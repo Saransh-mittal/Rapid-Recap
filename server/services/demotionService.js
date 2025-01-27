@@ -3,6 +3,11 @@ const User = require('../model/userSchema')
 const _ = require('lodash')
 const { calculateDistribution } = require('../utils/demotion.utils')
 const ApplicationUpdates = require('../model/applicationUpdatesSchema')
+const {
+  monthlyDemotionTemplate,
+} = require('../data/inboxNotificationsTemplates')
+const configService = require('../configService')
+const moment = require('moment-timezone')
 
 // Initialize distribution with default min score
 const DISTRIBUTION = calculateDistribution(500)
@@ -35,11 +40,45 @@ const processUserDemotion = async ({ user, session }) => {
       const newUserScore =
         newIQScore === 0 ? 0 : DISTRIBUTION.iqToScore(newIQScore)
 
-      // Create notification
+      // Get circle and society data
+      const circleAndSocietyData = await getCircleAndSocietyData(user)
+
+      // Find previous and new society/circle info
+      const prevSocietyInfo = circleAndSocietyData.find(
+        data =>
+          prevIQScore >= data.IQ_Lower &&
+          (data.IQ_Upper === null || prevIQScore < data.IQ_Upper),
+      )
+
+      const newSocietyInfo = circleAndSocietyData.find(
+        data =>
+          newIQScore >= data.IQ_Lower &&
+          (data.IQ_Upper === null || newIQScore < data.IQ_Upper),
+      )
+
+      // Create notification with enhanced template
+      const notificationTitle = 'Monthly Leaderboard Refresh'
+      const notificationText = monthlyDemotionTemplate.html({
+        name: user.name,
+        inGameName: user.inGameName,
+        prevIQScore,
+        newIQScore,
+        rank: user.rank,
+        prevSociety: prevSocietyInfo.society,
+        prevCircle: prevSocietyInfo.circle,
+        newSociety: newSocietyInfo.society,
+        newCircle: newSocietyInfo.circle,
+        month: moment().subtract(1, 'month').month() + 1,
+        year: moment().subtract(1, 'month').year(),
+        seasonNumber: parseInt(configService.getCurrentSeason(), 10),
+        prevSocietyColor: prevSocietyInfo.textColor,
+        newSocietyColor: newSocietyInfo.textColor,
+      })
+
       const notification = new ApplicationUpdates({
         userId: user._id,
-        title: 'Monthly Leaderboard Refresh',
-        mainText: `Your IQ score has been adjusted from ${prevIQScore} to ${newIQScore} as part of our monthly refresh.`,
+        title: notificationTitle,
+        mainText: notificationText,
         type: 'demotion',
       })
 

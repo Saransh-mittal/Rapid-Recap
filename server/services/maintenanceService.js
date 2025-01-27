@@ -1,18 +1,19 @@
+// services/maintenanceService.js
+const cache = require('memory-cache')
 const MaintenanceWindow = require('../model/maintenanceSchema')
-const { redis } = require('../redis')
 const { makeRetryable } = require('../utils/retryUtils')
 const globalEmitter = require('../eventEmitter')
 
 const MAINTENANCE_CACHE_KEY = 'maintenance:status'
-const MAINTENANCE_CHECK_INTERVAL = 60000 // 1 minute
+const CACHE_DURATION = 60 * 1000 // 1 minute in milliseconds
 
 // Function to check if system is under maintenance
 const isUnderMaintenance = async () => {
   try {
     // Check cache first
-    const cachedStatus = await redis.get(MAINTENANCE_CACHE_KEY)
+    const cachedStatus = cache.get(MAINTENANCE_CACHE_KEY)
     if (cachedStatus) {
-      return JSON.parse(cachedStatus)
+      return cachedStatus
     }
 
     // If not in cache, check database
@@ -35,11 +36,7 @@ const isUnderMaintenance = async () => {
     }
 
     // Cache the result
-    await redis.setex(
-      MAINTENANCE_CACHE_KEY,
-      60, // Cache for 1 minute
-      JSON.stringify(status),
-    )
+    cache.put(MAINTENANCE_CACHE_KEY, status, CACHE_DURATION)
 
     return status
   } catch (error) {
@@ -61,10 +58,7 @@ const scheduleMaintenance = makeRetryable(
     await maintenance.save()
 
     // Clear cache
-    await redis.del(MAINTENANCE_CACHE_KEY)
-
-    // Emit event for scheduled maintenance
-    globalEmitter.emit('maintenance-scheduled', maintenance)
+    cache.del(MAINTENANCE_CACHE_KEY)
 
     return maintenance
   },
@@ -87,10 +81,7 @@ const startMaintenance = makeRetryable(
     await maintenance.save()
 
     // Clear cache
-    await redis.del(MAINTENANCE_CACHE_KEY)
-
-    // Emit maintenance start event
-    globalEmitter.emit('maintenance-started', maintenance)
+    cache.del(MAINTENANCE_CACHE_KEY)
 
     // Force all users to reload their app
     globalEmitter.emit('force-reload')
@@ -116,10 +107,7 @@ const endMaintenance = makeRetryable(
     await maintenance.save()
 
     // Clear cache
-    await redis.del(MAINTENANCE_CACHE_KEY)
-
-    // Emit maintenance end event
-    globalEmitter.emit('maintenance-ended', maintenance)
+    cache.del(MAINTENANCE_CACHE_KEY)
 
     // Force all users to reload their app
     globalEmitter.emit('force-reload')
@@ -145,10 +133,7 @@ const cancelMaintenance = makeRetryable(
     await maintenance.save()
 
     // Clear cache
-    await redis.del(MAINTENANCE_CACHE_KEY)
-
-    // Emit maintenance cancelled event
-    globalEmitter.emit('maintenance-cancelled', maintenance)
+    cache.del(MAINTENANCE_CACHE_KEY)
 
     return maintenance
   },

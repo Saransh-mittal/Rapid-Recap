@@ -16,6 +16,7 @@ const Dashboard = lazy(() => import('../screens/Dashboard'))
 const ContactLayout = lazy(() =>
   import('../components/contactComponents/ContactLayout'),
 )
+const RuleBook = lazy(() => import('../screens/RuleBook'))
 const HallOfChampions = lazy(() => import('../screens/HallOfChampions'))
 
 const OnboardingProcess = lazy(() => import('../screens/OnboardingProcess'))
@@ -40,6 +41,8 @@ const AppRoutes = ({ isToken, needsOnboarding, setIsGuestLoggedin }) => {
               path="/"
               element={isToken ? <Navigate to="/home" /> : <GetStarted />}
             />
+            <Route path="/manual" element={<RuleBook />} />
+            <Route path="/manual/:pageId" element={<RuleBook />} />
             {/* <Route path="/get-started" element={<GetStarted />} /> */}
             <Route path="/hall-of-champions" element={<HallOfChampions />} />
             <Route path="/contact/feedback" element={<ContactLayout />} />

@@ -11,43 +11,29 @@ const { saveMonthlyStats } = require('./monthlyStatsService')
 const moment = require('moment-timezone')
 const globalEmitter = require('../eventEmitter')
 const MaintenanceWindow = require('../model/maintenanceSchema')
+const {
+  sendMaintenanceCompletionNotification,
+} = require('./maintenanceNotificationService')
 
 const executeMonthlyDemotionWithMaintenance = async () => {
   try {
     // Setup maintenance window
-    const startTime = moment()
-      .utc()
-      .startOf('month')
-      .set({ hour: 0, minute: 0 })
-    const endTime = moment(startTime).add(2, 'hours')
-
+    const startTime = new Date()
+    const endTime = moment(startTime).add(2, 'hour')
+    const maintenanceReason = 'Monthly Leaderboard Reset'
     console.log('Starting monthly refresh process...')
 
     // Schedule and start maintenance
     const maintenance = await scheduleMaintenance({
-      startTime: startTime.toDate(),
+      startTime: startTime,
       endTime: endTime.toDate(),
-      reason: 'Monthly Leaderboard Refresh and Stats Collection',
+      reason: maintenanceReason,
     })
 
     await startMaintenance(maintenance._id)
 
-    // Emit maintenance start event for frontend
-    globalEmitter.emit('maintenance-update', {
-      status: 'started',
-      step: 'initialization',
-      progress: 0,
-      message: 'Starting monthly refresh process',
-    })
-
     // Step 1: Save monthly stats
     console.log('Collecting monthly statistics...')
-    globalEmitter.emit('maintenance-update', {
-      status: 'in-progress',
-      step: 'stats-collection',
-      progress: 20,
-      message: 'Collecting monthly statistics',
-    })
 
     const statsResult = await saveMonthlyStats({
       month: moment().subtract(1, 'month').month() + 1, // Previous month
@@ -60,35 +46,20 @@ const executeMonthlyDemotionWithMaintenance = async () => {
 
     // Step 2: Execute demotion
     console.log('Starting demotion process...')
-    globalEmitter.emit('maintenance-update', {
-      status: 'in-progress',
-      step: 'demotion',
-      progress: 60,
-      message: 'Performing leaderboard refresh',
-    })
 
     const demotionResult = await executeMonthlyDemotion()
     await calculateRanksAfterDemotion()
 
     // Step 3: End maintenance
     console.log('Completing process...')
-    globalEmitter.emit('maintenance-update', {
-      status: 'completing',
-      step: 'finalization',
-      progress: 90,
-      message: 'Finalizing monthly refresh',
-    })
 
     await endMaintenance(maintenance._id)
+    console.log('Sending completion notifications...')
 
-    // Final success event
-    globalEmitter.emit('maintenance-update', {
-      status: 'completed',
-      step: 'completed',
-      progress: 100,
-      message: 'Monthly refresh completed successfully',
+    await sendMaintenanceCompletionNotification({
+      maintenanceId: maintenance._id,
+      reason: maintenanceReason,
     })
-
     return {
       success: true,
       stats: {

@@ -24,6 +24,7 @@ import LeaderboardRow from '../components/leaderBoardComponents/LeaderBoardRow'
 import InfoButton, {
   InfoButtonProvider,
 } from '../components/miscellaneous/InfoButton'
+import RefreshTimer from '../components/leaderBoardComponents/RefreshTimer'
 
 const INITIAL_RENDER_COUNT = 500
 const RENDER_BATCH_SIZE = 500
@@ -36,6 +37,7 @@ const Leaderboard = () => {
   const toast = useToast()
 
   const [leaders, setLeaders] = useState([])
+  const [initialTime, setInitialTime] = useState({})
   const [searchResults, setSearchResults] = useState([])
   const [searchLoad, setSearchLoad] = useState(false)
   const [isLoading, setIsLoading] = useState(true)
@@ -62,6 +64,7 @@ const Leaderboard = () => {
       const response = await axios.get('/api/user/leaderboard?limit=500')
       allLeadersRef.current = response.data.users
       setLeaders(response.data.users.slice(0, INITIAL_RENDER_COUNT))
+      setInitialTime(response.data.nextRefresh)
     } catch (error) {
       console.error('Error fetching leaderboard:', error)
       toast({
@@ -228,7 +231,10 @@ const Leaderboard = () => {
             </InfoButtonProvider>
           </Flex>
         </Flex>
-
+        {/* Add Timer here */}
+        <Box>
+          <RefreshTimer initialTime={initialTime} />
+        </Box>
         <Flex justifyContent="center">
           <Box
             w={{ base: '100%', md: '75%', lg: '60%' }}

@@ -596,11 +596,27 @@ const leaderBoard = async (req, res) => {
   const currUserId = req.user ? req.user._id : null
   const { society, page = 1, limit = 10 } = req.query
   const cacheKey = `leaderboard_${society}_${page}_${limit}`
-
+  // Calculate time until next refresh
+  const now = moment.utc()
+  const nextRefresh = moment.utc().startOf('month').add(1, 'month')
+  if (now.date() === 1 && now.hour() < 1) {
+    // If it's the first of the month and before 1 AM UTC
+    nextRefresh.subtract(1, 'month')
+  }
+  const timeUntilRefresh = {
+    days: nextRefresh.diff(now, 'days'),
+    hours: nextRefresh.diff(now, 'hours') % 24,
+    minutes: nextRefresh.diff(now, 'minutes') % 60,
+    seconds: nextRefresh.diff(now, 'seconds') % 60,
+    totalSeconds: nextRefresh.diff(now, 'seconds'),
+  }
   // Try to get the cached result
   const cachedResult = cache.get(cacheKey)
   if (cachedResult) {
-    return res.status(200).json(cachedResult)
+    return res.status(200).json({
+      ...cachedResult,
+      nextRefresh: timeUntilRefresh,
+    })
   }
 
   const societyConditions = {
@@ -727,6 +743,7 @@ const leaderBoard = async (req, res) => {
       currUser: currUserData,
       totalPages,
       currentPage: pageNumber,
+      nextRefresh: timeUntilRefresh,
     }
 
     // Cache the result
