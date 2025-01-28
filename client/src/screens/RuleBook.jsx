@@ -3,10 +3,11 @@ import React from 'react'
 import { Box, Container, Heading, useMediaQuery } from '@chakra-ui/react'
 import { motion } from 'framer-motion'
 import { useParams, useNavigate } from 'react-router-dom'
+import { useTranslation } from 'react-i18next'
 import PageSlide from '../components/ruleBookComponents/PageSlide'
 import { SearchBar } from '../components/ruleBookComponents/SearchComponents'
 import DropdownMenu from '../components/ruleBookComponents/DropdownMenu'
-import { ruleBookPages } from '../assets/ruleBookData'
+import { getRuleBookPages } from '../assets/ruleBookData'
 import { Helmet } from 'react-helmet'
 
 const MotionBox = motion(Box)
@@ -15,25 +16,26 @@ const RuleBook = () => {
   const { pageId } = useParams()
   const navigate = useNavigate()
   const [isLargerThan768] = useMediaQuery('(min-width: 768px)')
+  const { t } = useTranslation('rulebook')
+
+  // Get fresh pages whenever language changes
+  const pages = React.useMemo(() => getRuleBookPages(), [t])
 
   const currentPage = React.useMemo(() => {
-    return ruleBookPages.find(page => page.id === pageId) || ruleBookPages[0]
-  }, [pageId])
+    return pages.find(page => page.id === pageId) || pages[0]
+  }, [pageId, pages])
 
   React.useEffect(() => {
     if (!pageId) {
-      navigate(`/manual/${ruleBookPages[0].id}`)
+      navigate(`/manual/${pages[0].id}`)
     }
-  }, [pageId, navigate])
+  }, [pageId, navigate, pages])
 
   return (
     <Box minH="100vh" w="full" pt={20} pb={10}>
       <Helmet>
-        <title>Player's Manual | Rapid Recap</title>
-        <meta
-          name="description"
-          content="Learn how to play and master Rapid Recap with our comprehensive player's manual."
-        />
+        <title>{t('meta.title')}</title>
+        <meta name="description" content={t('meta.description')} />
       </Helmet>
 
       <Container
@@ -52,15 +54,15 @@ const RuleBook = () => {
             color="pink.300"
             letterSpacing="tight"
           >
-            Player's Manual
+            {t('heading')}
           </Heading>
         </MotionBox>
 
         <Box position="relative" zIndex={10}>
           <SearchBar
-            pages={ruleBookPages}
+            pages={pages}
             onSelectResult={section => {
-              const page = ruleBookPages.find(p => p.title === section)
+              const page = pages.find(p => p.title === section)
               if (page) {
                 navigate(`/manual/${page.id}`)
               }
@@ -68,7 +70,7 @@ const RuleBook = () => {
           />
 
           <DropdownMenu
-            pages={ruleBookPages}
+            pages={pages}
             currentPage={currentPage}
             onSelect={id => navigate(`/manual/${id}`)}
           />

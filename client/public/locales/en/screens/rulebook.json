@@ -1,0 +1,272 @@
+{
+  "meta": {
+    "title": "Player's Manual | Rapid Recap",
+    "description": "Learn how to play and master Rapid Recap with our comprehensive player's manual."
+  },
+  "heading": "Player's Manual",
+  "quiz-system": {
+    "title": "Quiz System",
+    "sections": {
+      "how-quizzes-work": {
+        "title": "How Quizzes Work",
+        "items": {
+          "reading-time": {
+            "text": "Reading Time: 2-4 minutes per article",
+            "explanation": "Our reading time is carefully calibrated for optimal information absorption. 2-4 minutes provides enough time to grasp key concepts while maintaining engagement. This duration has been proven to maximize retention and quiz performance.",
+            "hasDetails": true
+          },
+          "quiz-time": {
+            "text": "Quiz Time: 50 seconds for optimal performance",
+            "explanation": "The 50-second time limit is based on cognitive science research. This duration creates the perfect balance between pressure and performance, keeping you engaged while allowing sufficient time for thoughtful answers. This timing has been shown to improve both accuracy and learning retention.",
+            "hasDetails": true
+          },
+          "questions": {
+            "text": "Questions: 5 questions per quiz",
+            "explanation": "Each quiz contains 5 carefully crafted questions that test your understanding of key concepts. This number is optimized for quick engagement while providing comprehensive coverage of the article content.",
+            "hasDetails": false
+          }
+        }
+      },
+      "theme-options": {
+        "title": "Theme Options",
+        "items": {
+          "indian-mythology": {
+            "text": "Indian Mythology",
+            "explanation": "Experience the news through the lens of Indian epics! Stories are retold using characters and events from the Mahabharata and Ramayana, while preserving all key information. For example, a diplomatic negotiation might be compared to Krishna's peace mission to the Kauravas. Remember - the quiz will still be based on the original article content.",
+            "hasDetails": true
+          },
+          "mystic-world": {
+            "text": "Mystic World",
+            "explanation": "Enter a world of magic and superheroes! Articles are reimagined using elements from Harry Potter, Marvel, and DC universes. A technological breakthrough might be explained through Tony Stark's innovations, while maintaining all factual details for the quiz.",
+            "hasDetails": true
+          },
+          "space-theme": {
+            "text": "Space Theme",
+            "explanation": "Blast off into a cosmic perspective! Stories are retold through the lens of space exploration and astronomy, referencing real missions like Apollo and Mars rovers. Complex topics might be explained through the viewpoint of astronauts or mission control, while keeping all original facts intact.",
+            "hasDetails": true
+          },
+          "greek-mythology": {
+            "text": "Greek Mythology",
+            "explanation": "Journey through ancient Greece! News stories are woven into the rich tapestry of Greek mythology, using tales of gods, heroes, and epic quests as metaphors. A climate crisis might be told through Poseidon's domain, but all original information remains for quiz preparation.",
+            "hasDetails": true
+          },
+          "bible-stories": {
+            "text": "Bible Stories",
+            "explanation": "Experience current events through biblical narratives! Articles are retold using well-known stories from the Bible as metaphors, while maintaining all key facts. A story about perseverance might parallel David facing Goliath, but quizzes still focus on the actual events.",
+            "hasDetails": true
+          },
+          "sci-fi-adventure": {
+            "text": "Sci-Fi Adventure",
+            "explanation": "Enter a futuristic universe! Stories are reimagined using elements from Star Wars, Star Trek, and other sci-fi worlds. International relations might be explained through interplanetary diplomacy, but all original details are preserved for quiz accuracy.",
+            "hasDetails": true
+          }
+        }
+      },
+      "important-note": {
+        "title": "Important Note",
+        "items": {
+          "quiz-original-content": {
+            "text": "Quizzes Based on Original Content",
+            "explanation": "While themes make reading more engaging, all quiz questions come from the original article content. Themed versions maintain 100% of the factual information while adding an entertaining narrative layer.",
+            "hasDetails": true
+          }
+        }
+      }
+    }
+  },
+  "rqm-score": {
+    "title": "RQM Score",
+    "sections": {
+      "accuracy": {
+        "title": "Accuracy",
+        "items": {
+          "correct-answers": {
+            "text": "Correct answers",
+            "explanation": "Each correct answer contributes to your base RQM score. The system uses advanced algorithms to weight questions based on difficulty, ensuring fair scoring across different quiz types.",
+            "hasDetails": true
+          },
+          "perfect-score": {
+            "text": "Perfect score bonus (20%)",
+            "explanation": "Achieve a perfect score to earn a 20% boost to your RQM. This significant bonus rewards mastery and encourages thorough understanding of the material. This multiplier is applied after all other calculations.",
+            "hasDetails": true
+          },
+          "near-perfect": {
+            "text": "Near-perfect bonus (10%)",
+            "explanation": "Missing just one question still earns you a 10% bonus, encouraging consistency and rewarding strong performance. This helps maintain motivation even when perfection is just out of reach.",
+            "hasDetails": true
+          }
+        }
+      },
+      "speed": {
+        "title": "Speed",
+        "items": {
+          "base-time": {
+            "text": "Base time: 15 seconds per question",
+            "explanation": "The 15-second baseline for each question is carefully calculated to allow for reading, processing, and answering. This timing is based on extensive user testing and cognitive research.",
+            "hasDetails": true
+          },
+          "speed-bonus": {
+            "text": "Speed bonus up to 2x",
+            "explanation": "Quick answers can earn up to double points! The speed multiplier scales smoothly from 1x to 2x based on your response time. The sweet spot is balancing speed with accuracy - rushing and making mistakes will cost more points than answering correctly but slower.",
+            "hasDetails": true
+          }
+        }
+      }
+    }
+  },
+  "iq-system": {
+    "title": "IQ System",
+    "sections": {
+      "score-range": {
+        "title": "Score Range",
+        "items": {
+          "average": {
+            "text": "Average: 100",
+            "explanation": "The system is centered around 100 as the average score, following standard IQ distribution patterns. This provides a familiar and well-understood baseline for measuring performance.",
+            "hasDetails": false
+          },
+          "standard-deviation": {
+            "text": "Standard Deviation: 15",
+            "explanation": "A standard deviation of 15 points means that about 68% of users fall within 85-115, 95% within 70-130, and 99.7% within 55-145. This creates a balanced and fair distribution of scores.",
+            "hasDetails": true
+          }
+        }
+      },
+      "society-ranks": {
+        "title": "Society Ranks",
+        "items": {
+          "titans": {
+            "text": "Titans Society: 150+",
+            "explanation": "The legendary Titans Society represents the pinnacle of achievement. Members consistently demonstrate exceptional understanding and quick thinking. Exclusive features and recognition await those who reach this prestigious level.",
+            "hasDetails": true
+          },
+          "mavericks": {
+            "text": "Mavericks Society: 130-150",
+            "explanation": "Mavericks are elite performers who regularly showcase outstanding comprehension and rapid information processing. This society offers special privileges and unique challenges.",
+            "hasDetails": true
+          },
+          "elites": {
+            "text": "Elites Society: 110-130",
+            "explanation": "The Elites demonstrate above-average performance and consistent growth. Members gain access to advanced features and special community events.",
+            "hasDetails": true
+          },
+          "strivers": {
+            "text": "Strivers Society: 90-110",
+            "explanation": "Strivers represent the core of our community, showing steady progress and reliable performance. Special tools and support help members continue their growth.",
+            "hasDetails": true
+          },
+          "explorers": {
+            "text": "Explorers Society: Below 90",
+            "explanation": "Everyone begins as an Explorer, equipped with tools and guidance to learn and improve. This society focuses on growth and development.",
+            "hasDetails": true
+          }
+        }
+      }
+    }
+  },
+  "boosters": {
+    "title": "Boosters & Multipliers",
+    "sections": {
+      "quin-boost": {
+        "title": "Quin Boost",
+        "items": {
+          "trigger": {
+            "text": "Trigger: Complete 5 consecutive quizzes",
+            "explanation": "The Quin Boost activates after completing 5 quizzes in sequence, rewarding sustained engagement. Each quiz must be completed within the same day to maintain the sequence.",
+            "hasDetails": true
+          },
+          "reward": {
+            "text": "Reward: 1.5x RQM multiplier on 6th quiz",
+            "explanation": "Your 6th quiz receives a powerful 1.5x multiplier to your RQM score. This boost can be combined with other multipliers for maximum impact. Strategic timing of this boost can significantly accelerate your progress.",
+            "hasDetails": true
+          }
+        }
+      },
+      "streak-surge": {
+        "title": "Streak Surge",
+        "items": {
+          "trigger": {
+            "text": "Trigger: Maintain 7-day streak",
+            "explanation": "A week of consistent daily activity unlocks the Streak Surge. Each day of the streak must include at least one completed quiz. Missing a day resets the counter.",
+            "hasDetails": true
+          },
+          "reward": {
+            "text": "Reward: 1.5x RQM for the entire day",
+            "explanation": "Enjoy a 1.5x multiplier on all quizzes for a full day! This powerful boost applies to every quiz you take, making it perfect for maximizing gains.",
+            "hasDetails": true
+          },
+          "stacking": {
+            "text": "Stacks with other boosts",
+            "explanation": "Combine with other multipliers for maximum effect. Strategic use of multiple boosts can result in extraordinary score improvements.",
+            "hasDetails": true
+          }
+        }
+      },
+      "maximum-power": {
+        "title": "Maximum Power",
+        "items": {
+          "max-multiplier": {
+            "text": "Combined maximum multiplier: 2x",
+            "explanation": "The system caps total multipliers at 2x to maintain balance. This can be achieved by combining Quin Boost, Streak Surge, and Category boosts strategically.",
+            "hasDetails": true
+          },
+          "requirements": {
+            "text": "Requires active Quin Boost + Streak Surge + Category boost",
+            "explanation": "Achieving maximum multiplication requires careful timing and activation of multiple boost types. Plan your quiz schedule to align these powerful multipliers.",
+            "hasDetails": true
+          },
+          "per-attempt": {
+            "text": "Applied per quiz attempt",
+            "explanation": "Each quiz calculates its multiplier independently, allowing for strategic boost usage across multiple attempts.",
+            "hasDetails": false
+          }
+        }
+      }
+    }
+  },
+  "tournament": {
+    "title": "Tournament System",
+    "sections": {
+      "schedule": {
+        "title": "Schedule",
+        "items": {
+          "registration": {
+            "text": "Registration: Monday-Friday",
+            "explanation": "Five-day registration period allows players to prepare and strategize. Sign up early to access pre-tournament practice sessions and special preparation resources.",
+            "hasDetails": true
+          },
+          "competition": {
+            "text": "Competition: Saturday-Sunday",
+            "explanation": "Intense weekend competition tests your knowledge and speed. The two-day format allows for strategic timing of attempts and recovery periods.",
+            "hasDetails": true
+          }
+        }
+      },
+      "championship": {
+        "title": "February Championship",
+        "items": {
+          "duration": {
+            "text": "Duration: Full month of February",
+            "explanation": "A month-long championship that tests consistency and endurance. Strategic planning and regular participation are key to success.",
+            "hasDetails": true
+          },
+          "rewards": {
+            "text": "Top 5 players receive monetary rewards",
+            "explanation": "Substantial rewards await the highest performers. The prize pool is distributed among the top 5 players based on their final rankings.",
+            "hasDetails": true
+          },
+          "ranking": {
+            "text": "Based on global leaderboard position",
+            "explanation": "Your rank is determined by your position on the worldwide leaderboard. Real-time updates let you track your standing throughout the competition.",
+            "hasDetails": false
+          },
+          "eligibility": {
+            "text": "All active players eligible",
+            "explanation": "No minimum requirements - just stay active and participate! Every player has a chance to compete and win.",
+            "hasDetails": false
+          }
+        }
+      }
+    }
+  }
+}

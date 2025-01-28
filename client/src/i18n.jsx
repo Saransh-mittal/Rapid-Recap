@@ -17,6 +17,7 @@ const namespaces = {
     'GetStarted',
     'LoadingScreen',
     'OnboardingProcess',
+    'rulebook',
   ],
   redux: ['tournamentSlice'],
   utils: ['formatDate'],
