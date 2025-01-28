@@ -213,6 +213,7 @@ const OnboardingProcess = ({ setIsGuestLoggedin }) => {
         }
       }
     } catch (error) {
+      console.log(error)
       toast({
         title: 'Error',
         description: 'Failed to proceed to next step. Please try again.',

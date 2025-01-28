@@ -116,6 +116,16 @@ const Home = () => {
       } catch (error) {
         if (!axios.isCancel(error)) {
           console.error(error.message)
+          console.log(loginCheckStatus)
+          console.log(isAuthenticated)
+
+          if (
+            loginCheckStatus === 'fulfilled' &&
+            !isAuthenticated &&
+            location.pathname === 'home/all'
+          ) {
+            return
+          }
           toast({
             title: t('fetch_error'),
             status: 'error',
@@ -130,6 +140,7 @@ const Home = () => {
       }
     },
     [
+      isAuthenticated,
       loginCheckStatus,
       hasMoreItems,
       notLoggedIn,
@@ -199,7 +210,7 @@ const Home = () => {
       navigate('/home/all')
     } else if (
       !isAuthenticated &&
-      locationpathname === '/home' &&
+      (locationpathname === '/home' || locationpathname === '/home/all') &&
       loginCheckStatus === 'fulfilled'
     ) {
       navigate('/home/top')

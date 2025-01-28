@@ -9,6 +9,8 @@ const {
 } = require('./miscellaneous.utils')
 const configService = require('../configService')
 const SeasonData = require('../model/seasonDataSchema')
+const mongoose = require('mongoose')
+const { makeRetryable } = require('./retryUtils')
 
 const calculateTopPercent = (userIQ, sortedIQScores) => {
   //sortedIQScores.sort((a, b) => b - a);
@@ -671,6 +673,160 @@ function calculateLoginStreak(user, today) {
   }
   return { streak: 1 } // Reset streak
 }
+
+// Helper function to prepare data
+function prepareOnboardingData(body) {
+  const {
+    step,
+    stepId,
+    language,
+    categories,
+    quizResult,
+    currentStep,
+    nextStep,
+    currentStepId,
+    nextStepId,
+    ...restData
+  } = body
+
+  // Handle the old format (using step number)
+  const isOldFormat = step !== undefined && !currentStep
+
+  function getStepId(step) {
+    const stepMap = {
+      1: 'language',
+      2: 'welcome',
+      3: 'categories',
+      4: 'article_selection',
+      5: 'quiz_question',
+      6: 'quiz_result',
+      7: 'article_reading',
+      8: 'leaderboard',
+    }
+    return stepMap[step] || 'language'
+  }
+
+  // Normalize the data format
+  const normalizedData = {
+    currentStep: currentStep || step || 0,
+    nextStep: isOldFormat ? step + 1 : nextStep || currentStep + 1,
+    currentStepId: currentStepId || stepId || getStepId(step),
+    nextStepId: nextStepId || getStepId(isOldFormat ? step + 1 : nextStep),
+    data: {
+      language: language || restData.language,
+      categories: categories || restData.categories,
+      quizResult: quizResult || restData.quizResult,
+    },
+  }
+
+  return { normalizedData }
+}
+
+const executeOnboardingUpdate = async req => {
+  const { normalizedData } = prepareOnboardingData(req.body)
+  const userId = req.user._id
+
+  const session = await mongoose.startSession()
+  session.startTransaction()
+
+  try {
+    const user = await User.findById(userId).session(session)
+    if (!user) {
+      await session.abortTransaction()
+      session.endSession()
+      return { status: 404, data: { message: 'User not found' } }
+    }
+
+    // Update user data
+    user.onboardingStep = normalizedData.nextStep
+
+    // Process data based on the current step
+    switch (normalizedData.currentStepId) {
+      case 'language':
+        if (normalizedData.data.language) {
+          user.userLanguage = normalizedData.data.language
+        }
+        break
+
+      case 'welcome':
+        if (normalizedData.data.language) {
+          user.userLanguage = normalizedData.data.language
+        }
+        break
+
+      case 'categories':
+        if (
+          normalizedData.data.categories &&
+          Array.isArray(normalizedData.data.categories)
+        ) {
+          user.preferredCategories = normalizedData.data.categories.map(
+            category => ({
+              category,
+              weight: 1 / normalizedData.data.categories.length,
+              isInferred: false,
+            }),
+          )
+        }
+        break
+
+      case 'quiz_question':
+        // Quiz question step, no data to save
+        break
+
+      case 'quiz_result':
+        if (normalizedData.data.quizResult !== undefined) {
+          user.initialQuizResult = normalizedData.data.quizResult
+        }
+        break
+
+      case 'article_reading':
+        // Article reading step, no data to save
+        break
+
+      case 'leaderboard':
+        user.needsOnboarding = false
+        break
+    }
+
+    await user.save({ session })
+    await session.commitTransaction()
+    session.endSession()
+
+    return {
+      status: 200,
+      data: {
+        message: 'Onboarding progress updated',
+        currentStep: normalizedData.currentStep,
+        nextStep: normalizedData.nextStep,
+        currentStepId: normalizedData.currentStepId,
+        nextStepId: normalizedData.nextStepId,
+      },
+    }
+  } catch (error) {
+    await session.abortTransaction()
+    session.endSession()
+    throw error // This will be caught by the retry mechanism
+  }
+}
+
+// Create a retryable version of the function
+const retryableOnboardingUpdate = makeRetryable(executeOnboardingUpdate, {
+  operationName: 'UpdateOnboardingProgress',
+  maxRetries: 5,
+  initialDelay: 100,
+  isRetryable: error => {
+    // Add specific MongoDB transaction error handling
+    if (error.codeName === 'WriteConflict') return true
+    if (error.errorLabels?.includes('TransientTransactionError')) return true
+    return defaultIsRetryableError(error)
+  },
+  onRetry: (error, attempt) => {
+    console.warn(
+      `Retrying transaction attempt ${attempt} due to write conflict`,
+    )
+  },
+})
+
 module.exports = {
   calculateTopPercent,
   calculateLabelsAndData,
@@ -689,4 +845,5 @@ module.exports = {
   getTheRevivalEndDay,
   formatPreferredCategories,
   calculateLoginStreak,
+  retryableOnboardingUpdate,
 }
