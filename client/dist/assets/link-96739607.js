@@ -1,1 +1,0 @@
-import{j as t}from"./index-c313bc2e.js";import{n as i,x as c,s as m,o as l,p as k}from"./text-3a919685.js";const x=i(function(s,n){const o=c("Link",s),{className:e,isExternal:a,...r}=m(s);return t.jsx(l.a,{target:a?"_blank":void 0,rel:a?"noopener":void 0,ref:n,className:k("chakra-link",e),...r,__css:o})});x.displayName="Link";export{x as L};
