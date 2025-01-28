@@ -251,10 +251,6 @@ export default function Register({ isOpen, onClose }) {
   }
 
   useEffect(() => {
-    document.title = 'Register - Rapid Recap'
-  }, [])
-
-  useEffect(() => {
     if (verifyEmail && isOpen) {
       onClose()
       dispatch(setIsSigninOpen(true))

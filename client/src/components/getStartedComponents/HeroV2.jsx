@@ -66,7 +66,16 @@ const HeroV2 = ({ inViewFooter }) => {
   const dispatch = useDispatch()
 
   return (
-    <Box minH="100vh" position="relative" py={8} mt={16}>
+    <Box
+      as="section"
+      minH="100vh"
+      position="relative"
+      py={8}
+      mt={16}
+      aria-label="Hero section"
+      itemScope
+      itemType="https://schema.org/WebPageElement"
+    >
       <Container maxW="container.xl">
         <Grid
           templateColumns={{ base: '1fr', lg: '1fr 1fr' }}
@@ -75,10 +84,13 @@ const HeroV2 = ({ inViewFooter }) => {
         >
           {/* Left Section */}
           <VStack
+            as="article"
             align="start"
             spacing={4}
             alignItems={{ base: 'center', lg: 'flex-start' }}
             w={'100%'}
+            itemScope
+            itemType="https://schema.org/Article"
           >
             {/* Language Badge */}
             <HStack
@@ -100,7 +112,7 @@ const HeroV2 = ({ inViewFooter }) => {
                   fontSize="sm"
                 >
                   <HStack spacing={2}>
-                    <Languages size={14} />
+                    <Languages size={14} aria-hidden="true" />
                     <Text>{t('Header.languageBadge')}</Text>
                   </HStack>
                 </Badge>
@@ -110,6 +122,8 @@ const HeroV2 = ({ inViewFooter }) => {
               </HStack>
               <LanguageSwitchButton COLORS={COLORS} />
             </HStack>
+
+            {/* Mobile Language Section */}
             <VStack
               spacing={4}
               w="full"
@@ -129,7 +143,7 @@ const HeroV2 = ({ inViewFooter }) => {
                   fontSize="sm"
                 >
                   <HStack spacing={2}>
-                    <Languages size={14} />
+                    <Languages size={14} aria-hidden="true" />
                     <Text>{t('Header.languageBadge')}</Text>
                   </HStack>
                 </Badge>
@@ -139,9 +153,11 @@ const HeroV2 = ({ inViewFooter }) => {
               </HStack>
               <LanguageSwitchButton COLORS={COLORS} />
             </VStack>
+
             {/* Main Heading with Social Proof */}
-            <Box>
+            <Box as="header">
               <Heading
+                as="h1"
                 fontSize={{ base: '3xl', md: '4xl', lg: '5xl' }}
                 fontWeight="bold"
                 bgGradient={`linear(to-r, ${COLORS.accent}, ${COLORS.secondary})`}
@@ -149,20 +165,27 @@ const HeroV2 = ({ inViewFooter }) => {
                 lineHeight="1.1"
                 mb={4}
                 textAlign={{ base: 'center', lg: 'left' }}
+                itemProp="headline"
               >
                 {t('Header.title')}
               </Heading>
-              <Text
-                fontSize={{ base: 'md', md: 'xl' }}
-                color="whiteAlpha.900"
-                maxW="600px"
-                textAlign={{ base: 'center', lg: 'left' }}
-              >
-                {t('Header.activeLearners')}
-              </Text>
+              <Box w={'100%'} align="center">
+                <Text
+                  as="p"
+                  fontSize={{ base: 'md', md: 'xl' }}
+                  color="whiteAlpha.900"
+                  maxW="600px"
+                  textAlign={{ base: 'center', lg: 'left' }}
+                  itemProp="description"
+                >
+                  {t('Header.activeLearners')}
+                </Text>
+              </Box>
             </Box>
+
             {/* CTA Section */}
             <VStack
+              as="div"
               align="start"
               spacing={4}
               w="100%"
@@ -171,6 +194,8 @@ const HeroV2 = ({ inViewFooter }) => {
                 base: 'center',
                 lg: 'flex-start',
               }}
+              role="group"
+              aria-label="Call to action"
             >
               <Box ref={ref}>
                 <Button
@@ -180,7 +205,7 @@ const HeroV2 = ({ inViewFooter }) => {
                   px={12}
                   py={7}
                   fontSize="xl"
-                  rightIcon={<TrendingUp />}
+                  rightIcon={<TrendingUp aria-hidden="true" />}
                   _hover={{
                     bg: 'pink.500',
                     transform: 'translateY(-2px) scale(1.05)',
@@ -190,12 +215,13 @@ const HeroV2 = ({ inViewFooter }) => {
                     playClick()
                     dispatch(setIsSigninOpen(true))
                   }}
+                  aria-label={t('Header.getStartedButton')}
                 >
                   {t('Header.getStartedButton')}
                 </Button>
               </Box>
 
-              <HStack spacing={4} wrap="wrap">
+              <HStack spacing={4} wrap="wrap" aria-label="Key features">
                 <Badge variant="outline" colorScheme="pink">
                   {t('Header.badges.freeAccess')}
                 </Badge>
@@ -207,6 +233,7 @@ const HeroV2 = ({ inViewFooter }) => {
                 </Badge>
               </HStack>
             </VStack>
+
             {/* Search Bar */}
             <ArticleSearch COLORS={COLORS} />
           </VStack>
@@ -214,10 +241,14 @@ const HeroV2 = ({ inViewFooter }) => {
           {/* Right Section - Hero Image */}
           {!isMobile && (
             <Box
+              as="figure"
               position="relative"
               w="90%"
               h="100%"
               display={{ base: 'none', lg: 'block' }}
+              itemProp="image"
+              itemScope
+              itemType="https://schema.org/ImageObject"
             >
               <AspectRatio ratio={4 / 3}>
                 <Box
@@ -229,7 +260,7 @@ const HeroV2 = ({ inViewFooter }) => {
                   <Box
                     as="img"
                     src={learner}
-                    alt={t('Header.title')}
+                    alt={t('Header.imageAlt')}
                     objectFit="cover"
                     borderRadius="2xl"
                     filter="brightness(0.9)"
@@ -238,6 +269,8 @@ const HeroV2 = ({ inViewFooter }) => {
                       transform: 'scale(1.02)',
                     }}
                     transition="all 0.3s ease"
+                    loading="eager"
+                    itemProp="contentUrl"
                   />
 
                   <Box
@@ -249,6 +282,7 @@ const HeroV2 = ({ inViewFooter }) => {
                     bgGradient="radial(circle, rgba(237,100,166,0.5) 0%, rgba(237,100,166,0) 70%)"
                     borderRadius="full"
                     animation="pulse 2s infinite"
+                    aria-hidden="true"
                   />
 
                   <Box
@@ -261,6 +295,7 @@ const HeroV2 = ({ inViewFooter }) => {
                     borderRadius="full"
                     animation="pulse 2s infinite"
                     style={{ animationDelay: '1s' }}
+                    aria-hidden="true"
                   />
                 </Box>
               </AspectRatio>
@@ -271,7 +306,6 @@ const HeroV2 = ({ inViewFooter }) => {
                 position={{ top: '10%', right: '-5%' }}
                 COLORS={COLORS}
               />
-
               <FloatingAchievementBadge
                 icon={Brain}
                 position={{ bottom: '25%', left: '-5%' }}
@@ -281,11 +315,17 @@ const HeroV2 = ({ inViewFooter }) => {
             </Box>
           )}
         </Grid>
+
+        {/* Stats Grid */}
         <Grid
+          as="section"
           templateColumns={{ base: 'repeat(2, 1fr)', md: 'repeat(4, 1fr)' }}
           gap={4}
           w="full"
           mt={8}
+          aria-label="Platform statistics"
+          itemScope
+          itemType="https://schema.org/Dataset"
         >
           <StatsCard
             icon={Users}
@@ -316,6 +356,7 @@ const HeroV2 = ({ inViewFooter }) => {
             COLORS={COLORS}
           />
         </Grid>
+
         <TournamentBanner COLORS={COLORS} shine={shine} />
         <SmartCTA
           isMainButtonVisible={!inView && !inViewFooter}

@@ -1,34 +1,114 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <script>window.prerenderReady = false;</script>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Rapid Recap - Stay Informed, Stay Ahead</title>
 
-  <!-- SEO Meta Tags -->
-  <meta name="description" content="Stay updated with the latest news and articles. Test your knowledge with quizzes and see your Information Quotient (IQ) score on Rapid Recap.">
-  <meta name="keywords" content="Rapid Recap, news, articles, quizzes, IQ score, leaderboard">
-  <meta property="og:title" content="Rapid Recap - Stay Informed, Stay Ahead">
-  <meta property="og:description" content="Stay updated with the latest news and articles. Test your knowledge with quizzes and see your Information Quotient (IQ) score on Rapid Recap.">
+  <!-- Primary Meta Tags -->
+  <title>Rapid Recap | Gamified News Quizzes for Current Affairs Mastery</title>
+  <meta name="description" content="Transform your current affairs learning with Rapid Recap's interactive news quizzes and gamified knowledge platform. Build lasting knowledge in 5-15 minutes daily. Join 1000+ active learners!">
+  <meta name="keywords" content="gamified current affairs learning, interactive news quiz app, current affairs practice, knowledge retention app, news quiz game, personalized learning platform, bilingual current affairs, competitive exam preparation">
+  <meta name="robots" content="index, follow">
+  <meta name="author" content="Rapid Recap">
+  <link rel="canonical" href="https://www.rapidrecap.co.in">
 
-  <!-- Preload resources -->
-  <link rel="preload" href="/images/tourBGDark.webp" as="image">
-  <link rel="manifest" href="/manifest.json">
-  <link rel="apple-touch-icon" href="/images/rrlogo_512.png">
+  <!-- Open Graph / Facebook -->
+  <meta property="og:type" content="website">
+  <meta property="og:url" content="https://www.rapidrecap.co.in">
+  <meta property="og:title" content="Rapid Recap - Transform News Into Knowledge | Interactive Learning Platform">
+  <meta property="og:description" content="Transform your current affairs learning with Rapid Recap's interactive news quizzes and gamified knowledge platform. Build lasting knowledge in 5-15 minutes daily.">
+  <meta property="og:image" content="https://www.rapidrecap.co.in/images/rrlogo_512.png">
+  <meta property="og:site_name" content="Rapid Recap">
+  <meta property="og:locale" content="en_US">
+
+  <!-- Twitter -->
+  <meta name="twitter:card" content="summary_large_image">
+  <meta name="twitter:url" content="https://www.rapidrecap.co.in">
+  <meta name="twitter:title" content="Rapid Recap - Transform News Into Knowledge | Interactive Learning Platform">
+  <meta name="twitter:description" content="Transform your current affairs learning with Rapid Recap's interactive news quizzes and gamified knowledge platform. Build lasting knowledge in 5-15 minutes daily.">
+  <meta name="twitter:image" content="https://www.rapidrecap.co.in/images/rrlogo_512.png">
+
+  <!-- App Meta Tags -->
+  <meta name="application-name" content="Rapid Recap">
+  <meta name="apple-mobile-web-app-title" content="Rapid Recap">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
   <meta name="theme-color" content="#1a1527">
-  <link rel="icon" type="image/webp" href="/images/rrlogo.webp">
 
-  <!-- Preconnect to Google Fonts -->
+  <!-- Preload Critical Resources -->
+  <link rel="preload" href="/images/tourBGDark.webp" as="image">
+  <link rel="preload" href="/fonts/main-font.woff2" as="font" type="font/woff2" crossorigin>
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link rel="preconnect" href="https://fonts.googleapis.com">
-  <!-- DNS Prefetch -->
   <link rel="dns-prefetch" href="https://fonts.gstatic.com">
   <link rel="dns-prefetch" href="https://fonts.googleapis.com">
 
+  <!-- Progressive Web App -->
+  <link rel="manifest" href="/manifest.json">
+  <link rel="apple-touch-icon" href="/images/rrlogo_512.png">
+  <link rel="icon" type="image/webp" href="/images/rrlogo.webp">
+
+  <!-- Structured Data - Web Application -->
+  <script type="application/ld+json">
+    {
+      "@context": "https://schema.org",
+      "@type": "WebApplication",
+      "name": "Rapid Recap",
+      "description": "Transform your current affairs learning with Rapid Recap's interactive news quizzes and gamified knowledge platform.",
+      "url": "https://www.rapidrecap.co.in",
+      "applicationCategory": "EducationalApplication",
+      "operatingSystem": "Web",
+      "offers": {
+        "@type": "Offer",
+        "price": "0",
+        "priceCurrency": "INR"
+      },
+      "aggregateRating": {
+        "@type": "AggregateRating",
+        "ratingValue": "4.8",
+        "ratingCount": "1000",
+        "bestRating": "5",
+        "worstRating": "1"
+      },
+      "featureList": [
+        "Interactive News Quizzes",
+        "Personalized Learning Path",
+        "Real-time Progress Tracking",
+        "Competitive Tournaments",
+        "Bilingual Support"
+      ],
+      "screenshot": "https://www.rapidrecap.co.in/images/app-screenshot.webp",
+      "softwareVersion": "1.0",
+      "author": {
+        "@type": "Organization",
+        "name": "Rapid Recap Inc",
+        "url": "https://www.rapidrecap.co.in"
+      }
+    }
+  </script>
+
+  <!-- Structured Data - Organization -->
+  <script type="application/ld+json">
+    {
+      "@context": "https://schema.org",
+      "@type": "Organization",
+      "name": "Rapid Recap",
+      "url": "https://www.rapidrecap.co.in",
+      "logo": "https://www.rapidrecap.co.in/images/rrlogo_512.png",
+      "sameAs": [
+        "https://www.instagram.com/rrapidrecap/",
+        "https://www.linkedin.com/company/rrapidrecap/"
+      ],
+      "contactPoint": {
+        "@type": "ContactPoint",
+        "contactType": "customer support",
+        "email": "rapidrecap2k23@gmail.com"
+      }
+    }
+  </script>
+
   <style>
-
-
     /* Splash screen styles */
     #splash-screen {
       position: fixed;
@@ -86,31 +166,24 @@
       from { opacity: 0; transform: translateY(10px); }
       to { opacity: 1; transform: translateY(0); }
     }
-
   </style>
-
-  <!-- Bot detection script -->
-  <script>
-    (function() {
-      window.__IS_BOT__ = false; // Will be set by server
-      document.documentElement.dataset.bot = window.__IS_BOT__;
-    })();
-  </script>
 </head>
+
 <body>
+  <!-- Main Content -->
+  <main id="main-content">
+    <!-- Loading Screen -->
+    <div id="splash-screen" aria-label="Loading screen"></div>
+    <!-- React Root -->
+    <div id="root"><!--ssr-outlet--></div>
+  </main>
 
-  <div id="splash-screen"></div>
-
-    <div id="bot-navbar"></div>
-    <div id="bot-hero"></div>
-    <div id="bot-benefits"></div>
-    <div id="bot-features"></div>
-
-    <div id="bot-article"></div>
-
-    <div id="bot-footer"></div>
-  <!-- App Root for CSR -->
-  <div id="root"><!--ssr-outlet--></div>
+  <!-- NoScript Fallback -->
+  <noscript>
+    <div style="text-align: center; padding: 20px;">
+      Please enable JavaScript to use Rapid Recap. We offer an interactive learning experience that requires JavaScript.
+    </div>
+  </noscript>
 
   <!-- Entry Point -->
   <script type="module" src="/src/entry-client.jsx"></script>

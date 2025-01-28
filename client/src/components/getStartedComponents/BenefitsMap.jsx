@@ -6,14 +6,11 @@ import {
   Flex,
   VStack,
   Container,
-  useBreakpointValue,
   Badge,
   Circle,
-  Icon,
-  HStack,
 } from '@chakra-ui/react'
 import { motion } from 'framer-motion'
-import { Parallax, ParallaxProvider } from 'react-scroll-parallax'
+import { ParallaxProvider } from 'react-scroll-parallax'
 import { useTranslation } from 'react-i18next'
 import {
   Newspaper,
@@ -27,7 +24,6 @@ import {
 import { keyframes } from '@emotion/react'
 
 const MotionBox = motion(Box)
-const MotionFlex = motion(Flex)
 
 const COLORS = {
   accent: '#ED64A6',
@@ -51,14 +47,12 @@ const BenefitCard = ({
   icon: Icon,
   title,
   description,
-  index,
   isLarge = false,
   badge,
 }) => {
-  const { t } = useTranslation('GetStarted')
-
   return (
     <MotionBox
+      as="article"
       initial={{ opacity: 0, y: 20 }}
       whileInView={{ opacity: 1, y: 0 }}
       viewport={{ once: true }}
@@ -77,6 +71,9 @@ const BenefitCard = ({
       position="relative"
       overflow="hidden"
       transition="all 0.3s ease"
+      itemScope
+      itemType="https://schema.org/Service"
+      role="article"
     >
       <Box
         position="absolute"
@@ -85,6 +82,7 @@ const BenefitCard = ({
         right={0}
         height="4px"
         bgGradient={`linear(to-r, ${COLORS.accent}, ${COLORS.secondary})`}
+        aria-hidden="true"
       />
 
       <VStack spacing={4} align="center">
@@ -96,15 +94,19 @@ const BenefitCard = ({
           _hover={{
             animation: `${pulseAnimation} 2s infinite`,
           }}
+          role="img"
+          aria-label={`${title} icon`}
         >
-          <Icon size={isLarge ? 32 : 24} />
+          <Icon size={isLarge ? 32 : 24} aria-hidden="true" />
         </Circle>
 
         <Heading
+          as="h3"
           size={isLarge ? 'lg' : 'md'}
           color="white"
           fontWeight="bold"
           textAlign="center"
+          itemProp="name"
         >
           {title}
         </Heading>
@@ -114,6 +116,7 @@ const BenefitCard = ({
           fontSize={isLarge ? 'md' : 'sm'}
           textAlign="center"
           lineHeight="tall"
+          itemProp="description"
         >
           {description}
         </Text>
@@ -126,6 +129,7 @@ const BenefitCard = ({
             py={1}
             borderRadius="full"
             bg="rgba(237, 100, 166, 0.1)"
+            role="status"
           >
             {badge}
           </Badge>
@@ -142,6 +146,7 @@ const MobileArrow = () => (
     alignItems="center"
     w="full"
     py={2}
+    aria-hidden="true"
   >
     <Box
       as={motion.div}
@@ -161,6 +166,7 @@ const ConnectingLine = ({ direction = 'right' }) => (
     px={4}
     position="relative"
     display={{ base: 'none', md: 'flex' }}
+    aria-hidden="true"
   >
     <Box
       h="2px"
@@ -180,10 +186,9 @@ const ConnectingLine = ({ direction = 'right' }) => (
   </Flex>
 )
 
-const BenefitsMap = ({ isWeakDevice }) => {
+const BenefitsMap = () => {
   const { t } = useTranslation('GetStarted')
-  const isMobile = useBreakpointValue({ base: true, md: false })
-  const ContentWrapper = isWeakDevice ? Box : ParallaxProvider
+  const ContentWrapper = ParallaxProvider
 
   const benefits = [
     {
@@ -230,9 +235,17 @@ const BenefitsMap = ({ isWeakDevice }) => {
 
   return (
     <ContentWrapper>
-      <Box py={10} position="relative">
+      <Box
+        as="section"
+        py={10}
+        position="relative"
+        aria-label="Benefits section"
+        itemScope
+        itemType="https://schema.org/ItemList"
+      >
         <Container maxW="1400px" px={{ base: 4, md: 8 }}>
           <MotionBox
+            as="header"
             initial={{ opacity: 0, y: -20 }}
             whileInView={{ opacity: 1, y: 0 }}
             viewport={{ once: true }}
@@ -247,6 +260,7 @@ const BenefitsMap = ({ isWeakDevice }) => {
               fontSize="sm"
               borderRadius="full"
               bg="rgba(237, 100, 166, 0.1)"
+              aria-label="Section highlight"
             >
               {t('BenefitsMap.yourLearningJourney')}
             </Badge>
@@ -257,20 +271,29 @@ const BenefitsMap = ({ isWeakDevice }) => {
               bgClip="text"
               fontWeight="bold"
               letterSpacing="tight"
+              itemProp="name"
             >
               {t('BenefitsMap.mainTitle')}
             </Heading>
           </MotionBox>
 
           <Flex
+            as="section"
             direction={{ base: 'column', md: 'row' }}
             gap={6}
             mb={12}
             align="stretch"
+            aria-label="Primary benefits"
           >
             {benefits.map((benefit, index) => (
               <React.Fragment key={benefit.title}>
-                <Box flex="1">
+                <Box
+                  flex="1"
+                  itemProp="itemListElement"
+                  itemScope
+                  itemType="https://schema.org/ListItem"
+                >
+                  <meta itemProp="position" content={index + 1} />
                   <BenefitCard {...benefit} index={index} />
                 </Box>
                 {index < benefits.length - 1 && (
@@ -285,20 +308,33 @@ const BenefitsMap = ({ isWeakDevice }) => {
             ))}
           </Flex>
 
-          <Flex justify="center" mb={12}>
+          <Flex
+            as="section"
+            justify="center"
+            mb={12}
+            aria-label="Central feature"
+          >
             <Box width={{ base: '100%', md: '80%' }}>
               <BenefitCard {...centralFeature} isLarge={true} index={3} />
             </Box>
           </Flex>
 
           <Flex
+            as="section"
             direction={{ base: 'column', md: 'row' }}
             gap={6}
             align="stretch"
+            aria-label="Additional benefits"
           >
             {bottomBenefits.map((benefit, index) => (
               <React.Fragment key={benefit.title}>
-                <Box flex="1">
+                <Box
+                  flex="1"
+                  itemProp="itemListElement"
+                  itemScope
+                  itemType="https://schema.org/ListItem"
+                >
+                  <meta itemProp="position" content={index + 4} />
                   <BenefitCard {...benefit} index={index + 4} />
                 </Box>
                 {index < bottomBenefits.length - 1 && (
