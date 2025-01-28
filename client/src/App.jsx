@@ -8,7 +8,6 @@ import React, {
 } from 'react'
 import { useLocation } from 'react-router-dom'
 import ReactGA from 'react-ga4'
-import { Helmet } from 'react-helmet'
 import { Box } from '@chakra-ui/react'
 import { useDispatch, useSelector } from 'react-redux'
 import { useTranslation } from 'react-i18next'
@@ -429,31 +428,6 @@ const App = () => {
 
   return (
     <>
-      <Helmet>
-        <title>{t('Rapid Recap - Stay Informed, Stay Ahead')}</title>
-        <meta
-          name="description"
-          content={t(
-            'Rapid Recap is your go-to source for the latest news and articles. Test your knowledge with quizzes and track your Information Quotient (IQ) score.',
-          )}
-        />
-        <meta
-          name="keywords"
-          content={t(
-            'Rapid Recap, news, articles, quizzes, IQ score, leaderboard',
-          )}
-        />
-        <meta
-          property="og:title"
-          content={t('Rapid Recap - Stay Informed, Stay Ahead')}
-        />
-        <meta
-          property="og:description"
-          content={t(
-            'Stay updated with the latest news and articles. Take quizzes and see your Information Quotient (IQ) score on Rapid Recap.',
-          )}
-        />
-      </Helmet>
       {showLoadingScreen && <LoadingScreen progress={overallProgress} />}
 
       <Suspense fallback={null}>

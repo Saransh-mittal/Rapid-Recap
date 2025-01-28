@@ -305,10 +305,6 @@ export default function Signin({ isOpen, onClose, hamburgerOnClose }) {
   }
 
   useEffect(() => {
-    document.title = 'Rapid Recap - Sign In'
-  }, [])
-
-  useEffect(() => {
     if (
       !isEmailVerifyOpen &&
       forgotPassword &&
