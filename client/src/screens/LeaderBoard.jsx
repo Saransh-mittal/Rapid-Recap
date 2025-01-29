@@ -25,6 +25,7 @@ import InfoButton, {
   InfoButtonProvider,
 } from '../components/miscellaneous/InfoButton'
 import RefreshTimer from '../components/leaderBoardComponents/RefreshTimer'
+import { useInView } from 'react-intersection-observer'
 
 const INITIAL_RENDER_COUNT = 500
 const RENDER_BATCH_SIZE = 500
@@ -35,6 +36,9 @@ const Leaderboard = () => {
   const navigate = useNavigate()
   const { user } = useSelector(state => state.auth)
   const toast = useToast()
+  const { ref, inView } = useInView({ threshold: 0, triggerOnce: false })
+  const { ref: firstLeaderboardRowRef, inView: firstLeaderboardRowInView } =
+    useInView({ threshold: 0, triggerOnce: false })
 
   const [leaders, setLeaders] = useState([])
   const [initialTime, setInitialTime] = useState({})
@@ -119,14 +123,16 @@ const Leaderboard = () => {
   }, [isLoading])
 
   useEffect(() => {
-    // select body element
     const body = document.querySelector('body')
-    body.style.overflow = 'hidden'
+    if (firstLeaderboardRowInView) body.style.overflow = 'auto'
+    else if (!inView && !firstLeaderboardRowInView)
+      body.style.overflow = 'hidden'
+    else body.style.overflow = 'auto'
 
     return () => {
       body.style.overflow = 'auto'
     }
-  }, [])
+  }, [inView, firstLeaderboardRowInView])
 
   const handleRowClick = useCallback(
     inGameName => {
@@ -145,6 +151,7 @@ const Leaderboard = () => {
             height: `${ROW_HEIGHT - ROW_GAP}px`,
             // top: `${parseFloat(style.top) + index * ROW_GAP}px`,
           }}
+          ref={index === 0 ? firstLeaderboardRowRef : null}
         >
           <LeaderboardRow
             user={leader}
@@ -166,7 +173,6 @@ const Leaderboard = () => {
 
   return (
     <Box
-      minH="100vh"
       p={{ base: 4, md: 8 }}
       mt={{
         base: user?.needsOnboarding ? '18%' : '16%',
@@ -232,7 +238,7 @@ const Leaderboard = () => {
           </Flex>
         </Flex>
         {/* Add Timer here */}
-        <Box>
+        <Box ref={ref}>
           <RefreshTimer initialTime={initialTime} />
         </Box>
         <Flex justifyContent="center">
@@ -253,7 +259,6 @@ const Leaderboard = () => {
 
         <Box
           height={{ base: 'calc(100vh - 150px)', md: 'calc(100vh - 190px)' }}
-          overflow="hidden" // Add this line to remove scrollbars
         >
           {isLoading || !isInitialRenderComplete || searchLoad ? (
             <Flex justify="center" my={4}>

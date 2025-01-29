@@ -9,6 +9,7 @@ const Tournament = require('../model/tournamentSchema')
 const {
   TournamentRegistration,
 } = require('../model/tournamentRegistrationSchema')
+const Article = require('../model/articleSchema')
 dotenv.config({ path: './config.env' })
 
 // Connection URLs remain the same
@@ -86,6 +87,11 @@ const collections = {
     model: 'TOURNAMENT_REGISTRATION',
     schema: TournamentRegistration.schema,
     fileName: 'tournament_registrations.csv',
+  },
+  articles: {
+    model: 'ARTICLE',
+    schema: Article.schema,
+    fileName: 'articles.csv',
   },
 }
 
@@ -252,6 +258,50 @@ async function migrateUsers(sourceDb, targetDb) {
   return users.length
 }
 
+// Function to migrate latest 500 articles
+async function migrateLatestArticles(sourceDb, targetDb) {
+  console.log('\nStarting article migration...')
+
+  const ArticlesSource = sourceDb.model('ARTICLE', collections.articles.schema)
+  const ArticlesTarget = targetDb.model('ARTICLE', collections.articles.schema)
+
+  // Fetch latest 500 articles, sorted by createdAt
+  console.log('Fetching latest 500 articles...')
+  const articles = await ArticlesSource.find({})
+    .sort({ createdAt: -1 })
+    .limit(500)
+    .lean()
+  console.log(`Found ${articles.length} articles`)
+
+  // Export articles to CSV
+  const articleFields = Object.keys(collections.articles.schema.paths)
+  await exportToCSV(articles, articleFields, collections.articles.fileName)
+
+  // Insert articles into target
+  console.log('Inserting articles into target database...')
+  try {
+    await ArticlesTarget.insertMany(articles, {
+      ordered: false, // Continue on error
+      lean: true,
+    })
+  } catch (error) {
+    // Log any duplicate key errors but continue
+    if (error.code === 11000) {
+      console.warn('Some articles were already present in target database')
+    } else {
+      throw error
+    }
+  }
+
+  // Verify migration
+  const targetArticleCount = await ArticlesTarget.countDocuments()
+  console.log(
+    `Source Articles: ${articles.length} -> Target Articles: ${targetArticleCount}`,
+  )
+
+  return articles.length
+}
+
 // Separate function for quiz attempts migration
 async function migrateQuizAttempts(sourceDb, targetDb) {
   console.log('\nStarting quiz attempts migration...')
@@ -307,7 +357,8 @@ async function migrateCollections() {
     await validateTargetDatabase(targetDb)
 
     // Perform migrations in order (users first, then related collections)
-    const userCount = await migrateUsers(sourceDb, targetDb)
+    // const userCount = await migrateUsers(sourceDb, targetDb)
+    const articleCount = await migrateLatestArticles(sourceDb, targetDb)
     // const tournamentCount = await migrateTournaments(sourceDb, targetDb)
     // const registrationCount = await migrateTournamentRegistrations(
     //   sourceDb,
@@ -317,7 +368,8 @@ async function migrateCollections() {
     // const quizAttemptCount = await migrateQuizAttempts(sourceDb, targetDb)
 
     console.log('\nMigration completed successfully')
-    console.log(`Total users migrated: ${userCount}`)
+    // console.log(`Total users migrated: ${userCount}`)
+    console.log(`Total articles migrated: ${articleCount}`)
     // console.log(`Total tournaments migrated: ${tournamentCount}`)
     // console.log(`Total tournament registrations migrated: ${registrationCount}`)
     // console.log(`Total quiz sessions migrated: ${sessionCount}`)
