@@ -63,6 +63,14 @@ const quizAttemptSchema = new mongoose.Schema({
     required: true,
     deafult: 1,
   },
+  month: {
+    type: Number,
+    required: true,
+  },
+  year: {
+    type: Number,
+    required: true,
+  },
   prevIQScore: {
     type: Number,
   },

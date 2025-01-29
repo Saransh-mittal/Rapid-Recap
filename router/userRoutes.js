@@ -54,6 +54,14 @@ const {
   exportGuestData,
   enhancedGuestLogin,
 } = require('../controllers/guestController')
+const {
+  getUserMonthlyPerformance,
+  getUserHistoricalPerformance,
+} = require('../controllers/monthlyLeaderboardController')
+const { getMaintenanceStatus } = require('../controllers/maintenanceController')
+const {
+  getDemotionSummary,
+} = require('../controllers/demotionSummaryController')
 
 router.route('/register').post(registerUser)
 router.route('/login').post(loginUser)
@@ -102,6 +110,10 @@ router.route('/claim-badge').post(Authenticate, claimTournamentBadge)
 router.get('/valid-categories', Authenticate, getValidCategories)
 router.put('/update-category', Authenticate, updateBadgeCategory)
 router.get('/modal-status', Authenticate, checkRewardsModalStatus)
+router.get('/stats/monthly', Authenticate, getUserMonthlyPerformance)
+router.get('/stats/historical', Authenticate, getUserHistoricalPerformance)
+router.get('/maintenance-status', getMaintenanceStatus)
+router.route('/demotion-summary').get(Authenticate, getDemotionSummary)
 
 router.get('/confirmDeleteAccount/:token', confirmDeleteAccount)
 router

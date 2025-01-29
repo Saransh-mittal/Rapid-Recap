@@ -17,6 +17,7 @@ const chatsRoutes = require('./router/chatsRoutes')
 const messageRoutes = require('./router/messageRoutes')
 const friendsRoutes = require('./router/friendsRoutes')
 const tournamentRoutes = require('./router/tournamentRoutes')
+const leaderboardRoutes = require('./router/leaderboardRoutes')
 const { errorHandler } = require('./middleware/errorMiddleware')
 const webpush = require('web-push')
 const cookieParser = require('cookie-parser')
@@ -332,6 +333,7 @@ async function initializeServer() {
     apiRouter.use('/message', messageRoutes)
     apiRouter.use('/friends', friendsRoutes)
     apiRouter.use('/tournament', tournamentRoutes)
+    apiRouter.use('/leaderboard', leaderboardRoutes)
     app.use('/api', apiRouter)
 
     // SSR Middleware for non-API routes

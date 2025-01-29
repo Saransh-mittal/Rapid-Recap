@@ -597,11 +597,27 @@ const leaderBoard = async (req, res) => {
   const currUserId = req.user ? req.user._id : null
   const { society, page = 1, limit = 10 } = req.query
   const cacheKey = `leaderboard_${society}_${page}_${limit}`
-
+  // Calculate time until next refresh
+  const now = moment.utc()
+  const nextRefresh = moment.utc().startOf('month').add(1, 'month')
+  if (now.date() === 1 && now.hour() < 1) {
+    // If it's the first of the month and before 1 AM UTC
+    nextRefresh.subtract(1, 'month')
+  }
+  const timeUntilRefresh = {
+    days: nextRefresh.diff(now, 'days'),
+    hours: nextRefresh.diff(now, 'hours') % 24,
+    minutes: nextRefresh.diff(now, 'minutes') % 60,
+    seconds: nextRefresh.diff(now, 'seconds') % 60,
+    totalSeconds: nextRefresh.diff(now, 'seconds'),
+  }
   // Try to get the cached result
   const cachedResult = cache.get(cacheKey)
   if (cachedResult) {
-    return res.status(200).json(cachedResult)
+    return res.status(200).json({
+      ...cachedResult,
+      nextRefresh: timeUntilRefresh,
+    })
   }
 
   const societyConditions = {
@@ -654,11 +670,22 @@ const leaderBoard = async (req, res) => {
       .limit(limitNumber)
       .lean()
 
-    // Step 3: Fetch quiz attempts for paginated users
+    // Step 3: Fetch quiz attempts for paginated users with date condition
     const userIds = paginatedUsers.map(user => user._id)
+    const currentDate = moment()
+
+    const quizAttemptsQuery =
+      currentDate.year() >= 2025 && currentDate.month() > 0
+        ? {
+            user: { $in: userIds },
+            season: 2,
+            year: moment().year(),
+            month: moment().month() + 1,
+          }
+        : { user: { $in: userIds }, season: 2 }
 
     const quizAttempts = await QuizAttempt.aggregate([
-      { $match: { user: { $in: userIds }, season: 2 } },
+      { $match: quizAttemptsQuery },
       { $group: { _id: '$user', count: { $sum: 1 } } },
     ])
 
@@ -703,15 +730,24 @@ const leaderBoard = async (req, res) => {
       rank: user.rank,
     }))
 
-    // Step 7: Get current user data
+    // Step 7: Get current user data with date condition
     let currUserData = {}
 
     if (currUserId) {
+      const quizMatchQuery =
+        currentDate.year() >= 2025 && currentDate.month() > 0
+          ? {
+              season: 2,
+              year: moment().year(),
+              month: moment().month() + 1,
+            }
+          : { season: 2 }
+
       const currUser = await User.findById(currUserId)
         .select('avgRQM quizAttempts rank')
         .populate({
           path: 'quizAttempts',
-          match: { season: 2 },
+          match: quizMatchQuery,
           select: '_id',
         })
         .lean()
@@ -728,6 +764,7 @@ const leaderBoard = async (req, res) => {
       currUser: currUserData,
       totalPages,
       currentPage: pageNumber,
+      nextRefresh: timeUntilRefresh,
     }
 
     // Cache the result

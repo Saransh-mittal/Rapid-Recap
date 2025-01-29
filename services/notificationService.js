@@ -1,3 +1,5 @@
+// services/notificationService.js
+
 const webpush = require('web-push')
 const Subscription = require('../model/subscriptionSchema')
 
