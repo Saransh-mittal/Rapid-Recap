@@ -5,6 +5,7 @@ import AdminRoute from './AdminRoute'
 import ServiceScreen from '../screens/ServiceScreen'
 import ConfirmDeleteAccount from '../screens/ConfirmDeleteAccount'
 import DeleteAccount from '../screens/DeleteAccount'
+import { useSelector } from 'react-redux'
 
 const TournamentWrapper = lazy(() => import('../screens/TournamentWrapper'))
 const Home = lazy(() => import('../screens/Home'))
@@ -20,8 +21,10 @@ const RuleBook = lazy(() => import('../screens/RuleBook'))
 const HallOfChampions = lazy(() => import('../screens/HallOfChampions'))
 
 const OnboardingProcess = lazy(() => import('../screens/OnboardingProcess'))
+const DemotionSummary = lazy(() => import('../screens/DemotionSummary'))
 
 const AppRoutes = ({ isToken, needsOnboarding, setIsGuestLoggedin }) => {
+  const { summary, isVisible } = useSelector(state => state.demotionSummary)
   return (
     <Suspense fallback={<Loading />}>
       <Routes>
@@ -33,6 +36,11 @@ const AppRoutes = ({ isToken, needsOnboarding, setIsGuestLoggedin }) => {
                 <OnboardingProcess setIsGuestLoggedin={setIsGuestLoggedin} />
               }
             />
+            <Route path="*" element={<Navigate to="/" replace />} />
+          </>
+        ) : isVisible && summary ? (
+          <>
+            <Route path="/" element={<DemotionSummary />} />
             <Route path="*" element={<Navigate to="/" replace />} />
           </>
         ) : (

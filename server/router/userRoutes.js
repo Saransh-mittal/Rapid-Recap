@@ -59,6 +59,9 @@ const {
   getUserHistoricalPerformance,
 } = require('../controllers/monthlyLeaderboardController')
 const { getMaintenanceStatus } = require('../controllers/maintenanceController')
+const {
+  getDemotionSummary,
+} = require('../controllers/demotionSummaryController')
 
 router.route('/register').post(registerUser)
 router.route('/login').post(loginUser)
@@ -110,6 +113,7 @@ router.get('/modal-status', Authenticate, checkRewardsModalStatus)
 router.get('/stats/monthly', Authenticate, getUserMonthlyPerformance)
 router.get('/stats/historical', Authenticate, getUserHistoricalPerformance)
 router.get('/maintenance-status', getMaintenanceStatus)
+router.route('/demotion-summary').get(Authenticate, getDemotionSummary)
 
 router.get('/confirmDeleteAccount/:token', confirmDeleteAccount)
 router

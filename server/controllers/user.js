@@ -669,11 +669,22 @@ const leaderBoard = async (req, res) => {
       .limit(limitNumber)
       .lean()
 
-    // Step 3: Fetch quiz attempts for paginated users
+    // Step 3: Fetch quiz attempts for paginated users with date condition
     const userIds = paginatedUsers.map(user => user._id)
+    const currentDate = moment()
+
+    const quizAttemptsQuery =
+      currentDate.year() >= 2025 && currentDate.month() > 0
+        ? {
+            user: { $in: userIds },
+            season: 2,
+            year: moment().year(),
+            month: moment().month() + 1,
+          }
+        : { user: { $in: userIds }, season: 2 }
 
     const quizAttempts = await QuizAttempt.aggregate([
-      { $match: { user: { $in: userIds }, season: 2 } },
+      { $match: quizAttemptsQuery },
       { $group: { _id: '$user', count: { $sum: 1 } } },
     ])
 
@@ -718,15 +729,24 @@ const leaderBoard = async (req, res) => {
       rank: user.rank,
     }))
 
-    // Step 7: Get current user data
+    // Step 7: Get current user data with date condition
     let currUserData = {}
 
     if (currUserId) {
+      const quizMatchQuery =
+        currentDate.year() >= 2025 && currentDate.month() > 0
+          ? {
+              season: 2,
+              year: moment().year(),
+              month: moment().month() + 1,
+            }
+          : { season: 2 }
+
       const currUser = await User.findById(currUserId)
         .select('avgRQM quizAttempts rank')
         .populate({
           path: 'quizAttempts',
-          match: { season: 2 },
+          match: quizMatchQuery,
           select: '_id',
         })
         .lean()

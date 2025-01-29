@@ -155,6 +155,7 @@ const saveQuizAttempt = async (
       ? 1.5
       : 1
   const isBoosted = boosted || quinBoostUtilized
+
   const newQuizAttempt = new QuizAttempt({
     user: userId,
     article: articleId,
@@ -167,6 +168,8 @@ const saveQuizAttempt = async (
     boost,
     isBoosted,
     season: parseInt(configService.getCurrentSeason(), 10),
+    month: moment().month() + 1,
+    year: moment().year(),
   })
   await newQuizAttempt.save({ session })
   quizSession.RQM_score = {

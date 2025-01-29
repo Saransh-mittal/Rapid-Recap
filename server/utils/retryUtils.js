@@ -41,6 +41,10 @@ const defaultIsRetryableError = error => {
   if (error.code === 'ThrottlingException') return true
   if (error.code === 'ProvisionedThroughputExceededException') return true
 
+  if (error.errorLabels?.includes('TransientTransactionError')) return true
+  if (error.errorLabels?.includes('RetryableWriteError')) return true
+  if (error.code === 251) return true // NoSuchTransaction
+
   return false
 }
 

@@ -84,6 +84,7 @@ import { tournamentRewardsClaim } from './utils/tournamentRewards.js'
 import { useSocket } from './customHooks/useSocket.js'
 import useRewardsModal from './customHooks/useRewardsModal.js'
 import MaintenanceHandler from './services/MaintenanceHandler.jsx'
+import { fetchDemotionSummary } from './redux/demotionSummarySlice.js'
 
 const App = () => {
   ReactGA.initialize('G-ES5VQ8NW7Z')
@@ -114,6 +115,7 @@ const App = () => {
     selectedNotificationId,
   } = useSelector(state => state.app)
   const { isOpen, tournamentQuiz } = useSelector(state => state.quiz)
+  const { summary, isVisible } = useSelector(state => state.demotionSummary)
   const [isGuestLoggedin, setIsGuestLoggedin] = useState(false)
   const [guestModalJustClosed, setGuestModalJustClosed] = useState(false)
   const { tournamentId, status, tournamentStartTime } = useSelector(
@@ -135,7 +137,7 @@ const App = () => {
     if (selectedNotificationId) {
       dispatch(setIsNotifInboxModalOpen(true))
     }
-  }, [selectedNotificationId, dispatch])
+  }, [selectedNotificationId])
 
   const handleClose = useCallback(() => {
     setIsGuestLoggedin(false)
@@ -313,6 +315,12 @@ const App = () => {
   }, [loginCheckStatus])
 
   useEffect(() => {
+    if (loginCheckStatus === 'fulfilled' && isAuthenticated) {
+      dispatch(fetchDemotionSummary())
+    }
+  }, [loginCheckStatus, isAuthenticated])
+
+  useEffect(() => {
     let timer
     if (isAuthenticated) {
       dispatch(isSubscribedChecker())
@@ -412,12 +420,12 @@ const App = () => {
         }),
       )
     }
-  }, [user, guestModalJustClosed, isGuestLoggedin, dispatch])
+  }, [user, guestModalJustClosed, isGuestLoggedin])
 
   const handleNavbarLoad = useCallback(() => {
     setNavbarLoaded(true)
     dispatch(setTaskProgress({ task: 'navbarLoad', progress: 100 }))
-  }, [dispatch])
+  }, [])
 
   useEffect(() => {
     if (overallProgress === 100) {
@@ -428,7 +436,7 @@ const App = () => {
         setRendered(true)
       }, 500)
     }
-  }, [navbarLoaded, overallProgress, dispatch])
+  }, [navbarLoaded, overallProgress])
 
   useEffect(() => {
     if (typeof window !== 'undefined' && window.prerenderReady && rendered) {
@@ -437,7 +445,7 @@ const App = () => {
   }, [rendered])
 
   return (
-    <>
+    <MaintenanceHandler>
       <Helmet>
         <title>{t('Rapid Recap - Stay Informed, Stay Ahead')}</title>
         <meta
@@ -463,110 +471,109 @@ const App = () => {
           )}
         />
       </Helmet>
-      <MaintenanceHandler>
-        {showLoadingScreen && <LoadingScreen progress={overallProgress} />}
 
+      {showLoadingScreen && <LoadingScreen progress={overallProgress} />}
+
+      <Suspense fallback={null}>
+        {!showLoadingScreen && <FixedBackground />}
+      </Suspense>
+
+      <Suspense fallback={null}>
+        <NoteMessageQueue />
+      </Suspense>
+
+      {showXpLevelModal && (
         <Suspense fallback={null}>
-          {!showLoadingScreen && <FixedBackground />}
+          <XPLevelModal
+            setShowXPLevelModal={show => dispatch(setShowXpLevelModal(show))}
+          />
         </Suspense>
+      )}
 
-        <Suspense fallback={null}>
-          <NoteMessageQueue />
-        </Suspense>
-
-        {showXpLevelModal && (
+      <Suspense fallback={null}>
+        <ButtonGradient />
+      </Suspense>
+      <Suspense fallback={null}>
+        <GuestLoginModal
+          isOpen={isGuestLoggedin}
+          onClose={handleClose}
+          guestName={user?.inGameName}
+          guestPassword={user?.guestTempPassword}
+          guestId={user?._id}
+          onOpen={() => setIsGuestLoggedin(true)}
+          t={GuestLoginModaltranslation}
+        />
+      </Suspense>
+      <Suspense fallback={null}>
+        {isOpen ? tournamentQuiz ? <TournamentQuiz /> : <Quiz /> : null}
+      </Suspense>
+      <Suspense fallback={null}>
+        <Signin
+          isOpen={isSigninOpen}
+          onOpen={() => dispatch(setIsSigninOpen(true))}
+          onClose={() => dispatch(setIsSigninOpen(false))}
+        />
+      </Suspense>
+      <Suspense fallback={null}>
+        {isAuthenticated && USER_IQ > 90 && user.societyUpgradeMessage && (
+          <UpgradeModal
+            isOpen={showUpgradeModal}
+            onClose={() => setShowUpgradeModal(false)}
+            title={t('upgrade_modal_title')}
+            content={t('upgrade_modal_content')}
+          />
+        )}
+      </Suspense>
+      <Suspense fallback={null}>
+        <Register
+          isOpen={isRegisterOpen}
+          onOpen={() => dispatch(setIsRegisterOpen(true))}
+          onClose={() => dispatch(setIsRegisterOpen(false))}
+        />
+      </Suspense>
+      <NavbarProvider>
+        {showNavbar && !(summary && isVisible) && (
           <Suspense fallback={null}>
-            <XPLevelModal
-              setShowXPLevelModal={show => dispatch(setShowXpLevelModal(show))}
-            />
+            {/* <Navbar onNavbarLoad={handleNavbarLoad} /> */}
+            <ModernNavbar onNavbarLoad={handleNavbarLoad} />
           </Suspense>
         )}
-
-        <Suspense fallback={null}>
-          <ButtonGradient />
-        </Suspense>
-        <Suspense fallback={null}>
-          <GuestLoginModal
-            isOpen={isGuestLoggedin}
-            onClose={handleClose}
-            guestName={user?.inGameName}
-            guestPassword={user?.guestTempPassword}
-            guestId={user?._id}
-            onOpen={() => setIsGuestLoggedin(true)}
-            t={GuestLoginModaltranslation}
-          />
-        </Suspense>
-        <Suspense fallback={null}>
-          {isOpen ? tournamentQuiz ? <TournamentQuiz /> : <Quiz /> : null}
-        </Suspense>
-        <Suspense fallback={null}>
-          <Signin
-            isOpen={isSigninOpen}
-            onOpen={() => dispatch(setIsSigninOpen(true))}
-            onClose={() => dispatch(setIsSigninOpen(false))}
-          />
-        </Suspense>
-        <Suspense fallback={null}>
-          {isAuthenticated && USER_IQ > 90 && user.societyUpgradeMessage && (
-            <UpgradeModal
-              isOpen={showUpgradeModal}
-              onClose={() => setShowUpgradeModal(false)}
-              title={t('upgrade_modal_title')}
-              content={t('upgrade_modal_content')}
+        <Box
+          position="relative"
+          minHeight="100vh"
+          zIndex={1}
+          overflowX={'hidden'}
+        >
+          <Suspense fallback={null}>
+            <AppRoutes
+              isToken={isToken()}
+              needsOnboarding={user?.needsOnboarding}
+              setIsGuestLoggedin={setIsGuestLoggedin}
             />
-          )}
-        </Suspense>
-        <Suspense fallback={null}>
-          <Register
-            isOpen={isRegisterOpen}
-            onOpen={() => dispatch(setIsRegisterOpen(true))}
-            onClose={() => dispatch(setIsRegisterOpen(false))}
+          </Suspense>
+        </Box>
+      </NavbarProvider>
+      <Suspense fallback={null}>
+        {isNotifInboxModalOpen && (
+          <NotificationModal
+            handleNotifModalClose={handleNotifModalClose}
+            selectedNotificationId={selectedNotificationId}
+            selectedNotification={getLatestWeeklyReportUpdate()}
           />
-        </Suspense>
-        <NavbarProvider>
-          {showNavbar && (
-            <Suspense fallback={null}>
-              {/* <Navbar onNavbarLoad={handleNavbarLoad} /> */}
-              <ModernNavbar onNavbarLoad={handleNavbarLoad} />
-            </Suspense>
-          )}
-          <Box
-            position="relative"
-            minHeight="100vh"
-            zIndex={1}
-            overflowX={'hidden'}
-          >
-            <Suspense fallback={null}>
-              <AppRoutes
-                isToken={isToken()}
-                needsOnboarding={user?.needsOnboarding}
-                setIsGuestLoggedin={setIsGuestLoggedin}
-              />
-            </Suspense>
-          </Box>
-        </NavbarProvider>
-        <Suspense fallback={null}>
-          {isNotifInboxModalOpen && (
-            <NotificationModal
-              handleNotifModalClose={handleNotifModalClose}
-              selectedNotificationId={selectedNotificationId}
-              selectedNotification={getLatestWeeklyReportUpdate()}
-            />
-          )}
-        </Suspense>
-        <Suspense fallback={null}>
-          {!isLoadingRewardsModal && (
-            <TournamentRewardsModal
-              isOpen={isOpenRewardsModal}
-              onClose={onClose}
-            />
-          )}
-        </Suspense>
-        <Suspense fallback={null}>
-          <RewardDisplay />
-        </Suspense>
-      </MaintenanceHandler>
-    </>
+        )}
+      </Suspense>
+      <Suspense fallback={null}>
+        {!isLoadingRewardsModal && (
+          <TournamentRewardsModal
+            isOpen={isOpenRewardsModal}
+            onClose={onClose}
+          />
+        )}
+      </Suspense>
+      <Suspense fallback={null}>
+        <RewardDisplay />
+      </Suspense>
+    </MaintenanceHandler>
   )
 }
 

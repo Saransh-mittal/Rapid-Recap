@@ -150,7 +150,11 @@ const LeaderboardRow = React.memo(({ user, rank, isCurrentUser, onClick }) => {
           <VStack align="start" spacing={0}>
             <Flex
               position={'relative'}
-              px={!maxSocietyAndCircle?.boxShadow ? 0.25 : 2}
+              px={
+                !maxSocietyAndCircle?.boxShadow || !user.rankedInCurrentSeason
+                  ? 0.25
+                  : 2
+              }
             >
               <Text
                 fontSize={{ base: 'sm', md: 'lg' }}
@@ -163,10 +167,12 @@ const LeaderboardRow = React.memo(({ user, rank, isCurrentUser, onClick }) => {
               >
                 {user.name}
               </Text>
-              <NameLightning
-                boxShadow={maxSocietyAndCircle?.boxShadow}
-                MAX_IQ={user.maxIQScore}
-              />
+              {user.rankedInCurrentSeason && (
+                <NameLightning
+                  boxShadow={maxSocietyAndCircle?.boxShadow}
+                  MAX_IQ={user.maxIQScore}
+                />
+              )}
             </Flex>
             <Text
               fontSize={{ base: 'xs', md: 'md' }}

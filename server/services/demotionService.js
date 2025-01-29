@@ -8,6 +8,10 @@ const {
 } = require('../data/inboxNotificationsTemplates')
 const configService = require('../configService')
 const moment = require('moment-timezone')
+const { getCircleAndSocietyData } = require('../data/CircleAndSocietyData')
+const {
+  createDemotionSummary,
+} = require('../controllers/demotionSummaryController')
 
 // Initialize distribution with default min score
 const DISTRIBUTION = calculateDistribution(500)
@@ -56,6 +60,15 @@ const processUserDemotion = async ({ user, session }) => {
           (data.IQ_Upper === null || newIQScore < data.IQ_Upper),
       )
 
+      await createDemotionSummary({
+        userId: user._id,
+        prevIQ: prevIQScore,
+        newIQ: newIQScore,
+        prevSociety: prevSocietyInfo.society,
+        newSociety: newSocietyInfo.society,
+        prevCircle: prevSocietyInfo.circle,
+        newCircle: newSocietyInfo.circle,
+      })
       // Create notification with enhanced template
       const notificationTitle = 'Monthly Leaderboard Refresh'
       const notificationText = monthlyDemotionTemplate.html({
