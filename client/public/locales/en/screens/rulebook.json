@@ -32,42 +32,32 @@
         "items": {
           "indian-mythology": {
             "text": "Indian Mythology",
-            "explanation": "Experience the news through the lens of Indian epics! Stories are retold using characters and events from the Mahabharata and Ramayana, while preserving all key information. For example, a diplomatic negotiation might be compared to Krishna's peace mission to the Kauravas. Remember - the quiz will still be based on the original article content.",
+            "explanation": "Experience questions through the lens of Indian mythology. Complex concepts are explained using analogies from ancient Indian epics and legends.",
             "hasDetails": true
           },
           "mystic-world": {
             "text": "Mystic World",
-            "explanation": "Enter a world of magic and superheroes! Articles are reimagined using elements from Harry Potter, Marvel, and DC universes. A technological breakthrough might be explained through Tony Stark's innovations, while maintaining all factual details for the quiz.",
+            "explanation": "Enter a world of magic and superheroes! Articles are reimagined using elements from Harry Potter, Marvel, and DC universes.",
             "hasDetails": true
           },
           "space-theme": {
             "text": "Space Theme",
-            "explanation": "Blast off into a cosmic perspective! Stories are retold through the lens of space exploration and astronomy, referencing real missions like Apollo and Mars rovers. Complex topics might be explained through the viewpoint of astronauts or mission control, while keeping all original facts intact.",
+            "explanation": "Transform your quiz experience into an interstellar journey. Questions are rewritten with cosmic analogies and space-themed contexts while maintaining the original information.",
             "hasDetails": true
           },
           "greek-mythology": {
             "text": "Greek Mythology",
-            "explanation": "Journey through ancient Greece! News stories are woven into the rich tapestry of Greek mythology, using tales of gods, heroes, and epic quests as metaphors. A climate crisis might be told through Poseidon's domain, but all original information remains for quiz preparation.",
+            "explanation": "Questions are reimagined through classical Greek mythology, where modern concepts meet ancient wisdom and legendary tales.",
             "hasDetails": true
           },
           "bible-stories": {
             "text": "Bible Stories",
-            "explanation": "Experience current events through biblical narratives! Articles are retold using well-known stories from the Bible as metaphors, while maintaining all key facts. A story about perseverance might parallel David facing Goliath, but quizzes still focus on the actual events.",
+            "explanation": "Experience current events through biblical narratives! Articles are retold using well-known stories from the Bible as metaphors.",
             "hasDetails": true
           },
           "sci-fi-adventure": {
             "text": "Sci-Fi Adventure",
-            "explanation": "Enter a futuristic universe! Stories are reimagined using elements from Star Wars, Star Trek, and other sci-fi worlds. International relations might be explained through interplanetary diplomacy, but all original details are preserved for quiz accuracy.",
-            "hasDetails": true
-          }
-        }
-      },
-      "important-note": {
-        "title": "Important Note",
-        "items": {
-          "quiz-original-content": {
-            "text": "Quizzes Based on Original Content",
-            "explanation": "While themes make reading more engaging, all quiz questions come from the original article content. Themed versions maintain 100% of the factual information while adding an entertaining narrative layer.",
+            "explanation": "Enter a futuristic universe! Stories are reimagined using elements from Star Wars, Star Trek, and other sci-fi worlds.",
             "hasDetails": true
           }
         }
@@ -82,17 +72,17 @@
         "items": {
           "correct-answers": {
             "text": "Correct answers",
-            "explanation": "Each correct answer contributes to your base RQM score. The system uses advanced algorithms to weight questions based on difficulty, ensuring fair scoring across different quiz types.",
+            "explanation": "Each correct answer contributes to your base RQM score. The system uses advanced algorithms to weight questions based on difficulty.",
             "hasDetails": true
           },
           "perfect-score": {
             "text": "Perfect score bonus (20%)",
-            "explanation": "Achieve a perfect score to earn a 20% boost to your RQM. This significant bonus rewards mastery and encourages thorough understanding of the material. This multiplier is applied after all other calculations.",
+            "explanation": "Achieve a perfect score to earn a 20% boost to your RQM. This significant bonus rewards mastery and encourages thorough understanding.",
             "hasDetails": true
           },
           "near-perfect": {
             "text": "Near-perfect bonus (10%)",
-            "explanation": "Missing just one question still earns you a 10% bonus, encouraging consistency and rewarding strong performance. This helps maintain motivation even when perfection is just out of reach.",
+            "explanation": "Missing just one question still earns you a 10% bonus, encouraging consistency and rewarding strong performance.",
             "hasDetails": true
           }
         }
@@ -102,12 +92,12 @@
         "items": {
           "base-time": {
             "text": "Base time: 15 seconds per question",
-            "explanation": "The 15-second baseline for each question is carefully calculated to allow for reading, processing, and answering. This timing is based on extensive user testing and cognitive research.",
+            "explanation": "The 15-second baseline for each question is carefully calculated to allow for reading, processing, and answering.",
             "hasDetails": true
           },
           "speed-bonus": {
             "text": "Speed bonus up to 2x",
-            "explanation": "Quick answers can earn up to double points! The speed multiplier scales smoothly from 1x to 2x based on your response time. The sweet spot is balancing speed with accuracy - rushing and making mistakes will cost more points than answering correctly but slower.",
+            "explanation": "Quick answers can earn up to double points! The speed multiplier scales smoothly from 1x to 2x based on your response time.",
             "hasDetails": true
           }
         }
@@ -122,12 +112,12 @@
         "items": {
           "average": {
             "text": "Average: 100",
-            "explanation": "The system is centered around 100 as the average score, following standard IQ distribution patterns. This provides a familiar and well-understood baseline for measuring performance.",
+            "explanation": "The system is centered around 100 as the average score, following standard IQ distribution patterns.",
             "hasDetails": false
           },
           "standard-deviation": {
             "text": "Standard Deviation: 15",
-            "explanation": "A standard deviation of 15 points means that about 68% of users fall within 85-115, 95% within 70-130, and 99.7% within 55-145. This creates a balanced and fair distribution of scores.",
+            "explanation": "A standard deviation of 15 points means that about 68% of users fall within 85-115, 95% within 70-130, and 99.7% within 55-145.",
             "hasDetails": true
           }
         }
@@ -137,27 +127,27 @@
         "items": {
           "titans": {
             "text": "Titans Society: 150+",
-            "explanation": "The legendary Titans Society represents the pinnacle of achievement. Members consistently demonstrate exceptional understanding and quick thinking. Exclusive features and recognition await those who reach this prestigious level.",
+            "explanation": "The legendary Titans Society represents the pinnacle of achievement. Members consistently demonstrate exceptional understanding and quick thinking.",
             "hasDetails": true
           },
           "mavericks": {
             "text": "Mavericks Society: 130-150",
-            "explanation": "Mavericks are elite performers who regularly showcase outstanding comprehension and rapid information processing. This society offers special privileges and unique challenges.",
+            "explanation": "Mavericks are elite performers who regularly showcase outstanding comprehension and rapid information processing.",
             "hasDetails": true
           },
           "elites": {
             "text": "Elites Society: 110-130",
-            "explanation": "The Elites demonstrate above-average performance and consistent growth. Members gain access to advanced features and special community events.",
+            "explanation": "The Elites demonstrate above-average performance and consistent growth.",
             "hasDetails": true
           },
           "strivers": {
             "text": "Strivers Society: 90-110",
-            "explanation": "Strivers represent the core of our community, showing steady progress and reliable performance. Special tools and support help members continue their growth.",
+            "explanation": "Strivers represent the core of our community, showing steady progress and reliable performance.",
             "hasDetails": true
           },
           "explorers": {
             "text": "Explorers Society: Below 90",
-            "explanation": "Everyone begins as an Explorer, equipped with tools and guidance to learn and improve. This society focuses on growth and development.",
+            "explanation": "Everyone begins as an Explorer, equipped with tools and guidance to learn and improve.",
             "hasDetails": true
           }
         }
@@ -172,12 +162,12 @@
         "items": {
           "trigger": {
             "text": "Trigger: Complete 5 consecutive quizzes",
-            "explanation": "The Quin Boost activates after completing 5 quizzes in sequence, rewarding sustained engagement. Each quiz must be completed within the same day to maintain the sequence.",
+            "explanation": "The Quin Boost activates after completing 5 quizzes in sequence, rewarding sustained engagement.",
             "hasDetails": true
           },
           "reward": {
             "text": "Reward: 1.5x RQM multiplier on 6th quiz",
-            "explanation": "Your 6th quiz receives a powerful 1.5x multiplier to your RQM score. This boost can be combined with other multipliers for maximum impact. Strategic timing of this boost can significantly accelerate your progress.",
+            "explanation": "Your 6th quiz receives a powerful 1.5x multiplier to your RQM score.",
             "hasDetails": true
           }
         }
@@ -187,17 +177,12 @@
         "items": {
           "trigger": {
             "text": "Trigger: Maintain 7-day streak",
-            "explanation": "A week of consistent daily activity unlocks the Streak Surge. Each day of the streak must include at least one completed quiz. Missing a day resets the counter.",
+            "explanation": "A week of consistent daily activity unlocks the Streak Surge.",
             "hasDetails": true
           },
           "reward": {
             "text": "Reward: 1.5x RQM for the entire day",
-            "explanation": "Enjoy a 1.5x multiplier on all quizzes for a full day! This powerful boost applies to every quiz you take, making it perfect for maximizing gains.",
-            "hasDetails": true
-          },
-          "stacking": {
-            "text": "Stacks with other boosts",
-            "explanation": "Combine with other multipliers for maximum effect. Strategic use of multiple boosts can result in extraordinary score improvements.",
+            "explanation": "Enjoy a 1.5x multiplier on all quizzes for a full day!",
             "hasDetails": true
           }
         }
@@ -207,17 +192,17 @@
         "items": {
           "max-multiplier": {
             "text": "Combined maximum multiplier: 2x",
-            "explanation": "The system caps total multipliers at 2x to maintain balance. This can be achieved by combining Quin Boost, Streak Surge, and Category boosts strategically.",
+            "explanation": "The system caps total multipliers at 2x to maintain balance.",
             "hasDetails": true
           },
           "requirements": {
             "text": "Requires active Quin Boost + Streak Surge + Category boost",
-            "explanation": "Achieving maximum multiplication requires careful timing and activation of multiple boost types. Plan your quiz schedule to align these powerful multipliers.",
+            "explanation": "Achieving maximum multiplication requires careful timing and activation of multiple boost types.",
             "hasDetails": true
           },
           "per-attempt": {
             "text": "Applied per quiz attempt",
-            "explanation": "Each quiz calculates its multiplier independently, allowing for strategic boost usage across multiple attempts.",
+            "explanation": "Each quiz calculates its multiplier independently.",
             "hasDetails": false
           }
         }
@@ -232,12 +217,12 @@
         "items": {
           "registration": {
             "text": "Registration: Monday-Friday",
-            "explanation": "Five-day registration period allows players to prepare and strategize. Sign up early to access pre-tournament practice sessions and special preparation resources.",
+            "explanation": "Five-day registration period allows players to prepare and strategize.",
             "hasDetails": true
           },
           "competition": {
             "text": "Competition: Saturday-Sunday",
-            "explanation": "Intense weekend competition tests your knowledge and speed. The two-day format allows for strategic timing of attempts and recovery periods.",
+            "explanation": "Intense weekend competition tests your knowledge and speed.",
             "hasDetails": true
           }
         }
@@ -247,23 +232,58 @@
         "items": {
           "duration": {
             "text": "Duration: Full month of February",
-            "explanation": "A month-long championship that tests consistency and endurance. Strategic planning and regular participation are key to success.",
+            "explanation": "A month-long championship that tests consistency and endurance.",
             "hasDetails": true
           },
           "rewards": {
             "text": "Top 5 players receive monetary rewards",
-            "explanation": "Substantial rewards await the highest performers. The prize pool is distributed among the top 5 players based on their final rankings.",
+            "explanation": "Substantial rewards await the highest performers.",
+            "hasDetails": true
+          }
+        }
+      }
+    }
+  },
+  "leaderboard": {
+    "title": "Leaderboard System",
+    "sections": {
+      "monthly-reset": {
+        "title": "Monthly Reset",
+        "items": {
+          "refresh": {
+            "text": "Automatic refresh on 1st of every month",
+            "explanation": "The leaderboard undergoes a complete refresh at the start of each month, ensuring fair competition and fresh opportunities for all players.",
             "hasDetails": true
           },
-          "ranking": {
-            "text": "Based on global leaderboard position",
-            "explanation": "Your rank is determined by your position on the worldwide leaderboard. Real-time updates let you track your standing throughout the competition.",
-            "hasDetails": false
+          "archival": {
+            "text": "Previous month achievements archived",
+            "explanation": "Your performance from the previous month is preserved in an accessible archive, allowing you to track your progress over time.",
+            "hasDetails": true
           },
-          "eligibility": {
-            "text": "All active players eligible",
-            "explanation": "No minimum requirements - just stay active and participate! Every player has a chance to compete and win.",
-            "hasDetails": false
+          "hall-of-champions": {
+            "text": "Hall of Champions",
+            "explanation": "Top performers from the previous month are honored in the Hall of Champions, where their names are displayed as recognition of their outstanding achievement.",
+            "hasDetails": true
+          }
+        }
+      },
+      "competition-cycles": {
+        "title": "Competition Cycles",
+        "items": {
+          "fresh-start": {
+            "text": "Fresh start every month",
+            "explanation": "Each month represents a new opportunity to climb the ranks.",
+            "hasDetails": true
+          },
+          "equal-opportunities": {
+            "text": "Equal opportunities for all players",
+            "explanation": "Monthly resets ensure that new and existing players alike have equal chances to achieve top rankings.",
+            "hasDetails": true
+          },
+          "dynamic-ranking": {
+            "text": "Dynamic ranking system",
+            "explanation": "Rankings are calculated based on your current month's performance metrics.",
+            "hasDetails": true
           }
         }
       }

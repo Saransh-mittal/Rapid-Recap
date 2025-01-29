@@ -28,10 +28,6 @@ export const getRuleBookPages = () => [
         'rulebook:quiz-system.sections.theme-options.title',
         'rulebook:quiz-system.sections.theme-options.items',
       ),
-      ...createSection(
-        'rulebook:quiz-system.sections.important-note.title',
-        'rulebook:quiz-system.sections.important-note.items',
-      ),
     },
   },
   {
@@ -88,9 +84,19 @@ export const getRuleBookPages = () => [
         'rulebook:tournament.sections.schedule.title',
         'rulebook:tournament.sections.schedule.items',
       ),
+    },
+  },
+  {
+    id: 'leaderboard',
+    title: i18n.t('rulebook:leaderboard.title'),
+    content: {
       ...createSection(
-        'rulebook:tournament.sections.championship.title',
-        'rulebook:tournament.sections.championship.items',
+        'rulebook:leaderboard.sections.monthly-reset.title',
+        'rulebook:leaderboard.sections.monthly-reset.items',
+      ),
+      ...createSection(
+        'rulebook:leaderboard.sections.competition-cycles.title',
+        'rulebook:leaderboard.sections.competition-cycles.items',
       ),
     },
   },
