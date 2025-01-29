@@ -28,6 +28,7 @@ const ServiceScreen = ({
       backgroundSize="400% 400%"
       animation={`${gradientAnimation} 15s ease infinite`}
       overflow="hidden"
+      zIndex={999}
     >
       <Box
         bg="rgba(26, 32, 44, 0.8)"

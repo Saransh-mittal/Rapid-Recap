@@ -82,6 +82,9 @@ import { quinBoostChecker } from './utils/quiz.utils.js'
 import { tournamentRewardsClaim } from './utils/tournamentRewards.js'
 import { useSocket } from './customHooks/useSocket.js'
 import useRewardsModal from './customHooks/useRewardsModal.js'
+import MaintenanceHandler from './services/MaintenanceHandler.jsx'
+import { fetchDemotionSummary } from './redux/demotionSummarySlice.js'
+import { Helmet } from 'react-helmet'
 
 const App = () => {
   ReactGA.initialize('G-ES5VQ8NW7Z')
@@ -112,6 +115,7 @@ const App = () => {
     selectedNotificationId,
   } = useSelector(state => state.app)
   const { isOpen, tournamentQuiz } = useSelector(state => state.quiz)
+  const { summary, isVisible } = useSelector(state => state.demotionSummary)
   const [isGuestLoggedin, setIsGuestLoggedin] = useState(false)
   const [guestModalJustClosed, setGuestModalJustClosed] = useState(false)
   const { tournamentId, status, tournamentStartTime } = useSelector(
@@ -132,7 +136,7 @@ const App = () => {
     if (selectedNotificationId) {
       dispatch(setIsNotifInboxModalOpen(true))
     }
-  }, [selectedNotificationId, dispatch])
+  }, [selectedNotificationId])
 
   const handleClose = useCallback(() => {
     setIsGuestLoggedin(false)
@@ -310,6 +314,12 @@ const App = () => {
   }, [loginCheckStatus])
 
   useEffect(() => {
+    if (loginCheckStatus === 'fulfilled' && isAuthenticated) {
+      dispatch(fetchDemotionSummary())
+    }
+  }, [loginCheckStatus, isAuthenticated])
+
+  useEffect(() => {
     let timer
     if (isAuthenticated) {
       dispatch(isSubscribedChecker())
@@ -409,12 +419,12 @@ const App = () => {
         }),
       )
     }
-  }, [user, guestModalJustClosed, isGuestLoggedin, dispatch])
+  }, [user, guestModalJustClosed, isGuestLoggedin])
 
   const handleNavbarLoad = useCallback(() => {
     setNavbarLoaded(true)
     dispatch(setTaskProgress({ task: 'navbarLoad', progress: 100 }))
-  }, [dispatch])
+  }, [])
 
   useEffect(() => {
     if (overallProgress === 100) {
@@ -427,7 +437,33 @@ const App = () => {
   }, [navbarLoaded, overallProgress, dispatch])
 
   return (
-    <>
+    <MaintenanceHandler>
+      <Helmet>
+        <title>{t('Rapid Recap - Stay Informed, Stay Ahead')}</title>
+        <meta
+          name="description"
+          content={t(
+            'Rapid Recap is your go-to source for the latest news and articles. Test your knowledge with quizzes and track your Information Quotient (IQ) score.',
+          )}
+        />
+        <meta
+          name="keywords"
+          content={t(
+            'Rapid Recap, news, articles, quizzes, IQ score, leaderboard',
+          )}
+        />
+        <meta
+          property="og:title"
+          content={t('Rapid Recap - Stay Informed, Stay Ahead')}
+        />
+        <meta
+          property="og:description"
+          content={t(
+            'Stay updated with the latest news and articles. Take quizzes and see your Information Quotient (IQ) score on Rapid Recap.',
+          )}
+        />
+      </Helmet>
+
       {showLoadingScreen && <LoadingScreen progress={overallProgress} />}
 
       <Suspense fallback={null}>
@@ -488,7 +524,7 @@ const App = () => {
         />
       </Suspense>
       <NavbarProvider>
-        {showNavbar && (
+        {showNavbar && !(summary && isVisible) && (
           <Suspense fallback={null}>
             {/* <Navbar onNavbarLoad={handleNavbarLoad} /> */}
             <ModernNavbar onNavbarLoad={handleNavbarLoad} />
@@ -529,7 +565,7 @@ const App = () => {
       <Suspense fallback={null}>
         <RewardDisplay />
       </Suspense>
-    </>
+    </MaintenanceHandler>
   )
 }
 

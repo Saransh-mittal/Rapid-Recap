@@ -9,10 +9,7 @@ const {
 const { makeRetryable } = require('../utils/retryUtils')
 
 // New utility function to calculate IQ boost based on RQM score
-const calculateIQBoostMultiplier = (RQM_score, user, iqIncrement) => {
-  if (iqIncrement === 0) {
-    return 1
-  }
+const calculateIQBoostMultiplier = (RQM_score, user) => {
   // No boost if user needs onboarding
   if (user?.needsOnboarding) {
     return 1
@@ -46,14 +43,16 @@ const calculateRealTimeIQ = async (
   const prevIQScore = user.IQ_score
 
   // Calculate IQ increment
-  const iqIncrement = parseFloat(newIQScore) - parseFloat(prevIQScore)
+  let iqIncrement = parseFloat(newIQScore) - parseFloat(prevIQScore)
 
   // Apply boost multiplier
-  const boostMultiplier = calculateIQBoostMultiplier(
-    RQM_score,
-    user,
-    iqIncrement,
-  )
+  const boostMultiplier = calculateIQBoostMultiplier(RQM_score, user)
+
+  if (boostMultiplier > 1 && iqIncrement <= 0) {
+    iqIncrement = 0.1
+  } else if (iqIncrement < 0) {
+    iqIncrement = 0
+  }
   const boostedIncrement = iqIncrement * boostMultiplier
 
   // Calculate final IQ score

@@ -24,6 +24,8 @@ import LeaderboardRow from '../components/leaderBoardComponents/LeaderBoardRow'
 import InfoButton, {
   InfoButtonProvider,
 } from '../components/miscellaneous/InfoButton'
+import RefreshTimer from '../components/leaderBoardComponents/RefreshTimer'
+import { useInView } from 'react-intersection-observer'
 
 const INITIAL_RENDER_COUNT = 500
 const RENDER_BATCH_SIZE = 500
@@ -34,8 +36,12 @@ const Leaderboard = () => {
   const navigate = useNavigate()
   const { user } = useSelector(state => state.auth)
   const toast = useToast()
+  const { ref, inView } = useInView({ threshold: 0, triggerOnce: false })
+  const { ref: firstLeaderboardRowRef, inView: firstLeaderboardRowInView } =
+    useInView({ threshold: 0, triggerOnce: false })
 
   const [leaders, setLeaders] = useState([])
+  const [initialTime, setInitialTime] = useState({})
   const [searchResults, setSearchResults] = useState([])
   const [searchLoad, setSearchLoad] = useState(false)
   const [isLoading, setIsLoading] = useState(true)
@@ -62,6 +68,7 @@ const Leaderboard = () => {
       const response = await axios.get('/api/user/leaderboard?limit=500')
       allLeadersRef.current = response.data.users
       setLeaders(response.data.users.slice(0, INITIAL_RENDER_COUNT))
+      setInitialTime(response.data.nextRefresh)
     } catch (error) {
       console.error('Error fetching leaderboard:', error)
       toast({
@@ -116,14 +123,16 @@ const Leaderboard = () => {
   }, [isLoading])
 
   useEffect(() => {
-    // select body element
     const body = document.querySelector('body')
-    body.style.overflow = 'hidden'
+    if (firstLeaderboardRowInView) body.style.overflow = 'auto'
+    else if (!inView && !firstLeaderboardRowInView)
+      body.style.overflow = 'hidden'
+    else body.style.overflow = 'auto'
 
     return () => {
       body.style.overflow = 'auto'
     }
-  }, [])
+  }, [inView, firstLeaderboardRowInView])
 
   const handleRowClick = useCallback(
     inGameName => {
@@ -142,6 +151,7 @@ const Leaderboard = () => {
             height: `${ROW_HEIGHT - ROW_GAP}px`,
             // top: `${parseFloat(style.top) + index * ROW_GAP}px`,
           }}
+          ref={index === 0 ? firstLeaderboardRowRef : null}
         >
           <LeaderboardRow
             user={leader}
@@ -163,7 +173,6 @@ const Leaderboard = () => {
 
   return (
     <Box
-      minH="100vh"
       p={{ base: 4, md: 8 }}
       mt={{
         base: user?.needsOnboarding ? '18%' : '16%',
@@ -228,7 +237,10 @@ const Leaderboard = () => {
             </InfoButtonProvider>
           </Flex>
         </Flex>
-
+        {/* Add Timer here */}
+        <Box ref={ref}>
+          <RefreshTimer initialTime={initialTime} />
+        </Box>
         <Flex justifyContent="center">
           <Box
             w={{ base: '100%', md: '75%', lg: '60%' }}
@@ -247,7 +259,6 @@ const Leaderboard = () => {
 
         <Box
           height={{ base: 'calc(100vh - 150px)', md: 'calc(100vh - 190px)' }}
-          overflow="hidden" // Add this line to remove scrollbars
         >
           {isLoading || !isInitialRenderComplete || searchLoad ? (
             <Flex justify="center" my={4}>

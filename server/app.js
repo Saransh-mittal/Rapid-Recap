@@ -18,6 +18,7 @@ const chatsRoutes = require('./router/chatsRoutes')
 const messageRoutes = require('./router/messageRoutes')
 const friendsRoutes = require('./router/friendsRoutes')
 const tournamentRoutes = require('./router/tournamentRoutes')
+const leaderboardRoutes = require('./router/leaderboardRoutes')
 const authRouter = express.Router()
 const webpush = require('web-push')
 const cookieParser = require('cookie-parser')
@@ -27,6 +28,7 @@ const helmet = require('helmet')
 const i18nMiddleware = require('i18next-http-middleware')
 const i18n = require('./i18n')
 const { initBotTracking } = require('./utils/botTracker')
+const maintenanceMiddleware = require('./middleware/maintenanceMiddleware')
 
 const app = express()
 // CORS configuration - only needed in development
@@ -46,7 +48,7 @@ if (process.env.NODE_ENV !== 'production') {
   })
 }
 // Apply security middleware first
-
+app.use(maintenanceMiddleware)
 app.use(i18nMiddleware.handle(i18n))
 
 app.use(
@@ -180,6 +182,7 @@ authRouter.use('/chat', chatsRoutes)
 authRouter.use('/message', messageRoutes)
 authRouter.use('/friends', friendsRoutes)
 authRouter.use('/tournament', tournamentRoutes)
+authRouter.use('/leaderboard', leaderboardRoutes)
 app.use('/api', authRouter)
 
 initBotTracking()

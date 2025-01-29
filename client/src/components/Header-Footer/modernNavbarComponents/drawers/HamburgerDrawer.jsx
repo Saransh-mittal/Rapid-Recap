@@ -26,7 +26,7 @@ import { useTranslation } from 'react-i18next'
 import { ChatState } from '../../../../contextAPI/ChatProvider'
 
 import FixedBackground from '../../../miscellaneous/FixedBackground'
-import { ChevronRight } from 'lucide-react'
+import { ChevronRight, Scroll } from 'lucide-react'
 import { motion } from 'framer-motion'
 import HamFooter from '../HamFooter'
 const LogoutButton = lazy(() => import('../LogoutButton'))
@@ -269,7 +269,14 @@ const HamburgerDrawer = ({
                         fill={'#fff'}
                       />
                     </Box>
-
+                    <Box
+                      onClick={() => {
+                        navigate('/manual')
+                        onClose()
+                      }}
+                    >
+                      <Scroll color="white" />
+                    </Box>
                     <Inbox
                       className={'inbox-button-lg'}
                       onClick={handleInboxClick}

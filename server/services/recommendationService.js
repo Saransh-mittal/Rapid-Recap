@@ -98,7 +98,9 @@ const getRecommendations = async (userId, page = 1, pageSize = 18) => {
       !userRecommendations ||
       userRecommendations.lastUpdated < updateThreshold
     ) {
-      updateRecommendations(userId)
+      updateRecommendations(userId).catch(error => {
+        console.error('Error in updateRecommendations:', error)
+      })
     }
     // return empry array if no recommendations
     if (!userRecommendations) {
@@ -147,7 +149,9 @@ async function getArticlePageRecommendations(
       !userRecommendations ||
       userRecommendations.lastUpdated < updateThreshold
     ) {
-      updateRecommendations(userId) // Trigger an update in the background
+      updateRecommendations(userId).catch(error => {
+        console.error('Error in updateRecommendations:', error)
+      }) // Trigger an update in the background
     }
 
     if (

@@ -27,7 +27,6 @@ export async function sendSubscriptionToBackend(subscription) {
     return response.json()
   } catch (error) {
     console.error('Backend subscription error:', error)
-    throw error
   }
 }
 
