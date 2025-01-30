@@ -1,4 +1,4 @@
-const VERSION = 'v8.7'
+const VERSION = 'v8.8'
 const CACHE_NAME = `rapid-recap-${VERSION}`
 const ASSETS_CACHE = `assets-${VERSION}`
 const DYNAMIC_CACHE = `dynamic-${VERSION}`
@@ -182,25 +182,64 @@ self.addEventListener('activate', event => {
   console.log('Service Worker activating - Version', VERSION)
 
   event.waitUntil(
-    Promise.all([
-      // Clear old caches
-      caches.keys().then(keys =>
-        Promise.all(
+    (async () => {
+      try {
+        // 1. Clear old caches
+        const keys = await caches.keys()
+        await Promise.all(
           keys.map(key => {
             if (!key.includes(VERSION)) {
               console.log('Deleting old cache:', key)
               return caches.delete(key)
             }
           }),
-        ),
-      ),
-      // Take control of all clients
-      clients.claim(),
-      // Force reload all clients to ensure they get fresh content
-      clients.matchAll().then(clients => {
-        clients.forEach(client => client.navigate(client.url))
-      }),
-    ]),
+        )
+
+        // 2. Take control of all clients
+        await clients.claim()
+
+        // 3. Get all clients
+        const allClients = await clients.matchAll()
+
+        // 4. For each client, find and refresh locale files
+        for (const client of allClients) {
+          // Get all cache storage
+          const cacheKeys = await caches.keys()
+
+          for (const cacheName of cacheKeys) {
+            const cache = await caches.open(cacheName)
+            const requests = await cache.keys()
+
+            // Find all locale files
+            const localeRequests = requests.filter(request =>
+              request.url.includes('/locales/'),
+            )
+
+            // Fetch each locale file with cache-busting
+            await Promise.all(
+              localeRequests.map(request =>
+                fetch(request.url, {
+                  cache: 'reload',
+                  headers: {
+                    'Cache-Control': 'no-cache',
+                    Pragma: 'no-cache',
+                  },
+                }),
+              ),
+            )
+          }
+
+          // Navigate client to reload with fresh cache
+          client.navigate(client.url)
+        }
+      } catch (error) {
+        console.error('Error in service worker activation:', error)
+        // Still try to reload clients even if there was an error
+        clients.matchAll().then(clients => {
+          clients.forEach(client => client.navigate(client.url))
+        })
+      }
+    })(),
   )
 })
 
