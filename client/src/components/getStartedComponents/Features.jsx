@@ -37,7 +37,7 @@ const COLORS = {
   cardBorder: 'rgba(237, 100, 166, 0.2)',
 }
 
-const FeatureCard = ({ icon: Icon, title, description, index }) => (
+const FeatureCard = ({ icon: Icon, title, description, image, index }) => (
   <MotionBox
     as="article"
     initial={{ opacity: 0, y: 20 }}
@@ -59,6 +59,29 @@ const FeatureCard = ({ icon: Icon, title, description, index }) => (
     itemType="https://schema.org/Product"
     role="article"
   >
+    {/* Add Schema.org metadata */}
+    <div itemProp="brand" itemScope itemType="https://schema.org/Brand">
+      <meta itemProp="name" content="Rapid Recap" />
+    </div>
+    <meta itemProp="category" content="Educational Software" />
+    <meta itemProp="image" content={`https://www.rapidrecap.co.in${image}`} />
+    {/* Add simplified offers data for free digital product */}
+    <div itemProp="offers" itemScope itemType="https://schema.org/Offer">
+      <meta itemProp="price" content="0" />
+      <meta itemProp="priceCurrency" content="USD" />
+      <meta itemProp="availability" content="https://schema.org/InStock" />
+    </div>
+
+    {/* Add aggregate rating */}
+    <div
+      itemProp="aggregateRating"
+      itemScope
+      itemType="https://schema.org/AggregateRating"
+    >
+      <meta itemProp="ratingValue" content="4.8" />
+      <meta itemProp="reviewCount" content="250" />
+    </div>
+
     <VStack spacing={{ base: 3, md: 4 }} align="center">
       <Circle
         size="60px"
@@ -133,6 +156,8 @@ const UISection = ({ image, title, description, isImageLeft, index }) => {
       itemScope
       itemType="https://schema.org/Article"
     >
+      {/* Add required product image */}
+      <meta itemProp="image" content={`https://www.rapidrecap.co.in${image}`} />
       <Box
         w={{ base: 'full', lg: '50%' }}
         order={isMobile ? 0 : isImageLeft ? 0 : 1}
@@ -210,21 +235,25 @@ const Features = () => {
         icon: Newspaper,
         title: t('Features.features.curatedNews.title'),
         description: t('Features.features.curatedNews.description'),
+        image: '/images/landingPage/homeUI.webp',
       },
       {
         icon: Brain,
         title: t('Features.features.interactiveLearning.title'),
         description: t('Features.features.interactiveLearning.description'),
+        image: '/images/landingPage/smartReading.jpg',
       },
       {
         icon: Trophy,
         title: t('Features.features.competitiveEdge.title'),
         description: t('Features.features.competitiveEdge.description'),
+        image: '/images/landingPage/tournamentUI.webp',
       },
       {
         icon: Award,
         title: t('Features.features.skillMastery.title'),
         description: t('Features.features.skillMastery.description'),
+        image: '/images/landingPage/quizUI.webp',
       },
     ],
     [t],

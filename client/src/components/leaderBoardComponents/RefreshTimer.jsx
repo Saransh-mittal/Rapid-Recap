@@ -1,7 +1,8 @@
 import React, { useState, useEffect } from 'react'
-import { Box, Text, Flex, useColorModeValue } from '@chakra-ui/react'
+import { Box, Text, Flex } from '@chakra-ui/react'
 import { motion, AnimatePresence } from 'framer-motion'
 import { useTranslation } from 'react-i18next'
+import RefreshTimerSkeleton from './RefreshTimerSkeleton'
 
 const MotionBox = motion(Box)
 const MotionFlex = motion(Flex)
@@ -61,14 +62,22 @@ const TimeUnit = ({ value, label }) => {
 
 const RefreshTimer = ({ initialTime }) => {
   const [timeLeft, setTimeLeft] = useState({
-    days: initialTime.days || 0,
-    hours: initialTime.hours || 0,
-    minutes: initialTime.minutes || 0,
-    seconds: initialTime.seconds || 0,
+    days: 0,
+    hours: 0,
+    minutes: 0,
+    seconds: 0,
   })
+  const [isLoading, setIsLoading] = useState(true)
   const { t } = useTranslation('LeaderBoard')
+
   useEffect(() => {
+    if (!initialTime?.totalSeconds) {
+      return
+    }
+
+    setIsLoading(false)
     let totalSeconds = initialTime.totalSeconds
+
     const timer = setInterval(() => {
       if (totalSeconds <= 0) {
         clearInterval(timer)
@@ -85,7 +94,11 @@ const RefreshTimer = ({ initialTime }) => {
     }, 1000)
 
     return () => clearInterval(timer)
-  }, [initialTime.totalSeconds])
+  }, [initialTime?.totalSeconds])
+
+  if (isLoading) {
+    return <RefreshTimerSkeleton />
+  }
 
   return (
     <MotionBox

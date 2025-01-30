@@ -57,6 +57,7 @@ const ModernNavbar = ({ onNavbarLoad }) => {
     onOpen: onOpenUserSearch,
     onClose: onCloseUserSearch,
   } = useDisclosure()
+  const isToken = useCallback(() => localStorage.getItem('token'), [])
   const [notifyCont, setNotifyCnt] = useState(0)
   const [scrollOpacity, setScrollOpacity] = useState(0.95)
   const { isAuthenticated, user, loginCheckStatus } = useSelector(
@@ -130,18 +131,20 @@ const ModernNavbar = ({ onNavbarLoad }) => {
         throw new Error('Logout Failed')
       }
     } catch (error) {
-      toast({
-        title: 'Logout Failed',
-        status: 'error',
-        duration: 5000,
-        isClosable: true,
-        position: 'top',
-      })
-      console.error(error.message)
+      if (isToken()) {
+        toast({
+          title: 'Logout Failed',
+          status: 'error',
+          duration: 5000,
+          isClosable: true,
+          position: 'top',
+        })
+        console.error(error)
+      }
     } finally {
       setIsLoggingOut(false)
     }
-  }, [dispatch, navigate, toast])
+  }, [dispatch, navigate, toast, isToken])
 
   const checkStreakAndFetchUpdates = useCallback(() => {
     if (!updatesLoading && loginCheckStatus === 'fulfilled') {
@@ -151,7 +154,11 @@ const ModernNavbar = ({ onNavbarLoad }) => {
       dispatch(fetchDailyStreak())
     }
   }, [streakLoading, loginCheckStatus, isAuthenticated, dispatch])
-
+  useEffect(() => {
+    if (!isToken()) {
+      handleLogout()
+    }
+  }, [isToken])
   useEffect(() => {
     checkStreakAndFetchUpdates()
   }, [loginCheckStatus, dispatch])

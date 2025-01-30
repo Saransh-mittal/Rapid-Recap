@@ -600,8 +600,8 @@ const leaderBoard = async (req, res) => {
   // Calculate time until next refresh
   const now = moment.utc()
   const nextRefresh = moment.utc().startOf('month').add(1, 'month')
-  if (now.date() === 1 && now.hour() < 1) {
-    // If it's the first of the month and before 1 AM UTC
+  if (now.date() === 1 && now.hour() === 0) {
+    // If it's the first of the month at exactly midnight UTC (00:00)
     nextRefresh.subtract(1, 'month')
   }
   const timeUntilRefresh = {

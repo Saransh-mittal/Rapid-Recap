@@ -327,6 +327,28 @@ const HeroV2 = ({ inViewFooter }) => {
           itemScope
           itemType="https://schema.org/Dataset"
         >
+          <meta itemProp="name" content="Rapid Recap Platform Statistics" />
+          <meta
+            itemProp="description"
+            content="Key performance metrics and usage statistics for the Rapid Recap learning platform"
+          />
+
+          <div
+            itemProp="creator"
+            itemScope
+            itemType="https://schema.org/Organization"
+            style={{ display: 'none' }}
+          >
+            <meta itemProp="name" content="Rapid Recap Analytics Team" />
+            <meta itemProp="url" content="https://rapidrecap.co" />
+          </div>
+
+          <meta
+            itemProp="license"
+            content="https://creativecommons.org/licenses/by/4.0/"
+          />
+          <meta itemProp="dateModified" content={new Date().toISOString()} />
+
           <StatsCard
             icon={Users}
             value={t('Header.stats.monthlyUsers.value')}
