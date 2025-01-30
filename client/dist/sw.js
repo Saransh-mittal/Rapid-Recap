@@ -1,4 +1,4 @@
-const VERSION = 'v8.8'
+const VERSION = 'v8.9'
 const CACHE_NAME = `rapid-recap-${VERSION}`
 const ASSETS_CACHE = `assets-${VERSION}`
 const DYNAMIC_CACHE = `dynamic-${VERSION}`
@@ -184,7 +184,7 @@ self.addEventListener('activate', event => {
   event.waitUntil(
     (async () => {
       try {
-        // 1. Clear old caches
+        // Clear old caches
         const keys = await caches.keys()
         await Promise.all(
           keys.map(key => {
@@ -195,46 +195,32 @@ self.addEventListener('activate', event => {
           }),
         )
 
-        // 2. Take control of all clients
+        // Take control of all clients
         await clients.claim()
 
-        // 3. Get all clients
+        // Get all clients
         const allClients = await clients.matchAll()
 
-        // 4. For each client, find and refresh locale files
+        // For each client, fetch Navbar.json to trigger cache invalidation and reload
         for (const client of allClients) {
-          // Get all cache storage
-          const cacheKeys = await caches.keys()
-
-          for (const cacheName of cacheKeys) {
-            const cache = await caches.open(cacheName)
-            const requests = await cache.keys()
-
-            // Find all locale files
-            const localeRequests = requests.filter(request =>
-              request.url.includes('/locales/'),
-            )
-
-            // Fetch each locale file with cache-busting
-            await Promise.all(
-              localeRequests.map(request =>
-                fetch(request.url, {
-                  cache: 'reload',
-                  headers: {
-                    'Cache-Control': 'no-cache',
-                    Pragma: 'no-cache',
-                  },
-                }),
-              ),
-            )
+          try {
+            await fetch('/locales/en/components/headerFooter/Navbar.json', {
+              cache: 'reload',
+              headers: {
+                'Cache-Control': 'no-cache',
+                Pragma: 'no-cache',
+              },
+            })
+            client.navigate(client.url)
+          } catch (error) {
+            console.error('Error fetching Navbar.json:', error)
+            // Still try to reload the client
+            client.navigate(client.url)
           }
-
-          // Navigate client to reload with fresh cache
-          client.navigate(client.url)
         }
       } catch (error) {
         console.error('Error in service worker activation:', error)
-        // Still try to reload clients even if there was an error
+        // Attempt to reload clients even if there was an error
         clients.matchAll().then(clients => {
           clients.forEach(client => client.navigate(client.url))
         })
