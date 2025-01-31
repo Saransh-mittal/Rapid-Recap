@@ -1,0 +1,1 @@
+import{j as r}from"./index-f04082ea.js";import{S as s}from"./skeleton-d05901a1.js";const t=({size:e="2rem",...o})=>r.jsx(s,{borderRadius:"full",boxSize:e,...o});t.displayName="SkeletonCircle";export{t as S};
