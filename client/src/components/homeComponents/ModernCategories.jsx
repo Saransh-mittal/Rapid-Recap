@@ -1,5 +1,13 @@
 import React, { useState, useRef, useEffect } from 'react'
-import { Box, HStack, VStack, Text, useMediaQuery } from '@chakra-ui/react'
+import {
+  Box,
+  HStack,
+  VStack,
+  Text,
+  useMediaQuery,
+  Link,
+} from '@chakra-ui/react'
+import { Link as RouterLink } from 'react-router-dom'
 import { motion, AnimatePresence } from 'framer-motion'
 import { useTranslation } from 'react-i18next'
 import { useSelector } from 'react-redux'
@@ -258,298 +266,318 @@ const ModernCategories = ({
   )
 }
 
-const MobileCategory = React.forwardRef(
+export const MobileCategory = React.forwardRef(
   ({ category, isActive, isBoost, onClick, display }, ref) => (
-    <MotionBox
+    <Link
+      as={RouterLink}
+      to={`/category/${category.toLowerCase()}`}
       ref={ref}
-      position="relative"
-      px={4}
-      py={2}
-      borderRadius="xl"
-      bg={
-        isActive && isBoost
-          ? COLORS.background.boostActive
-          : isActive
-          ? COLORS.background.active
-          : 'transparent'
-      }
-      cursor="pointer"
-      whileHover={{ scale: 1.02 }}
-      whileTap={{ scale: 0.98 }}
-      transition={{ duration: 0.1 }}
-      onClick={onClick}
+      onClick={e => {
+        e.preventDefault()
+        onClick()
+      }}
+      _hover={{ textDecoration: 'none' }}
       display={display || 'flex'}
-      flexDirection="column"
-      alignItems="center"
-      justifyContent="center"
-      minH="40px"
-      overflow="hidden"
+      aria-label={`View ${category} category`}
     >
-      {isActive && isBoost && (
-        <>
-          <BoostParticles />
-          <Box
+      <MotionBox
+        position="relative"
+        px={4}
+        py={2}
+        borderRadius="xl"
+        bg={
+          isActive && isBoost
+            ? COLORS.background.boostActive
+            : isActive
+            ? COLORS.background.active
+            : 'transparent'
+        }
+        cursor="pointer"
+        whileHover={{ scale: 1.02 }}
+        whileTap={{ scale: 0.98 }}
+        transition={{ duration: 0.1 }}
+        display="flex"
+        flexDirection="column"
+        alignItems="center"
+        justifyContent="center"
+        minH="40px"
+        overflow="hidden"
+      >
+        {isActive && isBoost && (
+          <>
+            <BoostParticles />
+            <Box
+              position="absolute"
+              inset={0}
+              padding="1.5px"
+              borderRadius="xl"
+              background={COLORS.frame.boost}
+              animate={{
+                opacity: [0.6, 1, 0.6],
+                scale: [1, 1.02, 1],
+              }}
+              transition={{
+                duration: 2,
+                repeat: Infinity,
+              }}
+            >
+              <Box
+                width="100%"
+                height="100%"
+                borderRadius="xl"
+                bg={COLORS.background.boostActive}
+              />
+            </Box>
+          </>
+        )}
+
+        {isBoost && !isActive && (
+          <MotionBox
             position="absolute"
             inset={0}
-            padding="1.5px"
-            borderRadius="xl"
-            background={COLORS.frame.boost}
             animate={{
-              opacity: [0.6, 1, 0.6],
-              scale: [1, 1.02, 1],
+              background: [
+                'linear-gradient(45deg, rgba(255,184,0,0.15) 0%, rgba(255,214,107,0.25) 50%, rgba(255,184,0,0.15) 100%)',
+                'linear-gradient(45deg, rgba(255,184,0,0.25) 0%, rgba(255,214,107,0.35) 50%, rgba(255,184,0,0.25) 100%)',
+              ],
+              scale: [1, 1.05, 1],
+            }}
+            transition={{
+              duration: 3,
+              repeat: Infinity,
+              repeatType: 'reverse',
+            }}
+          />
+        )}
+
+        <Text
+          fontSize="xs"
+          fontWeight={isActive || isBoost ? '600' : '500'}
+          color={
+            isActive
+              ? isBoost
+                ? COLORS.text.boost
+                : COLORS.text.active
+              : isBoost
+              ? COLORS.text.boost
+              : COLORS.text.default
+          }
+          letterSpacing="0.4px"
+          whiteSpace="nowrap"
+          style={{
+            textShadow: isBoost
+              ? '0 0 12px rgba(255,184,0,0.7)'
+              : isActive
+              ? '0 0 8px rgba(139,92,246,0.5)'
+              : 'none',
+          }}
+          zIndex={1}
+        >
+          {category}
+        </Text>
+
+        {isActive && (
+          <MotionBox
+            position="absolute"
+            bottom="2px"
+            left="50%"
+            transform="translateX(-50%)"
+            width="3px"
+            height="3px"
+            borderRadius="full"
+            bg={isBoost ? COLORS.indicator.boost : COLORS.indicator.default}
+            initial={{ opacity: 0, scale: 0 }}
+            animate={{
+              opacity: [0.5, 1, 0.5],
+              scale: [1, 1.5, 1],
             }}
             transition={{
               duration: 2,
               repeat: Infinity,
             }}
-          >
-            <Box
-              width="100%"
-              height="100%"
-              borderRadius="xl"
-              bg={COLORS.background.boostActive}
-            />
-          </Box>
-        </>
-      )}
-
-      {isBoost && !isActive && (
-        <MotionBox
-          position="absolute"
-          inset={0}
-          animate={{
-            background: [
-              'linear-gradient(45deg, rgba(255,184,0,0.15) 0%, rgba(255,214,107,0.25) 50%, rgba(255,184,0,0.15) 100%)',
-              'linear-gradient(45deg, rgba(255,184,0,0.25) 0%, rgba(255,214,107,0.35) 50%, rgba(255,184,0,0.25) 100%)',
-            ],
-            scale: [1, 1.05, 1],
-          }}
-          transition={{
-            duration: 3,
-            repeat: Infinity,
-            repeatType: 'reverse',
-          }}
-        />
-      )}
-
-      <Text
-        fontSize="xs"
-        fontWeight={isActive || isBoost ? '600' : '500'}
-        color={
-          isActive
-            ? isBoost
-              ? COLORS.text.boost
-              : COLORS.text.active
-            : isBoost
-            ? COLORS.text.boost
-            : COLORS.text.default
-        }
-        letterSpacing="0.4px"
-        whiteSpace="nowrap"
-        style={{
-          textShadow: isBoost
-            ? '0 0 12px rgba(255,184,0,0.7)'
-            : isActive
-            ? '0 0 8px rgba(139,92,246,0.5)'
-            : 'none',
-        }}
-        zIndex={1}
-      >
-        {category}
-      </Text>
-
-      {isActive && (
-        <MotionBox
-          position="absolute"
-          bottom="2px"
-          left="50%"
-          transform="translateX(-50%)"
-          width="3px"
-          height="3px"
-          borderRadius="full"
-          bg={isBoost ? COLORS.indicator.boost : COLORS.indicator.default}
-          initial={{ opacity: 0, scale: 0 }}
-          animate={{
-            opacity: [0.5, 1, 0.5],
-            scale: [1, 1.5, 1],
-          }}
-          transition={{
-            duration: 2,
-            repeat: Infinity,
-          }}
-          style={{
-            boxShadow: `0 0 12px ${
-              isBoost ? 'rgba(255,184,0,0.7)' : 'rgba(139,92,246,0.7)'
-            }`,
-          }}
-          zIndex={1}
-        />
-      )}
-    </MotionBox>
+            style={{
+              boxShadow: `0 0 12px ${
+                isBoost ? 'rgba(255,184,0,0.7)' : 'rgba(139,92,246,0.7)'
+              }`,
+            }}
+            zIndex={1}
+          />
+        )}
+      </MotionBox>
+    </Link>
   ),
 )
 
-const DesktopCategory = React.forwardRef(
+export const DesktopCategory = React.forwardRef(
   ({ category, isActive, isBoost, onClick, display }, ref) => (
-    <MotionBox
+    <Link
+      as={RouterLink}
+      to={`/category/${category.toLowerCase()}`}
       ref={ref}
-      px={4}
-      py={2.5}
-      mx={1}
-      borderRadius="xl"
-      cursor="pointer"
-      position="relative"
-      display={display || 'block'}
-      whileHover={{
-        backgroundColor: isActive
-          ? isBoost
-            ? COLORS.background.boostActive
-            : COLORS.background.active
-          : COLORS.background.hover,
-        scale: 1.05,
+      onClick={e => {
+        e.preventDefault()
+        onClick()
       }}
-      whileTap={{ scale: 0.98 }}
-      transition={{ duration: 0.15 }}
-      onClick={onClick}
-      overflow="hidden"
+      _hover={{ textDecoration: 'none' }}
+      display={display || 'block'}
+      aria-label={`View ${category} category`}
     >
-      {isActive && isBoost && (
-        <>
-          <BoostParticles />
-          <Box
+      <MotionBox
+        px={4}
+        py={2.5}
+        mx={1}
+        borderRadius="xl"
+        cursor="pointer"
+        position="relative"
+        whileHover={{
+          backgroundColor: isActive
+            ? isBoost
+              ? COLORS.background.boostActive
+              : COLORS.background.active
+            : COLORS.background.hover,
+          scale: 1.05,
+        }}
+        whileTap={{ scale: 0.98 }}
+        transition={{ duration: 0.15 }}
+        overflow="hidden"
+      >
+        {isActive && isBoost && (
+          <>
+            <BoostParticles />
+            <Box
+              position="absolute"
+              inset={0}
+              padding="1.5px"
+              borderRadius="xl"
+              background={COLORS.frame.boost}
+              animate={{
+                opacity: [0.6, 1, 0.6],
+                scale: [1, 1.02, 1],
+              }}
+              transition={{
+                duration: 2,
+                repeat: Infinity,
+              }}
+            >
+              <Box
+                width="100%"
+                height="100%"
+                borderRadius="xl"
+                bg={COLORS.background.boostActive}
+              />
+            </Box>
+          </>
+        )}
+
+        {isBoost && !isActive && (
+          <MotionBox
             position="absolute"
             inset={0}
-            padding="1.5px"
-            borderRadius="xl"
-            background={COLORS.frame.boost}
             animate={{
-              opacity: [0.6, 1, 0.6],
-              scale: [1, 1.02, 1],
+              background: [
+                'linear-gradient(45deg, rgba(255,184,0,0.25) 0%, rgba(255,214,107,0.35) 50%, rgba(255,184,0,0.25) 100%)',
+              ],
+              scale: [1, 1.05, 1],
+            }}
+            transition={{
+              duration: 3,
+              repeat: Infinity,
+              repeatType: 'reverse',
+            }}
+          />
+        )}
+
+        {isActive && (
+          <MotionBox
+            position="absolute"
+            left="-1px"
+            top="50%"
+            width="3px"
+            height="50%"
+            borderRadius="full"
+            bg={isBoost ? COLORS.indicator.boost : COLORS.indicator.default}
+            transform="translateY(-50%)"
+            animate={{
+              opacity: [0.7, 1, 0.7],
+              height: ['40%', '50%', '40%'],
             }}
             transition={{
               duration: 2,
               repeat: Infinity,
             }}
-          >
-            <Box
-              width="100%"
-              height="100%"
-              borderRadius="xl"
-              bg={COLORS.background.boostActive}
-            />
-          </Box>
-        </>
-      )}
+            style={{
+              boxShadow: `0 0 12px ${
+                isBoost ? 'rgba(255,184,0,0.7)' : 'rgba(139,92,246,0.7)'
+              }`,
+            }}
+            zIndex={1}
+          />
+        )}
 
-      {isBoost && !isActive && (
-        <MotionBox
-          position="absolute"
-          inset={0}
-          animate={{
-            background: [
-              'linear-gradient(45deg, rgba(255,184,0,0.25) 0%, rgba(255,214,107,0.35) 50%, rgba(255,184,0,0.25) 100%)',
-            ],
-            scale: [1, 1.05, 1],
-          }}
-          transition={{
-            duration: 3,
-            repeat: Infinity,
-            repeatType: 'reverse',
-          }}
-        />
-      )}
-
-      {isActive && (
-        <MotionBox
-          position="absolute"
-          left="-1px"
-          top="50%"
-          width="3px"
-          height="50%"
-          borderRadius="full"
-          bg={isBoost ? COLORS.indicator.boost : COLORS.indicator.default}
-          transform="translateY(-50%)"
-          animate={{
-            opacity: [0.7, 1, 0.7],
-            height: ['40%', '50%', '40%'],
-          }}
-          transition={{
-            duration: 2,
-            repeat: Infinity,
+        <Text
+          fontSize="sm"
+          fontWeight={isActive || isBoost ? '600' : '500'}
+          color={
+            isActive
+              ? isBoost
+                ? COLORS.text.boost
+                : COLORS.text.active
+              : isBoost
+              ? COLORS.text.boost
+              : COLORS.text.default
+          }
+          letterSpacing="0.3px"
+          transition="all 0.2s"
+          _hover={{
+            color: isActive
+              ? isBoost
+                ? COLORS.text.boost
+                : COLORS.text.active
+              : isBoost
+              ? COLORS.text.boost
+              : 'white',
           }}
           style={{
-            boxShadow: `0 0 12px ${
-              isBoost ? 'rgba(255,184,0,0.7)' : 'rgba(139,92,246,0.7)'
-            }`,
+            textShadow: isBoost
+              ? '0 0 12px rgba(255,184,0,0.7)'
+              : isActive
+              ? '0 0 8px rgba(139,92,246,0.5)'
+              : 'none',
           }}
           zIndex={1}
-        />
-      )}
+          position="relative"
+        >
+          {category}
+        </Text>
 
-      <Text
-        fontSize="sm"
-        fontWeight={isActive || isBoost ? '600' : '500'}
-        color={
-          isActive
-            ? isBoost
-              ? COLORS.text.boost
-              : COLORS.text.active
-            : isBoost
-            ? COLORS.text.boost
-            : COLORS.text.default
-        }
-        letterSpacing="0.3px"
-        transition="all 0.2s"
-        _hover={{
-          color: isActive
-            ? isBoost
-              ? COLORS.text.boost
-              : COLORS.text.active
-            : isBoost
-            ? COLORS.text.boost
-            : 'white',
-        }}
-        style={{
-          textShadow: isBoost
-            ? '0 0 12px rgba(255,184,0,0.7)'
-            : isActive
-            ? '0 0 8px rgba(139,92,246,0.5)'
-            : 'none',
-        }}
-        zIndex={1}
-        position="relative"
-      >
-        {category}
-      </Text>
-
-      {/* Add floating particles for boost active state */}
-      {isActive && isBoost && (
-        <MotionBox
-          position="absolute"
-          right="4px"
-          top="50%"
-          width="4px"
-          height="4px"
-          borderRadius="full"
-          bg={COLORS.indicator.boost}
-          transform="translateY(-50%)"
-          animate={{
-            y: ['-50%', '-100%', '-50%'],
-            opacity: [0.5, 1, 0.5],
-            scale: [1, 1.5, 1],
-          }}
-          transition={{
-            duration: 2,
-            repeat: Infinity,
-            repeatType: 'reverse',
-          }}
-          style={{
-            boxShadow: '0 0 12px rgba(255,184,0,0.7)',
-          }}
-          zIndex={1}
-        />
-      )}
-    </MotionBox>
+        {isActive && isBoost && (
+          <MotionBox
+            position="absolute"
+            right="4px"
+            top="50%"
+            width="4px"
+            height="4px"
+            borderRadius="full"
+            bg={COLORS.indicator.boost}
+            transform="translateY(-50%)"
+            animate={{
+              y: ['-50%', '-100%', '-50%'],
+              opacity: [0.5, 1, 0.5],
+              scale: [1, 1.5, 1],
+            }}
+            transition={{
+              duration: 2,
+              repeat: Infinity,
+              repeatType: 'reverse',
+            }}
+            style={{
+              boxShadow: '0 0 12px rgba(255,184,0,0.7)',
+            }}
+            zIndex={1}
+          />
+        )}
+      </MotionBox>
+    </Link>
   ),
 )
 

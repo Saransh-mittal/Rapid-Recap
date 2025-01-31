@@ -1,26 +1,32 @@
 // Navigation.js
 import React, { memo, useMemo } from 'react'
-import { HStack, Text } from '@chakra-ui/react'
+import { Link as RouterLink } from 'react-router-dom'
+import { Link, HStack } from '@chakra-ui/react'
 import { motion } from 'framer-motion'
 
-const MotionText = motion(Text)
+// Create a motion-enabled Chakra Link component
+const MotionLink = motion(Link)
 
-const NavLink = memo(({ label, isActive, onClick }) => (
-  <MotionText
-    fontSize="md"
-    textTransform="uppercase"
-    fontWeight={isActive ? '600' : '500'}
-    color={isActive ? 'white' : 'whiteAlpha.800'}
-    cursor="pointer"
-    position="relative"
-    whileHover={{ scale: 1.05 }}
-    whileTap={{ scale: 0.95 }}
-    onClick={onClick}
-    _hover={{
-      color: 'white',
+const NavLink = memo(({ label, isActive, onClick, path }) => (
+  <MotionLink
+    as={RouterLink} // Combine Chakra + React Router
+    to={path} // Required for href (SEO)
+    onClick={e => {
+      e.preventDefault() // Prevent full page reload
+      onClick()
     }}
-    _after={
-      isActive
+    sx={{
+      fontSize: 'md',
+      textTransform: 'uppercase',
+      fontWeight: isActive ? '600' : '500',
+      color: isActive ? 'white' : 'whiteAlpha.800',
+      cursor: 'pointer',
+      position: 'relative',
+      _hover: {
+        color: 'white',
+        textDecoration: 'none', // Disable underline
+      },
+      _after: isActive
         ? {
             content: '""',
             position: 'absolute',
@@ -32,11 +38,13 @@ const NavLink = memo(({ label, isActive, onClick }) => (
             bg: 'white',
             transform: 'translateX(-50%)',
           }
-        : {}
-    }
+        : undefined,
+    }}
+    whileHover={{ scale: 1.05 }}
+    whileTap={{ scale: 0.95 }}
   >
     {label}
-  </MotionText>
+  </MotionLink>
 ))
 
 NavLink.displayName = 'NavLink'
@@ -55,6 +63,7 @@ const Navigation = memo(({ items, currentPath, onNavigate }) => {
           label={label}
           isActive={isLinkActive(path)}
           onClick={() => onNavigate(path)}
+          path={path}
         />
       ))}
     </HStack>

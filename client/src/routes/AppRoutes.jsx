@@ -22,6 +22,7 @@ const HallOfChampions = lazy(() => import('../screens/HallOfChampions'))
 
 const OnboardingProcess = lazy(() => import('../screens/OnboardingProcess'))
 const DemotionSummary = lazy(() => import('../screens/DemotionSummary'))
+const PrivacyPolicy = lazy(() => import('../screens/PrivacyPolicy'))
 
 const AppRoutes = ({ isToken, needsOnboarding, setIsGuestLoggedin }) => {
   const { summary, isVisible } = useSelector(state => state.demotionSummary)
@@ -85,6 +86,7 @@ const AppRoutes = ({ isToken, needsOnboarding, setIsGuestLoggedin }) => {
             />
             <Route path="*" element={<Navigate to="/" replace />} />
             <Route path="/delete-account" element={<DeleteAccount />} />
+            <Route path="/privacy-policy" element={<PrivacyPolicy />} />
             <Route
               path="/confirmDeleteAccount/:token"
               element={<ConfirmDeleteAccount />}

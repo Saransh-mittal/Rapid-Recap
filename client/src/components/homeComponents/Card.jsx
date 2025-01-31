@@ -9,7 +9,9 @@ import {
   HStack,
   Circle,
   Heading,
+  Link,
 } from '@chakra-ui/react'
+import { Link as RouterLink } from 'react-router-dom'
 import { motion, useAnimation, useSpring, useTransform } from 'framer-motion'
 import { useNavigate } from 'react-router-dom'
 import slugify from 'slugify'
@@ -148,202 +150,216 @@ const Card = React.memo(
     }
 
     return (
-      <MotionBox
-        ref={cardRef}
-        w={'xs'}
-        h={{ base: '26rem', md: 'md' }}
-        borderRadius="2xl"
-        overflow="hidden"
-        bg="linear-gradient(135deg, rgba(59,130,246,0.1) 0%, rgba(147,51,234,0.1) 100%)"
+      <Link
+        as={RouterLink}
+        to={`/article/${id}/${slugify(urlTitle)}`}
         onClick={handleClick}
-        color="white"
-        cursor="pointer"
-        boxShadow="xl"
-        position="relative"
-        variants={variants}
-        initial="hidden"
-        animate="visible"
-        whileHover="hover"
-        whileTap="tap"
-        style={{
-          rotateX,
-          rotateY,
-          transformStyle: 'preserve-3d',
-          perspective: 1000,
-        }}
-        onMouseMove={handleMouseMove}
-        onMouseLeave={handleMouseLeave}
-        layoutId={`card-${id}`}
+        _hover={{ textDecoration: 'none' }}
+        display="block"
+        draggable="false"
+        aria-label={`Read article: ${title}`}
+        itemScope
+        itemType="http://schema.org/Article"
       >
-        {/* Enhanced Star with better positioning and glow */}
-        {/* Dynamic Difficulty Icon */}
-        {difficulty && (
-          <Box
-            position="absolute"
-            top="-3px"
-            left="-3px"
-            zIndex="2"
-            transform="rotate(0deg)"
-            width="48px"
-            height="48px"
-            display="flex"
-            alignItems="center"
-            justifyContent="center"
-          >
-            <motion.div
-              initial={{ rotate: -30, scale: 0 }}
-              animate={{ rotate: 0, scale: 1 }}
-              transition={{ duration: 0.5, type: 'spring', bounce: 0.5 }}
+        <meta itemProp="headline" content={title} />
+        <meta itemProp="datePublished" content={date} />
+        <meta itemProp="image" content={image} />
+        <meta itemProp="articleSection" content={category} />
+        <MotionBox
+          ref={cardRef}
+          w={'xs'}
+          h={{ base: '26rem', md: 'md' }}
+          borderRadius="2xl"
+          overflow="hidden"
+          bg="linear-gradient(135deg, rgba(59,130,246,0.1) 0%, rgba(147,51,234,0.1) 100%)"
+          color="white"
+          cursor="pointer"
+          boxShadow="xl"
+          position="relative"
+          variants={variants}
+          initial="hidden"
+          animate="visible"
+          whileHover="hover"
+          whileTap="tap"
+          style={{
+            rotateX,
+            rotateY,
+            transformStyle: 'preserve-3d',
+            perspective: 1000,
+          }}
+          onMouseMove={handleMouseMove}
+          onMouseLeave={handleMouseLeave}
+          layoutId={`card-${id}`}
+        >
+          {/* Enhanced Star with better positioning and glow */}
+          {/* Dynamic Difficulty Icon */}
+          {difficulty && (
+            <Box
+              position="absolute"
+              top="-3px"
+              left="-3px"
+              zIndex="2"
+              transform="rotate(0deg)"
+              width="48px"
+              height="48px"
+              display="flex"
+              alignItems="center"
+              justifyContent="center"
             >
+              <motion.div
+                initial={{ rotate: -30, scale: 0 }}
+                animate={{ rotate: 0, scale: 1 }}
+                transition={{ duration: 0.5, type: 'spring', bounce: 0.5 }}
+              >
+                <Box
+                  position="relative"
+                  color={DIFF_COLOR[difficulty?.toLowerCase()]}
+                >
+                  {(() => {
+                    const IconComponent =
+                      ICONS_ARTICLE_DIFFICULTY[difficulty?.toLowerCase()]
+                    return <IconComponent size={24} />
+                  })()}
+                  <Box
+                    position="absolute"
+                    top="50%"
+                    left="50%"
+                    transform="translate(-50%, -50%)"
+                    width="100%"
+                    height="100%"
+                    borderRadius="full"
+                    bg={getDifficultyColor(difficulty).glow}
+                    filter="blur(8px)"
+                    opacity="0.6"
+                    zIndex="-1"
+                  />
+                </Box>
+              </motion.div>
+            </Box>
+          )}
+          {/* Difficulty Badge with Golden Frame */}
+          {/* Royal Reward Difficulty Badge with Gold Frame */}
+          {/* Royal Reward Difficulty Badge */}
+          {difficulty && (
+            <Box
+              position="absolute"
+              top="2px"
+              right="2px"
+              zIndex="2"
+              transition="all 0.3s ease"
+              _hover={{
+                transform: 'translateY(2px) scale(1.02)',
+                filter: 'brightness(1.1)',
+              }}
+            >
+              {/* Outer Decorative Frame */}
               <Box
                 position="relative"
-                color={DIFF_COLOR[difficulty?.toLowerCase()]}
-              >
-                {(() => {
-                  const IconComponent =
-                    ICONS_ARTICLE_DIFFICULTY[difficulty?.toLowerCase()]
-                  return <IconComponent size={24} />
-                })()}
-                <Box
-                  position="absolute"
-                  top="50%"
-                  left="50%"
-                  transform="translate(-50%, -50%)"
-                  width="100%"
-                  height="100%"
-                  borderRadius="full"
-                  bg={getDifficultyColor(difficulty).glow}
-                  filter="blur(8px)"
-                  opacity="0.6"
-                  zIndex="-1"
-                />
-              </Box>
-            </motion.div>
-          </Box>
-        )}
-        {/* Difficulty Badge with Golden Frame */}
-        {/* Royal Reward Difficulty Badge with Gold Frame */}
-        {/* Royal Reward Difficulty Badge */}
-        {difficulty && (
-          <Box
-            position="absolute"
-            top="2px"
-            right="2px"
-            zIndex="2"
-            transition="all 0.3s ease"
-            _hover={{
-              transform: 'translateY(2px) scale(1.02)',
-              filter: 'brightness(1.1)',
-            }}
-          >
-            {/* Outer Decorative Frame */}
-            <Box
-              position="relative"
-              padding="2px"
-              borderRadius="xl"
-              style={{
-                background: `linear-gradient(45deg, #251C44, #312456, #251C44)`, // Dark purple frame
-                boxShadow: `
+                padding="2px"
+                borderRadius="xl"
+                style={{
+                  background: `linear-gradient(45deg, #251C44, #312456, #251C44)`, // Dark purple frame
+                  boxShadow: `
         0 4px 20px rgba(37, 28, 68, 0.3),
         0 0 15px rgba(37, 28, 68, 0.2)
       `,
-              }}
-            >
-              {/* Main Badge Container */}
-              <Box
-                position="relative"
-                px="6"
-                py="2"
-                borderRadius="lg"
-                overflow="hidden"
-                style={{
-                  background: '#251C44', // Dark purple background
-                  border: `2px solid ${
-                    difficulty?.toLowerCase() === 'easy'
-                      ? '#22c55e'
-                      : difficulty?.toLowerCase() === 'medium'
-                      ? '#FFB800'
-                      : '#ef4444'
-                  }`,
                 }}
               >
-                {/* Royal Corner Ornaments */}
-                {[...Array(4)].map((_, i) => (
-                  <Box
-                    key={i}
-                    position="absolute"
-                    {...{
-                      0: {
-                        top: '0',
-                        left: '0',
-                        transform: 'translate(-25%, -25%)',
-                      },
-                      1: {
-                        top: '0',
-                        right: '0',
-                        transform: 'translate(25%, -25%)',
-                      },
-                      2: {
-                        bottom: '0',
-                        left: '0',
-                        transform: 'translate(-25%, 25%)',
-                      },
-                      3: {
-                        bottom: '0',
-                        right: '0',
-                        transform: 'translate(25%, 25%)',
-                      },
-                    }[i]}
-                  >
-                    <Box
-                      position="relative"
-                      width="12px"
-                      height="12px"
-                      transform="rotate(45deg)"
-                      style={{
-                        background:
-                          difficulty?.toLowerCase() === 'easy'
-                            ? '#22c55e'
-                            : difficulty?.toLowerCase() === 'medium'
-                            ? '#FFB800'
-                            : '#ef4444',
-                        borderRadius: '2px',
-                      }}
-                    />
-                  </Box>
-                ))}
-
-                {/* Shine Effect */}
+                {/* Main Badge Container */}
                 <Box
-                  position="absolute"
-                  top="0"
-                  left="0"
-                  right="0"
-                  bottom="0"
-                  style={{
-                    background:
-                      'linear-gradient(45deg, transparent 0%, rgba(255,255,255,0.05) 50%, transparent 100%)',
-                    animation: 'shine 3s infinite linear',
-                  }}
-                />
-
-                <Text
-                  fontSize="sm"
-                  fontWeight="black"
-                  textTransform="uppercase"
-                  letterSpacing="0.1em"
-                  px="1"
-                  textAlign="center"
                   position="relative"
-                  color={
-                    difficulty?.toLowerCase() === 'easy'
-                      ? 'green'
-                      : difficulty?.toLowerCase() === 'medium'
-                      ? 'yellow'
-                      : 'red'
-                  }
+                  px="6"
+                  py="2"
+                  borderRadius="lg"
+                  overflow="hidden"
                   style={{
-                    textShadow: `
+                    background: '#251C44', // Dark purple background
+                    border: `2px solid ${
+                      difficulty?.toLowerCase() === 'easy'
+                        ? '#22c55e'
+                        : difficulty?.toLowerCase() === 'medium'
+                        ? '#FFB800'
+                        : '#ef4444'
+                    }`,
+                  }}
+                >
+                  {/* Royal Corner Ornaments */}
+                  {[...Array(4)].map((_, i) => (
+                    <Box
+                      key={i}
+                      position="absolute"
+                      {...{
+                        0: {
+                          top: '0',
+                          left: '0',
+                          transform: 'translate(-25%, -25%)',
+                        },
+                        1: {
+                          top: '0',
+                          right: '0',
+                          transform: 'translate(25%, -25%)',
+                        },
+                        2: {
+                          bottom: '0',
+                          left: '0',
+                          transform: 'translate(-25%, 25%)',
+                        },
+                        3: {
+                          bottom: '0',
+                          right: '0',
+                          transform: 'translate(25%, 25%)',
+                        },
+                      }[i]}
+                    >
+                      <Box
+                        position="relative"
+                        width="12px"
+                        height="12px"
+                        transform="rotate(45deg)"
+                        style={{
+                          background:
+                            difficulty?.toLowerCase() === 'easy'
+                              ? '#22c55e'
+                              : difficulty?.toLowerCase() === 'medium'
+                              ? '#FFB800'
+                              : '#ef4444',
+                          borderRadius: '2px',
+                        }}
+                      />
+                    </Box>
+                  ))}
+
+                  {/* Shine Effect */}
+                  <Box
+                    position="absolute"
+                    top="0"
+                    left="0"
+                    right="0"
+                    bottom="0"
+                    style={{
+                      background:
+                        'linear-gradient(45deg, transparent 0%, rgba(255,255,255,0.05) 50%, transparent 100%)',
+                      animation: 'shine 3s infinite linear',
+                    }}
+                  />
+
+                  <Text
+                    fontSize="sm"
+                    fontWeight="black"
+                    textTransform="uppercase"
+                    letterSpacing="0.1em"
+                    px="1"
+                    textAlign="center"
+                    position="relative"
+                    color={
+                      difficulty?.toLowerCase() === 'easy'
+                        ? 'green'
+                        : difficulty?.toLowerCase() === 'medium'
+                        ? 'yellow'
+                        : 'red'
+                    }
+                    style={{
+                      textShadow: `
             0 0 10px ${
               difficulty?.toLowerCase() === 'easy'
                 ? 'rgba(38, 180, 90, 0.5)'
@@ -352,203 +368,206 @@ const Card = React.memo(
                 : 'rgba(177, 45, 45, 0.5)'
             }
           `,
-                  }}
-                >
-                  {diffTranslation(difficulty?.toLocaleLowerCase())}
-                </Text>
+                    }}
+                  >
+                    {diffTranslation(difficulty?.toLocaleLowerCase())}
+                  </Text>
 
-                {/* Metallic Accent Lines */}
-                <Box
-                  position="absolute"
-                  left="0"
-                  right="0"
-                  bottom="0"
-                  height="1px"
-                  style={{
-                    background: `linear-gradient(to right, transparent, ${
-                      difficulty?.toLowerCase() === 'easy'
-                        ? '#22c55e'
-                        : difficulty?.toLowerCase() === 'medium'
-                        ? '#FFB800'
-                        : '#ef4444'
-                    }40, transparent)`,
-                  }}
-                />
+                  {/* Metallic Accent Lines */}
+                  <Box
+                    position="absolute"
+                    left="0"
+                    right="0"
+                    bottom="0"
+                    height="1px"
+                    style={{
+                      background: `linear-gradient(to right, transparent, ${
+                        difficulty?.toLowerCase() === 'easy'
+                          ? '#22c55e'
+                          : difficulty?.toLowerCase() === 'medium'
+                          ? '#FFB800'
+                          : '#ef4444'
+                      }40, transparent)`,
+                    }}
+                  />
+                </Box>
               </Box>
-            </Box>
 
-            {/* Add subtle glow effect */}
-            <Box
-              position="absolute"
-              top="0"
-              left="0"
-              right="0"
-              bottom="0"
-              borderRadius="xl"
-              filter="blur(8px)"
-              style={{
-                background:
-                  difficulty?.toLowerCase() === 'easy'
-                    ? 'rgba(34, 197, 94, 0.2)'
-                    : difficulty?.toLowerCase() === 'medium'
-                    ? 'rgba(255, 184, 0, 0.2)'
-                    : 'rgba(239, 68, 68, 0.2)',
-                zIndex: -1,
-              }}
+              {/* Add subtle glow effect */}
+              <Box
+                position="absolute"
+                top="0"
+                left="0"
+                right="0"
+                bottom="0"
+                borderRadius="xl"
+                filter="blur(8px)"
+                style={{
+                  background:
+                    difficulty?.toLowerCase() === 'easy'
+                      ? 'rgba(34, 197, 94, 0.2)'
+                      : difficulty?.toLowerCase() === 'medium'
+                      ? 'rgba(255, 184, 0, 0.2)'
+                      : 'rgba(239, 68, 68, 0.2)',
+                  zIndex: -1,
+                }}
+              />
+            </Box>
+          )}
+          <Box
+            overflow="hidden"
+            height="200px"
+            style={{ transform: 'translateZ(20px)' }}
+          >
+            <MotionImage
+              src={image}
+              alt={title}
+              h="100%"
+              w="100%"
+              objectFit="cover"
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              transition={{ delay: 0.2 }}
+              variants={variants.image}
+              onError={e => (e.target.src = '/images/fallback_news_image.webp')}
+              loading="lazy"
+              itemProp="image"
             />
           </Box>
-        )}
-        <Box
-          overflow="hidden"
-          height="200px"
-          style={{ transform: 'translateZ(20px)' }}
-        >
-          <MotionImage
-            src={image}
-            alt={title}
-            h="100%"
-            w="100%"
-            objectFit="cover"
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            transition={{ delay: 0.2 }}
-            variants={variants.image}
-            onError={e => (e.target.src = '/images/fallback_news_image.webp')}
-            loading="lazy"
-          />
-        </Box>
 
-        <VStack
-          align="start"
-          p={6}
-          spacing={4}
-          style={{ transform: 'translateZ(50px)' }}
-        >
-          <HStack spacing={2} flexWrap="wrap">
-            <MotionBadge
-              colorScheme="purple"
-              fontWeight="bold"
-              fontSize="xs"
-              textTransform="uppercase"
-              initial={{ opacity: 0, y: -10 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ delay: 0.3 }}
-            >
-              {category}
-            </MotionBadge>
-            <MotionBadge
-              colorScheme="blue"
-              variant="outline"
-              fontSize="xs"
-              display="flex"
-              alignItems="center"
-              initial={{ opacity: 0, y: -10 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ delay: 0.4 }}
-            >
-              <CalendarSVG size={12} style={{ marginRight: '4px' }} />
-              {date}
-            </MotionBadge>
-
-            {/* Enhanced Multiplier Badge */}
-            {multiplier && (
-              <MotionBox
-                initial={{ opacity: 0, scale: 0 }}
-                animate={{ opacity: 1, scale: 1 }}
-                transition={{ delay: 0.5 }}
-                position="relative"
+          <VStack
+            align="start"
+            p={6}
+            spacing={4}
+            style={{ transform: 'translateZ(50px)' }}
+          >
+            <HStack spacing={2} flexWrap="wrap">
+              <MotionBadge
+                colorScheme="purple"
+                fontWeight="bold"
+                fontSize="xs"
+                textTransform="uppercase"
+                initial={{ opacity: 0, y: -10 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ delay: 0.3 }}
               >
-                <Box
-                  bg="linear-gradient(135deg, #FF6B6B 0%, #9F67FF 100%)"
-                  px="3"
-                  py="1"
-                  borderRadius="full"
-                  boxShadow="0 4px 12px rgba(159, 103, 255, 0.4)"
+                {category}
+              </MotionBadge>
+              <MotionBadge
+                colorScheme="blue"
+                variant="outline"
+                fontSize="xs"
+                display="flex"
+                alignItems="center"
+                initial={{ opacity: 0, y: -10 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ delay: 0.4 }}
+              >
+                <CalendarSVG size={12} style={{ marginRight: '4px' }} />
+                {date}
+              </MotionBadge>
+
+              {/* Enhanced Multiplier Badge */}
+              {multiplier && (
+                <MotionBox
+                  initial={{ opacity: 0, scale: 0 }}
+                  animate={{ opacity: 1, scale: 1 }}
+                  transition={{ delay: 0.5 }}
                   position="relative"
-                  overflow="hidden"
-                  _before={{
-                    content: '""',
-                    position: 'absolute',
-                    top: 0,
-                    left: 0,
-                    right: 0,
-                    bottom: 0,
-                    background:
-                      'linear-gradient(45deg, transparent 0%, rgba(255,255,255,0.2) 50%, transparent 100%)',
-                    animation: 'shine 2s infinite',
-                  }}
                 >
-                  <HStack spacing="1" alignItems="center">
-                    <Text
-                      color="white"
-                      fontSize="xs"
-                      fontWeight="extrabold"
-                      textShadow="0 2px 4px rgba(0,0,0,0.2)"
-                    >
-                      {multiplier}
-                    </Text>
-                    <Text
-                      color="yellow.200"
-                      fontSize="xs"
-                      fontWeight="bold"
-                      textTransform="uppercase"
-                    >
-                      Boost
-                    </Text>
-                  </HStack>
-                </Box>
-              </MotionBox>
-            )}
-          </HStack>
+                  <Box
+                    bg="linear-gradient(135deg, #FF6B6B 0%, #9F67FF 100%)"
+                    px="3"
+                    py="1"
+                    borderRadius="full"
+                    boxShadow="0 4px 12px rgba(159, 103, 255, 0.4)"
+                    position="relative"
+                    overflow="hidden"
+                    _before={{
+                      content: '""',
+                      position: 'absolute',
+                      top: 0,
+                      left: 0,
+                      right: 0,
+                      bottom: 0,
+                      background:
+                        'linear-gradient(45deg, transparent 0%, rgba(255,255,255,0.2) 50%, transparent 100%)',
+                      animation: 'shine 2s infinite',
+                    }}
+                  >
+                    <HStack spacing="1" alignItems="center">
+                      <Text
+                        color="white"
+                        fontSize="xs"
+                        fontWeight="extrabold"
+                        textShadow="0 2px 4px rgba(0,0,0,0.2)"
+                      >
+                        {multiplier}
+                      </Text>
+                      <Text
+                        color="yellow.200"
+                        fontSize="xs"
+                        fontWeight="bold"
+                        textTransform="uppercase"
+                      >
+                        Boost
+                      </Text>
+                    </HStack>
+                  </Box>
+                </MotionBox>
+              )}
+            </HStack>
 
-          <MotionHeading
-            as="h3"
-            fontSize="md"
-            fontWeight="bold"
-            lineHeight="shorter"
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: 0.5 }}
-            style={{ textShadow: '0 2px 4px rgba(0,0,0,0.3)' }}
-            textAlign={'left'}
-          >
-            {title}
-          </MotionHeading>
-        </VStack>
-
-        <Flex
-          justify="space-between"
-          w="100%"
-          alignItems="center"
-          position={'absolute'}
-          px={6}
-          bottom={3}
-        >
-          <HStack spacing={2}>
-            <ClockSVG size={14} color="#fff" />
-            <MotionText
-              fontSize="sm"
-              fontWeight="medium"
-              initial={{ opacity: 0, x: -10 }}
-              animate={{ opacity: 1, x: 0 }}
-              transition={{ delay: 0.6 }}
+            <MotionHeading
+              as="h3"
+              fontSize="md"
+              fontWeight="bold"
+              lineHeight="shorter"
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: 0.5 }}
+              style={{ textShadow: '0 2px 4px rgba(0,0,0,0.3)' }}
+              textAlign={'left'}
+              itemProp="headline"
             >
-              {readTime} {t('minRead')}
-            </MotionText>
-          </HStack>
-          <MotionCircle
-            size="40px"
-            bg="blue.500"
-            color="white"
-            variants={variants.arrow}
-            animate={controls}
-            whileHover={{ bg: 'blue.600' }}
-            transition={{ duration: 0.2 }}
+              {title}
+            </MotionHeading>
+          </VStack>
+
+          <Flex
+            justify="space-between"
+            w="100%"
+            alignItems="center"
+            position={'absolute'}
+            px={6}
+            bottom={3}
           >
-            <ArrowForwardIcon size={20} fill="#fff" />
-          </MotionCircle>
-        </Flex>
-      </MotionBox>
+            <HStack spacing={2}>
+              <ClockSVG size={14} color="#fff" />
+              <MotionText
+                fontSize="sm"
+                fontWeight="medium"
+                initial={{ opacity: 0, x: -10 }}
+                animate={{ opacity: 1, x: 0 }}
+                transition={{ delay: 0.6 }}
+              >
+                {readTime} {t('minRead')}
+              </MotionText>
+            </HStack>
+            <MotionCircle
+              size="40px"
+              bg="blue.500"
+              color="white"
+              variants={variants.arrow}
+              animate={controls}
+              whileHover={{ bg: 'blue.600' }}
+              transition={{ duration: 0.2 }}
+            >
+              <ArrowForwardIcon size={20} fill="#fff" />
+            </MotionCircle>
+          </Flex>
+        </MotionBox>
+      </Link>
     )
   },
 )
