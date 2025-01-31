@@ -1,4 +1,4 @@
-const VERSION = 'v8.9'
+const VERSION = 'v9'
 const CACHE_NAME = `rapid-recap-${VERSION}`
 const ASSETS_CACHE = `assets-${VERSION}`
 const DYNAMIC_CACHE = `dynamic-${VERSION}`
@@ -211,6 +211,26 @@ self.addEventListener('activate', event => {
                 Pragma: 'no-cache',
               },
             })
+            await fetch(
+              '/locales/en/components/articleComponents/Sidebar.json',
+              {
+                cache: 'reload',
+                headers: {
+                  'Cache-Control': 'no-cache',
+                  Pragma: 'no-cache',
+                },
+              },
+            )
+            await fetch(
+              '/locales/hi/components/articleComponents/Sidebar.json',
+              {
+                cache: 'reload',
+                headers: {
+                  'Cache-Control': 'no-cache',
+                  Pragma: 'no-cache',
+                },
+              },
+            )
             client.navigate(client.url)
           } catch (error) {
             console.error('Error fetching Navbar.json:', error)

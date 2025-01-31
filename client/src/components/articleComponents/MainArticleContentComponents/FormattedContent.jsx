@@ -5,19 +5,21 @@ import React, {
   useRef,
   useContext,
 } from 'react'
-import { Box, Flex, Button, useMediaQuery } from '@chakra-ui/react'
+import { Box, Flex, Button, useMediaQuery, Text } from '@chakra-ui/react'
 import DictTooltip from './DictTooltip'
 import SummaryView from './SummaryView'
 import NumberedContent from './NumberedContent'
 import { HighlightedWordsContext } from '../../../contextAPI/MainArticleProvider'
+import { useTranslation } from 'react-i18next'
 
 const FormattedContent = React.memo(
   ({ mainText, themedContent, dictionary = [], importantSentences = [] }) => {
     const [selectedWord, setSelectedWord] = useState(null)
     const [tooltipPosition, setTooltipPosition] = useState(null)
-    const [showOnlySummary, setShowOnlySummary] = useState(false)
+    const [showOnlySummary, setShowOnlySummary] = useState(true)
     const [isMobile] = useMediaQuery('(max-width: 480px)')
     const { reset: resetHighlightedWords } = useContext(HighlightedWordsContext)
+    const { t } = useTranslation('Sidebar')
 
     const stableRef = useRef({
       handleMouseEnter: (e, word) => {
@@ -96,7 +98,12 @@ const FormattedContent = React.memo(
 
     return (
       <Box position="relative">
-        <Flex justifyContent="flex-end" mb={6}>
+        <Flex
+          flexDirection={{ base: 'column', lg: 'row-reverse' }}
+          alignItems={'flex-end'}
+          gap={3}
+          mb={6}
+        >
           <Button
             onClick={toggleSummary}
             size={isMobile ? 'sm' : 'md'}
@@ -108,9 +115,37 @@ const FormattedContent = React.memo(
             }}
             transition="all 0.3s ease"
             boxShadow="0 2px 4px rgba(0,0,0,0.1)"
+            w={'fit-content'}
           >
             {showOnlySummary ? 'Show Full Article' : 'Show Key Points'}
           </Button>
+          {showOnlySummary && (
+            <Box
+              mt={2}
+              px={2}
+              py={2}
+              borderRadius="md"
+              bg="rgba(128, 90, 213, 0.1)"
+              backdropFilter="blur(8px)"
+              boxShadow="0 2px 4px rgba(0,0,0,0.1)"
+              animation="fadeIn 0.5s ease-in-out"
+              sx={{
+                '@keyframes fadeIn': {
+                  '0%': { opacity: 0, transform: 'translateY(-10px)' },
+                  '100%': { opacity: 1, transform: 'translateY(0)' },
+                },
+              }}
+            >
+              <Text
+                fontSize="sm"
+                color="purple.200"
+                fontStyle="italic"
+                letterSpacing="wide"
+              >
+                ✨ {t('warningForSummary')}
+              </Text>
+            </Box>
+          )}
         </Flex>
 
         <Box
