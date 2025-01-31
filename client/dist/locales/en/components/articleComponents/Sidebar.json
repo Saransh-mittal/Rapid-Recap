@@ -8,5 +8,6 @@
   "articleImageAlt": "Article image",
   "loadMore": "Load More",
   "alreadyOnArticle": "You are already on this article",
-  "alreadyOnArticleDesc": "You are already on this article. Please navigate to another article."
+  "alreadyOnArticleDesc": "You are already on this article. Please navigate to another article.",
+  "warningForSummary": "For optimal quiz performance, immerse yourself in the complete article"
 }
