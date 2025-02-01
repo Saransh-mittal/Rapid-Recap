@@ -318,7 +318,7 @@ async function migrateQuizAttempts(sourceDb, targetDb) {
   // Fetch quiz attempts
   console.log('Fetching quiz attempts...')
   const quizAttempts = await QuizAttemptsSource.find({
-    createdAt: { $gte: new Date('2025-01-01') },
+    createdAt: { $gte: new Date('2025-01-31') },
   }).lean()
   console.log(`Found ${quizAttempts.length} quiz attempts`)
 
@@ -357,23 +357,23 @@ async function migrateCollections() {
     await validateTargetDatabase(targetDb)
 
     // Perform migrations in order (users first, then related collections)
-    // const userCount = await migrateUsers(sourceDb, targetDb)
-    const articleCount = await migrateLatestArticles(sourceDb, targetDb)
+    const userCount = await migrateUsers(sourceDb, targetDb)
+    // const articleCount = await migrateLatestArticles(sourceDb, targetDb)
     // const tournamentCount = await migrateTournaments(sourceDb, targetDb)
     // const registrationCount = await migrateTournamentRegistrations(
     //   sourceDb,
     //   targetDb,
     // )
     // const sessionCount = await migrateQuizSessions(sourceDb, targetDb)
-    // const quizAttemptCount = await migrateQuizAttempts(sourceDb, targetDb)
+    const quizAttemptCount = await migrateQuizAttempts(sourceDb, targetDb)
 
     console.log('\nMigration completed successfully')
-    // console.log(`Total users migrated: ${userCount}`)
-    console.log(`Total articles migrated: ${articleCount}`)
+    console.log(`Total users migrated: ${userCount}`)
+    // console.log(`Total articles migrated: ${articleCount}`)
     // console.log(`Total tournaments migrated: ${tournamentCount}`)
     // console.log(`Total tournament registrations migrated: ${registrationCount}`)
     // console.log(`Total quiz sessions migrated: ${sessionCount}`)
-    // console.log(`Total quiz attempts migrated: ${quizAttemptCount}`)
+    console.log(`Total quiz attempts migrated: ${quizAttemptCount}`)
   } catch (error) {
     if (error instanceof CollectionExistsError) {
       console.error('\nMigration aborted:', error.message)

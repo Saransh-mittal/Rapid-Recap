@@ -53,7 +53,12 @@ const calculateRealTimeIQ = async (
   } else if (iqIncrement < 0) {
     iqIncrement = 0
   }
-  const boostedIncrement = iqIncrement * boostMultiplier
+
+  // Apply the boost multiplier
+  let boostedIncrement = iqIncrement * boostMultiplier
+  const MAX_IQ_INCREMENT = 5.0
+  boostedIncrement = Math.min(boostedIncrement, MAX_IQ_INCREMENT)
+  iqIncrement = Math.min(iqIncrement, MAX_IQ_INCREMENT)
 
   // Calculate final IQ score
   const finalIQScore = (parseFloat(prevIQScore) + boostedIncrement).toFixed(1)

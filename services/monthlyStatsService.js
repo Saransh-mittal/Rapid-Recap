@@ -12,7 +12,7 @@ const saveMonthlyStats = makeRetryable(
   async ({
     month = moment().month() + 1,
     year = moment().year(),
-    batchSize = 100,
+    batchSize = 50,
   } = {}) => {
     let processedCount = 0
     let errors = []
@@ -100,7 +100,7 @@ const saveMonthlyStats = makeRetryable(
               // Add transaction options for better error handling
               readConcern: { level: 'majority' },
               writeConcern: { w: 'majority' },
-              maxCommitTimeMS: 60000,
+              maxCommitTimeMS: 120000,
             },
           )
         } catch (error) {
