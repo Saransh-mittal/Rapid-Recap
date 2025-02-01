@@ -47,7 +47,13 @@ const saveQuizAttempt = async (
     .populate({
       path: 'quizAttempts',
       select: '_id createdAt',
-      match: { season: parseInt(configService.getCurrentSeason(), 10) },
+      match: {
+        $and: [
+          { season: parseInt(configService.getCurrentSeason(), 10) },
+          { month: new Date().getMonth() + 1 }, // JavaScript months are 0-based, so add 1
+          { year: new Date().getFullYear() },
+        ],
+      },
     })
     .session(session)
 
