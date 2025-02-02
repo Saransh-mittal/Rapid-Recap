@@ -18,6 +18,7 @@ const {
 const ApplicationUpdates = require('../model/applicationUpdatesSchema')
 const { setTimeout } = require('timers/promises')
 const { sendNotification } = require('../services/notificationService')
+const moment = require('moment-timezone')
 
 const retryOperation = async (operation, maxRetries = 3, delay = 1000) => {
   for (let attempt = 1; attempt <= maxRetries; attempt++) {
@@ -209,7 +210,13 @@ const fetchUniqueArticleIds = async () => {
   try {
     const currSeason = configService.getCurrentSeason()
     return await QuizAttempt.aggregate([
-      { $match: { season: parseInt(currSeason, 10) } },
+      {
+        $match: {
+          season: parseInt(currSeason, 10),
+          month: moment().month() + 1,
+          year: moment().year(),
+        },
+      },
       { $group: { _id: '$article' } },
       { $project: { _id: 0, articleId: '$_id' } },
     ])
@@ -291,6 +298,8 @@ const calculateUserScores = async users => {
         return await QuizAttempt.find({
           user: user._id,
           season: parseInt(currSeason, 10),
+          month: moment().month() + 1,
+          year: moment().year(),
         }).populate({
           path: 'article',
           select: '_id', // Only select the _id field from article
