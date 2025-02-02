@@ -298,7 +298,7 @@ initBotTracking()
 // const generateGoogleNewsSitemap = require('./google-sitemap-generator')
 // generateGoogleNewsSitemap()
 // Load scheduler
-// require('./scheduler/setupCronJobs')
+require('./scheduler/setupCronJobs')
 // require('./scripts/analyzeArticleRelations')
 // Setup routes and SSR
 async function initializeServer() {
