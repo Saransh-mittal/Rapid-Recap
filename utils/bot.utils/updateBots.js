@@ -1,4 +1,3 @@
-const moment = require('moment')
 const Article = require('../../model/articleSchema')
 const QuizAttempt = require('../../model/quizAttemptSchema')
 const Quiz = require('../../model/quizSchema')
