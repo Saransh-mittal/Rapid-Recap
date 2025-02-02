@@ -1,10 +1,10 @@
+const moment = require('moment')
 const Article = require('../../model/articleSchema')
 const QuizAttempt = require('../../model/quizAttemptSchema')
 const Quiz = require('../../model/quizSchema')
 const User = require('../../model/userSchema')
 const { genQuiz } = require('../quiz.utils')
 const configService = require('../../configService')
-const moment = require('moment-timezone')
 
 function shuffle(array) {
   for (let i = array.length - 1; i > 0; i--) {
@@ -146,8 +146,6 @@ async function updateBots() {
               articleDifficulty: fullQuiz.overAllDifficulty,
               timeTaken,
               season: parseInt(configService.getCurrentSeason(), 10),
-              month: moment().month() + 1,
-              year: moment().year(),
             })
 
             await newQuizAttempt.save()

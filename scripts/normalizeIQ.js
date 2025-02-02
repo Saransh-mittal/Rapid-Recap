@@ -1,3 +1,4 @@
+const MonthlyStats = require('../model/monthlyStatsSchema')
 const QuizAttempt = require('../model/quizAttemptSchema')
 const User = require('../model/userSchema')
 const { calculateRealTimeIQ } = require('../services/iqCalculationService')
@@ -10,24 +11,38 @@ const normalizeIQ = async () => {
     today.setHours(0, 0, 0, 0)
     const tomorrow = new Date(today)
     tomorrow.setDate(tomorrow.getDate() + 1)
+    const yesterday = new Date(today)
+    yesterday.setDate(yesterday.getDate() - 1)
+    yesterday.setHours(0, 0, 0, 0)
 
     // Find specified users
-    const userInGameNames = ['kavyansh_mittal', 'saransh_1234', 'Nikhil']
+    // const userInGameNames = ['Nikhil']
     const users = await User.find({
-      inGameName: { $in: userInGameNames },
+      // inGameName: { $in: userInGameNames },
+      IQ_score: { $gt: 0 },
     })
-    for (let user of users) {
-      if (user.inGameName === 'kavyansh_mittal') {
-        user.IQ_score = 97
-        user.userScore = 1043.75
-        user.baseUserScore = 1043.75
-      } else {
-        user.IQ_score = 110
-        user.userScore = 1125
-        user.baseUserScore = 1125
+    const monthlyUserStats = await MonthlyStats.find({})
+    for (let user of monthlyUserStats) {
+      const u = await User.findById(user.user)
+      if (user.iqScore.final >= 130) {
+        u.IQ_score = 110
+        u.userScore = 1125
+        u.baseUserScore = 1043.75
+      } else if (user.iqScore.final >= 110 && user.iqScore.final < 130) {
+        u.IQ_score = 97
+        u.userScore = 1043.75
+        u.baseUserScore = 1043.75
+      } else if (user.iqScore.final >= 90 && user.iqScore.final < 110) {
+        u.IQ_score = 90
+        u.userScore = 750
+        u.baseUserScore = 750
+      } else if (user.iqScore.final >= 10 && user.iqScore.final < 90) {
+        u.IQ_score = 10
+        u.userScore = 500
+        u.baseUserScore = 500
       }
 
-      await user.save()
+      await u.save()
     }
     const userIds = users.map(user => user._id)
 
@@ -35,7 +50,7 @@ const normalizeIQ = async () => {
     const attempts = await QuizAttempt.find({
       user: { $in: userIds },
       createdAt: {
-        $gte: today,
+        $gte: yesterday,
         $lt: tomorrow,
       },
     })
@@ -111,8 +126,6 @@ const normalizeIQ = async () => {
     console.log('\nNormalization complete')
   } catch (error) {
     console.error('Error in normalizeIQ:', error)
-  } finally {
-    await mongoose.disconnect()
   }
 }
 

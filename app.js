@@ -31,7 +31,6 @@ const i18nMiddleware = require('i18next-http-middleware')
 const i18n = require('./i18n')
 const connectDB = require('./db/conn')
 const connect_s4a = require('connect-s4a')
-const maintenanceMiddleware = require('./middleware/maintenanceMiddleware')
 // const fs = require('fs')
 
 const app = express()
@@ -239,7 +238,6 @@ if (process.env.NODE_ENV === 'development') {
     }),
   )
 }
-app.use(maintenanceMiddleware)
 // Enhanced headers for service workers, images, and media
 app.use((req, res, next) => {
   // Special handling for service worker
@@ -300,7 +298,7 @@ initBotTracking()
 // const generateGoogleNewsSitemap = require('./google-sitemap-generator')
 // generateGoogleNewsSitemap()
 // Load scheduler
-require('./scheduler/setupCronJobs')
+// require('./scheduler/setupCronJobs')
 // require('./scripts/analyzeArticleRelations')
 // Setup routes and SSR
 async function initializeServer() {

@@ -16,12 +16,24 @@ const calculateIQBoostMultiplier = (RQM_score, user) => {
   }
 
   let multiplier
-  if (RQM_score >= 100) multiplier = 5
-  else if (RQM_score >= 76) multiplier = 4
-  else if (RQM_score >= 51) multiplier = 2
+  if (RQM_score >= 200) multiplier = 10
+  else if (RQM_score >= 150) multiplier = 5
+  else if (RQM_score >= 120) multiplier = 4
+  else if (RQM_score >= 100) multiplier = 3
+  else if (RQM_score >= 76) multiplier = 2
   else multiplier = 1
 
   return multiplier
+}
+
+// Utility function to determine MAX_IQ_INCREMENT based on current IQ
+const getMaxIQIncrement = currentIQ => {
+  if (currentIQ > 200) return 0.5
+  if (currentIQ > 150) return 1
+  if (currentIQ >= 130) return 2
+  if (currentIQ >= 110) return 3
+  if (currentIQ >= 90) return 5
+  return 10
 }
 
 // Modified calculateRealTimeIQ function
@@ -56,7 +68,10 @@ const calculateRealTimeIQ = async (
 
   // Apply the boost multiplier
   let boostedIncrement = iqIncrement * boostMultiplier
-  const MAX_IQ_INCREMENT = 5.0
+
+  // Get dynamic MAX_IQ_INCREMENT based on current IQ score
+  const MAX_IQ_INCREMENT = getMaxIQIncrement(parseFloat(prevIQScore))
+
   boostedIncrement = Math.min(boostedIncrement, MAX_IQ_INCREMENT)
   iqIncrement = Math.min(iqIncrement, MAX_IQ_INCREMENT)
 

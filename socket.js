@@ -13,8 +13,8 @@ function initializeSocket(server) {
   const io = require('socket.io')(server, {
     pingTimeout: 60000,
     cors: {
-      origin: 'https://www.rapidrecap.co.in',
-      credentials: true,
+      origin: 'http://localhost:5173', // change at the time of production
+      // credentials: true,
     },
   })
 
