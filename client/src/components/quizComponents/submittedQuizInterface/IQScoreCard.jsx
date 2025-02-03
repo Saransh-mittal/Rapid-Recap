@@ -98,24 +98,48 @@ const IQScoreCard = React.memo(
                 animate={{ opacity: 1, x: 0 }}
                 transition={{ delay: 2.5 }}
               >
-                <MotionBadge
-                  colorScheme="yellow"
-                  variant="solid"
-                  fontSize="xs"
-                  px={3}
-                  py={1}
-                  borderRadius="full"
-                  bgGradient="linear(to-r, orange.400, yellow.400)"
-                  display="flex"
-                  alignItems="center"
-                  gap={1}
-                >
-                  <Icon as={Sparkles} boxSize={3} />+
-                  {(scoreData.boostMultiplier - 1) * 100}% BOOST
-                </MotionBadge>
-                <Text fontSize="xs" color="gray.300">
-                  for {boostReason}
-                </Text>
+                {scoreData.boostedIncrement == 5 ? (
+                  <MotionBadge
+                    colorScheme="purple"
+                    variant="solid"
+                    fontSize={{ base: '2xs', md: 'xs' }}
+                    px={3}
+                    py={1}
+                    mr={-4}
+                    borderRadius="full"
+                    bgGradient="linear(to-r, purple.400, pink.400)"
+                    display="flex"
+                    alignItems="center"
+                    gap={1}
+                    initial={{ opacity: 0, scale: 0.8 }}
+                    animate={{ opacity: 1, scale: 1 }}
+                    transition={{ delay: 3 }}
+                  >
+                    <Icon as={Sparkles} boxSize={3} />
+                    {t('maxBoostAchieved')}
+                  </MotionBadge>
+                ) : (
+                  <>
+                    <MotionBadge
+                      colorScheme="yellow"
+                      variant="solid"
+                      fontSize="xs"
+                      px={3}
+                      py={1}
+                      borderRadius="full"
+                      bgGradient="linear(to-r, orange.400, yellow.400)"
+                      display="flex"
+                      alignItems="center"
+                      gap={1}
+                    >
+                      <Icon as={Sparkles} boxSize={3} />+
+                      {(scoreData.boostMultiplier - 1) * 100}% BOOST
+                    </MotionBadge>
+                    <Text fontSize="xs" color="gray.300">
+                      for {boostReason}
+                    </Text>
+                  </>
+                )}
               </MotionFlex>
             )}
           </Flex>

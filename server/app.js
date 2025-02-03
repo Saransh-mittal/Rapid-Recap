@@ -48,7 +48,7 @@ if (process.env.NODE_ENV !== 'production') {
   })
 }
 // Apply security middleware first
-app.use(maintenanceMiddleware)
+// app.use(maintenanceMiddleware)
 app.use(i18nMiddleware.handle(i18n))
 
 app.use(
@@ -141,6 +141,7 @@ webpush.setVapidDetails(
 // require('./scripts/runHighlightTest.js')
 // require('./scripts/vectorizeArticles')
 // require('./scripts/analyzeUserDistribution')
+// require('./scripts/normalizeIQ')
 // -------------------
 
 // const { dailyUserIQCalc } = require('./utils/dailyUserIQCalc.utils')

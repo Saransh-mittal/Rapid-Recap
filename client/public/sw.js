@@ -1,4 +1,4 @@
-const VERSION = 'v9'
+const VERSION = 'v9.1'
 const CACHE_NAME = `rapid-recap-${VERSION}`
 const ASSETS_CACHE = `assets-${VERSION}`
 const DYNAMIC_CACHE = `dynamic-${VERSION}`
@@ -14,6 +14,16 @@ const NEVER_CACHE_DOMAINS = [
   'analytics.google.com',
   'www.googletagmanager.com',
   'stats.g.doubleclick.net',
+]
+
+const URLS_TO_CACHE = [
+  '/locales/en/components/headerFooter/Navbar.json',
+  '/locales/en/components/articleComponents/Sidebar.json',
+  '/locales/hi/components/articleComponents/Sidebar.json',
+  '/locales/en/components/quizComponents/SubmittedQuizInterface.json',
+  '/locales/hi/components/quizComponents/SubmittedQuizInterface.json',
+  '/locales/en/screens/LeaderBoard.json',
+  '/locales/hi/screens/LeaderBoard.json',
 ]
 
 // Function to get all files from a directory with specific extensions
@@ -201,39 +211,26 @@ self.addEventListener('activate', event => {
         // Get all clients
         const allClients = await clients.matchAll()
 
-        // For each client, fetch Navbar.json to trigger cache invalidation and reload
+        // For each client, fetch the URLs to trigger cache invalidation and reload
         for (const client of allClients) {
           try {
-            await fetch('/locales/en/components/headerFooter/Navbar.json', {
-              cache: 'reload',
-              headers: {
-                'Cache-Control': 'no-cache',
-                Pragma: 'no-cache',
-              },
-            })
-            await fetch(
-              '/locales/en/components/articleComponents/Sidebar.json',
-              {
-                cache: 'reload',
-                headers: {
-                  'Cache-Control': 'no-cache',
-                  Pragma: 'no-cache',
-                },
-              },
+            // Fetch all URLs with cache-busting headers
+            await Promise.all(
+              URLS_TO_CACHE.map(url =>
+                fetch(url, {
+                  cache: 'reload',
+                  headers: {
+                    'Cache-Control': 'no-cache',
+                    Pragma: 'no-cache',
+                  },
+                }),
+              ),
             )
-            await fetch(
-              '/locales/hi/components/articleComponents/Sidebar.json',
-              {
-                cache: 'reload',
-                headers: {
-                  'Cache-Control': 'no-cache',
-                  Pragma: 'no-cache',
-                },
-              },
-            )
+
+            // Navigate to reload the client
             client.navigate(client.url)
           } catch (error) {
-            console.error('Error fetching Navbar.json:', error)
+            console.error('Error fetching cached files:', error)
             // Still try to reload the client
             client.navigate(client.url)
           }

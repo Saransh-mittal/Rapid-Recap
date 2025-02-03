@@ -19,8 +19,6 @@ const isUnderMaintenance = async () => {
     // If not in cache, check database
     const maintenance = await MaintenanceWindow.findOne({
       isActive: true,
-      startTime: { $lte: new Date() },
-      endTime: { $gt: new Date() },
       status: 'in-progress',
     })
 
