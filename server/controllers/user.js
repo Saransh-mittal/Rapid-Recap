@@ -18,6 +18,7 @@ const {
   makeFirstLoginFalse,
   getTheRevivalEndDay,
   calculateLoginStreak,
+  retryableOnboardingUpdate,
 } = require('../utils/user.utils')
 const { dailyUserIQCalc } = require('../utils/dailyUserIQCalc.utils')
 const ApplicationUpdates = require('../model/applicationUpdatesSchema')
@@ -49,6 +50,11 @@ const {
   updateUserWithRetry,
   logActivityWithRetry,
 } = require('../utils/dbOperations.js')
+const moment = require('moment-timezone')
+const { processBadgePrivileges } = require('../utils/tournament.utils.js')
+const { getCategories } = require('../data/categories.js')
+const Tournament = require('../model/tournamentSchema.js')
+const { REWARDS_MODAL_CONFIG } = require('../config/rewardsModalConfig.js')
 
 const registerUser = async (req, res) => {
   const { name, email, pic, password, cpassword, inGameName } = req.body
@@ -202,10 +208,28 @@ const loginUser = async (req, res) => {
         expires: new Date(Date.now() + 365 * 24 * 60 * 60 * 1000),
         httpOnly: true,
       })
+    let badges = findUser?.badges || []
+    const now = moment().tz('Asia/Kolkata')
 
-    return res
-      .status(201)
-      .json({ message: 'SignIn Successfull', user: findUser, token })
+    // Get unclaimed valid badges
+    let unClaimedValidBadges = badges.filter(
+      badge =>
+        badge.canBeClaimedUntil &&
+        moment(badge.canBeClaimedUntil).isAfter(now) &&
+        !badge.claimed,
+    )
+
+    // Process category privileges from badges
+    const categoryPrivileges = processBadgePrivileges(badges)
+    Object.keys(categoryPrivileges).forEach(key => {
+      const cacheKey = `privilege_${findUser._id.toString()}_${key}`
+      cache.put(cacheKey, categoryPrivileges[key], 5 * 60 * 1000)
+    })
+    return res.status(201).json({
+      message: 'SignIn Successfull',
+      user: { ...findUser._doc, unClaimedValidBadges, categoryPrivileges },
+      token,
+    })
   } catch (err) {
     console.log(err)
   }
@@ -240,9 +264,29 @@ const loginCheck = asyncHandler(async (req, res) => {
   // Calculate new login streak
   const newStreakData = calculateLoginStreak(user, today)
 
+  let badges = user?.badges || []
+  const now = moment().tz('Asia/Kolkata')
+
+  // Get unclaimed valid badges
+  let unClaimedValidBadges = badges.filter(
+    badge =>
+      badge.canBeClaimedUntil &&
+      moment(badge.canBeClaimedUntil).isAfter(now) &&
+      !badge.claimed,
+  )
+
+  // Process category privileges from badges
+  const categoryPrivileges = processBadgePrivileges(badges)
+
+  Object.keys(categoryPrivileges).forEach(key => {
+    const cacheKey = `privilege_${req.user._id}_${key}`
+    cache.put(cacheKey, categoryPrivileges[key], 5 * 60 * 1000)
+  })
   // Create optimistically updated user object for immediate response
   const optimisticUser = {
     ...user,
+    unClaimedValidBadges,
+    categoryPrivileges,
     loginStreak: newStreakData.streak,
     lastLogin: today,
   }
@@ -434,6 +478,18 @@ const handleGoogleLogin = async (req, res) => {
           return res
             .status(422)
             .json({ error: 'In Game Name cannot have spaces' })
+
+        if (isValidEmail(inGameName)) {
+          return res
+            .status(422)
+            .json({ error: 'Email cannot be used as an In-Game Name' })
+        }
+
+        if (inGameName.length > 16) {
+          return res.status(422).json({
+            error: 'In Game Name cannot be greater than 16 characters',
+          })
+        }
         user.inGameName = inGameName
       }
 
@@ -459,6 +515,18 @@ const handleGoogleLogin = async (req, res) => {
         return res
           .status(422)
           .json({ error: 'In Game Name cannot have spaces' })
+
+      if (isValidEmail(inGameName)) {
+        return res
+          .status(422)
+          .json({ error: 'Email cannot be used as an In-Game Name' })
+      }
+
+      if (inGameName.length > 16) {
+        return res.status(422).json({
+          error: 'In Game Name cannot be greater than 16 characters',
+        })
+      }
       // If not, create a new user with Google data
       const name = userInfo.name.split(' ')
       user = new User({
@@ -478,7 +546,30 @@ const handleGoogleLogin = async (req, res) => {
       expires: new Date(Date.now() + 2592000000),
       httpOnly: true,
     })
-    res.status(201).json({ message: 'Google Login Successfull', user, token })
+
+    let badges = user?.badges || []
+    const now = moment().tz('Asia/Kolkata')
+
+    // Get unclaimed valid badges
+    let unClaimedValidBadges = badges.filter(
+      badge =>
+        badge.canBeClaimedUntil &&
+        moment(badge.canBeClaimedUntil).isAfter(now) &&
+        !badge.claimed,
+    )
+
+    // Process category privileges from badges
+    const categoryPrivileges = processBadgePrivileges(badges)
+
+    Object.keys(categoryPrivileges).forEach(key => {
+      const cacheKey = `privilege_${user._id.toString()}_${key}`
+      cache.put(cacheKey, categoryPrivileges[key], 5 * 60 * 1000)
+    })
+    res.status(201).json({
+      message: 'Google Login Successfull',
+      user: { ...user._doc, unClaimedValidBadges, categoryPrivileges },
+      token,
+    })
   } catch (error) {
     console.log(error)
     res.status(422).json({ error: error })
@@ -506,11 +597,27 @@ const leaderBoard = async (req, res) => {
   const currUserId = req.user ? req.user._id : null
   const { society, page = 1, limit = 10 } = req.query
   const cacheKey = `leaderboard_${society}_${page}_${limit}`
-
+  // Calculate time until next refresh
+  const now = moment.utc()
+  const nextRefresh = moment.utc().startOf('month').add(1, 'month')
+  if (now.date() === 1 && now.hour() === 0) {
+    // If it's the first of the month at exactly midnight UTC (00:00)
+    nextRefresh.subtract(1, 'month')
+  }
+  const timeUntilRefresh = {
+    days: nextRefresh.diff(now, 'days'),
+    hours: nextRefresh.diff(now, 'hours') % 24,
+    minutes: nextRefresh.diff(now, 'minutes') % 60,
+    seconds: nextRefresh.diff(now, 'seconds') % 60,
+    totalSeconds: nextRefresh.diff(now, 'seconds'),
+  }
   // Try to get the cached result
   const cachedResult = cache.get(cacheKey)
   if (cachedResult) {
-    return res.status(200).json(cachedResult)
+    return res.status(200).json({
+      ...cachedResult,
+      nextRefresh: timeUntilRefresh,
+    })
   }
 
   const societyConditions = {
@@ -533,6 +640,7 @@ const leaderBoard = async (req, res) => {
 
   try {
     const totalDocuments = await User.countDocuments(condition)
+
     const maxUsers = Math.min(totalDocuments, 500)
     const totalPages = Math.ceil(maxUsers / limitNumber)
 
@@ -552,16 +660,32 @@ const leaderBoard = async (req, res) => {
       .lean()
 
     // Step 2: Get paginated users with full details
+
     const paginatedUsers = await User.find(condition)
+      .select(
+        '_id name inGameName IQ_score pic avgRQM maxIQScore level xp displayedBadge',
+      )
       .sort({ IQ_score: -1, avgRQM: -1 })
       .skip(skipNumber)
       .limit(limitNumber)
       .lean()
 
-    // Step 3: Fetch quiz attempts for paginated users
+    // Step 3: Fetch quiz attempts for paginated users with date condition
     const userIds = paginatedUsers.map(user => user._id)
+    const currentDate = moment()
+
+    const quizAttemptsQuery =
+      currentDate.year() >= 2025 && currentDate.month() > 0
+        ? {
+            user: { $in: userIds },
+            season: 2,
+            year: moment().year(),
+            month: moment().month() + 1,
+          }
+        : { user: { $in: userIds }, season: 2 }
+
     const quizAttempts = await QuizAttempt.aggregate([
-      { $match: { user: { $in: userIds }, season: 2 } },
+      { $match: quizAttemptsQuery },
       { $group: { _id: '$user', count: { $sum: 1 } } },
     ])
 
@@ -585,7 +709,9 @@ const leaderBoard = async (req, res) => {
       },
     }))
 
-    await User.bulkWrite(bulkOps)
+    User.bulkWrite(bulkOps).catch(error => {
+      console.error('Error updating ranks:', error)
+    })
 
     // Step 6: Format result for response
     const result = enrichedUsers.map(user => ({
@@ -604,14 +730,24 @@ const leaderBoard = async (req, res) => {
       rank: user.rank,
     }))
 
-    // Step 7: Get current user data
+    // Step 7: Get current user data with date condition
     let currUserData = {}
+
     if (currUserId) {
+      const quizMatchQuery =
+        currentDate.year() >= 2025 && currentDate.month() > 0
+          ? {
+              season: 2,
+              year: moment().year(),
+              month: moment().month() + 1,
+            }
+          : { season: 2 }
+
       const currUser = await User.findById(currUserId)
         .select('avgRQM quizAttempts rank')
         .populate({
           path: 'quizAttempts',
-          match: { season: 2 },
+          match: quizMatchQuery,
           select: '_id',
         })
         .lean()
@@ -628,6 +764,7 @@ const leaderBoard = async (req, res) => {
       currUser: currUserData,
       totalPages,
       currentPage: pageNumber,
+      nextRefresh: timeUntilRefresh,
     }
 
     // Cache the result
@@ -1257,7 +1394,10 @@ const streakChecker = asyncHandler(async (req, res) => {
       user.streak > 0 &&
       user.streak % 7 === 0 &&
       user.streakExpiry.getTime() === tomorrow.getTime()
-
+    if (user.todayBoost && !isBoosted) {
+      user.todayBoost = false
+      await user.save()
+    }
     // // Check if the streak surge is already claimed today
     const checkIfAlreadyAwarded = await Activity.find({
       userId: user._id,
@@ -1873,126 +2013,14 @@ const confirmDeleteAccount = async (req, res) => {
 // @route  POST /api/user/onboarding-progress
 // @access Private
 const updateOnboardingProgress = asyncHandler(async (req, res) => {
-  function getStepId(step) {
-    const stepMap = {
-      1: 'language',
-      2: 'welcome',
-      3: 'categories',
-      4: 'article_selection',
-      5: 'quiz_question',
-      6: 'quiz_result',
-      7: 'article_reading',
-      8: 'leaderboard',
-    }
-    return stepMap[step] || 'language'
-  }
-  const {
-    step,
-    stepId,
-    language,
-    categories,
-    quizResult,
-    currentStep,
-    nextStep,
-    currentStepId,
-    nextStepId,
-    ...restData
-  } = req.body
-
-  // Handle the old format (using step number)
-  const isOldFormat = step !== undefined && !currentStep
-
-  // Normalize the data format
-  const normalizedData = {
-    currentStep: currentStep || step || 0,
-    nextStep: isOldFormat ? step + 1 : nextStep || currentStep + 1,
-    currentStepId: currentStepId || stepId || getStepId(step),
-    nextStepId: nextStepId || getStepId(isOldFormat ? step + 1 : nextStep),
-    data: {
-      language: language || restData.language,
-      categories: categories || restData.categories,
-      quizResult: quizResult || restData.quizResult,
-    },
-  }
-
-  const userId = req.user._id
-
-  const session = await mongoose.startSession()
-  session.startTransaction()
-
   try {
-    const user = await User.findById(userId).session(session)
-    if (!user) {
-      await session.abortTransaction()
-      session.endSession()
-      return res.status(404).json({ message: 'User not found' })
+    // Add validation
+    if (!req.user?._id) {
+      return res.status(401).json({ message: 'User not authenticated' })
     }
-
-    // Update to the next step
-    user.onboardingStep = normalizedData.nextStep
-
-    // Process data based on the current step
-    switch (normalizedData.currentStepId) {
-      case 'language':
-        if (normalizedData.data.language) {
-          user.userLanguage = normalizedData.data.language
-        }
-        break
-
-      case 'welcome':
-        if (normalizedData.data.language) {
-          user.userLanguage = normalizedData.data.language
-        }
-        break
-
-      case 'categories':
-        if (
-          normalizedData.data.categories &&
-          Array.isArray(normalizedData.data.categories)
-        ) {
-          user.preferredCategories = normalizedData.data.categories.map(
-            category => ({
-              category,
-              weight: 1 / normalizedData.data.categories.length,
-              isInferred: false,
-            }),
-          )
-        }
-        break
-
-      case 'quiz_question':
-        // Quiz question step, no data to save
-        break
-
-      case 'quiz_result':
-        if (normalizedData.data.quizResult !== undefined) {
-          user.initialQuizResult = normalizedData.data.quizResult
-        }
-        break
-
-      case 'article_reading':
-        // Article reading step, no data to save
-        break
-
-      case 'leaderboard':
-        user.needsOnboarding = false
-        break
-    }
-
-    await user.save({ session })
-    await session.commitTransaction()
-    session.endSession()
-
-    res.status(200).json({
-      message: 'Onboarding progress updated',
-      currentStep: normalizedData.currentStep,
-      nextStep: normalizedData.nextStep,
-      currentStepId: normalizedData.currentStepId,
-      nextStepId: normalizedData.nextStepId,
-    })
+    const result = await retryableOnboardingUpdate(req)
+    res.status(result.status).json(result.data)
   } catch (error) {
-    await session.abortTransaction()
-    session.endSession()
     console.error('Error updating onboarding progress:', error)
     res.status(500).json({
       message: 'Error updating onboarding progress',
@@ -2025,6 +2053,185 @@ const getOnboardingProgress = asyncHandler(async (req, res) => {
       message: 'Error fetching onboarding progress',
       error: error.message,
     })
+  }
+})
+
+const claimTournamentBadge = asyncHandler(async (req, res) => {
+  const { tournamentNumber, badgeName } = req.body
+  const userId = req.user._id
+
+  try {
+    const user = await User.findById(userId)
+    if (!user) {
+      return res.status(404).json({ message: 'User not found' })
+    }
+
+    // Find the badge and mark it as claimed
+    const badgeIndex = user.badges.findIndex(
+      badge =>
+        badge.tournamentNumber === tournamentNumber &&
+        badge.badgeName === badgeName &&
+        !badge.claimed,
+    )
+
+    if (badgeIndex === -1) {
+      return res
+        .status(404)
+        .json({ message: 'Badge not found or already claimed' })
+    }
+
+    user.badges[badgeIndex].claimed = true
+    await user.save()
+
+    cache.keys().forEach(key => {
+      if (key.startsWith('privilege_')) {
+        cache.del(key)
+      }
+    })
+
+    res.status(200).json({ message: 'Badge claimed successfully' })
+  } catch (error) {
+    console.error('Error claiming badge:', error)
+    res.status(500).json({ message: 'Internal server error' })
+  }
+})
+
+const getValidCategories = asyncHandler(async (req, res) => {
+  const userId = req.user._id
+
+  try {
+    // Get user's current badges for the tournament
+    const user = await User.findById(userId)
+    // get latest completed tournament
+    const latestTournament = await Tournament.findOne({ status: 'completed' })
+      .select('tournamentNumber')
+      .sort({ tournamentNumber: -1 })
+
+    if (!user) {
+      return res.status(404).json({ message: 'User not found' })
+    }
+    let badges = user?.badges || []
+    const now = moment().tz('Asia/Kolkata')
+    let currentBadges = badges.filter(
+      badge =>
+        badge.canBeClaimedUntil &&
+        moment(badge.canBeClaimedUntil).isAfter(now) &&
+        badge.tournamentNumber === latestTournament.tournamentNumber,
+    )
+    // Get all categories that have badges for this tournament
+    const usedCategories = currentBadges.map(badge => badge.text)
+
+    // Get all available categories (you'll need to import or define this)
+    const allCategories = getCategories()
+
+    // Filter out categories that already have badges
+    const validCategories = allCategories.filter(
+      category => !usedCategories.includes(category),
+    )
+
+    res.status(200).json({ validCategories })
+  } catch (error) {
+    console.error('Error getting valid categories:', error)
+    res.status(500).json({ message: 'Internal server error' })
+  }
+})
+
+const updateBadgeCategory = asyncHandler(async (req, res) => {
+  const { badgeName, selectedCategory } = req.body
+  const userId = req.user._id
+
+  try {
+    const user = await User.findById(userId)
+    if (!user) {
+      return res.status(404).json({ message: 'User not found' })
+    }
+    // get latest completed tournament
+    const latestTournament = await Tournament.findOne({ status: 'completed' })
+      .select('tournamentNumber')
+      .sort({ tournamentNumber: -1 })
+
+    // Find the badge
+    const badgeIndex = user.badges.findIndex(
+      badge =>
+        badge.tournamentNumber === latestTournament.tournamentNumber &&
+        badge.badgeName === badgeName &&
+        !badge.text, // Must be unnamed
+    )
+
+    if (badgeIndex === -1) {
+      return res
+        .status(404)
+        .json({ message: 'Badge not found or already has category' })
+    }
+    const allCategories = getCategories()
+
+    // Validate if category is allowed
+    const usedCategories = user.badges
+      .filter(
+        badge => badge.tournamentNumber === latestTournament.tournamentNumber,
+      )
+      .map(badge => badge.text)
+    // Filter out categories that already have badges
+    const validCategories = allCategories.filter(
+      category => !usedCategories.includes(category),
+    )
+    if (!validCategories.includes(selectedCategory)) {
+      return res.status(400).json({
+        message: 'Category already has a badge for this tournament',
+        invalidCategory: true,
+      })
+    }
+
+    // Update badge
+    user.badges[badgeIndex].text = selectedCategory
+    await user.save()
+
+    res.status(200).json({
+      message: 'Badge category updated successfully',
+      updatedBadge: user.badges[badgeIndex],
+    })
+  } catch (error) {
+    console.error('Error updating badge category:', error)
+    res.status(500).json({ message: 'Internal server error' })
+  }
+})
+
+const checkRewardsModalStatus = asyncHandler(async (req, res) => {
+  const userId = req.user._id
+
+  try {
+    const user = await User.findById(userId)
+
+    if (!user) {
+      return res.status(404).json({ error: 'User not found' })
+    }
+
+    // For existing users (created before feature start date)
+    const isExistingUser =
+      user.createdAt < REWARDS_MODAL_CONFIG.FEATURE_START_DATE
+
+    // Check if modal should be shown
+    let shouldShowModal = false
+    if (isExistingUser && !user.hasSeenRewardsModal) {
+      // Set expiry date if not set
+      if (!user.rewardsModalExpiryDate) {
+        user.rewardsModalExpiryDate = REWARDS_MODAL_CONFIG.EXPIRY_DATE
+        await user.save()
+      }
+
+      // Check if within expiry period
+      if (new Date() <= user.rewardsModalExpiryDate) {
+        shouldShowModal = true
+        // Mark as seen
+        user.hasSeenRewardsModal = true
+        await user.save()
+      }
+    }
+
+    res.status(200).json({ shouldShowModal })
+  } catch (error) {
+    console.error('Error checking rewards modal status:', error)
+    res.status(500).json({ error: 'Internal server error' })
   }
 })
 
@@ -2072,4 +2279,8 @@ module.exports = {
   getOnboardingProgress,
   claimQuinBoost,
   claimStreakSurge,
+  claimTournamentBadge,
+  getValidCategories,
+  updateBadgeCategory,
+  checkRewardsModalStatus,
 }

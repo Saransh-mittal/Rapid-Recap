@@ -15,7 +15,7 @@ import {
   useToast,
 } from '@chakra-ui/react'
 import { RiRobot2Line } from 'react-icons/ri'
-
+import { GrMemory } from 'react-icons/gr'
 // Component Imports
 import DashboardHeader from '../components/dashboardComponents/DashboardHeader'
 import DateRangeSelector from '../components/dashboardComponents/DateRangeSelector'
@@ -24,6 +24,7 @@ import UserStats from '../components/dashboardComponents/UserStats'
 import MergedDataTable from '../components/dashboardComponents/MergedDataTable'
 import ManagementButtons from '../components/dashboardComponents/ManagementButtons'
 import FeedbackButtons from '../components/dashboardComponents/FeedbackButtons'
+import MaintenanceModal from '../components/dashboardComponents/MaintenanceModal'
 
 // Lazy loaded components
 const NotificationStatus = lazy(() =>
@@ -131,6 +132,11 @@ const Dashboard = () => {
     isOpen: isOnboardingArticleOpen,
     onOpen: onOnboardingArticleOpen,
     onClose: onOnboardingArticleClose,
+  } = useDisclosure()
+  const {
+    isOpen: isMaintenanceOpen,
+    onOpen: onMaintenanceOpen,
+    onClose: onMaintenanceClose,
   } = useDisclosure()
 
   // Data fetching functions
@@ -424,12 +430,41 @@ const Dashboard = () => {
     }
   }
 
+  const handleCacheAnalysis = async () => {
+    try {
+      setIsSendingReport(true)
+      const response = await axios.get('/api/admin/cache-analysis/report')
+
+      toast({
+        title: 'Report Sent!',
+        description: 'Memory cache analysis report has been sent to your email',
+        status: 'success',
+        duration: 5000,
+        isClosable: true,
+        position: 'top-right',
+      })
+    } catch (error) {
+      toast({
+        title: 'Error',
+        description:
+          error.response?.data?.message ||
+          'Failed to send cache analysis report',
+        status: 'error',
+        duration: 5000,
+        isClosable: true,
+        position: 'top-right',
+      })
+    } finally {
+      setIsSendingReport(false)
+    }
+  }
+
   return (
     <Box minHeight="100vh" mt={'4.5rem'} px={isLargerThan768 ? '2rem' : '0rem'}>
       <Container maxW="container.xl" py={8}>
         <DashboardHeader />
         <Box display="flex" justifyContent="center" mb={4} w={'100%'}>
-          <Button
+          {/*<Button
             leftIcon={<RiRobot2Line />}
             colorScheme="purple"
             size="md"
@@ -443,6 +478,21 @@ const Dashboard = () => {
             transition="all 0.2s"
           >
             Send Bot Analytics Report
+          </Button>*/}
+          <Button
+            leftIcon={<GrMemory />}
+            colorScheme="purple"
+            size="md"
+            isLoading={isSendingReport}
+            loadingText="Analyzing..."
+            onClick={handleCacheAnalysis}
+            _hover={{
+              transform: 'translateY(-2px)',
+              boxShadow: 'lg',
+            }}
+            transition="all 0.2s"
+          >
+            Analyze Memory Cache
           </Button>
         </Box>
         <Tabs isFitted variant="soft-rounded" colorScheme="teal">
@@ -492,6 +542,7 @@ const Dashboard = () => {
                 onCurrentAffairsOpen={onCurrentAffairsOpen}
                 onTestTournamentManagementOpen={onTestTournamentManagementOpen}
                 onOnboardingArticleOpen={onOnboardingArticleOpen}
+                onMaintenanceOpen={onMaintenanceOpen}
               />
             </TabPanel>
 
@@ -552,6 +603,10 @@ const Dashboard = () => {
             setSelectedArticle={setSelectedArticle}
             articles={articles}
             fetchArticles={fetchArticles}
+          />
+          <MaintenanceModal
+            isOpen={isMaintenanceOpen}
+            onClose={onMaintenanceClose}
           />
           <OnboardingArticleAdd
             isOpen={isAddModalOpen}

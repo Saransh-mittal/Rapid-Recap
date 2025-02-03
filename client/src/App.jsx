@@ -8,13 +8,10 @@ import React, {
 } from 'react'
 import { useLocation } from 'react-router-dom'
 import ReactGA from 'react-ga4'
-import { Helmet } from 'react-helmet'
 import { Box } from '@chakra-ui/react'
 import { useDispatch, useSelector } from 'react-redux'
-import axios from 'axios'
 import { useTranslation } from 'react-i18next'
 
-const Navbar = React.lazy(() => import('./components/Header-Footer/Navbar.jsx'))
 const FixedBackground = React.lazy(() =>
   import('./components/miscellaneous/FixedBackground.jsx'),
 )
@@ -43,10 +40,14 @@ const NotificationModal = React.lazy(() =>
 const UpgradeModal = React.lazy(() =>
   import('./components/homeComponents/UpgradeModal'),
 )
+const TournamentRewardsModal = React.lazy(() =>
+  import(
+    './components/tournamentComponents/rewards/TournamentRewardsModal.jsx'
+  ),
+)
 import { RewardDisplay } from './components/rewards'
 
 import {
-  addNoteMessage,
   fetchUnreadNoteMessages,
   setIsRegisterOpen,
   setIsSigninOpen,
@@ -56,7 +57,6 @@ import {
   setIsNotifInboxModalOpen,
   addNoteMessageIfAllowed,
 } from './redux/appSlice.js'
-import { setLoginCheckStatus, setUser } from './redux/authSlice.js'
 import i18n from 'i18next'
 import { changeLanguage } from './utils/helper.utils.js'
 import {
@@ -79,6 +79,11 @@ import {
   setQuizLeftToGetQuizBoost,
 } from './redux/quizSlice.js'
 import { quinBoostChecker } from './utils/quiz.utils.js'
+import { tournamentRewardsClaim } from './utils/tournamentRewards.js'
+import { useSocket } from './customHooks/useSocket.js'
+import useRewardsModal from './customHooks/useRewardsModal.js'
+import MaintenanceHandler from './services/MaintenanceHandler.jsx'
+import { fetchDemotionSummary } from './redux/demotionSummarySlice.js'
 
 const App = () => {
   ReactGA.initialize('G-ES5VQ8NW7Z')
@@ -89,11 +94,18 @@ const App = () => {
   const [showLoadingScreen, setShowLoadingScreen] = useState(false)
   const { t } = useTranslation('App') // Initialize translation function
   const { t: tournamentSliceTranslation } = useTranslation('tournamentSlice') // Added translation
+  const { t: rewardsTranslation } = useTranslation('rewards') // Added translation
   const [navbarLoaded, setNavbarLoaded] = useState(false)
   const dispatch = useDispatch()
   const { isAuthenticated, user, loginCheckStatus } = useSelector(
     state => state.auth,
   )
+  const {
+    isOpen: isOpenRewardsModal,
+    onClose,
+    isLoading: isLoadingRewardsModal,
+  } = useRewardsModal()
+  const { getSocket } = useSocket()
   const {
     isRegisterOpen,
     isSigninOpen,
@@ -102,6 +114,7 @@ const App = () => {
     selectedNotificationId,
   } = useSelector(state => state.app)
   const { isOpen, tournamentQuiz } = useSelector(state => state.quiz)
+  const { summary, isVisible } = useSelector(state => state.demotionSummary)
   const [isGuestLoggedin, setIsGuestLoggedin] = useState(false)
   const [guestModalJustClosed, setGuestModalJustClosed] = useState(false)
   const { tournamentId, status, tournamentStartTime } = useSelector(
@@ -122,7 +135,7 @@ const App = () => {
     if (selectedNotificationId) {
       dispatch(setIsNotifInboxModalOpen(true))
     }
-  }, [selectedNotificationId, dispatch])
+  }, [selectedNotificationId])
 
   const handleClose = useCallback(() => {
     setIsGuestLoggedin(false)
@@ -300,6 +313,34 @@ const App = () => {
   }, [loginCheckStatus])
 
   useEffect(() => {
+    if (loginCheckStatus === 'fulfilled' && isAuthenticated) {
+      dispatch(fetchDemotionSummary())
+    }
+    const handleHashChange = () => {
+      if (
+        window.location.hash === '#signin' &&
+        !isAuthenticated &&
+        loginCheckStatus === 'fulfilled'
+      ) {
+        dispatch(setIsSigninOpen(true))
+      }
+      if (
+        window.location.hash === '#register' &&
+        !isAuthenticated &&
+        loginCheckStatus === 'fulfilled'
+      ) {
+        dispatch(setIsRegisterOpen(true))
+      }
+    }
+    // Check hash on initial load
+    handleHashChange()
+
+    // Listen for hash changes
+    window.addEventListener('hashchange', handleHashChange)
+    return () => window.removeEventListener('hashchange', handleHashChange)
+  }, [loginCheckStatus, isAuthenticated])
+
+  useEffect(() => {
     let timer
     if (isAuthenticated) {
       dispatch(isSubscribedChecker())
@@ -313,6 +354,7 @@ const App = () => {
         setQuizLeftToGetQuizBoost,
         dispatch,
       })
+      getSocket()
     }
     if (isAuthenticated && user?.soundSettings) {
       dispatch(setSoundSettings(user.soundSettings))
@@ -340,6 +382,11 @@ const App = () => {
     dispatch(setTaskProgress({ task: 'otherTasks', progress: 100 }))
     return () => clearTimeout(timer)
   }, [isAuthenticated])
+
+  useEffect(() => {
+    if (user && user.inGameName)
+      tournamentRewardsClaim({ user, dispatch, t: rewardsTranslation })
+  }, [user])
 
   useEffect(() => {
     ReactGA.set({
@@ -393,12 +440,12 @@ const App = () => {
         }),
       )
     }
-  }, [user, guestModalJustClosed, isGuestLoggedin, dispatch])
+  }, [user, guestModalJustClosed, isGuestLoggedin])
 
   const handleNavbarLoad = useCallback(() => {
     setNavbarLoaded(true)
     dispatch(setTaskProgress({ task: 'navbarLoad', progress: 100 }))
-  }, [dispatch])
+  }, [])
 
   useEffect(() => {
     if (overallProgress === 100) {
@@ -411,32 +458,7 @@ const App = () => {
   }, [navbarLoaded, overallProgress, dispatch])
 
   return (
-    <>
-      <Helmet>
-        <title>{t('Rapid Recap - Stay Informed, Stay Ahead')}</title>
-        <meta
-          name="description"
-          content={t(
-            'Rapid Recap is your go-to source for the latest news and articles. Test your knowledge with quizzes and track your Information Quotient (IQ) score.',
-          )}
-        />
-        <meta
-          name="keywords"
-          content={t(
-            'Rapid Recap, news, articles, quizzes, IQ score, leaderboard',
-          )}
-        />
-        <meta
-          property="og:title"
-          content={t('Rapid Recap - Stay Informed, Stay Ahead')}
-        />
-        <meta
-          property="og:description"
-          content={t(
-            'Stay updated with the latest news and articles. Take quizzes and see your Information Quotient (IQ) score on Rapid Recap.',
-          )}
-        />
-      </Helmet>
+    <MaintenanceHandler>
       {showLoadingScreen && <LoadingScreen progress={overallProgress} />}
 
       <Suspense fallback={null}>
@@ -497,7 +519,7 @@ const App = () => {
         />
       </Suspense>
       <NavbarProvider>
-        {showNavbar && (
+        {showNavbar && !(summary && isVisible) && (
           <Suspense fallback={null}>
             {/* <Navbar onNavbarLoad={handleNavbarLoad} /> */}
             <ModernNavbar onNavbarLoad={handleNavbarLoad} />
@@ -528,9 +550,17 @@ const App = () => {
         )}
       </Suspense>
       <Suspense fallback={null}>
+        {!isLoadingRewardsModal && (
+          <TournamentRewardsModal
+            isOpen={isOpenRewardsModal}
+            onClose={onClose}
+          />
+        )}
+      </Suspense>
+      <Suspense fallback={null}>
         <RewardDisplay />
       </Suspense>
-    </>
+    </MaintenanceHandler>
   )
 }
 

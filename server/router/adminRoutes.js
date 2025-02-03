@@ -19,7 +19,10 @@ const {
   updateOnBoardingArticle,
   deleteOnBoardingArticle,
 } = require('../controllers/article')
-const { sendCurrentBotReport } = require('../controllers/mail')
+const {
+  sendCurrentBotReport,
+  sendCacheAnalysisReport,
+} = require('../controllers/mail')
 
 const {
   getAllTournaments,
@@ -40,6 +43,13 @@ const {
   getTournamentFeedback,
   getTournamentFeedbackStats,
 } = require('../controllers/feedbackController')
+const {
+  scheduleMaintenanceWindow,
+  startMaintenanceWindow,
+  endMaintenanceWindow,
+  cancelMaintenanceWindow,
+  getMaintenanceWindows,
+} = require('../controllers/maintenanceController')
 const router = express.Router()
 
 router.post(
@@ -203,5 +213,38 @@ router.get(
   adminMiddleware,
   sendCurrentBotReport,
 )
+router.get(
+  '/cache-analysis/report',
+  Authenticate,
+  adminMiddleware,
+  sendCacheAnalysisReport,
+)
+
+// Maintenance routes
+router.post(
+  '/maintenance',
+  Authenticate,
+  adminMiddleware,
+  scheduleMaintenanceWindow,
+)
+router.post(
+  '/maintenance/:maintenanceId/start',
+  Authenticate,
+  adminMiddleware,
+  startMaintenanceWindow,
+)
+router.post(
+  '/maintenance/:maintenanceId/end',
+  Authenticate,
+  adminMiddleware,
+  endMaintenanceWindow,
+)
+router.post(
+  '/maintenance/:maintenanceId/cancel',
+  Authenticate,
+  adminMiddleware,
+  cancelMaintenanceWindow,
+)
+router.get('/maintenance', Authenticate, adminMiddleware, getMaintenanceWindows)
 
 module.exports = router

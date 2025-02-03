@@ -73,7 +73,7 @@ mongoose
 //             continue;
 //           articlesForMail.push({
 //             articleData,
-//             link: `https://www.rapidrecap.co.in/article/${articleData._id.toString()}`,
+//             link: `https://rapidrecap.ai/article/${articleData._id.toString()}`,
 //           });
 //           cnt--;
 //         }
@@ -130,7 +130,7 @@ mongoose
 //   // const users = await User.find({ inGameName: "saransh_1234" }).select("_id");
 
 //   const updateTitle = `🚀 The Wise Web Has Launched! Connect, Chat, and Share on Rapid Recap 🌐`;
-//   const url = "https://www.rapidrecap.co.in/";
+//   const url = "https://rapidrecap.ai/";
 //   for (let user of users) {
 //     await sendNotification({
 //       userId: user._id.toString(),

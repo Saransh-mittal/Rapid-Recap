@@ -24,6 +24,7 @@ const {
   calculateWeeklyQuizCount,
   calculateWeeklyQuizDifficultyDistribution,
 } = require('../utils/mail.utils')
+const { analyzeMemoryCache } = require('../utils/memoryCacheMonitor.js')
 const { progressBar } = require('../utils/progress.utils.js')
 const asyncHandler = require('express-async-handler')
 
@@ -194,7 +195,7 @@ const sendMailsToUsers = async (req, res) => {
       //     continue
       //   articlesForMail.push({
       //     articleData,
-      //     link: `https://www.rapidrecap.co.in/article/${articleData._id.toString()}`,
+      //     link: `https://rapidrecap.ai/article/${articleData._id.toString()}`,
       //   })
       //   cnt--
       // }
@@ -275,4 +276,60 @@ const sendCurrentBotReport = asyncHandler(async (req, res) => {
   })
 })
 
-module.exports = { streakBroken, sendMailsToUsers, sendCurrentBotReport }
+// @desc   Send cache analysis report via email
+// @route  POST /api/admin/cache-analysis/report
+// @access Admin
+const sendCacheAnalysisReport = asyncHandler(async (req, res) => {
+  const { email } = await User.findById(req.user._id)
+  const cacheAnalysis = analyzeMemoryCache()
+
+  const transporter = await mailTransporter()
+
+  const emailContent = `
+    <h2>Memory Cache Analysis Report</h2>
+    <p>Total Keys: ${cacheAnalysis.totalKeys}</p>
+    <p>Total Size: ${cacheAnalysis.totalSize}</p>
+
+    <h3>Cache Usage By Key Type:</h3>
+    <table border="1">
+      <tr>
+        <th>Key</th>
+        <th>Size</th>
+        <th>Type</th>
+        <th>Expiry</th>
+      </tr>
+      ${cacheAnalysis.keysBySize
+        .map(
+          item => `
+        <tr>
+          <td>${item.key}</td>
+          <td>${item.size}</td>
+          <td>${item.type}</td>
+          <td>${item.expiryTime || 'No expiry'}</td>
+        </tr>
+      `,
+        )
+        .join('')}
+    </table>
+  `
+
+  await transporter.sendMail({
+    from: process.env.EMAIL_FROM,
+    to: email,
+    subject: `Memory Cache Analysis Report - ${new Date().toLocaleDateString()}`,
+    html: emailContent,
+  })
+
+  res.status(200).json({
+    success: true,
+    message: 'Memory cache analysis report sent successfully',
+    data: cacheAnalysis,
+  })
+})
+
+module.exports = {
+  streakBroken,
+  sendMailsToUsers,
+  sendCurrentBotReport,
+  sendCacheAnalysisReport,
+}

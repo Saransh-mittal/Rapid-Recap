@@ -12,6 +12,7 @@ const {
   fetchNews,
   processNews,
   extractNewsUtilityFunc,
+  processArticlesWithPrivileges,
 } = require('../utils/article.utils')
 const { sendNotification } = require('../services/notificationService')
 const {
@@ -56,7 +57,7 @@ const {
   cacheVector,
 } = require('../utils/searchCache.utils')
 
-async function allArticles(req, res) {
+const allArticles = async (req, res) => {
   const {
     page = 1,
     pageSize = CACHE_CONFIG.defaults.PAGE_SIZE,
@@ -74,10 +75,28 @@ async function allArticles(req, res) {
 
     const processedArticles = await getOrSetCache(cacheKey, async () => {
       const articles = await queryArticles({ category, page, pageSize })
-      return processArticles(articles, lang)
+      const baseProcessed = await processArticles(
+        articles,
+        lang,
+        req.privileges,
+      )
+
+      return baseProcessed
     })
 
-    res.send(processedArticles)
+    let result = processedArticles
+    // Apply privilege-based processing if authenticated
+    if (req.privileges) {
+      result = processArticlesWithPrivileges(processedArticles, req.privileges)
+    } else {
+      // strip off articleDifficulty from the response if there is no privilege
+      result = processedArticles.map(article => {
+        const { articleDifficulty, ...rest } = article
+        return rest
+      })
+    }
+
+    res.send(result)
   } catch (error) {
     console.error('Error in allArticles:', error)
     res.status(400).json({ error: error.message || 'Something went wrong' })
@@ -142,8 +161,8 @@ async function getArticle(req, res) {
         if (!article) {
           throw new Error('Article not found')
         }
-
-        return processDetailedArticle(article, highlights, lang)
+        const privileges = req.privileges
+        return processDetailedArticle(article, highlights, lang, privileges)
       },
       CACHE_CONFIG.durations.USER_ARTICLE,
     )
@@ -481,7 +500,7 @@ const getWorldNews = async (req, res) => {
     const title = '📢 New Content Alert! 📰'
     const body =
       'Exciting news just in! Explore our latest articles and breaking news updates to stay ahead of the curve. Tap to discover now!'
-    const url = 'https://www.rapidrecap.co.in/'
+    const url = 'https://rapidrecap.ai/'
     sendNotification({ title, body, url })
   } catch (error) {
     res.status(500).json({ error: error || 'Something went wrong' })
@@ -503,7 +522,7 @@ const extractNews = async (req, res) => {
     //   const title = `📢 New ${notificationCategories} Content Alert! 📰`;
     //   const body =
     //     "Exciting news just in! Explore our latest articles and breaking news updates to stay ahead of the curve. Tap to discover now!";
-    //   const url = "https://www.rapidrecap.co.in/";
+    //   const url = "https://rapidrecap.ai/";
     //   await sendNotification({ title, body, url });
     // }
   } catch (error) {
@@ -1015,15 +1034,27 @@ const getRelatedArticles = asyncHandler(async (req, res) => {
 // @route  GET /api/articles/bot-related/:articleId
 // @access Public
 const getBotRelatedArticles = asyncHandler(async (req, res) => {
+  const cachedContent = cache.get('bot-related-articles')
+  if (cachedContent) {
+    return res.send(cachedContent)
+  }
   const { articleId } = req.params
-  const relatedArticles = await ArticleService.getRelatedArticles(articleId)
 
-  if (!relatedArticles) {
+  // Try to get trending articles first
+  let articles = await ArticleService.getTrendingArticles()
+
+  // If no trending articles, fallback to regular related articles
+  if (!articles) {
+    articles = await ArticleService.getRelatedArticles(articleId)
+  }
+
+  if (!articles) {
     return res.status(404).send('')
   }
 
-  const relatedHTML =
-    ArticleService.generateRelatedArticlesHTML(relatedArticles)
+  const relatedHTML = ArticleService.generateRelatedArticlesHTML(articles)
+
+  cache.put('bot-related-articles', relatedHTML, 3600000 * 6)
   res.send(relatedHTML)
 })
 

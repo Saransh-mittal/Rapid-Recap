@@ -1,41 +1,49 @@
 import { useState, useRef, useEffect, useCallback } from 'react'
-import './EmailVerify.css'
-import axios from 'axios'
-import { Otptimer } from 'otp-timer-ts'
-import Loading from '../miscellaneous/Loading'
 import {
-  Modal as ChakraModal,
-  Box,
+  Modal,
+  ModalOverlay,
+  ModalContent,
+  ModalHeader,
+  ModalCloseButton,
+  ModalBody,
   Button,
-  HStack,
   Input,
   Text,
   VStack,
-  ModalOverlay,
-  ModalContent,
-  ModalCloseButton,
-  ModalBody,
+  HStack,
+  Box,
+  useToast,
+  Progress,
 } from '@chakra-ui/react'
-import { useToast } from '@chakra-ui/react'
-import throttle from 'lodash.throttle'
+import { Brain, CheckCircle2, MailCheck } from 'lucide-react'
 import { useDispatch, useSelector } from 'react-redux'
-
-import useSafeSound from '../../customHooks/useSafeSound'
 import { setVerifyEmail } from '../../redux/authSlice'
 import { useTranslation } from 'react-i18next'
-import { useFeatureDetection } from '../../utils/featureDetection'
+import axios from 'axios'
+import throttle from 'lodash.throttle'
+import { keyframes } from '@emotion/react'
+
+// Animation keyframes
+const glowAnimation = keyframes`
+  0% { text-shadow: 0 0 5px #FF0080; }
+  50% { text-shadow: 0 0 20px #FF0080, 0 0 30px #FF0080; }
+  100% { text-shadow: 0 0 5px #FF0080; }
+`
+
+const floatAnimation = keyframes`
+  0% { transform: translateY(0px); }
+  50% { transform: translateY(-10px); }
+  100% { transform: translateY(0px); }
+`
 
 const EmailVerify = ({ email, isOpen, onClose }) => {
   const { t } = useTranslation('EmailVerify')
   const toast = useToast()
   const dispatch = useDispatch()
-  const { forgotPassword, user } = useSelector(state => state.auth)
-  const [load, setLoad] = useState(false) //for loading spinner
-  const features = useFeatureDetection()
-  const { playClick } = useSafeSound({
-    enabled: features.hasAudioSupport,
-    volume: 0.5,
-  })
+  const { forgotPassword } = useSelector(state => state.auth)
+
+  const [load, setLoad] = useState(false)
+  const [timeLeft, setTimeLeft] = useState(60)
   const [otp, setOtp] = useState({
     i1: '',
     i2: '',
@@ -44,6 +52,7 @@ const EmailVerify = ({ email, isOpen, onClose }) => {
     i5: '',
     i6: '',
   })
+
   const refs = {
     i1: useRef(null),
     i2: useRef(null),
@@ -53,91 +62,83 @@ const EmailVerify = ({ email, isOpen, onClose }) => {
     i6: useRef(null),
   }
 
+  // Calculate progress based on OTP digits filled
+  const calculateProgress = () => {
+    const filledDigits = Object.values(otp).filter(value => value !== '').length
+    return (filledDigits / 6) * 100
+  }
+
   const handleChange = e => {
     const { name, value } = e.target
-    if (value === '+') {
-      return
-    }
-    if (otp[name] !== '' && value !== '') {
+    if (value === '+' || (otp[name] !== '' && value !== '')) {
       return
     }
     if (/^\d*$/.test(value)) {
-      // Update the state if it's a whole number
       setOtp({ ...otp, [name]: value })
       if (value !== '' && /^[0-9]$/.test(value)) {
         const nextInput =
           name === 'i6' ? null : refs[`i${parseInt(name[1], 10) + 1}`]
-        nextInput && nextInput.current.focus()
+        nextInput?.current?.focus()
       }
     }
   }
 
-  const submitOTP = async e => {
-    const otpValue = `${otp.i1}${otp.i2}${otp.i3}${otp.i4}${otp.i5}${otp.i6}`
-    const data = { otp: otpValue, email: email }
+  const showEmail = () => {
+    const i = email.indexOf('@')
+    return (
+      email.slice(0, 2) + email.slice(2, i).replace(/./g, '*') + email.slice(i)
+    )
+  }
+
+  const submitOTP = async () => {
+    const otpValue = Object.values(otp).join('')
     setLoad(true)
+
     try {
       const response = await axios.post(
         `/api/user/verifyEmail?forgotPassword=${forgotPassword}`,
-        data,
+        { otp: otpValue, email },
       )
 
       if (response.status === 201) {
-        if (forgotPassword) {
-          toast({
-            title: t('toastResetSuccess'),
-            status: 'success',
-            duration: 9000,
-            isClosable: true,
-            position: 'top',
-          })
-        } else {
-          toast({
-            title: 'Email Verified now you can login',
-            status: 'success',
-            duration: 9000,
-            isClosable: true,
-            position: 'top',
-          })
-        }
+        toast({
+          title: forgotPassword
+            ? t('toastResetSuccess')
+            : 'Email Verified Successfully!',
+          description: forgotPassword
+            ? undefined
+            : 'You can now log in to your account.',
+          status: 'success',
+          duration: 5000,
+          isClosable: true,
+          position: 'top',
+        })
         onClose()
         dispatch(setVerifyEmail(true))
-      } else {
-        throw new Error(t('toastVerifyFailed'))
       }
-      return
     } catch (error) {
       toast({
-        title: t('toastVerifyFailed'),
-        description: error?.response?.data?.error,
+        title: 'Verification Failed',
+        description: error?.response?.data?.error || 'Please try again.',
         status: 'error',
-        duration: 9000,
+        duration: 5000,
         isClosable: true,
         position: 'top',
       })
-      console.log(error)
     } finally {
       setLoad(false)
     }
   }
 
-  const showEmail = () => {
-    let i = email.indexOf('@')
-
-    const starredEmail =
-      email.slice(0, 2) + email.slice(2, i).replace(/./g, '*') + email.slice(i)
-    return starredEmail
-  }
-
-  const resendOTP = async e => {
+  const resendOTP = async () => {
     setLoad(true)
     try {
-      const response = await axios.post(`/api/user/resendOTP`, {
-        email: email,
-      })
+      const response = await axios.post('/api/user/resendOTP', { email })
       if (response.status === 201) {
+        setTimeLeft(60)
         toast({
-          title: t('toastOTPSent'),
+          title: 'OTP Sent Successfully',
+          description: 'Please check your email for the new code.',
           status: 'success',
           duration: 5000,
           isClosable: true,
@@ -146,15 +147,13 @@ const EmailVerify = ({ email, isOpen, onClose }) => {
       }
     } catch (error) {
       toast({
-        title: t('toastOTPFail'),
-        description: error.response.data.error,
+        title: 'Failed to Send OTP',
+        description: error.response?.data?.error || 'Please try again.',
         status: 'error',
         duration: 5000,
         isClosable: true,
         position: 'top',
       })
-
-      console.log(error.response.data.error)
     } finally {
       setLoad(false)
     }
@@ -177,14 +176,10 @@ const EmailVerify = ({ email, isOpen, onClose }) => {
 
   const handleKeyDown = e => {
     const { name, value } = e.target
-    const isBackspace = e.code === 'Backspace'
-    if (isBackspace) {
-      // If backspace is pressed and the current input is empty, move focus to the previous input
-      if (value === '') {
-        const prevInput =
-          name === 'i1' ? null : refs[`i${parseInt(name[1], 10) - 1}`]
-        prevInput && prevInput.current.focus()
-      }
+    if (e.code === 'Backspace' && value === '') {
+      const prevInput =
+        name === 'i1' ? null : refs[`i${parseInt(name[1], 10) - 1}`]
+      prevInput?.current?.focus()
     } else if (e.key === 'Enter') {
       submitOTPThrottled()
     }
@@ -193,79 +188,162 @@ const EmailVerify = ({ email, isOpen, onClose }) => {
   const submitOTPThrottled = useCallback(throttle(submitOTP, 1000), [otp])
 
   useEffect(() => {
-    return () => submitOTPThrottled.cancel()
-  }, [submitOTPThrottled])
+    let timer
+    if (timeLeft > 0) {
+      timer = setInterval(() => setTimeLeft(prev => prev - 1), 1000)
+    }
+    return () => {
+      clearInterval(timer)
+      submitOTPThrottled.cancel()
+    }
+  }, [timeLeft, submitOTPThrottled])
 
   return (
-    <ChakraModal isOpen={isOpen} onClose={onClose}>
-      <ModalOverlay />
+    <Modal
+      isOpen={isOpen}
+      onClose={onClose}
+      size={{ base: 'full', md: 'md' }}
+      motionPreset="slideInBottom"
+    >
+      <ModalOverlay bg="blackAlpha.700" backdropFilter="blur(10px)" />
       <ModalContent
-        sx={{
-          borderRadius: 'xl',
-          backgroundColor: '#0f0d15',
-          backgroundImage:
-            'linear-gradient(-180deg, #1a1527, #0e0c16 88%, #0e0c16 99%)',
-          padding: '20px',
-        }}
+        bg="#0f0d15"
+        backgroundImage="linear-gradient(to bottom, #1a1527, #0e0c16 88%, #0e0c16 99%)"
+        borderRadius="xl"
+        border="1px solid"
+        borderColor="whiteAlpha.100"
+        boxShadow="0 0 20px rgba(255, 0, 128, 0.2)"
       >
-        <ModalCloseButton color={'white'} />
-        <ModalBody>
-          <VStack spacing={4} align="stretch" color={'white'}>
-            <Text fontSize="2xl" fontWeight="bold" textAlign="center">
-              {t('heading')}
-            </Text>
-            <Text textAlign="center">
-              {t('otpSent')}
-              {showEmail()}
-            </Text>
-            <Text textAlign="center">{t('enterOTP')}</Text>
-            <HStack justifyContent="center">
+        <Box
+          position="absolute"
+          top="0"
+          left="0"
+          right="0"
+          h="4px"
+          bgGradient="linear(to-r, pink.500, purple.500)"
+        />
+
+        <ModalHeader pt={8}>
+          <VStack spacing={4}>
+            <HStack spacing={2}>
+              <Box
+                as={Brain}
+                size="30px"
+                color="pink.400"
+                animation={`${floatAnimation} 3s infinite`}
+              />
+              <Text
+                fontSize="3xl"
+                fontWeight="bold"
+                bgGradient="linear(to-r, pink.400, purple.400)"
+                bgClip="text"
+                animation={`${glowAnimation} 2s infinite`}
+              >
+                Verify Email
+              </Text>
+            </HStack>
+            <Box as={MailCheck} size="48px" color="pink.400" />
+          </VStack>
+        </ModalHeader>
+
+        <ModalCloseButton color="white" />
+
+        <ModalBody pb={6}>
+          <VStack spacing={6}>
+            <Box w="full">
+              <Progress
+                value={calculateProgress()}
+                size="sm"
+                colorScheme="pink"
+                hasStripe
+                isAnimated
+                borderRadius="full"
+              />
+            </Box>
+
+            <VStack spacing={2}>
+              <Text color="whiteAlpha.900" textAlign="center">
+                We've sent a verification code to:
+              </Text>
+              <Text color="pink.400" fontWeight="bold" fontSize="lg">
+                {showEmail()}
+              </Text>
+              <Text color="whiteAlpha.600" fontSize="sm">
+                Enter the 6-digit code below
+              </Text>
+            </VStack>
+
+            <HStack spacing={2} justify="center">
               {Object.keys(otp).map((key, index) => (
                 <Input
                   key={index}
-                  onChange={handleChange}
-                  onPaste={handlePaste}
+                  ref={refs[key]}
                   name={key}
                   value={otp[key]}
+                  onChange={handleChange}
+                  onPaste={handlePaste}
+                  onKeyDown={handleKeyDown}
                   type="number"
                   maxLength={1}
-                  ref={refs[key]}
-                  onKeyDown={handleKeyDown}
-                  width="40px"
-                  height="40px"
+                  w={12}
+                  h={12}
                   textAlign="center"
+                  fontSize="xl"
                   p={0}
+                  bg="whiteAlpha.50"
+                  border="1px solid"
+                  borderColor="whiteAlpha.200"
+                  color="white"
+                  _hover={{ borderColor: 'pink.400' }}
+                  _focus={{
+                    borderColor: 'pink.500',
+                    boxShadow: '0 0 0 1px #FF0080',
+                  }}
                 />
               ))}
             </HStack>
+
             <Button
-              onClick={() => {
-                playClick()
-                submitOTPThrottled()
-              }}
+              w="full"
+              size="lg"
+              onClick={submitOTPThrottled}
               isLoading={load}
-              loadingText={t('verifying')}
-              colorScheme="blue"
+              loadingText="Verifying..."
+              leftIcon={<CheckCircle2 size={18} />}
+              bgGradient="linear(to-r, pink.500, purple.500)"
+              color="white"
+              _hover={{
+                bgGradient: 'linear(to-r, pink.600, purple.600)',
+                transform: 'translateY(-2px)',
+              }}
+              _active={{
+                bgGradient: 'linear(to-r, pink.700, purple.700)',
+                transform: 'translateY(0)',
+              }}
+              transition="all 0.2s"
             >
-              {t('verifyButton')}
+              Verify Email
             </Button>
-            <Text textAlign="center">{t('didntReceiveCode')}</Text>
-            <Box textAlign="center">
-              <Otptimer
-                buttonText={t('resendOTP')}
-                buttonContainerClass="btn btn-danger"
-                minutes={0}
-                seconds={60}
-                onResend={resendOTP}
-                textStyle={{ color: 'white' }}
-                timerStyle={{ color: 'white' }}
-              />
-            </Box>
-            {load && <Loading />}
+
+            <VStack spacing={1}>
+              <Text color="whiteAlpha.600" fontSize="sm">
+                Didn't receive the code?
+              </Text>
+              <Button
+                variant="ghost"
+                size="sm"
+                color="pink.400"
+                isDisabled={timeLeft > 0}
+                onClick={resendOTP}
+                _hover={{ bg: 'whiteAlpha.100' }}
+              >
+                {timeLeft > 0 ? `Resend code in ${timeLeft}s` : 'Resend code'}
+              </Button>
+            </VStack>
           </VStack>
         </ModalBody>
       </ModalContent>
-    </ChakraModal>
+    </Modal>
   )
 }
 

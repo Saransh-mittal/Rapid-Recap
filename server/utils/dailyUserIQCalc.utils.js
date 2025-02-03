@@ -18,6 +18,7 @@ const {
 const ApplicationUpdates = require('../model/applicationUpdatesSchema')
 const { setTimeout } = require('timers/promises')
 const { sendNotification } = require('../services/notificationService')
+const moment = require('moment-timezone')
 
 const retryOperation = async (operation, maxRetries = 3, delay = 1000) => {
   for (let attempt = 1; attempt <= maxRetries; attempt++) {
@@ -209,7 +210,13 @@ const fetchUniqueArticleIds = async () => {
   try {
     const currSeason = configService.getCurrentSeason()
     return await QuizAttempt.aggregate([
-      { $match: { season: parseInt(currSeason, 10) } },
+      {
+        $match: {
+          season: parseInt(currSeason, 10),
+          month: moment().month() + 1,
+          year: moment().year(),
+        },
+      },
       { $group: { _id: '$article' } },
       { $project: { _id: 0, articleId: '$_id' } },
     ])
@@ -291,9 +298,15 @@ const calculateUserScores = async users => {
         return await QuizAttempt.find({
           user: user._id,
           season: parseInt(currSeason, 10),
+          month: moment().month() + 1,
+          year: moment().year(),
         }).populate({
           path: 'article',
-          populate: { path: 'quiz' },
+          select: '_id', // Only select the _id field from article
+          populate: {
+            path: 'quiz',
+            select: '_id', // Only select the _id field from quiz
+          },
         })
       })
 
@@ -342,6 +355,61 @@ const calculateUserScores = async users => {
   return { userScores, sumOfUserScores }
 }
 
+// Add these helper functions at the top of the file
+const isBaseIQ = iq => {
+  const baseIQs = [0, 10, 97, 110]
+  return baseIQs.includes(Number(iq))
+}
+
+const hasQuizAttemptsThisMonth = async userId => {
+  const currSeason = configService.getCurrentSeason()
+  const count = await QuizAttempt.countDocuments({
+    user: userId,
+    season: parseInt(currSeason, 10),
+    month: moment().month() + 1,
+    year: moment().year(),
+  })
+  return count > 0
+}
+
+const getMaxIQIncrement = currentIQ => {
+  if (currentIQ > 200) return 0.5
+  if (currentIQ > 150) return 1
+  if (currentIQ >= 130) return 2
+  if (currentIQ >= 110) return 3
+  if (currentIQ >= 90) return 5
+  return 10
+}
+
+const getMaxIQDecrement = currentIQ => {
+  if (currentIQ > 200) return 12
+  if (currentIQ > 150) return 10
+  if (currentIQ >= 130) return 8
+  if (currentIQ >= 110) return 6
+  if (currentIQ >= 90) return 5
+  return 4
+}
+
+const capIQChange = (oldIQ, newIQ) => {
+  const change = newIQ - oldIQ
+
+  // If IQ is increasing
+  if (change > 0) {
+    const maxIncrement = getMaxIQIncrement(oldIQ)
+    return change > maxIncrement ? oldIQ + maxIncrement : newIQ
+  }
+
+  // If IQ is decreasing
+  if (change < 0) {
+    const maxDecrement = getMaxIQDecrement(oldIQ)
+    return change < -maxDecrement ? oldIQ - maxDecrement : newIQ
+  }
+
+  // If no change
+  return newIQ
+}
+
+// Modify the calculateAndAssignIQScores function
 const calculateAndAssignIQScores = async (userScores, sumOfUserScores) => {
   const meanOfUserScores = sumOfUserScores / userScores.length
   const sumOfSquares = userScores.reduce(
@@ -352,25 +420,45 @@ const calculateAndAssignIQScores = async (userScores, sumOfUserScores) => {
 
   userScores.sort((a, b) => b.userScore - a.userScore)
   let rank = 1
+
   for (const { user, userScore } of userScores) {
     if (!user) {
       console.error(`Invalid user data for rank ${rank}.`)
       continue
     }
 
-    const normalizedScore = (userScore - meanOfUserScores) / standardDeviation
-    const IQScore = 100 + 15 * normalizedScore
-
-    const currIQScore = IQScore.toFixed(1)
     try {
       const updatedUser = await User.findById(user._id)
-      const awardableXpOrNot = currIQScore > user.maxIQScore
-      const previousIQForXp = user.maxIQScore
       const prevIQScore = updatedUser.IQ_score
 
+      // Calculate new IQ score
+      const normalizedScore = (userScore - meanOfUserScores) / standardDeviation
+      let newIQScore = 100 + 15 * normalizedScore
+
+      // Check if user is at base IQ and has no quiz attempts
+      const hasAttempts = await hasQuizAttemptsThisMonth(user._id)
+      if (isBaseIQ(prevIQScore) && !hasAttempts) {
+        newIQScore = Math.min(newIQScore, prevIQScore)
+      }
+
+      // Apply the new capping logic
+      newIQScore = capIQChange(Number(prevIQScore), newIQScore)
+
+      // Ensure IQ doesn't go below 0
+      newIQScore = Math.max(0, newIQScore)
+
+      // Round to 1 decimal place
+      const currIQScore = newIQScore.toFixed(1)
+
+      const awardableXpOrNot = currIQScore > updatedUser.maxIQScore
+      const previousIQForXp = updatedUser.maxIQScore
+
+      // Update user's IQ scores
       updatedUser.IQ_score = currIQScore
       updatedUser.maxIQScore = Math.max(updatedUser.maxIQScore, currIQScore)
       updatedUser.prevIQScore = prevIQScore
+
+      // Save daily IQ record
       const currentSeason = configService.getCurrentSeason()
       const dailyIQ = new DailyIQ({
         user: updatedUser._id,

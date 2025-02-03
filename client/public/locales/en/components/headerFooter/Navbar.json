@@ -1,6 +1,7 @@
 {
   "tournament": "Tournament",
   "home": "Home",
+  "hallOfChampions": "Champions",
   "contact": "Contact Us",
   "leaderboard": "Leaderboard",
   "dashboard": "Dashboard",
@@ -13,6 +14,7 @@
     "title": "Profile",
     "dashboard": "Dashboard",
     "leaderboard": "Leaderboard",
+    "manual": "Manual",
     "help": "Help",
     "leaderboardLocked": "You need to sign in to access this page",
     "profile": {

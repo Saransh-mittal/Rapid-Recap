@@ -1,7 +1,7 @@
 import React from 'react'
 import { Button, VStack, Box, Flex } from '@chakra-ui/react'
 import { motion } from 'framer-motion'
-import GetStarted from '../Header-Footer/navbarComponents/GetStarted'
+import GetStarted from '../Header-Footer/modernNavbarComponents/GetStarted'
 
 const MotionBox = motion(Box)
 
@@ -17,7 +17,7 @@ const FloatingActionButtons = ({
   return (
     <MotionBox
       position="fixed"
-      bottom="2rem"
+      bottom="3rem"
       right="0.5rem"
       zIndex={1000}
       initial={{ opacity: 0, y: 20 }}

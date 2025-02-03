@@ -52,7 +52,7 @@ async function sendGuestAccountExpiryNotifs() {
             userId: guest._id,
             title: notification.subject,
             body: notification.body,
-            url: 'https://www.rapidrecap.co.in',
+            url: 'https://rapidrecap.ai',
           })
           console.log(`Sent expiry notification to guest ${guest._id}`)
         }

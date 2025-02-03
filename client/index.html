@@ -3,31 +3,228 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Rapid Recap - Stay Informed, Stay Ahead</title>
 
-  <!-- SEO Meta Tags -->
-  <meta name="description" content="Stay updated with the latest news and articles. Test your knowledge with quizzes and see your Information Quotient (IQ) score on Rapid Recap.">
-  <meta name="keywords" content="Rapid Recap, news, articles, quizzes, IQ score, leaderboard">
-  <meta property="og:title" content="Rapid Recap - Stay Informed, Stay Ahead">
-  <meta property="og:description" content="Stay updated with the latest news and articles. Test your knowledge with quizzes and see your Information Quotient (IQ) score on Rapid Recap.">
+  <!-- Primary Meta Tags -->
+  <meta name="robots" content="index, follow">
+  <meta name="author" content="Rapid Recap">
 
-  <!-- Preload resources -->
+
+
+  <!-- Preload Critical Resources -->
   <link rel="preload" href="/images/tourBGDark.webp" as="image">
-  <link rel="manifest" href="/manifest.json">
-  <link rel="apple-touch-icon" href="/images/rrlogo_512.png">
-  <meta name="theme-color" content="#1a1527">
-  <link rel="icon" type="image/webp" href="/images/rrlogo.webp">
-
-  <!-- Preconnect to Google Fonts -->
+  <link rel="preload" href="/fonts/main-font.woff2" as="font" type="font/woff2" crossorigin>
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link rel="preconnect" href="https://fonts.googleapis.com">
-  <!-- DNS Prefetch -->
   <link rel="dns-prefetch" href="https://fonts.gstatic.com">
   <link rel="dns-prefetch" href="https://fonts.googleapis.com">
 
+  <!-- Progressive Web App -->
+  <link rel="manifest" href="/manifest.json">
+  <link rel="apple-touch-icon" href="/images/rrlogo_512.png">
+  <link rel="icon" type="image/webp" href="/images/rrlogo.webp">
+
+
+  <!-- Structured Data - FAQ -->
+  <script type="application/ld+json">
+    {
+      "@context": "https://schema.org",
+      "@type": "FAQPage",
+      "mainEntity": [
+      {
+        "name": "What kind of content does Rapid Recap offer?",
+        "acceptedAnswer": {
+          "text": "We offer daily news articles with interactive quizzes, current affairs updates, and weekly tournaments to help you learn through gamification."
+        }
+      },
+      {
+        "name": "How can I improve my general knowledge with Rapid Recap?",
+        "acceptedAnswer": {
+          "text": "Our AI-powered platform offers daily current affairs, history, science, politics, and sports GK questions with answers in English and Hindi."
+        }
+      },
+      {
+        "name": "Is the GK quiz online free to access?",
+        "acceptedAnswer": {
+          "text": "Yes, our online general knowledge quiz platform is completely free to access with daily updates and competitive tournaments."
+        }
+      },
+      {
+        "name": "How can this help in competitive exam preparation?",
+        "acceptedAnswer": {
+          "text": "Our AI-powered platform provides daily current affairs updates and general knowledge questions that are essential for competitive exams. Practice with our interactive quizzes to improve your knowledge and test-taking skills."
+        }
+      }]
+    }
+  </script>
+
+  <!-- Add to index.html -->
+<script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@type": "WebSite",
+    "url": "https://rapidrecap.ai",
+    "name": "Rapid Recap",
+    "subjectOf": [{
+      "@type": "WebPage",
+      "name": "Home Dashboard",
+      "url": "https://rapidrecap.ai/home",
+      "description": "Access daily AI-curated GK questions, current affairs quizzes, and personalized learning content. Stay updated with the latest general knowledge in an interactive format.",
+      "potentialAction": {
+        "@type": "ReadAction",
+        "target": "https://rapidrecap.ai/home"
+      },
+      "mainEntity": {
+        "@type": "LearningResource",
+        "learningResourceType": "Quiz Collection",
+        "educationalLevel": "All Levels",
+        "teaches": ["Current Affairs", "General Knowledge", "Competitive Exam Preparation"]
+      }
+    }, {
+      "@type": "WebPage",
+      "name": "Tournament Arena",
+      "url": "https://rapidrecap.ai/tournament",
+      "description": "Participate in weekend GK tournaments, compete with other learners, and win rewards. Test your knowledge in various categories through AI-powered competitive quizzes.",
+      "potentialAction": {
+        "@type": "PlayAction",
+        "target": "https://rapidrecap.ai/tournament"
+      },
+      "mainEntity": {
+        "@type": "Game",
+        "gameType": "Knowledge Competition",
+        "playMode": "Online multiplayer",
+        "offers": {
+          "@type": "Offer",
+          "price": "0",
+          "priceCurrency": "INR"
+        }
+      }
+    }, {
+      "@type": "WebPage",
+      "name": "Leaderboard",
+      "url": "https://rapidrecap.ai/leaderboard",
+      "description": "View real-time rankings of top performers, track your position, and compare your progress with other learners. See who's leading in general knowledge mastery.",
+      "potentialAction": {
+        "@type": "ViewAction",
+        "target": "https://rapidrecap.ai/leaderboard"
+      },
+      "mainEntity": {
+        "@type": "ItemList",
+        "itemListElement": {
+          "@type": "ListItem",
+          "item": {
+            "@type": "Thing",
+            "name": "Global Leaderboard Rankings",
+            "description": "Real-time performance rankings of Rapid Recap users"
+          }
+        }
+      }
+    }],
+    "publisher": {
+      "@type": "Organization",
+      "name": "Rapid Recap",
+      "url": "https://rapidrecap.ai",
+      "logo": {
+        "@type": "ImageObject",
+        "url": "https://rapidrecap.ai/images/rrlogo_512.png"
+      }
+    },
+    "audience": {
+      "@type": "Audience",
+      "audienceType": "Students, Professionals, Knowledge Enthusiasts",
+      "geographicArea": {
+        "@type": "Country",
+        "name": "India"
+      }
+    }
+  }
+  </script>
+
+  <!-- Additional FAQ structured data for Tournament page -->
+  <script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@type": "FAQPage",
+    "mainEntity": [{
+      "@type": "Question",
+      "name": "When do tournaments take place?",
+      "acceptedAnswer": {
+        "@type": "Answer",
+        "text": "Tournaments are held every weekend. Registration opens Monday and closes Friday, with the tournament running Saturday and Sunday."
+      }
+    }, {
+      "@type": "Question",
+      "name": "How do tournament quizzes work?",
+      "acceptedAnswer": {
+        "@type": "Answer",
+        "text": "Players can choose 3 categories plus Current Affairs (mandatory). Each category has 2 attempts allowed, with the best score counted. Questions are based on the week's content."
+      }
+    }, {
+      "@type": "Question",
+      "name": "Are tournaments free to enter?",
+      "acceptedAnswer": {
+        "@type": "Answer",
+        "text": "Yes, all tournaments are completely free to enter for registered users. Simply sign up and participate to win rewards and improve your ranking."
+      }
+    }]
+  }
+  </script>
+
+  <!-- Additional Learn Action structured data for Home page -->
+  <script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@type": "LearningResource",
+    "name": "Daily GK Quiz Dashboard",
+    "url": "https://rapidrecap.ai/home",
+    "educationalLevel": "All Levels",
+    "learningResourceType": "Quiz Collection",
+    "teaches": [
+      "Current Affairs",
+      "General Knowledge",
+      "History",
+      "Science",
+      "Politics",
+      "Sports"
+    ],
+    "educationalUse": [
+      "Self-Assessment",
+      "Competitive Exam Preparation",
+      "Skill Development"
+    ],
+    "timeRequired": "PT15M",
+    "interactivityType": "active",
+    "isAccessibleForFree": true,
+    "offers": {
+      "@type": "Offer",
+      "price": "0",
+      "priceCurrency": "INR"
+    }
+  }
+  </script>
+
+  <!-- Additional Competition structured data for Leaderboard -->
+  <script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@type": "Table",
+    "name": "Rapid Recap Global Rankings",
+    "url": "https://rapidrecap.ai/leaderboard",
+    "about": {
+      "@type": "Thing",
+      "name": "GK Quiz Performance Rankings",
+      "description": "Real-time global rankings showing top performers in general knowledge quizzes and tournaments"
+    },
+    "mainEntity": {
+      "@type": "Dataset",
+      "name": "Performance Metrics",
+      "description": "User rankings based on IQ scores, tournament performance, and quiz completion rates",
+      "measurementTechnique": ["IQ Score System", "Tournament Points", "Quiz Performance"],
+      "temporalCoverage": "Daily updates"
+    }
+  }
+  </script>
+
   <style>
-
-
     /* Splash screen styles */
     #splash-screen {
       position: fixed;
@@ -85,31 +282,30 @@
       from { opacity: 0; transform: translateY(10px); }
       to { opacity: 1; transform: translateY(0); }
     }
-
   </style>
-
-  <!-- Bot detection script -->
-  <script>
-    (function() {
-      window.__IS_BOT__ = false; // Will be set by server
-      document.documentElement.dataset.bot = window.__IS_BOT__;
-    })();
-  </script>
 </head>
+
 <body>
+  <!-- Main Content -->
+  <main id="main-content">
+    <!-- Loading Screen -->
+    <div id="splash-screen" aria-label="Loading screen">
+      <div class="splash-content">
+        <img src="/images/rrlogo_512.png" alt="Rapid Recap - AI GK Quiz Platform" class="logo">
+        <h1 class="title">AI-Powered GK Quiz Platform</h1>
+        <p class="subtitle">Master Current Affairs & General Knowledge</p>
+      </div>
+    </div>
+    <!-- React Root -->
+    <div id="root"><!--ssr-outlet--></div>
+  </main>
 
-  <div id="splash-screen"></div>
-
-    <div id="bot-navbar"></div>
-    <div id="bot-hero"></div>
-    <div id="bot-benefits"></div>
-    <div id="bot-features"></div>
-
-    <div id="bot-article"></div>
-
-    <div id="bot-footer"></div>
-  <!-- App Root for CSR -->
-  <div id="root"><!--ssr-outlet--></div>
+  <!-- NoScript Fallback -->
+  <noscript>
+    <div style="text-align: center; padding: 20px;">
+      Please enable JavaScript to access our AI-powered GK quiz platform. We offer interactive learning experiences that require JavaScript to function.
+    </div>
+  </noscript>
 
   <!-- Entry Point -->
   <script type="module" src="/src/entry-client.jsx"></script>

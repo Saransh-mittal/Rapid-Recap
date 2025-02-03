@@ -11,5 +11,5 @@ Allow: /
 
 User-agent: Slurp
 Allow: /
-Sitemap: https://www.rapidrecap.co.in/sitemap.xml
-Sitemap: https://www.rapidrecap.co.in/google-news-sitemap.xml
+Sitemap: https://rapidrecap.ai/sitemap.xml
+Sitemap: https://rapidrecap.ai/google-news-sitemap.xml

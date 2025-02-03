@@ -214,6 +214,7 @@ const ArticleCard = ({
 }
 
 const ArticleSelection = ({
+  errorFecthinArticle,
   onArticleSelect,
   randomArticle,
   visitedArticle,
@@ -252,7 +253,7 @@ const ArticleSelection = ({
     )
   }
 
-  if (!getVisitedArticle()) {
+  if (!getVisitedArticle() || errorFecthinArticle) {
     onArticleSelect(randomArticle)
   }
   if (!visitedArticle) {

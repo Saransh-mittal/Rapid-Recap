@@ -1,6 +1,7 @@
 // client/src/entry-client.jsx
 import React, { lazy, Suspense } from 'react'
 import ReactDOM from 'react-dom/client'
+// import { SocketProvider } from './contextAPI/SocketContext.jsx'
 
 // Lazy load all major components
 const BrowserRouter = lazy(() =>
@@ -8,6 +9,7 @@ const BrowserRouter = lazy(() =>
     default: module.BrowserRouter,
   })),
 )
+const SocketProvider = lazy(() => import('./contextAPI/SocketContext.jsx'))
 const Provider = lazy(() =>
   import('react-redux').then(module => ({
     default: module.Provider,
@@ -23,7 +25,7 @@ const HelmetProvider = lazy(() =>
     default: module.HelmetProvider,
   })),
 )
-const ChatProvider = lazy(() => import('./contextAPI/ChatProvider.jsx'))
+// const ChatProvider = lazy(() => import('./contextAPI/ChatProvider.jsx'))
 const I18nextProvider = lazy(() =>
   import('react-i18next').then(module => ({
     default: module.I18nextProvider,
@@ -88,21 +90,25 @@ if (!isBot) {
       <BrowserRouter>
         <ReduxWrapper>
           <Suspense fallback={<LoadingFallback />}>
-            <ChatProvider>
-              <I18nWrapper>
-                <Suspense fallback={<LoadingFallback />}>
-                  <ChakraProvider>
-                    <Suspense fallback={<LoadingFallback />}>
-                      <HelmetProvider>
-                        <Suspense fallback={<LoadingFallback />}>
-                          <App />
-                        </Suspense>
-                      </HelmetProvider>
-                    </Suspense>
-                  </ChakraProvider>
-                </Suspense>
-              </I18nWrapper>
-            </ChatProvider>
+            {/* <ChatProvider> */}
+            <SocketProvider>
+              <Suspense fallback={<LoadingFallback />}>
+                <I18nWrapper>
+                  <Suspense fallback={<LoadingFallback />}>
+                    <ChakraProvider>
+                      <Suspense fallback={<LoadingFallback />}>
+                        <HelmetProvider>
+                          <Suspense fallback={<LoadingFallback />}>
+                            <App />
+                          </Suspense>
+                        </HelmetProvider>
+                      </Suspense>
+                    </ChakraProvider>
+                  </Suspense>
+                </I18nWrapper>
+              </Suspense>
+            </SocketProvider>
+            {/* </ChatProvider> */}
           </Suspense>
         </ReduxWrapper>
       </BrowserRouter>

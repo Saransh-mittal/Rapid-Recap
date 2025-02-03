@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useCallback, useRef } from 'react'
+import React, { useState, useEffect, useCallback, useRef, useMemo } from 'react'
 import {
   Box,
   VStack,
@@ -24,6 +24,9 @@ import LeaderboardRow from '../components/leaderBoardComponents/LeaderBoardRow'
 import InfoButton, {
   InfoButtonProvider,
 } from '../components/miscellaneous/InfoButton'
+import RefreshTimer from '../components/leaderBoardComponents/RefreshTimer'
+import { useInView } from 'react-intersection-observer'
+import CircleAndSocietyData from '../assets/CircleAndSocietyData'
 
 const INITIAL_RENDER_COUNT = 500
 const RENDER_BATCH_SIZE = 500
@@ -34,8 +37,12 @@ const Leaderboard = () => {
   const navigate = useNavigate()
   const { user } = useSelector(state => state.auth)
   const toast = useToast()
+  const { ref, inView } = useInView({ threshold: 0, triggerOnce: false })
+  const { ref: firstLeaderboardRowRef, inView: firstLeaderboardRowInView } =
+    useInView({ threshold: 0, triggerOnce: false })
 
   const [leaders, setLeaders] = useState([])
+  const [initialTime, setInitialTime] = useState({})
   const [searchResults, setSearchResults] = useState([])
   const [searchLoad, setSearchLoad] = useState(false)
   const [isLoading, setIsLoading] = useState(true)
@@ -62,6 +69,7 @@ const Leaderboard = () => {
       const response = await axios.get('/api/user/leaderboard?limit=500')
       allLeadersRef.current = response.data.users
       setLeaders(response.data.users.slice(0, INITIAL_RENDER_COUNT))
+      setInitialTime(response.data.nextRefresh)
     } catch (error) {
       console.error('Error fetching leaderboard:', error)
       toast({
@@ -84,7 +92,7 @@ const Leaderboard = () => {
         clearTimeout(renderTimeoutRef.current)
       }
     }
-  }, [fetchLeaderboard])
+  }, [])
 
   useEffect(() => {
     if (!isLoading && allLeadersRef.current.length > INITIAL_RENDER_COUNT) {
@@ -116,14 +124,16 @@ const Leaderboard = () => {
   }, [isLoading])
 
   useEffect(() => {
-    // select body element
     const body = document.querySelector('body')
-    body.style.overflow = 'hidden'
+    if (firstLeaderboardRowInView) body.style.overflow = 'auto'
+    else if (!inView && !firstLeaderboardRowInView)
+      body.style.overflow = 'hidden'
+    else body.style.overflow = 'auto'
 
     return () => {
       body.style.overflow = 'auto'
     }
-  }, [])
+  }, [inView, firstLeaderboardRowInView])
 
   const handleRowClick = useCallback(
     inGameName => {
@@ -142,6 +152,7 @@ const Leaderboard = () => {
             height: `${ROW_HEIGHT - ROW_GAP}px`,
             // top: `${parseFloat(style.top) + index * ROW_GAP}px`,
           }}
+          ref={index === 0 ? firstLeaderboardRowRef : null}
         >
           <LeaderboardRow
             user={leader}
@@ -161,9 +172,91 @@ const Leaderboard = () => {
   const itemCount =
     searchResults.length > 0 ? searchResults.length : leaders.length
 
+  // Add this inside the Leaderboard component
+  const getStructuredData = useMemo(() => {
+    const topLeaders = leaders.slice(0, 10).map((leader, index) => {
+      const society = CircleAndSocietyData.find(
+        item =>
+          item.IQ_Lower <= leader.IQ_score &&
+          (item.IQ_Upper === null || item.IQ_Upper > leader.IQ_score),
+      )
+
+      return {
+        '@type': 'Person',
+        name: leader.inGameName,
+        identifier: {
+          '@type': 'PropertyValue',
+          propertyID: 'IQ_Score',
+          value: leader.IQ_score,
+        },
+        member: {
+          '@type': 'Organization',
+          name: society?.society || 'Explorer Society',
+        },
+      }
+    })
+
+    return {
+      '@context': 'https://schema.org',
+      '@type': 'Table',
+      about: {
+        '@type': 'CreativeWork',
+        name: 'Rapid Recap Global Rankings',
+        description:
+          'Real-time leaderboard showing top performers in AI-powered GK quizzes and knowledge tournaments',
+      },
+      mainEntity: {
+        '@type': 'ItemList',
+        numberOfItems: leaders.length,
+        itemListElement: topLeaders,
+      },
+      significantLinks: [
+        {
+          '@type': 'WebPage',
+          name: 'Tournament',
+          url: 'https://rapidrecap.ai/tournament',
+        },
+        {
+          '@type': 'WebPage',
+          name: 'Hall of Champions',
+          url: 'https://rapidrecap.ai/hall-of-champions',
+        },
+      ],
+      provider: {
+        '@type': 'Organization',
+        name: 'Rapid Recap',
+        url: 'https://rapidrecap.ai',
+        logo: {
+          '@type': 'ImageObject',
+          url: 'https://rapidrecap.ai/images/rrlogo_512.png',
+        },
+      },
+      dataset: {
+        '@type': 'Dataset',
+        name: 'Rapid Recap Performance Metrics',
+        description:
+          'Comprehensive rankings based on Information Quotient (IQ) scores and quiz performance',
+        creator: {
+          '@type': 'Organization',
+          name: 'Rapid Recap',
+        },
+        temporalCoverage: 'Real-time updates',
+        includedInDataCatalog: {
+          '@type': 'DataCatalog',
+          name: 'GK Performance Rankings',
+        },
+        measurementTechnique: [
+          'Information Quotient (IQ) Score System',
+          'Tournament Performance',
+          'Quiz Completion Rate',
+          'Knowledge Society Progress',
+        ],
+      },
+    }
+  }, [leaders])
+
   return (
     <Box
-      minH="100vh"
       p={{ base: 4, md: 8 }}
       mt={{
         base: user?.needsOnboarding ? '18%' : '16%',
@@ -184,6 +277,9 @@ const Leaderboard = () => {
         />
         <meta property="og:url" content={t('helmet.metaOgUrl')} />
         <meta property="og:type" content="website" />
+        <script type="application/ld+json">
+          {JSON.stringify(getStructuredData)}
+        </script>
       </Helmet>
       <VStack
         spacing={{ base: 4, md: 6, lg: 8 }}
@@ -228,7 +324,10 @@ const Leaderboard = () => {
             </InfoButtonProvider>
           </Flex>
         </Flex>
-
+        {/* Add Timer here */}
+        <Box ref={ref}>
+          <RefreshTimer initialTime={initialTime} />
+        </Box>
         <Flex justifyContent="center">
           <Box
             w={{ base: '100%', md: '75%', lg: '60%' }}
@@ -247,7 +346,6 @@ const Leaderboard = () => {
 
         <Box
           height={{ base: 'calc(100vh - 150px)', md: 'calc(100vh - 190px)' }}
-          overflow="hidden" // Add this line to remove scrollbars
         >
           {isLoading || !isInitialRenderComplete || searchLoad ? (
             <Flex justify="center" my={4}>

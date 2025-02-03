@@ -29,7 +29,7 @@ const MailTemplates = {
     }) => `<div style="font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif; background-color:#f4f4f4; padding:30px;">
   <div style="max-width:600px; margin:0 auto; background:white; padding:30px; border-radius:10px; box-shadow:0 0 20px rgba(0,0,0,0.1);">
     <div style="text-align:center; border-bottom:1px solid #e0e0e0; padding-bottom:20px;">
-      <a href="https://www.rapidrecap.co.in" style="font-size:2em; color:#00466a; text-decoration:none; font-weight:bold; display:flex; align-items:center; justify-content:center;">
+      <a href="https://rapidrecap.ai" style="font-size:2em; color:#00466a; text-decoration:none; font-weight:bold; display:flex; align-items:center; justify-content:center;">
         <img src="https://res.cloudinary.com/dxstsrnbs/image/upload/v1720002794/rr_qts9kn.png" alt="Rapid Recap Logo" style="width:40px; height:30px; margin-right:10px;">
         Rapid Recap
       </a>
@@ -39,7 +39,7 @@ const MailTemplates = {
       <p style="font-size:1em; color:#666; margin-top:20px;">We're excited to introduce you to our latest feature: browser notifications! With Rapid Recap's new notification system, you'll never miss out on the latest articles, breaking news, and exclusive content.</p>
       <p style="font-size:1em; color:#666; margin-top:20px;">To subscribe to browser notifications and stay informed, simply click the button below:</p>
       <div style="text-align:center; margin:30px 0;">
-        <a href="https://www.rapidrecap.co.in" style="display:inline-block; background-color:#00466a; color:#fff; text-decoration:none; padding:15px 30px; border-radius:5px; font-size:1em;">Subscribe Now</a>
+        <a href="https://rapidrecap.ai" style="display:inline-block; background-color:#00466a; color:#fff; text-decoration:none; padding:15px 30px; border-radius:5px; font-size:1em;">Subscribe Now</a>
       </div>
 
       <div style="margin-top:40px;">
@@ -146,7 +146,7 @@ const MailTemplates = {
 <body style="font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif; background-color:#f4f4f4; padding:30px; margin:0;">
   <div style="max-width:600px; margin:0 auto; background:white; padding:30px; border-radius:10px; box-shadow:0 0 20px rgba(0,0,0,0.1);">
     <div style="text-align:center; border-bottom:1px solid #e0e0e0; padding-bottom:20px;">
-      <a href="https://www.rapidrecap.co.in" style="font-size:2em; color:#00466a; text-decoration:none; font-weight:bold; display:inline-block;">
+      <a href="https://rapidrecap.ai" style="font-size:2em; color:#00466a; text-decoration:none; font-weight:bold; display:inline-block;">
         <img src="https://res.cloudinary.com/dxstsrnbs/image/upload/v1720002794/rr_qts9kn.png" alt="Rapid Recap Logo" style="width:40px; height:30px; vertical-align:middle; margin-right:10px;">
         Rapid Recap
       </a>
@@ -164,7 +164,7 @@ const MailTemplates = {
         '<br><br>',
       )}</p>
       <div style="text-align:center; margin:30px 0;">
-        <a href="https://www.rapidrecap.co.in" style="display:inline-block; background-color:#00466a; color:#fff; text-decoration:none; padding:15px 30px; border-radius:5px; font-size:1em;">View</a>
+        <a href="https://rapidrecap.ai" style="display:inline-block; background-color:#00466a; color:#fff; text-decoration:none; padding:15px 30px; border-radius:5px; font-size:1em;">View</a>
       </div>
 
       <div style="margin-top:40px; background-color:#A0937D; padding:20px; border-radius:10px;">
@@ -284,7 +284,7 @@ const MailTemplates = {
   <body style="font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif; background-color:#f4f4f4; padding:30px; margin:0;">
     <div style="max-width:600px; margin:0 auto; background:white; padding:30px; border-radius:10px; box-shadow:0 0 20px rgba(0,0,0,0.1);">
       <div style="text-align:center; border-bottom:1px solid #e0e0e0; padding-bottom:20px;">
-        <a href="https://www.rapidrecap.co.in" style="font-size:2em; color:#00466a; text-decoration:none; font-weight:bold; display:flex; align-items:center; justify-content:center;">
+        <a href="https://rapidrecap.ai" style="font-size:2em; color:#00466a; text-decoration:none; font-weight:bold; display:flex; align-items:center; justify-content:center;">
           <img src="https://res.cloudinary.com/dxstsrnbs/image/upload/v1720002794/rr_qts9kn.png" alt="Rapid Recap Logo" style="width:40px; height:30px; margin-right:10px;">
           Rapid Recap
         </a>
@@ -297,7 +297,7 @@ const MailTemplates = {
         <p style="font-size:1em; color:#666; margin-top:10px;">To revive your streak, simply activate and then utilize QuinBoost. All you need to do is complete 6 quizzes in a single day during the Revival Period. Once you do, your streak will be fully restored, and you can continue progressing without missing a beat.</p>
         <p style="font-size:1em; color:#666; margin-top:20px;">Remember, this is a limited-time opportunity. The clock is ticking, so be sure to take advantage of QuinBoost before your Revival Period ends.</p>
         <div style="text-align:center; margin:30px 0;">
-          <a href="https://www.rapidrecap.co.in" style="display:inline-block; background-color:#00466a; color:#fff; text-decoration:none; padding:15px 30px; border-radius:5px; font-size:1em;">Activate QuinBoost Now</a>
+          <a href="https://rapidrecap.ai" style="display:inline-block; background-color:#00466a; color:#fff; text-decoration:none; padding:15px 30px; border-radius:5px; font-size:1em;">Activate QuinBoost Now</a>
         </div>
 
         <div style="margin-top:40px; background-color:#A0937D; padding:20px; border-radius:10px;">
@@ -424,7 +424,7 @@ const MailTemplates = {
   <body style="font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif; background-color:#f4f4f4; padding:30px; margin:0;">
     <div style="max-width:600px; margin:0 auto; background:white; padding:30px; border-radius:10px; box-shadow:0 0 20px rgba(0,0,0,0.1);">
       <div style="text-align:center; border-bottom:1px solid #e0e0e0; padding-bottom:20px;">
-        <a href="https://www.rapidrecap.co.in" style="font-size:2em; color:#00466a; text-decoration:none; font-weight:bold; display:flex; align-items:center; justify-content:center;">
+        <a href="https://rapidrecap.ai" style="font-size:2em; color:#00466a; text-decoration:none; font-weight:bold; display:flex; align-items:center; justify-content:center;">
           <img src="https://res.cloudinary.com/dxstsrnbs/image/upload/v1720002794/rr_qts9kn.png" alt="Rapid Recap Logo" style="width:40px; height:30px; margin-right:10px;">
           Rapid Recap
         </a>
@@ -436,7 +436,7 @@ const MailTemplates = {
         <p style="font-size:1em; color:#666; margin-top:20px;">However, we miss having you engage with our daily quizzes and would love to see you back on track!</p>
         <p style="font-size:1em; color:#666; margin-top:20px;">Take this opportunity to restart your learning journey. Click below to resume:</p>
         <div style="text-align:center; margin:30px 0;">
-          <a href="https://www.rapidrecap.co.in" style="display:inline-block; background-color:#00466a; color:#fff; text-decoration:none; padding:15px 30px; border-radius:5px; font-size:1em;">Get Back on Track</a>
+          <a href="https://rapidrecap.ai" style="display:inline-block; background-color:#00466a; color:#fff; text-decoration:none; padding:15px 30px; border-radius:5px; font-size:1em;">Get Back on Track</a>
         </div>
 
         <div style="margin-top:40px; background-color:#A0937D; padding:20px; border-radius:10px;">
@@ -563,7 +563,7 @@ const MailTemplates = {
     <body style="font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif; background-color:#f4f4f4; padding:30px; margin:0;">
       <div style="max-width:600px; margin:0 auto; background:white; padding:30px; border-radius:10px; box-shadow:0 0 20px rgba(0,0,0,0.1);">
         <div style="text-align:center; border-bottom:1px solid #e0e0e0; padding-bottom:20px;">
-          <a href="https://www.rapidrecap.co.in" style="font-size:2em; color:#00466a; text-decoration:none; font-weight:bold; display:flex; align-items:center; justify-content:center;">
+          <a href="https://rapidrecap.ai" style="font-size:2em; color:#00466a; text-decoration:none; font-weight:bold; display:flex; align-items:center; justify-content:center;">
             <img src="https://res.cloudinary.com/dxstsrnbs/image/upload/v1720002794/rr_qts9kn.png" alt="Rapid Recap Logo" style="width:40px; height:30px; margin-right:10px;">
             Rapid Recap
           </a>
@@ -574,7 +574,7 @@ const MailTemplates = {
           <p style="font-size:1em; color:#666; margin-top:20px;">You're just one step away from unlocking an exciting power-up. Complete your next quiz to activate the Quin Boost, which will enhance your performance on your ${QuinQuizNumber}th quiz.</p>
           <p style="font-size:1em; color:#666; margin-top:20px;">We can't wait to see you achieve great results with this boost! 🚀</p>
           <div style="text-align:center; margin:30px 0;">
-            <a href="https://www.rapidrecap.co.in" style="display:inline-block; background-color:#00466a; color:#fff; text-decoration:none; padding:15px 30px; border-radius:5px; font-size:1em;">Complete Your Next Quiz</a>
+            <a href="https://rapidrecap.ai" style="display:inline-block; background-color:#00466a; color:#fff; text-decoration:none; padding:15px 30px; border-radius:5px; font-size:1em;">Complete Your Next Quiz</a>
           </div>
 
           <div style="margin-top:40px; background-color:#A0937D; padding:20px; border-radius:10px;">
@@ -705,7 +705,7 @@ const MailTemplates = {
   <body style="font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif; background-color:#f4f4f4; padding:30px; margin:0;">
     <div style="max-width:600px; margin:0 auto; background:white; padding:30px; border-radius:10px; box-shadow:0 0 20px rgba(0,0,0,0.1);">
       <div style="text-align:center; border-bottom:1px solid #e0e0e0; padding-bottom:20px;">
-        <a href="https://www.rapidrecap.co.in" style="font-size:2em; color:#00466a; text-decoration:none; font-weight:bold; display:flex; align-items:center; justify-content:center;">
+        <a href="https://rapidrecap.ai" style="font-size:2em; color:#00466a; text-decoration:none; font-weight:bold; display:flex; align-items:center; justify-content:center;">
           <img src="https://res.cloudinary.com/dxstsrnbs/image/upload/v1720002794/rr_qts9kn.png" alt="Rapid Recap Logo" style="width:40px; height:30px; margin-right:10px;">
           Rapid Recap
         </a>
@@ -716,7 +716,7 @@ const MailTemplates = {
         <p style="font-size:1em; color:#666; margin-top:20px;">You have now unlocked the Quin Boost! 🎉 This special power-up will amplify your RQM Score by 1.5 times on your next (${QuinQuizNumber}th) quiz. Look out for the special badge indicating your Quin Boost is active.</p>
         <p style="font-size:1em; color:#666; margin-top:20px;">Make sure to take full advantage of this boost and achieve an outstanding score! 🌟</p>
         <div style="text-align:center; margin:30px 0;">
-          <a href="https://www.rapidrecap.co.in" style="display:inline-block; background-color:#00466a; color:#fff; text-decoration:none; padding:15px 30px; border-radius:5px; font-size:1em;">Take Your ${QuinQuizNumber}th Quiz Now</a>
+          <a href="https://rapidrecap.ai" style="display:inline-block; background-color:#00466a; color:#fff; text-decoration:none; padding:15px 30px; border-radius:5px; font-size:1em;">Take Your ${QuinQuizNumber}th Quiz Now</a>
         </div>
 
         <div style="margin-top:40px; background-color:#A0937D; padding:20px; border-radius:10px;">
@@ -838,7 +838,7 @@ const MailTemplates = {
 <body style="font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif; background-color:#f4f4f4; padding:30px; margin:0;">
   <div style="max-width:600px; margin:0 auto; background:white; padding:30px; border-radius:10px; box-shadow:0 0 20px rgba(0,0,0,0.1);">
     <div style="text-align:center; border-bottom:1px solid #e0e0e0; padding-bottom:20px;">
-      <a href="https://www.rapidrecap.co.in" style="font-size:2em; color:#00466a; text-decoration:none; font-weight:bold; display:flex; align-items:center; justify-content:center;">
+      <a href="https://rapidrecap.ai" style="font-size:2em; color:#00466a; text-decoration:none; font-weight:bold; display:flex; align-items:center; justify-content:center;">
         <img src="https://res.cloudinary.com/dxstsrnbs/image/upload/v1720002794/rr_qts9kn.png" alt="Rapid Recap Logo" style="width:40px; height:30px; margin-right:10px;">
         Rapid Recap
       </a>
@@ -848,7 +848,7 @@ const MailTemplates = {
       <p style="font-size:1em; color:#666; margin-top:20px;">Quick reminder: your Quin Boost will expire in just 1 hour! ⏳</p>
       <p style="font-size:1em; color:#666; margin-top:20px;">Don't miss out on this opportunity to amplify your RQM Score by 1.5 times on your next quiz. Take your ${QuinQuizNumber}th quiz now and make the most of this special power-up! 🌟</p>
       <div style="text-align:center; margin:30px 0;">
-        <a href="https://www.rapidrecap.co.in" style="display:inline-block; background-color:#00466a; color:#fff; text-decoration:none; padding:15px 30px; border-radius:5px; font-size:1em;">Take Your ${QuinQuizNumber}th Quiz Now</a>
+        <a href="https://rapidrecap.ai" style="display:inline-block; background-color:#00466a; color:#fff; text-decoration:none; padding:15px 30px; border-radius:5px; font-size:1em;">Take Your ${QuinQuizNumber}th Quiz Now</a>
       </div>
 
       <div style="margin-top:40px; background-color:#A0937D; padding:20px; border-radius:10px;">
@@ -974,7 +974,7 @@ const MailTemplates = {
     <body style="font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif; background-color:#f4f4f4; padding:30px; margin:0;">
       <div style="max-width:600px; margin:0 auto; background:white; padding:30px; border-radius:10px; box-shadow:0 0 20px rgba(0,0,0,0.1);">
         <div style="text-align:center; border-bottom:1px solid #e0e0e0; padding-bottom:20px;">
-          <a href="https://www.rapidrecap.co.in" style="font-size:2em; color:#00466a; text-decoration:none; font-weight:bold; display:flex; align-items:center; justify-content:center;">
+          <a href="https://rapidrecap.ai" style="font-size:2em; color:#00466a; text-decoration:none; font-weight:bold; display:flex; align-items:center; justify-content:center;">
             <img src="https://res.cloudinary.com/dxstsrnbs/image/upload/v1720002794/rr_qts9kn.png" alt="Rapid Recap Logo" style="width:40px; height:30px; margin-right:10px;">
             Rapid Recap
           </a>
@@ -985,7 +985,7 @@ const MailTemplates = {
           <p style="font-size:1em; color:#666; margin-top:20px;">We hope you enjoyed the enhanced experience and made the most of the 1.5x RQM Score multiplier. Your boosted performance has been truly impressive! 🌟</p>
           <p style="font-size:1em; color:#666; margin-top:20px;">Even though the Quin Boost was temporary, there's good news! The Quin Boost will reactivate after you complete the next five quizzes. Keep up the great work and continue your learning journey with us. We have many more quizzes waiting for you. 📚</p>
           <div style="text-align:center; margin:30px 0;">
-            <a href="https://www.rapidrecap.co.in" style="display:inline-block; background-color:#00466a; color:#fff; text-decoration:none; padding:15px 30px; border-radius:5px; font-size:1em;">Continue Learning</a>
+            <a href="https://rapidrecap.ai" style="display:inline-block; background-color:#00466a; color:#fff; text-decoration:none; padding:15px 30px; border-radius:5px; font-size:1em;">Continue Learning</a>
           </div>
 
           <div style="margin-top:40px; background-color:#A0937D; padding:20px; border-radius:10px;">
@@ -1111,7 +1111,7 @@ const MailTemplates = {
   <body style="font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif; background-color:#f4f4f4; padding:30px; margin:0;">
     <div style="max-width:600px; margin:0 auto; background:white; padding:30px; border-radius:10px; box-shadow:0 0 20px rgba(0,0,0,0.1);">
       <div style="text-align:center; border-bottom:1px solid #e0e0e0; padding-bottom:20px;">
-        <a href="https://www.rapidrecap.co.in" style="font-size:2em; color:#00466a; text-decoration:none; font-weight:bold; display:flex; align-items:center; justify-content:center;">
+        <a href="https://rapidrecap.ai" style="font-size:2em; color:#00466a; text-decoration:none; font-weight:bold; display:flex; align-items:center; justify-content:center;">
           <img src="https://res.cloudinary.com/dxstsrnbs/image/upload/v1720002794/rr_qts9kn.png" alt="Rapid Recap Logo" style="width:40px; height:30px; margin-right:10px;">
           Rapid Recap
         </a>
@@ -1123,7 +1123,7 @@ const MailTemplates = {
         <p style="font-size:1em; color:#666; margin-top:20px;">We miss having you engage with our daily quizzes and would love to see you back on track!</p>
         <p style="font-size:1em; color:#666; margin-top:20px;">Take this opportunity to restart your learning journey. Click below to resume:</p>
         <div style="text-align:center; margin:30px 0;">
-          <a href="https://www.rapidrecap.co.in" style="display:inline-block; background-color:#00466a; color:#fff; text-decoration:none; padding:15px 30px; border-radius:5px; font-size:1em;">Get Back on Track</a>
+          <a href="https://rapidrecap.ai" style="display:inline-block; background-color:#00466a; color:#fff; text-decoration:none; padding:15px 30px; border-radius:5px; font-size:1em;">Get Back on Track</a>
         </div>
 
         <div style="margin-top:40px; background-color:#A0937D; padding:20px; border-radius:10px;">
@@ -1249,7 +1249,7 @@ const MailTemplates = {
   <body style="font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif; background-color:#f4f4f4; padding:30px; margin:0;">
     <div style="max-width:600px; margin:0 auto; background:white; padding:30px; border-radius:10px; box-shadow:0 0 20px rgba(0,0,0,0.1);">
       <div style="text-align:center; border-bottom:1px solid #e0e0e0; padding-bottom:20px;">
-        <a href="https://www.rapidrecap.co.in" style="font-size:2em; color:#00466a; text-decoration:none; font-weight:bold; display:flex; align-items:center; justify-content:center;">
+        <a href="https://rapidrecap.ai" style="font-size:2em; color:#00466a; text-decoration:none; font-weight:bold; display:flex; align-items:center; justify-content:center;">
           <img src="https://res.cloudinary.com/dxstsrnbs/image/upload/v1720002794/rr_qts9kn.png" alt="Rapid Recap Logo" style="width:40px; height:30px; margin-right:10px;">
           Rapid Recap
         </a>
@@ -1261,7 +1261,7 @@ const MailTemplates = {
         <p style="font-size:1em; color:#666; margin-top:20px;">There's a lot of new and exciting content waiting for you! We'd love to see you back to continue your learning journey with us.</p>
         <p style="font-size:1em; color:#666; margin-top:20px;">Click below to resume:</p>
         <div style="text-align:center; margin:30px 0;">
-          <a href="https://www.rapidrecap.co.in" style="display:inline-block; background-color:#00466a; color:#fff; text-decoration:none; padding:15px 30px; border-radius:5px; font-size:1em;">Get Back on Track</a>
+          <a href="https://rapidrecap.ai" style="display:inline-block; background-color:#00466a; color:#fff; text-decoration:none; padding:15px 30px; border-radius:5px; font-size:1em;">Get Back on Track</a>
         </div>
 
         <div style="margin-top:40px; background-color:#A0937D; padding:20px; border-radius:10px;">
@@ -1387,7 +1387,7 @@ const MailTemplates = {
   <body style="font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif; background-color:#f4f4f4; padding:30px; margin:0;">
     <div style="max-width:600px; margin:0 auto; background:white; padding:30px; border-radius:10px; box-shadow:0 0 20px rgba(0,0,0,0.1);">
       <div style="text-align:center; border-bottom:1px solid #e0e0e0; padding-bottom:20px;">
-        <a href="https://www.rapidrecap.co.in" style="font-size:2em; color:#00466a; text-decoration:none; font-weight:bold; display:flex; align-items:center; justify-content:center;">
+        <a href="https://rapidrecap.ai" style="font-size:2em; color:#00466a; text-decoration:none; font-weight:bold; display:flex; align-items:center; justify-content:center;">
           <img src="https://res.cloudinary.com/dxstsrnbs/image/upload/v1720002794/rr_qts9kn.png" alt="Rapid Recap Logo" style="width:40px; height:30px; margin-right:10px;">
           Rapid Recap
         </a>
@@ -1397,7 +1397,7 @@ const MailTemplates = {
         <p style="font-size:1em; color:#666; margin-top:20px;">We hope this message finds you well.</p>
         <p style="font-size:1em; color:#666; margin-top:20px;">Don't forget to take today's quiz and keep your Rapid Recap streak going strong. Your daily dose of knowledge awaits! Log in now and maintain that winning streak!</p>
         <div style="text-align:center; margin:30px 0;">
-          <a href="https://www.rapidrecap.co.in" style="display:inline-block; background-color:#00466a; color:#fff; text-decoration:none; padding:15px 30px; border-radius:5px; font-size:1em;">Log in now</a>
+          <a href="https://rapidrecap.ai" style="display:inline-block; background-color:#00466a; color:#fff; text-decoration:none; padding:15px 30px; border-radius:5px; font-size:1em;">Log in now</a>
         </div>
 
         <div style="margin-top:40px; background-color:#A0937D; padding:20px; border-radius:10px;">
@@ -1529,7 +1529,7 @@ const MailTemplates = {
   <body style="font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif; background-color:#f4f4f4; padding:30px; margin:0;">
     <div style="max-width:600px; margin:0 auto; background:white; padding:30px; border-radius:10px; box-shadow:0 0 20px rgba(0,0,0,0.1);">
       <div style="text-align:center; border-bottom:1px solid #e0e0e0; padding-bottom:20px;">
-        <a href="https://www.rapidrecap.co.in" style="font-size:2em; color:#00466a; text-decoration:none; font-weight:bold; display:flex; align-items:center; justify-content:center;">
+        <a href="https://rapidrecap.ai" style="font-size:2em; color:#00466a; text-decoration:none; font-weight:bold; display:flex; align-items:center; justify-content:center;">
           <img src="https://res.cloudinary.com/dxstsrnbs/image/upload/v1720002794/rr_qts9kn.png" alt="Rapid Recap Logo" style="width:40px; height:30px; margin-right:10px;">
           Rapid Recap
         </a>
@@ -1539,7 +1539,7 @@ const MailTemplates = {
         <p style="font-size:1em; color:#666; margin-top:20px;">We hope this message finds you well.</p>
         <p style="font-size:1em; color:#666; margin-top:20px;">The day is almost over, but your streak doesn't have to be! Take a few minutes now to complete today's quiz and extend your impressive streak. Don't let the day end without keeping your momentum going!</p>
         <div style="text-align:center; margin:30px 0;">
-          <a href="https://www.rapidrecap.co.in" style="display:inline-block; background-color:#00466a; color:#fff; text-decoration:none; padding:15px 30px; border-radius:5px; font-size:1em;">Log in now</a>
+          <a href="https://rapidrecap.ai" style="display:inline-block; background-color:#00466a; color:#fff; text-decoration:none; padding:15px 30px; border-radius:5px; font-size:1em;">Log in now</a>
         </div>
 
         <div style="margin-top:40px; background-color:#A0937D; padding:20px; border-radius:10px;">
@@ -1671,7 +1671,7 @@ const MailTemplates = {
   <body style="font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif; background-color:#f4f4f4; padding:30px; margin:0;">
     <div style="max-width:600px; margin:0 auto; background:white; padding:30px; border-radius:10px; box-shadow:0 0 20px rgba(0,0,0,0.1);">
       <div style="text-align:center; border-bottom:1px solid #e0e0e0; padding-bottom:20px;">
-        <a href="https://www.rapidrecap.co.in" style="font-size:2em; color:#00466a; text-decoration:none; font-weight:bold; display:flex; align-items:center; justify-content:center;">
+        <a href="https://rapidrecap.ai" style="font-size:2em; color:#00466a; text-decoration:none; font-weight:bold; display:flex; align-items:center; justify-content:center;">
           <img src="https://res.cloudinary.com/dxstsrnbs/image/upload/v1720002794/rr_qts9kn.png" alt="Rapid Recap Logo" style="width:40px; height:30px; margin-right:10px;">
           Rapid Recap
         </a>
@@ -1682,7 +1682,7 @@ const MailTemplates = {
         <p style="font-size:1em; color:#666; margin-top:20px;">We noticed that you haven't completed today's quiz yet. Don't let your hard-earned streak come to an end!</p>
         <p style="font-size:1em; color:#666; margin-top:20px;">Keep your momentum going and set yourself up for success tomorrow by completing today's quiz.</p>
         <div style="text-align:center; margin:30px 0;">
-          <a href="https://www.rapidrecap.co.in" style="display:inline-block; background-color:#00466a; color:#fff; text-decoration:none; padding:15px 30px; border-radius:5px; font-size:1em;">Log in now</a>
+          <a href="https://rapidrecap.ai" style="display:inline-block; background-color:#00466a; color:#fff; text-decoration:none; padding:15px 30px; border-radius:5px; font-size:1em;">Log in now</a>
         </div>
 
         <div style="margin-top:40px; background-color:#A0937D; padding:20px; border-radius:10px;">

@@ -10,6 +10,7 @@ import { setCategory, setItemsState } from '../redux/contentSlice'
 import { markFriendRequestsAsRead } from '../redux/appSlice'
 import i18n from 'i18next'
 import { categoryCache } from '../services/categoryCache'
+import slugify from 'slugify'
 
 const Timeline = React.lazy(() =>
   import('../components/homeComponents/Timeline'),
@@ -20,7 +21,9 @@ const WiseWeb = React.lazy(() =>
 
 const Home = () => {
   const { t } = useTranslation('Home')
-  const { isAuthenticated, loginCheckStatus } = useSelector(state => state.auth)
+  const { isAuthenticated, loginCheckStatus, user } = useSelector(
+    state => state.auth,
+  )
   const { unreadFriendRequests } = useSelector(state => state.app)
   const { isSearching } = useSelector(state => state.articles)
   const dispatchRedux = useDispatch()
@@ -66,7 +69,12 @@ const Home = () => {
 
           // Prefetch next page
           if (hasMoreItems) {
-            categoryCache.prefetchCategory(cat, pageNum + 1, i18n.language)
+            categoryCache.prefetchCategory(
+              cat,
+              pageNum + 1,
+              i18n.language,
+              user,
+            )
           }
 
           setLoad(false)
@@ -81,7 +89,13 @@ const Home = () => {
                 notLoggedIn && (cat === 'all' || !cat) ? 'top' : cat
               }&lang=${i18n.language}`
 
-        const response = await axios.get(endpoint)
+        // Add auth header if user has privileges
+        const headers =
+          user?.categoryPrivileges?.[cat] ||
+          (user?.categoryPrivileges && cat === 'all')
+            ? { Authorization: `Bearer ${localStorage.getItem('token')}` }
+            : {}
+        const response = await axios.get(endpoint, { headers })
 
         if (cat !== currentCategoryRef.current) return
 
@@ -103,6 +117,16 @@ const Home = () => {
       } catch (error) {
         if (!axios.isCancel(error)) {
           console.error(error.message)
+          console.log(loginCheckStatus)
+          console.log(isAuthenticated)
+
+          if (
+            loginCheckStatus === 'fulfilled' &&
+            !isAuthenticated &&
+            location.pathname === 'home/all'
+          ) {
+            return
+          }
           toast({
             title: t('fetch_error'),
             status: 'error',
@@ -117,6 +141,7 @@ const Home = () => {
       }
     },
     [
+      isAuthenticated,
       loginCheckStatus,
       hasMoreItems,
       notLoggedIn,
@@ -149,7 +174,7 @@ const Home = () => {
         await fetchData(1, category)
 
         // Prefetch adjacent categories
-        categoryCache.prefetchAdjacentCategories(category, i18n.language)
+        categoryCache.prefetchAdjacentCategories(category, i18n.language, user)
       } else if (page > 1) {
         await fetchData(page, category)
       }
@@ -186,7 +211,7 @@ const Home = () => {
       navigate('/home/all')
     } else if (
       !isAuthenticated &&
-      locationpathname === '/home' &&
+      (locationpathname === '/home' || locationpathname === '/home/all') &&
       loginCheckStatus === 'fulfilled'
     ) {
       navigate('/home/top')
@@ -209,12 +234,76 @@ const Home = () => {
     }
   }, [hasMoreItems, isSearching, notLoggedIn])
 
+  // Add this inside Home component
+  const getStructuredData = useMemo(() => {
+    const categoryName = category
+      ? category.charAt(0).toUpperCase() + category.slice(1)
+      : 'Top'
+
+    return {
+      '@context': 'https://schema.org',
+      '@type': 'WebPage',
+      name: `${categoryName} GK Questions & Current Affairs Quiz | Rapid Recap`,
+      url: `https://rapidrecap.ai/home/${category || ''}`,
+      description: t('description'),
+      isPartOf: {
+        '@type': 'WebSite',
+        name: 'Rapid Recap',
+        url: 'https://rapidrecap.ai',
+      },
+      mainEntity: {
+        '@type': 'ItemList',
+        itemListElement: items.map((article, index) => ({
+          '@type': 'Article',
+          position: index + 1,
+          url: `https://rapidrecap.ai/article/${article._id}/${slugify(
+            article.title,
+          )}`,
+          name: article?.title,
+          description: article?.description,
+          datePublished: article?.date,
+          author: {
+            '@type': 'Organization',
+            name: 'Rapid Recap',
+          },
+        })),
+      },
+      about: {
+        '@type': 'Thing',
+        name: `${categoryName} Knowledge Quiz`,
+        description: `Latest ${categoryName} general knowledge questions and current affairs quiz with detailed answers`,
+      },
+      offers: {
+        '@type': 'Offer',
+        price: '0',
+        priceCurrency: 'INR',
+      },
+      provider: {
+        '@type': 'Organization',
+        name: 'Rapid Recap',
+        logo: {
+          '@type': 'ImageObject',
+          url: 'https://rapidrecap.ai/images/rrlogo_512.png',
+        },
+      },
+    }
+  }, [category, items, t])
+
   return (
     <Box marginTop={'4.5rem'} w={'100%'} overflow={'hidden'} maxH="92vh">
       <Helmet>
-        <title>{t('title')}</title>
+        <link
+          rel="canonical"
+          href={`https://rapidrecap.ai/home/${category ? category : ''}`}
+        />
+        <title>
+          {t('title')} | {category ? category : 'Top'}
+        </title>
         <meta name="description" content={t('description')} />
         <meta name="keywords" content={t('keywords')} />
+        <script type="application/ld+json">
+          {JSON.stringify(getStructuredData)}
+        </script>
       </Helmet>
       <React.Suspense fallback={<Spinner />}>
         <Timeline

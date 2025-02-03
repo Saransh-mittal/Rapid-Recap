@@ -1608,6 +1608,123 @@ const getTournamentParticipants = asyncHandler(async (req, res) => {
   res.json(participants)
 })
 
+// Get a list of all completed tournaments
+const getCompletedTournaments = asyncHandler(async (req, res) => {
+  const completedTournaments = await Tournament.find({
+    status: 'completed',
+    tournamentType: 'normal',
+    tournamentNumber: { $gt: 1 },
+  }).sort({ tournamentNumber: -1 })
+
+  res.json({
+    status: 'success',
+    data: completedTournaments.map(t => ({
+      id: t._id,
+      tournamentNumber: t.tournamentNumber,
+      endDate: t.endDate,
+    })),
+  })
+})
+
+// Get top 5 leaders for a specific tournament
+const getTournamentLeaders = asyncHandler(async (req, res) => {
+  const { tournamentId } = req.params
+
+  const tournament = await Tournament.findById(tournamentId)
+  if (!tournament) {
+    res.status(404)
+    throw new Error('Tournament not found')
+  }
+
+  const topRegistrations = await TournamentRegistration.find({
+    tournament: tournamentId,
+  })
+    .sort({ totalScore: -1 })
+    .limit(5)
+    .populate('user', 'name username')
+
+  const leaderboardData = await Promise.all(
+    topRegistrations.map(async reg => {
+      const categoryScores = Array.from(reg.categoryScores.entries())
+      const bestCategory = categoryScores.reduce((best, current) =>
+        current[1] > best[1] ? current : best,
+      )
+
+      return {
+        id: reg.user._id,
+        name: reg.user.name,
+        username: reg.user.username,
+        totalScore: reg.totalScore,
+        categoriesPlayed: reg.selectedCategories,
+        bestCategory: {
+          name: bestCategory[0],
+          score: bestCategory[1],
+        },
+        badges: [], // Enhanced badge logic can be added here
+      }
+    }),
+  )
+
+  res.json({
+    status: 'success',
+    data: {
+      tournamentNumber: tournament.tournamentNumber,
+      leaders: leaderboardData,
+    },
+  })
+})
+
+const getLatestTournamentLeaders = asyncHandler(async (req, res) => {
+  const latestTournament = await Tournament.findOne({
+    status: 'completed',
+    tournamentType: 'normal',
+  }).sort({ tournamentNumber: -1 })
+
+  if (!latestTournament) {
+    return res.json({
+      status: 'success',
+      data: { leaders: [] },
+    })
+  }
+
+  const topRegistrations = await TournamentRegistration.find({
+    tournament: latestTournament._id,
+  })
+    .sort({ totalScore: -1 })
+    .limit(5)
+    .populate('user', 'name username')
+
+  const leaders = await Promise.all(
+    topRegistrations.map(async reg => {
+      const categoryScores = Array.from(reg.categoryScores.entries())
+      const bestCategory = categoryScores.reduce((best, current) =>
+        current[1] > best[1] ? current : best,
+      )
+
+      return {
+        id: reg.user._id,
+        name: reg.user.name,
+        username: reg.user.username,
+        totalScore: reg.totalScore,
+        categoriesPlayed: reg.selectedCategories,
+        bestCategory: {
+          name: bestCategory[0],
+          score: bestCategory[1],
+        },
+        badges: [],
+      }
+    }),
+  )
+
+  res.json({
+    status: 'success',
+    data: {
+      tournamentNumber: latestTournament.tournamentNumber,
+      leaders,
+    },
+  })
+})
+
 module.exports = {
   registerForTournament,
   createTestTournament,
@@ -1633,4 +1750,7 @@ module.exports = {
   editQuestion,
   getTournamentParticipants,
   getLatestTestTournament,
+  getLatestTournamentLeaders,
+  getCompletedTournaments,
+  getTournamentLeaders,
 }

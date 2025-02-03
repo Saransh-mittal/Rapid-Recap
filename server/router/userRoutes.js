@@ -44,18 +44,31 @@ const {
   getOnboardingProgress,
   claimQuinBoost,
   claimStreakSurge,
+  claimTournamentBadge,
+  getValidCategories,
+  updateBadgeCategory,
+  checkRewardsModalStatus,
 } = require('../controllers/user')
 const { Authenticate } = require('../middleware/authenticate')
 const {
   exportGuestData,
   enhancedGuestLogin,
 } = require('../controllers/guestController')
+const {
+  getUserMonthlyPerformance,
+  getUserHistoricalPerformance,
+} = require('../controllers/monthlyLeaderboardController')
+const { getMaintenanceStatus } = require('../controllers/maintenanceController')
+const {
+  getDemotionSummary,
+} = require('../controllers/demotionSummaryController')
+const maintenanceMiddleware = require('../middleware/maintenanceMiddleware')
 
 router.route('/register').post(registerUser)
 router.route('/login').post(loginUser)
 router.route('/logout').post(Authenticate, logoutUser)
 router.route('/verifyEmail').post(verifyUser)
-router.route('/loginCheck').get(Authenticate, loginCheck)
+router.route('/loginCheck').get(maintenanceMiddleware, Authenticate, loginCheck)
 router.route('/resendOTP').post(resendOTP)
 router.route('/forgotPassword').post(forgotPassword)
 router.route('/handleGoogleLogin').post(handleGoogleLogin)
@@ -94,6 +107,14 @@ router
 router.post('/deleteAccount', Authenticate, deleteAccount)
 router.post('/claim-quinboost', Authenticate, claimQuinBoost)
 router.post('/claim-streak-surge', Authenticate, claimStreakSurge)
+router.route('/claim-badge').post(Authenticate, claimTournamentBadge)
+router.get('/valid-categories', Authenticate, getValidCategories)
+router.put('/update-category', Authenticate, updateBadgeCategory)
+router.get('/modal-status', Authenticate, checkRewardsModalStatus)
+router.get('/stats/monthly', Authenticate, getUserMonthlyPerformance)
+router.get('/stats/historical', Authenticate, getUserHistoricalPerformance)
+router.get('/maintenance-status', getMaintenanceStatus)
+router.route('/demotion-summary').get(Authenticate, getDemotionSummary)
 
 router.get('/confirmDeleteAccount/:token', confirmDeleteAccount)
 router

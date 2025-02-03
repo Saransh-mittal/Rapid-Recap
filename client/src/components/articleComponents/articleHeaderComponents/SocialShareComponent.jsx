@@ -68,7 +68,7 @@ const SocialShareComponent = ({ isOpen, onClose, articleToShare }) => {
   // Share functionality
   const handleSocialShare = platform => {
     let url = ''
-    const articleUrl = `https://www.rapidrecap.co.in/article/${articleToShare._id}`
+    const articleUrl = `https://rapidrecap.ai/article/${articleToShare._id}`
     const text = encodeURIComponent(
       `${t('checkOutArticle')}: ${articleToShare.title}`,
     )
@@ -94,7 +94,7 @@ const SocialShareComponent = ({ isOpen, onClose, articleToShare }) => {
   }
 
   const handleCopyArticleUrl = () => {
-    const articleUrl = `https://www.rapidrecap.co.in/article/${articleToShare._id}`
+    const articleUrl = `https://rapidrecap.ai/article/${articleToShare._id}`
     navigator.clipboard.writeText(articleUrl)
     toast({
       title: t('linkCopied'),

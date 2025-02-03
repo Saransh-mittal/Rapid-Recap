@@ -130,7 +130,7 @@
 84-->/Users/saranshmittal/Desktop/Rapid-Recap-main/client/app/src/main/AndroidManifest.xml:84:13-86:64
 85                android:name="android.support.customtabs.trusted.DEFAULT_URL"
 85-->/Users/saranshmittal/Desktop/Rapid-Recap-main/client/app/src/main/AndroidManifest.xml:85:17-78
-86                android:value="https://www.rapidrecap.co.in" />
+86                android:value="https://rapidrecap.ai" />
 86-->/Users/saranshmittal/Desktop/Rapid-Recap-main/client/app/src/main/AndroidManifest.xml:86:17-61
 87            <meta-data
 87-->/Users/saranshmittal/Desktop/Rapid-Recap-main/client/app/src/main/AndroidManifest.xml:88:13-90:58

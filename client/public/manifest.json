@@ -4,26 +4,27 @@
   "description": "Stay Informed, Stay Ahead with Rapid Recap",
   "theme_color": "#1a1527",
   "background_color": "#0f0d15",
-  "display": "standalone",
+  "display": "fullscreen",
   "start_url": "/",
+  "scope": "/",
   "icons": [
     {
-      "src": "/images/rrlogo_HD.png",
+      "src": "/images/rrlogo_100.png",
       "sizes": "100x100",
       "type": "image/png"
     },
     {
-      "src": "/images/rrlogo_HD.png",
+      "src": "/images/rrlogo_192.png",
       "sizes": "192x192",
       "type": "image/png"
     },
     {
-      "src": "/images/rrlogo_HD.png",
+      "src": "/images/rrlogo_512.png",
       "sizes": "512x512",
       "type": "image/png"
     },
     {
-      "src": "/images/rrlogo_HD.png",
+      "src": "/images/rrlogo_192.png",
       "sizes": "192x192",
       "type": "image/png",
       "purpose": "maskable"

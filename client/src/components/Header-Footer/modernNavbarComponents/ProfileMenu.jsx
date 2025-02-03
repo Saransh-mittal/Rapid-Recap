@@ -14,7 +14,7 @@ import {
 import { motion, AnimatePresence } from 'framer-motion'
 import { useSelector } from 'react-redux'
 import { useNavigate } from 'react-router-dom'
-import { User, LogOut, HelpCircle, LayoutDashboard } from 'lucide-react'
+import { User, LogOut, HelpCircle, LayoutDashboard, Scroll } from 'lucide-react'
 import { useTranslation } from 'react-i18next'
 
 const MotionBox = motion(Box)
@@ -66,6 +66,14 @@ const ProfileMenu = memo(({ user, handleLogout, isLoggingOut }) => {
         onClose()
       },
       isHidden: !showDashboard,
+    },
+    {
+      icon: Scroll,
+      label: t('profileMenu.manual'), // Add translation key
+      onClick: () => {
+        navigate('/manual')
+        onClose()
+      },
     },
     {
       icon: HelpCircle,

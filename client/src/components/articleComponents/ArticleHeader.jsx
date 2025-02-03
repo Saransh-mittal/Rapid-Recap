@@ -40,6 +40,7 @@ import { useFeatureDetection } from '../../utils/featureDetection'
 import useSafeSound from '../../customHooks/useSafeSound'
 import ArticleHeaderSkeleton from './loaders/ArticleHeaderSkeleton'
 import SocialShareComponent from './articleHeaderComponents/SocialShareComponent'
+import NotUserLangSwitcher from './NotUserLangSwitcher'
 
 const ArticleForm = React.lazy(() =>
   import('../dashboardComponents/ArticleManageComponents/ArticleForm'),
@@ -59,6 +60,8 @@ const ArticleHeader = ({
   quizLeftToGetQuizBoost,
   openModal,
   onThemeChange,
+  openStreakSurgeModal,
+  openCategoryBoostModal,
 }) => {
   const { t } = useTranslation('ArticleHeader')
   const { isAuthenticated, isAdmin } = useSelector(state => state.auth)
@@ -258,7 +261,7 @@ const ArticleHeader = ({
               w={'100%'}
             >
               {/* <AuthorInfo author={author} selectedLanguage={selectedLanguage} /> */}
-              <AITagLine />
+              <AITagLine t={t} />
               {isAdmin && (
                 <>
                   <EditIcon
@@ -297,6 +300,9 @@ const ArticleHeader = ({
             position={'relative'}
           >
             <BoostSection
+              isCategoryBoostAvailable={article?.isArticleCategoryBoosted}
+              openStreakSurgeModal={openStreakSurgeModal}
+              openCategoryBoostModal={openCategoryBoostModal}
               isQuinBoostAvailable={isQuinBoostAvailable}
               quizLeftToGetQuizBoost={quizLeftToGetQuizBoost}
               openModal={openModal}
@@ -324,7 +330,10 @@ const ArticleHeader = ({
               <Flex
                 justifyContent={{ base: 'flex-end', lg: 'flex-start' }}
                 w={{ base: '100%', lg: 'auto' }}
+                alignItems={'center'}
+                gap={2}
               >
+                <Flex>{!user && <NotUserLangSwitcher />}</Flex>
                 <Text fontSize={['sm', 'md', 'lg']} mb={0}>
                   {avgTimeRead} {t('timeToRead')} • <time>{formattedDate}</time>
                 </Text>
@@ -385,16 +394,11 @@ const ArticleHeader = ({
                 </MenuList>
               </Menu>
             </Box>
-            <Badge
-              colorScheme="purple"
-              variant="solid"
-              px={2}
-              py={1}
-              borderRadius="md"
-              fontSize="xs"
-            >
-              {t('featureInTesting')}
-            </Badge>
+            {!user && !isLargerThan768 && (
+              <Flex align={'flex-end'} w={'100%'}>
+                <NotUserLangSwitcher />
+              </Flex>
+            )}
           </Flex>
         </Flex>
         <SocialShareComponent

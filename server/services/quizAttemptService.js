@@ -21,6 +21,7 @@ const { calculateRealTimeIQ } = require('./iqCalculationService')
 const { streakSurgeTemplate } = require('../data/inboxNotificationsTemplates')
 const i18n = require('i18next')
 const ApplicationUpdates = require('../model/applicationUpdatesSchema')
+const moment = require('moment-timezone')
 
 const hasStreakSurgeNotificationToday = async user => {
   return user.todaysQuizCnt > 0
@@ -46,18 +47,38 @@ const saveQuizAttempt = async (
     .populate({
       path: 'quizAttempts',
       select: '_id createdAt',
-      match: { season: parseInt(configService.getCurrentSeason(), 10) },
+      match: {
+        $and: [
+          { season: parseInt(configService.getCurrentSeason(), 10) },
+          { month: new Date().getMonth() + 1 }, // JavaScript months are 0-based, so add 1
+          { year: new Date().getFullYear() },
+        ],
+      },
     })
     .session(session)
 
+  const article = await Article.findById(articleId)
+    .select('_id category quizAttemptCnt')
+    .session(session)
+
   const localizedI18n = i18n.cloneInstance({ initImmediate: false })
+
+  const now = moment().tz('Asia/Kolkata')
+  const validBadges = user.badges.filter(
+    badge =>
+      badge.canBeClaimedUntil &&
+      moment(badge.canBeClaimedUntil).isAfter(now) &&
+      ['ACE', 'PRO', 'CHAMP'].includes(badge.badgeName) &&
+      badge.text === article.category,
+  )
+  const rqmBoostForCategory = validBadges.some(badge =>
+    ['ACE', 'PRO'].includes(badge.badgeName),
+  )
 
   // Switch to user's language
   await localizedI18n.changeLanguage(
     user?.userLanguage ? user.userLanguage : 'en',
   )
-
-  const article = await Article.findById(articleId).session(session)
 
   const existingAttempt = await QuizAttempt.findOne({
     user: userId,
@@ -81,7 +102,14 @@ const saveQuizAttempt = async (
   ) {
     const quinBoost = user.quinBoosts[user.quinBoosts.length - 1]
     if (quinBoost.boosted) {
-      RQM_score = Math.ceil(RQM_score * (user.todayBoost ? 1.75 : 1.5))
+      RQM_score = Math.ceil(
+        RQM_score *
+          (rqmBoostForCategory && user.todayBoost
+            ? 2
+            : rqmBoostForCategory || user.todayBoost
+            ? 1.75
+            : 1.5),
+      )
       quinBoost.boosted = false
       const qBoost = await QuinBoost.findById(quinBoost.quinBoost)
       qBoost.article = article._id
@@ -96,7 +124,7 @@ const saveQuizAttempt = async (
       user.eligibleForTournament = true
     }
   } else if (user.todayBoost) {
-    RQM_score = Math.ceil(RQM_score * 1.5)
+    RQM_score = Math.ceil(RQM_score * (rqmBoostForCategory ? 1.75 : 1.5))
     boosted = true
 
     // Check if notification has already been sent today
@@ -114,18 +142,26 @@ const saveQuizAttempt = async (
       })
       await newNotification.save()
     }
+  } else if (rqmBoostForCategory) {
+    RQM_score = Math.ceil(RQM_score * 1.5)
+    boosted = true
   }
 
   emitProgress('calculateRQM', 100)
   emitProgress('saveAttempt', 50)
   const articleDifficulty = quizSession.overAllDifficulty[user.userLanguage]
   const boost =
-    quinBoostUtilized && user.todayBoost
+    quinBoostUtilized && user.todayBoost && rqmBoostForCategory
+      ? 2
+      : (quinBoostUtilized && user.todayBoost) ||
+        (quinBoostUtilized && rqmBoostForCategory) ||
+        (user.todayBoost && rqmBoostForCategory)
       ? 1.75
-      : boosted || quinBoostUtilized
+      : quinBoostUtilized || user.todayBoost || rqmBoostForCategory
       ? 1.5
       : 1
   const isBoosted = boosted || quinBoostUtilized
+
   const newQuizAttempt = new QuizAttempt({
     user: userId,
     article: articleId,
@@ -138,6 +174,8 @@ const saveQuizAttempt = async (
     boost,
     isBoosted,
     season: parseInt(configService.getCurrentSeason(), 10),
+    month: moment().month() + 1,
+    year: moment().year(),
   })
   await newQuizAttempt.save({ session })
   quizSession.RQM_score = {
@@ -159,6 +197,7 @@ const saveQuizAttempt = async (
     createdAt: { $gte: currentDate },
   }).session(session)
 
+  const lastQuizAttempt = user.quizAttempts[user.quizAttempts.length - 1]
   await updateUserStats({
     user,
     RQM_score,
@@ -225,7 +264,7 @@ const saveQuizAttempt = async (
   emitProgress('updateStats', 100)
   emitProgress('checkTournament', 50)
   const { messageForTournamentEligibility, userEligibleForTournament } =
-    await checkTournamentEligibility(user, RQM_score, session)
+    await checkTournamentEligibility(user, RQM_score, lastQuizAttempt, session)
 
   const xpAwarded = await logActivity({
     userInGameName: user.inGameName,

@@ -8,7 +8,10 @@ const MotionBox = motion(Box)
 
 const QuizResult = ({ isCorrect, onNext, quizQuestion, isLoadingNext }) => {
   const { t } = useTranslation('OnboardingProcess')
-
+  if (!quizQuestion) {
+    onNext()
+    return null
+  }
   return (
     <Box h="100vh" display="flex" alignItems="center" justifyContent="center">
       <MotionBox
@@ -59,7 +62,7 @@ const QuizResult = ({ isCorrect, onNext, quizQuestion, isLoadingNext }) => {
             )}
           </Text>
           <Text fontSize="xl" color="white" textAlign="center">
-            {quizQuestion.explanation}
+            {quizQuestion?.explanation}
           </Text>
           <Text fontSize="lg" color="white" textAlign="center">
             {t('quizResult.nextStepDescription')}

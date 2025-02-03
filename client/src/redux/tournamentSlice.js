@@ -1,5 +1,5 @@
 import { createSlice, createAsyncThunk } from '@reduxjs/toolkit'
-import { addNoteMessage, addNoteMessageIfAllowed } from './appSlice'
+import { addNoteMessageIfAllowed } from './appSlice'
 import axios from 'axios'
 
 export const checkTournamentRegistration = createAsyncThunk(

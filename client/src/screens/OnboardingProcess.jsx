@@ -87,6 +87,7 @@ const OnboardingProcess = ({ setIsGuestLoggedin }) => {
   const [submittingSelectedLanguage, setSubmittingSelectedLanguage] =
     useState(false)
   const [isLoadingNext, setIsLoadingNext] = useState(false)
+  const [errorFecthinArticle, setErrorFetchingArticle] = useState(false)
   const features = useFeatureDetection()
   const { playClick } = useSafeSound({
     enabled: features.hasAudioSupport,
@@ -181,6 +182,7 @@ const OnboardingProcess = ({ setIsGuestLoggedin }) => {
       setCurrentStepId(nextStepId)
       fetchOnBoardingArticle()
       if (getVisitedArticle()) fetchVisitedArticle(getVisitedArticle()?.id)
+      axios.get('/api/user/leaderboard?limit=500')
     } catch (error) {
       console.error('Failed to update language:', error)
       toast({
@@ -211,6 +213,7 @@ const OnboardingProcess = ({ setIsGuestLoggedin }) => {
         }
       }
     } catch (error) {
+      console.log(error)
       toast({
         title: 'Error',
         description: 'Failed to proceed to next step. Please try again.',
@@ -272,7 +275,8 @@ const OnboardingProcess = ({ setIsGuestLoggedin }) => {
 
   const fetchVisitedArticle = useCallback(
     async articleId => {
-      if (isVisitedArticleFetching) return
+      if (isVisitedArticleFetching || !articleId) return
+
       setIsVisitedArticleFetching(true)
       try {
         const response = await axios.get(
@@ -281,14 +285,8 @@ const OnboardingProcess = ({ setIsGuestLoggedin }) => {
 
         setVisitedArticle(response.data)
       } catch (error) {
+        setErrorFetchingArticle(true)
         console.error(error)
-        toast({
-          title: 'Error',
-          description: 'Failed to fetch article. Please try again later.',
-          status: 'error',
-          duration: 3000,
-          isClosable: true,
-        })
       } finally {
         setIsVisitedArticleFetching(false)
       }
@@ -399,6 +397,7 @@ const OnboardingProcess = ({ setIsGuestLoggedin }) => {
     ),
     [ONBOARDING_STEPS.ARTICLE_SELECTION]: (
       <ArticleSelection
+        errorFecthinArticle={errorFecthinArticle}
         onArticleSelect={selectedArticle => {
           fetchOnBoardingArticle(selectedArticle?.id || selectedArticle?._id)
           handleNext()

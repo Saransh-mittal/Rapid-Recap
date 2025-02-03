@@ -19,14 +19,15 @@ import {
 import { Star, Clock, Zap } from 'lucide-react'
 import { motion } from 'framer-motion'
 import { useSelector } from 'react-redux'
+import { useTranslation } from 'react-i18next'
 
 const StreakSurgeModal = ({ isOpen, onClose, isStreakBoosted }) => {
+  const { t } = useTranslation('StreakSurgeModal')
   const [isLargerThan768] = useMediaQuery('(min-width: 768px)')
   const { streak: currentStreak } = useSelector(state => state.app)
   const getNextStreakThreshold = count => Math.floor(count / 7) * 7 + 7
   const nextStreak = getNextStreakThreshold(currentStreak)
   const daysRemaining = nextStreak - currentStreak
-  // Update progress calculation to show full bar when streak surge is active
   const progress = isStreakBoosted ? 100 : ((currentStreak % 7) / 7) * 100
 
   const isStreakSurgeActivated = currentStreak > 0 && currentStreak % 7 === 0
@@ -67,7 +68,7 @@ const StreakSurgeModal = ({ isOpen, onClose, isStreakBoosted }) => {
                 bgClip="text"
                 letterSpacing="wide"
               >
-                Streak Surge
+                {t('title')}
               </Text>
               <Zap size={28} color="#4F46E5" />
             </Flex>
@@ -79,8 +80,8 @@ const StreakSurgeModal = ({ isOpen, onClose, isStreakBoosted }) => {
               textAlign="center"
             >
               {isStreakSurgeActivated || isStreakBoosted
-                ? 'Surge Activated!'
-                : 'Keep Your Streak Alive'}
+                ? t('surgeActivated')
+                : t('keepStreakAlive')}
             </Text>
           </Flex>
         </ModalHeader>
@@ -117,14 +118,16 @@ const StreakSurgeModal = ({ isOpen, onClose, isStreakBoosted }) => {
                 <Clock size={24} color="#4F46E5" />
                 <Text fontSize="xl" fontWeight="bold">
                   {isStreakSurgeActivated || isStreakBoosted
-                    ? 'Streak Surge Activated'
-                    : 'Streak Surge Inactive'}
+                    ? t('streakSurgeActivated')
+                    : t('streakSurgeInactive')}
                 </Text>
               </Flex>
 
               <Box mb={4}>
                 <Flex justify="space-between" mb={2}>
-                  <Text color="gray.300">Current Streak: {currentStreak}</Text>
+                  <Text color="gray.300">
+                    {t('currentStreak')}: {currentStreak}
+                  </Text>
                   <Badge
                     bg="rgba(79, 70, 229, 0.2)"
                     color="#4F46E5"
@@ -133,8 +136,8 @@ const StreakSurgeModal = ({ isOpen, onClose, isStreakBoosted }) => {
                     borderRadius="full"
                   >
                     {isStreakSurgeActivated || isStreakBoosted
-                      ? 'Surge Active'
-                      : `Next Surge: ${nextStreak}`}
+                      ? t('surgeActive')
+                      : `${t('nextSurge')}: ${nextStreak}`}
                   </Badge>
                 </Flex>
                 <Progress
@@ -153,10 +156,10 @@ const StreakSurgeModal = ({ isOpen, onClose, isStreakBoosted }) => {
 
               <Text color="gray.400" fontSize="md" textAlign="center">
                 {isStreakSurgeActivated || isStreakBoosted
-                  ? 'Your Streak Surge is now active!'
+                  ? t('surgeActiveMessage')
                   : daysRemaining > 0
-                  ? `${daysRemaining} days until next Streak Surge`
-                  : 'Surge ready!'}
+                  ? t('daysUntilSurge', { count: daysRemaining })
+                  : t('surgeReady')}
               </Text>
             </MotionBox>
 
@@ -178,13 +181,10 @@ const StreakSurgeModal = ({ isOpen, onClose, isStreakBoosted }) => {
               <Flex align="center" gap={3} mb={4}>
                 <Zap size={24} color="#4F46E5" />
                 <Text fontSize="xl" fontWeight="bold">
-                  Power Up Your Progress
+                  {t('powerUpProgress')}
                 </Text>
               </Flex>
-              <Text color="gray.400">
-                Maintain your daily streak to unlock powerful multipliers and
-                rewards!
-              </Text>
+              <Text color="gray.400">{t('powerUpDescription')}</Text>
             </MotionBox>
 
             <MotionBox
@@ -205,13 +205,10 @@ const StreakSurgeModal = ({ isOpen, onClose, isStreakBoosted }) => {
               <Flex align="center" gap={3} mb={4}>
                 <Clock size={24} color="#4F46E5" />
                 <Text fontSize="xl" fontWeight="bold">
-                  Surge Pattern
+                  {t('surgePattern')}
                 </Text>
               </Flex>
-              <Text color="gray.400">
-                Complete daily activities to maintain your streak. Surge
-                activates every 7 days of consistent progress!
-              </Text>
+              <Text color="gray.400">{t('surgePatternDescription')}</Text>
             </MotionBox>
           </VStack>
         </ModalBody>
@@ -234,7 +231,7 @@ const StreakSurgeModal = ({ isOpen, onClose, isStreakBoosted }) => {
             fontWeight="bold"
             letterSpacing="wide"
           >
-            Continue
+            {t('continue')}
           </Button>
         </ModalFooter>
       </ModalContent>

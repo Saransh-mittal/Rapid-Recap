@@ -25,9 +25,9 @@ async function sendRecommendedNewsNotification() {
             user?.userLanguage === 'hi' && !article?.hindiTitle
               ? article.hindiTitle
               : article.title
-          const url = `https://www.rapidrecap.co.in/article/${
-            article._id
-          }/${slugify(article.title)}`
+          const url = `https://rapidrecap.ai/article/${article._id}/${slugify(
+            article.title,
+          )}`
           const image =
             article.imgURL && article.imgURL.length > 0
               ? article.imgURL[0]

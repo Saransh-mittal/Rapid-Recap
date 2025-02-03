@@ -787,9 +787,641 @@ const userWeeklyReportInboxTemplate = {
 </html>`,
 }
 
+const tournamentWinnerNotificationTemplate = ({
+  tournamentNumber,
+  prevIQ,
+  newIQ,
+  boost,
+}) => {
+  // Define colors and common values as variables
+  const colors = {
+    purple: '#8A2BE2',
+    lightPurple: '#9370DB',
+    darkBg: '#0a0a0f',
+    cardBg: '#1a1527',
+    headerBg: '#2c1460',
+  }
+
+  return `
+    <div class="tournament-notification">
+      <div class="header">
+        <span class="trophy-icon">👑</span>
+        <h2>Tournament Champion</h2>
+      </div>
+
+      <div class="content">
+        <div class="boost-details">
+          <p class="tournament-intro">Extraordinary Performance in</p>
+          <div class="tournament-number">Tournament #${tournamentNumber}</div>
+
+          <div class="scores">
+            <div class="score-item">
+              <div class="score-label">Previous IQ</div>
+              <div class="score-value">${prevIQ}</div>
+            </div>
+            <div class="score-item new-score">
+              <div class="score-label">New IQ</div>
+              <div class="score-value">${newIQ}</div>
+            </div>
+          </div>
+        </div>
+
+        <div class="message">
+          Your exceptional tournament performance has earned you a
+          <span class="boost-amount">+${boost} IQ</span> boost!
+        </div>
+
+        <p class="footer-message">Continue your reign at the top of the leaderboards!</p>
+      </div>
+
+      <div class="footer">
+        <p>RAPID RECAP</p>
+      </div>
+    </div>
+
+    <style>
+      /* Base Styles - Mobile First */
+      .tournament-notification {
+        width: 100%;
+        max-width: 100%;
+        margin: 0 auto;
+        background: ${colors.cardBg};
+        border-radius: clamp(12px, 3vw, 20px);
+        border: 1px solid rgba(255, 255, 255, 0.1);
+        color: #fff;
+        overflow: hidden;
+        font-family: system-ui, -apple-system, sans-serif;
+      }
+
+      .header {
+        background: ${colors.headerBg};
+        padding: clamp(1.25rem, 5vw, 2.5rem) clamp(1rem, 3vw, 2rem);
+        text-align: center;
+      }
+
+      .trophy-icon {
+        font-size: clamp(2.5rem, 8vw, 3.5rem);
+        display: block;
+        margin-bottom: clamp(0.75rem, 2vw, 1.25rem);
+      }
+
+      .header h2 {
+        margin: 0;
+        font-size: clamp(1.5rem, 5vw, 2.25rem);
+        font-weight: 700;
+        letter-spacing: 0.1em;
+        text-transform: uppercase;
+        line-height: 1.2;
+      }
+
+      .content {
+        padding: clamp(1.25rem, 5vw, 2.5rem) clamp(1rem, 3vw, 2rem);
+      }
+
+      .boost-details {
+        background: rgba(138, 43, 226, 0.05);
+        border-radius: clamp(10px, 2vw, 15px);
+        padding: clamp(1rem, 4vw, 2rem);
+        margin: clamp(1rem, 4vw, 2rem) 0;
+        border: 1px solid rgba(138, 43, 226, 0.2);
+      }
+
+      .tournament-intro {
+        text-align: center;
+        font-size: clamp(1rem, 3.5vw, 1.125rem);
+        margin-bottom: clamp(0.75rem, 2vw, 1rem);
+      }
+
+      .tournament-number {
+        font-size: clamp(1.25rem, 4.5vw, 1.75rem);
+        text-align: center;
+        padding: clamp(0.75rem, 2vw, 1rem) 0;
+        font-weight: 700;
+        letter-spacing: 0.05em;
+        color: ${colors.purple};
+      }
+
+      .scores {
+        display: grid;
+        grid-template-columns: repeat(2, 1fr);
+        gap: clamp(0.75rem, 3vw, 1.875rem);
+        margin: clamp(1rem, 4vw, 1.5rem) 0;
+        padding: 0 clamp(0.5rem, 2vw, 1rem);
+      }
+
+      .score-item {
+        text-align: center;
+        padding: clamp(0.75rem, 3vw, 1.25rem);
+        background: rgba(255, 255, 255, 0.03);
+        border-radius: clamp(8px, 2vw, 12px);
+        border: 1px solid rgba(138, 43, 226, 0.1);
+      }
+
+      .score-label {
+        font-size: clamp(0.75rem, 2.5vw, 0.875rem);
+        color: ${colors.lightPurple};
+        margin-bottom: clamp(0.375rem, 1.5vw, 0.5rem);
+        text-transform: uppercase;
+        letter-spacing: 0.05em;
+      }
+
+      .score-value {
+        font-size: clamp(1.5rem, 5vw, 1.75rem);
+        font-weight: 700;
+        line-height: 1.2;
+      }
+
+      .score-item.new-score {
+        background: rgba(138, 43, 226, 0.1);
+        border: 1px solid rgba(138, 43, 226, 0.2);
+      }
+
+      .score-item.new-score .score-value {
+        color: ${colors.purple};
+      }
+
+      .message {
+        text-align: center;
+        font-size: clamp(1rem, 3.5vw, 1.125rem);
+        line-height: 1.6;
+        margin: clamp(1.25rem, 4vw, 1.5rem) clamp(0.5rem, 2vw, 1rem);
+        word-wrap: break-word;
+      }
+
+      .boost-amount {
+        display: inline-block;
+        padding: clamp(0.25rem, 1vw, 0.375rem) clamp(0.5rem, 2vw, 0.75rem);
+        background: rgba(138, 43, 226, 0.1);
+        border-radius: clamp(6px, 1.5vw, 8px);
+        border: 1px solid rgba(138, 43, 226, 0.2);
+        font-weight: 700;
+        color: ${colors.lightPurple};
+        margin: 0 0.25rem;
+      }
+
+      .footer-message {
+        text-align: center;
+        color: #888;
+        font-size: clamp(0.875rem, 3vw, 1rem);
+        padding: 0 clamp(0.5rem, 2vw, 1rem);
+      }
+
+      .footer {
+        background: #0f0d15;
+        padding: clamp(0.75rem, 3vw, 1.25rem);
+        text-align: center;
+        border-top: 1px solid rgba(138, 43, 226, 0.1);
+      }
+
+      .footer p {
+        color: #666;
+        margin: 0;
+        font-size: clamp(0.75rem, 2.5vw, 0.875rem);
+        letter-spacing: 0.05em;
+      }
+
+      /* Tablet Breakpoint */
+      @media screen and (min-width: 768px) {
+        .tournament-notification {
+          max-width: 90%;
+        }
+
+        .scores {
+          max-width: 500px;
+          margin-left: auto;
+          margin-right: auto;
+        }
+      }
+
+      /* Desktop Breakpoint */
+      @media screen and (min-width: 1024px) {
+        .tournament-notification {
+          max-width: 600px;
+        }
+
+        /* Optional: Add hover states for desktop only */
+        .score-item {
+          transition: transform 0.2s ease;
+        }
+
+        .score-item:hover {
+          transform: translateY(-2px);
+        }
+      }
+    </style>
+  `
+}
+
+const monthlyDemotionTemplate = {
+  from: 'rapidrecap2k23@gmail.com',
+  subject: 'Monthly Leaderboard Refresh - Your New Standing',
+  html: ({
+    name,
+    inGameName,
+    prevIQScore,
+    newIQScore,
+    rank,
+    prevSociety,
+    prevCircle,
+    newSociety,
+    newCircle,
+    month,
+    year,
+    seasonNumber,
+    prevSocietyColor,
+    newSocietyColor,
+  }) => {
+    const monthNames = [
+      'January',
+      'February',
+      'March',
+      'April',
+      'May',
+      'June',
+      'July',
+      'August',
+      'September',
+      'October',
+      'November',
+      'December',
+    ]
+    const monthName = monthNames[month - 1]
+
+    const formatSocietyCircle = (society, circle) => {
+      if (circle) {
+        return `${society} - ${circle}`
+      }
+      return society
+    }
+
+    return `<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge">
+  <title>Monthly Leaderboard Refresh</title>
+  <style type="text/css">
+    /* Reset styles for email clients */
+    body, table, td, a {
+      -webkit-text-size-adjust: 100%;
+      -ms-text-size-adjust: 100%;
+      margin: 0;
+      padding: 0;
+    }
+
+    table, td {
+      mso-table-lspace: 0pt;
+      mso-table-rspace: 0pt;
+      border-collapse: collapse;
+    }
+
+    img {
+      -ms-interpolation-mode: bicubic;
+      border: 0;
+      height: auto;
+      line-height: 100%;
+      outline: none;
+      text-decoration: none;
+    }
+
+    body {
+      margin: 0;
+      padding: 0;
+      font-family: Arial, sans-serif;
+      font-size: 14px;
+      line-height: 1.4;
+      background-color: #0a0a0a;
+      color: #ffffff;
+      width: 100% !important;
+      height: 100% !important;
+      -webkit-font-smoothing: antialiased;
+      -moz-osx-font-smoothing: grayscale;
+    }
+
+    /* Container styles */
+    .email-container {
+      max-width: 600px;
+      margin: 0 auto;
+      background: linear-gradient(135deg, #0a0a0a 0%, #1a1a1a 100%);
+    }
+
+    /* Header styles */
+    .header {
+      background: linear-gradient(135deg, #000000 0%, #1a1a1a 100%);
+      padding: 40px 20px;
+      text-align: center;
+      position: relative;
+    }
+
+    .header::before {
+      content: '';
+      position: absolute;
+      top: 0;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      background: radial-gradient(circle at 50% 50%, rgba(255, 215, 0, 0.15) 0%, transparent 60%);
+      pointer-events: none;
+    }
+
+    .header-title {
+      color: #ffd700;
+      font-size: 32px;
+      margin: 0;
+      text-transform: uppercase;
+      letter-spacing: 2px;
+      text-shadow: 0 2px 4px rgba(0,0,0,0.5);
+      font-weight: bold;
+    }
+
+    .header-subtitle {
+      color: #ffd700;
+      font-size: 18px;
+      margin-top: 10px;
+    }
+
+    .period-badge {
+      display: inline-block;
+      background: rgba(255, 215, 0, 0.1);
+      border: 1px solid rgba(255, 215, 0, 0.2);
+      padding: 8px 15px;
+      border-radius: 20px;
+      color: #ffd700;
+      font-size: 14px;
+      margin-top: 15px;
+    }
+
+    /* Content styles */
+    .content {
+      padding: 30px 20px;
+    }
+
+    .hero-message {
+      text-align: center;
+      margin-bottom: 40px;
+      padding: 20px;
+      background: linear-gradient(135deg, rgba(255, 215, 0, 0.1) 0%, rgba(255, 215, 0, 0.05) 100%);
+      border-radius: 10px;
+      border: 1px solid rgba(255, 215, 0, 0.2);
+    }
+
+    .hero-title {
+      color: #ffd700;
+      font-size: 24px;
+      margin: 0 0 15px 0;
+    }
+
+    .hero-text {
+      color: #ffffff;
+      font-size: 16px;
+      line-height: 1.6;
+      margin: 0;
+    }
+
+    /* Society change card styles */
+    .society-change-card {
+      background: rgba(26, 26, 26, 0.9);
+      border-radius: 15px;
+      padding: 25px;
+      margin: 20px 0;
+      border: 1px solid rgba(255, 215, 0, 0.1);
+      text-align: center;
+    }
+
+    .society-change-title {
+      color: #ffd700;
+      font-size: 20px;
+      margin: 0 0 20px 0;
+    }
+
+    .society-badge {
+      display: inline-block;
+      padding: 12px 20px;
+      border-radius: 20px;
+      margin: 5px;
+      font-weight: bold;
+      background: rgba(0, 0, 0, 0.3);
+      border: 1px solid rgba(255, 255, 255, 0.1);
+    }
+
+    .transition-arrow {
+      display: block;
+      color: #ffd700;
+      font-size: 24px;
+      margin: 15px 0;
+    }
+
+    /* Stats card styles */
+    .stats-card {
+      background: rgba(26, 26, 26, 0.9);
+      border-radius: 15px;
+      padding: 25px;
+      margin: 20px 0;
+      border: 1px solid rgba(255, 215, 0, 0.1);
+    }
+
+    .stat-row {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 12px 0;
+      border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+    }
+
+    .stat-row:last-child {
+      border-bottom: none;
+    }
+
+    .stat-label {
+      color: #ffd700;
+      font-size: 14px;
+      font-weight: bold;
+    }
+
+    .stat-value {
+      color: #ffffff;
+      font-size: 14px;
+      font-weight: bold;
+    }
+
+    /* Message box styles */
+    .message-box {
+      background: linear-gradient(135deg, rgba(26, 26, 26, 0.9) 0%, rgba(13, 13, 13, 0.9) 100%);
+      border-radius: 10px;
+      padding: 25px;
+      text-align: center;
+      margin: 20px 0;
+      border: 1px solid rgba(255, 215, 0, 0.1);
+    }
+
+    .message-title {
+      color: #ffd700;
+      font-size: 20px;
+      margin: 0 0 15px 0;
+    }
+
+    .message-text {
+      color: #ffffff;
+      font-size: 15px;
+      line-height: 1.6;
+      margin: 0 0 20px 0;
+    }
+
+    .highlight-box {
+      background: rgba(255, 215, 0, 0.1);
+      border-radius: 8px;
+      padding: 15px;
+      margin: 15px 0;
+    }
+
+    .highlight-text {
+      color: #ffd700;
+      font-size: 14px;
+      margin: 0;
+    }
+
+    .cta-button {
+      display: inline-block;
+      background: linear-gradient(135deg, #ffd700 0%, #ffb347 100%);
+      color: #000000;
+      padding: 12px 30px;
+      border-radius: 25px;
+      text-decoration: none;
+      font-weight: bold;
+      margin-top: 20px;
+      text-transform: uppercase;
+      letter-spacing: 1px;
+      font-size: 14px;
+    }
+
+    /* Footer styles */
+    .footer {
+      background: #0a0a0a;
+      color: #666666;
+      padding: 20px;
+      text-align: center;
+    }
+
+    .footer-text {
+      margin: 0;
+      font-size: 12px;
+    }
+
+    .footer-subtext {
+      margin: 5px 0 0 0;
+      font-size: 10px;
+    }
+
+    /* Responsive styles */
+    @media screen and (max-width: 600px) {
+      .email-container {
+        width: 100% !important;
+      }
+
+      .content {
+        padding: 20px 15px;
+      }
+
+      .header-title {
+        font-size: 28px;
+      }
+
+      .society-badge {
+        padding: 10px 15px;
+        font-size: 13px;
+      }
+    }
+  </style>
+</head>
+<body>
+  <table role="presentation" cellspacing="0" cellpadding="0" border="0" align="center" width="100%" class="email-container">
+    <tr>
+      <td class="header">
+        <h1 class="header-title">Monthly Refresh</h1>
+        <p class="header-subtitle">Season ${seasonNumber}</p>
+        <div class="period-badge">${monthName} ${year}</div>
+      </td>
+    </tr>
+    <tr>
+      <td class="content">
+        <div class="hero-message">
+          <h2 class="hero-title">Monthly Standings Update</h2>
+          <p class="hero-text">
+            The ${monthName} leaderboard has been refreshed. Here's your new standing:
+          </p>
+        </div>
+
+        <div class="society-change-card">
+          <h3 class="society-change-title">Society Standing</h3>
+          <div class="society-badge" style="color: ${prevSocietyColor}">
+            ${formatSocietyCircle(prevSociety, prevCircle)}
+          </div>
+          <div class="transition-arrow">↓</div>
+          <div class="society-badge" style="color: ${newSocietyColor}">
+            ${formatSocietyCircle(newSociety, newCircle)}
+          </div>
+        </div>
+
+        <div class="stats-card">
+          <div class="stat-row">
+            <span class="stat-label">Player</span>
+            <span class="stat-value">${name} (@${inGameName})</span>
+          </div>
+          <div class="stat-row">
+            <span class="stat-label">Previous IQ Score</span>
+            <span class="stat-value">${prevIQScore}</span>
+          </div>
+          <div class="stat-row">
+            <span class="stat-label">New IQ Score</span>
+            <span class="stat-value">${newIQScore}</span>
+          </div>
+          <div class="stat-row">
+            <span class="stat-label">Previous Rank</span>
+            <span class="stat-value">${rank}</span>
+          </div>
+        </div>
+
+        <div class="message-box">
+          <h3 class="message-title">Ready for a New Challenge?</h3>
+          <p class="message-text">
+            Your standings have been adjusted as part of our ${monthName} refresh.
+            This reset ensures dynamic competition and gives everyone a fresh chance to rise through the ranks.
+          </p>
+          ${
+            prevSociety !== newSociety || prevCircle !== newCircle
+              ? `
+          <div class="highlight-box">
+            <p class="highlight-text">
+              Strive to regain your position in ${formatSocietyCircle(
+                prevSociety,
+                prevCircle,
+              )}!
+            </p>
+          </div>
+          `
+              : ''
+          }
+        </div>
+      </td>
+    </tr>
+    <tr>
+      <td class="footer">
+        <p class="footer-text">Rapid Recap Inc</p>
+        <p class="footer-subtext">Jaipur, India</p>
+      </td>
+    </tr>
+  </table>
+</body>
+</html>`
+  },
+}
+
 module.exports = {
   societyOrCircleUpgradeTemplate,
   quinBoostUnlockTemplate, // Export the new template
   streakSurgeTemplate,
   userWeeklyReportInboxTemplate,
+  tournamentWinnerNotificationTemplate,
+  monthlyDemotionTemplate,
 }

@@ -182,8 +182,8 @@ const Contact = () => {
                   />
                 </Suspense>
                 {t('email_label')}{' '}
-                <Link href="mailto:rapidrecap2k23@gmail.com" color="teal.200">
-                  rapidrecap2k23@gmail.com
+                <Link href="mailto:team@rapidrecap.ai" color="teal.200">
+                  team@rapidrecap.ai
                 </Link>
               </Text>
               <Text textAlign="center" mb={4} fontSize={'1.2rem'}>

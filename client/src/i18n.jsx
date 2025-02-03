@@ -17,6 +17,7 @@ const namespaces = {
     'GetStarted',
     'LoadingScreen',
     'OnboardingProcess',
+    'rulebook',
   ],
   redux: ['tournamentSlice'],
   utils: ['formatDate'],
@@ -27,6 +28,8 @@ const namespaces = {
     'BoostSection',
     'GivenQuiz',
     'QuinBoostModal',
+    'StreakSurgeModal',
+    'CategoryBoostModal',
     'QuizExpired',
     'RelatedArticlesToggle',
     'ShareButton',
@@ -35,6 +38,7 @@ const namespaces = {
     'TotalUserAttempted',
     'TrackTime',
   ],
+  rewards: ['rewards'],
   tournamentComponents: [
     'TournamentLoadingScreen',
     'EpicQuestGuide',
@@ -149,6 +153,7 @@ const namespaces = {
     'LastTournamentRank',
     'TournamentBadgeGallery',
   ],
+  HallOfChampions: ['ChampionDetailsModal'],
   assets: ['Circles', 'Brains', 'CircleAndSocietyData'],
   main: ['App'],
 }
@@ -175,6 +180,8 @@ i18n
             return `/locales/${lng}/utils/${namespace}.json`
           case 'articleComponents':
             return `/locales/${lng}/components/articleComponents/${namespace}.json`
+          case 'rewards':
+            return `/locales/${lng}/components/rewards/${namespace}.json`
           case 'tournamentComponents':
             return `/locales/${lng}/components/tournamentComponents/${namespace}.json`
           case 'quizComponents':
@@ -199,6 +206,9 @@ i18n
             return `/locales/${lng}/components/streakComponents/${namespace}.json`
           case 'profileComponents':
             return `/locales/${lng}/components/profileComponents/${namespace}.json`
+          case 'profileComponents':
+            return `/locales/${lng}/components/HallOfChampions/${namespace}.json`
+
           case 'assets':
             return `/locales/${lng}/assets/${namespace}.json`
           case 'categories':

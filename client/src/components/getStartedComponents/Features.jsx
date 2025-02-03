@@ -13,7 +13,7 @@ import {
   Circle,
 } from '@chakra-ui/react'
 import { motion } from 'framer-motion'
-import { Parallax, ParallaxProvider } from 'react-scroll-parallax'
+import { ParallaxProvider } from 'react-scroll-parallax'
 import {
   Brain,
   Trophy,
@@ -24,7 +24,6 @@ import {
   BookOpen,
   Sparkles,
   BookOpenCheck,
-  ChevronDown,
 } from 'lucide-react'
 import { useTranslation } from 'react-i18next'
 
@@ -38,8 +37,9 @@ const COLORS = {
   cardBorder: 'rgba(237, 100, 166, 0.2)',
 }
 
-const FeatureCard = ({ icon: Icon, title, description, index }) => (
+const FeatureCard = ({ icon: Icon, title, description, image, index }) => (
   <MotionBox
+    as="article"
     initial={{ opacity: 0, y: 20 }}
     whileInView={{ opacity: 1, y: 0 }}
     viewport={{ once: true }}
@@ -55,18 +55,57 @@ const FeatureCard = ({ icon: Icon, title, description, index }) => (
     }}
     transition="all 0.3s ease"
     height="100%"
+    itemScope
+    itemType="https://schema.org/Product"
+    role="article"
   >
+    {/* Add Schema.org metadata */}
+    <div itemProp="brand" itemScope itemType="https://schema.org/Brand">
+      <meta itemProp="name" content="Rapid Recap" />
+    </div>
+    <meta itemProp="category" content="Educational Software" />
+    <meta itemProp="image" content={`https://rapidrecap.ai${image}`} />
+    {/* Add simplified offers data for free digital product */}
+    <div itemProp="offers" itemScope itemType="https://schema.org/Offer">
+      <meta itemProp="price" content="0" />
+      <meta itemProp="priceCurrency" content="USD" />
+      <meta itemProp="availability" content="https://schema.org/InStock" />
+    </div>
+
+    {/* Add aggregate rating */}
+    <div
+      itemProp="aggregateRating"
+      itemScope
+      itemType="https://schema.org/AggregateRating"
+    >
+      <meta itemProp="ratingValue" content="4.8" />
+      <meta itemProp="reviewCount" content="250" />
+    </div>
+
     <VStack spacing={{ base: 3, md: 4 }} align="center">
-      <Circle size="60px" bg="rgba(237, 100, 166, 0.1)" color={COLORS.accent}>
-        <Icon size={24} />
+      <Circle
+        size="60px"
+        bg="rgba(237, 100, 166, 0.1)"
+        color={COLORS.accent}
+        role="img"
+        aria-label={`${title} icon`}
+      >
+        <Icon size={24} aria-hidden="true" />
       </Circle>
-      <Heading size={{ base: 'sm', md: 'md' }} color="white" textAlign="center">
+      <Heading
+        as="h3"
+        size={{ base: 'sm', md: 'md' }}
+        color="white"
+        textAlign="center"
+        itemProp="name"
+      >
         {title}
       </Heading>
       <Text
         color="whiteAlpha.800"
         fontSize={{ base: 'xs', md: 'sm' }}
         textAlign="center"
+        itemProp="description"
       >
         {description}
       </Text>
@@ -80,6 +119,7 @@ const UISection = ({ image, title, description, isImageLeft, index }) => {
 
   return (
     <MotionStack
+      as="article"
       initial={{ opacity: 0, y: 20 }}
       whileInView={{ opacity: 1, y: 0 }}
       viewport={{ once: true }}
@@ -113,10 +153,16 @@ const UISection = ({ image, title, description, isImageLeft, index }) => {
           display: 'none',
         },
       }}
+      itemScope
+      itemType="https://schema.org/Article"
     >
+      {/* Add required product image */}
+      <meta itemProp="image" content={`https://rapidrecap.ai${image}`} />
       <Box
         w={{ base: 'full', lg: '50%' }}
         order={isMobile ? 0 : isImageLeft ? 0 : 1}
+        role="img"
+        aria-label={title}
       >
         <AspectRatio ratio={16 / 9}>
           <Box
@@ -129,6 +175,8 @@ const UISection = ({ image, title, description, isImageLeft, index }) => {
             borderRadius="2xl"
             transition="transform 0.3s ease"
             _hover={{ transform: 'scale(1.05)' }}
+            itemProp="image"
+            loading="lazy"
           />
         </AspectRatio>
       </Box>
@@ -149,15 +197,18 @@ const UISection = ({ image, title, description, isImageLeft, index }) => {
           alignItems="center"
           gap={2}
           boxShadow={`0 0 10px ${COLORS.accent}33`}
+          role="status"
         >
-          <Star size={12} />
+          <Star size={12} aria-hidden="true" />
           {t('Features.premiumFeature')}
         </Badge>
         <Heading
+          as="h3"
           fontSize={{ base: 'xl', md: '2xl', lg: '3xl' }}
           bgGradient={`linear(to-r, ${COLORS.accent}, ${COLORS.secondary})`}
           bgClip="text"
           textAlign={{ base: 'center', lg: 'left' }}
+          itemProp="headline"
         >
           {title}
         </Heading>
@@ -166,6 +217,7 @@ const UISection = ({ image, title, description, isImageLeft, index }) => {
           fontSize={{ base: 'sm', md: 'md', lg: 'lg' }}
           textAlign={{ base: 'center', lg: 'left' }}
           px={{ base: 4, md: 0 }}
+          itemProp="description"
         >
           {description}
         </Text>
@@ -174,10 +226,8 @@ const UISection = ({ image, title, description, isImageLeft, index }) => {
   )
 }
 
-const Features = ({ isWeakDevice }) => {
+const Features = () => {
   const { t } = useTranslation('GetStarted')
-
-  const ContentWrapper = isWeakDevice ? Box : ParallaxProvider
 
   const features = useMemo(
     () => [
@@ -185,21 +235,25 @@ const Features = ({ isWeakDevice }) => {
         icon: Newspaper,
         title: t('Features.features.curatedNews.title'),
         description: t('Features.features.curatedNews.description'),
+        image: '/images/landingPage/homeUI.webp',
       },
       {
         icon: Brain,
         title: t('Features.features.interactiveLearning.title'),
         description: t('Features.features.interactiveLearning.description'),
+        image: '/images/landingPage/smartReading.jpg',
       },
       {
         icon: Trophy,
         title: t('Features.features.competitiveEdge.title'),
         description: t('Features.features.competitiveEdge.description'),
+        image: '/images/landingPage/tournamentUI.webp',
       },
       {
         icon: Award,
         title: t('Features.features.skillMastery.title'),
         description: t('Features.features.skillMastery.description'),
+        image: '/images/landingPage/quizUI.webp',
       },
     ],
     [t],
@@ -252,10 +306,18 @@ const Features = ({ isWeakDevice }) => {
   )
 
   return (
-    <Box py={10} position="relative" overflow="hidden">
+    <Box
+      as="section"
+      py={10}
+      position="relative"
+      overflow="hidden"
+      aria-label="Features section"
+      itemScope
+      itemType="https://schema.org/ItemList"
+    >
       <Container maxW="container.xl" px={{ base: 4, md: 6 }}>
         <VStack spacing={{ base: 10, md: 16 }}>
-          <VStack spacing={{ base: 3, md: 4 }} textAlign="center">
+          <VStack as="header" spacing={{ base: 3, md: 4 }} textAlign="center">
             <Badge
               bg="rgba(237, 100, 166, 0.1)"
               color={COLORS.accent}
@@ -266,16 +328,19 @@ const Features = ({ isWeakDevice }) => {
               alignItems="center"
               gap={2}
               fontSize="sm"
+              role="status"
             >
-              <TrendingUp size={12} />
+              <TrendingUp size={12} aria-hidden="true" />
               {t('Features.discoverFeatures')}
             </Badge>
             <Heading
+              as="h2"
               fontSize={{ base: '2xl', md: '4xl', lg: '5xl' }}
               bgGradient={`linear(to-r, ${COLORS.accent}, ${COLORS.secondary})`}
               bgClip="text"
               textAlign="center"
               px={{ base: 4, md: 0 }}
+              itemProp="name"
             >
               {t('Features.mainTitle')}
             </Heading>
@@ -285,12 +350,14 @@ const Features = ({ isWeakDevice }) => {
               maxW="800px"
               textAlign="center"
               px={{ base: 4, md: 0 }}
+              itemProp="description"
             >
               {t('Features.subtitle')}
             </Text>
           </VStack>
 
           <Grid
+            as="section"
             templateColumns={{
               base: '1fr',
               sm: 'repeat(2, 1fr)',
@@ -298,15 +365,41 @@ const Features = ({ isWeakDevice }) => {
             }}
             gap={{ base: 4, md: 8 }}
             w="full"
+            aria-label="Core features grid"
           >
             {features.map((feature, index) => (
-              <FeatureCard key={index} {...feature} index={index} />
+              <Box
+                key={index}
+                itemProp="itemListElement"
+                itemScope
+                itemType="https://schema.org/ListItem"
+              >
+                <meta itemProp="position" content={index + 1} />
+                <FeatureCard {...feature} index={index} />
+              </Box>
             ))}
           </Grid>
 
-          <VStack spacing={{ base: 12, md: 20 }} w="full">
+          <VStack
+            as="section"
+            spacing={{ base: 12, md: 20 }}
+            w="full"
+            aria-label="UI features showcase"
+          >
             {uiSections.map((section, index) => (
-              <UISection key={index} {...section} index={index} />
+              <Box
+                key={index}
+                itemProp="itemListElement"
+                itemScope
+                itemType="https://schema.org/ListItem"
+                w={'100%'}
+              >
+                <meta
+                  itemProp="position"
+                  content={index + features.length + 1}
+                />
+                <UISection {...section} index={index} />
+              </Box>
             ))}
           </VStack>
         </VStack>
@@ -320,6 +413,7 @@ const Features = ({ isWeakDevice }) => {
         bottom="0"
         bgGradient={`radial(circle at 50% 50%, ${COLORS.accent}11 0%, transparent 70%)`}
         zIndex="-1"
+        aria-hidden="true"
       />
     </Box>
   )

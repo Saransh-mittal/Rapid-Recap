@@ -17,6 +17,7 @@ const UserCard = ({ user, t }) => {
   if (user?.role === 'guest') {
     return null
   }
+  if (user?.needsOnboarding) return null
   return (
     user &&
     user.IQ_score && (

@@ -227,6 +227,10 @@ function initializeSocket(server) {
       )
     },
   )
+  globalEmitter.on('force-reload', () => {
+    io.emit('force-reload')
+    console.log('Force reload emitted to all clients')
+  })
   // Bridge between custom emitter and Socket.IO for tournament quiz submission progress
   globalEmitter.on(
     'tournament_quiz_submission_progress',

@@ -1,7 +1,9 @@
+// src/hooks/useCounter.js
 import { useState, useEffect, useRef } from 'react'
+import { formatNumber } from '../../../utils/helper.utils'
 
-export const useCounter = (end, start, duration = 2) => {
-  const [count, setCount] = useState(start)
+export const useCounter = (end, start, duration = 4) => {
+  const [count, setCount] = useState(formatNumber(start))
   const frameRef = useRef()
   const startTimeRef = useRef()
 
@@ -12,14 +14,15 @@ export const useCounter = (end, start, duration = 2) => {
       }
 
       const elapsed = currentTime - startTimeRef.current
-      const progress = Math.min(elapsed / (duration * 1000), 1)
+      const progress = Math.min(elapsed / (duration * 1000), 2)
 
       if (progress < 1) {
-        const currentCount = Math.round(start + (end - start) * progress)
+        const rawCount = start + (end - start) * progress
+        const currentCount = formatNumber(rawCount)
         setCount(currentCount)
         frameRef.current = requestAnimationFrame(animate)
       } else {
-        setCount(end)
+        setCount(formatNumber(end))
       }
     }
 
@@ -33,5 +36,5 @@ export const useCounter = (end, start, duration = 2) => {
     }
   }, [start, end, duration])
 
-  return count
+  return formatNumber(count)
 }

@@ -3,7 +3,7 @@ import React from 'react'
 // If you have access to react-icons, you could import:
 // import { RiAiLine } from 'react-icons/ri'
 
-const AITagLine = () => {
+const AITagLine = ({ t }) => {
   return (
     <Flex
       align="center"
@@ -24,7 +24,7 @@ const AITagLine = () => {
         borderColor: 'purple.200',
       }}
     >
-      <Text>Enhanced by Rapid Recap AI</Text>
+      <Text>{t('Enhanced by Rapid Recap AI')}</Text>
     </Flex>
   )
 }

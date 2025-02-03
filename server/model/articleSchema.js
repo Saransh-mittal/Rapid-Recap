@@ -105,6 +105,12 @@ const articleSchema = new mongoose.Schema(
       type: Boolean,
       default: false,
     },
+    articleDifficulty: {
+      type: Number,
+      default: 0.5,
+      min: 0.01,
+      max: 0.99,
+    },
     createdAt: {
       type: Date,
       default: Date.now,

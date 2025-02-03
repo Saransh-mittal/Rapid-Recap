@@ -230,7 +230,7 @@ const Tournament = () => {
   const pageDescription = tournamentData
     ? `Join Tournament #${tournamentData.tournamentNumber}. Compete with players worldwide, test your skills, and win exciting prizes!`
     : 'Participate in our regular tournaments, compete with players worldwide, and win exciting prizes!'
-  const canonicalUrl = `https://www.rapidrecap.co.in/tournament`
+  const canonicalUrl = `https://rapidrecap.ai/tournament`
 
   // Structured data for SEO
   const structuredData = tournamentData
@@ -249,7 +249,7 @@ const Tournament = () => {
         organizer: {
           '@type': 'Organization',
           name: 'Rapid Recap',
-          url: 'https://www.rapidrecap.co.in/',
+          url: 'https://rapidrecap.ai/',
         },
         competitor: {
           '@type': 'Person',
