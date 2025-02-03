@@ -23,6 +23,7 @@ import {
   HStack,
   Image,
   Divider,
+  Link,
 } from '@chakra-ui/react'
 import { GoogleOAuthProvider, GoogleLogin } from '@react-oauth/google'
 import {
@@ -632,18 +633,22 @@ export default function Register({ isOpen, onClose }) {
                 </Button>
 
                 <Flex w="full" justify="center">
-                  <Button
-                    variant="ghost"
-                    color="pink.400"
-                    size="sm"
+                  <Link
+                    href="/#signin"
                     onClick={() => {
                       onClose()
                       dispatch(setIsSigninOpen(true))
                     }}
-                    _hover={{ bg: 'whiteAlpha.100' }}
                   >
-                    Already have an account? Sign in
-                  </Button>
+                    <Button
+                      variant="ghost"
+                      color="pink.400"
+                      size="sm"
+                      _hover={{ bg: 'whiteAlpha.100' }}
+                    >
+                      Already have an account? Sign in
+                    </Button>
+                  </Link>
                 </Flex>
               </>
             )}

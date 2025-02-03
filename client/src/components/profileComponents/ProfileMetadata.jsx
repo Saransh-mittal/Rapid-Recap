@@ -43,7 +43,7 @@ export const ProfileMetadata = ({ profile, userSocietyAndCircle }) => {
       <meta property="og:type" content="profile" />
       <meta
         property="og:url"
-        content={`https://www.rapidrecap.co.in/profile/${profile?.inGameName}`}
+        content={`https://rapidrecap.ai/profile/${profile?.inGameName}`}
       />
       <meta
         property="og:image"
@@ -70,7 +70,7 @@ export const ProfileMetadata = ({ profile, userSocietyAndCircle }) => {
       />
       <link
         rel="canonical"
-        href={`https://www.rapidrecap.co.in/profile/${profile?.inGameName}`}
+        href={`https://rapidrecap.ai/profile/${profile?.inGameName}`}
       />
       <script type="application/ld+json">
         {`
@@ -78,7 +78,7 @@ export const ProfileMetadata = ({ profile, userSocietyAndCircle }) => {
           "@context": "http://schema.org",
           "@type": "Person",
           "name": "${profile?.inGameName}",
-          "url": "https://www.rapidrecap.co.in/profile/${profile?.inGameName}",
+          "url": "https://rapidrecap.ai/profile/${profile?.inGameName}",
           "image": "${
             profile?.pic ||
             'http://res.cloudinary.com/dxstsrnbs/image/upload/v1712729332/ProfilePIcs/p7zujdgjs1m301vsss1q.png'

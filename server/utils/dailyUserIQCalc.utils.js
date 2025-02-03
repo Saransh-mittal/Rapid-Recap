@@ -372,13 +372,40 @@ const hasQuizAttemptsThisMonth = async userId => {
   return count > 0
 }
 
+const getMaxIQIncrement = currentIQ => {
+  if (currentIQ > 200) return 0.5
+  if (currentIQ > 150) return 1
+  if (currentIQ >= 130) return 2
+  if (currentIQ >= 110) return 3
+  if (currentIQ >= 90) return 5
+  return 10
+}
+
+const getMaxIQDecrement = currentIQ => {
+  if (currentIQ > 200) return 12
+  if (currentIQ > 150) return 10
+  if (currentIQ >= 130) return 8
+  if (currentIQ >= 110) return 6
+  if (currentIQ >= 90) return 5
+  return 4
+}
+
 const capIQChange = (oldIQ, newIQ) => {
-  const maxChange = 5
   const change = newIQ - oldIQ
 
-  if (Math.abs(change) > maxChange) {
-    return change > 0 ? oldIQ + maxChange : oldIQ - maxChange
+  // If IQ is increasing
+  if (change > 0) {
+    const maxIncrement = getMaxIQIncrement(oldIQ)
+    return change > maxIncrement ? oldIQ + maxIncrement : newIQ
   }
+
+  // If IQ is decreasing
+  if (change < 0) {
+    const maxDecrement = getMaxIQDecrement(oldIQ)
+    return change < -maxDecrement ? oldIQ - maxDecrement : newIQ
+  }
+
+  // If no change
   return newIQ
 }
 
@@ -414,8 +441,8 @@ const calculateAndAssignIQScores = async (userScores, sumOfUserScores) => {
         newIQScore = Math.min(newIQScore, prevIQScore)
       }
 
-      // Cap IQ change to ±5 points
-      newIQScore = capIQChange(prevIQScore, newIQScore)
+      // Apply the new capping logic
+      newIQScore = capIQChange(Number(prevIQScore), newIQScore)
 
       // Ensure IQ doesn't go below 0
       newIQScore = Math.max(0, newIQScore)

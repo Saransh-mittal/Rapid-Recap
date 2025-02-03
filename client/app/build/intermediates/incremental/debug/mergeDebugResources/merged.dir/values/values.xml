@@ -98,7 +98,7 @@
         \"relation\": [\"delegate_permission/common.handle_all_urls\"],
         \"target\": {
             \"namespace\": \"web\",
-            \"site\": \"https://www.rapidrecap.co.in\"
+            \"site\": \"https://rapidrecap.ai\"
         }
     }]
 </string>
@@ -107,10 +107,10 @@
     <string name="fallback_menu_item_copy_link">Copy link</string>
     <string name="fallback_menu_item_open_in_browser">Open in browser</string>
     <string name="fallback_menu_item_share_link">Share link</string>
-    <string name="fullScopeUrl" translatable="false">https://www.rapidrecap.co.in/</string>
+    <string name="fullScopeUrl" translatable="false">https://rapidrecap.ai/</string>
     <string name="generatorApp" translatable="false">bubblewrap-cli</string>
-    <string name="hostName" translatable="false">www.rapidrecap.co.in</string>
-    <string name="launchUrl" translatable="false">https://www.rapidrecap.co.in/</string>
+    <string name="hostName" translatable="false">rapidrecap.ai</string>
+    <string name="launchUrl" translatable="false">https://rapidrecap.ai/</string>
     <string name="launcherName" translatable="false">Rapid Recap</string>
     <string name="manage_space_no_data_toast">This app holds no browsing data.</string>
     <string name="manage_space_not_supported_toast">This app\'s data is stored in %1$s.</string>
@@ -119,7 +119,7 @@
     <string name="providerAuthority" translatable="false">in.co.rapidrecap.www.twa.fileprovider</string>
     <string name="status_bar_notification_info_overflow">999+</string>
     <string name="update_chrome_toast">Please update to Chrome Stable 72 or later.</string>
-    <string name="webManifestUrl" translatable="false">https://www.rapidrecap.co.in/manifest.json</string>
+    <string name="webManifestUrl" translatable="false">https://rapidrecap.ai/manifest.json</string>
     <style name="SplashTheme" parent="@android:style/Theme.DeviceDefault.NoActionBar">
         <item name="android:windowBackground">@drawable/splash_screen</item>
         <item name="android:windowNoTitle">true</item>
@@ -143,22 +143,22 @@
     <style name="Widget.Compat.NotificationActionContainer" parent=""/>
     <style name="Widget.Compat.NotificationActionText" parent=""/>
     <declare-styleable name="ColorStateListItem">
-        
+
         <attr name="android:color"/>
-        
+
         <attr format="float" name="alpha"/>
         <attr name="android:alpha"/>
     </declare-styleable>
     <declare-styleable name="FontFamily">
-        
+
         <attr format="string" name="fontProviderAuthority"/>
-        
+
         <attr format="string" name="fontProviderPackage"/>
-        
+
         <attr format="string" name="fontProviderQuery"/>
-        
+
         <attr format="reference" name="fontProviderCerts"/>
-        
+
         <attr name="fontProviderFetchStrategy">
             <!-- The blocking font fetch works as follows.
               First, check the local cache, then if the requested font is not cached, request the
@@ -173,7 +173,7 @@
               fontProviderFetchTimeout will be ignored if async loading is specified. -->
             <enum name="async" value="1"/>
         </attr>
-        
+
         <attr format="integer" name="fontProviderFetchTimeout">
             <!-- A special value for the timeout. In this case, the blocking font fetching will not
               timeout and wait until a reply is received from the font provider. -->
@@ -181,20 +181,20 @@
         </attr>
     </declare-styleable>
     <declare-styleable name="FontFamilyFont">
-        
+
         <attr name="fontStyle">
             <enum name="normal" value="0"/>
             <enum name="italic" value="1"/>
         </attr>
-        
+
         <attr format="reference" name="font"/>
-        
+
         <attr format="integer" name="fontWeight"/>
-        
+
         <attr format="string" name="fontVariationSettings"/>
-        
+
         <attr format="integer" name="ttcIndex"/>
-        
+
         <attr name="android:fontStyle"/>
         <attr name="android:font"/>
         <attr name="android:fontWeight"/>
@@ -202,42 +202,42 @@
         <attr name="android:ttcIndex"/>
     </declare-styleable>
     <declare-styleable name="GradientColor">
-        
+
         <attr name="android:startColor"/>
-        
+
         <attr name="android:centerColor"/>
-        
+
         <attr name="android:endColor"/>
-        
+
         <attr name="android:type"/>
 
-        
-        
+
+
         <attr name="android:gradientRadius"/>
 
-        
-        
+
+
         <attr name="android:centerX"/>
-        
+
         <attr name="android:centerY"/>
 
-        
-        
+
+
         <attr name="android:startX"/>
-        
+
         <attr name="android:startY"/>
-        
+
         <attr name="android:endX"/>
-        
+
         <attr name="android:endY"/>
 
-        
+
         <attr name="android:tileMode"/>
     </declare-styleable>
     <declare-styleable name="GradientColorItem">
-        
+
         <attr name="android:offset"/>
-        
+
         <attr name="android:color"/>
     </declare-styleable>
 </resources>

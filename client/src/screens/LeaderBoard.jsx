@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useCallback, useRef } from 'react'
+import React, { useState, useEffect, useCallback, useRef, useMemo } from 'react'
 import {
   Box,
   VStack,
@@ -26,6 +26,7 @@ import InfoButton, {
 } from '../components/miscellaneous/InfoButton'
 import RefreshTimer from '../components/leaderBoardComponents/RefreshTimer'
 import { useInView } from 'react-intersection-observer'
+import CircleAndSocietyData from '../assets/CircleAndSocietyData'
 
 const INITIAL_RENDER_COUNT = 500
 const RENDER_BATCH_SIZE = 500
@@ -171,6 +172,89 @@ const Leaderboard = () => {
   const itemCount =
     searchResults.length > 0 ? searchResults.length : leaders.length
 
+  // Add this inside the Leaderboard component
+  const getStructuredData = useMemo(() => {
+    const topLeaders = leaders.slice(0, 10).map((leader, index) => {
+      const society = CircleAndSocietyData.find(
+        item =>
+          item.IQ_Lower <= leader.IQ_score &&
+          (item.IQ_Upper === null || item.IQ_Upper > leader.IQ_score),
+      )
+
+      return {
+        '@type': 'Person',
+        name: leader.inGameName,
+        identifier: {
+          '@type': 'PropertyValue',
+          propertyID: 'IQ_Score',
+          value: leader.IQ_score,
+        },
+        member: {
+          '@type': 'Organization',
+          name: society?.society || 'Explorer Society',
+        },
+      }
+    })
+
+    return {
+      '@context': 'https://schema.org',
+      '@type': 'Table',
+      about: {
+        '@type': 'CreativeWork',
+        name: 'Rapid Recap Global Rankings',
+        description:
+          'Real-time leaderboard showing top performers in AI-powered GK quizzes and knowledge tournaments',
+      },
+      mainEntity: {
+        '@type': 'ItemList',
+        numberOfItems: leaders.length,
+        itemListElement: topLeaders,
+      },
+      significantLinks: [
+        {
+          '@type': 'WebPage',
+          name: 'Tournament',
+          url: 'https://rapidrecap.ai/tournament',
+        },
+        {
+          '@type': 'WebPage',
+          name: 'Hall of Champions',
+          url: 'https://rapidrecap.ai/hall-of-champions',
+        },
+      ],
+      provider: {
+        '@type': 'Organization',
+        name: 'Rapid Recap',
+        url: 'https://rapidrecap.ai',
+        logo: {
+          '@type': 'ImageObject',
+          url: 'https://rapidrecap.ai/images/rrlogo_512.png',
+        },
+      },
+      dataset: {
+        '@type': 'Dataset',
+        name: 'Rapid Recap Performance Metrics',
+        description:
+          'Comprehensive rankings based on Information Quotient (IQ) scores and quiz performance',
+        creator: {
+          '@type': 'Organization',
+          name: 'Rapid Recap',
+        },
+        temporalCoverage: 'Real-time updates',
+        includedInDataCatalog: {
+          '@type': 'DataCatalog',
+          name: 'GK Performance Rankings',
+        },
+        measurementTechnique: [
+          'Information Quotient (IQ) Score System',
+          'Tournament Performance',
+          'Quiz Completion Rate',
+          'Knowledge Society Progress',
+        ],
+      },
+    }
+  }, [leaders])
+
   return (
     <Box
       p={{ base: 4, md: 8 }}
@@ -193,6 +277,9 @@ const Leaderboard = () => {
         />
         <meta property="og:url" content={t('helmet.metaOgUrl')} />
         <meta property="og:type" content="website" />
+        <script type="application/ld+json">
+          {JSON.stringify(getStructuredData)}
+        </script>
       </Helmet>
       <VStack
         spacing={{ base: 4, md: 6, lg: 8 }}

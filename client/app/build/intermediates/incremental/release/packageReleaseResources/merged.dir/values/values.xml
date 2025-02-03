@@ -16,19 +16,19 @@
         \"relation\": [\"delegate_permission/common.handle_all_urls\"],
         \"target\": {
             \"namespace\": \"web\",
-            \"site\": \"https://www.rapidrecap.co.in\"
+            \"site\": \"https://rapidrecap.ai\"
         }
     }]
 </string>
     <string name="fallbackType" translatable="false">customtabs</string>
-    <string name="fullScopeUrl" translatable="false">https://www.rapidrecap.co.in/</string>
+    <string name="fullScopeUrl" translatable="false">https://rapidrecap.ai/</string>
     <string name="generatorApp" translatable="false">bubblewrap-cli</string>
-    <string name="hostName" translatable="false">www.rapidrecap.co.in</string>
-    <string name="launchUrl" translatable="false">https://www.rapidrecap.co.in/</string>
+    <string name="hostName" translatable="false">rapidrecap.ai</string>
+    <string name="launchUrl" translatable="false">https://rapidrecap.ai/</string>
     <string name="launcherName" translatable="false">Rapid Recap</string>
     <string name="orientation" translatable="false">default</string>
     <string name="providerAuthority" translatable="false">in.co.rapidrecap.www.twa.fileprovider</string>
-    <string name="webManifestUrl" translatable="false">https://www.rapidrecap.co.in/manifest.json</string>
+    <string name="webManifestUrl" translatable="false">https://rapidrecap.ai/manifest.json</string>
     <style name="SplashTheme" parent="@android:style/Theme.DeviceDefault.NoActionBar">
         <item name="android:windowBackground">@drawable/splash_screen</item>
         <item name="android:windowNoTitle">true</item>

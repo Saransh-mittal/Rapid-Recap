@@ -1,6 +1,13 @@
 // /pages/Article.jsx
 
-import React, { lazy, useEffect, useRef, useState, useCallback } from 'react'
+import React, {
+  lazy,
+  useEffect,
+  useRef,
+  useState,
+  useCallback,
+  useMemo,
+} from 'react'
 import axios from 'axios'
 import {
   Flex,
@@ -313,7 +320,6 @@ const Article = () => {
   }, [])
 
   useEffect(() => {
-    document.title = 'Article page'
     quinBoostChecker({
       setIsQuinBoostAvailable,
       setQuizLeftToGetQuizBoost,
@@ -359,6 +365,84 @@ const Article = () => {
   const handleThemeChange = useCallback(newThemedContent => {
     setThemedContent(newThemedContent)
   }, [])
+
+  const getStructuredData = useMemo(() => {
+    const articleUrl = `https://rapidrecap.ai/article/${id}/${slugify(
+      title['english'],
+    )}`
+
+    return {
+      '@context': 'https://schema.org',
+      '@type': 'Article',
+      mainEntityOfPage: {
+        '@type': 'WebPage',
+        '@id': articleUrl,
+      },
+      headline: title[selectedLanguage],
+      description:
+        article?.description ||
+        mainText[selectedLanguage]?.[0]?.substring(0, 160),
+      image: {
+        '@type': 'ImageObject',
+        url: imgURL || fallback_news_image,
+        width: '1200',
+        height: '630',
+      },
+      datePublished: article?.dateTime,
+      dateModified: article?.dateTime,
+      author: {
+        '@type': 'Person',
+        name: author[selectedLanguage],
+        url: 'https://rapidrecap.ai',
+      },
+      publisher: {
+        '@type': 'Organization',
+        name: 'Rapid Recap',
+        logo: {
+          '@type': 'ImageObject',
+          url: 'https://rapidrecap.ai/images/rrlogo.png',
+          width: '512',
+          height: '512',
+        },
+      },
+      articleSection: article?.category,
+      keywords: article?.keywords?.join(', '),
+      inLanguage: selectedLanguage === 'hindi' ? 'hi' : 'en',
+      isAccessibleForFree: true,
+      interactionStatistic: {
+        '@type': 'InteractionCounter',
+        interactionType: 'https://schema.org/ReadAction',
+        userInteractionCount: totalUsersGivenQuiz,
+      },
+      potentialAction: [
+        {
+          '@type': 'ReadAction',
+          target: [articleUrl],
+        },
+        {
+          '@type': 'AssessAction',
+          target: [`${articleUrl}/quiz`],
+          description:
+            'Test your knowledge with an AI-powered quiz on this article',
+        },
+      ],
+      isPartOf: {
+        '@type': 'WebSite',
+        name: 'Rapid Recap',
+        url: 'https://rapidrecap.ai',
+      },
+    }
+  }, [
+    id,
+    title,
+    selectedLanguage,
+    imgURL,
+    article,
+    author,
+    totalUsersGivenQuiz,
+    mainText,
+  ])
+
   return (
     <Flex w={'100vw'}>
       <Flex
@@ -370,36 +454,60 @@ const Article = () => {
         minH={'100vh'}
       >
         <Helmet>
-          <title>{`${title[selectedLanguage]} | Rapid Recap`}</title>
+          <title>{`${title[selectedLanguage]} | Rapid Recap - AI-Powered GK Quiz`}</title>
+          {/* Primary Meta Tags */}
           <meta
             name="description"
-            content={mainText[selectedLanguage]?.[0]?.substring(0, 160)}
+            content={
+              article?.description ||
+              mainText[selectedLanguage]?.[0]?.substring(0, 160)
+            }
           />
           <meta
             name="keywords"
-            content={`${article?.category}, news, current events, ${title[
-              selectedLanguage
-            ]
-              ?.toLowerCase()
-              ?.split(' ')
-              ?.join(', ')}`}
+            content={`${article?.keywords?.join(
+              ', ',
+            )}, GK quiz, current affairs, general knowledge test`}
           />
+          <meta name="author" content={author[selectedLanguage]} />
+          <meta
+            name="language"
+            content={selectedLanguage === 'hindi' ? 'hi' : 'en'}
+          />
+
+          {/* Open Graph Meta Tags */}
           <meta
             property="og:title"
-            content={`${title[selectedLanguage]} | Rapid Recap`}
+            content={`${title[selectedLanguage]} | Rapid Recap - Test Your Knowledge`}
           />
           <meta
             property="og:description"
-            content={mainText[selectedLanguage]?.[0]?.substring(0, 160)}
+            content={
+              article?.description ||
+              mainText[selectedLanguage]?.[0]?.substring(0, 160)
+            }
           />
-          <meta property="og:image" content={imgURL} />
+          <meta property="og:image" content={imgURL || fallback_news_image} />
           <meta property="og:type" content="article" />
           <meta
             property="og:url"
-            content={`https://www.rapidrecap.co.in/article/${id}/${slugify(
+            content={`https://rapidrecap.ai/article/${id}/${slugify(
               title['english'],
             )}`}
           />
+          <meta property="og:site_name" content="Rapid Recap" />
+          <meta
+            property="og:locale"
+            content={selectedLanguage === 'hindi' ? 'hi_IN' : 'en_US'}
+          />
+          <meta property="article:published_time" content={article?.dateTime} />
+          <meta property="article:author" content={author[selectedLanguage]} />
+          <meta property="article:section" content={article?.category} />
+          {article?.keywords?.map(keyword => (
+            <meta property="article:tag" content={keyword} key={keyword} />
+          ))}
+
+          {/* Twitter Meta Tags */}
           <meta name="twitter:card" content="summary_large_image" />
           <meta
             name="twitter:title"
@@ -407,45 +515,41 @@ const Article = () => {
           />
           <meta
             name="twitter:description"
-            content={mainText[selectedLanguage]?.[0]?.substring(0, 160)}
+            content={
+              article?.description ||
+              mainText[selectedLanguage]?.[0]?.substring(0, 160)
+            }
           />
-          <meta name="twitter:image" content={imgURL} />
+          <meta name="twitter:image" content={imgURL || fallback_news_image} />
+          <meta name="twitter:site" content="@rapidrecap" />
+
+          {/* Canonical URL */}
           <link
             rel="canonical"
-            href={`https://www.rapidrecap.co.in/article/${id}/${slugify(
+            href={`https://rapidrecap.ai/article/${id}/${slugify(
               title['english'],
             )}`}
           />
-          <script type="application/ld+json">
-            {`
-    {
-      "@context": "https://schema.org",
-      "@type": "NewsArticle",
-      "mainEntityOfPage": {
-        "@type": "WebPage",
-        "@id": "https://www.rapidrecap.co.in/article/${id}/${slugify(
+
+          {/* Alternate Language Links */}
+          <link
+            rel="alternate"
+            hrefLang="en"
+            href={`https://rapidrecap.ai/article/${id}/${slugify(
               title['english'],
-            )}"
-      },
-      "headline": "${title[selectedLanguage]}",
-      "image": ["${imgURL}"],
-      "datePublished": "${article?.dateTime}",
-      "dateModified": "${article?.dateTime}",
-      "author": {
-        "@type": "Person",
-        "name": "${author[selectedLanguage]}"
-      },
-      "publisher": {
-        "@type": "Organization",
-        "name": "Rapid Recap",
-        "logo": {
-          "@type": "ImageObject",
-          "url": "https://www.rapidrecap.co.in/images/rrlogo.png"
-        }
-      },
-      "description": "${mainText[selectedLanguage]?.[0]?.substring(0, 160)}"
-    }
-    `}
+            )}`}
+          />
+          <link
+            rel="alternate"
+            hrefLang="hi"
+            href={`https://rapidrecap.ai/article/${id}/${slugify(
+              title['hindi'] || title['english'],
+            )}`}
+          />
+
+          {/* Structured Data */}
+          <script type="application/ld+json">
+            {JSON.stringify(getStructuredData)}
           </script>
         </Helmet>
         <article>

@@ -21,7 +21,7 @@ const generateOrganizationSchema = baseUrl => ({
   contactPoint: {
     '@type': 'ContactPoint',
     contactType: 'customer service',
-    email: 'rapidrecap2k23@gmail.com',
+    email: 'team@rapidrecap.ai',
   },
 })
 const generateArticleSchema = ({ articleData, baseUrl }) => ({
@@ -209,7 +209,7 @@ const generateAndInjectSchemas = ({ template, articleData, url, baseUrl }) => {
         contactPoint: {
           '@type': 'ContactPoint',
           contactType: 'customer service',
-          email: 'rapidrecap2k23@gmail.com',
+          email: 'team@rapidrecap.ai',
         },
       },
     ],

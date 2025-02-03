@@ -84,7 +84,6 @@ import { useSocket } from './customHooks/useSocket.js'
 import useRewardsModal from './customHooks/useRewardsModal.js'
 import MaintenanceHandler from './services/MaintenanceHandler.jsx'
 import { fetchDemotionSummary } from './redux/demotionSummarySlice.js'
-import { Helmet } from 'react-helmet'
 
 const App = () => {
   ReactGA.initialize('G-ES5VQ8NW7Z')
@@ -317,6 +316,28 @@ const App = () => {
     if (loginCheckStatus === 'fulfilled' && isAuthenticated) {
       dispatch(fetchDemotionSummary())
     }
+    const handleHashChange = () => {
+      if (
+        window.location.hash === '#signin' &&
+        !isAuthenticated &&
+        loginCheckStatus === 'fulfilled'
+      ) {
+        dispatch(setIsSigninOpen(true))
+      }
+      if (
+        window.location.hash === '#register' &&
+        !isAuthenticated &&
+        loginCheckStatus === 'fulfilled'
+      ) {
+        dispatch(setIsRegisterOpen(true))
+      }
+    }
+    // Check hash on initial load
+    handleHashChange()
+
+    // Listen for hash changes
+    window.addEventListener('hashchange', handleHashChange)
+    return () => window.removeEventListener('hashchange', handleHashChange)
   }, [loginCheckStatus, isAuthenticated])
 
   useEffect(() => {
@@ -438,32 +459,6 @@ const App = () => {
 
   return (
     <MaintenanceHandler>
-      <Helmet>
-        <title>{t('Rapid Recap - Stay Informed, Stay Ahead')}</title>
-        <meta
-          name="description"
-          content={t(
-            'Rapid Recap is your go-to source for the latest news and articles. Test your knowledge with quizzes and track your Information Quotient (IQ) score.',
-          )}
-        />
-        <meta
-          name="keywords"
-          content={t(
-            'Rapid Recap, news, articles, quizzes, IQ score, leaderboard',
-          )}
-        />
-        <meta
-          property="og:title"
-          content={t('Rapid Recap - Stay Informed, Stay Ahead')}
-        />
-        <meta
-          property="og:description"
-          content={t(
-            'Stay updated with the latest news and articles. Take quizzes and see your Information Quotient (IQ) score on Rapid Recap.',
-          )}
-        />
-      </Helmet>
-
       {showLoadingScreen && <LoadingScreen progress={overallProgress} />}
 
       <Suspense fallback={null}>

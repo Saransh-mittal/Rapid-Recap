@@ -1,6 +1,6 @@
 {
   "packageId": "in.co.rapidrecap.www.twa",
-  "host": "www.rapidrecap.co.in",
+  "host": "rapidrecap.ai",
   "name": "Rapid Recap",
   "launcherName": "Rapid Recap",
   "display": "standalone",
@@ -13,7 +13,7 @@
   "backgroundColor": "#0F0D15",
   "enableNotifications": true,
   "startUrl": "/",
-  "iconUrl": "https://www.rapidrecap.co.in/images/rrlogo_HD.png",
+  "iconUrl": "https://rapidrecap.ai/images/rrlogo_HD.png",
   "splashScreenFadeOutDuration": 300,
   "signingKey": {
     "path": "/Users/saranshmittal/Desktop/Rapid-Recap/client/android.keystore",
@@ -23,7 +23,7 @@
   "appVersionCode": 1,
   "shortcuts": [],
   "generatorApp": "bubblewrap-cli",
-  "webManifestUrl": "https://www.rapidrecap.co.in/manifest.json",
+  "webManifestUrl": "https://rapidrecap.ai/manifest.json",
   "fallbackType": "customtabs",
   "features": {},
   "alphaDependencies": {
@@ -32,7 +32,7 @@
   "enableSiteSettingsShortcut": true,
   "isChromeOSOnly": false,
   "isMetaQuest": false,
-  "fullScopeUrl": "https://www.rapidrecap.co.in/",
+  "fullScopeUrl": "https://rapidrecap.ai/",
   "minSdkVersion": 19,
   "orientation": "default",
   "fingerprints": [],

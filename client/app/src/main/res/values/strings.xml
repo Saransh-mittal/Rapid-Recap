@@ -15,7 +15,7 @@
      limitations under the License.
 -->
 <resources>
-  
+
 
   <!--
     This variable below expresses the relationship between the app and the site,
@@ -28,7 +28,7 @@
         \"relation\": [\"delegate_permission/common.handle_all_urls\"],
         \"target\": {
             \"namespace\": \"web\",
-            \"site\": \"https://www.rapidrecap.co.in\"
+            \"site\": \"https://rapidrecap.ai\"
         }
     }]
 </string>

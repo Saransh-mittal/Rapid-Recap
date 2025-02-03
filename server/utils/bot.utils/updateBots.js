@@ -1,4 +1,4 @@
-const moment = require('moment')
+const moment = require('moment-timezone')
 const Article = require('../../model/articleSchema')
 const QuizAttempt = require('../../model/quizAttemptSchema')
 const Quiz = require('../../model/quizSchema')
@@ -146,6 +146,8 @@ async function updateBots() {
               articleDifficulty: fullQuiz.overAllDifficulty,
               timeTaken,
               season: parseInt(configService.getCurrentSeason(), 10),
+              month: moment().month() + 1,
+              year: moment().year(),
             })
 
             await newQuizAttempt.save()

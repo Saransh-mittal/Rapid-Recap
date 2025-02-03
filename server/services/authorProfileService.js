@@ -48,7 +48,7 @@ class AuthorProfileService {
       affiliation: {
         '@type': 'Organization',
         name: 'Rapid Recap',
-        url: 'https://www.rapidrecap.co.in',
+        url: 'https://rapidrecap.ai',
       },
       worksFor: {
         '@type': 'Organization',

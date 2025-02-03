@@ -212,9 +212,21 @@ export const appSlice = createSlice({
       state.showNote = action.payload
     },
     setIsSigninOpen: (state, action) => {
+      if (window.location.hash !== '#signin' && action.payload) {
+        window.location.hash = 'signin'
+      }
+      if (!action.payload) {
+        window.location.hash = ''
+      }
       state.isSigninOpen = action.payload
     },
     setIsRegisterOpen: (state, action) => {
+      if (window.location.hash !== '#register' && action.payload) {
+        window.location.hash = '#register'
+      }
+      if (!action.payload) {
+        window.location.hash = ''
+      }
       state.isRegisterOpen = action.payload
     },
     setExportData: (state, action) => {

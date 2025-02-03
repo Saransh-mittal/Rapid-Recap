@@ -66,6 +66,8 @@ async function processDetailedArticle(article, highlights, lang, privileges) {
     dictionary: highlights?.dictionary || [],
     importantSentences: highlights?.importantSentences || [],
     isArticleCategoryBoosted,
+    description: article.description,
+    keywords: article.keywords,
   }
 }
 

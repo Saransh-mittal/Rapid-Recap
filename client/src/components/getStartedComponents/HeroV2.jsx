@@ -11,6 +11,7 @@ import {
   Badge,
   useBreakpointValue,
   AspectRatio,
+  Link,
 } from '@chakra-ui/react'
 import {
   Brain,
@@ -198,27 +199,31 @@ const HeroV2 = ({ inViewFooter }) => {
               aria-label="Call to action"
             >
               <Box ref={ref}>
-                <Button
-                  size={{ base: 'md', md: 'lg' }}
-                  bg={COLORS.accent}
-                  color="white"
-                  px={12}
-                  py={7}
-                  fontSize="xl"
-                  rightIcon={<TrendingUp aria-hidden="true" />}
-                  _hover={{
-                    bg: 'pink.500',
-                    transform: 'translateY(-2px) scale(1.05)',
-                  }}
-                  boxShadow={`0 0 30px ${COLORS.accent}33`}
+                <Link
+                  href="/#signin"
                   onClick={() => {
                     playClick()
                     dispatch(setIsSigninOpen(true))
                   }}
-                  aria-label={t('Header.getStartedButton')}
                 >
-                  {t('Header.getStartedButton')}
-                </Button>
+                  <Button
+                    size={{ base: 'md', md: 'lg' }}
+                    bg={COLORS.accent}
+                    color="white"
+                    px={12}
+                    py={7}
+                    fontSize="xl"
+                    rightIcon={<TrendingUp aria-hidden="true" />}
+                    _hover={{
+                      bg: 'pink.500',
+                      transform: 'translateY(-2px) scale(1.05)',
+                    }}
+                    boxShadow={`0 0 30px ${COLORS.accent}33`}
+                    aria-label={t('Header.getStartedButton')}
+                  >
+                    {t('Header.getStartedButton')}
+                  </Button>
+                </Link>
               </Box>
 
               <HStack spacing={4} wrap="wrap" aria-label="Key features">

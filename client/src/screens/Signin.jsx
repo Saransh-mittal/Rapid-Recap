@@ -35,6 +35,7 @@ import {
   Badge,
   Divider,
   HStack,
+  Link,
 } from '@chakra-ui/react'
 import {
   Brain,
@@ -530,19 +531,23 @@ export default function Signin({ isOpen, onClose, hamburgerOnClose }) {
                   >
                     Forgot Password?
                   </Button>
-                  <Button
-                    variant="ghost"
-                    color="pink.400"
-                    size="sm"
+                  <Link
+                    href="/#register"
                     onClick={() => {
-                      dispatch(setIsRegisterOpen(true))
                       onClose()
+                      dispatch(setIsRegisterOpen(true))
                     }}
-                    leftIcon={<UserPlus size={14} />}
-                    _hover={{ bg: 'whiteAlpha.100' }}
                   >
-                    Register
-                  </Button>
+                    <Button
+                      variant="ghost"
+                      color="pink.400"
+                      size="sm"
+                      leftIcon={<UserPlus size={14} />}
+                      _hover={{ bg: 'whiteAlpha.100' }}
+                    >
+                      Register
+                    </Button>
+                  </Link>
                 </Flex>
 
                 <Divider borderColor="whiteAlpha.200" />

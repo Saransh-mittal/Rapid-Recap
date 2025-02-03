@@ -64,7 +64,7 @@ const FeatureCard = ({ icon: Icon, title, description, image, index }) => (
       <meta itemProp="name" content="Rapid Recap" />
     </div>
     <meta itemProp="category" content="Educational Software" />
-    <meta itemProp="image" content={`https://www.rapidrecap.co.in${image}`} />
+    <meta itemProp="image" content={`https://rapidrecap.ai${image}`} />
     {/* Add simplified offers data for free digital product */}
     <div itemProp="offers" itemScope itemType="https://schema.org/Offer">
       <meta itemProp="price" content="0" />
@@ -157,7 +157,7 @@ const UISection = ({ image, title, description, isImageLeft, index }) => {
       itemType="https://schema.org/Article"
     >
       {/* Add required product image */}
-      <meta itemProp="image" content={`https://www.rapidrecap.co.in${image}`} />
+      <meta itemProp="image" content={`https://rapidrecap.ai${image}`} />
       <Box
         w={{ base: 'full', lg: '50%' }}
         order={isMobile ? 0 : isImageLeft ? 0 : 1}

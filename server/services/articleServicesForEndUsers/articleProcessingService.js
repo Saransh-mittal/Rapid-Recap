@@ -72,7 +72,10 @@ async function processArticles(articles, lang, isPrivileged = null) {
       if (isPrivileged && !article.articleDifficulty) {
         difficulty = calculateArticleDifficulty({ mainText: article.mainText })
       }
+
       return {
+        description: article.description,
+        keywords: article.keywords,
         category: article.category,
         title: article.title,
         quizAttemptCnt: article.quizAttemptCnt,

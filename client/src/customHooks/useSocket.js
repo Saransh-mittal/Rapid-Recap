@@ -5,7 +5,7 @@ import { useSocketContext } from '../contextAPI/SocketContext'
 
 const ENDPOINT =
   process.env.NODE_ENV === 'production'
-    ? 'https://www.rapidrecap.co.in'
+    ? 'https://rapidrecap.ai'
     : 'http://localhost:3000'
 
 export const useSocket = () => {

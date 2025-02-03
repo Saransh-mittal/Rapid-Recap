@@ -5,6 +5,7 @@ import {
   useBreakpointValue,
   Portal,
   SlideFade,
+  Link,
 } from '@chakra-ui/react'
 import { AnimatePresence, motion } from 'framer-motion'
 import { TrendingUp } from 'lucide-react'
@@ -48,27 +49,31 @@ const SmartCTA = ({ isMainButtonVisible, COLORS }) => {
               borderColor="rgba(237, 100, 166, 0.2)"
               boxShadow="lg"
             >
-              <Button
-                size={{ base: 'md', md: 'lg' }}
-                bg={COLORS.accent}
-                color="white"
-                px={8}
-                py={6}
-                fontSize={isMobile ? 'md' : 'xl'}
-                rightIcon={<TrendingUp />}
-                _hover={{
-                  bg: 'pink.500',
-                  transform: 'translateY(-2px) scale(1.02)',
-                  boxShadow: `0 0 20px ${COLORS.accent}33`,
-                }}
-                transition="all 0.3s ease"
+              <Link
+                href="/#signin"
                 onClick={() => {
                   playClick()
                   dispatch(setIsSigninOpen(true))
                 }}
               >
-                {t('Header.getStartedButton')}
-              </Button>
+                <Button
+                  size={{ base: 'md', md: 'lg' }}
+                  bg={COLORS.accent}
+                  color="white"
+                  px={8}
+                  py={6}
+                  fontSize={isMobile ? 'md' : 'xl'}
+                  rightIcon={<TrendingUp />}
+                  _hover={{
+                    bg: 'pink.500',
+                    transform: 'translateY(-2px) scale(1.02)',
+                    boxShadow: `0 0 20px ${COLORS.accent}33`,
+                  }}
+                  transition="all 0.3s ease"
+                >
+                  {t('Header.getStartedButton')}
+                </Button>
+              </Link>
             </Box>
           </motion.div>
         </SlideFade>
