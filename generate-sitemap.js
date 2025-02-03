@@ -9,7 +9,7 @@ const {
 } = require('./utils/miscellaneous.utils')
 const slugify = require('slugify')
 
-const BASE_URL = 'https://www.rapidrecap.co.in'
+const BASE_URL = 'https://rapidrecap.ai'
 const MAX_URLS_PER_SITEMAP = 50000
 const MAX_ARTICLES = 5000
 const MAX_PROFILES = 5000

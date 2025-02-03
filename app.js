@@ -38,6 +38,23 @@ const server = http.createServer(app)
 
 // Trust Railway's proxy
 app.set('trust proxy', true)
+// Redirect requests from rapidrecap.co.in to rapidrecap.ai
+app.use((req, res, next) => {
+  // Get the host from the incoming request
+  const host = req.headers.host
+
+  // Check if the request is coming to rapidrecap.co.in (or its www version)
+  if (host === 'rapidrecap.co.in' || host === 'www.rapidrecap.co.in') {
+    // Build the new URL with https and the same path/query string
+    const newUrl = `https://rapidrecap.ai${req.originalUrl}`
+
+    // 301 Moved Permanently redirect status code
+    return res.redirect(301, newUrl)
+  }
+
+  // If the host is not rapidrecap.co.in, continue to the next middleware/route
+  next()
+})
 
 // Basic middleware setup
 app.use(cookieParser())
@@ -106,21 +123,21 @@ if (process.env.NODE_ENV === 'development') {
   // Mobile crawlers configuration (General mobile user agents)
 
   // Mobile crawlers
-  app.use(
-    connect_s4a(process.env.S4A_SECRET_MOBILE, {
-      includeUserAgents:
-        /(?:Mobile|iPhone|Android).*(?:compatible;\s*(?:(?:Googlebot|Google-InspectionTool|bingbot|YandexBot)\/)|(?:facebookexternalhit\/.*iPhone)|(?:Twitterbot\/.*Mobile))/i,
-    }),
-  )
+  // app.use(
+  //   connect_s4a(process.env.S4A_SECRET_MOBILE, {
+  //     includeUserAgents:
+  //       /(?:Mobile|iPhone|Android).*(?:compatible;\s*(?:(?:Googlebot|Google-InspectionTool|bingbot|YandexBot)\/)|(?:facebookexternalhit\/.*iPhone)|(?:Twitterbot\/.*Mobile))/i,
+  //   }),
+  // )
 
   // Desktop crawlers
-  app.use(
-    connect_s4a(process.env.S4A_SECRET_DESKTOP, {
-      includeUserAgents:
-        /(?:compatible;\s*(?:(?:Googlebot|Google-InspectionTool|bingbot|YandexBot)\/)|facebookexternalhit\/|Twitterbot\/|LinkedInBot\/|DuckDuckBot(?:-Https)?\/)/i,
-      ignoreUserAgents: /(?:Mobile|iPhone|Android)/i,
-    }),
-  )
+  // app.use(
+  //   connect_s4a(process.env.S4A_SECRET_DESKTOP, {
+  //     includeUserAgents:
+  //       /(?:compatible;\s*(?:(?:Googlebot|Google-InspectionTool|bingbot|YandexBot)\/)|facebookexternalhit\/|Twitterbot\/|LinkedInBot\/|DuckDuckBot(?:-Https)?\/)/i,
+  //     ignoreUserAgents: /(?:Mobile|iPhone|Android)/i,
+  //   }),
+  // )
 
   // Production configuration
   app.use(

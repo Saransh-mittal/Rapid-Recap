@@ -5,7 +5,7 @@ const xml = require('xmlbuilder')
 const { toISOString } = require('./utils/miscellaneous.utils')
 const slugify = require('slugify')
 
-const BASE_URL = 'https://www.rapidrecap.co.in'
+const BASE_URL = 'https://rapidrecap.ai'
 const MAX_NEWS_ARTICLES = 1000 // Google News allows up to 1000 articles
 
 async function generateGoogleNewsSitemap() {

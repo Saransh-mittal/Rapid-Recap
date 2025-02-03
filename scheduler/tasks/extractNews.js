@@ -21,7 +21,7 @@ async function extractNews(country) {
 <body style="font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif; background-color:#f4f4f4; padding:30px; margin:0;">
     <div style="max-width:600px; margin:0 auto; background:white; padding:30px; border-radius:10px; box-shadow:0 0 20px rgba(0,0,0,0.1);">
         <div style="text-align:center; border-bottom:1px solid #e0e0e0; padding-bottom:20px;">
-            <a href="https://www.rapidrecap.co.in" style="font-size:2em; color:#00466a; text-decoration:none; font-weight:bold; display:flex; align-items:center; justify-content:center;">
+            <a href="https://rapidrecap.ai" style="font-size:2em; color:#00466a; text-decoration:none; font-weight:bold; display:flex; align-items:center; justify-content:center;">
                 <img src="https://res.cloudinary.com/dxstsrnbs/image/upload/v1720002794/rr_qts9kn.png" alt="Rapid Recap Logo" style="width:40px; height:30px; margin-right:10px;">
                 Rapid Recap
             </a>
