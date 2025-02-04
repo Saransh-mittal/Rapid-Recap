@@ -14,7 +14,7 @@
     "setup-pyenv-win": "py -m venv venv && venv\\Scripts\\pip install -r requirements.txt",
     "setup-pyenv-mac": "python3 -m venv venv && source venv/bin/activate && pip install -r requirements.txt",
     "start-dev-win": "venv\\Scripts\\activate && nodemon app.js",
-    "start-dev-mac": "source venv/bin/activate && nodemon app.js",
+    "start-dev-mac": "source venv/bin/activate && nodemon --ignore 'venv/' app.js",
     "start": "npm run start-prod",
     "start-prod": "/opt/venv/bin/activate && node app.js"
   },
@@ -25,7 +25,7 @@
     "bcryptjs": "^2.4.3",
     "compression": "^1.7.4",
     "concurrently": "^8.2.2",
-    "connect-s4a": "^0.2.2",
+    "connect-s4a": "git+https://github.com/Saransh-mittal/connect-s4a.git#master",
     "cookie-parser": "^1.4.6",
     "crypto-js": "^4.2.0",
     "dotenv": "^16.2.0",
