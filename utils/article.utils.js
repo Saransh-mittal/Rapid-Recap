@@ -741,7 +741,7 @@ const getTopThreeRecommendedArticles = async userId => {
         continue
       articlesForMail.push({
         articleData,
-        link: `https://www.rapidrecap.co.in/article/${articleData._id.toString()}`,
+        link: `https://rapidrecap.ai/article/${articleData._id.toString()}`,
       })
       cnt--
     }
