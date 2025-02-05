@@ -7,8 +7,11 @@ WORKDIR /app
 # Copy package.json and package-lock.json to the working directory
 COPY package*.json ./
 
-# Install Node.js dependencies
-RUN npm ci
+# Install Node.js dependencies and verify connect-s4a installation
+RUN npm ci && \
+  ls -la node_modules/connect-s4a && \
+  echo "connect-s4a version:" && \
+  cat node_modules/connect-s4a/package.json | grep version
 
 # Copy the rest of the application code to the working directory
 COPY . .
