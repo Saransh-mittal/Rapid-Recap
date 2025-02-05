@@ -38,6 +38,21 @@ const server = http.createServer(app)
 
 // Trust Railway's proxy
 app.set('trust proxy', true)
+
+// Consolidate CORS and header middleware
+const setCorsHeaders = (req, res, next) => {
+  // Don't set headers if they've already been sent
+  if (!res.headersSent) {
+    res.setHeader('Access-Control-Allow-Origin', '*')
+    res.setHeader(
+      'Access-Control-Allow-Methods',
+      'GET, POST, PUT, DELETE, OPTIONS',
+    )
+    res.setHeader('Access-Control-Allow-Headers', 'Content-Type, Authorization')
+    res.setHeader('Access-Control-Allow-Credentials', 'true')
+  }
+  next()
+}
 // Redirect requests from rapidrecap.co.in to rapidrecap.ai
 app.use((req, res, next) => {
   // Get the host from the incoming request
@@ -255,49 +270,28 @@ if (process.env.NODE_ENV === 'development') {
     }),
   )
 }
-// Enhanced headers for service workers, images, and media
+// Unified special file handling middleware
 app.use((req, res, next) => {
-  // Special handling for service worker
-  if (req.url.includes('service-worker.js') || req.url.includes('sw.js')) {
-    // Set CSP headers specifically for service worker
-    res.setHeader(
-      'Content-Security-Policy',
-      "default-src * 'self' 'unsafe-inline' 'unsafe-eval' data: blob: *",
-    )
-    res.setHeader('Service-Worker-Allowed', '/')
-    res.setHeader('Access-Control-Allow-Origin', '*')
-    res.setHeader(
-      'Access-Control-Allow-Methods',
-      'GET, POST, PUT, DELETE, OPTIONS',
-    )
-    res.setHeader(
-      'Access-Control-Allow-Headers',
-      'Origin, X-Requested-With, Content-Type, Accept, Authorization',
-    )
+  if (!res.headersSent) {
+    if (req.url.includes('service-worker.js') || req.url.includes('sw.js')) {
+      res.setHeader('Service-Worker-Allowed', '/')
+      res.setHeader(
+        'Content-Security-Policy',
+        "default-src * 'self' 'unsafe-inline' 'unsafe-eval' data: blob: *",
+      )
+    } else if (req.url.match(/\.(jpg|jpeg|png|gif|webp|svg|ico)$/i)) {
+      res.setHeader('Cross-Origin-Resource-Policy', 'cross-origin')
+    }
   }
-
-  // Special handling for image requests
-  if (req.url.match(/\.(jpg|jpeg|png|gif|webp|svg|ico)$/i)) {
-    res.setHeader('Access-Control-Allow-Origin', '*')
-    res.setHeader('Cross-Origin-Resource-Policy', 'cross-origin')
-  }
-
   next()
 })
 
-// Add this middleware for handling preflight requests
+// Unified OPTIONS handler
 app.options('*', (req, res) => {
-  res.setHeader('Access-Control-Allow-Origin', '*')
-  res.setHeader(
-    'Access-Control-Allow-Methods',
-    'GET, POST, PUT, PATCH, DELETE, OPTIONS',
-  )
-  res.setHeader(
-    'Access-Control-Allow-Headers',
-    'Origin, X-Requested-With, Content-Type, Accept, Authorization',
-  )
-  res.setHeader('Access-Control-Allow-Credentials', 'true')
-  res.status(200).end()
+  if (!res.headersSent) {
+    setCorsHeaders(req, res, () => {})
+    res.status(200).end()
+  }
 })
 
 // Setup web push
@@ -315,7 +309,7 @@ initBotTracking()
 // const generateGoogleNewsSitemap = require('./google-sitemap-generator')
 // generateGoogleNewsSitemap()
 // Load scheduler
-require('./scheduler/setupCronJobs')
+// require('./scheduler/setupCronJobs')
 //
 // require('./scripts/analyzeArticleRelations')
 // Setup routes and SSR
