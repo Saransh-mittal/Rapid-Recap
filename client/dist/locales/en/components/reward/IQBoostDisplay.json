@@ -1,0 +1,28 @@
+{
+  "claimButton": {
+    "text": "Claim IQ Boost!"
+  },
+  "successMessage": {
+    "text": "Intelligence Amplified!"
+  },
+  "scoreDisplay": {
+    "previousScore": "Previous IQ Score",
+    "newScore": "New IQ Score",
+    "increase": "Increase",
+    "points": "points"
+  },
+  "reward": {
+    "title": "IQ Boost Reward",
+    "description": "Congratulations! You've earned an IQ boost for your outstanding performance. Your intelligence score has increased.",
+    "type": "iq_boost"
+  },
+  "accessibility": {
+    "claimButtonAria": "Click to claim your IQ boost reward",
+    "scoreDisplayAria": "Score comparison showing IQ boost",
+    "successMessageAria": "IQ boost successfully claimed"
+  },
+  "animations": {
+    "neuronEffect": "Neural activation effect",
+    "brainIcon": "Glowing brain icon"
+  }
+}

@@ -1,7 +1,7 @@
 {
   "name": "Rapid Recap",
   "short_name": "Rapid Recap",
-  "description": "Stay Informed, Stay Ahead with Rapid Recap",
+  "description": "GK Quiz Online | AI-Powered Current Affairs & General Knowledge Questions",
   "theme_color": "#1a1527",
   "background_color": "#0f0d15",
   "display": "fullscreen",
@@ -24,8 +24,8 @@
       "type": "image/png"
     },
     {
-      "src": "/images/rrlogo_100.png",
-      "sizes": "100x100",
+      "src": "/images/rrlogo_192.png",
+      "sizes": "192x192",
       "type": "image/png",
       "purpose": "maskable"
     }
