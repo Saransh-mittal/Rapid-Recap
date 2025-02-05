@@ -310,6 +310,7 @@ initBotTracking()
 // generateGoogleNewsSitemap()
 // Load scheduler
 require('./scheduler/setupCronJobs')
+//
 // require('./scripts/analyzeArticleRelations')
 // Setup routes and SSR
 async function initializeServer() {
