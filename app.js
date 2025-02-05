@@ -113,10 +113,6 @@ if (process.env.NODE_ENV === 'development') {
     next()
   })
 } else {
-  const s4a = require('connect-s4a')
-  console.log('\n=== connect-s4a Verification ===')
-  console.log('Module loaded successfully')
-  console.log('Module exports:', Object.keys(s4a))
   // app.use((req, res, next) => {
   //   if (shouldUseSEO4Ajax(req.url)) {
   //     connect_s4a(process.env.S4A_SECRET)(req, res, next)
