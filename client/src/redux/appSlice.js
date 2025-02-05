@@ -162,6 +162,9 @@ export const appSlice = createSlice({
     setShowIQScoreModal: (state, action) => {
       state.showIQScoreModal = action.payload
     },
+    setStreak: (state, action) => {
+      state.streak = action.payload
+    },
     setStreakLoading: (state, action) => {
       state.streakLoading = action.payload
     },
@@ -400,6 +403,7 @@ export const {
   setSelectedNotificationId,
   setIsNotifInboxModalOpen,
   setShowIQScoreModal,
+  setStreak,
   setShowDailyStreakModal,
   logout: logoutApp,
 } = appSlice.actions

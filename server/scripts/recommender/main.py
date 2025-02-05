@@ -17,7 +17,8 @@ from recommendation_engine import (recommend_articles_with_vector_search,
 # Configure production logging with timestamp and level
 logging.basicConfig(
     level=logging.INFO,
-    format='%(asctime)s - %(levelname)s - [%(name)s] - %(message)s'
+    format='%(asctime)s - %(levelname)s - [%(name)s] - %(message)s',
+    stream=sys.stdout  # This is the key change to print to stdout
 )
 logger = logging.getLogger('recommendation_system')
 

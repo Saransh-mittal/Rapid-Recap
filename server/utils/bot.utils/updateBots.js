@@ -35,6 +35,7 @@ async function updateBots() {
     console.log('Fetching articles with quiz...')
     let articlesWithQuiz = await Article.find({
       quiz: { $exists: true },
+      createdAt: { $gte: moment().month(0).date(1).toDate() },
     })
     // articlesWithQuiz = await Promise.all(
     //   articlesWithQuiz.filter(async article => {
