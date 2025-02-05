@@ -7,12 +7,9 @@ WORKDIR /app
 # Copy package.json and package-lock.json to the working directory
 COPY package*.json ./
 
-# Install git (needed for GitHub dependencies)
-RUN apt-get update && apt-get install -y git
-
-# Install Node.js dependencies with force flag to bypass engine check
-RUN npm config set engine-strict false && \
-  npm ci --force && \
+# First, remove package-lock.json and install dependencies fresh
+RUN rm -f package-lock.json && \
+  npm install && \
   echo "\n=== Verifying connect-s4a installation ===\n" && \
   ls -la node_modules/connect-s4a && \
   echo "\nconnect-s4a version:" && \
@@ -24,7 +21,7 @@ RUN npm config set engine-strict false && \
 COPY . .
 
 # Install Python and required packages
-RUN apt-get install -y python3 python3-venv python3-pip
+RUN apt-get update && apt-get install -y python3 python3-venv python3-pip
 RUN python3 -m venv /opt/venv
 RUN /opt/venv/bin/pip install --upgrade pip
 RUN /opt/venv/bin/pip install -r requirements.txt
