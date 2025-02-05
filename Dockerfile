@@ -4,11 +4,12 @@ FROM node:18
 # Set the working directory in the container
 WORKDIR /app
 
-# Copy package.json and package-lock.json to the working directory
+# Copy package.json to the working directory
 COPY package*.json ./
 
-# First, remove package-lock.json and install dependencies fresh
+# Clean install: remove both package-lock.json and node_modules, then install fresh
 RUN rm -f package-lock.json && \
+  rm -rf node_modules && \
   npm install && \
   echo "\n=== Verifying connect-s4a installation ===\n" && \
   ls -la node_modules/connect-s4a && \
@@ -29,9 +30,7 @@ RUN /opt/venv/bin/pip install -r requirements.txt
 # Ensure the virtual environment activation script has execution permissions
 RUN chmod +x /opt/venv/bin/activate
 
-# Build the application
-RUN npm run build
-
+# No need for npm run build since we've already installed dependencies
 # Set environment variables
 ENV PATH="/opt/venv/bin:$PATH"
 ENV NODE_ENV=production
