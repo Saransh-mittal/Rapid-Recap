@@ -7,21 +7,28 @@ const Authenticate = async (req, res, next) => {
       return res.status(401).json({ message: 'No token provided' })
     }
 
-    jwt.verify(token, process.env.SECRET_KEY, async (err, decoded) => {
-      if (err) {
-        return res.status(401).json({ message: 'Token is not valid' })
-      }
+    // Use promises instead of callback to handle JWT verification
+    try {
+      const decoded = await new Promise((resolve, reject) => {
+        jwt.verify(token, process.env.SECRET_KEY, (err, decoded) => {
+          if (err) reject(err)
+          else resolve(decoded)
+        })
+      })
+
       req.user = decoded
       next()
-    })
+    } catch (jwtError) {
+      return res.status(401).json({ message: 'Token is not valid' })
+    }
   } catch (error) {
-    res.status(500).json({ message: 'Internal server error' })
     console.error('Authentication failed:', error)
+    return res.status(500).json({ message: 'Internal server error' })
   }
 }
 
 const adminMiddleware = (req, res, next) => {
-  if (req.user.role !== 'admin') {
+  if (!req.user || req.user.role !== 'admin') {
     return res.status(403).json({ message: 'Access denied. Admins only.' })
   }
   next()
