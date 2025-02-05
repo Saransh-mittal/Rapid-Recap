@@ -61,5 +61,8 @@
     "socket.io": "^4.7.5",
     "web-push": "^3.6.7",
     "xmlbuilder": "^15.1.1"
+  },
+  "engines": {
+    "node": ">=18.0.0"
   }
 }
