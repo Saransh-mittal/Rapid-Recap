@@ -206,7 +206,7 @@ i18n
             return `/locales/${lng}/components/streakComponents/${namespace}.json`
           case 'profileComponents':
             return `/locales/${lng}/components/profileComponents/${namespace}.json`
-          case 'profileComponents':
+          case 'HallOfChampions':
             return `/locales/${lng}/components/HallOfChampions/${namespace}.json`
 
           case 'assets':

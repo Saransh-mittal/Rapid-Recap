@@ -9,7 +9,10 @@ import {
   useToast,
   Heading,
   useBreakpointValue,
+  Button,
+  Icon,
 } from '@chakra-ui/react'
+import { StarIcon } from '@chakra-ui/icons'
 import axios from 'axios'
 import { useNavigate } from 'react-router-dom'
 import { useSelector } from 'react-redux'
@@ -27,6 +30,7 @@ import InfoButton, {
 import RefreshTimer from '../components/leaderBoardComponents/RefreshTimer'
 import { useInView } from 'react-intersection-observer'
 import CircleAndSocietyData from '../assets/CircleAndSocietyData'
+import FebruaryRewardsPromo from '../components/leaderBoardComponents/FebruaryRewardsPromo'
 
 const INITIAL_RENDER_COUNT = 500
 const RENDER_BATCH_SIZE = 500
@@ -47,6 +51,7 @@ const Leaderboard = () => {
   const [searchLoad, setSearchLoad] = useState(false)
   const [isLoading, setIsLoading] = useState(true)
   const [isInitialRenderComplete, setIsInitialRenderComplete] = useState(false)
+  const [isRewardsModalOpen, setIsRewardsModalOpen] = useState(false)
   const textColor = useColorModeValue('gray.100', 'gray.200')
   const accentColor = 'pink.400'
 
@@ -64,6 +69,7 @@ const Leaderboard = () => {
     scrollbarWidth: 'none',
     msOverflowStyle: 'none',
   }
+
   const fetchLeaderboard = useCallback(async () => {
     try {
       const response = await axios.get('/api/user/leaderboard?limit=500')
@@ -150,7 +156,6 @@ const Leaderboard = () => {
           style={{
             ...style,
             height: `${ROW_HEIGHT - ROW_GAP}px`,
-            // top: `${parseFloat(style.top) + index * ROW_GAP}px`,
           }}
           ref={index === 0 ? firstLeaderboardRowRef : null}
         >
@@ -172,7 +177,6 @@ const Leaderboard = () => {
   const itemCount =
     searchResults.length > 0 ? searchResults.length : leaders.length
 
-  // Add this inside the Leaderboard component
   const getStructuredData = useMemo(() => {
     const topLeaders = leaders.slice(0, 10).map((leader, index) => {
       const society = CircleAndSocietyData.find(
@@ -287,47 +291,66 @@ const Leaderboard = () => {
         maxW="1200px"
         mx="auto"
       >
-        <Flex
-          width={'100%'}
-          justifyContent={'center'}
-          alignItems={'center'}
-          ml={5}
-        >
+        <Flex width={'100%'} direction="column" alignItems={'center'} gap={2}>
           <Flex
+            width={'100%'}
             justifyContent={'center'}
             alignItems={'center'}
-            flexDirection={'column'}
+            position="relative"
           >
-            <Heading
-              as="h1"
-              fontSize={{ base: 'xl', md: '2xl', lg: '4xl' }}
-              fontWeight="bold"
-              color={textColor}
-              letterSpacing="wide"
+            <Flex
+              justifyContent={'center'}
+              alignItems={'center'}
+              flexDirection={'column'}
             >
-              {t('title')}
-            </Heading>
-            <Text
-              fontSize={{ base: 'lg', md: 'xl' }}
-              fontWeight="semibold"
-              color={accentColor}
-            >
-              {t('tag')}
-            </Text>
+              <Heading
+                as="h1"
+                fontSize={{ base: 'xl', md: '2xl', lg: '4xl' }}
+                fontWeight="bold"
+                color={textColor}
+                letterSpacing="wide"
+                textAlign="center"
+              >
+                {t('title')}
+              </Heading>
+              <Text
+                fontSize={{ base: 'lg', md: 'xl' }}
+                fontWeight="semibold"
+                color={accentColor}
+                textAlign="center"
+              >
+                SEASON 2
+              </Text>
+            </Flex>
+            <Box position="absolute" right={{ base: 12, md: 420 }}>
+              <InfoButtonProvider>
+                <InfoButton
+                  id="leaderboardCacheInfo"
+                  text={t('infoForLeaderboard')}
+                />
+              </InfoButtonProvider>
+            </Box>
           </Flex>
-          <Flex>
-            <InfoButtonProvider>
-              <InfoButton
-                id="leaderboardCacheInfo"
-                text={t('infoForLeaderboard')}
-              />
-            </InfoButtonProvider>
-          </Flex>
+
+          <Button
+            leftIcon={<Icon as={StarIcon} color="yellow.400" />}
+            bg="yellow.500"
+            color="gray.900"
+            _hover={{ bg: 'yellow.300' }}
+            variant="solid"
+            onClick={() => setIsRewardsModalOpen(true)}
+            size={{ base: 'sm', md: 'md' }}
+            fontWeight="bold"
+            animation="pulse 2s infinite"
+          >
+            <Text textAlign="center">Win Cash Prizes</Text>
+          </Button>
         </Flex>
-        {/* Add Timer here */}
+
         <Box ref={ref}>
           <RefreshTimer initialTime={initialTime} />
         </Box>
+
         <Flex justifyContent="center">
           <Box
             w={{ base: '100%', md: '75%', lg: '60%' }}
@@ -363,7 +386,7 @@ const Leaderboard = () => {
                   overscanCount={5}
                   style={{
                     ...scrollbarHiddenStyle,
-                  }} // Apply scrollbar hiding styles
+                  }}
                   className="leaderboard-list"
                 >
                   {Row}
@@ -372,6 +395,11 @@ const Leaderboard = () => {
             </AutoSizer>
           )}
         </Box>
+
+        <FebruaryRewardsPromo
+          isOpen={isRewardsModalOpen}
+          onClose={() => setIsRewardsModalOpen(false)}
+        />
       </VStack>
     </Box>
   )
