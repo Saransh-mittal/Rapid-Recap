@@ -1,4 +1,4 @@
-const VERSION = 'v9.2'
+const VERSION = 'v9.3'
 const CACHE_NAME = `rapid-recap-${VERSION}`
 const ASSETS_CACHE = `assets-${VERSION}`
 const DYNAMIC_CACHE = `dynamic-${VERSION}`
