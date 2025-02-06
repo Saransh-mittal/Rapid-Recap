@@ -1,4 +1,4 @@
-const VERSION = 'v9.3'
+const VERSION = 'v9.4'
 const CACHE_NAME = `rapid-recap-${VERSION}`
 const ASSETS_CACHE = `assets-${VERSION}`
 const DYNAMIC_CACHE = `dynamic-${VERSION}`
@@ -25,6 +25,8 @@ const URLS_TO_CACHE = [
   '/locales/en/screens/LeaderBoard.json',
   '/locales/hi/screens/LeaderBoard.json',
   '/manifest.json',
+  '/images/screenshots/desktop1.png',
+  '/images/screenshots/mobile1.png',
 ]
 
 // Function to get all files from a directory with specific extensions
