@@ -6,7 +6,7 @@
   "background_color": "#0f0d15",
   "display": "fullscreen",
   "start_url": "/",
-  "scope": "/",
+  "id": "/",
   "icons": [
     {
       "src": "/images/rrlogo_100.png",
@@ -28,6 +28,39 @@
       "sizes": "192x192",
       "type": "image/png",
       "purpose": "maskable"
+    }
+  ],
+  "screenshots": [
+    {
+      "src": "/images/screenshots/desktop1.png",
+      "sizes": "1280x720",
+      "type": "image/png",
+      "form_factor": "wide",
+      "label": "Homescreen of Rapid Recap"
+    },
+    {
+      "src": "/images/screenshots/mobile1.png",
+      "sizes": "750x1334",
+      "type": "image/png",
+      "label": "Rapid Recap on mobile"
+    }
+  ],
+  "categories": [
+    "education",
+    "news"
+  ],
+  "orientation": "any",
+  "shortcuts": [
+    {
+      "name": "Take Quiz",
+      "url": "/home/all",
+      "description": "Start a new quiz",
+      "icons": [
+        {
+          "src": "/images/rrlogo_100.png",
+          "sizes": "100x100"
+        }
+      ]
     }
   ]
 }
