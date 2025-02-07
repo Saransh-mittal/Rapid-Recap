@@ -4,7 +4,7 @@
   "description": "GK Quiz Online | AI-Powered Current Affairs & General Knowledge Questions",
   "theme_color": "#1a1527",
   "background_color": "#0f0d15",
-  "display": "fullscreen",
+  "display": "standalone",
   "start_url": "/",
   "id": "/",
   "icons": [
