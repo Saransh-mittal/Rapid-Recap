@@ -175,9 +175,9 @@ const App = () => {
   }, [updates])
 
   useEffect(() => {
-    if (!isInstalled && !isDismissed) {
+    setTimeout(() => {
       setShowPWAPrompt(true)
-    }
+    }, 45000)
     // setShowLoadingScreen(true)
     setTimeout(() => {
       setShowUpgradeModal(true)

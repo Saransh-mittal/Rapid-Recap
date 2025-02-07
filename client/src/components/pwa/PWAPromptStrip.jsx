@@ -12,56 +12,42 @@ import {
 } from '@chakra-ui/react'
 import { X, Download, Info } from 'lucide-react'
 import PWAInfoModal from './PWAInfoModal'
+import { setPWAPromptDismissal } from '../../utils/pwaInstallStore'
+import InstallStepsModal from './InstallStepsModal'
 
 const PWAPromptStrip = ({ onClose }) => {
   const { isOpen, onOpen, onClose: onModalClose } = useDisclosure()
   const [deferredPrompt, setDeferredPrompt] = useState(null)
-  const [isInstallable, setIsInstallable] = useState(false)
   const toast = useToast()
+  const [showInstallSteps, setShowInstallSteps] = useState(false)
 
   useEffect(() => {
-    const handleInstallPrompt = e => {
-      console.log('beforeinstallprompt event fired', new Date().toISOString())
-      e.preventDefault()
-      setDeferredPrompt(e)
-      setIsInstallable(true)
-    }
+    // Check if running in standalone mode
+    const isStandalone =
+      window.matchMedia('(display-mode: standalone)').matches ||
+      window.matchMedia('(display-mode: fullscreen)').matches ||
+      window.navigator.standalone ||
+      document.referrer.includes('android-app://')
 
-    // Add user interaction listener to help trigger install prompt
-    window.addEventListener('beforeinstallprompt', handleInstallPrompt)
-
-    return () => {
-      window.removeEventListener('beforeinstallprompt', handleInstallPrompt)
-    }
-  }, [])
-
-  useEffect(() => {
-    const handleInstallPrompt = e => {
-      console.log('beforeinstallprompt fired')
-      // Prevent the mini-infobar from appearing on mobile
-      e.preventDefault()
-      // Store the event for later use
-      setDeferredPrompt(e)
-      setIsInstallable(true)
-      console.log('beforeinstallprompt captured:', e)
-    }
-
-    // Check if the app is already installed
-    const handleAppInstalled = () => {
-      setIsInstallable(false)
-      setDeferredPrompt(null)
-      console.log('App installed')
+    if (isStandalone) {
       onClose()
+      setPWAPromptDismissal()
+      return
+    }
+    const handleInstallPrompt = e => {
+      e.preventDefault()
+      setDeferredPrompt(e)
+    }
+
+    const handleAppInstalled = () => {
+      console.log('App installed')
+      setDeferredPrompt(null)
+      onClose()
+      setPWAPromptDismissal()
     }
 
     window.addEventListener('beforeinstallprompt', handleInstallPrompt)
     window.addEventListener('appinstalled', handleAppInstalled)
-
-    // Check if running as standalone PWA
-    if (window.matchMedia('(display-mode: standalone)').matches) {
-      setIsInstallable(false)
-      console.log('Running in standalone mode')
-    }
 
     return () => {
       window.removeEventListener('beforeinstallprompt', handleInstallPrompt)
@@ -71,42 +57,16 @@ const PWAPromptStrip = ({ onClose }) => {
 
   const handleInstall = async () => {
     if (!deferredPrompt) {
-      console.log('No installation prompt available')
-      toast({
-        title: 'Installation not available',
-        description:
-          'Please try using a supported browser or check if the app is already installed.',
-        status: 'info',
-        duration: 5000,
-        isClosable: true,
-      })
+      setShowInstallSteps(true)
       return
     }
 
     try {
-      console.log('Triggering install prompt...')
-      // Show the install prompt
-      deferredPrompt.prompt()
-
-      // Wait for the user to respond to the prompt
-      const { outcome } = await deferredPrompt.userChoice
-      console.log('Installation outcome:', outcome)
+      const { outcome } = await deferredPrompt.prompt()
 
       if (outcome === 'accepted') {
-        console.log('User accepted the install prompt')
         setDeferredPrompt(null)
-        setIsInstallable(false)
         onClose()
-      } else {
-        console.log('User declined the install prompt')
-        toast({
-          title: 'Installation declined',
-          description:
-            'You can install the app later from the prompt or browser menu.',
-          status: 'info',
-          duration: 3000,
-          isClosable: true,
-        })
       }
     } catch (error) {
       console.error('Installation error:', error)
@@ -121,7 +81,12 @@ const PWAPromptStrip = ({ onClose }) => {
     }
   }
 
-  // Mobile version of the strip
+  const handleClose = () => {
+    setPWAPromptDismissal()
+    onClose()
+  }
+
+  // Mobile strip component
   const MobileStrip = () => (
     <Box py={2} px={3}>
       <Flex direction="column" gap={2}>
@@ -138,7 +103,7 @@ const PWAPromptStrip = ({ onClose }) => {
             cursor="pointer"
             boxSize={4}
             _hover={{ color: 'white' }}
-            onClick={onClose}
+            onClick={handleClose}
           />
         </Flex>
         <Flex gap={2}>
@@ -168,7 +133,7 @@ const PWAPromptStrip = ({ onClose }) => {
     </Box>
   )
 
-  // Desktop version of the strip
+  // Desktop strip component
   const DesktopStrip = () => (
     <Flex
       py={2}
@@ -210,13 +175,11 @@ const PWAPromptStrip = ({ onClose }) => {
           color="whiteAlpha.700"
           cursor="pointer"
           _hover={{ color: 'white' }}
-          onClick={onClose}
+          onClick={handleClose}
         />
       </Flex>
     </Flex>
   )
-
-  if (!isInstallable) return null
 
   return (
     <AnimatePresence>
@@ -252,6 +215,10 @@ const PWAPromptStrip = ({ onClose }) => {
           isOpen={isOpen}
           onClose={onModalClose}
           onInstall={handleInstall}
+        />
+        <InstallStepsModal
+          isOpen={showInstallSteps}
+          onClose={() => setShowInstallSteps(false)}
         />
       </motion.div>
     </AnimatePresence>

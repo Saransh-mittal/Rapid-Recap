@@ -1,23 +1,14 @@
-// src/utils/pwaInstallStore.js
-
-const PWA_PROMPT_DISMISSED = 'pwa_prompt_dismissed'
-const DISMISS_DURATION_DAYS = 7
+const PWA_PROMPT_KEY = 'pwa_browser_session'
 
 export const getPWAPromptStatus = () => {
-  try {
-    const stored = localStorage.getItem(PWA_PROMPT_DISMISSED)
-    if (!stored) return false
+  // Use sessionStorage to manage per-browser-session state
+  return sessionStorage.getItem(PWA_PROMPT_KEY) === 'dismissed'
+}
 
-    const { timestamp } = JSON.parse(stored)
-    const now = new Date().getTime()
-    const daysSinceDismiss = (now - timestamp) / (1000 * 60 * 60 * 24)
-
-    return daysSinceDismiss < DISMISS_DURATION_DAYS
-  } catch (error) {
-    return false
-  }
+export const setPWAPromptDismissal = () => {
+  sessionStorage.setItem(PWA_PROMPT_KEY, 'dismissed')
 }
 
 export const clearPWAPromptDismissal = () => {
-  localStorage.removeItem(PWA_PROMPT_DISMISSED)
+  sessionStorage.removeItem(PWA_PROMPT_KEY)
 }
