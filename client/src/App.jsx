@@ -45,6 +45,8 @@ const TournamentRewardsModal = React.lazy(() =>
     './components/tournamentComponents/rewards/TournamentRewardsModal.jsx'
   ),
 )
+import PWAPromptStrip from './components/pwa/PWAPromptStrip'
+import { getPWAPromptStatus } from './utils/pwaInstallStore'
 import { RewardDisplay } from './components/rewards'
 
 import {
@@ -84,6 +86,7 @@ import { useSocket } from './customHooks/useSocket.js'
 import useRewardsModal from './customHooks/useRewardsModal.js'
 import MaintenanceHandler from './services/MaintenanceHandler.jsx'
 import { fetchDemotionSummary } from './redux/demotionSummarySlice.js'
+import usePWAInstallation from './customHooks/usePWAInstallation.js'
 
 const App = () => {
   ReactGA.initialize('G-ES5VQ8NW7Z')
@@ -121,6 +124,10 @@ const App = () => {
     state => state.tournament,
   )
   const [isReload, setIsReload] = useState(false)
+  const [showPWAPrompt, setShowPWAPrompt] = useState(false)
+  // Check if already installed or prompt was recently dismissed
+  const { isInstalled } = usePWAInstallation()
+  const isDismissed = getPWAPromptStatus()
   useCountdown({ timeString: tournamentStartTime })
   const [showUpgradeModal, setShowUpgradeModal] = useState(false)
   const showNavbar = !user?.needsOnboarding
@@ -168,6 +175,9 @@ const App = () => {
   }, [updates])
 
   useEffect(() => {
+    if (!isInstalled && !isDismissed) {
+      setShowPWAPrompt(true)
+    }
     // setShowLoadingScreen(true)
     setTimeout(() => {
       setShowUpgradeModal(true)
@@ -218,6 +228,9 @@ const App = () => {
       }
     }
   }, [])
+  const handlePromptClose = () => {
+    setShowPWAPrompt(false)
+  }
 
   useEffect(() => {
     const token = isToken()
@@ -464,7 +477,7 @@ const App = () => {
       <Suspense fallback={null}>
         {!showLoadingScreen && <FixedBackground />}
       </Suspense>
-
+      {showPWAPrompt && <PWAPromptStrip onClose={handlePromptClose} />}
       <Suspense fallback={null}>
         <NoteMessageQueue />
       </Suspense>
