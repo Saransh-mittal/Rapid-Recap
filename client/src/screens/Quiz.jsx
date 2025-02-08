@@ -13,7 +13,7 @@ import {
   quinBoostChecker,
 } from '../utils/quiz.utils'
 import { useTranslation } from 'react-i18next'
-import { addNoteMessage, setStreakLoading } from '../redux/appSlice'
+import { addNoteMessage, setStreak, setStreakLoading } from '../redux/appSlice'
 import { setUser } from '../redux/authSlice'
 import {
   setIsQuinBoostAvailable,
@@ -74,7 +74,7 @@ const Quiz = () => {
   const navigate = useNavigate()
 
   const toast = useToast()
-  const { isBoosted } = useSelector(state => state.app)
+  const { isBoosted, streak } = useSelector(state => state.app)
   const { user } = useSelector(state => state.auth)
 
   const [currentQuestionIndex, setCurrentQuestionIndex] = useState(0)
@@ -203,6 +203,9 @@ const Quiz = () => {
         let isLevelUp = false
         if (newXp >= xpBaseAtNextLevel) {
           isLevelUp = true
+        }
+        if (user.todaysQuizCnt === 0) {
+          dispatchRedux(setStreak(streak + 1))
         }
         dispatchRedux(
           setUser({

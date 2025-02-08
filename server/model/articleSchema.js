@@ -120,21 +120,6 @@ const articleSchema = new mongoose.Schema(
 )
 
 articleSchema.index({ title: 1 }, { unique: true })
-articleSchema.index(
-  {
-    title: 'text',
-    hindiTitle: 'text',
-    mainText: 'text',
-    hindiMainText: 'text',
-    author: 'text',
-    category: 'text',
-  },
-  {
-    name: 'ArticleTextIndex',
-    default_language: 'english',
-    language_override: 'language',
-  },
-)
 articleSchema.index({ dateTime: 1 })
 articleSchema.pre('save', function (next) {
   if (this.author === null) {
