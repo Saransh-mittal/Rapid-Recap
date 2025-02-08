@@ -2,7 +2,14 @@ import React, { useEffect, useState, useCallback, useMemo, useRef } from 'react'
 import { useTranslation } from 'react-i18next'
 import axios from 'axios'
 import { useNavigate, useParams } from 'react-router-dom'
-import { useToast, Box, Spinner, useDisclosure } from '@chakra-ui/react'
+import {
+  useToast,
+  Box,
+  Spinner,
+  useDisclosure,
+  Button,
+  Badge,
+} from '@chakra-ui/react'
 import { Helmet } from 'react-helmet'
 import { useDispatch, useSelector } from 'react-redux'
 import { setPageRedux } from '../redux/uiSlice'
@@ -11,6 +18,8 @@ import { markFriendRequestsAsRead } from '../redux/appSlice'
 import i18n from 'i18next'
 import { categoryCache } from '../services/categoryCache'
 import slugify from 'slugify'
+import { Package, Star, Target, Trophy, Clock, Sparkle } from 'lucide-react'
+import GameInventory from '../components/rewards/GameInventry'
 
 const Timeline = React.lazy(() =>
   import('../components/homeComponents/Timeline'),
@@ -31,6 +40,9 @@ const Home = () => {
   const { category } = useParams()
   const toast = useToast()
 
+  // Game Inventory states
+  const { isOpen, onOpen, onClose } = useDisclosure()
+
   const [items, setItems] = useState([])
   const [page, setPage] = useState(1)
   const [load, setLoad] = useState(true)
@@ -40,6 +52,59 @@ const Home = () => {
   const initialLoadDoneRef = useRef(false)
 
   const notLoggedIn = !isAuthenticated
+
+  const inventory = [
+    {
+      id: 1,
+      type: 'boost',
+      name: 'Quin Boost',
+      icon: <Star size={20} />,
+      count: 3,
+      rarity: 'epic',
+      description: '2x points for 30 seconds',
+      gradient: 'linear(to-br, purple.500, pink.500)',
+    },
+    {
+      id: 2,
+      type: 'boost',
+      name: 'Category Boost',
+      icon: <Target size={20} />,
+      count: 5,
+      rarity: 'rare',
+      description: 'Choose your category',
+      gradient: 'linear(to-br, blue.500, cyan.500)',
+    },
+    {
+      id: 3,
+      type: 'powerup',
+      name: 'Time Freeze',
+      icon: <Clock size={20} />,
+      count: 2,
+      rarity: 'epic',
+      description: 'Pause timer for 10 seconds',
+      gradient: 'linear(to-br, green.500, emerald.500)',
+    },
+    {
+      id: 4,
+      type: 'badge',
+      name: 'Speed Master',
+      icon: <Trophy size={20} />,
+      count: 1,
+      rarity: 'legendary',
+      description: 'Complete in under 1 minute',
+      gradient: 'linear(to-br, yellow.400, orange.500)',
+    },
+    {
+      id: 5,
+      type: 'collectible',
+      name: 'Golden Star',
+      icon: <Sparkle size={20} />,
+      count: 1,
+      rarity: 'legendary',
+      description: 'Rare achievement trophy',
+      gradient: 'linear(to-br, yellow.300, amber.500)',
+    },
+  ]
 
   const fetchData = useCallback(
     async (pageNum, cat) => {
@@ -55,7 +120,6 @@ const Home = () => {
       setLoad(true)
 
       try {
-        // Check cache first
         const cachedData = categoryCache.get(cat, pageNum)
         if (cachedData && !categoryCache.isStale(cat, pageNum)) {
           if (pageNum === 1) {
@@ -67,7 +131,6 @@ const Home = () => {
             dispatchRedux(setItemsState(updatedItems))
           }
 
-          // Prefetch next page
           if (hasMoreItems) {
             categoryCache.prefetchCategory(
               cat,
@@ -89,7 +152,6 @@ const Home = () => {
                 notLoggedIn && (cat === 'all' || !cat) ? 'top' : cat
               }&lang=${i18n.language}`
 
-        // Add auth header if user has privileges
         const headers =
           user?.categoryPrivileges?.[cat] ||
           (user?.categoryPrivileges && cat === 'all')
@@ -172,8 +234,6 @@ const Home = () => {
         }
 
         await fetchData(1, category)
-
-        // Prefetch adjacent categories
         categoryCache.prefetchAdjacentCategories(category, i18n.language, user)
       } else if (page > 1) {
         await fetchData(page, category)
@@ -234,7 +294,6 @@ const Home = () => {
     }
   }, [hasMoreItems, isSearching, notLoggedIn])
 
-  // Add this inside Home component
   const getStructuredData = useMemo(() => {
     const categoryName = category
       ? category.charAt(0).toUpperCase() + category.slice(1)
@@ -305,6 +364,7 @@ const Home = () => {
           {JSON.stringify(getStructuredData)}
         </script>
       </Helmet>
+
       <React.Suspense fallback={<Spinner />}>
         <Timeline
           data={items}
@@ -317,13 +377,45 @@ const Home = () => {
           page={page}
           setPage={setPage}
         />
-        {/* <WiseWeb
-          isOpen={isOpenWiseWeb}
-          onClose={onCloseWiseWeb}
-          requestNotif={unreadFriendRequests > 0}
-          markRequestAsRead={() => dispatchRedux(markFriendRequestsAsRead())}
-        /> */}
       </React.Suspense>
+
+      {/* Game Inventory Button */}
+      <Box position="fixed" bottom="4" right="4" zIndex="999">
+        <Button
+          onClick={onOpen}
+          bgGradient="linear(to-r, blue.500, purple.500)"
+          _hover={{
+            bgGradient: 'linear(to-r, blue.600, purple.600)',
+            transform: 'scale(1.05)',
+          }}
+          color="white"
+          leftIcon={<Package />}
+          position="relative"
+          transition="all 0.3s"
+          rounded="full"
+          px="4"
+          py="6"
+        >
+          Treasure Vault
+          <Badge
+            position="absolute"
+            top="-2"
+            right="-2"
+            bg="red.500"
+            color="white"
+            rounded="full"
+            w="6"
+            h="6"
+            display="flex"
+            alignItems="center"
+            justifyContent="center"
+          >
+            {inventory.length}
+          </Badge>
+        </Button>
+      </Box>
+
+      <GameInventory isOpen={isOpen} inventory={inventory} onClose={onClose} />
     </Box>
   )
 }
