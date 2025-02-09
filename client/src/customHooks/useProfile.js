@@ -23,6 +23,7 @@ export const useProfile = () => {
     solvedQuizzes: false,
     society: false,
     seasonAnalytics: false,
+    monthlyAnalytics: false,
     tournamentAnalytics: false,
   })
 

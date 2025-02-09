@@ -19,6 +19,10 @@ const {
   getTheRevivalEndDay,
   calculateLoginStreak,
   retryableOnboardingUpdate,
+  getCurrentMonthTopPercentOfUser,
+  getMonthSolvedQuizzesCount,
+  getMonthlyIQScoreHistory,
+  getAvailableMonths,
 } = require('../utils/user.utils')
 const { dailyUserIQCalc } = require('../utils/dailyUserIQCalc.utils')
 const ApplicationUpdates = require('../model/applicationUpdatesSchema')
@@ -1712,6 +1716,106 @@ const seasonHistory = async (req, res) => {
   }
 }
 
+// Get monthly analytics data
+const monthlyHistory = async (req, res) => {
+  try {
+    const user = await User.findOne({
+      inGameName: req.params.inGameName,
+    }).select('_id')
+
+    if (!user) {
+      return res.status(404).json({ error: 'User not found' })
+    }
+
+    // Parse month and year from query parameters
+    const month = parseInt(req.query.month)
+    const year = parseInt(req.query.year)
+
+    // Validate month and year
+    if (isNaN(month) || month < 1 || month > 12 || isNaN(year) || year < 2020) {
+      return res.status(400).json({ error: 'Invalid month or year' })
+    }
+
+    // Calculate start and end dates for the month
+    const startDate = new Date(year, month - 1, 1)
+    const endDate = new Date(year, month, 0, 23, 59, 59, 999)
+
+    // Get all required data
+    const [monthlyStats, solvedQuizzes, iqScoresHistory] = await Promise.all([
+      getCurrentMonthTopPercentOfUser({
+        userId: user._id,
+        startDate,
+        endDate,
+      }),
+      getMonthSolvedQuizzesCount({
+        userId: user._id,
+        startDate,
+        endDate,
+      }),
+      getMonthlyIQScoreHistory({
+        userId: user._id,
+        startDate,
+        endDate,
+      }),
+    ])
+
+    if (!monthlyStats) {
+      return res.status(404).json({
+        error: 'No data available for this month',
+      })
+    }
+
+    // Send response
+    res.status(200).json({
+      lineGraph: iqScoresHistory,
+      barGraph: {
+        Top_Percentage: monthlyStats.Top_Percentage,
+        percentileData: monthlyStats.percentileData,
+        filteredLabels: monthlyStats.filteredLabels,
+        filteredIQData: monthlyStats.filteredIQData,
+        USER_IQ: monthlyStats.USER_IQ,
+      },
+      solvedQuizzes,
+      USER_IQ: monthlyStats.USER_IQ,
+    })
+  } catch (err) {
+    console.error('Monthly history error:', err)
+    res.status(500).json({ error: 'Internal server error' })
+  }
+}
+
+// Get available months with data
+const getMonthlyAvailability = async (req, res) => {
+  try {
+    const user = await User.findOne({
+      inGameName: req.params.inGameName,
+    }).select('_id')
+
+    if (!user) {
+      return res.status(404).json({ error: 'User not found' })
+    }
+
+    // Get months with quiz attempts
+    const availableMonths = await getAvailableMonths(user._id)
+
+    // Handle case where no data is available
+    if (!availableMonths || availableMonths.length === 0) {
+      return res.status(200).json({
+        availableMonths: [],
+        message: 'No monthly data available',
+      })
+    }
+
+    res.status(200).json({
+      availableMonths,
+      message: 'Available months retrieved successfully',
+    })
+  } catch (err) {
+    console.error('Error getting monthly availability:', err)
+    res.status(500).json({ error: 'Internal server error' })
+  }
+}
+
 const bookmark = async (req, res) => {
   const { articleId, view, update } = req.query
   const userId = req.user._id
@@ -2264,6 +2368,8 @@ module.exports = {
   quinBoostChecker,
   updateNewSeasonModal,
   seasonHistory,
+  monthlyHistory,
+  getMonthlyAvailability,
   bookmark,
   getBookmarks,
   removeBookmark,

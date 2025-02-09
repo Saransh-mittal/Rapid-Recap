@@ -152,6 +152,7 @@ const namespaces = {
     'TournamentModal',
     'LastTournamentRank',
     'TournamentBadgeGallery',
+    'MonthlySelectorModal',
   ],
   HallOfChampions: ['ChampionDetailsModal'],
   assets: ['Circles', 'Brains', 'CircleAndSocietyData'],

@@ -827,6 +827,227 @@ const retryableOnboardingUpdate = makeRetryable(executeOnboardingUpdate, {
   },
 })
 
+// Helper function to calculate percentile data
+const calculatePercentileData = scores => {
+  if (!scores || scores.length === 0) return []
+
+  const sortedScores = [...scores].sort((a, b) => b - a)
+  const totalUsers = sortedScores.length
+
+  const percentiles = [100, 90, 80, 70, 60, 50, 40, 30, 20, 10]
+  return percentiles.map(percentile => {
+    const index = Math.floor(((100 - percentile) / 100) * totalUsers)
+    return {
+      percentile,
+      score: sortedScores[index] || 0,
+    }
+  })
+}
+
+// Helper function to calculate top percentage
+const calculateTopPercentage = (userScore, sortedScores) => {
+  if (!sortedScores || sortedScores.length === 0) return 0
+
+  // Find position of user's score (can have multiple same scores)
+  let position = sortedScores.findIndex(score => score <= userScore) + 1
+  if (position === 0) position = sortedScores.length
+
+  return ((position / sortedScores.length) * 100).toFixed(1)
+}
+
+// Helper function to generate graph labels
+const generateLabels = percentileData => {
+  return percentileData.map(item => `Top ${item.percentile}%`)
+}
+
+// Helper function to generate IQ data
+const generateIQData = percentileData => {
+  return percentileData.map(item => item.score)
+}
+
+// Function to get available months with data
+const getAvailableMonths = async userId => {
+  try {
+    const monthlyData = await QuizAttempt.aggregate([
+      {
+        $match: {
+          user: new mongoose.Types.ObjectId(userId),
+        },
+      },
+      {
+        $group: {
+          _id: {
+            year: { $year: '$createdAt' },
+            month: { $month: '$createdAt' },
+          },
+          count: { $sum: 1 },
+        },
+      },
+      {
+        $match: {
+          count: { $gt: 0 },
+        },
+      },
+      {
+        $sort: {
+          '_id.year': -1,
+          '_id.month': -1,
+        },
+      },
+    ])
+
+    // Transform into required format
+    const yearsMap = new Map()
+    monthlyData.forEach(item => {
+      const year = item._id.year
+      const month = item._id.month
+
+      if (!yearsMap.has(year)) {
+        yearsMap.set(year, [])
+      }
+      yearsMap.get(year).push(month)
+    })
+
+    // Convert to array format and sort months
+    const availableMonths = Array.from(yearsMap.entries())
+      .map(([year, months]) => ({
+        year,
+        months: months.sort((a, b) => a - b),
+      }))
+      .sort((a, b) => b.year - a.year) // Sort years in descending order
+
+    return availableMonths
+  } catch (error) {
+    console.error('Error getting available months:', error)
+    throw error
+  }
+}
+
+// Main function to get monthly top percent of user
+const getCurrentMonthTopPercentOfUser = async ({
+  userId,
+  startDate,
+  endDate,
+}) => {
+  try {
+    // Check if there's any data for this month
+    const hasData = await QuizAttempt.exists({
+      user: new mongoose.Types.ObjectId(userId),
+      createdAt: { $gte: startDate, $lte: endDate },
+    })
+
+    if (!hasData) {
+      return null
+    }
+
+    // Get all users' attempts for the month
+    const monthlyAttempts = await QuizAttempt.aggregate([
+      {
+        $match: {
+          createdAt: { $gte: startDate, $lte: endDate },
+        },
+      },
+      {
+        $sort: { createdAt: -1 },
+      },
+      {
+        $group: {
+          _id: '$user',
+          lastIQScore: { $first: '$IQ_score' },
+        },
+      },
+    ])
+
+    const userScores = monthlyAttempts
+      .map(attempt => attempt.lastIQScore)
+      .filter(Boolean)
+
+    const sortedScores = userScores.sort((a, b) => b - a)
+
+    // Get user's latest IQ score in this month
+    const userLatestAttempt = await QuizAttempt.findOne({
+      user: new mongoose.Types.ObjectId(userId),
+      createdAt: { $gte: startDate, $lte: endDate },
+    })
+      .sort({ createdAt: -1 })
+      .select('IQ_score')
+
+    const USER_IQ = userLatestAttempt?.IQ_score || 0
+
+    // Calculate percentile data
+    const percentileData = calculatePercentileData(sortedScores)
+    const Top_Percentage = calculateTopPercentage(USER_IQ, sortedScores)
+
+    return {
+      Top_Percentage,
+      percentileData,
+      filteredLabels: generateLabels(percentileData),
+      filteredIQData: generateIQData(percentileData),
+      USER_IQ,
+    }
+  } catch (error) {
+    console.error('Error in getCurrentMonthTopPercentOfUser:', error)
+    throw error
+  }
+}
+
+// Function to get monthly solved quizzes count
+const getMonthSolvedQuizzesCount = async ({ userId, startDate, endDate }) => {
+  try {
+    const quizCounts = await QuizAttempt.aggregate([
+      {
+        $match: {
+          user: new mongoose.Types.ObjectId(userId),
+          createdAt: { $gte: startDate, $lte: endDate },
+        },
+      },
+      {
+        $group: {
+          _id: '$difficulty',
+          count: { $sum: 1 },
+        },
+      },
+    ])
+
+    return {
+      easy: quizCounts.find(q => q._id === 'easy')?.count || 0,
+      medium: quizCounts.find(q => q._id === 'medium')?.count || 0,
+      hard: quizCounts.find(q => q._id === 'hard')?.count || 0,
+    }
+  } catch (error) {
+    console.error('Error in getMonthSolvedQuizzesCount:', error)
+    throw error
+  }
+}
+
+// Function to get monthly IQ score history
+const getMonthlyIQScoreHistory = async ({ userId, startDate, endDate }) => {
+  try {
+    return await QuizAttempt.aggregate([
+      {
+        $match: {
+          user: new mongoose.Types.ObjectId(userId),
+          createdAt: { $gte: startDate, $lte: endDate },
+        },
+      },
+      {
+        $sort: { createdAt: 1 },
+      },
+      {
+        $project: {
+          date: { $dateToString: { format: '%Y-%m-%d', date: '$createdAt' } },
+          IQ_score: 1,
+          difficulty: 1,
+          dailyRank: 1,
+        },
+      },
+    ])
+  } catch (error) {
+    console.error('Error in getMonthlyIQScoreHistory:', error)
+    throw error
+  }
+}
+
 module.exports = {
   calculateTopPercent,
   calculateLabelsAndData,
@@ -846,4 +1067,12 @@ module.exports = {
   formatPreferredCategories,
   calculateLoginStreak,
   retryableOnboardingUpdate,
+  getCurrentMonthTopPercentOfUser,
+  getMonthSolvedQuizzesCount,
+  getMonthlyIQScoreHistory,
+  getAvailableMonths,
+  calculatePercentileData,
+  calculateTopPercentage,
+  generateLabels,
+  generateIQData,
 }

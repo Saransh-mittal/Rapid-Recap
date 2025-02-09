@@ -24,6 +24,7 @@ const SecureYourProgress = React.lazy(() =>
 
 import HistogramSVG from '../../assets/svg/HistogramSVG'
 import BookmarkSVG from '../../assets/svg/BookmarkSVG'
+import MonthlySelectorModal from './LeftProfileSectionComponents/MonthlyButtonComponents/MonthlySelectorModal'
 
 export const LeftProfileSection = ({
   profile,
@@ -35,6 +36,7 @@ export const LeftProfileSection = ({
   const { t } = useTranslation('Profile')
 
   const seasonSelectorDisclosure = useDisclosure()
+  const monthlyAnalyticsDisclosure = useDisclosure()
   const bookmarksDisclosure = useDisclosure()
   const settingsDisclosure = useDisclosure()
 
@@ -132,11 +134,33 @@ export const LeftProfileSection = ({
             }}
           />
         )}
-      {user?.role === 'guest' && (
-        <Suspense fallback={null}>
-          <SecureYourProgress key={`secure-progress-${inGameName}`} />
-        </Suspense>
-      )}
+
+      {(!privacyProfileData.monthlyAnalytics ||
+        inGameName === user?.inGameName) &&
+        user?.role !== 'guest' && (
+          <ProfileButtonWithModal
+            buttonText={t('monthlyAnalytics')}
+            inGameName={inGameName}
+            stateUserInGameName={user?.inGameName}
+            isPrivate={user?.profilePrivacy.monthlyAnalytics}
+            hoverAnimation={hoverAnimation}
+            icon={<HistogramSVG width={'20px'} height={'20px'} fill={'#fff'} />}
+            modalComponent={MonthlySelectorModal}
+            isModalOpen={monthlyAnalyticsDisclosure.isOpen}
+            onOpenModal={monthlyAnalyticsDisclosure.onOpen}
+            onCloseModal={monthlyAnalyticsDisclosure.onClose}
+            additionalProps={{
+              currMonth: new Date().getMonth() + 1,
+              currYear: new Date().getFullYear(),
+              startYear: 2020,
+              loginedUserProfile: loginedUserProfile,
+              inGameName: inGameName,
+              availableMonths: profile?.monthlyData?.availableMonths || [],
+              privacyProfileData: privacyProfileData,
+              months: profile?.monthlyData?.months || [],
+            }}
+          />
+        )}
 
       {inGameName === user?.inGameName && (
         <>

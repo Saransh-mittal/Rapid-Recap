@@ -48,6 +48,8 @@ const {
   getValidCategories,
   updateBadgeCategory,
   checkRewardsModalStatus,
+  monthlyHistory,
+  getMonthlyAvailability,
 } = require('../controllers/user')
 const { Authenticate } = require('../middleware/authenticate')
 const {
@@ -92,6 +94,10 @@ router.route('/longestStreakCalculator').get(longestStreakCalculatorOfAllUsers)
 router.route('/quinBoostChecker').get(Authenticate, quinBoostChecker)
 router.route('/newSeasonModal').get(Authenticate, updateNewSeasonModal)
 router.route('/seasonHistory/:inGameName').get(seasonHistory)
+router
+  .route('/monthlyAvailability/:inGameName')
+  .get(Authenticate, getMonthlyAvailability)
+router.route('/monthlyHistory/:inGameName').get(Authenticate, monthlyHistory)
 router.route('/bookmark').get(Authenticate, bookmark)
 router.route('/getBookmarks').get(Authenticate, getBookmarks)
 router.route('/removeBookmark').get(Authenticate, removeBookmark)

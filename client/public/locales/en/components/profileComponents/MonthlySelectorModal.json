@@ -1,0 +1,6 @@
+{
+  "errorTitle": "Error",
+  "errorDescription": "Failed to fetch monthly history.",
+  "selectMonth": "Select Month",
+  "month": "Month"
+}
