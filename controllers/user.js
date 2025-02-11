@@ -55,6 +55,8 @@ const { processBadgePrivileges } = require('../utils/tournament.utils.js')
 const { getCategories } = require('../data/categories.js')
 const Tournament = require('../model/tournamentSchema.js')
 const { REWARDS_MODAL_CONFIG } = require('../config/rewardsModalConfig.js')
+const Inventory = require('../model/inventorySchema.js')
+const Ability = require('../model/abilitySchema.js')
 
 const registerUser = async (req, res) => {
   const { name, email, pic, password, cpassword, inGameName } = req.body
@@ -1607,11 +1609,7 @@ const claimQuinBoost = asyncHandler(async (req, res) => {
   const userId = req.user._id
 
   try {
-    const user = await User.findById(userId).populate({
-      path: 'quinBoosts.quinBoost',
-      select: 'createdAt',
-    })
-
+    const user = await User.findById(userId)
     if (!user) {
       return res.status(404).json({ error: 'User not found' })
     }
@@ -1619,26 +1617,53 @@ const claimQuinBoost = asyncHandler(async (req, res) => {
     const today = new Date()
     today.setUTCHours(0, 0, 0, 0)
 
-    // Find the first unclaimed, active boost
-    const boostIndex = user.quinBoosts.findIndex(
-      boost =>
-        boost.boosted && !boost.claimed && boost.quinBoost?.createdAt >= today,
-    )
-
-    if (boostIndex === -1) {
-      return res.status(400).json({ error: 'No unclaimed quinBoost found' })
+    const quinBoostAbility = await Ability.findOne({
+      name: 'QuinBoost',
+      user: userId,
+      claimed: false,
+      expiresAt: { $gte: new Date() },
+    })
+    if (!quinBoostAbility || quinBoostAbility.claimed) {
+      return res.status(400).json({ error: 'No QuinBoost available to claim' })
     }
 
-    // Mark the boost as claimed
-    user.quinBoosts[boostIndex].claimed = true
-    await user.save()
+    // Get or create user's inventory
+    let inventory = await Inventory.findOne({ user: userId })
+    if (!inventory) {
+      inventory = new Inventory({ user: userId })
+    }
+
+    // Calculate expiry date (5 days from now)
+    const expiryDate = quinBoostAbility.expiresAt
+
+    // Add QuinBoost to inventory
+    inventory.abilities.push({
+      abilityId: quinBoostAbility._id,
+      quantity: 1,
+      expiresAt: expiryDate,
+      isActive: false,
+      acquiredAt: new Date(),
+    })
+
+    await inventory.save()
+    quinBoostAbility.claimed = true
+    await quinBoostAbility.save()
+    // Create notification
+    const notification = new ApplicationUpdates({
+      userId,
+      title: 'QuinBoost Added to Inventory!',
+      mainText: `You've earned a QuinBoost! Use it from your inventory to get a 1.5x RQM score boost on your next quiz.`,
+      type: 'applicationUpdate',
+    })
+
+    await notification.save()
 
     res.status(200).json({
-      message: 'QuinBoost claimed successfully',
-      multiplier: user.todayBoost ? 1.75 : 1.5,
+      message: 'QuinBoost successfully added to inventory',
+      expiresAt: expiryDate,
     })
   } catch (error) {
-    console.error(error)
+    console.error('Error claiming QuinBoost:', error)
     res.status(500).json({ error: 'Internal server error' })
   }
 })
@@ -2235,6 +2260,160 @@ const checkRewardsModalStatus = asyncHandler(async (req, res) => {
   }
 })
 
+const getUserAchievements = asyncHandler(async (req, res) => {
+  const userId = req.user._id
+
+  const user = await User.findById(userId)
+    .populate('badges')
+    .populate('tournamentPerformance')
+    .populate({
+      path: 'quizAttempts',
+      populate: {
+        path: 'article',
+        select: 'category articleDifficulty',
+      },
+    })
+
+  // Get all timeSpent records for this user
+  const timeSpentRecords = await TimeSpent.find({ userId })
+    .populate('articleId', 'category')
+    .lean()
+
+  // Progress Stats
+  const progressStats = {
+    level: user.level,
+    totalXP: user.xp,
+    quizzesSolved: user.quizAttempts.length,
+    globalRank: user.rank,
+    society: user.society,
+    IQScore: user.IQ_score,
+    averageRQM: user.avgRQM,
+  }
+
+  // Tournament Achievements
+  const tournamentStats = {
+    totalBadges: user.badges.length,
+    aceBadges: user.badges.filter(b => b.badgeName === 'ACE').length,
+    proBadges: user.badges.filter(b => b.badgeName === 'PRO').length,
+    champBadges: user.badges.filter(b => b.badgeName === 'CHAMP').length,
+    tournamentWins: user.tournamentPerformance.filter(t => t.rank === 1).length,
+    top3Finishes: user.tournamentPerformance.filter(t => t.rank <= 3).length,
+  }
+
+  // Calculate perfect quiz days
+  const quizAttemptsByDay = user.quizAttempts.reduce((acc, attempt) => {
+    const date = new Date(attempt.createdAt).toDateString()
+    if (!acc[date]) {
+      acc[date] = {
+        attempts: [],
+        totalRQM: 0,
+        count: 0,
+      }
+    }
+    acc[date].attempts.push(attempt)
+    acc[date].totalRQM += attempt.RQM_score
+    acc[date].count += 1
+    return acc
+  }, {})
+
+  const perfectQuizDays = Object.values(quizAttemptsByDay).filter(day => {
+    // A perfect day is when average RQM score is above 90 with at least 3 attempts
+    return day.count >= 3 && day.totalRQM / day.count >= 90
+  }).length
+
+  // Streak Achievements
+  const streakStats = {
+    currentStreak: user.streak,
+    longestStreak: user.longestStreak,
+    totalDaysActive: user.loginStreak,
+    perfectQuizDays,
+  }
+
+  // Calculate preferred categories using both quiz attempts and time spent
+  const categoryStats = {}
+
+  // Process quiz attempts for categories
+  user.quizAttempts.forEach(attempt => {
+    const category = attempt.article?.category
+    if (!category) return
+
+    if (!categoryStats[category]) {
+      categoryStats[category] = {
+        quizCount: 0,
+        totalRQM: 0,
+        timeSpent: 0,
+        score: 0,
+      }
+    }
+    categoryStats[category].quizCount += 1
+    categoryStats[category].totalRQM += attempt.RQM_score
+  })
+
+  // Process time spent for categories
+  timeSpentRecords.forEach(record => {
+    const category = record.articleId?.category
+    if (!category) return
+
+    if (!categoryStats[category]) {
+      categoryStats[category] = {
+        quizCount: 0,
+        totalRQM: 0,
+        timeSpent: 0,
+        score: 0,
+      }
+    }
+    categoryStats[category].timeSpent += record.timeSpent
+  })
+
+  // Calculate final scores for categories
+  Object.keys(categoryStats).forEach(category => {
+    const stats = categoryStats[category]
+    // Weight calculation:
+    // 50% - Number of quizzes attempted
+    // 30% - Average RQM score
+    // 20% - Time spent
+    const quizWeight = (stats.quizCount / user.quizAttempts.length) * 50
+    const rqmWeight =
+      stats.quizCount > 0 ? (stats.totalRQM / stats.quizCount / 100) * 30 : 0
+    const timeWeight =
+      (stats.timeSpent /
+        Object.values(categoryStats).reduce(
+          (sum, cat) => sum + cat.timeSpent,
+          0,
+        )) *
+      20
+
+    stats.score = quizWeight + rqmWeight + timeWeight
+  })
+
+  // Get top 3 categories
+  const topCategories = Object.entries(categoryStats)
+    .sort(([, a], [, b]) => b.score - a.score)
+    .slice(0, 3)
+    .map(([category, stats]) => ({
+      category,
+      score: Math.round(stats.score),
+      quizCount: stats.quizCount,
+      avgRQM:
+        stats.quizCount > 0 ? Math.round(stats.totalRQM / stats.quizCount) : 0,
+    }))
+
+  // Category Expertise
+  const expertise = {
+    easyMastery: user.easyQuizCount,
+    mediumMastery: user.mediumQuizCount,
+    hardMastery: user.hardQuizCount,
+    preferredCategories: topCategories,
+  }
+
+  res.json({
+    progressStats,
+    tournamentStats,
+    streakStats,
+    categoryStats: expertise,
+  })
+})
+
 module.exports = {
   registerUser,
   loginUser,
@@ -2283,4 +2462,5 @@ module.exports = {
   getValidCategories,
   updateBadgeCategory,
   checkRewardsModalStatus,
+  getUserAchievements,
 }

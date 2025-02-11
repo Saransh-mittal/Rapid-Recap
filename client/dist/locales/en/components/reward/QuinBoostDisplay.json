@@ -6,7 +6,7 @@
     "iq": "Better IQ"
   },
   "button": {
-    "activate": "Activate Boost!",
-    "activated": "Boost Activated!"
+    "activate": "Claim Boost!",
+    "activated": "Boost Claimed!"
   }
 }

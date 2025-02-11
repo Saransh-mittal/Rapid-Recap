@@ -48,6 +48,7 @@ const {
   getValidCategories,
   updateBadgeCategory,
   checkRewardsModalStatus,
+  getUserAchievements,
 } = require('../controllers/user')
 const { Authenticate } = require('../middleware/authenticate')
 const {
@@ -115,6 +116,7 @@ router.get('/stats/monthly', Authenticate, getUserMonthlyPerformance)
 router.get('/stats/historical', Authenticate, getUserHistoricalPerformance)
 router.get('/maintenance-status', getMaintenanceStatus)
 router.route('/demotion-summary').get(Authenticate, getDemotionSummary)
+router.get('/achievements', Authenticate, getUserAchievements)
 
 router.get('/confirmDeleteAccount/:token', confirmDeleteAccount)
 router

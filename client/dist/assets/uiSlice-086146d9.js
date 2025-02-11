@@ -1,1 +1,0 @@
-import{au as o}from"./demotionSummarySlice-c0491ba7.js";const t={modal:!1,page:0},s=o({name:"ui",initialState:t,reducers:{setModal:(e,a)=>{e.modal=a.payload},setPageRedux:(e,a)=>{e.page=a.payload},resetUIState:e=>t}}),{setModal:c,setPageRedux:d,resetUIState:u}=s.actions,i=s.reducer;export{d as s,i as u};
