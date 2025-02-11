@@ -53,58 +53,7 @@ const Home = () => {
 
   const notLoggedIn = !isAuthenticated
 
-  const inventory = [
-    {
-      id: 1,
-      type: 'boost',
-      name: 'Quin Boost',
-      icon: <Star size={20} />,
-      count: 3,
-      rarity: 'epic',
-      description: '2x points for 30 seconds',
-      gradient: 'linear(to-br, purple.500, pink.500)',
-    },
-    {
-      id: 2,
-      type: 'boost',
-      name: 'Category Boost',
-      icon: <Target size={20} />,
-      count: 5,
-      rarity: 'rare',
-      description: 'Choose your category',
-      gradient: 'linear(to-br, blue.500, cyan.500)',
-    },
-    {
-      id: 3,
-      type: 'powerup',
-      name: 'Time Freeze',
-      icon: <Clock size={20} />,
-      count: 2,
-      rarity: 'epic',
-      description: 'Pause timer for 10 seconds',
-      gradient: 'linear(to-br, green.500, emerald.500)',
-    },
-    {
-      id: 4,
-      type: 'badge',
-      name: 'Speed Master',
-      icon: <Trophy size={20} />,
-      count: 1,
-      rarity: 'legendary',
-      description: 'Complete in under 1 minute',
-      gradient: 'linear(to-br, yellow.400, orange.500)',
-    },
-    {
-      id: 5,
-      type: 'collectible',
-      name: 'Golden Star',
-      icon: <Sparkle size={20} />,
-      count: 1,
-      rarity: 'legendary',
-      description: 'Rare achievement trophy',
-      gradient: 'linear(to-br, yellow.300, amber.500)',
-    },
-  ]
+  const { availableAbilities } = useSelector(state => state.inventory)
 
   const fetchData = useCallback(
     async (pageNum, cat) => {
@@ -380,7 +329,7 @@ const Home = () => {
       </React.Suspense>
 
       {/* Game Inventory Button */}
-      <Box position="fixed" bottom="4" right="4" zIndex="999">
+      <Box position="fixed" bottom="20" right="4" zIndex="999">
         <Button
           onClick={onOpen}
           bgGradient="linear(to-r, blue.500, purple.500)"
@@ -397,25 +346,27 @@ const Home = () => {
           py="6"
         >
           Treasure Vault
-          <Badge
-            position="absolute"
-            top="-2"
-            right="-2"
-            bg="red.500"
-            color="white"
-            rounded="full"
-            w="6"
-            h="6"
-            display="flex"
-            alignItems="center"
-            justifyContent="center"
-          >
-            {inventory.length}
-          </Badge>
+          {availableAbilities.length != 0 && (
+            <Badge
+              position="absolute"
+              top="-2"
+              right="-2"
+              bg="red.500"
+              color="white"
+              rounded="full"
+              w="6"
+              h="6"
+              display="flex"
+              alignItems="center"
+              justifyContent="center"
+            >
+              {availableAbilities.length}
+            </Badge>
+          )}
         </Button>
       </Box>
 
-      <GameInventory isOpen={isOpen} inventory={inventory} onClose={onClose} />
+      <GameInventory isOpen={isOpen} onClose={onClose} />
     </Box>
   )
 }

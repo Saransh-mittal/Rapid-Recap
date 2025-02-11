@@ -22,6 +22,33 @@ const { streakSurgeTemplate } = require('../data/inboxNotificationsTemplates')
 const i18n = require('i18next')
 const ApplicationUpdates = require('../model/applicationUpdatesSchema')
 const moment = require('moment-timezone')
+const { createQuinBoostAbility } = require('./abilityService')
+const Inventory = require('../model/inventorySchema')
+
+const handleQuinBoostEarned = async ({ user, session }) => {
+  try {
+    // Calculate expiry date (5 days from now)
+    const expiryDate = new Date()
+    expiryDate.setDate(expiryDate.getDate() + 5)
+
+    // Create new QuinBoost ability
+    await createQuinBoostAbility({ expiryDate, userId: user._id, session })
+
+    // Create notification about earning QuinBoost
+    const notification = new ApplicationUpdates({
+      userId: user._id,
+      title: 'QuinBoost Available!',
+      mainText: `You've earned a QuinBoost! Use it from your inventory to get a 1.5x RQM score boost on your next quiz.`,
+      type: 'applicationUpdate',
+    })
+    await notification.save({ session })
+
+    return true
+  } catch (error) {
+    console.error('Error handling QuinBoost earned:', error)
+    return false
+  }
+}
 
 const hasStreakSurgeNotificationToday = async user => {
   return user.todaysQuizCnt > 0
@@ -96,12 +123,20 @@ const saveQuizAttempt = async (
   let boosted = false
   let quinBoostUtilized = false
   const nonBoostedRQM = RQM_score
-  if (
-    user.quinBoosts.length > 0 &&
-    user.quinBoosts[user.quinBoosts.length - 1]?.boosted
-  ) {
-    const quinBoost = user.quinBoosts[user.quinBoosts.length - 1]
-    if (quinBoost.boosted) {
+
+  // Check active ability boosts
+  const inventory = await Inventory.findOne({ user: userId })
+    .populate('abilities.abilityId')
+    .session(session)
+
+  if (inventory) {
+    const activeQuinBoost = inventory.abilities.find(
+      ability =>
+        ability.isActive &&
+        ability.abilityId?.name === 'QuinBoost' &&
+        ability.expiresAt > new Date(),
+    )
+    if (activeQuinBoost) {
       RQM_score = Math.ceil(
         RQM_score *
           (rqmBoostForCategory && user.todayBoost
@@ -110,23 +145,15 @@ const saveQuizAttempt = async (
             ? 1.75
             : 1.5),
       )
-      quinBoost.boosted = false
-      const qBoost = await QuinBoost.findById(quinBoost.quinBoost)
-      qBoost.article = article._id
-      await qBoost.save({ session })
-      if (user.revivalPeriodEnd) {
-        user.streak = user.streakBeforeBreak + 1
-        user.streakBeforeBreak = 0
-        user.revivalPeriodEnd = null
-        await user.save({ session })
-      }
+      activeQuinBoost.isActive = false
+      activeQuinBoost.isUsed = true
+      await inventory.save({ session })
       quinBoostUtilized = true
       user.eligibleForTournament = true
     }
   } else if (user.todayBoost) {
     RQM_score = Math.ceil(RQM_score * (rqmBoostForCategory ? 1.75 : 1.5))
     boosted = true
-
     // Check if notification has already been sent today
     const hasNotification = await hasStreakSurgeNotificationToday(user)
 
@@ -162,6 +189,7 @@ const saveQuizAttempt = async (
       : 1
   const isBoosted = boosted || quinBoostUtilized
 
+  // Create and save the quiz attempt
   const newQuizAttempt = new QuizAttempt({
     user: userId,
     article: articleId,
@@ -196,7 +224,8 @@ const saveQuizAttempt = async (
     user: userId,
     createdAt: { $gte: currentDate },
   }).session(session)
-
+  if (todayAttemptsCount % 5 === 0 && todayAttemptsCount > 0)
+    await handleQuinBoostEarned({ user, session })
   const lastQuizAttempt = user.quizAttempts[user.quizAttempts.length - 1]
   await updateUserStats({
     user,

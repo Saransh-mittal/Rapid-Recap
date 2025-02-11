@@ -76,10 +76,7 @@ import { NavbarProvider } from './contextAPI/NavbarContext.jsx'
 import useCountdown from './customHooks/useCountdown.js'
 import ModernNavbar from './components/Header-Footer/ModernNavbar.jsx'
 import { userCacheService, useUserCache } from './lib/cache/index.js'
-import {
-  setIsQuinBoostAvailable,
-  setQuizLeftToGetQuizBoost,
-} from './redux/quizSlice.js'
+import { setQuizLeftToGetQuizBoost } from './redux/quizSlice.js'
 import { quinBoostChecker } from './utils/quiz.utils.js'
 import { tournamentRewardsClaim } from './utils/tournamentRewards.js'
 import { useSocket } from './customHooks/useSocket.js'
@@ -87,6 +84,7 @@ import useRewardsModal from './customHooks/useRewardsModal.js'
 import MaintenanceHandler from './services/MaintenanceHandler.jsx'
 import { fetchDemotionSummary } from './redux/demotionSummarySlice.js'
 import usePWAInstallation from './customHooks/usePWAInstallation.js'
+import { fetchInventory } from './redux/inventorySlice.js'
 
 const App = () => {
   ReactGA.initialize('G-ES5VQ8NW7Z')
@@ -362,8 +360,8 @@ const App = () => {
       timer = setTimeout(() => {
         dispatch(fetchUnreadNoteMessages())
       }, delay)
+      dispatch(fetchInventory())
       quinBoostChecker({
-        setIsQuinBoostAvailable,
         setQuizLeftToGetQuizBoost,
         dispatch,
       })

@@ -48,7 +48,6 @@ const ArticleForm = React.lazy(() =>
 
 const ArticleHeader = ({
   title,
-  author,
   articleLoading,
   selectedLanguage,
   bookmark,
@@ -306,9 +305,6 @@ const ArticleHeader = ({
               isQuinBoostAvailable={isQuinBoostAvailable}
               quizLeftToGetQuizBoost={quizLeftToGetQuizBoost}
               openModal={openModal}
-              playClick={playClick}
-              notLoggedIn={notLoggedIn}
-              toast={toast}
               isBoosted={isBoosted}
             />
 

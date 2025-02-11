@@ -1,11 +1,10 @@
-import React, { useState } from 'react'
+import React, { useState, useCallback, useEffect } from 'react'
 import {
   Box,
   Button,
   Flex,
   Grid,
   Text,
-  useDisclosure,
   Modal,
   ModalOverlay,
   ModalContent,
@@ -18,35 +17,129 @@ import {
   DrawerOverlay,
   DrawerContent,
   DrawerBody,
-  DrawerHeader,
-  Container,
+  Spinner,
+  useToast,
+  useBreakpointValue,
 } from '@chakra-ui/react'
-import {
-  Package,
-  Star,
-  Target,
-  Zap,
-  Crown,
-  Trophy,
-  Shield,
-  Gift,
-  Clock,
-  Sparkle,
-  ChevronLeft,
-} from 'lucide-react'
+import { Package, Zap, Crown, Shield, Clock, ChevronLeft } from 'lucide-react'
+import { useDispatch, useSelector } from 'react-redux'
+import { activateAbility } from '../../redux/inventorySlice'
+import { motion } from 'framer-motion'
+import BadgesSection from './gameInventoryComponents/BadgesSection'
 
-const GameInventory = ({ isOpen, inventory, onClose }) => {
-  const [selectedCategory, setSelectedCategory] = useState('boost')
-  const [selectedItem, setSelectedItem] = useState(null)
+// Icons mapping for different ability types
+const ABILITY_ICONS = {
+  BOOST: <Zap size={20} />,
+  POWER_UP: <Crown size={20} />,
+  BADGE: <Shield size={20} />,
+}
 
-  const filters = [
-    { id: 'boost', name: 'Boosts', icon: <Zap /> },
-    { id: 'powerup', name: 'Power-Ups', icon: <Crown /> },
-    { id: 'badge', name: 'Badges', icon: <Shield /> },
-  ]
+const ExpiryTimer = ({ expiresAt }) => {
+  const [timeLeft, setTimeLeft] = useState('')
 
-  const getRarityStyle = rarity => {
-    switch (rarity) {
+  // Responsive sizes
+  const timerSize = useBreakpointValue({
+    base: {
+      clockSize: 9,
+      fontSize: '0.6rem',
+      px: '1',
+      py: '0.25',
+      ml: '1',
+    },
+    md: {
+      clockSize: 11,
+      fontSize: '0.7rem',
+      px: '1.5',
+      py: '0.5',
+      ml: '1',
+    },
+  })
+
+  const calculateTimeLeft = useCallback(() => {
+    const now = new Date()
+    const expiry = new Date(expiresAt)
+    const diff = expiry - now
+
+    if (diff <= 0) return 'Expired'
+
+    const days = Math.floor(diff / (1000 * 60 * 60 * 24))
+    const hours = Math.floor((diff % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60))
+    const minutes = Math.floor((diff % (1000 * 60 * 60)) / (1000 * 60))
+
+    if (days > 0) {
+      return `${days}d ${hours}h`
+    } else if (hours > 0) {
+      return `${hours}h ${minutes}m`
+    } else {
+      return `${minutes}m`
+    }
+  }, [expiresAt])
+
+  useEffect(() => {
+    setTimeLeft(calculateTimeLeft())
+    const timer = setInterval(() => {
+      setTimeLeft(calculateTimeLeft())
+    }, 60000)
+
+    return () => clearInterval(timer)
+  }, [calculateTimeLeft])
+
+  const handleClick = e => {
+    e.stopPropagation()
+  }
+
+  return (
+    <Box
+      as={motion.div}
+      position="absolute"
+      bottom="-3.5"
+      right="-3.5"
+      onClick={handleClick}
+      zIndex={2}
+      initial={{ opacity: 0, y: 5 }}
+      animate={{ opacity: 1, y: 0 }}
+      transition={{ duration: 0.2 }}
+    >
+      <Flex
+        align="center"
+        bg="rgba(0, 0, 0, 0.85)"
+        backdropFilter="blur(8px)"
+        px={timerSize.px}
+        py={timerSize.py}
+        rounded="full"
+        border="1px solid"
+        borderColor="whiteAlpha.200"
+        boxShadow="0 2px 4px rgba(0, 0, 0, 0.1)"
+        _hover={{
+          borderColor: 'whiteAlpha.300',
+        }}
+        transition="all 0.2s"
+        userSelect="none"
+      >
+        <Clock
+          size={timerSize.clockSize}
+          color="white"
+          opacity={0.8}
+          strokeWidth={2.5}
+        />
+        <Text
+          ml={timerSize.ml}
+          fontSize={timerSize.fontSize}
+          fontWeight="medium"
+          color="white"
+          letterSpacing="tight"
+          whiteSpace="nowrap"
+        >
+          {timeLeft}
+        </Text>
+      </Flex>
+    </Box>
+  )
+}
+
+const AbilityCard = ({ item, isActive, onClick, variants }) => {
+  const getRarityStyle = useCallback(rarity => {
+    switch (rarity?.toLowerCase()) {
       case 'legendary':
         return {
           bgGradient: 'linear(to-br, yellow.400, orange.500)',
@@ -68,11 +161,175 @@ const GameInventory = ({ isOpen, inventory, onClose }) => {
           shadow: 'lg',
         }
     }
+  }, [])
+
+  return (
+    <motion.div
+      variants={variants}
+      initial="hidden"
+      animate="visible"
+      whileHover={{ scale: 1.05 }}
+      transition={{ type: 'spring', stiffness: 300 }}
+    >
+      <Box
+        {...getRarityStyle(item.rarity)}
+        p="4"
+        rounded="lg"
+        position="relative"
+        cursor="pointer"
+        onClick={() => (isActive ? null : onClick(item))}
+        border={isActive ? '2px solid' : 'none'}
+        borderColor={isActive ? 'green.400' : 'transparent'}
+        _before={
+          isActive
+            ? {
+                content: '""',
+                position: 'absolute',
+                inset: '-4px',
+                borderRadius: 'lg',
+                background:
+                  'linear-gradient(45deg, #00ff8811, #00ff8844, #00ff8811)',
+                filter: 'blur(8px)',
+                zIndex: -1,
+              }
+            : {}
+        }
+      >
+        <Box position="absolute" inset="0" bg="blackAlpha.300" rounded="lg" />
+        <VStack position="relative" spacing="2">
+          <Flex
+            bg="blackAlpha.300"
+            p="2"
+            rounded="full"
+            justify="center"
+            align="center"
+          >
+            {ABILITY_ICONS[item.type] || <Package size={24} />}
+          </Flex>
+          <Text fontSize="sm" fontWeight="bold" textAlign="center">
+            {item.name}
+          </Text>
+          {item.multiplier && (
+            <Badge
+              position="absolute"
+              top="-1"
+              left="-1"
+              bg="blackAlpha.700"
+              px="2"
+              rounded="full"
+              color="yellow.300"
+            >
+              {item.multiplier}x
+            </Badge>
+          )}
+          <Badge
+            position="absolute"
+            top="-1"
+            right={isActive ? '-4' : '-1'}
+            bg="blackAlpha.700"
+            px="2"
+            rounded="full"
+            color={isActive ? 'green.300' : 'yellow.300'}
+          >
+            {isActive ? 'Active' : `x${item.quantity || 1}`}
+          </Badge>
+          {item.expiresAt && <ExpiryTimer expiresAt={item.expiresAt} />}
+        </VStack>
+      </Box>
+    </motion.div>
+  )
+}
+const DrawerHeader = ({ filters, selectedCategory, setSelectedCategory }) => (
+  <Box borderBottomWidth="1px" borderColor="gray.700" pb="4">
+    <Heading
+      textAlign="center"
+      bgGradient="linear(to-r, yellow.200, yellow.500)"
+      bgClip="text"
+      fontSize="2xl"
+      mb="4"
+    >
+      Treasure Vault
+    </Heading>
+    <HStack overflowX="auto" py="2" spacing="2">
+      {filters.map(filter => (
+        <Button
+          key={filter.id}
+          onClick={() => setSelectedCategory(filter.id)}
+          bgGradient={
+            selectedCategory === filter.id
+              ? 'linear(to-r, blue.500, purple.500)'
+              : ''
+          }
+          bg={selectedCategory !== filter.id ? 'gray.800' : ''}
+          _hover={{
+            bg: selectedCategory !== filter.id ? 'gray.700' : '',
+          }}
+          leftIcon={filter.icon}
+          size="sm"
+          whiteSpace="nowrap"
+          color="white"
+        >
+          {filter.name}
+        </Button>
+      ))}
+    </HStack>
+  </Box>
+)
+const GameInventory = ({ isOpen, onClose }) => {
+  const [selectedCategory, setSelectedCategory] = useState('BOOST')
+  const [selectedItem, setSelectedItem] = useState(null)
+  const dispatch = useDispatch()
+  const toast = useToast()
+  const { activeAbilities, availableAbilities, loading, error } = useSelector(
+    state => state.inventory,
+  )
+
+  const filters = [
+    { id: 'BOOST', name: 'Boosts', icon: <Zap /> },
+    { id: 'POWER_UP', name: 'Power-Ups', icon: <Crown /> },
+    { id: 'BADGE', name: 'Badges', icon: <Shield /> },
+  ]
+
+  const itemVariants = {
+    hidden: { opacity: 0, scale: 0.8 },
+    visible: { opacity: 1, scale: 1 },
   }
+
+  const handleActivateAbility = useCallback(
+    async abilityId => {
+      try {
+        await dispatch(activateAbility(abilityId)).unwrap()
+        toast({
+          title: 'Ability Activated',
+          description: 'The ability has been successfully activated!',
+          status: 'success',
+          duration: 3000,
+          isClosable: true,
+        })
+        setSelectedItem(null)
+      } catch (error) {
+        toast({
+          title: 'Activation Failed',
+          description: error || 'Failed to activate ability',
+          status: 'error',
+          duration: 3000,
+          isClosable: true,
+        })
+      }
+    },
+    [dispatch, toast],
+  )
+
+  const filteredActiveAbilities = activeAbilities.filter(
+    item => selectedCategory === 'all' || item.type === selectedCategory,
+  )
+
+  const filteredAvailableAbilities = availableAbilities.filter(
+    item => selectedCategory === 'all' || item.type === selectedCategory,
+  )
 
   return (
     <>
-      {/* Drawer */}
       <Drawer isOpen={isOpen} onClose={onClose} placement="right" size="md">
         <DrawerOverlay backdropFilter="blur(4px)" />
         <DrawerContent
@@ -90,94 +347,87 @@ const GameInventory = ({ isOpen, inventory, onClose }) => {
             zIndex="1"
           />
 
-          <DrawerHeader borderBottomWidth="1px" borderColor="gray.700">
-            <Heading
-              textAlign="center"
-              bgGradient="linear(to-r, yellow.200, yellow.500)"
-              bgClip="text"
-              fontSize="2xl"
-            >
-              Treasure Vault
-            </Heading>
-            <HStack overflowX="auto" py="2" spacing="2">
-              {filters.map(filter => (
-                <Button
-                  key={filter.id}
-                  onClick={() => setSelectedCategory(filter.id)}
-                  bgGradient={
-                    selectedCategory === filter.id
-                      ? 'linear(to-r, blue.500, purple.500)'
-                      : ''
-                  }
-                  bg={selectedCategory !== filter.id ? 'gray.800' : ''}
-                  _hover={{
-                    bg: selectedCategory !== filter.id ? 'gray.700' : '',
-                  }}
-                  leftIcon={filter.icon}
-                  size="sm"
-                  whiteSpace="nowrap"
-                  color={'white'}
-                >
-                  {filter.name}
-                </Button>
-              ))}
-            </HStack>
-          </DrawerHeader>
+          <DrawerBody p="4">
+            <DrawerHeader
+              filters={filters}
+              selectedCategory={selectedCategory}
+              setSelectedCategory={setSelectedCategory}
+            />
 
-          <DrawerBody>
-            <Grid templateColumns="repeat(2, 1fr)" gap="3" py="4">
-              {inventory
-                .filter(
-                  item =>
-                    selectedCategory === 'all' ||
-                    item.type === selectedCategory,
-                )
-                .map(item => (
-                  <Box
-                    key={item.id}
-                    {...getRarityStyle(item.rarity)}
-                    p="33"
-                    rounded="lg"
-                    position="relative"
-                    cursor="pointer"
-                    onClick={() => setSelectedItem(item)}
-                    transition="transform 0.2s"
-                    _hover={{ transform: 'scale(1.05)' }}
-                  >
-                    <Box
-                      position="absolute"
-                      inset="0"
-                      bg="blackAlpha.300"
-                      rounded="lg"
-                    />
-                    <VStack position="relative" spacing="2">
-                      <Flex
-                        bg="blackAlpha.300"
-                        p="2"
-                        rounded="full"
-                        justify="center"
-                        align="center"
-                      >
-                        {item.icon}
-                      </Flex>
-                      <Text fontSize="xs" fontWeight="bold" textAlign="center">
-                        {item.name}
-                      </Text>
-                      <Badge
-                        position="absolute"
-                        top="-1"
-                        right="-1"
-                        bg="blackAlpha.500"
-                        px="2"
-                        rounded="full"
-                        color="yellow"
-                      >
-                        x{item.count}
-                      </Badge>
-                    </VStack>
+            {loading ? (
+              <Flex justify="center" align="center" h="full">
+                <Spinner size="xl" color="blue.400" />
+              </Flex>
+            ) : (
+              <VStack spacing="6" align="stretch" mt="4">
+                {/* Active Abilities Section */}
+                {filteredActiveAbilities.length > 0 && (
+                  <Box>
+                    <Heading
+                      size="md"
+                      mb="4"
+                      bgGradient="linear(to-r, green.300, teal.300)"
+                      bgClip="text"
+                    >
+                      Active Abilities
+                    </Heading>
+                    <Grid templateColumns="repeat(2, 1fr)" gap="3">
+                      {filteredActiveAbilities.map(item => (
+                        <AbilityCard
+                          key={item.id}
+                          item={item}
+                          isActive={true}
+                          onClick={setSelectedItem}
+                          variants={itemVariants}
+                        />
+                      ))}
+                    </Grid>
                   </Box>
-                ))}
-            </Grid>
+                )}
+
+                {/* Available Abilities Section */}
+                {filteredAvailableAbilities.length > 0 && (
+                  <Box>
+                    <Heading
+                      size="md"
+                      mb="4"
+                      bgGradient="linear(to-r, blue.300, purple.300)"
+                      bgClip="text"
+                    >
+                      Available Abilities
+                    </Heading>
+                    <Grid templateColumns="repeat(2, 1fr)" gap="3">
+                      {filteredAvailableAbilities.map(item => (
+                        <AbilityCard
+                          key={item.id}
+                          item={item}
+                          isActive={false}
+                          onClick={setSelectedItem}
+                          variants={itemVariants}
+                        />
+                      ))}
+                    </Grid>
+                  </Box>
+                )}
+
+                {filteredActiveAbilities.length === 0 &&
+                  filteredAvailableAbilities.length === 0 &&
+                  selectedCategory != 'BADGE' && (
+                    <Flex
+                      justify="center"
+                      align="center"
+                      h="40vh"
+                      direction="column"
+                      spacing={4}
+                    >
+                      <Package size={48} />
+                      <Text mt={4}>No items found in this category</Text>
+                    </Flex>
+                  )}
+
+                {selectedCategory === 'BADGE' && <BadgesSection />}
+              </VStack>
+            )}
           </DrawerBody>
         </DrawerContent>
       </Drawer>
@@ -187,54 +437,91 @@ const GameInventory = ({ isOpen, inventory, onClose }) => {
         isOpen={!!selectedItem}
         onClose={() => setSelectedItem(null)}
         isCentered
+        motionPreset="slideInBottom"
       >
-        <ModalOverlay backdropFilter="blur(4px)" bg="blackAlpha.800" />
+        <ModalOverlay backdropFilter="blur(12px)" bg="rgba(0, 0, 0, 0.8)" />
         <ModalContent
-          {...(selectedItem && getRarityStyle(selectedItem.rarity))}
-          maxW="sm"
-          p="6"
-          color="white"
+          maxW="320px"
+          bg="#1F2937" // Dark slate color matching the image
+          borderRadius="2xl"
+          overflow="hidden"
+          boxShadow="0 0 20px rgba(0, 0, 0, 0.4)"
+          p={0}
         >
           {selectedItem && (
-            <Flex direction="column">
-              <Flex gap="4" mb="4">
-                <Flex
-                  bg="blackAlpha.300"
-                  p="3"
-                  rounded="full"
-                  justify="center"
-                  align="center"
-                >
-                  {selectedItem.icon}
-                </Flex>
-                <Box flex="1">
-                  <Text fontSize="xl" fontWeight="bold">
+            <motion.div
+              initial={{ opacity: 0, y: 10 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0, y: -10 }}
+              transition={{ duration: 0.2 }}
+            >
+              <Box pos="relative" px={6} pt={8} pb={6}>
+                {/* Icon and Title Section */}
+                <Flex direction="column" align="center" mb={6}>
+                  <Box bg="#2D3748" p={4} rounded="xl" mb={3}>
+                    <Zap size={24} color="white" />
+                  </Box>
+                  <Text
+                    fontSize="2xl"
+                    fontWeight="semibold"
+                    color="white"
+                    textAlign="center"
+                  >
                     {selectedItem.name}
                   </Text>
-                  <Text fontSize="sm" opacity="0.8" textTransform="capitalize">
-                    {selectedItem.type} • {selectedItem.rarity}
-                  </Text>
-                </Box>
-                <Badge bg="blackAlpha.300" px="3" py="1" rounded="full">
-                  x{selectedItem.count}
-                </Badge>
-              </Flex>
-              <Text fontSize="sm" opacity="0.9" mb="4">
-                {selectedItem.description}
-              </Text>
-              <Button
-                onClick={() => {
-                  console.log('Claiming item:', selectedItem)
-                  setSelectedItem(null)
-                }}
-                bg="green.500"
-                _hover={{ bg: 'green.600' }}
-                color="white"
-                w="full"
-              >
-                Claim Reward
-              </Button>
-            </Flex>
+
+                  {/* Type Badge */}
+                  <HStack spacing={2} mt={2}>
+                    <Badge
+                      bg="#374151"
+                      color="whiteAlpha.900"
+                      px={3}
+                      py={1}
+                      rounded="full"
+                      fontSize="sm"
+                    >
+                      {selectedItem.type === 'BOOST'
+                        ? 'Boost'
+                        : selectedItem.type}
+                    </Badge>
+                    <Badge
+                      bg="#374151"
+                      color="whiteAlpha.900"
+                      px={3}
+                      py={1}
+                      rounded="full"
+                      fontSize="sm"
+                    >
+                      {selectedItem?.multiplier || 1}x boost
+                    </Badge>
+                  </HStack>
+                </Flex>
+
+                {/* Activate Button */}
+                <Button
+                  onClick={() => handleActivateAbility(selectedItem.id)}
+                  w="full"
+                  h="50px"
+                  rounded="xl"
+                  fontSize="lg"
+                  bg="#34D399" // Emerald green color
+                  color="white"
+                  _hover={{
+                    bg: '#10B981',
+                    transform: 'translateY(-1px)',
+                  }}
+                  _active={{
+                    bg: '#059669',
+                    transform: 'translateY(0)',
+                  }}
+                  isLoading={loading}
+                  loadingText="Activating..."
+                  transition="all 0.2s"
+                >
+                  Activate
+                </Button>
+              </Box>
+            </motion.div>
           )}
         </ModalContent>
       </Modal>

@@ -22,6 +22,10 @@ const inventorySchema = new mongoose.Schema({
         type: Date,
         default: null,
       },
+      isUsed: {
+        type: Boolean,
+        default: false,
+      },
       isActive: {
         type: Boolean,
         default: false,
@@ -40,8 +44,6 @@ const inventorySchema = new mongoose.Schema({
 
 // Index for faster queries
 inventorySchema.index({ user: 1 })
-inventorySchema.index({ 'abilities.expiresAt': 1 })
-inventorySchema.index({ 'abilities.isActive': 1 })
 
 const Inventory = mongoose.model('INVENTORY', inventorySchema)
 

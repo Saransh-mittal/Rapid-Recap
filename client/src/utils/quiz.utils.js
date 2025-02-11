@@ -3,13 +3,9 @@ import { fetchDailyStreak } from '../redux/appSlice'
 import { addReward } from '../redux/rewardsSlice'
 import { REWARD_TYPES } from '../components/rewards'
 
-const quinBoostChecker = async ({
-  setIsQuinBoostAvailable,
-  setQuizLeftToGetQuizBoost,
-  dispatch,
-}) => {
+const quinBoostChecker = async ({ setQuizLeftToGetQuizBoost, dispatch }) => {
   try {
-    const response = await axios.get(`/api/user/quinBoostChecker`)
+    const response = await axios.get(`/api/abilities/check/QuinBoost`)
 
     if (response.status === 200) {
       const {
@@ -20,7 +16,6 @@ const quinBoostChecker = async ({
       } = response.data
 
       dispatch(setQuizLeftToGetQuizBoost(quizLeftToGetQuizBoost))
-      dispatch(setIsQuinBoostAvailable(isQuinBoostAvailable))
 
       // Show reward if there's an unclaimed boost
       if (hasUnclaimedBoost) {

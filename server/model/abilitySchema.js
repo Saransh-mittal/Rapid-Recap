@@ -1,6 +1,10 @@
 const mongoose = require('mongoose')
 
 const abilitySchema = new mongoose.Schema({
+  user: {
+    type: mongoose.Schema.Types.ObjectId,
+    ref: 'USER',
+  },
   name: {
     type: String,
     required: true,
@@ -41,18 +45,21 @@ const abilitySchema = new mongoose.Schema({
   },
   isActive: {
     type: Boolean,
-    default: true,
+    default: false,
+  },
+  claimed: {
+    type: Boolean,
+    default: false,
+  },
+  expiresAt: {
+    type: Date,
+    default: null,
   },
   createdAt: {
     type: Date,
     default: Date.now,
   },
 })
-
-// Index for faster queries
-abilitySchema.index({ name: 1 })
-abilitySchema.index({ type: 1 })
-abilitySchema.index({ isActive: 1 })
 
 const Ability = mongoose.model('ABILITY', abilitySchema)
 
