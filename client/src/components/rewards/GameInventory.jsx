@@ -1,3 +1,4 @@
+// GameInventory.jsx
 import React, { useState, useCallback, useEffect } from 'react'
 import {
   Box,
@@ -25,9 +26,10 @@ import { Package, Zap, Crown, Shield, Clock, ChevronLeft } from 'lucide-react'
 import { useDispatch, useSelector } from 'react-redux'
 import { activateAbility } from '../../redux/inventorySlice'
 import { motion } from 'framer-motion'
+import { useTranslation } from 'react-i18next'
+import i18n from 'i18next'
 import BadgesSection from './gameInventoryComponents/BadgesSection'
 
-// Icons mapping for different ability types
 const ABILITY_ICONS = {
   BOOST: <Zap size={20} />,
   POWER_UP: <Crown size={20} />,
@@ -36,8 +38,8 @@ const ABILITY_ICONS = {
 
 const ExpiryTimer = ({ expiresAt }) => {
   const [timeLeft, setTimeLeft] = useState('')
+  const { t } = useTranslation('GameInventory')
 
-  // Responsive sizes
   const timerSize = useBreakpointValue({
     base: {
       clockSize: 9,
@@ -60,20 +62,20 @@ const ExpiryTimer = ({ expiresAt }) => {
     const expiry = new Date(expiresAt)
     const diff = expiry - now
 
-    if (diff <= 0) return 'Expired'
+    if (diff <= 0) return t('timer.expired')
 
     const days = Math.floor(diff / (1000 * 60 * 60 * 24))
     const hours = Math.floor((diff % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60))
     const minutes = Math.floor((diff % (1000 * 60 * 60)) / (1000 * 60))
 
     if (days > 0) {
-      return `${days}d ${hours}h`
+      return t('timer.daysAndHours', { days, hours })
     } else if (hours > 0) {
-      return `${hours}h ${minutes}m`
+      return t('timer.hoursAndMinutes', { hours, minutes })
     } else {
-      return `${minutes}m`
+      return t('timer.minutes', { minutes })
     }
-  }, [expiresAt])
+  }, [expiresAt, t])
 
   useEffect(() => {
     setTimeLeft(calculateTimeLeft())
@@ -84,17 +86,13 @@ const ExpiryTimer = ({ expiresAt }) => {
     return () => clearInterval(timer)
   }, [calculateTimeLeft])
 
-  const handleClick = e => {
-    e.stopPropagation()
-  }
-
   return (
     <Box
       as={motion.div}
       position="absolute"
       bottom="-3.5"
       right="-3.5"
-      onClick={handleClick}
+      onClick={e => e.stopPropagation()}
       zIndex={2}
       initial={{ opacity: 0, y: 5 }}
       animate={{ opacity: 1, y: 0 }}
@@ -138,6 +136,8 @@ const ExpiryTimer = ({ expiresAt }) => {
 }
 
 const AbilityCard = ({ item, isActive, onClick, variants }) => {
+  const { t } = useTranslation('GameInventory')
+
   const getRarityStyle = useCallback(rarity => {
     switch (rarity?.toLowerCase()) {
       case 'legendary':
@@ -219,7 +219,7 @@ const AbilityCard = ({ item, isActive, onClick, variants }) => {
               rounded="full"
               color="yellow.300"
             >
-              {item.multiplier}x
+              {t('status.multiplier', { value: item.multiplier })}
             </Badge>
           )}
           <Badge
@@ -231,7 +231,9 @@ const AbilityCard = ({ item, isActive, onClick, variants }) => {
             rounded="full"
             color={isActive ? 'green.300' : 'yellow.300'}
           >
-            {isActive ? 'Active' : `x${item.quantity || 1}`}
+            {isActive
+              ? t('status.active')
+              : t('status.quantity', { count: item.quantity || 1 })}
           </Badge>
           {item.expiresAt && <ExpiryTimer expiresAt={item.expiresAt} />}
         </VStack>
@@ -239,55 +241,63 @@ const AbilityCard = ({ item, isActive, onClick, variants }) => {
     </motion.div>
   )
 }
-const DrawerHeader = ({ filters, selectedCategory, setSelectedCategory }) => (
-  <Box borderBottomWidth="1px" borderColor="gray.700" pb="4">
-    <Heading
-      textAlign="center"
-      bgGradient="linear(to-r, yellow.200, yellow.500)"
-      bgClip="text"
-      fontSize="2xl"
-      mb="4"
-    >
-      Treasure Vault
-    </Heading>
-    <HStack overflowX="auto" py="2" spacing="2">
-      {filters.map(filter => (
-        <Button
-          key={filter.id}
-          onClick={() => setSelectedCategory(filter.id)}
-          bgGradient={
-            selectedCategory === filter.id
-              ? 'linear(to-r, blue.500, purple.500)'
-              : ''
-          }
-          bg={selectedCategory !== filter.id ? 'gray.800' : ''}
-          _hover={{
-            bg: selectedCategory !== filter.id ? 'gray.700' : '',
-          }}
-          leftIcon={filter.icon}
-          size="sm"
-          whiteSpace="nowrap"
-          color="white"
-        >
-          {filter.name}
-        </Button>
-      ))}
-    </HStack>
-  </Box>
-)
+
+const DrawerHeader = ({ filters, selectedCategory, setSelectedCategory }) => {
+  const { t } = useTranslation('GameInventory')
+
+  return (
+    <Box borderBottomWidth="1px" borderColor="gray.700" pb="4">
+      <Heading
+        textAlign="center"
+        bgGradient="linear(to-r, yellow.200, yellow.500)"
+        bgClip="text"
+        fontSize="2xl"
+        mb="4"
+      >
+        {t('header.title')}
+      </Heading>
+      <HStack overflowX="auto" py="2" spacing="2">
+        {filters.map(filter => (
+          <Button
+            key={filter.id}
+            onClick={() => setSelectedCategory(filter.id)}
+            bgGradient={
+              selectedCategory === filter.id
+                ? 'linear(to-r, blue.500, purple.500)'
+                : ''
+            }
+            bg={selectedCategory !== filter.id ? 'gray.800' : ''}
+            _hover={{
+              bg: selectedCategory !== filter.id ? 'gray.700' : '',
+            }}
+            leftIcon={filter.icon}
+            size="sm"
+            whiteSpace="nowrap"
+            color="white"
+          >
+            {t(`filters.${filter.id.toLowerCase()}`)}
+          </Button>
+        ))}
+      </HStack>
+    </Box>
+  )
+}
+
 const GameInventory = ({ isOpen, onClose }) => {
   const [selectedCategory, setSelectedCategory] = useState('BOOST')
   const [selectedItem, setSelectedItem] = useState(null)
   const dispatch = useDispatch()
   const toast = useToast()
+  const { t } = useTranslation('GameInventory')
+
   const { activeAbilities, availableAbilities, loading, error } = useSelector(
     state => state.inventory,
   )
 
   const filters = [
-    { id: 'BOOST', name: 'Boosts', icon: <Zap /> },
-    { id: 'POWER_UP', name: 'Power-Ups', icon: <Crown /> },
-    { id: 'BADGE', name: 'Badges', icon: <Shield /> },
+    { id: 'BOOST', name: t('filters.boost'), icon: <Zap /> },
+    { id: 'POWER_UP', name: t('filters.powerUp'), icon: <Crown /> },
+    { id: 'BADGE', name: t('filters.badge'), icon: <Shield /> },
   ]
 
   const itemVariants = {
@@ -300,8 +310,8 @@ const GameInventory = ({ isOpen, onClose }) => {
       try {
         await dispatch(activateAbility(abilityId)).unwrap()
         toast({
-          title: 'Ability Activated',
-          description: 'The ability has been successfully activated!',
+          title: t('notifications.abilityActivated.title'),
+          description: t('notifications.abilityActivated.description'),
           status: 'success',
           duration: 3000,
           isClosable: true,
@@ -309,15 +319,15 @@ const GameInventory = ({ isOpen, onClose }) => {
         setSelectedItem(null)
       } catch (error) {
         toast({
-          title: 'Activation Failed',
-          description: error || 'Failed to activate ability',
+          title: t('notifications.activationFailed.title'),
+          description: error || t('notifications.activationFailed.description'),
           status: 'error',
           duration: 3000,
           isClosable: true,
         })
       }
     },
-    [dispatch, toast],
+    [dispatch, toast, t],
   )
 
   const filteredActiveAbilities = activeAbilities.filter(
@@ -360,7 +370,6 @@ const GameInventory = ({ isOpen, onClose }) => {
               </Flex>
             ) : (
               <VStack spacing="6" align="stretch" mt="4">
-                {/* Active Abilities Section */}
                 {filteredActiveAbilities.length > 0 && (
                   <Box>
                     <Heading
@@ -369,7 +378,7 @@ const GameInventory = ({ isOpen, onClose }) => {
                       bgGradient="linear(to-r, green.300, teal.300)"
                       bgClip="text"
                     >
-                      Active Abilities
+                      {t('sections.activeAbilities')}
                     </Heading>
                     <Grid templateColumns="repeat(2, 1fr)" gap="3">
                       {filteredActiveAbilities.map(item => (
@@ -385,7 +394,6 @@ const GameInventory = ({ isOpen, onClose }) => {
                   </Box>
                 )}
 
-                {/* Available Abilities Section */}
                 {filteredAvailableAbilities.length > 0 && (
                   <Box>
                     <Heading
@@ -394,7 +402,7 @@ const GameInventory = ({ isOpen, onClose }) => {
                       bgGradient="linear(to-r, blue.300, purple.300)"
                       bgClip="text"
                     >
-                      Available Abilities
+                      {t('sections.availableAbilities')}
                     </Heading>
                     <Grid templateColumns="repeat(2, 1fr)" gap="3">
                       {filteredAvailableAbilities.map(item => (
@@ -412,7 +420,7 @@ const GameInventory = ({ isOpen, onClose }) => {
 
                 {filteredActiveAbilities.length === 0 &&
                   filteredAvailableAbilities.length === 0 &&
-                  selectedCategory != 'BADGE' && (
+                  selectedCategory !== 'BADGE' && (
                     <Flex
                       justify="center"
                       align="center"
@@ -421,7 +429,7 @@ const GameInventory = ({ isOpen, onClose }) => {
                       spacing={4}
                     >
                       <Package size={48} />
-                      <Text mt={4}>No items found in this category</Text>
+                      <Text mt={4}>{t('empty.noItems')}</Text>
                     </Flex>
                   )}
 
@@ -442,7 +450,7 @@ const GameInventory = ({ isOpen, onClose }) => {
         <ModalOverlay backdropFilter="blur(12px)" bg="rgba(0, 0, 0, 0.8)" />
         <ModalContent
           maxW="320px"
-          bg="#1F2937" // Dark slate color matching the image
+          bg="#1F2937"
           borderRadius="2xl"
           overflow="hidden"
           boxShadow="0 0 20px rgba(0, 0, 0, 0.4)"
@@ -456,7 +464,6 @@ const GameInventory = ({ isOpen, onClose }) => {
               transition={{ duration: 0.2 }}
             >
               <Box pos="relative" px={6} pt={8} pb={6}>
-                {/* Icon and Title Section */}
                 <Flex direction="column" align="center" mb={6}>
                   <Box bg="#2D3748" p={4} rounded="xl" mb={3}>
                     <Zap size={24} color="white" />
@@ -470,7 +477,6 @@ const GameInventory = ({ isOpen, onClose }) => {
                     {selectedItem.name}
                   </Text>
 
-                  {/* Type Badge */}
                   <HStack spacing={2} mt={2}>
                     <Badge
                       bg="#374151"
@@ -480,9 +486,7 @@ const GameInventory = ({ isOpen, onClose }) => {
                       rounded="full"
                       fontSize="sm"
                     >
-                      {selectedItem.type === 'BOOST'
-                        ? 'Boost'
-                        : selectedItem.type}
+                      {t(`ability.type.${selectedItem.type.toLowerCase()}`)}
                     </Badge>
                     <Badge
                       bg="#374151"
@@ -492,19 +496,20 @@ const GameInventory = ({ isOpen, onClose }) => {
                       rounded="full"
                       fontSize="sm"
                     >
-                      {selectedItem?.multiplier || 1}x boost
+                      {t('status.multiplier', {
+                        value: selectedItem?.multiplier || 1,
+                      })}
                     </Badge>
                   </HStack>
                 </Flex>
 
-                {/* Activate Button */}
                 <Button
                   onClick={() => handleActivateAbility(selectedItem.id)}
                   w="full"
                   h="50px"
                   rounded="xl"
                   fontSize="lg"
-                  bg="#34D399" // Emerald green color
+                  bg="#34D399"
                   color="white"
                   _hover={{
                     bg: '#10B981',
@@ -515,10 +520,10 @@ const GameInventory = ({ isOpen, onClose }) => {
                     transform: 'translateY(0)',
                   }}
                   isLoading={loading}
-                  loadingText="Activating..."
+                  loadingText={t('actions.activating')}
                   transition="all 0.2s"
                 >
-                  Activate
+                  {t('actions.activate')}
                 </Button>
               </Box>
             </motion.div>

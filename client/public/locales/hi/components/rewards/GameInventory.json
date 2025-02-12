@@ -1,0 +1,49 @@
+{
+  "header": {
+    "title": "खजाना तिजोरी"
+  },
+  "filters": {
+    "boost": "बूस्ट",
+    "power_up": "पावर-अप",
+    "badge": "बैज"
+  },
+  "sections": {
+    "activeAbilities": "सक्रिय क्षमताएं",
+    "availableAbilities": "उपलब्ध क्षमताएं"
+  },
+  "status": {
+    "active": "सक्रिय",
+    "quantity": "x{{count}}",
+    "multiplier": "{{value}}x"
+  },
+  "ability": {
+    "type": {
+      "boost": "बूस्ट",
+      "power_up": "पावर-अप",
+      "badge": "बैज"
+    }
+  },
+  "actions": {
+    "activate": "सक्रिय करें",
+    "activating": "सक्रिय हो रहा है..."
+  },
+  "notifications": {
+    "abilityActivated": {
+      "title": "क्षमता सक्रिय की गई",
+      "description": "क्षमता सफलतापूर्वक सक्रिय कर दी गई है!"
+    },
+    "activationFailed": {
+      "title": "सक्रियण विफल",
+      "description": "क्षमता सक्रिय करने में विफल"
+    }
+  },
+  "timer": {
+    "expired": "समाप्त",
+    "daysAndHours": "{{days}}दि {{hours}}घं",
+    "hoursAndMinutes": "{{hours}}घं {{minutes}}मि",
+    "minutes": "{{minutes}}मि"
+  },
+  "empty": {
+    "noItems": "इस श्रेणी में कोई आइटम नहीं मिला"
+  }
+}

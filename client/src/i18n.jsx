@@ -38,7 +38,7 @@ const namespaces = {
     'TotalUserAttempted',
     'TrackTime',
   ],
-  rewards: ['rewards'],
+  rewards: ['rewards', 'GameInventory', 'BadgesSection'],
   tournamentComponents: [
     'TournamentLoadingScreen',
     'EpicQuestGuide',
@@ -80,6 +80,7 @@ const namespaces = {
     'GuestLoginModal',
     'ResetPassword',
   ],
+
   contactComponents: ['FeedbackModal'],
   chatComponent: [
     'userChats',

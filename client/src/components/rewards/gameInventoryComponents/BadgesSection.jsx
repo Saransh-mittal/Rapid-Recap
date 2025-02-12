@@ -12,11 +12,11 @@ import { useSelector } from 'react-redux'
 import { motion } from 'framer-motion'
 import { Shield } from 'lucide-react'
 import axios from 'axios'
-import TournamentBadge from '../../tournamentComponents/TournamentBadges'
 import { useTranslation } from 'react-i18next'
+import TournamentBadge from '../../tournamentComponents/TournamentBadges'
 
 const BadgesSection = () => {
-  const { t: tournamentBadgeTranslate } = useTranslation('TournamentBadge')
+  const { t } = useTranslation('BadgesSection')
   const { user } = useSelector(state => state.auth)
   const toast = useToast()
 
@@ -36,23 +36,23 @@ const BadgesSection = () => {
         })
 
         toast({
-          title: 'Badge Updated',
-          description: 'Your displayed badge has been updated successfully.',
+          title: t('notifications.updateSuccess.title'),
+          description: t('notifications.updateSuccess.description'),
           status: 'success',
           duration: 3000,
           isClosable: true,
         })
       } catch (error) {
         toast({
-          title: 'Error',
-          description: 'Failed to update badge.',
+          title: t('notifications.updateError.title'),
+          description: t('notifications.updateError.description'),
           status: 'error',
           duration: 3000,
           isClosable: true,
         })
       }
     },
-    [toast],
+    [toast, t],
   )
 
   const itemVariants = {
@@ -70,7 +70,7 @@ const BadgesSection = () => {
             bgGradient="linear(to-r, purple.300, pink.300)"
             bgClip="text"
           >
-            Tournament Badges
+            {t('header.title')}
           </Heading>
           <Grid templateColumns="repeat(3, 1fr)" gap="12" align="center">
             {sortedBadges.map((badge, index) => (
@@ -93,7 +93,8 @@ const BadgesSection = () => {
                     name: badge.badgeName,
                     text: badge.text,
                   }}
-                  t={tournamentBadgeTranslate}
+                  onClick={() => handleBadgeSelect(badge)}
+                  t={t}
                 />
               </motion.div>
             ))}
@@ -109,7 +110,7 @@ const BadgesSection = () => {
         >
           <Shield size={48} opacity={0.5} />
           <Text mt={4} color="gray.500">
-            No tournament badges earned yet
+            {t('empty.noBadges')}
           </Text>
         </Flex>
       )}

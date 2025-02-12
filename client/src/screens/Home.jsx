@@ -19,7 +19,7 @@ import i18n from 'i18next'
 import { categoryCache } from '../services/categoryCache'
 import slugify from 'slugify'
 import { Package, Star, Target, Trophy, Clock, Sparkle } from 'lucide-react'
-import GameInventory from '../components/rewards/GameInventry'
+import GameInventory from '../components/rewards/GameInventory'
 
 const Timeline = React.lazy(() =>
   import('../components/homeComponents/Timeline'),

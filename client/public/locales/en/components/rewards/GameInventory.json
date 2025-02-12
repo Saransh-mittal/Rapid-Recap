@@ -1,0 +1,49 @@
+{
+  "header": {
+    "title": "Treasure Vault"
+  },
+  "filters": {
+    "boost": "Boosts",
+    "power_up": "Power-Ups",
+    "badge": "Badges"
+  },
+  "sections": {
+    "activeAbilities": "Active Abilities",
+    "availableAbilities": "Available Abilities"
+  },
+  "status": {
+    "active": "Active",
+    "quantity": "x{{count}}",
+    "multiplier": "{{value}}x"
+  },
+  "ability": {
+    "type": {
+      "boost": "Boost",
+      "power_up": "Power-Up",
+      "badge": "Badge"
+    }
+  },
+  "actions": {
+    "activate": "Activate",
+    "activating": "Activating..."
+  },
+  "notifications": {
+    "abilityActivated": {
+      "title": "Ability Activated",
+      "description": "The ability has been successfully activated!"
+    },
+    "activationFailed": {
+      "title": "Activation Failed",
+      "description": "Failed to activate ability"
+    }
+  },
+  "timer": {
+    "expired": "Expired",
+    "daysAndHours": "{{days}}d {{hours}}h",
+    "hoursAndMinutes": "{{hours}}h {{minutes}}m",
+    "minutes": "{{minutes}}m"
+  },
+  "empty": {
+    "noItems": "No items found in this category"
+  }
+}
