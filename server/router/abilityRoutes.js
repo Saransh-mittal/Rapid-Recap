@@ -7,7 +7,6 @@ const {
   getActiveAbilities,
   getAvailableAbilitiesController,
   activateAbility,
-  deactivateAbility,
   checkAbilities,
   checkAbility,
 } = require('../controllers/abilityController')
