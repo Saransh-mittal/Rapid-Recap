@@ -168,7 +168,7 @@ const createQuinBoostAbility = async ({ expiryDate, userId, session }) => {
       duration: null, // One-time use
       cooldown: 0,
       stackable: true,
-      maxStacks: 3,
+      maxStacks: 4,
       icon: '/images/abilities/quinboost.webp',
       isActive: false,
       claimed: false,
