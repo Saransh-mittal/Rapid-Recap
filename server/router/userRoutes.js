@@ -26,7 +26,6 @@ const {
   quizDailyStreakUpdator,
   streakChecker,
   longestStreakCalculatorOfAllUsers,
-  quinBoostChecker,
   seasonHistory,
   updateNewSeasonModal,
   bookmark,
@@ -90,7 +89,6 @@ router.route('/sendMailForNotifySubscribe').get(sendMailForNotifySubscribe)
 router.route('/quizDailyStreak').get(quizDailyStreakUpdator)
 router.route('/streakChecker').get(Authenticate, streakChecker)
 router.route('/longestStreakCalculator').get(longestStreakCalculatorOfAllUsers)
-router.route('/quinBoostChecker').get(Authenticate, quinBoostChecker)
 router.route('/newSeasonModal').get(Authenticate, updateNewSeasonModal)
 router.route('/seasonHistory/:inGameName').get(seasonHistory)
 router.route('/bookmark').get(Authenticate, bookmark)

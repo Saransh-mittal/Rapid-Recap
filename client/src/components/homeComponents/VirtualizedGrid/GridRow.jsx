@@ -23,7 +23,6 @@ const GridRow = React.memo(
       lg: GAP,
     })
     const { rows, columns, width } = data
-    const { isBoosted } = useSelector(state => state.app)
     const { effects } = useSelector(state => state.inventory)
 
     const rowData = rows[index]
@@ -56,7 +55,6 @@ const GridRow = React.memo(
                   difficulty={item?.articleDifficulty}
                   multiplier={calculateTotalMultiplier(
                     effects?.boost?.multiplier,
-                    isBoosted,
                     item?.rqmBoostAvailable,
                   )}
                   title={

@@ -72,8 +72,7 @@ export const fetchDailyStreak = createAsyncThunk(
         addReward({
           type: REWARD_TYPES.STREAK_SURGE,
           title: 'Streak Surge Activated!',
-          description:
-            'Congratulations on your 7-day streak! Get 1.5x boost on all quizzes today.',
+          description: `Congratulations on your 7-day streak! Get ${response.data.multiplier}x boost on all quizzes today.`,
           rewards: [
             {
               title: 'Bonus XP',

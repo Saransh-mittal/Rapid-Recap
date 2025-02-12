@@ -22,8 +22,12 @@ const { streakSurgeTemplate } = require('../data/inboxNotificationsTemplates')
 const i18n = require('i18next')
 const ApplicationUpdates = require('../model/applicationUpdatesSchema')
 const moment = require('moment-timezone')
-const { createQuinBoostAbility } = require('./abilityService')
+const {
+  createQuinBoostAbility,
+  calculateTotalEffect,
+} = require('./abilityService')
 const Inventory = require('../model/inventorySchema')
+const { calculateTotalMultiplier } = require('../utils/inventory.utils')
 
 const handleQuinBoostEarned = async ({ user, session }) => {
   try {
@@ -120,7 +124,6 @@ const saveQuizAttempt = async (
   let { baseRQM_score, RQM_score, score, expectedTime, performanceBonus } =
     calculateRQMScore(userResponses, questions, timeTaken)
 
-  let boosted = false
   let quinBoostUtilized = false
   const nonBoostedRQM = RQM_score
 
@@ -129,6 +132,7 @@ const saveQuizAttempt = async (
     .populate('abilities.abilityId')
     .session(session)
 
+  let totalBoostMultiplier = rqmBoostForCategory ? 1.5 : 1
   if (inventory) {
     const activeQuinBoost = inventory.abilities.find(
       ability =>
@@ -136,58 +140,67 @@ const saveQuizAttempt = async (
         ability.abilityId?.name === 'QuinBoost' &&
         ability.expiresAt > new Date(),
     )
-    if (activeQuinBoost) {
-      RQM_score = Math.ceil(
-        RQM_score *
-          (rqmBoostForCategory && user.todayBoost
-            ? 2
-            : rqmBoostForCategory || user.todayBoost
-            ? 1.75
-            : 1.5),
+    const activeStreakSurge = inventory.abilities.find(
+      ability =>
+        ability.isActive &&
+        ability.abilityId?.name === 'StreakSurge' &&
+        ability.expiresAt > new Date(),
+    )
+    const activeAbilities = inventory.abilities
+      .filter(
+        ability =>
+          ability.isActive &&
+          ability.abilityId?.type === 'BOOST' &&
+          ability.expiresAt > new Date(),
       )
+      .map(ability => ({
+        id: ability.abilityId._id,
+        name: ability.abilityId.name,
+        type: ability.abilityId.type,
+        multiplier: ability.abilityId.multiplier,
+        duration: ability.abilityId.duration,
+        expiresAt: ability.expiresAt,
+        acquiredAt: ability.acquiredAt,
+      }))
+    const effects = calculateTotalEffect(activeAbilities, 'BOOST')
+    totalBoostMultiplier = calculateTotalMultiplier(
+      effects?.multiplier,
+      rqmBoostForCategory,
+    )
+
+    RQM_score = Math.ceil(RQM_score * totalBoostMultiplier)
+    if (activeQuinBoost) {
       activeQuinBoost.isActive = false
       activeQuinBoost.isUsed = true
       await inventory.save({ session })
       quinBoostUtilized = true
       user.eligibleForTournament = true
-    }
-  } else if (user.todayBoost) {
-    RQM_score = Math.ceil(RQM_score * (rqmBoostForCategory ? 1.75 : 1.5))
-    boosted = true
-    // Check if notification has already been sent today
-    const hasNotification = await hasStreakSurgeNotificationToday(user)
+    } else if (activeStreakSurge) {
+      // Check if notification has already been sent today
+      const hasNotification = await hasStreakSurgeNotificationToday(user)
 
-    if (!hasNotification) {
-      const notificationTitle = localizedI18n.t('Streak Surge day!')
-      const notificationMainText = streakSurgeTemplate(user.streak)
+      if (!hasNotification) {
+        const notificationTitle = localizedI18n.t('Streak Surge day!')
+        const notificationMainText = streakSurgeTemplate(user.streak)
 
-      const newNotification = new ApplicationUpdates({
-        title: notificationTitle,
-        mainText: notificationMainText,
-        userId: userId,
-        type: 'applicationUpdate',
-      })
-      await newNotification.save()
+        const newNotification = new ApplicationUpdates({
+          title: notificationTitle,
+          mainText: notificationMainText,
+          userId: userId,
+          type: 'applicationUpdate',
+        })
+        await newNotification.save()
+      }
     }
   } else if (rqmBoostForCategory) {
-    RQM_score = Math.ceil(RQM_score * 1.5)
-    boosted = true
+    RQM_score = Math.ceil(RQM_score * totalBoostMultiplier)
   }
 
   emitProgress('calculateRQM', 100)
   emitProgress('saveAttempt', 50)
   const articleDifficulty = quizSession.overAllDifficulty[user.userLanguage]
-  const boost =
-    quinBoostUtilized && user.todayBoost && rqmBoostForCategory
-      ? 2
-      : (quinBoostUtilized && user.todayBoost) ||
-        (quinBoostUtilized && rqmBoostForCategory) ||
-        (user.todayBoost && rqmBoostForCategory)
-      ? 1.75
-      : quinBoostUtilized || user.todayBoost || rqmBoostForCategory
-      ? 1.5
-      : 1
-  const isBoosted = boosted || quinBoostUtilized
+  const boost = totalBoostMultiplier
+  const isBoosted = totalBoostMultiplier > 1
 
   // Create and save the quiz attempt
   const newQuizAttempt = new QuizAttempt({

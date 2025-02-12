@@ -1,4 +1,4 @@
-export const calculateTotalMultiplier = (invMultiplier, rqmBoostAvailable) => {
+const calculateTotalMultiplier = (invMultiplier, rqmBoostAvailable) => {
   // Convert boolean conditions to multipliers
   const multipliers = [invMultiplier || 1, rqmBoostAvailable ? 1.5 : 1]
 
@@ -15,10 +15,8 @@ export const calculateTotalMultiplier = (invMultiplier, rqmBoostAvailable) => {
   )
 
   // Convert to display format
-  if (finalMultiplier <= 1) return null
-  return `${finalMultiplier}x`
+  if (finalMultiplier <= 1) return 1
+  return finalMultiplier
 }
 
-export const checkQuinBoostAvailability = abilities => {
-  return abilities.some(ability => ability.name === 'QuinBoost')
-}
+module.exports = { calculateTotalMultiplier }
