@@ -27,10 +27,7 @@ import i18n from 'i18next'
 import { blackListedImgUrls } from '../assets/blackListedImgUrls'
 
 import { setArticleData, setTotalUsersGivenQuiz } from '../redux/articleSlice'
-import {
-  setIsQuinBoostAvailable,
-  setQuizLeftToGetQuizBoost,
-} from '../redux/quizSlice'
+import { setQuizLeftToGetQuizBoost } from '../redux/quizSlice'
 import ArticleFooter from '../components/articleComponents/ArticleFooter'
 import { useReadingProgress } from '../customHooks/useReadingProgress'
 import PremiumCTA from '../components/articleComponents/PremiumCTA'
@@ -321,7 +318,6 @@ const Article = () => {
 
   useEffect(() => {
     quinBoostChecker({
-      setIsQuinBoostAvailable,
       setQuizLeftToGetQuizBoost,
       dispatch,
     })

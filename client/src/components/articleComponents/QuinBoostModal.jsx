@@ -19,6 +19,7 @@ import {
 } from '@chakra-ui/react'
 import { Star, Clock } from 'lucide-react'
 import { useTranslation } from 'react-i18next'
+import { useSelector } from 'react-redux'
 
 const QuinBoostModal = ({
   isOpen,
@@ -29,13 +30,15 @@ const QuinBoostModal = ({
   const { t } = useTranslation('QuinBoostModal')
   const [isLargerThan768] = useMediaQuery('(min-width: 768px)')
 
-  const getNextBoostThreshold = count => Math.floor(count / 6) * 6 + 6
+  const getNextBoostThreshold = count => Math.floor(count / 5) * 5 + 5
   const nextBoost = getNextBoostThreshold(currentQuizCount)
-  const quizzesRemaining = nextBoost - currentQuizCount
-  const progress = ((currentQuizCount % 6) / 5) * 100
 
-  const isQuinBoostActivated =
-    currentQuizCount > 0 && currentQuizCount % 5 === 0
+  const progress = ((currentQuizCount % 5) / 5) * 100
+  const { isQuinBoostAvailable, quizLeftToGetQuizBoost } = useSelector(
+    state => state.quiz,
+  )
+  const quizzesRemaining = quizLeftToGetQuizBoost
+  const isQuinBoostActivated = isQuinBoostAvailable
 
   const MotionBox = motion(Box)
 
@@ -162,7 +165,7 @@ const QuinBoostModal = ({
                 {isQuinBoostActivated
                   ? t('boostActivatedMessage')
                   : quizzesRemaining > 0
-                  ? `${quizzesRemaining - 1} ${t('quizzesUntilBoost')}`
+                  ? `${quizzesRemaining} ${t('quizzesUntilBoost')}`
                   : t('boostReady')}
               </Text>
             </MotionBox>

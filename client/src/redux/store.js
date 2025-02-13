@@ -11,6 +11,7 @@ import loadingProgressReducer from './loadingProgressSlice'
 import noteMessageSummaryReducer from './noteMessageSummarySlice'
 import rewardsReducer from './rewardsSlice'
 import demotionSummaryReducer from './demotionSummarySlice'
+import inventoryReducer from './inventorySlice'
 
 export const store = configureStore({
   reducer: {
@@ -26,5 +27,6 @@ export const store = configureStore({
     noteMessageSummary: noteMessageSummaryReducer,
     rewards: rewardsReducer,
     demotionSummary: demotionSummaryReducer,
+    inventory: inventoryReducer,
   },
 })

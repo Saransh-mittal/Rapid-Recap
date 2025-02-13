@@ -15,16 +15,13 @@ import {
 import { useTranslation } from 'react-i18next'
 import { addNoteMessage, setStreak, setStreakLoading } from '../redux/appSlice'
 import { setUser } from '../redux/authSlice'
-import {
-  setIsQuinBoostAvailable,
-  setQuizLeftToGetQuizBoost,
-  setIsOpen,
-} from '../redux/quizSlice'
+import { setQuizLeftToGetQuizBoost, setIsOpen } from '../redux/quizSlice'
 import { setTotalUsersGivenQuiz } from '../redux/articleSlice'
 import i18n from 'i18next'
 import useNavigationWarning from '../customHooks/useNavigationWarning'
 import { useNavigate } from 'react-router-dom'
 import QuizLoadingScreen from '../components/quizComponents/QuizLoadingScreen'
+import { fetchInventory } from '../redux/inventorySlice'
 
 // Lazy load components
 const ConfirmationModal = lazy(() =>
@@ -178,8 +175,8 @@ const Quiz = () => {
     try {
       dispatchRedux(setStreakLoading(true))
       dispatchRedux(setTotalUsersGivenQuiz(totalUsersGivenQuiz + 1))
+      dispatchRedux(fetchInventory())
       quinBoostChecker({
-        setIsQuinBoostAvailable,
         setQuizLeftToGetQuizBoost,
         dispatch: dispatchRedux,
       })
@@ -343,7 +340,6 @@ const Quiz = () => {
   const handleConfirmClose = useCallback(async () => {
     try {
       quinBoostChecker({
-        setIsQuinBoostAvailable,
         setQuizLeftToGetQuizBoost,
         dispatch: dispatchRedux,
       })

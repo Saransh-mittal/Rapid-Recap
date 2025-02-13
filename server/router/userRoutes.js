@@ -26,7 +26,6 @@ const {
   quizDailyStreakUpdator,
   streakChecker,
   longestStreakCalculatorOfAllUsers,
-  quinBoostChecker,
   seasonHistory,
   updateNewSeasonModal,
   bookmark,
@@ -48,6 +47,7 @@ const {
   getValidCategories,
   updateBadgeCategory,
   checkRewardsModalStatus,
+  getUserAchievements,
 } = require('../controllers/user')
 const { Authenticate } = require('../middleware/authenticate')
 const {
@@ -89,7 +89,6 @@ router.route('/sendMailForNotifySubscribe').get(sendMailForNotifySubscribe)
 router.route('/quizDailyStreak').get(quizDailyStreakUpdator)
 router.route('/streakChecker').get(Authenticate, streakChecker)
 router.route('/longestStreakCalculator').get(longestStreakCalculatorOfAllUsers)
-router.route('/quinBoostChecker').get(Authenticate, quinBoostChecker)
 router.route('/newSeasonModal').get(Authenticate, updateNewSeasonModal)
 router.route('/seasonHistory/:inGameName').get(seasonHistory)
 router.route('/bookmark').get(Authenticate, bookmark)
@@ -115,6 +114,7 @@ router.get('/stats/monthly', Authenticate, getUserMonthlyPerformance)
 router.get('/stats/historical', Authenticate, getUserHistoricalPerformance)
 router.get('/maintenance-status', getMaintenanceStatus)
 router.route('/demotion-summary').get(Authenticate, getDemotionSummary)
+router.get('/achievements', Authenticate, getUserAchievements)
 
 router.get('/confirmDeleteAccount/:token', confirmDeleteAccount)
 router

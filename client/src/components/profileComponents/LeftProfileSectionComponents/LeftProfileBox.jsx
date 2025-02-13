@@ -29,6 +29,7 @@ import CircleAndSocietyData from '../../../assets/CircleAndSocietyData'
 import { useFeatureDetection } from '../../../utils/featureDetection'
 import useSafeSound from '../../../customHooks/useSafeSound'
 import RQMThermometer from '../../leaderBoardComponents/RQMThermometer'
+import { ShareAchievements } from '../../shareAchievements'
 
 // Lazy loading components
 const EditProfileModal = React.lazy(() =>
@@ -533,6 +534,7 @@ const LeftProfileBox = ({ leftProfileView, CURR_IQ, MAX_IQ, avgRQMScore }) => {
             >
               {t('edit')}
             </Button>
+
             <Button
               key={`show-badges-button-${leftProfileView?.inGameName}`}
               size="sm"
@@ -541,6 +543,15 @@ const LeftProfileBox = ({ leftProfileView, CURR_IQ, MAX_IQ, avgRQMScore }) => {
             >
               {t('showBadges')}
             </Button>
+            <ShareAchievements
+              level={user.level}
+              experience={user.xp}
+              solvedQuizzes={user.quizAttempts?.length || 0}
+              ranking={user.rank}
+              society={user.society}
+              IQScore={user.IQ_score}
+              averageRQM={user.avgRQM}
+            />
           </HStack>
         )}
       </MotionFlex>

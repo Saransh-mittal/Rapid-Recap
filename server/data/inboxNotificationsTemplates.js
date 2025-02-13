@@ -454,7 +454,7 @@ const streakSurgeTemplate = streakCount => {
                     <p class="streak-count highlight">${streakCount}-Day Streak</p>
                     <p>Your dedication has unlocked a special <span class="highlight">Streak Surge</span> boost!</p>
                 </div>
-                <p style="text-align: center;">Today, all your RQM scores will be boosted by <span class="highlight">1.5x</span>!</p>
+                <p style="text-align: center;">Today, all your RQM scores will be boosted by <span class="highlight">1.25x</span>!</p>
                 <p style="text-align: center;">Keep up the amazing work and watch your scores soar!</p>
             </div>
             <div class="footer">

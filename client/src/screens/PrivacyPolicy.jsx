@@ -280,7 +280,7 @@ const PrivacyPolicy = () => {
             color="gray.400"
             pb={8}
           >
-            <Text fontSize="lg">Contact us at: privacy@rapidrecap.com</Text>
+            <Text fontSize="lg">Contact us at: team@rapidrecap.ai</Text>
             <Text mt={2} fontSize="lg">
               Rapid Recap Inc, Jaipur, India
             </Text>

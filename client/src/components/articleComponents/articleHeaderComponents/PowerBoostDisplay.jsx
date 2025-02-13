@@ -3,6 +3,7 @@ import { Box, Flex, Text, HStack } from '@chakra-ui/react'
 import { motion } from 'framer-motion'
 import { Star, Zap, Crown } from 'lucide-react'
 import { useSelector } from 'react-redux'
+import { calculateTotalMultiplier } from '../../../utils/inventory.utils'
 
 const BoostCard = ({ icon: Icon, title, isActive, onClick }) => {
   return (
@@ -222,18 +223,10 @@ const PowerBoostDisplay = ({
 }) => {
   const { isBoosted } = useSelector(state => state.app)
   const { isQuinBoostAvailable } = useSelector(state => state.quiz)
-
+  const { effects } = useSelector(state => state.inventory)
   const multiplier = useMemo(() => {
-    const activeBoosts = [
-      isBoosted,
-      isQuinBoostAvailable,
-      categoryBoost,
-    ].filter(Boolean).length
-    if (activeBoosts === 1) return '1.5X'
-    if (activeBoosts === 2) return '1.75X'
-    if (activeBoosts === 3) return '2X'
-    return null
-  }, [isBoosted, isQuinBoostAvailable, categoryBoost])
+    return calculateTotalMultiplier(effects?.boost?.multiplier, categoryBoost)
+  }, [effects, categoryBoost])
 
   return (
     <Box

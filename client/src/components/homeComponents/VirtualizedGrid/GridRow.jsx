@@ -4,6 +4,7 @@ import { GAP } from './constants'
 import Card from '../Card'
 import SkeletonCard from './SkeletonCard'
 import { useSelector } from 'react-redux'
+import { calculateTotalMultiplier } from '../../../utils/inventory.utils'
 
 const GridRow = React.memo(
   ({
@@ -22,15 +23,13 @@ const GridRow = React.memo(
       lg: GAP,
     })
     const { rows, columns, width } = data
-    const { isQuinBoostAvailable } = useSelector(state => state.quiz)
-    const { isBoosted } = useSelector(state => state.app)
+    const { effects } = useSelector(state => state.inventory)
 
     const rowData = rows[index]
     const cardWidth = (width - responsiveGap * (columns + 1)) / columns
     const totalRowWidth = cardWidth * columns + responsiveGap * (columns - 1)
     const leftPadding = (width - totalRowWidth) / 2
-    const isDoubleBoosted = isQuinBoostAvailable && isBoosted
-    const isSingleBoosted = isQuinBoostAvailable || isBoosted
+
     return (
       <Flex
         style={{
@@ -54,16 +53,10 @@ const GridRow = React.memo(
               <CardContainer key={item._id} width={cardWidth}>
                 <Card
                   difficulty={item?.articleDifficulty}
-                  multiplier={
-                    item?.rqmBoostAvailable && isDoubleBoosted
-                      ? '2x'
-                      : (item?.rqmBoostAvailable && isSingleBoosted) ||
-                        isDoubleBoosted
-                      ? '1.75x'
-                      : isSingleBoosted || item?.rqmBoostAvailable
-                      ? '1.5x'
-                      : null
-                  }
+                  multiplier={calculateTotalMultiplier(
+                    effects?.boost?.multiplier,
+                    item?.rqmBoostAvailable,
+                  )}
                   title={
                     i18n.language === 'en' ? item?.title : item?.hindiTitle
                   }

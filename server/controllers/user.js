@@ -55,6 +55,16 @@ const { processBadgePrivileges } = require('../utils/tournament.utils.js')
 const { getCategories } = require('../data/categories.js')
 const Tournament = require('../model/tournamentSchema.js')
 const { REWARDS_MODAL_CONFIG } = require('../config/rewardsModalConfig.js')
+const Inventory = require('../model/inventorySchema.js')
+const Ability = require('../model/abilitySchema.js')
+const {
+  checkActiveAbilities,
+  calculateTotalEffect,
+} = require('../services/abilityService.js')
+const {
+  verifyStreakSurgeEligibility,
+  handleStreakSurgeEarned,
+} = require('../services/abilityServices/streakSurgeService.js')
 
 const registerUser = async (req, res) => {
   const { name, email, pic, password, cpassword, inGameName } = req.body
@@ -1324,135 +1334,117 @@ const longestStreakCalculatorOfAllUsers = async (req, res) => {
 // @route GET /api/user/streakChecker
 // @access Private
 const streakChecker = asyncHandler(async (req, res) => {
-  const userId = req.user._id
+  const session = await mongoose.startSession()
   try {
-    const user = await User.findById(userId)
+    await session.withTransaction(async () => {
+      const userId = req.user._id
+      const user = await User.findById(userId).session(session)
 
-    const today = new Date()
-    today.setUTCHours(0, 0, 0, 0)
-    const tomorrow = new Date(today.getTime() + 24 * 60 * 60 * 1000)
-    const pastStreak = user.streak
-    let isRevivalPeriod = false
-    let streakBeforeBreak = 0
-    let remainingTimeBeforeRevival = null
+      const today = new Date()
+      today.setUTCHours(0, 0, 0, 0)
+      const tomorrow = new Date(today.getTime() + 24 * 60 * 60 * 1000)
+      const pastStreak = user.streak
+      let isRevivalPeriod = false
+      let streakBeforeBreak = 0
+      let remainingTimeBeforeRevival = null
 
-    // Check and handle revival period
-    if (
-      user.revivalPeriodEnd &&
-      new Date().getTime() > user.revivalPeriodEnd.getTime()
-    ) {
-      user.revivalPeriodEnd = null
-    }
-
-    if (user.streakExpiry.getTime() < tomorrow.getTime()) {
-      user.todaysQuizCnt = 0
-    }
-
-    // Handle streak expiry
-    if (today.getTime() > user.streakExpiry.getTime()) {
-      if (user.streak >= 5 && user.revivalPeriodEnd === null) {
-        user.streakBeforeBreak = user.streak
-        streakBeforeBreak = user.streak
-        user.revivalPeriodEnd = getTheRevivalEndDay(
-          user.streak,
-          user.streakExpiry,
-        )
-        remainingTimeBeforeRevival =
-          user.revivalPeriodEnd.getTime() - today.getTime()
-        isRevivalPeriod = remainingTimeBeforeRevival <= 0 ? false : true
-
-        if (remainingTimeBeforeRevival < 0) {
-          user.revivalPeriodEnd = null
-          user.streakBeforeBreak = 0
-        }
+      // Check and handle revival period
+      if (
+        user.revivalPeriodEnd &&
+        new Date().getTime() > user.revivalPeriodEnd.getTime()
+      ) {
+        user.revivalPeriodEnd = null
       }
 
-      user.streak = 0
-      user.streakExpiry = new Date(today.getTime() + 24 * 60 * 60 * 1000)
-      user.todayBoost = false
-      await user.save()
+      if (user.streakExpiry.getTime() < tomorrow.getTime()) {
+        user.todaysQuizCnt = 0
+      }
 
-      return res.status(200).json({
-        streak: 0,
-        pastStreak,
+      // Handle streak expiry
+      if (today.getTime() > user.streakExpiry.getTime()) {
+        if (user.streak >= 5 && user.revivalPeriodEnd === null) {
+          user.streakBeforeBreak = user.streak
+          streakBeforeBreak = user.streak
+          user.revivalPeriodEnd = getTheRevivalEndDay(
+            user.streak,
+            user.streakExpiry,
+          )
+          remainingTimeBeforeRevival =
+            user.revivalPeriodEnd.getTime() - today.getTime()
+          isRevivalPeriod = remainingTimeBeforeRevival <= 0 ? false : true
+
+          if (remainingTimeBeforeRevival < 0) {
+            user.revivalPeriodEnd = null
+            user.streakBeforeBreak = 0
+          }
+        }
+
+        user.streak = 0
+        user.streakExpiry = new Date(today.getTime() + 24 * 60 * 60 * 1000)
+        user.todayBoost = false
+        await user.save({ session })
+
+        return res.status(200).json({
+          streak: 0,
+          pastStreak,
+          isRevivalPeriod,
+          streakBeforeBreak,
+          remainingTimeBeforeRevival,
+          todaysQuizAttemptsCount: 0,
+        })
+      }
+
+      if (user.revivalPeriodEnd) {
+        remainingTimeBeforeRevival =
+          user.revivalPeriodEnd.getTime() - new Date().getTime()
+        isRevivalPeriod = true
+        streakBeforeBreak = user.streakBeforeBreak
+      }
+
+      // Check streak surge eligibility
+      const { isEligible: hasUnclaimedStreakSurge } =
+        await verifyStreakSurgeEligibility({
+          user,
+          session,
+        })
+
+      // Update user stats
+      if (user.streak > user.longestStreak) {
+        user.longestStreak = user.streak
+      }
+      if (user.streak >= 2) {
+        user.eligibleForTournament = true
+      }
+      await user.save({ session })
+
+      // Get active abilities to check boost status
+      const activeAbilities = await checkActiveAbilities({
+        userId: user._id,
+        type: 'BOOST',
+        name: 'StreakSurge',
+        session,
+      })
+
+      const effects = calculateTotalEffect(activeAbilities, 'BOOST')
+      // Send response
+      res.status(200).json({
+        streak: user.streak,
+        longestStreak: user.longestStreak,
+        isBoosted: effects.multiplier > 1,
         isRevivalPeriod,
         streakBeforeBreak,
         remainingTimeBeforeRevival,
-        todaysQuizAttemptsCount: 0,
+        todaysQuizAttemptsCount: user.todaysQuizCnt,
+        hasUnclaimedStreakSurge,
+        multiplier: hasUnclaimedStreakSurge ? 1.25 : effects.multiplier,
+        xpAward: activityTypes.SEVEN_DAY_STREAK.xp,
       })
-    }
-
-    if (user.revivalPeriodEnd) {
-      remainingTimeBeforeRevival =
-        user.revivalPeriodEnd.getTime() - new Date().getTime()
-      isRevivalPeriod = true
-      streakBeforeBreak = user.streakBeforeBreak
-    }
-
-    // Check for streak surge eligibility
-    const isBoosted =
-      user.streak > 0 &&
-      user.streak % 7 === 0 &&
-      user.streakExpiry.getTime() === tomorrow.getTime()
-    if (user.todayBoost && !isBoosted) {
-      user.todayBoost = false
-      await user.save()
-    }
-    // // Check if the streak surge is already claimed today
-    const checkIfAlreadyAwarded = await Activity.find({
-      userId: user._id,
-      type: activityTypes.SEVEN_DAY_STREAK.type,
-      timestamp: { $gte: today },
-    })
-
-    const hasUnclaimedStreakSurge =
-      isBoosted && !user.todayBoost && checkIfAlreadyAwarded.length === 0
-    // user.todayBoost = isBoosted
-
-    // let xpAwarded = 0
-    let seven_day_streak = false
-
-    // Handle rewards and XP
-    if (
-      isBoosted &&
-      user.todaysQuizCnt === 1
-      // && checkIfAlreadyAwarded.length === 0
-    ) {
-      // xpAwarded = await logActivity({
-      //   userInGameName: user.inGameName,
-      //   type: activityTypes.SEVEN_DAY_STREAK.type,
-      //   date: today,
-      // })
-      seven_day_streak = true
-    }
-
-    // Update user stats
-    if (user.streak > user.longestStreak) {
-      user.longestStreak = user.streak
-    }
-    if (user.streak >= 2) {
-      user.eligibleForTournament = true
-    }
-    await user.save()
-
-    // Send response
-    res.status(200).json({
-      streak: user.streak,
-      longestStreak: user.longestStreak,
-      isBoosted,
-      isRevivalPeriod,
-      streakBeforeBreak,
-      remainingTimeBeforeRevival,
-      todaysQuizAttemptsCount: user.todaysQuizCnt,
-      seven_day_streak,
-      // xpAwarded,
-      xpAward: activityTypes.SEVEN_DAY_STREAK.xp,
-      hasUnclaimedStreakSurge,
-      multiplier: isBoosted ? 1.5 : 1,
     })
   } catch (error) {
     console.error('Streak checker error:', error)
     res.status(500).json({ error: 'Internal server error' })
+  } finally {
+    session.endSession()
   }
 })
 
@@ -1460,143 +1452,63 @@ const streakChecker = asyncHandler(async (req, res) => {
 // @route  GET /api/user/claim-streak-surge
 // @access Private
 const claimStreakSurge = asyncHandler(async (req, res) => {
-  const userId = req.user._id
-
+  const session = await mongoose.startSession()
   try {
-    const user = await User.findById(userId)
-    const today = new Date()
-    today.setUTCHours(0, 0, 0, 0)
+    await session.withTransaction(async () => {
+      const userId = req.user._id
+      const user = await User.findById(userId).session(session)
 
-    // Verify the streak surge is valid
-    if (!user || !user.streak || user.streak % 7 !== 0) {
-      return res.status(400).json({ error: 'No valid streak surge available' })
-    }
+      // Verify eligibility
+      const { isEligible, alreadyClaimed } = await verifyStreakSurgeEligibility(
+        {
+          user,
+          session,
+        },
+      )
 
-    // Check if already claimed
-    const alreadyClaimed = await Activity.findOne({
-      userId: user._id,
-      type: activityTypes.SEVEN_DAY_STREAK.type,
-      timestamp: { $gte: today },
-    })
+      if (!isEligible) {
+        throw new Error('No valid streak surge available')
+      }
 
-    if (alreadyClaimed && user.todayBoost) {
-      return res.status(400).json({ error: 'Streak surge already claimed' })
-    }
+      if (alreadyClaimed) {
+        throw new Error('Streak surge already claimed today')
+      }
 
-    // Award XP and mark as claimed
-    const xpAwarded = await logActivity({
-      userInGameName: user.inGameName,
-      type: activityTypes.SEVEN_DAY_STREAK.type,
-      date: today,
-    })
+      // Create and activate streak surge ability
+      const { ability, xpAwarded } = await handleStreakSurgeEarned({
+        user,
+        session,
+      })
 
-    // Update user
-    user.todayBoost = true
-    await user.save()
+      // Auto-activate the ability
+      const inventory = await Inventory.findOne({ user: userId })
+        .populate('abilities.abilityId')
+        .session(session)
 
-    res.status(200).json({
-      message: 'Streak surge claimed successfully',
-      xpAwarded,
+      const inventoryAbility = inventory.abilities.find(invAbility =>
+        invAbility.abilityId._id.equals(ability._id),
+      )
+
+      if (inventoryAbility) {
+        inventoryAbility.isActive = true
+        await inventory.save({ session })
+
+        ability.isActive = true
+        await ability.save({ session })
+      }
+
+      res.status(200).json({
+        message: 'Streak surge claimed and activated successfully',
+        xpAwarded,
+      })
     })
   } catch (error) {
     console.error('Error claiming streak surge:', error)
-    res.status(500).json({ error: 'Internal server error' })
-  }
-})
-
-// @desc   Get user streak on every refresh of the page
-// @route  GET /api/user/quinBoostChecker
-// @access Private
-const quinBoostChecker = asyncHandler(async (req, res) => {
-  const userId = req.user._id
-  try {
-    const user = await User.findById(userId).populate({
-      path: 'quinBoosts.quinBoost',
-      select: 'createdAt',
-    })
-    if (!user) {
-      return res.status(404).json({ error: 'User not found' })
-    }
-
-    const today = new Date()
-    today.setUTCHours(0, 0, 0, 0)
-
-    // Reset expired boosts
-    const quinBoostsToReset = user.quinBoosts.filter(quinBoost => {
-      return quinBoost.quinBoost ? quinBoost.quinBoost.createdAt < today : false
-    })
-
-    for (const quinBoost of quinBoostsToReset) {
-      quinBoost.boosted = false
-      quinBoost.claimed = true // Mark expired boosts as claimed
-    }
-    await user.save()
-
-    const quizAttempts = await QuizAttempt.find({
-      user: userId,
-      createdAt: { $gte: today },
-    })
-
-    const quizLeftToGetQuizBoost = 5 - (quizAttempts.length % 6)
-
-    // Check for unclaimed but active quinBoost
-    let hasUnclaimedBoost = user.quinBoosts.some(
-      boost =>
-        boost.boosted && !boost.claimed && boost.quinBoost?.createdAt >= today,
-    )
-
-    const isQuinBoostAvailable =
-      quizLeftToGetQuizBoost === 0 && quizAttempts.length > 0
-
-    if (isQuinBoostAvailable) {
-      const existingQuinBoost = await QuinBoost.findOne({
-        user: userId,
-        createdAt: { $gte: today },
-        quizCount: quizAttempts.length,
-      })
-
-      if (!existingQuinBoost) {
-        const quinBoost = new QuinBoost({
-          user: user._id,
-          quizCount: quizAttempts.length,
-          createdAt: new Date(),
-        })
-        await quinBoost.save()
-
-        user.quinBoosts.push({
-          quinBoost: quinBoost._id,
-          boosted: true,
-          claimed: false, // Initialize as unclaimed
-        })
-        await user.save()
-
-        const notificationTitle = 'Quin Boost Activated!'
-        const notificationText = quinBoostUnlockTemplate(
-          user.todayBoost ? 1.75 : 1.5,
-        )
-
-        const newNotification = new ApplicationUpdates({
-          userId: user._id,
-          title: notificationTitle,
-          mainText: notificationText,
-          img: '',
-          read: false,
-        })
-
-        await newNotification.save()
-        hasUnclaimedBoost = true
-      }
-    }
-
-    res.status(200).json({
-      quizLeftToGetQuizBoost,
-      isQuinBoostAvailable,
-      hasUnclaimedBoost,
-      multiplier: hasUnclaimedBoost ? (user.todayBoost ? 1.75 : 1.5) : 1,
-    })
-  } catch (error) {
-    console.error(error)
-    res.status(500).json({ error: 'Internal server error' })
+    res
+      .status(400)
+      .json({ error: error.message || 'Error claiming streak surge' })
+  } finally {
+    session.endSession()
   }
 })
 
@@ -1607,11 +1519,7 @@ const claimQuinBoost = asyncHandler(async (req, res) => {
   const userId = req.user._id
 
   try {
-    const user = await User.findById(userId).populate({
-      path: 'quinBoosts.quinBoost',
-      select: 'createdAt',
-    })
-
+    const user = await User.findById(userId)
     if (!user) {
       return res.status(404).json({ error: 'User not found' })
     }
@@ -1619,26 +1527,53 @@ const claimQuinBoost = asyncHandler(async (req, res) => {
     const today = new Date()
     today.setUTCHours(0, 0, 0, 0)
 
-    // Find the first unclaimed, active boost
-    const boostIndex = user.quinBoosts.findIndex(
-      boost =>
-        boost.boosted && !boost.claimed && boost.quinBoost?.createdAt >= today,
-    )
-
-    if (boostIndex === -1) {
-      return res.status(400).json({ error: 'No unclaimed quinBoost found' })
+    const quinBoostAbility = await Ability.findOne({
+      name: 'QuinBoost',
+      user: userId,
+      claimed: false,
+      expiresAt: { $gte: new Date() },
+    })
+    if (!quinBoostAbility || quinBoostAbility.claimed) {
+      return res.status(400).json({ error: 'No QuinBoost available to claim' })
     }
 
-    // Mark the boost as claimed
-    user.quinBoosts[boostIndex].claimed = true
-    await user.save()
+    // Get or create user's inventory
+    let inventory = await Inventory.findOne({ user: userId })
+    if (!inventory) {
+      inventory = new Inventory({ user: userId })
+    }
+
+    // Calculate expiry date (5 days from now)
+    const expiryDate = quinBoostAbility.expiresAt
+
+    // Add QuinBoost to inventory
+    inventory.abilities.push({
+      abilityId: quinBoostAbility._id,
+      quantity: 1,
+      expiresAt: expiryDate,
+      isActive: false,
+      acquiredAt: new Date(),
+    })
+
+    await inventory.save()
+    quinBoostAbility.claimed = true
+    await quinBoostAbility.save()
+    // Create notification
+    const notification = new ApplicationUpdates({
+      userId,
+      title: 'QuinBoost Added to Inventory!',
+      mainText: `You've earned a QuinBoost! Use it from your inventory to get a 1.5x RQM score boost on your next quiz.`,
+      type: 'applicationUpdate',
+    })
+
+    await notification.save()
 
     res.status(200).json({
-      message: 'QuinBoost claimed successfully',
-      multiplier: user.todayBoost ? 1.75 : 1.5,
+      message: 'QuinBoost successfully added to inventory',
+      expiresAt: expiryDate,
     })
   } catch (error) {
-    console.error(error)
+    console.error('Error claiming QuinBoost:', error)
     res.status(500).json({ error: 'Internal server error' })
   }
 })
@@ -2235,6 +2170,160 @@ const checkRewardsModalStatus = asyncHandler(async (req, res) => {
   }
 })
 
+const getUserAchievements = asyncHandler(async (req, res) => {
+  const userId = req.user._id
+
+  const user = await User.findById(userId)
+    .populate('badges')
+    .populate('tournamentPerformance')
+    .populate({
+      path: 'quizAttempts',
+      populate: {
+        path: 'article',
+        select: 'category articleDifficulty',
+      },
+    })
+
+  // Get all timeSpent records for this user
+  const timeSpentRecords = await TimeSpent.find({ userId })
+    .populate('articleId', 'category')
+    .lean()
+
+  // Progress Stats
+  const progressStats = {
+    level: user.level,
+    totalXP: user.xp,
+    quizzesSolved: user.quizAttempts.length,
+    globalRank: user.rank,
+    society: user.society,
+    IQScore: user.IQ_score,
+    averageRQM: user.avgRQM,
+  }
+
+  // Tournament Achievements
+  const tournamentStats = {
+    totalBadges: user.badges.length,
+    aceBadges: user.badges.filter(b => b.badgeName === 'ACE').length,
+    proBadges: user.badges.filter(b => b.badgeName === 'PRO').length,
+    champBadges: user.badges.filter(b => b.badgeName === 'CHAMP').length,
+    tournamentWins: user.tournamentPerformance.filter(t => t.rank === 1).length,
+    top3Finishes: user.tournamentPerformance.filter(t => t.rank <= 3).length,
+  }
+
+  // Calculate perfect quiz days
+  const quizAttemptsByDay = user.quizAttempts.reduce((acc, attempt) => {
+    const date = new Date(attempt.createdAt).toDateString()
+    if (!acc[date]) {
+      acc[date] = {
+        attempts: [],
+        totalRQM: 0,
+        count: 0,
+      }
+    }
+    acc[date].attempts.push(attempt)
+    acc[date].totalRQM += attempt.RQM_score
+    acc[date].count += 1
+    return acc
+  }, {})
+
+  const perfectQuizDays = Object.values(quizAttemptsByDay).filter(day => {
+    // A perfect day is when average RQM score is above 90 with at least 3 attempts
+    return day.count >= 3 && day.totalRQM / day.count >= 90
+  }).length
+
+  // Streak Achievements
+  const streakStats = {
+    currentStreak: user.streak,
+    longestStreak: user.longestStreak,
+    totalDaysActive: user.loginStreak,
+    perfectQuizDays,
+  }
+
+  // Calculate preferred categories using both quiz attempts and time spent
+  const categoryStats = {}
+
+  // Process quiz attempts for categories
+  user.quizAttempts.forEach(attempt => {
+    const category = attempt.article?.category
+    if (!category) return
+
+    if (!categoryStats[category]) {
+      categoryStats[category] = {
+        quizCount: 0,
+        totalRQM: 0,
+        timeSpent: 0,
+        score: 0,
+      }
+    }
+    categoryStats[category].quizCount += 1
+    categoryStats[category].totalRQM += attempt.RQM_score
+  })
+
+  // Process time spent for categories
+  timeSpentRecords.forEach(record => {
+    const category = record.articleId?.category
+    if (!category) return
+
+    if (!categoryStats[category]) {
+      categoryStats[category] = {
+        quizCount: 0,
+        totalRQM: 0,
+        timeSpent: 0,
+        score: 0,
+      }
+    }
+    categoryStats[category].timeSpent += record.timeSpent
+  })
+
+  // Calculate final scores for categories
+  Object.keys(categoryStats).forEach(category => {
+    const stats = categoryStats[category]
+    // Weight calculation:
+    // 50% - Number of quizzes attempted
+    // 30% - Average RQM score
+    // 20% - Time spent
+    const quizWeight = (stats.quizCount / user.quizAttempts.length) * 50
+    const rqmWeight =
+      stats.quizCount > 0 ? (stats.totalRQM / stats.quizCount / 100) * 30 : 0
+    const timeWeight =
+      (stats.timeSpent /
+        Object.values(categoryStats).reduce(
+          (sum, cat) => sum + cat.timeSpent,
+          0,
+        )) *
+      20
+
+    stats.score = quizWeight + rqmWeight + timeWeight
+  })
+
+  // Get top 3 categories
+  const topCategories = Object.entries(categoryStats)
+    .sort(([, a], [, b]) => b.score - a.score)
+    .slice(0, 3)
+    .map(([category, stats]) => ({
+      category,
+      score: Math.round(stats.score),
+      quizCount: stats.quizCount,
+      avgRQM:
+        stats.quizCount > 0 ? Math.round(stats.totalRQM / stats.quizCount) : 0,
+    }))
+
+  // Category Expertise
+  const expertise = {
+    easyMastery: user.easyQuizCount,
+    mediumMastery: user.mediumQuizCount,
+    hardMastery: user.hardQuizCount,
+    preferredCategories: topCategories,
+  }
+
+  res.json({
+    progressStats,
+    tournamentStats,
+    streakStats,
+    categoryStats: expertise,
+  })
+})
+
 module.exports = {
   registerUser,
   loginUser,
@@ -2261,7 +2350,6 @@ module.exports = {
   quizDailyStreakUpdator,
   longestStreakCalculatorOfAllUsers,
   streakChecker,
-  quinBoostChecker,
   updateNewSeasonModal,
   seasonHistory,
   bookmark,
@@ -2283,4 +2371,5 @@ module.exports = {
   getValidCategories,
   updateBadgeCategory,
   checkRewardsModalStatus,
+  getUserAchievements,
 }
