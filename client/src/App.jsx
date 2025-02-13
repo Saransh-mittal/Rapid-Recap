@@ -45,9 +45,15 @@ const TournamentRewardsModal = React.lazy(() =>
     './components/tournamentComponents/rewards/TournamentRewardsModal.jsx'
   ),
 )
-import PWAPromptStrip from './components/pwa/PWAPromptStrip'
+// import PWAPromptStrip from './components/pwa/PWAPromptStrip'
+const PWAPromptStrip = React.lazy(() =>
+  import('./components/pwa/PWAPromptStrip.jsx'),
+)
 import { getPWAPromptStatus } from './utils/pwaInstallStore'
-import { RewardDisplay } from './components/rewards'
+// import { RewardDisplay } from './components/rewards'
+const RewardDisplay = React.lazy(() =>
+  import('./components/rewards/RewardDisplay.jsx'),
+)
 
 import {
   fetchUnreadNoteMessages,
@@ -475,7 +481,9 @@ const App = () => {
       <Suspense fallback={null}>
         {!showLoadingScreen && <FixedBackground />}
       </Suspense>
-      {showPWAPrompt && <PWAPromptStrip onClose={handlePromptClose} />}
+      <Suspense fallback={null}>
+        {showPWAPrompt && <PWAPromptStrip onClose={handlePromptClose} />}
+      </Suspense>
       <Suspense fallback={null}>
         <NoteMessageQueue />
       </Suspense>
