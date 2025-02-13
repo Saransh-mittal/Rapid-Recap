@@ -1,0 +1,30 @@
+{
+  "header": {
+    "title": "टूर्नामेंट बैज"
+  },
+  "badges": {
+    "tournament": "टूर्नामेंट {{number}}",
+    "rank": {
+      "first": "विजेता",
+      "second": "उपविजेता",
+      "third": "द्वितीय उपविजेता",
+      "participant": "प्रतिभागी"
+    },
+    "stats": {
+      "participants": "{{count}} प्रतिभागी"
+    }
+  },
+  "notifications": {
+    "updateSuccess": {
+      "title": "बैज अपडेट किया गया",
+      "description": "आपका प्रदर्शित बैज सफलतापूर्वक अपडेट कर दिया गया है।"
+    },
+    "updateError": {
+      "title": "त्रुटि",
+      "description": "बैज अपडेट करने में विफल।"
+    }
+  },
+  "empty": {
+    "noBadges": "अभी तक कोई टूर्नामेंट बैज अर्जित नहीं किया गया"
+  }
+}

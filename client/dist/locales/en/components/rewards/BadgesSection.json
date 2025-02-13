@@ -1,0 +1,30 @@
+{
+  "header": {
+    "title": "Tournament Badges"
+  },
+  "badges": {
+    "tournament": "Tournament {{number}}",
+    "rank": {
+      "first": "Champion",
+      "second": "Runner-up",
+      "third": "Second Runner-up",
+      "participant": "Participant"
+    },
+    "stats": {
+      "participants": "{{count}} Participants"
+    }
+  },
+  "notifications": {
+    "updateSuccess": {
+      "title": "Badge Updated",
+      "description": "Your displayed badge has been updated successfully."
+    },
+    "updateError": {
+      "title": "Error",
+      "description": "Failed to update badge."
+    }
+  },
+  "empty": {
+    "noBadges": "No tournament badges earned yet"
+  }
+}
