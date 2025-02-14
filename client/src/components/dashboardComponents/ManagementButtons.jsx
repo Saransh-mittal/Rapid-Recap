@@ -10,6 +10,7 @@ const ManagementButtons = ({
   onTestTournamentManagementOpen,
   onOnboardingArticleOpen,
   onMaintenanceOpen,
+  onAnnouncementOpen,
 }) => {
   const buttonColorScheme = 'teal'
 
@@ -44,6 +45,9 @@ const ManagementButtons = ({
       </Button>
       <Button colorScheme={buttonColorScheme} onClick={onMaintenanceOpen}>
         Manage Maintenance
+      </Button>
+      <Button onClick={onAnnouncementOpen} colorScheme={buttonColorScheme}>
+        Send Announcement
       </Button>
     </SimpleGrid>
   )

@@ -24,6 +24,7 @@ import {
   Spinner,
   VStack,
   useBreakpointValue,
+  IconButton,
 } from '@chakra-ui/react'
 import { Share2 } from 'lucide-react'
 import html2canvas from 'html2canvas'
@@ -265,7 +266,7 @@ const ShareAchievements = () => {
 
   return (
     <>
-      <Button
+      {/* <Button
         leftIcon={<Share2 />}
         onClick={onOpen}
         colorScheme="purple"
@@ -274,7 +275,10 @@ const ShareAchievements = () => {
         _hover={{ bg: 'rgba(128, 90, 213, 0.12)' }}
       >
         Share Achievements
-      </Button>
+      </Button> */}
+      <Box onClick={onOpen} cursor="pointer">
+        <Share2 boxSize={6} color={'white'} />
+      </Box>
 
       <Modal isOpen={isOpen} onClose={onClose} size="full">
         <ModalContent

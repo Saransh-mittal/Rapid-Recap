@@ -5,6 +5,7 @@ const { sendNotification } = require('../services/notificationService')
 const asyncHandler = require('express-async-handler')
 const i18n = require('i18next')
 const User = require('../model/userSchema')
+const ApplicationUpdates = require('../model/applicationUpdatesSchema')
 
 const notificationNews = async (req, res) => {
   try {
@@ -86,8 +87,57 @@ const getNoteMessages = asyncHandler(async (req, res) => {
   }
 })
 
+// @desc  Create an announcement
+// @route POST /api/admin/announcement
+// @access Private/Admin
+const createAnnouncement = asyncHandler(async (req, res) => {
+  const { title, mainText, img, pushNotificationText } = req.body
+
+  if (!title || !mainText) {
+    res.status(400)
+    throw new Error('Title and main text are required')
+  }
+
+  try {
+    // Get all users
+    const users = await User.find({})
+
+    // Create application updates for all users
+    const updates = users.map(user => ({
+      title,
+      mainText,
+      img,
+      userId: user._id,
+      type: 'applicationUpdate',
+    }))
+
+    await ApplicationUpdates.insertMany(updates)
+
+    // Send push notifications if text is provided
+    const notificationText = pushNotificationText || mainText
+
+    // Send notifications to all users
+    for (const user of users) {
+      await sendNotification({
+        title,
+        body: notificationText,
+        icon: '/images/rrlogo.webp',
+        image: img,
+        userId: user._id,
+      })
+    }
+
+    res.status(200).json({ message: 'Announcement sent successfully' })
+  } catch (error) {
+    console.error('Error creating announcement:', error)
+    res.status(500)
+    throw new Error('Failed to create announcement')
+  }
+})
+
 module.exports = {
   notificationNews,
   notificationNewMessageChats,
   getNoteMessages,
+  createAnnouncement,
 }

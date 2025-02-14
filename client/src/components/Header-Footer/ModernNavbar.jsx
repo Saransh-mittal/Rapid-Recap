@@ -244,12 +244,12 @@ const ModernNavbar = ({ onNavbarLoad }) => {
             icon={<Search size={20} />}
             onClick={() => onOpenUserSearch()}
           />
-          <IconButton
+          {/* <IconButton
             icon={<MessageCircle size={20} />}
             hasNotification={notification?.length > 0}
             notificationCount={notification?.length}
             onClick={() => navigate('/chats')}
-          />
+          /> */}
           <Box position={'relative'}>
             {notifyCont > 0 && (
               <Badge

@@ -508,7 +508,7 @@ const LeftProfileBox = ({ leftProfileView, CURR_IQ, MAX_IQ, avgRQMScore }) => {
               user?._id !== leftProfileView?._id &&
               user?.role !== 'guest' && (
                 <Flex marginLeft="1.5rem" paddingTop="10px">
-                  {renderFriendButton()}
+                  {/* {renderFriendButton()} */}
                 </Flex>
               )}
           </Flex>

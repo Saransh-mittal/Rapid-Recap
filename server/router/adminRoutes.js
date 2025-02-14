@@ -50,6 +50,7 @@ const {
   cancelMaintenanceWindow,
   getMaintenanceWindows,
 } = require('../controllers/maintenanceController')
+const { createAnnouncement } = require('../controllers/notification')
 const router = express.Router()
 
 router.post(
@@ -246,5 +247,7 @@ router.post(
   cancelMaintenanceWindow,
 )
 router.get('/maintenance', Authenticate, adminMiddleware, getMaintenanceWindows)
+
+router.post('/announcement', Authenticate, adminMiddleware, createAnnouncement)
 
 module.exports = router
