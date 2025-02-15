@@ -7,12 +7,16 @@ const {
 const User = require('../model/userSchema')
 const QuizAttempt = require('../model/quizAttemptSchema')
 const i18n = require('i18next')
-const { makeRetryable } = require('./retryUtils')
+const { makeRetryable, defaultIsRetryableError } = require('./retryUtils')
 const moment = require('moment-timezone')
 const ApplicationUpdates = require('../model/applicationUpdatesSchema')
 const {
   tournamentWinnerNotificationTemplate,
 } = require('../data/inboxNotificationsTemplates')
+const {
+  createCategoryAbilities,
+} = require('../services/abilityServices/tournamentAbilityService')
+const mongoose = require('mongoose')
 
 const getUserRegistrationDetails = async (userId, tournamentId, session) => {
   try {
@@ -132,9 +136,9 @@ const getTopLeadersForCategory = makeRetryable(
 )
 
 /**
- * Determines which badges a user should receive based on their tournament performance
+ * Base function for determining badges with session management
  */
-const determineBadges = ({
+const determineBadgesWithSession = async ({
   rank,
   participantCount,
   selectedCategories,
@@ -142,49 +146,139 @@ const determineBadges = ({
   userId,
   hasParticipated,
 }) => {
-  const top5Threshold = Math.ceil(participantCount * 0.05)
-  const top10Threshold = Math.ceil(participantCount * 0.1)
-  const top25Threshold = Math.ceil(participantCount * 0.25)
+  const session = await mongoose.startSession()
 
-  // Determine overall rank badge
-  let overallBadge = null
-  if (rank === 1) overallBadge = BADGE_CONFIG.RANK_1
-  else if (rank === 2) overallBadge = BADGE_CONFIG.RANK_2
-  else if (rank === 3) overallBadge = BADGE_CONFIG.RANK_3
-  else if (rank <= top5Threshold) overallBadge = BADGE_CONFIG.TOP_5
-  else if (rank <= top10Threshold) overallBadge = BADGE_CONFIG.TOP_10
-  else if (rank <= top25Threshold) overallBadge = BADGE_CONFIG.TOP_25
-  else if (hasParticipated) overallBadge = BADGE_CONFIG.QUIZ_WARRIOR
+  try {
+    // Capture and return the result of the transaction
+    const result = await session.withTransaction(async () => {
+      const top5Threshold = Math.ceil(participantCount * 0.05)
+      const top10Threshold = Math.ceil(participantCount * 0.1)
+      const top25Threshold = Math.ceil(participantCount * 0.25)
 
-  // Determine category badges
-  const categoryBadges = selectedCategories
-    .map(category => {
-      const categoryRank = categoryLeaders[category]?.findIndex(
-        leader => leader.userId.toString() === userId.toString(),
+      // Determine overall rank badge
+      let overallBadge = null
+      if (rank === 1) overallBadge = BADGE_CONFIG.RANK_1
+      else if (rank === 2) overallBadge = BADGE_CONFIG.RANK_2
+      else if (rank === 3) overallBadge = BADGE_CONFIG.RANK_3
+      else if (rank <= top5Threshold) overallBadge = BADGE_CONFIG.TOP_5
+      else if (rank <= top10Threshold) overallBadge = BADGE_CONFIG.TOP_10
+      else if (rank <= top25Threshold) overallBadge = BADGE_CONFIG.TOP_25
+      else if (hasParticipated) overallBadge = BADGE_CONFIG.QUIZ_WARRIOR
+
+      // Process category badges with retry mechanism
+      const categoryBadgePromises = selectedCategories.map(category =>
+        processCategoryBadge({
+          category,
+          categoryLeaders,
+          userId,
+          session,
+        }),
       )
 
-      // Only assign badge if user is in top 3
-      if (categoryRank > 2 || categoryRank === -1) return null
+      // Wait for all category badge processing to complete
+      const categoryBadges = (await Promise.all(categoryBadgePromises)).filter(
+        Boolean,
+      )
 
-      // Create badge with optional text based on category
-      const badge = (() => {
-        if (categoryRank === 0) return { ...BADGE_CONFIG.ACE }
-        if (categoryRank === 1) return { ...BADGE_CONFIG.PRO }
-        if (categoryRank === 2) return { ...BADGE_CONFIG.CHAMP }
-      })()
-
-      // Only add category text for regular categories
-      if (badge && shouldHaveBadgeText(category)) {
-        badge.text = category
-      }
-
-      return badge
+      // Return the result object
+      return { overallBadge, categoryBadges }
     })
-    .filter(Boolean)
 
-  return { overallBadge, categoryBadges }
+    // Return the transaction result
+    return result
+  } catch (error) {
+    // Add context to the error for retry mechanism
+    const enhancedError = new Error(
+      'Badge determination failed: ' + error.message,
+    )
+    enhancedError.originalError = error
+    throw enhancedError
+  } finally {
+    await session.endSession()
+  }
+}
+/**
+ * Retryable version of the badge determination process with session management
+ */
+const determineBadges = makeRetryable(determineBadgesWithSession, {
+  operationName: 'DetermineBadges',
+  maxRetries: 3,
+  onRetry: (error, attempt) => {
+    console.warn(
+      `Retrying badge determination, attempt ${attempt}. Error: ${error.message}`,
+    )
+  },
+  isRetryable: error => {
+    // Check if the error has transaction-related labels
+    if (error.originalError?.errorLabels?.includes('TransientTransactionError'))
+      return true
+    if (error.originalError?.errorLabels?.includes('RetryableWriteError'))
+      return true
+
+    // Check custom error messages
+    if (error.message.includes('Badge determination failed')) return true
+    if (error.message.includes('Category badge processing failed')) return true
+
+    // Fall back to default error checker
+    return defaultIsRetryableError(error)
+  },
+})
+
+/**
+ * Process category badge with retry mechanism
+ */
+const processCategoryBadgeBase = async ({
+  category,
+  categoryLeaders,
+  userId,
+  session,
+}) => {
+  if (!session) {
+    throw new Error('Session is required for category badge processing')
+  }
+
+  const categoryRank = categoryLeaders[category]?.findIndex(
+    leader => leader.userId.toString() === userId.toString(),
+  )
+
+  // Only assign badge if user is in top 3
+  if (categoryRank > 2 || categoryRank === -1) return null
+
+  // Create badge with optional text based on category
+  const badge = (() => {
+    if (categoryRank === 0) return { ...BADGE_CONFIG.ACE }
+    if (categoryRank === 1) return { ...BADGE_CONFIG.PRO }
+    if (categoryRank === 2) return { ...BADGE_CONFIG.CHAMP }
+  })()
+
+  // Only add category text for regular categories
+  if (badge && shouldHaveBadgeText(category)) {
+    badge.text = category
+    await createCategoryAbilities({
+      userId,
+      category: badge.text,
+      badgeName: badge.name,
+      session,
+    })
+  }
+
+  return badge
 }
 
+const processCategoryBadge = makeRetryable(processCategoryBadgeBase, {
+  operationName: 'ProcessCategoryBadge',
+  maxRetries: 3,
+  onRetry: (error, attempt) => {
+    console.warn(
+      `Retrying category badge processing, attempt ${attempt}. Error: ${error.message}`,
+    )
+  },
+  isRetryable: error => {
+    if (error.message.includes('Category processing failed')) return true
+    if (error.message.includes('Transaction aborted')) return true
+    return defaultIsRetryableError(error)
+  },
+})
 /**
  * Determines which badge should be displayed for a user
  */
@@ -196,9 +290,9 @@ const determineDisplayedBadge = ({ overallBadge, categoryBadges }) => {
     return overallBadge
   }
 
-  const aceBadge = categoryBadges.find(badge => badge.name === 'ACE')
-  const proBadge = categoryBadges.find(badge => badge.name === 'PRO')
-  const champBadge = categoryBadges.find(badge => badge.name === 'CHAMP')
+  const aceBadge = categoryBadges?.find(badge => badge.name === 'ACE')
+  const proBadge = categoryBadges?.find(badge => badge.name === 'PRO')
+  const champBadge = categoryBadges?.find(badge => badge.name === 'CHAMP')
 
   return aceBadge || proBadge || champBadge || overallBadge
 }
@@ -431,7 +525,7 @@ const updateTournamentPerformanceAndBadges = async tournament => {
         })
 
         // Determine badges
-        const { overallBadge, categoryBadges } = determineBadges({
+        const resultingBadges = await determineBadges({
           rank,
           participantCount,
           selectedCategories: entry.selectedCategories,
@@ -440,6 +534,8 @@ const updateTournamentPerformanceAndBadges = async tournament => {
           hasParticipated,
         })
 
+        const overallBadge = resultingBadges?.overallBadge
+        const categoryBadges = resultingBadges?.categoryBadges
         // Determine displayed badge
         const displayedBadge = determineDisplayedBadge({
           overallBadge,

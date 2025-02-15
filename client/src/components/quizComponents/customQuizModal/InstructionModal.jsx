@@ -64,9 +64,7 @@ const InstructionModalBody = () => {
           </Box>
         ))}
       </VStack>
-      <PowerBoostDisplay
-        categoryBoost={articleData?.isArticleCategoryBoosted}
-      />
+      <PowerBoostDisplay category={articleData?.category} />
     </Box>
   )
 }

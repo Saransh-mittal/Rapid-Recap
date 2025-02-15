@@ -4,7 +4,6 @@ import { GAP } from './constants'
 import Card from '../Card'
 import SkeletonCard from './SkeletonCard'
 import { useSelector } from 'react-redux'
-import { calculateTotalMultiplier } from '../../../utils/inventory.utils'
 
 const GridRow = React.memo(
   ({
@@ -53,10 +52,7 @@ const GridRow = React.memo(
               <CardContainer key={item._id} width={cardWidth}>
                 <Card
                   difficulty={item?.articleDifficulty}
-                  multiplier={calculateTotalMultiplier(
-                    effects?.boost?.multiplier,
-                    item?.rqmBoostAvailable,
-                  )}
+                  multiplier={effects?.boost?.multiplier}
                   title={
                     i18n.language === 'en' ? item?.title : item?.hindiTitle
                   }

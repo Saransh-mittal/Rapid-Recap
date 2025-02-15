@@ -216,16 +216,23 @@ const DecorativeFrame = () => {
 }
 
 const PowerBoostDisplay = ({
-  categoryBoost,
+  category,
   openModal,
   openStreakSurgeModal,
   openCategoryBoostModal,
 }) => {
   const { isBoosted } = useSelector(state => state.app)
   const { isQuinBoostAvailable } = useSelector(state => state.quiz)
-  const { effects } = useSelector(state => state.inventory)
+  const { effects, activeAbilities } = useSelector(state => state.inventory)
+
+  const categoryBoost = useMemo(() => {
+    return activeAbilities.find(
+      ability =>
+        ability?.name?.split(' ')?.[0] === category && ability.type === 'BOOST',
+    )
+  }, [activeAbilities])
   const multiplier = useMemo(() => {
-    return calculateTotalMultiplier(effects?.boost?.multiplier, categoryBoost)
+    return `${effects?.boost?.multiplier}x`
   }, [effects, categoryBoost])
 
   return (

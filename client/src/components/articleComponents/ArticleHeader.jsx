@@ -55,8 +55,6 @@ const ArticleHeader = ({
   dateTime,
   bookmarkStatus,
   article,
-  isQuinBoostAvailable,
-  quizLeftToGetQuizBoost,
   openModal,
   onThemeChange,
   openStreakSurgeModal,
@@ -72,6 +70,7 @@ const ArticleHeader = ({
     enabled: features.hasAudioSupport,
     volume: 0.5,
   })
+
   const { isOpen, onOpen: onOpenShareModal, onClose } = useDisclosure()
   const [isLargerThan768] = useMediaQuery('(min-width: 768px)')
   const toast = useToast()
@@ -299,13 +298,10 @@ const ArticleHeader = ({
             position={'relative'}
           >
             <BoostSection
-              isCategoryBoostAvailable={article?.isArticleCategoryBoosted}
+              category={article?.category}
               openStreakSurgeModal={openStreakSurgeModal}
               openCategoryBoostModal={openCategoryBoostModal}
-              isQuinBoostAvailable={isQuinBoostAvailable}
-              quizLeftToGetQuizBoost={quizLeftToGetQuizBoost}
               openModal={openModal}
-              isBoosted={isBoosted}
             />
 
             <ShareButton

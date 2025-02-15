@@ -9,14 +9,7 @@ import React, {
   useMemo,
 } from 'react'
 import axios from 'axios'
-import {
-  Flex,
-  useToast,
-  Grid,
-  useMediaQuery,
-  Box,
-  Button,
-} from '@chakra-ui/react'
+import { Flex, useToast, Grid, useMediaQuery, Box } from '@chakra-ui/react'
 import { useParams } from 'react-router-dom'
 import ReactGA from 'react-ga4'
 import { Helmet } from 'react-helmet'
@@ -41,7 +34,6 @@ import TrackTime from '../components/articleComponents/TrackTime'
 import MainArticleContentSkeleton from '../components/articleComponents/loaders/MainArticleContentSkeleton'
 import StreakSurgeModal from '../components/articleComponents/StreakSurgeModal'
 import CategoryBoostModal from '../components/articleComponents/CategoryBoostModal'
-import InstructionModalBody from '../components/quizComponents/customQuizModal/InstructionModal'
 //SSR images
 const fallback_news_image = '/images/fallback_news_image.webp'
 
@@ -57,9 +49,7 @@ const Article = () => {
   const { articleData, totalUsersGivenQuiz } = useSelector(
     state => state.articles,
   )
-  const { quizLeftToGetQuizBoost, isQuinBoostAvailable } = useSelector(
-    state => state.quiz,
-  )
+  const { isQuinBoostAvailable } = useSelector(state => state.quiz)
   const dispatch = useDispatch()
   const { id } = useParams()
 
@@ -113,7 +103,6 @@ const Article = () => {
   const [isLargerThan821] = useMediaQuery('(min-width: 821px)')
   const [bookmark, setBookmark] = useState(false)
   const [isQuizGivenLoading, setIsQuizGivenLoading] = useState(true)
-  const quizFetchTimer = useRef(null)
 
   const notLoggedIn = !isAuthenticated
 
@@ -571,8 +560,6 @@ const Article = () => {
                 dateTime={dateTime}
                 bookmarkStatus={bookmarkStatus}
                 article={article}
-                isQuinBoostAvailable={isQuinBoostAvailable}
-                quizLeftToGetQuizBoost={quizLeftToGetQuizBoost}
                 openStreakSurgeModal={() => setIsStreakSurgeModalOpen(true)}
                 openCategoryBoostModal={() => setIsCategoryBoostModalOpen(true)}
                 openModal={openModal}
