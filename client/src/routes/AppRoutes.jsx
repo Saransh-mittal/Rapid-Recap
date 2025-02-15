@@ -57,7 +57,7 @@ const AppRoutes = ({ isToken, needsOnboarding, setIsGuestLoggedin }) => {
             <Route path="/contact/feedback" element={<ContactLayout />} />
             <Route path="/home/:category" element={<Home />} />
             <Route path="/home" element={<Home />} />
-            <Route
+            {/* <Route
               path="/chats"
               element={
                 <ServiceScreen
@@ -67,7 +67,7 @@ const AppRoutes = ({ isToken, needsOnboarding, setIsGuestLoggedin }) => {
                   quoteAuthor="Peter Drucker"
                 />
               }
-            />
+            /> */}
             <Route path="/article/:id/:slug" element={<Article />} />
             <Route path="/article/:id" element={<Article />} />
             <Route path="/profile/:inGameName" element={<Profile />} />

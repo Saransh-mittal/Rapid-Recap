@@ -1,12 +1,35 @@
-import React, { useState, useEffect } from 'react'
+import React, { useState, useEffect, Suspense, lazy } from 'react'
 import { Box, VStack, useToast } from '@chakra-ui/react'
-import AnimatedBackground from '../components/HallOfChampions/AnimatedBackground'
-import ChampionCard from '../components/HallOfChampions/ChampionCard'
-import TournamentCard from '../components/HallOfChampions/TournamentCard'
-import HallOfChampionsHeader from '../components/HallOfChampions/HallOfChampionsHeader'
-import ChampionDetailsModal from '../components/HallOfChampions/ChampionDetailsModal'
-import EnhancedTabs from '../components/HallOfChampions/EnhancedTabs'
+
+// Lazy load major components
+const AnimatedBackground = lazy(() =>
+  import('../components/HallOfChampions/AnimatedBackground'),
+)
+const ChampionCard = lazy(() =>
+  import('../components/HallOfChampions/ChampionCard'),
+)
+const TournamentCard = lazy(() =>
+  import('../components/HallOfChampions/TournamentCard'),
+)
+const HallOfChampionsHeader = lazy(() =>
+  import('../components/HallOfChampions/HallOfChampionsHeader'),
+)
+const ChampionDetailsModal = lazy(() =>
+  import('../components/HallOfChampions/ChampionDetailsModal'),
+)
+const EnhancedTabs = lazy(() =>
+  import('../components/HallOfChampions/EnhancedTabs'),
+)
+
+// Keep ShimmerTournamentCard eager loaded since it's used for loading states
 import ShimmerTournamentCard from '../components/HallOfChampions/ShimmerTournamentCard'
+
+// Loading fallback component
+const LoadingFallback = () => (
+  <Box display="flex" justifyContent="center" alignItems="center" minH="200px">
+    <ShimmerTournamentCard />
+  </Box>
+)
 
 const HallOfChampions = () => {
   const [selectedChampion, setSelectedChampion] = useState(null)
@@ -98,69 +121,83 @@ const HallOfChampions = () => {
   }, [])
 
   return (
-    <Box minH="100vh" position="relative">
-      <AnimatedBackground />
+    <Suspense fallback={<LoadingFallback />}>
+      <Box minH="100vh" position="relative">
+        <Suspense fallback={<Box minH="100vh" bg="gray.900" />}>
+          <AnimatedBackground />
+        </Suspense>
 
-      <Box
-        position="relative"
-        zIndex="1"
-        pt={{ base: '60px', md: '80px' }}
-        pb={8}
-      >
-        <HallOfChampionsHeader />
+        <Box
+          position="relative"
+          zIndex="1"
+          pt={{ base: '60px', md: '80px' }}
+          pb={8}
+        >
+          <Suspense fallback={<Box h="100px" />}>
+            <HallOfChampionsHeader />
+          </Suspense>
 
-        <VStack maxW="1200px" mx="auto" px={4} spacing={8}>
-          <EnhancedTabs
-            onTournamentChange={handleTournamentChange}
-            onLeaderboardFilterChange={handleLeaderboardChange}
-          >
-            <VStack spacing={4} w="full">
-              {isLoading ? (
-                <>
-                  <ShimmerTournamentCard />
-                  <ShimmerTournamentCard />
-                  <ShimmerTournamentCard />
-                </>
-              ) : championsData.length === 0 ? (
-                <Box>No champions data available yet</Box>
-              ) : (
-                championsData.map((champion, index) => (
-                  <ChampionCard
-                    key={champion.id || index}
-                    champion={champion}
-                    index={index}
-                    onClick={() => handleChampionClick(champion)}
-                  />
-                ))
-              )}
-            </VStack>
-            <VStack spacing={4} w="full">
-              {isLoading ? (
-                <>
-                  <ShimmerTournamentCard />
-                  <ShimmerTournamentCard />
-                  <ShimmerTournamentCard />
-                </>
-              ) : (
-                tournamentData.map((tournament, index) => (
-                  <TournamentCard
-                    key={tournament.id}
-                    data={tournament}
-                    index={index}
-                  />
-                ))
-              )}
-            </VStack>
-          </EnhancedTabs>
-        </VStack>
+          <VStack maxW="1200px" mx="auto" px={4} spacing={8}>
+            <Suspense fallback={<LoadingFallback />}>
+              <EnhancedTabs
+                onTournamentChange={handleTournamentChange}
+                onLeaderboardFilterChange={handleLeaderboardChange}
+              >
+                <VStack spacing={4} w="full">
+                  {isLoading ? (
+                    <>
+                      <ShimmerTournamentCard />
+                      <ShimmerTournamentCard />
+                      <ShimmerTournamentCard />
+                    </>
+                  ) : championsData.length === 0 ? (
+                    <Box>No champions data available yet</Box>
+                  ) : (
+                    <Suspense fallback={<LoadingFallback />}>
+                      {championsData.map((champion, index) => (
+                        <ChampionCard
+                          key={champion.id || index}
+                          champion={champion}
+                          index={index}
+                          onClick={() => handleChampionClick(champion)}
+                        />
+                      ))}
+                    </Suspense>
+                  )}
+                </VStack>
+                <VStack spacing={4} w="full">
+                  {isLoading ? (
+                    <>
+                      <ShimmerTournamentCard />
+                      <ShimmerTournamentCard />
+                      <ShimmerTournamentCard />
+                    </>
+                  ) : (
+                    <Suspense fallback={<LoadingFallback />}>
+                      {tournamentData.map((tournament, index) => (
+                        <TournamentCard
+                          key={tournament.id}
+                          data={tournament}
+                          index={index}
+                        />
+                      ))}
+                    </Suspense>
+                  )}
+                </VStack>
+              </EnhancedTabs>
+            </Suspense>
+          </VStack>
+        </Box>
+
+        <Suspense fallback={null}>
+          <ChampionDetailsModal
+            isOpen={isModalOpen}
+            onClose={() => setIsModalOpen(false)}
+            champion={selectedChampion}
+          />
+        </Suspense>
       </Box>
-
-      <ChampionDetailsModal
-        isOpen={isModalOpen}
-        onClose={() => setIsModalOpen(false)}
-        champion={selectedChampion}
-      />
-    </Box>
+    </Suspense>
   )
 }
 

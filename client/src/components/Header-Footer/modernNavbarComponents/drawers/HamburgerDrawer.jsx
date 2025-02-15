@@ -40,6 +40,7 @@ const FaMessenger = lazy(() => import('../../../../assets/svg/FaMessenger'))
 const UserFriendsSVG = lazy(() =>
   import('../../../../assets/svg/UserFriendsSVG'),
 )
+import { ShareAchievements } from '../../../shareAchievements'
 const MotionChevron = motion(ChevronRight)
 const HamburgerDrawer = ({
   isOpen,
@@ -245,7 +246,7 @@ const HamburgerDrawer = ({
               <Flex gap={4} justifyContent="center" flexWrap="wrap">
                 {!notLogined && (
                   <>
-                    <Box onClick={handleChatClick} position="relative">
+                    {/* <Box onClick={handleChatClick} position="relative">
                       {Array.isArray(notification) &&
                         notification.length > 0 && (
                           <Badge
@@ -268,7 +269,16 @@ const HamburgerDrawer = ({
                         height={'25px'}
                         fill={'#fff'}
                       />
-                    </Box>
+                    </Box> */}
+                    <ShareAchievements
+                      level={user.level}
+                      experience={user.xp}
+                      solvedQuizzes={user.quizAttempts?.length || 0}
+                      ranking={user.rank}
+                      society={user.society}
+                      IQScore={user.IQ_score}
+                      averageRQM={user.avgRQM}
+                    />
                     <Box
                       onClick={() => {
                         navigate('/manual')
@@ -285,7 +295,7 @@ const HamburgerDrawer = ({
                       w="25px"
                     />
 
-                    <Flex
+                    {/* <Flex
                       onClick={() => {
                         toast({
                           title: 'Wise Web',
@@ -318,7 +328,7 @@ const HamburgerDrawer = ({
                           top={'-4px'}
                         />
                       )}
-                    </Flex>
+                    </Flex> */}
                     <Box onClick={handleUserSearchClick}>
                       <SearchIcon boxSize={6} color={'white'} />
 

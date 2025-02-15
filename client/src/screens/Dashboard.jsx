@@ -14,7 +14,6 @@ import {
   Button,
   useToast,
 } from '@chakra-ui/react'
-import { RiRobot2Line } from 'react-icons/ri'
 import { GrMemory } from 'react-icons/gr'
 // Component Imports
 import DashboardHeader from '../components/dashboardComponents/DashboardHeader'
@@ -26,6 +25,9 @@ import ManagementButtons from '../components/dashboardComponents/ManagementButto
 import FeedbackButtons from '../components/dashboardComponents/FeedbackButtons'
 import MaintenanceModal from '../components/dashboardComponents/MaintenanceModal'
 
+const AnnouncementModal = lazy(() =>
+  import('../components/dashboardComponents/AnnouncementModal'),
+)
 // Lazy loaded components
 const NotificationStatus = lazy(() =>
   import('../components/miscellaneous/NotificationStatus'),
@@ -87,6 +89,11 @@ const Dashboard = () => {
   // Media query hook
   const [isLargerThan768] = useMediaQuery('(min-width: 768px)')
 
+  const {
+    isOpen: isAnnouncementOpen,
+    onOpen: onAnnouncementOpen,
+    onClose: onAnnouncementClose,
+  } = useDisclosure()
   // Disclosure hooks for modals
   const {
     isOpen: isNotificationStatusOpen,
@@ -543,6 +550,7 @@ const Dashboard = () => {
                 onTestTournamentManagementOpen={onTestTournamentManagementOpen}
                 onOnboardingArticleOpen={onOnboardingArticleOpen}
                 onMaintenanceOpen={onMaintenanceOpen}
+                onAnnouncementOpen={onAnnouncementOpen}
               />
             </TabPanel>
 
@@ -604,6 +612,12 @@ const Dashboard = () => {
             articles={articles}
             fetchArticles={fetchArticles}
           />
+          <Suspense fallback={<Spinner />}>
+            <AnnouncementModal
+              isOpen={isAnnouncementOpen}
+              onClose={onAnnouncementClose}
+            />
+          </Suspense>
           <MaintenanceModal
             isOpen={isMaintenanceOpen}
             onClose={onMaintenanceClose}
