@@ -94,18 +94,6 @@ const saveQuizAttempt = async (
 
   const localizedI18n = i18n.cloneInstance({ initImmediate: false })
 
-  const now = moment().tz('Asia/Kolkata')
-  const validBadges = user.badges.filter(
-    badge =>
-      badge.canBeClaimedUntil &&
-      moment(badge.canBeClaimedUntil).isAfter(now) &&
-      ['ACE', 'PRO', 'CHAMP'].includes(badge.badgeName) &&
-      badge.text === article.category,
-  )
-  const rqmBoostForCategory = validBadges.some(badge =>
-    ['ACE', 'PRO'].includes(badge.badgeName),
-  )
-
   // Switch to user's language
   await localizedI18n.changeLanguage(
     user?.userLanguage ? user.userLanguage : 'en',
@@ -132,7 +120,7 @@ const saveQuizAttempt = async (
     .populate('abilities.abilityId')
     .session(session)
 
-  let totalBoostMultiplier = rqmBoostForCategory ? 1.5 : 1
+  let totalBoostMultiplier = 1
   if (inventory) {
     const activeQuinBoost = inventory.abilities.find(
       ability =>
@@ -163,10 +151,7 @@ const saveQuizAttempt = async (
         acquiredAt: ability.acquiredAt,
       }))
     const effects = calculateTotalEffect(activeAbilities, 'BOOST')
-    totalBoostMultiplier = calculateTotalMultiplier(
-      effects?.multiplier,
-      rqmBoostForCategory,
-    )
+    totalBoostMultiplier = effects?.multiplier
 
     RQM_score = Math.ceil(RQM_score * totalBoostMultiplier)
     if (activeQuinBoost) {
@@ -192,8 +177,6 @@ const saveQuizAttempt = async (
         await newNotification.save()
       }
     }
-  } else if (rqmBoostForCategory) {
-    RQM_score = Math.ceil(RQM_score * totalBoostMultiplier)
   }
 
   emitProgress('calculateRQM', 100)

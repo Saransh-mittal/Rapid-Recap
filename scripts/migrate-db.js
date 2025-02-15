@@ -8,6 +8,7 @@ const dotenv = require('dotenv')
 const Tournament = require('../model/tournamentSchema')
 const {
   TournamentRegistration,
+  QuizSession,
 } = require('../model/tournamentRegistrationSchema')
 const Article = require('../model/articleSchema')
 dotenv.config({ path: './config.env' })
@@ -93,6 +94,11 @@ const collections = {
     schema: Article.schema,
     fileName: 'articles.csv',
   },
+  quizSessions: {
+    model: 'QUIZ_SESSION',
+    schema: QuizSession.schema,
+    fileName: 'quiz_sessions.csv',
+  },
 }
 
 // Utility function for CSV export
@@ -167,19 +173,50 @@ async function migrateTournamentRegistrations(sourceDb, targetDb) {
   const registrations = await RegistrationsSource.find({}).lean()
   console.log(`Found ${registrations.length} tournament registrations`)
 
+  // Clean the registrations data
+  const cleanedRegistrations = registrations.map(registration => {
+    const cleaned = { ...registration }
+
+    // Handle askedQuestions field
+    if (cleaned.askedQuestions) {
+      // Convert to regular object if it's not already
+      const questions =
+        cleaned.askedQuestions instanceof Map
+          ? Object.fromEntries(cleaned.askedQuestions)
+          : cleaned.askedQuestions
+
+      // Remove any keys starting with '$'
+      cleaned.askedQuestions = Object.fromEntries(
+        Object.entries(questions).filter(([key]) => !key.startsWith('$')),
+      )
+    }
+
+    return cleaned
+  })
+
   // Export registrations to CSV
   const registrationFields = Object.keys(
     collections.tournamentRegistrations.schema.paths,
   )
   await exportToCSV(
-    registrations,
+    cleanedRegistrations,
     registrationFields,
     collections.tournamentRegistrations.fileName,
   )
 
-  // Insert registrations into target
+  // Insert registrations into target database
   console.log('Inserting tournament registrations into target database...')
-  await RegistrationsTarget.insertMany(registrations)
+  try {
+    // Use ordered: false to continue on error
+    await RegistrationsTarget.insertMany(cleanedRegistrations, {
+      ordered: false,
+      // Skip validation if needed
+      validateBeforeSave: false,
+    })
+  } catch (error) {
+    // Log errors but continue
+    console.warn('Some documents failed to insert:', error.message)
+  }
 
   // Verify migration
   const targetRegistrationCount = await RegistrationsTarget.countDocuments()
@@ -205,7 +242,9 @@ async function migrateQuizSessions(sourceDb, targetDb) {
 
   // Fetch quiz sessions
   console.log('Fetching quiz sessions...')
-  const quizSessions = await QuizSessionsSource.find({}).lean()
+  const quizSessions = await QuizSessionsSource.find({
+    attemptNumber: { $exists: true },
+  }).lean()
   console.log(`Found ${quizSessions.length} quiz sessions`)
 
   // Export quiz sessions to CSV
@@ -364,16 +403,16 @@ async function migrateCollections() {
     //   sourceDb,
     //   targetDb,
     // )
-    // const sessionCount = await migrateQuizSessions(sourceDb, targetDb)
-    const quizAttemptCount = await migrateQuizAttempts(sourceDb, targetDb)
+    const sessionCount = await migrateQuizSessions(sourceDb, targetDb)
+    // const quizAttemptCount = await migrateQuizAttempts(sourceDb, targetDb)
 
     console.log('\nMigration completed successfully')
     // console.log(`Total users migrated: ${userCount}`)
     // console.log(`Total articles migrated: ${articleCount}`)
     // console.log(`Total tournaments migrated: ${tournamentCount}`)
     // console.log(`Total tournament registrations migrated: ${registrationCount}`)
-    // console.log(`Total quiz sessions migrated: ${sessionCount}`)
-    console.log(`Total quiz attempts migrated: ${quizAttemptCount}`)
+    console.log(`Total quiz sessions migrated: ${sessionCount}`)
+    // console.log(`Total quiz attempts migrated: ${quizAttemptCount}`)
   } catch (error) {
     if (error instanceof CollectionExistsError) {
       console.error('\nMigration aborted:', error.message)

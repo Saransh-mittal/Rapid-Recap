@@ -345,7 +345,7 @@ const endTournament = async () => {
 
   for (const registration of registeredUsers) {
     const localizedI18n = i18n.cloneInstance()
-    await localizedI18n.changeLanguage(registration.user.userLanguage)
+    await localizedI18n.changeLanguage(registration?.user?.userLanguage || 'en')
 
     const t = (key, options) =>
       localizedI18n.t(key, { ns: 'tournamentManagement', ...options })
@@ -357,7 +357,7 @@ const endTournament = async () => {
       title,
       body,
       url: '/tournament',
-      userId: registration.user._id,
+      userId: registration?.user?._id,
     })
   }
 
