@@ -88,29 +88,31 @@ if (!isBot) {
   ReactDOM.createRoot(document.getElementById('root')).render(
     <Suspense fallback={<LoadingFallback />}>
       <BrowserRouter>
-        <ReduxWrapper>
-          <Suspense fallback={<LoadingFallback />}>
-            {/* <ChatProvider> */}
-            <SocketProvider>
-              <Suspense fallback={<LoadingFallback />}>
-                <I18nWrapper>
-                  <Suspense fallback={<LoadingFallback />}>
-                    <ChakraProvider>
-                      <Suspense fallback={<LoadingFallback />}>
-                        <HelmetProvider>
-                          <Suspense fallback={<LoadingFallback />}>
-                            <App />
-                          </Suspense>
-                        </HelmetProvider>
-                      </Suspense>
-                    </ChakraProvider>
-                  </Suspense>
-                </I18nWrapper>
-              </Suspense>
-            </SocketProvider>
-            {/* </ChatProvider> */}
-          </Suspense>
-        </ReduxWrapper>
+        <Suspense fallback={<LoadingFallback />}>
+          <ReduxWrapper>
+            <Suspense fallback={<LoadingFallback />}>
+              {/* <ChatProvider> */}
+              <SocketProvider>
+                <Suspense fallback={<LoadingFallback />}>
+                  <I18nWrapper>
+                    <Suspense fallback={<LoadingFallback />}>
+                      <ChakraProvider>
+                        <Suspense fallback={<LoadingFallback />}>
+                          <HelmetProvider>
+                            <Suspense fallback={<LoadingFallback />}>
+                              <App />
+                            </Suspense>
+                          </HelmetProvider>
+                        </Suspense>
+                      </ChakraProvider>
+                    </Suspense>
+                  </I18nWrapper>
+                </Suspense>
+              </SocketProvider>
+              {/* </ChatProvider> */}
+            </Suspense>
+          </ReduxWrapper>
+        </Suspense>
       </BrowserRouter>
     </Suspense>,
   )

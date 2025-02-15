@@ -232,7 +232,9 @@ const PowerBoostDisplay = ({
     )
   }, [activeAbilities])
   const multiplier = useMemo(() => {
-    return `${effects?.boost?.multiplier}x`
+    return effects?.boost?.multiplier <= 1
+      ? null
+      : `${effects?.boost?.multiplier}x`
   }, [effects, categoryBoost])
 
   return (

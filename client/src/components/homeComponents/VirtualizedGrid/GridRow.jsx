@@ -52,7 +52,11 @@ const GridRow = React.memo(
               <CardContainer key={item._id} width={cardWidth}>
                 <Card
                   difficulty={item?.articleDifficulty}
-                  multiplier={effects?.boost?.multiplier}
+                  multiplier={
+                    effects?.boost?.multiplier <= 1
+                      ? null
+                      : effects?.boost?.multiplier
+                  }
                   title={
                     i18n.language === 'en' ? item?.title : item?.hindiTitle
                   }
