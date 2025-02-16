@@ -413,6 +413,37 @@ const userSchema = new mongoose.Schema(
       type: Date,
       default: null,
     },
+    referralCode: {
+      type: String,
+      unique: true,
+      sparse: true, // Allows null values while maintaining uniqueness
+    },
+    referredBy: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: 'USER',
+      default: null,
+    },
+    referralCount: {
+      type: Number,
+      default: 0,
+    },
+    referrals: [
+      {
+        user: {
+          type: mongoose.Schema.Types.ObjectId,
+          ref: 'USER',
+        },
+        status: {
+          type: String,
+          enum: ['pending', 'complete'],
+          default: 'pending',
+        },
+        date: {
+          type: Date,
+          default: Date.now,
+        },
+      },
+    ],
   },
   { collection: 'Users' },
 )

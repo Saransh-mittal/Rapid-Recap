@@ -25,6 +25,7 @@ const moment = require('moment-timezone')
 const {
   createQuinBoostAbility,
   calculateTotalEffect,
+  createQuizBoostAbility,
 } = require('./abilityService')
 const Inventory = require('../model/inventorySchema')
 const { calculateTotalMultiplier } = require('../utils/inventory.utils')
@@ -87,6 +88,29 @@ const saveQuizAttempt = async (
       },
     })
     .session(session)
+
+  if (
+    (!user.quizAttempts || user.quizAttempts.length === 0) &&
+    user.referredBy
+  ) {
+    const referrer = await User.findById(user.referredBy).session(session)
+
+    // Find the referral and update its status
+    const referralIndex = referrer.referrals.findIndex(
+      referral => referral.user.toString() === user._id.toString(),
+    )
+
+    if (referralIndex !== -1) {
+      referrer.referrals[referralIndex].status = 'complete'
+      await referrer.save({ session })
+      await createQuizBoostAbility({
+        userId: referrer._id,
+        session,
+        quantity: 3,
+        multiplier: 1.5,
+      })
+    }
+  }
 
   const article = await Article.findById(articleId)
     .select('_id category quizAttemptCnt')

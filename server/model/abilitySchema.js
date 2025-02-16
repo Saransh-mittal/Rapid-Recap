@@ -19,6 +19,10 @@ const abilitySchema = new mongoose.Schema({
     enum: ['BOOST', 'POWER_UP'],
     required: true,
   },
+  quantity: {
+    type: Number,
+    default: 1,
+  },
   multiplier: {
     type: Number,
     default: 1,

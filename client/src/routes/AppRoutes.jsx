@@ -6,6 +6,7 @@ import ServiceScreen from '../screens/ServiceScreen'
 import ConfirmDeleteAccount from '../screens/ConfirmDeleteAccount'
 import DeleteAccount from '../screens/DeleteAccount'
 import { useSelector } from 'react-redux'
+import ReferralDashboard from '../screens/ReferralDashboard'
 
 const TournamentWrapper = lazy(() => import('../screens/TournamentWrapper'))
 const Home = lazy(() => import('../screens/Home'))
@@ -57,6 +58,11 @@ const AppRoutes = ({ isToken, needsOnboarding, setIsGuestLoggedin }) => {
             <Route path="/contact/feedback" element={<ContactLayout />} />
             <Route path="/home/:category" element={<Home />} />
             <Route path="/home" element={<Home />} />
+            <Route
+              path="/referral"
+              // element={isToken ? <ReferralDashboard /> : <GetStarted />}
+              element={<ReferralDashboard />}
+            />
             {/* <Route
               path="/chats"
               element={

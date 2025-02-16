@@ -183,10 +183,44 @@ const createQuinBoostAbility = async ({ expiryDate, userId, session }) => {
   }
 }
 
+const createQuizBoostAbility = async ({
+  expiryDate,
+  userId,
+  quantity = 1,
+  multiplier = 1.5,
+  session,
+}) => {
+  try {
+    const quizBoostAbility = new Ability({
+      user: userId,
+      name: 'QuizBoost',
+      description: `Boost your RQM score by ${multiplier}x for one quiz attempt`,
+      type: 'BOOST',
+      multiplier: multiplier,
+      duration: null, // One-time use
+      cooldown: 0,
+      stackable: true,
+      maxStacks: 5,
+      icon: '/images/abilities/quizboost.webp',
+      isActive: false,
+      claimed: false,
+      expiresAt: expiryDate,
+      quantity: quantity,
+    })
+
+    await quizBoostAbility.save({ session })
+    return quizBoostAbility
+  } catch (error) {
+    console.error('Error creating QuizBoost ability:', error)
+    throw error
+  }
+}
+
 module.exports = {
   checkActiveAbilities,
   getAvailableAbilities,
   calculateTotalEffect,
   cleanupExpiredAbilities,
   createQuinBoostAbility,
+  createQuizBoostAbility,
 }

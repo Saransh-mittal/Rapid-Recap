@@ -20,6 +20,7 @@ import useSafeSound from '../customHooks/useSafeSound'
 import { getVisitedArticle } from '../utils/article.utils'
 import ArticleSelection from '../components/onboarding/ArticleSelection'
 import TimeIndicatorBadge from '../components/onboarding/TimeIndicatorBadge'
+import ReferralStep from '../components/onboarding/ReferralStep'
 
 const MotionBox = motion(Box)
 
@@ -53,6 +54,7 @@ const Star = React.memo(({ size, top, left }) => (
 // Define step constants
 const ONBOARDING_STEPS = {
   LANGUAGE: 'language',
+  REFERRAL: 'referral',
   WELCOME: 'welcome',
   CATEGORIES: 'categories',
   ARTICLE_SELECTION: 'article_selection',
@@ -65,6 +67,7 @@ const ONBOARDING_STEPS = {
 // Define step sequence
 const STEP_SEQUENCE = [
   ONBOARDING_STEPS.LANGUAGE,
+  ONBOARDING_STEPS.REFERRAL,
   ONBOARDING_STEPS.WELCOME,
   ONBOARDING_STEPS.CATEGORIES,
   ONBOARDING_STEPS.ARTICLE_SELECTION,
@@ -175,7 +178,7 @@ const OnboardingProcess = ({ setIsGuestLoggedin }) => {
     try {
       setSelectedLanguage(lang)
       await i18n.changeLanguage(lang)
-      const nextStepId = ONBOARDING_STEPS.WELCOME
+      const nextStepId = ONBOARDING_STEPS.REFERRAL
       await updateOnboardingProgress(ONBOARDING_STEPS.LANGUAGE, nextStepId, {
         language: lang,
       })
@@ -309,7 +312,8 @@ const OnboardingProcess = ({ setIsGuestLoggedin }) => {
         console.error(error)
         toast({
           title: 'Error',
-          description: 'Failed to fetch article. Please try again later.',
+          description:
+            'Failed to fetch onboarding article. Please try again later.',
           status: 'error',
           duration: 3000,
           isClosable: true,
@@ -355,7 +359,7 @@ const OnboardingProcess = ({ setIsGuestLoggedin }) => {
         if (response.data.step >= 1) {
           setSelectedLanguage(response.data.language)
         }
-        if (response.data.step >= 3) {
+        if (response.data.step >= 4) {
           setSelectedCategories(response.data.categories)
         }
         if (stepId === ONBOARDING_STEPS.ARTICLE_SELECTION) {
@@ -387,6 +391,9 @@ const OnboardingProcess = ({ setIsGuestLoggedin }) => {
         submittingSelectedLanguage={submittingSelectedLanguage}
         selectedLanguage={selectedLanguage}
       />
+    ),
+    [ONBOARDING_STEPS.REFERRAL]: (
+      <ReferralStep onComplete={() => handleNext()} />
     ),
     [ONBOARDING_STEPS.WELCOME]: <Welcome />,
     [ONBOARDING_STEPS.CATEGORIES]: (
