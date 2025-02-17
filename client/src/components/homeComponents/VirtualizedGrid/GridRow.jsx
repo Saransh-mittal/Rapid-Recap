@@ -4,6 +4,12 @@ import { GAP } from './constants'
 import Card from '../Card'
 import SkeletonCard from './SkeletonCard'
 import { useSelector } from 'react-redux'
+import {
+  calculateTotalEffect,
+  getCategoryFromBoost,
+  isCategoryBoost,
+} from '../../../utils/helper.utils'
+import { useMemo } from 'react'
 
 const GridRow = React.memo(
   ({
@@ -22,7 +28,24 @@ const GridRow = React.memo(
       lg: GAP,
     })
     const { rows, columns, width } = data
-    const { effects } = useSelector(state => state.inventory)
+    const { activeAbilities } = useSelector(state => state.inventory)
+
+    const filteredActiveAbilities = activeAbilities.filter(ability => {
+      // Handle category boosts
+      if (isCategoryBoost(ability.name)) {
+        const boostCategory = getCategoryFromBoost(ability.name)
+        return (
+          boostCategory.toLowerCase() ===
+          rows[index].items[0].category.toLowerCase()
+        )
+      }
+      // Include all other types of boosts
+      return true
+    })
+    const effects = useMemo(
+      () => calculateTotalEffect(filteredActiveAbilities, 'BOOST'),
+      [activeAbilities],
+    )
 
     const rowData = rows[index]
     const cardWidth = (width - responsiveGap * (columns + 1)) / columns
@@ -53,9 +76,7 @@ const GridRow = React.memo(
                 <Card
                   difficulty={item?.articleDifficulty}
                   multiplier={
-                    effects?.boost?.multiplier <= 1
-                      ? null
-                      : effects?.boost?.multiplier
+                    effects?.multiplier <= 1 ? null : `${effects?.multiplier}x`
                   }
                   title={
                     i18n.language === 'en' ? item?.title : item?.hindiTitle

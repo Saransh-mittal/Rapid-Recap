@@ -4,6 +4,11 @@ import { motion } from 'framer-motion'
 import { Star, Zap, Crown } from 'lucide-react'
 import { useSelector } from 'react-redux'
 import { calculateTotalMultiplier } from '../../../utils/inventory.utils'
+import {
+  calculateTotalEffect,
+  getCategoryFromBoost,
+  isCategoryBoost,
+} from '../../../utils/helper.utils'
 
 const BoostCard = ({ icon: Icon, title, isActive, onClick }) => {
   return (
@@ -223,8 +228,22 @@ const PowerBoostDisplay = ({
 }) => {
   const { isBoosted } = useSelector(state => state.app)
   const { isQuinBoostAvailable } = useSelector(state => state.quiz)
-  const { effects, activeAbilities } = useSelector(state => state.inventory)
+  const { activeAbilities } = useSelector(state => state.inventory)
+  const filteredActiveAbilities = activeAbilities.filter(ability => {
+    // Handle category boosts
 
+    if (isCategoryBoost(ability.name)) {
+      const boostCategory = getCategoryFromBoost(ability.name)
+
+      return boostCategory.toLowerCase() === category.toLowerCase()
+    }
+    // Include all other types of boosts
+    return true
+  })
+  const effects = useMemo(
+    () => calculateTotalEffect(filteredActiveAbilities, 'BOOST'),
+    [activeAbilities],
+  )
   const categoryBoost = useMemo(() => {
     return activeAbilities.find(
       ability =>
@@ -232,9 +251,7 @@ const PowerBoostDisplay = ({
     )
   }, [activeAbilities])
   const multiplier = useMemo(() => {
-    return effects?.boost?.multiplier <= 1
-      ? null
-      : `${effects?.boost?.multiplier}x`
+    return effects?.multiplier <= 1 ? null : `${effects?.multiplier}x`
   }, [effects, categoryBoost])
 
   return (

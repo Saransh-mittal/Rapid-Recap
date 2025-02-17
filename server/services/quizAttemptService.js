@@ -59,6 +59,19 @@ const hasStreakSurgeNotificationToday = async user => {
   return user.todaysQuizCnt > 0
 }
 
+// Helper function to check if ability name is a category boost
+const isCategoryBoost = abilityName => {
+  return (
+    abilityName.endsWith('Boost') &&
+    !['QuinBoost', 'QuizBoost'].includes(abilityName)
+  )
+}
+
+// Helper function to extract category from ability name
+const getCategoryFromBoost = abilityName => {
+  return abilityName.replace(' Boost', '')
+}
+
 const saveQuizAttempt = async (
   userId,
   articleId,
@@ -158,13 +171,31 @@ const saveQuizAttempt = async (
         ability.abilityId?.name === 'StreakSurge' &&
         ability.expiresAt > new Date(),
     )
+    const activeQuizBoost = inventory.abilities.find(
+      ability =>
+        ability.isActive &&
+        ability.abilityId?.name === 'QuizBoost' &&
+        (ability.expiresAt > new Date() || ability.expiresAt === null),
+    )
     const activeAbilities = inventory.abilities
-      .filter(
-        ability =>
+      .filter(ability => {
+        // Basic active ability checks
+        const isActive =
           ability.isActive &&
           ability.abilityId?.type === 'BOOST' &&
-          ability.expiresAt > new Date(),
-      )
+          (ability.expiresAt > new Date() || ability.expiresAt === null)
+
+        if (!isActive) return false
+
+        // Handle category boosts
+        if (isCategoryBoost(ability.abilityId.name)) {
+          const boostCategory = getCategoryFromBoost(ability.abilityId.name)
+          return boostCategory.toLowerCase() === article.category.toLowerCase()
+        }
+
+        // Include all other types of boosts
+        return true
+      })
       .map(ability => ({
         id: ability.abilityId._id,
         name: ability.abilityId.name,
@@ -184,7 +215,8 @@ const saveQuizAttempt = async (
       await inventory.save({ session })
       quinBoostUtilized = true
       user.eligibleForTournament = true
-    } else if (activeStreakSurge) {
+    }
+    if (activeStreakSurge) {
       // Check if notification has already been sent today
       const hasNotification = await hasStreakSurgeNotificationToday(user)
 
@@ -200,6 +232,16 @@ const saveQuizAttempt = async (
         })
         await newNotification.save()
       }
+    }
+    if (activeQuizBoost) {
+      if (activeQuizBoost.quantity <= 1) {
+        activeQuizBoost.isActive = false
+        activeQuizBoost.isUsed = true
+        activeQuizBoost.quantity -= 1
+      } else {
+        activeQuizBoost.quantity -= 1
+      }
+      await inventory.save({ session })
     }
   }
 

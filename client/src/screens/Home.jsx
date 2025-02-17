@@ -128,8 +128,6 @@ const Home = () => {
       } catch (error) {
         if (!axios.isCancel(error)) {
           console.error(error.message)
-          console.log(loginCheckStatus)
-          console.log(isAuthenticated)
 
           if (
             loginCheckStatus === 'fulfilled' &&

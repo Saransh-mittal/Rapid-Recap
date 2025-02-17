@@ -65,6 +65,9 @@ const {
   verifyStreakSurgeEligibility,
   handleStreakSurgeEarned,
 } = require('../services/abilityServices/streakSurgeService.js')
+const {
+  createCategoryAbilities,
+} = require('../services/abilityServices/tournamentAbilityService.js')
 
 const registerUser = async (req, res) => {
   const { name, email, pic, password, cpassword, inGameName } = req.body
@@ -2120,6 +2123,12 @@ const updateBadgeCategory = asyncHandler(async (req, res) => {
     // Update badge
     user.badges[badgeIndex].text = selectedCategory
     await user.save()
+    await createCategoryAbilities({
+      userId,
+      category: selectedCategory,
+      badgeName,
+      session: null,
+    })
 
     res.status(200).json({
       message: 'Badge category updated successfully',

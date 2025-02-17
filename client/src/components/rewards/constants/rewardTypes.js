@@ -1,6 +1,6 @@
 export const REWARD_TYPES = {
   IQ_BOOST: 'IQ_BOOST',
-  QUIN_BOOST: 'RQM_BOOST',
+  RQM_BOOST: 'RQM_BOOST',
   ACHIEVEMENT: 'ACHIEVEMENT',
   BONUS: 'BONUS',
   STREAK_SURGE: 'STREAK_SURGE',
@@ -15,7 +15,7 @@ export const REWARD_VARIANTS = {
     colorScheme: 'blue',
     bgGradient: 'linear(to-b, rgba(13,14,20,0.97), rgba(9,10,13,0.97))',
   },
-  [REWARD_TYPES.QUIN_BOOST]: {
+  [REWARD_TYPES.RQM_BOOST]: {
     icon: 'Rocket',
     colorScheme: 'purple',
     bgGradient:

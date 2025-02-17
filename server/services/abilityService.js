@@ -34,12 +34,14 @@ const checkActiveAbilities = async ({
         ability =>
           ability.isActive &&
           ability.abilityId &&
-          ability.expiresAt > new Date(),
+          (ability.expiresAt > new Date() || ability.expiresAt === null),
       )
       .map(ability => ({
         id: ability.abilityId._id,
         name: ability.abilityId.name,
         type: ability.abilityId.type,
+        description: ability.abilityId.description,
+        quantity: ability.quantity,
         multiplier: ability.abilityId.multiplier,
         duration: ability.abilityId.duration,
         expiresAt: ability.expiresAt,
@@ -84,11 +86,13 @@ const getAvailableAbilities = async ({
           !ability.isUsed &&
           !ability.isActive &&
           ability.abilityId &&
-          ability.expiresAt > new Date(),
+          (ability.expiresAt > new Date() || ability.expiresAt === null),
       )
       .map(ability => ({
         id: ability.abilityId._id,
         name: ability.abilityId.name,
+        quantity: ability.quantity,
+        description: ability.abilityId.description,
         type: ability.abilityId.type,
         multiplier: ability.abilityId.multiplier,
         duration: ability.abilityId.duration,
@@ -99,6 +103,24 @@ const getAvailableAbilities = async ({
     return availableAbilities
   } catch (error) {
     console.error('Error getting available abilities:', error)
+    throw error
+  }
+}
+
+/**
+ * Get unclaimed abilities from abilities collection
+ */
+const getUnClaimedAbilities = async ({ userId, session = null }) => {
+  try {
+    const unclaimedAbilities = await Ability.find({
+      user: userId,
+      claimed: false,
+      $or: [{ expiresAt: { $gte: new Date() } }, { expiresAt: null }],
+    }).session(session)
+
+    return unclaimedAbilities
+  } catch (error) {
+    console.error('Error getting unclaimed abilities:', error)
     throw error
   }
 }
@@ -223,4 +245,5 @@ module.exports = {
   cleanupExpiredAbilities,
   createQuinBoostAbility,
   createQuizBoostAbility,
+  getUnClaimedAbilities,
 }

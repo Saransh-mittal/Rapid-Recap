@@ -39,7 +39,7 @@ const TournamentWinnerDisplay = React.lazy(() =>
 
 // Map of reward types to their components
 const rewardComponents = {
-  [REWARD_TYPES.QUIN_BOOST]: QuinBoostDisplay,
+  [REWARD_TYPES.RQM_BOOST]: QuinBoostDisplay,
   [REWARD_TYPES.IQ_BOOST]: IQBoostDisplay,
   [REWARD_TYPES.STREAK_SURGE]: StreakSurgeDisplay,
   [REWARD_TYPES.TOURNAMENT_ACE]: TournamentWinnerDisplay,

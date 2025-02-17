@@ -2,6 +2,8 @@ import { createSlice, createAsyncThunk } from '@reduxjs/toolkit'
 import axios from 'axios'
 import { setIsQuinBoostAvailable } from './quizSlice'
 import { checkQuinBoostAvailability } from '../utils/inventory.utils'
+import { addReward } from './rewardsSlice'
+import { REWARD_TYPES } from '../components/rewards'
 
 // Async thunk for fetching inventory
 export const fetchInventory = createAsyncThunk(
@@ -14,10 +16,39 @@ export const fetchInventory = createAsyncThunk(
           checkQuinBoostAvailability(response.data.activeAbilities),
         ),
       )
+      if (response.data.unclaimedAbilities.length > 0) {
+        response.data.unclaimedAbilities.forEach(ability => {
+          if (ability.type === 'BOOST' && ability.name != 'QuinBoost') {
+            dispatch(
+              addReward({
+                _id: ability._id,
+                type: REWARD_TYPES.RQM_BOOST,
+                title: `${ability.name} Unlocked!`,
+                description: ability.description,
+                multiplier: ability.multiplier,
+              }),
+            )
+          }
+        })
+      }
       return response.data
     } catch (error) {
       return rejectWithValue(
         error.response?.data?.error || 'Failed to fetch inventory',
+      )
+    }
+  },
+)
+
+export const claimAbility = createAsyncThunk(
+  'inventory/claimAbility',
+  async (abilityId, { rejectWithValue }) => {
+    try {
+      const response = await axios.post(`/api/abilities/claim/${abilityId}`)
+      return response.data
+    } catch (error) {
+      return rejectWithValue(
+        error.response?.data?.error || 'Failed to claim ability',
       )
     }
   },
@@ -46,6 +77,7 @@ export const activateAbility = createAsyncThunk(
 const initialState = {
   activeAbilities: [],
   availableAbilities: [],
+  unclaimedAbilities: [],
   effects: {
     boost: { multiplier: 1 },
   },
@@ -70,6 +102,7 @@ const inventorySlice = createSlice({
       .addCase(fetchInventory.fulfilled, (state, action) => {
         state.activeAbilities = action.payload.activeAbilities
         state.availableAbilities = action.payload.availableAbilities
+        state.unclaimedAbilities = action.payload.unclaimedAbilities
         state.effects = action.payload.effects
         state.loading = false
         state.lastFetched = Date.now()

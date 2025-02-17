@@ -161,3 +161,42 @@ export const handleTournamentFeedback = async (
 export const formatNumber = num => {
   return Number(num).toFixed(1)
 }
+
+export const isCategoryBoost = abilityName => {
+  return (
+    abilityName.endsWith('Boost') &&
+    !['QuinBoost', 'QuizBoost'].includes(abilityName)
+  )
+}
+
+// Helper function to extract category from ability name
+export const getCategoryFromBoost = abilityName => {
+  return abilityName.replace(' Boost', '')
+}
+
+export const calculateTotalEffect = (activeAbilities, type = 'BOOST') => {
+  const effects = {
+    multiplier: 1,
+  }
+
+  if (!Array.isArray(activeAbilities)) {
+    return effects
+  }
+
+  const typeAbilities = activeAbilities.filter(ability => ability.type === type)
+
+  if (typeAbilities.length > 0) {
+    // Find the highest multiplier from active abilities
+    const baseBoost = Math.max(
+      ...typeAbilities.map(ability => ability.multiplier || 1),
+    )
+
+    // Add 0.25x for each additional boost after the first
+    const additionalBoosts = (typeAbilities.length - 1) * 0.25
+
+    // Calculate total and cap at 2x
+    effects.multiplier = Math.min(baseBoost + additionalBoosts, 2)
+  }
+
+  return effects
+}

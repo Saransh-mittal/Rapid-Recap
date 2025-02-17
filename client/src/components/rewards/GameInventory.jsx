@@ -235,6 +235,20 @@ const AbilityCard = ({ item, isActive, onClick, variants }) => {
               ? t('status.active')
               : t('status.quantity', { count: item.quantity || 1 })}
           </Badge>
+          {isActive && (
+            <Badge
+              position="absolute"
+              bottom="-3"
+              left={isActive ? '-4' : '-1'}
+              bg="blackAlpha.700"
+              px="2"
+              rounded="full"
+              color={isActive ? 'green.300' : 'yellow.300'}
+              fontSize={'0.6rem'}
+            >
+              Quantity: x{item.quantity || 1}
+            </Badge>
+          )}
           {item.expiresAt && <ExpiryTimer expiresAt={item.expiresAt} />}
         </VStack>
       </Box>
@@ -501,6 +515,26 @@ const GameInventory = ({ isOpen, onClose }) => {
                       })}
                     </Badge>
                   </HStack>
+                  {selectedItem.description && (
+                    <Text
+                      color={'whiteAlpha.800'}
+                      fontSize="sm"
+                      mt={2}
+                      textAlign={'center'}
+                    >
+                      {selectedItem.description || t('ability.noDescription')}
+                    </Text>
+                  )}
+                  {selectedItem.quantity && (
+                    <Text
+                      color={'whiteAlpha.800'}
+                      fontSize="sm"
+                      mt={2}
+                      textAlign={'center'}
+                    >
+                      You have {selectedItem.quantity} of this item
+                    </Text>
+                  )}
                 </Flex>
 
                 <Button

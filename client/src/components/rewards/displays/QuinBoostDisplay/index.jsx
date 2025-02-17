@@ -8,6 +8,8 @@ import { RocketAnimation, FloatingParticles } from './components'
 import useRewardState from '../../hooks/useRewardState'
 import { claimQuinBoost } from '../../../../utils/quiz.utils'
 import { useTranslation } from 'react-i18next'
+import { useDispatch } from 'react-redux'
+import { claimAbility } from '../../../../redux/inventorySlice'
 
 const QuinBoostDisplay = ({ reward, onClaim, claimed: initialClaimed }) => {
   const [showEffects, setShowEffects] = useState(false)
@@ -16,6 +18,7 @@ const QuinBoostDisplay = ({ reward, onClaim, claimed: initialClaimed }) => {
     initialClaimed,
   })
   const { t } = useTranslation('rewards')
+  const dispatch = useDispatch()
   useEffect(() => {
     const timer = setTimeout(() => setShowEffects(true), 100)
     return () => clearTimeout(timer)
@@ -57,7 +60,7 @@ const QuinBoostDisplay = ({ reward, onClaim, claimed: initialClaimed }) => {
                 textAlign="center"
                 letterSpacing="wide"
               >
-                {t('rqmBoost.title')}
+                {reward.title || t('rqmBoost.title')}
               </Text>
 
               <Text
@@ -67,7 +70,7 @@ const QuinBoostDisplay = ({ reward, onClaim, claimed: initialClaimed }) => {
                 px={4}
                 maxW="sm"
               >
-                {t('rqmBoost.subtitle')}
+                {reward.description || t('rqmBoost.subtitle')}
               </Text>
 
               <HStack
@@ -103,7 +106,11 @@ const QuinBoostDisplay = ({ reward, onClaim, claimed: initialClaimed }) => {
                       <Button
                         onClick={() => {
                           handleClaim()
-                          claimQuinBoost()
+                          if (reward.name != 'QuinBoost') {
+                            dispatch(claimAbility(reward._id))
+                          } else {
+                            claimQuinBoost()
+                          }
                         }}
                         size="lg"
                         height="16"
