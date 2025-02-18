@@ -1,5 +1,6 @@
 export const REWARD_TYPES = {
   IQ_BOOST: 'IQ_BOOST',
+  POWER_UP: 'POWER_UP',
   RQM_BOOST: 'RQM_BOOST',
   ACHIEVEMENT: 'ACHIEVEMENT',
   BONUS: 'BONUS',
@@ -21,6 +22,26 @@ export const REWARD_VARIANTS = {
     bgGradient:
       'linear(167deg, rgba(88,51,167,0.15) 0%, rgba(128,90,213,0.15) 100%)',
     accentGradient: 'linear(to-r, purple.400, pink.400)',
+  },
+  [REWARD_TYPES.POWER_UP]: {
+    icon: 'Shield',
+    colorScheme: 'cyan',
+    bgGradient: 'linear(140deg, #061428 0%, #164E63 100%)',
+    buttonGradient: 'linear(to-r, cyan.400, blue.500)',
+    cardGradient:
+      'linear(to-r, rgba(14, 116, 144, 0.8), rgba(56, 189, 248, 0.8))',
+    titleGradient: 'linear(to-r, cyan.300, blue.300)',
+    glowColor: 'rgba(99, 179, 237, 0.3)', // cyan.400 with opacity
+    cardBg: 'rgba(14, 116, 144, 0.4)', // cyan.800 with opacity
+    iconBg: 'rgba(14, 116, 144, 0.8)',
+    iconColor: 'cyan.300',
+    boostIconColor: 'blue.400',
+    shimmerColor: 'rgba(99, 179, 237, 0.15)',
+    particleColor: 'cyan.400',
+    buttonText: 'cyan.100',
+    buttonBorderColor: 'cyan.400',
+    buttonBg: 'rgba(99, 179, 237, 0.1)',
+    accentGradient: 'linear(to-r, cyan.400, blue.400)',
   },
   [REWARD_TYPES.ACHIEVEMENT]: {
     icon: 'Trophy',

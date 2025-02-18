@@ -37,7 +37,7 @@ const ReferralStep = ({ onComplete }) => {
 
   useEffect(() => {
     const searchParams = new URLSearchParams(location.hash.split('?')[1])
-    const refCode = searchParams.get('ref')
+    const refCode = searchParams.get('ref') || localStorage.getItem('ref')
     if (refCode) {
       setReferralCode(refCode)
       checkReferralCode(refCode)

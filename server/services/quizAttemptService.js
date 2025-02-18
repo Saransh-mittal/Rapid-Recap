@@ -29,6 +29,12 @@ const {
 } = require('./abilityService')
 const Inventory = require('../model/inventorySchema')
 const { calculateTotalMultiplier } = require('../utils/inventory.utils')
+const {
+  createCategoryBoost,
+  isCategoryBoost,
+  getCategoryFromBoost,
+  createCategoryRadar,
+} = require('./abilityServices/tournamentAbilityService')
 
 const handleQuinBoostEarned = async ({ user, session }) => {
   try {
@@ -57,19 +63,6 @@ const handleQuinBoostEarned = async ({ user, session }) => {
 
 const hasStreakSurgeNotificationToday = async user => {
   return user.todaysQuizCnt > 0
-}
-
-// Helper function to check if ability name is a category boost
-const isCategoryBoost = abilityName => {
-  return (
-    abilityName.endsWith('Boost') &&
-    !['QuinBoost', 'QuizBoost'].includes(abilityName)
-  )
-}
-
-// Helper function to extract category from ability name
-const getCategoryFromBoost = abilityName => {
-  return abilityName.replace(' Boost', '')
 }
 
 const saveQuizAttempt = async (
@@ -116,12 +109,54 @@ const saveQuizAttempt = async (
     if (referralIndex !== -1) {
       referrer.referrals[referralIndex].status = 'complete'
       await referrer.save({ session })
-      await createQuizBoostAbility({
-        userId: referrer._id,
-        session,
-        quantity: 3,
-        multiplier: 1.5,
-      })
+
+      const referralCount = referrer.referralCount
+
+      if (referralCount === 1)
+        await createQuizBoostAbility({
+          userId: referrer._id,
+          session,
+          quantity: 3,
+          multiplier: 1.5,
+        })
+      else if (referralCount === 3) {
+        await createCategoryBoost({
+          userId: referrer._id,
+          category: 'category',
+          multiplier: 1.5,
+          duration: 3 * 24 * 60, // 3 days
+          expiresAt: moment().add(1, 'month').toDate(),
+          isClaimed: false,
+          isActive: false,
+          description: `Increases RQM score by 1.5x for your chozen category as you referred 3 friends`,
+          isBadgePowerUp: false,
+          session,
+        })
+      } else if (referralCount === 5) {
+        await createCategoryBoost({
+          userId: referrer._id,
+          category: 'category',
+          multiplier: 1.5,
+          duration: 5 * 24 * 60, // 3 days
+          expiresAt: moment().add(1, 'month').toDate(),
+          isClaimed: false,
+          isActive: false,
+          description: `Increases RQM score by 1.5x for your chozen category as you referred 5 friends`,
+          isBadgePowerUp: false,
+          session,
+        })
+        await createCategoryRadar({
+          userId: referrer._id,
+          category: 'category',
+          duration: 5 * 24 * 60, // 3 days
+          expiresAt: moment().add(1, 'month').toDate(),
+          isClaimed: false,
+          isActive: false,
+          description: `You can view difficulty of each articles for your chozen category as you referred 5 friends`,
+          isBadgePowerUp: false,
+          session,
+        })
+      }
     }
   }
 

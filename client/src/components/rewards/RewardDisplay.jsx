@@ -15,8 +15,14 @@ import {
 import { REWARD_TYPES } from './constants/rewardTypes'
 
 // Lazy load components properly
-const QuinBoostDisplay = React.lazy(() =>
-  import('./displays/QuinBoostDisplay/index').then(module => ({
+const RQMBoostDisplay = React.lazy(() =>
+  import('./displays/RQMBoostDisplay/index').then(module => ({
+    default: module.default || module,
+  })),
+)
+
+const PowerUpDisplay = React.lazy(() =>
+  import('./displays/PowerUpDisplay/index').then(module => ({
     default: module.default || module,
   })),
 )
@@ -39,7 +45,8 @@ const TournamentWinnerDisplay = React.lazy(() =>
 
 // Map of reward types to their components
 const rewardComponents = {
-  [REWARD_TYPES.RQM_BOOST]: QuinBoostDisplay,
+  [REWARD_TYPES.RQM_BOOST]: RQMBoostDisplay,
+  [REWARD_TYPES.POWER_UP]: PowerUpDisplay,
   [REWARD_TYPES.IQ_BOOST]: IQBoostDisplay,
   [REWARD_TYPES.STREAK_SURGE]: StreakSurgeDisplay,
   [REWARD_TYPES.TOURNAMENT_ACE]: TournamentWinnerDisplay,

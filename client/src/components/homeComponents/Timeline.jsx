@@ -31,9 +31,14 @@ const Timeline = ({
   const dispatchRedux = useDispatch()
   const [showGetsStarted, setShowGetStarted] = useState(false)
   const { isAuthenticated, user } = useSelector(state => state.auth)
+  const { activeAbilities } = useSelector(state => state.inventory)
   const categories = useMemo(
-    () => getCategories({ categoryPrivileges: user?.categoryPrivileges }),
-    [user?.categoryPrivileges],
+    () =>
+      getCategories({
+        categoryPrivileges: user?.categoryPrivileges,
+        activeAbilities: activeAbilities,
+      }),
+    [user?.categoryPrivileges, activeAbilities],
   )
   const { searchResults, isSearching, searchLoading, searchTerm } = useSelector(
     state => state.articles,

@@ -1,9 +1,22 @@
 import i18n from 'i18next'
+import {
+  getCategoryFromBoost,
+  getCategoryFromRadar,
+} from '../utils/helper.utils'
 
-export const getCategories = ({ categoryPrivileges }) => {
+export const getCategories = ({ categoryPrivileges, activeAbilities }) => {
   // Helper function to check if a category has any true privileges
   const isCategoryBoostAvailable = categoryKey => {
     // If the category exists in categoryPrivileges
+    if (activeAbilities && activeAbilities.length > 0) {
+      return activeAbilities.some(
+        ability =>
+          getCategoryFromBoost(ability.name).toLocaleLowerCase() ===
+            categoryKey ||
+          getCategoryFromRadar(ability.name).toLocaleLowerCase() ===
+            categoryKey,
+      )
+    }
     if (categoryPrivileges && categoryPrivileges[categoryKey]) {
       const privileges = categoryPrivileges[categoryKey]
       // Return true if any of the privileges is true

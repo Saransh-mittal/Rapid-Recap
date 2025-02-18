@@ -4,6 +4,7 @@ import { setIsQuinBoostAvailable } from './quizSlice'
 import { checkQuinBoostAvailability } from '../utils/inventory.utils'
 import { addReward } from './rewardsSlice'
 import { REWARD_TYPES } from '../components/rewards'
+import { isCategoryBoost, isCategoryPowerUp } from '../utils/helper.utils'
 
 // Async thunk for fetching inventory
 export const fetchInventory = createAsyncThunk(
@@ -26,6 +27,17 @@ export const fetchInventory = createAsyncThunk(
                 title: `${ability.name} Unlocked!`,
                 description: ability.description,
                 multiplier: ability.multiplier,
+                isCategoryBoost: isCategoryBoost(ability.name),
+              }),
+            )
+          } else if (ability.type === 'POWER_UP') {
+            dispatch(
+              addReward({
+                _id: ability._id,
+                type: REWARD_TYPES.POWER_UP,
+                title: `${ability.name} Unlocked!`,
+                description: ability.description,
+                isCategoryBoost: isCategoryPowerUp(ability.name),
               }),
             )
           }
@@ -42,9 +54,11 @@ export const fetchInventory = createAsyncThunk(
 
 export const claimAbility = createAsyncThunk(
   'inventory/claimAbility',
-  async (abilityId, { rejectWithValue }) => {
+  async ({ abilityId, category = null }, { rejectWithValue }) => {
     try {
-      const response = await axios.post(`/api/abilities/claim/${abilityId}`)
+      const response = await axios.post(`/api/abilities/claim/${abilityId}`, {
+        category,
+      })
       return response.data
     } catch (error) {
       return rejectWithValue(
@@ -81,7 +95,7 @@ const initialState = {
   effects: {
     boost: { multiplier: 1 },
   },
-  loading: false,
+  loading: true,
   error: null,
   lastFetched: null,
 }
@@ -108,6 +122,21 @@ const inventorySlice = createSlice({
         state.lastFetched = Date.now()
       })
       .addCase(fetchInventory.rejected, (state, action) => {
+        state.loading = false
+        state.error = action.payload
+      })
+      .addCase(claimAbility.pending, state => {
+        state.loading = true
+        state.error = null
+      })
+      .addCase(claimAbility.fulfilled, (state, action) => {
+        state.activeAbilities = action.payload.activeAbilities
+        state.availableAbilities = action.payload.availableAbilities
+        state.effects = action.payload.effects
+        state.loading = false
+        state.lastFetched = Date.now()
+      })
+      .addCase(claimAbility.rejected, (state, action) => {
         state.loading = false
         state.error = action.payload
       })

@@ -20,6 +20,12 @@ import { categoryCache } from '../services/categoryCache'
 import slugify from 'slugify'
 import { Package, Star, Target, Trophy, Clock, Sparkle } from 'lucide-react'
 import GameInventory from '../components/rewards/GameInventory'
+import {
+  getCategoryFromBoost,
+  getCategoryFromRadar,
+  isCategoryBoost,
+  isCategoryPowerUp,
+} from '../utils/helper.utils'
 
 const Timeline = React.lazy(() =>
   import('../components/homeComponents/Timeline'),
@@ -53,7 +59,9 @@ const Home = () => {
 
   const notLoggedIn = !isAuthenticated
 
-  const { availableAbilities } = useSelector(state => state.inventory)
+  const { availableAbilities, activeAbilities, loading } = useSelector(
+    state => state.inventory,
+  )
 
   const fetchData = useCallback(
     async (pageNum, cat) => {
@@ -61,7 +69,8 @@ const Home = () => {
         !hasMoreItems ||
         loadingRef.current ||
         !cat ||
-        loginCheckStatus === 'pending'
+        loginCheckStatus === 'pending' ||
+        loading
       )
         return
 
@@ -100,10 +109,36 @@ const Home = () => {
             : `/api/articles?page=${pageNum}&pageSize=18&category=${
                 notLoggedIn && (cat === 'all' || !cat) ? 'top' : cat
               }&lang=${i18n.language}`
-
+        console.log(activeAbilities)
+        console.log(
+          activeAbilities &&
+            activeAbilities.length > 0 &&
+            activeAbilities.some(
+              ability =>
+                getCategoryFromBoost(ability.name).toLocaleLowerCase() ===
+                  cat ||
+                getCategoryFromRadar(ability.name).toLocaleLowerCase() === cat,
+            ),
+        )
         const headers =
           user?.categoryPrivileges?.[cat] ||
-          (user?.categoryPrivileges && cat === 'all')
+          ((user?.categoryPrivileges ||
+            (activeAbilities &&
+              activeAbilities.length > 0 &&
+              activeAbilities.some(
+                ability =>
+                  isCategoryBoost(ability.name) ||
+                  isCategoryPowerUp(ability.name),
+              ))) &&
+            cat === 'all') ||
+          (activeAbilities &&
+            activeAbilities.length > 0 &&
+            activeAbilities.some(
+              ability =>
+                getCategoryFromBoost(ability.name).toLocaleLowerCase() ===
+                  cat ||
+                getCategoryFromRadar(ability.name).toLocaleLowerCase() === cat,
+            ))
             ? { Authorization: `Bearer ${localStorage.getItem('token')}` }
             : {}
         const response = await axios.get(endpoint, { headers })
@@ -153,6 +188,8 @@ const Home = () => {
       isAuthenticated,
       loginCheckStatus,
       hasMoreItems,
+      loading,
+      activeAbilities,
       notLoggedIn,
       items,
       dispatchRedux,
@@ -166,8 +203,9 @@ const Home = () => {
 
     const handleCategoryChange = async () => {
       if (
-        !initialLoadDoneRef.current ||
-        currentCategoryRef.current !== category
+        (!initialLoadDoneRef.current ||
+          currentCategoryRef.current !== category) &&
+        !loading
       ) {
         setPage(1)
         setItems([])
@@ -188,13 +226,14 @@ const Home = () => {
     }
 
     handleCategoryChange()
-  }, [category, page, loginCheckStatus])
+  }, [category, page, loginCheckStatus, loading])
 
   useEffect(() => {
     if (
       loginCheckStatus === 'fulfilled' &&
       !initialLoadDoneRef.current &&
-      category
+      category &&
+      !loading
     ) {
       setPage(1)
       setItems([])
@@ -205,7 +244,7 @@ const Home = () => {
       initialLoadDoneRef.current = true
       fetchData(1, category)
     }
-  }, [loginCheckStatus, category, fetchData, dispatchRedux])
+  }, [loginCheckStatus, category, fetchData, loading, dispatchRedux])
 
   useEffect(() => {
     const locationpathname = window.location.pathname

@@ -335,10 +335,16 @@ const App = () => {
     }
     const handleHashChange = () => {
       if (
-        window.location.hash === '#signin' &&
+        window.location.hash.split('?')[0] === '#signin' &&
         !isAuthenticated &&
         loginCheckStatus === 'fulfilled'
       ) {
+        if (window.location.hash.split('?')?.[1]?.split('=')?.[0] === 'ref') {
+          localStorage.setItem(
+            'ref',
+            window.location.hash.split('?')?.[1]?.split('=')?.[1],
+          )
+        }
         dispatch(setIsSigninOpen(true))
       }
       if (

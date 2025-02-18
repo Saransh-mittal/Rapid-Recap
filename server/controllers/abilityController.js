@@ -109,13 +109,21 @@ const activateAbility = asyncHandler(async (req, res) => {
         requiredError = false
         throw new Error(`${ability.name} ability is already active`)
       }
-      if (!ability.stackable) {
-        requiredError = false
-        throw new Error(`${ability.name} ability is not stackable`)
-      }
+      // if (!ability.stackable) {
+      //   requiredError = false
+      //   throw new Error(`${ability.name} ability is not stackable`)
+      // }
 
       // Activate the ability
       inventoryAbility.isActive = true
+      const durationofAbility = ability.duration
+      if (durationofAbility) {
+        // convert minutes to date from now
+        inventoryAbility.expiresAt = new Date(
+          Date.now() + durationofAbility * 60000,
+        )
+        ability.expiresAt = inventoryAbility.expiresAt
+      }
       await inventory.save({ session })
       ability.isActive = true
       await ability.save({ session })
@@ -229,6 +237,7 @@ const checkAbility = asyncHandler(async (req, res) => {
  */
 const claimAbility = asyncHandler(async (req, res) => {
   const { abilityId } = req.params
+  const { category } = req.body
   const userId = req.user._id
   let requiredError = true
   const session = await mongoose.startSession()
@@ -260,6 +269,12 @@ const claimAbility = asyncHandler(async (req, res) => {
         })
       }
 
+      // Handle category boost case
+      if (category) {
+        // change the name of the ability to category boost
+        ability.name = `${category} ${ability.name.split(' ')[1]}`
+      }
+
       // Add ability to inventory
       inventory.abilities.push({
         abilityId: abilityId,
@@ -273,11 +288,17 @@ const claimAbility = asyncHandler(async (req, res) => {
       ability.claimed = true
       await ability.save({ session })
 
-      // Create notification
+      // Create notification with appropriate message
+      const notificationText = category
+        ? `You've successfully claimed a Category Boost for ${category}! Your RQM scores in ${category} will be boosted by ${ability.multiplier}x.`
+        : `You've successfully claimed a ${ability.name}! Effect: ${ability.description}`
+
       const notification = new ApplicationUpdates({
         userId,
-        title: `${ability.name} Claimed!`,
-        mainText: `You've successfully claimed a ${ability.name}! Effect: ${ability.description}`,
+        title: category
+          ? `${category} Boost Claimed!`
+          : `${ability.name} Claimed!`,
+        mainText: notificationText,
         type: 'applicationUpdate',
       })
       await notification.save({ session })

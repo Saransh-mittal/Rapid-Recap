@@ -1,6 +1,14 @@
-// src/components/rewards/displays/RQMBoostDisplay/index.jsx
 import React, { useState, useEffect } from 'react'
-import { Box, Text, Button, HStack, VStack } from '@chakra-ui/react'
+import {
+  Box,
+  Text,
+  Button,
+  HStack,
+  VStack,
+  Select,
+  FormControl,
+  FormLabel,
+} from '@chakra-ui/react'
 import { motion, AnimatePresence } from 'framer-motion'
 import { Sparkles, Zap, Target, Stars, Brain } from 'lucide-react'
 import BaseRewardDisplay from '../../common/BaseRewardDisplay'
@@ -10,19 +18,45 @@ import { claimQuinBoost } from '../../../../utils/quiz.utils'
 import { useTranslation } from 'react-i18next'
 import { useDispatch } from 'react-redux'
 import { claimAbility } from '../../../../redux/inventorySlice'
+import { categories } from '../../../../assets/Categories'
 
-const QuinBoostDisplay = ({ reward, onClaim, claimed: initialClaimed }) => {
+const RQMBoostDisplay = ({ reward, onClaim, claimed: initialClaimed }) => {
   const [showEffects, setShowEffects] = useState(false)
+  const [selectedCategory, setSelectedCategory] = useState('')
   const { claimed, showSuccess, handleClaim } = useRewardState({
     onClaim,
     initialClaimed,
   })
   const { t } = useTranslation('rewards')
   const dispatch = useDispatch()
+
+  // Filter categories - exclude 'all', 'top', 'general'
+  const availableCategories = categories.filter(
+    cat => !['all', 'top', 'general'].includes(cat.key),
+  )
+
   useEffect(() => {
     const timer = setTimeout(() => setShowEffects(true), 100)
     return () => clearTimeout(timer)
   }, [])
+
+  const handleClaimClick = () => {
+    handleClaim()
+    if (reward.name !== 'QuinBoost' && !reward.isCategoryBoost) {
+      dispatch(claimAbility({ abilityId: reward._id }))
+    } else if (reward.isCategoryBoost) {
+      dispatch(
+        claimAbility({
+          abilityId: reward._id,
+          category: selectedCategory,
+        }),
+      )
+    } else {
+      claimQuinBoost()
+    }
+  }
+
+  const isClaimDisabled = reward.isCategoryBoost && !selectedCategory
 
   return (
     <BaseRewardDisplay
@@ -103,36 +137,81 @@ const QuinBoostDisplay = ({ reward, onClaim, claimed: initialClaimed }) => {
                       transition={{ delay: 0.4 }}
                       style={{ width: '100%' }}
                     >
-                      <Button
-                        onClick={() => {
-                          handleClaim()
-                          if (reward.name != 'QuinBoost') {
-                            dispatch(claimAbility(reward._id))
-                          } else {
-                            claimQuinBoost()
-                          }
-                        }}
-                        size="lg"
-                        height="16"
-                        width="full"
-                        bgGradient="linear(to-r, purple.500, pink.500)"
-                        _hover={{
-                          bgGradient: 'linear(to-r, purple.600, pink.600)',
-                          transform: 'scale(1.02)',
-                        }}
-                        _active={{
-                          transform: 'scale(0.98)',
-                        }}
-                        color="white"
-                        fontSize="xl"
-                        fontWeight="bold"
-                        rounded="2xl"
-                        leftIcon={<Zap size={22} />}
-                        rightIcon={<Stars size={22} />}
-                        transition="all 0.2s"
-                      >
-                        {t('rqmBoost.button.activate')}
-                      </Button>
+                      <VStack spacing={4} width="full">
+                        {reward.isCategoryBoost && (
+                          <FormControl>
+                            <FormLabel
+                              color="whiteAlpha.900"
+                              fontSize="lg"
+                              textAlign="center"
+                            >
+                              {t('Select Category for Boost')}
+                            </FormLabel>
+                            <Select
+                              placeholder={t('Select a category')}
+                              value={selectedCategory}
+                              onChange={e =>
+                                setSelectedCategory(e.target.value)
+                              }
+                              bg="whiteAlpha.100"
+                              color="white"
+                              borderColor="whiteAlpha.300"
+                              _hover={{
+                                borderColor: 'purple.300',
+                              }}
+                              _focus={{
+                                borderColor: 'purple.400',
+                                boxShadow: '0 0 0 1px #805AD5',
+                              }}
+                            >
+                              {availableCategories.map(cat => (
+                                <option
+                                  key={cat.key}
+                                  value={cat.key}
+                                  style={{
+                                    backgroundColor: '#2D3748',
+                                    color: 'white',
+                                  }}
+                                >
+                                  {cat.label}
+                                </option>
+                              ))}
+                            </Select>
+                          </FormControl>
+                        )}
+
+                        <Button
+                          onClick={handleClaimClick}
+                          size="lg"
+                          height="16"
+                          width="full"
+                          bgGradient="linear(to-r, purple.500, pink.500)"
+                          _hover={{
+                            bgGradient: 'linear(to-r, purple.600, pink.600)',
+                            transform: 'scale(1.02)',
+                          }}
+                          _active={{
+                            transform: 'scale(0.98)',
+                          }}
+                          color="white"
+                          fontSize="xl"
+                          fontWeight="bold"
+                          rounded="2xl"
+                          leftIcon={<Zap size={22} />}
+                          rightIcon={<Stars size={22} />}
+                          transition="all 0.2s"
+                          isDisabled={isClaimDisabled}
+                          _disabled={{
+                            opacity: 0.6,
+                            cursor: 'not-allowed',
+                            _hover: {
+                              transform: 'none',
+                            },
+                          }}
+                        >
+                          {t('rqmBoost.button.activate')}
+                        </Button>
+                      </VStack>
                     </motion.div>
                   ) : (
                     <motion.div initial={{ scale: 0 }} animate={{ scale: 1 }}>
@@ -159,4 +238,4 @@ const QuinBoostDisplay = ({ reward, onClaim, claimed: initialClaimed }) => {
   )
 }
 
-export default QuinBoostDisplay
+export default RQMBoostDisplay

@@ -168,10 +168,17 @@ export const isCategoryBoost = abilityName => {
     !['QuinBoost', 'QuizBoost'].includes(abilityName)
   )
 }
+export const isCategoryPowerUp = abilityName => {
+  return abilityName.endsWith('Radar')
+}
 
 // Helper function to extract category from ability name
 export const getCategoryFromBoost = abilityName => {
   return abilityName.replace(' Boost', '')
+}
+// Helper function to extract category from ability name
+export const getCategoryFromRadar = abilityName => {
+  return abilityName.replace(' Radar', '')
 }
 
 export const calculateTotalEffect = (activeAbilities, type = 'BOOST') => {

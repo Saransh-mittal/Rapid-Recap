@@ -173,5 +173,17 @@
       "title": "Quiz Warrior",
       "description": "Given atleast one quiz in the tournament"
     }
+  },
+  "powerUp": {
+    "badge": {
+      "special": "SPECIAL POWER-UP"
+    },
+    "title": "Power Shield Activated",
+    "subtitle": "Enhance your protection and gain temporary immunity against IQ penalties",
+    "button": {
+      "activate": "Claim Power-up",
+      "activated": "Power-up Claimed!"
+    },
+    "selectCategory": "Select Category for Power Up"
   }
 }

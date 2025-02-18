@@ -87,8 +87,23 @@ const createCategoryCache = () => {
           ? `/api/recommendation?page=${page}&pageSize=18&lang=${language}`
           : `/api/articles?page=${page}&pageSize=18&category=${category}&lang=${language}`
       const headers =
-        user?.categoryPrivileges?.[category] ||
-        (user?.categoryPrivileges && category === 'all')
+        user?.categoryPrivileges?.[cat] ||
+        ((user?.categoryPrivileges ||
+          (activeAbilities &&
+            activeAbilities.length > 0 &&
+            activeAbilities.some(
+              ability =>
+                isCategoryBoost(ability.name) ||
+                isCategoryPowerUp(ability.name),
+            ))) &&
+          cat === 'all') ||
+        (activeAbilities &&
+          activeAbilities.length > 0 &&
+          activeAbilities.some(
+            ability =>
+              getCategoryFromBoost(ability.name).toLocaleLowerCase() === cat ||
+              getCategoryFromRadar(ability.name).toLocaleLowerCase() === cat,
+          ))
           ? { Authorization: `Bearer ${localStorage.getItem('token')}` }
           : {}
       const response = await axios.get(endpoint, { headers })
