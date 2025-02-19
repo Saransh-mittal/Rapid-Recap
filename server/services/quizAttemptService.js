@@ -107,19 +107,25 @@ const saveQuizAttempt = async (
     )
 
     if (referralIndex !== -1) {
+      await createQuizBoostAbility({
+        userId: user._id,
+        session,
+        quantity: 2,
+        multiplier: 1.5,
+      })
       referrer.referrals[referralIndex].status = 'complete'
       await referrer.save({ session })
 
       const referralCount = referrer.referralCount
 
-      if (referralCount === 1)
+      if (referralCount === 1) {
         await createQuizBoostAbility({
           userId: referrer._id,
           session,
           quantity: 3,
           multiplier: 1.5,
         })
-      else if (referralCount === 3) {
+      } else if (referralCount === 3) {
         await createCategoryBoost({
           userId: referrer._id,
           category: 'category',
@@ -137,7 +143,7 @@ const saveQuizAttempt = async (
           userId: referrer._id,
           category: 'category',
           multiplier: 1.5,
-          duration: 5 * 24 * 60, // 3 days
+          duration: 5 * 24 * 60, // 5 days
           expiresAt: moment().add(1, 'month').toDate(),
           isClaimed: false,
           isActive: false,
@@ -148,7 +154,7 @@ const saveQuizAttempt = async (
         await createCategoryRadar({
           userId: referrer._id,
           category: 'category',
-          duration: 5 * 24 * 60, // 3 days
+          duration: 5 * 24 * 60, // 5 days
           expiresAt: moment().add(1, 'month').toDate(),
           isClaimed: false,
           isActive: false,
@@ -157,6 +163,27 @@ const saveQuizAttempt = async (
           session,
         })
       }
+    }
+  } else if (user.referredBy && user.quizAttempts.length === 4) {
+    const referrer = await User.findById(user.referredBy).session(session)
+
+    // Find the referral and update its status
+    const referralIndex = referrer.referrals.findIndex(
+      referral => referral.user.toString() === user._id.toString(),
+    )
+    if (referralIndex !== -1) {
+      await createCategoryBoost({
+        userId: user._id,
+        category: 'category',
+        multiplier: 1.5,
+        duration: 2 * 24 * 60, // 2 days
+        expiresAt: moment().add(1, 'month').toDate(),
+        isClaimed: false,
+        isActive: false,
+        description: `Increases RQM score by 1.5x for your chozen category as you were referred and completed 5 quizzes`,
+        isBadgePowerUp: false,
+        session,
+      })
     }
   }
 

@@ -23,6 +23,7 @@ export const fetchInventory = createAsyncThunk(
             dispatch(
               addReward({
                 _id: ability._id,
+                name: ability.name,
                 type: REWARD_TYPES.RQM_BOOST,
                 title: `${ability.name} Unlocked!`,
                 description: ability.description,
@@ -34,6 +35,7 @@ export const fetchInventory = createAsyncThunk(
             dispatch(
               addReward({
                 _id: ability._id,
+                name: ability.name,
                 type: REWARD_TYPES.POWER_UP,
                 title: `${ability.name} Unlocked!`,
                 description: ability.description,

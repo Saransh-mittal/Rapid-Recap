@@ -34,6 +34,7 @@ const checkQuinBoostStatus = async ({ userId, session = null }) => {
     return {
       quizLeftToGetQuizBoost,
       hasUnclaimedBoost,
+      ability: ability || null,
       multiplier: hasUnclaimedBoost ? 1.5 : 1,
     }
   } catch (error) {

@@ -12,6 +12,7 @@ const quinBoostChecker = async ({ setQuizLeftToGetQuizBoost, dispatch }) => {
         quizLeftToGetQuizBoost,
         isQuinBoostAvailable,
         hasUnclaimedBoost,
+        ability,
         multiplier,
       } = response.data
 
@@ -22,9 +23,11 @@ const quinBoostChecker = async ({ setQuizLeftToGetQuizBoost, dispatch }) => {
         dispatch(
           addReward({
             type: REWARD_TYPES.RQM_BOOST,
+            name: ability.name,
             title: 'RQM Boost Unlocked!',
             description:
-              'Your dedication earned you a bonus! Next quiz score will be multiplied by 1.5x.',
+              ability.description ||
+              `Your dedication earned you a bonus! Next quiz score will be multiplied by ${multiplier}x.`,
             multiplier,
           }),
         )

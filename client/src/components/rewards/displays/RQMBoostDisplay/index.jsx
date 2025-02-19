@@ -41,7 +41,6 @@ const RQMBoostDisplay = ({ reward, onClaim, claimed: initialClaimed }) => {
   }, [])
 
   const handleClaimClick = () => {
-    handleClaim()
     if (reward.name !== 'QuinBoost' && !reward.isCategoryBoost) {
       dispatch(claimAbility({ abilityId: reward._id }))
     } else if (reward.isCategoryBoost) {
@@ -54,6 +53,7 @@ const RQMBoostDisplay = ({ reward, onClaim, claimed: initialClaimed }) => {
     } else {
       claimQuinBoost()
     }
+    handleClaim()
   }
 
   const isClaimDisabled = reward.isCategoryBoost && !selectedCategory
