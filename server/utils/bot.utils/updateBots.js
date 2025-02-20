@@ -157,7 +157,11 @@ async function updateBots() {
             const u = await User.findById(userId).populate({
               path: 'quizAttempts',
               select: '_id',
-              match: { season: parseInt(configService.getCurrentSeason(), 10) },
+              match: {
+                season: parseInt(configService.getCurrentSeason(), 10),
+                month: moment().month() + 1,
+                year: moment().year,
+              },
             })
             u.quizAttempts.push(newQuizAttempt._id)
             if (fullQuiz.overAllDifficulty < 0.5) u.easyQuizCount++
