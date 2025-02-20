@@ -232,7 +232,7 @@ const PowerBoostDisplay = ({
   const filteredActiveAbilities = activeAbilities.filter(ability => {
     // Handle category boosts
 
-    if (isCategoryBoost(ability.name)) {
+    if (ability && ability?.name && isCategoryBoost(ability.name) && category) {
       const boostCategory = getCategoryFromBoost(ability.name)
 
       return boostCategory.toLowerCase() === category.toLowerCase()

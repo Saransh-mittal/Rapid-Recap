@@ -89,6 +89,11 @@ const NavbarModalManager = memo(
           label: t('hallOfChampions'),
           path: '/hall-of-champions',
         },
+        {
+          key: 'Referral',
+          label: t('referral'),
+          path: '/referral',
+        },
       ],
       [t],
     )

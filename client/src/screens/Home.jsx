@@ -95,6 +95,7 @@ const Home = () => {
               pageNum + 1,
               i18n.language,
               user,
+              activeAbilities,
             )
           }
 
@@ -109,17 +110,7 @@ const Home = () => {
             : `/api/articles?page=${pageNum}&pageSize=18&category=${
                 notLoggedIn && (cat === 'all' || !cat) ? 'top' : cat
               }&lang=${i18n.language}`
-        console.log(activeAbilities)
-        console.log(
-          activeAbilities &&
-            activeAbilities.length > 0 &&
-            activeAbilities.some(
-              ability =>
-                getCategoryFromBoost(ability.name).toLocaleLowerCase() ===
-                  cat ||
-                getCategoryFromRadar(ability.name).toLocaleLowerCase() === cat,
-            ),
-        )
+
         const headers =
           user?.categoryPrivileges?.[cat] ||
           ((user?.categoryPrivileges ||

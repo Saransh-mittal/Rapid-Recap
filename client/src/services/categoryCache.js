@@ -1,6 +1,12 @@
 // services/categoryCache.js
 import { categories, findCategoryIndex } from '../assets/Categories'
 import axios from 'axios'
+import {
+  getCategoryFromBoost,
+  getCategoryFromRadar,
+  isCategoryBoost,
+  isCategoryPowerUp,
+} from '../utils/helper.utils'
 
 const createCategoryCache = () => {
   const cache = new Map()
@@ -78,7 +84,13 @@ const createCategoryCache = () => {
     return adjacentCategories
   }
 
-  const prefetchCategory = async (category, page = 1, language, user) => {
+  const prefetchCategory = async (
+    category,
+    page = 1,
+    language,
+    user,
+    activeAbilities,
+  ) => {
     if (!category || get(category, page)?.data) return // Don't prefetch if already cached
 
     try {
@@ -87,7 +99,7 @@ const createCategoryCache = () => {
           ? `/api/recommendation?page=${page}&pageSize=18&lang=${language}`
           : `/api/articles?page=${page}&pageSize=18&category=${category}&lang=${language}`
       const headers =
-        user?.categoryPrivileges?.[cat] ||
+        user?.categoryPrivileges?.[category] ||
         ((user?.categoryPrivileges ||
           (activeAbilities &&
             activeAbilities.length > 0 &&
@@ -96,13 +108,15 @@ const createCategoryCache = () => {
                 isCategoryBoost(ability.name) ||
                 isCategoryPowerUp(ability.name),
             ))) &&
-          cat === 'all') ||
+          category === 'all') ||
         (activeAbilities &&
           activeAbilities.length > 0 &&
           activeAbilities.some(
             ability =>
-              getCategoryFromBoost(ability.name).toLocaleLowerCase() === cat ||
-              getCategoryFromRadar(ability.name).toLocaleLowerCase() === cat,
+              getCategoryFromBoost(ability.name).toLocaleLowerCase() ===
+                category ||
+              getCategoryFromRadar(ability.name).toLocaleLowerCase() ===
+                category,
           ))
           ? { Authorization: `Bearer ${localStorage.getItem('token')}` }
           : {}

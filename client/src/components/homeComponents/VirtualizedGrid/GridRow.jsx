@@ -32,7 +32,11 @@ const GridRow = React.memo(
 
     const filteredActiveAbilities = activeAbilities.filter(ability => {
       // Handle category boosts
-      if (isCategoryBoost(ability.name)) {
+      if (
+        isCategoryBoost(ability.name) &&
+        rows[index].items.length > 0 &&
+        rows[index].items[0]?.category
+      ) {
         const boostCategory = getCategoryFromBoost(ability.name)
         return (
           boostCategory.toLowerCase() ===
