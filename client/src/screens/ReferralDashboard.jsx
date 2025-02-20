@@ -12,12 +12,13 @@ import {
   Flex,
   IconButton,
   Badge,
-  Divider,
   Input,
   InputGroup,
   InputRightElement,
+  useColorModeValue,
+  Tooltip,
 } from '@chakra-ui/react'
-import { motion } from 'framer-motion'
+import { motion, AnimatePresence } from 'framer-motion'
 import { Share2, Copy, Users, Gift, Crown, Sparkles } from 'lucide-react'
 import { BsWhatsapp, BsInstagram, BsTwitterX } from 'react-icons/bs'
 import axios from 'axios'
@@ -88,7 +89,6 @@ const ReferralDashboard = () => {
         )
         break
       case 'instagram':
-        // Since Instagram doesn't have a direct share API, copy to clipboard
         await navigator.clipboard.writeText(`${message} ${referralLink}`)
         toast({
           title: 'Link copied!',
@@ -111,29 +111,31 @@ const ReferralDashboard = () => {
         }
     }
   }
-  // Add this constant at the top with other constants
+
   const FEATURES = [
     'Earn Rewards',
     'Build Knowledge',
     'Get Score Boosts',
     'Join Tournaments',
   ]
+
   if (!isAuthenticated) {
     return (
-      <Container maxW="md" py={20}>
+      <Container maxW="md" py={20} minH="100vh" bg="gray.900">
         <MotionBox
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.5 }}
           textAlign="center"
         >
-          <VStack spacing={6}>
+          <VStack spacing={8}>
             <MotionFlex
               justify="center"
               rounded="full"
-              w="80px"
-              h="80px"
-              bg="purple.50"
+              w="100px"
+              h="100px"
+              bg="purple.900"
+              boxShadow="0 0 20px rgba(128, 90, 213, 0.4)"
               mb={4}
               initial={{ scale: 0.5 }}
               animate={{ scale: 1 }}
@@ -143,55 +145,53 @@ const ReferralDashboard = () => {
                 damping: 20,
               }}
             >
-              <Users size={40} color="#805AD5" style={{ margin: 'auto' }} />
+              <Users size={50} color="#E9D8FD" style={{ margin: 'auto' }} />
             </MotionFlex>
 
             <Heading
-              size="lg"
-              bgGradient="linear(to-r, purple.400, pink.400)"
+              size="2xl"
+              bgGradient="linear(to-r, purple.300, pink.200)"
               bgClip="text"
               mb={2}
+              fontWeight="extrabold"
             >
               Join Our Community
             </Heading>
 
-            <Text color="gray.600" maxW="md" fontSize="lg">
-              Sign in to access your referral code and start earning rewards by
-              inviting friends!
+            <Text color="whiteAlpha.900" maxW="md" fontSize="xl">
+              Sign in to access your referral code and start earning rewards!
             </Text>
 
-            <MotionBox
-              initial={{ y: 10, opacity: 0 }}
-              animate={{ y: 0, opacity: 1 }}
-              transition={{ delay: 0.2 }}
+            <Button
+              size="lg"
+              colorScheme="purple"
+              leftIcon={<Crown size={24} />}
+              onClick={() => (window.location.hash = 'signin')}
+              mt={4}
+              px={8}
+              py={6}
+              fontSize="lg"
+              bgGradient="linear(to-r, purple.500, pink.500)"
+              _hover={{
+                bgGradient: 'linear(to-r, purple.600, pink.600)',
+                transform: 'translateY(-2px)',
+                boxShadow: 'xl',
+              }}
+              transition="all 0.2s"
             >
-              <Button
-                size="lg"
-                colorScheme="purple"
-                leftIcon={<Crown size={20} />}
-                onClick={() => (window.location.hash = 'signin')}
-                mt={4}
-                _hover={{
-                  transform: 'translateY(-2px)',
-                  boxShadow: 'lg',
-                }}
-              >
-                Sign In to Get Started
-              </Button>
-            </MotionBox>
+              Sign In to Get Started
+            </Button>
 
-            <MotionFlex
-              mt={8}
-              p={6}
-              bg="purple.50"
-              rounded="xl"
-              direction="column"
-              align="center"
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
-              transition={{ delay: 0.4 }}
+            <Box
+              mt={12}
+              p={8}
+              bg="whiteAlpha.100"
+              rounded="2xl"
+              backdropFilter="blur(10px)"
+              border="1px solid"
+              borderColor="whiteAlpha.200"
             >
-              <Text fontWeight="bold" color="purple.700" mb={3}>
+              <Text fontWeight="bold" color="purple.200" mb={6} fontSize="xl">
                 Why Join Rapid Recap?
               </Text>
               <HStack spacing={6} wrap="wrap" justify="center">
@@ -202,14 +202,18 @@ const ReferralDashboard = () => {
                     animate={{ opacity: 1, y: 0 }}
                     transition={{ delay: 0.6 + index * 0.1 }}
                     textAlign="center"
+                    bg="whiteAlpha.200"
+                    p={4}
+                    rounded="xl"
+                    minW="150px"
                   >
-                    <Text color="purple.600" fontSize="sm">
+                    <Text color="purple.100" fontSize="md" fontWeight="medium">
                       {feature}
                     </Text>
                   </MotionBox>
                 ))}
               </HStack>
-            </MotionFlex>
+            </Box>
           </VStack>
         </MotionBox>
       </Container>
@@ -217,193 +221,221 @@ const ReferralDashboard = () => {
   }
 
   return (
-    <Container maxW="md" py={8}>
-      <MotionBox
-        initial={{ opacity: 0, y: 20 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ duration: 0.5 }}
-      >
-        <VStack spacing={8} align="stretch">
-          {/* Header Section */}
-          <Box textAlign="center">
-            <Heading
-              size="lg"
-              mb={2}
-              bgGradient="linear(to-r, purple.400, pink.400)"
-              bgClip="text"
-            >
-              Invite Friends
-            </Heading>
-            <Text color="gray.600">Share the knowledge, earn rewards!</Text>
-          </Box>
-
-          {/* Referral Stats */}
-          <MotionFlex
-            justify="space-between"
-            p={6}
-            bg="purple.50"
-            rounded="xl"
-            initial={{ scale: 0.95 }}
-            animate={{ scale: 1 }}
-            whileHover={{ scale: 1.02 }}
-            transition={{ duration: 0.2 }}
+    <Container maxW="md" p={4} pt="140px" bg="gray.900" minH="100vh">
+      <VStack spacing={6} align="stretch" p={4}>
+        {/* Header */}
+        <Box
+          position="relative"
+          top={0}
+          left={0}
+          right={0}
+          h="5px"
+          // bg="rgba(26, 32, 44, 0.95)"
+          backdropFilter="blur(10px)"
+          borderBottom="1px solid"
+          // borderColor="black"
+          zIndex={10}
+          px={4}
+          display="flex"
+          flexDirection="column"
+          justifyContent="flex-end"
+          pb={4}
+        >
+          <Heading
+            size="lg"
+            bgGradient="linear(to-r, purple.400, pink.400)"
+            bgClip="text"
+            textAlign="center"
+            mb={1}
           >
-            <VStack align="flex-start">
-              <HStack>
-                <Users size={20} color="#805AD5" />
-                <Text fontWeight="bold" color="purple.700">
-                  Total Referrals
-                </Text>
-              </HStack>
-              <Heading size="xl" color="purple.600">
+            Invite Friends
+          </Heading>
+          <Text color="whiteAlpha.800" fontSize="sm" textAlign="center">
+            Share the knowledge, earn rewards!
+          </Text>
+        </Box>
+
+        {/* Referral Stats */}
+        <MotionFlex
+          justify="space-between"
+          p={4}
+          bg="whiteAlpha.100"
+          rounded="xl"
+          initial={{ scale: 0.97 }}
+          whileHover={{ scale: 1.01 }}
+          transition={{ duration: 0.2 }}
+        >
+          <HStack spacing={3}>
+            <Users size={18} color="#E9D8FD" />
+            <VStack align="flex-start" spacing={0}>
+              <Text color="whiteAlpha.900" fontSize="sm">
+                Total Referrals
+              </Text>
+              <Heading size="2xl" color="white">
                 {stats?.referralCount || 0}
               </Heading>
             </VStack>
-            <Sparkles size={40} color="#805AD5" />
-          </MotionFlex>
-
-          {/* Referral Code Section */}
+          </HStack>
           <Box>
-            <Text mb={2} fontWeight="medium" color="gray.700">
-              Your Referral Code
-            </Text>
-            <InputGroup size="lg">
-              <Input
-                value={referralCode}
-                isReadOnly
-                bg="white"
-                border="2px"
-                borderColor="purple.200"
-                _hover={{ borderColor: 'purple.300' }}
-              />
-              <InputRightElement width="4.5rem">
-                <IconButton
-                  h="1.75rem"
-                  size="sm"
-                  icon={<Copy size={18} />}
-                  onClick={onCopy}
-                  colorScheme="purple"
-                  variant="ghost"
-                />
-              </InputRightElement>
-            </InputGroup>
+            <Sparkles size={24} color="#E9D8FD" />
           </Box>
+        </MotionFlex>
 
-          {/* Share Buttons */}
-          <VStack spacing={4}>
-            <Button
-              leftIcon={<Share2 size={20} />}
-              colorScheme="purple"
-              w="100%"
-              onClick={() => handleShare()}
+        {/* Referral Code */}
+        <Box>
+          <Text mb={2} color="whiteAlpha.800" fontSize="sm">
+            Your Referral Code
+          </Text>
+          <InputGroup size="md">
+            <Input
+              value={referralCode}
+              color="white"
+              bg="whiteAlpha.100"
+              border="1px"
+              borderColor="purple.500"
+              _hover={{ borderColor: 'purple.400' }}
+              isReadOnly
+            />
+            <InputRightElement>
+              <Tooltip label={hasCopied ? 'Copied!' : 'Copy code'}>
+                <IconButton
+                  icon={<Copy size={16} />}
+                  variant="ghost"
+                  colorScheme="purple"
+                  size="sm"
+                  onClick={onCopy}
+                />
+              </Tooltip>
+            </InputRightElement>
+          </InputGroup>
+        </Box>
+
+        {/* Share Button */}
+        <Button
+          leftIcon={<Share2 size={18} />}
+          bgGradient="linear(to-r, purple.500, pink.500)"
+          _hover={{
+            bgGradient: 'linear(to-r, purple.600, pink.600)',
+          }}
+          onClick={() => handleShare()}
+          size="md"
+        >
+          Share Referral Link
+        </Button>
+
+        {/* Social Icons */}
+        <HStack justify="center" spacing={4}>
+          {[
+            { icon: BsWhatsapp, color: '#25D366', platform: 'whatsapp' },
+            { icon: BsInstagram, color: '#E4405F', platform: 'instagram' },
+            { icon: BsTwitterX, color: '#ffffff', platform: 'twitter' },
+          ].map((social, index) => (
+            <MotionBox
+              key={index}
+              initial={{ scale: 0.9 }}
+              whileHover={{ scale: 1.1 }}
+              whileTap={{ scale: 0.95 }}
             >
-              Share Referral Link
-            </Button>
-
-            <HStack spacing={4} justify="center" w="100%">
               <IconButton
-                icon={<BsWhatsapp size={22} />}
-                colorScheme="green"
-                variant="outline"
-                rounded="full"
-                onClick={() => handleShare('whatsapp')}
-                _hover={{
-                  transform: 'scale(1.05)',
-                  bg: 'green.100',
-                }}
+                icon={<social.icon size={20} />}
+                variant="ghost"
+                color={social.color}
+                _hover={{ bg: 'whiteAlpha.200' }}
+                onClick={() => handleShare(social.platform)}
               />
-              <IconButton
-                icon={<BsInstagram size={22} />}
-                colorScheme="pink"
-                variant="outline"
-                rounded="full"
-                onClick={() => handleShare('instagram')}
-                _hover={{
-                  transform: 'scale(1.05)',
-                  bg: 'pink.100',
-                }}
-              />
-              <IconButton
-                icon={<BsTwitterX size={22} />}
-                colorScheme="white"
-                variant="outline"
-                rounded="full"
-                onClick={() => handleShare('twitter')}
-                _hover={{
-                  transform: 'scale(1.05)',
-                  bg: 'whiteAlpha.400',
-                }}
-              />
-            </HStack>
-          </VStack>
+            </MotionBox>
+          ))}
+        </HStack>
 
-          {/* Rewards Section */}
-          <Box>
-            <HStack mb={4}>
-              <Gift size={20} color="#805AD5" />
-              <Heading size="md" color="gray.700">
-                Referral Rewards
-              </Heading>
-            </HStack>
+        {/* Rewards Section */}
+        <Box mt={2}>
+          <HStack mb={3}>
+            <Gift size={18} color="#E9D8FD" />
+            <Text color="white" fontWeight="medium">
+              Referral Rewards
+            </Text>
+          </HStack>
 
-            <VStack spacing={4} align="stretch">
+          <VStack spacing={3}>
+            <AnimatePresence>
               {REWARD_TIERS.map((tier, index) => (
                 <MotionFlex
                   key={index}
-                  p={4}
-                  bg="white"
-                  border="1px"
-                  borderColor="purple.100"
+                  w="100%"
+                  initial={{ opacity: 0, y: 20 }}
+                  animate={{
+                    opacity: 1,
+                    y: 0,
+                    transition: { delay: index * 0.1 },
+                  }}
+                  whileHover={{
+                    scale: 1.02,
+                    backgroundColor: 'rgba(255, 255, 255, 0.08)',
+                  }}
+                  p={3}
+                  bg="whiteAlpha.50"
                   rounded="lg"
                   justify="space-between"
                   align="center"
-                  initial={{ opacity: 0, x: -20 }}
-                  animate={{ opacity: 1, x: 0 }}
-                  transition={{ delay: index * 0.1 }}
-                  whileHover={{ scale: 1.02 }}
+                  border="1px solid"
+                  borderColor="yellow"
+                  cursor="pointer"
+                  transition="all 0.2s"
                 >
-                  <HStack>
-                    <Crown size={20} color={tier.iconColor} />
+                  <HStack spacing={3}>
+                    <Box
+                      p={2}
+                      bg="whiteAlpha.100"
+                      rounded="lg"
+                      color={tier.iconColor}
+                    >
+                      <Crown size={16} />
+                    </Box>
                     <VStack align="flex-start" spacing={0}>
-                      <Text fontWeight="bold" color="gray.700">
+                      <Text color="white" fontSize="sm" fontWeight="medium">
                         {tier.count} Referrals
                       </Text>
-                      <Text fontSize="sm" color="gray.500">
+                      <Text color="whiteAlpha.700" fontSize="xs">
                         {tier.reward}
                       </Text>
                     </VStack>
                   </HStack>
                   <Badge
+                    variant="subtle"
                     colorScheme={
                       stats?.referralCount >= tier.count ? 'green' : 'gray'
                     }
+                    px={2}
+                    py={1}
+                    rounded="full"
+                    fontSize="xs"
                   >
                     {stats?.referralCount >= tier.count ? 'Unlocked' : 'Locked'}
                   </Badge>
                 </MotionFlex>
               ))}
-            </VStack>
-          </Box>
-        </VStack>
-      </MotionBox>
+            </AnimatePresence>
+          </VStack>
+        </Box>
+      </VStack>
     </Container>
   )
 }
 
 const REWARD_TIERS = [
   {
-    count: 3,
-    reward: '100 XP + 1.5x Score Boost (1 day)',
+    count: 1,
+    reward: '1.5x Score Boost (3 Quizzes)',
     iconColor: '#4299E1',
   },
   {
-    count: 5,
-    reward: '500 XP + Influencer Badge',
+    count: 3,
+    reward: 'Category Boost (3 days)',
     iconColor: '#805AD5',
   },
   {
-    count: 10,
-    reward: '1000 XP + Community Builder Badge',
+    count: 5,
+    reward: 'Radar + Category Boost (5 days)',
     iconColor: '#D69E2E',
   },
 ]
