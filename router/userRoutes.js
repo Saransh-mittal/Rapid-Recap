@@ -63,6 +63,12 @@ const {
   getDemotionSummary,
 } = require('../controllers/demotionSummaryController')
 const maintenanceMiddleware = require('../middleware/maintenanceMiddleware')
+const {
+  getReferralCode,
+  applyReferralCodeHandler,
+  getReferralStats,
+  checkReferralCode,
+} = require('../controllers/referralController')
 
 router.route('/register').post(registerUser)
 router.route('/login').post(loginUser)
@@ -115,6 +121,10 @@ router.get('/stats/historical', Authenticate, getUserHistoricalPerformance)
 router.get('/maintenance-status', getMaintenanceStatus)
 router.route('/demotion-summary').get(Authenticate, getDemotionSummary)
 router.get('/achievements', Authenticate, getUserAchievements)
+router.route('/referral-code').get(Authenticate, getReferralCode)
+router.route('/apply-referral').post(Authenticate, applyReferralCodeHandler)
+router.route('/referral-stats').get(Authenticate, getReferralStats)
+router.route('/check-referral').get(Authenticate, checkReferralCode)
 
 router.get('/confirmDeleteAccount/:token', confirmDeleteAccount)
 router

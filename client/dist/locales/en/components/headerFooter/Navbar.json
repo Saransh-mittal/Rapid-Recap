@@ -1,6 +1,7 @@
 {
   "tournament": "Tournament",
   "home": "Home",
+  "referral": "Referral",
   "hallOfChampions": "Champions",
   "contact": "Contact Us",
   "leaderboard": "Leaderboard",
@@ -13,6 +14,7 @@
   "profileMenu": {
     "title": "Profile",
     "dashboard": "Dashboard",
+    "referral": "Referral",
     "leaderboard": "Leaderboard",
     "manual": "Manual",
     "help": "Help",

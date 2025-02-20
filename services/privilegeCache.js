@@ -3,6 +3,10 @@
 const cache = require('memory-cache')
 const User = require('../model/userSchema')
 const moment = require('moment-timezone')
+const { checkActiveAbilities } = require('./abilityService')
+const {
+  isCategoryBoost,
+} = require('./abilityServices/tournamentAbilityService')
 
 const CACHE_TTL = 5 * 60 * 1000 // 5 minutes
 
@@ -39,63 +43,120 @@ const privilegeCache = {
    * Fetch privileges from database
    */
   async fetchPrivilegesFromDB({ userId, category }) {
-    const user = await User.findById(userId).select('badges').lean()
+    try {
+      // Get user badges
+      const user = await User.findById(userId).select('badges').lean()
 
-    if (!user?.badges) {
-      return { rqmBoost: false, radar: false }
-    }
+      // Get active abilities
+      const activeAbilities = await checkActiveAbilities({ userId })
 
-    const now = moment().tz('Asia/Kolkata')
+      const now = moment().tz('Asia/Kolkata')
 
-    // If no specific category, check all categories
-    if (!category) {
-      const validBadges = user.badges.filter(
+      // Filter active category boosts
+      const activeCategoryBoosts = activeAbilities.filter(
+        ability =>
+          ability.name.includes('Boost') &&
+          isCategoryBoost(ability.name) &&
+          !ability.isBadgePowerUp &&
+          (ability.expiresAt > new Date() || ability.expiresAt === null),
+      )
+      const activeCategoryRadar = activeAbilities.filter(
+        ability =>
+          ability.name.includes('Radar') &&
+          !ability.isBadgePowerUp &&
+          (ability.expiresAt > new Date() || ability.expiresAt === null),
+      )
+
+      // If no specific category provided, check all categories
+      if (!category) {
+        // Process badges
+        const validBadges = (user?.badges || []).filter(
+          badge =>
+            badge.canBeClaimedUntil &&
+            moment(badge.canBeClaimedUntil).isAfter(now) &&
+            ['ACE', 'PRO', 'CHAMP'].includes(badge.badgeName),
+        )
+
+        // Initialize privileges by category
+        const privilegesByCategory = {}
+
+        // Add privileges from badges
+        validBadges.forEach(badge => {
+          if (!privilegesByCategory[badge.text]) {
+            privilegesByCategory[badge.text] = {
+              rqmBoost: false,
+              radar: false,
+            }
+          }
+
+          if (['ACE', 'PRO'].includes(badge.badgeName)) {
+            privilegesByCategory[badge.text].rqmBoost = true
+          }
+          if (['ACE', 'CHAMP'].includes(badge.badgeName)) {
+            privilegesByCategory[badge.text].radar = true
+          }
+        })
+
+        // Add privileges from active category boosts
+        activeCategoryBoosts.forEach(boost => {
+          const boostCategory = boost.name.split(' ')[0]
+          if (!privilegesByCategory[boostCategory]) {
+            privilegesByCategory[boostCategory] = {
+              rqmBoost: false,
+              radar: false,
+            }
+          }
+          privilegesByCategory[boostCategory].rqmBoost = true
+        })
+        activeCategoryRadar.forEach(radar => {
+          const radarCategory = radar.name.split(' ')[0]
+          if (!privilegesByCategory[radarCategory]) {
+            privilegesByCategory[radarCategory] = {
+              rqmBoost: false,
+              radar: false,
+            }
+          }
+          privilegesByCategory[radarCategory].radar = true
+        })
+
+        return {
+          privilegesByCategory,
+          hasAnyPrivilege:
+            validBadges.length > 0 ||
+            activeCategoryBoosts.length > 0 ||
+            activeCategoryRadar.length > 0,
+        }
+      }
+
+      // For specific category
+      const validBadges = (user?.badges || []).filter(
         badge =>
           badge.canBeClaimedUntil &&
           moment(badge.canBeClaimedUntil).isAfter(now) &&
-          ['ACE', 'PRO', 'CHAMP'].includes(badge.badgeName),
+          ['ACE', 'PRO', 'CHAMP'].includes(badge.badgeName) &&
+          badge.text === category,
       )
 
-      // Group badges by category
-      const privilegesByCategory = {}
-      validBadges.forEach(badge => {
-        if (!privilegesByCategory[badge.text]) {
-          privilegesByCategory[badge.text] = {
-            rqmBoost: false,
-            radar: false,
-          }
-        }
-
-        if (['ACE', 'PRO'].includes(badge.badgeName)) {
-          privilegesByCategory[badge.text].rqmBoost = true
-        }
-        if (['ACE', 'CHAMP'].includes(badge.badgeName)) {
-          privilegesByCategory[badge.text].radar = true
-        }
-      })
+      // Check for active category boost for the specific category
+      const hasCategoryBoost = activeCategoryBoosts.some(
+        boost => boost.name.split(' ')[0] === category,
+      )
+      const hasCategoryRadar = activeCategoryRadar.some(
+        radar => radar.name.split(' ')[0] === category,
+      )
 
       return {
-        privilegesByCategory,
-        hasAnyPrivilege: validBadges.length > 0,
+        rqmBoost:
+          validBadges.some(badge => ['ACE', 'PRO'].includes(badge.badgeName)) ||
+          hasCategoryBoost,
+        radar:
+          validBadges.some(badge =>
+            ['ACE', 'CHAMP'].includes(badge.badgeName),
+          ) || hasCategoryRadar,
       }
-    }
-
-    // For specific category
-    const validBadges = user.badges.filter(
-      badge =>
-        badge.canBeClaimedUntil &&
-        moment(badge.canBeClaimedUntil).isAfter(now) &&
-        ['ACE', 'PRO', 'CHAMP'].includes(badge.badgeName) &&
-        badge.text === category,
-    )
-
-    return {
-      rqmBoost: validBadges.some(badge =>
-        ['ACE', 'PRO'].includes(badge.badgeName),
-      ),
-      radar: validBadges.some(badge =>
-        ['ACE', 'CHAMP'].includes(badge.badgeName),
-      ),
+    } catch (error) {
+      console.error('Error fetching privileges:', error)
+      throw error
     }
   },
 

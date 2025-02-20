@@ -25,9 +25,16 @@ const moment = require('moment-timezone')
 const {
   createQuinBoostAbility,
   calculateTotalEffect,
+  createQuizBoostAbility,
 } = require('./abilityService')
 const Inventory = require('../model/inventorySchema')
 const { calculateTotalMultiplier } = require('../utils/inventory.utils')
+const {
+  createCategoryBoost,
+  isCategoryBoost,
+  getCategoryFromBoost,
+  createCategoryRadar,
+} = require('./abilityServices/tournamentAbilityService')
 
 const handleQuinBoostEarned = async ({ user, session }) => {
   try {
@@ -88,6 +95,98 @@ const saveQuizAttempt = async (
     })
     .session(session)
 
+  if (
+    (!user.quizAttempts || user.quizAttempts.length === 0) &&
+    user.referredBy
+  ) {
+    const referrer = await User.findById(user.referredBy).session(session)
+
+    // Find the referral and update its status
+    const referralIndex = referrer.referrals.findIndex(
+      referral => referral.user.toString() === user._id.toString(),
+    )
+
+    if (referralIndex !== -1) {
+      await createQuizBoostAbility({
+        userId: user._id,
+        session,
+        quantity: 2,
+        multiplier: 1.5,
+      })
+      referrer.referrals[referralIndex].status = 'complete'
+      await referrer.save({ session })
+
+      const referralCount = referrer.referralCount
+
+      if (referralCount === 1) {
+        await createQuizBoostAbility({
+          userId: referrer._id,
+          session,
+          quantity: 3,
+          multiplier: 1.5,
+        })
+      } else if (referralCount === 3) {
+        await createCategoryBoost({
+          userId: referrer._id,
+          category: 'category',
+          multiplier: 1.5,
+          duration: 3 * 24 * 60, // 3 days
+          expiresAt: moment().add(1, 'month').toDate(),
+          isClaimed: false,
+          isActive: false,
+          description: `Increases RQM score by 1.5x for your chozen category as you referred 3 friends`,
+          isBadgePowerUp: false,
+          session,
+        })
+      } else if (referralCount === 5) {
+        await createCategoryBoost({
+          userId: referrer._id,
+          category: 'category',
+          multiplier: 1.5,
+          duration: 5 * 24 * 60, // 5 days
+          expiresAt: moment().add(1, 'month').toDate(),
+          isClaimed: false,
+          isActive: false,
+          description: `Increases RQM score by 1.5x for your chozen category as you referred 5 friends`,
+          isBadgePowerUp: false,
+          session,
+        })
+        await createCategoryRadar({
+          userId: referrer._id,
+          category: 'category',
+          duration: 5 * 24 * 60, // 5 days
+          expiresAt: moment().add(1, 'month').toDate(),
+          isClaimed: false,
+          isActive: false,
+          description: `You can view difficulty of each articles for your chozen category as you referred 5 friends`,
+          isBadgePowerUp: false,
+          session,
+        })
+      }
+    }
+  } else if (user.referredBy && user.quizAttempts.length === 4) {
+    const referrer = await User.findById(user.referredBy).session(session)
+
+    // Find the referral and update its status
+    const referralIndex = referrer.referrals.findIndex(
+      referral => referral.user.toString() === user._id.toString(),
+    )
+    if (referralIndex !== -1) {
+      await createCategoryBoost({
+        userId: user._id,
+        category: 'category',
+        multiplier: 1.5,
+        duration: 2 * 24 * 60, // 2 days
+        expiresAt: moment().add(1, 'month').toDate(),
+        isClaimed: false,
+        isActive: false,
+        description: `Increases RQM score by 1.5x for your chozen category as you were referred and completed 5 quizzes`,
+        isBadgePowerUp: false,
+        session,
+      })
+    }
+  }
+
   const article = await Article.findById(articleId)
     .select('_id category quizAttemptCnt')
     .session(session)
@@ -134,13 +233,31 @@ const saveQuizAttempt = async (
         ability.abilityId?.name === 'StreakSurge' &&
         ability.expiresAt > new Date(),
     )
+    const activeQuizBoost = inventory.abilities.find(
+      ability =>
+        ability.isActive &&
+        ability.abilityId?.name === 'QuizBoost' &&
+        (ability.expiresAt > new Date() || ability.expiresAt === null),
+    )
     const activeAbilities = inventory.abilities
-      .filter(
-        ability =>
+      .filter(ability => {
+        // Basic active ability checks
+        const isActive =
           ability.isActive &&
           ability.abilityId?.type === 'BOOST' &&
-          ability.expiresAt > new Date(),
-      )
+          (ability.expiresAt > new Date() || ability.expiresAt === null)
+
+        if (!isActive) return false
+
+        // Handle category boosts
+        if (isCategoryBoost(ability.abilityId.name)) {
+          const boostCategory = getCategoryFromBoost(ability.abilityId.name)
+          return boostCategory.toLowerCase() === article.category.toLowerCase()
+        }
+
+        // Include all other types of boosts
+        return true
+      })
       .map(ability => ({
         id: ability.abilityId._id,
         name: ability.abilityId.name,
@@ -160,7 +277,8 @@ const saveQuizAttempt = async (
       await inventory.save({ session })
       quinBoostUtilized = true
       user.eligibleForTournament = true
-    } else if (activeStreakSurge) {
+    }
+    if (activeStreakSurge) {
       // Check if notification has already been sent today
       const hasNotification = await hasStreakSurgeNotificationToday(user)
 
@@ -176,6 +294,16 @@ const saveQuizAttempt = async (
         })
         await newNotification.save()
       }
+    }
+    if (activeQuizBoost) {
+      if (activeQuizBoost.quantity <= 1) {
+        activeQuizBoost.isActive = false
+        activeQuizBoost.isUsed = true
+        activeQuizBoost.quantity -= 1
+      } else {
+        activeQuizBoost.quantity -= 1
+      }
+      await inventory.save({ session })
     }
   }
 

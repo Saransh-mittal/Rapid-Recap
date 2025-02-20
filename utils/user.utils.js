@@ -695,13 +695,14 @@ function prepareOnboardingData(body) {
   function getStepId(step) {
     const stepMap = {
       1: 'language',
-      2: 'welcome',
-      3: 'categories',
-      4: 'article_selection',
-      5: 'quiz_question',
-      6: 'quiz_result',
-      7: 'article_reading',
-      8: 'leaderboard',
+      2: 'referral',
+      3: 'welcome',
+      4: 'categories',
+      5: 'article_selection',
+      6: 'quiz_question',
+      7: 'quiz_result',
+      8: 'article_reading',
+      9: 'leaderboard',
     }
     return stepMap[step] || 'language'
   }
@@ -746,6 +747,10 @@ const executeOnboardingUpdate = async req => {
         if (normalizedData.data.language) {
           user.userLanguage = normalizedData.data.language
         }
+        break
+
+      case 'referral':
+        // Referral step, no data to save
         break
 
       case 'welcome':

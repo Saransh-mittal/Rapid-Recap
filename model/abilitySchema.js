@@ -8,7 +8,6 @@ const abilitySchema = new mongoose.Schema({
   name: {
     type: String,
     required: true,
-    unique: true,
   },
   description: {
     type: String,
@@ -18,6 +17,10 @@ const abilitySchema = new mongoose.Schema({
     type: String,
     enum: ['BOOST', 'POWER_UP'],
     required: true,
+  },
+  quantity: {
+    type: Number,
+    default: 1,
   },
   multiplier: {
     type: Number,
@@ -48,6 +51,10 @@ const abilitySchema = new mongoose.Schema({
     default: false,
   },
   claimed: {
+    type: Boolean,
+    default: false,
+  },
+  isBadgePowerUp: {
     type: Boolean,
     default: false,
   },
