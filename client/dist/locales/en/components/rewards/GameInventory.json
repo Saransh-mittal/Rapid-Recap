@@ -14,7 +14,8 @@
   "status": {
     "active": "Active",
     "quantity": "x{{count}}",
-    "multiplier": "{{value}}x"
+    "multiplier": "{{value}}x",
+    "additionalTime": "+{{value}} sec"
   },
   "ability": {
     "type": {

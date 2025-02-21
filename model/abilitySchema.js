@@ -26,6 +26,9 @@ const abilitySchema = new mongoose.Schema({
     type: Number,
     default: 1,
   },
+  additionalTime: {
+    type: Number, // in seconds
+  },
   duration: {
     type: Number, // Duration in minutes, null means permanent
     default: null,

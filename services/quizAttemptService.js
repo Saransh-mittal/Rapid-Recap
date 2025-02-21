@@ -35,6 +35,9 @@ const {
   getCategoryFromBoost,
   createCategoryRadar,
 } = require('./abilityServices/tournamentAbilityService')
+const {
+  checkAndAwardTimeDilation,
+} = require('./abilityServices/timeDilationService')
 
 const handleQuinBoostEarned = async ({ user, session }) => {
   try {
@@ -208,16 +211,36 @@ const saveQuizAttempt = async (
     throw new Error('User has already attempted the quiz for the article.')
   }
 
-  let { baseRQM_score, RQM_score, score, expectedTime, performanceBonus } =
-    calculateRQMScore(userResponses, questions, timeTaken)
-
-  let quinBoostUtilized = false
-  const nonBoostedRQM = RQM_score
-
   // Check active ability boosts
   const inventory = await Inventory.findOne({ user: userId })
     .populate('abilities.abilityId')
     .session(session)
+  const activeTimeDilation =
+    inventory?.abilities?.find(
+      ability =>
+        ability.isActive &&
+        ability.abilityId?.name === 'TimeDilation' &&
+        (ability.expiresAt > new Date() || ability.expiresAt === null),
+    ) || null
+
+  let {
+    baseRQM_score,
+    RQM_score,
+    score,
+    expectedTime,
+    performanceBonus,
+    timeDilationBoosted,
+    timeDilatedTimeTaken,
+  } = calculateRQMScore(userResponses, questions, timeTaken, activeTimeDilation)
+
+  if (timeDilationBoosted) {
+    activeTimeDilation.isActive = false
+    activeTimeDilation.isUsed = true
+    await inventory.save({ session })
+  }
+
+  let quinBoostUtilized = false
+  const nonBoostedRQM = RQM_score
 
   let totalBoostMultiplier = 1
   if (inventory) {
@@ -320,11 +343,17 @@ const saveQuizAttempt = async (
     quiz: sessionId,
     responses: userResponses,
     RQM_score,
+    baseRQM_score,
     articleDifficulty,
     timeTaken,
     expectedTime,
     boost,
     isBoosted,
+    timeDilatedTimeTaken,
+    additionalTime: activeTimeDilation
+      ? activeTimeDilation?.abilityId?.additionalTime || 0
+      : 0,
+    timeDilationBoosted,
     season: parseInt(configService.getCurrentSeason(), 10),
     month: moment().month() + 1,
     year: moment().year(),
@@ -359,6 +388,13 @@ const saveQuizAttempt = async (
     session,
     newQuizAttempt,
   })
+
+  if (RQM_score >= 40) {
+    await checkAndAwardTimeDilation({
+      userId,
+      session,
+    })
+  }
 
   emitProgress('updateStats', 50)
   let resultOfIQCalc = {}
@@ -445,7 +481,7 @@ const saveQuizAttempt = async (
     )
   }
 
-  await scheduleQuizEmails(user, quizzesToday)
+  // await scheduleQuizEmails(user, quizzesToday)
 
   const pastRQMs = await fetchTodaysPastRQMs({ userId, session })
 
@@ -475,6 +511,7 @@ const saveQuizAttempt = async (
     messageForTournamentEligibility,
     userEligibleForTournament,
     performanceBonus,
+    timeDilationBoosted,
     pauseRealTimeIQ: user.pauseRealTimeIQ,
     ...resultOfIQCalc,
   }

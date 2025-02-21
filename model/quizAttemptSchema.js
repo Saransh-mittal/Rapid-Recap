@@ -37,6 +37,9 @@ const quizAttemptSchema = new mongoose.Schema({
     type: Number,
     required: true,
   },
+  baseRQM_score: {
+    type: Number,
+  },
   articleDifficulty: {
     type: Number,
     required: true,
@@ -45,6 +48,9 @@ const quizAttemptSchema = new mongoose.Schema({
     type: Number,
   },
   timeTaken: {
+    type: Number,
+  },
+  timeDilatedTimeTaken: {
     type: Number,
   },
   expectedTime: {
@@ -85,6 +91,17 @@ const quizAttemptSchema = new mongoose.Schema({
     type: Number,
   },
   globalStandardDeviation: {
+    type: Number,
+  },
+  timeDilationBoosted: {
+    type: Boolean,
+    default: false,
+  },
+  usedForTimeDilation: {
+    type: Boolean,
+    default: false,
+  },
+  additionalTime: {
     type: Number,
   },
   createdAt: {
