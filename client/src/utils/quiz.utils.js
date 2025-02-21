@@ -81,6 +81,7 @@ const parseQuizData = result => {
     difficulty: result?.quizDifficulty,
     baseRQM: result?.baseRQM_score,
     finalRQM: result?.RQM_score,
+    timeDilationBoosted: result?.timeDilationBoosted,
     performanceBonus: result?.performanceBonus,
     boost: result?.boost,
     isBoost: result?.isBoosted,

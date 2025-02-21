@@ -1,11 +1,57 @@
 import React, { useEffect, useState, useCallback } from 'react'
-import { Box, Text } from '@chakra-ui/react'
+import { Box, HStack, Text, VStack } from '@chakra-ui/react'
 import useSound from '../../customHooks/useSound'
+import { useSelector } from 'react-redux'
+import {
+  calculateTotalEffect,
+  getCategoryFromBoost,
+  isCategoryBoost,
+} from '../../utils/helper.utils'
+import { useMemo } from 'react'
+import { motion } from 'framer-motion'
+const MotionBox = motion(Box)
 
 const Countdown = ({ timer, submitted, isTournament = false }) => {
   const [offset, setOffset] = useState(0)
   const [isFlashing, setIsFlashing] = useState(false)
-  const initialTimer = 50
+  const { activeAbilities } = useSelector(state => state.inventory)
+  const filteredActiveAbilities = activeAbilities.filter(ability => {
+    // Handle category boosts
+
+    if (ability && ability?.name && isCategoryBoost(ability.name) && category) {
+      const boostCategory = getCategoryFromBoost(ability.name)
+
+      return boostCategory.toLowerCase() === category.toLowerCase()
+    }
+    // Include all other types of boosts
+    return true
+  })
+  const timeDilationEffect = useMemo(
+    () =>
+      calculateTotalEffect(
+        filteredActiveAbilities.filter(
+          ability => ability?.name === 'TimeDilation',
+        ),
+        'POWER_UP',
+      ),
+    [activeAbilities],
+  )
+  const additionalTime = useMemo(
+    () =>
+      timeDilationEffect?.additionalTime
+        ? timeDilationEffect?.additionalTime
+        : 0,
+    [timeDilationEffect],
+  )
+  const effects = useMemo(
+    () => calculateTotalEffect(filteredActiveAbilities, 'BOOST'),
+    [activeAbilities],
+  )
+  const multiplier = useMemo(
+    () => (effects?.multiplier <= 1 ? null : `${effects?.multiplier}x`),
+    [effects],
+  )
+  const initialTimer = useMemo(() => 50 + additionalTime, [timeDilationEffect])
   const { play30SecSound, play20SecSound, play10SecSound, playEndSound } =
     useSound()
 
@@ -93,6 +139,89 @@ const Countdown = ({ timer, submitted, isTournament = false }) => {
       >
         {timer}
       </Text>
+      <VStack position={'absolute'} top="0" right={'-3.75rem'}>
+        {additionalTime && (
+          <MotionBox
+            initial={{ opacity: 0, scale: 0 }}
+            animate={{ opacity: 1, scale: 1 }}
+            transition={{ delay: 0.5 }}
+            position="relative"
+          >
+            <Box
+              bg="linear-gradient(135deg, #FF6B6B 0%, #9F67FF 100%)"
+              px="3"
+              py="1"
+              borderRadius="full"
+              boxShadow="0 4px 12px rgba(159, 103, 255, 0.4)"
+              position="relative"
+              overflow="hidden"
+              w={'fit-content'}
+              _before={{
+                content: '""',
+                position: 'absolute',
+                top: 0,
+                left: 0,
+                right: 0,
+                bottom: 0,
+                background:
+                  'linear-gradient(45deg, transparent 0%, rgba(255,255,255,0.2) 50%, transparent 100%)',
+                animation: 'shine 2s infinite',
+              }}
+            >
+              <HStack spacing="1" alignItems="center">
+                <Text
+                  color="white"
+                  fontSize="xs"
+                  fontWeight="extrabold"
+                  textShadow="0 2px 4px rgba(0,0,0,0.2)"
+                >
+                  +{additionalTime}s
+                </Text>
+              </HStack>
+            </Box>
+          </MotionBox>
+        )}
+        {multiplier && (
+          <MotionBox
+            initial={{ opacity: 0, scale: 0 }}
+            animate={{ opacity: 1, scale: 1 }}
+            transition={{ delay: 0.5 }}
+            position="relative"
+          >
+            <Box
+              bg="linear-gradient(135deg, #FF6B6B 0%, #9F67FF 100%)"
+              px="3"
+              py="1"
+              borderRadius="full"
+              boxShadow="0 4px 12px rgba(159, 103, 255, 0.4)"
+              position="relative"
+              overflow="hidden"
+              _before={{
+                content: '""',
+                position: 'absolute',
+                top: 0,
+                left: 0,
+                right: 0,
+                bottom: 0,
+                background:
+                  'linear-gradient(45deg, transparent 0%, rgba(255,255,255,0.2) 50%, transparent 100%)',
+                animation: 'shine 2s infinite',
+              }}
+            >
+              <HStack spacing="1" alignItems="center">
+                <Text
+                  color="white"
+                  fontSize="xs"
+                  fontWeight="extrabold"
+                  textShadow="0 2px 4px rgba(0,0,0,0.2)"
+                >
+                  {multiplier}
+                </Text>
+              </HStack>
+            </Box>
+          </MotionBox>
+        )}
+      </VStack>
     </Box>
   )
 }

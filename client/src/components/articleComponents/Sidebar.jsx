@@ -44,6 +44,7 @@ const Alt_img = '/images/rr.webp'
 const fallback_news_image = '/images/fallback_news_image.webp'
 
 const Sidebar = ({
+  category,
   givenQuiz,
   percentile,
   RQM_score,
@@ -364,7 +365,7 @@ const Sidebar = ({
           >
             <TakeQuizButton
               onClick={handleQuizButtonClick}
-              isQuinBoostAvailable={isQuinBoostAvailable}
+              category={category}
             />
           </Box>
           {notLoggedIn && (

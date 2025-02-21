@@ -209,7 +209,7 @@ const AbilityCard = ({ item, isActive, onClick, variants }) => {
           <Text fontSize="sm" fontWeight="bold" textAlign="center">
             {item.name}
           </Text>
-          {item.multiplier && (
+          {item.multiplier && item.multiplier > 1 && (
             <Badge
               position="absolute"
               top="-1"
@@ -220,6 +220,20 @@ const AbilityCard = ({ item, isActive, onClick, variants }) => {
               color="yellow.300"
             >
               {t('status.multiplier', { value: item.multiplier })}
+            </Badge>
+          )}
+          {item.additionalTime && (
+            <Badge
+              position="absolute"
+              top="-1"
+              left={{ base: '-4', md: '-1' }}
+              bg="blackAlpha.700"
+              px="2"
+              rounded="full"
+              color="yellow.300"
+              fontSize={'0.7rem'}
+            >
+              {t('status.additionalTime', { value: item.additionalTime })}
             </Badge>
           )}
           <Badge

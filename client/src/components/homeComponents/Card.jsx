@@ -82,6 +82,7 @@ const Card = React.memo(
     urlTitle,
     difficulty,
     multiplier,
+    additionalTime,
   }) => {
     const { t } = useTranslation('Card')
     const { t: diffTranslation } = useTranslation('DifficultyLegend')
@@ -511,6 +512,46 @@ const Card = React.memo(
                         textTransform="uppercase"
                       >
                         Boost
+                      </Text>
+                    </HStack>
+                  </Box>
+                </MotionBox>
+              )}
+              {additionalTime && (
+                <MotionBox
+                  initial={{ opacity: 0, scale: 0 }}
+                  animate={{ opacity: 1, scale: 1 }}
+                  transition={{ delay: 0.5 }}
+                  position="relative"
+                >
+                  <Box
+                    bg="linear-gradient(135deg, #FF6B6B 0%, #9F67FF 100%)"
+                    px="3"
+                    py="1"
+                    borderRadius="full"
+                    boxShadow="0 4px 12px rgba(159, 103, 255, 0.4)"
+                    position="relative"
+                    overflow="hidden"
+                    _before={{
+                      content: '""',
+                      position: 'absolute',
+                      top: 0,
+                      left: 0,
+                      right: 0,
+                      bottom: 0,
+                      background:
+                        'linear-gradient(45deg, transparent 0%, rgba(255,255,255,0.2) 50%, transparent 100%)',
+                      animation: 'shine 2s infinite',
+                    }}
+                  >
+                    <HStack spacing="1" alignItems="center">
+                      <Text
+                        color="white"
+                        fontSize="xs"
+                        fontWeight="extrabold"
+                        textShadow="0 2px 4px rgba(0,0,0,0.2)"
+                      >
+                        {additionalTime}
                       </Text>
                     </HStack>
                   </Box>

@@ -3,6 +3,12 @@ import axios from 'axios'
 import { useToast } from '@chakra-ui/react'
 import { useSocket } from './useSocket'
 import { useSelector } from 'react-redux'
+import { useMemo } from 'react'
+import {
+  calculateTotalEffect,
+  getCategoryFromBoost,
+  isCategoryBoost,
+} from '../utils/helper.utils'
 
 const useFetchQuiz = (articleId, language, onClose) => {
   const [quizSession, setQuizSession] = useState(null)
@@ -13,6 +19,35 @@ const useFetchQuiz = (articleId, language, onClose) => {
   const toast = useToast()
   const { socket, getSocket } = useSocket()
   const { user } = useSelector(state => state.auth)
+  const { activeAbilities } = useSelector(state => state.inventory)
+  const filteredActiveAbilities = activeAbilities.filter(ability => {
+    // Handle category boosts
+
+    if (ability && ability?.name && isCategoryBoost(ability.name) && category) {
+      const boostCategory = getCategoryFromBoost(ability.name)
+
+      return boostCategory.toLowerCase() === category.toLowerCase()
+    }
+    // Include all other types of boosts
+    return true
+  })
+  const timeDilationEffect = useMemo(
+    () =>
+      calculateTotalEffect(
+        filteredActiveAbilities.filter(
+          ability => ability?.name === 'TimeDilation',
+        ),
+        'POWER_UP',
+      ),
+    [activeAbilities],
+  )
+  const additionalTime = useMemo(
+    () =>
+      timeDilationEffect?.additionalTime
+        ? timeDilationEffect?.additionalTime
+        : 0,
+    [timeDilationEffect],
+  )
 
   useEffect(() => {
     const fetchQuiz = async () => {
@@ -25,7 +60,8 @@ const useFetchQuiz = (articleId, language, onClose) => {
         const { quizSession, status, timer, message } = response.data
         setQuizSession(quizSession)
         setQuizStatus(status)
-        setRemainingTime(timer)
+        setRemainingTime((timer || 50) + additionalTime)
+
         if (status === 'completed') {
           toast({
             title: 'Quiz Already Completed',
@@ -57,7 +93,7 @@ const useFetchQuiz = (articleId, language, onClose) => {
     }
 
     fetchQuiz()
-  }, [articleId, language, toast, onClose])
+  }, [articleId, language, toast, onClose, additionalTime])
 
   useEffect(() => {
     const currentSocket = getSocket()

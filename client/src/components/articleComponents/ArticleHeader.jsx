@@ -296,13 +296,14 @@ const ArticleHeader = ({
             w={'100%'}
             justifyContent={{ base: 'space-between', md: 'flex-end' }}
             position={'relative'}
+            mb={2}
           >
-            <BoostSection
+            {/* <BoostSection
               category={article?.category}
               openStreakSurgeModal={openStreakSurgeModal}
               openCategoryBoostModal={openCategoryBoostModal}
               openModal={openModal}
-            />
+            /> */}
 
             <ShareButton
               onClick={handleShare}

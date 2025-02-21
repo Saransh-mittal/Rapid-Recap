@@ -53,5 +53,6 @@
   "registerNote": "Register to convert this expected score into your starting IQ",
   "expectedScore": "Expected Score",
   "maestroAchieved": "Maestro Achieved",
-  "maxBoostAchieved": "Max Boost Achieved"
+  "maxBoostAchieved": "Max Boost Achieved",
+  "Time Dilated": "Time Dilated"
 }

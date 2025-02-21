@@ -34,6 +34,7 @@ import TrackTime from '../components/articleComponents/TrackTime'
 import MainArticleContentSkeleton from '../components/articleComponents/loaders/MainArticleContentSkeleton'
 import StreakSurgeModal from '../components/articleComponents/StreakSurgeModal'
 import CategoryBoostModal from '../components/articleComponents/CategoryBoostModal'
+import GameInventoryButton from '../components/rewards/GameInventoryButton'
 //SSR images
 const fallback_news_image = '/images/fallback_news_image.webp'
 
@@ -599,8 +600,9 @@ const Article = () => {
                 importantSentences={importantSentences}
               />
             )}
-
+            <GameInventoryButton page={'ARTICLE'} />
             <Sidebar
+              category={article?.category}
               setShouldScrollToTop={setShouldScrollToTop}
               shouldScrollToTop={shouldScrollToTop}
               givenQuiz={givenQuiz}

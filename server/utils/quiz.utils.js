@@ -678,6 +678,7 @@ const generateCategoryQuiz = async ({
 const BASELINE_TIME_PER_QUESTION = 15 // seconds
 const ALL_CORRECT_BONUS = 1.2 // 20% bonus for all correct
 const ONE_WRONG_BONUS = 1.1 // 10% bonus for only one wrong
+const BASE_TIME_WINDOW = 50
 
 const calculateScore = userResponses => {
   return (
@@ -707,17 +708,34 @@ const calculateExpectedTime = questions => {
   )
 }
 
-const calculateApparentTimeTaken = timeTaken => {
-  return timeTaken <= 10
+const calculateApparentTimeTaken = (
+  timeTaken,
+  isActiveTimeDilation = false,
+) => {
+  return timeTaken <= 10 && !isActiveTimeDilation
     ? Math.ceil((timeTaken * timeTaken) / 2 - 10 * timeTaken + 60)
     : timeTaken
 }
 
-const calculateRQMScore = (userResponses, questions, timeTaken) => {
+const calculateRQMScore = (
+  userResponses,
+  questions,
+  timeTaken,
+  activeTimeDilation,
+) => {
   const score = calculateScore(userResponses)
   const quizDifficulty = calculateQuizDifficulty(questions)
   const expectedTime = calculateExpectedTime(questions)
+  const timeDilatedTimeTaken = activeTimeDilation
+    ? (timeTaken * BASE_TIME_WINDOW) /
+      (BASE_TIME_WINDOW + (activeTimeDilation?.abilityId?.additionalTime || 30))
+    : timeTaken
+
   const apparentTimeTaken = calculateApparentTimeTaken(timeTaken)
+  const apparentDilatedTimeTaken = calculateApparentTimeTaken(
+    timeDilatedTimeTaken,
+    !!activeTimeDilation,
+  )
 
   // Calculate weighted score based on question difficulties
   const weightedScore =
@@ -734,6 +752,7 @@ const calculateRQMScore = (userResponses, questions, timeTaken) => {
   const correctCount = userResponses.filter(res => res.isCorrect).length
   // Calculate time factor (compare to expected time)
   const timeFactor = Math.min(expectedTime / apparentTimeTaken, 2) // Cap at 2x speed
+  const timeDilatedFactor = Math.min(expectedTime / apparentDilatedTimeTaken, 2) // Cap at 2x speed
 
   const baseRQM_score = Math.ceil((adjustedScore * timeFactor * 150) / 2)
   if (correctCount === questions.length) {
@@ -743,7 +762,7 @@ const calculateRQMScore = (userResponses, questions, timeTaken) => {
   }
 
   // Calculate final RQM score
-  const RQM_score = Math.ceil((adjustedScore * timeFactor * 150) / 2)
+  const RQM_score = Math.ceil((adjustedScore * timeDilatedFactor * 150) / 2)
   return {
     baseRQM_score,
     RQM_score,
@@ -755,6 +774,8 @@ const calculateRQMScore = (userResponses, questions, timeTaken) => {
         : correctCount === questions.length - 1
         ? ONE_WRONG_BONUS
         : 1,
+    timeDilationBoosted: !!activeTimeDilation,
+    timeDilatedTimeTaken,
   }
 }
 

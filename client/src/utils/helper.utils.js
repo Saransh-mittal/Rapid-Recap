@@ -184,6 +184,7 @@ export const getCategoryFromRadar = abilityName => {
 export const calculateTotalEffect = (activeAbilities, type = 'BOOST') => {
   const effects = {
     multiplier: 1,
+    additionalTime: 0,
   }
 
   if (!Array.isArray(activeAbilities)) {
@@ -191,8 +192,7 @@ export const calculateTotalEffect = (activeAbilities, type = 'BOOST') => {
   }
 
   const typeAbilities = activeAbilities.filter(ability => ability.type === type)
-
-  if (typeAbilities.length > 0) {
+  if (typeAbilities.length > 0 && type === 'BOOST') {
     // Find the highest multiplier from active abilities
     const baseBoost = Math.max(
       ...typeAbilities.map(ability => ability.multiplier || 1),
@@ -203,6 +203,15 @@ export const calculateTotalEffect = (activeAbilities, type = 'BOOST') => {
 
     // Calculate total and cap at 2x
     effects.multiplier = Math.min(baseBoost + additionalBoosts, 2)
+  } else if (typeAbilities.length > 0 && type === 'POWER_UP') {
+    const timeDilationAbilities = typeAbilities.filter(
+      ability => ability.name === 'TimeDilation',
+    )
+    if (timeDilationAbilities.length > 0) {
+      effects.additionalTime = Math.max(
+        ...timeDilationAbilities.map(ability => ability.additionalTime || 0),
+      )
+    }
   }
 
   return effects

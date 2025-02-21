@@ -50,6 +50,16 @@ const GridRow = React.memo(
       () => calculateTotalEffect(filteredActiveAbilities, 'BOOST'),
       [activeAbilities],
     )
+    const timeDilationEffect = useMemo(
+      () =>
+        calculateTotalEffect(
+          filteredActiveAbilities.filter(
+            ability => ability?.name === 'TimeDilation',
+          ),
+          'POWER_UP',
+        ),
+      [activeAbilities],
+    )
 
     const rowData = rows[index]
     const cardWidth = (width - responsiveGap * (columns + 1)) / columns
@@ -81,6 +91,11 @@ const GridRow = React.memo(
                   difficulty={item?.articleDifficulty}
                   multiplier={
                     effects?.multiplier <= 1 ? null : `${effects?.multiplier}x`
+                  }
+                  additionalTime={
+                    timeDilationEffect?.additionalTime
+                      ? `+${timeDilationEffect?.additionalTime}s`
+                      : null
                   }
                   title={
                     i18n.language === 'en' ? item?.title : item?.hindiTitle

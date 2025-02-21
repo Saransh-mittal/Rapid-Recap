@@ -1,5 +1,12 @@
 // /hooks/useTimer.js
+import { useMemo } from 'react'
 import { useState, useEffect, useRef } from 'react'
+import {
+  calculateTotalEffect,
+  getCategoryFromBoost,
+  isCategoryBoost,
+} from '../utils/helper.utils'
+import { useSelector } from 'react-redux'
 
 const useTimer = (
   remainingTime,
@@ -13,11 +20,43 @@ const useTimer = (
   const [timer, setTimer] = useState(remainingTime || 50)
   const [timeTaken, setTimeTaken] = useState(0)
   const userAnswersRef = useRef(userAnswers)
+  const { activeAbilities } = useSelector(state => state.inventory)
+  const filteredActiveAbilities = activeAbilities.filter(ability => {
+    // Handle category boosts
+
+    if (ability && ability?.name && isCategoryBoost(ability.name) && category) {
+      const boostCategory = getCategoryFromBoost(ability.name)
+
+      return boostCategory.toLowerCase() === category.toLowerCase()
+    }
+    // Include all other types of boosts
+    return true
+  })
+  const timeDilationEffect = useMemo(
+    () =>
+      calculateTotalEffect(
+        filteredActiveAbilities.filter(
+          ability => ability?.name === 'TimeDilation',
+        ),
+        'POWER_UP',
+      ),
+    [activeAbilities],
+  )
+  const additionalTime = useMemo(
+    () =>
+      timeDilationEffect?.additionalTime
+        ? timeDilationEffect?.additionalTime
+        : 0,
+    [timeDilationEffect],
+  )
 
   // Update the ref whenever userAnswers changes
   useEffect(() => {
     userAnswersRef.current = userAnswers
   }, [userAnswers])
+  useEffect(() => {
+    setTimer((remainingTime || 50) + additionalTime)
+  }, [additionalTime])
 
   useEffect(() => {
     let timerId = null

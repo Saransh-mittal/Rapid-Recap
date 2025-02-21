@@ -2,7 +2,7 @@
 import React, { useState, useEffect, useMemo, useCallback } from 'react'
 import { Box, Flex, Icon, Text } from '@chakra-ui/react'
 import { motion, AnimatePresence } from 'framer-motion'
-import { Brain } from 'lucide-react'
+import { Brain, Clock } from 'lucide-react'
 import { useTranslation } from 'react-i18next'
 import CountingNumber from './CountingNumber.jsx'
 
@@ -62,43 +62,98 @@ const ScoreHeader = React.memo(({ isTournament, t }) => (
   </Flex>
 ))
 
-// Score display with CSS transforms for better performance
-const FinalScoreDisplay = React.memo(({ finalScore, isTournament }) => (
+const TimeDilationBadge = React.memo(({ t }) => (
   <motion.div
-    initial={{ scale: 1 }}
-    animate={{ scale: [1, 1.1, 1] }}
+    initial={{ scale: 0, opacity: 0 }}
+    animate={{ scale: 1, opacity: 1 }}
     transition={{
-      duration: 0.5,
-      ease: 'easeInOut',
-      willChange: 'transform',
+      delay: 0.5,
+      duration: 0.3,
+      type: 'spring',
+      stiffness: 260,
+      damping: 20,
     }}
   >
-    <MotionBox
+    <Flex
       position="absolute"
-      inset="-16px"
-      rounded="xl"
-      bgGradient="linear(to-r, rgba(168, 85, 247, 0.2), rgba(236, 72, 153, 0.2))"
-      filter="blur(16px)"
-      initial={{ opacity: 0 }}
-      animate={{ opacity: 1 }}
-      transition={{ duration: 1.5 }}
-      style={{ willChange: 'opacity' }}
-    />
-    <Text
-      fontSize="4xl"
-      fontWeight="bold"
-      bgGradient={
-        isTournament
-          ? 'linear(to-r, yellow.400, orange.400)'
-          : 'linear(to-r, purple.400, pink.400)'
-      }
-      bgClip="text"
-      style={{ willChange: 'transform' }}
+      top="-25px"
+      right="-35px"
+      bg="rgba(139, 92, 246, 0.9)"
+      backdropFilter="blur(8px)"
+      rounded="full"
+      px={2}
+      py={1}
+      alignItems="center"
+      gap={1}
+      border="1px solid rgba(255, 255, 255, 0.2)"
+      boxShadow="0 4px 6px rgba(0, 0, 0, 0.1)"
+      w={'max-content'}
     >
-      {finalScore}
-    </Text>
+      <motion.div
+        animate={{
+          rotate: [0, 360],
+          scale: [1, 1.2, 1],
+        }}
+        transition={{
+          rotate: { duration: 10, repeat: Infinity, ease: 'linear' },
+          scale: { duration: 2, repeat: Infinity, ease: 'easeInOut' },
+        }}
+      >
+        <Clock size={14} color="white" />
+      </motion.div>
+      <Text
+        fontSize="xs"
+        color="white"
+        fontWeight="semibold"
+        textShadow="0 1px 2px rgba(0, 0, 0, 0.2)"
+      >
+        {t('Time Dilated')}
+      </Text>
+    </Flex>
   </motion.div>
 ))
+
+const FinalScoreDisplay = React.memo(
+  ({ finalScore, isTournament, timeDilationBoosted, t }) => (
+    <motion.div
+      initial={{ scale: 1 }}
+      animate={{ scale: [1, 1.1, 1] }}
+      transition={{
+        duration: 0.5,
+        ease: 'easeInOut',
+        willChange: 'transform',
+      }}
+      style={{ position: 'relative' }}
+    >
+      <MotionBox
+        position="absolute"
+        inset="-16px"
+        rounded="xl"
+        bgGradient="linear(to-r, rgba(168, 85, 247, 0.2), rgba(236, 72, 153, 0.2))"
+        filter="blur(16px)"
+        initial={{ opacity: 0 }}
+        animate={{ opacity: 1 }}
+        transition={{ duration: 1.5 }}
+        style={{ willChange: 'opacity' }}
+      />
+      <Text
+        fontSize="4xl"
+        fontWeight="bold"
+        bgGradient={
+          isTournament
+            ? 'linear(to-r, yellow.400, orange.400)'
+            : 'linear(to-r, purple.400, pink.400)'
+        }
+        bgClip="text"
+        style={{ willChange: 'transform' }}
+      >
+        {finalScore}
+      </Text>
+
+      {timeDilationBoosted && <TimeDilationBadge t={t} />}
+    </motion.div>
+  ),
+)
 
 const RQMScoreCard = React.memo(
   ({ step, quizData, isTournament, animationDelay }) => {
@@ -185,7 +240,9 @@ const RQMScoreCard = React.memo(
           return (
             <FinalScoreDisplay
               finalScore={finalScore}
+              timeDilationBoosted={quizData?.timeDilationBoosted}
               isTournament={isTournament}
+              t={t}
             />
           )
       }
