@@ -49,7 +49,7 @@ const tournamentDays = {
 }
 const isCalculating = { value: false }
 let schedules = [
-  createSchedule('newSeasonReset', '00:00', resetNewSeasonModal),
+  // createSchedule('newSeasonReset', '00:00', resetNewSeasonModal),
   createSchedule('userIQScore', '00:01', () =>
     calculateUserIQScores(isCalculating),
   ),
@@ -273,6 +273,14 @@ schedules.forEach(schedule => {
 
   // Generate cron pattern using UTC time
   schedule.cronPattern = `${timeUTC.minute()} ${timeUTC.hour()} * * ${dayOfWeek}`
+
+  if (schedule.name === 'userIQScore') {
+    // Original pattern would be "1 18 * * *" (after UTC conversion)
+    // Modify to exclude the 1st day of each month
+    schedule.cronPattern = `${schedule.cronPattern.split(' ')[0]} ${
+      schedule.cronPattern.split(' ')[1]
+    } 2-31 * *`
+  }
 
   // Add UTC day and time to the schedule for reference
   schedule.utcDay = timeUTC.day()

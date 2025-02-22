@@ -4,6 +4,7 @@ const {
 } = require('../../services/demotionMaintenanceService')
 const moment = require('moment-timezone')
 const { mailTransporter } = require('../../utils/mail.utils')
+const { distributeRewards } = require('../../services/distributeRewardsService')
 
 const sendMonthlyRefreshMail = async stats => {
   try {
@@ -60,7 +61,13 @@ const demotionTask = async () => {
       console.log('Not the correct time for monthly refresh')
       return
     }
+    // Check if it's March 1st, 2025 specifically for winners distribution
+    const isMarch2025 = currentUTC.year() === 2025 && currentUTC.month() === 2 // month is 0-based, so 2 is March
 
+    if (isMarch2025) {
+      const winners = await distributeRewards()
+      console.log(`Successfully distributed ${winners.length} rewards`)
+    }
     const result = await executeMonthlyDemotionWithMaintenance()
 
     console.log('Monthly refresh completed:', {
