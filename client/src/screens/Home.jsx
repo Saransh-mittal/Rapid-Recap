@@ -27,6 +27,7 @@ import {
   isCategoryPowerUp,
 } from '../utils/helper.utils'
 import GameInventoryButton from '../components/rewards/GameInventoryButton'
+import { setLoading } from '../redux/inventorySlice'
 
 const Timeline = React.lazy(() =>
   import('../components/homeComponents/Timeline'),
@@ -253,6 +254,10 @@ const Home = () => {
       loginCheckStatus === 'fulfilled'
     ) {
       navigate('/home/top')
+    }
+
+    if (!isAuthenticated && loginCheckStatus === 'fulfilled') {
+      dispatchRedux(setLoading(false))
     }
   }, [isAuthenticated, loginCheckStatus])
 

@@ -481,7 +481,7 @@ const saveQuizAttempt = async (
     )
   }
 
-  await scheduleQuizEmails(user, quizzesToday)
+  // await scheduleQuizEmails(user, quizzesToday)
 
   const pastRQMs = await fetchTodaysPastRQMs({ userId, session })
 

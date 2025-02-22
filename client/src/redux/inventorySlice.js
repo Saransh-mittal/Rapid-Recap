@@ -107,6 +107,9 @@ const inventorySlice = createSlice({
   initialState,
   reducers: {
     clearInventory: () => initialState,
+    setLoading: (state, action) => {
+      state.loading = action.payload
+    },
   },
   extraReducers: builder => {
     builder
@@ -160,5 +163,5 @@ const inventorySlice = createSlice({
   },
 })
 
-export const { clearInventory } = inventorySlice.actions
+export const { clearInventory, setLoading } = inventorySlice.actions
 export default inventorySlice.reducer
