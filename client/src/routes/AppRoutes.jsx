@@ -20,6 +20,7 @@ const ContactLayout = lazy(() =>
 )
 const RuleBook = lazy(() => import('../screens/RuleBook'))
 const HallOfChampions = lazy(() => import('../screens/HallOfChampions'))
+const QuickClash = lazy(() => import('../screens/QuickClash'))
 
 const OnboardingProcess = lazy(() => import('../screens/OnboardingProcess'))
 const DemotionSummary = lazy(() => import('../screens/DemotionSummary'))
@@ -58,6 +59,7 @@ const AppRoutes = ({ isToken, needsOnboarding, setIsGuestLoggedin }) => {
             <Route path="/contact/feedback" element={<ContactLayout />} />
             <Route path="/home/:category" element={<Home />} />
             <Route path="/home" element={<Home />} />
+            <Route path="/quick-clash" element={<QuickClash />} />
             <Route
               path="/referral"
               // element={isToken ? <ReferralDashboard /> : <GetStarted />}

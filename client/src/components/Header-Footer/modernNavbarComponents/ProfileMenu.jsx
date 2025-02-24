@@ -21,6 +21,7 @@ import {
   LayoutDashboard,
   Scroll,
   Gift,
+  Swords,
 } from 'lucide-react'
 import { useTranslation } from 'react-i18next'
 
@@ -62,6 +63,14 @@ const ProfileMenu = memo(({ user, handleLogout, isLoggingOut }) => {
       label: t('profileMenu.profile.title'),
       onClick: () => {
         navigate(`/profile/${user?.inGameName}`)
+        onClose()
+      },
+    },
+    {
+      icon: Swords,
+      label: t('profileMenu.quickClash'),
+      onClick: () => {
+        navigate('/quick-clash')
         onClose()
       },
     },
