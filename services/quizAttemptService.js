@@ -239,7 +239,7 @@ const saveQuizAttempt = async (
     await inventory.save({ session })
   }
 
-  if (user.revivalPeriodEnd && user.todaysQuizCnt >= 6) {
+  if (user.revivalPeriodEnd && user.todaysQuizCnt >= 5) {
     user.streak = user.streakBeforeBreak + 1
     user.streakBeforeBreak = 0
     user.revivalPeriodEnd = null
