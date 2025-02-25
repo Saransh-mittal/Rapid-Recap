@@ -1158,10 +1158,19 @@ const addOnBoardingArticle = asyncHandler(async (req, res) => {
         )
       }
     }
-    // Create and save the article
+
+    // Validate onBoardingArticleCategory
+    if (!articleData.onBoardingArticleCategory) {
+      throw new Error(
+        'onBoardingArticleCategory is required for onboarding articles',
+      )
+    }
+
+    // Create and save the article with onBoardingArticleCategory
     const article = new Article({
       ...articleData,
-      category: 'onBoardingArticle', // Make sure this matches your frontend category
+      category: 'onBoardingArticle',
+      onBoardingArticleCategory: articleData.onBoardingArticleCategory,
     })
     await article.save({ session })
 
@@ -1342,41 +1351,68 @@ const updateOnBoardingArticle = asyncHandler(async (req, res) => {
 const getRandomOnBoardingArticle = asyncHandler(async (req, res) => {
   const userId = req.user._id
   const articleId = req.query.articleId
-  const { userLanguage } = await User.findById(userId).select('userLanguage')
 
-  const article =
-    articleId !== 'undefined' && articleId !== 'null'
-      ? await Article.aggregate([
-          { $match: { _id: new mongoose.Types.ObjectId(articleId) } },
-          {
-            $project: {
-              _id: 1,
-              title: userLanguage === 'hi' ? '$hindiTitle' : '$title',
-              mainText: userLanguage === 'hi' ? '$hindiMainText' : '$mainText',
-              author: userLanguage === 'hi' ? '$hindiAuthor' : '$author',
-              dateTime: 1,
-              imgURL: 1,
-              avgReadTime: 1,
-              description: 1,
-            },
-          },
-        ])
-      : await Article.aggregate([
-          { $match: { category: 'onBoardingArticle' } },
-          { $sample: { size: 1 } },
-          {
-            $project: {
-              _id: 1,
-              title: userLanguage === 'hi' ? '$hindiTitle' : '$title',
-              mainText: userLanguage === 'hi' ? '$hindiMainText' : '$mainText',
-              author: userLanguage === 'hi' ? '$hindiAuthor' : '$author',
-              dateTime: 1,
-              imgURL: 1,
-              avgReadTime: 1,
-              description: 1,
-            },
-          },
-        ])
+  // Get user info including language and preferred categories
+  const user = await User.findById(userId).select(
+    'userLanguage preferredCategories',
+  )
+  const userLanguage = user?.userLanguage || 'en'
+
+  let article = []
+
+  if (articleId !== 'undefined' && articleId !== 'null') {
+    // If articleId is provided, get that specific article
+    article = await Article.aggregate([
+      { $match: { _id: new mongoose.Types.ObjectId(articleId) } },
+      {
+        $project: {
+          _id: 1,
+          title: userLanguage === 'hi' ? '$hindiTitle' : '$title',
+          mainText: userLanguage === 'hi' ? '$hindiMainText' : '$mainText',
+          author: userLanguage === 'hi' ? '$hindiAuthor' : '$author',
+          dateTime: 1,
+          imgURL: 1,
+          avgReadTime: 1,
+          description: 1,
+        },
+      },
+    ])
+  } else {
+    // Get user's preferred categories
+    const userCategories =
+      user?.preferredCategories?.map(pc => pc.category) || []
+
+    if (!userCategories.length) {
+      return res.status(400).json({ message: 'No preferred categories found' })
+    }
+
+    // Get random article from user's preferred categories
+    article = await Article.aggregate([
+      {
+        $match: {
+          category: 'onBoardingArticle',
+          onBoardingArticleCategory: { $in: userCategories },
+        },
+      },
+      { $sample: { size: 1 } },
+      {
+        $project: {
+          _id: 1,
+          title: userLanguage === 'hi' ? '$hindiTitle' : '$title',
+          mainText: userLanguage === 'hi' ? '$hindiMainText' : '$mainText',
+          author: userLanguage === 'hi' ? '$hindiAuthor' : '$author',
+          dateTime: 1,
+          imgURL: 1,
+          avgReadTime: 1,
+          description: 1,
+        },
+      },
+    ])
+  }
+
+  if (article.length === 0) {
+    return res.status(404).json({ message: 'No onboarding articles found' })
+  }
 
   let articleHighlights = await ArticleHighlight.findOne({
     articleId: article[0]._id,
@@ -1393,9 +1429,6 @@ const getRandomOnBoardingArticle = asyncHandler(async (req, res) => {
       articleId: article[0]._id,
       lang: userLanguage,
     })
-  }
-  if (article.length === 0) {
-    return res.status(404).json({ message: 'No onboarding articles found' })
   }
 
   // Get the quiz for the article
@@ -1436,8 +1469,11 @@ const getRandomOnBoardingArticle = asyncHandler(async (req, res) => {
       }
     }
   }
-  if (!quizQuestion)
+
+  if (!quizQuestion) {
     return res.status(404).json({ message: 'No quiz found for the article' })
+  }
+
   // Combine article and quiz question
   const result = {
     ...article[0],

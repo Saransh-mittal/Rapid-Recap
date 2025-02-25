@@ -304,13 +304,13 @@ webpush.setVapidDetails(
 
 // Initialize bot tracking
 initBotTracking()
-// require('./scripts/script_prepare_article_data')()
-// const generateSitemap = require('./generate-sitemap')
-// generateSitemap()
-// const generateGoogleNewsSitemap = require('./google-sitemap-generator')
-// generateGoogleNewsSitemap()
+require('./scripts/script_prepare_article_data')()
+const generateSitemap = require('./generate-sitemap')
+generateSitemap()
+const generateGoogleNewsSitemap = require('./google-sitemap-generator')
+generateGoogleNewsSitemap()
 // Load scheduler
-require('./scheduler/setupCronJobs')
+// require('./scheduler/setupCronJobs')
 // require('./scripts/analyzeArticleRelations')
 // Setup routes and SSR
 async function initializeServer() {
