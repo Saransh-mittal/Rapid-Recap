@@ -257,8 +257,7 @@ const Quiz = () => {
               }),
             )
 
-        result?.quinBoostUtilized &&
-          user.revivalPeriodEnd &&
+        result?.streakRevived &&
           dispatchRedux(
             addNoteMessage({
               messageType: 'streak',
