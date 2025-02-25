@@ -239,6 +239,13 @@ const saveQuizAttempt = async (
     await inventory.save({ session })
   }
 
+  if (user.revivalPeriodEnd && user.todaysQuizCnt >= 6) {
+    user.streak = user.streakBeforeBreak + 1
+    user.streakBeforeBreak = 0
+    user.revivalPeriodEnd = null
+    await user.save({ session })
+  }
+
   let quinBoostUtilized = false
   const nonBoostedRQM = RQM_score
 
