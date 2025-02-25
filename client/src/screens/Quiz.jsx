@@ -98,7 +98,12 @@ const Quiz = () => {
     remainingTime,
     isQuizGenerating,
     socket,
-  } = useFetchQuiz(articleId, i18n.language, onClose, setShowInstruction)
+  } = useFetchQuiz({
+    articleId,
+    language: i18n.language,
+    onClose,
+    category: article?.category,
+  })
   const quizId = quizSession?.quiz
   const [submitError, setSubmitError] = useState(false)
 
@@ -132,6 +137,7 @@ const Quiz = () => {
         setUserEligibleForTournament,
       }),
     setSubmitted,
+    article?.category,
   )
 
   const handleNextQuestion = useCallback(() => {

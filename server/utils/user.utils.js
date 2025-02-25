@@ -696,13 +696,10 @@ function prepareOnboardingData(body) {
     const stepMap = {
       1: 'language',
       2: 'referral',
-      3: 'welcome',
-      4: 'categories',
-      5: 'article_selection',
-      6: 'quiz_question',
-      7: 'quiz_result',
-      8: 'article_reading',
-      9: 'leaderboard',
+      3: 'categories',
+      4: 'article_selection',
+      5: 'article_reading',
+      6: 'leaderboard',
     }
     return stepMap[step] || 'language'
   }
@@ -771,16 +768,6 @@ const executeOnboardingUpdate = async req => {
               isInferred: false,
             }),
           )
-        }
-        break
-
-      case 'quiz_question':
-        // Quiz question step, no data to save
-        break
-
-      case 'quiz_result':
-        if (normalizedData.data.quizResult !== undefined) {
-          user.initialQuizResult = normalizedData.data.quizResult
         }
         break
 

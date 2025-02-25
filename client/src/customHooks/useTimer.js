@@ -16,6 +16,7 @@ const useTimer = (
   userAnswers,
   onTimerEnd,
   setSubmitted,
+  category,
 ) => {
   const [timer, setTimer] = useState(remainingTime || 50)
   const [timeTaken, setTimeTaken] = useState(0)

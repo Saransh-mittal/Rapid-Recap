@@ -21,9 +21,11 @@ import {
   useToast,
   Box,
   Switch,
+  Select,
 } from '@chakra-ui/react'
 import axios from 'axios'
 import { onBoardingArticlePlaceholder } from '../../assets/onBoardingArticlePlaceholder.js'
+import { categories } from '../../assets/Categories.js'
 
 const initialArticleState = {
   dateTime: new Date().toISOString(),
@@ -36,6 +38,7 @@ const initialArticleState = {
   imgURL: '',
   avgReadTime: '',
   category: 'onBoardingArticle',
+  onBoardingArticleCategory: '',
 }
 
 const initialQuizzesState = [
@@ -419,6 +422,25 @@ const OnboardingArticleAdd = ({ isOpen, onClose, article }) => {
                     borderColor: 'blue.300',
                   }}
                 />
+              </FormControl>
+              <FormControl>
+                <FormLabel color="whiteAlpha.900">Article Category</FormLabel>
+                <Select
+                  name="onBoardingArticleCategory"
+                  value={articleData.onBoardingArticleCategory}
+                  onChange={handleArticleChange}
+                  bg="gray.700"
+                  borderColor="whiteAlpha.300"
+                  _hover={{ borderColor: 'whiteAlpha.400' }}
+                  _focus={{ borderColor: 'blue.300' }}
+                >
+                  <option value="">Select Category</option>
+                  {categories.map(cat => (
+                    <option key={cat.key} value={cat.key}>
+                      {cat.label}
+                    </option>
+                  ))}
+                </Select>
               </FormControl>
 
               <Tabs variant="soft-rounded" colorScheme="blue">

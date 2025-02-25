@@ -10,7 +10,7 @@ import {
   isCategoryBoost,
 } from '../utils/helper.utils'
 
-const useFetchQuiz = (articleId, language, onClose) => {
+const useFetchQuiz = ({ articleId, language, onClose, category }) => {
   const [quizSession, setQuizSession] = useState(null)
   const [quizStatus, setQuizStatus] = useState(null)
   const [load, setLoad] = useState(true)

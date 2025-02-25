@@ -7,9 +7,6 @@ import axios from 'axios'
 import i18n from 'i18next'
 import LanguageSelection from '../components/onboarding/LanguageSelection'
 import CategorySelection from '../components/onboarding/CategorySelection'
-import Welcome from '../components/onboarding/Welcome'
-import QuizQuestion from '../components/onboarding/QuizQuestion'
-import QuizResult from '../components/onboarding/QuizResult'
 import ArticleReading from '../components/onboarding/ArticleReading'
 import LeaderboardOnboarding from '../components/onboarding/LeaderboardOnboarding'
 import { setUser } from '../redux/authSlice'
@@ -55,11 +52,8 @@ const Star = React.memo(({ size, top, left }) => (
 const ONBOARDING_STEPS = {
   LANGUAGE: 'language',
   REFERRAL: 'referral',
-  WELCOME: 'welcome',
   CATEGORIES: 'categories',
   ARTICLE_SELECTION: 'article_selection',
-  QUIZ_QUESTION: 'quiz_question',
-  QUIZ_RESULT: 'quiz_result',
   ARTICLE_READING: 'article_reading',
   LEADERBOARD: 'leaderboard',
 }
@@ -68,11 +62,8 @@ const ONBOARDING_STEPS = {
 const STEP_SEQUENCE = [
   ONBOARDING_STEPS.LANGUAGE,
   ONBOARDING_STEPS.REFERRAL,
-  ONBOARDING_STEPS.WELCOME,
   ONBOARDING_STEPS.CATEGORIES,
   ONBOARDING_STEPS.ARTICLE_SELECTION,
-  ONBOARDING_STEPS.QUIZ_QUESTION,
-  ONBOARDING_STEPS.QUIZ_RESULT,
   ONBOARDING_STEPS.ARTICLE_READING,
   ONBOARDING_STEPS.LEADERBOARD,
 ]
@@ -81,7 +72,6 @@ const OnboardingProcess = ({ setIsGuestLoggedin }) => {
   const [currentStepId, setCurrentStepId] = useState(ONBOARDING_STEPS.LANGUAGE)
   const [selectedLanguage, setSelectedLanguage] = useState('')
   const [selectedCategories, setSelectedCategories] = useState([])
-  const [initialQuizCorrect, setInitialQuizCorrect] = useState(false)
   const [article, setArticle] = useState(null)
   const [visitedArticle, setVisitedArticle] = useState(null)
   const [isVisitedArticleFetching, setIsVisitedArticleFetching] =
@@ -120,7 +110,7 @@ const OnboardingProcess = ({ setIsGuestLoggedin }) => {
       !getVisitedArticle() &&
       currentId === ONBOARDING_STEPS.ARTICLE_SELECTION
     ) {
-      return ONBOARDING_STEPS.QUIZ_QUESTION
+      return ONBOARDING_STEPS.ARTICLE_READING
     }
     const currentIndex = STEP_SEQUENCE.indexOf(currentId)
     return STEP_SEQUENCE[currentIndex + 1] || currentId
@@ -136,14 +126,6 @@ const OnboardingProcess = ({ setIsGuestLoggedin }) => {
       case ONBOARDING_STEPS.CATEGORIES:
         return {
           categories: data.categories,
-        }
-      case ONBOARDING_STEPS.QUIZ_RESULT:
-        return {
-          quizResult: data.quizResult,
-        }
-      case ONBOARDING_STEPS.WELCOME:
-        return {
-          language: data.language,
         }
       default:
         return {}
@@ -183,7 +165,7 @@ const OnboardingProcess = ({ setIsGuestLoggedin }) => {
         language: lang,
       })
       setCurrentStepId(nextStepId)
-      fetchOnBoardingArticle()
+
       if (getVisitedArticle()) fetchVisitedArticle(getVisitedArticle()?.id)
       axios.get('/api/user/leaderboard?limit=500')
     } catch (error) {
@@ -209,7 +191,7 @@ const OnboardingProcess = ({ setIsGuestLoggedin }) => {
         await updateOnboardingProgress(currentStepId, nextStepId, rawData)
         setCurrentStepId(nextStepId)
 
-        if (nextStepId === ONBOARDING_STEPS.QUIZ_QUESTION) {
+        if (nextStepId === ONBOARDING_STEPS.ARTICLE_READING) {
           axios.get(
             `/api/recommendation?page=${1}&pageSize=18&lang=${i18n.language}`,
           )
@@ -254,15 +236,6 @@ const OnboardingProcess = ({ setIsGuestLoggedin }) => {
         isClosable: true,
       })
     }
-  }
-
-  const handleQuizComplete = isCorrect => {
-    setInitialQuizCorrect(isCorrect)
-    const nextStepId = ONBOARDING_STEPS.QUIZ_RESULT
-    updateOnboardingProgress(ONBOARDING_STEPS.QUIZ_QUESTION, nextStepId, {
-      quizResult: isCorrect,
-    })
-    setCurrentStepId(nextStepId)
   }
 
   const handleCategoryToggle = category => {
@@ -351,7 +324,7 @@ const OnboardingProcess = ({ setIsGuestLoggedin }) => {
           stepId === ONBOARDING_STEPS.ARTICLE_SELECTION &&
           !getVisitedArticle()
         ) {
-          setCurrentStepId(ONBOARDING_STEPS.QUIZ_QUESTION)
+          setCurrentStepId(ONBOARDING_STEPS.ARTICLE_READING)
         } else {
           setCurrentStepId(stepId)
         }
@@ -366,7 +339,7 @@ const OnboardingProcess = ({ setIsGuestLoggedin }) => {
           fetchVisitedArticle(getVisitedArticle()?.id)
           fetchOnBoardingArticle()
         }
-        if (stepId === ONBOARDING_STEPS.QUIZ_QUESTION) {
+        if (stepId === ONBOARDING_STEPS.ARTICLE_READING) {
           fetchOnBoardingArticle()
         }
       } catch (error) {
@@ -395,7 +368,6 @@ const OnboardingProcess = ({ setIsGuestLoggedin }) => {
     [ONBOARDING_STEPS.REFERRAL]: (
       <ReferralStep onComplete={() => handleNext()} />
     ),
-    [ONBOARDING_STEPS.WELCOME]: <Welcome />,
     [ONBOARDING_STEPS.CATEGORIES]: (
       <CategorySelection
         selectedCategories={selectedCategories}
@@ -413,22 +385,6 @@ const OnboardingProcess = ({ setIsGuestLoggedin }) => {
         visitedArticle={visitedArticle}
         isArticleFetching={isArticleFetching}
         isVisitedArticleFetching={isVisitedArticleFetching}
-      />
-    ),
-    [ONBOARDING_STEPS.QUIZ_QUESTION]: (
-      <QuizQuestion
-        isArticleFetching={isArticleFetching}
-        onComplete={handleQuizComplete}
-        quizQuestion={article?.quizQuestion}
-        fetchOnBoardingArticle={fetchOnBoardingArticle}
-      />
-    ),
-    [ONBOARDING_STEPS.QUIZ_RESULT]: (
-      <QuizResult
-        isCorrect={initialQuizCorrect}
-        onNext={handleNext}
-        quizQuestion={article?.quizQuestion}
-        isLoadingNext={isLoadingNext}
       />
     ),
     [ONBOARDING_STEPS.ARTICLE_READING]: (
@@ -489,9 +445,7 @@ const OnboardingProcess = ({ setIsGuestLoggedin }) => {
               display={
                 (currentStepId === ONBOARDING_STEPS.CATEGORIES &&
                   selectedCategories.length === 5) ||
-                currentStepId === ONBOARDING_STEPS.WELCOME
-                  ? 'block'
-                  : 'none'
+                'none'
               }
             >
               <Button

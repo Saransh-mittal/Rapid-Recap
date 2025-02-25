@@ -70,6 +70,9 @@ const articleSchema = new mongoose.Schema(
       required: true,
       default: 'general',
     },
+    onBoardingArticleCategory: {
+      type: String,
+    },
     relatedArticles: [
       {
         type: mongoose.Schema.Types.ObjectId,

@@ -14,6 +14,8 @@ const MotionBox = motion(Box)
 const Countdown = ({ timer, submitted, isTournament = false }) => {
   const [offset, setOffset] = useState(0)
   const [isFlashing, setIsFlashing] = useState(false)
+  const { articleData } = useSelector(state => state.articles)
+  const category = articleData?.category
   const { activeAbilities } = useSelector(state => state.inventory)
   const filteredActiveAbilities = activeAbilities.filter(ability => {
     // Handle category boosts
