@@ -70,7 +70,7 @@ const ProfileMenu = memo(({ user, handleLogout, isLoggingOut }) => {
       icon: Swords,
       label: t('profileMenu.quickClash'),
       onClick: () => {
-        navigate('/quick-clash')
+        navigate('/quickclash')
         onClose()
       },
     },

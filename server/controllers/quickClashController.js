@@ -13,6 +13,18 @@ const {
   completeReading,
   completeQuiz,
 } = require('../services/quickClashServices/quickClashSessionService')
+const QuickClashChallenge = require('../model/quickClashSchemas/quickClashChallengeSchema')
+const QuickClashSession = require('../model/quickClashSchemas/quickClashSessionSchema')
+const QuickClashQuiz = require('../model/quickClashSchemas/quickClashQuizSchema')
+const {
+  getQuizQuestions,
+  submitQuizAnswersService,
+  getQuizReport,
+} = require('../services/quickClashServices/quickClashQuizService')
+const {
+  generateChallengeAnalysis,
+  getUserChallengeAnalysis,
+} = require('../services/quickClashServices/quickClashAnalysisService')
 
 // Create a new challenge
 const createNewChallenge = asyncHandler(async (req, res) => {
@@ -153,16 +165,30 @@ const submitQuizAnswers = asyncHandler(async (req, res) => {
   const { sessionId } = req.params
   const { responses } = req.body
 
-  const result = await completeQuiz({
-    sessionId,
-    responses,
-  })
+  try {
+    const result = await submitQuizAnswersService({
+      sessionId,
+      responses,
+    })
 
-  res.status(200).json({
-    success: true,
-    message: 'Quiz completed successfully',
-    ...result,
-  })
+    // Get the session with challenge ID
+    const session = await QuickClashSession.findById(sessionId)
+      .select('challenge')
+      .lean()
+
+    res.status(200).json({
+      success: true,
+      message: 'Quiz completed successfully',
+      challengeId: session.challenge.toString(), // Include the challenge ID for redirection
+      ...result,
+    })
+  } catch (error) {
+    console.error('Error submitting quiz answers:', error)
+    res.status(500).json({
+      success: false,
+      message: error.message || 'Error submitting quiz answers',
+    })
+  }
 })
 
 // Socket event handlers for real-time updates
@@ -314,6 +340,237 @@ const handleQuickClashEvents = (io, socket) => {
   })
 }
 
+// Get quiz questions for a session
+const getSessionQuiz = asyncHandler(async (req, res) => {
+  const { sessionId } = req.params
+
+  try {
+    // Get questions without answers for the frontend
+    const questions = await getQuizQuestions({ sessionId })
+
+    // Start the timer for the quiz attempt
+    const session = await QuickClashSession.findById(sessionId)
+    if (session && session.phase === 'quiz' && !session.quizAttempt.startTime) {
+      session.quizAttempt.startTime = new Date()
+      await session.save()
+    }
+
+    res.status(200).json({
+      success: true,
+      questions,
+      quizDuration: 50, // Send quiz duration to frontend (50 seconds)
+    })
+  } catch (error) {
+    console.error('Error fetching session quiz:', error)
+    res.status(500).json({
+      success: false,
+      message: 'Error fetching quiz questions',
+    })
+  }
+})
+
+// Get completed challenges
+const getCompletedChallenges = asyncHandler(async (req, res) => {
+  const userId = req.user._id
+  const { page = 1, limit = 10 } = req.query
+
+  try {
+    const skip = (parseInt(page) - 1) * parseInt(limit)
+
+    const query = {
+      $or: [{ challenger: userId }, { opponent: userId }],
+      status: 'completed',
+    }
+
+    const challenges = await QuickClashChallenge.find(query)
+      .populate('challenger opponent')
+      .sort({ createdAt: -1 })
+      .skip(skip)
+      .limit(parseInt(limit))
+
+    const totalCount = await QuickClashChallenge.countDocuments(query)
+    const hasMore = skip + challenges.length < totalCount
+
+    res.status(200).json({
+      success: true,
+      challenges,
+      hasMore,
+      total: totalCount,
+    })
+  } catch (error) {
+    console.error('Error fetching completed challenges:', error)
+    res.status(500).json({
+      success: false,
+      message: 'Error fetching completed challenges',
+    })
+  }
+})
+
+/**
+ * @desc    Get quiz report for a completed challenge session
+ * @route   GET /api/quickClash/session/:sessionId/report
+ * @access  Private
+ */
+const getSessionQuizReport = asyncHandler(async (req, res) => {
+  const { sessionId } = req.params
+  const userId = req.user._id
+
+  try {
+    const report = await getQuizReport({
+      sessionId,
+      userId,
+    })
+
+    res.status(200).json({
+      success: true,
+      report,
+    })
+  } catch (error) {
+    console.error('Error fetching session quiz report:', error)
+    res.status(400).json({
+      success: false,
+      message: error.message || 'Failed to fetch quiz report',
+    })
+  }
+})
+
+const getSessionIdFromChallenge = asyncHandler(async (req, res) => {
+  const { challengeId } = req.params
+  const { userId } = req.query
+
+  try {
+    // Find the session for this challenge and user
+    const session = await QuickClashSession.findOne({
+      challenge: challengeId,
+      user: userId,
+      phase: 'completed',
+    })
+
+    if (!session) {
+      return res.status(404).json({
+        success: false,
+        message: 'No completed session found for this challenge',
+      })
+    }
+
+    res.status(200).json({
+      success: true,
+      sessionId: session._id,
+    })
+  } catch (error) {
+    console.error('Error finding challenge session:', error)
+    res.status(500).json({
+      success: false,
+      message: 'Error finding challenge session',
+    })
+  }
+})
+
+/**
+ * @desc    Generate analysis for a challenge
+ * @route   POST /api/quickClash/analysis/:challengeId/generate
+ * @access  Private
+ */
+const generateAnalysis = asyncHandler(async (req, res) => {
+  const { challengeId } = req.params
+  const userId = req.user._id
+
+  try {
+    // Check if user is part of the challenge
+    const challenge = await QuickClashChallenge.findById(challengeId)
+
+    if (!challenge) {
+      return res.status(404).json({
+        success: false,
+        message: 'Challenge not found',
+      })
+    }
+
+    // Verify user is part of this challenge
+    const isChallenger = challenge.challenger.toString() === userId.toString()
+    const isOpponent = challenge.opponent.toString() === userId.toString()
+
+    if (!isChallenger && !isOpponent) {
+      return res.status(403).json({
+        success: false,
+        message: 'You are not authorized to access this challenge',
+      })
+    }
+
+    // Check if challenge is completed
+    if (challenge.status !== 'completed') {
+      return res.status(400).json({
+        success: false,
+        message: 'Challenge must be completed before generating analysis',
+      })
+    }
+
+    // Generate the analysis
+    const analysis = await generateChallengeAnalysis({ challengeId })
+
+    res.status(200).json({
+      success: true,
+      analysis,
+    })
+  } catch (error) {
+    console.error('Error generating challenge analysis:', error)
+    res.status(500).json({
+      success: false,
+      message: error.message || 'Failed to generate analysis',
+    })
+  }
+})
+
+/**
+ * @desc    Get challenge analysis for current user
+ * @route   GET /api/quickClash/analysis/:challengeId
+ * @access  Private
+ */
+const getChallengeAnalysis = asyncHandler(async (req, res) => {
+  const { challengeId } = req.params
+  const userId = req.user._id
+
+  try {
+    // Check if user is part of the challenge
+    const challenge = await QuickClashChallenge.findById(challengeId)
+
+    if (!challenge) {
+      return res.status(404).json({
+        success: false,
+        message: 'Challenge not found',
+      })
+    }
+
+    // Verify user is part of this challenge
+    const isChallenger = challenge.challenger.toString() === userId.toString()
+    const isOpponent = challenge.opponent.toString() === userId.toString()
+
+    if (!isChallenger && !isOpponent) {
+      return res.status(403).json({
+        success: false,
+        message: 'You are not authorized to access this challenge',
+      })
+    }
+
+    // Get the user's analysis
+    const analysis = await getUserChallengeAnalysis({
+      challengeId,
+      userId,
+    })
+
+    res.status(200).json({
+      success: true,
+      analysis,
+    })
+  } catch (error) {
+    console.error('Error fetching challenge analysis:', error)
+    res.status(500).json({
+      success: false,
+      message: error.message || 'Failed to fetch analysis',
+    })
+  }
+})
+
 module.exports = {
   createNewChallenge,
   handleAcceptChallenge,
@@ -325,4 +582,10 @@ module.exports = {
   completeReadingPhase,
   submitQuizAnswers,
   handleQuickClashEvents,
+  getSessionQuiz,
+  getCompletedChallenges,
+  getSessionQuizReport,
+  getSessionIdFromChallenge,
+  generateAnalysis,
+  getChallengeAnalysis,
 }

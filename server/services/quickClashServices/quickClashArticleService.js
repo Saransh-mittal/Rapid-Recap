@@ -48,10 +48,19 @@ const generateMixedArticle = async ({ articles }) => {
     temperature: 0.7, // Lower temperature for more factual content
   })
 
-  // Generate Hindi translation
+  // Check if English content exceeds the length limit and summarize if needed
+  let processedEnglishArticle = { ...englishArticle }
+  if (englishArticle.content.length > 1700) {
+    processedEnglishArticle = await summarizeContent({
+      article: englishArticle,
+      targetLength: 1500,
+    })
+  }
+
+  // Generate Hindi translation using the processed English article
   const hindiPrompt = `
     Translate this English news article to Hindi, maintaining journalistic tone:
-    ${JSON.stringify(englishArticle)}
+    ${JSON.stringify(processedEnglishArticle)}
 
     Requirements:
     1. Natural and fluent Hindi translation
@@ -80,17 +89,63 @@ const generateMixedArticle = async ({ articles }) => {
 
   return {
     title: {
-      english: englishArticle.title,
+      english: processedEnglishArticle.title,
       hindi: hindiArticle.title,
     },
     content: {
-      english: englishArticle.content,
+      english: processedEnglishArticle.content,
       hindi: hindiArticle.content,
     },
   }
 }
 
+// New function to summarize content that exceeds the character limit
+const summarizeContent = async ({ article, targetLength }) => {
+  console.log(
+    `Article exceeds length limit (${article.content.length} chars). Summarizing to ~${targetLength} chars...`,
+  )
+
+  const summarizePrompt = `
+    Summarize this article to approximately ${targetLength} characters while preserving key information:
+    ${JSON.stringify(article)}
+
+    Requirements:
+    1. Maintain all important facts and information
+    2. Keep the same journalistic tone and style
+    3. Focus on clarity and comprehensiveness despite the length reduction
+    4. The output should be ${targetLength}-${targetLength + 100} characters
+    5. Return JSON with format:
+       {
+         "title": "Original or slightly modified title",
+         "content": "Summarized content"
+       }
+  `
+
+  const summarizedArticle = await makeGPTRequest({
+    messages: [
+      {
+        role: 'system',
+        content:
+          'You are an expert editor who specializes in concise news summaries that maintain key information.',
+      },
+      {
+        role: 'user',
+        content: summarizePrompt,
+      },
+    ],
+    temperature: 0.5, // Lower temperature for more accurate summarization
+  })
+
+  // Log the result of the summarization
+  console.log(
+    `Summarization complete. Original: ${article.content.length} chars, New: ${summarizedArticle.content.length} chars`,
+  )
+
+  return summarizedArticle
+}
+
 module.exports = {
   getSourceArticles,
   generateMixedArticle,
+  summarizeContent, // Export for testing purposes
 }

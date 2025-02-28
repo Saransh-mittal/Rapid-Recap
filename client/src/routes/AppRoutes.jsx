@@ -21,6 +21,10 @@ const ContactLayout = lazy(() =>
 const RuleBook = lazy(() => import('../screens/RuleBook'))
 const HallOfChampions = lazy(() => import('../screens/HallOfChampions'))
 const QuickClash = lazy(() => import('../screens/QuickClash'))
+const QuickClashSession = lazy(() => import('../screens/QuickClashSession'))
+const QuickBattleScene = lazy(() =>
+  import('../components/quickClashComponents/QuickBattleScene'),
+)
 
 const OnboardingProcess = lazy(() => import('../screens/OnboardingProcess'))
 const DemotionSummary = lazy(() => import('../screens/DemotionSummary'))
@@ -52,6 +56,18 @@ const AppRoutes = ({ isToken, needsOnboarding, setIsGuestLoggedin }) => {
               path="/"
               element={isToken ? <Navigate to="/home" /> : <GetStarted />}
             />
+            <Route
+              path="/quickclash"
+              element={isToken ? <QuickClash /> : <GetStarted />}
+            />
+            <Route
+              path="/quickclash/session/:challengeId"
+              element={isToken ? <QuickClashSession /> : <GetStarted />}
+            />
+            <Route
+              path="/quickclash/battle/:challengeId"
+              element={isToken ? <QuickBattleScene /> : <GetStarted />}
+            />
             <Route path="/manual" element={<RuleBook />} />
             <Route path="/manual/:pageId" element={<RuleBook />} />
             {/* <Route path="/get-started" element={<GetStarted />} /> */}
@@ -59,7 +75,6 @@ const AppRoutes = ({ isToken, needsOnboarding, setIsGuestLoggedin }) => {
             <Route path="/contact/feedback" element={<ContactLayout />} />
             <Route path="/home/:category" element={<Home />} />
             <Route path="/home" element={<Home />} />
-            <Route path="/quick-clash" element={<QuickClash />} />
             <Route
               path="/referral"
               // element={isToken ? <ReferralDashboard /> : <GetStarted />}

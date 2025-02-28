@@ -1,13 +1,15 @@
 // services/quickClashChallengeService.js
 const QuickClashChallenge = require('../../model/quickClashSchemas/quickClashChallengeSchema')
-const QuickClashSession = require('../../model/quickClashSchemas/quickClashSessionSchema')
 const {
   getSourceArticles,
   generateMixedArticle,
 } = require('./quickClashArticleService')
-const { generateQuestionsForQuiz } = require('../../utils/quiz.utils')
 const mongoose = require('mongoose')
 const { generateQuickClashQuizzes } = require('../../utils/quickClashUtils')
+const {
+  generateQuickClashHighlights,
+  getQuickClashHighlights,
+} = require('../../utils/quickClashHighlight.utils')
 
 const CHALLENGE_EXPIRY = 24 * 60 * 60 * 1000 // 24 hours
 
@@ -74,11 +76,43 @@ const createChallenge = async ({ challengerId, opponentId, categories }) => {
         session,
       })
 
+      // Generate highlights for both languages in parallel
+      // We use Promise.allSettled to continue even if one fails
+      const highlightPromises = [
+        generateQuickClashHighlights({
+          challengeId: challenge._id,
+          lang: 'en',
+          session,
+        }),
+        generateQuickClashHighlights({
+          challengeId: challenge._id,
+          lang: 'hi',
+          session,
+        }),
+      ]
+
+      const highlightResults = await Promise.allSettled(highlightPromises)
+      console.log(
+        `Highlight generation results: ${highlightResults
+          .map(r => r.status)
+          .join(', ')}`,
+      )
+
       return {
         challenge,
         quizzes: {
           english: englishQuiz,
           hindi: hindiQuiz,
+        },
+        highlights: {
+          english:
+            highlightResults[0].status === 'fulfilled'
+              ? highlightResults[0].value
+              : null,
+          hindi:
+            highlightResults[1].status === 'fulfilled'
+              ? highlightResults[1].value
+              : null,
         },
       }
     })
@@ -155,11 +189,27 @@ const getChallengeDetails = async ({ challengeId }) => {
       select: 'title dateTime category',
     })
 
+  const [hindiHighlights, englishHighlights] = await Promise.all([
+    getQuickClashHighlights({ challengeId, lang: 'hi' }),
+    getQuickClashHighlights({ challengeId, lang: 'en' }),
+  ])
+
   if (!challenge) {
     throw new Error('Challenge not found')
   }
+  if (!hindiHighlights || !englishHighlights) {
+    throw new Error('Highlights not found')
+  }
 
-  return challenge
+  const challengeObj = challenge.toObject()
+  challengeObj.article.hindiImportantSentences =
+    hindiHighlights.importantSentences
+  challengeObj.article.englishImportantSentences =
+    englishHighlights.importantSentences
+  challengeObj.article.hindiDictionary = hindiHighlights.dictionary
+  challengeObj.article.englishDictionary = englishHighlights.dictionary
+
+  return challengeObj
 }
 
 const getUserChallenges = async ({ userId, status = null, limit = 10 }) => {

@@ -1,4 +1,12 @@
-import React from 'react'
+// components/quickClashComponents/ActiveChallenges.jsx
+import React, {
+  useState,
+  useEffect,
+  useMemo,
+  useCallback,
+  lazy,
+  Suspense,
+} from 'react'
 import {
   Box,
   VStack,
@@ -8,8 +16,17 @@ import {
   HStack,
   Button,
   useToast,
-  Tooltip,
   Divider,
+  Spinner,
+  Center,
+  useDisclosure,
+  AlertDialog,
+  AlertDialogBody,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogContent,
+  AlertDialogOverlay,
+  Icon,
 } from '@chakra-ui/react'
 import { formatDistance } from 'date-fns'
 import {
@@ -19,7 +36,16 @@ import {
   PlayCircle,
   Trophy,
   HourglassIcon,
+  AlertCircle,
+  FileText,
 } from 'lucide-react'
+import axios from 'axios'
+import { useNavigate } from 'react-router-dom'
+import { useTranslation } from 'react-i18next'
+import { useSelector } from 'react-redux'
+
+// Lazy-loaded component
+const QuizReportModal = lazy(() => import('./QuizReportModal'))
 
 // Challenge Status Badge Component
 const StatusBadge = ({ status, isChallenger }) => {
@@ -31,7 +57,7 @@ const StatusBadge = ({ status, isChallenger }) => {
           text: isChallenger ? 'Awaiting Response' : 'New Challenge',
           icon: <Clock size={14} />,
         }
-      case 'accepted':
+      case 'active':
         return {
           color: 'green',
           text: 'Ready to Start',
@@ -48,6 +74,18 @@ const StatusBadge = ({ status, isChallenger }) => {
           color: 'purple',
           text: 'Completed',
           icon: <Trophy size={14} />,
+        }
+      case 'expired':
+        return {
+          color: 'red',
+          text: 'Expired',
+          icon: <AlertCircle size={14} />,
+        }
+      case 'rejected':
+        return {
+          color: 'red',
+          text: 'Rejected',
+          icon: <X size={14} />,
         }
       default:
         return {
@@ -76,7 +114,9 @@ const StatusBadge = ({ status, isChallenger }) => {
 }
 
 // Challenge Progress Component
-const ChallengeProgress = ({ challenge }) => {
+const ChallengeProgress = ({ challenge, userId }) => {
+  const isChallenger = challenge.challenger._id === userId
+
   return (
     <VStack align="stretch" spacing={2} mt={2}>
       <Text fontSize="sm" fontWeight="semibold" color="whiteAlpha.800">
@@ -85,43 +125,31 @@ const ChallengeProgress = ({ challenge }) => {
       <HStack spacing={4} wrap="wrap">
         <Box>
           <Text fontSize="sm" color="whiteAlpha.700" mb={1}>
-            {challenge.challengerName}:
+            {challenge.challenger.inGameName || challenge.challenger.name}:
           </Text>
           <Badge
-            colorScheme={
-              challenge.challengerStatus === 'ready'
-                ? 'yellow'
-                : challenge.challengerStatus === 'completed'
-                ? 'green'
-                : 'gray'
-            }
+            colorScheme={challenge.challengerScore > 0 ? 'green' : 'yellow'}
           >
-            {challenge.challengerStatus === 'ready'
-              ? 'Ready to start'
-              : challenge.challengerStatus === 'completed'
-              ? 'Completed'
-              : 'Pending'}
+            {challenge.challengerScore > 0 ? 'Completed' : 'Pending'}
           </Badge>
+          {challenge.challengerScore > 0 && (
+            <Badge ml={2} colorScheme="blue">
+              Score: {challenge.challengerScore}
+            </Badge>
+          )}
         </Box>
         <Box>
           <Text fontSize="sm" color="whiteAlpha.700" mb={1}>
-            {challenge.opponentName}:
+            {challenge.opponent.inGameName || challenge.opponent.name}:
           </Text>
-          <Badge
-            colorScheme={
-              challenge.opponentStatus === 'ready'
-                ? 'yellow'
-                : challenge.opponentStatus === 'completed'
-                ? 'green'
-                : 'gray'
-            }
-          >
-            {challenge.opponentStatus === 'ready'
-              ? 'Ready to start'
-              : challenge.opponentStatus === 'completed'
-              ? 'Completed'
-              : 'Pending'}
+          <Badge colorScheme={challenge.opponentScore > 0 ? 'green' : 'yellow'}>
+            {challenge.opponentScore > 0 ? 'Completed' : 'Pending'}
           </Badge>
+          {challenge.opponentScore > 0 && (
+            <Badge ml={2} colorScheme="blue">
+              Score: {challenge.opponentScore}
+            </Badge>
+          )}
         </Box>
       </HStack>
     </VStack>
@@ -129,43 +157,99 @@ const ChallengeProgress = ({ challenge }) => {
 }
 
 // Individual Challenge Item Component
-const ChallengeItem = ({ challenge, onAccept, onDecline, onStart }) => {
-  const isChallenger = challenge.challengerId === 'current-user-id'
+const ChallengeItem = ({
+  challenge,
+  userId,
+  onAccept,
+  onDecline,
+  onStart,
+  onViewReport,
+}) => {
+  const { t } = useTranslation('QuickClash')
+  const isChallenger = challenge.challenger._id === userId
   const timeLeft = formatDistance(new Date(challenge.expiresAt), new Date(), {
     addSuffix: true,
   })
 
+  const isExpired = new Date(challenge.expiresAt) < new Date()
+  const myScore = isChallenger
+    ? challenge.challengerScore
+    : challenge.opponentScore
+  const opponentScore = isChallenger
+    ? challenge.opponentScore
+    : challenge.challengerScore
+  const hasCompleted = myScore > 0
+
   const renderActionButtons = () => {
+    if (isExpired) {
+      return null
+    }
+
+    // If user has completed the challenge, show view report button
+    if (hasCompleted) {
+      return (
+        <Button
+          size="sm"
+          colorScheme="purple"
+          variant="outline"
+          leftIcon={<FileText size={16} />}
+          onClick={() => onViewReport(challenge)}
+        >
+          {t('View Report')}
+        </Button>
+      )
+    }
+
     if (challenge.status === 'pending' && !isChallenger) {
       return (
         <HStack>
           <Button
             size="sm"
             colorScheme="green"
-            onClick={() => onAccept(challenge.id)}
+            onClick={() => onAccept(challenge._id)}
             leftIcon={<Check size={16} />}
           >
-            Accept Challenge
+            {t('Accept Challenge')}
           </Button>
           <Button
             size="sm"
             colorScheme="red"
             variant="outline"
-            onClick={() => onDecline(challenge.id)}
+            onClick={() => onDecline(challenge._id)}
             leftIcon={<X size={16} />}
           >
-            Decline
+            {t('Decline')}
           </Button>
         </HStack>
       )
     }
+
+    if (challenge.status === 'active' && !hasCompleted) {
+      return (
+        <Button
+          size="sm"
+          colorScheme="green"
+          onClick={() => onStart(challenge._id)}
+          leftIcon={<PlayCircle size={16} />}
+        >
+          {t('Start Challenge')}
+        </Button>
+      )
+    }
+
     return null
   }
 
-  const isReadyToStart =
-    challenge.status === 'accepted' &&
-    ((isChallenger && challenge.challengerStatus === 'ready') ||
-      (!isChallenger && challenge.opponentStatus === 'ready'))
+  const isWinner =
+    challenge.status === 'completed' &&
+    ((isChallenger && challenge.challengerScore > challenge.opponentScore) ||
+      (!isChallenger && challenge.opponentScore > challenge.challengerScore))
+
+  const isTie =
+    challenge.status === 'completed' &&
+    challenge.challengerScore > 0 &&
+    challenge.opponentScore > 0 &&
+    challenge.challengerScore === challenge.opponentScore
 
   return (
     <Box
@@ -174,7 +258,9 @@ const ChallengeItem = ({ challenge, onAccept, onDecline, onStart }) => {
       borderRadius="lg"
       mb={3}
       border="1px solid"
-      borderColor="whiteAlpha.100"
+      borderColor={
+        isWinner ? 'purple.400' : isTie ? 'yellow.400' : 'whiteAlpha.100'
+      }
       _hover={{ bg: 'whiteAlpha.100' }}
       transition="all 0.2s"
     >
@@ -195,7 +281,7 @@ const ChallengeItem = ({ challenge, onAccept, onDecline, onStart }) => {
             />
           </HStack>
           <Badge
-            colorScheme={challenge.timeLeft < 6 ? 'red' : 'yellow'}
+            colorScheme={isExpired ? 'red' : 'yellow'}
             px={2}
             py={1}
             borderRadius="md"
@@ -204,17 +290,19 @@ const ChallengeItem = ({ challenge, onAccept, onDecline, onStart }) => {
             gap={1}
           >
             <HourglassIcon size={14} />
-            Expires {timeLeft}
+            {isExpired ? 'Expired' : `Expires ${timeLeft}`}
           </Badge>
         </HStack>
 
         <VStack align="start" spacing={2}>
           <HStack>
-            <Text fontWeight="bold">
+            <Text fontWeight="bold" color="white">
               {isChallenger ? 'Challenged:' : 'Challenger:'}
             </Text>
-            <Text>
-              {isChallenger ? challenge.opponentName : challenge.challengerName}
+            <Text color="whiteAlpha.900">
+              {isChallenger
+                ? challenge.opponent.inGameName || challenge.opponent.name
+                : challenge.challenger.inGameName || challenge.challenger.name}
             </Text>
           </HStack>
           <Text fontSize="sm" color="whiteAlpha.700">
@@ -225,151 +313,288 @@ const ChallengeItem = ({ challenge, onAccept, onDecline, onStart }) => {
           </Text>
         </VStack>
 
-        {challenge.status !== 'pending' && (
+        {challenge.status !== 'pending' && challenge.status !== 'rejected' && (
           <>
             <Divider borderColor="whiteAlpha.200" />
-            <ChallengeProgress challenge={challenge} />
+            <ChallengeProgress challenge={challenge} userId={userId} />
           </>
         )}
 
-        <HStack justify="space-between">
-          {renderActionButtons()}
-          {isReadyToStart && (
-            <Button
-              size="sm"
-              colorScheme="green"
-              onClick={() => onStart(challenge.id)}
-              leftIcon={<PlayCircle size={16} />}
-            >
-              Start Challenge
-            </Button>
-          )}
-        </HStack>
+        {challenge.status === 'completed' && (
+          <Box
+            p={2}
+            bg={isWinner ? 'purple.900' : isTie ? 'yellow.900' : 'gray.800'}
+            borderRadius="md"
+            textAlign="center"
+          >
+            <Text fontWeight="bold" color="white">
+              {isWinner
+                ? '🎉 You won the challenge!'
+                : isTie
+                ? '🤝 Challenge ended in a tie!'
+                : 'Better luck next time!'}
+            </Text>
+          </Box>
+        )}
+
+        <HStack justify="space-between">{renderActionButtons()}</HStack>
       </VStack>
     </Box>
   )
 }
 
+// Confirmation Dialog Component
+const ConfirmationDialog = ({
+  isOpen,
+  onClose,
+  onConfirm,
+  title,
+  message,
+  confirmText = 'Confirm',
+  cancelText = 'Cancel',
+}) => {
+  const cancelRef = React.useRef()
+
+  return (
+    <AlertDialog
+      isOpen={isOpen}
+      leastDestructiveRef={cancelRef}
+      onClose={onClose}
+    >
+      <AlertDialogOverlay>
+        <AlertDialogContent
+          bg="gray.800"
+          borderColor="whiteAlpha.200"
+          borderWidth="1px"
+        >
+          <AlertDialogHeader fontSize="lg" fontWeight="bold" color="white">
+            {title}
+          </AlertDialogHeader>
+
+          <AlertDialogBody color="whiteAlpha.800">{message}</AlertDialogBody>
+
+          <AlertDialogFooter>
+            <Button ref={cancelRef} onClick={onClose}>
+              {cancelText}
+            </Button>
+            <Button colorScheme="red" onClick={onConfirm} ml={3}>
+              {confirmText}
+            </Button>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialogOverlay>
+    </AlertDialog>
+  )
+}
+
 // Main Active Challenges Component
 const ActiveChallenges = () => {
+  const { t } = useTranslation('QuickClash')
   const toast = useToast()
-  const [filter, setFilter] = React.useState('all')
+  const navigate = useNavigate()
+  const [filter, setFilter] = useState('all')
+  const [challenges, setChallenges] = useState([])
+  const [loading, setLoading] = useState(true)
+  const [error, setError] = useState(null)
+  const { user } = useSelector(state => state.auth)
+  const userId = user?._id
+  const [selectedSession, setSelectedSession] = useState(null)
 
-  // Enhanced dummy data
-  const dummyChallenges = [
-    {
-      id: '1',
-      challengerId: 'current-user-id',
-      challengerName: 'You',
-      opponentId: 'user2',
-      opponentName: 'John Doe',
-      category: 'Current Affairs',
-      status: 'pending',
-      createdAt: '2024-02-23T10:00:00Z',
-      expiresAt: '2024-02-24T10:00:00Z',
-      timeLeft: 12,
-      challengerStatus: 'ready',
-      opponentStatus: 'pending',
-    },
-    {
-      id: '2',
-      challengerId: 'user3',
-      challengerName: 'Jane Smith',
-      opponentId: 'current-user-id',
-      opponentName: 'You',
-      category: 'Technology',
-      status: 'accepted',
-      createdAt: '2024-02-23T09:00:00Z',
-      expiresAt: '2024-02-24T09:00:00Z',
-      timeLeft: 4,
-      challengerStatus: 'ready',
-      opponentStatus: 'ready',
-    },
-    {
-      id: '3',
-      challengerId: 'current-user-id',
-      challengerName: 'You',
-      opponentId: 'user4',
-      opponentName: 'Mike Wilson',
-      category: 'Sports',
-      status: 'accepted',
-      createdAt: '2024-02-23T08:00:00Z',
-      expiresAt: '2024-02-24T08:00:00Z',
-      timeLeft: 8,
-      challengerStatus: 'completed',
-      opponentStatus: 'ready',
-    },
-    {
-      id: '3',
-      challengerId: 'current-user-id',
-      challengerName: 'You',
-      opponentId: 'user4',
-      opponentName: 'Mike Wilson',
-      category: 'Sports',
-      status: 'accepted',
-      createdAt: '2024-02-23T08:00:00Z',
-      expiresAt: '2024-02-24T08:00:00Z',
-      timeLeft: 8,
-      challengerStatus: 'completed',
-      opponentStatus: 'ready',
-    },
-  ]
+  const {
+    isOpen: isConfirmOpen,
+    onOpen: onConfirmOpen,
+    onClose: onConfirmClose,
+  } = useDisclosure()
 
-  const filteredChallenges = React.useMemo(() => {
-    let filtered = dummyChallenges
+  const {
+    isOpen: isReportOpen,
+    onOpen: onReportOpen,
+    onClose: onReportClose,
+  } = useDisclosure()
+
+  const [confirmAction, setConfirmAction] = useState({ type: '', id: '' })
+
+  // Fetch challenges
+  useEffect(() => {
+    const fetchChallenges = async () => {
+      try {
+        setLoading(true)
+        const response = await axios.get('/api/quickClash/challenges')
+
+        setChallenges(response.data.challenges || [])
+        setError(null)
+      } catch (err) {
+        setError('Failed to load challenges. Please try again.')
+        console.error('Error fetching challenges:', err)
+      } finally {
+        setLoading(false)
+      }
+    }
+
+    fetchChallenges()
+    // Set up polling interval to refresh challenges every 30 seconds
+    const intervalId = setInterval(() => {
+      fetchChallenges()
+    }, 30000)
+
+    return () => clearInterval(intervalId)
+  }, [])
+
+  const filteredChallenges = useMemo(() => {
+    if (!challenges || !userId) return []
+
+    let filtered = [...challenges]
 
     // Filter based on type (sent/received)
     switch (filter) {
       case 'sent':
-        filtered = filtered.filter(c => c.challengerId === 'current-user-id')
+        filtered = filtered.filter(c => c.challenger._id === userId)
         break
       case 'received':
-        filtered = filtered.filter(c => c.challengerId !== 'current-user-id')
+        filtered = filtered.filter(c => c.opponent._id === userId)
         break
     }
-
-    // Only show pending and accepted challenges
-    filtered = filtered.filter(c =>
-      ['pending', 'accepted', 'in_progress'].includes(c.status),
-    )
-
     return filtered
-  }, [filter])
+  }, [filter, challenges, userId])
 
-  const handleAccept = challengeId => {
-    toast({
-      title: 'Challenge Accepted',
-      description: 'The challenge is now ready to start!',
-      status: 'success',
-      duration: 3000,
-      isClosable: true,
-    })
+  const handleAccept = useCallback(
+    challengeId => {
+      setConfirmAction({ type: 'accept', id: challengeId })
+      onConfirmOpen()
+    },
+    [onConfirmOpen],
+  )
+
+  const handleDecline = useCallback(
+    challengeId => {
+      setConfirmAction({ type: 'decline', id: challengeId })
+      onConfirmOpen()
+    },
+    [onConfirmOpen],
+  )
+
+  const handleStart = useCallback(
+    challengeId => {
+      navigate(`/quickclash/session/${challengeId}`)
+    },
+    [navigate],
+  )
+
+  const handleViewReport = useCallback(
+    challenge => {
+      // Find the completed session for this challenge
+      const isChallenger = challenge.challenger._id === userId
+
+      // We'll need to find the session ID through an API call
+      const fetchSession = async () => {
+        try {
+          const response = await axios.get(
+            `/api/quickClash/challenge/${challenge._id}/sessions?userId=${userId}`,
+          )
+          if (response.data && response.data.sessionId) {
+            setSelectedSession(response.data.sessionId)
+            onReportOpen()
+          } else {
+            toast({
+              title: t('Error'),
+              description: t(
+                'Could not find your quiz session for this challenge',
+              ),
+              status: 'error',
+              duration: 3000,
+              isClosable: true,
+            })
+          }
+        } catch (error) {
+          console.error('Error fetching session:', error)
+          toast({
+            title: t('Error'),
+            description: t('Failed to load your quiz session'),
+            status: 'error',
+            duration: 3000,
+            isClosable: true,
+          })
+        }
+      }
+
+      fetchSession()
+    },
+    [userId, onReportOpen, toast, t],
+  )
+
+  const executeConfirmAction = async () => {
+    const { type, id } = confirmAction
+
+    try {
+      if (type === 'accept') {
+        await axios.post(`/api/quickClash/challenge/${id}/accept`)
+        toast({
+          title: t('Challenge Accepted'),
+          description: t('The challenge is now ready to start!'),
+          status: 'success',
+          duration: 3000,
+          isClosable: true,
+        })
+      } else if (type === 'decline') {
+        await axios.post(`/api/quickClash/challenge/${id}/reject`)
+        toast({
+          title: t('Challenge Declined'),
+          status: 'info',
+          duration: 3000,
+          isClosable: true,
+        })
+      }
+
+      // Refresh challenges
+      const response = await axios.get('/api/quickClash/challenges')
+      setChallenges(response.data.challenges || [])
+    } catch (error) {
+      console.error(`Error ${type}ing challenge:`, error)
+      toast({
+        title: t('Error'),
+        description:
+          error.response?.data?.message || t(`Failed to ${type} challenge`),
+        status: 'error',
+        duration: 3000,
+        isClosable: true,
+      })
+    } finally {
+      onConfirmClose()
+    }
   }
 
-  const handleDecline = challengeId => {
-    toast({
-      title: 'Challenge Declined',
-      status: 'info',
-      duration: 3000,
-      isClosable: true,
-    })
+  // Check if we're still loading and no challenges have been loaded yet
+  if (loading && !challenges.length) {
+    return (
+      <Center py={10}>
+        <VStack spacing={4}>
+          <Spinner size="xl" color="purple.500" thickness="4px" />
+          <Text color="whiteAlpha.700">{t('Loading challenges...')}</Text>
+        </VStack>
+      </Center>
+    )
   }
 
-  const handleStart = challengeId => {
-    toast({
-      title: 'Starting Challenge',
-      description: 'Preparing your reading session...',
-      status: 'info',
-      duration: 3000,
-      isClosable: true,
-    })
+  // If there was an error and no challenges have been loaded yet
+  if (error && !challenges.length) {
+    return (
+      <Center py={10}>
+        <VStack spacing={4}>
+          <Box as={AlertCircle} size="48px" color="red.400" />
+          <Text color="whiteAlpha.700">{error}</Text>
+          <Button colorScheme="blue" onClick={() => window.location.reload()}>
+            {t('Retry')}
+          </Button>
+        </VStack>
+      </Center>
+    )
   }
 
   return (
     <Box>
       <VStack align="stretch" spacing={4}>
         <Heading size="lg" color="whiteAlpha.900">
-          Active Challenges
+          {t('Active Challenges')}
         </Heading>
 
         <HStack spacing={2} mb={4}>
@@ -378,40 +603,74 @@ const ActiveChallenges = () => {
             colorScheme={filter === 'all' ? 'blue' : 'gray'}
             onClick={() => setFilter('all')}
           >
-            All Challenges
+            {t('All Challenges')}
           </Button>
           <Button
             size="sm"
             colorScheme={filter === 'sent' ? 'blue' : 'gray'}
             onClick={() => setFilter('sent')}
           >
-            Sent by You
+            {t('Sent by You')}
           </Button>
           <Button
             size="sm"
             colorScheme={filter === 'received' ? 'blue' : 'gray'}
             onClick={() => setFilter('received')}
           >
-            Received
+            {t('Received')}
           </Button>
         </HStack>
 
         {filteredChallenges.length === 0 ? (
           <Box p={6} textAlign="center" bg="whiteAlpha.50" borderRadius="lg">
-            <Text color="whiteAlpha.700">No active challenges found</Text>
+            <Text color="whiteAlpha.700">
+              {t('No active challenges found')}
+            </Text>
           </Box>
         ) : (
           filteredChallenges.map(challenge => (
             <ChallengeItem
-              key={challenge.id}
+              key={challenge._id}
               challenge={challenge}
+              userId={userId}
               onAccept={handleAccept}
               onDecline={handleDecline}
               onStart={handleStart}
+              onViewReport={handleViewReport}
             />
           ))
         )}
       </VStack>
+
+      <ConfirmationDialog
+        isOpen={isConfirmOpen}
+        onClose={onConfirmClose}
+        onConfirm={executeConfirmAction}
+        title={
+          confirmAction.type === 'accept'
+            ? t('Accept Challenge?')
+            : t('Decline Challenge?')
+        }
+        message={
+          confirmAction.type === 'accept'
+            ? t('Are you sure you want to accept this challenge?')
+            : t('Are you sure you want to decline this challenge?')
+        }
+        confirmText={
+          confirmAction.type === 'accept' ? t('Accept') : t('Decline')
+        }
+      />
+
+      {/* Quiz Report Modal */}
+      <Suspense fallback={null}>
+        {isReportOpen && selectedSession && (
+          <QuizReportModal
+            isOpen={isReportOpen}
+            onClose={onReportClose}
+            sessionId={selectedSession}
+          />
+        )}
+      </Suspense>
     </Box>
   )
 }

@@ -1,4 +1,4 @@
-// models/quickClashSessionSchema.js
+// models/quickClashSchemas/quickClashSessionSchema.js
 const mongoose = require('mongoose')
 
 const quickClashSessionSchema = new mongoose.Schema({
@@ -39,17 +39,31 @@ const quickClashSessionSchema = new mongoose.Schema({
       enum: ['manual', 'timeout'],
     },
   },
-  quiz: {
+  quizAttempt: {
     startTime: Date,
     endTime: Date,
     responses: [
       {
         questionId: mongoose.Schema.Types.ObjectId,
-        answer: String,
+        userAnswer: String,
         isCorrect: Boolean,
         timeSpent: Number,
       },
     ],
+    // Using a regular object for answer mappings rather than Map type
+    answerMappings: {
+      type: Object,
+      default: {},
+    },
+    // Add field to track which questions were shown to the user
+    selectedQuestionIds: {
+      type: [String],
+      default: [],
+    },
+    shuffledOptions: {
+      type: Object,
+      default: {},
+    },
     timeSpent: Number,
     completed: {
       type: Boolean,
@@ -58,6 +72,7 @@ const quickClashSessionSchema = new mongoose.Schema({
   },
   score: {
     RQM_score: Number,
+    baseRQM_score: Number, // Add this field to match your service response
     speedBonus: Number,
     accuracyBonus: Number,
     total: Number,

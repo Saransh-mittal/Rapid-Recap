@@ -10,151 +10,175 @@ import {
   Flex,
   Avatar,
   Text,
-  Badge,
   Box,
   useToast,
   Skeleton,
   SkeletonCircle,
+  Button,
+  useDisclosure,
+  Modal,
+  ModalOverlay,
+  ModalContent,
+  ModalHeader,
+  ModalFooter,
+  ModalBody,
+  ModalCloseButton,
+  Select,
 } from '@chakra-ui/react'
 import { useNavigate } from 'react-router-dom'
 import { useTranslation } from 'react-i18next'
+import { FiZap } from 'react-icons/fi'
+import axios from 'axios'
+import SearchResultItem from './userSearchDrawerComponents/SearchResultItem'
 
 // Lazy load the SearchBar component
 const SearchBar = React.lazy(() => import('../leaderBoardComponents/SearchBar'))
 
-// Import the TournamentBadge component
-import TournamentBadges from '../tournamentComponents/TournamentBadges'
+const ChallengeModal = ({
+  isOpen,
+  onClose,
+  selectedUser,
+  categories,
+  onSendChallenge,
+  isLoading,
+}) => {
+  const { t } = useTranslation('QuickClash')
+  const [selectedCategories, setSelectedCategories] = useState([])
 
-// New component for each search result item
-const SearchResultItem = React.memo(
-  ({
-    user,
-    onItemClick,
-    hoverBg,
-    textColor,
-    subTextColor,
-    badgeBg,
-    TournamentBadgeTranslate,
-  }) => {
-    const nameRef = React.useRef(null)
-    const [badgeOffset, setBadgeOffset] = React.useState(0)
-
-    React.useEffect(() => {
-      if (nameRef.current) {
-        const nameWidth = nameRef.current.offsetWidth
-        setBadgeOffset(Math.min(nameWidth * 0.1, 10)) // 10% of name width, max 10px
+  const handleCategoryChange = e => {
+    const options = e.target.options
+    const selected = []
+    for (let i = 0; i < options.length; i++) {
+      if (options[i].selected) {
+        selected.push(options[i].value)
       }
-    }, [user.name])
+    }
+    setSelectedCategories(selected)
+  }
 
-    return (
-      <Flex
-        alignItems="center"
-        py={5}
-        borderRadius="lg"
-        transition="all 0.3s"
-        cursor="pointer"
-        position="relative"
-        overflow="hidden"
-        _before={{
-          content: '""',
-          position: 'absolute',
-          top: 0,
-          left: 0,
-          right: 0,
-          bottom: 0,
-          bgImage: hoverBg,
-          opacity: 0,
-          transition: 'opacity 0.3s ease',
-        }}
-        _hover={{
-          transform: 'translateY(-2px)',
-          boxShadow: '0 4px 20px rgba(138, 43, 226, 0.2)',
-          _before: {
-            opacity: 1,
-          },
-        }}
-        onClick={() => onItemClick(user.inGameName)}
+  const handleSendChallenge = () => {
+    if (selectedCategories.length === 0) {
+      return
+    }
+    onSendChallenge(selectedUser, selectedCategories)
+  }
+
+  return (
+    <Modal isOpen={isOpen} onClose={onClose}>
+      <ModalOverlay bg="blackAlpha.700" backdropFilter="blur(5px)" />
+      <ModalContent
+        bg="linear-gradient(135deg, #1a1527, #0f0d15)"
+        borderRadius="xl"
+        boxShadow="0 8px 32px rgba(0, 0, 0, 0.4)"
       >
-        <Flex alignItems="center">
-          <Avatar name={user.name} src={user.pic} size="md" zIndex={1} />
-        </Flex>
-        <Box ml={4} flex={1} zIndex={1}>
-          <Text
-            ref={nameRef}
-            fontSize="sm"
-            fontWeight="semibold"
-            color={textColor}
-            mb="2px"
-            display="inline-block"
-          >
-            {user.name}
-          </Text>
-          <Text fontSize="xs" color={subTextColor} mb={0}>
-            @{user.inGameName}
-          </Text>
-        </Box>
-        {user?.displayedBadge && (
-          <Box
-            ml={`-${4 + badgeOffset}px`}
-            mt={0}
-            zIndex={2}
-            transition="margin-left 0.3s ease"
-          >
-            <TournamentBadges
-              tournamentNumber={user?.displayedBadge?.tournamentNumber}
-              rank={user?.displayedBadge?.rank}
-              name={user?.name}
-              inGameName={user?.inGameName}
-              participantCnt={user?.displayedBadge?.participantCnt}
-              size="sm"
-              badgeName={{
-                name: user?.displayedBadge?.badgeName,
-                text: user?.displayedBadge?.text,
-              }}
-              t={TournamentBadgeTranslate}
-            />
-          </Box>
-        )}
-        <Flex justifyContent={'center'} mx={2}>
-          <Badge
-            bg={badgeBg}
-            color="white"
-            borderRadius="full"
-            px={2}
-            py={1}
-            fontWeight="bold"
-            fontSize="xs"
-            boxShadow="0 2px 4px rgba(0,0,0,0.2)"
-            display="flex"
-            alignItems="center"
-            zIndex={1}
-            w={'4.6rem'}
-            justifyContent="center"
-          >
-            <Text as="span" role="img" aria-label="brain" mr={1}>
-              🧠
+        <ModalHeader color="white">
+          {t('Challenge')} {selectedUser?.name}
+        </ModalHeader>
+        <ModalCloseButton color="white" />
+        <ModalBody>
+          <Flex direction="column" gap={4}>
+            <Flex align="center" gap={3}>
+              <Avatar src={selectedUser?.pic} name={selectedUser?.name} />
+              <Box>
+                <Text color="white" fontWeight="bold">
+                  {selectedUser?.name}
+                </Text>
+                <Text color="gray.300">@{selectedUser?.inGameName}</Text>
+              </Box>
+            </Flex>
+
+            <Text color="white">
+              {t('Select categories for your challenge:')}
             </Text>
-            {user.IQ_score}
-          </Badge>
-        </Flex>
-      </Flex>
-    )
-  },
-)
+            <Select
+              multiple
+              size="md"
+              onChange={handleCategoryChange}
+              bg="whiteAlpha.200"
+              color="white"
+              borderColor="whiteAlpha.300"
+              _hover={{ borderColor: 'purple.400' }}
+              _focus={{
+                borderColor: 'purple.500',
+                boxShadow: '0 0 0 1px #805AD5',
+              }}
+              height="120px"
+            >
+              {categories.map(category => (
+                <option
+                  key={category.key}
+                  value={category.key}
+                  style={{ background: '#1a1527' }}
+                >
+                  {category.label}
+                </option>
+              ))}
+            </Select>
+            <Text color="gray.300" fontSize="sm">
+              {t('Hold Ctrl/Cmd to select multiple categories (min 1, max 3)')}
+            </Text>
+          </Flex>
+        </ModalBody>
+
+        <ModalFooter>
+          <Button variant="outline" colorScheme="gray" mr={3} onClick={onClose}>
+            {t('Cancel')}
+          </Button>
+          <Button
+            colorScheme="purple"
+            leftIcon={<FiZap />}
+            onClick={handleSendChallenge}
+            isLoading={isLoading}
+            isDisabled={
+              selectedCategories.length === 0 || selectedCategories.length > 3
+            }
+            bgGradient="linear(to-r, purple.500, purple.700)"
+            _hover={{ bgGradient: 'linear(to-r, purple.600, purple.800)' }}
+          >
+            {t('Send Challenge')}
+          </Button>
+        </ModalFooter>
+      </ModalContent>
+    </Modal>
+  )
+}
 
 const UserSearchDrawer = ({ isOpen, onClose, onSearchClick }) => {
   const { t } = useTranslation('UserSearchDrawer')
+  const { t: tQuickClash } = useTranslation('QuickClash')
   const { t: TournamentBadgeTranslate } = useTranslation('TournamentBadge')
   const [searchResults, setSearchResults] = useState([])
   const [searchLoad, setSearchLoad] = useState(false)
+  const [isChallengeSending, setIsChallengeSending] = useState(false)
+  const [selectedUser, setSelectedUser] = useState(null)
   const toast = useToast()
   const navigate = useNavigate()
+  const {
+    isOpen: isChallengeModalOpen,
+    onOpen: onChallengeModalOpen,
+    onClose: onChallengeModalClose,
+  } = useDisclosure()
 
   const bg = 'linear-gradient(-180deg, #1a1527, #0e0c16 88%, #0e0c16 99%)'
   const hoverBg = 'linear-gradient(135deg, #2a1d47, #1e1537)'
   const textColor = 'white'
   const subTextColor = 'gray.300'
   const badgeBg = 'blue.500'
+
+  // Available categories for quick clash
+  const categories = useMemo(
+    () => [
+      { key: 'world', label: tQuickClash('World') },
+      { key: 'politics', label: tQuickClash('Politics') },
+      { key: 'business', label: tQuickClash('Business') },
+      { key: 'technology', label: tQuickClash('Technology') },
+      { key: 'sports', label: tQuickClash('Sports') },
+      { key: 'health', label: tQuickClash('Health') },
+      { key: 'science', label: tQuickClash('Science') },
+      { key: 'environment', label: tQuickClash('Environment') },
+    ],
+    [tQuickClash],
+  )
 
   const handleClose = useCallback(() => {
     setSearchResults([])
@@ -169,6 +193,54 @@ const UserSearchDrawer = ({ isOpen, onClose, onSearchClick }) => {
       onSearchClick && onSearchClick()
     },
     [navigate, handleClose, onSearchClick],
+  )
+
+  const handleChallengeClick = useCallback(
+    user => {
+      setSelectedUser(user)
+      onChallengeModalOpen()
+    },
+    [onChallengeModalOpen],
+  )
+
+  const sendChallenge = useCallback(
+    async (user, selectedCategories) => {
+      if (!user || selectedCategories.length === 0) return
+
+      setIsChallengeSending(true)
+      try {
+        const response = await axios.post('/api/quickClash/challenge/create', {
+          opponentId: user._id,
+          categories: selectedCategories,
+        })
+
+        toast({
+          title: tQuickClash('Challenge Sent!'),
+          description:
+            tQuickClash('Your challenge has been sent to') + ` ${user.name}`,
+          status: 'success',
+          duration: 5000,
+          isClosable: true,
+          position: 'top',
+        })
+
+        onChallengeModalClose()
+      } catch (error) {
+        const errorMessage =
+          error.response?.data?.error || tQuickClash('Error sending challenge')
+        toast({
+          title: tQuickClash('Challenge Failed'),
+          description: errorMessage,
+          status: 'error',
+          duration: 5000,
+          isClosable: true,
+          position: 'top',
+        })
+      } finally {
+        setIsChallengeSending(false)
+      }
+    },
+    [toast, tQuickClash, onChallengeModalClose],
   )
 
   const StylishDivider = useMemo(
@@ -223,6 +295,7 @@ const UserSearchDrawer = ({ isOpen, onClose, onSearchClick }) => {
           <SearchResultItem
             user={user}
             onItemClick={handleItemClick}
+            onChallengeClick={handleChallengeClick}
             hoverBg={hoverBg}
             textColor={textColor}
             subTextColor={subTextColor}
@@ -235,45 +308,58 @@ const UserSearchDrawer = ({ isOpen, onClose, onSearchClick }) => {
       searchResults,
       StylishDivider,
       handleItemClick,
+      handleChallengeClick,
       hoverBg,
       textColor,
       subTextColor,
       badgeBg,
+      TournamentBadgeTranslate,
     ],
   )
 
   return (
-    <Drawer
-      isOpen={isOpen}
-      placement="right"
-      onClose={handleClose}
-      size={{ base: 'full', md: 'sm' }}
-    >
-      <DrawerOverlay />
-      <DrawerContent bgColor="#0f0d15" bgImage={bg}>
-        <DrawerCloseButton color={textColor} />
-        <DrawerHeader color={textColor}>
-          {t('UserSearchDrawer.searchUsers')}
-        </DrawerHeader>
+    <>
+      <Drawer
+        isOpen={isOpen}
+        placement="right"
+        onClose={handleClose}
+        size={{ base: 'full', md: 'sm' }}
+      >
+        <DrawerOverlay />
+        <DrawerContent bgColor="#0f0d15" bgImage={bg}>
+          <DrawerCloseButton color={textColor} />
+          <DrawerHeader color={textColor}>
+            {t('UserSearchDrawer.searchUsers')}
+          </DrawerHeader>
 
-        <DrawerBody>
-          <Suspense fallback={SkeletonLoader}>
-            <SearchBar
-              w="100%"
-              setSearchResults={setSearchResults}
-              setSearchLoad={setSearchLoad}
-            />
-          </Suspense>
-          {searchLoad ? (
-            SkeletonLoader
-          ) : (
-            <VStack spacing={0} align="stretch" mt={4}>
-              {renderSearchResults}
-            </VStack>
-          )}
-        </DrawerBody>
-      </DrawerContent>
-    </Drawer>
+          <DrawerBody>
+            <Suspense fallback={SkeletonLoader}>
+              <SearchBar
+                w="100%"
+                setSearchResults={setSearchResults}
+                setSearchLoad={setSearchLoad}
+              />
+            </Suspense>
+            {searchLoad ? (
+              SkeletonLoader
+            ) : (
+              <VStack spacing={0} align="stretch" mt={4}>
+                {renderSearchResults}
+              </VStack>
+            )}
+          </DrawerBody>
+        </DrawerContent>
+      </Drawer>
+
+      <ChallengeModal
+        isOpen={isChallengeModalOpen}
+        onClose={onChallengeModalClose}
+        selectedUser={selectedUser}
+        categories={categories}
+        onSendChallenge={sendChallenge}
+        isLoading={isChallengeSending}
+      />
+    </>
   )
 }
 

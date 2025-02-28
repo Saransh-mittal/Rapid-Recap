@@ -154,13 +154,10 @@ const generateQuickClashQuizzes = async ({
       session,
     })
 
-    // Generate Hindi Quiz
-    const hindiQuiz = await generateQuickClashQuiz({
-      title: hindiTitle,
-      author,
-      mainText: hindiMainText,
+    // Translate English quiz to Hindi instead of generating a new one
+    const hindiQuiz = await translateQuizToHindi({
+      englishQuiz,
       challenge,
-      language: 'hi',
       session,
     })
 
@@ -172,6 +169,267 @@ const generateQuickClashQuizzes = async ({
     console.error('Error generating quick clash quizzes:', error)
     throw error
   }
+}
+
+// New function to translate quiz from English to Hindi
+const translateQuizToHindi = async ({ englishQuiz, challenge, session }) => {
+  const openai = new OpenAI(process.env.OPENAI_API_KEY)
+  let attempts = 5 // Increased from 3 to 5 attempts
+  let lastError = null
+
+  // Prepare the questions for translation
+  const questionsForTranslation = englishQuiz.questions.map(q => ({
+    question: q.question,
+    optionA: q.options.a,
+    optionB: q.options.b,
+    optionC: q.options.c,
+    optionD: q.options.d,
+    explanation: q.explanation,
+  }))
+
+  const prompt = `
+Translate the following quiz questions from English to Hindi while preserving the meaning and context accurately:
+
+Quiz questions: ${JSON.stringify(questionsForTranslation, null, 2)}
+
+Return the translated content in the following JSON format:
+{
+  "translatedQuestions": [
+    {
+      "question": "Hindi translated question",
+      "optionA": "Hindi option A",
+      "optionB": "Hindi option B",
+      "optionC": "Hindi option C",
+      "optionD": "Hindi option D",
+      "explanation": "Hindi explanation"
+    },
+    ...
+  ]
+}
+`
+
+  while (attempts-- > 0) {
+    try {
+      const result = await openai.chat.completions.create({
+        model: attempts > 2 ? 'gpt-4o-mini' : 'gpt-4o', // Use more powerful model for last attempts
+        response_format: { type: 'json_object' },
+        messages: [
+          {
+            role: 'system',
+            content:
+              'You are a translation assistant that accurately translates English quiz questions to Hindi while preserving the original meaning, format, and structure.',
+          },
+          {
+            role: 'user',
+            content: prompt,
+          },
+          // If we had a previous error, tell the model what went wrong
+          ...(lastError
+            ? [
+                {
+                  role: 'user',
+                  content: `The previous attempt failed with this issue: ${lastError}. Please ensure your response includes all required fields and follows the exact format requested.`,
+                },
+              ]
+            : []),
+        ],
+      })
+
+      let responseText = result.choices[0].message.content
+      responseText = responseText.replace(/```json|```/g, '').trim()
+
+      // Validate JSON before parsing
+      if (!responseText.startsWith('{') || !responseText.endsWith('}')) {
+        throw new Error('Response is not valid JSON')
+      }
+
+      const response = JSON.parse(responseText)
+
+      // Perform thorough validation
+      if (!response || !response.translatedQuestions) {
+        throw new Error('Response missing translatedQuestions field')
+      }
+
+      if (!Array.isArray(response.translatedQuestions)) {
+        throw new Error('translatedQuestions must be an array')
+      }
+
+      if (
+        response.translatedQuestions.length !== englishQuiz.questions.length
+      ) {
+        throw new Error(
+          `Translation count mismatch: Expected ${englishQuiz.questions.length} items but got ${response.translatedQuestions.length}`,
+        )
+      }
+
+      // Validate each translated question
+      for (let i = 0; i < response.translatedQuestions.length; i++) {
+        const t = response.translatedQuestions[i]
+        if (
+          !t.question ||
+          !t.optionA ||
+          !t.optionB ||
+          !t.optionC ||
+          !t.optionD ||
+          !t.explanation
+        ) {
+          throw new Error(`Missing fields in question #${i + 1}`)
+        }
+      }
+
+      // Map the translated questions to match the original schema structure
+      // but keep the original difficulty values and correct answers
+      const translatedQuestions = englishQuiz.questions.map(
+        (originalQ, index) => {
+          const translatedQ = response.translatedQuestions[index]
+          return {
+            question: translatedQ.question,
+            options: {
+              a: translatedQ.optionA,
+              b: translatedQ.optionB,
+              c: translatedQ.optionC,
+              d: translatedQ.optionD,
+            },
+            answer: originalQ.answer, // Keep original correct answer (a, b, c, or d)
+            explanation: translatedQ.explanation,
+            difficulty: originalQ.difficulty, // Keep original difficulty
+          }
+        },
+      )
+
+      // Create Hindi QuickClashQuiz with translated questions but same structure and difficulty
+      const hindiQuiz = new QuickClashQuiz({
+        challenge: challenge._id,
+        language: 'hi',
+        questions: translatedQuestions,
+        overallDifficulty: englishQuiz.overallDifficulty, // Keep the same overall difficulty
+      })
+
+      try {
+        // Validate model before saving
+        await hindiQuiz.validate()
+        await hindiQuiz.save({ session })
+        console.log(
+          `Successfully translated quiz to Hindi (${translatedQuestions.length} questions)`,
+        )
+        return hindiQuiz
+      } catch (validationError) {
+        // If there's a validation error, capture it and retry
+        lastError = `Mongoose validation error: ${validationError.message}`
+        console.error(lastError)
+        continue
+      }
+    } catch (err) {
+      lastError = err.message
+      console.error(
+        `Error translating quiz to Hindi (attempt ${5 - attempts}/${5}):`,
+        err.message,
+      )
+
+      // Add delay between attempts to avoid rate limiting
+      if (attempts > 0) {
+        await new Promise(resolve => setTimeout(resolve, 1000))
+      } else {
+        // On final failure, try a fallback approach
+        return await translateQuizFallback({
+          englishQuiz,
+          challenge,
+          session,
+        })
+      }
+    }
+  }
+
+  throw new Error(
+    `Failed to translate quiz to Hindi after multiple attempts. Last error: ${lastError}`,
+  )
+}
+
+// Fallback method if translation fails - translates one question at a time
+const translateQuizFallback = async ({ englishQuiz, challenge, session }) => {
+  console.log(
+    'Attempting fallback translation method (one question at a time)...',
+  )
+  const openai = new OpenAI(process.env.OPENAI_API_KEY)
+  const translatedQuestions = []
+
+  // Try to translate one question at a time
+  for (let i = 0; i < englishQuiz.questions.length; i++) {
+    const q = englishQuiz.questions[i]
+    try {
+      const result = await openai.chat.completions.create({
+        model: 'gpt-4o', // Use most powerful model for fallback
+        response_format: { type: 'json_object' },
+        messages: [
+          {
+            role: 'system',
+            content:
+              'Translate this single quiz question from English to Hindi with accuracy.',
+          },
+          {
+            role: 'user',
+            content: `
+Translate this single quiz question from English to Hindi:
+Question: ${q.question}
+Option A: ${q.options.a}
+Option B: ${q.options.b}
+Option C: ${q.options.c}
+Option D: ${q.options.d}
+Explanation: ${q.explanation}
+
+Return as JSON:
+{
+  "question": "Hindi question",
+  "optionA": "Hindi option A",
+  "optionB": "Hindi option B",
+  "optionC": "Hindi option C",
+  "optionD": "Hindi option D",
+  "explanation": "Hindi explanation"
+}`,
+          },
+        ],
+      })
+
+      const response = JSON.parse(result.choices[0].message.content)
+
+      translatedQuestions.push({
+        question: response.question,
+        options: {
+          a: response.optionA,
+          b: response.optionB,
+          c: response.optionC,
+          d: response.optionD,
+        },
+        answer: q.answer,
+        explanation: response.explanation,
+        difficulty: q.difficulty,
+      })
+
+      console.log(
+        `Successfully translated question ${i + 1}/${
+          englishQuiz.questions.length
+        }`,
+      )
+    } catch (err) {
+      console.error(`Failed to translate question ${i + 1}:`, err.message)
+      // If translation fails, use the English version as fallback
+      translatedQuestions.push(q)
+    }
+  }
+
+  // Create Hindi QuickClashQuiz with translated questions
+  const hindiQuiz = new QuickClashQuiz({
+    challenge: challenge._id,
+    language: 'hi',
+    questions: translatedQuestions,
+    overallDifficulty: englishQuiz.overallDifficulty,
+  })
+
+  await hindiQuiz.save({ session })
+  console.log(
+    `Fallback translation complete. Saved ${translatedQuestions.length} questions.`,
+  )
+  return hindiQuiz
 }
 
 const generateQuickClashQuiz = async ({
@@ -374,4 +632,5 @@ module.exports = {
   canStartNewChallenge,
   formatSessionStatus,
   generateQuickClashQuizzes,
+  translateQuizToHindi,
 }

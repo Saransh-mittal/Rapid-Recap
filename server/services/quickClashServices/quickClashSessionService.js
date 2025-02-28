@@ -1,14 +1,15 @@
-// services/quickClashSessionService.js
+// services/quickClashServices/quickClashSessionService.js
 const QuickClashSession = require('../../model/quickClashSchemas/quickClashSessionSchema')
 const QuickClashQuiz = require('../../model/quickClashSchemas/quickClashQuizSchema')
-const { generateQuestionsForQuiz } = require('../../utils/quiz.utils')
-const mongoose = require('mongoose')
 const QuickClashChallenge = require('../../model/quickClashSchemas/quickClashChallengeSchema')
+const {
+  getQuickClashHighlights,
+} = require('../../utils/quickClashHighlight.utils')
+const { updateChallengeScore } = require('./quickClashChallengeService')
+const mongoose = require('mongoose')
 
 const READING_TIME_LIMIT = 120 // 2 minutes in seconds
 const SESSION_EXPIRY = 24 * 60 * 60 * 1000 // 24 hours
-
-// Inside quickClashSessionService.js
 
 const createSession = async ({ challengeId, userId, language }) => {
   const session = await mongoose.startSession()
@@ -53,6 +54,15 @@ const createSession = async ({ challengeId, userId, language }) => {
       })
 
       await quizSession.save({ session })
+
+      // Get article highlights (we don't wait for this to avoid transaction timeout)
+      getQuickClashHighlights({
+        challengeId,
+        lang: language,
+      }).catch(err => {
+        console.error('Error fetching highlights (non-blocking):', err)
+      })
+
       return quizSession
     })
   } finally {
@@ -103,10 +113,20 @@ const completeReading = async ({ sessionId, completionType = 'manual' }) => {
       }
 
       const now = new Date()
-      const timeSpent = Math.min(
-        Math.floor((now - quizSession.reading.startTime) / 1000),
-        READING_TIME_LIMIT,
-      )
+
+      // Fix for NaN timeSpent - Ensure startTime exists before calculating
+      let timeSpent = 0
+      if (quizSession.reading.startTime) {
+        // Calculate time spent and ensure it's valid
+        const timeDiff = now - quizSession.reading.startTime
+        timeSpent = Math.max(
+          0,
+          Math.min(Math.floor(timeDiff / 1000), READING_TIME_LIMIT),
+        )
+      } else {
+        // If startTime doesn't exist, use default value
+        timeSpent = Math.min(10, READING_TIME_LIMIT) // Default to 10 seconds or max time limit
+      }
 
       // Complete reading phase
       quizSession.reading.completed = true
@@ -115,9 +135,10 @@ const completeReading = async ({ sessionId, completionType = 'manual' }) => {
 
       // Start quiz phase
       quizSession.phase = 'quiz'
-      quizSession.quiz.startTime = now
+      quizSession.quizAttempt.startTime = now
 
       await quizSession.save({ session })
+
       return {
         timeSpent,
         completionType,
@@ -150,6 +171,45 @@ const checkReadingTimeout = async ({ sessionId }) => {
   }
 
   return false
+}
+
+const getSessionDetails = async ({ sessionId }) => {
+  const quizSession = await QuickClashSession.findById(sessionId)
+    .populate('quiz')
+    .populate('challenge')
+
+  if (!quizSession) {
+    throw new Error('Session not found')
+  }
+
+  // Get highlights for the article
+  const highlights = await getQuickClashHighlights({
+    challengeId: quizSession.challenge._id,
+    lang: quizSession.language,
+  }).catch(() => null)
+
+  // Prepare the article content
+  const article = {
+    title:
+      quizSession.language === 'en'
+        ? quizSession.challenge.article.title.english
+        : quizSession.challenge.article.title.hindi,
+    content:
+      quizSession.language === 'en'
+        ? quizSession.challenge.article.content.english
+        : quizSession.challenge.article.content.hindi,
+    dictionary: highlights?.dictionary || [],
+    importantSentences: highlights?.importantSentences || [],
+  }
+
+  // Get questions from the quiz
+  const questions = quizSession.quiz.questions || []
+
+  return {
+    session: quizSession,
+    article,
+    questions,
+  }
 }
 
 const calculateRQMScore = ({
@@ -195,17 +255,36 @@ const completeQuiz = async ({ sessionId, responses }) => {
 
       const now = new Date()
       const quizTimeSpent = Math.floor(
-        (now - quizSession.quiz.startTime) / 1000,
+        (now - quizSession.quizAttempt.startTime) / 1000,
       )
 
+      // Map and validate responses
+      const validatedResponses = responses.map(response => {
+        const question = quizSession.quiz.questions.find(
+          q => q._id.toString() === response.questionId.toString(),
+        )
+
+        if (!question) {
+          throw new Error(`Question not found: ${response.questionId}`)
+        }
+
+        return {
+          questionId: response.questionId,
+          answer: response.answer,
+          isCorrect: response.answer === question.answer,
+          timeSpent: response.timeSpent || 0,
+        }
+      })
+
       // Record responses and calculate score
-      quizSession.quiz.responses = responses
-      quizSession.quiz.timeSpent = quizTimeSpent
-      quizSession.quiz.completed = true
+      quizSession.quizAttempt.responses = validatedResponses
+      quizSession.quizAttempt.timeSpent = quizTimeSpent
+      quizSession.quizAttempt.completed = true
+      quizSession.quizAttempt.endTime = now
       quizSession.phase = 'completed'
 
       const RQM_score = calculateRQMScore({
-        responses,
+        responses: validatedResponses,
         timeSpent: quizTimeSpent,
         difficulty: quizSession.quiz.overallDifficulty,
         questionCount: quizSession.quiz.questions.length,
@@ -215,7 +294,7 @@ const completeQuiz = async ({ sessionId, responses }) => {
         RQM_score,
         speedBonus: quizTimeSpent < quizSession.quiz.questions.length * 15,
         accuracyBonus:
-          responses.filter(r => r.isCorrect).length ===
+          validatedResponses.filter(r => r.isCorrect).length ===
           quizSession.quiz.questions.length,
         total: RQM_score,
       }
@@ -246,5 +325,6 @@ module.exports = {
   startReading,
   completeReading,
   checkReadingTimeout,
+  getSessionDetails,
   completeQuiz,
 }
