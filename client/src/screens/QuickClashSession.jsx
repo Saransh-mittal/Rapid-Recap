@@ -1,384 +1,51 @@
+// components/screens/QuickClashSession.jsx
 import React, { useState, useEffect, useRef, lazy, Suspense } from 'react'
 import {
   Container,
-  Box,
-  Heading,
-  Text,
-  Button,
   VStack,
-  HStack,
-  Progress,
-  Badge,
-  useToast,
   Spinner,
   Center,
-  Alert,
-  AlertIcon,
-  AlertTitle,
-  AlertDescription,
-  Flex,
-  Divider,
-  Icon,
+  useToast,
   useDisclosure,
-  Modal,
-  ModalOverlay,
-  ModalContent,
-  ModalHeader,
-  ModalBody,
-  ModalFooter,
-  ModalCloseButton,
-  useBreakpointValue,
-  Tag,
+  Box,
+  Flex,
+  Text,
+  Badge,
+  Icon,
+  HStack,
+  Progress,
 } from '@chakra-ui/react'
-import { motion } from 'framer-motion'
-import { useParams, useNavigate } from 'react-router-dom'
+import { useParams, useNavigate, useBeforeUnload } from 'react-router-dom'
 import { useTranslation } from 'react-i18next'
+import { motion } from 'framer-motion'
+import { Clock, AlertTriangle } from 'lucide-react'
 import axios from 'axios'
-import {
-  Clock,
-  BookOpen,
-  CheckCircle2,
-  XCircle,
-  Trophy,
-  AlarmClock,
-  Library,
-  ArrowLeft,
-  Brain,
-  Sparkles,
-  Target,
-  LightbulbIcon,
-} from 'lucide-react'
-import MainArticleContent from '../components/articleComponents/MainArticleContent'
-import QuickClashBackground from '../components/quickClashComponents/QuickClashBackground'
 
-const MotionBox = motion(Box)
-const MotionText = motion(Text)
-const MotionFlex = motion(Flex)
-const QuickClashQuiz = lazy(() =>
-  import('../components/quickClashComponents/QuickClashQuiz'),
+// Component imports
+import QuickClashError from '../components/quickClashComponents/QuickClashError'
+import ResultsModal from '../components/quickClashComponents/ResultsModal'
+import ConfirmationDialog from '../components/quickClashComponents/ConfirmationDialog'
+
+// Lazy-loaded components
+const ReadingPhase = lazy(() =>
+  import('../components/quickClashComponents/ReadingPhase'),
 )
 const QuizInstructions = lazy(() =>
   import('../components/quickClashComponents/QuizInstructions'),
 )
+const QuickClashQuiz = lazy(() =>
+  import('../components/quickClashComponents/QuickClashQuiz'),
+)
 
-// Reading Phase Component
-const ReadingPhase = ({ article, timeLeft, onComplete }) => {
-  const { t } = useTranslation('QuickClash')
-  const contentRef = useRef(null)
-  const articleRef = useRef(null)
-  const [scrollPercentage, setScrollPercentage] = useState(0)
-  const [hasScrolledToBottom, setHasScrolledToBottom] = useState(false)
-  const padding = useBreakpointValue({ base: 4, md: 8 })
-  const maxWidth = useBreakpointValue({ base: '100%', md: '800px' })
+const MotionBadge = motion(Badge)
 
-  useEffect(() => {
-    const handleScroll = () => {
-      if (!contentRef.current) return
-
-      const { scrollTop, scrollHeight, clientHeight } = contentRef.current
-      const scrolled = (scrollTop / (scrollHeight - clientHeight)) * 100
-      setScrollPercentage(Math.min(scrolled, 100))
-
-      // Check if scrolled to bottom (or close to it)
-      if (scrollHeight - scrollTop - clientHeight < 50) {
-        setHasScrolledToBottom(true)
-      }
-    }
-
-    const contentElement = contentRef.current
-    if (contentElement) {
-      contentElement.addEventListener('scroll', handleScroll)
-      return () => contentElement.removeEventListener('scroll', handleScroll)
-    }
-  }, [])
-
-  // Countdown animation variants
-  const timerVariants = {
-    attention: {
-      scale: [1, 1.05, 1],
-      transition: {
-        duration: 1,
-        repeat: timeLeft <= 30 ? Infinity : 0,
-        repeatType: 'reverse',
-      },
-    },
-  }
-
-  return (
-    <MotionBox
-      initial={{ opacity: 0 }}
-      animate={{ opacity: 1 }}
-      transition={{ duration: 0.3 }}
-      w="100%"
-    >
-      <VStack spacing={6} align="stretch">
-        <Flex justify="space-between" wrap="wrap" gap={3} align="center">
-          <Badge
-            bgGradient="linear(to-r, purple.500, purple.700)"
-            color="white"
-            p={2}
-            borderRadius="md"
-            display="flex"
-            alignItems="center"
-            fontSize="md"
-          >
-            <Icon as={BookOpen} mr={2} />
-            {t('Reading Phase')}
-          </Badge>
-
-          <MotionBox
-            variants={timerVariants}
-            animate={timeLeft <= 30 ? 'attention' : ''}
-          >
-            <Badge
-              colorScheme={
-                timeLeft <= 30 ? 'red' : timeLeft <= 60 ? 'yellow' : 'green'
-              }
-              p={2}
-              borderRadius="md"
-              display="flex"
-              alignItems="center"
-              fontSize="md"
-              boxShadow={
-                timeLeft <= 30 ? '0 0 10px rgba(229, 62, 62, 0.5)' : 'none'
-              }
-            >
-              <Icon as={AlarmClock} mr={2} />
-              {Math.floor(timeLeft / 60)}:
-              {String(timeLeft % 60).padStart(2, '0')}
-            </Badge>
-          </MotionBox>
-        </Flex>
-
-        <QuickClashBackground>
-          <Box
-            ref={contentRef}
-            maxH="65vh"
-            overflowY="auto"
-            p={6}
-            borderRadius="lg"
-            css={{
-              '&::-webkit-scrollbar': {
-                width: '8px',
-              },
-              '&::-webkit-scrollbar-track': {
-                background: 'rgba(255, 255, 255, 0.1)',
-                borderRadius: '10px',
-              },
-              '&::-webkit-scrollbar-thumb': {
-                background: 'rgba(138, 43, 226, 0.5)',
-                borderRadius: '10px',
-              },
-            }}
-          >
-            <Box w="100%" maxW={maxWidth} mx="auto">
-              {/* Article Header */}
-              <Box mb={5}>
-                <Heading size="lg" color="white" mb={3}>
-                  {article.title}
-                </Heading>
-                <HStack spacing={4} color="gray.300" fontSize="sm">
-                  <Text>{t('Challenge Article')}</Text>
-                  <Text>•</Text>
-                  <Text>
-                    {t('Reading Time')}: 2 {t('minutes')}
-                  </Text>
-                </HStack>
-              </Box>
-
-              {/* Article Content */}
-              <MainArticleContent
-                imgURL={null} // No image in challenge articles
-                mainText={article?.content} // Format for MainArticleContent
-                articleRef={articleRef}
-                articleLoading={false}
-                themedContent={''}
-                dictionary={article?.dictionary}
-                importantSentences={article?.importantSentences}
-              />
-            </Box>
-          </Box>
-        </QuickClashBackground>
-
-        <VStack spacing={3} align="center">
-          <Progress
-            value={scrollPercentage}
-            size="sm"
-            colorScheme="purple"
-            borderRadius="full"
-            width="100%"
-            bg="whiteAlpha.200"
-          />
-
-          <Text
-            fontSize="sm"
-            color={hasScrolledToBottom ? 'green.300' : 'whiteAlpha.600'}
-          >
-            {hasScrolledToBottom
-              ? t('Article fully read!')
-              : `${Math.round(scrollPercentage)}% ${t('read')}`}
-          </Text>
-
-          <Button
-            as={motion.button}
-            colorScheme="green"
-            size="lg"
-            leftIcon={<CheckCircle2 />}
-            onClick={onComplete}
-            isDisabled={!hasScrolledToBottom && timeLeft > 5}
-            whileHover={{ scale: 1.05 }}
-            whileTap={{ scale: 0.95 }}
-            w="100%"
-            maxW="400px"
-            bgGradient={
-              hasScrolledToBottom
-                ? 'linear(to-r, green.400, green.600)'
-                : 'linear(to-r, gray.500, gray.600)'
-            }
-            _hover={{
-              bgGradient: hasScrolledToBottom
-                ? 'linear(to-r, green.500, green.700)'
-                : 'linear(to-r, gray.600, gray.700)',
-            }}
-            boxShadow={
-              hasScrolledToBottom
-                ? '0 4px 12px rgba(72, 187, 120, 0.3)'
-                : 'none'
-            }
-          >
-            {hasScrolledToBottom
-              ? t('Complete Reading')
-              : t('Scroll to continue')}
-          </Button>
-
-          {!hasScrolledToBottom && (
-            <Text fontSize="sm" color="whiteAlpha.600" textAlign="center">
-              {t('Scroll through the article to enable the continue button')}
-            </Text>
-          )}
-        </VStack>
-      </VStack>
-    </MotionBox>
-  )
-}
-
-// Results Modal Component
-const ResultsModal = ({ isOpen, onClose, score, navigateToList }) => {
-  const { t } = useTranslation('QuickClash')
-
-  return (
-    <Modal
-      isOpen={isOpen}
-      onClose={onClose}
-      isCentered
-      closeOnOverlayClick={false}
-      motionPreset="scale"
-    >
-      <ModalOverlay backdropFilter="blur(8px)" />
-      <ModalContent
-        bg="rgba(26, 21, 39, 0.95)"
-        borderWidth="1px"
-        borderColor="purple.500"
-        borderRadius="xl"
-        boxShadow="0 4px 20px rgba(138, 43, 226, 0.3)"
-      >
-        <ModalHeader color="white">
-          <HStack>
-            <Icon as={Trophy} color="yellow.400" />
-            <Text>{t('Challenge Complete!')}</Text>
-          </HStack>
-        </ModalHeader>
-
-        <ModalBody>
-          <VStack spacing={6}>
-            <MotionBox
-              initial={{ opacity: 0, scale: 0.8 }}
-              animate={{ opacity: 1, scale: 1 }}
-              transition={{
-                duration: 0.6,
-                type: 'spring',
-                stiffness: 200,
-                damping: 15,
-              }}
-            >
-              <Icon as={Trophy} boxSize="80px" color="yellow.400" />
-
-              <motion.div
-                initial={{ opacity: 0, y: 20 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ delay: 0.3, duration: 0.5 }}
-              >
-                <VStack spacing={2} mt={4}>
-                  <Text fontSize="lg" color="whiteAlpha.900">
-                    {t('Your Score')}
-                  </Text>
-                  <Text
-                    fontSize="5xl"
-                    fontWeight="bold"
-                    color="white"
-                    bgGradient="linear(to-r, yellow.300, orange.400)"
-                    bgClip="text"
-                  >
-                    {score}
-                  </Text>
-                </VStack>
-              </motion.div>
-            </MotionBox>
-
-            <motion.div
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
-              transition={{ delay: 0.6, duration: 0.5 }}
-            >
-              <Alert
-                status="info"
-                variant="subtle"
-                borderRadius="md"
-                bg="rgba(66, 153, 225, 0.15)"
-                borderLeftWidth="4px"
-                borderLeftColor="blue.400"
-              >
-                <AlertIcon color="blue.400" />
-                <Box>
-                  <AlertTitle color="blue.200">
-                    {t('Score Recorded!')}
-                  </AlertTitle>
-                  <AlertDescription color="whiteAlpha.900">
-                    {t(
-                      'Check back later to see the final results once your opponent completes the challenge.',
-                    )}
-                  </AlertDescription>
-                </Box>
-              </Alert>
-            </motion.div>
-          </VStack>
-        </ModalBody>
-
-        <ModalFooter>
-          <Button
-            as={motion.button}
-            onClick={navigateToList}
-            bgGradient="linear(to-r, purple.500, purple.700)"
-            _hover={{ bgGradient: 'linear(to-r, purple.600, purple.800)' }}
-            rightIcon={<ArrowLeft />}
-            whileHover={{ scale: 1.05 }}
-            whileTap={{ scale: 0.95 }}
-          >
-            {t('Return to Challenges')}
-          </Button>
-        </ModalFooter>
-      </ModalContent>
-    </Modal>
-  )
-}
-
-// Main QuickClashSession Component
 const QuickClashSession = () => {
   const { t } = useTranslation('QuickClash')
   const { challengeId } = useParams()
   const navigate = useNavigate()
   const toast = useToast()
 
+  // State management
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState(null)
   const [session, setSession] = useState(null)
@@ -386,14 +53,31 @@ const QuickClashSession = () => {
   const [challenge, setChallenge] = useState(null)
   const [article, setArticle] = useState(null)
   const [timeLeft, setTimeLeft] = useState(120) // 2 minutes for reading
+  const [quizTimeLeft, setQuizTimeLeft] = useState(50) // 50 seconds for quiz
   const [language, setLanguage] = useState('en')
+  const [score, setScore] = useState(0)
+  const [phaseProgress, setPhaseProgress] = useState(0)
+
+  // Results modal control
   const {
     isOpen: isResultsOpen,
     onOpen: openResults,
     onClose: closeResults,
   } = useDisclosure()
-  const [score, setScore] = useState(0)
-  const quizStartTimeRef = useRef(null) // Ref to store the time when quiz phase starts
+
+  // Confirmation dialog for navigation
+  const {
+    isOpen: isConfirmDialogOpen,
+    onOpen: openConfirmDialog,
+    onClose: closeConfirmDialog,
+  } = useDisclosure()
+
+  // Quiz start time reference
+  const quizStartTimeRef = useRef(null)
+  const readingStartTimeRef = useRef(null)
+
+  // Flag to skip confirmation when intentionally navigating away
+  const skipConfirmRef = useRef(false)
 
   // Initialize session
   useEffect(() => {
@@ -446,6 +130,8 @@ const QuickClashSession = () => {
         )
 
         setPhase('reading')
+        setTimeLeft(120) // 2 minutes
+        readingStartTimeRef.current = Date.now()
         setError(null)
       } catch (err) {
         console.error('Error initializing session:', err)
@@ -466,18 +152,44 @@ const QuickClashSession = () => {
     if (phase !== 'reading' || !session) return
 
     const timer = setInterval(() => {
-      setTimeLeft(prevTime => {
-        if (prevTime <= 1) {
-          clearInterval(timer)
-          handleReadingComplete()
-          return 0
-        }
-        return prevTime - 1
-      })
+      const elapsed = Math.floor(
+        (Date.now() - readingStartTimeRef.current) / 1000,
+      )
+      const remaining = Math.max(0, 120 - elapsed)
+      setTimeLeft(remaining)
+
+      // Calculate progress percentage (inverted - 0% at start, 100% at end)
+      setPhaseProgress(Math.min(100, (elapsed / 120) * 100))
+
+      if (remaining <= 0) {
+        clearInterval(timer)
+        handleReadingComplete()
+      }
     }, 1000)
 
     return () => clearInterval(timer)
   }, [phase, session])
+
+  // Quiz timer
+  useEffect(() => {
+    if (phase !== 'quiz' || !quizStartTimeRef.current) return
+
+    const timer = setInterval(() => {
+      const elapsed = Math.floor((Date.now() - quizStartTimeRef.current) / 1000)
+      const remaining = Math.max(0, 50 - elapsed)
+      setQuizTimeLeft(remaining)
+
+      // Calculate progress percentage (inverted - 0% at start, 100% at end)
+      setPhaseProgress(Math.min(100, (elapsed / 50) * 100))
+
+      if (remaining <= 0) {
+        clearInterval(timer)
+        // The QuickClashQuiz component will handle auto-submission
+      }
+    }, 1000)
+
+    return () => clearInterval(timer)
+  }, [phase, quizStartTimeRef.current])
 
   // Handle reading phase completion
   const handleReadingComplete = async () => {
@@ -485,11 +197,8 @@ const QuickClashSession = () => {
       await axios.post(
         `/api/quickClash/session/${session._id}/reading/complete`,
       )
-      // Change phase to instruction instead of automatically proceeding to quiz
       setPhase('instruction')
-
-      // We do NOT auto-start the quiz phase here anymore
-      // No more setTimeout to automatically transition to quiz
+      setPhaseProgress(0)
     } catch (error) {
       console.error('Error completing reading phase:', error)
       toast({
@@ -506,191 +215,295 @@ const QuickClashSession = () => {
 
   // Start the quiz phase after instructions
   const handleStartQuiz = () => {
-    // Set current time as quiz start time
     quizStartTimeRef.current = Date.now()
     setPhase('quiz')
+    setQuizTimeLeft(50) // Reset to 50 seconds
+    setPhaseProgress(0)
   }
 
   // Handle quiz completion
   const handleQuizComplete = result => {
-    setScore(result.score.total)
+    setScore(result.RQM_score)
     setPhase('completed')
     openResults()
   }
 
-  // Navigate back to challenges list
-  const navigateToList = () => {
+  // Handle browser's back button and page refresh attempts
+  useBeforeUnload(event => {
+    // Only show native browser warning if in an active phase
+    if (phase === 'reading' || phase === 'instruction' || phase === 'quiz') {
+      event.preventDefault()
+      // Browser standard requires us to set returnValue
+      event.returnValue = ''
+      return ''
+    }
+  })
+
+  // Handle browser back button
+  useEffect(() => {
+    const handlePopState = e => {
+      if (phase === 'reading' || phase === 'instruction' || phase === 'quiz') {
+        // Prevent the default action
+        e.preventDefault()
+        // Show our custom dialog
+        openConfirmDialog()
+        // Push a new state so the user stays on the page
+        window.history.pushState(null, document.title, window.location.href)
+      }
+    }
+
+    // Listen for popstate events (back button)
+    window.addEventListener('popstate', handlePopState)
+
+    // Push a state on mount so we have something to go back to
+    window.history.pushState(null, document.title, window.location.href)
+
+    return () => {
+      window.removeEventListener('popstate', handlePopState)
+    }
+  }, [phase, openConfirmDialog])
+
+  // Function for confirmed navigation
+  const confirmNavigation = () => {
+    skipConfirmRef.current = true
     navigate('/quickclash')
   }
 
+  // Format time display
+  const formatTime = seconds => {
+    const minutes = Math.floor(seconds / 60)
+    const remainingSeconds = seconds % 60
+    return `${minutes}:${remainingSeconds.toString().padStart(2, '0')}`
+  }
+
+  // Get the current active timer
+  const getCurrentTimer = () => {
+    switch (phase) {
+      case 'reading':
+        return timeLeft
+      case 'quiz':
+        return quizTimeLeft
+      default:
+        return null
+    }
+  }
+
+  // Get phase-specific information
+  const getPhaseInfo = () => {
+    switch (phase) {
+      case 'reading':
+        return {
+          label: t('Reading Phase'),
+          totalTime: 120,
+          currentTime: timeLeft,
+          colorScheme: timeLeft <= 30 ? 'red' : 'blue',
+        }
+      case 'instruction':
+        return {
+          label: t('Instructions'),
+          totalTime: null,
+          currentTime: null,
+          colorScheme: 'purple',
+        }
+      case 'quiz':
+        return {
+          label: t('Quiz Phase'),
+          totalTime: 50,
+          currentTime: quizTimeLeft,
+          colorScheme: quizTimeLeft <= 10 ? 'red' : 'green',
+        }
+      case 'completed':
+        return {
+          label: t('Completed'),
+          totalTime: null,
+          currentTime: null,
+          colorScheme: 'purple',
+        }
+      default:
+        return {
+          label: t('Loading'),
+          totalTime: null,
+          currentTime: null,
+          colorScheme: 'gray',
+        }
+    }
+  }
+
+  // Persistent timer header component
+  const TimerHeader = () => {
+    const phaseInfo = getPhaseInfo()
+    const timer = getCurrentTimer()
+
+    // Animation for time running out
+    const isAttention =
+      (phase === 'reading' && timeLeft <= 30) ||
+      (phase === 'quiz' && quizTimeLeft <= 10)
+
+    return (
+      <Box
+        position="sticky"
+        top={0}
+        zIndex={100}
+        w="100%"
+        bg="rgba(13, 10, 20, 0.9)"
+        backdropFilter="blur(8px)"
+        borderBottom="1px solid"
+        borderColor="whiteAlpha.100"
+        py={3}
+        px={4}
+      >
+        <VStack spacing={2} w="100%">
+          <Flex w="100%" justify="space-between" align="center">
+            <Badge colorScheme="purple" p={2} borderRadius="md" fontSize="sm">
+              {challenge?.category || t('Quick Clash')}
+            </Badge>
+
+            <HStack>
+              <Badge colorScheme="purple">{phaseInfo.label}</Badge>
+
+              {timer !== null && (
+                <MotionBadge
+                  colorScheme={phaseInfo.colorScheme}
+                  p={2}
+                  borderRadius="md"
+                  display="flex"
+                  alignItems="center"
+                  gap={1}
+                  fontSize="md"
+                  animate={
+                    isAttention
+                      ? {
+                          scale: [1, 1.1, 1],
+                          transition: {
+                            duration: 0.8,
+                            repeat: Infinity,
+                            repeatType: 'reverse',
+                          },
+                        }
+                      : {}
+                  }
+                  boxShadow={
+                    isAttention
+                      ? `0 0 8px var(--chakra-colors-${phaseInfo.colorScheme}-500)`
+                      : 'none'
+                  }
+                >
+                  <Icon as={Clock} />
+                  <Text>{formatTime(timer)}</Text>
+                </MotionBadge>
+              )}
+            </HStack>
+          </Flex>
+
+          {(phase === 'reading' || phase === 'quiz') && (
+            <Progress
+              value={phaseProgress}
+              size="xs"
+              w="100%"
+              colorScheme={phaseInfo.colorScheme}
+              borderRadius="full"
+            />
+          )}
+        </VStack>
+      </Box>
+    )
+  }
+
+  // Render based on current state
   if (loading) {
     return (
-      <Container maxW="container.lg" py={10}>
-        <Center h="60vh">
-          <VStack spacing={6}>
-            <Spinner
-              size="xl"
-              thickness="4px"
-              color="purple.500"
-              emptyColor="whiteAlpha.200"
-              speed="0.8s"
-            />
-            <MotionText
-              color="whiteAlpha.800"
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
-              transition={{ duration: 0.5 }}
-            >
-              {t('Preparing your challenge...')}
-            </MotionText>
-          </VStack>
-        </Center>
-      </Container>
+      <Center h="100vh" bg="rgba(13, 10, 20, 0.98)">
+        <VStack spacing={6}>
+          <Spinner
+            size="xl"
+            thickness="4px"
+            color="purple.500"
+            emptyColor="whiteAlpha.200"
+            speed="0.8s"
+          />
+          <Text color="whiteAlpha.800">{t('Preparing your challenge...')}</Text>
+        </VStack>
+      </Center>
     )
   }
 
   if (error) {
-    return (
-      <Container maxW="container.lg" py={10}>
-        <Center h="60vh">
-          <MotionBox
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.5 }}
-            maxW="600px"
-          >
-            <VStack
-              spacing={6}
-              p={8}
-              borderRadius="xl"
-              bg="rgba(26, 32, 44, 0.5)"
-              borderWidth="1px"
-              borderColor="red.500"
-            >
-              <Icon as={XCircle} boxSize={12} color="red.400" />
-              <Heading size="md" color="white">
-                {t('Error')}
-              </Heading>
-              <Text color="whiteAlpha.800" textAlign="center">
-                {error}
-              </Text>
-              <Button
-                leftIcon={<ArrowLeft />}
-                onClick={navigateToList}
-                bgGradient="linear(to-r, purple.500, purple.700)"
-                _hover={{ bgGradient: 'linear(to-r, purple.600, purple.800)' }}
-              >
-                {t('Back to Challenges')}
-              </Button>
-            </VStack>
-          </MotionBox>
-        </Center>
-      </Container>
-    )
+    return <QuickClashError error={error} onBackClick={confirmNavigation} />
   }
 
   return (
-    <Container maxW="container.lg" py={8}>
-      <VStack spacing={8} align="stretch">
-        <Flex justify="space-between" wrap="wrap" gap={4} align="center">
-          <Button
-            variant="ghost"
-            leftIcon={<ArrowLeft size={16} />}
-            onClick={navigateToList}
-            size="sm"
-            color="whiteAlpha.800"
-            _hover={{ bg: 'whiteAlpha.100' }}
-          >
-            {t('Back to Challenges')}
-          </Button>
+    <Box minH="100vh" bg="rgba(13, 10, 20, 0.98)">
+      <TimerHeader />
 
-          <HStack spacing={3}>
-            <Badge
-              colorScheme="purple"
-              p={2}
-              borderRadius="md"
-              bgGradient="linear(to-r, purple.500, purple.700)"
-              fontSize="sm"
+      <Container maxW="container.lg" py={4} px={{ base: 2, md: 4 }}>
+        <VStack spacing={6} align="stretch">
+          {phase === 'reading' && article && (
+            <Suspense
+              fallback={
+                <Center py={10}>
+                  <Spinner size="xl" color="purple.500" />
+                </Center>
+              }
             >
-              {challenge?.category}
-            </Badge>
+              <ReadingPhase
+                article={article}
+                timeLeft={timeLeft}
+                onComplete={handleReadingComplete}
+              />
+            </Suspense>
+          )}
 
-            {phase === 'reading' && timeLeft > 0 && (
-              <MotionBox
-                animate={{
-                  scale: timeLeft <= 30 ? [1, 1.05, 1] : 1,
-                }}
-                transition={{
-                  duration: 1,
-                  repeat: timeLeft <= 30 ? Infinity : 0,
-                  repeatType: 'reverse',
-                }}
-              >
-                <Badge
-                  colorScheme={timeLeft <= 30 ? 'red' : 'yellow'}
-                  p={2}
-                  borderRadius="md"
-                  boxShadow={
-                    timeLeft <= 30 ? '0 0 10px rgba(229, 62, 62, 0.5)' : 'none'
-                  }
-                >
-                  <HStack spacing={1}>
-                    <Icon as={Clock} />
-                    <Text>
-                      {Math.floor(timeLeft / 60)}:
-                      {String(timeLeft % 60).padStart(2, '0')}
-                    </Text>
-                  </HStack>
-                </Badge>
-              </MotionBox>
-            )}
-          </HStack>
-        </Flex>
+          {phase === 'instruction' && (
+            <Suspense
+              fallback={
+                <Center py={10}>
+                  <Spinner size="xl" color="purple.500" />
+                </Center>
+              }
+            >
+              <QuizInstructions onStart={handleStartQuiz} />
+            </Suspense>
+          )}
 
-        {phase === 'reading' && article && (
-          <ReadingPhase
-            article={article}
-            timeLeft={timeLeft}
-            onComplete={handleReadingComplete}
+          {phase === 'quiz' && session && (
+            <Suspense
+              fallback={
+                <Center py={10}>
+                  <Spinner size="xl" color="purple.500" />
+                </Center>
+              }
+            >
+              <QuickClashQuiz
+                sessionId={session._id}
+                onComplete={handleQuizComplete}
+                quizDuration={50} // Set quiz duration to 50 seconds
+              />
+            </Suspense>
+          )}
+
+          <ResultsModal
+            isOpen={isResultsOpen}
+            onClose={closeResults}
+            score={score}
+            navigateToList={confirmNavigation}
           />
-        )}
 
-        {phase === 'instruction' && (
-          <Suspense
-            fallback={
-              <Center py={10}>
-                <Spinner size="xl" color="purple.500" />
-              </Center>
-            }
-          >
-            <QuizInstructions onStart={handleStartQuiz} />
-          </Suspense>
-        )}
-
-        {phase === 'quiz' && session && (
-          <Suspense
-            fallback={
-              <Center py={10}>
-                <Spinner size="xl" color="purple.500" />
-              </Center>
-            }
-          >
-            <QuickClashQuiz
-              sessionId={session._id}
-              onComplete={handleQuizComplete}
-              quizDuration={50} // Set quiz duration to 50 seconds
-            />
-          </Suspense>
-        )}
-
-        <ResultsModal
-          isOpen={isResultsOpen}
-          onClose={closeResults}
-          score={score}
-          navigateToList={navigateToList}
-        />
-      </VStack>
-    </Container>
+          {/* Navigation Confirmation Dialog */}
+          <ConfirmationDialog
+            isOpen={isConfirmDialogOpen}
+            onClose={closeConfirmDialog}
+            onConfirm={confirmNavigation}
+            title={t('Exit Challenge?')}
+            message={t(
+              'Your progress in this challenge will be lost. Are you sure you want to leave?',
+            )}
+            confirmText={t('Leave Challenge')}
+            cancelText={t('Continue Challenge')}
+            isDangerous={true}
+          />
+        </VStack>
+      </Container>
+    </Box>
   )
 }
 

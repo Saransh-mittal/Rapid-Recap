@@ -116,6 +116,7 @@ const QuizReportModal = ({ isOpen, onClose, sessionId }) => {
           <SubmittedQuizInterface
             result={report}
             onViewReport={() => setShowSummary(true)}
+            openedFromQuickClash={true}
           />
         ) : showSummary ? (
           <QuizGivenSummary

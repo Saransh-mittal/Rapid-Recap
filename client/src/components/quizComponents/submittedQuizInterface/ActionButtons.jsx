@@ -60,7 +60,13 @@ const ActionButton = React.memo(
 )
 
 const ActionButtons = React.memo(
-  ({ step, onViewReport, isTournament, animationDelay }) => {
+  ({
+    step,
+    onViewReport,
+    isTournament,
+    animationDelay,
+    openedFromQuickClash = false,
+  }) => {
     const { t } = useTranslation('SubmittedQuizInterface')
     const navigate = useNavigate()
     const { user } = useSelector(state => state.auth)
@@ -81,7 +87,7 @@ const ActionButtons = React.memo(
           maxW="100%"
           px={0}
         >
-          {!user?.needsOnboarding && (
+          {!user?.needsOnboarding && !openedFromQuickClash && !isTournament && (
             <ActionButton
               icon={Trophy}
               label={t('leaderboard')}

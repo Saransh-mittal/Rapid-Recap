@@ -22,9 +22,6 @@ const RuleBook = lazy(() => import('../screens/RuleBook'))
 const HallOfChampions = lazy(() => import('../screens/HallOfChampions'))
 const QuickClash = lazy(() => import('../screens/QuickClash'))
 const QuickClashSession = lazy(() => import('../screens/QuickClashSession'))
-const QuickBattleScene = lazy(() =>
-  import('../components/quickClashComponents/QuickBattleScene'),
-)
 
 const OnboardingProcess = lazy(() => import('../screens/OnboardingProcess'))
 const DemotionSummary = lazy(() => import('../screens/DemotionSummary'))
@@ -58,15 +55,13 @@ const AppRoutes = ({ isToken, needsOnboarding, setIsGuestLoggedin }) => {
             />
             <Route
               path="/quickclash"
-              element={isToken ? <QuickClash /> : <GetStarted />}
+              element={isToken ? <QuickClash /> : <Navigate to="/" replace />}
             />
             <Route
               path="/quickclash/session/:challengeId"
-              element={isToken ? <QuickClashSession /> : <GetStarted />}
-            />
-            <Route
-              path="/quickclash/battle/:challengeId"
-              element={isToken ? <QuickBattleScene /> : <GetStarted />}
+              element={
+                isToken ? <QuickClashSession /> : <Navigate to="/" replace />
+              }
             />
             <Route path="/manual" element={<RuleBook />} />
             <Route path="/manual/:pageId" element={<RuleBook />} />

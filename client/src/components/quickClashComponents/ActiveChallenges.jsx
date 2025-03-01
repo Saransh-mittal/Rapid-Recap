@@ -550,12 +550,6 @@ const ActiveChallenges = () => {
     }
 
     fetchChallenges()
-    // Set up polling interval to refresh challenges every 30 seconds
-    const intervalId = setInterval(() => {
-      fetchChallenges()
-    }, 30000)
-
-    return () => clearInterval(intervalId)
   }, [])
 
   const filteredChallenges = useMemo(() => {

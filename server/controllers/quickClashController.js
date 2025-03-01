@@ -25,6 +25,9 @@ const {
   generateChallengeAnalysis,
   getUserChallengeAnalysis,
 } = require('../services/quickClashServices/quickClashAnalysisService')
+const {
+  getUserStats,
+} = require('../services/quickClashServices/quickClashStatsService')
 
 // Create a new challenge
 const createNewChallenge = asyncHandler(async (req, res) => {
@@ -115,17 +118,25 @@ const startChallengeSession = asyncHandler(async (req, res) => {
   const { language } = req.body
   const userId = req.user._id
 
-  const session = await createSession({
-    challengeId,
-    userId,
-    language,
-  })
+  try {
+    const session = await createSession({
+      challengeId,
+      userId,
+      language,
+    })
 
-  res.status(200).json({
-    success: true,
-    message: 'Challenge session started',
-    session,
-  })
+    res.status(200).json({
+      success: true,
+      message: 'Challenge session started',
+      session,
+    })
+  } catch (error) {
+    console.error('Error starting challenge session:', error)
+    res.status(500).json({
+      success: false,
+      message: error.message || 'Error starting challenge session',
+    })
+  }
 })
 
 // Start reading phase
@@ -571,6 +582,30 @@ const getChallengeAnalysis = asyncHandler(async (req, res) => {
   }
 })
 
+/**
+ * @desc    Get user Quick Clash statistics
+ * @route   GET /api/quickClash/stats
+ * @access  Private
+ */
+const getUserClashStats = asyncHandler(async (req, res) => {
+  const userId = req.user._id
+
+  try {
+    const stats = await getUserStats({ userId })
+
+    res.status(200).json({
+      success: true,
+      stats,
+    })
+  } catch (error) {
+    console.error('Error fetching Quick Clash stats:', error)
+    res.status(500).json({
+      success: false,
+      message: error.message || 'Failed to fetch Quick Clash statistics',
+    })
+  }
+})
+
 module.exports = {
   createNewChallenge,
   handleAcceptChallenge,
@@ -588,4 +623,5 @@ module.exports = {
   getSessionIdFromChallenge,
   generateAnalysis,
   getChallengeAnalysis,
+  getUserClashStats,
 }

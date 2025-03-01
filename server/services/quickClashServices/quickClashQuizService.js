@@ -15,7 +15,6 @@ const getQuizQuestions = async ({ sessionId }) => {
   let mongoSession
 
   try {
-    console.log(`[getQuizQuestions] Starting for session ID: ${sessionId}`)
     mongoSession = await mongoose.startSession()
     await mongoSession.startTransaction()
 
@@ -28,10 +27,6 @@ const getQuizQuestions = async ({ sessionId }) => {
       throw new Error('Session not found')
     }
 
-    console.log(
-      `[getQuizQuestions] Found session: ${sessionInstance._id}, phase: ${sessionInstance.phase}`,
-    )
-
     const quiz = await QuickClashQuiz.findById(sessionInstance.quiz).session(
       mongoSession,
     )
@@ -43,24 +38,14 @@ const getQuizQuestions = async ({ sessionId }) => {
       throw new Error('Quiz not found')
     }
 
-    console.log(
-      `[getQuizQuestions] Found quiz with ${quiz.questions.length} questions`,
-    )
-
     // Select 5 random questions from the total set
     let allQuestions = [...quiz.questions]
     let selectedQuestions = []
 
     // If we have 5 or fewer questions, use all of them
     if (allQuestions.length <= 5) {
-      console.log(
-        `[getQuizQuestions] Using all ${allQuestions.length} questions`,
-      )
       selectedQuestions = allQuestions
     } else {
-      console.log(
-        `[getQuizQuestions] Selecting 5 random questions from ${allQuestions.length} total`,
-      )
       // Randomly select 5 questions
       for (let i = 0; i < 5; i++) {
         const randomIndex = Math.floor(Math.random() * allQuestions.length)
@@ -71,7 +56,6 @@ const getQuizQuestions = async ({ sessionId }) => {
 
     // Initialize quizAttempt structure if needed
     if (!sessionInstance.quizAttempt) {
-      console.log(`[getQuizQuestions] Initializing quizAttempt structure`)
       sessionInstance.quizAttempt = {
         responses: [],
         answerMappings: {},
@@ -82,13 +66,11 @@ const getQuizQuestions = async ({ sessionId }) => {
 
     // Initialize the answer mappings object if it doesn't exist
     if (!sessionInstance.quizAttempt.answerMappings) {
-      console.log(`[getQuizQuestions] Initializing answerMappings`)
       sessionInstance.quizAttempt.answerMappings = {}
     }
 
     // Initialize the shuffled options object if it doesn't exist
     if (!sessionInstance.quizAttempt.shuffledOptions) {
-      console.log(`[getQuizQuestions] Initializing shuffledOptions`)
       sessionInstance.quizAttempt.shuffledOptions = {}
     }
 
@@ -103,11 +85,8 @@ const getQuizQuestions = async ({ sessionId }) => {
 
     // Shuffle options for each question
     const questionsWithShuffledOptions = selectedQuestions.map(q => {
-      console.log(`[getQuizQuestions] Processing question: ${q._id}`)
-
       // Create an array of option entries
       const optionEntries = Object.entries(q.options)
-      console.log(`[getQuizQuestions] Original options:`, optionEntries)
 
       // Shuffle the entries
       for (let i = optionEntries.length - 1; i > 0; i--) {
@@ -117,8 +96,6 @@ const getQuizQuestions = async ({ sessionId }) => {
           optionEntries[i],
         ]
       }
-
-      console.log(`[getQuizQuestions] Shuffled options:`, optionEntries)
 
       // Convert back to an object
       const shuffledOptionsForQuestion = {}
@@ -139,10 +116,6 @@ const getQuizQuestions = async ({ sessionId }) => {
           newAnswer = key
         }
       })
-
-      console.log(
-        `[getQuizQuestions] Question ${q._id}: Original answer '${originalAnswer}' -> New answer '${newAnswer}'`,
-      )
 
       // Store mapping in our local object
       const questionId = q._id.toString()
@@ -167,49 +140,22 @@ const getQuizQuestions = async ({ sessionId }) => {
     // Set the entire shuffledOptions object at once
     sessionInstance.quizAttempt.shuffledOptions = shuffledOptions
 
-    console.log(
-      `[getQuizQuestions] Updated answerMappings:`,
-      sessionInstance.quizAttempt.answerMappings,
-    )
-    console.log(
-      `[getQuizQuestions] Updated shuffledOptions:`,
-      sessionInstance.quizAttempt.shuffledOptions,
-    )
-    console.log(
-      `[getQuizQuestions] Selected question IDs:`,
-      sessionInstance.quizAttempt.selectedQuestionIds,
-    )
-
     // Mark the fields as modified to ensure they get saved
     sessionInstance.markModified('quizAttempt.answerMappings')
     sessionInstance.markModified('quizAttempt.shuffledOptions')
     sessionInstance.markModified('quizAttempt.selectedQuestionIds')
 
     // Save the session with updated mappings
-    console.log(
-      `[getQuizQuestions] Saving session with updated answer mappings and shuffled options`,
-    )
     await sessionInstance.save({ session: mongoSession })
 
     // Verify the save was successful
     const verifySession = await QuickClashSession.findById(sessionId).session(
       mongoSession,
     )
-    console.log(
-      `[getQuizQuestions] Verification after save - answerMappings:`,
-      verifySession.quizAttempt.answerMappings,
-    )
-    console.log(
-      `[getQuizQuestions] Verification after save - shuffledOptions:`,
-      verifySession.quizAttempt.shuffledOptions,
-    )
 
     // Commit the transaction
     await mongoSession.commitTransaction()
 
-    console.log(
-      `[getQuizQuestions] Successfully processed ${questionsWithShuffledOptions.length} questions`,
-    )
     return questionsWithShuffledOptions
   } catch (error) {
     console.error(`[getQuizQuestions] Error: ${error.message}`, error)
@@ -220,7 +166,6 @@ const getQuizQuestions = async ({ sessionId }) => {
     throw error
   } finally {
     if (mongoSession) {
-      console.log(`[getQuizQuestions] Ending session`)
       mongoSession.endSession()
     }
   }
@@ -243,15 +188,9 @@ const submitQuizAnswersService = async ({
   let startedTransaction = false
 
   try {
-    console.log(
-      `[submitQuizAnswersService] Starting for session ID: ${sessionId}`,
-    )
-    console.log(`[submitQuizAnswersService] Received responses:`, responses)
-
     if (!mongoSession) {
       await session.startTransaction()
       startedTransaction = true
-      console.log(`[submitQuizAnswersService] Started new transaction`)
     }
 
     const quizSession = await QuickClashSession.findById(sessionId)
@@ -265,26 +204,12 @@ const submitQuizAnswersService = async ({
       throw new Error('Quiz session not found')
     }
 
-    console.log(
-      `[submitQuizAnswersService] Found quiz session in phase: ${quizSession.phase}`,
-    )
-
     if (quizSession.phase !== 'quiz') {
       console.error(
         `[submitQuizAnswersService] Invalid session phase: ${quizSession.phase}`,
       )
       throw new Error(`Invalid session phase: ${quizSession.phase}`)
     }
-
-    // Log the answer mappings from the session
-    console.log(
-      `[submitQuizAnswersService] answerMappings from DB:`,
-      quizSession.quizAttempt.answerMappings,
-    )
-    console.log(
-      `[submitQuizAnswersService] selectedQuestionIds from DB:`,
-      quizSession.quizAttempt.selectedQuestionIds,
-    )
 
     // CRITICAL: Only process the questions that were actually shown to the user
     const selectedQuestionIds =
@@ -296,11 +221,6 @@ const submitQuizAnswersService = async ({
     // Filter responses to only include selected questions
     const filteredResponses = responses.filter(response =>
       selectedQuestionIds.includes(response.questionId.toString()),
-    )
-
-    console.log(
-      `[submitQuizAnswersService] Filtered responses to only include selected questions:`,
-      filteredResponses,
     )
 
     // Validate responses against the correct answers from the quiz
@@ -320,18 +240,11 @@ const submitQuizAnswersService = async ({
       const mapping =
         quizSession.quizAttempt.answerMappings?.[response.questionId.toString()]
 
-      console.log(`[submitQuizAnswersService] Question ${response.questionId}:`)
-      console.log(`- User answer: "${response.answer}"`)
-      console.log(`- Original answer: "${question.answer}"`)
-      console.log(`- Mapping:`, mapping)
-
       // If there's a mapping and the answer matches the new answer, it's correct
       // This handles the option shuffling we did when sending questions
       const isCorrect = mapping
         ? response.answer === mapping.newAnswer
         : response.answer === question.answer
-
-      console.log(`- Is correct: ${isCorrect}`)
 
       return {
         questionId: response.questionId,
@@ -340,11 +253,6 @@ const submitQuizAnswersService = async ({
         timeSpent: response.timeSpent || 0,
       }
     })
-
-    console.log(
-      `[submitQuizAnswersService] Validated responses:`,
-      validatedResponses,
-    )
 
     // Calculate time taken
     const now = new Date()
@@ -357,18 +265,9 @@ const submitQuizAnswersService = async ({
         ? Math.floor((now - quizSession.quizAttempt.startTime) / 1000)
         : 0)
 
-    console.log(
-      `[submitQuizAnswersService] Quiz time spent: ${quizTimeSpent} seconds`,
-    )
-
     // Get only the selected questions for RQM calculation
     const selectedQuestions = quizSession.quiz.questions.filter(question =>
       selectedQuestionIds.includes(question._id.toString()),
-    )
-
-    console.log(
-      `[submitQuizAnswersService] Selected questions for RQM calculation:`,
-      selectedQuestions.map(q => q._id.toString()),
     )
 
     // Calculate RQM score using the same function as regular quizzes
@@ -383,10 +282,6 @@ const submitQuizAnswersService = async ({
     const RQM_score = rqmResult.RQM_score
     const baseRQM_score = rqmResult.baseRQM_score || RQM_score
 
-    console.log(
-      `[submitQuizAnswersService] Calculated scores - RQM: ${RQM_score}, Base: ${baseRQM_score}`,
-    )
-
     // Update session
     quizSession.quizAttempt.responses = validatedResponses
     quizSession.quizAttempt.timeSpent = quizTimeSpent
@@ -399,11 +294,10 @@ const submitQuizAnswersService = async ({
       total: RQM_score,
     }
 
-    console.log(`[submitQuizAnswersService] Saving updated quiz session`)
     await quizSession.save({ session })
 
     // Update challenge score
-    console.log(`[submitQuizAnswersService] Updating challenge score`)
+
     await updateChallengeScore({
       challengeId: quizSession.challenge,
       userId: quizSession.user,
@@ -412,7 +306,6 @@ const submitQuizAnswersService = async ({
     })
 
     if (startedTransaction) {
-      console.log(`[submitQuizAnswersService] Committing transaction`)
       await session.commitTransaction()
     }
 
@@ -452,7 +345,6 @@ const submitQuizAnswersService = async ({
       responses: validatedResponses,
     }
 
-    console.log(`[submitQuizAnswersService] Returning result:`, result)
     return result
   } catch (error) {
     console.error(`[submitQuizAnswersService] Error: ${error.message}`, error)
@@ -465,7 +357,6 @@ const submitQuizAnswersService = async ({
     throw error
   } finally {
     if (!mongoSession && startedTransaction) {
-      console.log(`[submitQuizAnswersService] Ending session`)
       session.endSession()
     }
   }
@@ -480,8 +371,6 @@ const submitQuizAnswersService = async ({
  */
 const getQuizReport = async ({ sessionId, userId }) => {
   try {
-    console.log(`[getQuizReport] Starting for session ID: ${sessionId}`)
-
     // Get session with populated quiz
     const quizSession = await QuickClashSession.findOne({
       _id: sessionId,
@@ -521,19 +410,6 @@ const getQuizReport = async ({ sessionId, userId }) => {
         ? 'medium'
         : 'hard'
 
-    console.log(
-      `[getQuizReport] Selected question IDs:`,
-      quizSession.quizAttempt.selectedQuestionIds,
-    )
-    console.log(
-      `[getQuizReport] Answer mappings:`,
-      quizSession.quizAttempt.answerMappings,
-    )
-    console.log(
-      `[getQuizReport] Shuffled options:`,
-      quizSession.quizAttempt.shuffledOptions,
-    )
-
     // Get the questions that were actually shown to the user using selectedQuestionIds
     const questionsShown = quizSession.quizAttempt.selectedQuestionIds
       ? quizSession.quiz.questions.filter(q =>
@@ -542,10 +418,6 @@ const getQuizReport = async ({ sessionId, userId }) => {
           ),
         )
       : quizSession.quiz.questions
-
-    console.log(
-      `[getQuizReport] Found ${questionsShown.length} questions shown to user`,
-    )
 
     // Construct the report questions including user responses and using the actual option order
     const questions = quizSession.quizAttempt.responses.map(response => {
@@ -611,10 +483,6 @@ const getQuizReport = async ({ sessionId, userId }) => {
       // Additional stats for display
       category: quizSession.challenge.category,
     }
-
-    console.log(
-      `[getQuizReport] Successfully generated report for session ${sessionId} with ${questions.length} questions`,
-    )
 
     return result
   } catch (error) {

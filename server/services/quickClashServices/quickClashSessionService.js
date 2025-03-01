@@ -22,7 +22,9 @@ const createSession = async ({ challengeId, userId, language }) => {
       }).session(session)
 
       if (existingSession) {
-        throw new Error('Session already exists for this challenge')
+        throw new Error(
+          'Session already exists for this challenge user cannot continue further',
+        )
       }
 
       // Get challenge and corresponding quiz

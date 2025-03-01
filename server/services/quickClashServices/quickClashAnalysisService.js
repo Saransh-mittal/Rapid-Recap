@@ -517,6 +517,35 @@ Your job is to provide qualitative analysis and insights based on these metrics 
 
 VERY IMPORTANT: Only analyze performance for question difficulties that were present in the quiz. Do not mention missing difficulty levels as an area for improvement or growth.
 
+KNOWLEDGE PATTERN METRICS SCORING GUIDELINES (All metrics should be scored 0-100):
+
+1. Factual Recall (0-100):
+   - Evaluate the user's ability to remember specific facts, dates, names, and direct information from the text
+   - Score based on:
+     * Accuracy on fact-based questions (70% of score)
+     * Speed of answering factual questions (30% of score)
+     * 100 = Perfect recall with rapid responses
+     * 0 = Unable to recall basic facts
+
+2. Technical Terms (0-100):
+   - Evaluate the user's understanding of domain-specific terminology and concepts
+   - Score based on:
+     * Correct answers to questions featuring specialized vocabulary (80% of score)
+     * Consistent performance on technical vs. general questions (20% of score)
+     * 100 = Expert-level command of technical concepts
+     * 0 = No grasp of specialized terminology
+
+3. Strategic Analysis (0-100):
+   - Evaluate the user's ability to connect concepts, infer relationships, and apply knowledge
+   - Score based on:
+     * Performance on questions requiring synthesis of multiple facts (50% of score)
+     * Ability to identify cause-effect relationships (30% of score)
+     * Time efficiency on complex questions (20% of score)
+     * 100 = Sophisticated analytical thinking
+     * 0 = Unable to make connections between related concepts
+
+Ensure these scores reflect the user's actual performance on the questions they received, not theoretical ability. Be consistent in your scoring methodology.
+
 The output must be a valid JSON object with the following structure:
 {
   "performance": {
@@ -614,6 +643,35 @@ ${
 Your job is to provide qualitative analysis and insights based on these metrics and the detailed question-level data. Focus on identifying patterns, providing actionable recommendations, and creating a personalized learning path.
 
 VERY IMPORTANT: Only analyze performance for question difficulties that were present in the quiz. Do not mention missing difficulty levels as an area for improvement or growth.
+
+KNOWLEDGE PATTERN METRICS SCORING GUIDELINES (All metrics should be scored 0-100):
+
+1. Factual Recall (0-100):
+   - Evaluate the user's ability to remember specific facts, dates, names, and direct information from the text
+   - Score based on:
+     * Accuracy on fact-based questions (70% of score)
+     * Speed of answering factual questions (30% of score)
+     * 100 = Perfect recall with rapid responses
+     * 0 = Unable to recall basic facts
+
+2. Technical Terms (0-100):
+   - Evaluate the user's understanding of domain-specific terminology and concepts
+   - Score based on:
+     * Correct answers to questions featuring specialized vocabulary (80% of score)
+     * Consistent performance on technical vs. general questions (20% of score)
+     * 100 = Expert-level command of technical concepts
+     * 0 = No grasp of specialized terminology
+
+3. Strategic Analysis (0-100):
+   - Evaluate the user's ability to connect concepts, infer relationships, and apply knowledge
+   - Score based on:
+     * Performance on questions requiring synthesis of multiple facts (50% of score)
+     * Ability to identify cause-effect relationships (30% of score)
+     * Time efficiency on complex questions (20% of score)
+     * 100 = Sophisticated analytical thinking
+     * 0 = Unable to make connections between related concepts
+
+Ensure these scores reflect the user's actual performance on the questions they received, not theoretical ability. Be consistent in your scoring methodology.
 
 The output must be a valid JSON object with the following structure:
 {
@@ -728,31 +786,6 @@ Here are the battle details: ${JSON.stringify(prompt, null, 2)}`,
     })
     // Parse the JSON response
     const engagement = JSON.parse(engagementResponse.choices[0].message.content)
-
-    console.log('=== TOKEN USAGE ANALYSIS ===')
-    console.log('Full Prompt Size (chars):', JSON.stringify(prompt).length)
-    console.log(
-      'Challenger Metrics Size (chars):',
-      JSON.stringify(challengerMetrics).length,
-    )
-    console.log(
-      'Opponent Metrics Size (chars):',
-      JSON.stringify(opponentMetrics).length,
-    )
-
-    // Also log response sizes after each API call
-    console.log(
-      'Challenger Response Size (chars):',
-      challengerResponse.choices[0].message.content.length,
-    )
-    console.log(
-      'Opponent Response Size (chars):',
-      opponentResponse.choices[0].message.content.length,
-    )
-    console.log(
-      'Engagement Response Size (chars):',
-      engagementResponse.choices[0].message.content.length,
-    )
 
     // Create the complete analysis
     const analysisResult = {
