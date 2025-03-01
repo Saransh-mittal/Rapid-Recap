@@ -84,7 +84,6 @@ const QuizReportModal = ({ isOpen, onClose, sessionId }) => {
       isOpen={isOpen}
       onClose={onClose}
       size="full"
-      scrollBehavior="inside"
       motionPreset="slideInBottom"
       closeOnOverlayClick={true}
     >

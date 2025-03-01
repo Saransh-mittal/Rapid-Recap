@@ -577,7 +577,6 @@ const ChallengeAnalysisModal = ({ isOpen, onClose, challengeId }) => {
         borderRadius="xl"
         overflow="hidden"
         maxW={variant === 'full' ? '100%' : '1000px'}
-        color={'white'}
       >
         {loading ? (
           <Center h="300px">
@@ -596,7 +595,7 @@ const ChallengeAnalysisModal = ({ isOpen, onClose, challengeId }) => {
           </Center>
         ) : (
           <>
-            <ModalHeader color={'white'}>
+            <ModalHeader>
               <HStack>
                 <Icon as={Brain} color="purple.400" boxSize={6} />
                 <Text>{t('Challenge AI Analysis')}</Text>
@@ -616,11 +615,15 @@ const ChallengeAnalysisModal = ({ isOpen, onClose, challengeId }) => {
                 >
                   {analysis.battleMetrics.difficulty}
                 </Badge>
+                <Badge colorScheme="yellow">
+                  {Math.floor(analysis.battleMetrics.duration / 60)}m{' '}
+                  {analysis.battleMetrics.duration % 60}s
+                </Badge>
               </HStack>
             </ModalHeader>
             <ModalCloseButton />
 
-            <ModalBody pb={6} color={'white'}>
+            <ModalBody pb={6}>
               {/* Battle Results Banner */}
               <MotionBox
                 mb={6}

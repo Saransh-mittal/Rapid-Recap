@@ -28,12 +28,14 @@ import {
   TabPanels,
   Tab,
   TabPanel,
-  Divider,
   Icon,
+  Flex,
+  Tag,
+  TagLabel,
 } from '@chakra-ui/react'
-import { FiSearch, FiZap } from 'react-icons/fi'
-import { Trophy, Clock } from 'lucide-react'
 import { motion } from 'framer-motion'
+import { FiSearch, FiZap, FiArrowRight } from 'react-icons/fi'
+import { Trophy, Clock, Users, Sparkles, Target } from 'lucide-react'
 import { useTranslation } from 'react-i18next'
 import axios from 'axios'
 import ActiveChallenges from '../components/quickClashComponents/ActiveChallenges'
@@ -153,15 +155,16 @@ const NewChallengeModal = ({ isOpen, onClose }) => {
 
   return (
     <Modal isOpen={isOpen} onClose={onClose} size="lg">
-      <ModalOverlay bg="blackAlpha.700" backdropFilter="blur(5px)" />
-      <ModalContent
-        bg="linear-gradient(135deg, #1a1527, #0f0d15)"
-        borderRadius="xl"
-        boxShadow="0 8px 32px rgba(0, 0, 0, 0.4)"
-      >
-        <ModalHeader color="white">{t('Create New Challenge')}</ModalHeader>
+      <ModalOverlay />
+      <ModalContent bg="#1a1527" borderRadius="lg">
+        <ModalHeader color="white">
+          <HStack>
+            <Icon as={Target} color="purple.300" />
+            <Text>{t('Create New Challenge')}</Text>
+          </HStack>
+        </ModalHeader>
         <ModalCloseButton color="white" />
-        <ModalBody>
+        <ModalBody py={6}>
           <VStack spacing={6}>
             <FormControl>
               <FormLabel color="whiteAlpha.900">{t('Find Opponent')}</FormLabel>
@@ -171,13 +174,12 @@ const NewChallengeModal = ({ isOpen, onClose }) => {
                   value={searchTerm}
                   onChange={e => setSearchTerm(e.target.value)}
                   onKeyDown={handleKeyDown}
-                  bg="whiteAlpha.100"
+                  bg="whiteAlpha.50"
                   color="white"
-                  borderColor="whiteAlpha.300"
+                  borderColor="whiteAlpha.200"
                   _hover={{ borderColor: 'purple.400' }}
                   _focus={{
                     borderColor: 'purple.500',
-                    boxShadow: '0 0 0 1px #805AD5',
                   }}
                 />
                 <InputRightElement>
@@ -201,7 +203,7 @@ const NewChallengeModal = ({ isOpen, onClose }) => {
                   borderRadius="md"
                   border="1px solid"
                   borderColor="whiteAlpha.200"
-                  bg="whiteAlpha.50"
+                  bg="#14101f"
                 >
                   {searchResults.map(user => (
                     <Box
@@ -210,9 +212,13 @@ const NewChallengeModal = ({ isOpen, onClose }) => {
                       _hover={{ bg: 'whiteAlpha.100' }}
                       cursor="pointer"
                       onClick={() => handleUserSelect(user)}
+                      transition="background 0.2s"
                     >
                       <Text color="white">
-                        {user.name} (@{user.inGameName})
+                        {user.name}{' '}
+                        <Text as="span" color="purple.300">
+                          @{user.inGameName}
+                        </Text>
                       </Text>
                     </Box>
                   ))}
@@ -224,14 +230,22 @@ const NewChallengeModal = ({ isOpen, onClose }) => {
                   mt={3}
                   p={3}
                   borderRadius="md"
-                  border="1px solid"
-                  borderColor="purple.300"
-                  bg="whiteAlpha.100"
+                  bg="#2d1b54"
+                  borderWidth="1px"
+                  borderColor="purple.500"
                 >
-                  <Text color="white" fontWeight="bold">
-                    {t('Selected Opponent')}: {selectedUser.name} (@
-                    {selectedUser.inGameName})
-                  </Text>
+                  <HStack>
+                    <Icon as={Users} color="purple.200" />
+                    <Text color="white" fontWeight="medium">
+                      {t('Selected Opponent')}:{' '}
+                      <Text as="span" fontWeight="bold">
+                        {selectedUser.name}
+                      </Text>{' '}
+                      <Text as="span" fontSize="sm" color="purple.200">
+                        @{selectedUser.inGameName}
+                      </Text>
+                    </Text>
+                  </HStack>
                 </Box>
               )}
             </FormControl>
@@ -244,13 +258,12 @@ const NewChallengeModal = ({ isOpen, onClose }) => {
                 multiple
                 size="md"
                 onChange={handleCategoryChange}
-                bg="whiteAlpha.100"
+                bg="whiteAlpha.50"
                 color="white"
-                borderColor="whiteAlpha.300"
+                borderColor="whiteAlpha.200"
                 _hover={{ borderColor: 'purple.400' }}
                 _focus={{
                   borderColor: 'purple.500',
-                  boxShadow: '0 0 0 1px #805AD5',
                 }}
                 height="120px"
               >
@@ -264,7 +277,26 @@ const NewChallengeModal = ({ isOpen, onClose }) => {
                   </option>
                 ))}
               </Select>
-              <Text color="gray.300" fontSize="sm" mt={1}>
+
+              {selectedCategories.length > 0 && (
+                <Flex mt={2} flexWrap="wrap" gap={2}>
+                  {selectedCategories.map(cat => {
+                    const category = categories.find(c => c.key === cat)
+                    return (
+                      <Tag
+                        key={cat}
+                        colorScheme="purple"
+                        size="sm"
+                        borderRadius="full"
+                      >
+                        <TagLabel>{category?.label}</TagLabel>
+                      </Tag>
+                    )
+                  })}
+                </Flex>
+              )}
+
+              <Text color="gray.300" fontSize="sm" mt={2}>
                 {t(
                   'Hold Ctrl/Cmd to select multiple categories (min 1, max 3)',
                 )}
@@ -274,12 +306,13 @@ const NewChallengeModal = ({ isOpen, onClose }) => {
         </ModalBody>
 
         <ModalFooter>
-          <Button variant="outline" mr={3} onClick={onClose} color="gray.300">
+          <Button variant="ghost" mr={3} onClick={onClose} color="gray.300">
             {t('Cancel')}
           </Button>
           <Button
             leftIcon={<FiZap />}
-            colorScheme="purple"
+            bg="purple.600"
+            _hover={{ bg: 'purple.700' }}
             isLoading={isSubmitting}
             isDisabled={
               !selectedUser ||
@@ -296,96 +329,196 @@ const NewChallengeModal = ({ isOpen, onClose }) => {
   )
 }
 
-const QuickClash = () => {
+const QuickClashHeader = ({ onNewChallenge }) => {
   const { t } = useTranslation('QuickClash')
+
+  return (
+    <MotionBox
+      initial={{ opacity: 0, y: -10 }}
+      animate={{ opacity: 1, y: 0 }}
+      transition={{ duration: 0.3 }}
+    >
+      <Flex
+        direction={{ base: 'column', md: 'row' }}
+        justifyContent="space-between"
+        alignItems={{ base: 'flex-start', md: 'center' }}
+        mb={8}
+        gap={4}
+      >
+        <Box>
+          <Heading
+            size={{ base: 'xl', md: '2xl' }}
+            color="purple.300"
+            mb={2}
+            textAlign={{ base: 'center', md: 'left' }}
+          >
+            {t('Quick Clash')}
+          </Heading>
+
+          <Text
+            color="whiteAlpha.800"
+            fontSize="md"
+            textAlign={{ base: 'center', md: 'left' }}
+          >
+            {t(
+              'Challenge other players to rapid-fire reading and quiz battles, test your knowledge and rise up the ranks!',
+            )}
+          </Text>
+        </Box>
+
+        <Button
+          leftIcon={<FiZap />}
+          bg="purple.600"
+          _hover={{ bg: 'purple.700' }}
+          onClick={onNewChallenge}
+          size="md"
+          mx={{ base: 'auto', md: 0 }}
+          color={'white'}
+        >
+          {t('New Challenge')}
+        </Button>
+      </Flex>
+    </MotionBox>
+  )
+}
+
+const Stat = ({ icon, label, value, color }) => (
+  <Box textAlign="center" p={2} flex="1" minW={{ base: '40%', md: 'auto' }}>
+    <Icon as={icon} color={color} boxSize={6} mb={2} />
+    <Text fontSize="sm" color="whiteAlpha.700">
+      {label}
+    </Text>
+    <Text fontSize="xl" fontWeight="bold" color="white">
+      {value}
+    </Text>
+  </Box>
+)
+
+const StatsCard = () => {
+  const { t } = useTranslation('QuickClash')
+
+  return (
+    <Box mb={6}>
+      <Box
+        borderRadius="lg"
+        bg="#1a1527"
+        borderWidth="1px"
+        borderColor="whiteAlpha.100"
+      >
+        <Flex wrap="wrap" justify="space-around" py={4} px={4} gap={2}>
+          <Stat
+            icon={Trophy}
+            label={t('Win Rate')}
+            value="68%"
+            color="yellow.400"
+          />
+          <Stat
+            icon={Clock}
+            label={t('Avg. Completion')}
+            value="43s"
+            color="blue.400"
+          />
+          <Stat
+            icon={Users}
+            label={t('Challenges')}
+            value="12"
+            color="purple.400"
+          />
+          <Stat
+            icon={Sparkles}
+            label={t('Best Category')}
+            value={t('Science')}
+            color="green.400"
+          />
+        </Flex>
+      </Box>
+    </Box>
+  )
+}
+
+const CustomTabs = ({ children }) => {
+  const { t } = useTranslation('QuickClash')
+
+  return (
+    <Tabs variant="soft-rounded" colorScheme="purple" isLazy>
+      <TabList
+        mb={4}
+        overflowX="auto"
+        css={{
+          scrollbarWidth: 'none',
+          '::-webkit-scrollbar': {
+            display: 'none',
+          },
+        }}
+      >
+        <Tab
+          color="white"
+          _selected={{
+            color: 'white',
+            bg: 'purple.600',
+            fontWeight: 'medium',
+          }}
+          borderRadius="md"
+          px={4}
+          py={2}
+          mr={2}
+        >
+          <Icon as={Clock} mr={2} />
+          {t('Active Challenges')}
+        </Tab>
+        <Tab
+          color="white"
+          _selected={{
+            color: 'white',
+            bg: 'purple.600',
+            fontWeight: 'medium',
+          }}
+          borderRadius="md"
+          px={4}
+          py={2}
+        >
+          <Icon as={Trophy} mr={2} />
+          {t('History')}
+        </Tab>
+      </TabList>
+
+      <TabPanels>{children}</TabPanels>
+    </Tabs>
+  )
+}
+
+const QuickClash = () => {
   const { isOpen, onOpen, onClose } = useDisclosure()
 
   return (
-    <Container maxW="container.xl" py={8} mt={8}>
-      <VStack spacing={8} align="stretch">
-        <MotionBox
-          initial={{ opacity: 0, y: -20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.5 }}
-        >
-          <HStack
-            justifyContent="space-between"
-            alignItems="center"
-            wrap="wrap"
-          >
-            <Box>
-              <Heading size="xl" color="whiteAlpha.900">
-                {t('Quick Clash')}
-              </Heading>
-              <Text color="whiteAlpha.700" mt={2}>
-                {t(
-                  'Challenge other players to rapid-fire reading and quiz battles!',
-                )}
-              </Text>
-            </Box>
-            <Button
-              leftIcon={<FiZap />}
-              size="md"
-              colorScheme="purple"
-              onClick={onOpen}
-              bgGradient="linear(to-r, purple.500, purple.700)"
-              _hover={{ bgGradient: 'linear(to-r, purple.600, purple.800)' }}
-              boxShadow="0 4px 12px rgba(138, 43, 226, 0.3)"
-            >
-              {t('New Challenge')}
-            </Button>
-          </HStack>
-        </MotionBox>
+    <Container maxW="container.xl" py={8}>
+      <QuickClashHeader onNewChallenge={onOpen} />
+      <StatsCard />
 
-        <MotionBox
-          initial={{ opacity: 0 }}
-          animate={{ opacity: 1 }}
-          transition={{ duration: 0.5, delay: 0.2 }}
-          bg="rgba(14, 12, 22, 0.97)"
-          borderRadius="xl"
-          p={6}
-          border="1px solid"
+      <MotionBox
+        initial={{ opacity: 0 }}
+        animate={{ opacity: 1 }}
+        transition={{ duration: 0.3 }}
+      >
+        <Box
+          borderRadius="lg"
+          bg="#1a1527"
+          borderWidth="1px"
           borderColor="whiteAlpha.100"
+          mb={4}
         >
-          <Tabs variant="soft-rounded" colorScheme="purple">
-            <TabList mb={6}>
-              <Tab
-                color="white"
-                _selected={{
-                  color: 'white',
-                  bg: 'purple.500',
-                  fontWeight: 'bold',
-                }}
-                px={5}
-              >
-                <Icon as={Clock} mr={2} />
-                {t('Active Challenges')}
-              </Tab>
-              <Tab
-                color="white"
-                _selected={{
-                  color: 'white',
-                  bg: 'purple.500',
-                  fontWeight: 'bold',
-                }}
-                px={5}
-              >
-                <Icon as={Trophy} mr={2} />
-                {t('History')}
-              </Tab>
-            </TabList>
-
-            <TabPanels>
+          <Box p={4}>
+            <CustomTabs>
               <TabPanel px={0}>
                 <ActiveChallenges />
               </TabPanel>
               <TabPanel px={0}>
                 <CompletedChallenges />
               </TabPanel>
-            </TabPanels>
-          </Tabs>
-        </MotionBox>
-      </VStack>
+            </CustomTabs>
+          </Box>
+        </Box>
+      </MotionBox>
 
       <NewChallengeModal isOpen={isOpen} onClose={onClose} />
     </Container>

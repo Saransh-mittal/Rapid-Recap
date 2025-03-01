@@ -10,15 +10,14 @@ import React, {
 import {
   Box,
   VStack,
-  Heading,
   Text,
   Badge,
   HStack,
   Button,
   useToast,
-  Divider,
   Spinner,
   Center,
+  Icon,
   useDisclosure,
   AlertDialog,
   AlertDialogBody,
@@ -26,7 +25,11 @@ import {
   AlertDialogHeader,
   AlertDialogContent,
   AlertDialogOverlay,
-  Icon,
+  Flex,
+  Avatar,
+  Tag,
+  TagLabel,
+  TagLeftIcon,
 } from '@chakra-ui/react'
 import { formatDistance } from 'date-fns'
 import {
@@ -38,41 +41,49 @@ import {
   HourglassIcon,
   AlertCircle,
   FileText,
+  Users,
+  Shield,
+  Target,
+  Flame,
 } from 'lucide-react'
 import axios from 'axios'
 import { useNavigate } from 'react-router-dom'
 import { useTranslation } from 'react-i18next'
 import { useSelector } from 'react-redux'
+import { motion } from 'framer-motion'
 
 // Lazy-loaded component
 const QuizReportModal = lazy(() => import('./QuizReportModal'))
 
-// Challenge Status Badge Component
+const MotionBox = motion(Box)
+const MotionVStack = motion(VStack)
+
+// Status Badge Component
 const StatusBadge = ({ status, isChallenger }) => {
   const getStatusConfig = () => {
     switch (status) {
       case 'pending':
         return {
           color: 'yellow',
-          text: isChallenger ? 'Awaiting Response' : 'New Challenge',
+          text: isChallenger ? 'Awaiting' : 'New',
           icon: <Clock size={14} />,
         }
       case 'active':
         return {
           color: 'green',
-          text: 'Ready to Start',
+          text: 'Ready',
           icon: <Check size={14} />,
         }
       case 'in_progress':
         return {
           color: 'blue',
-          text: 'In Progress',
+          text: 'Progress',
           icon: <PlayCircle size={14} />,
         }
       case 'completed':
         return {
           color: 'purple',
-          text: 'Completed',
+          text: 'Done',
           icon: <Trophy size={14} />,
         }
       case 'expired':
@@ -106,6 +117,7 @@ const StatusBadge = ({ status, isChallenger }) => {
       px={2}
       py={1}
       borderRadius="md"
+      fontSize="xs"
     >
       {config.icon}
       {config.text}
@@ -113,50 +125,68 @@ const StatusBadge = ({ status, isChallenger }) => {
   )
 }
 
-// Challenge Progress Component
-const ChallengeProgress = ({ challenge, userId }) => {
-  const isChallenger = challenge.challenger._id === userId
+// Player Status Component
+const PlayerStatus = ({ player, score, isUser }) => {
+  const { t } = useTranslation('QuickClash')
 
   return (
-    <VStack align="stretch" spacing={2} mt={2}>
-      <Text fontSize="sm" fontWeight="semibold" color="whiteAlpha.800">
-        Challenge Status:
-      </Text>
-      <HStack spacing={4} wrap="wrap">
-        <Box>
-          <Text fontSize="sm" color="whiteAlpha.700" mb={1}>
-            {challenge.challenger.inGameName || challenge.challenger.name}:
-          </Text>
-          <Badge
-            colorScheme={challenge.challengerScore > 0 ? 'green' : 'yellow'}
+    <HStack
+      spacing={3}
+      bg="whiteAlpha.100"
+      p={2}
+      borderRadius="md"
+      flex={1}
+      w={'100%'}
+    >
+      <Avatar
+        name={player.name}
+        src={player.pic}
+        size={{ base: 'sm', md: 'md' }}
+        bg={isUser ? 'purple.500' : 'gray.500'}
+      />
+      <Box>
+        <HStack>
+          <Text
+            fontSize={{ base: 'sm', md: 'md' }}
+            fontWeight="bold"
+            color="white"
+            noOfLines={1}
           >
-            {challenge.challengerScore > 0 ? 'Completed' : 'Pending'}
-          </Badge>
-          {challenge.challengerScore > 0 && (
-            <Badge ml={2} colorScheme="blue">
-              Score: {challenge.challengerScore}
-            </Badge>
-          )}
-        </Box>
-        <Box>
-          <Text fontSize="sm" color="whiteAlpha.700" mb={1}>
-            {challenge.opponent.inGameName || challenge.opponent.name}:
+            {player.inGameName || player.name}
           </Text>
-          <Badge colorScheme={challenge.opponentScore > 0 ? 'green' : 'yellow'}>
-            {challenge.opponentScore > 0 ? 'Completed' : 'Pending'}
-          </Badge>
-          {challenge.opponentScore > 0 && (
-            <Badge ml={2} colorScheme="blue">
-              Score: {challenge.opponentScore}
-            </Badge>
+          {isUser && (
+            <Tag
+              size={{ base: 'sm', md: 'md' }}
+              colorScheme="purple"
+              variant="subtle"
+            >
+              <TagLabel>{t('You')}</TagLabel>
+            </Tag>
           )}
-        </Box>
-      </HStack>
-    </VStack>
+        </HStack>
+        <HStack mt={1} spacing={1}>
+          <Badge
+            colorScheme={score > 0 ? 'green' : 'yellow'}
+            fontSize={{ base: 'xs', md: 'sm' }}
+          >
+            {score > 0 ? t('Completed') : t('Pending')}
+          </Badge>
+          {score > 0 && (
+            <Text
+              fontSize={{ base: 'sm', md: 'md' }}
+              color="blue.300"
+              fontWeight="bold"
+            >
+              {score}
+            </Text>
+          )}
+        </HStack>
+      </Box>
+    </HStack>
   )
 }
 
-// Individual Challenge Item Component
+// Challenge Item Component
 const ChallengeItem = ({
   challenge,
   userId,
@@ -164,6 +194,7 @@ const ChallengeItem = ({
   onDecline,
   onStart,
   onViewReport,
+  index,
 }) => {
   const { t } = useTranslation('QuickClash')
   const isChallenger = challenge.challenger._id === userId
@@ -175,70 +206,7 @@ const ChallengeItem = ({
   const myScore = isChallenger
     ? challenge.challengerScore
     : challenge.opponentScore
-  const opponentScore = isChallenger
-    ? challenge.opponentScore
-    : challenge.challengerScore
   const hasCompleted = myScore > 0
-
-  const renderActionButtons = () => {
-    if (isExpired) {
-      return null
-    }
-
-    // If user has completed the challenge, show view report button
-    if (hasCompleted) {
-      return (
-        <Button
-          size="sm"
-          colorScheme="purple"
-          variant="outline"
-          leftIcon={<FileText size={16} />}
-          onClick={() => onViewReport(challenge)}
-        >
-          {t('View Report')}
-        </Button>
-      )
-    }
-
-    if (challenge.status === 'pending' && !isChallenger) {
-      return (
-        <HStack>
-          <Button
-            size="sm"
-            colorScheme="green"
-            onClick={() => onAccept(challenge._id)}
-            leftIcon={<Check size={16} />}
-          >
-            {t('Accept Challenge')}
-          </Button>
-          <Button
-            size="sm"
-            colorScheme="red"
-            variant="outline"
-            onClick={() => onDecline(challenge._id)}
-            leftIcon={<X size={16} />}
-          >
-            {t('Decline')}
-          </Button>
-        </HStack>
-      )
-    }
-
-    if (challenge.status === 'active' && !hasCompleted) {
-      return (
-        <Button
-          size="sm"
-          colorScheme="green"
-          onClick={() => onStart(challenge._id)}
-          leftIcon={<PlayCircle size={16} />}
-        >
-          {t('Start Challenge')}
-        </Button>
-      )
-    }
-
-    return null
-  }
 
   const isWinner =
     challenge.status === 'completed' &&
@@ -251,95 +219,191 @@ const ChallengeItem = ({
     challenge.opponentScore > 0 &&
     challenge.challengerScore === challenge.opponentScore
 
+  // Animation settings
+  const animations = {
+    hidden: { opacity: 0, y: 10 },
+    visible: i => ({
+      opacity: 1,
+      y: 0,
+      transition: {
+        delay: i * 0.05,
+        duration: 0.3,
+      },
+    }),
+  }
+
   return (
-    <Box
-      p={4}
-      bg="whiteAlpha.50"
-      borderRadius="lg"
+    <MotionBox
+      initial="hidden"
+      animate="visible"
+      custom={index}
+      variants={animations}
       mb={3}
-      border="1px solid"
-      borderColor={
-        isWinner ? 'purple.400' : isTie ? 'yellow.400' : 'whiteAlpha.100'
-      }
-      _hover={{ bg: 'whiteAlpha.100' }}
-      transition="all 0.2s"
     >
-      <VStack align="stretch" spacing={3}>
-        <HStack justify="space-between" wrap="wrap" gap={2}>
-          <HStack>
-            <Badge
-              colorScheme={isChallenger ? 'blue' : 'purple'}
-              px={2}
-              py={1}
-              borderRadius="md"
+      <Box
+        bg="whiteAlpha.50"
+        borderRadius="lg"
+        overflow="hidden"
+        borderWidth="1px"
+        borderColor={
+          isWinner ? 'purple.400' : isTie ? 'yellow.400' : 'whiteAlpha.100'
+        }
+      >
+        {/* Header */}
+        <Box p={3}>
+          <HStack justify="space-between" mb={2}>
+            <HStack>
+              <StatusBadge
+                status={challenge.status}
+                isChallenger={isChallenger}
+              />
+              <Tag size={{ base: 'md' }} colorScheme="purple">
+                {challenge.category}
+              </Tag>
+            </HStack>
+            <Tag
+              size="sm"
+              colorScheme={isExpired ? 'red' : 'yellow'}
+              variant="subtle"
             >
-              {isChallenger ? 'Created by you' : 'Received'}
-            </Badge>
-            <StatusBadge
-              status={challenge.status}
-              isChallenger={isChallenger}
-            />
+              <TagLeftIcon as={HourglassIcon} boxSize={3} />
+              <TagLabel fontSize="xs">
+                {isExpired ? t('Expired') : timeLeft}
+              </TagLabel>
+            </Tag>
           </HStack>
-          <Badge
-            colorScheme={isExpired ? 'red' : 'yellow'}
-            px={2}
-            py={1}
-            borderRadius="md"
-            display="flex"
-            alignItems="center"
-            gap={1}
-          >
-            <HourglassIcon size={14} />
-            {isExpired ? 'Expired' : `Expires ${timeLeft}`}
-          </Badge>
-        </HStack>
 
-        <VStack align="start" spacing={2}>
           <HStack>
-            <Text fontWeight="bold" color="white">
-              {isChallenger ? 'Challenged:' : 'Challenger:'}
-            </Text>
-            <Text color="whiteAlpha.900">
-              {isChallenger
-                ? challenge.opponent.inGameName || challenge.opponent.name
-                : challenge.challenger.inGameName || challenge.challenger.name}
+            <Icon
+              as={isChallenger ? Shield : Target}
+              color={isChallenger ? 'blue.400' : 'purple.400'}
+              boxSize={4}
+            />
+            <Text fontSize="sm" color="whiteAlpha.800">
+              {isChallenger ? t('vs') : t('from')}{' '}
+              <Text as="span" fontWeight="bold">
+                {isChallenger
+                  ? challenge.opponent.inGameName || challenge.opponent.name
+                  : challenge.challenger.inGameName ||
+                    challenge.challenger.name}
+              </Text>
             </Text>
           </HStack>
-          <Text fontSize="sm" color="whiteAlpha.700">
-            Category: {challenge.category}
-          </Text>
-          <Text fontSize="sm" color="whiteAlpha.700">
-            Created: {new Date(challenge.createdAt).toLocaleDateString()}
-          </Text>
-        </VStack>
+        </Box>
 
+        {/* Player Status Section */}
         {challenge.status !== 'pending' && challenge.status !== 'rejected' && (
-          <>
-            <Divider borderColor="whiteAlpha.200" />
-            <ChallengeProgress challenge={challenge} userId={userId} />
-          </>
+          <Box px={3} pb={3}>
+            <HStack spacing={2} display={{ base: 'none', md: 'flex' }}>
+              <PlayerStatus
+                player={challenge.challenger}
+                score={challenge.challengerScore}
+                isUser={isChallenger}
+              />
+              <PlayerStatus
+                player={challenge.opponent}
+                score={challenge.opponentScore}
+                isUser={!isChallenger}
+              />
+            </HStack>
+            <VStack spacing={2} display={{ base: 'flex', md: 'none' }}>
+              <PlayerStatus
+                player={challenge.challenger}
+                score={challenge.challengerScore}
+                isUser={isChallenger}
+              />
+              <PlayerStatus
+                player={challenge.opponent}
+                score={challenge.opponentScore}
+                isUser={!isChallenger}
+              />
+            </VStack>
+          </Box>
         )}
 
+        {/* Result Banner */}
         {challenge.status === 'completed' && (
           <Box
             p={2}
             bg={isWinner ? 'purple.900' : isTie ? 'yellow.900' : 'gray.800'}
-            borderRadius="md"
             textAlign="center"
           >
-            <Text fontWeight="bold" color="white">
-              {isWinner
-                ? '🎉 You won the challenge!'
-                : isTie
-                ? '🤝 Challenge ended in a tie!'
-                : 'Better luck next time!'}
-            </Text>
+            <HStack spacing={1} justify="center">
+              <Icon
+                as={isWinner ? Trophy : isTie ? Flame : AlertCircle}
+                color={
+                  isWinner ? 'yellow.400' : isTie ? 'yellow.300' : 'gray.400'
+                }
+                boxSize={4}
+              />
+              <Text fontSize="sm" fontWeight="bold" color="white">
+                {isWinner ? t('Victory!') : isTie ? t('Tie!') : t('Defeat')}
+              </Text>
+            </HStack>
           </Box>
         )}
 
-        <HStack justify="space-between">{renderActionButtons()}</HStack>
-      </VStack>
-    </Box>
+        {/* Actions */}
+        <Flex justify="center" p={2} bg="whiteAlpha.50">
+          {!isExpired && (
+            <>
+              {hasCompleted ? (
+                <Button
+                  size="sm"
+                  colorScheme="purple"
+                  variant="outline"
+                  leftIcon={<FileText size={14} />}
+                  onClick={() => onViewReport(challenge)}
+                  as={motion.button}
+                  whileHover={{ scale: 1.03 }}
+                  whileTap={{ scale: 0.97 }}
+                >
+                  {t('View Report')}
+                </Button>
+              ) : challenge.status === 'pending' && !isChallenger ? (
+                <HStack>
+                  <Button
+                    size="sm"
+                    colorScheme="green"
+                    onClick={() => onAccept(challenge._id)}
+                    leftIcon={<Check size={14} />}
+                    as={motion.button}
+                    whileHover={{ scale: 1.03 }}
+                    whileTap={{ scale: 0.97 }}
+                  >
+                    {t('Accept')}
+                  </Button>
+                  <Button
+                    size="sm"
+                    colorScheme="red"
+                    variant="outline"
+                    onClick={() => onDecline(challenge._id)}
+                    leftIcon={<X size={14} />}
+                    as={motion.button}
+                    whileHover={{ scale: 1.03 }}
+                    whileTap={{ scale: 0.97 }}
+                  >
+                    {t('Decline')}
+                  </Button>
+                </HStack>
+              ) : challenge.status === 'active' && !hasCompleted ? (
+                <Button
+                  size="sm"
+                  colorScheme="green"
+                  onClick={() => onStart(challenge._id)}
+                  leftIcon={<PlayCircle size={14} />}
+                  as={motion.button}
+                  whileHover={{ scale: 1.03 }}
+                  whileTap={{ scale: 0.97 }}
+                >
+                  {t('Start')}
+                </Button>
+              ) : null}
+            </>
+          )}
+        </Flex>
+      </Box>
+    </MotionBox>
   )
 }
 
@@ -360,12 +424,14 @@ const ConfirmationDialog = ({
       isOpen={isOpen}
       leastDestructiveRef={cancelRef}
       onClose={onClose}
+      motionPreset="scale"
     >
       <AlertDialogOverlay>
         <AlertDialogContent
           bg="gray.800"
           borderColor="whiteAlpha.200"
           borderWidth="1px"
+          m={3}
         >
           <AlertDialogHeader fontSize="lg" fontWeight="bold" color="white">
             {title}
@@ -374,7 +440,13 @@ const ConfirmationDialog = ({
           <AlertDialogBody color="whiteAlpha.800">{message}</AlertDialogBody>
 
           <AlertDialogFooter>
-            <Button ref={cancelRef} onClick={onClose}>
+            <Button
+              ref={cancelRef}
+              onClick={onClose}
+              variant="ghost"
+              color="whiteAlpha.800"
+              _hover={{ bg: 'whiteAlpha.100' }}
+            >
               {cancelText}
             </Button>
             <Button colorScheme="red" onClick={onConfirm} ml={3}>
@@ -387,7 +459,53 @@ const ConfirmationDialog = ({
   )
 }
 
-// Main Active Challenges Component
+// Empty State Component
+const EmptyState = ({ filter }) => {
+  const { t } = useTranslation('QuickClash')
+
+  return (
+    <Center py={6}>
+      <MotionVStack
+        spacing={4}
+        p={6}
+        borderRadius="lg"
+        bg="whiteAlpha.50"
+        borderWidth="1px"
+        borderColor="whiteAlpha.100"
+        initial={{ opacity: 0, y: 10 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.4 }}
+        maxW="90%"
+        w="400px"
+        textAlign="center"
+      >
+        <Icon
+          as={
+            filter === 'sent' ? Shield : filter === 'received' ? Target : Users
+          }
+          boxSize={8}
+          color="purple.300"
+        />
+        <Text color="white" fontWeight="medium">
+          {filter === 'sent'
+            ? t('No Challenges Sent')
+            : filter === 'received'
+            ? t('No Challenges Received')
+            : t('No Active Challenges')}
+        </Text>
+        <Text color="whiteAlpha.600" fontSize="sm">
+          {filter === 'sent'
+            ? t('Challenge someone to a knowledge duel!')
+            : filter === 'received'
+            ? t("You haven't received any challenges yet.")
+            : t('Create a new challenge to get started!')}
+        </Text>
+      </MotionVStack>
+    </Center>
+  )
+}
+
+// Main ActiveChallenges Component
 const ActiveChallenges = () => {
   const { t } = useTranslation('QuickClash')
   const toast = useToast()
@@ -400,6 +518,7 @@ const ActiveChallenges = () => {
   const userId = user?._id
   const [selectedSession, setSelectedSession] = useState(null)
 
+  // Modal disclosures
   const {
     isOpen: isConfirmOpen,
     onOpen: onConfirmOpen,
@@ -420,7 +539,6 @@ const ActiveChallenges = () => {
       try {
         setLoading(true)
         const response = await axios.get('/api/quickClash/challenges')
-
         setChallenges(response.data.challenges || [])
         setError(null)
       } catch (err) {
@@ -483,9 +601,6 @@ const ActiveChallenges = () => {
   const handleViewReport = useCallback(
     challenge => {
       // Find the completed session for this challenge
-      const isChallenger = challenge.challenger._id === userId
-
-      // We'll need to find the session ID through an API call
       const fetchSession = async () => {
         try {
           const response = await axios.get(
@@ -497,22 +612,22 @@ const ActiveChallenges = () => {
           } else {
             toast({
               title: t('Error'),
-              description: t(
-                'Could not find your quiz session for this challenge',
-              ),
+              description: t('Could not find your quiz session'),
               status: 'error',
               duration: 3000,
               isClosable: true,
+              position: 'top',
             })
           }
         } catch (error) {
           console.error('Error fetching session:', error)
           toast({
             title: t('Error'),
-            description: t('Failed to load your quiz session'),
+            description: t('Failed to load quiz session'),
             status: 'error',
             duration: 3000,
             isClosable: true,
+            position: 'top',
           })
         }
       }
@@ -530,10 +645,10 @@ const ActiveChallenges = () => {
         await axios.post(`/api/quickClash/challenge/${id}/accept`)
         toast({
           title: t('Challenge Accepted'),
-          description: t('The challenge is now ready to start!'),
           status: 'success',
           duration: 3000,
           isClosable: true,
+          position: 'top',
         })
       } else if (type === 'decline') {
         await axios.post(`/api/quickClash/challenge/${id}/reject`)
@@ -542,6 +657,7 @@ const ActiveChallenges = () => {
           status: 'info',
           duration: 3000,
           isClosable: true,
+          position: 'top',
         })
       }
 
@@ -557,6 +673,7 @@ const ActiveChallenges = () => {
         status: 'error',
         duration: 3000,
         isClosable: true,
+        position: 'top',
       })
     } finally {
       onConfirmClose()
@@ -567,9 +684,11 @@ const ActiveChallenges = () => {
   if (loading && !challenges.length) {
     return (
       <Center py={10}>
-        <VStack spacing={4}>
-          <Spinner size="xl" color="purple.500" thickness="4px" />
-          <Text color="whiteAlpha.700">{t('Loading challenges...')}</Text>
+        <VStack spacing={3}>
+          <Spinner size="lg" color="purple.500" thickness="3px" speed="0.8s" />
+          <Text color="whiteAlpha.700" fontSize="sm">
+            {t('Loading challenges...')}
+          </Text>
         </VStack>
       </Center>
     )
@@ -579,10 +698,16 @@ const ActiveChallenges = () => {
   if (error && !challenges.length) {
     return (
       <Center py={10}>
-        <VStack spacing={4}>
-          <Box as={AlertCircle} size="48px" color="red.400" />
-          <Text color="whiteAlpha.700">{error}</Text>
-          <Button colorScheme="blue" onClick={() => window.location.reload()}>
+        <VStack spacing={3}>
+          <Icon as={AlertCircle} boxSize={8} color="red.400" />
+          <Text color="whiteAlpha.700" fontSize="sm">
+            {error}
+          </Text>
+          <Button
+            colorScheme="purple"
+            size="sm"
+            onClick={() => window.location.reload()}
+          >
             {t('Retry')}
           </Button>
         </VStack>
@@ -593,55 +718,72 @@ const ActiveChallenges = () => {
   return (
     <Box>
       <VStack align="stretch" spacing={4}>
-        <Heading size="lg" color="whiteAlpha.900">
-          {t('Active Challenges')}
-        </Heading>
-
-        <HStack spacing={2} mb={4}>
+        {/* Filter Tabs */}
+        <HStack
+          spacing={1}
+          p={1}
+          borderRadius="lg"
+          bg="whiteAlpha.100"
+          justify="center"
+          overflowX="auto"
+          mx="auto"
+          maxW="320px"
+          mb={3}
+        >
           <Button
             size="sm"
-            colorScheme={filter === 'all' ? 'blue' : 'gray'}
+            colorScheme={filter === 'all' ? 'purple' : 'white'}
             onClick={() => setFilter('all')}
+            variant={filter === 'all' ? 'solid' : 'ghost'}
+            leftIcon={<Users size={12} />}
+            flexShrink={0}
           >
-            {t('All Challenges')}
+            {t('All')}
           </Button>
           <Button
             size="sm"
-            colorScheme={filter === 'sent' ? 'blue' : 'gray'}
+            colorScheme={filter === 'sent' ? 'purple' : 'white'}
             onClick={() => setFilter('sent')}
+            variant={filter === 'sent' ? 'solid' : 'ghost'}
+            leftIcon={<Shield size={12} />}
+            flexShrink={0}
           >
-            {t('Sent by You')}
+            {t('Sent')}
           </Button>
           <Button
             size="sm"
-            colorScheme={filter === 'received' ? 'blue' : 'gray'}
+            colorScheme={filter === 'received' ? 'purple' : 'white'}
             onClick={() => setFilter('received')}
+            variant={filter === 'received' ? 'solid' : 'ghost'}
+            leftIcon={<Target size={12} />}
+            flexShrink={0}
           >
             {t('Received')}
           </Button>
         </HStack>
 
+        {/* Challenge List */}
         {filteredChallenges.length === 0 ? (
-          <Box p={6} textAlign="center" bg="whiteAlpha.50" borderRadius="lg">
-            <Text color="whiteAlpha.700">
-              {t('No active challenges found')}
-            </Text>
-          </Box>
+          <EmptyState filter={filter} />
         ) : (
-          filteredChallenges.map(challenge => (
-            <ChallengeItem
-              key={challenge._id}
-              challenge={challenge}
-              userId={userId}
-              onAccept={handleAccept}
-              onDecline={handleDecline}
-              onStart={handleStart}
-              onViewReport={handleViewReport}
-            />
-          ))
+          <VStack align="stretch" spacing={2} px={1}>
+            {filteredChallenges.map((challenge, index) => (
+              <ChallengeItem
+                key={challenge._id}
+                challenge={challenge}
+                userId={userId}
+                onAccept={handleAccept}
+                onDecline={handleDecline}
+                onStart={handleStart}
+                onViewReport={handleViewReport}
+                index={index}
+              />
+            ))}
+          </VStack>
         )}
       </VStack>
 
+      {/* Confirmation Dialog */}
       <ConfirmationDialog
         isOpen={isConfirmOpen}
         onClose={onConfirmClose}
@@ -653,8 +795,8 @@ const ActiveChallenges = () => {
         }
         message={
           confirmAction.type === 'accept'
-            ? t('Are you sure you want to accept this challenge?')
-            : t('Are you sure you want to decline this challenge?')
+            ? t('You can start it immediately after accepting.')
+            : t('This action cannot be undone.')
         }
         confirmText={
           confirmAction.type === 'accept' ? t('Accept') : t('Decline')

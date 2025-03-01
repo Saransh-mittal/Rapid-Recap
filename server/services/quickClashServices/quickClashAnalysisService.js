@@ -726,9 +726,33 @@ Here are the battle details: ${JSON.stringify(prompt, null, 2)}`,
         },
       ],
     })
-
     // Parse the JSON response
     const engagement = JSON.parse(engagementResponse.choices[0].message.content)
+
+    console.log('=== TOKEN USAGE ANALYSIS ===')
+    console.log('Full Prompt Size (chars):', JSON.stringify(prompt).length)
+    console.log(
+      'Challenger Metrics Size (chars):',
+      JSON.stringify(challengerMetrics).length,
+    )
+    console.log(
+      'Opponent Metrics Size (chars):',
+      JSON.stringify(opponentMetrics).length,
+    )
+
+    // Also log response sizes after each API call
+    console.log(
+      'Challenger Response Size (chars):',
+      challengerResponse.choices[0].message.content.length,
+    )
+    console.log(
+      'Opponent Response Size (chars):',
+      opponentResponse.choices[0].message.content.length,
+    )
+    console.log(
+      'Engagement Response Size (chars):',
+      engagementResponse.choices[0].message.content.length,
+    )
 
     // Create the complete analysis
     const analysisResult = {

@@ -544,12 +544,14 @@ const App = () => {
         />
       </Suspense>
       <NavbarProvider>
-        {showNavbar && !(summary && isVisible) && (
-          <Suspense fallback={null}>
-            {/* <Navbar onNavbarLoad={handleNavbarLoad} /> */}
-            <ModernNavbar onNavbarLoad={handleNavbarLoad} />
-          </Suspense>
-        )}
+        {showNavbar &&
+          !(summary && isVisible) &&
+          !location.pathname.startsWith('/quickclash') && (
+            <Suspense fallback={null}>
+              {/* <Navbar onNavbarLoad={handleNavbarLoad} /> */}
+              <ModernNavbar onNavbarLoad={handleNavbarLoad} />
+            </Suspense>
+          )}
         <Box
           position="relative"
           minHeight="100vh"

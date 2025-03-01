@@ -28,6 +28,7 @@ import {
   ModalFooter,
   ModalCloseButton,
   useBreakpointValue,
+  Tag,
 } from '@chakra-ui/react'
 import { motion } from 'framer-motion'
 import { useParams, useNavigate } from 'react-router-dom'
@@ -43,10 +44,16 @@ import {
   Library,
   ArrowLeft,
   Brain,
+  Sparkles,
+  Target,
+  LightbulbIcon,
 } from 'lucide-react'
 import MainArticleContent from '../components/articleComponents/MainArticleContent'
+import QuickClashBackground from '../components/quickClashComponents/QuickClashBackground'
 
 const MotionBox = motion(Box)
+const MotionText = motion(Text)
+const MotionFlex = motion(Flex)
 const QuickClashQuiz = lazy(() =>
   import('../components/quickClashComponents/QuickClashQuiz'),
 )
@@ -85,6 +92,18 @@ const ReadingPhase = ({ article, timeLeft, onComplete }) => {
     }
   }, [])
 
+  // Countdown animation variants
+  const timerVariants = {
+    attention: {
+      scale: [1, 1.05, 1],
+      transition: {
+        duration: 1,
+        repeat: timeLeft <= 30 ? Infinity : 0,
+        repeatType: 'reverse',
+      },
+    },
+  }
+
   return (
     <MotionBox
       initial={{ opacity: 0 }}
@@ -93,9 +112,10 @@ const ReadingPhase = ({ article, timeLeft, onComplete }) => {
       w="100%"
     >
       <VStack spacing={6} align="stretch">
-        <HStack justify="space-between" wrap="wrap" gap={2}>
+        <Flex justify="space-between" wrap="wrap" gap={3} align="center">
           <Badge
-            colorScheme="purple"
+            bgGradient="linear(to-r, purple.500, purple.700)"
+            color="white"
             p={2}
             borderRadius="md"
             display="flex"
@@ -106,96 +126,137 @@ const ReadingPhase = ({ article, timeLeft, onComplete }) => {
             {t('Reading Phase')}
           </Badge>
 
-          <Badge
-            colorScheme={timeLeft <= 30 ? 'red' : 'yellow'}
-            p={2}
-            borderRadius="md"
-            display="flex"
-            alignItems="center"
-            fontSize="md"
+          <MotionBox
+            variants={timerVariants}
+            animate={timeLeft <= 30 ? 'attention' : ''}
           >
-            <Icon as={AlarmClock} mr={2} />
-            {Math.floor(timeLeft / 60)}:{String(timeLeft % 60).padStart(2, '0')}
-          </Badge>
-        </HStack>
+            <Badge
+              colorScheme={
+                timeLeft <= 30 ? 'red' : timeLeft <= 60 ? 'yellow' : 'green'
+              }
+              p={2}
+              borderRadius="md"
+              display="flex"
+              alignItems="center"
+              fontSize="md"
+              boxShadow={
+                timeLeft <= 30 ? '0 0 10px rgba(229, 62, 62, 0.5)' : 'none'
+              }
+            >
+              <Icon as={AlarmClock} mr={2} />
+              {Math.floor(timeLeft / 60)}:
+              {String(timeLeft % 60).padStart(2, '0')}
+            </Badge>
+          </MotionBox>
+        </Flex>
 
-        <Box
-          ref={contentRef}
-          maxH="60vh"
-          overflowY="auto"
-          p={0}
-          borderRadius="lg"
-          css={{
-            '&::-webkit-scrollbar': {
-              width: '8px',
-            },
-            '&::-webkit-scrollbar-track': {
-              background: 'rgba(255, 255, 255, 0.1)',
-              borderRadius: '10px',
-            },
-            '&::-webkit-scrollbar-thumb': {
-              background: 'rgba(138, 43, 226, 0.5)',
-              borderRadius: '10px',
-            },
-          }}
-        >
-          <Box w="100%" maxW={maxWidth} mx="auto">
-            {/* Article Header */}
-            <Box mb={3}>
-              <Heading size="lg" color="white" mb={2}>
-                {article.title}
-              </Heading>
-              <HStack spacing={4} color="gray.300" fontSize="sm">
-                <Text>{t('Challenge Article')}</Text>
-                <Text>•</Text>
-                <Text>
-                  {t('Reading Time')}: 2 {t('minutes')}
-                </Text>
-              </HStack>
+        <QuickClashBackground>
+          <Box
+            ref={contentRef}
+            maxH="65vh"
+            overflowY="auto"
+            p={6}
+            borderRadius="lg"
+            css={{
+              '&::-webkit-scrollbar': {
+                width: '8px',
+              },
+              '&::-webkit-scrollbar-track': {
+                background: 'rgba(255, 255, 255, 0.1)',
+                borderRadius: '10px',
+              },
+              '&::-webkit-scrollbar-thumb': {
+                background: 'rgba(138, 43, 226, 0.5)',
+                borderRadius: '10px',
+              },
+            }}
+          >
+            <Box w="100%" maxW={maxWidth} mx="auto">
+              {/* Article Header */}
+              <Box mb={5}>
+                <Heading size="lg" color="white" mb={3}>
+                  {article.title}
+                </Heading>
+                <HStack spacing={4} color="gray.300" fontSize="sm">
+                  <Text>{t('Challenge Article')}</Text>
+                  <Text>•</Text>
+                  <Text>
+                    {t('Reading Time')}: 2 {t('minutes')}
+                  </Text>
+                </HStack>
+              </Box>
+
+              {/* Article Content */}
+              <MainArticleContent
+                imgURL={null} // No image in challenge articles
+                mainText={article?.content} // Format for MainArticleContent
+                articleRef={articleRef}
+                articleLoading={false}
+                themedContent={''}
+                dictionary={article?.dictionary}
+                importantSentences={article?.importantSentences}
+              />
             </Box>
-
-            {/* Article Content */}
-            <MainArticleContent
-              imgURL={null} // No image in challenge articles
-              mainText={article?.content} // Format for MainArticleContent
-              articleRef={articleRef}
-              articleLoading={false}
-              themedContent={''}
-              dictionary={article?.dictionary}
-              importantSentences={article?.importantSentences}
-            />
           </Box>
-        </Box>
+        </QuickClashBackground>
 
-        <Progress
-          value={scrollPercentage}
-          size="sm"
-          colorScheme="purple"
-          mt={2}
-          borderRadius="full"
-        />
+        <VStack spacing={3} align="center">
+          <Progress
+            value={scrollPercentage}
+            size="sm"
+            colorScheme="purple"
+            borderRadius="full"
+            width="100%"
+            bg="whiteAlpha.200"
+          />
 
-        <Button
-          colorScheme="green"
-          size="lg"
-          leftIcon={<CheckCircle2 />}
-          onClick={onComplete}
-          isDisabled={!hasScrolledToBottom && timeLeft > 5}
-          w="100%"
-          maxW="400px"
-          mx="auto"
-          mt={2}
-        >
-          {hasScrolledToBottom
-            ? t('Complete Reading')
-            : t('Scroll to continue')}
-        </Button>
-
-        {!hasScrolledToBottom && (
-          <Text fontSize="sm" color="whiteAlpha.600" textAlign="center">
-            {t('Scroll through the article to enable the continue button')}
+          <Text
+            fontSize="sm"
+            color={hasScrolledToBottom ? 'green.300' : 'whiteAlpha.600'}
+          >
+            {hasScrolledToBottom
+              ? t('Article fully read!')
+              : `${Math.round(scrollPercentage)}% ${t('read')}`}
           </Text>
-        )}
+
+          <Button
+            as={motion.button}
+            colorScheme="green"
+            size="lg"
+            leftIcon={<CheckCircle2 />}
+            onClick={onComplete}
+            isDisabled={!hasScrolledToBottom && timeLeft > 5}
+            whileHover={{ scale: 1.05 }}
+            whileTap={{ scale: 0.95 }}
+            w="100%"
+            maxW="400px"
+            bgGradient={
+              hasScrolledToBottom
+                ? 'linear(to-r, green.400, green.600)'
+                : 'linear(to-r, gray.500, gray.600)'
+            }
+            _hover={{
+              bgGradient: hasScrolledToBottom
+                ? 'linear(to-r, green.500, green.700)'
+                : 'linear(to-r, gray.600, gray.700)',
+            }}
+            boxShadow={
+              hasScrolledToBottom
+                ? '0 4px 12px rgba(72, 187, 120, 0.3)'
+                : 'none'
+            }
+          >
+            {hasScrolledToBottom
+              ? t('Complete Reading')
+              : t('Scroll to continue')}
+          </Button>
+
+          {!hasScrolledToBottom && (
+            <Text fontSize="sm" color="whiteAlpha.600" textAlign="center">
+              {t('Scroll through the article to enable the continue button')}
+            </Text>
+          )}
+        </VStack>
       </VStack>
     </MotionBox>
   )
@@ -211,41 +272,98 @@ const ResultsModal = ({ isOpen, onClose, score, navigateToList }) => {
       onClose={onClose}
       isCentered
       closeOnOverlayClick={false}
+      motionPreset="scale"
     >
-      <ModalOverlay backdropFilter="blur(10px)" />
+      <ModalOverlay backdropFilter="blur(8px)" />
       <ModalContent
         bg="rgba(26, 21, 39, 0.95)"
         borderWidth="1px"
         borderColor="purple.500"
+        borderRadius="xl"
+        boxShadow="0 4px 20px rgba(138, 43, 226, 0.3)"
       >
-        <ModalHeader color="white">{t('Challenge Complete!')}</ModalHeader>
+        <ModalHeader color="white">
+          <HStack>
+            <Icon as={Trophy} color="yellow.400" />
+            <Text>{t('Challenge Complete!')}</Text>
+          </HStack>
+        </ModalHeader>
 
         <ModalBody>
           <VStack spacing={6}>
-            <Icon as={Trophy} boxSize="80px" color="yellow.400" />
+            <MotionBox
+              initial={{ opacity: 0, scale: 0.8 }}
+              animate={{ opacity: 1, scale: 1 }}
+              transition={{
+                duration: 0.6,
+                type: 'spring',
+                stiffness: 200,
+                damping: 15,
+              }}
+            >
+              <Icon as={Trophy} boxSize="80px" color="yellow.400" />
 
-            <VStack>
-              <Text fontSize="lg" color="white">
-                {t('Your Score')}
-              </Text>
-              <Text fontSize="4xl" fontWeight="bold" color="white">
-                {score}
-              </Text>
-            </VStack>
+              <motion.div
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ delay: 0.3, duration: 0.5 }}
+              >
+                <VStack spacing={2} mt={4}>
+                  <Text fontSize="lg" color="whiteAlpha.900">
+                    {t('Your Score')}
+                  </Text>
+                  <Text
+                    fontSize="5xl"
+                    fontWeight="bold"
+                    color="white"
+                    bgGradient="linear(to-r, yellow.300, orange.400)"
+                    bgClip="text"
+                  >
+                    {score}
+                  </Text>
+                </VStack>
+              </motion.div>
+            </MotionBox>
 
-            <Alert status="info" variant="solid" borderRadius="md">
-              <AlertIcon />
-              <AlertDescription>
-                {t(
-                  'Your score has been recorded! Check back later to see the final results once your opponent completes the challenge.',
-                )}
-              </AlertDescription>
-            </Alert>
+            <motion.div
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              transition={{ delay: 0.6, duration: 0.5 }}
+            >
+              <Alert
+                status="info"
+                variant="subtle"
+                borderRadius="md"
+                bg="rgba(66, 153, 225, 0.15)"
+                borderLeftWidth="4px"
+                borderLeftColor="blue.400"
+              >
+                <AlertIcon color="blue.400" />
+                <Box>
+                  <AlertTitle color="blue.200">
+                    {t('Score Recorded!')}
+                  </AlertTitle>
+                  <AlertDescription color="whiteAlpha.900">
+                    {t(
+                      'Check back later to see the final results once your opponent completes the challenge.',
+                    )}
+                  </AlertDescription>
+                </Box>
+              </Alert>
+            </motion.div>
           </VStack>
         </ModalBody>
 
         <ModalFooter>
-          <Button colorScheme="purple" onClick={navigateToList}>
+          <Button
+            as={motion.button}
+            onClick={navigateToList}
+            bgGradient="linear(to-r, purple.500, purple.700)"
+            _hover={{ bgGradient: 'linear(to-r, purple.600, purple.800)' }}
+            rightIcon={<ArrowLeft />}
+            whileHover={{ scale: 1.05 }}
+            whileTap={{ scale: 0.95 }}
+          >
             {t('Return to Challenges')}
           </Button>
         </ModalFooter>
@@ -408,12 +526,23 @@ const QuickClashSession = () => {
   if (loading) {
     return (
       <Container maxW="container.lg" py={10}>
-        <Center h="50vh">
+        <Center h="60vh">
           <VStack spacing={6}>
-            <Spinner size="xl" thickness="4px" color="purple.500" />
-            <Text color="whiteAlpha.700">
+            <Spinner
+              size="xl"
+              thickness="4px"
+              color="purple.500"
+              emptyColor="whiteAlpha.200"
+              speed="0.8s"
+            />
+            <MotionText
+              color="whiteAlpha.800"
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              transition={{ duration: 0.5 }}
+            >
               {t('Preparing your challenge...')}
-            </Text>
+            </MotionText>
           </VStack>
         </Center>
       </Container>
@@ -423,19 +552,38 @@ const QuickClashSession = () => {
   if (error) {
     return (
       <Container maxW="container.lg" py={10}>
-        <Center h="50vh">
-          <VStack spacing={6} maxW="600px">
-            <Alert status="error" variant="solid" borderRadius="md">
-              <AlertIcon />
-              <Box>
-                <AlertTitle>{t('Error')}</AlertTitle>
-                <AlertDescription>{error}</AlertDescription>
-              </Box>
-            </Alert>
-            <Button onClick={navigateToList} leftIcon={<ArrowLeft />}>
-              {t('Back to Challenges')}
-            </Button>
-          </VStack>
+        <Center h="60vh">
+          <MotionBox
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.5 }}
+            maxW="600px"
+          >
+            <VStack
+              spacing={6}
+              p={8}
+              borderRadius="xl"
+              bg="rgba(26, 32, 44, 0.5)"
+              borderWidth="1px"
+              borderColor="red.500"
+            >
+              <Icon as={XCircle} boxSize={12} color="red.400" />
+              <Heading size="md" color="white">
+                {t('Error')}
+              </Heading>
+              <Text color="whiteAlpha.800" textAlign="center">
+                {error}
+              </Text>
+              <Button
+                leftIcon={<ArrowLeft />}
+                onClick={navigateToList}
+                bgGradient="linear(to-r, purple.500, purple.700)"
+                _hover={{ bgGradient: 'linear(to-r, purple.600, purple.800)' }}
+              >
+                {t('Back to Challenges')}
+              </Button>
+            </VStack>
+          </MotionBox>
         </Center>
       </Container>
     )
@@ -444,29 +592,60 @@ const QuickClashSession = () => {
   return (
     <Container maxW="container.lg" py={8}>
       <VStack spacing={8} align="stretch">
-        <HStack justify="space-between" wrap="wrap" gap={4}>
+        <Flex justify="space-between" wrap="wrap" gap={4} align="center">
           <Button
-            variant="outline"
-            leftIcon={<ArrowLeft />}
+            variant="ghost"
+            leftIcon={<ArrowLeft size={16} />}
             onClick={navigateToList}
             size="sm"
+            color="whiteAlpha.800"
+            _hover={{ bg: 'whiteAlpha.100' }}
           >
             {t('Back to Challenges')}
           </Button>
 
-          <HStack>
-            <Badge colorScheme="purple" p={2} borderRadius="md">
-              {t('Category')}: {challenge?.category}
+          <HStack spacing={3}>
+            <Badge
+              colorScheme="purple"
+              p={2}
+              borderRadius="md"
+              bgGradient="linear(to-r, purple.500, purple.700)"
+              fontSize="sm"
+            >
+              {challenge?.category}
             </Badge>
 
-            {phase === 'reading' && (
-              <Badge colorScheme="yellow" p={2} borderRadius="md">
-                {t('Reading Time')}: {Math.floor(timeLeft / 60)}:
-                {String(timeLeft % 60).padStart(2, '0')}
-              </Badge>
+            {phase === 'reading' && timeLeft > 0 && (
+              <MotionBox
+                animate={{
+                  scale: timeLeft <= 30 ? [1, 1.05, 1] : 1,
+                }}
+                transition={{
+                  duration: 1,
+                  repeat: timeLeft <= 30 ? Infinity : 0,
+                  repeatType: 'reverse',
+                }}
+              >
+                <Badge
+                  colorScheme={timeLeft <= 30 ? 'red' : 'yellow'}
+                  p={2}
+                  borderRadius="md"
+                  boxShadow={
+                    timeLeft <= 30 ? '0 0 10px rgba(229, 62, 62, 0.5)' : 'none'
+                  }
+                >
+                  <HStack spacing={1}>
+                    <Icon as={Clock} />
+                    <Text>
+                      {Math.floor(timeLeft / 60)}:
+                      {String(timeLeft % 60).padStart(2, '0')}
+                    </Text>
+                  </HStack>
+                </Badge>
+              </MotionBox>
             )}
           </HStack>
-        </HStack>
+        </Flex>
 
         {phase === 'reading' && article && (
           <ReadingPhase
@@ -477,13 +656,25 @@ const QuickClashSession = () => {
         )}
 
         {phase === 'instruction' && (
-          <Suspense fallback={<Spinner size="xl" color="purple.500" />}>
+          <Suspense
+            fallback={
+              <Center py={10}>
+                <Spinner size="xl" color="purple.500" />
+              </Center>
+            }
+          >
             <QuizInstructions onStart={handleStartQuiz} />
           </Suspense>
         )}
 
         {phase === 'quiz' && session && (
-          <Suspense fallback={<Spinner size="xl" color="purple.500" />}>
+          <Suspense
+            fallback={
+              <Center py={10}>
+                <Spinner size="xl" color="purple.500" />
+              </Center>
+            }
+          >
             <QuickClashQuiz
               sessionId={session._id}
               onComplete={handleQuizComplete}
