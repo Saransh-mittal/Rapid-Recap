@@ -309,6 +309,7 @@ const generateSitemap = require('./generate-sitemap')
 generateSitemap()
 const generateGoogleNewsSitemap = require('./google-sitemap-generator')
 generateGoogleNewsSitemap()
+//
 // Load scheduler
 require('./scheduler/setupCronJobs')
 // require('./scripts/analyzeArticleRelations')
