@@ -25,6 +25,7 @@ import axios from 'axios'
 import QuickClashError from '../components/quickClashComponents/QuickClashError'
 import ResultsModal from '../components/quickClashComponents/ResultsModal'
 import ConfirmationDialog from '../components/quickClashComponents/ConfirmationDialog'
+import { useSelector } from 'react-redux'
 
 // Lazy-loaded components
 const ReadingPhase = lazy(() =>
@@ -44,6 +45,7 @@ const QuickClashSession = () => {
   const { challengeId } = useParams()
   const navigate = useNavigate()
   const toast = useToast()
+  const { user } = useSelector(state => state.auth)
 
   // State management
   const [loading, setLoading] = useState(true)
@@ -94,7 +96,7 @@ const QuickClashSession = () => {
         const sessionResponse = await axios.post(
           `/api/quickClash/session/${challengeId}`,
           {
-            language,
+            language: user?.userLanguage || 'en',
           },
         )
 
@@ -102,7 +104,7 @@ const QuickClashSession = () => {
 
         // Initialize article data
         setArticle(
-          language === 'en'
+          user?.userLanguage === 'en' || !user?.userLanguage
             ? {
                 title: challengeResponse.data.challenge.article.title.english,
                 content:
@@ -145,7 +147,7 @@ const QuickClashSession = () => {
     }
 
     initSession()
-  }, [challengeId, language])
+  }, [challengeId, language, user?.userLanguage])
 
   // Reading timer
   useEffect(() => {

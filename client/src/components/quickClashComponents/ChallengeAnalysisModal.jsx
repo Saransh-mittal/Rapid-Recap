@@ -292,7 +292,6 @@ const ChallengeAnalysisModal = ({ isOpen, onClose, challengeId }) => {
               css={{
                 scrollbarWidth: 'none',
                 '&::-webkit-scrollbar': { display: 'none' },
-                '-webkit-overflow-scrolling': 'touch',
               }}
             >
               <Tab

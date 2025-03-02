@@ -7,10 +7,19 @@ const {
 } = require('../../utils/quickClashHighlight.utils')
 const { updateChallengeScore } = require('./quickClashChallengeService')
 const mongoose = require('mongoose')
+const User = require('../../model/userSchema')
 
 const READING_TIME_LIMIT = 120 // 2 minutes in seconds
 const SESSION_EXPIRY = 24 * 60 * 60 * 1000 // 24 hours
 
+/**
+ * Create a new session for a challenge with language support
+ * @param {Object} params - Parameters
+ * @param {string} params.challengeId - Challenge ID
+ * @param {string} params.userId - User ID
+ * @param {string} [params.language] - Optional explicit language choice (en/hi) - overrides user preference
+ * @returns {Promise<Object>} The created session
+ */
 const createSession = async ({ challengeId, userId, language }) => {
   const session = await mongoose.startSession()
   try {
@@ -27,7 +36,7 @@ const createSession = async ({ challengeId, userId, language }) => {
         )
       }
 
-      // Get challenge and corresponding quiz
+      // Get challenge
       const challenge = await QuickClashChallenge.findById(challengeId).session(
         session,
       )
@@ -36,14 +45,30 @@ const createSession = async ({ challengeId, userId, language }) => {
         throw new Error('Challenge not found')
       }
 
+      // Determine the preferred language
+      let preferredLanguage = language
+
+      if (!preferredLanguage) {
+        // If no explicit language provided, fetch user's preference
+        const user = await User.findById(userId, 'userLanguage').session(
+          session,
+        )
+        preferredLanguage = user?.userLanguage || 'en'
+      }
+
+      // Default to English if no valid language setting
+      if (preferredLanguage !== 'en' && preferredLanguage !== 'hi') {
+        preferredLanguage = 'en'
+      }
+
       // Fetch the quiz for selected language
       const quiz = await QuickClashQuiz.findOne({
         challenge: challengeId,
-        language,
+        language: preferredLanguage,
       }).session(session)
 
       if (!quiz) {
-        throw new Error(`Quiz not found for language: ${language}`)
+        throw new Error(`Quiz not found for language: ${preferredLanguage}`)
       }
 
       // Create session
@@ -51,7 +76,7 @@ const createSession = async ({ challengeId, userId, language }) => {
         challenge: challengeId,
         user: userId,
         quiz: quiz._id,
-        language,
+        language: preferredLanguage,
         expiresAt: new Date(Date.now() + SESSION_EXPIRY),
       })
 
@@ -60,7 +85,7 @@ const createSession = async ({ challengeId, userId, language }) => {
       // Get article highlights (we don't wait for this to avoid transaction timeout)
       getQuickClashHighlights({
         challengeId,
-        lang: language,
+        lang: preferredLanguage,
       }).catch(err => {
         console.error('Error fetching highlights (non-blocking):', err)
       })

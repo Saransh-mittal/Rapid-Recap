@@ -5,6 +5,8 @@ const QuickClashQuiz = require('../../model/quickClashSchemas/quickClashQuizSche
 const QuickClashSession = require('../../model/quickClashSchemas/quickClashSessionSchema')
 const mongoose = require('mongoose')
 const OpenAI = require('openai')
+const User = require('../../model/userSchema')
+const { translateAnalysisToHindi } = require('./quickClashTranslationService')
 
 /**
  * Generate AI analysis for a completed challenge
@@ -763,7 +765,7 @@ Here are the battle details: ${JSON.stringify(prompt, null, 2)}`,
         },
         {
           role: 'user',
-          content: `Create engaging, fun content to wrap up this knowledge battle. Be witty, motivational, and interesting. Use the detailed question-level data to personalize your commentary.
+          content: `Create engaging, fun content to wrap up this knowledge battle. Be witty, motivational, and interesting. Use the detailed question-level data to personalize your commentary. victoryMeme should be text only no links anywhere.
 
       The output must be a valid JSON object with the following structure:
       {
@@ -840,6 +842,201 @@ Here are the battle details: ${JSON.stringify(prompt, null, 2)}`,
     }
 
     return analysisResult
+  }
+}
+
+// services/quickClashServices/quickClashAnalysisService.js - Improved translation handling
+
+/**
+ * Generate AI analysis for a completed challenge with translation support
+ * @param {Object} params - Parameters
+ * @param {string} params.challengeId - Challenge ID
+ * @param {mongoose.ClientSession} [params.session] - Optional Mongoose session for transactions
+ * @param {string} [params.preferredLanguage] - User's preferred language (en/hi)
+ * @returns {Promise<Object>} The generated analysis document with translation if needed
+ */
+const generateChallengeAnalysisWithTranslation = async ({
+  challengeId,
+  session,
+  preferredLanguage = 'en',
+}) => {
+  try {
+    await new Promise(resolve => setTimeout(resolve, 10000))
+    // First check if we already have an analysis
+    let analysis = await QuickClashAnalysis.findOne({ challenge: challengeId })
+
+    // If no analysis exists, generate a new one
+    if (!analysis) {
+      analysis = await generateChallengeAnalysis({ challengeId, session })
+    }
+
+    // If user prefers Hindi, ensure translation is complete
+    if (preferredLanguage === 'hi') {
+      // Check if translation is already done
+      if (
+        analysis.translationStatus !== 'completed' ||
+        !analysis.hindiTranslation ||
+        !analysis.hindiTranslation.challenger ||
+        !analysis.hindiTranslation.challenger.analysis ||
+        !analysis.hindiTranslation.challenger.analysis.strengths ||
+        analysis.hindiTranslation.challenger.analysis.strengths.length === 0
+      ) {
+        console.log(
+          'Hindi translation needed and not available - generating now',
+        )
+
+        // Do the translation synchronously before returning
+        analysis = await translateAnalysisToHindi({ analysisId: analysis._id })
+      }
+    }
+
+    return analysis
+  } catch (error) {
+    console.error(
+      'Error generating challenge analysis with translation:',
+      error,
+    )
+    throw error
+  }
+}
+
+/**
+ * Get analysis for a specific user in a challenge, respecting language preference
+ * @param {Object} params - Parameters
+ * @param {string} params.challengeId - Challenge ID
+ * @param {string} params.userId - User ID
+ * @returns {Promise<Object>} User's analysis with the appropriate language
+ */
+const getUserChallengeAnalysisLocalized = async ({ challengeId, userId }) => {
+  try {
+    // Get user's language preference first
+    const user = await User.findById(userId, 'userLanguage')
+    const preferredLanguage = user?.userLanguage || 'en'
+
+    // First check if analysis exists
+    let analysis = await QuickClashAnalysis.findOne({ challenge: challengeId })
+
+    if (!analysis) {
+      // Generate analysis if it doesn't exist, passing the language preference
+      return await generateChallengeAnalysisWithTranslation({
+        challengeId,
+        preferredLanguage,
+      })
+    }
+
+    // Check if Hindi is requested and translation is needed
+    if (
+      preferredLanguage === 'hi' &&
+      (analysis.translationStatus !== 'completed' ||
+        !analysis.hindiTranslation ||
+        !analysis.hindiTranslation.challenger)
+    ) {
+      // Complete the translation synchronously
+      analysis = await translateAnalysisToHindi({ analysisId: analysis._id })
+    }
+
+    // Determine if user is challenger or opponent
+    const isChallenger =
+      analysis.challenger.userId.toString() === userId.toString()
+
+    // Create localized version of the analysis based on language preference
+    if (preferredLanguage === 'hi' && analysis.hindiTranslation) {
+      return {
+        battleMetrics: analysis.battleMetrics,
+        userAnalysis: isChallenger
+          ? createLocalizedUserAnalysis(
+              analysis.challenger,
+              analysis.hindiTranslation.challenger,
+            )
+          : createLocalizedUserAnalysis(
+              analysis.opponent,
+              analysis.hindiTranslation.opponent,
+            ),
+        opponentAnalysis: isChallenger
+          ? createLocalizedUserAnalysis(
+              analysis.opponent,
+              analysis.hindiTranslation.opponent,
+            )
+          : createLocalizedUserAnalysis(
+              analysis.challenger,
+              analysis.hindiTranslation.challenger,
+            ),
+        engagement: {
+          ...analysis.engagement,
+          ...(analysis.hindiTranslation.engagement || {}),
+          winner: analysis.engagement.winner,
+        },
+        isWinner:
+          analysis.engagement.winner &&
+          analysis.engagement.winner.toString() === userId.toString(),
+      }
+    }
+
+    // Return English version
+    return {
+      battleMetrics: analysis.battleMetrics,
+      userAnalysis:
+        analysis.challenger.userId.toString() === userId.toString()
+          ? analysis.challenger
+          : analysis.opponent,
+      opponentAnalysis:
+        analysis.challenger.userId.toString() === userId.toString()
+          ? analysis.opponent
+          : analysis.challenger,
+      engagement: analysis.engagement,
+      isWinner:
+        analysis.engagement.winner &&
+        analysis.engagement.winner.toString() === userId.toString(),
+    }
+  } catch (error) {
+    console.error('Error fetching localized challenge analysis:', error)
+    throw error
+  }
+}
+
+/**
+ * Helper function to create a localized version of user analysis by merging English and Hindi data
+ * @param {Object} englishData - Original English analysis data
+ * @param {Object} hindiData - Hindi translation data
+ * @returns {Object} Merged analysis with Hindi text where available
+ */
+const createLocalizedUserAnalysis = (englishData, hindiData) => {
+  if (!hindiData) return englishData
+
+  return {
+    ...englishData,
+    performance: {
+      ...englishData.performance,
+      difficultyInsight:
+        hindiData.performance?.difficultyInsight ||
+        englishData.performance?.difficultyInsight,
+    },
+    analysis: {
+      ...englishData.analysis,
+      strengths:
+        hindiData.analysis?.strengths || englishData.analysis?.strengths,
+      weaknesses:
+        hindiData.analysis?.weaknesses || englishData.analysis?.weaknesses,
+      recommendations:
+        hindiData.analysis?.recommendations ||
+        englishData.analysis?.recommendations,
+      // Keep numeric data from English version
+      knowledgePatterns: englishData.analysis?.knowledgePatterns,
+    },
+    learningPath: {
+      ...englishData.learningPath,
+      focusAreas:
+        hindiData.learningPath?.focusAreas ||
+        englishData.learningPath?.focusAreas,
+      topicSuggestions:
+        hindiData.learningPath?.topicSuggestions ||
+        englishData.learningPath?.topicSuggestions,
+      nextSteps:
+        hindiData.learningPath?.nextSteps ||
+        englishData.learningPath?.nextSteps,
+    },
+    // Keep statistics from English version
+    statistics: englishData.statistics,
   }
 }
 
@@ -1260,123 +1457,6 @@ const createEngagementContent = (
 }
 
 /**
- * Generate topic suggestions based on category
- * @param {string} category - Challenge category
- * @param {number} [count=3] - Number of suggestions to generate
- * @returns {Array<string>} Topic suggestions
- */
-const generateTopicSuggestions = (category, count = 3) => {
-  const suggestions = {
-    world: [
-      'International Relations',
-      'Global Economics',
-      'Cultural Studies',
-      'Geopolitical Conflicts',
-      'Climate Diplomacy',
-      'World History',
-    ],
-    politics: [
-      'Political Systems',
-      'Electoral Politics',
-      'Policy Analysis',
-      'Constitutional Law',
-      'Political Theory',
-      'Public Administration',
-    ],
-    business: [
-      'Market Analysis',
-      'Corporate Strategy',
-      'Financial Fundamentals',
-      'Economic Trends',
-      'Entrepreneurship',
-      'Business Ethics',
-    ],
-    technology: [
-      'Emerging Technologies',
-      'Tech Industry Trends',
-      'Digital Transformation',
-      'AI and Machine Learning',
-      'Cybersecurity',
-      'Software Development',
-    ],
-    sports: [
-      'Sports History',
-      'Athletic Performance',
-      'Team Strategies',
-      'Olympic Games',
-      'Sports Management',
-      'Sports Science',
-    ],
-    health: [
-      'Medical Advances',
-      'Public Health',
-      'Nutrition Science',
-      'Mental Health',
-      'Healthcare Systems',
-      'Disease Prevention',
-    ],
-    science: [
-      'Scientific Discoveries',
-      'Physics Concepts',
-      'Biological Systems',
-      'Chemistry Fundamentals',
-      'Scientific Method',
-      'Astronomy',
-    ],
-    environment: [
-      'Environmental Policy',
-      'Climate Science',
-      'Conservation',
-      'Sustainable Development',
-      'Renewable Energy',
-      'Biodiversity',
-    ],
-  }
-
-  // Default suggestions if category not found
-  const defaultSuggestions = [
-    'General Knowledge',
-    'Current Affairs',
-    'Historical Events',
-    'Scientific Concepts',
-    'Cultural Studies',
-    'Critical Thinking',
-  ]
-
-  const categoryList =
-    suggestions[category?.toLowerCase()] || defaultSuggestions
-
-  // Shuffle and pick the requested number
-  const shuffled = [...categoryList].sort(() => 0.5 - Math.random())
-  return shuffled.slice(0, count)
-}
-
-/**
- * Get category-specific words for generating creative content
- * @param {string} category - Challenge category
- * @returns {Array<string>} Category-specific words
- */
-const getCategorySpecificWords = category => {
-  const words = {
-    world: ['global diplomacy', 'international expertise', 'world affairs'],
-    politics: ['political strategy', 'policy knowledge', 'democratic theory'],
-    business: ['market insights', 'business acumen', 'economic understanding'],
-    technology: ['tech wizardry', 'coding skills', 'digital knowledge'],
-    sports: ['athletic knowledge', 'sports stats', 'game theory'],
-    health: ['medical knowledge', 'health expertise', 'wellness wisdom'],
-    science: ['scientific method', 'quantum thinking', 'molecular knowledge'],
-    environment: [
-      'climate awareness',
-      'environmental wisdom',
-      'sustainability',
-    ],
-  }
-
-  const defaultWords = ['knowledge', 'expertise', 'understanding']
-  return words[category?.toLowerCase()] || defaultWords
-}
-
-/**
  * Get analysis for a specific user in a challenge
  * @param {Object} params - Parameters
  * @param {string} params.challengeId - Challenge ID
@@ -1411,4 +1491,7 @@ const getUserChallengeAnalysis = async ({ challengeId, userId }) => {
 module.exports = {
   generateChallengeAnalysis,
   getUserChallengeAnalysis,
+  generateChallengeAnalysisWithTranslation,
+  getUserChallengeAnalysis,
+  getUserChallengeAnalysisLocalized,
 }

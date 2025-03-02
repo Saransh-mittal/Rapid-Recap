@@ -24,10 +24,17 @@ const {
 const {
   generateChallengeAnalysis,
   getUserChallengeAnalysis,
+  generateChallengeAnalysisWithTranslation,
+  getUserChallengeAnalysisLocalized,
 } = require('../services/quickClashServices/quickClashAnalysisService')
 const {
   getUserStats,
 } = require('../services/quickClashServices/quickClashStatsService')
+const {
+  initiateBackgroundAnalysis,
+  isAnalysisInProgress,
+} = require('../services/quickClashServices/autoAnalysisService')
+const QuickClashAnalysis = require('../model/quickClashSchemas/quickClashAnalysisSchema')
 
 // Create a new challenge
 const createNewChallenge = asyncHandler(async (req, res) => {
@@ -112,13 +119,18 @@ const getMyChallenges = asyncHandler(async (req, res) => {
   })
 })
 
-// Start a challenge session
+/**
+ * Start a challenge session
+ * @route POST /api/quickClash/session/:challengeId
+ * @access Private
+ */
 const startChallengeSession = asyncHandler(async (req, res) => {
   const { challengeId } = req.params
   const { language } = req.body
   const userId = req.user._id
 
   try {
+    // Pass the explicit language if provided, otherwise user's preference will be used
     const session = await createSession({
       challengeId,
       userId,
@@ -186,6 +198,23 @@ const submitQuizAnswers = asyncHandler(async (req, res) => {
     const session = await QuickClashSession.findById(sessionId)
       .select('challenge')
       .lean()
+
+    // Get the challenge to check if it's now completed
+    const challenge = await QuickClashChallenge.findById(session.challenge)
+      .select('challengerScore opponentScore status')
+      .lean()
+
+    // If both users have submitted their quizzes, the challenge is completed
+    if (
+      challenge &&
+      challenge.challengerScore > 0 &&
+      challenge.opponentScore > 0
+    ) {
+      // Start analysis generation in the background
+      initiateBackgroundAnalysis({
+        challengeId: session.challenge.toString(),
+      })
+    }
 
     res.status(200).json({
       success: true,
@@ -478,9 +507,9 @@ const getSessionIdFromChallenge = asyncHandler(async (req, res) => {
 })
 
 /**
- * @desc    Generate analysis for a challenge
- * @route   POST /api/quickClash/analysis/:challengeId/generate
- * @access  Private
+ * Generate analysis for a challenge
+ * @route POST /api/quickClash/analysis/:challengeId/generate
+ * @access Private
  */
 const generateAnalysis = asyncHandler(async (req, res) => {
   const { challengeId } = req.params
@@ -516,8 +545,10 @@ const generateAnalysis = asyncHandler(async (req, res) => {
       })
     }
 
-    // Generate the analysis
-    const analysis = await generateChallengeAnalysis({ challengeId })
+    // Generate the analysis with translation support
+    const analysis = await generateChallengeAnalysisWithTranslation({
+      challengeId,
+    })
 
     res.status(200).json({
       success: true,
@@ -533,9 +564,9 @@ const generateAnalysis = asyncHandler(async (req, res) => {
 })
 
 /**
- * @desc    Get challenge analysis for current user
- * @route   GET /api/quickClash/analysis/:challengeId
- * @access  Private
+ * Get challenge analysis for current user
+ * @route GET /api/quickClash/analysis/:challengeId
+ * @access Private
  */
 const getChallengeAnalysis = asyncHandler(async (req, res) => {
   const { challengeId } = req.params
@@ -563,8 +594,8 @@ const getChallengeAnalysis = asyncHandler(async (req, res) => {
       })
     }
 
-    // Get the user's analysis
-    const analysis = await getUserChallengeAnalysis({
+    // Get the user's analysis with localization support
+    const analysis = await getUserChallengeAnalysisLocalized({
       challengeId,
       userId,
     })
@@ -606,6 +637,63 @@ const getUserClashStats = asyncHandler(async (req, res) => {
   }
 })
 
+/**
+ * Get analysis status for a challenge
+ * @route GET /api/quickClash/analysis/:challengeId/status
+ * @access Private
+ */
+const getAnalysisStatus = asyncHandler(async (req, res) => {
+  const { challengeId } = req.params
+  const userId = req.user._id
+
+  try {
+    // Check if user is part of the challenge
+    const challenge = await QuickClashChallenge.findById(challengeId)
+
+    if (!challenge) {
+      return res.status(404).json({
+        success: false,
+        message: 'Challenge not found',
+      })
+    }
+
+    // Verify user is part of this challenge
+    const isChallenger = challenge.challenger.toString() === userId.toString()
+    const isOpponent = challenge.opponent.toString() === userId.toString()
+
+    if (!isChallenger && !isOpponent) {
+      return res.status(403).json({
+        success: false,
+        message: 'You are not authorized to access this challenge',
+      })
+    }
+
+    // Check if analysis exists
+    const existingAnalysis = await QuickClashAnalysis.findOne({
+      challenge: challengeId,
+    })
+
+    // Check if analysis is in progress (using our in-memory tracker)
+    const inProgress = isAnalysisInProgress({ challengeId })
+
+    res.status(200).json({
+      success: true,
+      status: existingAnalysis
+        ? 'completed'
+        : inProgress
+        ? 'in_progress'
+        : 'not_started',
+      analysisId: existingAnalysis ? existingAnalysis._id : null,
+    })
+  } catch (error) {
+    console.error('Error checking analysis status:', error)
+    res.status(500).json({
+      success: false,
+      message: error.message || 'Failed to check analysis status',
+    })
+  }
+})
+
 module.exports = {
   createNewChallenge,
   handleAcceptChallenge,
@@ -624,4 +712,5 @@ module.exports = {
   generateAnalysis,
   getChallengeAnalysis,
   getUserClashStats,
+  getAnalysisStatus,
 }

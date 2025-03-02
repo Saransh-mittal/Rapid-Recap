@@ -8,140 +8,18 @@ import {
   DrawerCloseButton,
   VStack,
   Flex,
-  Avatar,
-  Text,
   Box,
-  useToast,
   Skeleton,
   SkeletonCircle,
-  Button,
   useDisclosure,
-  Modal,
-  ModalOverlay,
-  ModalContent,
-  ModalHeader,
-  ModalFooter,
-  ModalBody,
-  ModalCloseButton,
-  Select,
 } from '@chakra-ui/react'
 import { useNavigate } from 'react-router-dom'
 import { useTranslation } from 'react-i18next'
-import { FiZap } from 'react-icons/fi'
-import axios from 'axios'
 import SearchResultItem from './userSearchDrawerComponents/SearchResultItem'
+import NewChallengeModal from '../quickClashComponents/modals/NewChallengeModal'
 
 // Lazy load the SearchBar component
 const SearchBar = React.lazy(() => import('../leaderBoardComponents/SearchBar'))
-
-const ChallengeModal = ({
-  isOpen,
-  onClose,
-  selectedUser,
-  categories,
-  onSendChallenge,
-  isLoading,
-}) => {
-  const { t } = useTranslation('QuickClash')
-  const [selectedCategories, setSelectedCategories] = useState([])
-
-  const handleCategoryChange = e => {
-    const options = e.target.options
-    const selected = []
-    for (let i = 0; i < options.length; i++) {
-      if (options[i].selected) {
-        selected.push(options[i].value)
-      }
-    }
-    setSelectedCategories(selected)
-  }
-
-  const handleSendChallenge = () => {
-    if (selectedCategories.length === 0) {
-      return
-    }
-    onSendChallenge(selectedUser, selectedCategories)
-  }
-
-  return (
-    <Modal isOpen={isOpen} onClose={onClose}>
-      <ModalOverlay bg="blackAlpha.700" backdropFilter="blur(5px)" />
-      <ModalContent
-        bg="linear-gradient(135deg, #1a1527, #0f0d15)"
-        borderRadius="xl"
-        boxShadow="0 8px 32px rgba(0, 0, 0, 0.4)"
-      >
-        <ModalHeader color="white">
-          {t('Challenge')} {selectedUser?.name}
-        </ModalHeader>
-        <ModalCloseButton color="white" />
-        <ModalBody>
-          <Flex direction="column" gap={4}>
-            <Flex align="center" gap={3}>
-              <Avatar src={selectedUser?.pic} name={selectedUser?.name} />
-              <Box>
-                <Text color="white" fontWeight="bold">
-                  {selectedUser?.name}
-                </Text>
-                <Text color="gray.300">@{selectedUser?.inGameName}</Text>
-              </Box>
-            </Flex>
-
-            <Text color="white">
-              {t('Select categories for your challenge:')}
-            </Text>
-            <Select
-              multiple
-              size="md"
-              onChange={handleCategoryChange}
-              bg="whiteAlpha.200"
-              color="white"
-              borderColor="whiteAlpha.300"
-              _hover={{ borderColor: 'purple.400' }}
-              _focus={{
-                borderColor: 'purple.500',
-                boxShadow: '0 0 0 1px #805AD5',
-              }}
-              height="120px"
-            >
-              {categories.map(category => (
-                <option
-                  key={category.key}
-                  value={category.key}
-                  style={{ background: '#1a1527' }}
-                >
-                  {category.label}
-                </option>
-              ))}
-            </Select>
-            <Text color="gray.300" fontSize="sm">
-              {t('Hold Ctrl/Cmd to select multiple categories (min 1, max 3)')}
-            </Text>
-          </Flex>
-        </ModalBody>
-
-        <ModalFooter>
-          <Button variant="outline" colorScheme="gray" mr={3} onClick={onClose}>
-            {t('Cancel')}
-          </Button>
-          <Button
-            colorScheme="purple"
-            leftIcon={<FiZap />}
-            onClick={handleSendChallenge}
-            isLoading={isLoading}
-            isDisabled={
-              selectedCategories.length === 0 || selectedCategories.length > 3
-            }
-            bgGradient="linear(to-r, purple.500, purple.700)"
-            _hover={{ bgGradient: 'linear(to-r, purple.600, purple.800)' }}
-          >
-            {t('Send Challenge')}
-          </Button>
-        </ModalFooter>
-      </ModalContent>
-    </Modal>
-  )
-}
 
 const UserSearchDrawer = ({ isOpen, onClose, onSearchClick }) => {
   const { t } = useTranslation('UserSearchDrawer')
@@ -149,9 +27,7 @@ const UserSearchDrawer = ({ isOpen, onClose, onSearchClick }) => {
   const { t: TournamentBadgeTranslate } = useTranslation('TournamentBadge')
   const [searchResults, setSearchResults] = useState([])
   const [searchLoad, setSearchLoad] = useState(false)
-  const [isChallengeSending, setIsChallengeSending] = useState(false)
   const [selectedUser, setSelectedUser] = useState(null)
-  const toast = useToast()
   const navigate = useNavigate()
   const {
     isOpen: isChallengeModalOpen,
@@ -164,21 +40,6 @@ const UserSearchDrawer = ({ isOpen, onClose, onSearchClick }) => {
   const textColor = 'white'
   const subTextColor = 'gray.300'
   const badgeBg = 'blue.500'
-
-  // Available categories for quick clash
-  const categories = useMemo(
-    () => [
-      { key: 'world', label: tQuickClash('World') },
-      { key: 'politics', label: tQuickClash('Politics') },
-      { key: 'business', label: tQuickClash('Business') },
-      { key: 'technology', label: tQuickClash('Technology') },
-      { key: 'sports', label: tQuickClash('Sports') },
-      { key: 'health', label: tQuickClash('Health') },
-      { key: 'science', label: tQuickClash('Science') },
-      { key: 'environment', label: tQuickClash('Environment') },
-    ],
-    [tQuickClash],
-  )
 
   const handleClose = useCallback(() => {
     setSearchResults([])
@@ -201,46 +62,6 @@ const UserSearchDrawer = ({ isOpen, onClose, onSearchClick }) => {
       onChallengeModalOpen()
     },
     [onChallengeModalOpen],
-  )
-
-  const sendChallenge = useCallback(
-    async (user, selectedCategories) => {
-      if (!user || selectedCategories.length === 0) return
-
-      setIsChallengeSending(true)
-      try {
-        const response = await axios.post('/api/quickClash/challenge/create', {
-          opponentId: user._id,
-          categories: selectedCategories,
-        })
-
-        toast({
-          title: tQuickClash('Challenge Sent!'),
-          description:
-            tQuickClash('Your challenge has been sent to') + ` ${user.name}`,
-          status: 'success',
-          duration: 5000,
-          isClosable: true,
-          position: 'top',
-        })
-
-        onChallengeModalClose()
-      } catch (error) {
-        const errorMessage =
-          error.response?.data?.error || tQuickClash('Error sending challenge')
-        toast({
-          title: tQuickClash('Challenge Failed'),
-          description: errorMessage,
-          status: 'error',
-          duration: 5000,
-          isClosable: true,
-          position: 'top',
-        })
-      } finally {
-        setIsChallengeSending(false)
-      }
-    },
-    [toast, tQuickClash, onChallengeModalClose],
   )
 
   const StylishDivider = useMemo(
@@ -351,13 +172,10 @@ const UserSearchDrawer = ({ isOpen, onClose, onSearchClick }) => {
         </DrawerContent>
       </Drawer>
 
-      <ChallengeModal
+      <NewChallengeModal
         isOpen={isChallengeModalOpen}
         onClose={onChallengeModalClose}
-        selectedUser={selectedUser}
-        categories={categories}
-        onSendChallenge={sendChallenge}
-        isLoading={isChallengeSending}
+        preSelectedUser={selectedUser}
       />
     </>
   )

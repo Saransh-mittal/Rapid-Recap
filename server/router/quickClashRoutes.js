@@ -18,6 +18,7 @@ const {
   generateAnalysis,
   getChallengeAnalysis,
   getUserClashStats,
+  getAnalysisStatus,
 } = require('../controllers/quickClashController')
 
 const router = express.Router()
@@ -45,6 +46,7 @@ router.get('/session/:sessionId/report', getSessionQuizReport)
 // Challenge analysis routes
 router.post('/analysis/:challengeId/generate', generateAnalysis)
 router.get('/analysis/:challengeId', getChallengeAnalysis)
+router.get('/analysis/:challengeId/status', getAnalysisStatus)
 
 router.get('/stats', getUserClashStats)
 

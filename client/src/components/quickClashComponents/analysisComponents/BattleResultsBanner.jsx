@@ -97,7 +97,7 @@ const BattleResultsBanner = ({ analysis, userIsWinner, isTie, userId }) => {
                 ? 'linear(to-r, purple.200, purple.400)'
                 : 'whiteAlpha.800'
             }
-            bgClip="text"
+            bgClip={userIsWinner || isTie ? 'text' : 'none'}
             initial={{ scale: 0.8 }}
             animate={{ scale: 1 }}
             transition={{ duration: 0.3 }}
@@ -124,6 +124,7 @@ const BattleResultsBanner = ({ analysis, userIsWinner, isTie, userId }) => {
                 ? 'linear(to-r, blue.200, blue.400)'
                 : 'whiteAlpha.800'
             }
+            bgClip={!userIsWinner && !isTie ? 'text' : 'none'}
             initial={{ scale: 0.8 }}
             animate={{ scale: 1 }}
             transition={{ duration: 0.3 }}

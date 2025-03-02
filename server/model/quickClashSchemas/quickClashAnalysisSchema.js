@@ -107,6 +107,51 @@ const quickClashAnalysisSchema = new mongoose.Schema({
       topicSuggestionsInterest: Number, // Percentage 0-100
     },
   },
+  // Hindi translation of the analysis
+  hindiTranslation: {
+    challenger: {
+      performance: {
+        difficultyInsight: String,
+      },
+      analysis: {
+        strengths: [String],
+        weaknesses: [String],
+        recommendations: [String],
+      },
+      learningPath: {
+        focusAreas: [String],
+        topicSuggestions: [String],
+        nextSteps: [String],
+      },
+    },
+    opponent: {
+      performance: {
+        difficultyInsight: String,
+      },
+      analysis: {
+        strengths: [String],
+        weaknesses: [String],
+        recommendations: [String],
+      },
+      learningPath: {
+        focusAreas: [String],
+        topicSuggestions: [String],
+        nextSteps: [String],
+      },
+    },
+    engagement: {
+      victoryMeme: String,
+      competitiveTaunt: String,
+      wittyAnalysis: String,
+      topicSuggestions: [String],
+    },
+  },
+  // Translation status
+  translationStatus: {
+    type: String,
+    enum: ['pending', 'completed', 'failed'],
+    default: 'pending',
+  },
 })
 
 // Create a unique compound index on challenge ID
