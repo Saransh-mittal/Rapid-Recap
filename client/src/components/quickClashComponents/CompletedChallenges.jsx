@@ -52,6 +52,7 @@ import { useTranslation } from 'react-i18next'
 import { format } from 'date-fns'
 import { useSelector } from 'react-redux'
 import AnalysisSummaryCard from './AnalysisSummaryCard'
+import useQuickClash from '../../customHooks/useQuickClash'
 
 // Lazy-loaded component
 const ChallengeAnalysisModal = lazy(() => import('./ChallengeAnalysisModal'))
@@ -60,19 +61,24 @@ const ChallengeDetailsModal = lazy(() => import('./ChallengeDetailsModal'))
 // Main CompletedChallenges Component
 const CompletedChallenges = () => {
   const { t } = useTranslation('QuickClash')
-  const [challenges, setChallenges] = useState([])
-  const [loading, setLoading] = useState(true)
-  const [error, setError] = useState(null)
-  const [page, setPage] = useState(1)
-  const [hasMore, setHasMore] = useState(true)
+  const {
+    completedChallenges: challenges,
+    completedChallengesLoading: loading,
+    completedChallengesError: error,
+    completedChallengesPage: page,
+    completedChallengesHasMore: hasMore,
+    loadCompletedChallenges,
+    resetCompletedChallengesState,
+    fetchChallengeAnalysis,
+    generateAnalysis,
+    challengeAnalyses,
+    challengeAnalysesLoading: analysisLoading,
+  } = useQuickClash()
   const { user } = useSelector(state => state.auth)
   const userId = user?._id
   const [selectedChallenge, setSelectedChallenge] = useState(null)
-  const [challengeAnalyses, setChallengeAnalyses] = useState({})
-  const [analysisLoading, setAnalysisLoading] = useState({})
   const [showCardView, setShowCardView] = useState(true)
   const [selectedAnalysisId, setSelectedAnalysisId] = useState(null)
-  const toast = useToast()
 
   // Modal disclosures
   const {
@@ -103,36 +109,15 @@ const CompletedChallenges = () => {
 
   // Fetch completed challenges
   useEffect(() => {
-    if (!userId) return
-
-    const fetchChallenges = async () => {
-      try {
-        setLoading(true)
-        const response = await axios.get(
-          '/api/quickClash/challenges/completed',
-          {
-            params: { page, limit: 10 },
-          },
-        )
-
-        if (page === 1) {
-          setChallenges(response.data.challenges)
-        } else {
-          setChallenges(prev => [...prev, ...response.data.challenges])
-        }
-
-        setHasMore(response.data.hasMore)
-        setError(null)
-      } catch (err) {
-        setError('Failed to load completed challenges')
-        console.error('Error fetching completed challenges:', err)
-      } finally {
-        setLoading(false)
-      }
+    if (userId) {
+      loadCompletedChallenges(page, 10)
     }
 
-    fetchChallenges()
-  }, [page, userId])
+    return () => {
+      // Reset state when component unmounts
+      resetCompletedChallengesState()
+    }
+  }, [page, userId, loadCompletedChallenges, resetCompletedChallengesState])
 
   // Fetch analyses for visible challenges
   useEffect(() => {
@@ -145,205 +130,6 @@ const CompletedChallenges = () => {
       fetchChallengeAnalysis(challenge._id)
     })
   }, [challenges, userId])
-
-  // Improved fetchChallengeAnalysis function for CompletedChallenges.jsx
-  const fetchChallengeAnalysis = async challengeId => {
-    // Skip if we already have the analysis or are already loading it
-    if (challengeAnalyses[challengeId] || analysisLoading[challengeId]) {
-      return
-    }
-
-    // Mark as loading
-    setAnalysisLoading(prev => ({ ...prev, [challengeId]: true }))
-
-    try {
-      // First check the analysis status to see if it exists or is in progress
-      const statusResponse = await axios.get(
-        `/api/quickClash/analysis/${challengeId}/status`,
-      )
-
-      if (statusResponse.data.status === 'completed') {
-        // Analysis is complete, fetch it
-        const response = await axios.get(
-          `/api/quickClash/analysis/${challengeId}`,
-        )
-        if (response.data.success && response.data.analysis) {
-          setChallengeAnalyses(prev => ({
-            ...prev,
-            [challengeId]: response.data.analysis,
-          }))
-        }
-        setAnalysisLoading(prev => ({ ...prev, [challengeId]: false }))
-        return
-      } else if (statusResponse.data.status === 'in_progress') {
-        // Analysis is in progress, set up polling for the STATUS endpoint
-        console.log(
-          `Analysis for challenge ${challengeId} is already in progress. Setting up polling.`,
-        )
-
-        // Start polling the STATUS endpoint until it's completed
-        const checkInterval = setInterval(async () => {
-          try {
-            // Check the STATUS endpoint instead of directly requesting the analysis
-            const statusCheck = await axios.get(
-              `/api/quickClash/analysis/${challengeId}/status`,
-            )
-
-            // Only fetch the full analysis when the status is completed
-            if (statusCheck.data.status === 'completed') {
-              // Analysis is complete, now fetch the full analysis
-              const analysisResponse = await axios.get(
-                `/api/quickClash/analysis/${challengeId}`,
-              )
-
-              if (
-                analysisResponse.data.success &&
-                analysisResponse.data.analysis
-              ) {
-                // Update state with the completed analysis
-                setChallengeAnalyses(prev => ({
-                  ...prev,
-                  [challengeId]: analysisResponse.data.analysis,
-                }))
-
-                // Stop checking
-                clearInterval(checkInterval)
-
-                // Update loading state
-                setAnalysisLoading(prev => ({ ...prev, [challengeId]: false }))
-              }
-            }
-          } catch (error) {
-            // Error checking status, continue polling
-            console.log(
-              `Waiting for analysis to complete for challenge ${challengeId}`,
-            )
-          }
-        }, 3000) // Check every 3 seconds
-
-        // Set a timeout to stop checking after 30 seconds
-        setTimeout(() => {
-          clearInterval(checkInterval)
-          // If we still don't have the analysis, clear loading state
-          if (!challengeAnalyses[challengeId]) {
-            setAnalysisLoading(prev => ({ ...prev, [challengeId]: false }))
-          }
-        }, 30000)
-
-        return
-      } else {
-        // Analysis not started, just set loading to false
-        // The user will have the option to generate it
-        setAnalysisLoading(prev => ({ ...prev, [challengeId]: false }))
-      }
-    } catch (error) {
-      console.error(
-        `Error fetching analysis for challenge ${challengeId}:`,
-        error,
-      )
-      setAnalysisLoading(prev => ({ ...prev, [challengeId]: false }))
-    }
-  }
-
-  // Generate analysis for a challenge
-  const generateAnalysis = async challengeId => {
-    setAnalysisLoading(prev => ({ ...prev, [challengeId]: true }))
-
-    try {
-      // Show toast notification for better UX
-      toast({
-        title: t('Generating analysis'),
-        description: t('Please wait while AI analyzes your performance'),
-        status: 'info',
-        duration: 5000,
-        isClosable: true,
-      })
-
-      // Request analysis generation via API
-      const response = await axios.post(
-        `/api/quickClash/analysis/${challengeId}/generate`,
-        { force: true }, // Force regeneration even if it exists
-      )
-
-      if (response.data.success) {
-        // Start polling for the analysis to complete
-        const checkInterval = setInterval(async () => {
-          try {
-            const analysisResponse = await axios.get(
-              `/api/quickClash/analysis/${challengeId}`,
-            )
-            if (
-              analysisResponse.data.success &&
-              analysisResponse.data.analysis
-            ) {
-              // Analysis is complete, update state
-              setChallengeAnalyses(prev => ({
-                ...prev,
-                [challengeId]: analysisResponse.data.analysis,
-              }))
-              // Stop checking
-              clearInterval(checkInterval)
-              // Update loading state
-              setAnalysisLoading(prev => ({ ...prev, [challengeId]: false }))
-
-              toast({
-                title: t('Analysis ready!'),
-                description: t('Your battle performance has been analyzed'),
-                status: 'success',
-                duration: 3000,
-                isClosable: true,
-              })
-            }
-          } catch (error) {
-            // Analysis still not ready, continue checking
-            console.log(
-              `Waiting for analysis to complete for challenge ${challengeId}`,
-            )
-          }
-        }, 3000) // Check every 3 seconds
-
-        // Set a timeout to stop checking after 30 seconds
-        setTimeout(() => {
-          clearInterval(checkInterval)
-          // If we still don't have the analysis, clear loading state
-          if (!challengeAnalyses[challengeId]) {
-            setAnalysisLoading(prev => ({ ...prev, [challengeId]: false }))
-
-            toast({
-              title: t('Analysis taking longer than expected'),
-              description: t('Please check back in a moment'),
-              status: 'warning',
-              duration: 5000,
-              isClosable: true,
-            })
-          }
-        }, 30000)
-      } else {
-        // Failed to start analysis
-        setAnalysisLoading(prev => ({ ...prev, [challengeId]: false }))
-
-        toast({
-          title: t('Analysis failed'),
-          description:
-            response.data.message || t('Please try again in a moment'),
-          status: 'error',
-          duration: 3000,
-          isClosable: true,
-        })
-      }
-    } catch (error) {
-      console.error('Error generating analysis:', error)
-      setAnalysisLoading(prev => ({ ...prev, [challengeId]: false }))
-
-      toast({
-        title: t('Analysis failed'),
-        description: t('Please try again in a moment'),
-        status: 'error',
-        duration: 3000,
-        isClosable: true,
-      })
-    }
-  }
 
   // Handle viewing full analysis
   const handleViewAnalysis = challengeId => {
@@ -359,7 +145,7 @@ const CompletedChallenges = () => {
 
   // Load more challenges
   const loadMore = () => {
-    setPage(prev => prev + 1)
+    loadCompletedChallenges(page + 1, 10)
   }
 
   // Format the result of a challenge

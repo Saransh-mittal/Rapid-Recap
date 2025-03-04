@@ -51,6 +51,7 @@ import { useNavigate } from 'react-router-dom'
 import { useTranslation } from 'react-i18next'
 import { useSelector } from 'react-redux'
 import { motion } from 'framer-motion'
+import useQuickClash from '../../customHooks/useQuickClash'
 
 // Lazy-loaded component
 const QuizReportModal = lazy(() => import('./QuizReportModal'))
@@ -511,9 +512,14 @@ const ActiveChallenges = () => {
   const toast = useToast()
   const navigate = useNavigate()
   const [filter, setFilter] = useState('all')
-  const [challenges, setChallenges] = useState([])
-  const [loading, setLoading] = useState(true)
-  const [error, setError] = useState(null)
+  const {
+    activeChallenges: challenges,
+    activeChallengesLoading: loading,
+    activeChallengesError: error,
+    loadActiveChallenges,
+    handleAcceptChallenge,
+    handleRejectChallenge,
+  } = useQuickClash()
   const { user } = useSelector(state => state.auth)
   const userId = user?._id
   const [selectedSession, setSelectedSession] = useState(null)
@@ -535,22 +541,10 @@ const ActiveChallenges = () => {
 
   // Fetch challenges
   useEffect(() => {
-    const fetchChallenges = async () => {
-      try {
-        setLoading(true)
-        const response = await axios.get('/api/quickClash/challenges')
-        setChallenges(response.data.challenges || [])
-        setError(null)
-      } catch (err) {
-        setError('Failed to load challenges. Please try again.')
-        console.error('Error fetching challenges:', err)
-      } finally {
-        setLoading(false)
-      }
+    if (userId) {
+      loadActiveChallenges()
     }
-
-    fetchChallenges()
-  }, [])
+  }, [userId, loadActiveChallenges])
 
   const filteredChallenges = useMemo(() => {
     if (!challenges || !userId) return []
@@ -636,39 +630,14 @@ const ActiveChallenges = () => {
 
     try {
       if (type === 'accept') {
-        await axios.post(`/api/quickClash/challenge/${id}/accept`)
-        toast({
-          title: t('Challenge Accepted'),
-          status: 'success',
-          duration: 3000,
-          isClosable: true,
-          position: 'top',
-        })
+        await handleAcceptChallenge(id)
       } else if (type === 'decline') {
-        await axios.post(`/api/quickClash/challenge/${id}/reject`)
-        toast({
-          title: t('Challenge Declined'),
-          status: 'info',
-          duration: 3000,
-          isClosable: true,
-          position: 'top',
-        })
+        await handleRejectChallenge(id)
       }
 
-      // Refresh challenges
-      const response = await axios.get('/api/quickClash/challenges')
-      setChallenges(response.data.challenges || [])
+      // No need to fetch challenges again as Redux will update the state
     } catch (error) {
       console.error(`Error ${type}ing challenge:`, error)
-      toast({
-        title: t('Error'),
-        description:
-          error.response?.data?.message || t(`Failed to ${type} challenge`),
-        status: 'error',
-        duration: 3000,
-        isClosable: true,
-        position: 'top',
-      })
     } finally {
       onConfirmClose()
     }

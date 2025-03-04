@@ -1,7 +1,6 @@
 import React, { useCallback } from 'react'
 import { Container, Box, useDisclosure, TabPanel } from '@chakra-ui/react'
 import { motion } from 'framer-motion'
-import { useTranslation } from 'react-i18next'
 import { lazy, Suspense } from 'react'
 
 // Regular imports
@@ -37,7 +36,6 @@ const MotionBox = motion(Box)
 
 const QuickClash = () => {
   const { isOpen, onOpen, onClose } = useDisclosure()
-  const { t } = useTranslation('QuickClash')
 
   // Use useCallback for event handlers
   const handleNewChallenge = useCallback(() => {

@@ -5,11 +5,23 @@ const {
   generateMixedArticle,
 } = require('./quickClashArticleService')
 const mongoose = require('mongoose')
-const { generateQuickClashQuizzes } = require('../../utils/quickClashUtils')
+const {
+  generateQuickClashQuiz,
+  translateQuizBackground,
+} = require('../../utils/quickClashUtils')
 const {
   generateQuickClashHighlights,
   getQuickClashHighlights,
+  scheduleHighlightGeneration,
 } = require('../../utils/quickClashHighlight.utils')
+const User = require('../../model/userSchema')
+const QuickClashQuiz = require('../../model/quickClashSchemas/quickClashQuizSchema')
+const {
+  notifyChallengeCreated,
+  notifyChallengeAccepted,
+  notifyChallengeRejected,
+  notifyChallengeCompleted,
+} = require('./quickClashNotificationService')
 
 const CHALLENGE_EXPIRY = 24 * 60 * 60 * 1000 // 24 hours
 
@@ -37,97 +49,175 @@ const checkChallengeLimits = async ({ userId, session }) => {
 }
 
 const createChallenge = async ({ challengerId, opponentId, categories }) => {
+  const category = categories[Math.floor(Math.random() * categories.length)]
+  const articles = await getSourceArticles({ category })
+  const mixedArticle = await generateMixedArticle({ articles })
   const session = await mongoose.startSession()
+
   try {
-    return await session.withTransaction(async () => {
-      // Check limits
-      await checkChallengeLimits({ userId: challengerId, session })
+    return await session.withTransaction(
+      async () => {
+        // Check limits
+        await checkChallengeLimits({ userId: challengerId, session })
 
-      // Randomly select category
-      const category = categories[Math.floor(Math.random() * categories.length)]
+        // Create challenge
+        const challenge = new QuickClashChallenge({
+          challenger: challengerId,
+          opponent: opponentId,
+          selectedCategories: categories,
+          category,
+          article: {
+            ...mixedArticle,
+            sourceArticles: articles.map(a => a._id),
+          },
+          expiresAt: new Date(Date.now() + CHALLENGE_EXPIRY),
+        })
 
-      // Get source articles and generate mixed content
-      const articles = await getSourceArticles({ category, session })
-      const mixedArticle = await generateMixedArticle({ articles })
+        await challenge.save({ session })
 
-      // Create challenge
-      const challenge = new QuickClashChallenge({
-        challenger: challengerId,
-        opponent: opponentId,
-        selectedCategories: categories,
-        category,
-        article: {
-          ...mixedArticle,
-          sourceArticles: articles.map(a => a._id),
-        },
-        expiresAt: new Date(Date.now() + CHALLENGE_EXPIRY),
-      })
+        // Generate only English quiz in transaction
+        const englishQuiz = await generateQuickClashQuiz({
+          title: mixedArticle.title.english,
+          author: 'Rapid Recap Team',
+          mainText: mixedArticle.content.english,
+          challenge,
+          language: 'en',
+          session,
+        })
 
-      await challenge.save({ session })
+        // Create a placeholder for the Hindi quiz that will be updated later
+        const hindiQuiz = new QuickClashQuiz({
+          challenge: challenge._id,
+          language: 'hi',
+          questions: [], // Empty initially
+          overallDifficulty: englishQuiz.overallDifficulty,
+          translationStatus: 'pending', // Add this field to your schema
+        })
 
-      // Generate quizzes in both languages
-      const { englishQuiz, hindiQuiz } = await generateQuickClashQuizzes({
-        title: mixedArticle.title.english,
-        author: 'Rapid Recap Team',
-        mainText: mixedArticle.content.english,
-        hindiTitle: mixedArticle.title.hindi,
-        hindiMainText: mixedArticle.content.hindi,
-        challenge,
-        session,
-      })
+        await hindiQuiz.save({ session })
 
-      // Generate highlights for both languages in parallel
-      // We use Promise.allSettled to continue even if one fails
-      const highlightPromises = [
-        generateQuickClashHighlights({
+        // Create placeholder highlights inside the transaction
+        const englishHighlight = await generateQuickClashHighlights({
           challengeId: challenge._id,
           lang: 'en',
           session,
-        }),
-        generateQuickClashHighlights({
+        })
+
+        const hindiHighlight = await generateQuickClashHighlights({
           challengeId: challenge._id,
           lang: 'hi',
           session,
-        }),
-      ]
+        })
 
-      const highlightResults = await Promise.allSettled(highlightPromises)
-      console.log(
-        `Highlight generation results: ${highlightResults
-          .map(r => r.status)
-          .join(', ')}`,
-      )
+        // Populate challenger and opponent info
+        const [challenger, opponent] = await Promise.all([
+          User.findById(challengerId)
+            .select('_id inGameName name')
+            .session(session),
+          User.findById(opponentId)
+            .select('_id inGameName name')
+            .session(session),
+        ])
 
-      return {
-        challenge,
-        quizzes: {
-          english: englishQuiz,
-          hindi: hindiQuiz,
-        },
-        highlights: {
-          english:
-            highlightResults[0].status === 'fulfilled'
-              ? highlightResults[0].value
-              : null,
-          hindi:
-            highlightResults[1].status === 'fulfilled'
-              ? highlightResults[1].value
-              : null,
-        },
-      }
-    })
+        challenge.challenger = challenger
+        challenge.opponent = opponent
+
+        const result = {
+          challenge,
+          quizzes: {
+            english: englishQuiz,
+            hindi: hindiQuiz,
+          },
+          highlights: {
+            english: englishHighlight,
+            hindi: hindiHighlight,
+          },
+        }
+        result.notifyData = {
+          challenger,
+          opponent,
+          challenge: {
+            _id: challenge._id,
+            category: challenge.category,
+          },
+        }
+
+        // Schedule the Hindi translation to happen after transaction completes
+        setTimeout(() => {
+          translateQuizBackground({
+            englishQuiz,
+            challengeId: challenge._id,
+            hindiQuizId: hindiQuiz._id,
+            hindiTitle: mixedArticle.title.hindi,
+            hindiMainText: mixedArticle.content.hindi,
+          }).catch(err => {
+            console.error('Background Hindi translation failed:', err)
+          })
+        }, 1000)
+
+        return result
+      },
+      {
+        readConcern: { level: 'snapshot' },
+        writeConcern: { w: 'majority' },
+        maxTimeMS: 300000, // 5 minutes instead of default 60 seconds
+      },
+    )
   } finally {
     session.endSession()
   }
 }
 
+// After the transaction completes successfully,
+// schedule the actual highlight generation in the background
+const postChallengeCreation = async (challengeId, notifyData) => {
+  try {
+    // Schedule both English and Hindi highlight generation outside of the transaction
+    // Don't await these - let them run in the background
+    scheduleHighlightGeneration({ challengeId, lang: 'en' }).catch(err =>
+      console.error(
+        `Error in background English highlight generation: ${err.message}`,
+      ),
+    )
+
+    scheduleHighlightGeneration({ challengeId, lang: 'hi' }).catch(err =>
+      console.error(
+        `Error in background Hindi highlight generation: ${err.message}`,
+      ),
+    )
+
+    console.log(
+      `Background highlight generation scheduled for challenge ${challengeId}`,
+    )
+    if (notifyData) {
+      notifyChallengeCreated({
+        challenge: notifyData.challenge,
+        challenger: notifyData.challenger,
+        opponent: notifyData.opponent,
+      }).catch(err => {
+        console.error(
+          'Error sending challenge creation notification:',
+          err.message,
+        )
+      })
+    }
+  } catch (error) {
+    console.error(
+      `Error scheduling background highlight generation: ${error.message}`,
+    )
+    // Non-blocking - this won't affect the challenge creation itself
+  }
+}
+
 const acceptChallenge = async ({ challengeId, userId }) => {
   const session = await mongoose.startSession()
+  let result
   try {
-    return await session.withTransaction(async () => {
-      const challenge = await QuickClashChallenge.findById(challengeId).session(
-        session,
-      )
+    result = await session.withTransaction(async () => {
+      const challenge = await QuickClashChallenge.findById(challengeId)
+        .populate('opponent', '_id inGameName name')
+        .populate('challenger', '_id inGameName name')
+        .session(session)
 
       if (!challenge) {
         throw new Error('Challenge not found')
@@ -146,6 +236,20 @@ const acceptChallenge = async ({ challengeId, userId }) => {
 
       return challenge
     })
+    setTimeout(() => {
+      notifyChallengeAccepted({
+        challenge: {
+          _id: result._id,
+          category: result.category,
+        },
+        challenger: result.challenger,
+        opponent: result.opponent,
+      }).catch(err => {
+        console.error('Error sending challenge accepted notification:', err)
+      })
+    }, 0)
+
+    return result
   } finally {
     session.endSession()
   }
@@ -153,11 +257,14 @@ const acceptChallenge = async ({ challengeId, userId }) => {
 
 const rejectChallenge = async ({ challengeId, userId }) => {
   const session = await mongoose.startSession()
+  let result
+
   try {
-    return await session.withTransaction(async () => {
-      const challenge = await QuickClashChallenge.findById(challengeId).session(
-        session,
-      )
+    result = await session.withTransaction(async () => {
+      const challenge = await QuickClashChallenge.findById(challengeId)
+        .populate('challenger', '_id name inGameName')
+        .populate('opponent', '_id name inGameName')
+        .session(session)
 
       if (!challenge) {
         throw new Error('Challenge not found')
@@ -167,7 +274,7 @@ const rejectChallenge = async ({ challengeId, userId }) => {
         throw new Error('Challenge is no longer pending')
       }
 
-      if (!challenge.opponent.equals(userId)) {
+      if (!challenge.opponent._id.equals(userId)) {
         throw new Error('Not authorized to reject this challenge')
       }
 
@@ -176,6 +283,26 @@ const rejectChallenge = async ({ challengeId, userId }) => {
 
       return challenge
     })
+
+    // Send notification outside of transaction
+    if (result) {
+      // Use setTimeout to ensure this runs after the transaction is completed
+      // and doesn't block the response
+      setTimeout(() => {
+        notifyChallengeRejected({
+          challenge: {
+            _id: result._id,
+            category: result.category,
+          },
+          challenger: result.challenger,
+          opponent: result.opponent,
+        }).catch(err => {
+          console.error('Error sending challenge rejected notification:', err)
+        })
+      }, 0)
+    }
+
+    return result
   } finally {
     session.endSession()
   }
@@ -229,41 +356,104 @@ const getUserChallenges = async ({ userId, status = null, limit = 10 }) => {
   return challenges
 }
 
-const updateChallengeScore = async ({ challengeId, userId, score }) => {
-  const session = await mongoose.startSession()
+const updateChallengeScore = async ({
+  challengeId,
+  userId,
+  score,
+  session: providedSession,
+}) => {
+  // Use provided session if available, otherwise create a new one
+  const session = providedSession || (await mongoose.startSession())
+  let startedTransaction = false
+  let result
+  let shouldNotify = false
+
   try {
-    return await session.withTransaction(async () => {
-      const challenge = await QuickClashChallenge.findById(challengeId).session(
-        session,
-      )
+    if (!providedSession) {
+      startedTransaction = true
+      await session.startTransaction()
+    }
 
-      if (!challenge) {
-        throw new Error('Challenge not found')
-      }
+    // Find and update the challenge
+    const challenge = await QuickClashChallenge.findById(challengeId)
+      .populate('challenger', '_id name inGameName')
+      .populate('opponent', '_id name inGameName')
+      .session(session)
 
-      // Update appropriate score based on user role
-      if (challenge.challenger.equals(userId)) {
-        challenge.challengerScore = score
-      } else if (challenge.opponent.equals(userId)) {
-        challenge.opponentScore = score
-      } else {
-        throw new Error('User not part of this challenge')
-      }
+    if (!challenge) {
+      throw new Error('Challenge not found')
+    }
 
-      // If both players have completed, determine winner
-      if (challenge.challengerScore > 0 && challenge.opponentScore > 0) {
-        challenge.status = 'completed'
+    const wasComplete =
+      challenge.challengerScore > 0 && challenge.opponentScore > 0
+
+    // Update appropriate score based on user role
+    if (challenge.challenger._id.equals(userId)) {
+      challenge.challengerScore = score
+    } else if (challenge.opponent._id.equals(userId)) {
+      challenge.opponentScore = score
+    } else {
+      throw new Error('User not part of this challenge')
+    }
+
+    // If both players have completed, determine winner
+    const isNowComplete =
+      challenge.challengerScore > 0 && challenge.opponentScore > 0
+    if (isNowComplete && !wasComplete) {
+      challenge.status = 'completed'
+
+      // Set winner if not a tie
+      if (challenge.challengerScore !== challenge.opponentScore) {
         challenge.winner =
           challenge.challengerScore > challenge.opponentScore
-            ? challenge.challenger
-            : challenge.opponent
+            ? challenge.challenger._id
+            : challenge.opponent._id
       }
 
-      await challenge.save({ session })
-      return challenge
-    })
+      // Mark for notification after transaction
+      shouldNotify = true
+    } else if (
+      !isNowComplete &&
+      (challenge.challengerScore > 0 || challenge.opponentScore > 0)
+    ) {
+      // Only one player has completed - notify the other player
+      shouldNotify = true
+    }
+
+    await challenge.save({ session })
+    result = challenge
+
+    // If we started the transaction, commit it
+    if (startedTransaction) {
+      await session.commitTransaction()
+    }
+
+    // Send notification outside of transaction (after it's committed)
+    if (shouldNotify) {
+      // Use setTimeout to ensure this runs after the transaction is completed
+      // and doesn't block the response
+      setTimeout(() => {
+        notifyChallengeCompleted({
+          challenge: result,
+          completedByUserId: userId,
+        }).catch(err => {
+          console.error('Error sending challenge completion notification:', err)
+        })
+      }, 0)
+    }
+
+    return result
+  } catch (error) {
+    // If we started the transaction, abort it on error
+    if (startedTransaction) {
+      await session.abortTransaction()
+    }
+    throw error
   } finally {
-    session.endSession()
+    // If we started the session, end it
+    if (!providedSession) {
+      session.endSession()
+    }
   }
 }
 
@@ -274,4 +464,5 @@ module.exports = {
   getChallengeDetails,
   getUserChallenges,
   updateChallengeScore,
+  postChallengeCreation,
 }

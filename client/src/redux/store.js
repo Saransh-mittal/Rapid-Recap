@@ -12,6 +12,7 @@ import noteMessageSummaryReducer from './noteMessageSummarySlice'
 import rewardsReducer from './rewardsSlice'
 import demotionSummaryReducer from './demotionSummarySlice'
 import inventoryReducer from './inventorySlice'
+import quickClashReducer from './quickClashSlice'
 
 export const store = configureStore({
   reducer: {
@@ -28,5 +29,6 @@ export const store = configureStore({
     rewards: rewardsReducer,
     demotionSummary: demotionSummaryReducer,
     inventory: inventoryReducer,
+    quickClash: quickClashReducer,
   },
 })

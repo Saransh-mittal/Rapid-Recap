@@ -6,6 +6,7 @@ const {
   rejectChallenge,
   getChallengeDetails,
   getUserChallenges,
+  postChallengeCreation,
 } = require('../services/quickClashServices/quickClashChallengeService')
 const {
   createSession,
@@ -35,23 +36,93 @@ const {
   isAnalysisInProgress,
 } = require('../services/quickClashServices/autoAnalysisService')
 const QuickClashAnalysis = require('../model/quickClashSchemas/quickClashAnalysisSchema')
+const {
+  notifyChallengerAboutCreation,
+} = require('../services/quickClashServices/quickClashNotificationService')
+const User = require('../model/userSchema')
 
 // Create a new challenge
 const createNewChallenge = asyncHandler(async (req, res) => {
   const { opponentId, categories } = req.body
   const challengerId = req.user._id
 
-  const challenge = await createChallenge({
-    challengerId,
-    opponentId,
-    categories,
-  })
+  try {
+    // Create the challenge
+    const challengeResult = await createChallenge({
+      challengerId,
+      opponentId,
+      categories,
+    })
 
-  res.status(201).json({
-    success: true,
-    message: 'Challenge created successfully',
-    challenge,
-  })
+    // Handle post-creation tasks (background highlight generation)
+    // after sending the response to avoid blocking
+    if (challengeResult && challengeResult.challenge) {
+      // Notify the challenger about successful creation
+      const { challenger, opponent, challenge } = challengeResult.notifyData
+      notifyChallengerAboutCreation({
+        challenge,
+        challenger,
+        opponent,
+        success: true,
+      }).catch(err =>
+        console.error(
+          'Error notifying challenger about successful creation:',
+          err,
+        ),
+      )
+
+      // Schedule post-creation tasks
+      process.nextTick(() => {
+        postChallengeCreation(
+          challengeResult.challenge._id,
+          challengeResult.notifyData,
+        ).catch(err =>
+          console.error('Error in post-challenge creation tasks:', err),
+        )
+      })
+    }
+
+    res.status(201).json({
+      success: true,
+      message: 'Challenge created successfully',
+      challenge: challengeResult.challenge,
+    })
+  } catch (error) {
+    console.error('Error creating challenge:', error)
+
+    // If we have user data available, notify the challenger about failure
+    if (req.user) {
+      // We need to fetch the opponent's data since we don't have it yet
+      try {
+        const opponent = await User.findById(opponentId).select(
+          '_id name inGameName',
+        )
+
+        notifyChallengerAboutCreation({
+          challenge: { category },
+          challenger: req.user,
+          opponent,
+          success: false,
+          errorMessage: error.message || 'An unexpected error occurred.',
+        }).catch(err =>
+          console.error(
+            'Error notifying challenger about creation failure:',
+            err,
+          ),
+        )
+      } catch (notifyError) {
+        console.error(
+          'Error preparing challenger notification after creation failure:',
+          notifyError,
+        )
+      }
+    }
+
+    res.status(500).json({
+      success: false,
+      message: error.message || 'Failed to create challenge',
+    })
+  }
 })
 
 // Accept a challenge

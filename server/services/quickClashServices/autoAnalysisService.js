@@ -3,6 +3,8 @@ const {
   generateChallengeAnalysisWithTranslation,
 } = require('./quickClashAnalysisService')
 const QuickClashAnalysis = require('../../model/quickClashSchemas/quickClashAnalysisSchema')
+const { notifyAnalysisReady } = require('./quickClashNotificationService')
+const QuickClashChallenge = require('../../model/quickClashSchemas/quickClashChallengeSchema')
 
 // In-memory tracker to prevent duplicate analysis generation
 // This could be replaced with a Redis-based solution for multiple server instances
@@ -32,6 +34,30 @@ const isAnalysisExistingOrInProgress = async ({ challengeId }) => {
       error,
     )
     return false
+  }
+}
+
+const notifyUsers = async ({ challengeId }) => {
+  try {
+    const challenge = await QuickClashChallenge.findById(challengeId)
+
+    if (challenge) {
+      // Send notification to challenger
+      await notifyAnalysisReady({
+        challenge,
+        forOpponent: false,
+      })
+
+      // Send notification to opponent
+      await notifyAnalysisReady({
+        challenge,
+        forOpponent: true,
+      })
+    }
+  } catch (notifyError) {
+    console.error(
+      `Error sending analysis notifications: ${notifyError.message}`,
+    )
   }
 }
 
@@ -69,6 +95,9 @@ const initiateBackgroundAnalysis = async ({ challengeId, force = false }) => {
         console.log(
           `Background analysis completed for challenge ${challengeId}`,
         )
+        notifyUsers({ challengeId }).catch(notifyError => {
+          console.error(notifyError)
+        })
         // Remove from tracker when complete
         analysisInProgress.delete(challengeId)
       })

@@ -223,6 +223,7 @@ const ReadingPhase = ({ article, timeLeft, onComplete }) => {
               </Text>
 
               <MotionButton
+                disabled={!hasScrolledToBottom}
                 colorScheme={hasScrolledToBottom ? 'green' : 'purple'}
                 size="lg"
                 leftIcon={<CheckCircle2 />}

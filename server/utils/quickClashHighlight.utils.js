@@ -36,6 +36,85 @@ const generateQuickClashHighlights = async ({
       return existingHighlight
     }
 
+    // Create a placeholder record to indicate processing has started
+    const processingHighlight = new QuickClashHighlight({
+      challengeId: challenge._id,
+      dictionary: [],
+      importantSentences: [],
+      createdAt: new Date(),
+      lastUpdated: new Date(),
+      processingStatus: 'pending',
+      language: lang,
+      error: null,
+    })
+
+    // Save the processing placeholder
+    if (session) {
+      await processingHighlight.save({ session })
+    } else {
+      await processingHighlight.save()
+    }
+
+    // OpenAI call is moved outside of the transaction in scheduleHighlightGeneration
+    // We'll return the processing placeholder for now
+    return processingHighlight
+  } catch (error) {
+    console.error('Error during QuickClash highlight generation:', error)
+
+    // Create a failed highlight record
+    try {
+      const failedHighlight = new QuickClashHighlight({
+        challengeId: challengeId,
+        dictionary: [],
+        importantSentences: [],
+        processingStatus: 'failed',
+        language: lang,
+        error: error.message,
+      })
+
+      if (session) {
+        await failedHighlight.save({ session })
+      } else {
+        await failedHighlight.save()
+      }
+    } catch (saveError) {
+      console.error('Error saving failed highlight record:', saveError)
+    }
+
+    throw error
+  }
+}
+
+/**
+ * Schedule the actual highlight generation to happen outside of the transaction
+ * @param {Object} params - Parameters
+ * @param {string} params.challengeId - Challenge ID
+ * @param {string} params.lang - Language (en/hi)
+ */
+const scheduleHighlightGeneration = async ({ challengeId, lang = 'en' }) => {
+  try {
+    // Find challenge to ensure it exists
+    const challenge = await QuickClashChallenge.findById(challengeId)
+    if (!challenge) {
+      console.log('[ERROR] Challenge not found for scheduled generation')
+      return null
+    }
+
+    // Check if a record exists already
+    const existingHighlight = await QuickClashHighlight.findOne({
+      challengeId,
+      language: lang,
+    })
+
+    // If already completed or doesn't exist, don't proceed
+    if (
+      !existingHighlight ||
+      existingHighlight.processingStatus === 'completed'
+    ) {
+      return existingHighlight || null
+    }
+
+    // Here we perform the actual OpenAI call outside of any transaction
     const openai = new OpenAI({
       apiKey: process.env.OPENAI_API_KEY,
     })
@@ -90,6 +169,7 @@ const generateQuickClashHighlights = async ({
       category: challenge.category,
     }
 
+    // Make the OpenAI API call
     const output = await openai.chat.completions.create({
       model: 'gpt-4o-mini',
       response_format: { type: 'json_object' },
@@ -101,46 +181,46 @@ const generateQuickClashHighlights = async ({
 
     const highlightData = JSON.parse(output.choices[0].message.content)
 
-    // Create highlight document
-    const highlight = new QuickClashHighlight({
-      challengeId: challenge._id,
-      dictionary: highlightData.dictionary,
-      importantSentences: highlightData.importantSentences,
-      createdAt: new Date(),
-      lastUpdated: new Date(),
-      processingStatus: 'completed',
+    // Update the existing highlight record with the actual data
+    await QuickClashHighlight.findOneAndUpdate(
+      { challengeId, language: lang },
+      {
+        dictionary: highlightData.dictionary,
+        importantSentences: highlightData.importantSentences,
+        lastUpdated: new Date(),
+        processingStatus: 'completed',
+        error: null,
+      },
+      { new: true },
+    )
+
+    console.log(
+      `Background highlight generation completed for challenge ${challengeId} (${lang})`,
+    )
+
+    // Fetch and return the updated record
+    return await QuickClashHighlight.findOne({
+      challengeId,
       language: lang,
-      error: null,
     })
-
-    // Save the highlight
-    if (session) {
-      await highlight.save({ session })
-    } else {
-      await highlight.save()
-    }
-
-    return highlight
   } catch (error) {
-    console.error('Error during QuickClash highlight generation:', error)
+    console.error(`Error in scheduled highlight generation (${lang}):`, error)
 
-    // Create a failed highlight record
-    const failedHighlight = new QuickClashHighlight({
-      challengeId: challengeId,
-      dictionary: [],
-      importantSentences: [],
-      processingStatus: 'failed',
-      language: lang,
-      error: error.message,
-    })
-
-    if (session) {
-      await failedHighlight.save({ session })
-    } else {
-      await failedHighlight.save()
+    // Update the record to mark as failed
+    try {
+      await QuickClashHighlight.findOneAndUpdate(
+        { challengeId, language: lang },
+        {
+          lastUpdated: new Date(),
+          processingStatus: 'failed',
+          error: error.message,
+        },
+      )
+    } catch (updateError) {
+      console.error('Error updating failed highlight status:', updateError)
     }
 
-    throw error
+    return null
   }
 }
 
@@ -153,21 +233,65 @@ const generateQuickClashHighlights = async ({
  */
 const getQuickClashHighlights = async ({ challengeId, lang = 'en' }) => {
   try {
+    // First check if we have a completed highlight
     let highlight = await QuickClashHighlight.findOne({
       challengeId,
       language: lang,
       processingStatus: 'completed',
     })
 
-    if (!highlight) {
-      // Generate on-demand if not found
-      highlight = await generateQuickClashHighlights({
-        challengeId,
-        lang,
-      })
+    if (highlight) {
+      return highlight
     }
 
-    return highlight
+    // Check if we have a pending or failed highlight
+    const pendingHighlight = await QuickClashHighlight.findOne({
+      challengeId,
+      language: lang,
+    })
+
+    // If we have a pending highlight that's old, retry generation
+    if (pendingHighlight) {
+      const fiveMinutesAgo = new Date(Date.now() - 5 * 60 * 1000)
+
+      if (
+        pendingHighlight.processingStatus === 'pending' &&
+        pendingHighlight.lastUpdated < fiveMinutesAgo
+      ) {
+        // Retry generation if it's been pending for more than 5 minutes
+        console.log(
+          `Retrying highlight generation for challenge ${challengeId} (${lang})`,
+        )
+        return await scheduleHighlightGeneration({ challengeId, lang })
+      }
+
+      if (pendingHighlight.processingStatus === 'failed') {
+        // Retry generation if previous attempt failed
+        console.log(
+          `Retrying failed highlight generation for challenge ${challengeId} (${lang})`,
+        )
+        return await scheduleHighlightGeneration({ challengeId, lang })
+      }
+
+      // Otherwise return the pending highlight
+      return pendingHighlight
+    }
+
+    // If no highlight exists at all, create a placeholder and schedule generation
+    const newHighlight = await generateQuickClashHighlights({
+      challengeId,
+      lang,
+    })
+
+    // Schedule the actual generation to happen in the background
+    scheduleHighlightGeneration({ challengeId, lang }).catch(err =>
+      console.error(
+        `Background highlight generation error for ${challengeId} (${lang}):`,
+        err,
+      ),
+    )
+
+    return newHighlight
   } catch (error) {
     console.error('Error fetching QuickClash highlights:', error)
     return null
@@ -177,4 +301,5 @@ const getQuickClashHighlights = async ({ challengeId, lang = 'en' }) => {
 module.exports = {
   generateQuickClashHighlights,
   getQuickClashHighlights,
+  scheduleHighlightGeneration,
 }

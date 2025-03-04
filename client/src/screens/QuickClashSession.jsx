@@ -26,6 +26,7 @@ import QuickClashError from '../components/quickClashComponents/QuickClashError'
 import ResultsModal from '../components/quickClashComponents/ResultsModal'
 import ConfirmationDialog from '../components/quickClashComponents/ConfirmationDialog'
 import { useSelector } from 'react-redux'
+import useQuickClash from '../customHooks/useQuickClash'
 
 // Lazy-loaded components
 const ReadingPhase = lazy(() =>
@@ -46,17 +47,23 @@ const QuickClashSession = () => {
   const navigate = useNavigate()
   const toast = useToast()
   const { user } = useSelector(state => state.auth)
+  const {
+    startSession,
+    setActiveChallenge,
+    endSession,
+    currentSession: session,
+    sessionLoading,
+    sessionError: reduxSessionError,
+  } = useQuickClash()
 
   // State management
-  const [loading, setLoading] = useState(true)
+  const [loading, setLoading] = useState(false)
   const [error, setError] = useState(null)
-  const [session, setSession] = useState(null)
   const [phase, setPhase] = useState('loading') // loading, reading, instruction, quiz, completed
   const [challenge, setChallenge] = useState(null)
   const [article, setArticle] = useState(null)
   const [timeLeft, setTimeLeft] = useState(120) // 2 minutes for reading
   const [quizTimeLeft, setQuizTimeLeft] = useState(50) // 50 seconds for quiz
-  const [language, setLanguage] = useState('en')
   const [score, setScore] = useState(0)
   const [phaseProgress, setPhaseProgress] = useState(0)
 
@@ -80,74 +87,83 @@ const QuickClashSession = () => {
 
   // Flag to skip confirmation when intentionally navigating away
   const skipConfirmRef = useRef(false)
+  const initSession = async () => {
+    try {
+      setLoading(true)
 
+      // First get the challenge details
+      const challengeResponse = await axios.get(
+        `/api/quickClash/challenge/${challengeId}`,
+      )
+      const challenge = challengeResponse.data.challenge
+      setChallenge(challenge)
+      setActiveChallenge(challenge)
+
+      // Start the session using our Redux action
+      const currentSession = await startSession(
+        challengeId,
+        user?.userLanguage || 'en',
+      )
+
+      // Initialize article data
+      setArticle(
+        user?.userLanguage === 'en' || !user?.userLanguage
+          ? {
+              title: challenge.article.title.english,
+              content: challenge.article.content.english,
+              importantSentences: challenge.article.englishImportantSentences,
+              dictionary: challenge.article.englishDictionary,
+            }
+          : {
+              title: challenge.article.title.hindi,
+              content: challenge.article.content.hindi,
+              importantSentences: challenge.article.hindiImportantSentences,
+              dictionary: challenge.article.hindiDictionary,
+            },
+      )
+
+      // Start reading phase
+      await axios.post(
+        `/api/quickClash/session/${currentSession._id}/reading/start`,
+      )
+
+      setPhase('reading')
+      setTimeLeft(120) // 2 minutes
+      readingStartTimeRef.current = Date.now()
+      setError(null)
+    } catch (err) {
+      console.error('Error initializing session:', err)
+      setError(
+        err.response?.data?.message ||
+          reduxSessionError ||
+          'Failed to initialize challenge session',
+      )
+    } finally {
+      setLoading(false)
+    }
+  }
   // Initialize session
   useEffect(() => {
-    const initSession = async () => {
-      try {
-        setLoading(true)
-        // First get the challenge details
-        const challengeResponse = await axios.get(
-          `/api/quickClash/challenge/${challengeId}`,
-        )
-        setChallenge(challengeResponse.data.challenge)
-
-        // Start the session
-        const sessionResponse = await axios.post(
-          `/api/quickClash/session/${challengeId}`,
-          {
-            language: user?.userLanguage || 'en',
-          },
-        )
-
-        setSession(sessionResponse.data.session)
-
-        // Initialize article data
-        setArticle(
-          user?.userLanguage === 'en' || !user?.userLanguage
-            ? {
-                title: challengeResponse.data.challenge.article.title.english,
-                content:
-                  challengeResponse.data.challenge.article.content.english,
-                importantSentences:
-                  challengeResponse.data.challenge.article
-                    .englishImportantSentences,
-                dictionary:
-                  challengeResponse.data.challenge.article.englishDictionary,
-              }
-            : {
-                title: challengeResponse.data.challenge.article.title.hindi,
-                content: challengeResponse.data.challenge.article.content.hindi,
-                importantSentences:
-                  challengeResponse.data.challenge.article
-                    .hindiImportantSentences,
-                dictionary:
-                  challengeResponse.data.challenge.article.hindiDictionary,
-              },
-        )
-
-        // Start the reading phase
-        await axios.post(
-          `/api/quickClash/session/${sessionResponse.data.session._id}/reading/start`,
-        )
-
-        setPhase('reading')
-        setTimeLeft(120) // 2 minutes
-        readingStartTimeRef.current = Date.now()
-        setError(null)
-      } catch (err) {
-        console.error('Error initializing session:', err)
-        setError(
-          err.response?.data?.message ||
-            'Failed to initialize challenge session',
-        )
-      } finally {
-        setLoading(false)
-      }
+    if (!loading && !sessionLoading && !session) {
+      initSession()
     }
 
-    initSession()
-  }, [challengeId, language, user?.userLanguage])
+    // If session was loaded from Redux, we can update UI
+    if (session && loading) {
+      setLoading(false)
+    }
+  }, [challengeId, user?.userLanguage, session, sessionLoading])
+  useEffect(() => {
+    return () => {
+      endSession()
+    }
+  }, [])
+
+  useEffect(() => {
+    if (reduxSessionError) {
+      setError(reduxSessionError)
+    }
+  }, [reduxSessionError])
 
   // Reading timer
   useEffect(() => {

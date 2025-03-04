@@ -39,12 +39,6 @@ const StatsCard = () => {
   useEffect(() => {
     // Fetch stats on component mount
     fetchStats()
-
-    // Set up polling to refresh stats every 60 seconds
-    const intervalId = setInterval(fetchStats, 60000)
-
-    // Clean up interval on component unmount
-    return () => clearInterval(intervalId)
   }, [fetchStats])
 
   // Format seconds to a human-readable format using useMemo
