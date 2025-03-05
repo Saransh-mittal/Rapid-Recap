@@ -110,16 +110,20 @@ const QuizInterface = ({
 
           {currentQuestion && (
             <VStack spacing={2} align="stretch">
-              {Object.entries(currentQuestion.options).map(([key, value]) => (
-                <OptionButton
-                  key={key}
-                  optionKey={key}
-                  optionText={value.text}
-                  isSelected={userAnswers[currentQuestionIndex] === key}
-                  onSelect={handleAnswer}
-                  isTournament={isTournament}
-                />
-              ))}
+              {/* Map through options with correct structure handling */}
+              {Object.entries(currentQuestion.options || {}).map(
+                ([key, value]) => (
+                  <OptionButton
+                    key={key}
+                    optionKey={key}
+                    // Handle both object format and direct string format
+                    optionText={typeof value === 'object' ? value.text : value}
+                    isSelected={userAnswers[currentQuestionIndex] === key}
+                    onSelect={handleAnswer}
+                    isTournament={isTournament}
+                  />
+                ),
+              )}
             </VStack>
           )}
         </motion.div>

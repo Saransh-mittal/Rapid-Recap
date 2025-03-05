@@ -42,7 +42,13 @@ const QuizContainer = ({ children }) => (
 )
 
 const SubmittedQuizInterface = React.memo(
-  ({ submitLoad = false, result, onViewReport, isTournament = false }) => {
+  ({
+    submitLoad = false,
+    result,
+    onViewReport,
+    isTournament = false,
+    openedFromQuickClash = false,
+  }) => {
     const { t } = useTranslation('SubmittedQuizInterface')
     const { step } = useQuizProgress(submitLoad)
     const quizData = useMemo(() => parseQuizData(result), [result])
@@ -84,6 +90,7 @@ const SubmittedQuizInterface = React.memo(
                 isTournament={isTournament}
                 rqmDelay={ANIMATION_DELAYS.RQM_SCORE}
                 iqDelay={ANIMATION_DELAYS.IQ_SCORE}
+                openedFromQuickClash={openedFromQuickClash}
               />
 
               <ProgressSection
@@ -100,6 +107,7 @@ const SubmittedQuizInterface = React.memo(
                 onViewReport={onViewReport}
                 isTournament={isTournament}
                 animationDelay={ANIMATION_DELAYS.ACTION_BUTTONS}
+                openedFromQuickClash={openedFromQuickClash}
               />
             </VStack>
           </MotionBox>

@@ -24,10 +24,17 @@ const TournamentQuizFeedbackNoteMessage = lazy(() =>
     './noteMessages/feedbackNoteMessages/TournamentQuizFeedbackNoteMessage'
   ),
 )
+const TournamentNoteMessage = lazy(() =>
+  import('./noteMessages/TournamentNoteMessage'),
+)
+const QuickClashNoteMessage = lazy(() =>
+  import('./noteMessages/QuickClashNoteMessage'),
+)
+
 import { SOUND_TYPES } from '../../models/soundSettings'
 import useSound from '../../customHooks/useSound'
 import { useTranslation } from 'react-i18next'
-import TournamentNoteMessage from './noteMessages/TournamentNoteMessage'
+
 const NoteMessageQueue = () => {
   const dispatch = useDispatch()
   const noteMessageQueue = useSelector(state => state.app.noteMessageQueue)
@@ -63,11 +70,15 @@ const NoteMessageQueue = () => {
             ? playMilestoneSound()
             : playNoteMessageSound()
           break
+        case 'quickClash':
+          playNoteMessageSound() // Play sound for Quick Clash notifications
+          break
         default:
           playNoteMessageSound()
       }
     }
-  }, [noteMessageQueue])
+  }, [noteMessageQueue, playMilestoneSound, playNoteMessageSound])
+
   // Memoize onClose handler to avoid unnecessary re-renders
   const handleClose = useCallback(() => {
     dispatch(clearNoteMessageQueue())
@@ -199,6 +210,19 @@ const NoteMessageQueue = () => {
             width={message.width}
             onClose={handleClose}
             tournamentId={message.tournamentId}
+          />
+        </Suspense>
+      )
+    case 'quickClash':
+      return (
+        <Suspense fallback={null}>
+          <QuickClashNoteMessage
+            messageId={message.id}
+            eventType={message.eventType}
+            data={message.data}
+            duration={message.duration}
+            width={message.width}
+            onClose={handleClose}
           />
         </Suspense>
       )

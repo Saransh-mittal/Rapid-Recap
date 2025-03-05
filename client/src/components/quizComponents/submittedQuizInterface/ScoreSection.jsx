@@ -5,7 +5,14 @@ import RQMScoreCard from './RQMScoreCard'
 import IQScoreCard from './IQScoreCard'
 
 const ScoreSection = React.memo(
-  ({ step, quizData, isTournament, rqmDelay, iqDelay }) => {
+  ({
+    step,
+    quizData,
+    isTournament,
+    rqmDelay,
+    iqDelay,
+    openedFromQuickClash,
+  }) => {
     return (
       <Flex
         w={'100%'}
@@ -19,12 +26,14 @@ const ScoreSection = React.memo(
           isTournament={isTournament}
           animationDelay={rqmDelay}
         />
-        <IQScoreCard
-          step={step}
-          quizData={quizData}
-          isTournament={isTournament}
-          animationDelay={iqDelay}
-        />
+        {!openedFromQuickClash && !isTournament && (
+          <IQScoreCard
+            step={step}
+            quizData={quizData}
+            isTournament={isTournament}
+            animationDelay={iqDelay}
+          />
+        )}
       </Flex>
     )
   },

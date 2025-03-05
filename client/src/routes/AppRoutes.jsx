@@ -20,10 +20,16 @@ const ContactLayout = lazy(() =>
 )
 const RuleBook = lazy(() => import('../screens/RuleBook'))
 const HallOfChampions = lazy(() => import('../screens/HallOfChampions'))
+const QuickClash = lazy(() => import('../screens/QuickClash'))
+const QuickClashSession = lazy(() => import('../screens/QuickClashSession'))
 
 const OnboardingProcess = lazy(() => import('../screens/OnboardingProcess'))
 const DemotionSummary = lazy(() => import('../screens/DemotionSummary'))
 const PrivacyPolicy = lazy(() => import('../screens/PrivacyPolicy'))
+const QuickClashSocketTest =
+  process.env.NODE_ENV === 'production'
+    ? null
+    : React.lazy(() => import('../screens/testing/QuickClashSocketTest'))
 
 const AppRoutes = ({ isToken, needsOnboarding, setIsGuestLoggedin }) => {
   const { summary, isVisible } = useSelector(state => state.demotionSummary)
@@ -50,6 +56,22 @@ const AppRoutes = ({ isToken, needsOnboarding, setIsGuestLoggedin }) => {
             <Route
               path="/"
               element={isToken ? <Navigate to="/home" /> : <GetStarted />}
+            />
+            {process.env.NODE_ENV != 'production' && (
+              <Route
+                path="/quickclash/test-socket"
+                element={<QuickClashSocketTest />}
+              />
+            )}
+            <Route
+              path="/quickclash"
+              element={isToken ? <QuickClash /> : <Navigate to="/" replace />}
+            />
+            <Route
+              path="/quickclash/session/:challengeId"
+              element={
+                isToken ? <QuickClashSession /> : <Navigate to="/" replace />
+              }
             />
             <Route path="/manual" element={<RuleBook />} />
             <Route path="/manual/:pageId" element={<RuleBook />} />

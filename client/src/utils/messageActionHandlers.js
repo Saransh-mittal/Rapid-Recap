@@ -1,4 +1,4 @@
-// src/utils/messageActionHandlers.js
+// utils/messageActionHandlers.js
 
 const messageActionHandlers = {
   CONFIRM: () => {
@@ -63,12 +63,36 @@ const messageActionHandlers = {
       dispatch(actions.removeNoteMessageWithId(messageId))
   },
   VIEW_REPORT: () => {},
-
-  // Add more action handlers as needed
+  // Quick Clash specific actions
+  NAVIGATE: (navigate, path, dispatch, actions, messageId) => {
+    if (path) {
+      navigate(path)
+    }
+    dispatch &&
+      actions &&
+      messageId &&
+      dispatch(actions.removeNoteMessageWithId(messageId))
+  },
+  PLAY_CHALLENGE: (navigate, challengeId, dispatch, actions, messageId) => {
+    navigate(`/quickclash/session/${challengeId}`)
+    dispatch &&
+      actions &&
+      messageId &&
+      dispatch(actions.removeNoteMessageWithId(messageId))
+  },
+  VIEW_ANALYSIS: (navigate, challengeId, dispatch, actions, messageId) => {
+    navigate(`/quickclash`)
+    dispatch &&
+      actions &&
+      messageId &&
+      dispatch(actions.removeNoteMessageWithId(messageId))
+  },
 }
 
 export const createHandleMessageAction = (dispatch, actions) => {
   return (actionType, messageId, profileId, payload) => {
+    const { navigate } = actions
+
     if (messageActionHandlers[actionType]) {
       if (actionType === 'VIEW_ALL') {
         messageActionHandlers[actionType](() =>
@@ -101,6 +125,38 @@ export const createHandleMessageAction = (dispatch, actions) => {
           messageId,
           dispatch,
         )
+      } else if (actionType === 'NAVIGATE' && payload && payload.path) {
+        messageActionHandlers[actionType](
+          navigate,
+          payload.path,
+          dispatch,
+          actions,
+          messageId,
+        )
+      } else if (
+        actionType === 'PLAY_CHALLENGE' &&
+        payload &&
+        payload.challengeId
+      ) {
+        messageActionHandlers[actionType](
+          navigate,
+          payload.challengeId,
+          dispatch,
+          actions,
+          messageId,
+        )
+      } else if (
+        actionType === 'VIEW_ANALYSIS' &&
+        payload &&
+        payload.challengeId
+      ) {
+        messageActionHandlers[actionType](
+          navigate,
+          payload.challengeId,
+          dispatch,
+          actions,
+          messageId,
+        )
       } else {
         messageActionHandlers[actionType]()
       }
@@ -111,4 +167,5 @@ export const createHandleMessageAction = (dispatch, actions) => {
 }
 
 // You can also export individual handlers if needed
-export const { CONFIRM, CANCEL, VIEW_ALL, DISMISS } = messageActionHandlers
+export const { CONFIRM, CANCEL, VIEW_ALL, DISMISS, NAVIGATE } =
+  messageActionHandlers
