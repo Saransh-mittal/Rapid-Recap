@@ -238,12 +238,13 @@ const saveQuizAttempt = async (
     activeTimeDilation.isUsed = true
     await inventory.save({ session })
   }
-
+  let streakRevived = false
   if (user.revivalPeriodEnd && user.todaysQuizCnt >= 5) {
     user.streak = user.streakBeforeBreak + 1
     user.streakBeforeBreak = 0
     user.revivalPeriodEnd = null
     await user.save({ session })
+    streakRevived = true
   }
 
   let quinBoostUtilized = false
@@ -519,6 +520,7 @@ const saveQuizAttempt = async (
     userEligibleForTournament,
     performanceBonus,
     timeDilationBoosted,
+    streakRevived,
     pauseRealTimeIQ: user.pauseRealTimeIQ,
     ...resultOfIQCalc,
   }

@@ -8,13 +8,17 @@ const {
   checkUserBatch,
 } = require('./utils/miscellaneous.utils')
 const globalEmitter = require('./eventEmitter')
+const {
+  setupQuickClashSocketHandlers,
+  setupQuickClashGlobalEvents,
+} = require('./utils/quickClashSocket.utils')
 
 function initializeSocket(server) {
   const io = require('socket.io')(server, {
     pingTimeout: 60000,
     cors: {
-      origin: 'http://localhost:5173', // change at the time of production
-      // credentials: true,
+      origin: 'https://rapidrecap.ai/', // change at the time of production
+      credentials: true,
     },
   })
 
@@ -27,6 +31,8 @@ function initializeSocket(server) {
       await redis.setex(`user:${userData._id}:lastHeartbeat`, 90, Date.now())
       await User.findByIdAndUpdate(userData._id, { isOnline: true })
       socket.broadcast.emit('user online', userData._id)
+
+      setupQuickClashSocketHandlers(io, socket, userData)
     })
 
     socket.on('heartbeat', async userId => {
@@ -208,6 +214,7 @@ function initializeSocket(server) {
       socket.broadcast.emit('user offline', userData._id)
     })
   })
+  setupQuickClashGlobalEvents(io)
   // Bridge between custom emitter and Socket.IO
   globalEmitter.on('quiz_progress', ({ userId, progress }) => {
     io.to(`quiz_progress_${userId}`).emit('quiz_generation_progress', {

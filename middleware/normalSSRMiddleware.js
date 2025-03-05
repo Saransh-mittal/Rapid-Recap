@@ -66,7 +66,7 @@ async function createSSRMiddleware(app) {
           )
 
         res.setHeader('Content-Type', 'text/html; charset=utf-8')
-
+        res.setHeader('Cache-Control', 'no-store, must-revalidate')
         res.status(200).end(processedTemplate)
       } catch (error) {
         console.error('Error handling client-side rendering:', error)
@@ -121,6 +121,7 @@ function handleCSSRequest(req, res, next) {
   }
 
   res.setHeader('Content-Type', 'text/css')
+  res.setHeader('Cache-Control', 'public, max-age=31536000')
 
   res.sendFile(cssPath, err => {
     if (err) {
@@ -137,6 +138,7 @@ function setupStaticHandling(app) {
   const staticOptions = {
     setHeaders: (res, filePath) => {
       if (filePath.includes('/locales/')) {
+        res.setHeader('Cache-Control', 'no-store, must-revalidate')
         return
       }
 
@@ -145,7 +147,9 @@ function setupStaticHandling(app) {
         filePath.endsWith('service-worker.js')
       ) {
         res.setHeader('Service-Worker-Allowed', '/')
+        res.setHeader('Cache-Control', 'no-cache')
       } else {
+        res.setHeader('Cache-Control', 'public, max-age=31536000')
       }
     },
     index: false,
@@ -156,7 +160,9 @@ function setupStaticHandling(app) {
     '/locales',
     express.static(path.join(distPath, 'locales'), {
       ...staticOptions,
-      setHeaders: res => {},
+      setHeaders: res => {
+        res.setHeader('Cache-Control', 'no-store, must-revalidate')
+      },
     }),
   )
 
