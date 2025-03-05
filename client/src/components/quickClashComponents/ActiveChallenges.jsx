@@ -128,7 +128,7 @@ const StatusBadge = ({ status, isChallenger }) => {
 }
 
 // Player Status Component
-const PlayerStatus = ({ player, score, isUser }) => {
+const PlayerStatus = ({ player, score, attempted, isUser }) => {
   const { t } = useTranslation('QuickClash')
 
   return (
@@ -168,12 +168,12 @@ const PlayerStatus = ({ player, score, isUser }) => {
         </HStack>
         <HStack mt={1} spacing={1}>
           <Badge
-            colorScheme={score > 0 ? 'green' : 'yellow'}
+            colorScheme={attempted ? 'green' : 'yellow'}
             fontSize={{ base: 'xs', md: 'sm' }}
           >
-            {score > 0 ? t('Completed') : t('Pending')}
+            {attempted ? t('Completed') : t('Pending')}
           </Badge>
-          {score > 0 && (
+          {attempted && (
             <Text
               fontSize={{ base: 'sm', md: 'md' }}
               color="blue.300"
@@ -204,6 +204,10 @@ const ChallengeItem = ({
     addSuffix: true,
   })
 
+  const myAttempted = isChallenger
+    ? challenge.challengerAttempted
+    : challenge.opponentAttempted
+
   const isExpired = new Date(challenge.expiresAt) < new Date()
   const myScore = isChallenger
     ? challenge.challengerScore
@@ -212,13 +216,16 @@ const ChallengeItem = ({
 
   const isWinner =
     challenge.status === 'completed' &&
+    challenge.challengerAttempted &&
+    challenge.opponentAttempted &&
     ((isChallenger && challenge.challengerScore > challenge.opponentScore) ||
       (!isChallenger && challenge.opponentScore > challenge.challengerScore))
 
+  // Update the isTie logic
   const isTie =
     challenge.status === 'completed' &&
-    challenge.challengerScore > 0 &&
-    challenge.opponentScore > 0 &&
+    challenge.challengerAttempted &&
+    challenge.opponentAttempted &&
     challenge.challengerScore === challenge.opponentScore
 
   // Animation settings
@@ -300,11 +307,13 @@ const ChallengeItem = ({
               <PlayerStatus
                 player={challenge.challenger}
                 score={challenge.challengerScore}
+                attempted={challenge.challengerAttempted}
                 isUser={isChallenger}
               />
               <PlayerStatus
                 player={challenge.opponent}
                 score={challenge.opponentScore}
+                attempted={challenge.opponentAttempted}
                 isUser={!isChallenger}
               />
             </HStack>
@@ -312,11 +321,13 @@ const ChallengeItem = ({
               <PlayerStatus
                 player={challenge.challenger}
                 score={challenge.challengerScore}
+                attempted={challenge.challengerAttempted}
                 isUser={isChallenger}
               />
               <PlayerStatus
                 player={challenge.opponent}
                 score={challenge.opponentScore}
+                attempted={challenge.opponentAttempted}
                 isUser={!isChallenger}
               />
             </VStack>
@@ -324,32 +335,34 @@ const ChallengeItem = ({
         )}
 
         {/* Result Banner */}
-        {challenge.status === 'completed' && (
-          <Box
-            p={2}
-            bg={isWinner ? 'purple.900' : isTie ? 'yellow.900' : 'gray.800'}
-            textAlign="center"
-          >
-            <HStack spacing={1} justify="center">
-              <Icon
-                as={isWinner ? Trophy : isTie ? Flame : AlertCircle}
-                color={
-                  isWinner ? 'yellow.400' : isTie ? 'yellow.300' : 'gray.400'
-                }
-                boxSize={4}
-              />
-              <Text fontSize="sm" fontWeight="bold" color="white">
-                {isWinner ? t('Victory!') : isTie ? t('Tie!') : t('Defeat')}
-              </Text>
-            </HStack>
-          </Box>
-        )}
+        {challenge.status === 'completed' &&
+          challenge.challengerAttempted &&
+          challenge.opponentAttempted && (
+            <Box
+              p={2}
+              bg={isWinner ? 'purple.900' : isTie ? 'yellow.900' : 'gray.800'}
+              textAlign="center"
+            >
+              <HStack spacing={1} justify="center">
+                <Icon
+                  as={isWinner ? Trophy : isTie ? Flame : AlertCircle}
+                  color={
+                    isWinner ? 'yellow.400' : isTie ? 'yellow.300' : 'gray.400'
+                  }
+                  boxSize={4}
+                />
+                <Text fontSize="sm" fontWeight="bold" color="white">
+                  {isWinner ? t('Victory!') : isTie ? t('Tie!') : t('Defeat')}
+                </Text>
+              </HStack>
+            </Box>
+          )}
 
         {/* Actions */}
         <Flex justify="center" p={2} bg="whiteAlpha.50">
           {!isExpired && (
             <>
-              {hasCompleted ? (
+              {myAttempted ? (
                 <Button
                   size="sm"
                   colorScheme="purple"
@@ -388,7 +401,7 @@ const ChallengeItem = ({
                     {t('Decline')}
                   </Button>
                 </HStack>
-              ) : challenge.status === 'active' && !hasCompleted ? (
+              ) : challenge.status === 'active' && !myAttempted ? (
                 <Button
                   size="sm"
                   colorScheme="green"

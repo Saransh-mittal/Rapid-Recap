@@ -296,8 +296,7 @@ const submitQuizAnswersService = async ({
 
     await quizSession.save({ session })
 
-    // Update challenge score
-
+    // Update challenge score along with attempted status, regardless of score value
     await updateChallengeScore({
       challengeId: quizSession.challenge,
       userId: quizSession.user,
