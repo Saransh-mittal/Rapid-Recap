@@ -52,6 +52,7 @@ import { useTranslation } from 'react-i18next'
 import { useSelector } from 'react-redux'
 import { motion } from 'framer-motion'
 import useQuickClash from '../../customHooks/useQuickClash'
+import useQuickClashSocket from '../../customHooks/useQuickClashSocket'
 
 // Lazy-loaded component
 const QuizReportModal = lazy(() => import('./QuizReportModal'))
@@ -520,6 +521,7 @@ const ActiveChallenges = () => {
     handleAcceptChallenge,
     handleRejectChallenge,
   } = useQuickClash()
+  const { emitChallengeAccepted, emitChallengeRejected } = useQuickClashSocket()
   const { user } = useSelector(state => state.auth)
   const userId = user?._id
   const [selectedSession, setSelectedSession] = useState(null)
@@ -630,9 +632,27 @@ const ActiveChallenges = () => {
 
     try {
       if (type === 'accept') {
-        await handleAcceptChallenge(id)
+        const challenge = await handleAcceptChallenge(id)
+
+        // If successful, emit socket event
+        if (challenge) {
+          emitChallengeAccepted({
+            challengerId: challenge.challenger._id,
+            challengeId: challenge._id,
+            category: challenge.category,
+          })
+        }
       } else if (type === 'decline') {
-        await handleRejectChallenge(id)
+        const challenge = await handleRejectChallenge(id)
+
+        // If successful, emit socket event
+        if (challenge) {
+          emitChallengeRejected({
+            challengerId: challenge.challenger._id,
+            challengeId: challenge._id,
+            category: challenge.category,
+          })
+        }
       }
 
       // No need to fetch challenges again as Redux will update the state

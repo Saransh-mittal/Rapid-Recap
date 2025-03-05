@@ -5,6 +5,7 @@ const {
 const QuickClashAnalysis = require('../../model/quickClashSchemas/quickClashAnalysisSchema')
 const { notifyAnalysisReady } = require('./quickClashNotificationService')
 const QuickClashChallenge = require('../../model/quickClashSchemas/quickClashChallengeSchema')
+const globalEmitter = require('../../eventEmitter')
 
 // In-memory tracker to prevent duplicate analysis generation
 // This could be replaced with a Redis-based solution for multiple server instances
@@ -91,14 +92,46 @@ const initiateBackgroundAnalysis = async ({ challengeId, force = false }) => {
     generateChallengeAnalysisWithTranslation({
       challengeId,
     })
-      .then(() => {
+      .then(async analysis => {
         console.log(
           `Background analysis completed for challenge ${challengeId}`,
         )
         notifyUsers({ challengeId }).catch(notifyError => {
-          console.error(notifyError)
+          console.error(
+            `Error notifying users about completed analysis: ${notifyError.message}`,
+          )
         })
-        // Remove from tracker when complete
+        // Get the challenge to notify users
+        try {
+          const challenge = await QuickClashChallenge.findById(
+            challengeId,
+          ).populate('challenger opponent')
+
+          if (challenge) {
+            // Notify both users via global emitter
+            // This will be picked up by the socket server to emit to connected clients
+            globalEmitter.emit('quickClash:analysisReady', {
+              challengeId,
+              userId: challenge.challenger._id.toString(),
+            })
+
+            globalEmitter.emit('quickClash:analysisReady', {
+              challengeId,
+              userId: challenge.opponent._id.toString(),
+            })
+
+            console.log(
+              `Emitted analysis ready events for challenge ${challengeId}`,
+            )
+          }
+        } catch (notificationError) {
+          console.error(
+            'Error notifying users about completed analysis:',
+            notificationError,
+          )
+        }
+
+        // Remove from tracker
         analysisInProgress.delete(challengeId)
       })
       .catch(error => {

@@ -26,6 +26,10 @@ const QuickClashSession = lazy(() => import('../screens/QuickClashSession'))
 const OnboardingProcess = lazy(() => import('../screens/OnboardingProcess'))
 const DemotionSummary = lazy(() => import('../screens/DemotionSummary'))
 const PrivacyPolicy = lazy(() => import('../screens/PrivacyPolicy'))
+const QuickClashSocketTest =
+  process.env.NODE_ENV === 'production'
+    ? null
+    : React.lazy(() => import('../screens/testing/QuickClashSocketTest'))
 
 const AppRoutes = ({ isToken, needsOnboarding, setIsGuestLoggedin }) => {
   const { summary, isVisible } = useSelector(state => state.demotionSummary)
@@ -53,6 +57,12 @@ const AppRoutes = ({ isToken, needsOnboarding, setIsGuestLoggedin }) => {
               path="/"
               element={isToken ? <Navigate to="/home" /> : <GetStarted />}
             />
+            {process.env.NODE_ENV != 'production' && (
+              <Route
+                path="/quickclash/test-socket"
+                element={<QuickClashSocketTest />}
+              />
+            )}
             <Route
               path="/quickclash"
               element={isToken ? <QuickClash /> : <Navigate to="/" replace />}

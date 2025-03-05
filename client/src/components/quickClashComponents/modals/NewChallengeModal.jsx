@@ -27,11 +27,13 @@ import {
   Step2Buttons,
 } from './newChallengeComponents/StepButtons'
 import useQuickClash from '../../../customHooks/useQuickClash'
+import useQuickClashSocket from '../../../customHooks/useQuickClashSocket'
 
 const NewChallengeModal = ({ isOpen, onClose, preSelectedUser = null }) => {
   const { t } = useTranslation('QuickClash')
   const toast = useToast()
   const { createChallenge, challengeCreating: isSubmitting } = useQuickClash()
+  const { emitChallengeCreated } = useQuickClashSocket()
 
   // State management
   const [selectedUser, setSelectedUser] = useState(preSelectedUser || null)
@@ -165,7 +167,22 @@ const NewChallengeModal = ({ isOpen, onClose, preSelectedUser = null }) => {
 
     try {
       // Use the action from our hook
-      await createChallenge(selectedUser._id, selectedCategories)
+      const challenge = await createChallenge(
+        selectedUser._id,
+        selectedCategories,
+      )
+
+      // If creation was successful, emit socket event
+      if (challenge) {
+        emitChallengeCreated({
+          opponentId: selectedUser._id,
+          categories: selectedCategories,
+          challenge: {
+            _id: challenge._id,
+            category: challenge.category,
+          },
+        })
+      }
 
       // Close the modal if not already closed
       if (!manuallyClosed.current && isOpen) {
@@ -185,6 +202,7 @@ const NewChallengeModal = ({ isOpen, onClose, preSelectedUser = null }) => {
     resetState,
     isOpen,
     createChallenge,
+    emitChallengeCreated,
   ])
 
   // Is submission disabled? - Exactly 2 categories required

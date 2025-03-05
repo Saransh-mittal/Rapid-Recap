@@ -18,6 +18,14 @@ const ActiveChallenges = lazy(() =>
 const CompletedChallenges = lazy(() =>
   import('../components/quickClashComponents/CompletedChallenges'),
 )
+const QuickClashSocketDebug =
+  process.env.NODE_ENV === 'production'
+    ? null
+    : React.lazy(() =>
+        import(
+          '../components/quickClashComponents/development/QuickClashSocketDebug'
+        ),
+      )
 
 // Loading fallback
 const LoadingFallback = () => (
@@ -36,7 +44,6 @@ const MotionBox = motion(Box)
 
 const QuickClash = () => {
   const { isOpen, onOpen, onClose } = useDisclosure()
-
   // Use useCallback for event handlers
   const handleNewChallenge = useCallback(() => {
     onOpen()
@@ -84,6 +91,11 @@ const QuickClash = () => {
 
       {/* Challenge Modal */}
       <NewChallengeModal isOpen={isOpen} onClose={onClose} />
+      {process.env.NODE_ENV != 'production' && (
+        <Suspense fallback={<LoadingFallback />}>
+          {QuickClashSocketDebug && <QuickClashSocketDebug />}
+        </Suspense>
+      )}
     </Container>
   )
 }

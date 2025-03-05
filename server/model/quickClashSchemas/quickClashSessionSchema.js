@@ -89,7 +89,7 @@ const quickClashSessionSchema = new mongoose.Schema({
 
 // Indexes for performance
 quickClashSessionSchema.index({ challenge: 1, user: 1 }, { unique: true })
-quickClashSessionSchema.index({ expiresAt: 1 }, { expireAfterSeconds: 0 })
+quickClashSessionSchema.index({ expiresAt: 1 })
 quickClashSessionSchema.index({ user: 1, createdAt: -1 })
 
 const QuickClashSession = mongoose.model(

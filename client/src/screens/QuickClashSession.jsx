@@ -27,6 +27,7 @@ import ResultsModal from '../components/quickClashComponents/ResultsModal'
 import ConfirmationDialog from '../components/quickClashComponents/ConfirmationDialog'
 import { useSelector } from 'react-redux'
 import useQuickClash from '../customHooks/useQuickClash'
+import useQuickClashSocket from '../customHooks/useQuickClashSocket'
 
 // Lazy-loaded components
 const ReadingPhase = lazy(() =>
@@ -55,6 +56,7 @@ const QuickClashSession = () => {
     sessionLoading,
     sessionError: reduxSessionError,
   } = useQuickClash()
+  const { emitChallengeCompleted } = useQuickClashSocket()
 
   // State management
   const [loading, setLoading] = useState(false)
@@ -244,6 +246,15 @@ const QuickClashSession = () => {
     setScore(result.RQM_score)
     setPhase('completed')
     openResults()
+
+    // If challenge exists, emit completion event
+    if (challenge && challenge.opponent) {
+      emitChallengeCompleted({
+        opponentId: challenge.opponent._id,
+        challengeId: challenge._id,
+        score: result.RQM_score,
+      })
+    }
   }
 
   // Handle browser's back button and page refresh attempts

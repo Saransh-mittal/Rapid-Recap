@@ -174,6 +174,7 @@ const NoteMessage = ({
                         onClick={() =>
                           handleAction(action.actionType, action?.payload)
                         }
+                        path={action?.path}
                         size="sm"
                         variant="outline"
                         colorScheme="blue"

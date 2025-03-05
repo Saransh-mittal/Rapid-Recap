@@ -2,6 +2,7 @@
 const { sendNotification } = require('../notificationService')
 const ApplicationUpdates = require('../../model/applicationUpdatesSchema')
 const User = require('../../model/userSchema')
+const globalEmitter = require('../../eventEmitter')
 
 /**
  * Send notification when a new challenge is created
@@ -35,6 +36,13 @@ const notifyChallengeCreated = async ({ challenge, challenger, opponent }) => {
       url: '/quickclash',
       userId: opponent._id,
       messageId: appUpdate._id.toString(),
+    })
+
+    // Emit event for socket notification
+    globalEmitter.emit('quickClash:challengeCreated', {
+      challenge,
+      challenger,
+      opponent,
     })
 
     console.log(
@@ -87,6 +95,14 @@ const notifyChallengerAboutCreation = async ({
         messageId: appUpdate._id.toString(),
       })
 
+      // Emit event for socket notification to challenger
+      globalEmitter.emit('quickClash:challengerNotified', {
+        challenge,
+        challenger,
+        opponent,
+        success: true,
+      })
+
       console.log(
         `Challenge creation success notification sent to ${
           challenger.inGameName || challenger.name
@@ -112,6 +128,15 @@ const notifyChallengerAboutCreation = async ({
         url: '/quickclash',
         userId: challenger._id,
         messageId: appUpdate._id.toString(),
+      })
+
+      // Emit event for socket notification about failure to challenger
+      globalEmitter.emit('quickClash:challengerNotified', {
+        challenge,
+        challenger,
+        opponent,
+        success: false,
+        errorMessage: errorMessage || 'Failed to create challenge',
       })
 
       console.log(
@@ -162,6 +187,14 @@ const notifyChallengeAccepted = async ({ challenge, challenger, opponent }) => {
       messageId: appUpdate._id.toString(),
     })
 
+    // Emit event for socket notification
+    globalEmitter.emit('quickClash:challengeAccepted', {
+      challengeId: challenge._id,
+      category: challenge.category,
+      challenger,
+      opponent,
+    })
+
     console.log(
       `Challenge accepted notification sent to ${
         challenger.inGameName || challenger.name
@@ -204,6 +237,14 @@ const notifyChallengeRejected = async ({ challenge, challenger, opponent }) => {
       url: '/quickclash',
       userId: challenger._id,
       messageId: appUpdate._id.toString(),
+    })
+
+    // Emit event for socket notification
+    globalEmitter.emit('quickClash:challengeRejected', {
+      challengeId: challenge._id,
+      category: challenge.category,
+      challenger,
+      opponent,
     })
 
     console.log(
@@ -319,7 +360,10 @@ const notifyChallengeCompleted = async ({ challenge, completedByUserId }) => {
           messageId: opponentUpdate._id.toString(),
         }),
       ])
-
+      globalEmitter.emit('quickClash:challengeCompletedByBothPlayers', {
+        challenge,
+        completedByUserId,
+      })
       console.log(`Challenge completion notifications sent to both users`)
     } else {
       // Only one player has completed - notify the other player
@@ -364,6 +408,11 @@ const notifyChallengeCompleted = async ({ challenge, completedByUserId }) => {
         messageId: appUpdate._id.toString(),
       })
 
+      // Emit event for socket notification
+      globalEmitter.emit('quickClash:challengeCompleted', {
+        challenge,
+        completedByUserId,
+      })
       console.log(
         `Challenge awaiting notification sent to ${
           otherPlayer.inGameName || otherPlayer.name
@@ -407,6 +456,12 @@ const notifyAnalysisReady = async ({ challenge, forOpponent = false }) => {
       url: '/quickclash',
       userId: userId,
       messageId: appUpdate._id.toString(),
+    })
+
+    // Emit event for socket notification
+    globalEmitter.emit('quickClash:analysisReady', {
+      challengeId: challenge._id,
+      userId,
     })
 
     console.log(

@@ -91,6 +91,7 @@ import MaintenanceHandler from './services/MaintenanceHandler.jsx'
 import { fetchDemotionSummary } from './redux/demotionSummarySlice.js'
 import usePWAInstallation from './customHooks/usePWAInstallation.js'
 import { fetchInventory } from './redux/inventorySlice.js'
+import useQuickClashSocket from './customHooks/useQuickClashSocket.js'
 
 const App = () => {
   ReactGA.initialize('G-ES5VQ8NW7Z')
@@ -113,6 +114,8 @@ const App = () => {
     isLoading: isLoadingRewardsModal,
   } = useRewardsModal()
   const { getSocket } = useSocket()
+  const { isListening, initializeQuickClashSocket, cleanupSocketListeners } =
+    useQuickClashSocket()
   const {
     isRegisterOpen,
     isSigninOpen,
@@ -230,6 +233,7 @@ const App = () => {
       if (!isReload) {
         sessionStorage.removeItem('app_session_id')
       }
+      cleanupSocketListeners()
     }
   }, [])
   const handlePromptClose = () => {
@@ -362,6 +366,23 @@ const App = () => {
     window.addEventListener('hashchange', handleHashChange)
     return () => window.removeEventListener('hashchange', handleHashChange)
   }, [loginCheckStatus, isAuthenticated])
+
+  useEffect(() => {
+    let intervalToJoinQuickClashSocket
+    if (isAuthenticated) {
+      // setInterval to to poll initializeQuickClashSocket untill isListening is true and then clear the interval
+      intervalToJoinQuickClashSocket = setInterval(() => {
+        if (!isListening) {
+          initializeQuickClashSocket()
+        } else {
+          clearInterval(intervalToJoinQuickClashSocket)
+        }
+      }, 1000)
+    }
+    return () => {
+      clearInterval(intervalToJoinQuickClashSocket)
+    }
+  }, [isAuthenticated, isListening, initializeQuickClashSocket])
 
   useEffect(() => {
     let timer

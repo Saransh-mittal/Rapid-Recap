@@ -66,7 +66,7 @@ const quickClashChallengeSchema = new mongoose.Schema({
 })
 
 // Indexes for quick lookups and expiry
-quickClashChallengeSchema.index({ expiresAt: 1 }, { expireAfterSeconds: 0 })
+quickClashChallengeSchema.index({ expiresAt: 1 })
 quickClashChallengeSchema.index({ challenger: 1, status: 1 })
 quickClashChallengeSchema.index({ opponent: 1, status: 1 })
 

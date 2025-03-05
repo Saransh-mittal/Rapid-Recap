@@ -5,6 +5,7 @@ import XpAwardContent from './XpAwardContent'
 import StreakContent from './StreakContent'
 import FeedbackContent from './FeedbackContent'
 import TournamentContent from './TournamentContent'
+import QuickClashContent from './QuickClashContent'
 
 const MessageContent = ({ message }) => {
   const { t } = useTranslation('NoteMessageSummary')
@@ -22,6 +23,8 @@ const MessageContent = ({ message }) => {
       return <FeedbackContent type="tournamentQuiz" />
     case 'tournament':
       return <TournamentContent message={message} />
+    case 'quickClash':
+      return <QuickClashContent message={message} />
     default:
       return (
         <>

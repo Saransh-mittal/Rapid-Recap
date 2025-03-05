@@ -5,6 +5,7 @@ import GuestLogin from '../authComponents/GuestLogin'
 import SecureYourProgress from './SecureYourProgress'
 import { useTranslation } from 'react-i18next'
 import LanguageSwitcher from '../../LanguageSwitcher'
+import { useNavigate } from 'react-router-dom'
 
 const ElegantButton = ({ onClick, children }) => (
   <ChakraButton
@@ -39,14 +40,29 @@ const ElegantButton = ({ onClick, children }) => (
 
 const ButtonFactory = ({
   actionType,
+  path,
   onClick,
   innerText,
   GuestLoginTranslate,
   ...props
 }) => {
   const { t } = useTranslation('ButtonFactory')
+  const navigate = useNavigate()
 
   switch (actionType) {
+    case 'NAVIGATE':
+      return (
+        <ElegantButton
+          onClick={() => {
+            navigate(path)
+            onClick()
+          }}
+          {...props}
+        >
+          {innerText}
+        </ElegantButton>
+      )
+
     case 'SIGN_IN':
       return (
         <GetStarted

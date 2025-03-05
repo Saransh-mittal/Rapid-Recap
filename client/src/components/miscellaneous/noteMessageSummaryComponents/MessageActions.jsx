@@ -16,6 +16,7 @@ const MessageActions = ({ message, handleAction, handleDismiss }) => {
             <ButtonFactory
               key={actionIndex}
               actionType={action.actionType}
+              path={action?.path}
               onClick={() =>
                 handleAction(action.actionType, message.id, action.payload)
               }

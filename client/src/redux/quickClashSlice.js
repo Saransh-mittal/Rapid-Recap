@@ -178,6 +178,8 @@ const initialState = {
   challengeAnalyses: {},
   challengeAnalysesLoading: {},
   challengeAnalysesError: {},
+
+  socketListening: false,
 }
 
 const quickClashSlice = createSlice({
@@ -208,6 +210,9 @@ const quickClashSlice = createSlice({
     setChallengeAnalysis: (state, action) => {
       const { challengeId, analysis } = action.payload
       state.challengeAnalyses[challengeId] = analysis
+    },
+    setSocketListening: (state, action) => {
+      state.socketListening = action.payload
     },
     resetAllQuickClashState: () => initialState,
   },
@@ -345,6 +350,7 @@ export const {
   resetCompletedChallenges,
   setChallengeAnalysisLoading,
   setChallengeAnalysis,
+  setSocketListening,
   resetAllQuickClashState,
 } = quickClashSlice.actions
 
