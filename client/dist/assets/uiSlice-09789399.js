@@ -1,0 +1,1 @@
+import{an as o}from"./quickClashSlice-be34025f.js";const t={modal:!1,page:0},s=o({name:"ui",initialState:t,reducers:{setModal:(e,a)=>{e.modal=a.payload},setPageRedux:(e,a)=>{e.page=a.payload},resetUIState:e=>t}}),{setModal:c,setPageRedux:d,resetUIState:i}=s.actions,l=s.reducer;export{d as s,l as u};

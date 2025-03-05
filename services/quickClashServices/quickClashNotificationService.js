@@ -266,7 +266,7 @@ const notifyChallengeRejected = async ({ challenge, challenger, opponent }) => {
 const notifyChallengeCompleted = async ({ challenge, completedByUserId }) => {
   try {
     // Both players have completed
-    if (challenge.challengerScore > 0 && challenge.opponentScore > 0) {
+    if (challenge.challengerAttempted && challenge.opponentAttempted) {
       // Get user information
       const [challenger, opponent] = await Promise.all([
         User.findById(challenge.challenger),

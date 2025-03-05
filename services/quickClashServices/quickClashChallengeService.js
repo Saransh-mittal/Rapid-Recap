@@ -385,20 +385,23 @@ const updateChallengeScore = async ({
     }
 
     const wasComplete =
-      challenge.challengerScore > 0 && challenge.opponentScore > 0
+      challenge.challengerAttempted && challenge.opponentAttempted
 
-    // Update appropriate score based on user role
+    // Update appropriate score and attempted status based on user role
     if (challenge.challenger._id.equals(userId)) {
       challenge.challengerScore = score
+      challenge.challengerAttempted = true // Mark as attempted regardless of score
     } else if (challenge.opponent._id.equals(userId)) {
       challenge.opponentScore = score
+      challenge.opponentAttempted = true // Mark as attempted regardless of score
     } else {
       throw new Error('User not part of this challenge')
     }
 
     // If both players have completed, determine winner
     const isNowComplete =
-      challenge.challengerScore > 0 && challenge.opponentScore > 0
+      challenge.challengerAttempted && challenge.opponentAttempted
+
     if (isNowComplete && !wasComplete) {
       challenge.status = 'completed'
 
@@ -414,7 +417,7 @@ const updateChallengeScore = async ({
       shouldNotify = true
     } else if (
       !isNowComplete &&
-      (challenge.challengerScore > 0 || challenge.opponentScore > 0)
+      (challenge.challengerAttempted || challenge.opponentAttempted)
     ) {
       // Only one player has completed - notify the other player
       shouldNotify = true
