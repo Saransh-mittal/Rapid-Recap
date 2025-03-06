@@ -55,6 +55,14 @@ const quickClashChallengeSchema = new mongoose.Schema({
     type: Number,
     default: 0,
   },
+  challengerAttempted: {
+    type: Boolean,
+    default: false,
+  },
+  opponentAttempted: {
+    type: Boolean,
+    default: false,
+  },
   createdAt: {
     type: Date,
     default: Date.now,

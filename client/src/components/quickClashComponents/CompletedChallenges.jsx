@@ -154,8 +154,8 @@ const CompletedChallenges = () => {
 
     const isChallenger = challenge.challenger._id === userId
 
-    // If the challenge is incomplete
-    if (challenge.challengerScore === 0 || challenge.opponentScore === 0) {
+    // If the challenge is incomplete (one or both players haven't attempted)
+    if (!challenge.challengerAttempted || !challenge.opponentAttempted) {
       return { text: t('Incomplete'), color: 'gray' }
     }
 
