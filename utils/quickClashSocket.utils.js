@@ -24,13 +24,9 @@ const setupQuickClashSocketHandlers = (io, socket, user) => {
   if (!joinedUsers.has(joinKey)) {
     socket.join(quickClashRoom)
     joinedUsers.add(joinKey)
-    console.log(
-      `User ${userId} automatically joined quick clash notification room: ${quickClashRoom}`,
-    )
 
     // Remove from tracking when socket disconnects
     socket.on('disconnect', () => {
-      console.log(`User ${user?._id} disconnected from quick clash rooms`)
       joinedUsers.delete(joinKey)
     })
   }
@@ -42,111 +38,6 @@ const setupQuickClashSocketHandlers = (io, socket, user) => {
       socket.explicitlyJoinedQuickClash = true
     }
   })
-
-  // // Handle challenge creation
-  // socket.on(
-  //   'quickClash:createChallenge',
-  //   async ({ opponentId, categories, challenge }) => {
-  //     try {
-  //       // Add a small delay to avoid race conditions
-  //       setTimeout(() => {
-  //         // Emit to opponent's room
-  //         const opponentRoom = `quickClash:${opponentId}`
-  //         io.to(opponentRoom).emit('quickClash:newChallenge', {
-  //           challenge,
-  //           challenger: {
-  //             _id: user._id,
-  //             name: user.name,
-  //             inGameName: user.inGameName,
-  //           },
-  //         })
-
-  //         console.log(
-  //           `Quick clash challenge notification sent to user ${opponentId} in room ${opponentRoom}`,
-  //         )
-  //       }, 100)
-  //     } catch (error) {
-  //       console.error('Socket error in quickClash:createChallenge:', error)
-  //     }
-  //   },
-  // )
-
-  // // Handle challenge rejection
-  // socket.on(
-  //   'quickClash:rejectChallenge',
-  //   async ({ challengerId, challengeId, category }) => {
-  //     try {
-  //       // Add a small delay to avoid race conditions
-  //       setTimeout(() => {
-  //         // Emit to challenger's room
-  //         const challengerRoom = `quickClash:${challengerId}`
-  //         io.to(challengerRoom).emit('quickClash:challengeRejected', {
-  //           challengeId,
-  //           category,
-  //           opponent: {
-  //             _id: user._id,
-  //             name: user.name,
-  //             inGameName: user.inGameName,
-  //           },
-  //         })
-
-  //         console.log(
-  //           `Quick clash rejection notification sent to user ${challengerId} in room ${challengerRoom}`,
-  //         )
-  //       }, 100)
-  //     } catch (error) {
-  //       console.error('Socket error in quickClash:rejectChallenge:', error)
-  //     }
-  //   },
-  // )
-
-  // // Handle challenge completion
-  // socket.on(
-  //   'quickClash:completeChallenge',
-  //   async ({ opponentId, challengeId, score }) => {
-  //     try {
-  //       // Add a small delay to avoid race conditions
-  //       setTimeout(() => {
-  //         // Emit to opponent's room
-  //         const opponentRoom = `quickClash:${opponentId}`
-  //         io.to(opponentRoom).emit('quickClash:challengeCompleted', {
-  //           challengeId,
-  //           completedByUserId: user._id,
-  //           score,
-  //         })
-
-  //         console.log(
-  //           `Quick clash completion notification sent to user ${opponentId} in room ${opponentRoom}`,
-  //         )
-  //       }, 100)
-  //     } catch (error) {
-  //       console.error('Socket error in quickClash:completeChallenge:', error)
-  //     }
-  //   },
-  // )
-
-  // // Handle analysis ready notification
-  // socket.on(
-  //   'quickClash:analysisReady',
-  //   async ({ recipientId, challengeId }) => {
-  //     try {
-  //       // Add a small delay to avoid race conditions
-  //       setTimeout(() => {
-  //         // Emit to recipient's room
-  //         const recipientRoom = `quickClash:${recipientId}`
-  //         io.to(recipientRoom).emit('quickClash:analysisReady', {
-  //           challengeId,
-  //         })
-
-  //         console.log(
-  //           `Quick clash analysis ready notification sent to user ${recipientId} in room ${recipientRoom}`,
-  //         )
-  //       }, 100)
-  //     } catch (error) {
-  //       console.error('Socket error in quickClash:analysisReady:', error)
-  //     }
-  //   },
-  // )
 }
 
 /**
@@ -173,10 +64,6 @@ const setupQuickClashGlobalEvents = io => {
           challenge,
           challenger,
         })
-
-        console.log(
-          `[Global] Quick clash challenge notification sent to user ${opponent._id} in room ${opponentRoom}`,
-        )
       }, 100)
     },
   )
@@ -201,10 +88,6 @@ const setupQuickClashGlobalEvents = io => {
           success,
           errorMessage,
         })
-
-        console.log(
-          `[Global] Quick clash creation notification sent to challenger ${challenger._id} in room ${challengerRoom} (Success: ${success})`,
-        )
       }, 100)
     },
   )
@@ -229,10 +112,6 @@ const setupQuickClashGlobalEvents = io => {
           category,
           opponent,
         })
-
-        console.log(
-          `[Global] Quick clash acceptance notification sent to user ${challenger._id} in room ${challengerRoom}`,
-        )
       }, 100)
     },
   )
@@ -257,10 +136,6 @@ const setupQuickClashGlobalEvents = io => {
           category,
           opponent,
         })
-
-        console.log(
-          `[Global] Quick clash rejection notification sent to user ${challenger._id} in room ${challengerRoom}`,
-        )
       }, 100)
     },
   )
@@ -292,10 +167,6 @@ const setupQuickClashGlobalEvents = io => {
             completedByUserId,
           },
         )
-
-        console.log(
-          `[Global] Quick clash completion notification sent to user ${recipientId} in room ${recipientRoom}`,
-        )
       }, 100)
     },
   )
@@ -324,10 +195,6 @@ const setupQuickClashGlobalEvents = io => {
           challengeId: challenge._id,
           completedByUserId,
         })
-
-        console.log(
-          `[Global] Quick clash completion notification sent to user ${recipientId} in room ${recipientRoom}`,
-        )
       }, 100)
     },
   )
@@ -346,10 +213,6 @@ const setupQuickClashGlobalEvents = io => {
       io.to(userRoom).emit('quickClash:analysisReady', {
         challengeId,
       })
-
-      console.log(
-        `[Global] Quick clash analysis ready notification sent to user ${userId} in room ${userRoom}`,
-      )
     }, 100)
   })
 }

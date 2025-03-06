@@ -186,9 +186,6 @@ const postChallengeCreation = async (challengeId, notifyData) => {
       ),
     )
 
-    console.log(
-      `Background highlight generation scheduled for challenge ${challengeId}`,
-    )
     if (notifyData) {
       notifyChallengeCreated({
         challenge: notifyData.challenge,
