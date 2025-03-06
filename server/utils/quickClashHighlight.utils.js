@@ -194,10 +194,6 @@ const scheduleHighlightGeneration = async ({ challengeId, lang = 'en' }) => {
       { new: true },
     )
 
-    console.log(
-      `Background highlight generation completed for challenge ${challengeId} (${lang})`,
-    )
-
     // Fetch and return the updated record
     return await QuickClashHighlight.findOne({
       challengeId,

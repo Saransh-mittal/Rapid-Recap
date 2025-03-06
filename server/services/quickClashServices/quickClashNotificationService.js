@@ -44,10 +44,6 @@ const notifyChallengeCreated = async ({ challenge, challenger, opponent }) => {
       challenger,
       opponent,
     })
-
-    console.log(
-      `Challenge notification sent to ${opponent.inGameName || opponent.name}`,
-    )
   } catch (error) {
     console.error('Error sending challenge created notification:', error)
     // Non-blocking - this doesn't affect the main challenge creation flow
@@ -102,12 +98,6 @@ const notifyChallengerAboutCreation = async ({
         opponent,
         success: true,
       })
-
-      console.log(
-        `Challenge creation success notification sent to ${
-          challenger.inGameName || challenger.name
-        }`,
-      )
     } else {
       // Create application update for failed creation
       const appUpdate = new ApplicationUpdates({
@@ -138,12 +128,6 @@ const notifyChallengerAboutCreation = async ({
         success: false,
         errorMessage: errorMessage || 'Failed to create challenge',
       })
-
-      console.log(
-        `Challenge creation failure notification sent to ${
-          challenger.inGameName || challenger.name
-        }`,
-      )
     }
   } catch (error) {
     console.error(
@@ -194,12 +178,6 @@ const notifyChallengeAccepted = async ({ challenge, challenger, opponent }) => {
       challenger,
       opponent,
     })
-
-    console.log(
-      `Challenge accepted notification sent to ${
-        challenger.inGameName || challenger.name
-      }`,
-    )
   } catch (error) {
     console.error('Error sending challenge accepted notification:', error)
   }
@@ -246,12 +224,6 @@ const notifyChallengeRejected = async ({ challenge, challenger, opponent }) => {
       challenger,
       opponent,
     })
-
-    console.log(
-      `Challenge rejected notification sent to ${
-        challenger.inGameName || challenger.name
-      }`,
-    )
   } catch (error) {
     console.error('Error sending challenge rejected notification:', error)
   }
@@ -364,7 +336,6 @@ const notifyChallengeCompleted = async ({ challenge, completedByUserId }) => {
         challenge,
         completedByUserId,
       })
-      console.log(`Challenge completion notifications sent to both users`)
     } else {
       // Only one player has completed - notify the other player
       const isChallenger =
@@ -413,11 +384,6 @@ const notifyChallengeCompleted = async ({ challenge, completedByUserId }) => {
         challenge,
         completedByUserId,
       })
-      console.log(
-        `Challenge awaiting notification sent to ${
-          otherPlayer.inGameName || otherPlayer.name
-        }`,
-      )
     }
   } catch (error) {
     console.error('Error sending challenge completion notification:', error)
@@ -463,10 +429,6 @@ const notifyAnalysisReady = async ({ challenge, forOpponent = false }) => {
       challengeId: challenge._id,
       userId,
     })
-
-    console.log(
-      `Analysis ready notification sent to ${user.inGameName || user.name}`,
-    )
   } catch (error) {
     console.error('Error sending analysis ready notification:', error)
   }

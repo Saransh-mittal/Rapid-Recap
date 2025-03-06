@@ -92,6 +92,7 @@ import { fetchDemotionSummary } from './redux/demotionSummarySlice.js'
 import usePWAInstallation from './customHooks/usePWAInstallation.js'
 import { fetchInventory } from './redux/inventorySlice.js'
 import useQuickClashSocket from './customHooks/useQuickClashSocket.js'
+import useQuickClash from './customHooks/useQuickClash.js'
 
 const App = () => {
   ReactGA.initialize('G-ES5VQ8NW7Z')
@@ -116,6 +117,7 @@ const App = () => {
   const { getSocket } = useSocket()
   const { isListening, initializeQuickClashSocket, cleanupSocketListeners } =
     useQuickClashSocket()
+  const { loadActiveChallenges } = useQuickClash()
   const {
     isRegisterOpen,
     isSigninOpen,
@@ -394,6 +396,7 @@ const App = () => {
         dispatch(fetchUnreadNoteMessages())
       }, delay)
       dispatch(fetchInventory())
+      loadActiveChallenges()
       quinBoostChecker({
         setQuizLeftToGetQuizBoost,
         dispatch,

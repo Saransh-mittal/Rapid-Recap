@@ -93,7 +93,7 @@ const VictorySection = ({ engagement, winner, userIsWinner, isTie }) => {
         </MotionText>
 
         {/* Social Sharing */}
-        <HStack justify="center" spacing={{ base: 2, md: 4 }} mt={2}>
+        {/* <HStack justify="center" spacing={{ base: 2, md: 4 }} mt={2}>
           <MotionButton
             leftIcon={<Share2 size={16} />}
             colorScheme="purple"
@@ -117,7 +117,7 @@ const VictorySection = ({ engagement, winner, userIsWinner, isTie }) => {
           >
             {t('Download')}
           </MotionButton>
-        </HStack>
+        </HStack> */}
       </VStack>
     </MotionBox>
   )

@@ -41,6 +41,7 @@ import i18n from 'i18next'
 import { useTranslation } from 'react-i18next'
 import ExperienceLevelIcon from './modernNavbarComponents/ExperienceLevelIcon'
 import { userCacheService } from '../../lib/cache'
+import useQuickClash from '../../customHooks/useQuickClash'
 
 const MotionBox = motion(Box)
 
@@ -52,6 +53,7 @@ const ModernNavbar = ({ onNavbarLoad }) => {
   const toast = useToast()
   const [isMobile] = useMediaQuery('(max-width: 992px)')
   const { isMenuOpen, setIsMenuOpen } = useNavbar()
+  const { activeChallenges } = useQuickClash()
   const {
     isOpen: isOpenUserSearch,
     onOpen: onOpenUserSearch,
@@ -76,6 +78,19 @@ const ModernNavbar = ({ onNavbarLoad }) => {
     updatesFetched,
     streakFetched,
   } = useSelector(state => state.app)
+
+  const showRedDotOnMenu =
+    (activeChallenges &&
+      activeChallenges.filter(
+        challenge =>
+          (challenge.challenger._id === user?._id &&
+            !challenge.challengerAttempted) ||
+          (challenge.opponent._id === user?._id &&
+            !challenge.opponentAttempted),
+      ).length > 0) ||
+    unreadFriendRequests > 0 ||
+    (Array.isArray(notification) && notification.length > 0) ||
+    notifyCont !== 0
 
   const streakColor = streak ? getStreakColor(streak) : '#fff'
   const societyData = useMemo(
@@ -367,9 +382,7 @@ const ModernNavbar = ({ onNavbarLoad }) => {
         {renderNavContent()}
         {isMobile && (
           <Box position="relative">
-            {(unreadFriendRequests > 0 ||
-              (Array.isArray(notification) && notification.length > 0) ||
-              notifyCont !== 0) && (
+            {showRedDotOnMenu && (
               <Box
                 h="8px"
                 w="8px"

@@ -63,7 +63,6 @@ const useQuickClashSocket = () => {
 
     // Mark as listening
     dispatch(setSocketListening(true))
-    console.log('Quick Clash socket initialized successfully')
   }, [getSocket, isListening, dispatch])
 
   // Set up socket event listeners
@@ -82,7 +81,6 @@ const useQuickClashSocket = () => {
 
       // New challenge received
       socket.on('quickClash:newChallenge', data => {
-        console.log('New Quick Clash challenge received:', data)
         setLastEvent({ type: 'newChallenge', data, timestamp: new Date() })
 
         // Add to note message queue for in-app notification
@@ -102,7 +100,6 @@ const useQuickClashSocket = () => {
       })
 
       socket.on('quickClash:challengerNotified', data => {
-        console.log('Quick Clash challenge creation status:', data)
         setLastEvent({
           type: 'challengerNotified',
           data,
@@ -144,7 +141,6 @@ const useQuickClashSocket = () => {
 
       // Challenge accepted
       socket.on('quickClash:challengeAccepted', data => {
-        console.log('Quick Clash challenge accepted:', data)
         setLastEvent({ type: 'challengeAccepted', data, timestamp: new Date() })
 
         // Add to note message queue
@@ -165,7 +161,6 @@ const useQuickClashSocket = () => {
 
       // Challenge rejected
       socket.on('quickClash:challengeRejected', data => {
-        console.log('Quick Clash challenge rejected:', data)
         setLastEvent({ type: 'challengeRejected', data, timestamp: new Date() })
 
         // Add to note message queue
@@ -186,7 +181,6 @@ const useQuickClashSocket = () => {
 
       // Challenge completed
       socket.on('quickClash:challengeCompleted', data => {
-        console.log('Quick Clash challenge completed:', data)
         setLastEvent({
           type: 'challengeCompleted',
           data,
@@ -209,7 +203,6 @@ const useQuickClashSocket = () => {
         dispatch(fetchActiveChallenges())
       })
       socket.on('quickClash:challengeCompletedByBothPlayers', data => {
-        console.log('Quick Clash challenge completed:', data)
         setLastEvent({
           type: 'challengeCompletedByBothPlayers',
           data,
@@ -234,7 +227,6 @@ const useQuickClashSocket = () => {
 
       // Analysis ready
       socket.on('quickClash:analysisReady', data => {
-        console.log('Quick Clash analysis ready:', data)
         setLastEvent({ type: 'analysisReady', data, timestamp: new Date() })
 
         // Add to note message queue
@@ -260,7 +252,6 @@ const useQuickClashSocket = () => {
 
       // Handle socket reconnection
       socket.on('reconnect', () => {
-        console.log('Socket reconnected, re-joining Quick Clash rooms')
         // Reset the initialization flag
         initAttemptedRef.current = false
         dispatch(setSocketListening(false))
@@ -284,7 +275,6 @@ const useQuickClashSocket = () => {
       // Reset state
       initAttemptedRef.current = false
       dispatch(setSocketListening(false))
-      console.log('Quick Clash socket listeners cleaned up')
     }
   }, [socket, dispatch])
 
@@ -294,7 +284,6 @@ const useQuickClashSocket = () => {
       if (socket && socket.connected) {
         try {
           socket.emit('quickClash:createChallenge', data)
-          console.log('Emitted quickClash:createChallenge:', data)
         } catch (error) {
           console.error('Error emitting quickClash:createChallenge:', error)
         }
@@ -312,7 +301,6 @@ const useQuickClashSocket = () => {
       if (socket && socket.connected) {
         try {
           socket.emit('quickClash:acceptChallenge', data)
-          console.log('Emitted quickClash:acceptChallenge:', data)
         } catch (error) {
           console.error('Error emitting quickClash:acceptChallenge:', error)
         }
@@ -330,7 +318,6 @@ const useQuickClashSocket = () => {
       if (socket && socket.connected) {
         try {
           socket.emit('quickClash:rejectChallenge', data)
-          console.log('Emitted quickClash:rejectChallenge:', data)
         } catch (error) {
           console.error('Error emitting quickClash:rejectChallenge:', error)
         }
@@ -348,7 +335,6 @@ const useQuickClashSocket = () => {
       if (socket && socket.connected) {
         try {
           socket.emit('quickClash:completeChallenge', data)
-          console.log('Emitted quickClash:completeChallenge:', data)
         } catch (error) {
           console.error('Error emitting quickClash:completeChallenge:', error)
         }
@@ -366,7 +352,6 @@ const useQuickClashSocket = () => {
       if (socket && socket.connected) {
         try {
           socket.emit('quickClash:analysisReady', data)
-          console.log('Emitted quickClash:analysisReady:', data)
         } catch (error) {
           console.error('Error emitting quickClash:analysisReady:', error)
         }

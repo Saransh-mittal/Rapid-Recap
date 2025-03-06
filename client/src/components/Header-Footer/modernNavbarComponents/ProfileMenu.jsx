@@ -10,6 +10,7 @@ import {
   PopoverContent,
   PopoverBody,
   useDisclosure,
+  Badge,
 } from '@chakra-ui/react'
 import { motion, AnimatePresence } from 'framer-motion'
 import { useSelector } from 'react-redux'
@@ -24,6 +25,7 @@ import {
   Swords,
 } from 'lucide-react'
 import { useTranslation } from 'react-i18next'
+import useQuickClash from '../../../customHooks/useQuickClash'
 
 const MotionBox = motion(Box)
 
@@ -55,8 +57,17 @@ const ProfileMenu = memo(({ user, handleLogout, isLoggingOut }) => {
   const { isOpen, onToggle, onClose } = useDisclosure()
 
   const { isAuthenticated } = useSelector(state => state.auth)
-  const showDashboard = isAuthenticated && user && user.role === 'admin'
+  const { activeChallenges } = useQuickClash()
 
+  const showDashboard = isAuthenticated && user && user.role === 'admin'
+  const showRedDotOnMenu =
+    activeChallenges &&
+    activeChallenges.filter(
+      challenge =>
+        (challenge.challenger._id === user?._id &&
+          !challenge.challengerAttempted) ||
+        (challenge.opponent._id === user?._id && !challenge.opponentAttempted),
+    ).length > 0
   const menuItems = [
     {
       icon: User,
@@ -140,7 +151,19 @@ const ProfileMenu = memo(({ user, handleLogout, isLoggingOut }) => {
             borderRadius="full"
             objectFit="cover"
           />
-          <Box ml={1} color="whiteAlpha.700">
+          <Box ml={1} color="whiteAlpha.700" position={'relative'}>
+            {showRedDotOnMenu && (
+              <Box
+                h="8px"
+                w="8px"
+                bg={'red'}
+                borderRadius={'50%'}
+                position={'absolute'}
+                right={'-0.3rem'}
+                top={'-0.3rem'}
+                zIndex={2}
+              />
+            )}
             <Box
               as="span"
               fontSize="16px"
@@ -166,13 +189,39 @@ const ProfileMenu = memo(({ user, handleLogout, isLoggingOut }) => {
           <AnimatePresence>
             <VStack spacing={0} align="stretch" py={1}>
               {menuItems.map((item, index) => (
-                <MenuItem
-                  key={item.label}
-                  {...item}
-                  initial={{ opacity: 0, x: -20 }}
-                  animate={{ opacity: 1, x: 0 }}
-                  transition={{ delay: index * 0.1 }}
-                />
+                <Box key={item.label} position={'relative'}>
+                  {showRedDotOnMenu &&
+                    item.label == t('profileMenu.quickClash') && (
+                      <Badge
+                        bg={'red'}
+                        position={'absolute'}
+                        color={'white'}
+                        borderRadius={'50%'}
+                        h={'16px'}
+                        w={'16px'}
+                        textAlign={'center'}
+                        right={'0.25rem'}
+                        top={'0rem'}
+                        fontSize="xs"
+                      >
+                        {
+                          activeChallenges.filter(
+                            challenge =>
+                              (challenge.challenger._id === user?._id &&
+                                !challenge.challengerAttempted) ||
+                              (challenge.opponent._id === user?._id &&
+                                !challenge.opponentAttempted),
+                          ).length
+                        }
+                      </Badge>
+                    )}
+                  <MenuItem
+                    {...item}
+                    initial={{ opacity: 0, x: -20 }}
+                    animate={{ opacity: 1, x: 0 }}
+                    transition={{ delay: index * 0.1 }}
+                  />
+                </Box>
               ))}
             </VStack>
           </AnimatePresence>

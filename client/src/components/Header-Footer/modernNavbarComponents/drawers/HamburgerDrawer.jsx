@@ -41,6 +41,7 @@ const UserFriendsSVG = lazy(() =>
   import('../../../../assets/svg/UserFriendsSVG'),
 )
 import { ShareAchievements } from '../../../shareAchievements'
+import useQuickClash from '../../../../customHooks/useQuickClash'
 const MotionChevron = motion(ChevronRight)
 const HamburgerDrawer = ({
   isOpen,
@@ -57,7 +58,7 @@ const HamburgerDrawer = ({
   const toast = useToast()
   const { user, isAuthenticated } = useSelector(state => state.auth)
   const { unreadFriendRequests } = useSelector(state => state.app)
-
+  const { activeChallenges } = useQuickClash()
   const chatState = ChatState()
   const accentColor = useColorModeValue('purple.400', 'purple.300')
 
@@ -292,8 +293,40 @@ const HamburgerDrawer = ({
                         navigate('/quickclash')
                         onClose()
                       }}
+                      position="relative"
                     >
                       <Swords color="white" />
+                      {activeChallenges &&
+                        activeChallenges.filter(
+                          challenge =>
+                            (challenge.challenger._id === user?._id &&
+                              !challenge.challengerAttempted) ||
+                            (challenge.opponent._id === user?._id &&
+                              !challenge.opponentAttempted),
+                        ).length > 0 && (
+                          <Badge
+                            bg={'red'}
+                            position={'absolute'}
+                            color={'white'}
+                            borderRadius={'50%'}
+                            h={'18px'}
+                            w={'18px'}
+                            textAlign={'center'}
+                            right={'-0.5rem'}
+                            top={'-0.65rem'}
+                            fontSize="xs"
+                          >
+                            {
+                              activeChallenges.filter(
+                                challenge =>
+                                  (challenge.challenger._id === user?._id &&
+                                    !challenge.challengerAttempted) ||
+                                  (challenge.opponent._id === user?._id &&
+                                    !challenge.opponentAttempted),
+                              ).length
+                            }
+                          </Badge>
+                        )}
                     </Box>
                     <Inbox
                       className={'inbox-button-lg'}
