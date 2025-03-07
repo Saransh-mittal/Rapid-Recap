@@ -36,7 +36,13 @@ const ConfirmationModal = lazy(() =>
 
 const MotionButton = motion(Button)
 
-const QuickClashQuiz = ({ sessionId, onComplete, quizDuration = 50 }) => {
+const QuickClashQuiz = ({
+  sessionId,
+  onComplete,
+  setStopTimerOnQuizSubmit,
+  quizTimeLeft,
+  setQuizTimeLeft,
+}) => {
   const { t } = useTranslation('QuickClash')
   const navigate = useNavigate()
   const toast = useToast()
@@ -94,7 +100,7 @@ const QuickClashQuiz = ({ sessionId, onComplete, quizDuration = 50 }) => {
         initialAnswers[index] = ''
       })
       setUserAnswers(initialAnswers)
-
+      setQuizTimeLeft(50)
       // Initialize first question timing immediately
       setTimeSpent(prev => ({
         ...prev,
@@ -102,6 +108,11 @@ const QuickClashQuiz = ({ sessionId, onComplete, quizDuration = 50 }) => {
       }))
     }
   }, [questions])
+  useEffect(() => {
+    if (quizTimeLeft <= 0) {
+      handleSubmit()
+    }
+  }, [quizTimeLeft])
 
   // Submit quiz
   const handleSubmit = useCallback(async () => {
@@ -109,7 +120,7 @@ const QuickClashQuiz = ({ sessionId, onComplete, quizDuration = 50 }) => {
 
     try {
       setSubmitLoading(true)
-
+      setStopTimerOnQuizSubmit(true)
       // Calculate final time spent on current question
       const finalTimeSpent = { ...timeSpent }
       const currentQuestionData = finalTimeSpent[currentQuestionIndex]
@@ -295,6 +306,7 @@ const QuickClashQuiz = ({ sessionId, onComplete, quizDuration = 50 }) => {
             onClick={handleSubmit}
             colorScheme="green"
             rightIcon={<CheckCircle size={16} />}
+            isLoading={submitLoading}
             isDisabled={!userAnswers[currentQuestionIndex]}
             whileHover={{ scale: 1.05 }}
             whileTap={{ scale: 0.95 }}
@@ -318,42 +330,6 @@ const QuickClashQuiz = ({ sessionId, onComplete, quizDuration = 50 }) => {
             justifyContent="center"
             cursor={index === currentQuestionIndex ? 'default' : 'pointer'}
             border={currentQuestionIndex === index ? '2px solid white' : 'none'}
-            onClick={() => {
-              if (
-                index !== currentQuestionIndex &&
-                !switchingQuestionRef.current
-              ) {
-                // Save current question time
-                setTimeSpent(prev => {
-                  const now = Date.now()
-                  const questionData = prev[currentQuestionIndex] || {}
-                  const startTimeForQuestion = questionData.startTime || now
-                  const timeSpentMs = now - startTimeForQuestion
-
-                  // Update current and set start time for the question we're jumping to
-                  return {
-                    ...prev,
-                    [currentQuestionIndex]: {
-                      startTime: startTimeForQuestion,
-                      timeSpent: Math.floor(timeSpentMs / 1000),
-                    },
-                    [index]: {
-                      ...prev[index],
-                      startTime: Date.now(),
-                    },
-                  }
-                })
-
-                // Jump to the clicked question
-                setCurrentQuestionIndex(index)
-              }
-            }}
-            _hover={{
-              boxShadow:
-                index !== currentQuestionIndex ? '0 0 0 1px white' : 'none',
-              transform:
-                index !== currentQuestionIndex ? 'translateY(-2px)' : 'none',
-            }}
             transition="all 0.2s"
           >
             <Text fontSize="sm" color="white">

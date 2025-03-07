@@ -66,6 +66,7 @@ const QuickClashSession = () => {
   const [article, setArticle] = useState(null)
   const [timeLeft, setTimeLeft] = useState(120) // 2 minutes for reading
   const [quizTimeLeft, setQuizTimeLeft] = useState(50) // 50 seconds for quiz
+  const [stopTimerOnQuizSubmit, setStopTimerOnQuizSubmit] = useState(false)
   const [score, setScore] = useState(0)
   const [phaseProgress, setPhaseProgress] = useState(0)
 
@@ -202,14 +203,14 @@ const QuickClashSession = () => {
       // Calculate progress percentage (inverted - 0% at start, 100% at end)
       setPhaseProgress(Math.min(100, (elapsed / 50) * 100))
 
-      if (remaining <= 0) {
+      if (remaining <= 0 || stopTimerOnQuizSubmit) {
         clearInterval(timer)
         // The QuickClashQuiz component will handle auto-submission
       }
     }, 1000)
 
     return () => clearInterval(timer)
-  }, [phase, quizStartTimeRef.current])
+  }, [phase, quizStartTimeRef.current, stopTimerOnQuizSubmit])
 
   // Handle reading phase completion
   const handleReadingComplete = async () => {
@@ -237,7 +238,6 @@ const QuickClashSession = () => {
   const handleStartQuiz = () => {
     quizStartTimeRef.current = Date.now()
     setPhase('quiz')
-    setQuizTimeLeft(50) // Reset to 50 seconds
     setPhaseProgress(0)
   }
 
@@ -505,7 +505,9 @@ const QuickClashSession = () => {
               <QuickClashQuiz
                 sessionId={session._id}
                 onComplete={handleQuizComplete}
-                quizDuration={50} // Set quiz duration to 50 seconds
+                setStopTimerOnQuizSubmit={setStopTimerOnQuizSubmit}
+                quizTimeLeft={quizTimeLeft}
+                setQuizTimeLeft={setQuizTimeLeft}
               />
             </Suspense>
           )}

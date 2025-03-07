@@ -214,6 +214,9 @@ const quickClashSlice = createSlice({
     setSocketListening: (state, action) => {
       state.socketListening = action.payload
     },
+    setChallengeCreating: (state, action) => {
+      state.challengeCreating = action.payload
+    },
     resetAllQuickClashState: () => initialState,
   },
   extraReducers: builder => {
@@ -351,6 +354,7 @@ export const {
   setChallengeAnalysisLoading,
   setChallengeAnalysis,
   setSocketListening,
+  setChallengeCreating,
   resetAllQuickClashState,
 } = quickClashSlice.actions
 

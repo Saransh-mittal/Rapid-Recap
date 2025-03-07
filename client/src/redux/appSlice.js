@@ -12,8 +12,12 @@ export const addNoteMessageIfAllowed = createAsyncThunk(
   async (messageData, { getState, dispatch }) => {
     const state = getState()
     const needsOnboarding = state.auth.user?.needsOnboarding
+    // if on quick clash session page then don't show the message
 
-    if (!needsOnboarding) {
+    if (
+      !needsOnboarding &&
+      !window.location.pathname.startsWith('/quickclash/session')
+    ) {
       dispatch(addNoteMessage(messageData))
     }
     return null

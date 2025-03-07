@@ -28,13 +28,15 @@ import {
 } from './newChallengeComponents/StepButtons'
 import useQuickClash from '../../../customHooks/useQuickClash'
 import useQuickClashSocket from '../../../customHooks/useQuickClashSocket'
+import { setChallengeCreating } from '../../../redux/quickClashSlice'
+import { useDispatch } from 'react-redux'
 
 const NewChallengeModal = ({ isOpen, onClose, preSelectedUser = null }) => {
   const { t } = useTranslation('QuickClash')
   const toast = useToast()
   const { createChallenge, challengeCreating: isSubmitting } = useQuickClash()
   const { emitChallengeCreated } = useQuickClashSocket()
-
+  const dispatch = useDispatch()
   // State management
   const [selectedUser, setSelectedUser] = useState(preSelectedUser || null)
   const [selectedCategories, setSelectedCategories] = useState([])
@@ -71,6 +73,8 @@ const NewChallengeModal = ({ isOpen, onClose, preSelectedUser = null }) => {
   const handleClose = useCallback(() => {
     // If animation is showing, we can simply close without resetting state
     // to allow the background processing to continue
+    setShowAnimation(false)
+    dispatch(setChallengeCreating(false))
     if (showAnimation) {
       manuallyClosed.current = true
       onClose()

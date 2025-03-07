@@ -49,6 +49,9 @@ const checkChallengeLimits = async ({ userId, session }) => {
 }
 
 const createChallenge = async ({ challengerId, opponentId, categories }) => {
+  if (challengerId.toString() === opponentId.toString()) {
+    throw new Error('Cannot challenge yourself')
+  }
   const category = categories[Math.floor(Math.random() * categories.length)]
   const articles = await getSourceArticles({ category })
   const mixedArticle = await generateMixedArticle({ articles })
