@@ -48,7 +48,12 @@ const checkChallengeLimits = async ({ userId, session }) => {
   }
 }
 
-const createChallenge = async ({ challengerId, opponentId, categories }) => {
+const createChallenge = async ({
+  challengerId,
+  opponentId,
+  categories,
+  fromMatchMaking = false,
+}) => {
   if (challengerId.toString() === opponentId.toString()) {
     throw new Error('Cannot challenge yourself')
   }
@@ -75,7 +80,7 @@ const createChallenge = async ({ challengerId, opponentId, categories }) => {
           },
           expiresAt: new Date(Date.now() + CHALLENGE_EXPIRY),
         })
-
+        if (fromMatchMaking) challenge.status = 'active'
         await challenge.save({ session })
 
         // Generate only English quiz in transaction

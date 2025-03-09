@@ -20,6 +20,14 @@ const {
   getUserClashStats,
   getAnalysisStatus,
 } = require('../controllers/quickClashController')
+const {
+  joinMatchmakingRoom,
+  leaveMatchmakingRoom,
+  getMatchmakingUsers,
+  createMatchmakingChallenge,
+  getMatchmakingStatus,
+  acceptMatchmakingChallenge,
+} = require('../controllers/quickClashMatchmakingController')
 
 const router = express.Router()
 
@@ -49,5 +57,13 @@ router.get('/analysis/:challengeId', getChallengeAnalysis)
 router.get('/analysis/:challengeId/status', getAnalysisStatus)
 
 router.get('/stats', getUserClashStats)
+
+// Matchmaking routes
+router.post('/matchmaking/join', joinMatchmakingRoom)
+router.post('/matchmaking/leave', leaveMatchmakingRoom)
+router.get('/matchmaking/users', getMatchmakingUsers)
+router.post('/matchmaking/challenge', createMatchmakingChallenge)
+router.get('/matchmaking/status', getMatchmakingStatus)
+router.post('/matchmaking/accept', acceptMatchmakingChallenge)
 
 module.exports = router
