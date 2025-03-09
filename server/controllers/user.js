@@ -212,6 +212,9 @@ const loginUser = async (req, res) => {
       }
     }
 
+    if (!findUser.password)
+      return res.status(422).json({ error: 'Invalid Credentials' })
+
     const isMatch = await bcrypt.compare(password, findUser.password)
     if (!isMatch) return res.status(401).json({ error: 'Invalid Credentials' })
     const token = await findUser.generateAuthToken()
