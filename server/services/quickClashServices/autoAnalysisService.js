@@ -101,36 +101,6 @@ const initiateBackgroundAnalysis = async ({ challengeId, force = false }) => {
             `Error notifying users about completed analysis: ${notifyError.message}`,
           )
         })
-        // Get the challenge to notify users
-        try {
-          const challenge = await QuickClashChallenge.findById(
-            challengeId,
-          ).populate('challenger opponent')
-
-          if (challenge) {
-            // Notify both users via global emitter
-            // This will be picked up by the socket server to emit to connected clients
-            globalEmitter.emit('quickClash:analysisReady', {
-              challengeId,
-              userId: challenge.challenger._id.toString(),
-            })
-
-            globalEmitter.emit('quickClash:analysisReady', {
-              challengeId,
-              userId: challenge.opponent._id.toString(),
-            })
-
-            console.log(
-              `Emitted analysis ready events for challenge ${challengeId}`,
-            )
-          }
-        } catch (notificationError) {
-          console.error(
-            'Error notifying users about completed analysis:',
-            notificationError,
-          )
-        }
-
         // Remove from tracker
         analysisInProgress.delete(challengeId)
       })

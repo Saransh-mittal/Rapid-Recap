@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useMemo, lazy, Suspense } from 'react'
+import React, { useState, useEffect, lazy, Suspense } from 'react'
 import {
   Box,
   VStack,
@@ -7,58 +7,41 @@ import {
   Badge,
   HStack,
   Button,
-  Flex,
-  Divider,
   Spinner,
   Center,
-  Table,
-  Thead,
-  Tbody,
-  Tr,
-  Th,
-  Td,
-  TableContainer,
-  useColorModeValue,
   Icon,
   useDisclosure,
-  Modal,
-  ModalOverlay,
-  ModalContent,
-  ModalHeader,
-  ModalBody,
-  ModalCloseButton,
-  Stack,
-  Switch,
-  FormControl,
-  FormLabel,
-  useToast,
+  Flex,
+  SimpleGrid,
+  useBreakpointValue,
 } from '@chakra-ui/react'
 import {
-  Trophy,
-  Calendar,
-  User,
-  Timer,
-  BarChart,
-  ExternalLink,
-  Medal,
-  UserCheck,
-  UserX,
+  History,
   Brain,
-  Zap,
-  Settings,
+  XCircle,
+  Activity,
+  ChevronDown,
+  Grid,
+  Layers,
 } from 'lucide-react'
-import axios from 'axios'
 import { useTranslation } from 'react-i18next'
 import { format } from 'date-fns'
 import { useSelector } from 'react-redux'
-import AnalysisSummaryCard from './AnalysisSummaryCard'
+import { motion, AnimatePresence } from 'framer-motion'
 import useQuickClash from '../../customHooks/useQuickClash'
 
-// Lazy-loaded component
-const ChallengeAnalysisModal = lazy(() => import('./ChallengeAnalysisModal'))
-const ChallengeDetailsModal = lazy(() => import('./ChallengeDetailsModal'))
+// Motion-enhanced components
+const MotionBox = motion(Box)
+const MotionFlex = motion(Flex)
+const MotionText = motion(Text)
+const MotionButton = motion(Button)
+const MotionSimpleGrid = motion(SimpleGrid)
 
-// Main CompletedChallenges Component
+// Lazy-loaded components
+const ChallengeAnalysisModal = lazy(() => import('./ChallengeAnalysisModal'))
+const AnalysisSummaryCard = lazy(() => import('./AnalysisSummaryCard'))
+
+// Main CompletedChallenges Component with responsive grid
 const CompletedChallenges = () => {
   const { t } = useTranslation('QuickClash')
   const {
@@ -76,60 +59,42 @@ const CompletedChallenges = () => {
   } = useQuickClash()
   const { user } = useSelector(state => state.auth)
   const userId = user?._id
-  const [selectedChallenge, setSelectedChallenge] = useState(null)
-  const [showCardView, setShowCardView] = useState(true)
   const [selectedAnalysisId, setSelectedAnalysisId] = useState(null)
+  const [isGridView, setIsGridView] = useState(true)
 
-  // Modal disclosures
-  const {
-    isOpen: isDetailOpen,
-    onOpen: onDetailOpen,
-    onClose: onDetailClose,
-  } = useDisclosure()
+  // Responsive layout
+  const columns = useBreakpointValue({ base: 1, md: 2, lg: 3, xl: 3 })
 
+  // Grid view is only for tablet and desktop
+  const showGridControls = useBreakpointValue({ base: false, md: true })
+
+  // Modal disclosure for analysis
   const {
     isOpen: isAnalysisOpen,
     onOpen: onAnalysisOpen,
     onClose: onAnalysisClose,
   } = useDisclosure()
 
-  // Determine colors for the table
-  const headerBg = useColorModeValue(
-    'rgba(26, 21, 39, 0.9)',
-    'rgba(26, 21, 39, 0.9)',
-  )
-  const rowBg = useColorModeValue(
-    'rgba(26, 21, 39, 0.7)',
-    'rgba(26, 21, 39, 0.7)',
-  )
-  const rowHoverBg = useColorModeValue(
-    'rgba(26, 21, 39, 0.8)',
-    'rgba(26, 21, 39, 0.8)',
-  )
-
   // Fetch completed challenges
   useEffect(() => {
-    if (userId) {
-      loadCompletedChallenges(page, 10)
+    if (userId && page === 1) {
+      loadCompletedChallenges(page, columns === 1 ? 5 : 9) // More items for grid view
     }
+  }, [page, userId, loadCompletedChallenges, columns])
 
-    return () => {
-      // Reset state when component unmounts
-      resetCompletedChallengesState()
-    }
-  }, [page, userId, loadCompletedChallenges, resetCompletedChallengesState])
+  useEffect(() => {
+    return () => resetCompletedChallengesState()
+  }, [])
 
   // Fetch analyses for visible challenges
   useEffect(() => {
     if (!challenges.length || !userId) return
 
-    // Only fetch for the first few challenges to avoid too many requests
-    const challengesToFetch = challenges.slice(0, 5)
-
-    challengesToFetch.forEach(challenge => {
+    // Only fetch for the visible challenges
+    challenges.forEach(challenge => {
       fetchChallengeAnalysis(challenge._id)
     })
-  }, [challenges, userId])
+  }, [challenges, userId, fetchChallengeAnalysis])
 
   // Handle viewing full analysis
   const handleViewAnalysis = challengeId => {
@@ -137,306 +102,395 @@ const CompletedChallenges = () => {
     onAnalysisOpen()
   }
 
-  // Handle opening challenge details modal
-  const handleViewDetails = challenge => {
-    setSelectedChallenge(challenge)
-    onDetailOpen()
-  }
-
   // Load more challenges
   const loadMore = () => {
-    loadCompletedChallenges(page + 1, 10)
+    // Directly increment the page number
+    const nextPage = page + 1
+
+    // Load more items for grid view
+    const itemsPerPage = columns === 1 ? 5 : 6
+
+    // Call load function with the next page number
+    loadCompletedChallenges(nextPage, itemsPerPage)
   }
 
-  // Format the result of a challenge
-  const getChallengeResult = challenge => {
-    if (!userId) return { text: t('Unknown'), color: 'gray' }
-
-    const isChallenger = challenge.challenger._id === userId
-
-    // If the challenge is incomplete (one or both players haven't attempted)
-    if (!challenge.challengerAttempted || !challenge.opponentAttempted) {
-      return { text: t('Incomplete'), color: 'gray' }
+  // Toggle between grid and list view (only on desktop)
+  const toggleView = () => {
+    if (showGridControls) {
+      setIsGridView(!isGridView)
     }
-
-    // If there's a tie
-    if (challenge.challengerScore === challenge.opponentScore) {
-      return { text: t('Tie'), color: 'yellow' }
-    }
-
-    // If the user won
-    if (
-      (isChallenger && challenge.challengerScore > challenge.opponentScore) ||
-      (!isChallenger && challenge.opponentScore > challenge.challengerScore)
-    ) {
-      return { text: t('Victory'), color: 'green' }
-    }
-
-    // If the user lost
-    return { text: t('Defeat'), color: 'red' }
   }
 
+  // Loading state
   if (loading && !challenges.length) {
     return (
-      <Center py={10}>
-        <VStack spacing={4}>
-          <Spinner size="xl" color="purple.500" thickness="4px" />
-          <Text color="whiteAlpha.700">
-            {t('Loading completed challenges...')}
-          </Text>
-        </VStack>
+      <Center py={6}>
+        <MotionBox
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          transition={{ duration: 0.5 }}
+        >
+          <VStack spacing={4}>
+            <Spinner
+              size="lg"
+              color="blue.400"
+              thickness="3px"
+              speed="0.8s"
+              emptyColor="rgba(26, 32, 58, 0.4)"
+            />
+            <MotionText
+              color="blue.100"
+              fontSize="sm"
+              fontWeight="medium"
+              initial={{ y: 10, opacity: 0 }}
+              animate={{ y: 0, opacity: 1 }}
+              transition={{ delay: 0.2 }}
+            >
+              {t('Loading analyses...')}
+            </MotionText>
+          </VStack>
+        </MotionBox>
       </Center>
     )
   }
 
+  // Error state
   if (error && !challenges.length) {
     return (
-      <Center py={10}>
-        <Text color="whiteAlpha.700">{error}</Text>
+      <Center py={6}>
+        <MotionBox
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          transition={{ duration: 0.5 }}
+          p={4}
+          borderRadius="lg"
+          bg="rgba(26, 32, 58, 0.85)"
+          borderWidth="1px"
+          borderColor="red.500"
+          maxW="sm"
+        >
+          <VStack spacing={3}>
+            <Icon as={XCircle} color="red.400" boxSize={8} />
+            <Text color="whiteAlpha.900" fontSize="sm" textAlign="center">
+              {error}
+            </Text>
+            <MotionButton
+              colorScheme="blue"
+              size="sm"
+              onClick={() => loadCompletedChallenges(1, columns === 1 ? 5 : 9)}
+              whileHover={{ scale: 1.05 }}
+              whileTap={{ scale: 0.95 }}
+            >
+              {t('Retry')}
+            </MotionButton>
+          </VStack>
+        </MotionBox>
       </Center>
     )
   }
 
+  // Empty state
   if (!loading && !challenges.length) {
     return (
-      <Center py={10}>
-        <Text color="whiteAlpha.700">{t('No completed challenges found')}</Text>
+      <Center py={6}>
+        <MotionBox
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.5 }}
+          p={5}
+          borderRadius="lg"
+          bg="rgba(26, 32, 58, 0.85)"
+          borderWidth="1px"
+          borderColor="blue.700"
+          maxW="sm"
+          textAlign="center"
+        >
+          <VStack spacing={4}>
+            <Icon as={History} color="blue.400" boxSize={10} />
+            <Text color="whiteAlpha.900" fontWeight="medium" fontSize="md">
+              {t('No analyses available')}
+            </Text>
+            <Text color="whiteAlpha.700" fontSize="sm">
+              {t('Complete challenges to unlock AI insights')}
+            </Text>
+          </VStack>
+        </MotionBox>
       </Center>
     )
   }
 
   return (
-    <Box>
-      <VStack align="stretch" spacing={4}>
-        <HStack justify="space-between" wrap="wrap">
-          <Heading size="lg" color="whiteAlpha.900">
-            {t('Completed Challenges')}
-          </Heading>
+    <MotionBox
+      initial={{ opacity: 0 }}
+      animate={{ opacity: 1 }}
+      transition={{ duration: 0.5 }}
+      px={{ base: 2, md: 4 }} // More padding on desktop
+    >
+      <VStack align="stretch" spacing={5}>
+        {/* Header section */}
+        <MotionBox
+          bg="rgba(26, 32, 58, 0.9)"
+          p={{ base: 3, md: 4 }} // More padding on desktop
+          borderRadius="xl"
+          boxShadow="0 4px 12px rgba(0, 0, 0, 0.15)"
+          borderWidth="1px"
+          borderColor="blue.700"
+          initial={{ y: -10, opacity: 0 }}
+          animate={{ y: 0, opacity: 1 }}
+          transition={{ duration: 0.4 }}
+          position="relative"
+          overflow="hidden"
+        >
+          {/* Background glow effect */}
+          <Box
+            position="absolute"
+            top="0"
+            right="0"
+            bottom="0"
+            left="0"
+            bgGradient="radial(circle at top right, rgba(66, 153, 225, 0.1), transparent 70%)"
+            zIndex="0"
+          />
 
-          <HStack spacing={4}>
-            <FormControl display="flex" alignItems="center" width="auto">
-              <FormLabel
-                htmlFor="view-switch"
-                mb="0"
-                color="whiteAlpha.900"
-                fontSize="sm"
+          <Flex
+            position="relative"
+            zIndex="1"
+            justify="space-between"
+            align="center"
+            direction={{ base: 'row', md: 'row' }}
+            wrap="wrap"
+            gap={2}
+          >
+            <HStack spacing={2}>
+              <Icon as={Brain} color="blue.400" boxSize={5} />
+              <Heading size="md" color="whiteAlpha.900" fontWeight="bold">
+                {t('RR AI Analysis')}
+              </Heading>
+
+              <Badge
+                borderRadius="full"
+                px={2}
+                py={1}
+                colorScheme="blue"
+                fontSize="xs"
               >
-                {t('AI Analysis View')}
-              </FormLabel>
-              <Switch
-                id="view-switch"
-                colorScheme="purple"
-                isChecked={showCardView}
-                onChange={() => setShowCardView(!showCardView)}
-              />
-            </FormControl>
-          </HStack>
-        </HStack>
+                {challenges.length}
+              </Badge>
+            </HStack>
 
-        {showCardView ? (
-          <VStack align="stretch" spacing={4} mt={2}>
-            {challenges.map(challenge => {
-              const analysis = challengeAnalyses[challenge._id]
-
-              return (
-                <Box key={challenge._id}>
-                  <HStack
-                    mb={2}
-                    justify="space-between"
-                    bgColor="whiteAlpha.100"
-                    p={2}
-                    borderRadius="md"
-                  >
-                    <HStack>
-                      <Text color="whiteAlpha.900" fontWeight="semibold">
-                        {challenge.category} Challenge
-                      </Text>
-                      <Text color="whiteAlpha.600" fontSize="sm">
-                        {format(new Date(challenge.createdAt), 'dd MMM yyyy')}
-                      </Text>
-                    </HStack>
-
-                    <Button
-                      size="sm"
-                      variant="ghost"
-                      colorScheme="purple"
-                      onClick={() => handleViewDetails(challenge)}
-                    >
-                      {t('Details')}
-                    </Button>
-                  </HStack>
-
-                  <AnalysisSummaryCard
-                    challenge={challenge}
-                    analysis={analysis}
-                    userId={userId}
-                    onViewFull={() => {
-                      if (analysis) {
-                        handleViewAnalysis(challenge._id)
-                      } else {
-                        generateAnalysis(challenge._id)
-                        handleViewAnalysis(challenge._id)
-                      }
-                    }}
-                  />
-                </Box>
-              )
-            })}
-
-            {hasMore && (
-              <Center py={4}>
-                <Button
-                  onClick={loadMore}
-                  isLoading={loading}
-                  colorScheme="purple"
-                  variant="outline"
+            {/* Desktop grid/list toggle */}
+            {showGridControls && (
+              <HStack spacing={2}>
+                <MotionButton
+                  size="sm"
+                  variant={isGridView ? 'solid' : 'outline'}
+                  colorScheme="blue"
+                  leftIcon={<Grid size={14} />}
+                  onClick={() => setIsGridView(true)}
+                  whileHover={{ scale: 1.05 }}
+                  whileTap={{ scale: 0.95 }}
+                  iconSpacing={1}
                 >
-                  {t('Load More')}
-                </Button>
-              </Center>
+                  {t('Grid')}
+                </MotionButton>
+
+                <MotionButton
+                  size="sm"
+                  variant={!isGridView ? 'solid' : 'outline'}
+                  colorScheme="blue"
+                  leftIcon={<Layers size={14} />}
+                  onClick={() => setIsGridView(false)}
+                  whileHover={{ scale: 1.05 }}
+                  whileTap={{ scale: 0.95 }}
+                  iconSpacing={1}
+                >
+                  {t('List')}
+                </MotionButton>
+              </HStack>
             )}
-          </VStack>
-        ) : (
-          <TableContainer>
-            <Table variant="simple" size="md">
-              <Thead>
-                <Tr>
-                  <Th bg={headerBg} color="white">
-                    {t('Date')}
-                  </Th>
-                  <Th bg={headerBg} color="white">
-                    {t('Opponent')}
-                  </Th>
-                  <Th bg={headerBg} color="white">
-                    {t('Category')}
-                  </Th>
-                  <Th bg={headerBg} color="white">
-                    {t('Score')}
-                  </Th>
-                  <Th bg={headerBg} color="white">
-                    {t('Result')}
-                  </Th>
-                  <Th bg={headerBg} color="white">
-                    {t('Actions')}
-                  </Th>
-                </Tr>
-              </Thead>
-              <Tbody>
-                {challenges.map(challenge => {
-                  const isChallenger = challenge.challenger._id === userId
-                  const opponent = isChallenger
-                    ? challenge.opponent
-                    : challenge.challenger
-                  const myScore = isChallenger
-                    ? challenge.challengerScore
-                    : challenge.opponentScore
-                  const opponentScore = isChallenger
-                    ? challenge.opponentScore
-                    : challenge.challengerScore
-                  const result = getChallengeResult(challenge)
+          </Flex>
+        </MotionBox>
 
-                  return (
-                    <Tr
-                      key={challenge._id}
-                      bg={rowBg}
-                      _hover={{ bg: rowHoverBg }}
-                      transition="background-color 0.2s"
+        {/* Analysis cards - Responsive Grid/List layout */}
+        {isGridView && columns > 1 ? (
+          // Grid layout for desktop
+          <MotionSimpleGrid
+            columns={{ base: 1, md: 2, lg: 3, xl: 3 }}
+            spacing={{ base: 3, md: 4 }}
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            transition={{ staggerChildren: 0.1 }}
+          >
+            <AnimatePresence>
+              {challenges.map((challenge, index) => {
+                const analysis = challengeAnalyses[challenge._id]
+                const isAnalysisLoading = analysisLoading[challenge._id]
+                return (
+                  <MotionBox
+                    key={challenge._id}
+                    initial={{ opacity: 0, y: 15 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    exit={{ opacity: 0, y: -15 }}
+                    transition={{
+                      duration: 0.35,
+                      delay: index * 0.05,
+                    }}
+                  >
+                    {/* Category and date as part of the card */}
+                    <Box
+                      borderRadius="lg"
+                      overflow="hidden"
+                      display="flex"
+                      flexDirection="column"
                     >
-                      <Td color="white">
-                        {format(new Date(challenge.createdAt), 'dd MMM yyyy')}
-                      </Td>
-                      <Td color="white">
-                        <HStack>
-                          <Text>{opponent.name}</Text>
-                          <Text color="whiteAlpha.600" fontSize="sm">
-                            @{opponent.inGameName}
-                          </Text>
-                        </HStack>
-                      </Td>
-                      <Td color="white">
-                        <Badge colorScheme="purple">{challenge.category}</Badge>
-                      </Td>
-                      <Td color="white">
-                        <HStack spacing={1}>
-                          <Text fontWeight="bold">{myScore || 0}</Text>
-                          <Text color="whiteAlpha.600">:</Text>
-                          <Text fontWeight="bold">{opponentScore || 0}</Text>
-                        </HStack>
-                      </Td>
-                      <Td>
-                        <Badge colorScheme={result.color}>{result.text}</Badge>
-                      </Td>
-                      <Td>
-                        <HStack spacing={2}>
-                          <Button
-                            size="sm"
-                            variant="outline"
-                            colorScheme="purple"
-                            leftIcon={<ExternalLink size={14} />}
-                            onClick={() => handleViewDetails(challenge)}
-                          >
-                            {t('Details')}
-                          </Button>
+                      <HStack
+                        justify="space-between"
+                        fontSize="xs"
+                        color="whiteAlpha.700"
+                        mb={1}
+                        px={1}
+                      >
+                        <Text fontWeight="medium">{challenge.category}</Text>
+                        <Text>
+                          {format(new Date(challenge.createdAt), 'dd MMM yyyy')}
+                        </Text>
+                      </HStack>
 
-                          <Button
-                            size="sm"
-                            variant="solid"
-                            colorScheme="purple"
-                            leftIcon={<Brain size={14} />}
-                            isLoading={analysisLoading[challenge._id]}
-                            onClick={() => {
-                              if (challengeAnalyses[challenge._id]) {
-                                handleViewAnalysis(challenge._id)
-                              } else {
-                                generateAnalysis(challenge._id)
-                                handleViewAnalysis(challenge._id)
-                              }
-                            }}
+                      <Suspense
+                        fallback={
+                          <Center
+                            py={12}
+                            bg="rgba(26, 21, 39, 0.5)"
+                            borderRadius="lg"
                           >
-                            {t('AI Analysis')}
-                          </Button>
-                        </HStack>
-                      </Td>
-                    </Tr>
-                  )
-                })}
-              </Tbody>
-            </Table>
-          </TableContainer>
+                            <Spinner size="md" color="blue.400" />
+                          </Center>
+                        }
+                      >
+                        <AnalysisSummaryCard
+                          challenge={challenge}
+                          analysis={analysis}
+                          userId={userId}
+                          isLoading={isAnalysisLoading}
+                          onViewFull={() => {
+                            if (analysis) {
+                              handleViewAnalysis(challenge._id)
+                            } else {
+                              generateAnalysis(challenge._id)
+                              handleViewAnalysis(challenge._id)
+                            }
+                          }}
+                        />
+                      </Suspense>
+                    </Box>
+                  </MotionBox>
+                )
+              })}
+            </AnimatePresence>
+          </MotionSimpleGrid>
+        ) : (
+          // List layout for mobile
+          <VStack align="stretch" spacing={3} mt={1}>
+            <AnimatePresence>
+              {challenges.map((challenge, index) => {
+                const analysis = challengeAnalyses[challenge._id]
+                const isAnalysisLoading = analysisLoading[challenge._id]
+                return (
+                  <MotionBox
+                    key={challenge._id}
+                    initial={{ opacity: 0, y: 15 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    exit={{ opacity: 0, y: -15 }}
+                    transition={{
+                      duration: 0.35,
+                      delay: index * 0.05,
+                    }}
+                  >
+                    <MotionBox mb={1} px={1}>
+                      <HStack
+                        justify="space-between"
+                        fontSize="xs"
+                        color="whiteAlpha.700"
+                      >
+                        <Text>{challenge.category}</Text>
+                        <Text>
+                          {format(new Date(challenge.createdAt), 'dd MMM yyyy')}
+                        </Text>
+                      </HStack>
+                    </MotionBox>
+
+                    <Suspense
+                      fallback={
+                        <Center py={4}>
+                          <Spinner size="md" color="blue.400" />
+                        </Center>
+                      }
+                    >
+                      <AnalysisSummaryCard
+                        challenge={challenge}
+                        analysis={analysis}
+                        userId={userId}
+                        isLoading={isAnalysisLoading}
+                        onViewFull={() => {
+                          if (analysis) {
+                            handleViewAnalysis(challenge._id)
+                          } else {
+                            generateAnalysis(challenge._id)
+                            handleViewAnalysis(challenge._id)
+                          }
+                        }}
+                      />
+                    </Suspense>
+                  </MotionBox>
+                )
+              })}
+            </AnimatePresence>
+          </VStack>
         )}
 
-        {hasMore && !showCardView && (
+        {/* Load more button */}
+        {hasMore && (
           <Center py={4}>
-            <Button
+            <MotionButton
               onClick={loadMore}
               isLoading={loading}
-              colorScheme="purple"
+              colorScheme="blue"
               variant="outline"
+              size="sm"
+              leftIcon={<Activity size={14} />}
+              rightIcon={<ChevronDown size={14} />}
+              whileHover={{ scale: 1.05 }}
+              whileTap={{ scale: 0.95 }}
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              transition={{ delay: 0.3 }}
             >
               {t('Load More')}
-            </Button>
+            </MotionButton>
           </Center>
         )}
       </VStack>
 
-      <ChallengeDetailsModal
-        isOpen={isDetailOpen}
-        onClose={onDetailClose}
-        challenge={selectedChallenge}
-        userId={userId}
-      />
-
+      {/* Analysis Modal */}
       {selectedAnalysisId && (
         <Suspense
           fallback={
-            <Modal isOpen={isAnalysisOpen} onClose={onAnalysisClose}>
-              <ModalOverlay backdropFilter="blur(5px)" />
-              <ModalContent bg="rgba(26, 21, 39, 0.95)">
-                <Center p={10}>
-                  <Spinner size="xl" color="purple.500" thickness="4px" />
-                </Center>
-              </ModalContent>
-            </Modal>
+            <Center
+              position="fixed"
+              top="0"
+              left="0"
+              right="0"
+              bottom="0"
+              bg="rgba(0,0,0,0.7)"
+              zIndex="modal"
+            >
+              <VStack spacing={4}>
+                <Spinner size="xl" color="blue.500" thickness="4px" />
+                <Text color="white" fontWeight="medium">
+                  {t('Loading analysis...')}
+                </Text>
+              </VStack>
+            </Center>
           }
         >
           <ChallengeAnalysisModal
@@ -446,7 +500,7 @@ const CompletedChallenges = () => {
           />
         </Suspense>
       )}
-    </Box>
+    </MotionBox>
   )
 }
 

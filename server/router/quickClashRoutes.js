@@ -24,7 +24,6 @@ const {
   joinMatchmakingRoom,
   leaveMatchmakingRoom,
   getMatchmakingUsers,
-  createMatchmakingChallenge,
   getMatchmakingStatus,
   acceptMatchmakingChallenge,
 } = require('../controllers/quickClashMatchmakingController')
@@ -62,7 +61,6 @@ router.get('/stats', getUserClashStats)
 router.post('/matchmaking/join', joinMatchmakingRoom)
 router.post('/matchmaking/leave', leaveMatchmakingRoom)
 router.get('/matchmaking/users', getMatchmakingUsers)
-router.post('/matchmaking/challenge', createMatchmakingChallenge)
 router.get('/matchmaking/status', getMatchmakingStatus)
 router.post('/matchmaking/accept', acceptMatchmakingChallenge)
 

@@ -80,52 +80,6 @@ const MatchmakingTab = () => {
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.5 }}
     >
-      {/* Info panel */}
-      <Collapse in={showInfo} animateOpacity>
-        <Alert
-          status="info"
-          variant="subtle"
-          flexDirection={{ base: 'column', md: 'row' }}
-          alignItems="flex-start"
-          borderRadius="md"
-          bg="blue.800"
-          mb={4}
-        >
-          <AlertIcon color="blue.300" boxSize={5} mr={2} mt={1} />
-          <Box flex="1">
-            <AlertTitle fontSize="lg" mb={1} color="white">
-              {t('Quick Matchmaking')}
-            </AlertTitle>
-            <AlertDescription color="whiteAlpha.900" fontSize="sm">
-              {t(
-                'Find opponents quickly in the matchmaking room. Join the room to make yourself available for challenges, or challenge other players directly.',
-              )}
-            </AlertDescription>
-            <HStack mt={3} spacing={4}>
-              <Flex align="center" gap={1}>
-                <Icon as={UserCheck} color="green.300" boxSize={4} />
-                <Text color="green.300" fontSize="sm" fontWeight="medium">
-                  {t('Challenge anyone')}
-                </Text>
-              </Flex>
-              <Flex align="center" gap={1}>
-                <Icon as={Users} color="blue.300" boxSize={4} />
-                <Text color="blue.300" fontSize="sm" fontWeight="medium">
-                  {t('Bot opponents available')}
-                </Text>
-              </Flex>
-            </HStack>
-          </Box>
-          <CloseButton
-            position="absolute"
-            right="8px"
-            top="8px"
-            color="white"
-            onClick={() => setShowInfo(false)}
-          />
-        </Alert>
-      </Collapse>
-
       {/* Main matchmaking content */}
       <Box
         borderRadius="lg"

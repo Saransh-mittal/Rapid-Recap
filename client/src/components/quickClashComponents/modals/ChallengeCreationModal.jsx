@@ -1,4 +1,4 @@
-import React from 'react'
+import React, { useEffect } from 'react'
 import {
   Modal,
   ModalOverlay,
@@ -71,6 +71,12 @@ const ChallengeCreationModal = ({
       </Modal>
     )
   }
+
+  useEffect(() => {
+    setTimeout(() => {
+      onClose()
+    }, 5000)
+  }, [onClose])
 
   return (
     <Modal

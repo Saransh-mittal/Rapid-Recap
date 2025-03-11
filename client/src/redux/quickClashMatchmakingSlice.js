@@ -52,31 +52,6 @@ export const leaveMatchmaking = createAsyncThunk(
   },
 )
 
-export const createMatchmakingChallenge = createAsyncThunk(
-  'quickClashMatchmaking/createChallenge',
-  async ({ opponentId, categories }, { rejectWithValue }) => {
-    // Validate exactly 2 categories
-    if (!categories || !Array.isArray(categories) || categories.length !== 2) {
-      return rejectWithValue('Exactly 2 categories must be selected')
-    }
-
-    try {
-      const response = await axios.post(
-        '/api/quickClash/matchmaking/challenge',
-        {
-          opponentId,
-          categories,
-        },
-      )
-      return response.data
-    } catch (error) {
-      return rejectWithValue(
-        error.response?.data?.message || 'Failed to create challenge',
-      )
-    }
-  },
-)
-
 export const getMatchmakingStatus = createAsyncThunk(
   'quickClashMatchmaking/getStatus',
   async (_, { rejectWithValue }) => {
@@ -288,20 +263,6 @@ const quickClashMatchmakingSlice = createSlice({
       .addCase(leaveMatchmaking.rejected, (state, action) => {
         state.matchmakingLoading = false
         state.matchmakingError = action.payload
-      })
-
-      // Create challenge
-      .addCase(createMatchmakingChallenge.pending, state => {
-        state.challengeCreating = true
-        state.challengeCreationError = null
-      })
-      .addCase(createMatchmakingChallenge.fulfilled, (state, action) => {
-        state.challengeCreationResult = action.payload
-        state.challengeCreating = false
-      })
-      .addCase(createMatchmakingChallenge.rejected, (state, action) => {
-        state.challengeCreating = false
-        state.challengeCreationError = action.payload
       })
 
       // Get matchmaking status

@@ -18,11 +18,51 @@ import { motion } from 'framer-motion'
 import { useTranslation } from 'react-i18next'
 import { BookOpen, CheckCircle2, Lightbulb, AlertCircle } from 'lucide-react'
 import MainArticleContent from '../articleComponents/MainArticleContent'
+import world from '/images/quickclash/world_quickclash.webp'
+import politics from '/images/quickclash/politics_quickclash.webp'
+import tech from '/images/quickclash/technology_quickclash.webp'
+import science from '/images/quickclash/science_quickclash.webp'
+import health from '/images/quickclash/health_quickclash.webp'
+import business from '/images/quickclash/business_quickclash.webp'
+import sports from '/images/quickclash/sports_quickclash.webp'
+import entertainment from '/images/quickclash/entertainment_quickclash.webp'
+import education from '/images/quickclash/education_quickclash.webp'
+import lifestyle from '/images/quickclash/lifestyle_quickclash.webp'
+import environment from '/images/quickclash/environment_quickclash.webp'
+import food from '/images/quickclash/food_quickclash.webp'
+import tourism from '/images/quickclash/tourism_quickclash.webp'
+import crime from '/images/quickclash/crime_quickclash.webp'
 
 const MotionBox = motion(Box)
 const MotionButton = motion(Button)
 
-const ReadingPhase = ({ article, timeLeft, onComplete }) => {
+// Function to get the appropriate image based on category
+const getCategoryImage = category => {
+  if (!category) return null
+
+  const categoryLower = category.toLowerCase()
+
+  const categoryImageMap = {
+    world: world,
+    politics: politics,
+    technology: tech,
+    science: science,
+    health: health,
+    business: business,
+    sports: sports,
+    entertainment: entertainment,
+    education: education,
+    lifestyle: lifestyle,
+    environment: environment,
+    food: food,
+    tourism: tourism,
+    crime: crime,
+  }
+
+  return categoryImageMap[categoryLower] || null
+}
+
+const ReadingPhase = ({ article, timeLeft, onComplete, category }) => {
   const { t } = useTranslation('QuickClash')
   const articleRef = useRef(null)
   const contentRef = useRef(null)
@@ -30,6 +70,9 @@ const ReadingPhase = ({ article, timeLeft, onComplete }) => {
   const [hasScrolledToBottom, setHasScrolledToBottom] = useState(false)
   const [showHint, setShowHint] = useState(false)
   const maxWidth = useBreakpointValue({ base: '100%', md: '800px' })
+
+  // Get the appropriate image for the category
+  const categoryImage = getCategoryImage(category)
 
   // Calculate scroll percentage based on window scroll position
   useEffect(() => {
@@ -159,7 +202,7 @@ const ReadingPhase = ({ article, timeLeft, onComplete }) => {
 
             {/* Article Content */}
             <MainArticleContent
-              imgURL={null}
+              imgURL={categoryImage}
               mainText={article?.content}
               articleRef={articleRef}
               articleLoading={false}

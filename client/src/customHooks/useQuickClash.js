@@ -191,6 +191,9 @@ const useQuickClash = () => {
                 analysis: response.data.analysis,
               }),
             )
+            dispatch(
+              setChallengeAnalysisLoading({ challengeId, isLoading: false }),
+            )
             return response.data.analysis
           }
 

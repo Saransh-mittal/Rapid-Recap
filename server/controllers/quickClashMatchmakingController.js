@@ -5,16 +5,8 @@ const {
   leaveMatchmaking,
   updateMatchmakingStatus,
   getAvailableUsers,
-  simulateBotResponse,
-  isBot,
   acceptMatchmakingChallengeService,
 } = require('../services/quickClashServices/quickClashMatchmakingService')
-const {
-  simulateBotChallenge,
-} = require('../services/quickClashServices/quickClashBotService')
-const {
-  createChallenge,
-} = require('../services/quickClashServices/quickClashChallengeService')
 const QuickClashMatchmaking = require('../model/quickClashSchemas/quickClashMatchmakingSchema')
 const { sendNotification } = require('../services/notificationService')
 
@@ -109,78 +101,6 @@ const getMatchmakingUsers = asyncHandler(async (req, res) => {
     res.status(500).json({
       success: false,
       message: error.message || 'Failed to get matchmaking users',
-    })
-  }
-})
-
-/**
- * @desc    Create a challenge from matchmaking
- * @route   POST /api/quickClash/matchmaking/challenge
- * @access  Private
- */
-const createMatchmakingChallenge = asyncHandler(async (req, res) => {
-  const challengerId = req.user._id
-  const { opponentId, categories } = req.body
-
-  if (
-    !opponentId ||
-    !categories ||
-    !Array.isArray(categories) ||
-    categories.length === 0
-  ) {
-    return res.status(400).json({
-      success: false,
-      message: 'Opponent ID and at least one category are required',
-    })
-  }
-
-  try {
-    // Check if opponent is a bot
-    const botUser = await isBot({ userId: opponentId })
-
-    // Create challenge
-    const challengeResult = await createChallenge({
-      challengerId,
-      opponentId,
-      categories,
-    })
-
-    if (!challengeResult || !challengeResult.challenge) {
-      throw new Error('Failed to create challenge')
-    }
-
-    // If opponent is a bot, simulate response after a delay
-    if (botUser) {
-      // Set up bot response simulation
-      simulateBotResponse({
-        challengeId: challengeResult.challenge._id,
-        botId: opponentId,
-      }).then(responseResult => {
-        if (responseResult.accepted) {
-          // If bot accepts, simulate bot playing the challenge
-          setTimeout(() => {
-            simulateBotChallenge({
-              challengeId: challengeResult.challenge._id,
-              botId: opponentId,
-            }).catch(err => {
-              console.error('Error in bot challenge simulation:', err)
-            })
-          }, 5000) // Wait 5 seconds before bot starts playing
-        }
-      })
-    }
-
-    res.status(201).json({
-      success: true,
-      message: 'Challenge created successfully',
-      challenge: challengeResult.challenge,
-      isBot: botUser,
-    })
-  } catch (error) {
-    console.error('Error creating matchmaking challenge:', error)
-    res.status(500).json({
-      success: false,
-      message: error.message || 'Failed to create challenge',
     })
   }
 })
@@ -380,7 +300,6 @@ module.exports = {
   joinMatchmakingRoom,
   leaveMatchmakingRoom,
   getMatchmakingUsers,
-  createMatchmakingChallenge,
   getMatchmakingStatus,
   handleMatchmakingEvents,
   acceptMatchmakingChallenge,

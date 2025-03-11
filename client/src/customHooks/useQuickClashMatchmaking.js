@@ -7,7 +7,6 @@ import {
   fetchMatchmakingUsers,
   joinMatchmaking,
   leaveMatchmaking,
-  createMatchmakingChallenge,
   getMatchmakingStatus,
   setSocketConnected,
   addUser,
@@ -34,6 +33,9 @@ const useQuickClashMatchmaking = () => {
   const dispatch = useDispatch()
   const { socket, getSocket } = useSocket()
   const { _id } = useSelector(state => state.auth.user)
+  const { challengeCreationData } = useSelector(
+    state => state.quickClashMatchmaking,
+  )
   const toast = useToast()
   const { t } = useTranslation('QuickClash')
 
@@ -116,6 +118,10 @@ const useQuickClashMatchmaking = () => {
 
       currentSocket.on('quickClash:userUnavailable', data => {
         dispatch(removeLockedUser(data.userId))
+
+        if (data.userId.toString() === _id.toString()) {
+          dispatch(leaveMatchmaking())
+        }
       })
 
       currentSocket.on('quickClash:userRemoved', data => {
@@ -126,9 +132,7 @@ const useQuickClashMatchmaking = () => {
         dispatch(setPreparingChallenge(data))
 
         // Auto leave matchmaking
-        leaveMatchmaking().catch(error => {
-          console.error('Error leaving matchmaking:', error)
-        })
+        dispatch(leaveMatchmaking())
       })
 
       currentSocket.on('quickClash:matchCreationStarted', data => {
@@ -304,62 +308,6 @@ const useQuickClashMatchmaking = () => {
       })
   }, [dispatch, socket, matchmakingEntry, toast, t])
 
-  // Function to create a challenge from matchmaking
-  const handleCreateChallenge = useCallback(
-    (opponentId, categories) => {
-      // Validate we have exactly 2 categories
-      if (
-        !categories ||
-        !Array.isArray(categories) ||
-        categories.length !== 2
-      ) {
-        toast({
-          title: t('Error'),
-          description: t('Please select exactly 2 categories'),
-          status: 'error',
-          duration: 3000,
-          isClosable: true,
-        })
-        return Promise.reject('Invalid categories')
-      }
-
-      // Store pending challenge data for UI state
-      dispatch(setPendingChallenge({ opponentId, categories }))
-
-      return dispatch(createMatchmakingChallenge({ opponentId, categories }))
-        .unwrap()
-        .then(result => {
-          toast({
-            title: t('Challenge Created'),
-            description: t('Challenge sent successfully'),
-            status: 'success',
-            duration: 3000,
-            isClosable: true,
-          })
-
-          // Clear pending challenge state
-          dispatch(clearPendingChallenge())
-
-          return result
-        })
-        .catch(error => {
-          // Clear pending challenge state on error
-          dispatch(clearPendingChallenge())
-
-          toast({
-            title: t('Error'),
-            description: error || t('Failed to create challenge'),
-            status: 'error',
-            duration: 3000,
-            isClosable: true,
-          })
-
-          throw error
-        })
-    },
-    [dispatch, toast, t],
-  )
-
   const handleAcceptChallenge = useCallback(
     (creatorId, categories) => {
       // Validate we have exactly 2 categories
@@ -384,14 +332,6 @@ const useQuickClashMatchmaking = () => {
       return dispatch(acceptMatchmakingChallenge({ creatorId, categories }))
         .unwrap()
         .then(result => {
-          toast({
-            title: t('Challenge Accepted'),
-            description: t('Challenge is being prepared...'),
-            status: 'success',
-            duration: 3000,
-            isClosable: true,
-          })
-
           // Clear pending challenge state
           dispatch(clearPendingChallenge())
 
@@ -454,7 +394,6 @@ const useQuickClashMatchmaking = () => {
     // Actions
     joinMatchmaking: handleJoinMatchmaking,
     leaveMatchmaking: handleLeaveMatchmaking,
-    createChallenge: handleCreateChallenge,
     acceptChallenge: handleAcceptChallenge,
     loadAvailableUsers,
     checkMatchmakingStatus,

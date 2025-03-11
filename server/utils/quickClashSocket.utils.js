@@ -7,9 +7,6 @@ const {
   acceptChallenge,
   rejectChallenge,
 } = require('../services/quickClashServices/quickClashChallengeService')
-const {
-  simulateBotChallenge,
-} = require('../services/quickClashServices/quickClashBotService')
 
 const joinedUsers = new Set()
 
@@ -79,16 +76,6 @@ const setupQuickClashSocketHandlers = (io, socket, user) => {
               },
             )
           }
-
-          // Simulate bot playing the challenge after a short delay
-          setTimeout(() => {
-            simulateBotChallenge({
-              challengeId,
-              botId,
-            }).catch(err => {
-              console.error('Error in bot challenge simulation:', err)
-            })
-          }, 5000) // 5 seconds delay
         } else {
           // Bot rejects the challenge
           await rejectChallenge({

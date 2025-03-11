@@ -475,6 +475,7 @@ const QuickClashSession = () => {
               }
             >
               <ReadingPhase
+                category={challenge?.category}
                 article={article}
                 timeLeft={timeLeft}
                 onComplete={handleReadingComplete}

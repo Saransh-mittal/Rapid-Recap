@@ -1,158 +1,119 @@
-// components/quickClashComponents/AnalysisLoadingState.jsx
-import React, { useState, useEffect } from 'react'
+import React from 'react'
 import {
   Box,
-  VStack,
   HStack,
   Text,
-  Spinner,
+  Button,
   Icon,
-  Flex,
-  Badge,
+  Spinner,
+  VStack,
   useColorModeValue,
 } from '@chakra-ui/react'
-import { motion, AnimatePresence } from 'framer-motion'
-import {
-  Brain,
-  Sparkles,
-  Zap,
-  AtomIcon,
-  Lightbulb,
-  Microscope,
-  ServerCrash,
-  BookOpen,
-} from 'lucide-react'
+import { motion } from 'framer-motion'
+import { Brain, Zap } from 'lucide-react'
 import { useTranslation } from 'react-i18next'
 
 const MotionBox = motion(Box)
-const MotionText = motion(Text)
-const MotionFlex = motion(Flex)
+const MotionButton = motion(Button)
 
+/**
+ * Simplified loading state component for challenge analysis
+ */
 const AnalysisLoadingState = ({ challenge, onGenerate }) => {
   const { t } = useTranslation('QuickClash')
-  const [messageIndex, setMessageIndex] = useState(0)
   const cardBg = useColorModeValue(
-    'rgba(26, 21, 39, 0.85)',
-    'rgba(26, 21, 39, 0.85)',
+    'rgba(26, 32, 58, 0.8)',
+    'rgba(26, 32, 58, 0.8)',
   )
-
-  // Array of engaging loading messages
-  const loadingMessages = [
-    {
-      text: t('AI is analyzing your battle performance...'),
-      icon: Brain,
-      color: 'purple.400',
-    },
-    {
-      text: t('Comparing your answers with your opponent...'),
-      icon: Microscope,
-      color: 'blue.400',
-    },
-    {
-      text: t('Examining your knowledge patterns...'),
-      icon: Lightbulb,
-      color: 'yellow.400',
-    },
-    {
-      text: t('Creating personalized learning recommendations...'),
-      icon: BookOpen,
-      color: 'green.400',
-    },
-    {
-      text: t('Processing battle data for insights...'),
-      icon: AtomIcon,
-      color: 'cyan.400',
-    },
-    {
-      text: t('Quantifying your intellectual strengths...'),
-      icon: Sparkles,
-      color: 'pink.400',
-    },
-  ]
-
-  // Rotate through messages every 3.5 seconds
-  useEffect(() => {
-    const interval = setInterval(() => {
-      setMessageIndex(prev => (prev + 1) % loadingMessages.length)
-    }, 3500)
-    return () => clearInterval(interval)
-  }, [loadingMessages.length])
-
-  const currentMessage = loadingMessages[messageIndex]
 
   return (
     <MotionBox
-      p={4}
+      p={3}
       borderRadius="lg"
       bg={cardBg}
-      border="1px solid"
-      borderColor="purple.700"
-      mb={4}
+      borderWidth="1px"
+      borderColor="blue.700"
+      boxShadow="0 4px 12px rgba(0, 0, 0, 0.15)"
       initial={{ opacity: 0 }}
       animate={{ opacity: 1 }}
       transition={{ duration: 0.3 }}
+      position="relative"
+      overflow="hidden"
     >
-      <VStack spacing={6} align="stretch">
+      {/* Background pulse effect */}
+      <MotionBox
+        position="absolute"
+        top="0"
+        left="0"
+        right="0"
+        bottom="0"
+        bgGradient="radial(circle at center, rgba(66, 153, 225, 0.1), transparent 70%)"
+        zIndex="0"
+        animate={{
+          opacity: [0.3, 0.5, 0.3],
+        }}
+        transition={{
+          duration: 2,
+          repeat: Infinity,
+          repeatType: 'reverse',
+        }}
+      />
+
+      <VStack spacing={3} align="stretch" position="relative" zIndex="1">
         {/* Header */}
         <HStack justify="space-between" align="center">
-          <HStack>
-            <Icon as={Brain} color="purple.400" boxSize={5} />
-            <Text fontWeight="bold">{t('AI Analysis')}</Text>
+          <HStack spacing={2}>
+            <MotionBox
+              animate={{
+                rotate: [0, 5, -5, 0],
+              }}
+              transition={{
+                duration: 2,
+                repeat: Infinity,
+                repeatType: 'reverse',
+              }}
+            >
+              <Icon as={Brain} color="blue.400" boxSize={4} />
+            </MotionBox>
+            <Text fontWeight="medium" color="white" fontSize="sm">
+              {t('AI Analysis')}
+            </Text>
           </HStack>
-          <Badge colorScheme="purple" px={2} py={1}>
-            {challenge.category}
-          </Badge>
+
+          <HStack>
+            <Spinner size="sm" color="blue.400" />
+          </HStack>
         </HStack>
 
-        {/* Loading animation */}
-        <AnimatePresence mode="wait">
-          <MotionFlex
-            key={`message-${messageIndex}`}
-            justify="center"
-            align="center"
-            direction="column"
-            py={8}
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            exit={{ opacity: 0, y: -20 }}
-            transition={{ duration: 0.5 }}
+        {/* Loading message */}
+        <HStack spacing={2} justify="center" py={1}>
+          <Text color="whiteAlpha.800" fontSize="xs">
+            {t('Analyzing challenge data...')}
+          </Text>
+          <MotionBox
+            animate={{
+              opacity: [0, 1, 0],
+            }}
+            transition={{
+              duration: 1.5,
+              repeat: Infinity,
+            }}
           >
-            <Box mb={4}>
-              <Spinner
-                thickness="4px"
-                speed="0.65s"
-                color={currentMessage.color}
-                size="xl"
-                mb={4}
-              />
-            </Box>
+            <Icon as={Zap} color="blue.300" boxSize={3} />
+          </MotionBox>
+        </HStack>
 
-            <HStack mb={3}>
-              <Icon as={currentMessage.icon} color={currentMessage.color} />
-              <MotionText
-                fontSize="md"
-                fontWeight="medium"
-                textAlign="center"
-                initial={{ opacity: 0 }}
-                animate={{ opacity: 1 }}
-                transition={{ delay: 0.2 }}
-              >
-                {currentMessage.text}
-              </MotionText>
-            </HStack>
-
-            <Text fontSize="sm" color="whiteAlpha.600" textAlign="center">
-              {t('This may take up to 30 seconds')}
-            </Text>
-          </MotionFlex>
-        </AnimatePresence>
-
-        {/* Footer text */}
-        <Text fontSize="xs" color="whiteAlpha.600" textAlign="center">
-          {t(
-            'Advanced AI algorithms are evaluating your battle performance and creating personalized insights',
-          )}
-        </Text>
+        {/* Generate button */}
+        <MotionButton
+          onClick={onGenerate}
+          colorScheme="blue"
+          size="sm"
+          leftIcon={<Brain size={14} />}
+          whileHover={{ scale: 1.03 }}
+          whileTap={{ scale: 0.97 }}
+        >
+          {t('Generate Analysis')}
+        </MotionButton>
       </VStack>
     </MotionBox>
   )

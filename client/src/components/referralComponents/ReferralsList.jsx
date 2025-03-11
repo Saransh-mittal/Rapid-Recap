@@ -77,31 +77,31 @@ const ReferralsList = ({ referrals, isLoading }) => {
                     </Tr>
                   ))
                 : referrals.map(referral => (
-                    <Tr key={referral._id}>
+                    <Tr key={referral?._id}>
                       <Td>
                         <HStack>
                           <Avatar
                             size="sm"
-                            name={referral.user.inGameName}
-                            src={referral.user.pic}
+                            name={referral?.user?.inGameName}
+                            src={referral?.user?.pic}
                           />
                           <Text color="whiteAlpha.900">
-                            {referral.user.inGameName}
+                            {referral?.user?.inGameName}
                           </Text>
                         </HStack>
                       </Td>
                       <Td color="whiteAlpha.900">
-                        {moment(referral.date).format('MMM DD, YYYY')}
+                        {moment(referral?.date).format('MMM DD, YYYY')}
                       </Td>
                       <Td>
                         <Tag
                           size="sm"
                           variant="subtle"
                           colorScheme={
-                            referral.status === 'complete' ? 'green' : 'yellow'
+                            referral?.status === 'complete' ? 'green' : 'yellow'
                           }
                         >
-                          {referral.status}
+                          {referral?.status}
                         </Tag>
                       </Td>
                     </Tr>

@@ -242,19 +242,20 @@ const quickClashSlice = createSlice({
       })
       .addCase(fetchCompletedChallenges.fulfilled, (state, action) => {
         const { challenges, hasMore, total } = action.payload
-
         if (state.completedChallengesPage === 1) {
           state.completedChallenges = challenges
         } else {
           // Add new challenges, avoiding duplicates
           const existingIds = new Set(state.completedChallenges.map(c => c._id))
           const newChallenges = challenges.filter(c => !existingIds.has(c._id))
+          // FIXED: Append new challenges to existing ones instead of replacing
           state.completedChallenges = [
             ...state.completedChallenges,
             ...newChallenges,
           ]
         }
 
+        // Preserve existing analyses when loading more challenges
         state.completedChallengesHasMore = hasMore
         state.completedChallengesTotal = total
         state.completedChallengesLoading = false

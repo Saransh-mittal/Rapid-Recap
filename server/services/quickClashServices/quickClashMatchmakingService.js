@@ -3,11 +3,15 @@ const mongoose = require('mongoose')
 const QuickClashMatchmaking = require('../../model/quickClashSchemas/quickClashMatchmakingSchema')
 const User = require('../../model/userSchema')
 const globalEmitter = require('../../eventEmitter')
-const { createChallenge } = require('./quickClashChallengeService')
+const {
+  createChallenge,
+  checkChallengeLimits,
+} = require('./quickClashChallengeService')
 const { sendNotification } = require('../notificationService')
 const {
   notifyChallengerAboutCreation,
 } = require('./quickClashNotificationService')
+const { scheduleBotResponse } = require('./quickClashBotService')
 
 // Constants
 const MATCHMAKING_EXPIRY = 30 * 60 * 1000 // 30 minutes
@@ -26,7 +30,7 @@ const joinMatchmaking = async ({ userId, categories }) => {
   if (!categories || !Array.isArray(categories) || categories.length !== 2) {
     throw new Error('Exactly 2 categories must be selected')
   }
-
+  await checkChallengeLimits({ userId })
   const session = await mongoose.startSession()
   try {
     return await session.withTransaction(async () => {
@@ -133,10 +137,13 @@ const updateMatchmakingStatus = async ({ userId, status }) => {
  */
 const getAvailableUsers = async ({ userId }) => {
   try {
+    await checkChallengeLimits({ userId })
     // First get real users in matchmaking (excluding current user)
     const matchmakingQuery = {
       user: { $ne: userId },
       status: 'available',
+      isBot: false,
+      expiresAt: { $gt: new Date() },
     }
 
     // Find real users in matchmaking and populate user details
@@ -197,6 +204,7 @@ const getOrCreateBotEntries = async count => {
     const existingBots = await QuickClashMatchmaking.find({
       isBot: true,
       status: 'available',
+      expiresAt: { $gt: new Date() },
     })
       .populate('user', 'name inGameName pic userLanguage')
       .lean()
@@ -212,20 +220,19 @@ const getOrCreateBotEntries = async count => {
     // Find bot users that are not already in matchmaking
     const existingBotIds = existingBots.map(bot => bot.user._id.toString())
 
-    const botUsers = await User.find({
+    let botUsers = await User.find({
       email: { $regex: /^dummy\d+@mail\.com$/ },
       _id: { $nin: existingBotIds },
-    })
-      .select('_id name inGameName pic userLanguage')
-      .limit(botsToCreate)
+    }).select('_id name inGameName pic userLanguage')
 
+    botUsers = shuffleArray(botUsers).slice(0, botsToCreate)
     if (botUsers.length === 0) {
       return existingBots
     }
 
     // Create new bot entries
     const newBotEntries = []
-    const MATCHMAKING_EXPIRY = 60 * 60 * 1000 // 1 hours
+    const MATCHMAKING_EXPIRY = 2 * 60 * 1000 // 1 hours
 
     for (const bot of botUsers) {
       // Create 2 random categories for the bot
@@ -273,44 +280,6 @@ const isBot = async ({ userId }) => {
   } catch (error) {
     console.error('Error checking if user is bot:', error)
     return false
-  }
-}
-
-/**
- * Simulate bot response to a challenge
- * @param {Object} params - Parameters
- * @param {string} params.challengeId - Challenge ID
- * @param {string} params.botId - Bot user ID
- * @returns {Promise<Object>} Simulation result
- */
-const simulateBotResponse = async ({ challengeId, botId }) => {
-  try {
-    // Random delay before bot responds (3-8 seconds)
-    const delay = Math.floor(Math.random() * 5000) + 3000
-
-    // 80% chance of accepting the challenge
-    const willAccept = Math.random() < 0.8
-
-    return new Promise(resolve => {
-      setTimeout(async () => {
-        try {
-          // Emit response through global event emitter
-          globalEmitter.emit('quickClash:botResponse', {
-            challengeId,
-            botId,
-            accepted: willAccept,
-          })
-
-          resolve({ success: true, accepted: willAccept })
-        } catch (error) {
-          console.error('Error in bot response simulation:', error)
-          resolve({ success: false, error: error.message })
-        }
-      }, delay)
-    })
-  } catch (error) {
-    console.error('Error simulating bot response:', error)
-    throw error
   }
 }
 
@@ -376,6 +345,11 @@ const acceptMatchmakingChallengeService = async ({
       User.findById(accepterId).select('_id name inGameName pic').lean(),
     ])
 
+    const [isCreatorBot, isAccepterBot] = await Promise.all([
+      isBot({ userId: creatorId }),
+      isBot({ userId: accepterId }),
+    ])
+
     // Remove both users from matchmaking immediately
     await Promise.all([
       QuickClashMatchmaking.findOneAndDelete({ user: creatorId }),
@@ -430,6 +404,14 @@ const acceptMatchmakingChallengeService = async ({
             error,
           )
         })
+
+        if (isCreatorBot || isAccepterBot) {
+          await scheduleBotResponse({
+            challengeId: challengeResult.challenge._id,
+            botId: isCreatorBot ? creatorId : accepterId,
+            delayMinutes: Math.floor(Math.random() * 25) + 5,
+          })
+        }
       } catch (error) {
         console.error('Error creating challenge in background:', error)
 
@@ -503,7 +485,6 @@ module.exports = {
   leaveMatchmaking,
   updateMatchmakingStatus,
   getAvailableUsers,
-  simulateBotResponse,
   isBot,
   getRandomCategories,
   acceptMatchmakingChallengeService,

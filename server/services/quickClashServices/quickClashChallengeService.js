@@ -57,6 +57,8 @@ const createChallenge = async ({
   if (challengerId.toString() === opponentId.toString()) {
     throw new Error('Cannot challenge yourself')
   }
+  // Check limits
+  await checkChallengeLimits({ userId: challengerId })
   const category = categories[Math.floor(Math.random() * categories.length)]
   const articles = await getSourceArticles({ category })
   const mixedArticle = await generateMixedArticle({ articles })
@@ -65,9 +67,6 @@ const createChallenge = async ({
   try {
     return await session.withTransaction(
       async () => {
-        // Check limits
-        await checkChallengeLimits({ userId: challengerId, session })
-
         // Create challenge
         const challenge = new QuickClashChallenge({
           challenger: challengerId,
@@ -345,16 +344,35 @@ const getChallengeDetails = async ({ challengeId }) => {
 }
 
 const getUserChallenges = async ({ userId, status = null, limit = 10 }) => {
-  const query = {
-    $or: [{ challenger: userId }, { opponent: userId }],
+  let query = {
+    $and: [
+      { $or: [{ challenger: userId }, { opponent: userId }] },
+      {
+        $or: [
+          { status: { $in: ['active', 'completed'] } },
+          { status: 'pending', expiresAt: { $gt: new Date() } },
+          {
+            $and: [
+              { status: 'expired' },
+              { challengerAttempted: true },
+              { opponentAttempted: true },
+            ],
+          },
+        ],
+      },
+    ],
   }
 
   if (status) {
-    query.status = status
+    query = {
+      $or: [{ challenger: userId }, { opponent: userId }],
+      status: status,
+    }
   }
 
   const challenges = await QuickClashChallenge.find(query)
-    .populate('challenger opponent')
+    .populate('challenger', '_id name inGameName')
+    .populate('opponent', '_id name inGameName')
     .sort({ createdAt: -1 })
     .limit(limit)
 
@@ -466,6 +484,7 @@ const updateChallengeScore = async ({
 }
 
 module.exports = {
+  checkChallengeLimits,
   createChallenge,
   acceptChallenge,
   rejectChallenge,
