@@ -1,26 +1,8 @@
 // components/quickClashComponents/MatchmakingTab.jsx
-import React, { useState, useEffect } from 'react'
-import {
-  Box,
-  VStack,
-  Text,
-  Button,
-  HStack,
-  Flex,
-  Icon,
-  Divider,
-  useToast,
-  Collapse,
-  Alert,
-  AlertIcon,
-  AlertTitle,
-  AlertDescription,
-  CloseButton,
-} from '@chakra-ui/react'
+import React, { useEffect } from 'react'
+import { Box, useToast } from '@chakra-ui/react'
 import { motion } from 'framer-motion'
 import { useTranslation } from 'react-i18next'
-import { Users, Info, AlertCircle, UserCheck } from 'lucide-react'
-import { useSelector } from 'react-redux'
 
 import MatchmakingRoom from './MatchmakingRoom'
 import useQuickClashMatchmaking from '../../customHooks/useQuickClashMatchmaking'
@@ -30,13 +12,9 @@ const MotionBox = motion(Box)
 const MatchmakingTab = () => {
   const { t } = useTranslation('QuickClash')
   const toast = useToast()
-  const [showInfo, setShowInfo] = useState(true)
-  const { user } = useSelector(state => state.auth)
 
   // Get matchmaking state from our custom hook
   const {
-    inMatchmaking,
-    matchmakingLoading,
     matchmakingError,
     challengeCreationError,
 
