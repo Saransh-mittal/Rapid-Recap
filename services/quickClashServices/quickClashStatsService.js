@@ -1,7 +1,6 @@
 // services/quickClashServices/quickClashStatsService.js
 const QuickClashChallenge = require('../../model/quickClashSchemas/quickClashChallengeSchema')
 const QuickClashSession = require('../../model/quickClashSchemas/quickClashSessionSchema')
-const mongoose = require('mongoose')
 
 /**
  * Calculate Quick Clash statistics for a user
@@ -34,9 +33,10 @@ const getUserStats = async ({ userId }) => {
     // Calculate active challenges
     const activeChallenges = await QuickClashChallenge.countDocuments({
       $or: [
-        { challenger: userId, status: { $in: ['pending', 'active'] } },
-        { opponent: userId, status: { $in: ['pending', 'active'] } },
+        { challenger: userId, status: { $in: ['active'] } },
+        { opponent: userId, status: { $in: ['active'] } },
       ],
+      expiresAt: { $gt: new Date() },
     })
 
     stats.totalChallenges = completedChallenges.length + activeChallenges
@@ -53,6 +53,11 @@ const getUserStats = async ({ userId }) => {
     const categoryScores = {}
 
     for (const challenge of completedChallenges) {
+      // Only count challenges where both players have attempted
+      if (!challenge.challengerAttempted || !challenge.opponentAttempted) {
+        continue
+      }
+
       const isChallenger = challenge.challenger.toString() === userId.toString()
       const userScore = isChallenger
         ? challenge.challengerScore
@@ -78,19 +83,17 @@ const getUserStats = async ({ userId }) => {
         categoryScores[challenge.category].wins += 1
       } else if (userScore < opponentScore) {
         losses++
-      } else if (userScore > 0 && opponentScore > 0) {
+      } else {
         // Only count as tie if both players completed the challenge
         ties++
       }
     }
 
-    // Calculate win rate (only from completed challenges)
-    const completedWithBothScores = completedChallenges.filter(
-      challenge => challenge.challengerScore > 0 && challenge.opponentScore > 0,
-    )
+    // Calculate win rate only from completed matches where both players participated
+    const totalCompletedMatches = wins + losses + ties
 
-    if (completedWithBothScores.length > 0) {
-      stats.winRate = Math.round((wins / completedWithBothScores.length) * 100)
+    if (totalCompletedMatches > 0) {
+      stats.winRate = Math.round((wins / totalCompletedMatches) * 100)
     }
 
     stats.totalWins = wins

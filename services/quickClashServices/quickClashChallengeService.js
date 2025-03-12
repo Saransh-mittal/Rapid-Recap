@@ -48,7 +48,17 @@ const checkChallengeLimits = async ({ userId, session }) => {
   }
 }
 
-const createChallenge = async ({ challengerId, opponentId, categories }) => {
+const createChallenge = async ({
+  challengerId,
+  opponentId,
+  categories,
+  fromMatchMaking = false,
+}) => {
+  if (challengerId.toString() === opponentId.toString()) {
+    throw new Error('Cannot challenge yourself')
+  }
+  // Check limits
+  await checkChallengeLimits({ userId: challengerId })
   const category = categories[Math.floor(Math.random() * categories.length)]
   const articles = await getSourceArticles({ category })
   const mixedArticle = await generateMixedArticle({ articles })
@@ -57,9 +67,6 @@ const createChallenge = async ({ challengerId, opponentId, categories }) => {
   try {
     return await session.withTransaction(
       async () => {
-        // Check limits
-        await checkChallengeLimits({ userId: challengerId, session })
-
         // Create challenge
         const challenge = new QuickClashChallenge({
           challenger: challengerId,
@@ -72,7 +79,7 @@ const createChallenge = async ({ challengerId, opponentId, categories }) => {
           },
           expiresAt: new Date(Date.now() + CHALLENGE_EXPIRY),
         })
-
+        if (fromMatchMaking) challenge.status = 'active'
         await challenge.save({ session })
 
         // Generate only English quiz in transaction
@@ -337,16 +344,35 @@ const getChallengeDetails = async ({ challengeId }) => {
 }
 
 const getUserChallenges = async ({ userId, status = null, limit = 10 }) => {
-  const query = {
-    $or: [{ challenger: userId }, { opponent: userId }],
+  let query = {
+    $and: [
+      { $or: [{ challenger: userId }, { opponent: userId }] },
+      {
+        $or: [
+          { status: { $in: ['active', 'completed'] } },
+          { status: 'pending', expiresAt: { $gt: new Date() } },
+          {
+            $and: [
+              { status: 'expired' },
+              { challengerAttempted: true },
+              { opponentAttempted: true },
+            ],
+          },
+        ],
+      },
+    ],
   }
 
   if (status) {
-    query.status = status
+    query = {
+      $or: [{ challenger: userId }, { opponent: userId }],
+      status: status,
+    }
   }
 
   const challenges = await QuickClashChallenge.find(query)
-    .populate('challenger opponent')
+    .populate('challenger', '_id name inGameName')
+    .populate('opponent', '_id name inGameName')
     .sort({ createdAt: -1 })
     .limit(limit)
 
@@ -458,6 +484,7 @@ const updateChallengeScore = async ({
 }
 
 module.exports = {
+  checkChallengeLimits,
   createChallenge,
   acceptChallenge,
   rejectChallenge,
