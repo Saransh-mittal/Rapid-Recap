@@ -62,7 +62,13 @@ const generateChallengeAnalysis = async ({ challengeId, session }) => {
     ])
 
     if (!challengerSession || !opponentSession) {
-      throw new Error('Session data missing for one or both users')
+      throw new Error(
+        `${
+          !challengerSession
+            ? challenge?.challenger?.inGameName
+            : challenge?.opponent?.inGameName
+        } did not complete the challenge`,
+      )
     }
 
     // Get user stats data

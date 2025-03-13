@@ -1,1 +1,0 @@
-import{r as t}from"./index-468819cc.js";import"./App-2d043cc3.js";import"./SocketContext-65cace1d.js";import"./inventorySlice-44b4abe2.js";const o=t.createContext(),p=()=>t.useContext(o);export{p as C};
