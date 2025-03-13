@@ -28,7 +28,7 @@ import StatsCard from './StatsCard'
 import TournamentBanner from './TournamentBanner'
 import SmartCTA from './SmartCTA'
 import FloatingAchievementBadge from './FloatingAchievementBadge'
-import ArticleSearch from './ArticleSearch'
+// import ArticleSearch from './ArticleSearch'
 import { useInView } from 'react-intersection-observer'
 import useSafeSound from '../../customHooks/useSafeSound'
 import { useDispatch } from 'react-redux'
@@ -240,7 +240,7 @@ const HeroV2 = ({ inViewFooter }) => {
             </VStack>
 
             {/* Search Bar */}
-            <ArticleSearch COLORS={COLORS} />
+            {/* <ArticleSearch COLORS={COLORS} /> */}
           </VStack>
 
           {/* Right Section - Hero Image */}

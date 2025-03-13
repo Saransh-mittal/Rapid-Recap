@@ -210,7 +210,7 @@ const ArticleSearch = ({ COLORS }) => {
               <Spinner size="sm" color={COLORS.accent} />
             ) : (
               <IconButton
-                icon={<Search2Icon />}
+                // icon={<Search2Icon />}
                 variant="ghost"
                 color={COLORS.accent}
                 _hover={{ bg: 'transparent' }}
