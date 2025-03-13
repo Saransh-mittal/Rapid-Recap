@@ -1,127 +1,127 @@
 {
   "Header": {
-    "imageAlt": "AI-Powered Learning Platform Interface",
-    "title": "AI-Enhanced General Knowledge Quiz & Current Affairs Platform",
-    "subtitle": "Master GK Questions with Answers through Interactive Quizzes",
-    "getStartedButton": "Start Your GK Quiz Journey",
-    "searchPlaceholder": "Search thousands of GK articles and current affairs...",
+    "imageAlt": "AI-Powered Battle Arena for the Mind",
+    "title": "Level Up Your Knowledge & Dominate the Leaderboards!",
+    "subtitle": "Challenge Yourself with Fast-Paced Quizzes & Daily Brain Battles!",
+    "getStartedButton": "Enter the Arena!",
+    "searchPlaceholder": "Find game-changing articles and brain battles...",
     "languageBadge": "Available in English & हिंदी",
-    "activeLearners": "Join 1000+ monthly active learners mastering general knowledge questions and current affairs through AI-powered interactive quizzes",
+    "activeLearners": "Join 1000+ monthly challengers sharpening their minds in epic quiz battles!",
     "stats": {
       "monthlyUsers": {
         "value": "1000+",
-        "label": "Quiz Players",
-        "subtext": "Active community"
+        "label": "Active Players",
+        "subtext": "Engaged warriors"
       },
       "dailyMinutes": {
         "value": "2500+",
-        "label": "Quiz Minutes",
-        "subtext": "Daily engagement"
+        "label": "Minutes Conquered",
+        "subtext": "Daily brain power-ups"
       },
       "tournamentPlayers": {
         "value": "300+",
-        "label": "GK Champions",
-        "subtext": "Monthly winners"
+        "label": "Top Scorers",
+        "subtext": "Monthly champions"
       },
       "dailyArticles": {
         "value": "120+",
-        "label": "Daily Updates",
-        "subtext": "Fresh GK content"
+        "label": "Fresh Challenges",
+        "subtext": "New content daily"
       }
     },
     "badges": {
-      "freeAccess": "✓ Free Online GK Quiz Access",
-      "dailyArticles": "✓ 120+ Daily Current Affairs",
-      "weeklyTournaments": "✓ Weekly Knowledge Tournaments"
+      "freeAccess": "✓ Free Access to Mind Battles",
+      "dailyArticles": "✓ 120+ Fresh Challenges Every Day",
+      "weeklyTournaments": "✓ Weekly Showdowns for the Crown"
     }
   },
   "BenefitsMap": {
-    "mainTitle": "AI-Powered Knowledge Building Platform",
-    "yourLearningJourney": "Your GK Quiz Journey",
+    "mainTitle": "Your Ultimate Brain Training Platform",
+    "yourLearningJourney": "Your Path to Mastery",
     "benefits": {
       "curatedNews": {
-        "title": "AI-Curated Content",
-        "description": "Access high-quality general knowledge questions and current affairs curated by AI"
+        "title": "AI-Curated Brain Fuel",
+        "description": "Get fresh, high-quality knowledge bombs handpicked by AI."
       },
       "activeLearning": {
-        "title": "Interactive GK Quiz",
-        "description": "Master general knowledge through AI-powered interactive quizzes"
+        "title": "Epic Quiz Battles",
+        "description": "Put your knowledge to the test with thrilling quiz face-offs."
       },
       "trackProgress": {
-        "title": "Smart Progress Tracking",
-        "description": "AI-driven analytics to monitor your GK improvement"
+        "title": "Smarter Every Day!",
+        "description": "AI tracks your progress and helps you level up."
       },
       "infoRetention": {
-        "title": "AI Knowledge Retention System",
-        "description": "Our AI-powered approach combines active recall and spaced repetition for maximum retention of current affairs and GK",
-        "badge": "Premium AI Feature"
+        "title": "Max Memory Mode",
+        "description": "Supercharge your retention with AI-powered smart techniques!",
+        "badge": "Premium Feature"
       },
       "competitiveEdge": {
-        "title": "Online Quiz Competitions",
-        "description": "Compete in daily GK quizzes and weekly tournaments"
+        "title": "Dominate the Leaderboards",
+        "description": "Compete daily, rank up, and claim your spot at the top!"
       },
       "informedCitizen": {
-        "title": "Current Affairs Mastery",
-        "description": "Stay updated with AI-curated daily current affairs quizzes"
+        "title": "Stay Ahead of the Game",
+        "description": "Daily news challenges keep you sharp and informed."
       },
       "personalGrowth": {
-        "title": "Knowledge Enhancement",
-        "description": "Boost your general knowledge with AI-guided learning paths"
+        "title": "Power Up Your Brain!",
+        "description": "Upgrade your thinking skills with AI-guided challenges."
       }
     }
   },
   "Features": {
-    "mainTitle": "AI-Powered GK Quiz Platform Features",
-    "subtitle": "Transform your learning with our comprehensive suite of AI-enhanced features designed to make knowledge acquisition engaging and effective",
-    "discoverFeatures": "Explore AI Features",
-    "premiumFeature": "Premium AI Feature",
+    "mainTitle": "Next-Level Quiz Arena Features",
+    "subtitle": "Transform the way you learn with AI-powered challenges, leaderboards, and more!",
+    "discoverFeatures": "Unlock Features",
+    "premiumFeature": "Premium Feature",
     "features": {
       "curatedNews": {
-        "title": "AI-Curated GK Questions",
-        "description": "Daily updated general knowledge questions with answers, handpicked by our AI"
+        "title": "AI-Powered Daily Challenges",
+        "description": "Fresh knowledge battles every day, curated just for you!"
       },
       "interactiveLearning": {
-        "title": "Interactive Quiz System",
-        "description": "Engage with AI-powered quizzes designed to enhance knowledge retention"
+        "title": "Fast-Paced Quizzing",
+        "description": "Engage in rapid-fire quizzes that keep your mind sharp!"
       },
       "competitiveEdge": {
-        "title": "Online GK Tournaments",
-        "description": "Participate in AI-moderated tournaments and climb the leaderboard"
+        "title": "Weekly Tournaments",
+        "description": "Face off in thrilling knowledge battles and climb the rankings!"
       },
       "skillMastery": {
-        "title": "Knowledge Tracking",
-        "description": "AI analytics track your progress across different general knowledge categories"
+        "title": "Track & Level Up",
+        "description": "Watch your progress soar with AI-powered tracking."
       }
     },
     "uiSections": {
       "newsFeed": {
-        "title": "AI-Personalized GK Feed",
-        "description": "Get general knowledge questions tailored to your learning goals"
+        "title": "Custom-Tailored Knowledge Feed",
+        "description": "Get content that aligns with your game plan."
       },
       "reading": {
-        "title": "Smart Reading Interface",
-        "description": "AI-optimized interface for maximum comprehension of current affairs"
+        "title": "Optimized for Quick Mastery",
+        "description": "AI-enhanced reading that makes learning effortless."
       },
       "quiz": {
-        "title": "Advanced Quiz System",
-        "description": "Challenge yourself with AI-generated general knowledge questions"
+        "title": "Intense Quiz Battles",
+        "description": "Challenge yourself with high-speed knowledge duels."
       },
       "tournament": {
-        "title": "Weekly GK Tournaments",
-        "description": "Compete in AI-powered knowledge competitions"
+        "title": "Weekend Showdowns",
+        "description": "Jump into competitive tournaments and claim victory!"
       },
       "smartReading": {
         "title": "AI Reading Assistant",
-        "description": "Enhanced comprehension with AI-powered highlighting and instant definitions",
+        "description": "Enhanced comprehension with instant insights and smart highlights!",
         "features": {
-          "highlighting": "Smart content highlighting",
-          "dictionary": "Instant definitions"
+          "highlighting": "Key takeaways highlighted",
+          "dictionary": "Instant definitions on the go"
         }
       }
     }
   },
   "Tournament": {
-    "title": "Weekend GK Tournament",
+    "title": "Weekend Battle Royale",
     "countdown": {
       "days": "days",
       "hours": "hrs",
@@ -129,64 +129,64 @@
       "seconds": "sec"
     },
     "statuses": {
-      "inProgress": "In Progress",
-      "completed": "Completed",
-      "startingSoon": "Starting Soon"
+      "inProgress": "Live Showdown!",
+      "completed": "Battle Over",
+      "startingSoon": "Prepare for Glory"
     },
     "badges": {
-      "watchLive": "Watch live competitions",
-      "earnBadges": "Earn knowledge badges"
+      "watchLive": "Watch the Battles Unfold!",
+      "earnBadges": "Win Exclusive Badges!"
     },
     "buttons": {
-      "viewDetails": "View Details",
-      "register": "Register Now",
-      "viewTournament": "View Tournament",
-      "viewResults": "View Results"
+      "viewDetails": "Get in on the Action",
+      "register": "Join the Battle",
+      "viewTournament": "Enter the Arena",
+      "viewResults": "See the Champions"
     }
   },
   "SearchResults": {
-    "noResults": "No GK questions found",
-    "loadMore": "Load More Questions",
-    "searchError": "Search Error",
-    "searchFailed": "Failed to search questions",
-    "searchArticles": "Search GK Questions"
+    "noResults": "No Challenges Found. Try Again!",
+    "loadMore": "Load More Brain Battles",
+    "searchError": "Oops! Something Went Wrong.",
+    "searchFailed": "Search Failed. Try Again.",
+    "searchArticles": "Find More Challenges"
   },
   "premiumCTA": {
     "guestUser": "Continue as Guest",
     "initial": {
-      "title": "Ready to Test Your GK?",
-      "subtitle": "Create account to unlock AI-powered interactive quizzes and more",
+      "title": "Are You Ready to Compete?",
+      "subtitle": "Sign up now to unlock AI-powered challenges and leaderboard domination!",
       "buttonText": "Create Free Account"
     },
     "engaged": {
-      "title": "Enjoying the Quiz?",
-      "subtitle": "Join 1000+ monthly users tracking their progress",
+      "title": "Enjoying the Game?",
+      "subtitle": "Join thousands leveling up every day!",
       "buttonText": "Join the Community"
     },
     "quiz": {
-      "title": "GK Quiz Available!",
-      "subtitle": "Test your understanding & earn points",
-      "buttonText": "Start Quiz Now"
+      "title": "New Challenge Alert!",
+      "subtitle": "Test your knowledge, earn points, and climb the rankings!",
+      "buttonText": "Start Now"
     }
   },
   "premiumValue": {
-    "title": "Unlock Premium AI Features",
+    "title": "Unlock VIP Features",
     "features": {
       "iqSystem": {
-        "title": "AI-Powered IQ System",
-        "description": "Track your knowledge growth",
-        "stats": "1000+ monthly active users",
+        "title": "AI-Powered IQ Tracker",
+        "description": "Measure, improve, and dominate!",
+        "stats": "1000+ players tracking progress",
         "badge": "POPULAR"
       },
       "tournaments": {
-        "title": "Weekly GK Tournaments",
-        "description": "Compete & win rewards",
-        "stats": "500+ participants monthly",
+        "title": "Exclusive Showdowns",
+        "description": "Win big and prove your knowledge mastery!",
+        "stats": "500+ warriors every month",
         "badge": "NEW"
       },
       "analytics": {
-        "title": "Smart Analytics",
-        "description": "AI-driven progress tracking",
+        "title": "Smart Performance Insights",
+        "description": "AI tracks your strengths and weaknesses for ultimate growth!",
         "stats": "Real-time updates",
         "badge": "PREMIUM"
       }
