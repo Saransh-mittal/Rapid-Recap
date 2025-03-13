@@ -42,7 +42,7 @@ const {
 const User = require('../model/userSchema')
 const {
   getLeaderboard,
-} = require('../services/quickClashServices/uickClashLeaderboardService')
+} = require('../services/quickClashServices/quickClashLeaderboardService')
 
 // Create a new challenge
 const createNewChallenge = asyncHandler(async (req, res) => {
