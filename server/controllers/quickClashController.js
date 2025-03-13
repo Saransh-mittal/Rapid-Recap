@@ -40,6 +40,9 @@ const {
   notifyChallengerAboutCreation,
 } = require('../services/quickClashServices/quickClashNotificationService')
 const User = require('../model/userSchema')
+const {
+  getLeaderboard,
+} = require('../services/quickClashServices/quickClashLeaderboardService')
 
 // Create a new challenge
 const createNewChallenge = asyncHandler(async (req, res) => {
@@ -616,6 +619,34 @@ const getAnalysisStatus = asyncHandler(async (req, res) => {
   }
 })
 
+/**
+ * @desc    Get Quick Clash leaderboard
+ * @route   GET /api/quickClash/leaderboard
+ * @access  Private
+ */
+const getQuickClashLeaderboard = asyncHandler(async (req, res) => {
+  const { page = 1, limit = 20, search = '' } = req.query
+
+  try {
+    const leaderboardData = await getLeaderboard({
+      page: parseInt(page),
+      limit: parseInt(limit),
+      searchQuery: search,
+    })
+
+    res.status(200).json({
+      success: true,
+      ...leaderboardData,
+    })
+  } catch (error) {
+    console.error('Error fetching Quick Clash leaderboard:', error)
+    res.status(500).json({
+      success: false,
+      message: error.message || 'Failed to fetch leaderboard data',
+    })
+  }
+})
+
 module.exports = {
   createNewChallenge,
   handleAcceptChallenge,
@@ -634,4 +665,5 @@ module.exports = {
   getChallengeAnalysis,
   getUserClashStats,
   getAnalysisStatus,
+  getQuickClashLeaderboard,
 }

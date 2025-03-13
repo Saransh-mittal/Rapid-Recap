@@ -62,7 +62,13 @@ const generateChallengeAnalysis = async ({ challengeId, session }) => {
     ])
 
     if (!challengerSession || !opponentSession) {
-      throw new Error('Session data missing for one or both users')
+      throw new Error(
+        `${
+          !challengerSession
+            ? challenge?.challenger?.inGameName
+            : challenge?.opponent?.inGameName
+        } did not complete the challenge`,
+      )
     }
 
     // Get user stats data
@@ -137,85 +143,144 @@ const generateChallengeAnalysis = async ({ challengeId, session }) => {
  * Get a user's challenge statistics
  * @param {Object} params - Parameters
  * @param {string} params.userId - User ID
- * @param {mongoose.ClientSession} params.session - Mongoose session
+ * @param {mongoose.ClientSession} [params.session] - Optional Mongoose session
  * @returns {Promise<Object>} User statistics
  */
 const getUserChallengeStats = async ({ userId, session }) => {
-  // Get all completed challenges for this user
-  const challenges = await QuickClashChallenge.find({
-    $or: [
-      { challenger: userId, status: 'completed' },
-      { opponent: userId, status: 'completed' },
-    ],
-  }).session(session)
+  try {
+    // Get all completed challenges for this user
+    const completedChallenges = await QuickClashChallenge.find({
+      $or: [
+        { challenger: userId, status: 'completed' },
+        { opponent: userId, status: 'completed' },
+      ],
+    })
+      .session(session)
+      .lean()
 
-  // Calculate win rate
-  let wins = 0
-  let currentStreak = 0
-  let categoryCounts = {}
-  let timeOfDayCounts = {}
+    // Get active challenges count
+    const activeChallenges = await QuickClashChallenge.countDocuments({
+      $or: [
+        { challenger: userId, status: { $in: ['pending', 'active'] } },
+        { opponent: userId, status: { $in: ['pending', 'active'] } },
+      ],
+    }).session(session)
 
-  // Sort challenges by creation date (newest first)
-  challenges.sort((a, b) => b.createdAt - a.createdAt)
+    // Initialize stats
+    const stats = {
+      totalChallenges: completedChallenges.length + activeChallenges,
+      wins: 0,
+      currentStreak: 0,
+      winRate: 0,
+      bestCategory: null,
+      peakPerformanceTime: 'Afternoon', // Default value
+    }
 
-  for (const challenge of challenges) {
-    const isChallenger = challenge.challenger.toString() === userId.toString()
-    const userScore = isChallenger
-      ? challenge.challengerScore
-      : challenge.opponentScore
-    const opponentScore = isChallenger
-      ? challenge.opponentScore
-      : challenge.challengerScore
+    // If no completed challenges, return default stats
+    if (completedChallenges.length === 0) {
+      return stats
+    }
 
-    // Count wins and streaks
-    if (userScore > opponentScore) {
-      wins++
+    // Sort challenges by date (newest first) for streak calculation
+    completedChallenges.sort(
+      (a, b) => new Date(b.createdAt) - new Date(a.createdAt),
+    )
 
-      // Only count for the current streak if it's consecutive
-      if (
-        currentStreak === 0 ||
-        challenges.indexOf(challenge) ===
-          challenges.indexOf(challenges[0]) + currentStreak
-      ) {
-        currentStreak++
-      }
-    } else {
-      // Break the streak on loss
-      if (challenges.indexOf(challenge) <= currentStreak) {
-        break
+    // Calculate wins and category performance
+    const categoryScores = {}
+    const timeOfDayStats = {
+      Morning: { wins: 0, total: 0 },
+      Afternoon: { wins: 0, total: 0 },
+      Evening: { wins: 0, total: 0 },
+    }
+
+    let streakBroken = false
+    let completedCount = 0
+
+    for (const challenge of completedChallenges) {
+      const isChallenger = challenge.challenger.toString() === userId.toString()
+      const userScore = isChallenger
+        ? challenge.challengerScore
+        : challenge.opponentScore
+      const opponentScore = isChallenger
+        ? challenge.opponentScore
+        : challenge.challengerScore
+
+      // Only count challenges where both players completed their attempts
+      if (challenge.challengerAttempted && challenge.opponentAttempted) {
+        completedCount++
+
+        // Track time of day performance
+        const hour = new Date(challenge.createdAt).getHours()
+        const timeOfDay =
+          hour < 12 ? 'Morning' : hour < 18 ? 'Afternoon' : 'Evening'
+        timeOfDayStats[timeOfDay].total += 1
+
+        // Track category performance
+        if (!categoryScores[challenge.category]) {
+          categoryScores[challenge.category] = {
+            wins: 0,
+            total: 0,
+            score: 0, // Will be used for performance calculation
+          }
+        }
+        categoryScores[challenge.category].total += 1
+
+        // Count wins and update stats
+        if (userScore > opponentScore) {
+          stats.wins += 1
+          categoryScores[challenge.category].wins += 1
+          timeOfDayStats[timeOfDay].wins += 1
+
+          // Track current streak (only for most recent challenges)
+          if (!streakBroken) {
+            stats.currentStreak += 1
+          }
+        } else {
+          streakBroken = true // Break the streak on loss or tie
+        }
       }
     }
 
-    // Count categories
-    if (challenge.category) {
-      categoryCounts[challenge.category] =
-        (categoryCounts[challenge.category] || 0) + 1
+    // Calculate win rate
+    if (completedCount > 0) {
+      stats.winRate = Math.round((stats.wins / completedCount) * 100)
     }
 
-    // Count time of day
-    const hour = new Date(challenge.createdAt).getHours()
-    const timeOfDay =
-      hour < 12 ? 'Morning' : hour < 18 ? 'Afternoon' : 'Evening'
-    timeOfDayCounts[timeOfDay] = (timeOfDayCounts[timeOfDay] || 0) + 1
-  }
+    // Find best category
+    let bestCategoryScore = 0
+    Object.entries(categoryScores).forEach(([category, data]) => {
+      if (data.total >= 2) {
+        // Need at least 2 challenges for meaningful data
+        const winRate = data.wins / data.total
+        const categoryScore = winRate * Math.min(data.total, 10) // Cap influence of total
 
-  // Calculate win rate
-  const winRate = challenges.length > 0 ? (wins / challenges.length) * 100 : 0
+        if (categoryScore > bestCategoryScore) {
+          bestCategoryScore = categoryScore
+          stats.bestCategory = category
+        }
+      }
+    })
 
-  // Determine best category and peak performance time
-  const bestCategory =
-    Object.entries(categoryCounts).sort((a, b) => b[1] - a[1])[0]?.[0] || 'None'
-  const peakPerformanceTime =
-    Object.entries(timeOfDayCounts).sort((a, b) => b[1] - a[1])[0]?.[0] ||
-    'Afternoon'
+    // Find peak performance time
+    let bestTimeScore = 0
+    Object.entries(timeOfDayStats).forEach(([timeOfDay, data]) => {
+      if (data.total >= 2) {
+        // Need at least 2 challenges for meaningful data
+        const winRate = data.wins / data.total
+        const timeScore = winRate * Math.min(data.total, 10) // Cap influence of total
 
-  return {
-    totalChallenges: challenges.length,
-    wins,
-    currentStreak,
-    winRate,
-    bestCategory,
-    peakPerformanceTime,
+        if (timeScore > bestTimeScore) {
+          bestTimeScore = timeScore
+          stats.peakPerformanceTime = timeOfDay
+        }
+      }
+    })
+
+    return stats
+  } catch (error) {
+    console.error('Error calculating user stats:', error)
+    throw error
   }
 }
 

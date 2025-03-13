@@ -349,8 +349,11 @@ const getUserChallenges = async ({ userId, status = null, limit = 10 }) => {
       { $or: [{ challenger: userId }, { opponent: userId }] },
       {
         $or: [
-          { status: { $in: ['active', 'completed'] } },
-          { status: 'pending', expiresAt: { $gt: new Date() } },
+          { status: 'completed' },
+          {
+            status: { $in: ['active', 'pending'] },
+            expiresAt: { $gt: new Date() },
+          },
           {
             $and: [
               { status: 'expired' },

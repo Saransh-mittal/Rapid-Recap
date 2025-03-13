@@ -19,6 +19,7 @@ const {
   getChallengeAnalysis,
   getUserClashStats,
   getAnalysisStatus,
+  getQuickClashLeaderboard,
 } = require('../controllers/quickClashController')
 const {
   joinMatchmakingRoom,
@@ -63,5 +64,8 @@ router.post('/matchmaking/leave', leaveMatchmakingRoom)
 router.get('/matchmaking/users', getMatchmakingUsers)
 router.get('/matchmaking/status', getMatchmakingStatus)
 router.post('/matchmaking/accept', acceptMatchmakingChallenge)
+
+// Leaderboard routes
+router.get('/leaderboard', getQuickClashLeaderboard)
 
 module.exports = router
