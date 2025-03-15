@@ -1,7 +1,8 @@
-const VERSION = 'v9.5'
+const VERSION = 'v9.6' // Increment version to force update
 const CACHE_NAME = `rapid-recap-${VERSION}`
 const ASSETS_CACHE = `assets-${VERSION}`
 const DYNAMIC_CACHE = `dynamic-${VERSION}`
+const LOCALE_VERSION_KEY = 'locale-version' // Key for storing locale version in localStorage
 
 const RapidRecapLogo = './images/rrlogo.webp'
 const RRBadge = './images/rrlogo_notif_badge.png'
@@ -17,17 +18,13 @@ const NEVER_CACHE_DOMAINS = [
 ]
 
 const URLS_TO_CACHE = [
-  '/locales/en/components/headerFooter/Navbar.json',
-  '/locales/en/components/articleComponents/Sidebar.json',
-  '/locales/hi/components/articleComponents/Sidebar.json',
-  '/locales/en/components/quizComponents/SubmittedQuizInterface.json',
-  '/locales/hi/components/quizComponents/SubmittedQuizInterface.json',
-  '/locales/en/screens/LeaderBoard.json',
-  '/locales/hi/screens/LeaderBoard.json',
   '/manifest.json',
   '/images/screenshots/desktop1.png',
   '/images/screenshots/mobile1.png',
 ]
+
+// Remove locale files from URLS_TO_CACHE array
+// We'll handle them separately
 
 // Function to get all files from a directory with specific extensions
 const getFilesFromPublicDirectory = async () => {
@@ -98,12 +95,39 @@ function shouldCache(url) {
     // Don't cache API requests
     if (requestURL.pathname.includes('/api/')) return false
 
-    // Don't cache locale files
+    // IMPORTANT: Don't cache locale files (translation files)
     if (requestURL.pathname.includes('/locales/')) return false
 
     return true
   } catch (err) {
     console.error('Error checking cache eligibility:', err)
+    return false
+  }
+}
+
+// Function to purge locale files from all caches
+async function purgeLocaleFilesFromCache() {
+  try {
+    console.log('Purging locale files from caches...')
+    const cacheKeys = await caches.keys()
+
+    for (const cacheKey of cacheKeys) {
+      const cache = await caches.open(cacheKey)
+      const requests = await cache.keys()
+
+      for (const request of requests) {
+        // If the URL contains '/locales/', delete it from cache
+        if (request.url.includes('/locales/')) {
+          await cache.delete(request)
+          console.log(`Deleted locale file from cache: ${request.url}`)
+        }
+      }
+    }
+
+    console.log('Locale files purge complete')
+    return true
+  } catch (error) {
+    console.error('Error purging locale files:', error)
     return false
   }
 }
@@ -119,7 +143,10 @@ self.addEventListener('install', event => {
   event.waitUntil(
     (async () => {
       try {
-        // Delete old caches first
+        // Purge locale files from all caches first
+        await purgeLocaleFilesFromCache()
+
+        // Delete old caches
         const keys = await caches.keys()
         await Promise.all(
           keys.map(key => {
@@ -197,6 +224,9 @@ self.addEventListener('activate', event => {
   event.waitUntil(
     (async () => {
       try {
+        // Purge locale files from all caches
+        await purgeLocaleFilesFromCache()
+
         // Clear old caches
         const keys = await caches.keys()
         await Promise.all(
@@ -214,28 +244,13 @@ self.addEventListener('activate', event => {
         // Get all clients
         const allClients = await clients.matchAll()
 
-        // For each client, fetch the URLs to trigger cache invalidation and reload
+        // For each client, reload to ensure they get the latest version
         for (const client of allClients) {
           try {
-            // Fetch all URLs with cache-busting headers
-            await Promise.all(
-              URLS_TO_CACHE.map(url =>
-                fetch(url, {
-                  cache: 'reload',
-                  headers: {
-                    'Cache-Control': 'no-cache',
-                    Pragma: 'no-cache',
-                  },
-                }),
-              ),
-            )
-
             // Navigate to reload the client
             client.navigate(client.url)
           } catch (error) {
-            console.error('Error fetching cached files:', error)
-            // Still try to reload the client
-            client.navigate(client.url)
+            console.error('Error reloading client:', error)
           }
         }
       } catch (error) {
@@ -249,10 +264,56 @@ self.addEventListener('activate', event => {
   )
 })
 
-// Modified fetch event with stale-while-revalidate strategy
+// Modified fetch event with special handling for locale files
 self.addEventListener('fetch', event => {
   if (event.request.method !== 'GET') return
   if (IS_DEVELOPMENT) return
+
+  // Special handling for locale files - always network first
+  if (event.request.url.includes('/locales/')) {
+    event.respondWith(
+      (async () => {
+        try {
+          // Try network first for locale files
+          const networkResponse = await fetch(event.request, {
+            cache: 'no-store', // Never use cache for this request
+            headers: {
+              'Cache-Control': 'no-cache, no-store, must-revalidate',
+              Pragma: 'no-cache',
+              Expires: '0',
+            },
+          })
+
+          if (networkResponse.ok) {
+            return networkResponse
+          }
+
+          // Fallback to cache if network fails (rare case)
+          const cachedResponse = await caches.match(event.request)
+          return (
+            cachedResponse ||
+            new Response('Translation not available', {
+              status: 404,
+              statusText: 'Not Found',
+            })
+          )
+        } catch (error) {
+          console.error('Error fetching locale file:', error)
+          const cachedResponse = await caches.match(event.request)
+          return (
+            cachedResponse ||
+            new Response('Translation not available', {
+              status: 404,
+              statusText: 'Not Found',
+            })
+          )
+        }
+      })(),
+    )
+    return
+  }
+
+  // Regular caching strategy for non-locale files
   if (!shouldCache(event.request.url)) return
 
   if (
@@ -292,17 +353,75 @@ self.addEventListener('fetch', event => {
   }
 })
 
-// Add periodic cache validation
+// Listen for messages from the client
+self.addEventListener('message', event => {
+  try {
+    if (event.data.type === 'SKIP_WAITING') {
+      self.skipWaiting()
+    }
+
+    if (event.data.type === 'CACHE_INVALIDATE') {
+      event.waitUntil(
+        (async () => {
+          console.log('Received CACHE_INVALIDATE event')
+          // Purge all caches, including locale files
+          const keys = await caches.keys()
+          await Promise.all(
+            keys.map(key => {
+              console.log('Invalidating cache:', key)
+              return caches.delete(key)
+            }),
+          )
+
+          // Force reload all clients
+          const allClients = await clients.matchAll()
+          allClients.forEach(client => {
+            client.navigate(client.url)
+          })
+        })(),
+      )
+    }
+
+    // New handler for locale updates
+    if (event.data.type === 'LOCALE_UPDATED') {
+      event.waitUntil(
+        (async () => {
+          console.log('Received LOCALE_UPDATED event')
+
+          // Purge locale files from all caches
+          await purgeLocaleFilesFromCache()
+
+          // Force reload all clients
+          const allClients = await clients.matchAll()
+          allClients.forEach(client => {
+            client.navigate(client.url)
+          })
+        })(),
+      )
+    }
+  } catch (err) {
+    console.error('Error handling message event:', err)
+  }
+})
+
+// Add periodic cache validation with special handling for locale files
 const CACHE_VALIDATION_INTERVAL = 60 * 60 * 1000 // 1 hour
 
 setInterval(() => {
   if (!IS_DEVELOPMENT) {
+    // Purge locale files periodically to ensure they're always fresh
+    purgeLocaleFilesFromCache()
+
+    // Regular cache validation for other files
     caches.keys().then(keys => {
       keys.forEach(key => {
         if (key.includes(VERSION)) {
           caches.open(key).then(cache => {
             cache.keys().then(requests => {
               requests.forEach(request => {
+                // Skip locale files in regular validation
+                if (request.url.includes('/locales/')) return
+
                 fetch(request, {
                   cache: 'reload',
                   headers: {
@@ -322,7 +441,7 @@ setInterval(() => {
   }
 }, CACHE_VALIDATION_INTERVAL)
 
-// Push notification handling
+// Rest of your service worker code (push notifications, error handling, etc.)
 self.addEventListener('push', event => {
   try {
     const data = event.data.json()
@@ -376,30 +495,6 @@ self.addEventListener('notificationclick', event => {
     )
   } catch (err) {
     console.error('Error handling notification click:', err)
-  }
-})
-
-// Listen for messages from the client
-self.addEventListener('message', event => {
-  try {
-    if (event.data.type === 'SKIP_WAITING') {
-      self.skipWaiting()
-    }
-
-    if (event.data.type === 'CACHE_INVALIDATE') {
-      event.waitUntil(
-        caches.keys().then(keys => {
-          return Promise.all(
-            keys.map(key => {
-              console.log('Invalidating cache:', key)
-              return caches.delete(key)
-            }),
-          )
-        }),
-      )
-    }
-  } catch (err) {
-    console.error('Error handling message event:', err)
   }
 })
 
