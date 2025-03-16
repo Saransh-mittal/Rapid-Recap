@@ -65,22 +65,7 @@ let schedules = [
     '21:30',
     deleteExpiredGuestAccountsTask,
   ),
-  createSchedule(
-    'recommendedNewsNotification12',
-    '22:25',
-    sendRecommendedNewsNotification,
-  ),
   createSchedule('forceReload', '23:00', forceReloadAll),
-  createSchedule(
-    'recommendedNewsNotification1',
-    '00:25',
-    sendRecommendedNewsNotification,
-  ),
-  createSchedule(
-    'recommendedNewsNotification2',
-    '02:00',
-    sendRecommendedNewsNotification,
-  ),
   createSchedule('incFakeQuizAttempts', '03:00', incFakeQuizAttempts),
   createSchedule('extractNews1', '02:25', () => extractNews(null)),
   createSchedule('extractNews2', '09:00', () => extractNews('in')),
@@ -91,11 +76,6 @@ let schedules = [
   }),
   createSchedule('updateRecommendations', '01:00', updateDailyRecommendations),
   createSchedule('streakBrokenMails', '03:30', sendStreakBrokenMails),
-  createSchedule(
-    'recommendedNewsNotification3',
-    '04:25',
-    sendRecommendedNewsNotification,
-  ),
   createSchedule('incFakeQuizAttempts', '05:00', incFakeQuizAttempts),
   createSchedule(
     'recommendedNewsNotification4',
@@ -103,11 +83,6 @@ let schedules = [
     sendRecommendedNewsNotification,
   ),
   createSchedule('incFakeQuizAttempts', '07:00', incFakeQuizAttempts),
-  createSchedule(
-    'recommendedNewsNotification5',
-    '08:25',
-    sendRecommendedNewsNotification,
-  ),
   createSchedule('incFakeQuizAttempts', '08:45', incFakeQuizAttempts),
   createSchedule(
     'recommendedNewsNotification6',
@@ -116,20 +91,10 @@ let schedules = [
   ),
   createSchedule('incFakeQuizAttempts', '10:40', incFakeQuizAttempts),
   createSchedule('streakReminder1', '12:30', () => sendStreakReminder(0)),
-  createSchedule(
-    'recommendedNewsNotification7',
-    '12:25',
-    sendRecommendedNewsNotification,
-  ),
   createSchedule('incFakeQuizAttempts', '13:30', incFakeQuizAttempts),
   createSchedule(
     'recommendedNewsNotification8',
     '14:25',
-    sendRecommendedNewsNotification,
-  ),
-  createSchedule(
-    'recommendedNewsNotification9',
-    '16:25',
     sendRecommendedNewsNotification,
   ),
   createSchedule('incFakeQuizAttempts', '17:00', incFakeQuizAttempts),
