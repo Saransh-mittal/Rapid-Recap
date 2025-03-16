@@ -30,7 +30,7 @@ import InfoButton, {
 import RefreshTimer from '../components/leaderBoardComponents/RefreshTimer'
 import { useInView } from 'react-intersection-observer'
 import CircleAndSocietyData from '../assets/CircleAndSocietyData'
-import FebruaryRewardsPromo from '../components/leaderBoardComponents/FebruaryRewardsPromo'
+// import FebruaryRewardsPromo from '../components/leaderBoardComponents/FebruaryRewardsPromo'
 
 const INITIAL_RENDER_COUNT = 500
 const RENDER_BATCH_SIZE = 500
@@ -322,7 +322,11 @@ const Leaderboard = () => {
                 SEASON 2
               </Text>
             </Flex>
-            <Box position="absolute" right={{ base: 12, md: 420 }}>
+            <Box
+              position="absolute"
+              right={{ base: 12, md: 440 }}
+              top={{ base: -1, md: 9 }}
+            >
               <InfoButtonProvider>
                 <InfoButton
                   id="leaderboardCacheInfo"
@@ -332,7 +336,7 @@ const Leaderboard = () => {
             </Box>
           </Flex>
 
-          <Button
+          {/* <Button
             leftIcon={<Icon as={StarIcon} color="yellow.400" />}
             bg="yellow.500"
             color="gray.900"
@@ -344,7 +348,7 @@ const Leaderboard = () => {
             animation="pulse 2s infinite"
           >
             <Text textAlign="center">Win Cash Prizes</Text>
-          </Button>
+          </Button> */}
         </Flex>
 
         <Box ref={ref}>
@@ -396,10 +400,10 @@ const Leaderboard = () => {
           )}
         </Box>
 
-        <FebruaryRewardsPromo
+        {/* <FebruaryRewardsPromo
           isOpen={isRewardsModalOpen}
           onClose={() => setIsRewardsModalOpen(false)}
-        />
+        /> */}
       </VStack>
     </Box>
   )

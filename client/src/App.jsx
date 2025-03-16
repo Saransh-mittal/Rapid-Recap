@@ -93,6 +93,7 @@ import usePWAInstallation from './customHooks/usePWAInstallation.js'
 import { fetchInventory } from './redux/inventorySlice.js'
 import useQuickClashSocket from './customHooks/useQuickClashSocket.js'
 import useQuickClash from './customHooks/useQuickClash.js'
+import NotificationReminderModal from './components/miscellaneous/NotificationReminderModal.jsx'
 
 const App = () => {
   ReactGA.initialize('G-ES5VQ8NW7Z')
@@ -274,6 +275,40 @@ const App = () => {
               'ServiceWorker registration successful:',
               registration.scope,
             )
+
+            // Force update and activation
+            registration.update()
+
+            // If service worker is waiting, ask it to take control immediately
+            if (registration.waiting) {
+              registration.waiting.postMessage({ type: 'SKIP_WAITING' })
+            }
+
+            // Listen for updates
+            registration.addEventListener('updatefound', () => {
+              const newWorker = registration.installing
+
+              newWorker.addEventListener('statechange', () => {
+                if (
+                  newWorker.state === 'installed' &&
+                  navigator.serviceWorker.controller
+                ) {
+                  console.log(
+                    'New service worker installed, forcing activation',
+                  )
+                  newWorker.postMessage({ type: 'SKIP_WAITING' })
+                }
+              })
+            })
+
+            // Listen for controller change (new service worker taking over)
+            navigator.serviceWorker.addEventListener('controllerchange', () => {
+              console.log('New service worker activated')
+              // Purge locale cache when new service worker takes control
+              if (window.refreshTranslations) {
+                window.refreshTranslations()
+              }
+            })
 
             // Check for updates periodically (every 4 hours)
             setInterval(() => {
@@ -611,6 +646,7 @@ const App = () => {
       <Suspense fallback={null}>
         <RewardDisplay />
       </Suspense>
+      <NotificationReminderModal />
     </MaintenanceHandler>
   )
 }

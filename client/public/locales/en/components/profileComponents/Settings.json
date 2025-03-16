@@ -28,5 +28,22 @@
   "notificationSettings": "Notification Settings",
   "notSupported": "Not Supported",
   "reEnableNotifications": "Re-enable Notifications",
-  "enableNotifications": "Enable Notifications"
+  "enableNotifications": "Enable Notifications",
+  "description": "You're missing out on important updates about quizzes, tournaments and new content.",
+  "blockedTitle": "Notifications are blocked",
+  "pwaNotice": "You're using the installed app version. App notification permissions are managed separately from browser permissions.",
+  "instructions": {
+    "android": "Click the lock/site info icon in address bar\nSelect 'Site Settings'\nFind Notifications and select 'Allow'\nAlso check Chrome settings > Site settings > Notifications",
+    "ios": "Open Settings app\nScroll down to Safari\nTap Notifications\nToggle to allow notifications for this site",
+    "mac": "Click the lock/site info icon in address bar\nSelect 'Site Settings'\nFind Notifications and select 'Allow'\nYou may also need to check System Preferences > Notifications",
+    "generic": "Click the lock/site info icon in your browser's address bar\nSelect 'Site Settings' or 'Permissions'\nFind Notifications and change to 'Allow'",
+    "androidPWA": "Open your device Settings\nGo to Apps (or Applications)\nFind and tap on Rapid Recap\nSelect Notifications\nToggle to allow notifications",
+    "iosPWA": "Open your device Settings\nScroll down and find Rapid Recap\nTap on Notifications\nToggle to allow notifications",
+    "genericPWA": "Open your device Settings\nFind the Applications or Apps section\nLocate Rapid Recap\nEnable notifications in the app settings"
+  },
+  "buttons": {
+    "gotIt": "Got It",
+    "showInstructions": "How to enable notifications",
+    "hideInstructions": "Hide instructions"
+  }
 }

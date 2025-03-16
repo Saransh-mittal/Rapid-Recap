@@ -52,6 +52,7 @@ import {
 const MotionBox = motion(Box)
 const MotionFlex = motion(Flex)
 const MotionBadge = motion(Badge)
+const MotionButton = motion(Button)
 
 const MatchmakingRoom = () => {
   const { t } = useTranslation('QuickClash')
@@ -101,9 +102,6 @@ const MatchmakingRoom = () => {
 
   // Set up refresh interval
   useEffect(() => {
-    // Initial load
-    loadAvailableUsers()
-
     // Set up refresh interval
     const interval = setInterval(() => {
       loadAvailableUsers()
@@ -231,47 +229,196 @@ const MatchmakingRoom = () => {
     }
   }, [challengeCreationError, dispatch, toast, t])
 
-  // If there's an error
-  if (usersError && !usersLoading) {
-    return (
-      <Center h="60vh">
-        <VStack
-          spacing={6}
-          p={8}
-          bg="rgba(26, 21, 39, 0.6)"
-          borderRadius="xl"
-          backdropFilter="blur(10px)"
+  // Render error component
+  const renderErrorState = () => (
+    <Center h="60vh">
+      <VStack
+        spacing={6}
+        p={8}
+        bg="rgba(26, 21, 39, 0.6)"
+        borderRadius="xl"
+        backdropFilter="blur(10px)"
+      >
+        <MotionBox
+          initial={{ scale: 0.8, opacity: 0 }}
+          animate={{ scale: 1, opacity: 1 }}
+          transition={{ duration: 0.5 }}
         >
-          <MotionBox
-            initial={{ scale: 0.8, opacity: 0 }}
-            animate={{ scale: 1, opacity: 1 }}
-            transition={{ duration: 0.5 }}
+          <Icon as={X} boxSize={16} color="red.400" />
+        </MotionBox>
+        <Text color="white" fontSize="xl" fontWeight="bold">
+          {usersError}
+        </Text>
+        <Button
+          leftIcon={<RefreshCw />}
+          colorScheme="purple"
+          size="lg"
+          onClick={handleRefresh}
+          p={6}
+          _hover={{
+            transform: 'translateY(-2px)',
+            shadow: 'lg',
+            bg: 'purple.500',
+          }}
+          transition="all 0.3s"
+        >
+          {t('Retry')}
+        </Button>
+      </VStack>
+    </Center>
+  )
+
+  // Render loading state
+  const renderLoadingState = () => (
+    <Center h="50vh">
+      <VStack spacing={6}>
+        <MotionBox
+          animate={{
+            scale: [1, 1.1, 1],
+            rotate: [0, 0, 270, 270, 0],
+          }}
+          transition={{
+            duration: 3,
+            ease: 'easeInOut',
+            times: [0, 0.2, 0.5, 0.8, 1],
+            repeat: Infinity,
+            repeatType: 'loop',
+          }}
+        >
+          <Spinner size="xl" color="purple.500" thickness="4px" />
+        </MotionBox>
+        <Text color="white" fontSize="lg" fontWeight="medium">
+          {t('Scanning the arena for challengers...')}
+        </Text>
+      </VStack>
+    </Center>
+  )
+
+  // Render empty state
+  const renderEmptyState = () => (
+    <Center h="50vh">
+      <MotionBox
+        initial={{ opacity: 0, scale: 0.9 }}
+        animate={{ opacity: 1, scale: 1 }}
+        transition={{ duration: 0.5 }}
+        p={{ base: 6, md: 10 }}
+        borderRadius="2xl"
+        bg="rgba(26, 21, 39, 0.6)"
+        borderWidth="1px"
+        borderColor="whiteAlpha.200"
+        backdropFilter="blur(10px)"
+        textAlign="center"
+        maxW="md"
+        mx={{ base: 4, md: 0 }}
+      >
+        <VStack spacing={{ base: 4, md: 6 }}>
+          <Icon
+            as={Users}
+            boxSize={{ base: 12, md: 16 }}
+            color="whiteAlpha.700"
+          />
+          <Heading size={{ base: 'sm', md: 'md' }} color="white">
+            {t('The arena is empty')}
+          </Heading>
+          <Text
+            color="whiteAlpha.700"
+            fontSize={{ base: 'sm', md: 'md' }}
+            px={2}
           >
-            <Icon as={X} boxSize={16} color="red.400" />
-          </MotionBox>
-          <Text color="white" fontSize="xl" fontWeight="bold">
-            {usersError}
+            {inMatchmaking
+              ? t('Wait for brave challengers to arrive or return later')
+              : t('Join the matchmaking arena to find opponents')}
           </Text>
           <Button
-            leftIcon={<RefreshCw />}
             colorScheme="purple"
-            size="lg"
-            onClick={handleRefresh}
-            p={6}
-            _hover={{
-              transform: 'translateY(-2px)',
-              shadow: 'lg',
-              bg: 'purple.500',
-            }}
+            size={{ base: 'md', md: 'lg' }}
+            leftIcon={inMatchmaking ? <RefreshCw /> : <UserPlus />}
+            onClick={inMatchmaking ? handleRefresh : handleInitiateJoin}
+            _hover={{ transform: 'translateY(-3px)', boxShadow: 'lg' }}
             transition="all 0.3s"
+            width={{ base: 'full', md: 'auto' }}
           >
-            {t('Retry')}
+            {inMatchmaking ? t('Refresh') : t('Join Matchmaking')}
           </Button>
         </VStack>
-      </Center>
-    )
-  }
+      </MotionBox>
+    </Center>
+  )
 
+  // Render user grid
+  const renderUserGrid = () => (
+    <AnimatePresence>
+      <Box overflow="hidden" position="relative">
+        {/* Background glow effects */}
+        <Box
+          position="absolute"
+          top="-20%"
+          left="10%"
+          width="40%"
+          height="40%"
+          bg="purple.800"
+          opacity="0.1"
+          borderRadius="full"
+          filter="blur(80px)"
+          zIndex={0}
+          display={{ base: 'none', md: 'block' }}
+        />
+        <Box
+          position="absolute"
+          bottom="-10%"
+          right="5%"
+          width="30%"
+          height="30%"
+          bg="blue.700"
+          opacity="0.1"
+          borderRadius="full"
+          filter="blur(70px)"
+          zIndex={0}
+          display={{ base: 'none', md: 'block' }}
+        />
+
+        {/* User cards grid */}
+        <MotionBox
+          variants={containerVariants}
+          initial="hidden"
+          animate="visible"
+          position="relative"
+          zIndex={1}
+        >
+          <SimpleGrid
+            columns={{ base: 1, md: 3, lg: 4 }}
+            spacing={{ base: 3, md: 5 }}
+            p={{ base: 2, md: 4 }}
+          >
+            {users.map(user => (
+              <MotionBox
+                key={user.user._id}
+                variants={itemVariants}
+                whileHover={{
+                  y: -5,
+                  boxShadow: '0 15px 30px -10px rgba(0, 0, 0, 0.5)',
+                }}
+                transition={{ duration: 0.3 }}
+              >
+                <UserCard
+                  user={user}
+                  isSelected={selectedUser?.user._id === user.user._id}
+                  isPending={pendingChallenge?.opponentId === user.user._id}
+                  isLoading={
+                    challengeCreating &&
+                    selectedUser?.user._id === user.user._id
+                  }
+                  onSelect={handleSelectUser}
+                />
+              </MotionBox>
+            ))}
+          </SimpleGrid>
+        </MotionBox>
+      </Box>
+    </AnimatePresence>
+  )
+
+  // Main render
   return (
     <Container maxW="container.xl" p={{ base: 2, md: 4 }}>
       {challengeCreationData && (
@@ -502,149 +649,14 @@ const MatchmakingRoom = () => {
         </SimpleGrid>
       </MotionBox>
 
-      {/* User grid with loading state */}
-      {usersLoading && users.length === 0 ? (
-        <Center h="50vh">
-          <VStack spacing={6}>
-            <MotionBox
-              animate={{
-                scale: [1, 1.1, 1],
-                rotate: [0, 0, 270, 270, 0],
-              }}
-              transition={{
-                duration: 3,
-                ease: 'easeInOut',
-                times: [0, 0.2, 0.5, 0.8, 1],
-                repeat: Infinity,
-                repeatType: 'loop',
-              }}
-            >
-              <Spinner size="xl" color="purple.500" thickness="4px" />
-            </MotionBox>
-            <Text color="white" fontSize="lg" fontWeight="medium">
-              {t('Scanning the arena for challengers...')}
-            </Text>
-          </VStack>
-        </Center>
-      ) : users.length === 0 ? (
-        <Center h="50vh">
-          <MotionBox
-            initial={{ opacity: 0, scale: 0.9 }}
-            animate={{ opacity: 1, scale: 1 }}
-            transition={{ duration: 0.5 }}
-            p={{ base: 6, md: 10 }}
-            borderRadius="2xl"
-            bg="rgba(26, 21, 39, 0.6)"
-            borderWidth="1px"
-            borderColor="whiteAlpha.200"
-            backdropFilter="blur(10px)"
-            textAlign="center"
-            maxW="md"
-            mx={{ base: 4, md: 0 }}
-          >
-            <VStack spacing={{ base: 4, md: 6 }}>
-              <Icon
-                as={Users}
-                boxSize={{ base: 12, md: 16 }}
-                color="whiteAlpha.700"
-              />
-              <Heading size={{ base: 'sm', md: 'md' }} color="white">
-                {t('The arena is empty')}
-              </Heading>
-              <Text
-                color="whiteAlpha.700"
-                fontSize={{ base: 'sm', md: 'md' }}
-                px={2}
-              >
-                {inMatchmaking
-                  ? t('Wait for brave challengers to arrive or return later')
-                  : t('Join the matchmaking arena to find opponents')}
-              </Text>
-              <Button
-                colorScheme="purple"
-                size={{ base: 'md', md: 'lg' }}
-                leftIcon={inMatchmaking ? <RefreshCw /> : <UserPlus />}
-                onClick={inMatchmaking ? handleRefresh : handleInitiateJoin}
-                _hover={{ transform: 'translateY(-3px)', boxShadow: 'lg' }}
-                transition="all 0.3s"
-                width={{ base: 'full', md: 'auto' }}
-              >
-                {inMatchmaking ? t('Refresh') : t('Join Matchmaking')}
-              </Button>
-            </VStack>
-          </MotionBox>
-        </Center>
-      ) : (
-        <AnimatePresence>
-          <Box overflow="hidden" position="relative">
-            {/* Background glow effects */}
-            <Box
-              position="absolute"
-              top="-20%"
-              left="10%"
-              width="40%"
-              height="40%"
-              bg="purple.800"
-              opacity="0.1"
-              borderRadius="full"
-              filter="blur(80px)"
-              zIndex={0}
-              display={{ base: 'none', md: 'block' }}
-            />
-            <Box
-              position="absolute"
-              bottom="-10%"
-              right="5%"
-              width="30%"
-              height="30%"
-              bg="blue.700"
-              opacity="0.1"
-              borderRadius="full"
-              filter="blur(70px)"
-              zIndex={0}
-              display={{ base: 'none', md: 'block' }}
-            />
-
-            {/* User cards grid */}
-            <MotionBox
-              variants={containerVariants}
-              initial="hidden"
-              animate="visible"
-              position="relative"
-              zIndex={1}
-            >
-              <SimpleGrid
-                columns={{ base: 1, md: 3, lg: 4 }}
-                spacing={{ base: 3, md: 5 }}
-                p={{ base: 2, md: 4 }}
-              >
-                {users.map(user => (
-                  <MotionBox
-                    key={user.user._id}
-                    variants={itemVariants}
-                    whileHover={{
-                      y: -5,
-                      boxShadow: '0 15px 30px -10px rgba(0, 0, 0, 0.5)',
-                    }}
-                    transition={{ duration: 0.3 }}
-                  >
-                    <UserCard
-                      user={user}
-                      isSelected={selectedUser?.user._id === user.user._id}
-                      isPending={pendingChallenge?.opponentId === user.user._id}
-                      isLoading={
-                        challengeCreating &&
-                        selectedUser?.user._id === user.user._id
-                      }
-                      onSelect={handleSelectUser}
-                    />
-                  </MotionBox>
-                ))}
-              </SimpleGrid>
-            </MotionBox>
-          </Box>
-        </AnimatePresence>
-      )}
+      {/* Conditionally render main content based on state */}
+      {usersError && !usersLoading
+        ? renderErrorState()
+        : usersLoading && users.length === 0
+        ? renderLoadingState()
+        : users.length === 0
+        ? renderEmptyState()
+        : renderUserGrid()}
 
       {/* Join Category Selection Modal */}
       <CategorySelectionModal
@@ -659,8 +671,5 @@ const MatchmakingRoom = () => {
     </Container>
   )
 }
-
-// Styled Motion Button component
-const MotionButton = motion(Button)
 
 export default MatchmakingRoom
