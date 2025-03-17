@@ -3,65 +3,44 @@ const { makeGPTRequest } = require('../../utils/openai')
 const Article = require('../../model/articleSchema')
 
 /**
- * Get source articles based on weighted scoring of recency, time spent, and quiz attempts
+ * Get 5 random source articles from the last 7 days for a given category
  * @param {Object} params - Function parameters
  * @param {string} params.category - Article category to filter by
  * @param {Object} [params.session] - Optional Mongoose session for transactions
  * @returns {Promise<Array>} Array of articles
  */
 const getSourceArticles = async ({ category, session }) => {
-  // Define weights for scoring factors
-  const WEIGHTS = {
-    recency: 0.5, // 50% weight for how recent the article is
-    timeSpent: 0.3, // 30% weight for how much time users spend reading
-    quizAttempts: 0.2, // 20% weight for quiz attempt popularity
+  // Calculate date 7 days ago
+  const sevenDaysAgo = new Date()
+  sevenDaysAgo.setDate(sevenDaysAgo.getDate() - 7)
+
+  // Get articles in this category from the last 7 days
+  const articles = await Article.find({
+    category,
+    dateTime: { $gte: sevenDaysAgo },
+  }).session(session)
+
+  // If we have fewer than 5 articles, return all of them
+  if (articles.length <= 5) {
+    return articles
   }
 
-  // Get articles in this category
-  const articles = await Article.find({ category })
-    .sort({ dateTime: -1 }) // Sort by date, newest first
-    .limit(15) // Get more than we need for our custom scoring
-    .session(session)
+  // Randomly select 5 articles
+  const selectedArticles = []
+  const usedIndices = new Set()
 
-  // Calculate scores
-  const now = new Date()
-  const scoredArticles = articles.map(article => {
-    // Parse date (assuming dateTime can be parsed by Date constructor)
-    let articleDate
-    try {
-      articleDate = new Date(article.dateTime)
-      if (isNaN(articleDate.getTime())) throw new Error('Invalid date')
-    } catch (e) {
-      // Fallback to creation date
-      articleDate = article.createdAt || now
+  while (selectedArticles.length < 5 && usedIndices.size < articles.length) {
+    // Generate random index
+    const randomIndex = Math.floor(Math.random() * articles.length)
+
+    // If this index hasn't been used, add the article
+    if (!usedIndices.has(randomIndex)) {
+      usedIndices.add(randomIndex)
+      selectedArticles.push(articles[randomIndex])
     }
+  }
 
-    // Calculate days difference (max 90 days)
-    const daysDiff = Math.min(
-      90,
-      Math.max(0, (now - articleDate) / (1000 * 60 * 60 * 24)),
-    )
-
-    // Calculate scores (0-1 scale)
-    const recencyScore = Math.max(0, 1 - daysDiff / 90)
-    const quizAttemptScore = Math.min(1, (article.quizAttemptCnt || 0) / 100)
-    const timeSpentScore = Math.min(1, (article.avgReadTime || 0) / 300) // Assuming 300 seconds (5 mins) is a good read time
-
-    // Weighted total score
-    const totalScore =
-      recencyScore * WEIGHTS.recency +
-      quizAttemptScore * WEIGHTS.quizAttempts +
-      timeSpentScore * WEIGHTS.timeSpent
-
-    return {
-      article,
-      score: totalScore,
-    }
-  })
-
-  // Sort by score and return top 5
-  scoredArticles.sort((a, b) => b.score - a.score)
-  return scoredArticles.slice(0, 5).map(item => item.article)
+  return selectedArticles
 }
 
 const generateMixedArticle = async ({ articles }) => {
