@@ -210,6 +210,12 @@ const quickClashSlice = createSlice({
     setChallengeAnalysis: (state, action) => {
       const { challengeId, analysis } = action.payload
       state.challengeAnalyses[challengeId] = analysis
+      // Clear any error when we successfully set the analysis
+      state.challengeAnalysesError[challengeId] = null
+    },
+    setChallengeAnalysisError: (state, action) => {
+      const { challengeId, error } = action.payload
+      state.challengeAnalysesError[challengeId] = error
     },
     setSocketListening: (state, action) => {
       state.socketListening = action.payload
@@ -337,6 +343,7 @@ const quickClashSlice = createSlice({
         const { challengeId, analysis } = action.payload
         state.challengeAnalyses[challengeId] = analysis
         state.challengeAnalysesLoading[challengeId] = false
+        state.challengeAnalysesError[challengeId] = null
       })
       .addCase(getChallengeAnalysis.rejected, (state, action) => {
         const challengeId = action.meta.arg
@@ -354,6 +361,7 @@ export const {
   resetCompletedChallenges,
   setChallengeAnalysisLoading,
   setChallengeAnalysis,
+  setChallengeAnalysisError,
   setSocketListening,
   setChallengeCreating,
   resetAllQuickClashState,

@@ -16,16 +16,38 @@ import {
   resetCompletedChallenges,
   setChallengeAnalysisLoading,
   setChallengeAnalysis,
+  setChallengeAnalysisError,
 } from '../redux/quickClashSlice'
 import { useToast } from '@chakra-ui/react'
 import { useTranslation } from 'react-i18next'
 import axios from 'axios'
+import { isRetryableError } from '../components/quickClashComponents/analysisCard/AnalysisErrorCard'
+
+// List of error substrings that indicate a non-retryable error (duplicated here for the hook)
+const NON_RETRYABLE_ERRORS = [
+  'did not complete the challenge',
+  'not completed',
+  'player has not completed',
+  'challenge not completed',
+  'opponent has not completed',
+  'incomplete challenge',
+]
 
 const useQuickClash = () => {
   const dispatch = useDispatch()
   const quickClashState = useSelector(state => state.quickClash)
   const toast = useToast()
   const { t } = useTranslation('QuickClash')
+
+  // Utility function to check if an error is retryable
+  const isErrorRetryable = useCallback(errorMessage => {
+    if (!errorMessage) return false
+
+    // Check if any non-retryable error substring exists in the message
+    return !NON_RETRYABLE_ERRORS.some(substring =>
+      errorMessage.toLowerCase().includes(substring.toLowerCase()),
+    )
+  }, [])
 
   // Active challenges
   const loadActiveChallenges = useCallback(() => {
@@ -153,12 +175,22 @@ const useQuickClash = () => {
     dispatch(clearCurrentSession())
   }, [dispatch])
 
-  // Challenge analysis with polling
+  // Challenge analysis with proper error handling
   const fetchChallengeAnalysis = useCallback(
     async challengeId => {
       // Check if we already have the analysis
       if (quickClashState.challengeAnalyses[challengeId]) {
         return Promise.resolve(quickClashState.challengeAnalyses[challengeId])
+      }
+
+      // Check if we already have an error for this challenge
+      if (quickClashState.challengeAnalysesError[challengeId]) {
+        const errorMsg = quickClashState.challengeAnalysesError[challengeId]
+
+        // Don't retry if the error is non-retryable
+        if (!isErrorRetryable(errorMsg)) {
+          return null
+        }
       }
 
       // Check if already loading
@@ -179,7 +211,7 @@ const useQuickClash = () => {
           statusResponse.data.status === 'completed' ||
           statusResponse.data.status === 'not_started'
         ) {
-          // Analysis is complete, fetch it
+          // Analysis is complete or not started yet, fetch it
           const response = await axios.get(
             `/api/quickClash/analysis/${challengeId}`,
           )
@@ -197,7 +229,18 @@ const useQuickClash = () => {
             return response.data.analysis
           }
 
-          throw new Error('Analysis not found')
+          // If we got a success response but no analysis, handle it as an error
+          const errorMsg = 'Analysis not found or incomplete'
+          dispatch(
+            setChallengeAnalysisError({
+              challengeId,
+              error: errorMsg,
+            }),
+          )
+          dispatch(
+            setChallengeAnalysisLoading({ challengeId, isLoading: false }),
+          )
+          return null
         } else if (statusResponse.data.status === 'in_progress') {
           // Analysis is in progress, set up polling for the STATUS endpoint
           console.log(
@@ -240,19 +283,45 @@ const useQuickClash = () => {
                   }
                 }
               } catch (error) {
-                // Error checking status, continue polling
-                console.log(
-                  `Waiting for analysis to complete for challenge ${challengeId}`,
-                )
+                const errorMessage =
+                  error.response?.data?.message ||
+                  error.message ||
+                  'Error checking analysis status'
+
+                // If we get a non-retryable error during polling, stop the polling
+                if (!isErrorRetryable(errorMessage)) {
+                  clearInterval(checkInterval)
+
+                  dispatch(
+                    setChallengeAnalysisError({
+                      challengeId,
+                      error: errorMessage,
+                    }),
+                  )
+
+                  reject(new Error(errorMessage))
+                } else {
+                  // For retryable errors, just log and continue polling
+                  console.log(
+                    `Waiting for analysis to complete for challenge ${challengeId}`,
+                  )
+                }
               }
             }, 3000) // Check every 3 seconds
 
             // Set a timeout to stop checking after 30 seconds
             setTimeout(() => {
               clearInterval(checkInterval)
-              // If we still don't have the analysis, reject the promise
+              // If we still don't have the analysis, consider it an error
               if (!quickClashState.challengeAnalyses[challengeId]) {
-                reject(new Error('Analysis generation timeout'))
+                const errorMsg = 'Analysis generation timed out'
+                dispatch(
+                  setChallengeAnalysisError({
+                    challengeId,
+                    error: errorMsg,
+                  }),
+                )
+                reject(new Error(errorMsg))
               }
             }, 30000)
           }).finally(() => {
@@ -261,7 +330,7 @@ const useQuickClash = () => {
             )
           })
         } else {
-          // Analysis not started yet
+          // Unknown status
           dispatch(
             setChallengeAnalysisLoading({ challengeId, isLoading: false }),
           )
@@ -272,6 +341,21 @@ const useQuickClash = () => {
           `Error fetching analysis for challenge ${challengeId}:`,
           error,
         )
+
+        // Get the actual error message
+        const errorMessage =
+          error.response?.data?.message ||
+          error.message ||
+          'Failed to fetch analysis'
+
+        // Store the error in Redux
+        dispatch(
+          setChallengeAnalysisError({
+            challengeId,
+            error: errorMessage,
+          }),
+        )
+
         dispatch(setChallengeAnalysisLoading({ challengeId, isLoading: false }))
         return null
       }
@@ -280,12 +364,69 @@ const useQuickClash = () => {
       dispatch,
       quickClashState.challengeAnalyses,
       quickClashState.challengeAnalysesLoading,
+      quickClashState.challengeAnalysesError,
+      isErrorRetryable,
+    ],
+  )
+
+  // Retry analysis fetch (to be used with the error card)
+  const retryAnalysisFetch = useCallback(
+    challengeId => {
+      // Get the current error message
+      const currentError = quickClashState.challengeAnalysesError[challengeId]
+
+      // Don't retry if the error is non-retryable
+      if (currentError && !isErrorRetryable(currentError)) {
+        toast({
+          title: t('Cannot retry'),
+          description: t(
+            'This analysis is unavailable until your opponent completes their challenge',
+          ),
+          status: 'warning',
+          duration: 3000,
+          isClosable: true,
+        })
+        return Promise.resolve(null)
+      }
+
+      // Clear the error so we can try again
+      dispatch(
+        setChallengeAnalysisError({
+          challengeId,
+          error: null,
+        }),
+      )
+      // Then fetch the analysis again
+      return fetchChallengeAnalysis(challengeId)
+    },
+    [
+      dispatch,
+      fetchChallengeAnalysis,
+      quickClashState.challengeAnalysesError,
+      isErrorRetryable,
+      toast,
+      t,
     ],
   )
 
   // Manual analysis generation
   const generateAnalysis = useCallback(
     async challengeId => {
+      // Check for existing errors that are non-retryable
+      const existingError = quickClashState.challengeAnalysesError[challengeId]
+      if (existingError && !isErrorRetryable(existingError)) {
+        toast({
+          title: t('Cannot generate analysis'),
+          description: t(
+            'This analysis is unavailable until your opponent completes their challenge',
+          ),
+          status: 'warning',
+          duration: 3000,
+          isClosable: true,
+        })
+        return null
+      }
+
       dispatch(setChallengeAnalysisLoading({ challengeId, isLoading: true }))
 
       try {
@@ -322,21 +463,50 @@ const useQuickClash = () => {
 
         throw new Error('Failed to generate analysis')
       } catch (error) {
-        toast({
-          title: t('Analysis failed'),
-          description:
-            error.response?.data?.message || t('Please try again in a moment'),
-          status: 'error',
-          duration: 3000,
-          isClosable: true,
-        })
+        const errorMessage =
+          error.response?.data?.message || t('Please try again in a moment')
+
+        // Store the error in Redux
+        dispatch(
+          setChallengeAnalysisError({
+            challengeId,
+            error: errorMessage,
+          }),
+        )
+
+        // Use different toast based on whether it's retryable
+        if (isErrorRetryable(errorMessage)) {
+          toast({
+            title: t('Analysis failed'),
+            description: errorMessage,
+            status: 'error',
+            duration: 3000,
+            isClosable: true,
+          })
+        } else {
+          toast({
+            title: t('Analysis unavailable'),
+            description: t(
+              'This analysis cannot be generated until your opponent completes their challenge',
+            ),
+            status: 'warning',
+            duration: 3000,
+            isClosable: true,
+          })
+        }
 
         return null
       } finally {
         dispatch(setChallengeAnalysisLoading({ challengeId, isLoading: false }))
       }
     },
-    [dispatch, toast, t],
+    [
+      dispatch,
+      toast,
+      t,
+      quickClashState.challengeAnalysesError,
+      isErrorRetryable,
+    ],
   )
 
   return {
@@ -380,7 +550,9 @@ const useQuickClash = () => {
     setActiveChallenge,
     endSession,
     fetchChallengeAnalysis,
+    retryAnalysisFetch,
     generateAnalysis,
+    isErrorRetryable, // Expose this utility function
   }
 }
 

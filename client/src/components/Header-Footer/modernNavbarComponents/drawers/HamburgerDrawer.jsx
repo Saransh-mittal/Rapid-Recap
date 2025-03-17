@@ -18,6 +18,7 @@ import {
   VStack,
   useColorModeValue,
   Spinner,
+  HStack,
 } from '@chakra-ui/react'
 import { SearchIcon } from '@chakra-ui/icons'
 import { NavLink, useNavigate } from 'react-router-dom'
@@ -92,13 +93,67 @@ const HamburgerDrawer = ({
   }, [onOpenUserSearch])
 
   const showDashboard = isAuthenticated && user && user.role === 'admin'
+
+  // Add Quick Clash to nav items if not already present
   const memoizedNavItems = useMemo(() => {
-    return navItems.map((item, index) => {
+    // Check if Quick Clash is already in navItems
+    const hasQuickClash = navItems.some(
+      item =>
+        item.path.includes('quickclash') ||
+        item.key === 'QuickClash' ||
+        item.label === 'Quick Clash',
+    )
+
+    // Create a working copy of navItems
+    let workingNavItems = [...navItems]
+
+    // If Quick Clash not found, add it
+    if (!hasQuickClash && !notLogined) {
+      // Insert after Home or as second item
+      const homeIndex = workingNavItems.findIndex(
+        item => item.path === '/home' || item.label === 'Home',
+      )
+
+      const quickClashItem = {
+        path: '/quickclash',
+        label: 'Quick Clash',
+        key: 'QuickClash',
+      }
+
+      if (homeIndex !== -1) {
+        workingNavItems.splice(homeIndex + 1, 0, quickClashItem)
+      } else {
+        // If Home not found, add after first item
+        workingNavItems.splice(1, 0, quickClashItem)
+      }
+    }
+
+    // Generate the nav items
+    return workingNavItems.map((item, index) => {
       const isLinkActive = window.location.pathname.includes(
         item.path.toLocaleLowerCase(),
       )
 
       if (item.key === 'Dashboard' && !showDashboard) return null
+
+      // Check if this is the Quick Clash item
+      const isQuickClash =
+        item.path.includes('quickclash') ||
+        item.key === 'QuickClash' ||
+        item.label === 'Quick Clash'
+
+      // Get badge count for Quick Clash
+      const pendingChallengesCount =
+        isQuickClash && activeChallenges && user
+          ? activeChallenges.filter(
+              challenge =>
+                (challenge.challenger._id === user._id &&
+                  !challenge.challengerAttempted) ||
+                (challenge.opponent._id === user._id &&
+                  !challenge.opponentAttempted),
+            ).length
+          : 0
+
       return (
         <ListItem
           position="relative"
@@ -111,12 +166,38 @@ const HamburgerDrawer = ({
           gap="0.25rem"
           textTransform="uppercase"
           fontWeight={isLinkActive ? '600' : '500'}
-          color={isLinkActive ? 'white' : 'whiteAlpha.800'}
+          color={
+            isLinkActive
+              ? isQuickClash
+                ? 'yellow.300'
+                : 'white'
+              : isQuickClash
+              ? 'yellow.200'
+              : 'whiteAlpha.800'
+          }
           sx={{
-            '&:hover .nav-arrow': {
-              opacity: isLinkActive ? 1 : 0.5,
-              transform: 'translateX(0)',
+            '&:hover': {
+              color: isQuickClash ? 'yellow.300' : 'white',
+              '.nav-arrow': {
+                opacity: isLinkActive ? 1 : 0.5,
+                transform: 'translateX(0)',
+              },
             },
+            borderRadius: '8px',
+            padding: '6px 12px',
+            transition: 'all 0.3s ease',
+            background: isQuickClash
+              ? 'rgba(255, 215, 0, 0.08)'
+              : 'transparent',
+            boxShadow: isQuickClash ? '0 0 8px rgba(255, 215, 0, 0.2)' : 'none',
+          }}
+          _hover={{
+            background: isQuickClash
+              ? 'rgba(255, 215, 0, 0.15)'
+              : 'whiteAlpha.100',
+            boxShadow: isQuickClash
+              ? '0 0 12px rgba(255, 215, 0, 0.3)'
+              : 'none',
           }}
         >
           {/* Animated Arrow Indicator */}
@@ -141,23 +222,60 @@ const HamburgerDrawer = ({
                 ease: 'easeOut',
               }}
               style={{
-                color: 'white',
-                filter: 'drop-shadow(0 0 4px rgba(255, 255, 255, 0.3))',
+                color: isQuickClash ? '#FFD700' : 'white',
+                filter: isQuickClash
+                  ? 'drop-shadow(0 0 4px rgba(255, 215, 0, 0.5))'
+                  : 'drop-shadow(0 0 4px rgba(255, 255, 255, 0.3))',
               }}
             />
           </Box>
 
-          <NavLink
-            to={item.path}
-            className={`nav-link`}
-            ref={ref => (navLinkRefs.current[index] = ref)}
-          >
-            {item.label}
-          </NavLink>
+          <HStack spacing={2}>
+            <NavLink
+              to={item.path}
+              className={`nav-link`}
+              ref={ref => (navLinkRefs.current[index] = ref)}
+            >
+              {item.label}
+            </NavLink>
+
+            {/* Add Swords icon for Quick Clash */}
+            {isQuickClash && (
+              <Box
+                as={Swords}
+                size={16}
+                color="yellow.300"
+                filter="drop-shadow(0 0 3px rgba(255, 215, 0, 0.5))"
+              />
+            )}
+
+            {/* Show badge for active challenges */}
+            {isQuickClash && pendingChallengesCount > 0 && (
+              <Badge
+                bg="red.500"
+                color="white"
+                borderRadius="full"
+                fontSize="xs"
+                px={1.5}
+                boxShadow="0 0 5px rgba(229, 62, 62, 0.6)"
+              >
+                {pendingChallengesCount}
+              </Badge>
+            )}
+          </HStack>
         </ListItem>
       )
     })
-  }, [navItems, notLogined, onClose, navLinkRefs, isAuthenticated, user, t])
+  }, [
+    navItems,
+    notLogined,
+    onClose,
+    navLinkRefs,
+    isAuthenticated,
+    user,
+    t,
+    activeChallenges,
+  ])
 
   useEffect(() => {
     if (isOpen) {
@@ -288,46 +406,6 @@ const HamburgerDrawer = ({
                     >
                       <Scroll color="white" />
                     </Box>
-                    <Box
-                      onClick={() => {
-                        navigate('/quickclash')
-                        onClose()
-                      }}
-                      position="relative"
-                    >
-                      <Swords color="white" />
-                      {activeChallenges &&
-                        activeChallenges.filter(
-                          challenge =>
-                            (challenge.challenger._id === user?._id &&
-                              !challenge.challengerAttempted) ||
-                            (challenge.opponent._id === user?._id &&
-                              !challenge.opponentAttempted),
-                        ).length > 0 && (
-                          <Badge
-                            bg={'red'}
-                            position={'absolute'}
-                            color={'white'}
-                            borderRadius={'50%'}
-                            h={'18px'}
-                            w={'18px'}
-                            textAlign={'center'}
-                            right={'-0.5rem'}
-                            top={'-0.65rem'}
-                            fontSize="xs"
-                          >
-                            {
-                              activeChallenges.filter(
-                                challenge =>
-                                  (challenge.challenger._id === user?._id &&
-                                    !challenge.challengerAttempted) ||
-                                  (challenge.opponent._id === user?._id &&
-                                    !challenge.opponentAttempted),
-                              ).length
-                            }
-                          </Badge>
-                        )}
-                    </Box>
                     <Inbox
                       className={'inbox-button-lg'}
                       onClick={handleInboxClick}
@@ -385,7 +463,7 @@ const HamburgerDrawer = ({
 
               <UnorderedList
                 styleType="none"
-                spacing={4}
+                spacing={2}
                 width="100%"
                 display="flex"
                 flexDirection="column"

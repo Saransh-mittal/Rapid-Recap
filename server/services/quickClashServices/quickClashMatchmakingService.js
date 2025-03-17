@@ -30,7 +30,7 @@ const joinMatchmaking = async ({ userId, categories }) => {
   if (!categories || !Array.isArray(categories) || categories.length !== 2) {
     throw new Error('Exactly 2 categories must be selected')
   }
-  await checkChallengeLimits({ userId })
+  // await checkChallengeLimits({ userId })
   const session = await mongoose.startSession()
   try {
     return await session.withTransaction(async () => {
@@ -137,7 +137,7 @@ const updateMatchmakingStatus = async ({ userId, status }) => {
  */
 const getAvailableUsers = async ({ userId }) => {
   try {
-    await checkChallengeLimits({ userId })
+    // await checkChallengeLimits({ userId })
     // First get real users in matchmaking (excluding current user)
     const matchmakingQuery = {
       user: { $ne: userId },

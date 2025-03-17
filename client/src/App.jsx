@@ -605,7 +605,8 @@ const App = () => {
       <NavbarProvider>
         {showNavbar &&
           !(summary && isVisible) &&
-          !location.pathname.startsWith('/quickclash') && (
+          !location.pathname.startsWith('/quickclash') &&
+          location.pathname != '/' && (
             <Suspense fallback={null}>
               {/* <Navbar onNavbarLoad={handleNavbarLoad} /> */}
               <ModernNavbar onNavbarLoad={handleNavbarLoad} />

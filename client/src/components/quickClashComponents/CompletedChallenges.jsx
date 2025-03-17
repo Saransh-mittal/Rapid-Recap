@@ -245,21 +245,39 @@ const ChallengeCard = memo(
     analysis,
     userId,
     isAnalysisLoading,
+    analysisError,
     onViewAnalysis,
     generateAnalysis,
+    retryAnalysisFetch,
     index,
   }) => {
     const { t } = useTranslation('QuickClash')
 
-    // Memoize the handler to prevent unnecessary re-renders
+    // Memoize the handlers to prevent unnecessary re-renders
     const handleViewFullAnalysis = useCallback(() => {
       if (analysis) {
         onViewAnalysis(challenge._id)
-      } else {
+      } else if (!analysisError) {
         generateAnalysis(challenge._id)
         onViewAnalysis(challenge._id)
+      } else {
+        // If there's an error, we should retry first
+        retryAnalysisFetch(challenge._id)
+        onViewAnalysis(challenge._id)
       }
-    }, [analysis, challenge._id, onViewAnalysis, generateAnalysis])
+    }, [
+      analysis,
+      challenge._id,
+      onViewAnalysis,
+      generateAnalysis,
+      retryAnalysisFetch,
+      analysisError,
+    ])
+
+    // Memoize the retry handler
+    const handleRetry = useCallback(() => {
+      retryAnalysisFetch(challenge._id)
+    }, [retryAnalysisFetch, challenge._id])
 
     return (
       <MotionBox
@@ -302,7 +320,10 @@ const ChallengeCard = memo(
               analysis={analysis}
               userId={userId}
               isLoading={isAnalysisLoading}
+              isError={!!analysisError}
+              errorMessage={analysisError}
               onViewFull={handleViewFullAnalysis}
+              onRetry={handleRetry}
             />
           </Suspense>
         </Box>
@@ -323,9 +344,12 @@ const CompletedChallenges = () => {
     loadCompletedChallenges,
     resetCompletedChallengesState,
     fetchChallengeAnalysis,
+    retryAnalysisFetch,
     generateAnalysis,
+    isErrorRetryable,
     challengeAnalyses,
     challengeAnalysesLoading: analysisLoading,
+    challengeAnalysesError: analysisError,
   } = useQuickClash()
 
   const { user } = useSelector(state => state.auth)
@@ -378,7 +402,13 @@ const CompletedChallenges = () => {
     if (!challenges.length || !userId) return
 
     // Create a queue of challenges to fetch analyses for
-    const fetchQueue = challenges.map(challenge => challenge._id)
+    const fetchQueue = challenges
+      .map(challenge => challenge._id)
+      // Filter out challenges with non-retryable errors
+      .filter(challengeId => {
+        const error = analysisError[challengeId]
+        return !error || isErrorRetryable(error)
+      })
 
     // Process the queue with a slight delay between each request
     let timeoutId
@@ -387,7 +417,6 @@ const CompletedChallenges = () => {
 
       const challengeId = fetchQueue.shift()
       fetchChallengeAnalysis(challengeId)
-
       timeoutId = setTimeout(processQueue, 200) // 200ms delay between requests
     }
 
@@ -395,7 +424,13 @@ const CompletedChallenges = () => {
 
     // Cleanup timeout on unmount
     return () => clearTimeout(timeoutId)
-  }, [challenges, userId, fetchChallengeAnalysis])
+  }, [
+    challenges,
+    userId,
+    fetchChallengeAnalysis,
+    analysisError,
+    isErrorRetryable,
+  ])
 
   // Loading state
   if (loading && !challenges.length) {
@@ -446,8 +481,10 @@ const CompletedChallenges = () => {
                   analysis={challengeAnalyses[challenge._id]}
                   userId={userId}
                   isAnalysisLoading={analysisLoading[challenge._id]}
+                  analysisError={analysisError[challenge._id]}
                   onViewAnalysis={handleViewAnalysis}
                   generateAnalysis={generateAnalysis}
+                  retryAnalysisFetch={retryAnalysisFetch}
                   index={index}
                 />
               ))}
@@ -464,8 +501,10 @@ const CompletedChallenges = () => {
                   analysis={challengeAnalyses[challenge._id]}
                   userId={userId}
                   isAnalysisLoading={analysisLoading[challenge._id]}
+                  analysisError={analysisError[challenge._id]}
                   onViewAnalysis={handleViewAnalysis}
                   generateAnalysis={generateAnalysis}
+                  retryAnalysisFetch={retryAnalysisFetch}
                   index={index}
                 />
               ))}

@@ -19,6 +19,7 @@ const namespaces = {
     'OnboardingProcess',
     'rulebook',
     'QuickClash',
+    'AppStartScreen',
   ],
   redux: ['tournamentSlice'],
   utils: ['formatDate'],

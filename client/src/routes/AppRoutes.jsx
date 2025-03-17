@@ -30,6 +30,7 @@ const QuickClashSocketTest =
   process.env.NODE_ENV === 'production'
     ? null
     : React.lazy(() => import('../screens/testing/QuickClashSocketTest'))
+const AppStartScreen = lazy(() => import('../screens/AppStartScreen'))
 
 const AppRoutes = ({ isToken, needsOnboarding, setIsGuestLoggedin }) => {
   const { summary, isVisible } = useSelector(state => state.demotionSummary)
@@ -55,7 +56,7 @@ const AppRoutes = ({ isToken, needsOnboarding, setIsGuestLoggedin }) => {
           <>
             <Route
               path="/"
-              element={isToken ? <Navigate to="/home" /> : <GetStarted />}
+              element={isToken ? <AppStartScreen /> : <GetStarted />}
             />
             {process.env.NODE_ENV != 'production' && (
               <Route

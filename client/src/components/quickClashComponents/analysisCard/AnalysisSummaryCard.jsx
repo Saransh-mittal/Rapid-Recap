@@ -15,6 +15,7 @@ import CommentSection, {
 import ViewFullButton from './ViewFullButton'
 import AnalysisCardLoading from './AnalysisCardLoading'
 import GenerateAnalysisButton from './GenerateAnalysisButton'
+import AnalysisErrorCard from './AnalysisErrorCard'
 
 // Import helpers
 import { getThemeColors } from './themeHelpers'
@@ -217,11 +218,18 @@ const AnalysisSummaryCard = ({
   analysis,
   userId,
   isLoading = false,
+  isError = false,
+  errorMessage = '',
   onViewFull,
+  onRetry,
 }) => {
   // Use simple conditional rendering with no hooks
   if (isLoading) {
     return <LoadingCard onViewFull={onViewFull} />
+  }
+
+  if (isError) {
+    return <AnalysisErrorCard error={errorMessage} onRetry={onRetry} />
   }
 
   if (!analysis) {

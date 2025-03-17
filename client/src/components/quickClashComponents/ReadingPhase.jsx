@@ -16,7 +16,13 @@ import {
 } from '@chakra-ui/react'
 import { motion } from 'framer-motion'
 import { useTranslation } from 'react-i18next'
-import { BookOpen, CheckCircle2, Lightbulb, AlertCircle } from 'lucide-react'
+import {
+  BookOpen,
+  CheckCircle2,
+  Lightbulb,
+  AlertCircle,
+  Clock,
+} from 'lucide-react'
 import MainArticleContent from '../articleComponents/MainArticleContent'
 import world from '/images/quickclash/world_quickclash.webp'
 import politics from '/images/quickclash/politics_quickclash.webp'
@@ -35,6 +41,7 @@ import crime from '/images/quickclash/crime_quickclash.webp'
 
 const MotionBox = motion(Box)
 const MotionButton = motion(Button)
+const MotionBadge = motion(Badge)
 
 // Function to get the appropriate image based on category
 const getCategoryImage = category => {
@@ -60,6 +67,13 @@ const getCategoryImage = category => {
   }
 
   return categoryImageMap[categoryLower] || null
+}
+
+// Format time display as MM:SS
+const formatTime = seconds => {
+  const minutes = Math.floor(seconds / 60)
+  const remainingSeconds = seconds % 60
+  return `${minutes}:${remainingSeconds.toString().padStart(2, '0')}`
 }
 
 const ReadingPhase = ({ article, timeLeft, onComplete, category }) => {
@@ -114,6 +128,13 @@ const ReadingPhase = ({ article, timeLeft, onComplete, category }) => {
     return () => clearTimeout(hintTimer)
   }, [scrollPercentage, hasScrolledToBottom])
 
+  // Determine timer color based on remaining time
+  const getTimerColorScheme = () => {
+    if (timeLeft <= 10) return 'red'
+    if (timeLeft <= 30) return 'orange'
+    return 'blue'
+  }
+
   return (
     <MotionBox
       initial={{ opacity: 0 }}
@@ -121,6 +142,40 @@ const ReadingPhase = ({ article, timeLeft, onComplete, category }) => {
       transition={{ duration: 0.3 }}
       w="100%"
     >
+      {/* Floating Timer - Always visible */}
+      <MotionBadge
+        position="fixed"
+        top="15px"
+        right="20px"
+        zIndex={100}
+        colorScheme={getTimerColorScheme()}
+        p={2}
+        borderRadius="full"
+        display="flex"
+        alignItems="center"
+        gap={2}
+        boxShadow="0 4px 10px rgba(0,0,0,0.3)"
+        initial={{ opacity: 0, y: -10 }}
+        animate={
+          timeLeft <= 30
+            ? {
+                scale: [1, 1.1, 1],
+                transition: {
+                  duration: 0.8,
+                  repeat: Infinity,
+                  repeatType: 'reverse',
+                },
+                opacity: 1,
+                y: 0,
+              }
+            : { opacity: 1, y: 0 }
+        }
+        transition={{ duration: 0.3 }}
+      >
+        <Icon as={Clock} />
+        <Text fontWeight="bold">{formatTime(timeLeft)}</Text>
+      </MotionBadge>
+
       <VStack spacing={4} align="stretch">
         {/* Reading tips and info */}
         <Flex justify="center" mb={2}>

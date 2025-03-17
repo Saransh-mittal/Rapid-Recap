@@ -2,9 +2,9 @@ import { createSlice } from '@reduxjs/toolkit'
 
 const initialState = {
   tasks: {
-    fetchUser: { progress: 0, weight: 45 },
+    fetchUser: { progress: 0, weight: 75 },
     // serviceWorker: { progress: 0, weight: 15 },
-    navbarLoad: { progress: 0, weight: 30 },
+    // navbarLoad: { progress: 0, weight: 30 },
     otherTasks: { progress: 0, weight: 25 },
   },
   isLoading: true,

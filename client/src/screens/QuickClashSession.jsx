@@ -387,41 +387,43 @@ const QuickClashSession = () => {
               {challenge?.category || t('Quick Clash')}
             </Badge>
 
-            <HStack>
-              <Badge colorScheme="purple">{phaseInfo.label}</Badge>
+            {phase != 'reading' && (
+              <HStack>
+                <Badge colorScheme="purple">{phaseInfo.label}</Badge>
 
-              {timer !== null && (
-                <MotionBadge
-                  colorScheme={phaseInfo.colorScheme}
-                  p={2}
-                  borderRadius="md"
-                  display="flex"
-                  alignItems="center"
-                  gap={1}
-                  fontSize="md"
-                  animate={
-                    isAttention
-                      ? {
-                          scale: [1, 1.1, 1],
-                          transition: {
-                            duration: 0.8,
-                            repeat: Infinity,
-                            repeatType: 'reverse',
-                          },
-                        }
-                      : {}
-                  }
-                  boxShadow={
-                    isAttention
-                      ? `0 0 8px var(--chakra-colors-${phaseInfo.colorScheme}-500)`
-                      : 'none'
-                  }
-                >
-                  <Icon as={Clock} />
-                  <Text>{formatTime(timer)}</Text>
-                </MotionBadge>
-              )}
-            </HStack>
+                {timer !== null && (
+                  <MotionBadge
+                    colorScheme={phaseInfo.colorScheme}
+                    p={2}
+                    borderRadius="md"
+                    display="flex"
+                    alignItems="center"
+                    gap={1}
+                    fontSize="md"
+                    animate={
+                      isAttention
+                        ? {
+                            scale: [1, 1.1, 1],
+                            transition: {
+                              duration: 0.8,
+                              repeat: Infinity,
+                              repeatType: 'reverse',
+                            },
+                          }
+                        : {}
+                    }
+                    boxShadow={
+                      isAttention
+                        ? `0 0 8px var(--chakra-colors-${phaseInfo.colorScheme}-500)`
+                        : 'none'
+                    }
+                  >
+                    <Icon as={Clock} />
+                    <Text>{formatTime(timer)}</Text>
+                  </MotionBadge>
+                )}
+              </HStack>
+            )}
           </Flex>
 
           {(phase === 'reading' || phase === 'quiz') && (
