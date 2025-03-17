@@ -41,6 +41,7 @@ const checkChallengeLimits = async ({ userId, session }) => {
   const pendingChallenges = await QuickClashChallenge.countDocuments({
     challenger: userId,
     status: 'pending',
+    expiresAt: { $gt: new Date() },
   }).session(session)
 
   if (pendingChallenges >= 10) {
@@ -58,7 +59,7 @@ const createChallenge = async ({
     throw new Error('Cannot challenge yourself')
   }
   // Check limits
-  await checkChallengeLimits({ userId: challengerId })
+  // await checkChallengeLimits({ userId: challengerId })
   const category = categories[Math.floor(Math.random() * categories.length)]
   const articles = await getSourceArticles({ category })
   const mixedArticle = await generateMixedArticle({ articles })
