@@ -11,6 +11,7 @@ const ManagementButtons = ({
   onOnboardingArticleOpen,
   onMaintenanceOpen,
   onAnnouncementOpen,
+  onQuickClashAnalyticsOpen,
 }) => {
   const buttonColorScheme = 'teal'
 
@@ -48,6 +49,12 @@ const ManagementButtons = ({
       </Button>
       <Button onClick={onAnnouncementOpen} colorScheme={buttonColorScheme}>
         Send Announcement
+      </Button>
+      <Button
+        colorScheme={buttonColorScheme}
+        onClick={onQuickClashAnalyticsOpen}
+      >
+        Quick Clash Analytics
       </Button>
     </SimpleGrid>
   )

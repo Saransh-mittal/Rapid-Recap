@@ -59,6 +59,9 @@ const OnboardingArticleList = lazy(() =>
 const OnboardingArticleAdd = lazy(() =>
   import('../components/dashboardComponents/OnboardingArticleAdd'),
 )
+const QuickClashAnalyticsModal = lazy(() =>
+  import('../components/dashboardComponents/QuickClashAnalyticsModal'),
+)
 
 const Dashboard = () => {
   // State management
@@ -144,6 +147,11 @@ const Dashboard = () => {
     isOpen: isMaintenanceOpen,
     onOpen: onMaintenanceOpen,
     onClose: onMaintenanceClose,
+  } = useDisclosure()
+  const {
+    isOpen: isQuickClashAnalyticsOpen,
+    onOpen: onQuickClashAnalyticsOpen,
+    onClose: onQuickClashAnalyticsClose,
   } = useDisclosure()
 
   // Data fetching functions
@@ -551,6 +559,7 @@ const Dashboard = () => {
                 onOnboardingArticleOpen={onOnboardingArticleOpen}
                 onMaintenanceOpen={onMaintenanceOpen}
                 onAnnouncementOpen={onAnnouncementOpen}
+                onQuickClashAnalyticsOpen={onQuickClashAnalyticsOpen}
               />
             </TabPanel>
 
@@ -626,6 +635,10 @@ const Dashboard = () => {
             isOpen={isAddModalOpen}
             onClose={handleAddModalClose}
             article={selectedArticle}
+          />
+          <QuickClashAnalyticsModal
+            isOpen={isQuickClashAnalyticsOpen}
+            onClose={onQuickClashAnalyticsClose}
           />
         </Suspense>
       </Container>
