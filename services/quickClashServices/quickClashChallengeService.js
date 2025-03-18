@@ -3,6 +3,8 @@ const QuickClashChallenge = require('../../model/quickClashSchemas/quickClashCha
 const {
   getSourceArticles,
   generateMixedArticle,
+  getSourceArticle,
+  generateHindiTranslation,
 } = require('./quickClashArticleService')
 const mongoose = require('mongoose')
 const {
@@ -22,6 +24,12 @@ const {
   notifyChallengeRejected,
   notifyChallengeCompleted,
 } = require('./quickClashNotificationService')
+const ArticleHighlight = require('../../model/articleHighlightSchema')
+const {
+  copyHighlightsToChallenge,
+  createPlaceholderHighlight,
+} = require('../../utils/quickClashHighlightIntegration.utils')
+const Article = require('../../model/articleSchema')
 
 const CHALLENGE_EXPIRY = 24 * 60 * 60 * 1000 // 24 hours
 
@@ -49,6 +57,15 @@ const checkChallengeLimits = async ({ userId, session }) => {
   }
 }
 
+/**
+ * Create a new QuickClash challenge using a single article
+ * @param {Object} params - Parameters
+ * @param {string} params.challengerId - Challenger user ID
+ * @param {string} params.opponentId - Opponent user ID
+ * @param {Array<string>} params.categories - Selected categories for challenge
+ * @param {boolean} [params.fromMatchMaking=false] - Whether this is from matchmaking
+ * @returns {Promise<Object>} Challenge result object
+ */
 const createChallenge = async ({
   challengerId,
   opponentId,
@@ -58,11 +75,72 @@ const createChallenge = async ({
   if (challengerId.toString() === opponentId.toString()) {
     throw new Error('Cannot challenge yourself')
   }
+
   // Check limits
   // await checkChallengeLimits({ userId: challengerId })
+
+  // Select a random category from the provided categories
   const category = categories[Math.floor(Math.random() * categories.length)]
-  const articles = await getSourceArticles({ category })
-  const mixedArticle = await generateMixedArticle({ articles })
+
+  // Get a single article instead of multiple
+  const article = await getSourceArticle({ category })
+
+  // Check if Hindi translation exists
+  const hasHindiTranslation = !!(
+    article.hindiTitle &&
+    article.hindiMainText &&
+    article.hindiMainText.length > 0
+  )
+
+  // Format article data for the challenge
+  let articleData = {
+    title: {
+      english: article.title,
+      hindi: article.hindiTitle || '',
+    },
+    content: {
+      english: article.mainText,
+      hindi:
+        article.hindiMainText && article.hindiMainText.length > 0
+          ? article.hindiMainText.join(' ')
+          : '',
+    },
+    sourceArticles: [article._id],
+  }
+
+  // Generate Hindi translation if it doesn't exist
+  if (!hasHindiTranslation) {
+    console.log(`Generating Hindi translation for article ${article._id}`)
+
+    const hindiTranslation = await generateHindiTranslation({
+      title: article.title,
+      content: article.mainText,
+    })
+
+    // Update article data with the new translation
+    articleData.title.hindi = hindiTranslation.title
+    articleData.content.hindi = hindiTranslation.content
+
+    // Optionally update the original article for future use
+    try {
+      // Convert content string to array format as expected by schema
+      const hindiContentArray = [hindiTranslation.content]
+
+      await Article.findByIdAndUpdate(article._id, {
+        hindiTitle: hindiTranslation.title,
+        hindiMainText: hindiContentArray,
+      })
+
+      console.log(`Updated article ${article._id} with Hindi translation`)
+    } catch (updateError) {
+      console.error(
+        'Error updating article with Hindi translation:',
+        updateError,
+      )
+      // Continue with the challenge creation even if saving to article fails
+    }
+  }
+
   const session = await mongoose.startSession()
 
   try {
@@ -74,48 +152,79 @@ const createChallenge = async ({
           opponent: opponentId,
           selectedCategories: categories,
           category,
-          article: {
-            ...mixedArticle,
-            sourceArticles: articles.map(a => a._id),
-          },
+          article: articleData,
           expiresAt: new Date(Date.now() + CHALLENGE_EXPIRY),
         })
+
         if (fromMatchMaking) challenge.status = 'active'
         await challenge.save({ session })
 
-        // Generate only English quiz in transaction
+        // Generate English quiz in transaction
         const englishQuiz = await generateQuickClashQuiz({
-          title: mixedArticle.title.english,
-          author: 'Rapid Recap Team',
-          mainText: mixedArticle.content.english,
+          title: articleData.title.english,
+          author: article.author || 'Rapid Recap Team',
+          mainText: articleData.content.english,
           challenge,
           language: 'en',
           session,
         })
 
-        // Create a placeholder for the Hindi quiz that will be updated later
+        // Create a placeholder for the Hindi quiz
         const hindiQuiz = new QuickClashQuiz({
           challenge: challenge._id,
           language: 'hi',
           questions: [], // Empty initially
           overallDifficulty: englishQuiz.overallDifficulty,
-          translationStatus: 'pending', // Add this field to your schema
+          translationStatus: 'pending',
         })
 
         await hindiQuiz.save({ session })
 
-        // Create placeholder highlights inside the transaction
-        const englishHighlight = await generateQuickClashHighlights({
-          challengeId: challenge._id,
-          lang: 'en',
-          session,
-        })
+        // Look for existing article highlights for English
+        let englishHighlight = await ArticleHighlight.findOne({
+          articleId: article._id,
+          language: 'en',
+          processingStatus: 'completed',
+        }).session(session)
 
-        const hindiHighlight = await generateQuickClashHighlights({
-          challengeId: challenge._id,
-          lang: 'hi',
-          session,
-        })
+        // If article highlights exist, copy them to challenge
+        if (englishHighlight) {
+          englishHighlight = await copyHighlightsToChallenge({
+            articleHighlight: englishHighlight,
+            challengeId: challenge._id,
+            lang: 'en',
+            session,
+          })
+        } else {
+          // Otherwise, create a placeholder
+          englishHighlight = await createPlaceholderHighlight({
+            challengeId: challenge._id,
+            lang: 'en',
+            session,
+          })
+        }
+
+        // Do the same for Hindi highlights
+        let hindiHighlight = await ArticleHighlight.findOne({
+          articleId: article._id,
+          language: 'hi',
+          processingStatus: 'completed',
+        }).session(session)
+
+        if (hindiHighlight) {
+          hindiHighlight = await copyHighlightsToChallenge({
+            articleHighlight: hindiHighlight,
+            challengeId: challenge._id,
+            lang: 'hi',
+            session,
+          })
+        } else {
+          hindiHighlight = await createPlaceholderHighlight({
+            challengeId: challenge._id,
+            lang: 'hi',
+            session,
+          })
+        }
 
         // Populate challenger and opponent info
         const [challenger, opponent] = await Promise.all([
@@ -141,6 +250,7 @@ const createChallenge = async ({
             hindi: hindiHighlight,
           },
         }
+
         result.notifyData = {
           challenger,
           opponent,
@@ -150,14 +260,14 @@ const createChallenge = async ({
           },
         }
 
-        // Schedule the Hindi translation to happen after transaction completes
+        // Schedule quiz translation with our Hindi content
         setTimeout(() => {
           translateQuizBackground({
             englishQuiz,
             challengeId: challenge._id,
             hindiQuizId: hindiQuiz._id,
-            hindiTitle: mixedArticle.title.hindi,
-            hindiMainText: mixedArticle.content.hindi,
+            hindiTitle: articleData.title.hindi,
+            hindiMainText: articleData.content.hindi,
           }).catch(err => {
             console.error('Background Hindi translation failed:', err)
           })
