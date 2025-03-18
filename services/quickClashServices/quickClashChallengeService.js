@@ -80,7 +80,10 @@ const createChallenge = async ({
   // await checkChallengeLimits({ userId: challengerId })
 
   // Select a random category from the provided categories
-  const category = categories[Math.floor(Math.random() * categories.length)]
+  const category =
+    categories[
+      Math.floor(Math.random() * categories.length)
+    ].toLocaleLowerCase()
 
   // Get a single article instead of multiple
   const article = await getSourceArticle({ category })
