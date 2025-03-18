@@ -51,6 +51,10 @@ const {
   getMaintenanceWindows,
 } = require('../controllers/maintenanceController')
 const { createAnnouncement } = require('../controllers/notification')
+const {
+  getQuickClashStats,
+  getQuickClashUserActivity,
+} = require('../controllers/quickClashAnalyticsController')
 const router = express.Router()
 
 router.post(
@@ -250,4 +254,16 @@ router.get('/maintenance', Authenticate, adminMiddleware, getMaintenanceWindows)
 
 router.post('/announcement', Authenticate, adminMiddleware, createAnnouncement)
 
+router.get(
+  '/quick-clash/stats',
+  Authenticate,
+  adminMiddleware,
+  getQuickClashStats,
+)
+router.get(
+  '/quick-clash/user-activity',
+  Authenticate,
+  adminMiddleware,
+  getQuickClashUserActivity,
+)
 module.exports = router
