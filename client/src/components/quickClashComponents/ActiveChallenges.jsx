@@ -14,13 +14,23 @@ import {
   Center,
   Icon,
   Button,
+  useDisclosure,
+  Flex,
 } from '@chakra-ui/react'
 import { useTranslation } from 'react-i18next'
 import { useNavigate } from 'react-router-dom'
 import { useSelector } from 'react-redux'
-import { AnimatePresence } from 'framer-motion'
+import { AnimatePresence, motion } from 'framer-motion'
 import axios from 'axios'
-import { Target, Zap, HourglassIcon, Trophy, X, FileText } from 'lucide-react'
+import {
+  Target,
+  Zap,
+  HourglassIcon,
+  Trophy,
+  X,
+  FileText,
+  ChevronDown,
+} from 'lucide-react'
 
 // Import custom components
 import FilterTabs from './FilterTabs'
@@ -30,10 +40,14 @@ import ConfirmationDialog from './ConfirmationDialog'
 
 // Use React.lazy for components that aren't always needed
 const QuizReportModal = React.lazy(() => import('./QuizReportModal'))
+const NewChallengeModal = React.lazy(() => import('./modals/NewChallengeModal'))
 
 // Custom hooks
 import useQuickClash from '../../customHooks/useQuickClash'
 import useQuickClashSocket from '../../customHooks/useQuickClashSocket'
+
+const MotionCenter = motion(Center)
+const MotionButton = motion(Button)
 
 /**
  * Displays active challenges, allowing filtering and interaction
@@ -47,7 +61,10 @@ const ActiveChallenges = () => {
     activeChallenges: challenges,
     activeChallengesLoading: loading,
     activeChallengesError: error,
+    activeChallengesPage: page,
+    activeChallengesHasMore: hasMore,
     loadActiveChallenges,
+    loadMoreActiveChallenges,
     handleAcceptChallenge,
     handleRejectChallenge,
   } = useQuickClash()
@@ -55,11 +72,20 @@ const ActiveChallenges = () => {
   const { user } = useSelector(state => state.auth)
   const userId = user?._id
   const [selectedSession, setSelectedSession] = useState(null)
+  const [nextPageLoading, setNextPageLoading] = useState(false)
 
   // Modal disclosures
   const [isConfirmOpen, setIsConfirmOpen] = useState(false)
   const [isReportOpen, setIsReportOpen] = useState(false)
   const [confirmAction, setConfirmAction] = useState({ type: '', id: '' })
+
+  // New Challenge modal
+  const {
+    isOpen: isNewChallengeOpen,
+    onOpen: onNewChallengeOpen,
+    onClose: onNewChallengeClose,
+  } = useDisclosure()
+  const [revengeOpponent, setRevengeOpponent] = useState(null)
 
   // Fetch challenges
   useEffect(() => {
@@ -165,6 +191,15 @@ const ActiveChallenges = () => {
     setSelectedSession(null)
   }, [])
 
+  // Handle revenge action
+  const handleRevenge = useCallback(
+    opponent => {
+      setRevengeOpponent(opponent)
+      onNewChallengeOpen()
+    },
+    [onNewChallengeOpen],
+  )
+
   // Handle challenge actions
   const handleAccept = useCallback(
     challengeId => {
@@ -265,10 +300,43 @@ const ActiveChallenges = () => {
     }
   }
 
+  // Handle loading more challenges
+  const handleLoadMore = useCallback(async () => {
+    if (nextPageLoading || !hasMore) return
+
+    setNextPageLoading(true)
+    try {
+      await loadMoreActiveChallenges()
+    } catch (error) {
+      console.error('Error loading more challenges:', error)
+      toast({
+        title: t('Error'),
+        description: t('Failed to load more challenges'),
+        status: 'error',
+        duration: 3000,
+        isClosable: true,
+      })
+    } finally {
+      setNextPageLoading(false)
+    }
+  }, [nextPageLoading, hasMore, loadMoreActiveChallenges, toast, t])
+
+  // Handle New Challenge modal close and reset revengeOpponent
+  const handleNewChallengeClose = useCallback(() => {
+    onNewChallengeClose()
+    // Wait a bit before clearing the opponent to avoid UI flicker
+    setTimeout(() => setRevengeOpponent(null), 300)
+  }, [onNewChallengeClose])
+
   // Check if we're still loading and no challenges have been loaded yet
   if (loading && !challenges.length) {
     return (
-      <Center py={12}>
+      <MotionCenter
+        py={12}
+        initial={{ opacity: 0 }}
+        animate={{ opacity: 1 }}
+        transition={{ duration: 0.4 }}
+      >
         <VStack spacing={5}>
           <Spinner
             size="xl"
@@ -281,14 +349,19 @@ const ActiveChallenges = () => {
             {t('Loading challenges...')}
           </Text>
         </VStack>
-      </Center>
+      </MotionCenter>
     )
   }
 
   // If there was an error and no challenges have been loaded yet
   if (error && !challenges.length) {
     return (
-      <Center py={12}>
+      <MotionCenter
+        py={12}
+        initial={{ opacity: 0, y: 10 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.4 }}
+      >
         <VStack
           spacing={5}
           bg="gray.800"
@@ -302,11 +375,17 @@ const ActiveChallenges = () => {
           <Text color="white" fontWeight="medium" textAlign="center">
             {error}
           </Text>
-          <Button colorScheme="purple" onClick={() => loadActiveChallenges()}>
+          <Button
+            colorScheme="purple"
+            onClick={() => loadActiveChallenges()}
+            as={motion.button}
+            whileHover={{ scale: 1.05 }}
+            whileTap={{ scale: 0.95 }}
+          >
             {t('Retry')}
           </Button>
         </VStack>
-      </Center>
+      </MotionCenter>
     )
   }
 
@@ -352,6 +431,7 @@ const ActiveChallenges = () => {
                     onDecline: handleDecline,
                     onStart: handleStart,
                     onViewReport: handleViewReport,
+                    onRevenge: handleRevenge,
                   }}
                   animationDelay={idx * 0.1}
                 />
@@ -359,6 +439,27 @@ const ActiveChallenges = () => {
             </VStack>
           )}
         </AnimatePresence>
+
+        {/* Load More Button */}
+        {hasMore && filteredChallenges.length > 0 && (
+          <Flex justify="center" mt={4} mb={6}>
+            <MotionButton
+              onClick={handleLoadMore}
+              isLoading={nextPageLoading}
+              colorScheme="purple"
+              variant="outline"
+              size="md"
+              leftIcon={<ChevronDown size={18} />}
+              whileHover={{ scale: 1.05 }}
+              whileTap={{ scale: 0.95 }}
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              transition={{ delay: 0.2 }}
+            >
+              {t('Load More Challenges')}
+            </MotionButton>
+          </Flex>
+        )}
       </VStack>
 
       {/* Confirmation Dialog */}
@@ -388,6 +489,17 @@ const ActiveChallenges = () => {
             isOpen={isReportOpen}
             onClose={closeReportModal}
             sessionId={selectedSession}
+          />
+        )}
+      </Suspense>
+
+      {/* New Challenge Modal for Revenge */}
+      <Suspense fallback={null}>
+        {isNewChallengeOpen && (
+          <NewChallengeModal
+            isOpen={isNewChallengeOpen}
+            onClose={handleNewChallengeClose}
+            preSelectedUser={revengeOpponent}
           />
         )}
       </Suspense>

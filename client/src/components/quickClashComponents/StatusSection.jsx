@@ -19,7 +19,7 @@ const StatusSection = ({
   // If no challenges in this section, don't render anything
   if (!challenges || challenges.length === 0) return null
 
-  const { onAccept, onDecline, onStart, onViewReport } = handlers
+  const { onAccept, onDecline, onStart, onViewReport, onRevenge } = handlers
 
   return (
     <MotionBox
@@ -60,6 +60,7 @@ const StatusSection = ({
               onDecline={onDecline}
               onStart={onStart}
               onViewReport={onViewReport}
+              onRevenge={onRevenge}
               index={index}
             />
           </GridItem>

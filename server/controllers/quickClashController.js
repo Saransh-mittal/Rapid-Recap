@@ -176,20 +176,26 @@ const getChallenge = asyncHandler(async (req, res) => {
   })
 })
 
-// Get user's challenges
+/**
+ * Get user's challenges with pagination
+ * @route GET /api/quickClash/challenges
+ * @access Private
+ */
 const getMyChallenges = asyncHandler(async (req, res) => {
   const userId = req.user._id
-  const { status, limit } = req.query
+  const { status, limit = 20, page = 1 } = req.query
 
-  const challenges = await getUserChallenges({
+  const result = await getUserChallenges({
     userId,
     status,
-    limit: parseInt(limit) || 10,
+    page: parseInt(page),
+    limit: parseInt(limit),
   })
 
   res.status(200).json({
     success: true,
-    challenges,
+    challenges: result.challenges,
+    pagination: result.pagination,
   })
 })
 

@@ -17,6 +17,7 @@ import {
   setChallengeAnalysisLoading,
   setChallengeAnalysis,
   setChallengeAnalysisError,
+  resetActiveChallenges,
 } from '../redux/quickClashSlice'
 import { useToast } from '@chakra-ui/react'
 import { useTranslation } from 'react-i18next'
@@ -50,8 +51,27 @@ const useQuickClash = () => {
   }, [])
 
   // Active challenges
-  const loadActiveChallenges = useCallback(() => {
-    return dispatch(fetchActiveChallenges())
+  const loadActiveChallenges = useCallback(
+    (page = 1, limit = 20) => {
+      return dispatch(fetchActiveChallenges({ page, limit }))
+    },
+    [dispatch],
+  )
+
+  // Add a new function to load more challenges
+  const loadMoreActiveChallenges = useCallback(() => {
+    const nextPage = quickClashState.activeChallengesPage + 1
+    return dispatch(
+      fetchActiveChallenges({
+        page: nextPage,
+        limit: 20,
+      }),
+    )
+  }, [dispatch, quickClashState.activeChallengesPage])
+
+  // Add a function to reset the active challenges state
+  const resetActiveChallengesState = useCallback(() => {
+    dispatch(resetActiveChallenges())
   }, [dispatch])
 
   // Completed challenges
@@ -514,6 +534,9 @@ const useQuickClash = () => {
     activeChallenges: quickClashState.activeChallenges,
     activeChallengesLoading: quickClashState.activeChallengesLoading,
     activeChallengesError: quickClashState.activeChallengesError,
+    activeChallengesPage: quickClashState.activeChallengesPage,
+    activeChallengesHasMore: quickClashState.activeChallengesHasMore,
+    activeChallengesTotal: quickClashState.activeChallengesTotal,
 
     completedChallenges: quickClashState.completedChallenges,
     completedChallengesPage: quickClashState.completedChallengesPage,
@@ -539,6 +562,8 @@ const useQuickClash = () => {
     challengeAnalysesError: quickClashState.challengeAnalysesError,
 
     // Actions
+    loadMoreActiveChallenges,
+    resetActiveChallengesState,
     loadActiveChallenges,
     loadCompletedChallenges,
     resetCompletedChallengesState,

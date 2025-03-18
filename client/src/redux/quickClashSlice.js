@@ -5,10 +5,21 @@ import axios from 'axios'
 // Async thunks for fetching data
 export const fetchActiveChallenges = createAsyncThunk(
   'quickClash/fetchActiveChallenges',
-  async (_, { rejectWithValue }) => {
+  async ({ page = 1, limit = 20 } = {}, { rejectWithValue }) => {
     try {
-      const response = await axios.get('/api/quickClash/challenges')
-      return response.data.challenges || []
+      const response = await axios.get('/api/quickClash/challenges', {
+        params: { page, limit },
+      })
+      return {
+        challenges: response.data.challenges || [],
+        pagination: response.data.pagination || {
+          page,
+          limit,
+          total: 0,
+          pages: 0,
+          hasMore: false,
+        },
+      }
     } catch (error) {
       return rejectWithValue(
         error.response?.data?.message || 'Failed to fetch active challenges',
@@ -139,6 +150,9 @@ export const getChallengeAnalysis = createAsyncThunk(
 const initialState = {
   // Active challenges section
   activeChallenges: [],
+  activeChallengesPage: 1,
+  activeChallengesHasMore: true,
+  activeChallengesTotal: 0,
   activeChallengesLoading: false,
   activeChallengesError: null,
 
@@ -223,6 +237,14 @@ const quickClashSlice = createSlice({
     setChallengeCreating: (state, action) => {
       state.challengeCreating = action.payload
     },
+    updateActiveChallengesPage: (state, action) => {
+      state.activeChallengesPage = action.payload
+    },
+    resetActiveChallenges: state => {
+      state.activeChallenges = []
+      state.activeChallengesPage = 1
+      state.activeChallengesHasMore = true
+    },
     resetAllQuickClashState: () => initialState,
   },
   extraReducers: builder => {
@@ -233,7 +255,20 @@ const quickClashSlice = createSlice({
         state.activeChallengesError = null
       })
       .addCase(fetchActiveChallenges.fulfilled, (state, action) => {
-        state.activeChallenges = action.payload
+        const { challenges, pagination } = action.payload
+
+        if (pagination.page === 1) {
+          state.activeChallenges = challenges
+        } else {
+          // Add new challenges, avoiding duplicates
+          const existingIds = new Set(state.activeChallenges.map(c => c._id))
+          const newChallenges = challenges.filter(c => !existingIds.has(c._id))
+          state.activeChallenges = [...state.activeChallenges, ...newChallenges]
+        }
+
+        state.activeChallengesPage = pagination.page
+        state.activeChallengesHasMore = pagination.hasMore
+        state.activeChallengesTotal = pagination.total
         state.activeChallengesLoading = false
       })
       .addCase(fetchActiveChallenges.rejected, (state, action) => {
@@ -364,6 +399,8 @@ export const {
   setChallengeAnalysisError,
   setSocketListening,
   setChallengeCreating,
+  updateActiveChallengesPage,
+  resetActiveChallenges,
   resetAllQuickClashState,
 } = quickClashSlice.actions
 

@@ -604,9 +604,10 @@ const App = () => {
       </Suspense>
       <NavbarProvider>
         {showNavbar &&
-          !(summary && isVisible) &&
-          !location.pathname.startsWith('/quickclash') &&
-          location.pathname != '/' && (
+          ((!(summary && isVisible) &&
+            !location.pathname.startsWith('/quickclash') &&
+            location.pathname != '/') ||
+            (!location.pathname.startsWith('/quickclash') && !isLoggedIn)) && (
             <Suspense fallback={null}>
               {/* <Navbar onNavbarLoad={handleNavbarLoad} /> */}
               <ModernNavbar onNavbarLoad={handleNavbarLoad} />

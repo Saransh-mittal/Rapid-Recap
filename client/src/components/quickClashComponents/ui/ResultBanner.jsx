@@ -1,16 +1,31 @@
 import React from 'react'
-import { Flex, Badge, HStack, Text, Icon, Box } from '@chakra-ui/react'
+import { Flex, Badge, HStack, Text, Icon, Box, Button } from '@chakra-ui/react'
 import { motion } from 'framer-motion'
 import { useTranslation } from 'react-i18next'
-import { Trophy, Flame, AlertCircle } from 'lucide-react'
+import { Trophy, Shield, Swords, AlertCircle } from 'lucide-react'
 
 const MotionFlex = motion(Flex)
-const MotionBox = motion(Box)
+const MotionButton = motion(Button)
+
+// Define keyframe animations for shine effect
+const resultBannerAnimations = `
+  @keyframes shineEffect {
+    0% { background-position: -100% 0; }
+    100% { background-position: 200% 0; }
+  }
+`
 
 /**
- * Banner showing the result of a completed challenge
+ * Sleek banner showing the result of a completed challenge - adjusted for all screen sizes
  */
-const ResultBanner = ({ isWinner, isTie, isDefeat, expiresAt, category }) => {
+const ResultBanner = ({
+  isWinner,
+  isTie,
+  isDefeat,
+  expiresAt,
+  category,
+  onRevenge,
+}) => {
   const { t } = useTranslation('QuickClash')
   const isExpired = new Date(expiresAt) < new Date()
 
@@ -27,65 +42,119 @@ const ResultBanner = ({ isWinner, isTie, isDefeat, expiresAt, category }) => {
       Health: 'teal',
       Science: 'purple',
       Environment: 'green',
+      LIFESTYLE: 'purple',
+      FOOD: 'orange',
     }
     return categoryColors[category] || 'purple'
   }
 
+  // Enhanced premium gradients - sleek but visible
   const bgGradient = isWinner
-    ? 'linear(to-r, purple.600, blue.500)'
+    ? 'linear-gradient(135deg, rgba(128, 90, 213, 0.9), rgba(66, 153, 225, 0.9))'
     : isTie
-    ? 'linear(to-r, yellow.600, orange.500)'
-    : 'linear(to-r, red.700, red.600)'
+    ? 'linear-gradient(135deg, rgba(236, 201, 75, 0.9), rgba(237, 137, 54, 0.9))'
+    : 'linear-gradient(135deg, rgba(229, 62, 62, 0.9), rgba(159, 18, 57, 0.9))'
 
-  const icon = isWinner ? Trophy : isTie ? Flame : AlertCircle
+  // Shine overlay gradient for premium effect
+  const shineGradient =
+    'linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.2), transparent)'
 
-  const iconAnimation = {
-    animate: {
-      scale: [1, 1.2, 1],
-      transition: {
-        duration: 2,
-        repeat: Infinity,
-        repeatType: 'reverse',
-      },
-    },
-  }
+  // Select appropriate icon for result
+  const resultIcon = isWinner ? Trophy : isTie ? Shield : AlertCircle
 
+  // Combined banner with revenge button for sleek design
   return (
     <MotionFlex
-      py={2}
-      px={4}
-      bgGradient={bgGradient}
+      position="relative"
+      py={{ base: 2, md: 2.5 }} // Slightly bigger padding, responsive
+      px={{ base: 3, md: 4 }}
+      bg={bgGradient}
+      backgroundSize="200% 100%"
+      overflow="hidden"
       borderBottomRadius="lg"
       alignItems="center"
       justifyContent="space-between"
       color="white"
       fontWeight="bold"
-      initial={{ opacity: 0, y: -20 }}
+      boxShadow="0 2px 8px rgba(0,0,0,0.2)"
+      initial={{ opacity: 0, y: -10 }}
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.3 }}
+      css={resultBannerAnimations}
+      _before={{
+        content: '""',
+        position: 'absolute',
+        top: 0,
+        left: 0,
+        right: 0,
+        bottom: 0,
+        background: shineGradient,
+        backgroundSize: '200% 100%',
+        animation: 'shineEffect 3s infinite linear',
+        zIndex: 0,
+      }}
     >
-      <HStack>
-        <MotionBox {...iconAnimation} display="flex" alignItems="center">
-          <Icon
-            as={icon}
-            color={isWinner ? 'yellow.300' : isTie ? 'yellow.200' : 'red.300'}
-            mr={2}
-          />
-        </MotionBox>
-        <Text textTransform="uppercase" letterSpacing="wide">
+      <HStack spacing={2} position="relative" zIndex={1}>
+        <Icon
+          as={resultIcon}
+          color={isWinner ? 'yellow.300' : isTie ? 'yellow.100' : 'red.100'}
+          boxSize={{ base: 4, md: 4.5 }} // Slightly bigger icon, responsive
+        />
+        <Text
+          textTransform="uppercase"
+          letterSpacing="wide"
+          fontSize={{ base: 'sm', md: 'sm' }} // Adjusted text size, responsive
+          fontWeight="bold"
+        >
           {isWinner ? t('Victory!') : isTie ? t('Tie!') : t('Defeat!')}
         </Text>
       </HStack>
 
-      {/* Category badge in the banner */}
-      <Badge
-        colorScheme={getCategoryStyle(category)}
-        fontSize="xs"
-        borderRadius="full"
-        px={2}
-      >
-        {category}
-      </Badge>
+      <HStack spacing={1} position="relative" zIndex={1}>
+        {/* Category badge - appropriately sized */}
+        <Badge
+          colorScheme={getCategoryStyle(category)}
+          fontSize={{ base: '2xs', md: 'xs' }}
+          borderRadius="full"
+          px={2}
+          py={0.5}
+          fontWeight="medium"
+        >
+          {category}
+        </Badge>
+
+        {/* Inline revenge button for defeats - bigger for better usability */}
+        {isDefeat && onRevenge && (
+          <MotionButton
+            size={{ base: 'sm', md: 'sm' }} // Larger button size
+            colorScheme="red"
+            bg="#e15b5b"
+            leftIcon={<Icon as={Swords} boxSize={{ base: 3, md: 3.5 }} />}
+            onClick={onRevenge}
+            borderRadius="full"
+            px={4}
+            py={1}
+            height={{ base: '28px', md: '32px' }}
+            minW="auto"
+            fontWeight="bold"
+            fontSize={{ base: 'xs', md: 'sm' }}
+            boxShadow="0 0 10px rgba(229, 62, 62, 0.4)"
+            _hover={{
+              bg: '#d43c3c',
+              boxShadow: '0 0 12px rgba(229, 62, 62, 0.6)',
+              transform: 'translateY(-1px)',
+            }}
+            _active={{
+              bg: '#c83c3c',
+              transform: 'translateY(0)',
+            }}
+            whileHover={{ scale: 1.05 }}
+            whileTap={{ scale: 0.95 }}
+          >
+            {t('Revenge')}
+          </MotionButton>
+        )}
+      </HStack>
     </MotionFlex>
   )
 }

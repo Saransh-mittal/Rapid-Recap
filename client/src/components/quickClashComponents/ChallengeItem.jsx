@@ -10,6 +10,7 @@ import {
   Icon,
   Badge,
   Center,
+  Tooltip,
 } from '@chakra-ui/react'
 import { motion } from 'framer-motion'
 import { useTranslation } from 'react-i18next'
@@ -21,6 +22,8 @@ import {
   X,
   PlayCircle,
   FileText,
+  Flame,
+  Sword,
 } from 'lucide-react'
 
 // Import UI components
@@ -29,6 +32,7 @@ import PlayerStatus from './ui/PlayerStatus'
 import ResultBanner from './ui/ResultBanner'
 
 const MotionBox = motion(Box)
+const MotionButton = motion(Button)
 
 // Define animation for button pulse
 const pulseAnimation = `
@@ -36,6 +40,15 @@ const pulseAnimation = `
     0% { transform: scale(1); }
     50% { transform: scale(1.05); }
     100% { transform: scale(1); }
+  }
+`
+
+// Define flame animation for revenge button
+const flameAnimation = `
+  @keyframes flameFlicker {
+    0% { box-shadow: 0 0 10px rgba(229, 62, 62, 0.5); }
+    50% { box-shadow: 0 0 20px rgba(229, 62, 62, 0.8); }
+    100% { box-shadow: 0 0 10px rgba(229, 62, 62, 0.5); }
   }
 `
 
@@ -49,6 +62,7 @@ const ChallengeItem = ({
   onDecline,
   onStart,
   onViewReport,
+  onRevenge,
   index,
 }) => {
   const { t } = useTranslation('QuickClash')
@@ -158,11 +172,12 @@ const ChallengeItem = ({
   const showPlayerStatus =
     challenge.status !== 'pending' && challenge.status !== 'rejected'
 
-  // Determine if we should show the opponent info
-  const showOpponentInfo = !(
-    challenge.status === 'completed' &&
-    challenge.challengerAttempted &&
-    challenge.opponentAttempted
+  // Create a category tag that can be reused
+  const CategoryTag = () => (
+    <Tag size="sm" colorScheme={getCategoryStyle()} borderRadius="full" px={3}>
+      <Icon as={Target} size={12} mr={1} />
+      {challenge.category}
+    </Tag>
   )
 
   return (
@@ -174,6 +189,8 @@ const ChallengeItem = ({
       whileHover="hover"
       position="relative"
     >
+      {/* We'll handle the Revenge button in the ResultBanner component instead of here */}
+
       <Box
         bg="rgba(26, 32, 44, 0.8)"
         borderRadius="lg"
@@ -184,7 +201,7 @@ const ChallengeItem = ({
         transition="all 0.3s"
         position="relative"
       >
-        {/* Card Header - Only show status badge, not category (category will be shown in body for pending/new) */}
+        {/* Card Header - Show status badge and category for active/pending */}
         {challenge.status !== 'completed' && (
           <Flex
             p={3}
@@ -204,7 +221,7 @@ const ChallengeItem = ({
 
         {/* Card Body */}
         <Box p={3}>
-          {/* For pending/new challenges, show category and opponent in body */}
+          {/* For pending/new challenges, show opponent and category in body */}
           {(challenge.status === 'pending' ||
             (challenge.status === 'active' && !showPlayerStatus)) && (
             <HStack mb={3} justify="space-between">
@@ -222,46 +239,70 @@ const ChallengeItem = ({
                 </Text>
               </HStack>
 
-              <Tag
-                size="sm"
-                colorScheme={getCategoryStyle()}
-                borderRadius="full"
-                px={3}
-              >
-                <Icon as={Target} size={12} mr={1} />
-                {challenge.category}
-              </Tag>
+              <CategoryTag />
             </HStack>
           )}
 
           {/* Player Status Section for active or completed challenges */}
           {showPlayerStatus && (
-            <VStack spacing={2} align="stretch" mb={2}>
-              <PlayerStatus
-                player={challenge.challenger}
-                score={challenge.challengerScore}
-                attempted={challenge.challengerAttempted}
-                isUser={isChallenger}
-              />
+            <>
+              <VStack spacing={2} align="stretch" mb={2}>
+                <PlayerStatus
+                  player={challenge.challenger}
+                  score={challenge.challengerScore}
+                  attempted={challenge.challengerAttempted}
+                  isUser={isChallenger}
+                />
 
-              <Center py={1}>
-                <Tag
-                  size="sm"
-                  colorScheme="gray"
-                  variant="subtle"
-                  borderRadius="full"
+                <Flex
+                  justify="center"
+                  align="center"
+                  py={1}
+                  position="relative"
                 >
-                  {t('vs')}
-                </Tag>
-              </Center>
+                  <HStack spacing={2}>
+                    <Tag
+                      size="sm"
+                      colorScheme="gray"
+                      variant="subtle"
+                      borderRadius="full"
+                    >
+                      {t('vs')}
+                    </Tag>
+                  </HStack>
+                  {challenge.status === 'active' && (
+                    <Tag
+                      position={'absolute'}
+                      right={0}
+                      size="sm"
+                      colorScheme={getCategoryStyle()}
+                      borderRadius="full"
+                      px={3}
+                      animation={
+                        challenge.status === 'active' && !myAttempted
+                          ? 'pulse 3s infinite ease-in-out'
+                          : 'none'
+                      }
+                      css={
+                        challenge.status === 'active' && !myAttempted
+                          ? pulseAnimation
+                          : ''
+                      }
+                    >
+                      <Icon as={Target} size={12} mr={1} />
+                      {challenge.category}
+                    </Tag>
+                  )}
+                </Flex>
 
-              <PlayerStatus
-                player={challenge.opponent}
-                score={challenge.opponentScore}
-                attempted={challenge.opponentAttempted}
-                isUser={!isChallenger}
-              />
-            </VStack>
+                <PlayerStatus
+                  player={challenge.opponent}
+                  score={challenge.opponentScore}
+                  attempted={challenge.opponentAttempted}
+                  isUser={!isChallenger}
+                />
+              </VStack>
+            </>
           )}
 
           {/* Actions */}
@@ -357,6 +398,7 @@ const ChallengeItem = ({
               isDefeat={isDefeat}
               expiresAt={challenge.expiresAt}
               category={challenge.category}
+              onRevenge={isDefeat ? () => onRevenge(opponent) : null}
             />
           )}
       </Box>

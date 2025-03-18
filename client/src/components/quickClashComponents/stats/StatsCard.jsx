@@ -10,7 +10,7 @@ import {
   GridItem,
 } from '@chakra-ui/react'
 import { motion } from 'framer-motion'
-import { Trophy, Clock, Users, Sparkles } from 'lucide-react'
+import { Trophy, Award, Users, Sparkles } from 'lucide-react' // Changed Clock to Award
 import { useTranslation } from 'react-i18next'
 import useQuickClash from '../../../customHooks/useQuickClash'
 
@@ -38,12 +38,6 @@ const StatsCard = () => {
       })
     })
   }, [loadUserStats, toast, t])
-
-  // Format seconds to a human-readable format
-  const formatTime = useCallback(seconds => {
-    if (!seconds) return '0s'
-    return `${seconds}s`
-  }, [])
 
   // Get best category
   const bestCategory = useMemo(() => {
@@ -79,20 +73,18 @@ const StatsCard = () => {
           />
         </GridItem>
 
-        {/* Average Time */}
+        {/* Win Streak (replacing Avg. Time) */}
         <GridItem>
           <StatCard
-            icon={Clock}
-            label={t('Avg. Time')}
-            value={formatTime(stats.avgCompletionTime)}
+            icon={Award}
+            label={t('Win Streak')}
+            value={`${stats.currentWinStreak || 0} / ${
+              stats.longestWinStreak || 0
+            }`}
             color="rgba(80, 130, 200, 0.9)"
             secondaryColor="rgba(60, 110, 180, 0.2)"
             accentColor="rgba(100, 160, 240, 0.8)"
-            detail={
-              stats.avgReadingTime
-                ? `R: ${formatTime(stats.avgReadingTime)}`
-                : ''
-            }
+            detail={`${t('Current')} / ${t('Longest')}`}
             isLoading={loading}
           />
         </GridItem>
