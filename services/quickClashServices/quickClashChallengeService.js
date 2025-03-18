@@ -457,7 +457,15 @@ const getChallengeDetails = async ({ challengeId }) => {
   return challengeObj
 }
 
-const getUserChallenges = async ({ userId, status = null, limit = 10 }) => {
+const getUserChallenges = async ({
+  userId,
+  status = null,
+  page = 1,
+  limit = 20,
+}) => {
+  // Calculate skip value for pagination
+  const skip = (page - 1) * limit
+
   let query = {
     $and: [
       { $or: [{ challenger: userId }, { opponent: userId }] },
@@ -487,13 +495,26 @@ const getUserChallenges = async ({ userId, status = null, limit = 10 }) => {
     }
   }
 
+  // Get total count for pagination
+  const total = await QuickClashChallenge.countDocuments(query)
+
   const challenges = await QuickClashChallenge.find(query)
-    .populate('challenger', '_id name inGameName')
-    .populate('opponent', '_id name inGameName')
+    .populate('challenger', '_id name inGameName pic')
+    .populate('opponent', '_id name inGameName pic')
     .sort({ createdAt: -1 })
+    .skip(skip)
     .limit(limit)
 
-  return challenges
+  return {
+    challenges,
+    pagination: {
+      total,
+      page,
+      limit,
+      pages: Math.ceil(total / limit),
+      hasMore: page * limit < total,
+    },
+  }
 }
 
 const updateChallengeScore = async ({

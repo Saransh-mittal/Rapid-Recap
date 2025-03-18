@@ -1081,6 +1081,11 @@ const solvedQuizHistory = async (req, res) => {
   }
 }
 
+/**
+ * Search for users by inGameName, name, or email
+ * GET /api/user/search?query=...
+ * Public
+ */
 const userSearch = async (req, res) => {
   try {
     const { query } = req.query

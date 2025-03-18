@@ -28,6 +28,8 @@ const getUserStats = async ({ userId }) => {
       totalWins: 0,
       totalLosses: 0,
       totalTies: 0,
+      currentWinStreak: 0, // New field for current streak
+      longestWinStreak: 0, // New field for longest streak
     }
 
     // Calculate active challenges
@@ -52,7 +54,16 @@ const getUserStats = async ({ userId }) => {
     let ties = 0
     const categoryScores = {}
 
-    for (const challenge of completedChallenges) {
+    // For tracking win streaks
+    let currentWinStreak = 0
+    let longestWinStreak = 0
+
+    // Sort challenges by date for proper win streak calculation
+    const chronologicalChallenges = [...completedChallenges].sort(
+      (a, b) => new Date(a.createdAt) - new Date(b.createdAt),
+    )
+
+    for (const challenge of chronologicalChallenges) {
       // Only count challenges where both players have attempted
       if (!challenge.challengerAttempted || !challenge.opponentAttempted) {
         continue
@@ -81,13 +92,27 @@ const getUserStats = async ({ userId }) => {
       if (userScore > opponentScore) {
         wins++
         categoryScores[challenge.category].wins += 1
+        // Increment win streak
+        currentWinStreak++
+        // Update longest win streak if current is greater
+        if (currentWinStreak > longestWinStreak) {
+          longestWinStreak = currentWinStreak
+        }
       } else if (userScore < opponentScore) {
         losses++
+        // Reset win streak on loss
+        currentWinStreak = 0
       } else {
         // Only count as tie if both players completed the challenge
         ties++
+        // Reset win streak on tie
+        currentWinStreak = 0
       }
     }
+
+    // Store win streak stats
+    stats.currentWinStreak = currentWinStreak
+    stats.longestWinStreak = longestWinStreak
 
     // Calculate win rate only from completed matches where both players participated
     const totalCompletedMatches = wins + losses + ties
