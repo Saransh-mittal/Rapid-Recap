@@ -62,6 +62,9 @@ const OnboardingArticleAdd = lazy(() =>
 const QuickClashAnalyticsModal = lazy(() =>
   import('../components/dashboardComponents/QuickClashAnalyticsModal'),
 )
+const InterBotQuickClashModal = lazy(() =>
+  import('../components/dashboardComponents/InterBotQuickClashModal'),
+)
 
 const Dashboard = () => {
   // State management
@@ -152,6 +155,11 @@ const Dashboard = () => {
     isOpen: isQuickClashAnalyticsOpen,
     onOpen: onQuickClashAnalyticsOpen,
     onClose: onQuickClashAnalyticsClose,
+  } = useDisclosure()
+  const {
+    isOpen: isInterBotQuickClashOpen,
+    onOpen: onInterBotQuickClashOpen,
+    onClose: onInterBotQuickClashClose,
   } = useDisclosure()
 
   // Data fetching functions
@@ -560,6 +568,7 @@ const Dashboard = () => {
                 onMaintenanceOpen={onMaintenanceOpen}
                 onAnnouncementOpen={onAnnouncementOpen}
                 onQuickClashAnalyticsOpen={onQuickClashAnalyticsOpen}
+                onInterBotQuickClashOpen={onInterBotQuickClashOpen}
               />
             </TabPanel>
 
@@ -639,6 +648,13 @@ const Dashboard = () => {
           <QuickClashAnalyticsModal
             isOpen={isQuickClashAnalyticsOpen}
             onClose={onQuickClashAnalyticsClose}
+          />
+        </Suspense>
+        <Suspense fallback={<Spinner />}>
+          {/* Other modals */}
+          <InterBotQuickClashModal
+            isOpen={isInterBotQuickClashOpen}
+            onClose={onInterBotQuickClashClose}
           />
         </Suspense>
       </Container>

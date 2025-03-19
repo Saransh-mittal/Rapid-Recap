@@ -55,6 +55,12 @@ const {
   getQuickClashStats,
   getQuickClashUserActivity,
 } = require('../controllers/quickClashAnalyticsController')
+const {
+  getQuickClashBots,
+  simulateInterBotQuickClash,
+  simulateMultipleInterBotQuickClashes,
+  getInterBotResults,
+} = require('../controllers/quickClashAdminController')
 const router = express.Router()
 
 router.post(
@@ -266,4 +272,16 @@ router.get(
   adminMiddleware,
   getQuickClashUserActivity,
 )
+
+router.get('/quickclash/bots', getQuickClashBots)
+
+// Simulation routes
+router.post('/quickclash/simulate', simulateInterBotQuickClash)
+router.post(
+  '/quickclash/simulate-multiple',
+  simulateMultipleInterBotQuickClashes,
+)
+
+// Results routes
+router.get('/quickclash/results', getInterBotResults)
 module.exports = router
