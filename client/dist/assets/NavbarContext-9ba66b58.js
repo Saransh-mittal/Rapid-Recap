@@ -1,0 +1,1 @@
+import{j as e}from"./vendor-ui-9485c495.js";import{r as t}from"./vendor-react-7c64ad5c.js";const r=t.createContext(),s=({children:s})=>{const[n,o]=t.useState(!1),[a,i]=t.useState("/home/all");return e.jsx(r.Provider,{value:{isMenuOpen:n,setIsMenuOpen:o,activeLink:a,setActiveLink:i},children:s})},n=()=>t.useContext(r);export{s as N,n as u};

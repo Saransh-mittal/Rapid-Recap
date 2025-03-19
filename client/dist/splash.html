@@ -1,26 +1,103 @@
-<div id="splash-screen">
-  <div class="stars">
-    <!-- Stars will be added via JavaScript -->
-  </div>
-  <div class="splash-content">
-    <div class="logo-container">
-      <div class="glow-effect"></div>
-      <img src="/images/rrlogo_512.png" alt="Rapid Recap Logo" class="logo" />
+<div class="splash-content">
+  <img src="/images/rrlogo_512.png" alt="Rapid Recap - AI GK Quiz Platform" class="logo">
+  <h1 class="title">"The Game That Builds Minds" 🎮💡</h1>
+  <p class="subtitle">Beat the Clock, Beat Your Rivals!</p>
+  <div class="loading-indicator">
+    <div class="loading-bar">
+      <div class="loading-progress"></div>
     </div>
-    <div class="title">"The Game That Builds Minds" 🎮💡</div>
-    <div class="subtitle">Beat the Clock, Beat Your Rivals!</div>
   </div>
 </div>
 
+<style>
+  /* Splash screen styles with loading indicator */
+  .splash-content {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+  }
+
+  .logo {
+    width: 120px;
+    height: auto;
+    margin-bottom: 20px;
+    animation: pulse 2s infinite ease-in-out;
+  }
+
+  .title {
+    font-size: 28px;
+    font-weight: 600;
+    color: #ffffff;
+    margin-bottom: 8px;
+    letter-spacing: 2px;
+    opacity: 0;
+    animation: fadeIn 0.8s ease-out 0.2s forwards;
+  }
+
+  .subtitle {
+    font-size: 16px;
+    font-weight: 300;
+    color: #b3b3b3;
+    letter-spacing: 1px;
+    opacity: 0;
+    animation: fadeIn 0.8s ease-out 0.5s forwards;
+    margin-bottom: 24px;
+  }
+
+  .loading-indicator {
+    width: 240px;
+    opacity: 0;
+    animation: fadeIn 0.8s ease-out 0.7s forwards;
+  }
+
+  .loading-bar {
+    height: 4px;
+    background: rgba(255, 255, 255, 0.15);
+    border-radius: 2px;
+    overflow: hidden;
+  }
+
+  .loading-progress {
+    height: 100%;
+    width: 30%;
+    background: linear-gradient(90deg, #6366F1, #8B5CF6);
+    border-radius: 2px;
+    animation: progress 2s ease-in-out infinite;
+  }
+
+  /* Animations */
+  @keyframes pulse {
+    0% { transform: scale(1); }
+    50% { transform: scale(1.05); }
+    100% { transform: scale(1); }
+  }
+
+  @keyframes fadeIn {
+    from { opacity: 0; transform: translateY(10px); }
+    to { opacity: 1; transform: translateY(0); }
+  }
+
+  @keyframes progress {
+    0% { width: 5%; transform: translateX(-100%); }
+    50% { width: 50%; }
+    100% { width: 5%; transform: translateX(1000%); }
+  }
+</style>
+
 <script>
-// Add random stars
-const starsContainer = document.querySelector('.stars');
-for (let i = 0; i < 50; i++) {
-  const star = document.createElement('div');
-  star.className = 'star';
-  star.style.left = `${Math.random() * 100}%`;
-  star.style.top = `${Math.random() * 100}%`;
-  star.style.animationDelay = `${Math.random() * 2}s`;
-  starsContainer.appendChild(star);
-}
+  // This script will execute when splash screen is shown
+  // Will be removed for returning visitors via server-side logic
+  document.addEventListener('DOMContentLoaded', () => {
+    // Check if user has visited before
+    if (localStorage.getItem('has_visited_before') === 'true') {
+      // Make splash screen disappear immediately for returning users
+      const splash = document.getElementById('splash-screen');
+      if (splash) {
+        splash.style.display = 'none';
+      }
+    } else {
+      // Track splash screen shown (for analytics)
+      localStorage.setItem('has_visited_before', 'true');
+    }
+  });
 </script>

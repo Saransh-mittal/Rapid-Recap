@@ -1,0 +1,1 @@
+import"./vendor-ui-9485c495.js";import{r as o}from"./vendor-react-7c64ad5c.js";import"./vendor-plugins-5571e3f6.js";import"./useSocket-46caf10f.js";import"./index-79b6cd60.js";const t=o.createContext(),e=()=>o.useContext(t);export{e as C};
