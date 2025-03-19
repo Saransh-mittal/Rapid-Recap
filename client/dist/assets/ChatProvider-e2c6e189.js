@@ -1,0 +1,1 @@
+import"./vendor-ui-98d734de.js";import{r as t}from"./vendor-react-a21e02e8.js";import"./vendor-plugins-94e0445d.js";import"./SocketContext-651cd7bb.js";import"./inventorySlice-8aec7a86.js";const o=t.createContext(),e=()=>t.useContext(o);export{e as C};
