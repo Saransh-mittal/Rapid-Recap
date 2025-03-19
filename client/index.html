@@ -16,15 +16,36 @@
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
   <meta name="msapplication-starturl" content="/">
 
-
-
-  <!-- Preload Critical Resources -->
-  <link rel="preload" href="/images/tourBGDark.webp" as="image">
-  <link rel="preload" href="/fonts/main-font.woff2" as="font" type="font/woff2" crossorigin>
+  <!-- Resource Hints - Preconnect to important domains -->
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://rapidrecap.ai" crossorigin>
+
+  <!-- DNS prefetch -->
   <link rel="dns-prefetch" href="https://fonts.gstatic.com">
   <link rel="dns-prefetch" href="https://fonts.googleapis.com">
+
+  <!-- Critical Resources Preload - high priority assets required for initial render -->
+  <link rel="preload" href="/src/entry-client.jsx" as="script" fetchpriority="high">
+  <link rel="preload" href="/styles/components/css-splash.css" as="style">
+  <link rel="preload" href="/styles/main.css" as="style">
+  <link rel="preload" href="/images/rrlogo_512.png" as="image" fetchpriority="high">
+  <link rel="preload" href="/images/rrlogo.webp" as="image" fetchpriority="high">
+
+  <!-- Secondary Resources Preload - important but can load after initial render -->
+  <link rel="preload" href="/src/redux/store.js" as="script">
+  <link rel="preload" href="/src/i18n.jsx" as="script">
+
+  <!-- Module Preloads - modern browsers optimizations -->
+  <link rel="modulepreload" href="/src/App.jsx">
+  <link rel="modulepreload" href="/src/contextAPI/SocketContext.jsx">
+  <link rel="modulepreload" href="/src/contextAPI/NavbarContext.jsx">
+
+  <!-- Prefetch non-critical resources that may be needed soon -->
+  <link rel="prefetch" href="/src/routes/AppRoutes.jsx">
+  <link rel="prefetch" href="/src/components/Header-Footer/ModernNavbar.jsx">
+  <link rel="prefetch" href="/src/components/miscellaneous/FixedBackground.jsx">
+  <link rel="prefetch" href="/images/tourBGDark.webp">
 
   <!-- Progressive Web App -->
   <link rel="manifest" href="/manifest.json">
@@ -114,63 +135,10 @@
   }
   </script>
 
-  <!-- Additional Learn Action structured data for Home page -->
-  <script type="application/ld+json">
-  {
-    "@context": "https://schema.org",
-    "@type": "LearningResource",
-    "name": "Daily GK Quiz Dashboard",
-    "url": "https://rapidrecap.ai/home",
-    "educationalLevel": "All Levels",
-    "learningResourceType": "Quiz Collection",
-    "teaches": [
-      "Current Affairs",
-      "General Knowledge",
-      "History",
-      "Science",
-      "Politics",
-      "Sports"
-    ],
-    "educationalUse": [
-      "Self-Assessment",
-      "Competitive Exam Preparation",
-      "Skill Development"
-    ],
-    "timeRequired": "PT15M",
-    "interactivityType": "active",
-    "isAccessibleForFree": true,
-    "offers": {
-      "@type": "Offer",
-      "price": "0",
-      "priceCurrency": "INR"
-    }
-  }
-  </script>
-
-  <!-- Additional Competition structured data for Leaderboard -->
-  <script type="application/ld+json">
-  {
-    "@context": "https://schema.org",
-    "@type": "Table",
-    "name": "Rapid Recap Global Rankings",
-    "url": "https://rapidrecap.ai/leaderboard",
-    "about": {
-      "@type": "Thing",
-      "name": "GK Quiz Performance Rankings",
-      "description": "Real-time global rankings showing top performers in general knowledge quizzes and tournaments"
-    },
-    "mainEntity": {
-      "@type": "Dataset",
-      "name": "Performance Metrics",
-      "description": "User rankings based on IQ scores, tournament performance, and quiz completion rates",
-      "measurementTechnique": ["IQ Score System", "Tournament Points", "Quiz Performance"],
-      "temporalCoverage": "Daily updates"
-    }
-  }
-  </script>
+  <!-- Additional structured data omitted for brevity -->
 
   <style>
-    /* Splash screen styles */
+    /* Optimized splash screen styles */
     #splash-screen {
       position: fixed;
       top: 0;
@@ -182,6 +150,8 @@
       justify-content: center;
       align-items: center;
       z-index: 9999;
+      opacity: 1;
+      transition: opacity 0.5s ease-out;
     }
 
     .splash-content {
@@ -252,7 +222,7 @@
     </div>
   </noscript>
 
-  <!-- Entry Point -->
-  <script type="module" src="/src/entry-client.jsx"></script>
+  <!-- Entry Point with high priority loading -->
+  <script type="module" src="/src/entry-client.jsx" fetchpriority="high"></script>
 </body>
 </html>

@@ -1,15 +1,15 @@
-const VERSION = 'v9.6' // Increment version to force update
+const VERSION = 'v10.1' // Increment version to force update
 const CACHE_NAME = `rapid-recap-${VERSION}`
 const ASSETS_CACHE = `assets-${VERSION}`
 const DYNAMIC_CACHE = `dynamic-${VERSION}`
-const LOCALE_VERSION_KEY = 'locale-version' // Key for storing locale version in localStorage
+const CRITICAL_CACHE = `critical-${VERSION}` // New separate cache for critical resources
 
 const RapidRecapLogo = './images/rrlogo.webp'
 const RRBadge = './images/rrlogo_notif_badge.png'
 const IS_DEVELOPMENT =
   location.hostname === 'localhost' || location.hostname === '127.0.0.1'
 
-// Add list of domains that should never be cached
+// Define domains that should never be cached
 const NEVER_CACHE_DOMAINS = [
   'www.google-analytics.com',
   'analytics.google.com',
@@ -17,48 +17,21 @@ const NEVER_CACHE_DOMAINS = [
   'stats.g.doubleclick.net',
 ]
 
-const URLS_TO_CACHE = [
-  '/manifest.json',
-  '/images/screenshots/desktop1.png',
-  '/images/screenshots/mobile1.png',
+// Critical resources that should be cached first and always served from cache if available
+const CRITICAL_RESOURCES = [
+  '/',
+  '/index.html',
+  '/splash.html',
+  '/styles/components/css-splash.css',
+  '/styles/main.css',
+  '/src/entry-client.jsx',
+  '/images/rrlogo_512.png',
+  '/images/rrlogo.webp',
 ]
 
-// Remove locale files from URLS_TO_CACHE array
-// We'll handle them separately
-
-// Function to get all files from a directory with specific extensions
-const getFilesFromPublicDirectory = async () => {
-  try {
-    // We can't directly access filesystem, so we need to maintain a list of paths
-    const imageFiles = [
-      './images/rrlogo.webp',
-      './images/rrlogo_512.png',
-      './images/rrlogo_badge.png',
-      './images/tourBGDark.webp',
-      './images/landingPage/articleUI.webp',
-      './images/landingPage/featureBg.webp',
-      './images/landingPage/featureBgMobile.webp',
-      './images/landingPage/homeUI.webp',
-      './images/landingPage/QuizReportUI.webp',
-      './images/landingPage/quizUI.webp',
-      './images/landingPage/tournamentUI.webp',
-      // Add paths of other images you want to cache
-    ]
-
-    return imageFiles
-  } catch (error) {
-    console.error('Error getting image files:', error)
-    return []
-  }
-}
-// Assets that should be cached immediately
-const STATIC_ASSETS = [
-  // Original paths
-  '/',
-  './index.html',
+// Secondary important assets that should be cached but aren't required for initial render
+const IMPORTANT_ASSETS = [
   './manifest.json',
-  './splash.html',
-  './styles/main.css',
   './styles/utils/reset.css',
   './styles/utils/variables.css',
   './styles/utils/responsive.css',
@@ -69,33 +42,43 @@ const STATIC_ASSETS = [
   './styles/components/css-hero.css',
   './styles/components/css-navigation.css',
   './styles/components/css-sections.css',
-  './styles/components/css-splash.css',
 ]
 
-// Function to check if URL should be cached
+// Add non-critical assets that can be loaded later
+const BACKGROUND_ASSETS = [
+  './images/tourBGDark.webp',
+  './images/landingPage/articleUI.webp',
+  './images/landingPage/featureBg.webp',
+  './images/landingPage/featureBgMobile.webp',
+  './images/landingPage/homeUI.webp',
+  './images/landingPage/QuizReportUI.webp',
+  './images/landingPage/quizUI.webp',
+  './images/landingPage/tournamentUI.webp',
+]
+
+// Check if URL should be cached
 function shouldCache(url) {
-  // Immediately return false if in development mode
+  // Skip caching in development
   if (IS_DEVELOPMENT) {
-    console.log('Development mode: Caching disabled')
     return false
   }
 
   try {
     const requestURL = new URL(url)
 
-    // Don't cache chrome-extension URLs
+    // Don't cache extension URLs
     if (requestURL.protocol === 'chrome-extension:') return false
 
-    // Don't cache analytics and tracking
+    // Don't cache analytics/tracking
     if (NEVER_CACHE_DOMAINS.includes(requestURL.hostname)) return false
 
-    // Don't cache URLs with auth tokens
+    // Don't cache URLs with tokens
     if (requestURL.search.includes('token=')) return false
 
     // Don't cache API requests
     if (requestURL.pathname.includes('/api/')) return false
 
-    // IMPORTANT: Don't cache locale files (translation files)
+    // Don't cache locale files
     if (requestURL.pathname.includes('/locales/')) return false
 
     return true
@@ -105,10 +88,9 @@ function shouldCache(url) {
   }
 }
 
-// Function to purge locale files from all caches
+// Purge locale files from all caches
 async function purgeLocaleFilesFromCache() {
   try {
-    console.log('Purging locale files from caches...')
     const cacheKeys = await caches.keys()
 
     for (const cacheKey of cacheKeys) {
@@ -116,15 +98,11 @@ async function purgeLocaleFilesFromCache() {
       const requests = await cache.keys()
 
       for (const request of requests) {
-        // If the URL contains '/locales/', delete it from cache
         if (request.url.includes('/locales/')) {
           await cache.delete(request)
-          console.log(`Deleted locale file from cache: ${request.url}`)
         }
       }
     }
-
-    console.log('Locale files purge complete')
     return true
   } catch (error) {
     console.error('Error purging locale files:', error)
@@ -132,9 +110,10 @@ async function purgeLocaleFilesFromCache() {
   }
 }
 
-// Modified installation handler with cache busting
+// Enhanced installation handler
 self.addEventListener('install', event => {
   console.log('Service Worker installing - Version', VERSION)
+
   if (IS_DEVELOPMENT) {
     event.waitUntil(self.skipWaiting())
     return
@@ -146,66 +125,66 @@ self.addEventListener('install', event => {
         // Purge locale files from all caches first
         await purgeLocaleFilesFromCache()
 
-        // Delete old caches
-        const keys = await caches.keys()
+        // Cache critical resources first (highest priority)
+        const criticalCache = await caches.open(CRITICAL_CACHE)
+
+        // Process critical resources with high priority
         await Promise.all(
-          keys.map(key => {
-            if (key !== ASSETS_CACHE) {
-              return caches.delete(key)
+          CRITICAL_RESOURCES.map(async resource => {
+            try {
+              const response = await fetch(resource, {
+                cache: 'reload',
+                headers: {
+                  'Cache-Control': 'no-cache',
+                  Priority: 'high',
+                },
+              })
+
+              if (response.ok) {
+                await criticalCache.put(resource, response)
+              }
+            } catch (error) {
+              console.warn(
+                `Failed to cache critical resource ${resource}:`,
+                error,
+              )
             }
           }),
         )
 
-        // Open new cache
-        const cache = await caches.open(ASSETS_CACHE)
+        // Cache regular assets with normal priority (done in background)
+        const assetsCache = await caches.open(ASSETS_CACHE)
 
-        // Add cache busting parameter to static assets
-        const assetsWithVersion = STATIC_ASSETS.map(asset => {
-          const url = new URL(asset, self.location)
-          url.searchParams.set('v', VERSION)
-          return url.toString()
+        // Process important assets
+        IMPORTANT_ASSETS.forEach(asset => {
+          fetch(asset, { cache: 'reload' })
+            .then(response => {
+              if (response.ok) {
+                return assetsCache.put(asset, response)
+              }
+            })
+            .catch(error => {
+              console.warn(`Failed to cache asset ${asset}:`, error)
+            })
         })
 
-        // Cache files with network-first strategy
-        for (const asset of assetsWithVersion) {
-          try {
-            const response = await fetch(asset, {
-              cache: 'reload',
-              headers: {
-                'Cache-Control': 'no-cache',
-              },
-            })
-            if (response.ok) {
-              await cache.put(asset, response)
-            }
-          } catch (error) {
-            console.warn(`Failed to cache asset ${asset}:`, error)
-          }
-        }
-
-        // Handle image files
-        try {
-          const imageFiles = await getFilesFromPublicDirectory()
-          for (const imageFile of imageFiles) {
-            try {
-              const imageUrl = new URL(imageFile, self.location)
-              imageUrl.searchParams.set('v', VERSION)
-              const response = await fetch(imageUrl.toString(), {
-                cache: 'reload',
-                headers: {
-                  'Cache-Control': 'no-cache',
-                },
+        // Process background assets with lower priority
+        setTimeout(() => {
+          BACKGROUND_ASSETS.forEach(asset => {
+            fetch(asset)
+              .then(response => {
+                if (response.ok) {
+                  return assetsCache.put(asset, response)
+                }
               })
-              if (response.ok) {
-                await cache.put(imageFile, response)
-              }
-            } catch (error) {
-              console.warn(`Failed to cache image ${imageFile}:`, error)
-            }
-          }
-        } catch (error) {
-          console.warn('Failed to get image files:', error)
-        }
+              .catch(error => {
+                console.warn(
+                  `Failed to cache background asset ${asset}:`,
+                  error,
+                )
+              })
+          })
+        }, 5000) // Delay by 5 seconds to prioritize critical resources
 
         await self.skipWaiting()
         console.log('Service Worker installed successfully')
@@ -217,14 +196,14 @@ self.addEventListener('install', event => {
   )
 })
 
-// Modified activate event with proper cache cleanup
+// Enhanced activate event
 self.addEventListener('activate', event => {
   console.log('Service Worker activating - Version', VERSION)
 
   event.waitUntil(
     (async () => {
       try {
-        // Purge locale files from all caches
+        // Purge locale files
         await purgeLocaleFilesFromCache()
 
         // Clear old caches
@@ -238,45 +217,39 @@ self.addEventListener('activate', event => {
           }),
         )
 
-        // Take control of all clients
+        // Take control immediately
         await clients.claim()
 
-        // Get all clients
+        // Notify clients about the update
         const allClients = await clients.matchAll()
-
-        // For each client, reload to ensure they get the latest version
-        for (const client of allClients) {
-          try {
-            // Navigate to reload the client
-            client.navigate(client.url)
-          } catch (error) {
-            console.error('Error reloading client:', error)
-          }
-        }
+        allClients.forEach(client => {
+          client.postMessage({
+            type: 'SW_UPDATED',
+            version: VERSION,
+          })
+        })
       } catch (error) {
         console.error('Error in service worker activation:', error)
-        // Attempt to reload clients even if there was an error
-        clients.matchAll().then(clients => {
-          clients.forEach(client => client.navigate(client.url))
-        })
       }
     })(),
   )
 })
 
-// Modified fetch event with special handling for locale files
+// Enhanced fetch handler with optimized strategies
 self.addEventListener('fetch', event => {
   if (event.request.method !== 'GET') return
   if (IS_DEVELOPMENT) return
 
+  const url = event.request.url
+
   // Special handling for locale files - always network first
-  if (event.request.url.includes('/locales/')) {
+  if (url.includes('/locales/')) {
     event.respondWith(
       (async () => {
         try {
           // Try network first for locale files
           const networkResponse = await fetch(event.request, {
-            cache: 'no-store', // Never use cache for this request
+            cache: 'no-store',
             headers: {
               'Cache-Control': 'no-cache, no-store, must-revalidate',
               Pragma: 'no-cache',
@@ -288,7 +261,7 @@ self.addEventListener('fetch', event => {
             return networkResponse
           }
 
-          // Fallback to cache if network fails (rare case)
+          // Fallback to cache if network fails
           const cachedResponse = await caches.match(event.request)
           return (
             cachedResponse ||
@@ -298,7 +271,6 @@ self.addEventListener('fetch', event => {
             })
           )
         } catch (error) {
-          console.error('Error fetching locale file:', error)
           const cachedResponse = await caches.match(event.request)
           return (
             cachedResponse ||
@@ -313,9 +285,65 @@ self.addEventListener('fetch', event => {
     return
   }
 
-  // Regular caching strategy for non-locale files
-  if (!shouldCache(event.request.url)) return
+  // Skip non-cacheable resources
+  if (!shouldCache(url)) return
 
+  // Check if this is a critical resource
+  const isCriticalResource = CRITICAL_RESOURCES.some(
+    resource => url.endsWith(resource) || url.includes(resource),
+  )
+
+  if (isCriticalResource) {
+    // Cache-first strategy for critical resources
+    event.respondWith(
+      (async () => {
+        // Check critical cache first
+        const criticalCache = await caches.open(CRITICAL_CACHE)
+        const cachedResponse = await caches.match(event.request, {
+          cacheName: CRITICAL_CACHE,
+        })
+
+        if (cachedResponse) {
+          // Return cached version immediately
+
+          // Refresh the cache in the background (for next time)
+          fetch(event.request)
+            .then(networkResponse => {
+              if (networkResponse.ok) {
+                criticalCache.put(event.request, networkResponse)
+              }
+            })
+            .catch(() => {
+              // Ignore background refresh failures
+            })
+
+          return cachedResponse
+        }
+
+        // If not in critical cache, try to fetch
+        try {
+          const networkResponse = await fetch(event.request)
+
+          if (networkResponse.ok) {
+            // Cache the response for next time
+            const clonedResponse = networkResponse.clone()
+            criticalCache.put(event.request, clonedResponse)
+          }
+
+          return networkResponse
+        } catch (error) {
+          // Try other caches as fallback
+          return (
+            caches.match(event.request) ||
+            new Response('Resource unavailable offline', { status: 503 })
+          )
+        }
+      })(),
+    )
+    return
+  }
+
+  // For style, script, and image resources - use stale-while-revalidate strategy
   if (
     event.request.destination === 'style' ||
     event.request.destination === 'script' ||
@@ -323,26 +351,19 @@ self.addEventListener('fetch', event => {
   ) {
     event.respondWith(
       (async () => {
-        // Try cache first
         const cache = await caches.open(ASSETS_CACHE)
         const cachedResponse = await caches.match(event.request)
 
-        // Fetch new version in background
-        const fetchPromise = fetch(event.request, {
-          cache: 'reload',
-          headers: {
-            'Cache-Control': 'no-cache',
-          },
-        })
-          .then(async networkResponse => {
+        // Start network fetch in background
+        const fetchPromise = fetch(event.request)
+          .then(networkResponse => {
             if (networkResponse.ok) {
               // Update cache with new version
-              await cache.put(event.request, networkResponse.clone())
+              cache.put(event.request, networkResponse.clone())
             }
             return networkResponse
           })
           .catch(error => {
-            console.error('Network fetch failed:', error)
             return cachedResponse || caches.match('/offline.html')
           })
 
@@ -350,10 +371,39 @@ self.addEventListener('fetch', event => {
         return cachedResponse || fetchPromise
       })(),
     )
+    return
   }
+
+  // Default strategy for other resources - network first with cache fallback
+  event.respondWith(
+    (async () => {
+      try {
+        // Try network first
+        const networkResponse = await fetch(event.request)
+
+        if (networkResponse.ok) {
+          // Cache successful responses for later
+          const cache = await caches.open(DYNAMIC_CACHE)
+          cache.put(event.request, networkResponse.clone())
+          return networkResponse
+        }
+
+        // Fall back to cache if network fails
+        const cachedResponse = await caches.match(event.request)
+        return cachedResponse || networkResponse
+      } catch (error) {
+        // Network failure - try cache
+        const cachedResponse = await caches.match(event.request)
+        return (
+          cachedResponse ||
+          new Response('Network error occurred', { status: 503 })
+        )
+      }
+    })(),
+  )
 })
 
-// Listen for messages from the client
+// Enhanced message handling
 self.addEventListener('message', event => {
   try {
     if (event.data.type === 'SKIP_WAITING') {
@@ -382,19 +432,41 @@ self.addEventListener('message', event => {
       )
     }
 
-    // New handler for locale updates
+    // Handle locale updates
     if (event.data.type === 'LOCALE_UPDATED') {
       event.waitUntil(
         (async () => {
           console.log('Received LOCALE_UPDATED event')
-
-          // Purge locale files from all caches
           await purgeLocaleFilesFromCache()
 
-          // Force reload all clients
+          // Notify clients
           const allClients = await clients.matchAll()
           allClients.forEach(client => {
-            client.navigate(client.url)
+            client.postMessage({ type: 'LOCALE_REFRESH' })
+          })
+        })(),
+      )
+    }
+
+    // Handle returning user optimization
+    if (event.data.type === 'RETURNING_USER') {
+      event.waitUntil(
+        (async () => {
+          console.log('Optimizing for returning user')
+          // Ensure critical resources are cached
+          const criticalCache = await caches.open(CRITICAL_CACHE)
+
+          // Pre-warm critical cache for faster startup
+          CRITICAL_RESOURCES.forEach(resource => {
+            fetch(resource, { priority: 'high' })
+              .then(response => {
+                if (response.ok) {
+                  return criticalCache.put(resource, response)
+                }
+              })
+              .catch(err => {
+                // Ignore errors in background caching
+              })
           })
         })(),
       )
@@ -404,44 +476,7 @@ self.addEventListener('message', event => {
   }
 })
 
-// Add periodic cache validation with special handling for locale files
-const CACHE_VALIDATION_INTERVAL = 60 * 60 * 1000 // 1 hour
-
-setInterval(() => {
-  if (!IS_DEVELOPMENT) {
-    // Purge locale files periodically to ensure they're always fresh
-    purgeLocaleFilesFromCache()
-
-    // Regular cache validation for other files
-    caches.keys().then(keys => {
-      keys.forEach(key => {
-        if (key.includes(VERSION)) {
-          caches.open(key).then(cache => {
-            cache.keys().then(requests => {
-              requests.forEach(request => {
-                // Skip locale files in regular validation
-                if (request.url.includes('/locales/')) return
-
-                fetch(request, {
-                  cache: 'reload',
-                  headers: {
-                    'Cache-Control': 'no-cache',
-                  },
-                }).then(response => {
-                  if (response.ok) {
-                    cache.put(request, response)
-                  }
-                })
-              })
-            })
-          })
-        }
-      })
-    })
-  }
-}, CACHE_VALIDATION_INTERVAL)
-
-// Rest of your service worker code (push notifications, error handling, etc.)
+// Push notification handling
 self.addEventListener('push', event => {
   try {
     const data = event.data.json()
@@ -498,12 +533,45 @@ self.addEventListener('notificationclick', event => {
   }
 })
 
-// Error handling for uncaught errors
+// Error handling
 self.addEventListener('error', event => {
   console.error('Service Worker error:', event.error)
 })
 
-// Error handling for unhandled rejections
 self.addEventListener('unhandledrejection', event => {
   console.error('Service Worker unhandled rejection:', event.reason)
 })
+
+// Add background sync for offline support
+self.addEventListener('sync', event => {
+  if (event.tag === 'sync-user-data') {
+    event.waitUntil(
+      // Sync user data when online
+      clients.matchAll().then(clients => {
+        clients.forEach(client => {
+          client.postMessage({ type: 'SYNC_USER_DATA' })
+        })
+      }),
+    )
+  }
+})
+
+// Periodic maintenance
+setInterval(() => {
+  if (!IS_DEVELOPMENT) {
+    // Refresh critical cache periodically
+    caches.open(CRITICAL_CACHE).then(cache => {
+      CRITICAL_RESOURCES.forEach(resource => {
+        fetch(resource, { cache: 'reload' })
+          .then(response => {
+            if (response.ok) {
+              cache.put(resource, response)
+            }
+          })
+          .catch(err => {
+            // Ignore errors in background refresh
+          })
+      })
+    })
+  }
+}, 24 * 60 * 60 * 1000) // Once a day
