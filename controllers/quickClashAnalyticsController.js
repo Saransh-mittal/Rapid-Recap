@@ -631,7 +631,7 @@ const getQuickClashUserActivity = asyncHandler(async (req, res) => {
     const challengerId = challenge.challenger.toString()
     const opponentId = challenge.opponent.toString()
 
-    // Process challenger data
+    // Process challenger data (always include challengers)
     if (!userMap[challengerId]) {
       userMap[challengerId] = {
         userId: challengerId,
@@ -664,37 +664,39 @@ const getQuickClashUserActivity = asyncHandler(async (req, res) => {
       userMap[challengerId].lastActive = challenge.createdAt
     }
 
-    // Process opponent data
-    if (!userMap[opponentId]) {
-      userMap[opponentId] = {
-        userId: opponentId,
-        asChallenger: {
-          totalChallenges: 0,
-          completedChallenges: 0,
-          wonChallenges: 0,
-        },
-        asOpponent: {
-          totalChallenges: 0,
-          completedChallenges: 0,
-          wonChallenges: 0,
-        },
-        lastActive: null,
+    // Process opponent data - ONLY if the challenge is NOT pending
+    if (challenge.status !== 'pending') {
+      if (!userMap[opponentId]) {
+        userMap[opponentId] = {
+          userId: opponentId,
+          asChallenger: {
+            totalChallenges: 0,
+            completedChallenges: 0,
+            wonChallenges: 0,
+          },
+          asOpponent: {
+            totalChallenges: 0,
+            completedChallenges: 0,
+            wonChallenges: 0,
+          },
+          lastActive: null,
+        }
       }
-    }
 
-    userMap[opponentId].asOpponent.totalChallenges++
-    if (challenge.status === 'completed') {
-      userMap[opponentId].asOpponent.completedChallenges++
-      if (challenge.winner && challenge.winner.toString() === opponentId) {
-        userMap[opponentId].asOpponent.wonChallenges++
+      userMap[opponentId].asOpponent.totalChallenges++
+      if (challenge.status === 'completed') {
+        userMap[opponentId].asOpponent.completedChallenges++
+        if (challenge.winner && challenge.winner.toString() === opponentId) {
+          userMap[opponentId].asOpponent.wonChallenges++
+        }
       }
-    }
 
-    if (
-      !userMap[opponentId].lastActive ||
-      new Date(challenge.createdAt) > new Date(userMap[opponentId].lastActive)
-    ) {
-      userMap[opponentId].lastActive = challenge.createdAt
+      if (
+        !userMap[opponentId].lastActive ||
+        new Date(challenge.createdAt) > new Date(userMap[opponentId].lastActive)
+      ) {
+        userMap[opponentId].lastActive = challenge.createdAt
+      }
     }
   })
 
@@ -781,14 +783,19 @@ const getQuickClashUserActivity = asyncHandler(async (req, res) => {
   const mauChallenges = await QuickClashChallenge.find({
     createdAt: { $gte: thirtyDaysAgo, $lt: nextDay },
   })
-    .select('challenger opponent')
+    .select('challenger opponent status')
     .lean()
 
   // Collect all user IDs that were active in the last 30 days
   const mauUserIds = new Set()
   mauChallenges.forEach(challenge => {
+    // Always include challengers
     mauUserIds.add(challenge.challenger.toString())
-    mauUserIds.add(challenge.opponent.toString())
+
+    // Only add opponents for non-pending challenges
+    if (challenge.status !== 'pending') {
+      mauUserIds.add(challenge.opponent.toString())
+    }
   })
 
   // Convert to array for batch query
