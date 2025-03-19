@@ -684,6 +684,7 @@ const QuickClashAnalytics = () => {
                     icon={<FiTrendingUp />}
                     delay={0.6}
                     isMobile={true}
+                    w="full"
                   >
                     {currentStats.dailyTrends.length > 0 ? (
                       <Box h="220px">
@@ -747,6 +748,7 @@ const QuickClashAnalytics = () => {
                     icon={<FiPieChart />}
                     delay={0.7}
                     isMobile={true}
+                    w="full"
                   >
                     {currentStats.categories.length > 0 ? (
                       <Box h="220px">
@@ -811,6 +813,7 @@ const QuickClashAnalytics = () => {
                       icon={<FiUsers />}
                       delay={0.8}
                       isMobile={true}
+                      w="full"
                     >
                       <Box h="220px">
                         <Doughnut
