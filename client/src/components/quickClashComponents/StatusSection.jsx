@@ -2,6 +2,7 @@ import React from 'react'
 import { Box, Heading, HStack, Icon, Grid, GridItem } from '@chakra-ui/react'
 import { motion } from 'framer-motion'
 import ChallengeItem from './ChallengeItem'
+import FlippableChallengeItem from './FlippableChallengeItem'
 
 const MotionBox = motion(Box)
 
@@ -53,16 +54,32 @@ const StatusSection = ({
       >
         {challenges.map((challenge, index) => (
           <GridItem key={challenge._id}>
-            <ChallengeItem
-              challenge={challenge}
-              userId={userId}
-              onAccept={onAccept}
-              onDecline={onDecline}
-              onStart={onStart}
-              onViewReport={onViewReport}
-              onRevenge={onRevenge}
-              index={index}
-            />
+            {/* Use FlippableChallengeItem for completed challenges where both users attempted */}
+            {challenge.status === 'completed' &&
+            challenge.challengerAttempted &&
+            challenge.opponentAttempted ? (
+              <FlippableChallengeItem
+                challenge={challenge}
+                userId={userId}
+                onAccept={onAccept}
+                onDecline={onDecline}
+                onStart={onStart}
+                onViewReport={onViewReport}
+                onRevenge={onRevenge}
+                index={index}
+              />
+            ) : (
+              <ChallengeItem
+                challenge={challenge}
+                userId={userId}
+                onAccept={onAccept}
+                onDecline={onDecline}
+                onStart={onStart}
+                onViewReport={onViewReport}
+                onRevenge={onRevenge}
+                index={index}
+              />
+            )}
           </GridItem>
         ))}
       </Grid>

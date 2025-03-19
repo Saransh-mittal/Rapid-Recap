@@ -19,21 +19,40 @@ import AnalysisErrorCard from './AnalysisErrorCard'
 
 // Import helpers
 import { getThemeColors } from './themeHelpers'
+import { useTranslation } from 'react-i18next'
 
 // Motion-enhanced components
 const MotionBox = motion(Box)
 
-// Loading state component - extracted to avoid conditionals in main component
-const LoadingCard = ({ onViewFull }) => <AnalysisCardLoading />
-
-// Generate button component - extracted to avoid conditionals in main component
-const GenerateCard = ({ onViewFull }) => (
-  <GenerateAnalysisButton onViewFull={onViewFull} />
-)
-
-// Main card component - extracted to avoid conditionals in main component
-const MainCard = ({ challenge, analysis, userId, onViewFull }) => {
+/**
+ * AnalysisSummaryCard - Container component that renders the appropriate card
+ * based on loading state and available data
+ */
+const AnalysisSummaryCard = ({
+  challenge,
+  analysis,
+  userId,
+  isLoading = false,
+  isError = false,
+  errorMessage = '',
+  onViewFull,
+  onRetry,
+}) => {
+  const { t } = useTranslation('QuickClash')
   const { user } = useSelector(state => state.auth)
+
+  // Use simple conditional rendering with no hooks
+  if (isLoading) {
+    return <AnalysisCardLoading />
+  }
+
+  if (isError) {
+    return <AnalysisErrorCard error={errorMessage} onRetry={onRetry} />
+  }
+
+  if (!analysis) {
+    return <GenerateAnalysisButton onViewFull={onViewFull} />
+  }
 
   // Pre-calculate values that don't need memoization
   const isChallenger = challenge.challenger._id === userId
@@ -48,9 +67,6 @@ const MainCard = ({ challenge, analysis, userId, onViewFull }) => {
   // Calculate result states
   const userIsWinner = userScore > opponentScore
   const isTie = userScore === opponentScore && userScore > 0
-
-  // Check if user prefers Hindi
-  const prefersHindi = user?.userLanguage === 'hi'
 
   // Get the user's analysis data
   const userAnalysis =
@@ -69,38 +85,18 @@ const MainCard = ({ challenge, analysis, userId, onViewFull }) => {
 
   return (
     <MotionBox
-      width={'100%'}
-      display={{ base: 'block', md: 'flex' }}
-      flexDirection={'column'}
-      p={2.5}
-      height={{ base: '100%', md: '225px' }}
+      width="100%"
+      height="100%"
+      display="flex"
+      flexDirection="column"
+      p={4}
       borderRadius="lg"
       bgGradient={themeColors.cardBg}
-      borderWidth="1.5px"
-      borderColor={themeColors.borderColor}
-      boxShadow={`0 4px 16px rgba(0, 0, 0, 0.2), 0 0 0 1px ${
-        userIsWinner
-          ? 'rgba(72, 187, 120, 0.1)'
-          : isTie
-          ? 'rgba(66, 153, 225, 0.1)'
-          : 'rgba(245, 101, 101, 0.1)'
-      }`}
       initial={{ opacity: 0 }}
       animate={{ opacity: 1 }}
       transition={{ duration: 0.3 }}
       position="relative"
       overflow="hidden"
-      _hover={{
-        transform: 'translateY(-2px)',
-        boxShadow: `0 6px 20px rgba(0, 0, 0, 0.25), 0 0 0 1px ${
-          userIsWinner
-            ? 'rgba(72, 187, 120, 0.2)'
-            : isTie
-            ? 'rgba(66, 153, 225, 0.2)'
-            : 'rgba(245, 101, 101, 0.2)'
-        }`,
-        transition: 'all 0.2s ease-in-out',
-      }}
     >
       {/* Background glow/gradient effect */}
       <Box
@@ -155,7 +151,7 @@ const MainCard = ({ challenge, analysis, userId, onViewFull }) => {
         </>
       )}
 
-      <VStack spacing={2} align="stretch" position="relative" zIndex="2">
+      <VStack spacing={3} align="stretch" position="relative" zIndex="2">
         {/* Header with result banner and score */}
         <Flex justifyContent="space-between" alignItems="center">
           {/* Left side - Badge */}
@@ -194,7 +190,8 @@ const MainCard = ({ challenge, analysis, userId, onViewFull }) => {
           isTie={isTie}
           display={{ base: 'flex', md: 'none' }}
           width="100%"
-          marginTop={2}
+          marginTop="auto"
+          mt={3}
         />
       </VStack>
 
@@ -204,45 +201,12 @@ const MainCard = ({ challenge, analysis, userId, onViewFull }) => {
         userIsWinner={userIsWinner}
         isTie={isTie}
         display={{ base: 'none', md: 'block' }}
+        marginTop="auto"
+        mt={3}
+        position="static"
+        alignSelf="flex-end"
       />
     </MotionBox>
-  )
-}
-
-/**
- * AnalysisSummaryCard - Container component that renders the appropriate card
- * based on loading state and available data
- */
-const AnalysisSummaryCard = ({
-  challenge,
-  analysis,
-  userId,
-  isLoading = false,
-  isError = false,
-  errorMessage = '',
-  onViewFull,
-  onRetry,
-}) => {
-  // Use simple conditional rendering with no hooks
-  if (isLoading) {
-    return <LoadingCard onViewFull={onViewFull} />
-  }
-
-  if (isError) {
-    return <AnalysisErrorCard error={errorMessage} onRetry={onRetry} />
-  }
-
-  if (!analysis) {
-    return <GenerateCard onViewFull={onViewFull} />
-  }
-
-  return (
-    <MainCard
-      challenge={challenge}
-      analysis={analysis}
-      userId={userId}
-      onViewFull={onViewFull}
-    />
   )
 }
 
