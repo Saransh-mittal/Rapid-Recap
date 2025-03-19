@@ -52,86 +52,87 @@
   <link rel="apple-touch-icon" href="/images/rrlogo_512.png">
   <link rel="icon" type="image/webp" href="/images/rrlogo.webp">
 
-  <!-- Structured Data -->
-  <script type="application/ld+json">
-    {
-      "@context": "https://schema.org",
-      "@type": "WebSite",
-      "url": "https://rapidrecap.ai",
-      "name": "Rapid Recap",
-      "subjectOf": [{
-        "@type": "WebPage",
-        "name": "Home Dashboard",
-        "url": "https://rapidrecap.ai/home",
-        "description": "Access daily AI-curated GK questions, current affairs quizzes, and personalized learning content. Stay updated with the latest general knowledge in an interactive format.",
-        "potentialAction": {
-          "@type": "ReadAction",
-          "target": "https://rapidrecap.ai/home"
-        },
-        "mainEntity": {
-          "@type": "LearningResource",
-          "learningResourceType": "Quiz Collection",
-          "educationalLevel": "All Levels",
-          "teaches": ["Current Affairs", "General Knowledge", "Competitive Exam Preparation"]
-        }
-      }, {
-        "@type": "WebPage",
-        "name": "Tournament Arena",
-        "url": "https://rapidrecap.ai/tournament",
-        "description": "Participate in weekend GK tournaments, compete with other learners, and win rewards. Test your knowledge in various categories through AI-powered competitive quizzes.",
-        "potentialAction": {
-          "@type": "PlayAction",
-          "target": "https://rapidrecap.ai/tournament"
-        },
-        "mainEntity": {
-          "@type": "Game",
-          "gameType": "Knowledge Competition",
-          "playMode": "Online multiplayer",
-          "offers": {
-            "@type": "Offer",
-            "price": "0",
-            "priceCurrency": "INR"
-          }
-        }
-      }, {
-        "@type": "WebPage",
-        "name": "Leaderboard",
-        "url": "https://rapidrecap.ai/leaderboard",
-        "description": "View real-time rankings of top performers, track your position, and compare your progress with other learners. See who's leading in general knowledge mastery.",
-        "potentialAction": {
-          "@type": "ViewAction",
-          "target": "https://rapidrecap.ai/leaderboard"
-        },
-        "mainEntity": {
-          "@type": "ItemList",
-          "itemListElement": {
-            "@type": "ListItem",
-            "item": {
-              "@type": "Thing",
-              "name": "Global Leaderboard Rankings",
-              "description": "Real-time performance rankings of Rapid Recap users"
-            }
-          }
-        }
-      }],
-      "publisher": {
-        "@type": "Organization",
-        "name": "Rapid Recap",
-        "url": "https://rapidrecap.ai",
-        "logo": {
-          "@type": "ImageObject",
-          "url": "https://rapidrecap.ai/images/rrlogo_512.png"
-        }
+
+  <!-- Add to index.html -->
+<script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@type": "WebSite",
+    "url": "https://rapidrecap.ai",
+    "name": "Rapid Recap",
+    "subjectOf": [{
+      "@type": "WebPage",
+      "name": "Home Dashboard",
+      "url": "https://rapidrecap.ai/home",
+      "description": "Access daily AI-curated GK questions, current affairs quizzes, and personalized learning content. Stay updated with the latest general knowledge in an interactive format.",
+      "potentialAction": {
+        "@type": "ReadAction",
+        "target": "https://rapidrecap.ai/home"
       },
-      "audience": {
-        "@type": "Audience",
-        "audienceType": "Students, Professionals, Knowledge Enthusiasts",
-        "geographicArea": {
-          "@type": "Country",
-          "name": "India"
+      "mainEntity": {
+        "@type": "LearningResource",
+        "learningResourceType": "Quiz Collection",
+        "educationalLevel": "All Levels",
+        "teaches": ["Current Affairs", "General Knowledge", "Competitive Exam Preparation"]
+      }
+    }, {
+      "@type": "WebPage",
+      "name": "Tournament Arena",
+      "url": "https://rapidrecap.ai/tournament",
+      "description": "Participate in weekend GK tournaments, compete with other learners, and win rewards. Test your knowledge in various categories through AI-powered competitive quizzes.",
+      "potentialAction": {
+        "@type": "PlayAction",
+        "target": "https://rapidrecap.ai/tournament"
+      },
+      "mainEntity": {
+        "@type": "Game",
+        "gameType": "Knowledge Competition",
+        "playMode": "Online multiplayer",
+        "offers": {
+          "@type": "Offer",
+          "price": "0",
+          "priceCurrency": "INR"
         }
       }
+    }, {
+      "@type": "WebPage",
+      "name": "Leaderboard",
+      "url": "https://rapidrecap.ai/leaderboard",
+      "description": "View real-time rankings of top performers, track your position, and compare your progress with other learners. See who's leading in general knowledge mastery.",
+      "potentialAction": {
+        "@type": "ViewAction",
+        "target": "https://rapidrecap.ai/leaderboard"
+      },
+      "mainEntity": {
+        "@type": "ItemList",
+        "itemListElement": {
+          "@type": "ListItem",
+          "item": {
+            "@type": "Thing",
+            "name": "Global Leaderboard Rankings",
+            "description": "Real-time performance rankings of Rapid Recap users"
+          }
+        }
+      }
+    }],
+    "publisher": {
+      "@type": "Organization",
+      "name": "Rapid Recap",
+      "url": "https://rapidrecap.ai",
+      "logo": {
+        "@type": "ImageObject",
+        "url": "https://rapidrecap.ai/images/rrlogo_512.png"
+      }
+    },
+    "audience": {
+      "@type": "Audience",
+      "audienceType": "Students, Professionals, Knowledge Enthusiasts",
+      "geographicArea": {
+        "@type": "Country",
+        "name": "India"
+      }
     }
+  }
   </script>
 
   <!-- Additional structured data omitted for brevity -->
@@ -197,22 +198,9 @@
       to { opacity: 1; transform: translateY(0); }
     }
   </style>
-
-  <!-- Optimized script for returning visitors -->
-  <script>
-    // For returning visitors, hide the splash screen immediately
-    if (localStorage.getItem('has_visited_before') === 'true') {
-      document.addEventListener('DOMContentLoaded', () => {
-        const splash = document.getElementById('splash-screen');
-        if (splash) {
-          splash.style.display = 'none';
-        }
-      });
-    }
-  </script>
-  <script type="module" crossorigin src="/assets/index-58522ac5.js"></script>
+  <script type="module" crossorigin src="/assets/index-0c235c52.js"></script>
   <link rel="modulepreload" crossorigin href="/assets/vendor-react-a21e02e8.js">
-  <link rel="modulepreload" crossorigin href="/assets/vendor-ui-98d734de.js">
+  <link rel="modulepreload" crossorigin href="/assets/vendor-ui-6349895c.js">
 </head>
 
 <body>
@@ -226,7 +214,6 @@
         <p class="subtitle">Beat the Clock, Beat Your Rivals!</p>
       </div>
     </div>
-
     <!-- React Root -->
     <div id="root"><!--ssr-outlet--></div>
   </main>
