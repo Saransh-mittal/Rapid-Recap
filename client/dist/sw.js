@@ -1,4 +1,4 @@
-const VERSION = 'v10.0' // Increment version to force update
+const VERSION = 'v10.1' // Increment version to force update
 const CACHE_NAME = `rapid-recap-${VERSION}`
 const ASSETS_CACHE = `assets-${VERSION}`
 const DYNAMIC_CACHE = `dynamic-${VERSION}`
