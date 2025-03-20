@@ -137,67 +137,6 @@
 
   <!-- Additional structured data omitted for brevity -->
 
-  <style>
-    /* Optimized splash screen styles */
-    #splash-screen {
-      position: fixed;
-      top: 0;
-      left: 0;
-      right: 0;
-      bottom: 0;
-      background-color: #000000;
-      display: flex;
-      justify-content: center;
-      align-items: center;
-      z-index: 9999;
-      opacity: 1;
-      transition: opacity 0.5s ease-out;
-    }
-
-    .splash-content {
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-    }
-
-    #splash-screen .logo {
-      width: 120px;
-      height: auto;
-      margin-bottom: 20px;
-      animation: pulse 2s infinite ease-in-out;
-    }
-
-    #splash-screen .title {
-      font-size: 28px;
-      font-weight: 600;
-      color: #ffffff;
-      margin-bottom: 8px;
-      letter-spacing: 2px;
-      opacity: 0;
-      animation: fadeIn 0.8s ease-out 0.2s forwards;
-    }
-
-    #splash-screen .subtitle {
-      font-size: 16px;
-      font-weight: 300;
-      color: #b3b3b3;
-      letter-spacing: 1px;
-      opacity: 0;
-      animation: fadeIn 0.8s ease-out 0.5s forwards;
-    }
-
-    /* Animations */
-    @keyframes pulse {
-      0% { transform: scale(1); }
-      50% { transform: scale(1.05); }
-      100% { transform: scale(1); }
-    }
-
-    @keyframes fadeIn {
-      from { opacity: 0; transform: translateY(10px); }
-      to { opacity: 1; transform: translateY(0); }
-    }
-  </style>
   <script type="module" crossorigin src="/assets/index-ce9aab5e.js"></script>
 </head>
 
@@ -206,11 +145,6 @@
   <main id="main-content">
     <!-- Loading Screen -->
     <div id="splash-screen" aria-label="Loading screen">
-      <div class="splash-content">
-        <img src="/images/rrlogo_512.png" alt="Rapid Recap - AI GK Quiz Platform" class="logo">
-        <h1 class="title">  "The Game That Builds Minds" 🎮💡</h1>
-        <p class="subtitle">Beat the Clock, Beat Your Rivals!</p>
-      </div>
     </div>
     <!-- React Root -->
     <div id="root"><!--ssr-outlet--></div>
@@ -224,6 +158,6 @@
   </noscript>
 
   <!-- Entry Point with high priority loading -->
-  
+
 </body>
 </html>
