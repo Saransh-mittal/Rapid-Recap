@@ -1,8 +1,7 @@
-const VERSION = 'v10.1' // Increment version to force update
+const VERSION = 'v10.2' // Increment version to force update
 const CACHE_NAME = `rapid-recap-${VERSION}`
-const ASSETS_CACHE = `assets-${VERSION}`
+const OFFLINE_CACHE = `offline-${VERSION}`
 const DYNAMIC_CACHE = `dynamic-${VERSION}`
-const CRITICAL_CACHE = `critical-${VERSION}` // New separate cache for critical resources
 
 const RapidRecapLogo = './images/rrlogo.webp'
 const RRBadge = './images/rrlogo_notif_badge.png'
@@ -17,43 +16,30 @@ const NEVER_CACHE_DOMAINS = [
   'stats.g.doubleclick.net',
 ]
 
-// Critical resources that should be cached first and always served from cache if available
-const CRITICAL_RESOURCES = [
+// Assets that should be handled by Cloudflare
+// Don't intercept these to allow Cloudflare's CDN to handle them
+const CLOUDFLARE_HANDLED_PATTERNS = [
+  '/assets/',
+  '.js',
+  '.css',
+  '.webp',
+  '.png',
+  '.jpg',
+  '.svg',
+  '.ico',
+  '.woff',
+  '.woff2',
+]
+
+// Critical resources for offline functionality only - minimal set
+const OFFLINE_RESOURCES = [
   '/',
   '/index.html',
   '/splash.html',
   '/styles/components/css-splash.css',
-  '/styles/main.css',
-  '/src/entry-client.jsx',
+  '/offline.html', // Create a simple offline page
   '/images/rrlogo_512.png',
   '/images/rrlogo.webp',
-]
-
-// Secondary important assets that should be cached but aren't required for initial render
-const IMPORTANT_ASSETS = [
-  './manifest.json',
-  './styles/utils/reset.css',
-  './styles/utils/variables.css',
-  './styles/utils/responsive.css',
-  './styles/components/css-article.css',
-  './styles/components/css-benefits.css',
-  './styles/components/css-features.css',
-  './styles/components/css-footer.css',
-  './styles/components/css-hero.css',
-  './styles/components/css-navigation.css',
-  './styles/components/css-sections.css',
-]
-
-// Add non-critical assets that can be loaded later
-const BACKGROUND_ASSETS = [
-  './images/tourBGDark.webp',
-  './images/landingPage/articleUI.webp',
-  './images/landingPage/featureBg.webp',
-  './images/landingPage/featureBgMobile.webp',
-  './images/landingPage/homeUI.webp',
-  './images/landingPage/QuizReportUI.webp',
-  './images/landingPage/quizUI.webp',
-  './images/landingPage/tournamentUI.webp',
 ]
 
 // Check if URL should be cached
@@ -75,8 +61,17 @@ function shouldCache(url) {
     // Don't cache URLs with tokens
     if (requestURL.search.includes('token=')) return false
 
-    // Don't cache API requests
-    if (requestURL.pathname.includes('/api/')) return false
+    // Don't cache API requests except for offline capabilities
+    if (requestURL.pathname.includes('/api/')) {
+      // Only cache specific API endpoints needed for offline functionality
+      if (
+        requestURL.pathname.includes('/api/user/profile') ||
+        requestURL.pathname.includes('/api/articles/cache')
+      ) {
+        return true
+      }
+      return false
+    }
 
     // Don't cache locale files
     if (requestURL.pathname.includes('/locales/')) return false
@@ -84,6 +79,20 @@ function shouldCache(url) {
     return true
   } catch (err) {
     console.error('Error checking cache eligibility:', err)
+    return false
+  }
+}
+
+// Check if this request should be handled by Cloudflare instead of service worker
+function shouldLetCloudflareHandle(url) {
+  try {
+    // Never let Cloudflare handle in development mode
+    if (IS_DEVELOPMENT) return false
+
+    // For all asset patterns, let Cloudflare handle it
+    return CLOUDFLARE_HANDLED_PATTERNS.some(pattern => url.includes(pattern))
+  } catch (err) {
+    console.error('Error checking Cloudflare handling:', err)
     return false
   }
 }
@@ -110,7 +119,7 @@ async function purgeLocaleFilesFromCache() {
   }
 }
 
-// Enhanced installation handler
+// Installation handler - focus only on offline support
 self.addEventListener('install', event => {
   console.log('Service Worker installing - Version', VERSION)
 
@@ -122,69 +131,34 @@ self.addEventListener('install', event => {
   event.waitUntil(
     (async () => {
       try {
-        // Purge locale files from all caches first
+        // Purge locale files from all caches
         await purgeLocaleFilesFromCache()
 
-        // Cache critical resources first (highest priority)
-        const criticalCache = await caches.open(CRITICAL_CACHE)
+        // Only cache the minimal resources needed for offline functionality
+        const offlineCache = await caches.open(OFFLINE_CACHE)
 
-        // Process critical resources with high priority
+        // Process offline resources with high priority
         await Promise.all(
-          CRITICAL_RESOURCES.map(async resource => {
+          OFFLINE_RESOURCES.map(async resource => {
             try {
               const response = await fetch(resource, {
                 cache: 'reload',
                 headers: {
                   'Cache-Control': 'no-cache',
-                  Priority: 'high',
                 },
               })
 
               if (response.ok) {
-                await criticalCache.put(resource, response)
+                await offlineCache.put(resource, response)
               }
             } catch (error) {
               console.warn(
-                `Failed to cache critical resource ${resource}:`,
+                `Failed to cache offline resource ${resource}:`,
                 error,
               )
             }
           }),
         )
-
-        // Cache regular assets with normal priority (done in background)
-        const assetsCache = await caches.open(ASSETS_CACHE)
-
-        // Process important assets
-        IMPORTANT_ASSETS.forEach(asset => {
-          fetch(asset, { cache: 'reload' })
-            .then(response => {
-              if (response.ok) {
-                return assetsCache.put(asset, response)
-              }
-            })
-            .catch(error => {
-              console.warn(`Failed to cache asset ${asset}:`, error)
-            })
-        })
-
-        // Process background assets with lower priority
-        setTimeout(() => {
-          BACKGROUND_ASSETS.forEach(asset => {
-            fetch(asset)
-              .then(response => {
-                if (response.ok) {
-                  return assetsCache.put(asset, response)
-                }
-              })
-              .catch(error => {
-                console.warn(
-                  `Failed to cache background asset ${asset}:`,
-                  error,
-                )
-              })
-          })
-        }, 5000) // Delay by 5 seconds to prioritize critical resources
 
         await self.skipWaiting()
         console.log('Service Worker installed successfully')
@@ -196,7 +170,7 @@ self.addEventListener('install', event => {
   )
 })
 
-// Enhanced activate event
+// Activation handler
 self.addEventListener('activate', event => {
   console.log('Service Worker activating - Version', VERSION)
 
@@ -235,9 +209,12 @@ self.addEventListener('activate', event => {
   )
 })
 
-// Enhanced fetch handler with optimized strategies
+// Optimized fetch handler that defers to Cloudflare for static assets
 self.addEventListener('fetch', event => {
+  // Only handle GET requests
   if (event.request.method !== 'GET') return
+
+  // Bypass service worker in development mode
   if (IS_DEVELOPMENT) return
 
   const url = event.request.url
@@ -285,57 +262,44 @@ self.addEventListener('fetch', event => {
     return
   }
 
+  // ***IMPORTANT***: Let Cloudflare handle static assets
+  // Don't intercept requests for assets that should be handled by Cloudflare
+  if (shouldLetCloudflareHandle(url)) {
+    // Do not call event.respondWith() - this lets the request
+    // continue to the network and be handled by Cloudflare
+    return
+  }
+
   // Skip non-cacheable resources
   if (!shouldCache(url)) return
 
-  // Check if this is a critical resource
-  const isCriticalResource = CRITICAL_RESOURCES.some(
-    resource => url.endsWith(resource) || url.includes(resource),
-  )
-
-  if (isCriticalResource) {
-    // Cache-first strategy for critical resources
+  // For HTML navigation requests, use network-first strategy with offline fallback
+  if (event.request.mode === 'navigate') {
     event.respondWith(
       (async () => {
-        // Check critical cache first
-        const criticalCache = await caches.open(CRITICAL_CACHE)
-        const cachedResponse = await caches.match(event.request, {
-          cacheName: CRITICAL_CACHE,
-        })
-
-        if (cachedResponse) {
-          // Return cached version immediately
-
-          // Refresh the cache in the background (for next time)
-          fetch(event.request)
-            .then(networkResponse => {
-              if (networkResponse.ok) {
-                criticalCache.put(event.request, networkResponse)
-              }
-            })
-            .catch(() => {
-              // Ignore background refresh failures
-            })
-
-          return cachedResponse
-        }
-
-        // If not in critical cache, try to fetch
         try {
+          // Try network first for HTML pages
           const networkResponse = await fetch(event.request)
 
           if (networkResponse.ok) {
-            // Cache the response for next time
-            const clonedResponse = networkResponse.clone()
-            criticalCache.put(event.request, clonedResponse)
+            // Cache successful responses for offline support
+            const cache = await caches.open(OFFLINE_CACHE)
+            cache.put(event.request, networkResponse.clone())
+            return networkResponse
           }
 
-          return networkResponse
+          // Fall back to cache if network fails
+          const cachedResponse = await caches.match(event.request)
+          return cachedResponse || networkResponse
         } catch (error) {
-          // Try other caches as fallback
+          // Network failure - try cache
+          const cachedResponse = await caches.match(event.request)
+          if (cachedResponse) return cachedResponse
+
+          // If no cached version, serve offline page
           return (
-            caches.match(event.request) ||
-            new Response('Resource unavailable offline', { status: 503 })
+            caches.match('/offline.html') ||
+            new Response('You are offline', { status: 503 })
           )
         }
       })(),
@@ -343,38 +307,42 @@ self.addEventListener('fetch', event => {
     return
   }
 
-  // For style, script, and image resources - use stale-while-revalidate strategy
-  if (
-    event.request.destination === 'style' ||
-    event.request.destination === 'script' ||
-    event.request.destination === 'image'
-  ) {
+  // For API requests we want to cache, use network-first with cache fallback
+  if (url.includes('/api/') && shouldCache(url)) {
     event.respondWith(
       (async () => {
-        const cache = await caches.open(ASSETS_CACHE)
-        const cachedResponse = await caches.match(event.request)
+        try {
+          // Try network first
+          const networkResponse = await fetch(event.request)
 
-        // Start network fetch in background
-        const fetchPromise = fetch(event.request)
-          .then(networkResponse => {
-            if (networkResponse.ok) {
-              // Update cache with new version
-              cache.put(event.request, networkResponse.clone())
-            }
+          if (networkResponse.ok) {
+            // Cache successful responses for offline support
+            const cache = await caches.open(DYNAMIC_CACHE)
+            cache.put(event.request, networkResponse.clone())
             return networkResponse
-          })
-          .catch(error => {
-            return cachedResponse || caches.match('/offline.html')
-          })
+          }
 
-        // Return cached version immediately if available
-        return cachedResponse || fetchPromise
+          // Fall back to cache if network fails
+          const cachedResponse = await caches.match(event.request)
+          return cachedResponse || networkResponse
+        } catch (error) {
+          // Network failure - try cache
+          const cachedResponse = await caches.match(event.request)
+          return (
+            cachedResponse ||
+            new Response(JSON.stringify({ error: 'You are offline' }), {
+              status: 503,
+              headers: { 'Content-Type': 'application/json' },
+            })
+          )
+        }
       })(),
     )
     return
   }
 
-  // Default strategy for other resources - network first with cache fallback
+  // For any other resources not handled above, use a standard
+  // network-first strategy with cache fallback
   event.respondWith(
     (async () => {
       try {
@@ -403,7 +371,7 @@ self.addEventListener('fetch', event => {
   )
 })
 
-// Enhanced message handling
+// Message handling
 self.addEventListener('message', event => {
   try {
     if (event.data.type === 'SKIP_WAITING') {
@@ -443,30 +411,6 @@ self.addEventListener('message', event => {
           const allClients = await clients.matchAll()
           allClients.forEach(client => {
             client.postMessage({ type: 'LOCALE_REFRESH' })
-          })
-        })(),
-      )
-    }
-
-    // Handle returning user optimization
-    if (event.data.type === 'RETURNING_USER') {
-      event.waitUntil(
-        (async () => {
-          console.log('Optimizing for returning user')
-          // Ensure critical resources are cached
-          const criticalCache = await caches.open(CRITICAL_CACHE)
-
-          // Pre-warm critical cache for faster startup
-          CRITICAL_RESOURCES.forEach(resource => {
-            fetch(resource, { priority: 'high' })
-              .then(response => {
-                if (response.ok) {
-                  return criticalCache.put(resource, response)
-                }
-              })
-              .catch(err => {
-                // Ignore errors in background caching
-              })
           })
         })(),
       )
@@ -556,12 +500,12 @@ self.addEventListener('sync', event => {
   }
 })
 
-// Periodic maintenance
+// Check cache health less frequently
 setInterval(() => {
   if (!IS_DEVELOPMENT) {
-    // Refresh critical cache periodically
-    caches.open(CRITICAL_CACHE).then(cache => {
-      CRITICAL_RESOURCES.forEach(resource => {
+    // Just ensure offline resources are still available
+    caches.open(OFFLINE_CACHE).then(cache => {
+      OFFLINE_RESOURCES.forEach(resource => {
         fetch(resource, { cache: 'reload' })
           .then(response => {
             if (response.ok) {
@@ -574,4 +518,4 @@ setInterval(() => {
       })
     })
   }
-}, 24 * 60 * 60 * 1000) // Once a day
+}, 7 * 24 * 60 * 60 * 1000) // Once a week
