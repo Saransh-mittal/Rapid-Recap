@@ -1,1 +1,0 @@
-import{c as e}from"./vendor-redux-244f96cc.js";const a={modal:!1,page:0},t=e({name:"ui",initialState:a,reducers:{setModal:(e,a)=>{e.modal=a.payload},setPageRedux:(e,a)=>{e.page=a.payload},resetUIState:e=>a}}),{setModal:s,setPageRedux:d,resetUIState:o}=t.actions,r=t.reducer;export{d as s,r as u};

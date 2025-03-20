@@ -1,0 +1,1 @@
+const t=["https://static.toiimg.com/thumb/resizemode-72,width-1280,height-720,msid-47529300/47529300.jpg","https://www.thehindu.com/theme/images/og-image.png","https://static.toiimg.com/thumb/resizemode-4,width-1280,height-720,msid-47529300/47529300.jpg"];export{t as b};
