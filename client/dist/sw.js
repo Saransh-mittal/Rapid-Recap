@@ -1,4 +1,4 @@
-const VERSION = 'v10.3' // Increment version to force update
+const VERSION = 'v10.2' // Increment version to force update
 const CACHE_NAME = `rapid-recap-${VERSION}`
 const OFFLINE_CACHE = `offline-${VERSION}`
 const DYNAMIC_CACHE = `dynamic-${VERSION}`
@@ -61,8 +61,17 @@ function shouldCache(url) {
     // Don't cache URLs with tokens
     if (requestURL.search.includes('token=')) return false
 
-    // NEVER cache ANY API requests - important fix
-    if (requestURL.pathname.includes('/api/')) return false
+    // Don't cache API requests except for offline capabilities
+    if (requestURL.pathname.includes('/api/')) {
+      // Only cache specific API endpoints needed for offline functionality
+      if (
+        requestURL.pathname.includes('/api/user/profile') ||
+        requestURL.pathname.includes('/api/articles/cache')
+      ) {
+        return true
+      }
+      return false
+    }
 
     // Don't cache locale files
     if (requestURL.pathname.includes('/locales/')) return false
@@ -84,16 +93,6 @@ function shouldLetCloudflareHandle(url) {
     return CLOUDFLARE_HANDLED_PATTERNS.some(pattern => url.includes(pattern))
   } catch (err) {
     console.error('Error checking Cloudflare handling:', err)
-    return false
-  }
-}
-
-// Check if this is an API request that should never be cached or intercepted
-function isApiRequest(url) {
-  try {
-    return url.includes('/api/')
-  } catch (err) {
-    console.error('Error checking API request:', err)
     return false
   }
 }
@@ -120,29 +119,6 @@ async function purgeLocaleFilesFromCache() {
   }
 }
 
-// Purge all API request caches - important to prevent stale data
-async function purgeApiCachesFromCache() {
-  try {
-    const cacheKeys = await caches.keys()
-
-    for (const cacheKey of cacheKeys) {
-      const cache = await caches.open(cacheKey)
-      const requests = await cache.keys()
-
-      for (const request of requests) {
-        if (request.url.includes('/api/')) {
-          console.log('Purging cached API request:', request.url)
-          await cache.delete(request)
-        }
-      }
-    }
-    return true
-  } catch (error) {
-    console.error('Error purging API caches:', error)
-    return false
-  }
-}
-
 // Installation handler - focus only on offline support
 self.addEventListener('install', event => {
   console.log('Service Worker installing - Version', VERSION)
@@ -157,9 +133,6 @@ self.addEventListener('install', event => {
       try {
         // Purge locale files from all caches
         await purgeLocaleFilesFromCache()
-
-        // Purge any API caches that might exist from previous service worker versions
-        await purgeApiCachesFromCache()
 
         // Only cache the minimal resources needed for offline functionality
         const offlineCache = await caches.open(OFFLINE_CACHE)
@@ -206,9 +179,6 @@ self.addEventListener('activate', event => {
       try {
         // Purge locale files
         await purgeLocaleFilesFromCache()
-
-        // Purge any API caches on activation as well
-        await purgeApiCachesFromCache()
 
         // Clear old caches
         const keys = await caches.keys()
@@ -300,14 +270,6 @@ self.addEventListener('fetch', event => {
     return
   }
 
-  // ***CRITICAL FIX***: NEVER intercept or cache API requests
-  // Let them go directly to the server to ensure fresh data
-  if (isApiRequest(url)) {
-    // Do not call event.respondWith() - this lets the API request
-    // continue to the network without service worker interference
-    return
-  }
-
   // Skip non-cacheable resources
   if (!shouldCache(url)) return
 
@@ -338,6 +300,40 @@ self.addEventListener('fetch', event => {
           return (
             caches.match('/offline.html') ||
             new Response('You are offline', { status: 503 })
+          )
+        }
+      })(),
+    )
+    return
+  }
+
+  // For API requests we want to cache, use network-first with cache fallback
+  if (url.includes('/api/') && shouldCache(url)) {
+    event.respondWith(
+      (async () => {
+        try {
+          // Try network first
+          const networkResponse = await fetch(event.request)
+
+          if (networkResponse.ok) {
+            // Cache successful responses for offline support
+            const cache = await caches.open(DYNAMIC_CACHE)
+            cache.put(event.request, networkResponse.clone())
+            return networkResponse
+          }
+
+          // Fall back to cache if network fails
+          const cachedResponse = await caches.match(event.request)
+          return cachedResponse || networkResponse
+        } catch (error) {
+          // Network failure - try cache
+          const cachedResponse = await caches.match(event.request)
+          return (
+            cachedResponse ||
+            new Response(JSON.stringify({ error: 'You are offline' }), {
+              status: 503,
+              headers: { 'Content-Type': 'application/json' },
+            })
           )
         }
       })(),
@@ -504,12 +500,9 @@ self.addEventListener('sync', event => {
   }
 })
 
-// Periodically check for and remove any accidentally cached API requests
+// Check cache health less frequently
 setInterval(() => {
   if (!IS_DEVELOPMENT) {
-    // Ensure no API requests are cached
-    purgeApiCachesFromCache()
-
     // Just ensure offline resources are still available
     caches.open(OFFLINE_CACHE).then(cache => {
       OFFLINE_RESOURCES.forEach(resource => {
@@ -525,4 +518,4 @@ setInterval(() => {
       })
     })
   }
-}, 24 * 60 * 60 * 1000) // Once a day
+}, 7 * 24 * 60 * 60 * 1000) // Once a week
