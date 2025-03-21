@@ -1,7 +1,7 @@
 import React, { useState, useCallback, useEffect, lazy, Suspense } from 'react'
 import { Flex, useToast, Box } from '@chakra-ui/react'
 import './Quiz.css'
-import ReactGA from 'react-ga4'
+// import ReactGA from 'react-ga4'
 import { useDispatch, useSelector } from 'react-redux'
 
 import useFetchQuiz from '../customHooks/useFetchQuiz'
@@ -163,10 +163,10 @@ const Quiz = () => {
   const handleAnimationComplete = useCallback(() => {
     setShowGetSetGo(false)
     setShowInstruction(false)
-    ReactGA.event({
-      category: 'Quiz',
-      action: 'Quiz Started After Get-Set-Go Animation',
-    })
+    // ReactGA.event({
+    //   category: 'Quiz',
+    //   action: 'Quiz Started After Get-Set-Go Animation',
+    // })
   }, [])
 
   const showConfirmation = useCallback(() => {

@@ -11,7 +11,7 @@ import React, {
 import axios from 'axios'
 import { Flex, useToast, Grid, useMediaQuery, Box } from '@chakra-ui/react'
 import { useParams } from 'react-router-dom'
-import ReactGA from 'react-ga4'
+// import ReactGA from 'react-ga4'
 import { Helmet } from 'react-helmet'
 import { useDispatch, useSelector } from 'react-redux'
 import { quinBoostChecker } from '../utils/quiz.utils'
@@ -298,12 +298,12 @@ const Article = () => {
   }, [id])
 
   const trackGenerateQuizClick = useCallback(() => {
-    ReactGA.send({
-      hitType: 'event',
-      eventCategory: 'Generate Quiz Click',
-      eventAction: 'Click',
-      eventLabel: 'Generate Quiz Button',
-    })
+    // ReactGA.send({
+    //   hitType: 'event',
+    //   eventCategory: 'Generate Quiz Click',
+    //   eventAction: 'Click',
+    //   eventLabel: 'Generate Quiz Button',
+    // })
   }, [])
 
   useEffect(() => {

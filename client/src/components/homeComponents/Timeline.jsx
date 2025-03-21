@@ -1,7 +1,7 @@
 import React, { useEffect, useRef, useState, useMemo, useCallback } from 'react'
 import { Box, Flex, useBreakpointValue, useMediaQuery } from '@chakra-ui/react'
 import { useNavigate } from 'react-router-dom'
-import ReactGA from 'react-ga4'
+// import ReactGA from 'react-ga4'
 import { useDispatch, useSelector } from 'react-redux'
 import { setCategory } from '../../redux/contentSlice'
 import { useSwipeable } from 'react-swipeable'
@@ -143,10 +143,10 @@ const Timeline = ({
 
   // Analytics
   const trackCategoryClick = useCallback(category => {
-    ReactGA.send({
-      category,
-      action: 'click',
-    })
+    // ReactGA.send({
+    //   category,
+    //   action: 'click',
+    // })
   }, [])
 
   return (

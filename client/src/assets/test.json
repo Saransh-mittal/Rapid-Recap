@@ -1,416 +1,362 @@
 [
   {
-    "question": "What significant agreement was reached between Israel and Hamas on January 15, 2025?",
-    "hindiQuestion": "15 जनवरी 2025 को इजराइल और हमास के बीच कौन सा महत्वपूर्ण समझौता हुआ?",
+    "question": "Which city in India imposed a curfew due to violence over Aurangzeb's tomb?",
+    "hindiQuestion": "औरंगजेब की मकबरे को लेकर हिंसा के कारण भारत के किस शहर में कर्फ्यू लगाया गया?",
     "options": {
-      "a": "Trade agreement",
-      "b": "Military alliance",
-      "c": "Ceasefire and hostage exchange",
-      "d": "Peace treaty"
+      "a": "Mumbai",
+      "b": "Nagpur",
+      "c": "Delhi",
+      "d": "Hyderabad"
     },
     "hindiOptions": {
-      "a": "व्यापार समझौता",
-      "b": "सैन्य गठबंधन",
-      "c": "सीजफायर और बंधक विनिमय",
-      "d": "शांति संधि"
+      "a": "मुंबई",
+      "b": "नागपुर",
+      "c": "दिल्ली",
+      "d": "हैदराबाद"
     },
-    "correctAnswer": "c",
-    "difficulty": "0.8"
-  },
-  {
-    "question": "Which Indian entity was removed from the US Entity List on January 15, 2025?",
-    "hindiQuestion": "15 जनवरी 2025 को किस भारतीय संस्था को अमेरिका की एंटिटी लिस्ट से हटाया गया?",
-    "options": {
-      "a": "ISRO",
-      "b": "DRDO",
-      "c": "BARC",
-      "d": "IGCAR"
-    },
-    "hindiOptions": {
-      "a": "ISRO",
-      "b": "DRDO",
-      "c": "BARC",
-      "d": "IGCAR"
-    },
-    "correctAnswer": "c",
+    "correctAnswer": "b",
     "difficulty": "0.6"
   },
   {
-    "question": "What was the theme of the Indian Army Day celebrated on January 15, 2025?",
-    "hindiQuestion": "15 जनवरी 2025 को मनाए गए भारतीय सेना दिवस का विषय क्या था?",
+    "question": "Which state in India is resisting the three-language policy as of March 2025?",
+    "hindiQuestion": "मार्च 2025 तक भारत का कौन सा राज्य तीन-भाषा नीति का विरोध कर रहा है?",
     "options": {
-      "a": "Unity in Diversity",
-      "b": "Bravery and Sacrifice",
-      "c": "Capable India, Empowered Army",
-      "d": "Strength through Peace"
+      "a": "Maharashtra",
+      "b": "Kerala",
+      "c": "Tamil Nadu",
+      "d": "Karnataka"
     },
     "hindiOptions": {
-      "a": "विविधता में एकता",
-      "b": "वीरता और बलिदान",
-      "c": "सक्षम भारत, सशक्त सेना",
-      "d": "शांति के माध्यम से शक्ति"
+      "a": "महाराष्ट्र",
+      "b": "केरल",
+      "c": "तमिलनाडु",
+      "d": "कर्नाटक"
     },
     "correctAnswer": "c",
     "difficulty": "0.5"
   },
   {
-    "question": "What major event did Prime Minister Modi inaugurate on January 14, 2025, marking IMD's 150 years?",
-    "hindiQuestion": "15 जनवरी 2025 को पीएम मोदी ने IMD की 150वीं वर्षगांठ पर कौन सा प्रमुख कार्यक्रम शुरू किया?",
+    "question": "Who accused Pakistan of waging a proxy war through terrorism this week?",
+    "hindiQuestion": "इस सप्ताह किसने पाकिस्तान पर आतंकवाद के जरिए छद्म युद्ध छेड़ने का आरोप लगाया?",
     "options": {
-      "a": "National Weather Day",
-      "b": "Mission Mausam",
-      "c": "Vision 2047",
-      "d": "Climate Change Initiative"
+      "a": "Amit Shah",
+      "b": "Narendra Modi",
+      "c": "Rajnath Singh",
+      "d": "S Jaishankar"
     },
     "hindiOptions": {
-      "a": "राष्ट्रीय मौसम दिवस",
-      "b": "मिशन मौसाम",
-      "c": "विजन 2047",
-      "d": "जलवायु परिवर्तन पहल"
+      "a": "अमित शाह",
+      "b": "नरेंद्र मोदी",
+      "c": "राजनाथ सिंह",
+      "d": "एस जयशंकर"
     },
     "correctAnswer": "b",
     "difficulty": "0.7"
   },
   {
-    "question": "What significant financial event occurred on January 15, 2025, involving the S&P 500?",
-    "hindiQuestion": "15 जनवरी 2025 को S&P 500 से संबंधित कौन सा महत्वपूर्ण वित्तीय घटना हुई?",
+    "question": "What was dismantled by police at the Shambhu Border this week?",
+    "hindiQuestion": "इस सप्ताह शंभु बॉर्डर पर पुलिस ने क्या तोड़ा?",
     "options": {
-      "a": "Reached all-time high",
-      "b": "Snapped three-day win streak",
-      "c": "Dropped below 4000",
-      "d": "Gained 2%"
+      "a": "Farmers' protest site",
+      "b": "Trade barriers",
+      "c": "Traffic barricades",
+      "d": "Illegal settlements"
     },
     "hindiOptions": {
-      "a": "सर्वकालिक उच्च पर पहुंचा",
-      "b": "तीन दिन की जीत की लकीर टूटी",
-      "c": "4000 से नीचे गिरा",
-      "d": "2% बढ़ा"
+      "a": "किसानों का विरोध स्थल",
+      "b": "व्यापार अवरोध",
+      "c": "यातायात बैरिकेड",
+      "d": "अवैध बस्तियाँ"
     },
-    "correctAnswer": "b",
-    "difficulty": "0.4"
+    "correctAnswer": "a",
+    "difficulty": "0.5"
   },
   {
-    "question": "What was the outcome of the recent wildfires in California as of January 15, 2025?",
-    "hindiQuestion": "15 जनवरी 2025 तक कैलिफोर्निया में हालिया जंगल की आग का परिणाम क्या था?",
+    "question": "Which company's stock plummeted by nearly 50% since December 2024?",
+    "hindiQuestion": "दिसंबर 2024 से किस कंपनी का स्टॉक लगभग 50% तक गिर गया?",
     "options": {
-      "a": "Containment achieved",
-      "b": "State of emergency declared",
-      "c": "Evacuations ordered",
-      "d": "No damage reported"
+      "a": "Apple",
+      "b": "Tesla",
+      "c": "Amazon",
+      "d": "Google"
     },
     "hindiOptions": {
-      "a": "नियंत्रण प्राप्त",
-      "b": "आपातकाल की स्थिति घोषित",
-      "c": "निकासी का आदेश",
-      "d": "कोई नुकसान नहीं रिपोर्ट किया गया"
+      "a": "एप्पल",
+      "b": "टेस्ला",
+      "c": "अमेज़न",
+      "d": "गूगल"
+    },
+    "correctAnswer": "b",
+    "difficulty": "0.8"
+  },
+  {
+    "question": "What financial discrepancy was reported in Tesla's accounts for late 2024?",
+    "hindiQuestion": "टेस्ला के 2024 के अंत के खातों में कौन सी वित्तीय विसंगति रिपोर्ट की गई?",
+    "options": {
+      "a": "$1.4 billion",
+      "b": "$2 billion",
+      "c": "$500 million",
+      "d": "$3 billion"
+    },
+    "hindiOptions": {
+      "a": "$1.4 बिलियन",
+      "b": "$2 बिलियन",
+      "c": "$500 मिलियन",
+      "d": "$3 बिलियन"
+    },
+    "correctAnswer": "a",
+    "difficulty": "0.9"
+  },
+  {
+    "question": "Which Indian team won a bronze medal in floorball at the Special Olympics in Turin?",
+    "hindiQuestion": "ट्यूरिन में विशेष ओलंपिक में फ्लोरबॉल में किस भारतीय टीम ने कांस्य पदक जीता?",
+    "options": {
+      "a": "Men’s team",
+      "b": "Women’s team",
+      "c": "Mixed team",
+      "d": "Junior team"
+    },
+    "hindiOptions": {
+      "a": "पुरुष टीम",
+      "b": "महिला टीम",
+      "c": "मिश्रित टीम",
+      "d": "जूनियर टीम"
     },
     "correctAnswer": "b",
     "difficulty": "0.6"
   },
   {
-    "question": "What was the significant announcement made by the G7 regarding Ukraine on January 15, 2025?",
-    "hindiQuestion": "15 जनवरी 2025 को यूक्रेन के संबंध में G7 द्वारा कौन सी महत्वपूर्ण घोषणा की गई?",
+    "question": "Who was charged with second-degree murder in the death of Adan Manzano?",
+    "hindiQuestion": "अदन मंज़ानो की मौत में किसे दूसरी डिग्री की हत्या का आरोप लगाया गया?",
     "options": {
-      "a": "Increased military aid",
-      "b": "Agreed $50bn loan using Russian assets",
-      "c": "Sanctioned Russia",
-      "d": "Recognized Ukraine's sovereignty"
+      "a": "Rickey White",
+      "b": "Danette Colbert",
+      "c": "Sudiksha Konanki",
+      "d": "Elon Musk"
     },
     "hindiOptions": {
-      "a": "सैन्य सहायता बढ़ाई",
-      "b": "रूसी संपत्तियों का उपयोग करके $50 बिलियन का ऋण सहमति",
-      "c": "रूस पर प्रतिबंध",
-      "d": "यूक्रेन की संप्रभुता को मान्यता दी"
-    },
-    "correctAnswer": "b",
-    "difficulty": "0.7"
-  },
-  {
-    "question": "What missile did DRDO successfully test recently?",
-    "hindiQuestion": "डीआरडीओ ने हाल ही में कौन सी मिसाइल का सफल परीक्षण किया?",
-    "options": {
-      "a": "BrahMos",
-      "b": "Nag Mark 2",
-      "c": "Agni V",
-      "d": "Prithvi"
-    },
-    "hindiOptions": {
-      "a": "ब्रह्मोस",
-      "b": "नाग मार्क 2",
-      "c": "अग्नि V",
-      "d": "पृथ्वी"
+      "a": "रिकी व्हाइट",
+      "b": "डैनेट कोलबर्ट",
+      "c": "सुदिक्षा कोनंकी",
+      "d": "एलोन मस्क"
     },
     "correctAnswer": "b",
     "difficulty": "0.75"
   },
   {
-    "question": "What tragic event occurred involving a migrant boat near Morocco?",
-    "hindiQuestion": "मोरक्को के पास एक प्रवासी नाव के साथ कौन सी दुखद घटना हुई?",
+    "question": "Where was sports reporter Adan Manzano found dead this week?",
+    "hindiQuestion": "इस सप्ताह खेल पत्रकार अदन मंज़ानो मृत कहाँ पाए गए?",
     "options": {
-      "a": "Rescued by coast guard",
-      "b": "Capsized with over 40 Pakistanis dead",
-      "c": "Reached Spain safely",
-      "d": "Caught in storm"
+      "a": "Kansas City",
+      "b": "New Orleans",
+      "c": "Mumbai",
+      "d": "Virginia"
     },
     "hindiOptions": {
-      "a": "कोस्ट गार्ड द्वारा बचाया गया",
-      "b": "40 से अधिक पाकिस्तानी मृत के साथ पलटी",
-      "c": "सुरक्षित स्पेन पहुंचा",
-      "d": "तूफान में फंसा"
+      "a": "कैनसस सिटी",
+      "b": "न्यू ऑरलियन्स",
+      "c": "मुंबई",
+      "d": "वर्जीनिया"
     },
     "correctAnswer": "b",
+    "difficulty": "0.65"
+  },
+  {
+    "question": "Which former MLB player has not received contract offers this week?",
+    "hindiQuestion": "इस सप्ताह किस पूर्व MLB खिलाड़ी को अनुबंध प्रस्ताव नहीं मिले?",
+    "options": {
+      "a": "Alex Verdugo",
+      "b": "Mike Trout",
+      "c": "Bryce Harper",
+      "d": "Aaron Judge"
+    },
+    "hindiOptions": {
+      "a": "एलेक्स वर्दुगो",
+      "b": "माइक ट्राउट",
+      "c": "ब्राइस हार्पर",
+      "d": "एरन जज"
+    },
+    "correctAnswer": "a",
+    "difficulty": "0.7"
+  },
+  {
+    "question": "Which country's former president was arrested by the ICC this week?",
+    "hindiQuestion": "इस सप्ताह किस देश के पूर्व राष्ट्रपति को ICC ने गिरफ्तार किया?",
+    "options": {
+      "a": "Philippines",
+      "b": "Russia",
+      "c": "India",
+      "d": "Brazil"
+    },
+    "hindiOptions": {
+      "a": "फिलीपींस",
+      "b": "रूस",
+      "c": "भारत",
+      "d": "ब्राजील"
+    },
+    "correctAnswer": "a",
+    "difficulty": "0.5"
+  },
+  {
+    "question": "Who led the Senate probe into Rodrigo Duterte’s ICC arrest?",
+    "hindiQuestion": "रोड्रिगो दुतेर्ते की ICC गिरफ्तारी की सीनेट जांच का नेतृत्व किसने किया?",
+    "options": {
+      "a": "Sara Duterte",
+      "b": "Imee Marcos",
+      "c": "Boying Remulla",
+      "d": "Eduardo Año"
+    },
+    "hindiOptions": {
+      "a": "सारा दुतेर्ते",
+      "b": "इमी मार्कोस",
+      "c": "बॉयिंग रेमुल्ला",
+      "d": "एडुआर्डो एनो"
+    },
+    "correctAnswer": "b",
+    "difficulty": "0.75"
+  },
+  {
+    "question": "What was the main focus of the Philippines Senate inquiry on March 20, 2025?",
+    "hindiQuestion": "20 मार्च 2025 को फिलीपींस सीनेट जांच का मुख्य फोकस क्या था?",
+    "options": {
+      "a": "Economic reforms",
+      "b": "Duterte’s ICC arrest",
+      "c": "Trade policies",
+      "d": "Climate change"
+    },
+    "hindiOptions": {
+      "a": "आर्थिक सुधार",
+      "b": "दुतेर्ते की ICC गिरफ्तारी",
+      "c": "व्यापार नीतियाँ",
+      "d": "जलवायु परिवर्तन"
+    },
+    "correctAnswer": "b",
+    "difficulty": "0.8"
+  },
+  {
+    "question": "Which Indian bowler shone in the match against West Indies Masters?",
+    "hindiQuestion": "वेस्टइंडीज मास्टर्स के खिलाफ मैच में कौन सा भारतीय गेंदबाज चमका?",
+    "options": {
+      "a": "Vinay Kumar",
+      "b": "Jasprit Bumrah",
+      "c": "Mohammed Shami",
+      "d": "Ravindra Jadeja"
+    },
+    "hindiOptions": {
+      "a": "विनय कुमार",
+      "b": "जसप्रीत बुमराह",
+      "c": "मोहम्मद शमी",
+      "d": "रविंद्र जडेजा"
+    },
+    "correctAnswer": "a",
+    "difficulty": "0.7"
+  },
+  {
+    "question": "How many overs did India Masters take to chase the target against West Indies?",
+    "hindiQuestion": "इंडिया मास्टर्स ने वेस्टइंडीज के खिलाफ लक्ष्य का पीछा कितने ओवर में किया?",
+    "options": {
+      "a": "19 overs",
+      "b": "15 overs",
+      "c": "17 overs",
+      "d": "20 overs"
+    },
+    "hindiOptions": {
+      "a": "19 ओवर",
+      "b": "15 ओवर",
+      "c": "17 ओवर",
+      "d": "20 ओवर"
+    },
+    "correctAnswer": "c",
+    "difficulty": "0.85"
+  },
+  {
+    "question": "What rank did a student achieve in the GATE exam taken 'for fun'?",
+    "hindiQuestion": "एक छात्र ने 'मजाक' के लिए दी गई GATE परीक्षा में कौन सा रैंक हासिल किया?",
+    "options": {
+      "a": "18",
+      "b": "25",
+      "c": "10",
+      "d": "50"
+    },
+    "hindiOptions": {
+      "a": "18",
+      "b": "25",
+      "c": "10",
+      "d": "50"
+    },
+    "correctAnswer": "a",
     "difficulty": "0.9"
   },
   {
-    "question": "What did PV Sindhu collaborate with PUMA India for?",
-    "hindiQuestion": "पीवी सिंधु ने पीयूमा इंडिया के साथ किस लिए सहयोग किया?",
+    "question": "Which city was revealed as the top for women spying on partners on Tinder?",
+    "hindiQuestion": "कौन सा शहर टिंडर पर पार्टनर की जासूसी करने वाली महिलाओं के लिए शीर्ष पर रहा?",
     "options": {
-      "a": "Launch a new shoe line",
-      "b": "Increase interest in badminton",
-      "c": "Promote cricket",
-      "d": "Support women athletes"
+      "a": "Mumbai",
+      "b": "London",
+      "c": "New York",
+      "d": "Delhi"
     },
     "hindiOptions": {
-      "a": "नए जूते की श्रृंखला लॉन्च करना",
-      "b": "बैडमिंटन में रुचि बढ़ाना",
-      "c": "क्रिकेट को बढ़ावा देना",
-      "d": "महिला एथलीटों का समर्थन करना"
+      "a": "मुंबई",
+      "b": "लंदन",
+      "c": "न्यूयॉर्क",
+      "d": "दिल्ली"
     },
     "correctAnswer": "b",
     "difficulty": "0.6"
   },
   {
-    "question": "What did the US announce regarding AI export laws on January 16, 2025?",
-    "hindiQuestion": "16 जनवरी 2025 को अमेरिका ने AI निर्यात कानूनों के बारे में क्या घोषणा की?",
+    "question": "What substance was found in Adan Manzano’s system linked to his death?",
+    "hindiQuestion": "अदन मंज़ानो की मौत से जुड़े उनके सिस्टम में कौन सा पदार्थ पाया गया?",
     "options": {
-      "a": "Excludes India from closest allies",
-      "b": "Increased cooperation with India",
-      "c": "Bans all AI exports to Asia",
-      "d": "Introduces new AI technologies"
+      "a": "Cocaine",
+      "b": "Xanax",
+      "c": "Alcohol",
+      "d": "Heroin"
     },
     "hindiOptions": {
-      "a": "भारत को निकटतम सहयोगियों से बाहर रखा गया",
-      "b": "भारत के साथ सहयोग बढ़ाया गया",
-      "c": "एशिया में सभी AI निर्यात पर प्रतिबंध लगाया गया",
-      "d": "नए AI प्रौद्योगिकियों का परिचय दिया गया"
-    },
-    "correctAnswer": "a",
-    "difficulty": "0.6"
-  },
-  {
-    "question": "What major religious event started in Prayagraj with over 50 lakh devotees?",
-    "hindiQuestion": "प्रयागराज में 50 लाख से अधिक भक्तों के साथ कौन सा प्रमुख धार्मिक कार्यक्रम शुरू हुआ?",
-    "options": {
-      "a": "Diwali",
-      "b": "Maha Kumbh Mela",
-      "c": "Holi",
-      "d": "Navratri"
-    },
-    "hindiOptions": {
-      "a": "दीवाली",
-      "b": "महाकुंभ मेला",
-      "c": "होली",
-      "d": "नवरात्रि"
+      "a": "कोकेन",
+      "b": "ज़ैनक्स",
+      "c": "शराब",
+      "d": "हेरोइन"
     },
     "correctAnswer": "b",
-    "difficulty": "0.5"
-  },
-  {
-    "question": "What is the current exchange rate of the Indian Rupee against the dollar?",
-    "hindiQuestion": "भारतीय रुपया डॉलर के मुकाबले वर्तमान में कितने पर है?",
-    "options": {
-      "a": "₹86.49",
-      "b": "₹75.00",
-      "c": "₹80.00",
-      "d": "₹90.00"
-    },
-    "hindiOptions": {
-      "a": "₹86.49",
-      "b": "₹75.00",
-      "c": "₹80.00",
-      "d": "₹90.00"
-    },
-    "correctAnswer": "a",
     "difficulty": "0.7"
   },
   {
-    "question": "What significant agreement did India finalize with Saudi Arabia regarding Haj in 2025?",
-    "hindiQuestion": "भारत ने 2025 में हज के लिए सऊदी अरब के साथ कौन सा महत्वपूर्ण समझौता किया?",
+    "question": "Which Indian student solved a century-old math problem this week?",
+    "hindiQuestion": "इस सप्ताह किस भारतीय छात्र ने सदी पुरानी गणित समस्या हल की?",
     "options": {
-      "a": "50,000 pilgrims quota",
-      "b": "1,75,025 pilgrims quota",
-      "c": "1,00,000 pilgrims quota",
-      "d": "2,00,000 pilgrims quota"
+      "a": "Divya Tyagi",
+      "b": "Ramanujan",
+      "c": "Arya Bhatt",
+      "d": "Neha Sharma"
     },
     "hindiOptions": {
-      "a": "50,000 तीर्थयात्रियों का कोटा",
-      "b": "1,75,025 तीर्थयात्रियों का कोटा",
-      "c": "1,00,000 तीर्थयात्रियों का कोटा",
-      "d": "2,00,000 तीर्थयात्रियों का कोटा"
+      "a": "दिव्या त्यागी",
+      "b": "रामानुजन",
+      "c": "आर्य भट्ट",
+      "d": "नेहा शर्मा"
     },
-    "correctAnswer": "b",
-    "difficulty": "0.8"
+    "correctAnswer": "a",
+    "difficulty": "0.75"
   },
   {
-    "question": "What significant event did PM Modi attend in Mumbai on January 17, 2025?",
-    "hindiQuestion": "17 जनवरी 2025 को पीएम मोदी ने मुंबई में किस महत्वपूर्ण कार्यक्रम में भाग लिया?",
+    "question": "What was denied by Fadnavis regarding the Nagpur violence?",
+    "hindiQuestion": "नागपुर हिंसा के संबंध में फडणवीस ने क्या नकारा?",
     "options": {
-      "a": "Inauguration of naval combat ships",
-      "b": "Launch of a new government scheme",
-      "c": "Addressing a public rally",
-      "d": "Meeting with foreign dignitaries"
+      "a": "Quran burning",
+      "b": "Police brutality",
+      "c": "Political involvement",
+      "d": "Curfew imposition"
     },
     "hindiOptions": {
-      "a": "नौसेना के युद्धपोतों का उद्घाटन",
-      "b": "नई सरकारी योजना का शुभारंभ",
-      "c": "सार्वजनिक रैली को संबोधित करना",
-      "d": "विदेशी dignitaries के साथ बैठक"
+      "a": "कुरान जलाना",
+      "b": "पुलिस क्रूरता",
+      "c": "राजनीतिक भागीदारी",
+      "d": "कर्फ्यू लागू करना"
     },
     "correctAnswer": "a",
     "difficulty": "0.5"
-  },
-  {
-    "question": "What was the outcome of the prosecution approval for former Delhi chief ministers on January 17, 2025?",
-    "hindiQuestion": "17 जनवरी 2025 को पूर्व दिल्ली मुख्यमंत्री के खिलाफ अभियोजन स्वीकृति का क्या परिणाम था?",
-    "options": {
-      "a": "Approval for liquor policy scam",
-      "b": "Dismissal of charges",
-      "c": "New evidence presented",
-      "d": "Trial date set"
-    },
-    "hindiOptions": {
-      "a": "शराब नीति घोटाले के लिए स्वीकृति",
-      "b": "आरोपों का खारिज होना",
-      "c": "नया सबूत प्रस्तुत किया गया",
-      "d": "सुनवाई की तारीख तय की गई"
-    },
-    "correctAnswer": "a",
-    "difficulty": "0.7"
-  },
-  {
-    "question": "What was the current status of TikTok in the US as of January 17, 2025?",
-    "hindiQuestion": "17 जनवरी 2025 तक अमेरिका में TikTok की वर्तमान स्थिति क्या है?",
-    "options": {
-      "a": "Potential federal ban",
-      "b": "New partnership announced",
-      "c": "Acquisition by a US company",
-      "d": "No changes reported"
-    },
-    "hindiOptions": {
-      "a": "संभावित संघीय प्रतिबंध",
-      "b": "नई साझेदारी की घोषणा",
-      "c": "एक अमेरिकी कंपनी द्वारा अधिग्रहण",
-      "d": "कोई बदलाव नहीं रिपोर्ट किया गया"
-    },
-    "correctAnswer": "a",
-    "difficulty": "0.6"
-  },
-  {
-    "question": "What did the Kerala Governor report on January 17, 2025?",
-    "hindiQuestion": "17 जनवरी 2025 को केरल के गवर्नर ने क्या रिपोर्ट किया?",
-    "options": {
-      "a": "Liquidity stress due to declining fiscal transfers",
-      "b": "Increase in state revenue",
-      "c": "New economic policies introduced",
-      "d": "Improvement in public health"
-    },
-    "hindiOptions": {
-      "a": "घटते संघीय हस्तांतरण के कारण तरलता तनाव",
-      "b": "राज्य राजस्व में वृद्धि",
-      "c": "नई आर्थिक नीतियाँ लागू की गईं",
-      "d": "सार्वजनिक स्वास्थ्य में सुधार"
-    },
-    "correctAnswer": "a",
-    "difficulty": "0.8"
-  },
-  {
-    "question": "What was the major sports event reported on January 17, 2025?",
-    "hindiQuestion": "17 जनवरी 2025 को रिपोर्ट किए गए प्रमुख खेल आयोजन क्या थे?",
-    "options": {
-      "a": "ICC Champions Trophy opening ceremony",
-      "b": "Olympics qualification matches",
-      "c": "World Cup final",
-      "d": "National championships"
-    },
-    "hindiOptions": {
-      "a": "आईसीसी चैंपियंस ट्रॉफी उद्घाटन समारोह",
-      "b": "ओलंपिक क्वालीफिकेशन मैच",
-      "c": "विश्व कप फाइनल",
-      "d": "राष्ट्रीय चैंपियनशिप"
-    },
-    "correctAnswer": "a",
-    "difficulty": "0.5"
-  },
-  {
-    "question": "What was the significant economic news on January 16, 2025?",
-    "hindiQuestion": "16 जनवरी 2025 को महत्वपूर्ण आर्थिक समाचार क्या था?",
-    "options": {
-      "a": "Stocks fell due to earnings reports",
-      "b": "New economic policies announced",
-      "c": "Increase in employment rates",
-      "d": "Decrease in inflation rates"
-    },
-    "hindiOptions": {
-      "a": "कमाई की रिपोर्ट के कारण शेयर गिरे",
-      "b": "नई आर्थिक नीतियाँ घोषित की गईं",
-      "c": "रोजगार दरों में वृद्धि",
-      "d": "महंगाई दरों में कमी"
-    },
-    "correctAnswer": "a",
-    "difficulty": "0.7"
-  },
-  {
-    "question": "What did the FIFA organization demand on January 17, 2025?",
-    "hindiQuestion": "17 जनवरी 2025 को FIFA संगठन ने क्या मांग की?",
-    "options": {
-      "a": "Stricter regulations for player transfers",
-      "b": "Increased funding for women's football",
-      "c": "More transparency in financial dealings",
-      "d": "Changes to World Cup format"
-    },
-    "hindiOptions": {
-      "a": "खिलाड़ियों के स्थानांतरण के लिए सख्त नियम",
-      "b": "महिला फुटबॉल के लिए अधिक फंडिंग",
-      "c": "वित्तीय लेनदेन में अधिक पारदर्शिता",
-      "d": "विश्व कप प्रारूप में परिवर्तन"
-    },
-    "correctAnswer": "b",
-    "difficulty": "0.8"
-  },
-  {
-    "question": "Which country recently launched a new satellite into space on January 16, 2025?",
-    "hindiQuestion": "16 जनवरी 2025 को किस देश ने अंतरिक्ष में एक नया उपग्रह लॉन्च किया?",
-    "options": {
-      "a": "India",
-      "b": "China",
-      "c": "USA",
-      "d": "Russia"
-    },
-    "hindiOptions": {
-      "a": "भारत",
-      "b": "चीन",
-      "c": "अमेरिका",
-      "d": "रूस"
-    },
-    "correctAnswer": "c",
-    "difficulty": "0.6"
-  },
-  {
-    "question": "Who has been appointed as the new Chief Justice of India as of January 16, 2025?",
-    "hindiQuestion": "16 जनवरी 2025 तक भारत के नए मुख्य न्यायाधीश के रूप में किसे नियुक्त किया गया है?",
-    "options": {
-      "a": "Justice D.Y. Chandrachud",
-      "b": "Justice U.U. Lalit",
-      "c": "Justice N.V. Ramana",
-      "d": "Justice S.A. Bobde"
-    },
-    "hindiOptions": {
-      "a": "न्यायाधीश डी.वाई. चंद्रचूड",
-      "b": "न्यायाधीश यू.यू. ललित",
-      "c": "न्यायाधीश एन.वी. रमना",
-      "d": "न्यायाधीश एस.ए. बोबडे"
-    },
-    "correctAnswer": "a",
-    "difficulty": "0.7"
   }
 ]

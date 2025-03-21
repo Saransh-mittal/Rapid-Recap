@@ -56,13 +56,13 @@ async function createSSRMiddleware(app) {
             'utf-8',
           ),
         ])
-
+        // console.log('splashContent', splashContent)
         const processedTemplate = template
           .replace('<!--ssr-outlet-->', '')
-          .replace('<div id="splash-screen">', splashContent)
           .replace(
-            '<style>',
-            `<link rel="stylesheet" href="/styles/components/css-splash.css"><style>`,
+            `<div id="splash-screen" aria-label="Loading screen">
+    </div>`,
+            splashContent,
           )
 
         res.setHeader('Content-Type', 'text/html; charset=utf-8')

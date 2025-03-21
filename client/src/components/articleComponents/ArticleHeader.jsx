@@ -24,7 +24,7 @@ import {
 } from '@chakra-ui/react'
 import { ChevronDownIcon } from '@chakra-ui/icons'
 import { useDispatch, useSelector } from 'react-redux'
-import ReactGA from 'react-ga4'
+// import ReactGA from 'react-ga4'
 import BoostSection from './articleHeaderComponents/BoostSection'
 import BookmarkIcon from './articleHeaderComponents/BookmarkIcon'
 import ShareButton from './ShareButton'
@@ -166,11 +166,11 @@ const ArticleHeader = ({
         lang: lang,
       })
       onThemeChange(response.data.storyContent)
-      ReactGA.event({
-        category: 'Article Interaction',
-        action: 'Theme Selection',
-        label: selectedTheme,
-      })
+      // ReactGA.event({
+      //   category: 'Article Interaction',
+      //   action: 'Theme Selection',
+      //   label: selectedTheme,
+      // })
       timeoutRef.current = setTimeout(() => {
         dispatchRedux(
           addNoteMessage({

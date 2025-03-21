@@ -10,7 +10,7 @@ import { useDispatch, useSelector } from 'react-redux'
 import { Flex, useToast, Box } from '@chakra-ui/react'
 import axios from 'axios'
 import { useTranslation } from 'react-i18next'
-import ReactGA from 'react-ga4'
+// import ReactGA from 'react-ga4'
 
 import { setIsOpen, setTournamentQuiz } from '../../../redux/quizSlice'
 import { setUser } from '../../../redux/authSlice'
@@ -202,11 +202,11 @@ const TournamentQuiz = () => {
           )
         }
 
-        ReactGA.event({
-          category: 'Tournament',
-          action: 'Quiz Submitted',
-          label: category,
-        })
+        // ReactGA.event({
+        //   category: 'Tournament',
+        //   action: 'Quiz Submitted',
+        //   label: category,
+        // })
       } catch (error) {
         console.error('Error submitting quiz:', error)
         toast({
@@ -307,10 +307,10 @@ const TournamentQuiz = () => {
   const handleAnimationComplete = useCallback(() => {
     setShowGetSetGo(false)
     setQuizStarted(true)
-    ReactGA.event({
-      category: 'Tournament',
-      action: 'Quiz Started After Get-Set-Go Animation',
-    })
+    // ReactGA.event({
+    //   category: 'Tournament',
+    //   action: 'Quiz Started After Get-Set-Go Animation',
+    // })
   }, [])
 
   const renderModalBody = useCallback(() => {

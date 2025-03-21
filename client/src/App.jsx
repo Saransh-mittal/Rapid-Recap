@@ -7,7 +7,7 @@ import React, {
   useCallback,
 } from 'react'
 import { useLocation } from 'react-router-dom'
-import ReactGA from 'react-ga4'
+// import ReactGA from 'react-ga4'
 import { Box } from '@chakra-ui/react'
 import { useDispatch, useSelector } from 'react-redux'
 import { useTranslation } from 'react-i18next'
@@ -96,7 +96,7 @@ import useQuickClash from './customHooks/useQuickClash.js'
 import NotificationReminderModal from './components/miscellaneous/NotificationReminderModal.jsx'
 
 const App = () => {
-  ReactGA.initialize('G-ES5VQ8NW7Z')
+  // ReactGA.initialize('G-ES5VQ8NW7Z')
   const location = useLocation()
   const { isLoading, overallProgress } = useSelector(
     state => state.loadingProgress,
@@ -470,17 +470,17 @@ const App = () => {
       tournamentRewardsClaim({ user, dispatch, t: rewardsTranslation })
   }, [user])
 
-  useEffect(() => {
-    ReactGA.set({
-      'User Logged In': isLoggedIn ? t('Logged In') : t('Logged Out'), // Added translation
-      'User InGameName': getUserInGameName ? getUserInGameName : t('anonymous'), // Added translation
-    })
-    ReactGA.send({
-      hitType: 'pageview',
-      page: location.pathname + location.search,
-      title: document.title,
-    })
-  }, [location, getUserInGameName, isLoggedIn])
+  // useEffect(() => {
+  //   ReactGA.set({
+  //     'User Logged In': isLoggedIn ? t('Logged In') : t('Logged Out'), // Added translation
+  //     'User InGameName': getUserInGameName ? getUserInGameName : t('anonymous'), // Added translation
+  //   })
+  //   ReactGA.send({
+  //     hitType: 'pageview',
+  //     page: location.pathname + location.search,
+  //     title: document.title,
+  //   })
+  // }, [location, getUserInGameName, isLoggedIn])
 
   useUserCache()
 
