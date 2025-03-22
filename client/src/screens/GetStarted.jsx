@@ -5,6 +5,7 @@ import { useInView } from 'react-intersection-observer'
 import BenefitsMap from '../components/getStartedComponents/BenefitsMap'
 import Features from '../components/getStartedComponents/Features'
 import HeroV2 from '../components/getStartedComponents/HeroV2'
+import QuickClashHighlight from '../components/getStartedComponents/QuickClashHighlight'
 import Footer from '../components/Header-Footer/Footer'
 import { Helmet } from 'react-helmet'
 
@@ -260,6 +261,11 @@ const GetStarted = () => {
         ))}
       </Helmet>
       <HeroV2 inViewFooter={inViewFooter} />
+
+      {/* Add the QuickClashHighlight component here */}
+      <Box maxW="container.xl" mx="auto" px={{ base: 4, md: 0 }}>
+        <QuickClashHighlight />
+      </Box>
 
       <BenefitsMap />
 

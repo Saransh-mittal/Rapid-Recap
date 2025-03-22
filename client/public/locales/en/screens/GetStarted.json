@@ -191,5 +191,36 @@
         "badge": "PREMIUM"
       }
     }
+  },
+  "QuickClash": {
+    "title": "Quick Clash",
+    "subtitle": "Competitive knowledge battles where you challenge others to quiz showdowns!",
+    "howItWorks": "How It Works",
+    "startButton": "Start a Quick Clash",
+    "steps": {
+      "challenge": "Challenge friends or find opponents through matchmaking",
+      "read": "Read an article for 2 minutes",
+      "answer": "Answer 5 questions in 50 seconds",
+      "compare": "Compare results to determine winners",
+      "analysis": "Receive AI-powered performance analysis"
+    },
+    "features": {
+      "categories": {
+        "title": "Category Challenges",
+        "description": "Compete in current affairs, history, and more specialized knowledge areas"
+      },
+      "bilingual": {
+        "title": "Bilingual Support",
+        "description": "Play in English or Hindi with full language support"
+      },
+      "matchmaking": {
+        "title": "Real-time Matchmaking",
+        "description": "Find opponents instantly with our smart matching system"
+      },
+      "history": {
+        "title": "Challenge History",
+        "description": "Track your performance with detailed match history and leaderboards"
+      }
+    }
   }
 }
