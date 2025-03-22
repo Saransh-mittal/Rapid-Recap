@@ -30,6 +30,7 @@ import useQuickClash from '../../../customHooks/useQuickClash'
 import useQuickClashSocket from '../../../customHooks/useQuickClashSocket'
 import { setChallengeCreating } from '../../../redux/quickClashSlice'
 import { useDispatch } from 'react-redux'
+import useDailyTasks from '../../../customHooks/useDailyTasks'
 
 const NewChallengeModal = ({ isOpen, onClose, preSelectedUser = null }) => {
   const { t } = useTranslation('QuickClash')
@@ -37,6 +38,7 @@ const NewChallengeModal = ({ isOpen, onClose, preSelectedUser = null }) => {
   const { createChallenge, challengeCreating: isSubmitting } = useQuickClash()
   const { emitChallengeCreated } = useQuickClashSocket()
   const dispatch = useDispatch()
+  const { trackFriendChallenge } = useDailyTasks()
   // State management
   const [selectedUser, setSelectedUser] = useState(preSelectedUser || null)
   const [selectedCategories, setSelectedCategories] = useState([])
@@ -186,6 +188,7 @@ const NewChallengeModal = ({ isOpen, onClose, preSelectedUser = null }) => {
             category: challenge.category,
           },
         })
+        trackFriendChallenge()
       }
 
       // Close the modal if not already closed

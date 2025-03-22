@@ -28,6 +28,7 @@ import ConfirmationDialog from '../components/quickClashComponents/ConfirmationD
 import { useSelector } from 'react-redux'
 import useQuickClash from '../customHooks/useQuickClash'
 import useQuickClashSocket from '../customHooks/useQuickClashSocket'
+import useDailyTasks from '../customHooks/useDailyTasks'
 
 // Lazy-loaded components
 const ReadingPhase = lazy(() =>
@@ -57,7 +58,7 @@ const QuickClashSession = () => {
     sessionError: reduxSessionError,
   } = useQuickClash()
   const { emitChallengeCompleted } = useQuickClashSocket()
-
+  const { trackChallengeCompletion } = useDailyTasks()
   // State management
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState(null)
@@ -255,6 +256,14 @@ const QuickClashSession = () => {
         score: result.RQM_score,
       })
     }
+
+    trackChallengeCompletion({
+      score: result.RQM_score,
+      fromMatchmaking: challenge?.fromMatchmaking || false,
+      readingTime: 120 - timeLeft, // Convert remaining time to spent time
+      category: challenge?.category,
+      challengeId: challenge?._id,
+    })
   }
 
   // Handle browser's back button and page refresh attempts

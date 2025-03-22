@@ -12,6 +12,7 @@ import { addNoteMessageIfAllowed } from '../redux/appSlice'
 import { useNavigate } from 'react-router-dom'
 import { useTranslation } from 'react-i18next'
 import { v4 as uuidv4 } from 'uuid'
+import { updateTaskProgressDirectInRedux } from '../redux/quickClashDailyTasksSlice'
 
 /**
  * Custom hook for managing Quick Clash socket events
@@ -223,6 +224,20 @@ const useQuickClashSocket = () => {
 
         // Refresh active challenges list
         dispatch(fetchActiveChallenges())
+        //data.trackWinnerOutcomeResult
+        //updateTaskProgressDirectInRedux
+        if (data?.trackWinnerOutcomeResult?.tasksDone) {
+          // convert tasksDone object to array
+          const tasksDoneArray = Object.keys(
+            data.trackWinnerOutcomeResult.tasksDone,
+          ).map(key => data.trackWinnerOutcomeResult.tasksDone[key])
+          // update task progress directly in redux
+          tasksDoneArray.forEach(task => {
+            if (task) {
+              dispatch(updateTaskProgressDirectInRedux(task))
+            }
+          })
+        }
       })
 
       // Analysis ready

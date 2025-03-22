@@ -3,6 +3,7 @@ const { sendNotification } = require('../notificationService')
 const ApplicationUpdates = require('../../model/applicationUpdatesSchema')
 const User = require('../../model/userSchema')
 const globalEmitter = require('../../eventEmitter')
+const QuickClashOutcomeTracker = require('../../utils/quickClashOutcomeTracker')
 
 /**
  * Send notification when a new challenge is created
@@ -332,8 +333,19 @@ const notifyChallengeCompleted = async ({ challenge, completedByUserId }) => {
           messageId: opponentUpdate._id.toString(),
         }),
       ])
+
+      let trackWinnerOutcomeResult
+      try {
+        trackWinnerOutcomeResult = await QuickClashOutcomeTracker.trackOutcome({
+          challengeId: challenge._id.toString(),
+        })
+      } catch (error) {
+        trackWinnerOutcomeResult = null
+      }
+
       globalEmitter.emit('quickClash:challengeCompletedByBothPlayers', {
         challenge,
+        trackWinnerOutcomeResult,
         completedByUserId,
       })
     } else {

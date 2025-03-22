@@ -30,9 +30,13 @@ const {
 } = require('../controllers/quickClashMatchmakingController')
 
 const router = express.Router()
+const dailyTaskRoutes = require('./quickClashDailyTaskRoutes')
 
 // All routes need authentication
 router.use(Authenticate)
+
+// Mount daily task routes
+router.use('/dailyTasks', dailyTaskRoutes)
 
 // Challenge management routes
 router.post('/challenge/create', createNewChallenge)

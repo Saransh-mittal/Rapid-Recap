@@ -1,5 +1,5 @@
 // components/quickClashComponents/ui/CustomTabs.jsx
-import React, { useState } from 'react'
+import React, { useState, useCallback } from 'react'
 import {
   Box,
   Tabs,
@@ -11,37 +11,47 @@ import {
   Text,
   useBreakpointValue,
   useTheme,
+  Badge,
 } from '@chakra-ui/react'
 import { motion } from 'framer-motion'
-import { Swords, History, Users, Zap } from 'lucide-react'
+import { Swords, Users, Zap, CheckCircle, Calendar } from 'lucide-react'
 import { useTranslation } from 'react-i18next'
+import { useSelector } from 'react-redux'
 
 const MotionBox = motion(Box)
 const MotionFlex = motion(Flex)
+const MotionBadge = motion(Badge)
 
 /**
  * Enhanced CustomTabs component for Quick Clash tabs with gamified styling
  * @param {Object} props - Component props
  * @param {React.ReactNode} props.children - Tab panels
  * @param {number} props.initialTabIndex - Initial active tab index
+ * @param {Function} props.onChange - Callback when tab changes
+ * @param {Array} props.tabNames - Optional custom tab names
  */
-const CustomTabs = ({ children, initialTabIndex = 0 }) => {
+const CustomTabs = ({ children, initialTabIndex = 0, onChange, tabNames }) => {
   const { t } = useTranslation('QuickClash')
   const [tabIndex, setTabIndex] = useState(initialTabIndex)
   const isMobile = useBreakpointValue({ base: true, md: false })
   const theme = useTheme()
 
+  // Get daily tasks progress
+  const { tasks } = useSelector(state => state.quickClashDailyTasks)
+  const pendingTasks = tasks.filter(task => !task.completed)
+
   // Tab data with icons, labels and colors
-  const tabs = [
+  const defaultTabs = [
     {
       label: t('Challenges'),
       icon: Swords,
-      ariaLabel: 'challenges tab',
+      ariaLabel: 'active challenges tab',
       color: 'purple.400',
       hoverColor: 'purple.300',
       activeGradient: 'linear(to-r, purple.600, purple.400)',
       iconAnimation: { rotate: [0, 15, -15, 0], transition: { duration: 0.5 } },
     },
+    /* Comment out Analysis tab as requested
     {
       label: t('Analysis'),
       icon: History,
@@ -50,6 +60,16 @@ const CustomTabs = ({ children, initialTabIndex = 0 }) => {
       hoverColor: 'blue.300',
       activeGradient: 'linear(to-r, blue.600, blue.400)',
       iconAnimation: { rotate: [0, 360], transition: { duration: 0.7 } },
+    },
+    */
+    {
+      label: t('Daily Tasks'),
+      icon: Calendar,
+      ariaLabel: 'Daily Tasks tab',
+      color: 'yellow.400',
+      hoverColor: 'yellow.300',
+      activeGradient: 'linear(to-r, yellow.600, yellow.400)',
+      iconAnimation: { y: [0, -3, 0], transition: { duration: 0.5 } },
     },
     {
       label: t('Matchmaking'),
@@ -62,10 +82,21 @@ const CustomTabs = ({ children, initialTabIndex = 0 }) => {
     },
   ]
 
+  // Handle tab change
+  const handleTabChange = useCallback(
+    index => {
+      setTabIndex(index)
+      if (onChange) {
+        onChange(index)
+      }
+    },
+    [onChange],
+  )
+
   return (
     <Tabs
       index={tabIndex}
-      onChange={setTabIndex}
+      onChange={handleTabChange}
       variant="unstyled"
       colorScheme="purple"
       isLazy
@@ -102,7 +133,7 @@ const CustomTabs = ({ children, initialTabIndex = 0 }) => {
           zIndex="0"
         />
 
-        {tabs.map((tab, idx) => (
+        {defaultTabs.map((tab, idx) => (
           <Tab
             key={idx}
             flex={1}
@@ -127,6 +158,7 @@ const CustomTabs = ({ children, initialTabIndex = 0 }) => {
                 inactive: { scale: 1 },
               }}
               transition={{ type: 'spring', stiffness: 300, damping: 20 }}
+              position="relative"
             >
               <MotionBox
                 animate={tabIndex === idx ? tab.iconAnimation : {}}
@@ -148,6 +180,30 @@ const CustomTabs = ({ children, initialTabIndex = 0 }) => {
               >
                 {tab.label}
               </Text>
+
+              {/* Badge for Daily Tasks */}
+              {tab.label === t('Daily Tasks') && pendingTasks.length > 0 && (
+                <MotionBadge
+                  position="absolute"
+                  top="-8px"
+                  right="-8px"
+                  colorScheme="red"
+                  borderRadius="full"
+                  fontSize="xs"
+                  initial={{ scale: 0 }}
+                  animate={{
+                    scale: [0.8, 1.2, 1],
+                    transition: {
+                      duration: 0.5,
+                      repeat: 3,
+                      repeatType: 'reverse',
+                      repeatDelay: 5,
+                    },
+                  }}
+                >
+                  {pendingTasks.length}
+                </MotionBadge>
+              )}
 
               {/* Active indicator dot - shows for active tab only */}
               {tabIndex === idx && (

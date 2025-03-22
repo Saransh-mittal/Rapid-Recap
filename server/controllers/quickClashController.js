@@ -281,14 +281,14 @@ const submitQuizAnswers = asyncHandler(async (req, res) => {
 
     // Get the challenge to check if it's now completed
     const challenge = await QuickClashChallenge.findById(session.challenge)
-      .select('challengerScore opponentScore status')
+      .select('challengerAttempted opponentAttempted status')
       .lean()
 
     // If both users have submitted their quizzes, the challenge is completed
     if (
       challenge &&
-      challenge.challengerScore > 0 &&
-      challenge.opponentScore > 0
+      challenge.challengerAttempted &&
+      challenge.opponentAttempted
     ) {
       // Start analysis generation in the background
       initiateBackgroundAnalysis({

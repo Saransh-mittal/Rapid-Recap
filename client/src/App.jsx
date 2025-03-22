@@ -94,6 +94,7 @@ import { fetchInventory } from './redux/inventorySlice.js'
 import useQuickClashSocket from './customHooks/useQuickClashSocket.js'
 import useQuickClash from './customHooks/useQuickClash.js'
 import NotificationReminderModal from './components/miscellaneous/NotificationReminderModal.jsx'
+import useDailyTasks from './customHooks/useDailyTasks.js'
 
 const App = () => {
   // ReactGA.initialize('G-ES5VQ8NW7Z')

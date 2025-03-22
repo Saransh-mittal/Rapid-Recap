@@ -155,6 +155,7 @@ const createChallenge = async ({
           opponent: opponentId,
           selectedCategories: categories,
           category,
+          fromMatchmaking: fromMatchMaking || false,
           article: articleData,
           expiresAt: new Date(Date.now() + CHALLENGE_EXPIRY),
         })

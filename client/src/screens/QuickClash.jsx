@@ -7,6 +7,7 @@ import { lazy, Suspense } from 'react'
 import QuickClashHeader from '../components/quickClashComponents/QuickClashHeader'
 import CustomTabs from '../components/quickClashComponents/ui/CustomTabs'
 import NewChallengeModal from '../components/quickClashComponents/modals/NewChallengeModal'
+import { useSelector } from 'react-redux'
 
 // Entrance animation
 const QuickClashEntrance = lazy(() =>
@@ -25,6 +26,12 @@ const CompletedChallenges = lazy(() =>
 )
 const MatchmakingTab = lazy(() =>
   import('../components/quickClashComponents/MatchmakingTab'),
+)
+const DailyTasksDashboard = lazy(() =>
+  import('../components/quickClashComponents/dailyTasks/DailyTasksDashboard'),
+)
+const TaskPopup = lazy(() =>
+  import('../components/quickClashComponents/dailyTasks/TaskPopup'),
 )
 
 // Loading fallback
@@ -45,7 +52,12 @@ const MotionBox = motion(Box)
 const QuickClash = () => {
   const { isOpen, onOpen, onClose } = useDisclosure()
   const [showEntrance, setShowEntrance] = useState(true)
-
+  const [showTaskPopup, setShowTaskPopup] = useState(false)
+  const [activeTabIndex, setActiveTabIndex] = useState(0)
+  const { justCompletedTaskId } = useSelector(
+    state => state.quickClashDailyTasks,
+  )
+  const taskJustCompleted = !!justCompletedTaskId
   // Use localStorage to avoid showing entrance animation on every visit
   useEffect(() => {
     const lastVisit = localStorage.getItem('quickClashLastVisit')
@@ -58,7 +70,19 @@ const QuickClash = () => {
     } else {
       setShowEntrance(false)
     }
+
+    // Show task popup after a short delay
+    const timer = setTimeout(() => {
+      setShowTaskPopup(true)
+    }, 2000)
+
+    return () => clearTimeout(timer)
   }, [])
+  useEffect(() => {
+    if (taskJustCompleted) {
+      setShowTaskPopup(true)
+    }
+  }, [taskJustCompleted])
 
   // Use useCallback for event handlers
   const handleNewChallenge = useCallback(() => {
@@ -67,6 +91,12 @@ const QuickClash = () => {
 
   const handleEntranceComplete = useCallback(() => {
     setShowEntrance(false)
+  }, [])
+
+  // Handle viewing all tasks from the popup
+  const handleViewAllTasks = useCallback(() => {
+    setActiveTabIndex(3) // Switch to Daily Tasks tab
+    setShowTaskPopup(false) // Hide popup
   }, [])
 
   return (
@@ -108,17 +138,28 @@ const QuickClash = () => {
             mb={4}
           >
             <Box p={4}>
-              <CustomTabs initialTabIndex={0}>
+              <CustomTabs
+                initialTabIndex={activeTabIndex}
+                onChange={index => setActiveTabIndex(index)}
+                tabNames={['Active', 'Daily Tasks', 'Matchmaking']}
+              >
                 <TabPanel px={0}>
                   <Suspense fallback={<LoadingFallback />}>
                     <ActiveChallenges />
                   </Suspense>
                 </TabPanel>
-                <TabPanel px={0}>
+
+                {/* <TabPanel px={0}>
                   <Suspense fallback={<LoadingFallback />}>
                     <CompletedChallenges />
                   </Suspense>
+                </TabPanel> */}
+                <TabPanel px={0}>
+                  <Suspense fallback={<LoadingFallback />}>
+                    <DailyTasksDashboard />
+                  </Suspense>
                 </TabPanel>
+
                 <TabPanel px={0}>
                   <Suspense fallback={<LoadingFallback />}>
                     <MatchmakingTab />
@@ -131,6 +172,13 @@ const QuickClash = () => {
 
         {/* Challenge Modal */}
         <NewChallengeModal isOpen={isOpen} onClose={onClose} />
+
+        {/* Task Popup */}
+        {showTaskPopup && (
+          <Suspense fallback={null}>
+            <TaskPopup onViewAllTasks={handleViewAllTasks} />
+          </Suspense>
+        )}
       </Container>
     </>
   )

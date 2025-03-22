@@ -14,6 +14,7 @@ import demotionSummaryReducer from './demotionSummarySlice'
 import inventoryReducer from './inventorySlice'
 import quickClashReducer from './quickClashSlice'
 import quickClashMatchmakingReducer from './quickClashMatchmakingSlice'
+import quickClashDailyTasksReducer from './quickClashDailyTasksSlice'
 
 export const store = configureStore({
   reducer: {
@@ -32,5 +33,6 @@ export const store = configureStore({
     inventory: inventoryReducer,
     quickClash: quickClashReducer,
     quickClashMatchmaking: quickClashMatchmakingReducer,
+    quickClashDailyTasks: quickClashDailyTasksReducer,
   },
 })

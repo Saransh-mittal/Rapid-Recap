@@ -30,6 +30,7 @@ import { Brain, XCircle, ArrowLeft } from 'lucide-react'
 import axios from 'axios'
 import { useTranslation } from 'react-i18next'
 import { useSelector } from 'react-redux'
+import useDailyTasks from '../../customHooks/useDailyTasks'
 
 // Lazy loaded tab components
 const PerformanceTab = lazy(() => import('./analysisComponents/PerformanceTab'))
@@ -51,6 +52,7 @@ const ChallengeAnalysisModal = ({ isOpen, onClose, challengeId }) => {
   const [analysis, setAnalysis] = useState(null)
   const [activeTab, setActiveTab] = useState(0)
   const toast = useToast()
+  const { trackAnalysisView } = useDailyTasks()
 
   // Background colors - more soothing gradient
   const bgGradient = useColorModeValue(
@@ -109,6 +111,12 @@ const ChallengeAnalysisModal = ({ isOpen, onClose, challengeId }) => {
 
     fetchAnalysis()
   }, [isOpen, challengeId, toast, t])
+  useEffect(() => {
+    if (analysis) {
+      // Track when user views an analysis
+      trackAnalysisView()
+    }
+  }, [analysis, trackAnalysisView])
 
   // Calculate some derived values for display
   const userIsWinner =

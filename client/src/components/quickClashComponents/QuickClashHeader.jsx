@@ -16,6 +16,7 @@ import { Target } from 'lucide-react'
 import { useTranslation } from 'react-i18next'
 import { useNavigate } from 'react-router-dom'
 import QuickClashLeaderboardButton from './leaderboard/QuickClashLeaderboardButton'
+import TaskProgressIndicator from './dailyTasks/TaskProgressIndicator'
 
 const MotionBox = motion(Box)
 const MotionButton = motion(Button)
@@ -137,6 +138,7 @@ const QuickClashHeader = ({ onNewChallenge }) => {
           mt={{ base: 2, md: 0 }}
           w={{ base: '100%', md: 'auto' }}
         >
+          <TaskProgressIndicator size="sm" />
           <MotionButton
             as={motion.button}
             leftIcon={<FiZap />}
