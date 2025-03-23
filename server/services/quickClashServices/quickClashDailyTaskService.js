@@ -320,45 +320,104 @@ const claimTaskReward = async ({ taskId, userId }) => {
 }
 
 /**
- * Get task completion statistics
+ * Get comprehensive task statistics for a user
  * @param {Object} params - Parameters
  * @param {string} params.userId - User ID
- * @returns {Promise<Object>} Task statistics
+ * @returns {Promise<Object>} Detailed task statistics
  */
 const getTaskStatistics = async ({ userId }) => {
+  // Define time ranges for queries
   const today = moment().startOf('day')
+  const yesterday = moment().subtract(1, 'days').startOf('day')
   const pastWeek = moment().subtract(7, 'days').startOf('day')
+  const pastMonth = moment().subtract(30, 'days').startOf('day')
 
-  // Get all tasks for the user in the past week
+  // Get all tasks for the user in the past month (for better statistics)
   const tasks = await QuickClashDailyTask.find({
     user: userId,
-    assignedAt: { $gte: pastWeek.toDate() },
+    assignedAt: { $gte: pastMonth.toDate() },
   })
 
-  // Calculate statistics
+  // Get user for streak information
+  const user = await User.findById(userId).select(
+    'lastTaskCompletionDate taskCompletionStreak',
+  )
+
+  // Basic statistics
   const totalTasks = tasks.length
   const completedTasks = tasks.filter(task => task.completed).length
   const completionRate =
     totalTasks > 0 ? (completedTasks / totalTasks) * 100 : 0
+  const unclaimedRewards = tasks.filter(
+    task => task.completed && !task.rewardClaimed,
+  ).length
 
-  // Get today's task counts
+  // Today's task counts
   const todaysTasks = tasks.filter(task =>
     moment(task.assignedAt).isSame(today, 'day'),
   )
   const todaysCompleted = todaysTasks.filter(task => task.completed).length
+  const todaysCompletionRate =
+    todaysTasks.length > 0 ? (todaysCompleted / todaysTasks.length) * 100 : 0
+
+  // Yesterday's task counts (for comparison)
+  const yesterdaysTasks = tasks.filter(task =>
+    moment(task.assignedAt).isSame(yesterday, 'day'),
+  )
+  const yesterdaysCompleted = yesterdaysTasks.filter(
+    task => task.completed,
+  ).length
 
   // Get tasks by difficulty
-  const tasksByDifficulty = tasks.reduce((acc, task) => {
-    const diffLevel = task.difficulty
-    if (!acc[diffLevel]) {
-      acc[diffLevel] = { total: 0, completed: 0 }
-    }
-    acc[diffLevel].total++
-    if (task.completed) {
-      acc[diffLevel].completed++
+  const tasksByDifficulty = [1, 2, 3, 4, 5].reduce((acc, level) => {
+    const difficultyTasks = tasks.filter(task => task.difficulty === level)
+    acc[level] = {
+      total: difficultyTasks.length,
+      completed: difficultyTasks.filter(task => task.completed).length,
+      completionRate:
+        difficultyTasks.length > 0
+          ? (difficultyTasks.filter(task => task.completed).length /
+              difficultyTasks.length) *
+            100
+          : 0,
     }
     return acc
   }, {})
+
+  // Get tasks by type
+  const taskTypes = [
+    'COMPLETE_CHALLENGES',
+    'ACHIEVE_RQM_SCORE',
+    'WIN_CHALLENGES',
+    'CHALLENGE_FRIEND',
+    'USE_CATEGORIES',
+    'COMPLETE_MATCHMAKING',
+    'VIEW_ANALYSES',
+    'MAINTAIN_WINSTREAK',
+    'IMPROVE_READING_TIME',
+  ]
+
+  const tasksByType = taskTypes.reduce((acc, type) => {
+    const typeTasks = tasks.filter(task => task.taskType === type)
+    acc[type] = {
+      total: typeTasks.length,
+      completed: typeTasks.filter(task => task.completed).length,
+    }
+    return acc
+  }, {})
+
+  // Determine best performing category/difficulty
+  let bestDifficulty = { level: 0, rate: 0 }
+  for (const [level, stats] of Object.entries(tasksByDifficulty)) {
+    if (stats.total >= 3 && stats.completionRate > bestDifficulty.rate) {
+      bestDifficulty = {
+        level: parseInt(level),
+        rate: stats.completionRate,
+        completed: stats.completed,
+        total: stats.total,
+      }
+    }
+  }
 
   // Get total rewards earned
   const totalRewardsEarned = tasks
@@ -371,16 +430,113 @@ const getTaskStatistics = async ({ userId }) => {
       { xp: 0 },
     )
 
+  // Recent activity - last 5 completed tasks
+  const recentActivity = tasks
+    .filter(task => task.completed)
+    .sort((a, b) => new Date(b.completedAt) - new Date(a.completedAt))
+    .slice(0, 5)
+    .map(task => ({
+      id: task._id,
+      title: task.title,
+      type: task.taskType,
+      difficulty: task.difficulty,
+      completedAt: task.completedAt,
+      rewardClaimed: task.rewardClaimed,
+    }))
+
+  // Streak information - either from user document or calculate
+  let streak = user?.taskCompletionStreak || 0
+
+  // If we need to calculate streak manually (if not stored in user document)
+  if (!user?.taskCompletionStreak) {
+    // Get all completed tasks sorted by completion date
+    const userTasks = await QuickClashDailyTask.find({
+      user: userId,
+      completed: true,
+    }).sort({ completedAt: -1 })
+
+    if (userTasks.length > 0) {
+      // Check if any task was completed today
+      const latestTask = userTasks[0]
+      const latestDate = moment(latestTask.completedAt).startOf('day')
+      const isToday = latestDate.isSame(today, 'day')
+
+      if (isToday) {
+        // Start streak counter at 1 for today
+        streak = 1
+        let previousDate = today.clone().subtract(1, 'day')
+
+        // Check previous days
+        for (let i = 1; i < userTasks.length; i++) {
+          const taskDate = moment(userTasks[i].completedAt).startOf('day')
+
+          // If this task's date matches the previous date we're looking for
+          if (taskDate.isSame(previousDate, 'day')) {
+            streak++
+            previousDate = previousDate.clone().subtract(1, 'day')
+          } else if (taskDate.isBefore(previousDate, 'day')) {
+            // We found a gap, so break the loop
+            break
+          }
+        }
+      }
+    }
+  }
+
+  // Weekly progress trend - percentage completed each day for the past week
+  const weeklyTrend = []
+  for (let i = 6; i >= 0; i--) {
+    const date = moment().subtract(i, 'days').startOf('day')
+    const dayTasks = tasks.filter(task =>
+      moment(task.assignedAt).isSame(date, 'day'),
+    )
+    const dayCompleted = dayTasks.filter(task => task.completed).length
+    const dayRate =
+      dayTasks.length > 0 ? (dayCompleted / dayTasks.length) * 100 : 0
+
+    weeklyTrend.push({
+      date: date.format('YYYY-MM-DD'),
+      dayName: date.format('ddd'),
+      totalTasks: dayTasks.length,
+      completedTasks: dayCompleted,
+      completionRate: dayRate,
+    })
+  }
+
   return {
+    // Overall statistics
     totalTasks,
     completedTasks,
+    unclaimedRewards,
     completionRate,
+
+    // Today's stats
     today: {
       total: todaysTasks.length,
       completed: todaysCompleted,
+      completionRate: todaysCompletionRate,
     },
+
+    // Yesterday comparison
+    yesterday: {
+      total: yesterdaysTasks.length,
+      completed: yesterdaysCompleted,
+    },
+
+    // Categorized stats
     byDifficulty: tasksByDifficulty,
+    byType: tasksByType,
+
+    // Performance metrics
+    bestPerforming: bestDifficulty.level ? bestDifficulty : null,
+    streak,
+
+    // Rewards
     rewards: totalRewardsEarned,
+
+    // Activity and trends
+    recentActivity,
+    weeklyTrend,
   }
 }
 

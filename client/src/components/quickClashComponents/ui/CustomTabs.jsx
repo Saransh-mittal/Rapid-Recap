@@ -1,5 +1,5 @@
 // components/quickClashComponents/ui/CustomTabs.jsx
-import React, { useState, useCallback } from 'react'
+import React, { useState, useCallback, useEffect } from 'react'
 import {
   Box,
   Tabs,
@@ -21,6 +21,20 @@ import { useSelector } from 'react-redux'
 const MotionBox = motion(Box)
 const MotionFlex = motion(Flex)
 const MotionBadge = motion(Badge)
+
+// Map tab names to URL hashes
+const TAB_HASH_MAP = {
+  0: 'active',
+  1: 'tasks',
+  2: 'matchmaking',
+}
+
+// Reverse map for looking up index from hash
+const HASH_TAB_MAP = {
+  active: 0,
+  tasks: 1,
+  matchmaking: 2,
+}
 
 /**
  * Enhanced CustomTabs component for Quick Clash tabs with gamified styling
@@ -50,6 +64,7 @@ const CustomTabs = ({ children, initialTabIndex = 0, onChange, tabNames }) => {
       hoverColor: 'purple.300',
       activeGradient: 'linear(to-r, purple.600, purple.400)',
       iconAnimation: { rotate: [0, 15, -15, 0], transition: { duration: 0.5 } },
+      hash: 'active',
     },
     /* Comment out Analysis tab as requested
     {
@@ -63,13 +78,14 @@ const CustomTabs = ({ children, initialTabIndex = 0, onChange, tabNames }) => {
     },
     */
     {
-      label: t('Daily Tasks'),
+      label: t('Tasks'),
       icon: Calendar,
       ariaLabel: 'Daily Tasks tab',
       color: 'yellow.400',
       hoverColor: 'yellow.300',
       activeGradient: 'linear(to-r, yellow.600, yellow.400)',
       iconAnimation: { y: [0, -3, 0], transition: { duration: 0.5 } },
+      hash: 'tasks',
     },
     {
       label: t('Matchmaking'),
@@ -79,13 +95,49 @@ const CustomTabs = ({ children, initialTabIndex = 0, onChange, tabNames }) => {
       hoverColor: 'green.300',
       activeGradient: 'linear(to-r, green.600, green.400)',
       iconAnimation: { scale: [1, 1.2, 1], transition: { duration: 0.5 } },
+      hash: 'matchmaking',
     },
   ]
+
+  // Check URL hash on mount and when hash changes
+  useEffect(() => {
+    const syncTabWithHash = () => {
+      // Get current hash without the # symbol
+      const hash = window.location.hash.substring(1)
+
+      // Find the corresponding tab index
+      if (hash && HASH_TAB_MAP[hash] !== undefined) {
+        const newIndex = HASH_TAB_MAP[hash]
+        if (newIndex !== tabIndex) {
+          setTabIndex(newIndex)
+          if (onChange) {
+            onChange(newIndex)
+          }
+        }
+      }
+    }
+
+    // Initial sync on component mount
+    syncTabWithHash()
+
+    // Listen for hash changes
+    window.addEventListener('hashchange', syncTabWithHash)
+
+    // Cleanup
+    return () => {
+      window.removeEventListener('hashchange', syncTabWithHash)
+    }
+  }, [onChange, tabIndex])
 
   // Handle tab change
   const handleTabChange = useCallback(
     index => {
       setTabIndex(index)
+
+      // Update URL hash without triggering a page reload
+      const hash = TAB_HASH_MAP[index] || 'active'
+      window.history.pushState(null, '', `#${hash}`)
+
       if (onChange) {
         onChange(index)
       }

@@ -103,7 +103,7 @@ const QuickClashLeaderboardButton = () => {
         <MotionBox
           position="fixed"
           bottom="90px"
-          right="20px"
+          right="10px"
           zIndex={10}
           variants={floatingVariants}
           initial="initial"

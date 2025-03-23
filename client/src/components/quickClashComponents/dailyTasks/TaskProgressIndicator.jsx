@@ -1,200 +1,102 @@
 // components/quickClashComponents/dailyTasks/TaskProgressIndicator.jsx
-import React, { useEffect } from 'react'
+import React from 'react'
 import {
   Box,
   CircularProgress,
   CircularProgressLabel,
   Tooltip,
-  Badge,
-  HStack,
-  Text,
   Icon,
-  useDisclosure,
 } from '@chakra-ui/react'
-import { motion, AnimatePresence } from 'framer-motion'
-import { Star, CheckCircle, Award, Calendar } from 'lucide-react'
+import { motion } from 'framer-motion'
+import { Gift } from 'lucide-react'
 import { useSelector } from 'react-redux'
 import { useTranslation } from 'react-i18next'
-import TaskPopup from './TaskPopup'
 
 const MotionBox = motion(Box)
-const MotionCircularProgress = motion(CircularProgress)
-const MotionCircularProgressLabel = motion(CircularProgressLabel)
 
 /**
- * A circular progress indicator that shows daily task completion progress
- * Can be placed in header areas throughout the app
+ * A compact task progress indicator that matches the Quick Clash UI
  */
-const TaskProgressIndicator = ({ onViewTasks, size = 'md' }) => {
+const TaskProgressIndicator = ({ onViewTasks }) => {
   const { t } = useTranslation('QuickClash')
 
-  const { tasks, justCompletedTaskId } = useSelector(
-    state => state.quickClashDailyTasks,
-  )
+  const { tasks } = useSelector(state => state.quickClashDailyTasks)
 
   // Calculate progress
   const completedTasks = tasks.filter(task => task.completed).length
   const totalTasks = tasks.length || 1 // Prevent division by zero
   const progressPercentage = Math.round((completedTasks / totalTasks) * 100)
 
-  // Determine if all tasks are completed
-  const allCompleted = completedTasks === totalTasks && totalTasks > 0
-
   // Get count of unclaimed rewards
   const unclaimedRewards = tasks.filter(
     task => task.completed && !task.rewardClaimed,
   ).length
 
-  // Check if a task was just completed
-  const taskJustCompleted = !!justCompletedTaskId
-
-  // Size mappings
-  const sizeMap = {
-    sm: {
-      size: 45,
-      thickness: 3,
-      fontSize: 'md',
-      iconSize: 5,
-    },
-    md: {
-      size: 60,
-      thickness: 4,
-      fontSize: 'xl',
-      iconSize: 7,
-    },
-    lg: {
-      size: 80,
-      thickness: 5,
-      fontSize: '2xl',
-      iconSize: 10,
-    },
-  }
-
-  // Get settings based on size
-  const settings = sizeMap[size] || sizeMap.md
-
   // If there are no tasks, return empty box
   if (totalTasks === 0) {
-    return <Box w={settings.size} h={settings.size} />
+    return null
+  }
+
+  // Determine tooltip content
+  const getTooltipContent = () => {
+    if (unclaimedRewards > 0) {
+      return `${unclaimedRewards} ${t(
+        'rewards to claim',
+      )} - ${completedTasks}/${totalTasks} ${t('tasks')}`
+    } else {
+      return `${completedTasks}/${totalTasks} ${t('daily tasks completed')}`
+    }
   }
 
   return (
-    <>
-      <Tooltip
-        label={
-          allCompleted
-            ? t('All tasks completed!')
-            : `${completedTasks}/${totalTasks} ` + t('tasks completed')
-        }
-        placement="bottom"
-        hasArrow
+    <Tooltip
+      label={getTooltipContent()}
+      placement="bottom"
+      hasArrow
+      bg="gray.800"
+      color="white"
+      borderRadius="md"
+    >
+      <MotionBox
+        onClick={onViewTasks}
+        cursor="pointer"
+        position="relative"
+        h="44px"
+        w="44px"
+        initial={{ opacity: 0 }}
+        animate={{ opacity: 1 }}
+        whileHover={{ scale: 1.05 }}
+        whileTap={{ scale: 0.95 }}
       >
-        <MotionBox
-          onClick={onViewTasks}
-          cursor="pointer"
-          position="relative"
-          _hover={{ transform: 'scale(1.05)' }}
-          transition="all 0.2s"
-          initial={{ scale: 0.9, opacity: 0 }}
-          animate={{ scale: 1, opacity: 1 }}
-          whileTap={{ scale: 0.95 }}
+        {/* Progress Circle */}
+        <CircularProgress
+          value={progressPercentage}
+          size="44px"
+          thickness="2.5px"
+          color="#F7D147" // Gold color to match UI
+          trackColor="rgba(255, 255, 255, 0.1)"
+          capIsRound
         >
-          {/* Main circular progress */}
-          <MotionCircularProgress
-            value={progressPercentage}
-            size={settings.size}
-            thickness={settings.thickness}
-            color={allCompleted ? 'green.400' : 'purple.400'}
-            trackColor="whiteAlpha.200"
-            animate={
-              taskJustCompleted
-                ? {
-                    rotate: [0, 360],
-                    scale: [1, 1.1, 1],
-                  }
-                : {}
-            }
-            transition={
-              taskJustCompleted
-                ? {
-                    duration: 1.5,
-                    ease: 'easeInOut',
-                  }
-                : {}
-            }
-          >
-            <MotionCircularProgressLabel
-              color="white"
-              fontSize={settings.fontSize}
-              fontWeight="bold"
-              animate={taskJustCompleted ? { scale: [1, 1.2, 1] } : {}}
-              transition={{ duration: 0.5 }}
-            >
-              {progressPercentage}%
-            </MotionCircularProgressLabel>
-          </MotionCircularProgress>
-
-          {/* Completion icon */}
-          {allCompleted && (
-            <AnimatePresence>
-              <MotionBox
-                position="absolute"
-                top={-2}
-                right={-2}
-                initial={{ scale: 0, rotate: -30 }}
-                animate={{ scale: 1, rotate: 0 }}
-                exit={{ scale: 0, opacity: 0 }}
-                transition={{
-                  type: 'spring',
-                  stiffness: 500,
-                  damping: 15,
-                }}
-              >
-                <Icon
-                  as={CheckCircle}
-                  color="green.400"
-                  boxSize={settings.iconSize}
-                />
-              </MotionBox>
-            </AnimatePresence>
-          )}
-
-          {/* Unclaimed rewards badge */}
-          {unclaimedRewards > 0 && (
-            <AnimatePresence>
-              <MotionBox
-                position="absolute"
-                bottom={-2}
-                right={-2}
-                initial={{ scale: 0 }}
-                animate={{
-                  scale: 1,
-                  transition: {
-                    type: 'spring',
-                    stiffness: 500,
-                    damping: 15,
-                  },
-                }}
-                exit={{ scale: 0, opacity: 0 }}
-              >
-                <Badge
-                  colorScheme="yellow"
-                  borderRadius="full"
-                  px={2}
-                  py={1}
-                  boxShadow="0 0 10px rgba(236, 201, 75, 0.5)"
+          <CircularProgressLabel>
+            <Box position="relative">
+              <Icon as={Gift} color="#F7D147" boxSize="18px" />
+              {unclaimedRewards > 0 && (
+                <Box
+                  position="absolute"
+                  bottom="-4px"
+                  right="-4px"
+                  fontSize="11px"
+                  fontWeight="bold"
+                  color="#F7D147"
                 >
-                  <HStack spacing={1}>
-                    <Icon as={Award} boxSize={3} />
-                    <Text fontSize="xs">{unclaimedRewards}</Text>
-                  </HStack>
-                </Badge>
-              </MotionBox>
-            </AnimatePresence>
-          )}
-        </MotionBox>
-      </Tooltip>
-    </>
+                  {unclaimedRewards}
+                </Box>
+              )}
+            </Box>
+          </CircularProgressLabel>
+        </CircularProgress>
+      </MotionBox>
+    </Tooltip>
   )
 }
 

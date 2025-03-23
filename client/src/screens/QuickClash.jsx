@@ -13,6 +13,11 @@ import { useSelector } from 'react-redux'
 const QuickClashEntrance = lazy(() =>
   import('../components/quickClashComponents/QuickClashEntrance'),
 )
+const TaskCompletionHandler = React.lazy(() =>
+  import(
+    '../components/quickClashComponents/dailyTasks/TaskCompletionHandler.jsx'
+  ),
+)
 
 // Lazy loaded components for better performance
 const StatsCard = lazy(() =>
@@ -49,6 +54,10 @@ const LoadingFallback = () => (
 
 const MotionBox = motion(Box)
 
+/**
+ * Main QuickClash component
+ * Supports URL hash-based navigation for tabs
+ */
 const QuickClash = () => {
   const { isOpen, onOpen, onClose } = useDisclosure()
   const [showEntrance, setShowEntrance] = useState(true)
@@ -58,10 +67,26 @@ const QuickClash = () => {
     state => state.quickClashDailyTasks,
   )
   const taskJustCompleted = !!justCompletedTaskId
-  // Use localStorage to avoid showing entrance animation on every visit
+
+  // Initial setup - check URL hash, localStorage, etc.
   useEffect(() => {
     const lastVisit = localStorage.getItem('quickClashLastVisit')
     const now = Date.now()
+
+    // Check URL hash for initial tab
+    const hash = window.location.hash.substring(1)
+    if (hash) {
+      // Map hash to tab index
+      const hashToIndex = {
+        active: 0,
+        tasks: 1,
+        matchmaking: 2,
+      }
+
+      if (hashToIndex[hash] !== undefined) {
+        setActiveTabIndex(hashToIndex[hash])
+      }
+    }
 
     // Show entrance animation if it's been more than 1 hour since last visit
     if (!lastVisit || now - parseInt(lastVisit) > 60 * 60 * 1000) {
@@ -78,6 +103,8 @@ const QuickClash = () => {
 
     return () => clearTimeout(timer)
   }, [])
+
+  // Show popup when a task is completed
   useEffect(() => {
     if (taskJustCompleted) {
       setShowTaskPopup(true)
@@ -93,10 +120,16 @@ const QuickClash = () => {
     setShowEntrance(false)
   }, [])
 
-  // Handle viewing all tasks from the popup
+  // Handle viewing all tasks from the popup - now using URL hash navigation
   const handleViewAllTasks = useCallback(() => {
-    setActiveTabIndex(3) // Switch to Daily Tasks tab
-    setShowTaskPopup(false) // Hide popup
+    // Update URL hash to navigate to tasks tab
+    window.location.hash = 'tasks'
+    // Hide the popup
+  }, [])
+
+  // Update local tab index when changed via hash
+  const handleTabChange = useCallback(index => {
+    setActiveTabIndex(index)
   }, [])
 
   return (
@@ -140,7 +173,7 @@ const QuickClash = () => {
             <Box p={4}>
               <CustomTabs
                 initialTabIndex={activeTabIndex}
-                onChange={index => setActiveTabIndex(index)}
+                onChange={handleTabChange}
                 tabNames={['Active', 'Daily Tasks', 'Matchmaking']}
               >
                 <TabPanel px={0}>
@@ -149,11 +182,6 @@ const QuickClash = () => {
                   </Suspense>
                 </TabPanel>
 
-                {/* <TabPanel px={0}>
-                  <Suspense fallback={<LoadingFallback />}>
-                    <CompletedChallenges />
-                  </Suspense>
-                </TabPanel> */}
                 <TabPanel px={0}>
                   <Suspense fallback={<LoadingFallback />}>
                     <DailyTasksDashboard />
@@ -179,6 +207,11 @@ const QuickClash = () => {
             <TaskPopup onViewAllTasks={handleViewAllTasks} />
           </Suspense>
         )}
+
+        {/* Task Completion Handler */}
+        <Suspense fallback={null}>
+          <TaskCompletionHandler />
+        </Suspense>
       </Container>
     </>
   )

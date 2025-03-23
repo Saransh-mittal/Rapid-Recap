@@ -345,5 +345,6 @@
   "Check back later or refresh to get new tasks": "Check back later or refresh to get new tasks",
   "tasks remaining": "tasks remaining",
   "All tasks completed!": "All tasks completed!",
-  "And {count} more completed tasks": "And {{count}} more completed tasks"
+  "And {count} more completed tasks": "And {{count}} more completed tasks",
+  "Claim {xp} XP": "Claim {{xp}} XP"
 }

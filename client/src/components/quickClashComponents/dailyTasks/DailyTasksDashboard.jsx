@@ -1,20 +1,26 @@
 // components/quickClashComponents/dailyTasks/DailyTasksDashboard.jsx
-import React, { useEffect, useCallback } from 'react'
+import React, { useEffect, useCallback, useState, useMemo } from 'react'
 import {
   Box,
   VStack,
-  Heading,
+  HStack,
   Text,
-  SimpleGrid,
   Button,
   Flex,
   Spinner,
   Icon,
   useToast,
-  HStack,
-  Progress,
-  Divider,
   Badge,
+  CircularProgress,
+  CircularProgressLabel,
+  Tabs,
+  TabList,
+  Tab,
+  TabPanels,
+  TabPanel,
+  Heading,
+  Center,
+  Divider,
 } from '@chakra-ui/react'
 import { motion, AnimatePresence } from 'framer-motion'
 import {
@@ -25,7 +31,11 @@ import {
   Trophy,
   AlertCircle,
   Check,
-  Target,
+  CheckCircle,
+  Star,
+  Zap,
+  Gift,
+  Sparkles,
 } from 'lucide-react'
 import { useSelector, useDispatch } from 'react-redux'
 import { useTranslation } from 'react-i18next'
@@ -35,27 +45,85 @@ import {
   fetchTaskStatistics,
   clearJustCompletedTask,
 } from '../../../redux/quickClashDailyTasksSlice'
+
+// Import components
 import TaskCard from './TaskCard'
+import TaskDetailsModal from './TaskDetailsModal'
 
 const MotionBox = motion(Box)
-const MotionHeading = motion(Heading)
-const MotionButton = motion(Button)
 const MotionFlex = motion(Flex)
+const MotionText = motion(Text)
+const MotionHStack = motion(HStack)
+const MotionCircularProgress = motion(CircularProgress)
+const MotionBadge = motion(Badge)
+const MotionButton = motion(Button)
 
+/**
+ * A streamlined version of the Daily Tasks Dashboard optimized for mobile
+ */
 const DailyTasksDashboard = () => {
   const { t } = useTranslation('QuickClash')
   const dispatch = useDispatch()
   const toast = useToast()
 
-  // Select state from Redux
-  const {
-    tasks,
-    tasksLoading,
-    tasksError,
-    justCompletedTaskId,
-    statistics,
-    statisticsLoading,
-  } = useSelector(state => state.quickClashDailyTasks)
+  // Local state
+  const [tabIndex, setTabIndex] = useState(0)
+  const [selectedTask, setSelectedTask] = useState(null)
+  const [isTaskDetailsOpen, setIsTaskDetailsOpen] = useState(false)
+  const [showParticles, setShowParticles] = useState(false)
+
+  // Redux state
+  const { tasks, tasksLoading, tasksError, justCompletedTaskId, statistics } =
+    useSelector(state => state.quickClashDailyTasks)
+
+  // Calculate task statistics
+  const taskStats = useMemo(() => {
+    const totalTasks = tasks.length
+    const completedTasks = tasks.filter(task => task.completed).length
+    const unclaimedRewards = tasks.filter(
+      task => task.completed && !task.rewardClaimed,
+    ).length
+    const overallProgress =
+      totalTasks > 0 ? Math.round((completedTasks / totalTasks) * 100) : 0
+
+    return {
+      totalTasks,
+      completedTasks,
+      unclaimedRewards,
+      overallProgress,
+      allCompleted: completedTasks === totalTasks && totalTasks > 0,
+    }
+  }, [tasks])
+
+  // Generate particles for animation effects
+  const particles = React.useMemo(() => {
+    return Array.from({ length: 15 }, () => ({
+      x: Math.random() * 100 - 50, // Random x position
+      y: Math.random() * 100 - 50, // Random y position
+      scale: Math.random() * 0.5 + 0.5, // Random size
+      duration: Math.random() * 1 + 1, // Random duration
+      delay: Math.random() * 0.5, // Random delay
+    }))
+  }, [])
+
+  // Clear the "just completed" task after a delay
+  useEffect(() => {
+    if (justCompletedTaskId) {
+      const timer = setTimeout(() => {
+        dispatch(clearJustCompletedTask())
+      }, 3000)
+
+      return () => clearTimeout(timer)
+    }
+  }, [justCompletedTaskId, dispatch])
+
+  // Fetch tasks on component mount
+  useEffect(() => {
+    if (tasks.length === 0 && !tasksLoading) {
+      dispatch(fetchDailyTasks())
+      dispatch(fetchTaskStatistics())
+    }
+  }, [dispatch, tasks.length, tasksLoading])
 
   // Handle task refresh
   const handleRefreshTasks = useCallback(async () => {
@@ -65,330 +133,548 @@ const DailyTasksDashboard = () => {
         title: t('Tasks Refreshed'),
         description: t('Your daily tasks have been updated'),
         status: 'success',
-        duration: 3000,
+        duration: 2000,
         isClosable: true,
+        position: 'top',
       })
+      // Show particles effect after refresh
+      setShowParticles(true)
+      setTimeout(() => setShowParticles(false), 2000)
     } catch (error) {
       toast({
         title: t('Error'),
         description: error || t('Failed to refresh tasks'),
         status: 'error',
-        duration: 3000,
+        duration: 2000,
         isClosable: true,
+        position: 'top',
       })
     }
   }, [dispatch, toast, t])
 
-  // Fetch tasks on component mount
-  useEffect(() => {
-    dispatch(fetchDailyTasks())
-    dispatch(fetchTaskStatistics())
+  // Handle task click to show details
+  const handleTaskClick = useCallback(task => {
+    setSelectedTask(task)
+    setIsTaskDetailsOpen(true)
+  }, [])
 
-    // Clear the "just completed" task after 2 seconds
-    if (justCompletedTaskId) {
-      const timer = setTimeout(() => {
-        dispatch(clearJustCompletedTask())
-      }, 2000)
+  // Filter tasks based on tab index
+  const filteredTasks = useMemo(() => {
+    return tabIndex === 0
+      ? tasks.filter(task => !task.completed)
+      : tasks.filter(task => task.completed)
+  }, [tasks, tabIndex])
 
-      return () => clearTimeout(timer)
-    }
-  }, [dispatch, justCompletedTaskId])
+  // Render loading state
+  if (tasksLoading && tasks.length === 0) {
+    return (
+      <Center h="70vh">
+        <VStack spacing={4}>
+          <Spinner size="xl" thickness="4px" color="purple.500" speed="0.8s" />
+          <Text color="white" fontWeight="medium">
+            {t('Loading your daily tasks...')}
+          </Text>
+        </VStack>
+      </Center>
+    )
+  }
 
-  // Calculate overall progress
-  const totalTasks = tasks.length
-  const completedTasks = tasks.filter(task => task.completed).length
-  const overallProgress =
-    totalTasks > 0 ? Math.round((completedTasks / totalTasks) * 100) : 0
-
-  // Group tasks by completion status
-  const pendingTasks = tasks.filter(task => !task.completed)
-  const completedTasksList = tasks.filter(task => task.completed)
+  // Render error state
+  if (tasksError && tasks.length === 0) {
+    return (
+      <Center h="70vh">
+        <VStack spacing={4} maxW="90%" textAlign="center">
+          <Icon as={AlertCircle} color="red.400" boxSize={10} />
+          <Heading size="md" color="white">
+            {t('Failed to load tasks')}
+          </Heading>
+          <Text color="red.200">{tasksError}</Text>
+          <Button
+            leftIcon={<RefreshCw />}
+            colorScheme="red"
+            onClick={() => dispatch(fetchDailyTasks())}
+          >
+            {t('Try Again')}
+          </Button>
+        </VStack>
+      </Center>
+    )
+  }
 
   return (
     <MotionBox
       initial={{ opacity: 0 }}
       animate={{ opacity: 1 }}
-      transition={{ duration: 0.3 }}
+      transition={{ duration: 0.4 }}
+      pt={2}
+      position="relative"
     >
-      {/* Header */}
-      <MotionFlex
-        bg="rgba(26, 32, 44, 0.7)"
-        backdropFilter="blur(8px)"
-        borderRadius="xl"
-        p={4}
-        mb={5}
-        direction={{ base: 'column', md: 'row' }}
-        justify="space-between"
-        align={{ base: 'flex-start', md: 'center' }}
-        initial={{ y: -20, opacity: 0 }}
-        animate={{ y: 0, opacity: 1 }}
-        transition={{ duration: 0.4 }}
-      >
-        <Box mb={{ base: 4, md: 0 }}>
-          <HStack spacing={3} mb={1}>
-            <Icon as={CalendarClock} color="purple.400" boxSize={6} />
-            <MotionHeading
-              size="md"
-              color="white"
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
-              transition={{ delay: 0.2, duration: 0.3 }}
+      {/* Particle effects */}
+      <AnimatePresence>
+        {showParticles &&
+          particles.map((particle, i) => (
+            <MotionBox
+              key={i}
+              position="fixed"
+              top="50%"
+              left="50%"
+              initial={{
+                x: 0,
+                y: 0,
+                scale: 0,
+                opacity: 0,
+              }}
+              animate={{
+                x: particle.x + 'vw',
+                y: particle.y + 'vh',
+                scale: particle.scale,
+                opacity: [0, 0.8, 0],
+              }}
+              exit={{ opacity: 0 }}
+              transition={{
+                duration: particle.duration,
+                delay: particle.delay,
+              }}
+              zIndex={5}
             >
-              {t('Daily Tasks')}
-            </MotionHeading>
+              <Icon
+                as={i % 3 === 0 ? Sparkles : i % 3 === 1 ? Star : Zap}
+                color={
+                  i % 4 === 0
+                    ? 'purple.400'
+                    : i % 4 === 1
+                    ? 'blue.400'
+                    : i % 4 === 2
+                    ? 'yellow.400'
+                    : 'red.400'
+                }
+                boxSize={3 + (i % 3)}
+              />
+            </MotionBox>
+          ))}
+      </AnimatePresence>
 
-            {tasksLoading && <Spinner size="sm" color="purple.400" />}
-          </HStack>
+      {/* Progress Circle Header */}
+      <MotionFlex
+        direction="column"
+        align="center"
+        justify="center"
+        initial={{ opacity: 0, y: -10 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.4 }}
+        pb={4}
+      >
+        <MotionCircularProgress
+          value={taskStats.overallProgress}
+          size="100px"
+          thickness="8px"
+          color={taskStats.allCompleted ? 'green.400' : 'purple.400'}
+          trackColor="whiteAlpha.200"
+          capIsRound
+          animate={
+            justCompletedTaskId
+              ? {
+                  scale: [1, 1.1, 1],
+                  transition: { duration: 0.5 },
+                }
+              : {}
+          }
+        >
+          <CircularProgressLabel fontSize="xl" fontWeight="bold" color="white">
+            {taskStats.overallProgress}%
+          </CircularProgressLabel>
+        </MotionCircularProgress>
 
-          <Text fontSize="sm" color="gray.400">
-            {t('Complete tasks to earn XP')}
+        <MotionHStack
+          mt={2}
+          spacing={2}
+          animate={
+            taskStats.allCompleted
+              ? {
+                  scale: [1, 1.05, 1],
+                  transition: { repeat: Infinity, duration: 2 },
+                }
+              : {}
+          }
+        >
+          <Icon
+            as={taskStats.allCompleted ? CheckCircle : Clock}
+            color={taskStats.allCompleted ? 'green.400' : 'purple.400'}
+            boxSize={4}
+          />
+          <Text color="white" fontWeight="semibold">
+            {taskStats.completedTasks}/{taskStats.totalTasks} {t('Tasks')}
           </Text>
-        </Box>
-
-        <HStack spacing={3}>
-          <MotionButton
-            leftIcon={<RefreshCw size={16} />}
-            colorScheme="blue"
-            size="sm"
-            onClick={handleRefreshTasks}
-            isLoading={tasksLoading}
-            whileHover={{ scale: 1.05 }}
-            whileTap={{ scale: 0.95 }}
-            disabled={tasksLoading}
-          >
-            {t('Refresh')}
-          </MotionButton>
-        </HStack>
+        </MotionHStack>
       </MotionFlex>
 
-      {/* Daily Progress */}
-      <MotionBox
-        bg="rgba(26, 32, 44, 0.7)"
-        borderRadius="lg"
-        p={4}
-        mb={5}
-        borderWidth="1px"
-        borderColor="whiteAlpha.200"
-        initial={{ opacity: 0, y: 20 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ delay: 0.2, duration: 0.4 }}
-      >
-        <Flex justify="space-between" align="center" mb={3} wrap="wrap" gap={2}>
-          <HStack>
-            <Icon as={Target} color="green.400" boxSize={5} />
-            <Heading size="sm" color="white">
-              {t('Daily Progress')}
-            </Heading>
-          </HStack>
-
-          <Badge
-            colorScheme={overallProgress === 100 ? 'green' : 'blue'}
-            fontSize="sm"
-            py={1}
-            px={2}
+      {/* Stats Cards */}
+      <Flex justify="space-between" px={1} mb={6}>
+        {/* XP Earned */}
+        <MotionBox
+          bg="rgba(26, 32, 44, 0.7)"
+          p={3}
+          borderRadius="xl"
+          borderWidth="1px"
+          borderColor="yellow.700"
+          flex={1}
+          mr={2}
+          initial={{ opacity: 0, x: -10 }}
+          animate={{ opacity: 1, x: 0 }}
+          transition={{ duration: 0.4, delay: 0.1 }}
+        >
+          <Flex align="center" mb={1}>
+            <Icon as={Award} color="yellow.400" boxSize={5} mr={2} />
+            <Text color="white" fontSize="sm" fontWeight="medium">
+              {t('XP Earned')}
+            </Text>
+          </Flex>
+          <Text
+            color="yellow.300"
+            fontSize="2xl"
+            fontWeight="bold"
+            textAlign="center"
           >
-            <HStack spacing={1}>
-              {overallProgress === 100 ? (
-                <Check size={14} />
-              ) : (
-                <Clock size={14} />
-              )}
-              <Text>
-                {completedTasks}/{totalTasks} {t('Completed')}
+            {statistics?.rewards?.xp || 0}
+          </Text>
+        </MotionBox>
+
+        {/* Tasks with rewards to claim */}
+        {taskStats.unclaimedRewards > 0 && (
+          <MotionBox
+            bg="rgba(26, 32, 44, 0.7)"
+            p={3}
+            borderRadius="xl"
+            borderWidth="1px"
+            borderColor="purple.700"
+            flex={1}
+            ml={2}
+            initial={{ opacity: 0, x: 10 }}
+            animate={{
+              opacity: 1,
+              x: 0,
+              boxShadow: [
+                '0 0 0px rgba(128, 90, 213, 0)',
+                '0 0 10px rgba(128, 90, 213, 0.5)',
+                '0 0 0px rgba(128, 90, 213, 0)',
+              ],
+            }}
+            transition={{
+              duration: 0.4,
+              delay: 0.2,
+              boxShadow: {
+                repeat: Infinity,
+                duration: 2,
+              },
+            }}
+          >
+            <Flex align="center" mb={1}>
+              <Icon as={Gift} color="purple.400" boxSize={5} mr={2} />
+              <Text color="white" fontSize="sm" fontWeight="medium">
+                {t('Unclaimed')}
+              </Text>
+            </Flex>
+            <HStack justify="center" align="center">
+              <MotionBadge
+                colorScheme="purple"
+                fontSize="lg"
+                fontWeight="bold"
+                px={2}
+                py={1}
+                borderRadius="lg"
+                animate={{
+                  scale: [1, 1.1, 1],
+                  transition: { repeat: Infinity, duration: 1.5 },
+                }}
+              >
+                {taskStats.unclaimedRewards}
+              </MotionBadge>
+              <Text color="purple.200" fontSize="md">
+                {t('Rewards')}
               </Text>
             </HStack>
-          </Badge>
-        </Flex>
-
-        <Progress
-          value={overallProgress}
-          size="md"
-          colorScheme={overallProgress === 100 ? 'green' : 'blue'}
-          borderRadius="full"
-          bg="whiteAlpha.200"
-          mb={2}
-          isAnimated
-        />
-
-        {/* Stats summary */}
-        <SimpleGrid columns={{ base: 1, md: 3 }} spacing={4} mt={4}>
-          <StatCard
-            icon={Award}
-            title={t('Total XP Earned')}
-            value={statisticsLoading ? '-' : statistics.rewards.xp}
-            color="yellow.400"
-          />
-
-          <StatCard
-            icon={Trophy}
-            title={t('Completion Rate')}
-            value={
-              statisticsLoading
-                ? '-'
-                : `${Math.round(statistics.completionRate)}%`
-            }
-            color="green.400"
-          />
-
-          <StatCard
-            icon={Target}
-            title={t('Tasks')}
-            value={
-              statisticsLoading
-                ? '-'
-                : `${statistics.completedTasks}/${statistics.totalTasks}`
-            }
-            color="blue.400"
-          />
-        </SimpleGrid>
-      </MotionBox>
-
-      {/* Tasks Lists */}
-      <Box>
-        {/* Pending Tasks */}
-        {pendingTasks.length > 0 && (
-          <Box mb={6}>
-            <HStack mb={3}>
-              <Icon as={Clock} color="blue.400" boxSize={5} />
-              <Heading size="sm" color="white">
-                {t('In Progress')} ({pendingTasks.length})
-              </Heading>
-            </HStack>
-
-            <SimpleGrid columns={{ base: 1, md: 2, lg: 3 }} spacing={4}>
-              <AnimatePresence>
-                {pendingTasks.map(task => (
-                  <TaskCard
-                    key={task._id}
-                    task={task}
-                    isJustCompleted={task._id === justCompletedTaskId}
-                  />
-                ))}
-              </AnimatePresence>
-            </SimpleGrid>
-          </Box>
+          </MotionBox>
         )}
 
-        {/* Completed Tasks */}
-        {completedTasksList.length > 0 && (
-          <Box>
-            <HStack mb={3}>
-              <Icon as={Check} color="green.400" boxSize={5} />
-              <Heading size="sm" color="white">
-                {t('Completed')} ({completedTasksList.length})
-              </Heading>
-            </HStack>
-
-            <SimpleGrid columns={{ base: 1, md: 2, lg: 3 }} spacing={4}>
-              <AnimatePresence>
-                {completedTasksList.map(task => (
-                  <TaskCard key={task._id} task={task} />
-                ))}
-              </AnimatePresence>
-            </SimpleGrid>
-          </Box>
-        )}
-
-        {/* Error State */}
-        {tasksError && (
+        {/* If no unclaimed rewards, show streak instead */}
+        {taskStats.unclaimedRewards === 0 && (
           <MotionBox
-            p={4}
-            bg="red.900"
-            color="white"
-            borderRadius="md"
+            bg="rgba(26, 32, 44, 0.7)"
+            p={3}
+            borderRadius="xl"
             borderWidth="1px"
-            borderColor="red.300"
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            mb={4}
+            borderColor="blue.700"
+            flex={1}
+            ml={2}
+            initial={{ opacity: 0, x: 10 }}
+            animate={{ opacity: 1, x: 0 }}
+            transition={{ duration: 0.4, delay: 0.2 }}
+          >
+            <Flex align="center" mb={1}>
+              <Icon as={Zap} color="blue.400" boxSize={5} mr={2} />
+              <Text color="white" fontSize="sm" fontWeight="medium">
+                {t('Streak')}
+              </Text>
+            </Flex>
+            <Text
+              color="blue.300"
+              fontSize="2xl"
+              fontWeight="bold"
+              textAlign="center"
+            >
+              {statistics?.streak || 0}
+            </Text>
+          </MotionBox>
+        )}
+      </Flex>
+
+      {/* Refresh Button */}
+      <Box mb={4} textAlign="center">
+        <MotionButton
+          leftIcon={<RefreshCw size={16} />}
+          colorScheme="purple"
+          size="sm"
+          onClick={handleRefreshTasks}
+          isLoading={tasksLoading}
+          whileHover={{ scale: 1.05 }}
+          whileTap={{ scale: 0.95 }}
+          variant="outline"
+          initial={{ opacity: 0, y: 10 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.3, delay: 0.3 }}
+        >
+          {t('Refresh Tasks')}
+        </MotionButton>
+      </Box>
+
+      {/* Tasks Section */}
+      <Tabs
+        variant="soft-rounded"
+        colorScheme="purple"
+        onChange={setTabIndex}
+        isFitted
+        size="sm"
+      >
+        <TabList mb={4} borderRadius="lg" bg="rgba(26, 32, 44, 0.5)" p={1}>
+          <Tab
+            _selected={{
+              bg: 'purple.500',
+              color: 'white',
+            }}
           >
             <HStack>
-              <AlertCircle />
-              <Text>{tasksError}</Text>
+              <Clock size={14} />
+              <Text>{t('In Progress')}</Text>
+              {tasks.filter(task => !task.completed).length > 0 && (
+                <Badge colorScheme="blue" borderRadius="full" fontSize="xs">
+                  {tasks.filter(task => !task.completed).length}
+                </Badge>
+              )}
             </HStack>
-            <Button
-              mt={2}
-              colorScheme="red"
-              size="sm"
-              onClick={() => dispatch(fetchDailyTasks())}
-            >
-              {t('Try Again')}
-            </Button>
-          </MotionBox>
-        )}
-
-        {/* Empty State */}
-        {!tasksLoading && tasks.length === 0 && !tasksError && (
-          <MotionBox
-            p={6}
-            bg="rgba(26, 32, 44, 0.7)"
-            borderRadius="lg"
-            textAlign="center"
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
+          </Tab>
+          <Tab
+            _selected={{
+              bg: 'green.500',
+              color: 'white',
+            }}
           >
-            <VStack spacing={3}>
-              <Icon as={Target} boxSize={10} color="gray.400" />
-              <Heading size="md" color="white">
-                {t('No tasks available')}
-              </Heading>
-              <Text color="gray.400">
-                {t('Check back later or refresh to get new tasks')}
-              </Text>
-              <Button
-                mt={2}
-                colorScheme="purple"
-                leftIcon={<RefreshCw />}
-                onClick={handleRefreshTasks}
-              >
-                {t('Refresh Tasks')}
-              </Button>
-            </VStack>
-          </MotionBox>
-        )}
-      </Box>
+            <HStack>
+              <CheckCircle size={14} />
+              <Text>{t('Done')}</Text>
+              {tasks.filter(task => task.completed).length > 0 && (
+                <Badge colorScheme="green" borderRadius="full" fontSize="xs">
+                  {tasks.filter(task => task.completed).length}
+                </Badge>
+              )}
+            </HStack>
+          </Tab>
+        </TabList>
+
+        <TabPanels>
+          {/* In Progress Tasks */}
+          <TabPanel px={0}>
+            <AnimatePresence>
+              {filteredTasks.length > 0 ? (
+                <VStack spacing={3} align="stretch">
+                  {filteredTasks.map((task, index) => (
+                    <MotionBox
+                      key={task._id}
+                      initial={{ opacity: 0, y: 10 }}
+                      animate={{ opacity: 1, y: 0 }}
+                      transition={{ duration: 0.3, delay: index * 0.05 }}
+                      exit={{ opacity: 0, scale: 0.9 }}
+                    >
+                      <TaskCard
+                        task={task}
+                        isJustCompleted={task._id === justCompletedTaskId}
+                        onClick={() => handleTaskClick(task)}
+                      />
+                    </MotionBox>
+                  ))}
+                </VStack>
+              ) : (
+                <EmptyState
+                  icon={Clock}
+                  title={t('No Tasks In Progress')}
+                  description={t(
+                    "Looks like you've completed all your tasks! Check the completed tab or refresh to get new tasks.",
+                  )}
+                  buttonText={t('Refresh Tasks')}
+                  buttonIcon={RefreshCw}
+                  onButtonClick={handleRefreshTasks}
+                  isLoading={tasksLoading}
+                />
+              )}
+            </AnimatePresence>
+          </TabPanel>
+
+          {/* Completed Tasks */}
+          <TabPanel px={0}>
+            <AnimatePresence>
+              {filteredTasks.length > 0 ? (
+                <VStack spacing={3} align="stretch">
+                  {filteredTasks.map((task, index) => (
+                    <MotionBox
+                      key={task._id}
+                      initial={{ opacity: 0, y: 10 }}
+                      animate={{ opacity: 1, y: 0 }}
+                      transition={{ duration: 0.3, delay: index * 0.05 }}
+                      exit={{ opacity: 0, scale: 0.9 }}
+                    >
+                      <TaskCard
+                        task={task}
+                        isJustCompleted={task._id === justCompletedTaskId}
+                        onClick={() => handleTaskClick(task)}
+                      />
+                    </MotionBox>
+                  ))}
+                </VStack>
+              ) : (
+                <EmptyState
+                  icon={CheckCircle}
+                  title={t('No Completed Tasks')}
+                  description={t(
+                    "You haven't completed any tasks yet. Start completing tasks to see them here!",
+                  )}
+                  variant="green"
+                />
+              )}
+            </AnimatePresence>
+          </TabPanel>
+        </TabPanels>
+      </Tabs>
+
+      {/* Task Details Modal */}
+      <TaskDetailsModal
+        isOpen={isTaskDetailsOpen}
+        onClose={() => setIsTaskDetailsOpen(false)}
+        task={selectedTask}
+      />
+
+      {/* Error State */}
+      {tasksError && tasks.length > 0 && (
+        <MotionBox
+          p={4}
+          bg="red.900"
+          color="white"
+          borderRadius="md"
+          borderWidth="1px"
+          borderColor="red.300"
+          mt={4}
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          transition={{ duration: 0.3 }}
+        >
+          <HStack>
+            <AlertCircle />
+            <Text>{tasksError}</Text>
+          </HStack>
+          <Button
+            mt={2}
+            colorScheme="red"
+            size="sm"
+            onClick={() => dispatch(fetchDailyTasks())}
+          >
+            {t('Try Again')}
+          </Button>
+        </MotionBox>
+      )}
     </MotionBox>
   )
 }
 
-// Stat Card Component
-const StatCard = ({ icon, title, value, color }) => {
-  const Icon = icon
-
+// Empty state component
+const EmptyState = ({
+  icon,
+  title,
+  description,
+  buttonText,
+  buttonIcon,
+  onButtonClick,
+  isLoading,
+  variant = 'blue',
+}) => {
   return (
-    <MotionBox
-      p={3}
-      bg="rgba(26, 32, 44, 0.8)"
-      borderRadius="md"
-      borderWidth="1px"
-      borderColor="whiteAlpha.200"
-      initial={{ opacity: 0, y: 20 }}
-      animate={{ opacity: 1, y: 0 }}
-      transition={{ duration: 0.3 }}
-      _hover={{ bg: 'rgba(45, 55, 72, 0.8)' }}
-    >
-      <HStack spacing={3}>
-        <Box
-          p={2}
-          borderRadius="full"
-          bg={color}
-          boxSize={10}
-          display="flex"
-          alignItems="center"
-          justifyContent="center"
-        >
-          <Icon size={20} color="white" />
-        </Box>
-        <Box>
-          <Text fontSize="xs" color="gray.400">
+    <Center py={8}>
+      <MotionBox
+        initial={{ opacity: 0, y: 20 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.5 }}
+        p={6}
+        bg="rgba(26, 32, 44, 0.7)"
+        borderRadius="xl"
+        borderWidth="1px"
+        borderColor={`${variant}.700`}
+        textAlign="center"
+        maxW="md"
+        boxShadow={`0 0 20px rgba(0, 0, 0, 0.2)`}
+      >
+        <VStack spacing={4}>
+          <MotionFlex
+            boxSize="50px"
+            borderRadius="full"
+            bg={`${variant}.900`}
+            color={`${variant}.300`}
+            justify="center"
+            align="center"
+            animate={{
+              scale: [1, 1.1, 1],
+              rotate: [-5, 0, 5, 0],
+            }}
+            transition={{
+              duration: 3,
+              repeat: Infinity,
+              repeatType: 'reverse',
+            }}
+          >
+            <Icon as={icon} boxSize={6} />
+          </MotionFlex>
+
+          <Heading size="sm" color="white">
             {title}
+          </Heading>
+
+          <Text color="whiteAlpha.700" fontSize="sm">
+            {description}
           </Text>
-          <Text fontSize="lg" fontWeight="bold" color="white">
-            {value}
-          </Text>
-        </Box>
-      </HStack>
-    </MotionBox>
+
+          {buttonText && onButtonClick && (
+            <MotionButton
+              mt={2}
+              colorScheme={variant}
+              leftIcon={buttonIcon && <Icon as={buttonIcon} />}
+              onClick={onButtonClick}
+              isLoading={isLoading}
+              whileHover={{ scale: 1.05 }}
+              whileTap={{ scale: 0.95 }}
+              size="sm"
+            >
+              {buttonText}
+            </MotionButton>
+          )}
+        </VStack>
+      </MotionBox>
+    </Center>
   )
 }
 
