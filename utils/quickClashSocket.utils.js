@@ -224,7 +224,7 @@ const setupQuickClashGlobalEvents = io => {
 
   globalEmitter.on(
     'quickClash:challengeCompletedByBothPlayers',
-    ({ challenge, completedByUserId }) => {
+    ({ challenge, trackWinnerOutcomeResult, completedByUserId }) => {
       if (!challenge || !challenge.challenger || !challenge.opponent) {
         console.error(
           'Invalid challenge object in quickClash:challengeCompleted event',
@@ -246,6 +246,7 @@ const setupQuickClashGlobalEvents = io => {
           'quickClash:challengeCompletedByBothPlayers',
           {
             challengeId: challenge._id,
+            trackWinnerOutcomeResult,
             completedByUserId,
           },
         )
