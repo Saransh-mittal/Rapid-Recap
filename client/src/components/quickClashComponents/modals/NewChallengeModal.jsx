@@ -11,11 +11,11 @@ import {
   useToast,
 } from '@chakra-ui/react'
 import { useTranslation } from 'react-i18next'
-import axios from 'axios'
-import { categories } from '../../../assets/Categories'
+import { useDispatch } from 'react-redux'
 
 // Import utility functions
 import { processCategories } from '../../../utils/categoryUtils'
+import { categories } from '../../../assets/Categories'
 
 // Import sub-components
 import UserSearchStep from './newChallengeComponents/UserSearchStep'
@@ -26,24 +26,28 @@ import {
   Step1Buttons,
   Step2Buttons,
 } from './newChallengeComponents/StepButtons'
+
+// Import hooks
 import useQuickClash from '../../../customHooks/useQuickClash'
 import useQuickClashSocket from '../../../customHooks/useQuickClashSocket'
-import { setChallengeCreating } from '../../../redux/quickClashSlice'
-import { useDispatch } from 'react-redux'
 import useDailyTasks from '../../../customHooks/useDailyTasks'
+import { setChallengeCreating } from '../../../redux/quickClashSlice'
 
 const NewChallengeModal = ({ isOpen, onClose, preSelectedUser = null }) => {
   const { t } = useTranslation('QuickClash')
   const toast = useToast()
+  const dispatch = useDispatch()
+
   const { createChallenge, challengeCreating: isSubmitting } = useQuickClash()
   const { emitChallengeCreated } = useQuickClashSocket()
-  const dispatch = useDispatch()
   const { trackFriendChallenge } = useDailyTasks()
+
   // State management
   const [selectedUser, setSelectedUser] = useState(preSelectedUser || null)
   const [selectedCategories, setSelectedCategories] = useState([])
   const [step, setStep] = useState(preSelectedUser ? 2 : 1) // 1: Select opponent, 2: Select categories, 3: Creating challenge
   const [showAnimation, setShowAnimation] = useState(false)
+
   // Use ref to track if the modal was manually closed
   const manuallyClosed = useRef(false)
 
@@ -54,10 +58,7 @@ const NewChallengeModal = ({ isOpen, onClose, preSelectedUser = null }) => {
   const isMobile = useBreakpointValue({ base: true, md: false })
 
   // Process categories with colors and icons
-  const processedCategories = useMemo(
-    () => processCategories(categories),
-    [categories],
-  )
+  const processedCategories = useMemo(() => processCategories(categories), [])
 
   // Calculate progress percentage for steps
   const progressPercentage = useMemo(() => (step === 1 ? 50 : 100), [step])
@@ -84,49 +85,23 @@ const NewChallengeModal = ({ isOpen, onClose, preSelectedUser = null }) => {
       resetState()
       onClose()
     }
-  }, [resetState, onClose, showAnimation])
+  }, [resetState, onClose, showAnimation, dispatch])
 
-  // No progress update handler needed
+  // We no longer need a separate desktop category selection handler
+  // since we're using the grid for both desktop and mobile
 
-  // Category selection handler for desktop (multiple select)
-  const handleCategoryChange = useCallback(e => {
-    const options = e.target.options
-    const selected = []
-    for (let i = 0; i < options.length; i++) {
-      if (options[i].selected) {
-        selected.push(options[i].value)
+  // Category toggle handler for mobile view - exactly 1 category
+  const toggleCategory = useCallback(categoryKey => {
+    setSelectedCategories(prev => {
+      if (prev.includes(categoryKey)) {
+        // Allow removing a category
+        return prev.filter(c => c !== categoryKey)
+      } else {
+        // Replace any existing selection with the new category
+        return [categoryKey]
       }
-    }
-    setSelectedCategories(selected)
+    })
   }, [])
-
-  // Category toggle handler for mobile view - exactly 2 categories
-  const toggleCategory = useCallback(
-    categoryKey => {
-      setSelectedCategories(prev => {
-        if (prev.includes(categoryKey)) {
-          // Allow removing a category
-          return prev.filter(c => c !== categoryKey)
-        } else {
-          if (prev.length >= 2) {
-            // Exactly 2 categories required - replace the oldest selection
-            toast({
-              title: t('Only 2 categories allowed'),
-              description: t('First category has been replaced'),
-              status: 'info',
-              duration: 2000,
-              isClosable: true,
-              position: 'top',
-            })
-            return [prev[1], categoryKey]
-          }
-          // Add the new category
-          return [...prev, categoryKey]
-        }
-      })
-    },
-    [t, toast],
-  )
 
   // Remove category
   const removeCategory = useCallback(categoryKey => {
@@ -155,11 +130,11 @@ const NewChallengeModal = ({ isOpen, onClose, preSelectedUser = null }) => {
 
   // Submit handler
   const handleSubmit = useCallback(async () => {
-    // Requires exactly 2 categories
-    if (!selectedUser || selectedCategories.length !== 2) {
+    // Requires exactly 1 category
+    if (!selectedUser || selectedCategories.length !== 1) {
       toast({
         title: t('Incomplete selection'),
-        description: t('Please select an opponent and exactly 2 categories'),
+        description: t('Please select an opponent and a category'),
         status: 'warning',
         duration: 3000,
         isClosable: true,
@@ -205,16 +180,18 @@ const NewChallengeModal = ({ isOpen, onClose, preSelectedUser = null }) => {
     selectedCategories,
     toast,
     t,
-    onClose,
-    resetState,
-    isOpen,
     createChallenge,
     emitChallengeCreated,
+    trackFriendChallenge,
+    manuallyClosed,
+    isOpen,
+    resetState,
+    onClose,
   ])
 
-  // Is submission disabled? - Exactly 2 categories required
+  // Is submission disabled? - Exactly 1 category required
   const isSubmitDisabled = useMemo(() => {
-    return !selectedUser || selectedCategories.length !== 2
+    return !selectedUser || selectedCategories.length !== 1
   }, [selectedUser, selectedCategories])
 
   // Get readable category names for the animation
@@ -268,7 +245,7 @@ const NewChallengeModal = ({ isOpen, onClose, preSelectedUser = null }) => {
                 <CategorySelectionStep
                   processedCategories={processedCategories}
                   selectedCategories={selectedCategories}
-                  handleCategoryChange={handleCategoryChange}
+                  /* handleCategoryChange prop no longer needed */
                   toggleCategory={toggleCategory}
                   removeCategory={removeCategory}
                   isMobile={isMobile}

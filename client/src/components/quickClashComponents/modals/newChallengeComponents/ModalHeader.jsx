@@ -45,7 +45,7 @@ const ModalHeader = ({ step, progressPercentage }) => {
               {t('Step')} {step}/2
             </Badge>
             <Text fontSize="sm" color="whiteAlpha.700">
-              {t('Select 2-3 categories')}
+              {t('Select a category')}
             </Text>
           </HStack>
         )}

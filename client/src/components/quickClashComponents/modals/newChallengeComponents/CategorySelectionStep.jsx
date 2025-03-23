@@ -102,7 +102,7 @@ const CategoryTags = ({
 const CategorySelectionStep = ({
   processedCategories,
   selectedCategories,
-  handleCategoryChange,
+  /* handleCategoryChange not needed anymore */
   toggleCategory,
   removeCategory,
   isMobile,
@@ -117,70 +117,37 @@ const CategorySelectionStep = ({
     <VStack spacing={6}>
       <FormControl>
         <FormLabel color="whiteAlpha.900" fontWeight="medium">
-          {t('Select Battle Categories')}
+          {t('Select Battle Category')}
         </FormLabel>
-
-        {!isMobile ? (
-          // Desktop view: Multi-select dropdown
-          <Box>
-            <Select
-              multiple
-              size="md"
-              onChange={handleCategoryChange}
-              bg="whiteAlpha.100"
-              color="white"
-              borderColor="whiteAlpha.300"
-              _hover={{ borderColor: 'purple.400' }}
-              _focus={{
-                borderColor: 'purple.500',
-              }}
-              height="120px"
-              value={selectedCategories}
-            >
-              {processedCategories.map(category => (
-                <option
-                  key={category.key}
-                  value={category.key}
-                  style={{ background: '#1a1527' }}
-                >
-                  {category.label}
-                </option>
-              ))}
-            </Select>
-            <Text color="gray.300" fontSize="sm" mt={2}>
-              {t('Hold Ctrl/Cmd to select exactly 2 categories')}
-            </Text>
-          </Box>
-        ) : (
-          // Mobile view: Clickable cards
-          <MotionBox
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            transition={{ duration: 0.3 }}
-          >
-            <CategoryGrid
-              categories={processedCategories}
-              selectedCategories={selectedCategories}
-              toggleCategory={toggleCategory}
-            />
-            <Text color="gray.300" fontSize="xs" mt={3} textAlign="center">
-              {t('Tap to select exactly 2 categories')}
-            </Text>
-          </MotionBox>
-        )}
-
+        {/* Grid view for both desktop and mobile */}
+        <MotionBox
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          transition={{ duration: 0.3 }}
+        >
+          <CategoryGrid
+            categories={processedCategories}
+            selectedCategories={selectedCategories}
+            toggleCategory={toggleCategory}
+          />
+          <Text color="gray.300" fontSize="xs" mt={3} textAlign="center">
+            {isMobile
+              ? t('Tap to select a category')
+              : t('Click to select a category')}
+          </Text>
+        </MotionBox>
         {/* Selected categories visualization */}
         {showTagsSection && (
           <Box mt={4}>
             <Divider my={2} borderColor="whiteAlpha.300" />
             <HStack>
               <Text fontSize="sm" color="whiteAlpha.700">
-                {t('Selected Categories')}:
+                {t('Selected Category')}:
               </Text>
               <Badge
-                colorScheme={selectedCategories.length === 2 ? 'green' : 'red'}
+                colorScheme={selectedCategories.length === 1 ? 'green' : 'red'}
               >
-                {selectedCategories.length}/2
+                {selectedCategories.length}/1
               </Badge>
             </HStack>
             <CategoryTags
@@ -189,10 +156,10 @@ const CategorySelectionStep = ({
               tagSize={tagSize}
               removeCategory={removeCategory}
             />
-            {selectedCategories.length !== 2 && (
+            {selectedCategories.length !== 1 && (
               <Text color="red.300" fontSize="xs" mt={2}>
                 <Icon as={AlertTriangle} boxSize={3} mr={1} />
-                {t('Please select exactly 2 categories')}
+                {t('Please select a category')}
               </Text>
             )}
           </Box>
