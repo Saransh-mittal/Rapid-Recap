@@ -1,5 +1,12 @@
 import React, { useCallback, useState, useEffect } from 'react'
-import { Container, Box, useDisclosure, TabPanel } from '@chakra-ui/react'
+import {
+  Container,
+  Box,
+  useDisclosure,
+  TabPanel,
+  Center,
+  useBreakpointValue,
+} from '@chakra-ui/react'
 import { motion } from 'framer-motion'
 import { lazy, Suspense } from 'react'
 
@@ -26,17 +33,17 @@ const StatsCard = lazy(() =>
 const ActiveChallenges = lazy(() =>
   import('../components/quickClashComponents/ActiveChallenges'),
 )
-const CompletedChallenges = lazy(() =>
-  import('../components/quickClashComponents/CompletedChallenges'),
-)
-const MatchmakingTab = lazy(() =>
-  import('../components/quickClashComponents/MatchmakingTab'),
-)
 const DailyTasksDashboard = lazy(() =>
   import('../components/quickClashComponents/dailyTasks/DailyTasksDashboard'),
 )
 const TaskPopup = lazy(() =>
   import('../components/quickClashComponents/dailyTasks/TaskPopup'),
+)
+const MatchmakingButton = lazy(() =>
+  import('../components/quickClashComponents/MatchmakingButton'),
+)
+const FloatingActionMenu = lazy(() =>
+  import('../components/quickClashComponents/FloatingActionMenu'),
 )
 
 // Loading fallback
@@ -68,6 +75,13 @@ const QuickClash = () => {
   )
   const taskJustCompleted = !!justCompletedTaskId
 
+  // Show floating action menu only on mobile
+  const showFloatingMenu = useBreakpointValue({ base: true, md: false })
+
+  // Show find match button in center and task popup only on desktop
+  const showCenterMatchButton = useBreakpointValue({ base: false, md: true })
+  const showDesktopTaskPopup = useBreakpointValue({ base: false, md: true })
+
   // Initial setup - check URL hash, localStorage, etc.
   useEffect(() => {
     const lastVisit = localStorage.getItem('quickClashLastVisit')
@@ -80,7 +94,6 @@ const QuickClash = () => {
       const hashToIndex = {
         active: 0,
         tasks: 1,
-        matchmaking: 2,
       }
 
       if (hashToIndex[hash] !== undefined) {
@@ -96,25 +109,37 @@ const QuickClash = () => {
       setShowEntrance(false)
     }
 
-    // Show task popup after a short delay
-    const timer = setTimeout(() => {
-      setShowTaskPopup(true)
-    }, 2000)
+    // Show task popup after a short delay (desktop only)
+    if (showDesktopTaskPopup) {
+      const timer = setTimeout(() => {
+        setShowTaskPopup(true)
+      }, 2000)
+      return () => clearTimeout(timer)
+    }
+  }, [showDesktopTaskPopup])
 
-    return () => clearTimeout(timer)
-  }, [])
-
-  // Show popup when a task is completed
+  // Show popup when a task is completed (desktop only)
   useEffect(() => {
-    if (taskJustCompleted) {
+    if (taskJustCompleted && showDesktopTaskPopup) {
       setShowTaskPopup(true)
     }
-  }, [taskJustCompleted])
+  }, [taskJustCompleted, showDesktopTaskPopup])
 
   // Use useCallback for event handlers
   const handleNewChallenge = useCallback(() => {
     onOpen()
   }, [onOpen])
+
+  const handleFindMatch = useCallback(() => {
+    // This would trigger the matchmaking flow
+    // For now, just show the matchmaking modal like the MatchmakingButton does
+    if (
+      window.matchmakingButtonRef &&
+      window.matchmakingButtonRef.handleJoinMatchmaking
+    ) {
+      window.matchmakingButtonRef.handleJoinMatchmaking()
+    }
+  }, [])
 
   const handleEntranceComplete = useCallback(() => {
     setShowEntrance(false)
@@ -124,7 +149,7 @@ const QuickClash = () => {
   const handleViewAllTasks = useCallback(() => {
     // Update URL hash to navigate to tasks tab
     window.location.hash = 'tasks'
-    // Hide the popup
+    // Don't hide the popup here - the TaskPopup handles this
   }, [])
 
   // Update local tab index when changed via hash
@@ -148,6 +173,7 @@ const QuickClash = () => {
           opacity: showEntrance ? 0 : 1,
           transition: 'opacity 0.3s ease-in-out',
         }}
+        pb={{ base: '100px', md: '20px' }} // Add padding at bottom on mobile for floating action menu
       >
         {/* Header Section */}
         <QuickClashHeader onNewChallenge={handleNewChallenge} />
@@ -156,6 +182,17 @@ const QuickClash = () => {
         <Suspense fallback={<LoadingFallback />}>
           <StatsCard />
         </Suspense>
+
+        {/* Matchmaking Button at the top center - desktop only */}
+        {showCenterMatchButton && (
+          <Center my={5}>
+            <Suspense fallback={<LoadingFallback />}>
+              <MatchmakingButton
+                ref={el => (window.matchmakingButtonRef = el)}
+              />
+            </Suspense>
+          </Center>
+        )}
 
         {/* Tabs Section */}
         <MotionBox
@@ -174,7 +211,7 @@ const QuickClash = () => {
               <CustomTabs
                 initialTabIndex={activeTabIndex}
                 onChange={handleTabChange}
-                tabNames={['Active', 'Daily Tasks', 'Matchmaking']}
+                tabNames={['Active', 'Daily Tasks']}
               >
                 <TabPanel px={0}>
                   <Suspense fallback={<LoadingFallback />}>
@@ -187,26 +224,34 @@ const QuickClash = () => {
                     <DailyTasksDashboard />
                   </Suspense>
                 </TabPanel>
-
-                <TabPanel px={0}>
-                  <Suspense fallback={<LoadingFallback />}>
-                    <MatchmakingTab />
-                  </Suspense>
-                </TabPanel>
               </CustomTabs>
             </Box>
           </Box>
         </MotionBox>
 
-        {/* Challenge Modal */}
-        <NewChallengeModal isOpen={isOpen} onClose={onClose} />
-
-        {/* Task Popup */}
-        {showTaskPopup && (
+        {/* Floating Action Menu for mobile - Using the enhanced version with integrated task popup */}
+        {showFloatingMenu && (
           <Suspense fallback={null}>
-            <TaskPopup onViewAllTasks={handleViewAllTasks} />
+            <FloatingActionMenu
+              onNewChallenge={handleNewChallenge}
+              onFindMatch={handleFindMatch}
+            />
           </Suspense>
         )}
+
+        {/* Task Popup - Desktop Only */}
+        {showDesktopTaskPopup && showTaskPopup && (
+          <Suspense fallback={null}>
+            <TaskPopup
+              onViewAllTasks={handleViewAllTasks}
+              isOpen={showTaskPopup}
+              onClose={() => setShowTaskPopup(false)}
+            />
+          </Suspense>
+        )}
+
+        {/* Challenge Modal */}
+        <NewChallengeModal isOpen={isOpen} onClose={onClose} />
 
         {/* Task Completion Handler */}
         <Suspense fallback={null}>

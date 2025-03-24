@@ -331,7 +331,7 @@ const NextTaskItem = memo(({ task, expandedTask, onToggleExpand }) => {
 })
 
 // Main component
-const TaskPopup = ({ onViewAllTasks }) => {
+const TaskPopup = ({ onViewAllTasks, isOpen, onClose }) => {
   const { t } = useTranslation('QuickClash')
   const dispatch = useDispatch()
   const theme = useTheme()
@@ -461,337 +461,343 @@ const TaskPopup = ({ onViewAllTasks }) => {
   }
 
   // Display minimized button if popup is hidden or all tasks completed
-  if (!showPopup || (shouldShowCompleted && !isExpanded)) {
-    return <FloatingButton onClick={handleTogglePopup} />
+  if (!isOpen || (shouldShowCompleted && !isExpanded)) {
+    return null
   }
 
   return (
-    <AnimatePresence>
-      <MotionBox
-        position="fixed"
-        bottom="20px"
-        right="20px"
-        width={{ base: 'calc(100% - 40px)', md: '350px' }}
-        borderRadius="xl"
-        bg="rgba(26, 32, 44, 0.9)"
-        backdropFilter="blur(10px)"
-        boxShadow="0 8px 30px rgba(0, 0, 0, 0.4)"
-        overflow="hidden"
-        borderWidth="1px"
-        borderColor="purple.500"
-        zIndex={10}
-        initial={{ y: 100, opacity: 0 }}
-        animate={{ y: 0, opacity: 1 }}
-        exit={{ y: 100, opacity: 0 }}
-        transition={{
-          type: 'spring',
-          damping: 25,
-          stiffness: 300,
-        }}
-      >
-        {/* Background decorative elements */}
-        <Box
-          position="absolute"
-          top="-20%"
-          right="-10%"
-          width="40%"
-          height="40%"
-          borderRadius="full"
-          bg="purple.900"
-          opacity="0.1"
-          filter="blur(40px)"
-          zIndex={0}
-        />
-
-        <Box
-          position="absolute"
-          bottom="-10%"
-          left="-10%"
-          width="30%"
-          height="30%"
-          borderRadius="full"
-          bg="blue.900"
-          opacity="0.1"
-          filter="blur(30px)"
-          zIndex={0}
-        />
-
-        {/* Header with progress */}
-        <MotionFlex
-          px={4}
-          pt={3}
-          pb={2}
-          justify="space-between"
-          align="center"
-          bgGradient="linear(to-r, rgba(128, 90, 213, 0.2), rgba(76, 81, 191, 0.2))"
-          borderBottom="1px solid"
-          borderColor="whiteAlpha.200"
-          position="relative"
-          zIndex={1}
-        >
-          <HStack spacing={2}>
-            <MotionBox
-              animate={{
-                rotate: [-5, 5],
-                transition: {
-                  repeat: Infinity,
-                  repeatType: 'reverse',
-                  duration: 1.5,
-                },
-              }}
-            >
-              <Icon as={Target} color="purple.400" boxSize={5} />
-            </MotionBox>
-            <Heading size="sm" color="white">
-              {t('Daily Tasks')}
-            </Heading>
-
-            {/* Progress badge */}
-            <MotionBadge
-              colorScheme={progressPercentage === 100 ? 'green' : 'blue'}
-              ml={2}
-              animate={
-                justCompletedTaskId
-                  ? { scale: [1, 1.3, 1], rotate: [0, 5, 0] }
-                  : progressPercentage === 100
-                  ? {
-                      boxShadow: [
-                        '0 0 0px rgba(72, 187, 120, 0)',
-                        '0 0 10px rgba(72, 187, 120, 0.7)',
-                        '0 0 0px rgba(72, 187, 120, 0)',
-                      ],
-                      transition: { repeat: Infinity, duration: 2 },
-                    }
-                  : {}
-              }
-              transition={{ duration: 0.5 }}
-              bgGradient={
-                progressPercentage === 100
-                  ? 'linear(to-r, green.500, teal.500)'
-                  : 'linear(to-r, blue.500, cyan.500)'
-              }
-            >
-              {progressPercentage}%
-            </MotionBadge>
-          </HStack>
-
-          <HStack>
-            <MotionButton
-              size="xs"
-              variant="ghost"
-              colorScheme="purple"
-              onClick={() => setIsExpanded(!isExpanded)}
-              aria-label={isExpanded ? t('Collapse') : t('Expand')}
-              whileHover={{ scale: 1.1 }}
-              whileTap={{ scale: 0.9 }}
-            >
-              <MotionBox
-                animate={
-                  isExpanded
-                    ? { rotate: 180, transition: { duration: 0.3 } }
-                    : { rotate: 0, transition: { duration: 0.3 } }
-                }
-              >
-                <Icon as={ChevronUp} boxSize={4} />
-              </MotionBox>
-            </MotionButton>
-
-            <CloseButton
-              size="sm"
-              onClick={() => setShowPopup(false)}
-              color="whiteAlpha.700"
-              _hover={{ color: 'white' }}
-            />
-          </HStack>
-        </MotionFlex>
-
-        {/* Progress bar */}
-        <MotionProgress
-          value={progressPercentage}
-          size="xs"
-          bgGradient={
-            progressPercentage === 100
-              ? 'linear(to-r, green.500, teal.500)'
-              : 'linear(to-r, purple.500, pink.500)'
-          }
-          isAnimated
-          initial={{ width: '0%' }}
-          animate={{ width: '100%' }}
-          transition={{ duration: 0.7 }}
-          sx={{
-            '& > div:first-of-type': {
-              transition: 'width 0.5s ease-out',
-            },
+    <Portal>
+      <AnimatePresence>
+        <MotionBox
+          position="fixed"
+          bottom="20px"
+          right="20px"
+          width={{ base: 'calc(100% - 40px)', md: '350px' }}
+          borderRadius="xl"
+          bg="rgba(26, 32, 44, 0.9)"
+          backdropFilter="blur(10px)"
+          boxShadow="0 8px 30px rgba(0, 0, 0, 0.4)"
+          overflow="hidden"
+          borderWidth="1px"
+          borderColor="purple.500"
+          zIndex={101}
+          initial={{ y: 100, opacity: 0 }}
+          animate={{ y: 0, opacity: 1 }}
+          exit={{ y: 100, opacity: 0 }}
+          transition={{
+            type: 'spring',
+            damping: 25,
+            stiffness: 300,
           }}
-        />
-
-        {/* Summary section - always visible */}
-        <Box p={3} position="relative" zIndex={1}>
-          <HStack justify="space-between" mb={2}>
-            <MotionText
-              color="whiteAlpha.800"
-              fontSize="sm"
-              fontWeight="medium"
-              initial={{ opacity: 0, x: -10 }}
-              animate={{ opacity: 1, x: 0 }}
-              transition={{ delay: 0.1, duration: 0.3 }}
-            >
-              {incompleteTasks.length > 0
-                ? `${incompleteTasks.length} ` + t('tasks remaining')
-                : t('All tasks completed!')}
-            </MotionText>
-
-            <MotionBadge
-              colorScheme="green"
-              initial={{ opacity: 0, x: 10 }}
-              animate={{ opacity: 1, x: 0 }}
-              transition={{ delay: 0.2, duration: 0.3 }}
-            >
-              {completedCount}/{totalTasks}
-            </MotionBadge>
-          </HStack>
-
-          {/* Next task to complete (if any) */}
-          {incompleteTasks.length > 0 && (
-            <>
-              <HStack spacing={1} mb={1}>
-                <Icon as={Zap} color="blue.400" boxSize={3} />
-                <Text color="blue.300" fontSize="xs" fontWeight="medium">
-                  {t('Next task')}:
-                </Text>
-              </HStack>
-              <NextTaskItem
-                task={incompleteTasks[0]}
-                expandedTask={expandedTask}
-                onToggleExpand={toggleTaskExpansion}
-              />
-            </>
-          )}
-        </Box>
-
-        {/* Expandable section with all in-progress tasks */}
-        <Collapse in={isExpanded} animateOpacity>
+        >
+          {/* Background decorative elements */}
           <Box
-            p={3}
-            maxHeight="300px"
-            overflowY="auto"
+            position="absolute"
+            top="-20%"
+            right="-10%"
+            width="40%"
+            height="40%"
+            borderRadius="full"
+            bg="purple.900"
+            opacity="0.1"
+            filter="blur(40px)"
+            zIndex={0}
+          />
+
+          <Box
+            position="absolute"
+            bottom="-10%"
+            left="-10%"
+            width="30%"
+            height="30%"
+            borderRadius="full"
+            bg="blue.900"
+            opacity="0.1"
+            filter="blur(30px)"
+            zIndex={0}
+          />
+
+          {/* Header with progress */}
+          <MotionFlex
+            px={4}
+            pt={3}
+            pb={2}
+            justify="space-between"
+            align="center"
+            bgGradient="linear(to-r, rgba(128, 90, 213, 0.2), rgba(76, 81, 191, 0.2))"
+            borderBottom="1px solid"
+            borderColor="whiteAlpha.200"
             position="relative"
             zIndex={1}
-            css={{
-              '&::-webkit-scrollbar': {
-                width: '4px',
-              },
-              '&::-webkit-scrollbar-track': {
-                width: '6px',
-                background: 'transparent',
-              },
-              '&::-webkit-scrollbar-thumb': {
-                background: 'rgba(255, 255, 255, 0.2)',
-                borderRadius: '24px',
+          >
+            <HStack spacing={2}>
+              <MotionBox
+                animate={{
+                  rotate: [-5, 5],
+                  transition: {
+                    repeat: Infinity,
+                    repeatType: 'reverse',
+                    duration: 1.5,
+                  },
+                }}
+              >
+                <Icon as={Target} color="purple.400" boxSize={5} />
+              </MotionBox>
+              <Heading size="sm" color="white">
+                {t('Daily Tasks')}
+              </Heading>
+
+              {/* Progress badge */}
+              <MotionBadge
+                colorScheme={progressPercentage === 100 ? 'green' : 'blue'}
+                ml={2}
+                animate={
+                  justCompletedTaskId
+                    ? { scale: [1, 1.3, 1], rotate: [0, 5, 0] }
+                    : progressPercentage === 100
+                    ? {
+                        boxShadow: [
+                          '0 0 0px rgba(72, 187, 120, 0)',
+                          '0 0 10px rgba(72, 187, 120, 0.7)',
+                          '0 0 0px rgba(72, 187, 120, 0)',
+                        ],
+                        transition: { repeat: Infinity, duration: 2 },
+                      }
+                    : {}
+                }
+                transition={{ duration: 0.5 }}
+                bgGradient={
+                  progressPercentage === 100
+                    ? 'linear(to-r, green.500, teal.500)'
+                    : 'linear(to-r, blue.500, cyan.500)'
+                }
+              >
+                {progressPercentage}%
+              </MotionBadge>
+            </HStack>
+
+            <HStack>
+              <MotionButton
+                size="xs"
+                variant="ghost"
+                colorScheme="purple"
+                onClick={() => setIsExpanded(!isExpanded)}
+                aria-label={isExpanded ? t('Collapse') : t('Expand')}
+                whileHover={{ scale: 1.1 }}
+                whileTap={{ scale: 0.9 }}
+              >
+                <MotionBox
+                  animate={
+                    isExpanded
+                      ? { rotate: 180, transition: { duration: 0.3 } }
+                      : { rotate: 0, transition: { duration: 0.3 } }
+                  }
+                >
+                  <Icon as={ChevronUp} boxSize={4} />
+                </MotionBox>
+              </MotionButton>
+
+              <CloseButton
+                size="sm"
+                onClick={onClose}
+                color="whiteAlpha.700"
+                _hover={{ color: 'white' }}
+              />
+            </HStack>
+          </MotionFlex>
+
+          {/* Progress bar */}
+          <MotionProgress
+            value={progressPercentage}
+            size="xs"
+            bgGradient={
+              progressPercentage === 100
+                ? 'linear(to-r, green.500, teal.500)'
+                : 'linear(to-r, purple.500, pink.500)'
+            }
+            isAnimated
+            initial={{ width: '0%' }}
+            animate={{ width: '100%' }}
+            transition={{ duration: 0.7 }}
+            sx={{
+              '& > div:first-of-type': {
+                transition: 'width 0.5s ease-out',
               },
             }}
-          >
-            {incompleteTasks.length > 1 && (
-              <VStack spacing={2} align="stretch" mb={3}>
-                <HStack spacing={1}>
-                  <Icon as={Clock} color="purple.400" boxSize={3} />
-                  <Text color="purple.300" fontSize="xs" fontWeight="medium">
-                    {t('In progress')}:
+          />
+
+          {/* Summary section - always visible */}
+          <Box p={3} position="relative" zIndex={1}>
+            <HStack justify="space-between" mb={2}>
+              <MotionText
+                color="whiteAlpha.800"
+                fontSize="sm"
+                fontWeight="medium"
+                initial={{ opacity: 0, x: -10 }}
+                animate={{ opacity: 1, x: 0 }}
+                transition={{ delay: 0.1, duration: 0.3 }}
+              >
+                {incompleteTasks.length > 0
+                  ? `${incompleteTasks.length} ` + t('tasks remaining')
+                  : t('All tasks completed!')}
+              </MotionText>
+
+              <MotionBadge
+                colorScheme="green"
+                initial={{ opacity: 0, x: 10 }}
+                animate={{ opacity: 1, x: 0 }}
+                transition={{ delay: 0.2, duration: 0.3 }}
+              >
+                {completedCount}/{totalTasks}
+              </MotionBadge>
+            </HStack>
+
+            {/* Next task to complete (if any) */}
+            {incompleteTasks.length > 0 && (
+              <>
+                <HStack spacing={1} mb={1}>
+                  <Icon as={Zap} color="blue.400" boxSize={3} />
+                  <Text color="blue.300" fontSize="xs" fontWeight="medium">
+                    {t('Next task')}:
                   </Text>
                 </HStack>
-
-                {incompleteTasks.slice(1).map((task, index) => (
-                  <IncompleteTaskItem
-                    key={task._id}
-                    task={task}
-                    index={index}
-                    expandedTask={expandedTask}
-                    onToggleExpand={toggleTaskExpansion}
-                  />
-                ))}
-              </VStack>
-            )}
-
-            {/* Recently completed tasks */}
-            {completedTasks.length > 0 && (
-              <VStack spacing={2} align="stretch">
-                <HStack spacing={1}>
-                  <Icon as={CheckCircle} color="green.400" boxSize={3} />
-                  <Text color="green.300" fontSize="xs" fontWeight="medium">
-                    {t('Completed')}:
-                  </Text>
-                </HStack>
-
-                {completedTasks.slice(0, 3).map((task, index) => (
-                  <CompletedTaskItem
-                    key={task._id}
-                    task={task}
-                    index={index}
-                    expandedTask={expandedTask}
-                    justCompletedTaskId={justCompletedTaskId}
-                    claimLoading={claimLoading}
-                    claimingTaskId={claimingTaskId}
-                    onToggleExpand={toggleTaskExpansion}
-                    onClaimReward={handleClaimReward}
-                  />
-                ))}
-
-                {completedTasks.length > 3 && (
-                  <Text color="whiteAlpha.600" fontSize="xs" textAlign="center">
-                    {t('And {count} more completed tasks', {
-                      count: completedTasks.length - 3,
-                    })}
-                  </Text>
-                )}
-              </VStack>
+                <NextTaskItem
+                  task={incompleteTasks[0]}
+                  expandedTask={expandedTask}
+                  onToggleExpand={toggleTaskExpansion}
+                />
+              </>
             )}
           </Box>
 
-          <MotionDivider
-            borderColor="whiteAlpha.200"
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            transition={{ delay: 0.4, duration: 0.3 }}
-          />
-
-          {/* Footer with view all button */}
-          <Flex justify="center" p={3} position="relative" zIndex={1}>
-            <MotionButton
-              colorScheme="purple"
-              size="sm"
-              href="#tasks"
-              onClick={handleViewAllTasks}
-              leftIcon={<Layout size={16} />}
-              rightIcon={<Trophy size={16} />}
-              whileHover={{
-                scale: 1.05,
-                boxShadow: '0 0 15px rgba(128, 90, 213, 0.5)',
+          {/* Expandable section with all in-progress tasks */}
+          <Collapse in={isExpanded} animateOpacity>
+            <Box
+              p={3}
+              maxHeight="300px"
+              overflowY="auto"
+              position="relative"
+              zIndex={1}
+              css={{
+                '&::-webkit-scrollbar': {
+                  width: '4px',
+                },
+                '&::-webkit-scrollbar-track': {
+                  width: '6px',
+                  background: 'transparent',
+                },
+                '&::-webkit-scrollbar-thumb': {
+                  background: 'rgba(255, 255, 255, 0.2)',
+                  borderRadius: '24px',
+                },
               }}
-              whileTap={{ scale: 0.95 }}
-              bgGradient="linear(to-r, purple.500, pink.500)"
-              _hover={{
-                bgGradient: 'linear(to-r, purple.600, pink.600)',
-              }}
-              initial={{ opacity: 0, y: 10 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ delay: 0.5, duration: 0.3 }}
             >
-              {t('View All Tasks')}
-            </MotionButton>
-          </Flex>
-        </Collapse>
+              {incompleteTasks.length > 1 && (
+                <VStack spacing={2} align="stretch" mb={3}>
+                  <HStack spacing={1}>
+                    <Icon as={Clock} color="purple.400" boxSize={3} />
+                    <Text color="purple.300" fontSize="xs" fontWeight="medium">
+                      {t('In progress')}:
+                    </Text>
+                  </HStack>
 
-        {/* Reward animation */}
-        {showRewardAnimation && (
-          <Portal>
-            <RewardAnimation
-              xp={rewardAmount.xp}
-              onComplete={handleRewardAnimationComplete}
+                  {incompleteTasks.slice(1).map((task, index) => (
+                    <IncompleteTaskItem
+                      key={task._id}
+                      task={task}
+                      index={index}
+                      expandedTask={expandedTask}
+                      onToggleExpand={toggleTaskExpansion}
+                    />
+                  ))}
+                </VStack>
+              )}
+
+              {/* Recently completed tasks */}
+              {completedTasks.length > 0 && (
+                <VStack spacing={2} align="stretch">
+                  <HStack spacing={1}>
+                    <Icon as={CheckCircle} color="green.400" boxSize={3} />
+                    <Text color="green.300" fontSize="xs" fontWeight="medium">
+                      {t('Completed')}:
+                    </Text>
+                  </HStack>
+
+                  {completedTasks.slice(0, 3).map((task, index) => (
+                    <CompletedTaskItem
+                      key={task._id}
+                      task={task}
+                      index={index}
+                      expandedTask={expandedTask}
+                      justCompletedTaskId={justCompletedTaskId}
+                      claimLoading={claimLoading}
+                      claimingTaskId={claimingTaskId}
+                      onToggleExpand={toggleTaskExpansion}
+                      onClaimReward={handleClaimReward}
+                    />
+                  ))}
+
+                  {completedTasks.length > 3 && (
+                    <Text
+                      color="whiteAlpha.600"
+                      fontSize="xs"
+                      textAlign="center"
+                    >
+                      {t('And {count} more completed tasks', {
+                        count: completedTasks.length - 3,
+                      })}
+                    </Text>
+                  )}
+                </VStack>
+              )}
+            </Box>
+
+            <MotionDivider
+              borderColor="whiteAlpha.200"
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              transition={{ delay: 0.4, duration: 0.3 }}
             />
-          </Portal>
-        )}
-      </MotionBox>
-    </AnimatePresence>
+
+            {/* Footer with view all button */}
+            <Flex justify="center" p={3} position="relative" zIndex={1}>
+              <MotionButton
+                colorScheme="purple"
+                size="sm"
+                href="#tasks"
+                onClick={handleViewAllTasks}
+                leftIcon={<Layout size={16} />}
+                rightIcon={<Trophy size={16} />}
+                whileHover={{
+                  scale: 1.05,
+                  boxShadow: '0 0 15px rgba(128, 90, 213, 0.5)',
+                }}
+                whileTap={{ scale: 0.95 }}
+                bgGradient="linear(to-r, purple.500, pink.500)"
+                _hover={{
+                  bgGradient: 'linear(to-r, purple.600, pink.600)',
+                }}
+                initial={{ opacity: 0, y: 10 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ delay: 0.5, duration: 0.3 }}
+              >
+                {t('View All Tasks')}
+              </MotionButton>
+            </Flex>
+          </Collapse>
+
+          {/* Reward animation */}
+          {showRewardAnimation && (
+            <Portal>
+              <RewardAnimation
+                xp={rewardAmount.xp}
+                onComplete={handleRewardAnimationComplete}
+              />
+            </Portal>
+          )}
+        </MotionBox>
+      </AnimatePresence>
+    </Portal>
   )
 }
 

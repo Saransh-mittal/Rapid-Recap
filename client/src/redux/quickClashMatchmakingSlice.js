@@ -3,32 +3,11 @@ import { createSlice, createAsyncThunk } from '@reduxjs/toolkit'
 import axios from 'axios'
 
 // Async thunks for matchmaking actions
-export const fetchMatchmakingUsers = createAsyncThunk(
-  'quickClashMatchmaking/fetchUsers',
-  async (_, { rejectWithValue }) => {
-    try {
-      const response = await axios.get('/api/quickClash/matchmaking/users')
-      return response.data.users || []
-    } catch (error) {
-      return rejectWithValue(
-        error.response?.data?.message || 'Failed to fetch matchmaking users',
-      )
-    }
-  },
-)
-
 export const joinMatchmaking = createAsyncThunk(
   'quickClashMatchmaking/join',
-  async ({ categories }, { rejectWithValue }) => {
-    // Validate exactly 2 categories
-    if (!categories || !Array.isArray(categories) || categories.length !== 2) {
-      return rejectWithValue('Exactly 2 categories must be selected')
-    }
-
+  async (_, { rejectWithValue }) => {
     try {
-      const response = await axios.post('/api/quickClash/matchmaking/join', {
-        categories,
-      })
+      const response = await axios.post('/api/quickClash/matchmaking/join')
       return response.data.matchmaking
     } catch (error) {
       return rejectWithValue(
@@ -66,42 +45,7 @@ export const getMatchmakingStatus = createAsyncThunk(
   },
 )
 
-export const acceptMatchmakingChallenge = createAsyncThunk(
-  'quickClashMatchmaking/acceptChallenge',
-  async ({ creatorId, categories }, { rejectWithValue }) => {
-    // Validate exactly 2 categories
-    if (!categories || !Array.isArray(categories) || categories.length !== 2) {
-      return rejectWithValue('Exactly 2 categories must be selected')
-    }
-
-    try {
-      const response = await axios.post('/api/quickClash/matchmaking/accept', {
-        creatorId,
-        categories,
-      })
-
-      return response.data
-    } catch (error) {
-      // Special handling for race conditions (409 Conflict)
-      if (error.response?.status === 409) {
-        return rejectWithValue(
-          'This user is no longer available for challenges',
-        )
-      }
-
-      return rejectWithValue(
-        error.response?.data?.message || 'Failed to accept challenge',
-      )
-    }
-  },
-)
-
 const initialState = {
-  // Available users for matchmaking
-  users: [],
-  usersLoading: false,
-  usersError: null,
-
   // Current user's matchmaking state
   inMatchmaking: false,
   matchmakingEntry: null,
@@ -117,7 +61,6 @@ const initialState = {
   socketConnected: false,
 
   // Pending challenge data (for UI state)
-  pendingChallenge: null,
   preparingChallenge: null,
   challengeCreationData: null,
   challengeReady: null,
@@ -132,43 +75,9 @@ const quickClashMatchmakingSlice = createSlice({
       state.socketConnected = action.payload
     },
 
-    // User joined/left via socket
-    addUser: (state, action) => {
-      const newUser = action.payload
-      // Prevent duplicates
-      if (!state.users.some(u => u.user._id === newUser.user._id)) {
-        state.users.push(newUser)
-      }
-    },
-    removeUser: (state, action) => {
-      const userId = action.payload
-      state.users = state.users.filter(u => u.user._id !== userId)
-    },
-    updateUserStatus: (state, action) => {
-      const { userId, status } = action.payload
-      const userIndex = state.users.findIndex(u => u.user._id === userId)
-      if (userIndex !== -1) {
-        state.users[userIndex].status = status
-      }
-    },
-
-    // Challenge state management
-    setPendingChallenge: (state, action) => {
-      state.pendingChallenge = action.payload
-    },
-    clearPendingChallenge: state => {
-      state.pendingChallenge = null
-    },
-    removeLockedUser: (state, action) => {
-      const userId = action.payload
-      state.users = state.users.filter(u => u.user._id !== userId)
-    },
-
     // Handle challenge preparation
     setPreparingChallenge: (state, action) => {
       state.preparingChallenge = action.payload
-      // Clear users list when preparing a challenge
-      state.users = []
     },
 
     // Handle challenge ready notification
@@ -187,8 +96,7 @@ const quickClashMatchmakingSlice = createSlice({
       // Update the challengeId in the creation data
       if (
         state.challengeCreationData &&
-        state.challengeCreationData.tempChallengeId ===
-          action.payload.oldChallengeId
+        state.challengeCreationData.tempChallengeId
       ) {
         state.challengeReady = {
           ...action.payload,
@@ -208,6 +116,9 @@ const quickClashMatchmakingSlice = createSlice({
         state.challengeCreationData = null
       }
     },
+    setInMatchmaking: (state, action) => {
+      state.inMatchmaking = action.payload
+    },
     clearChallengeError: state => {
       state.challengeCreationError = null
     },
@@ -222,20 +133,6 @@ const quickClashMatchmakingSlice = createSlice({
   },
   extraReducers: builder => {
     builder
-      // Fetch users
-      .addCase(fetchMatchmakingUsers.pending, state => {
-        state.usersLoading = true
-        state.usersError = null
-      })
-      .addCase(fetchMatchmakingUsers.fulfilled, (state, action) => {
-        state.users = action.payload
-        state.usersLoading = false
-      })
-      .addCase(fetchMatchmakingUsers.rejected, (state, action) => {
-        state.usersLoading = false
-        state.usersError = action.payload
-      })
-
       // Join matchmaking
       .addCase(joinMatchmaking.pending, state => {
         state.matchmakingLoading = true
@@ -243,7 +140,6 @@ const quickClashMatchmakingSlice = createSlice({
       })
       .addCase(joinMatchmaking.fulfilled, (state, action) => {
         state.matchmakingEntry = action.payload
-        state.inMatchmaking = true
         state.matchmakingLoading = false
       })
       .addCase(joinMatchmaking.rejected, (state, action) => {
@@ -278,38 +174,20 @@ const quickClashMatchmakingSlice = createSlice({
         state.matchmakingLoading = false
         state.matchmakingError = action.payload
       })
-      // Accept challenge
-      .addCase(acceptMatchmakingChallenge.pending, state => {
-        state.challengeCreating = true
-        state.challengeCreationError = null
-      })
-      .addCase(acceptMatchmakingChallenge.fulfilled, (state, action) => {
-        state.challengeCreationResult = action.payload
-        state.challengeCreating = false
-      })
-      .addCase(acceptMatchmakingChallenge.rejected, (state, action) => {
-        state.challengeCreating = false
-        state.challengeCreationError = action.payload
-      })
   },
 })
 
 export const {
   setSocketConnected,
-  addUser,
-  removeUser,
-  updateUserStatus,
-  setPendingChallenge,
-  clearPendingChallenge,
-  resetMatchmakingState,
-  removeLockedUser,
   setPreparingChallenge,
   setChallengeReady,
   setMatchCreationStarted,
   setMatchChallengeReady,
   setMatchCreationFailed,
+  setInMatchmaking,
   clearChallengeStates,
   clearChallengeError,
+  resetMatchmakingState,
 } = quickClashMatchmakingSlice.actions
 
 export default quickClashMatchmakingSlice.reducer

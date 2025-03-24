@@ -1,49 +1,44 @@
 // customHooks/useQuickClashMatchmaking.js
-import { useCallback, useEffect, useState } from 'react'
+import { useCallback, useEffect, useState, useRef } from 'react'
 import { useDispatch, useSelector } from 'react-redux'
 import { useToast } from '@chakra-ui/react'
 import { useTranslation } from 'react-i18next'
+import { useNavigate } from 'react-router-dom'
 import {
-  fetchMatchmakingUsers,
   joinMatchmaking,
   leaveMatchmaking,
   getMatchmakingStatus,
   setSocketConnected,
-  addUser,
-  removeUser,
-  updateUserStatus,
-  setPendingChallenge,
-  clearPendingChallenge,
-  acceptMatchmakingChallenge,
   setPreparingChallenge,
-  removeLockedUser,
-  setChallengeReady,
-  setMatchChallengeReady,
   setMatchCreationStarted,
+  setMatchChallengeReady,
   setMatchCreationFailed,
+  clearChallengeError,
+  setInMatchmaking,
 } from '../redux/quickClashMatchmakingSlice'
 import { useSocket } from './useSocket'
 import { fetchActiveChallenges } from '../redux/quickClashSlice'
+import { addNoteMessageIfAllowed } from '../redux/appSlice'
+import { v4 as uuidv4 } from 'uuid'
 
 /**
  * Custom hook for Quick Clash matchmaking
+ * Focuses only on matchmaking functionality - challenge events are handled by useQuickClashSocket
  * @returns {Object} Matchmaking state and functions
  */
 const useQuickClashMatchmaking = () => {
   const dispatch = useDispatch()
-  const { socket, getSocket } = useSocket()
-  const { _id } = useSelector(state => state.auth.user)
-  const { challengeCreationData } = useSelector(
-    state => state.quickClashMatchmaking,
-  )
+  const navigate = useNavigate()
+  const { getSocket } = useSocket()
   const toast = useToast()
   const { t } = useTranslation('QuickClash')
 
+  // Get current user ID
+  const { user } = useSelector(state => state.auth)
+  const userId = user?._id?.toString()
+
   // Redux selectors
   const {
-    users,
-    usersLoading,
-    usersError,
     inMatchmaking,
     matchmakingEntry,
     matchmakingLoading,
@@ -52,119 +47,23 @@ const useQuickClashMatchmaking = () => {
     challengeCreationResult,
     challengeCreationError,
     socketConnected,
-    pendingChallenge,
+    challengeCreationData,
+    challengeReady,
   } = useSelector(state => state.quickClashMatchmaking)
 
-  // Local state for polling
-  const [pollingInterval, setPollingInterval] = useState(null)
+  // Setup socket event listeners - only for matchmaking events
+  const setupSocketListeners = useCallback(
+    currentSocket => {
+      if (!currentSocket) return
 
-  // Initialize socket connection for matchmaking
-  useEffect(() => {
-    const initSocket = () => {
-      const currentSocket = getSocket()
-
-      if (!currentSocket) {
-        console.warn('Socket not available for matchmaking')
-        dispatch(setSocketConnected(false))
-        return false
-      }
-      currentSocket.emit('join', 'quickClash:matchmaking')
-      // Set up event listeners
-      currentSocket.on('quickClash:userJoined', data => {
-        if (data.user._id.toString() === _id.toString()) return
-        dispatch(addUser(data))
-      })
-
-      currentSocket.on('quickClash:userLeft', data => {
-        dispatch(removeUser(data.userId))
-      })
-
-      currentSocket.on('quickClash:statusUpdated', data => {
-        dispatch(updateUserStatus(data))
-      })
-
-      currentSocket.on('quickClash:botAcceptedChallenge', data => {
-        // Handle bot accepting challenge
-        toast({
-          title: t('Challenge Accepted'),
-          description: t('Your challenge has been accepted'),
-          status: 'success',
-          duration: 3000,
-          isClosable: true,
-        })
-      })
-
-      currentSocket.on('quickClash:botRejectedChallenge', data => {
-        // Handle bot rejecting challenge
-        toast({
-          title: t('Challenge Declined'),
-          description: t('Your challenge has been declined'),
-          status: 'info',
-          duration: 3000,
-          isClosable: true,
-        })
-      })
-
-      currentSocket.on('quickClash:botCompletedChallenge', data => {
-        // Handle bot completing challenge
-        toast({
-          title: t('Challenge Completed'),
-          description: t('Your opponent has completed the challenge'),
-          status: 'info',
-          duration: 3000,
-          isClosable: true,
-        })
-      })
-
-      currentSocket.on('quickClash:userUnavailable', data => {
-        dispatch(removeLockedUser(data.userId))
-
-        if (data.userId.toString() === _id.toString()) {
-          dispatch(leaveMatchmaking())
-        }
-      })
-
-      currentSocket.on('quickClash:userRemoved', data => {
-        dispatch(removeLockedUser(data.userId))
-      })
-
-      currentSocket.on('quickClash:preparingChallenge', data => {
-        dispatch(setPreparingChallenge(data))
-
-        // Auto leave matchmaking
-        dispatch(leaveMatchmaking())
-      })
-
-      currentSocket.on('quickClash:matchCreationStarted', data => {
-        dispatch(setMatchCreationStarted(data))
-
-        // Show toast
-        toast({
-          title: t('Challenge Accepted'),
-          description: t('Creating your challenge...'),
-          status: 'success',
-          duration: 3000,
-          isClosable: true,
-        })
-      })
-
-      currentSocket.on('quickClash:matchCreationFailed', data => {
-        dispatch(setMatchCreationFailed(data))
-
-        // Show error toast
-        toast({
-          title: t('Challenge Creation Failed'),
-          description: data.error || t('Failed to create challenge'),
-          status: 'error',
-          duration: 5000,
-          isClosable: true,
-        })
-      })
+      // Clean up any existing listeners first to avoid duplicates
+      cleanupSocketListeners(currentSocket)
 
       currentSocket.on('quickClash:matchChallengeReady', data => {
+        dispatch(setInMatchmaking(false))
         dispatch(setMatchChallengeReady(data))
         dispatch(fetchActiveChallenges())
-        // Show toast
+
         toast({
           title: t('Challenge Ready'),
           description: t('Your challenge is ready to play!'),
@@ -175,124 +74,159 @@ const useQuickClashMatchmaking = () => {
             navigate(`/quickclash`)
           },
         })
+
+        dispatch(
+          addNoteMessageIfAllowed({
+            id: uuidv4(),
+            messageType: 'quickClash',
+            eventType: 'challengeReady',
+            data: {
+              challengeId: data.challengeId,
+            },
+            duration: 10000,
+            width: '350px',
+            actions: [
+              {
+                text: t('Play Now'),
+                actionType: 'NAVIGATE',
+                route: `/quickclash/session/${data.challengeId}`,
+              },
+            ],
+          }),
+        )
       })
-      // Join the matchmaking room
-      currentSocket.emit('quickClash:joinMatchmakingRoom')
 
-      dispatch(setSocketConnected(true))
-      return true
+      // Reconnect handling
+      currentSocket.on('reconnect', () => {
+        checkMatchmakingStatus()
+      })
+    },
+    [userId, dispatch, toast, t, navigate],
+  )
+
+  // Clean up socket event listeners
+  const cleanupSocketListeners = useCallback(currentSocket => {
+    if (!currentSocket) return
+    // Remove all matchmaking-related event listeners
+    currentSocket.off('quickClash:joinedMatchmaking')
+    currentSocket.off('quickClash:matchChallengeReady')
+    currentSocket.off('quickClash:botAcceptedChallenge')
+    currentSocket.off('reconnect')
+  }, [])
+
+  // Function to check matchmaking status
+  const checkMatchmakingStatus = useCallback(() => {
+    return dispatch(getMatchmakingStatus())
+      .unwrap()
+      .then(result => {
+        return result
+      })
+      .catch(error => {
+        console.error('Error checking matchmaking status:', error)
+      })
+  }, [dispatch])
+
+  // Initialize socket connection for matchmaking
+  useEffect(() => {
+    // Only attempt socket initialization if we have a userId
+    if (!userId) return
+
+    const currentSocket = getSocket()
+    if (!currentSocket) {
+      console.warn('Socket not available for matchmaking')
+      dispatch(setSocketConnected(false))
+      return
     }
 
-    // Try to initialize socket
-    const initialized = initSocket()
+    // Set up socket listeners and connections
+    currentSocket.emit('join', 'quickClash:matchmaking')
+    setupSocketListeners(currentSocket)
 
-    // If socket initialization failed, set up polling as fallback
-    if (!initialized && !pollingInterval) {
-      const interval = setInterval(() => {
-        dispatch(fetchMatchmakingUsers())
-      }, 10000) // Poll every 10 seconds
+    // Join the personal quickClash room
+    currentSocket.emit('quickClash:joinMatchmakingRoom')
 
-      setPollingInterval(interval)
-    }
+    // Set connected status
+    dispatch(setSocketConnected(true))
+
+    // Check status on connection
+    dispatch(getMatchmakingStatus())
 
     // Cleanup function
     return () => {
-      if (socket) {
-        socket.off('quickClash:userJoined')
-        socket.off('quickClash:userLeft')
-        socket.off('quickClash:statusUpdated')
-        socket.off('quickClash:botAcceptedChallenge')
-        socket.off('quickClash:botRejectedChallenge')
-        socket.off('quickClash:botCompletedChallenge')
-        socket.off('quickClash:userUnavailable')
-        socket.off('quickClash:userRemoved')
-        socket.off('quickClash:preparingChallenge')
-        socket.off('quickClash:challengeReady')
-        socket.off('quickClash:matchCreationStarted')
-        socket.off('quickClash:matchChallengeReady')
-        socket.off('quickClash:matchCreationFailed')
-      }
-
-      if (pollingInterval) {
-        clearInterval(pollingInterval)
-      }
+      cleanupSocketListeners(currentSocket)
+      dispatch(setSocketConnected(false))
     }
-  }, [socket, getSocket, dispatch, pollingInterval, t, toast])
+  }, [
+    userId,
+    getSocket,
+    setupSocketListeners,
+    cleanupSocketListeners,
+    dispatch,
+  ])
+
+  // Display error toast if matchmaking has an error
+  useEffect(() => {
+    if (matchmakingError) {
+      toast({
+        title: t('Error'),
+        description: matchmakingError,
+        status: 'error',
+        duration: 5000,
+        isClosable: true,
+      })
+    }
+  }, [matchmakingError, toast, t])
+
+  // Display error toast if challenge creation has an error
+  useEffect(() => {
+    if (challengeCreationError) {
+      toast({
+        title: t('Error'),
+        description: challengeCreationError,
+        status: 'error',
+        duration: 5000,
+        isClosable: true,
+      })
+
+      // Clear the error
+      dispatch(clearChallengeError())
+    }
+  }, [challengeCreationError, toast, t, dispatch])
 
   // Function to join matchmaking
-  const handleJoinMatchmaking = useCallback(
-    categories => {
-      // Validate we have exactly 2 categories
-      if (
-        !categories ||
-        !Array.isArray(categories) ||
-        categories.length !== 2
-      ) {
+  const handleJoinMatchmaking = useCallback(() => {
+    // Clear any previous timeout
+    dispatch(setInMatchmaking(true))
+    return dispatch(joinMatchmaking())
+      .unwrap()
+      .then(result => {
+        // Emit socket event if we have a socket
+        const currentSocket = getSocket()
+        if (currentSocket && result) {
+          // This will trigger the server to emit 'quickClash:joinedMatchmaking' back
+          currentSocket.emit('quickClash:joinMatchmaking')
+        }
+
+        return result
+      })
+      .catch(error => {
         toast({
           title: t('Error'),
-          description: t('Please select exactly 2 categories'),
+          description: error || t('Failed to join matchmaking'),
           status: 'error',
           duration: 3000,
           isClosable: true,
         })
-        return Promise.reject('Invalid categories')
-      }
 
-      return dispatch(joinMatchmaking({ categories }))
-        .unwrap()
-        .then(result => {
-          // Emit socket event if we have a socket
-          if (socket) {
-            socket.emit('quickClash:joinMatchmaking', {
-              userId: result.user,
-              categories,
-            })
-          }
-
-          toast({
-            title: t('Joined Matchmaking'),
-            description: t('Looking for opponents...'),
-            status: 'success',
-            duration: 3000,
-            isClosable: true,
-          })
-
-          return result
-        })
-        .catch(error => {
-          toast({
-            title: t('Error'),
-            description: error || t('Failed to join matchmaking'),
-            status: 'error',
-            duration: 3000,
-            isClosable: true,
-          })
-
-          throw error
-        })
-    },
-    [dispatch, socket, toast, t],
-  )
+        throw error
+      })
+  }, [dispatch, getSocket, t, toast])
 
   // Function to leave matchmaking
   const handleLeaveMatchmaking = useCallback(() => {
     return dispatch(leaveMatchmaking())
       .unwrap()
       .then(result => {
-        // Emit socket event if we have a socket
-        if (socket && matchmakingEntry) {
-          socket.emit('quickClash:leaveMatchmaking', {
-            userId: matchmakingEntry.user,
-          })
-        }
-
-        toast({
-          title: t('Left Matchmaking'),
-          status: 'info',
-          duration: 3000,
-          isClosable: true,
-        })
-
         return result
       })
       .catch(error => {
@@ -306,81 +240,10 @@ const useQuickClashMatchmaking = () => {
 
         throw error
       })
-  }, [dispatch, socket, matchmakingEntry, toast, t])
-
-  const handleAcceptChallenge = useCallback(
-    (creatorId, categories) => {
-      // Validate we have exactly 2 categories
-      if (
-        !categories ||
-        !Array.isArray(categories) ||
-        categories.length !== 2
-      ) {
-        toast({
-          title: t('Error'),
-          description: t('Please select exactly 2 categories'),
-          status: 'error',
-          duration: 3000,
-          isClosable: true,
-        })
-        return Promise.reject('Invalid categories')
-      }
-
-      // Store pending challenge data for UI state
-      dispatch(setPendingChallenge({ opponentId: creatorId, categories }))
-
-      return dispatch(acceptMatchmakingChallenge({ creatorId, categories }))
-        .unwrap()
-        .then(result => {
-          // Clear pending challenge state
-          dispatch(clearPendingChallenge())
-
-          return result
-        })
-        .catch(error => {
-          // Clear pending challenge state on error
-          dispatch(clearPendingChallenge())
-
-          // Race condition has a specific error
-          if (error === 'This user is no longer available for challenges') {
-            toast({
-              title: t('Challenge Already Taken'),
-              description: t('This user is no longer available'),
-              status: 'warning',
-              duration: 3000,
-              isClosable: true,
-            })
-          } else {
-            toast({
-              title: t('Error'),
-              description: error || t('Failed to accept challenge'),
-              status: 'error',
-              duration: 3000,
-              isClosable: true,
-            })
-          }
-
-          throw error
-        })
-    },
-    [dispatch, toast, t],
-  )
-
-  // Function to load available users
-  const loadAvailableUsers = useCallback(() => {
-    return dispatch(fetchMatchmakingUsers())
-  }, [dispatch])
-
-  // Function to check matchmaking status
-  const checkMatchmakingStatus = useCallback(() => {
-    return dispatch(getMatchmakingStatus())
-  }, [dispatch])
+  }, [dispatch, getSocket, userId, toast, t])
 
   return {
     // State
-    users,
-    usersLoading,
-    usersError,
     inMatchmaking,
     matchmakingEntry,
     matchmakingLoading,
@@ -389,14 +252,17 @@ const useQuickClashMatchmaking = () => {
     challengeCreationResult,
     challengeCreationError,
     socketConnected,
-    pendingChallenge,
+    challengeCreationData,
+    challengeReady,
 
     // Actions
     joinMatchmaking: handleJoinMatchmaking,
     leaveMatchmaking: handleLeaveMatchmaking,
-    acceptChallenge: handleAcceptChallenge,
-    loadAvailableUsers,
     checkMatchmakingStatus,
+
+    // Socket management
+    setupSocketListeners,
+    cleanupSocketListeners,
   }
 }
 

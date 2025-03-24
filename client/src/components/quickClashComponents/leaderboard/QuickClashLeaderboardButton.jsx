@@ -6,12 +6,11 @@ import {
   Box,
   useDisclosure,
   useBreakpointValue,
-  IconButton,
   HStack,
   Text,
 } from '@chakra-ui/react'
 import { motion } from 'framer-motion'
-import { Trophy, Star } from 'lucide-react'
+import { Trophy } from 'lucide-react'
 import { useTranslation } from 'react-i18next'
 
 import QuickClashLeaderboardModal from './QuickClashLeaderboardModal'
@@ -19,7 +18,7 @@ import QuickClashLeaderboardModal from './QuickClashLeaderboardModal'
 const MotionButton = motion(Button)
 const MotionBox = motion(Box)
 
-const QuickClashLeaderboardButton = () => {
+const QuickClashLeaderboardButton = ({ showMobileVersion = true }) => {
   const { t } = useTranslation('QuickClash')
   const { isOpen, onOpen, onClose } = useDisclosure()
   const isMobile = useBreakpointValue({ base: true, md: false })
@@ -27,7 +26,6 @@ const QuickClashLeaderboardButton = () => {
 
   // Animation variants
   const buttonVariants = {
-    initial: { scale: 0.95, opacity: 0 },
     animate: {
       scale: 1,
       opacity: 1,
@@ -52,7 +50,6 @@ const QuickClashLeaderboardButton = () => {
 
   // For floating badge (mobile)
   const floatingVariants = {
-    initial: { scale: 0, opacity: 0 },
     animate: {
       scale: 1,
       opacity: 1,
@@ -97,7 +94,7 @@ const QuickClashLeaderboardButton = () => {
     }
   `
 
-  if (isMobile) {
+  if (isMobile && showMobileVersion) {
     return (
       <>
         <MotionBox
@@ -112,52 +109,6 @@ const QuickClashLeaderboardButton = () => {
           whileTap="tap"
           onClick={onOpen}
         >
-          {/* Animated star background */}
-          <MotionBox
-            position="absolute"
-            width="150%"
-            height="150%"
-            top="-25%"
-            left="-25%"
-            opacity={0.6}
-            variants={starVariants}
-            animate="animate"
-            pointerEvents="none"
-          >
-            <Icon
-              as={Star}
-              position="absolute"
-              top="10%"
-              left="10%"
-              color="yellow.300"
-              boxSize={3}
-            />
-            <Icon
-              as={Star}
-              position="absolute"
-              top="20%"
-              right="15%"
-              color="yellow.400"
-              boxSize={2}
-            />
-            <Icon
-              as={Star}
-              position="absolute"
-              bottom="5%"
-              right="25%"
-              color="yellow.200"
-              boxSize={3}
-            />
-            <Icon
-              as={Star}
-              position="absolute"
-              bottom="30%"
-              left="0%"
-              color="yellow.300"
-              boxSize={2}
-            />
-          </MotionBox>
-
           <Box
             bg="purple.600"
             borderRadius="full"
@@ -194,7 +145,9 @@ const QuickClashLeaderboardButton = () => {
       </>
     )
   }
-
+  if (isMobile && !showMobileVersion) {
+    return null
+  }
   // Desktop version - designed to match with the New Challenge button
   return (
     <>

@@ -14,7 +14,7 @@ import {
   Badge,
 } from '@chakra-ui/react'
 import { motion } from 'framer-motion'
-import { Swords, Users, Zap, CheckCircle, Calendar } from 'lucide-react'
+import { Swords, Zap, Calendar } from 'lucide-react'
 import { useTranslation } from 'react-i18next'
 import { useSelector } from 'react-redux'
 
@@ -26,14 +26,12 @@ const MotionBadge = motion(Badge)
 const TAB_HASH_MAP = {
   0: 'active',
   1: 'tasks',
-  2: 'matchmaking',
 }
 
 // Reverse map for looking up index from hash
 const HASH_TAB_MAP = {
   active: 0,
   tasks: 1,
-  matchmaking: 2,
 }
 
 /**
@@ -66,17 +64,6 @@ const CustomTabs = ({ children, initialTabIndex = 0, onChange, tabNames }) => {
       iconAnimation: { rotate: [0, 15, -15, 0], transition: { duration: 0.5 } },
       hash: 'active',
     },
-    /* Comment out Analysis tab as requested
-    {
-      label: t('Analysis'),
-      icon: History,
-      ariaLabel: 'Challenge AI Analysis tab',
-      color: 'blue.400',
-      hoverColor: 'blue.300',
-      activeGradient: 'linear(to-r, blue.600, blue.400)',
-      iconAnimation: { rotate: [0, 360], transition: { duration: 0.7 } },
-    },
-    */
     {
       label: t('Tasks'),
       icon: Calendar,
@@ -86,16 +73,6 @@ const CustomTabs = ({ children, initialTabIndex = 0, onChange, tabNames }) => {
       activeGradient: 'linear(to-r, yellow.600, yellow.400)',
       iconAnimation: { y: [0, -3, 0], transition: { duration: 0.5 } },
       hash: 'tasks',
-    },
-    {
-      label: t('Matchmaking'),
-      icon: Users,
-      ariaLabel: 'Matchmaking tab',
-      color: 'green.400',
-      hoverColor: 'green.300',
-      activeGradient: 'linear(to-r, green.600, green.400)',
-      iconAnimation: { scale: [1, 1.2, 1], transition: { duration: 0.5 } },
-      hash: 'matchmaking',
     },
   ]
 
@@ -234,7 +211,7 @@ const CustomTabs = ({ children, initialTabIndex = 0, onChange, tabNames }) => {
               </Text>
 
               {/* Badge for Daily Tasks */}
-              {tab.label === t('Daily Tasks') && pendingTasks.length > 0 && (
+              {tab.label === t('Tasks') && pendingTasks.length > 0 && (
                 <MotionBadge
                   position="absolute"
                   top="-8px"

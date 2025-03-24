@@ -24,9 +24,7 @@ const {
 const {
   joinMatchmakingRoom,
   leaveMatchmakingRoom,
-  getMatchmakingUsers,
   getMatchmakingStatus,
-  acceptMatchmakingChallenge,
 } = require('../controllers/quickClashMatchmakingController')
 
 const router = express.Router()
@@ -41,7 +39,7 @@ router.use('/dailyTasks', dailyTaskRoutes)
 // Challenge management routes
 router.post('/challenge/create', createNewChallenge)
 router.get('/challenges', getMyChallenges)
-router.get('/challenges/completed', getCompletedChallenges) // Add this new endpoint
+router.get('/challenges/completed', getCompletedChallenges)
 router.get('/challenge/:challengeId', getChallenge)
 router.post('/challenge/:challengeId/accept', handleAcceptChallenge)
 router.post('/challenge/:challengeId/reject', handleRejectChallenge)
@@ -49,7 +47,7 @@ router.get('/challenge/:challengeId/sessions', getSessionIdFromChallenge)
 
 // Challenge session routes
 router.post('/session/:challengeId', startChallengeSession)
-router.get('/session/:sessionId/quiz', getSessionQuiz) // Add this new endpoint
+router.get('/session/:sessionId/quiz', getSessionQuiz)
 router.post('/session/:sessionId/reading/start', startReadingPhase)
 router.post('/session/:sessionId/reading/complete', completeReadingPhase)
 router.post('/session/:sessionId/quiz/submit', submitQuizAnswers)
@@ -62,12 +60,10 @@ router.get('/analysis/:challengeId/status', getAnalysisStatus)
 
 router.get('/stats', getUserClashStats)
 
-// Matchmaking routes
+// Simplified matchmaking routes - remove accept endpoint
 router.post('/matchmaking/join', joinMatchmakingRoom)
 router.post('/matchmaking/leave', leaveMatchmakingRoom)
-router.get('/matchmaking/users', getMatchmakingUsers)
 router.get('/matchmaking/status', getMatchmakingStatus)
-router.post('/matchmaking/accept', acceptMatchmakingChallenge)
 
 // Leaderboard routes
 router.get('/leaderboard', getQuickClashLeaderboard)

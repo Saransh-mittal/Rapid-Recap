@@ -103,8 +103,8 @@ const QuickClashHeader = ({ onNewChallenge }) => {
         direction={{ base: 'column', md: 'row' }}
         justifyContent="space-between"
         alignItems={{ base: 'center', md: 'center' }}
-        mb={8}
-        gap={{ base: 6, md: 4 }}
+        mb={{ base: 4, md: 8 }}
+        gap={{ base: 0, md: 4 }}
       >
         {/* Title and Description */}
         <MotionBox
@@ -138,8 +138,8 @@ const QuickClashHeader = ({ onNewChallenge }) => {
           mt={{ base: 2, md: 0 }}
           w={{ base: '100%', md: 'auto' }}
         >
-          <TaskProgressIndicator size="sm" />
           <MotionButton
+            display={{ base: 'none', md: 'inline-flex' }}
             as={motion.button}
             leftIcon={<FiZap />}
             bg="purple.600"
@@ -159,7 +159,7 @@ const QuickClashHeader = ({ onNewChallenge }) => {
           </MotionButton>
 
           {/* Leaderboard button is already responsive */}
-          <QuickClashLeaderboardButton />
+          <QuickClashLeaderboardButton showMobileVersion={false} />
         </HStack>
       </Flex>
     </MotionBox>
