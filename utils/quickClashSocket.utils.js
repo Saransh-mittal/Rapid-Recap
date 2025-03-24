@@ -54,52 +54,6 @@ const setupQuickClashSocketHandlers = (io, socket, user) => {
   handleMatchmakingEvents(io, socket)
 
   // Listen for bot response events
-  globalEmitter.on(
-    'quickClash:botResponse',
-    async ({ challengeId, botId, accepted }) => {
-      try {
-        if (accepted) {
-          // Bot accepts the challenge
-          await acceptChallenge({
-            challengeId,
-            userId: botId,
-          })
-
-          // Emit to challenger
-          const challenge = await getBasicChallengeInfo(challengeId)
-          if (challenge && challenge.challenger) {
-            io.to(`quickClash:${challenge.challenger}`).emit(
-              'quickClash:botAcceptedChallenge',
-              {
-                challengeId,
-                botId,
-              },
-            )
-          }
-        } else {
-          // Bot rejects the challenge
-          await rejectChallenge({
-            challengeId,
-            userId: botId,
-          })
-
-          // Emit to challenger
-          const challenge = await getBasicChallengeInfo(challengeId)
-          if (challenge && challenge.challenger) {
-            io.to(`quickClash:${challenge.challenger}`).emit(
-              'quickClash:botRejectedChallenge',
-              {
-                challengeId,
-                botId,
-              },
-            )
-          }
-        }
-      } catch (error) {
-        console.error('Error handling bot response:', error)
-      }
-    },
-  )
 }
 
 /**
@@ -311,68 +265,9 @@ const setupQuickClashGlobalEvents = io => {
     },
   )
 
-  globalEmitter.on('quickClash:userLeftMatchmaking', ({ userId }) => {
-    // Broadcast to all users in matchmaking room
-    io.to('quickClash:matchmaking').emit('quickClash:userLeft', {
-      userId,
-    })
-  })
-
-  globalEmitter.on(
-    'quickClash:matchmakingStatusUpdated',
-    ({ userId, status }) => {
-      // Broadcast to all users in matchmaking room
-      io.to('quickClash:matchmaking').emit('quickClash:statusUpdated', {
-        userId,
-        status,
-      })
-    },
-  )
-
   // Event for when a bot completes a challenge
-  globalEmitter.on(
-    'quickClash:botCompletedChallenge',
-    ({ challengeId, botId, score }) => {
-      try {
-        // Find the challenge to get the challenger ID
-        getBasicChallengeInfo(challengeId).then(challenge => {
-          if (challenge && challenge.challenger) {
-            // Emit to challenger
-            io.to(`quickClash:${challenge.challenger}`).emit(
-              'quickClash:botCompletedChallenge',
-              {
-                challengeId,
-                botId,
-                score,
-              },
-            )
-          }
-        })
-      } catch (error) {
-        console.error('Error handling bot completed challenge event:', error)
-      }
-    },
-  )
 
   // Add these event handlers to setupQuickClashGlobalEvents function
-  globalEmitter.on(
-    'quickClash:challengeStarted',
-    ({ challengerId, opponentId, challengeId, category }) => {
-      // Emit to both challenger and opponent
-      io.to(`quickClash:${challengerId}`).emit(
-        'quickClash:preparingChallenge',
-        {
-          challengeId,
-          category,
-        },
-      )
-
-      io.to(`quickClash:${opponentId}`).emit('quickClash:preparingChallenge', {
-        challengeId,
-        category,
-      })
-    },
-  )
 
   globalEmitter.on('quickClash:challengeRaceCondition', ({ accepterId }) => {
     // Notify user who tried to accept a challenge that was already taken
@@ -380,55 +275,6 @@ const setupQuickClashGlobalEvents = io => {
       message: 'This user is no longer available for challenges',
     })
   })
-
-  // Add these events to the setupQuickClashGlobalEvents function
-  globalEmitter.on('quickClash:userLocked', ({ userId }) => {
-    // Broadcast to all users in matchmaking room that this user is locked
-    io.to('quickClash:matchmaking').emit('quickClash:userUnavailable', {
-      userId,
-    })
-  })
-
-  globalEmitter.on('quickClash:userRemoved', ({ userId }) => {
-    // Broadcast to all users in matchmaking room that this user is removed
-    io.to('quickClash:matchmaking').emit('quickClash:userRemoved', {
-      userId,
-    })
-  })
-
-  // Use unique event names to avoid conflicts
-  globalEmitter.on(
-    'quickClash:matchChallenge',
-    ({
-      challengerId,
-      opponentId,
-      challengeId,
-      categories,
-      challengerData,
-      opponentData,
-    }) => {
-      // Emit to both users to show the creation modal
-      io.to(`quickClash:${challengerId}`).emit(
-        'quickClash:matchCreationStarted',
-        {
-          tempChallengeId: challengeId, // This is a temporary ID
-          categories,
-          opponent: opponentData,
-          isChallenger: true,
-        },
-      )
-
-      io.to(`quickClash:${opponentId}`).emit(
-        'quickClash:matchCreationStarted',
-        {
-          tempChallengeId: challengeId, // This is a temporary ID
-          categories,
-          opponent: challengerData,
-          isChallenger: false,
-        },
-      )
-    },
-  )
 
   globalEmitter.on(
     'quickClash:matchReady',
@@ -449,25 +295,6 @@ const setupQuickClashGlobalEvents = io => {
           oldChallengeId, // Include the temp ID so client can match it
         },
       )
-    },
-  )
-
-  globalEmitter.on(
-    'quickClash:matchFailed',
-    ({ challengerId, opponentId, error, oldChallengeId }) => {
-      // Notify both users of the failure
-      io.to(`quickClash:${challengerId}`).emit(
-        'quickClash:matchCreationFailed',
-        {
-          error,
-          oldChallengeId,
-        },
-      )
-
-      io.to(`quickClash:${opponentId}`).emit('quickClash:matchCreationFailed', {
-        error,
-        oldChallengeId,
-      })
     },
   )
 }
