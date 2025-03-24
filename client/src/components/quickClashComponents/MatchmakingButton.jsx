@@ -25,6 +25,7 @@ import {
   VStack,
   Box,
   Flex,
+  Divider,
 } from '@chakra-ui/react'
 import { motion } from 'framer-motion'
 import { useTranslation } from 'react-i18next'
@@ -178,7 +179,7 @@ const MatchmakingButton = forwardRef(({ compact = false }, ref) => {
       isOpen={isModalOpen && inMatchmaking}
       onClose={handleCloseModal}
       isCentered
-      size="md"
+      size="lg" // Larger size for better visibility
     >
       <ModalOverlay bg="rgba(0, 0, 0, 0.8)" backdropFilter="blur(10px)" />
       <ModalContent
@@ -196,11 +197,12 @@ const MatchmakingButton = forwardRef(({ compact = false }, ref) => {
 
         <ModalBody py={6}>
           <VStack spacing={6} align="center">
+            {/* Animated Spinner with Orbiting Elements */}
             <MotionFlex
               justify="center"
               align="center"
-              w="100px"
-              h="100px"
+              w="120px"
+              h="120px"
               borderRadius="full"
               bg="rgba(72, 187, 120, 0.1)"
               border="2px solid"
@@ -220,7 +222,7 @@ const MatchmakingButton = forwardRef(({ compact = false }, ref) => {
             >
               <Spinner
                 size="xl"
-                thickness="3px"
+                thickness="4px"
                 speed="0.8s"
                 color="green.400"
               />
@@ -231,31 +233,38 @@ const MatchmakingButton = forwardRef(({ compact = false }, ref) => {
                 animate={{ rotate: 360 }}
                 transition={{ duration: 30, repeat: Infinity, ease: 'linear' }}
               >
-                {Array.from({ length: 8 }).map((_, i) => (
+                {Array.from({ length: 12 }).map((_, i) => (
                   <Box
                     key={i}
                     position="absolute"
-                    w="6px"
-                    h="6px"
+                    w="8px"
+                    h="8px"
                     borderRadius="full"
                     bg="green.400"
-                    transform={`rotate(${i * 45}deg) translateY(-50px)`}
+                    transform={`rotate(${i * 30}deg) translateY(-60px)`}
                     opacity={0.5 + (i % 2) * 0.5}
                   />
                 ))}
               </MotionFlex>
             </MotionFlex>
 
-            <VStack spacing={1}>
-              <Text color="white" fontSize="lg" fontWeight="bold">
-                {t('Searching for your perfect opponent')}
+            {/* Informative Text */}
+            <VStack spacing={2} align="center">
+              <Text color="white" fontSize="xl" fontWeight="bold">
+                {t('You are in the matchmaking queue')}
               </Text>
-              <Text color="whiteAlpha.700" fontSize="sm">
-                {t('This may take a few moments')}
+              <Text color="whiteAlpha.700" fontSize="md" textAlign="center">
+                {t(
+                  'We are searching for the perfect opponent. You will remain in the queue until you choose to leave.',
+                )}
               </Text>
             </VStack>
 
-            <HStack spacing={4}>
+            {/* Separator */}
+            <Divider borderColor="whiteAlpha.300" />
+
+            {/* Time and Status Display */}
+            <HStack spacing={8} justify="center">
               <VStack spacing={1}>
                 <Text color="whiteAlpha.600" fontSize="sm">
                   {t('Time in Queue')}
@@ -291,10 +300,19 @@ const MatchmakingButton = forwardRef(({ compact = false }, ref) => {
                     repeatType: 'reverse',
                   }}
                 >
-                  {t('Active')}
+                  {t('Searching')}
                 </MotionBadge>
               </VStack>
             </HStack>
+
+            {/* Additional Info */}
+            <Box w="100%" pt={4}>
+              <Text color="whiteAlpha.600" fontSize="sm" textAlign="center">
+                {t(
+                  'You can close this modal and continue browsing. We will notify you when a match is found.',
+                )}
+              </Text>
+            </Box>
           </VStack>
         </ModalBody>
 
