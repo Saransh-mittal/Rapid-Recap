@@ -3,10 +3,6 @@ const globalEmitter = require('../eventEmitter')
 const {
   handleMatchmakingEvents,
 } = require('../controllers/quickClashMatchmakingController')
-const {
-  acceptChallenge,
-  rejectChallenge,
-} = require('../services/quickClashServices/quickClashChallengeService')
 
 const joinedUsers = new Set()
 
@@ -54,26 +50,6 @@ const setupQuickClashSocketHandlers = (io, socket, user) => {
   handleMatchmakingEvents(io, socket)
 
   // Listen for bot response events
-}
-
-/**
- * Helper to get basic challenge info
- * @param {string} challengeId - Challenge ID
- * @returns {Promise<Object>} Basic challenge info
- */
-const getBasicChallengeInfo = async challengeId => {
-  try {
-    // Import mongoose and model here to avoid circular dependency
-    const mongoose = require('mongoose')
-    const QuickClashChallenge = require('../model/quickClashSchemas/quickClashChallengeSchema')
-
-    return await QuickClashChallenge.findById(challengeId)
-      .select('challenger opponent category')
-      .lean()
-  } catch (error) {
-    console.error('Error getting challenge info:', error)
-    return null
-  }
 }
 
 /**
@@ -186,16 +162,10 @@ const setupQuickClashGlobalEvents = io => {
         return
       }
 
-      // Determine recipient
-      const recipientId =
-        completedByUserId.toString() === challenge.challenger._id.toString()
-          ? challenge.opponent._id.toString()
-          : challenge.challenger._id.toString()
-
       // Add a small delay to avoid race conditions
       setTimeout(() => {
         // Emit to recipient's room
-        const recipientRoom = `quickClash:${recipientId}`
+        const recipientRoom = `quickClash:${challenge.challenger._id.toString()}`
         io.to(recipientRoom).emit(
           'quickClash:challengeCompletedByBothPlayers',
           {
@@ -205,6 +175,18 @@ const setupQuickClashGlobalEvents = io => {
           },
         )
       }, 100)
+      setTimeout(() => {
+        // Emit to recipient's room
+        const recipientRoom = `quickClash:${challenge.opponent._id.toString()}`
+        io.to(recipientRoom).emit(
+          'quickClash:challengeCompletedByBothPlayers',
+          {
+            challengeId: challenge._id,
+            trackWinnerOutcomeResult,
+            completedByUserId,
+          },
+        )
+      }, 200)
     },
   )
   // Listen for challenge completed event from controller
