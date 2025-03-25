@@ -148,22 +148,6 @@ const FloatingActionMenu = ({ onNewChallenge, onFindMatch }) => {
     }
   }, [position, isDragging])
 
-  // Close menu on click outside - with proper cleanup
-  useEffect(() => {
-    if (!isOpen) return // Only add listener when menu is open
-
-    const handleClickOutside = event => {
-      if (menuRef.current && !menuRef.current.contains(event.target)) {
-        onClose()
-      }
-    }
-
-    document.addEventListener('mousedown', handleClickOutside)
-    return () => {
-      document.removeEventListener('mousedown', handleClickOutside)
-    }
-  }, [isOpen, onClose])
-
   // Show task popup when tasks are completed
   useEffect(() => {
     if (justCompletedTaskId) {

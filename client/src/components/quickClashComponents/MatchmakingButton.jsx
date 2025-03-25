@@ -130,36 +130,22 @@ const MatchmakingButton = forwardRef(({ compact = false }, ref) => {
     joinMatchmaking({ categories: defaultCategories })
       .then(() => {
         setIsModalOpen(true)
-        toast({
-          title: t('Joined Matchmaking'),
-          description: t('Looking for opponents...'),
-          status: 'success',
-          duration: 3000,
-          isClosable: true,
-        })
       })
       .catch(error => {
         console.error('Failed to join matchmaking:', error)
       })
-  }, [joinMatchmaking, toast, t])
+  }, [joinMatchmaking, t])
 
   // Handle leave matchmaking
   const handleLeaveMatchmaking = useCallback(() => {
     leaveMatchmaking()
       .then(() => {
         setIsModalOpen(false)
-        toast({
-          title: t('Left Matchmaking'),
-          description: t('You have left the matchmaking queue'),
-          status: 'info',
-          duration: 3000,
-          isClosable: true,
-        })
       })
       .catch(error => {
         console.error('Failed to leave matchmaking:', error)
       })
-  }, [leaveMatchmaking, toast, t])
+  }, [leaveMatchmaking, t])
 
   // Format time display
   const formatTime = seconds => {
