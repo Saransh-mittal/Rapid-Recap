@@ -1,5 +1,13 @@
 // components/quickClashComponents/FloatingActionMenu.jsx
-import React, { useState, useEffect, useRef, lazy, Suspense } from 'react'
+import React, {
+  useState,
+  useEffect,
+  useRef,
+  lazy,
+  Suspense,
+  useCallback,
+  useMemo,
+} from 'react'
 import {
   Box,
   Icon,
@@ -13,7 +21,7 @@ import {
 } from '@chakra-ui/react'
 import { motion, AnimatePresence } from 'framer-motion'
 import { useTranslation } from 'react-i18next'
-import { Menu as MenuIcon, X, Zap, Sword, Sparkles } from 'lucide-react'
+import { Menu as MenuIcon, X, Sword } from 'lucide-react'
 import { useSelector } from 'react-redux'
 
 // Import existing components to reuse
@@ -27,6 +35,74 @@ const TaskPopup = lazy(() => import('./dailyTasks/TaskPopup'))
 const MotionBox = motion(Box)
 const MotionButton = motion(Button)
 
+// Pre-define animation variants outside component to prevent recreation on each render
+const menuItemVariants = {
+  hidden: { opacity: 0, scale: 0.8, y: 10 },
+  visible: i => ({
+    opacity: 1,
+    scale: 1,
+    y: 0,
+    transition: {
+      delay: i * 0.06,
+      type: 'spring',
+      stiffness: 240,
+      damping: 20,
+    },
+  }),
+  exit: {
+    opacity: 0,
+    scale: 0.8,
+    transition: { duration: 0.2 },
+  },
+}
+
+// Main button animation variants
+const mainButtonVariants = {
+  closed: {
+    rotate: 0,
+    background: 'linear-gradient(135deg, #805AD5 0%, #6B46C1 100%)',
+  },
+  open: {
+    rotate: 90,
+    background: 'linear-gradient(135deg, #E53E3E 0%, #C53030 100%)',
+  },
+}
+
+// Pre-define styles for menu item wrappers
+const leaderboardButtonStyle = {
+  '> div, > button': {
+    position: 'static !important',
+    transform: 'none !important',
+    top: 'auto !important',
+    left: 'auto !important',
+    right: 'auto !important',
+    bottom: 'auto !important',
+  },
+  '.chakra-button': {
+    width: '48px !important',
+    height: '48px !important',
+    borderRadius: 'full !important',
+    p: '0 !important',
+    minWidth: 'auto !important',
+  },
+  '.chakra-button > span, .chakra-button > div > span': {
+    display: 'none !important',
+  },
+}
+
+const matchmakingButtonStyle = {
+  button: {
+    width: '48px',
+    height: '48px',
+    borderRadius: 'full',
+    p: 0,
+    minWidth: 'auto',
+  },
+  'button > span': {
+    display: 'none',
+  },
+}
+
 const FloatingActionMenu = ({ onNewChallenge, onFindMatch }) => {
   const { t } = useTranslation('QuickClash')
   const { isOpen, onToggle, onClose } = useDisclosure()
@@ -36,40 +112,48 @@ const FloatingActionMenu = ({ onNewChallenge, onFindMatch }) => {
   const toast = useToast()
   const menuRef = useRef(null)
 
-  // Get task completion status from Redux
+  // Get task completion status from Redux - only extract what we need
   const { justCompletedTaskId, tasks } = useSelector(
-    state => state.quickClashDailyTasks,
+    state => ({
+      justCompletedTaskId: state.quickClashDailyTasks.justCompletedTaskId,
+      tasks: state.quickClashDailyTasks.tasks,
+    }),
+    (prev, next) => {
+      // Only re-render if these specific values changed
+      return (
+        prev.justCompletedTaskId === next.justCompletedTaskId &&
+        prev.tasks.length === next.tasks.length &&
+        prev.tasks.filter(t => !t.completed).length ===
+          next.tasks.filter(t => !t.completed).length
+      )
+    },
   )
 
-  // Count pending tasks for the badge
-  const pendingTasks = tasks.filter(task => !task.completed).length
+  // Count pending tasks for the badge - memoize this calculation
+  const pendingTasks = useMemo(
+    () => tasks.filter(task => !task.completed).length,
+    [tasks],
+  )
 
   // Load saved position on mount
   useEffect(() => {
-    const savedPosition = localStorage.getItem('floatingMenuPosition')
-    if (savedPosition) {
-      setPosition(JSON.parse(savedPosition))
-    } else {
-      // Default position - bottom right
-      setPosition({ x: window.innerWidth - 80, y: window.innerHeight - 100 })
-    }
+    // Set initial position once on component mount
+    setPosition({ x: window.innerWidth - 70, y: window.innerHeight - 160 })
   }, [])
 
-  // Save position when it changes
+  // Save position when it changes (but only when not dragging)
   useEffect(() => {
     if (!isDragging) {
       localStorage.setItem('floatingMenuPosition', JSON.stringify(position))
     }
   }, [position, isDragging])
 
-  // Close menu on click outside
+  // Close menu on click outside - with proper cleanup
   useEffect(() => {
+    if (!isOpen) return // Only add listener when menu is open
+
     const handleClickOutside = event => {
-      if (
-        menuRef.current &&
-        !menuRef.current.contains(event.target) &&
-        isOpen
-      ) {
+      if (menuRef.current && !menuRef.current.contains(event.target)) {
         onClose()
       }
     }
@@ -87,28 +171,30 @@ const FloatingActionMenu = ({ onNewChallenge, onFindMatch }) => {
     }
   }, [justCompletedTaskId])
 
-  const handleDragStart = () => {
+  // Memoize handlers to prevent recreating on each render
+  const handleDragStart = useCallback(() => {
     setIsDragging(true)
     onClose()
-  }
+  }, [onClose])
 
-  const handleDragEnd = (_, info) => {
+  const handleDragEnd = useCallback((_, info) => {
     setIsDragging(false)
 
     // Update position while ensuring it stays within screen boundaries
-    const newX = Math.max(
-      20,
-      Math.min(window.innerWidth - 70, position.x + info.offset.x),
-    )
-    const newY = Math.max(
-      20,
-      Math.min(window.innerHeight - 70, position.y + info.offset.y),
-    )
+    setPosition(prevPosition => {
+      const newX = Math.max(
+        20,
+        Math.min(window.innerWidth - 70, prevPosition.x + info.offset.x),
+      )
+      const newY = Math.max(
+        20,
+        Math.min(window.innerHeight - 70, prevPosition.y + info.offset.y),
+      )
+      return { x: newX, y: newY }
+    })
+  }, [])
 
-    setPosition({ x: newX, y: newY })
-  }
-
-  const handleResetPosition = () => {
+  const handleResetPosition = useCallback(() => {
     // Reset to default position
     const defaultPosition = {
       x: window.innerWidth - 80,
@@ -127,59 +213,26 @@ const FloatingActionMenu = ({ onNewChallenge, onFindMatch }) => {
       duration: 2000,
       isClosable: true,
     })
-  }
+  }, [toast, t])
 
-  const handleNewChallengeClick = () => {
+  const handleNewChallengeClick = useCallback(() => {
     onNewChallenge()
     onClose()
-  }
+  }, [onNewChallenge, onClose])
 
-  const handleViewTasksClick = () => {
+  const handleViewTasksClick = useCallback(() => {
     setShowTaskPopup(true)
     onClose()
-  }
+  }, [onClose])
 
-  const handleCloseTaskPopup = () => {
+  const handleCloseTaskPopup = useCallback(() => {
     setShowTaskPopup(false)
-  }
+  }, [])
 
-  const handleViewAllTasks = () => {
+  const handleViewAllTasks = useCallback(() => {
     window.location.hash = 'tasks'
     // Don't close the popup here, let the component handle it
-  }
-
-  // Animation variants - subtle gamified animations
-  const menuItemVariants = {
-    hidden: { opacity: 0, scale: 0.8, y: 10 },
-    visible: i => ({
-      opacity: 1,
-      scale: 1,
-      y: 0,
-      transition: {
-        delay: i * 0.06,
-        type: 'spring',
-        stiffness: 240,
-        damping: 20,
-      },
-    }),
-    exit: {
-      opacity: 0,
-      scale: 0.8,
-      transition: { duration: 0.2 },
-    },
-  }
-
-  // Main button animation variants
-  const mainButtonVariants = {
-    closed: {
-      rotate: 0,
-      background: 'linear-gradient(135deg, #805AD5 0%, #6B46C1 100%)',
-    },
-    open: {
-      rotate: 90,
-      background: 'linear-gradient(135deg, #E53E3E 0%, #C53030 100%)',
-    },
-  }
+  }, [])
 
   return (
     <Portal>
@@ -197,13 +250,14 @@ const FloatingActionMenu = ({ onNewChallenge, onFindMatch }) => {
         initial={{ x: position.x, y: position.y }}
         animate={{ x: position.x, y: position.y }}
         transition={{ type: 'spring', damping: 20 }}
+        userSelect="none"
       >
         {/* Main button - gamified yet sleek */}
-
         <MotionButton
           width="60px"
           height="60px"
           borderRadius="full"
+          userSelect="none"
           bgGradient={
             isOpen
               ? 'linear(to-br, red.500, red.600)'
@@ -284,7 +338,7 @@ const FloatingActionMenu = ({ onNewChallenge, onFindMatch }) => {
         </MotionButton>
 
         {/* Menu items */}
-        <AnimatePresence>
+        <AnimatePresence mode="wait">
           {isOpen && (
             <VStack
               position="absolute"
@@ -292,6 +346,7 @@ const FloatingActionMenu = ({ onNewChallenge, onFindMatch }) => {
               right="5px"
               spacing={3}
               align="flex-end"
+              userSelect="none"
             >
               {/* New Challenge Button - Gamified but sleek */}
               <MotionBox
@@ -305,6 +360,7 @@ const FloatingActionMenu = ({ onNewChallenge, onFindMatch }) => {
                   label={t('Start a New Challenge')}
                   placement="left"
                   hasArrow
+                  openDelay={500}
                 >
                   <MotionButton
                     onClick={handleNewChallengeClick}
@@ -318,6 +374,7 @@ const FloatingActionMenu = ({ onNewChallenge, onFindMatch }) => {
                     _hover={{ transform: 'translateY(-2px)' }}
                     whileHover={{ scale: 1.05 }}
                     whileTap={{ scale: 0.95 }}
+                    userSelect="none"
                   >
                     <Icon as={Sword} boxSize={5} />
                   </MotionButton>
@@ -331,20 +388,7 @@ const FloatingActionMenu = ({ onNewChallenge, onFindMatch }) => {
                 initial="hidden"
                 animate="visible"
                 exit="exit"
-                // Override styles to ensure proper sizing in the menu
-                sx={{
-                  button: {
-                    width: '48px',
-                    height: '48px',
-                    borderRadius: 'full',
-                    p: 0,
-                    minWidth: 'auto',
-                  },
-                  'button > span': {
-                    // Hide any text in the button
-                    display: 'none',
-                  },
-                }}
+                sx={matchmakingButtonStyle}
               >
                 <MatchmakingButton compact={true} />
               </MotionBox>
@@ -355,29 +399,9 @@ const FloatingActionMenu = ({ onNewChallenge, onFindMatch }) => {
                 variants={menuItemVariants}
                 initial="hidden"
                 animate="visible"
+                userSelect="none"
                 exit="exit"
-                // Fix positioning issue with overrides
-                sx={{
-                  '> div, > button': {
-                    position: 'static !important',
-                    transform: 'none !important',
-                    top: 'auto !important',
-                    left: 'auto !important',
-                    right: 'auto !important',
-                    bottom: 'auto !important',
-                  },
-                  '.chakra-button': {
-                    width: '48px !important',
-                    height: '48px !important',
-                    borderRadius: 'full !important',
-                    p: '0 !important',
-                    minWidth: 'auto !important',
-                  },
-                  // Hide any text in the button
-                  '.chakra-button > span, .chakra-button > div > span': {
-                    display: 'none !important',
-                  },
-                }}
+                sx={leaderboardButtonStyle}
               >
                 <QuickClashLeaderboardButton />
               </MotionBox>
@@ -400,7 +424,7 @@ const FloatingActionMenu = ({ onNewChallenge, onFindMatch }) => {
           )}
         </AnimatePresence>
 
-        {/* Task Popup */}
+        {/* Task Popup - only render when needed */}
         {showTaskPopup && (
           <Suspense fallback={null}>
             <TaskPopup
@@ -415,4 +439,5 @@ const FloatingActionMenu = ({ onNewChallenge, onFindMatch }) => {
   )
 }
 
-export default FloatingActionMenu
+// Use React.memo to prevent unnecessary re-renders
+export default React.memo(FloatingActionMenu)

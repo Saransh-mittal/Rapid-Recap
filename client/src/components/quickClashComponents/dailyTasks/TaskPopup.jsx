@@ -23,15 +23,12 @@ import {
 import { motion, AnimatePresence } from 'framer-motion'
 import {
   ChevronUp,
-  ChevronDown,
   CheckCircle,
   Target,
   Clock,
   Trophy,
   Gift,
   Zap,
-  AlertTriangle,
-  Star,
   Layout,
   Award,
 } from 'lucide-react'
@@ -51,58 +48,6 @@ const MotionProgress = motion(Progress)
 const MotionText = motion(Text)
 const MotionDivider = motion(Divider)
 const MotionIconButton = motion(IconButton)
-
-// Minimized floating button component
-const FloatingButton = memo(({ onClick }) => {
-  const { t } = useTranslation('QuickClash')
-
-  return (
-    <MotionBox
-      position="fixed"
-      bottom="10px"
-      right="10px"
-      zIndex={10}
-      initial={{ scale: 0 }}
-      animate={{ scale: 1 }}
-      exit={{ scale: 0 }}
-      transition={{ type: 'spring', damping: 20, stiffness: 300 }}
-    >
-      <Tooltip label={t('Show Tasks')}>
-        <MotionButton
-          colorScheme="purple"
-          size="md"
-          borderRadius="full"
-          width="50px"
-          height="50px"
-          onClick={onClick}
-          boxShadow="0 5px 15px rgba(0,0,0,0.3)"
-          whileHover={{
-            scale: 1.1,
-            boxShadow: '0 8px 20px rgba(0,0,0,0.4)',
-          }}
-          whileTap={{ scale: 0.9 }}
-          bgGradient="linear(to-r, purple.500, pink.500)"
-          _hover={{
-            bgGradient: 'linear(to-r, purple.600, pink.600)',
-          }}
-        >
-          <MotionFlex
-            animate={{
-              rotate: [0, 10, -10, 0],
-              transition: {
-                repeat: Infinity,
-                repeatType: 'loop',
-                duration: 2,
-              },
-            }}
-          >
-            <Icon as={Target} boxSize={5} />
-          </MotionFlex>
-        </MotionButton>
-      </Tooltip>
-    </MotionBox>
-  )
-})
 
 // Task item component for completed tasks
 const CompletedTaskItem = memo(
