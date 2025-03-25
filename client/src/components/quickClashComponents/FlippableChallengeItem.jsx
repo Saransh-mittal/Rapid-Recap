@@ -307,7 +307,7 @@ const FlippableChallengeItem = ({
   // Handle revenge
   const handleRevenge = useCallback(() => {
     if (isDefeat) {
-      onRevenge(opponent)
+      onRevenge(opponent, challenge)
     }
   }, [onRevenge, opponent, isDefeat])
 
@@ -593,6 +593,7 @@ const FlippableChallengeItem = ({
               expiresAt={challenge.expiresAt}
               category={challenge.category}
               onRevenge={isDefeat ? handleRevenge : null}
+              revengeStatus={challenge.revengeStatus}
             />
           )}
       </MotionBox>

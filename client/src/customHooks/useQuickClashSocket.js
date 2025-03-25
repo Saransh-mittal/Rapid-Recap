@@ -32,6 +32,8 @@ const useQuickClashSocket = () => {
   // State for tracking socket events
   const [lastEvent, setLastEvent] = useState(null)
   const isListening = useSelector(state => state.quickClash.socketListening)
+  const { user } = useSelector(state => state.auth)
+  const userId = user?._id
 
   // Initialize and setup socket handlers
   const initializeQuickClashSocket = useCallback(() => {
@@ -204,26 +206,22 @@ const useQuickClashSocket = () => {
         dispatch(fetchActiveChallenges())
       })
       socket.on('quickClash:challengeCompletedByBothPlayers', data => {
-        setLastEvent({
-          type: 'challengeCompletedByBothPlayers',
-          data,
-          timestamp: new Date(),
-        })
-
         // Add to note message queue
-        dispatch(
-          addNoteMessageIfAllowed({
-            id: uuidv4(),
-            messageType: 'quickClash',
-            eventType: 'challengeCompletedByBothPlayers',
-            data: data,
-            duration: 10000,
-            width: '350px',
-          }),
-        )
+        if (data.completedByUserId != userId) {
+          dispatch(
+            addNoteMessageIfAllowed({
+              id: uuidv4(),
+              messageType: 'quickClash',
+              eventType: 'challengeCompletedByBothPlayers',
+              data: data,
+              duration: 10000,
+              width: '350px',
+            }),
+          )
+          // Refresh active challenges list
+          dispatch(fetchActiveChallenges())
+        }
 
-        // Refresh active challenges list
-        dispatch(fetchActiveChallenges())
         //data.trackWinnerOutcomeResult
         //updateTaskProgressDirectInRedux
         if (data?.trackWinnerOutcomeResult?.tasksDone) {

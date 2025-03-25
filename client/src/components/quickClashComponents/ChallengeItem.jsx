@@ -398,7 +398,8 @@ const ChallengeItem = ({
               isDefeat={isDefeat}
               expiresAt={challenge.expiresAt}
               category={challenge.category}
-              onRevenge={isDefeat ? () => onRevenge(opponent) : null}
+              onRevenge={isDefeat ? () => onRevenge(opponent, challenge) : null}
+              revengeStatus={challenge.revengeStatus}
             />
           )}
       </Box>

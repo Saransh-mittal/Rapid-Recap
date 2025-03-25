@@ -653,6 +653,54 @@ const getQuickClashLeaderboard = asyncHandler(async (req, res) => {
   }
 })
 
+/**
+ * @desc    Mark a challenge as having had revenge taken
+ * @route   POST /api/quickClash/challenge/:challengeId/markRevenge
+ * @access  Private
+ */
+const markChallengeRevenge = asyncHandler(async (req, res) => {
+  const { challengeId } = req.params
+  const userId = req.user._id
+
+  try {
+    // Find the challenge
+    const challenge = await QuickClashChallenge.findById(challengeId)
+
+    if (!challenge) {
+      return res.status(404).json({
+        success: false,
+        message: 'Challenge not found',
+      })
+    }
+
+    // Verify user is part of this challenge
+    const isChallenger = challenge.challenger.toString() === userId.toString()
+    const isOpponent = challenge.opponent.toString() === userId.toString()
+
+    if (!isChallenger && !isOpponent) {
+      return res.status(403).json({
+        success: false,
+        message: 'Not authorized to update this challenge',
+      })
+    }
+
+    // Update the challenge
+    challenge.revengeStatus = true
+    await challenge.save()
+
+    res.status(200).json({
+      success: true,
+      message: 'Challenge marked as revenged',
+    })
+  } catch (error) {
+    console.error('Error marking challenge revenge:', error)
+    res.status(500).json({
+      success: false,
+      message: 'Failed to update challenge',
+    })
+  }
+})
+
 module.exports = {
   createNewChallenge,
   handleAcceptChallenge,
@@ -672,4 +720,5 @@ module.exports = {
   getUserClashStats,
   getAnalysisStatus,
   getQuickClashLeaderboard,
+  markChallengeRevenge,
 }

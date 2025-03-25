@@ -25,6 +25,7 @@ const ResultBanner = ({
   expiresAt,
   category,
   onRevenge,
+  revengeStatus,
 }) => {
   const { t } = useTranslation('QuickClash')
   const isExpired = new Date(expiresAt) < new Date()
@@ -124,7 +125,7 @@ const ResultBanner = ({
         </Badge>
 
         {/* Inline revenge button for defeats - bigger for better usability */}
-        {isDefeat && onRevenge && (
+        {isDefeat && onRevenge && !revengeStatus && (
           <MotionButton
             size={{ base: 'sm', md: 'sm' }} // Larger button size
             colorScheme="red"
@@ -153,6 +154,11 @@ const ResultBanner = ({
           >
             {t('Revenge')}
           </MotionButton>
+        )}
+        {isDefeat && revengeStatus && (
+          <Text fontSize="xs" color="whiteAlpha.600" textAlign="center">
+            Revenge sent
+          </Text>
         )}
       </HStack>
     </MotionFlex>

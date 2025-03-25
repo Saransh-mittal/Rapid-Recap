@@ -20,6 +20,7 @@ const {
   getUserClashStats,
   getAnalysisStatus,
   getQuickClashLeaderboard,
+  markChallengeRevenge,
 } = require('../controllers/quickClashController')
 const {
   joinMatchmakingRoom,
@@ -44,6 +45,7 @@ router.get('/challenge/:challengeId', getChallenge)
 router.post('/challenge/:challengeId/accept', handleAcceptChallenge)
 router.post('/challenge/:challengeId/reject', handleRejectChallenge)
 router.get('/challenge/:challengeId/sessions', getSessionIdFromChallenge)
+router.post('/challenge/:challengeId/markRevenge', markChallengeRevenge)
 
 // Challenge session routes
 router.post('/session/:challengeId', startChallengeSession)

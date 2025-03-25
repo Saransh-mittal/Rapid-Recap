@@ -1,9 +1,11 @@
+// components/quickClashComponents/ActiveChallenges.jsx
 import React, {
   useState,
   useEffect,
   useMemo,
   useCallback,
   Suspense,
+  useRef,
 } from 'react'
 import {
   Box,
@@ -37,6 +39,7 @@ import FilterTabs from './FilterTabs'
 import EmptyState from './EmptyState'
 import StatusSection from './StatusSection'
 import ConfirmationDialog from './ConfirmationDialog'
+import RevengeConfirmationDialog from './RevengeConfirmationDialog'
 
 // Use React.lazy for components that aren't always needed
 const QuizReportModal = React.lazy(() => import('./QuizReportModal'))
@@ -67,6 +70,7 @@ const ActiveChallenges = () => {
     loadMoreActiveChallenges,
     handleAcceptChallenge,
     handleRejectChallenge,
+    createChallenge, // Import this from useQuickClash
   } = useQuickClash()
   const { emitChallengeAccepted, emitChallengeRejected } = useQuickClashSocket()
   const { user } = useSelector(state => state.auth)
@@ -77,15 +81,14 @@ const ActiveChallenges = () => {
   // Modal disclosures
   const [isConfirmOpen, setIsConfirmOpen] = useState(false)
   const [isReportOpen, setIsReportOpen] = useState(false)
+  const [isRevengeConfirmOpen, setIsRevengeConfirmOpen] = useState(false)
   const [confirmAction, setConfirmAction] = useState({ type: '', id: '' })
 
-  // New Challenge modal
-  const {
-    isOpen: isNewChallengeOpen,
-    onOpen: onNewChallengeOpen,
-    onClose: onNewChallengeClose,
-  } = useDisclosure()
-  const [revengeOpponent, setRevengeOpponent] = useState(null)
+  // Revenge state
+  const [revengeData, setRevengeData] = useState(null)
+  const [revengeLoading, setRevengeLoading] = useState(false)
+  const [revengeProgress, setRevengeProgress] = useState(0)
+  const progressTimerRef = useRef(null)
 
   // Fetch challenges
   useEffect(() => {
@@ -192,13 +195,136 @@ const ActiveChallenges = () => {
   }, [])
 
   // Handle revenge action
-  const handleRevenge = useCallback(
-    opponent => {
-      setRevengeOpponent(opponent)
-      onNewChallengeOpen()
-    },
-    [onNewChallengeOpen],
-  )
+  const handleRevenge = useCallback((opponent, originalChallenge) => {
+    // Store the revenge data for use when confirmed
+    setRevengeData({
+      opponent,
+      originalChallengeId: originalChallenge._id,
+      category: originalChallenge.category,
+    })
+
+    // Open the revenge confirmation dialog
+    setIsRevengeConfirmOpen(true)
+  }, [])
+
+  // Close revenge confirmation dialog
+  const closeRevengeConfirmDialog = useCallback(() => {
+    setIsRevengeConfirmOpen(false)
+    // Clear progress timer if it exists
+    if (progressTimerRef.current) {
+      clearInterval(progressTimerRef.current)
+      progressTimerRef.current = null
+    }
+    // Reset progress if dialog is being closed
+    setRevengeProgress(0)
+  }, [])
+
+  // Setup simulated progress timer for better UX during long operations
+  const startProgressTimer = useCallback(() => {
+    // Clear any existing timer
+    if (progressTimerRef.current) {
+      clearInterval(progressTimerRef.current)
+    }
+
+    // Reset progress
+    setRevengeProgress(5)
+
+    // Create a timer that increments progress slowly
+    // We'll target around 90% over 25 seconds, reserving the last 10% for completion
+    progressTimerRef.current = setInterval(() => {
+      setRevengeProgress(prev => {
+        // Slow down progress as it gets higher
+        const increment = prev < 30 ? 5 : prev < 60 ? 3 : prev < 85 ? 1 : 0.5
+        const newValue = Math.min(prev + increment, 90)
+        return newValue
+      })
+    }, 1000) // Update every second
+  }, [])
+
+  // Execute the revenge action when confirmed
+  const executeRevenge = useCallback(async () => {
+    if (!revengeData) return
+
+    // Start loading state
+    setRevengeLoading(true)
+
+    // Start progress timer for UX
+    startProgressTimer()
+
+    try {
+      // Create a new challenge with the same category
+      const result = await createChallenge(revengeData.opponent._id, [
+        revengeData.category,
+      ])
+
+      // Complete the progress
+      setRevengeProgress(100)
+
+      // Make API call to update the original challenge's revengeStatus
+      await axios.post(
+        `/api/quickClash/challenge/${revengeData.originalChallengeId}/markRevenge`,
+      )
+
+      // Short delay to show completed progress
+      await new Promise(resolve => setTimeout(resolve, 500))
+
+      // Show success message
+      toast({
+        title: t('Revenge Challenge Sent!'),
+        description: t(
+          "Your revenge challenge has been sent. It's time for redemption!",
+        ),
+        status: 'success',
+        duration: 5000,
+        isClosable: true,
+      })
+
+      // Refresh challenges list
+      loadActiveChallenges()
+
+      // Close the confirmation dialog
+      closeRevengeConfirmDialog()
+
+      // Clear the revenge data
+      setRevengeData(null)
+    } catch (error) {
+      console.error('Error creating revenge challenge:', error)
+
+      // Show error toast
+      toast({
+        title: t('Failed to Send Revenge'),
+        description:
+          error.response?.data?.message ||
+          t('An error occurred while creating the revenge challenge.'),
+        status: 'error',
+        duration: 5000,
+        isClosable: true,
+      })
+
+      // Close dialog after error
+      closeRevengeConfirmDialog()
+
+      // Clear the revenge data
+      setRevengeData(null)
+    } finally {
+      // End loading state
+      setRevengeLoading(false)
+
+      // Clear progress timer
+      if (progressTimerRef.current) {
+        clearInterval(progressTimerRef.current)
+        progressTimerRef.current = null
+      }
+    }
+  }, [
+    revengeData,
+    createChallenge,
+    closeRevengeConfirmDialog,
+    toast,
+    t,
+    loadActiveChallenges,
+    startProgressTimer,
+  ])
 
   // Handle challenge actions
   const handleAccept = useCallback(
@@ -320,13 +446,6 @@ const ActiveChallenges = () => {
       setNextPageLoading(false)
     }
   }, [nextPageLoading, hasMore, loadMoreActiveChallenges, toast, t])
-
-  // Handle New Challenge modal close and reset revengeOpponent
-  const handleNewChallengeClose = useCallback(() => {
-    onNewChallengeClose()
-    // Wait a bit before clearing the opponent to avoid UI flicker
-    setTimeout(() => setRevengeOpponent(null), 300)
-  }, [onNewChallengeClose])
 
   // Check if we're still loading and no challenges have been loaded yet
   if (loading && !challenges.length) {
@@ -482,6 +601,21 @@ const ActiveChallenges = () => {
         }
       />
 
+      {/* Revenge Confirmation Dialog */}
+      {revengeData && (
+        <RevengeConfirmationDialog
+          isOpen={isRevengeConfirmOpen}
+          onClose={closeRevengeConfirmDialog}
+          onConfirm={executeRevenge}
+          opponentName={
+            revengeData.opponent?.inGameName || revengeData.opponent?.name
+          }
+          category={revengeData.category}
+          isLoading={revengeLoading}
+          loadingProgress={revengeProgress}
+        />
+      )}
+
       {/* Quiz Report Modal */}
       <Suspense fallback={null}>
         {isReportOpen && selectedSession && (
@@ -489,17 +623,6 @@ const ActiveChallenges = () => {
             isOpen={isReportOpen}
             onClose={closeReportModal}
             sessionId={selectedSession}
-          />
-        )}
-      </Suspense>
-
-      {/* New Challenge Modal for Revenge */}
-      <Suspense fallback={null}>
-        {isNewChallengeOpen && (
-          <NewChallengeModal
-            isOpen={isNewChallengeOpen}
-            onClose={handleNewChallengeClose}
-            preSelectedUser={revengeOpponent}
           />
         )}
       </Suspense>
