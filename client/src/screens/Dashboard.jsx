@@ -65,6 +65,9 @@ const QuickClashAnalyticsModal = lazy(() =>
 const InterBotQuickClashModal = lazy(() =>
   import('../components/dashboardComponents/InterBotQuickClashModal'),
 )
+const SpecialCategoryManagement = lazy(() =>
+  import('../components/dashboardComponents/SpecialCategoryManagement'),
+)
 
 const Dashboard = () => {
   // State management
@@ -160,6 +163,11 @@ const Dashboard = () => {
     isOpen: isInterBotQuickClashOpen,
     onOpen: onInterBotQuickClashOpen,
     onClose: onInterBotQuickClashClose,
+  } = useDisclosure()
+  const {
+    isOpen: isSpecialCategoryManagementOpen,
+    onOpen: onSpecialCategoryManagementOpen,
+    onClose: onSpecialCategoryManagementClose,
   } = useDisclosure()
 
   // Data fetching functions
@@ -569,6 +577,9 @@ const Dashboard = () => {
                 onAnnouncementOpen={onAnnouncementOpen}
                 onQuickClashAnalyticsOpen={onQuickClashAnalyticsOpen}
                 onInterBotQuickClashOpen={onInterBotQuickClashOpen}
+                onSpecialCategoryManagementOpen={
+                  onSpecialCategoryManagementOpen
+                }
               />
             </TabPanel>
 
@@ -655,6 +666,12 @@ const Dashboard = () => {
           <InterBotQuickClashModal
             isOpen={isInterBotQuickClashOpen}
             onClose={onInterBotQuickClashClose}
+          />
+        </Suspense>
+        <Suspense fallback={<Spinner />}>
+          <SpecialCategoryManagement
+            isOpen={isSpecialCategoryManagementOpen}
+            onClose={onSpecialCategoryManagementClose}
           />
         </Suspense>
       </Container>

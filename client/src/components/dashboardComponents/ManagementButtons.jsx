@@ -13,6 +13,7 @@ const ManagementButtons = ({
   onAnnouncementOpen,
   onQuickClashAnalyticsOpen,
   onInterBotQuickClashOpen,
+  onSpecialCategoryManagementOpen,
 }) => {
   const buttonColorScheme = 'teal'
 
@@ -62,6 +63,12 @@ const ManagementButtons = ({
         onClick={onInterBotQuickClashOpen}
       >
         Inter-Bot Quick Clash
+      </Button>
+      <Button
+        colorScheme={buttonColorScheme}
+        onClick={onSpecialCategoryManagementOpen}
+      >
+        Special Categories
       </Button>
     </SimpleGrid>
   )

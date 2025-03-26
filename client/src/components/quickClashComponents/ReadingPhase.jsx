@@ -39,6 +39,7 @@ import environment from '/images/quickclash/environment_quickclash.webp'
 import food from '/images/quickclash/food_quickclash.webp'
 import tourism from '/images/quickclash/tourism_quickclash.webp'
 import crime from '/images/quickclash/crime_quickclash.webp'
+import special from '/images/quickclash/special_quickclash.webp'
 
 const MotionBox = motion(Box)
 const MotionButton = motion(Button)
@@ -68,7 +69,7 @@ const getCategoryImage = category => {
     crime: crime,
   }
 
-  return categoryImageMap[categoryLower] || null
+  return categoryImageMap[categoryLower] || special
 }
 
 // Format time display as MM:SS

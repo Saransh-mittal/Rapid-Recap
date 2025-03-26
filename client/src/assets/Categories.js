@@ -4,6 +4,9 @@ import {
   getCategoryFromRadar,
 } from '../utils/helper.utils'
 
+// Store special categories fetched from the API
+let specialCategories = []
+
 export const getCategories = ({ categoryPrivileges, activeAbilities }) => {
   // Helper function to check if a category has any true privileges
   const isCategoryBoostAvailable = categoryKey => {
@@ -25,7 +28,7 @@ export const getCategories = ({ categoryPrivileges, activeAbilities }) => {
     return false
   }
 
-  // Define categories
+  // Define regular categories
   const categoryDefinitions = [
     { key: 'all', isBoostAvailable: false },
     { key: 'top', isBoostAvailable: false },
@@ -61,14 +64,35 @@ export const getCategories = ({ categoryPrivileges, activeAbilities }) => {
     { key: 'tourism', isBoostAvailable: isCategoryBoostAvailable('tourism') },
   ]
 
-  return categoryDefinitions.map(({ key, isBoostAvailable }) => ({
-    key,
-    label: i18n.t(`categories:categories.${key}`),
-    labelForBoarding: key,
-    isBoostAvailable,
+  // Add special categories
+  const specialCategoryDefinitions = specialCategories.map(special => ({
+    key: special.key,
+    isBoostAvailable: isCategoryBoostAvailable(special.key),
+    isSpecial: true,
+    specialDetails: special,
   }))
+
+  // Combine regular and special categories
+  // Place special categories after 'general' but before other categories
+  const allCategories = [
+    ...categoryDefinitions.slice(0, 3), // all, top, general
+    ...specialCategoryDefinitions, // special categories
+    ...categoryDefinitions.slice(3), // remaining regular categories
+  ]
+
+  return allCategories.map(
+    ({ key, isBoostAvailable, isSpecial, specialDetails }) => ({
+      key,
+      label: i18n.t(`categories:categories.${key}`),
+      labelForBoarding: key,
+      isBoostAvailable,
+      isSpecial: isSpecial || false,
+      specialDetails, // Will be undefined for regular categories
+    }),
+  )
 }
 
+// Initial categories with no privileges
 export const categories = getCategories({ categoryPrivileges: null })
 
 export const findCategoryIndex = categoryKeyOrLabel => {
@@ -96,4 +120,60 @@ export const isCategoryBoosted = categoryKeyOrLabel => {
       cat?.label?.toLowerCase() === categoryKeyOrLabel?.toLowerCase(),
   )
   return category ? category.isBoostAvailable : false
+}
+
+// Special category utilities
+export const isSpecialCategory = categoryKeyOrLabel => {
+  const category = categories?.find(
+    cat =>
+      cat?.key?.toLowerCase() === categoryKeyOrLabel?.toLowerCase() ||
+      cat?.label?.toLowerCase() === categoryKeyOrLabel?.toLowerCase(),
+  )
+  return category ? category.isSpecial : false
+}
+
+export const getSpecialCategoryDetails = categoryKeyOrLabel => {
+  const category = categories?.find(
+    cat =>
+      cat?.key?.toLowerCase() === categoryKeyOrLabel?.toLowerCase() ||
+      cat?.label?.toLowerCase() === categoryKeyOrLabel?.toLowerCase(),
+  )
+  return category && category.isSpecial ? category.specialDetails : null
+}
+
+// Set the special categories from the API
+export const setSpecialCategories = categories => {
+  specialCategories = categories || []
+}
+
+// Get all special categories
+export const getSpecialCategories = () => {
+  return specialCategories
+}
+
+// Get all categories including special ones
+export const getAllCategories = () => {
+  const regularKeys = [
+    'all',
+    'top',
+    'general',
+    'world',
+    'politics',
+    'business',
+    'technology',
+    'sports',
+    'health',
+    'science',
+    'environment',
+    'crime',
+    'education',
+    'entertainment',
+    'food',
+    'lifestyle',
+    'tourism',
+  ]
+
+  const specialKeys = specialCategories.map(sc => sc.key)
+
+  return [...regularKeys, ...specialKeys]
 }

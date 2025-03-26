@@ -28,6 +28,7 @@ import {
 } from '../utils/helper.utils'
 import GameInventoryButton from '../components/rewards/GameInventoryButton'
 import { setLoading } from '../redux/inventorySlice'
+import { isSpecialCategory } from '../assets/Categories'
 
 const Timeline = React.lazy(() =>
   import('../components/homeComponents/Timeline'),
@@ -106,12 +107,20 @@ const Home = () => {
           return
         }
 
-        const endpoint =
-          (cat === 'all' || !cat) && !notLoggedIn
-            ? `/api/recommendation?page=${pageNum}&pageSize=18&lang=${i18n.language}`
-            : `/api/articles?page=${pageNum}&pageSize=18&category=${
-                notLoggedIn && (cat === 'all' || !cat) ? 'top' : cat
-              }&lang=${i18n.language}`
+        let endpoint
+
+        if (isSpecialCategory(cat)) {
+          // Special category API endpoint
+          endpoint = `/api/special-categories/${cat}/articles?page=${pageNum}&pageSize=18&lang=${i18n.language}`
+        } else if ((cat === 'all' || !cat) && !notLoggedIn) {
+          // Recommendations endpoint
+          endpoint = `/api/recommendation?page=${pageNum}&pageSize=18&lang=${i18n.language}`
+        } else {
+          // Regular articles endpoint
+          endpoint = `/api/articles?page=${pageNum}&pageSize=18&category=${
+            notLoggedIn && (cat === 'all' || !cat) ? 'top' : cat
+          }&lang=${i18n.language}`
+        }
 
         const headers =
           user?.categoryPrivileges?.[cat] ||

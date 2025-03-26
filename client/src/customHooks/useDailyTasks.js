@@ -91,7 +91,7 @@ const useDailyTasks = () => {
             console.error('Error updating reading time task:', error)
           }
         }
-        console.log(category)
+
         if (category) {
           try {
             await dispatch(

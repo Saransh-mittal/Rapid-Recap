@@ -310,7 +310,7 @@ const processArticle = asyncHandler(async newsItem => {
     // Prepare article data
     const articleData = {
       url: newsItem.url,
-      dateTime: newsItem.publish_date,
+      dateTime: newsItem.publish_date || new Date().toISOString(),
       author: Array.isArray(newsItem.author)
         ? newsItem.author[0]
         : newsItem.author,

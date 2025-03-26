@@ -11,6 +11,10 @@ import { Link as RouterLink } from 'react-router-dom'
 import { motion, AnimatePresence } from 'framer-motion'
 import { useTranslation } from 'react-i18next'
 import { useSelector } from 'react-redux'
+import {
+  getSpecialCategoryDetails,
+  isSpecialCategory,
+} from '../../assets/Categories'
 
 const MotionBox = motion(Box)
 
@@ -114,6 +118,13 @@ const ModernCategories = ({
     const isActive =
       category?.key?.toLowerCase() === activeCategory?.toLowerCase()
     const isBoost = category.isBoostAvailable
+
+    // Check if this is a special category
+    const isSpecial = category.isSpecial || isSpecialCategory(category.key)
+    const specialDetails = isSpecial
+      ? category.specialDetails || getSpecialCategoryDetails(category.key)
+      : null
+
     const Component = isMobile ? MobileCategory : DesktopCategory
 
     return (
@@ -122,6 +133,8 @@ const ModernCategories = ({
         category={t(`categories.${category.key}`).toUpperCase()}
         isActive={isActive}
         isBoost={isBoost}
+        isSpecial={isSpecial}
+        specialDetails={specialDetails}
         onClick={() => {
           handleActiveCategory({ category: category.key })
           trackCategoryClick(category.key)
@@ -267,7 +280,18 @@ const ModernCategories = ({
 }
 
 export const MobileCategory = React.forwardRef(
-  ({ category, isActive, isBoost, onClick, display }, ref) => (
+  (
+    {
+      category,
+      isActive,
+      isBoost,
+      onClick,
+      display,
+      isSpecial,
+      specialDetails,
+    },
+    ref,
+  ) => (
     <Link
       as={RouterLink}
       to={`/category/${category.toLowerCase()}`}
@@ -289,7 +313,9 @@ export const MobileCategory = React.forwardRef(
           isActive && isBoost
             ? COLORS.background.boostActive
             : isActive
-            ? COLORS.background.active
+            ? isSpecial
+              ? 'rgba(0, 0, 0, 0.4)'
+              : COLORS.background.active
             : 'transparent'
         }
         cursor="pointer"
@@ -331,6 +357,25 @@ export const MobileCategory = React.forwardRef(
           </>
         )}
 
+        {isSpecial && (
+          <MotionBox
+            position="absolute"
+            inset={0}
+            borderRadius="xl"
+            bg={`linear-gradient(135deg, ${
+              specialDetails?.badgeColor || 'purple.500'
+            }20, ${specialDetails?.badgeColor || 'purple.500'}40)`}
+            animate={{
+              opacity: [0.5, 0.7, 0.5],
+            }}
+            transition={{
+              duration: 2,
+              repeat: Infinity,
+              repeatType: 'reverse',
+            }}
+          />
+        )}
+
         {isBoost && !isActive && (
           <MotionBox
             position="absolute"
@@ -352,14 +397,18 @@ export const MobileCategory = React.forwardRef(
 
         <Text
           fontSize="xs"
-          fontWeight={isActive || isBoost ? '600' : '500'}
+          fontWeight={isActive || isBoost || isSpecial ? '600' : '500'}
           color={
             isActive
               ? isBoost
                 ? COLORS.text.boost
+                : isSpecial && specialDetails
+                ? specialDetails.badgeColor || COLORS.text.active
                 : COLORS.text.active
               : isBoost
               ? COLORS.text.boost
+              : isSpecial && specialDetails
+              ? specialDetails.badgeColor || COLORS.text.default
               : COLORS.text.default
           }
           letterSpacing="0.4px"
@@ -369,11 +418,15 @@ export const MobileCategory = React.forwardRef(
               ? '0 0 12px rgba(255,184,0,0.7)'
               : isActive
               ? '0 0 8px rgba(139,92,246,0.5)'
+              : isSpecial
+              ? `0 0 10px ${
+                  specialDetails?.badgeColor || 'rgba(139,92,246,0.7)'
+                }`
               : 'none',
           }}
           zIndex={1}
         >
-          {category}
+          {isSpecial && specialDetails?.icon} {category}
         </Text>
 
         {isActive && (
@@ -385,7 +438,13 @@ export const MobileCategory = React.forwardRef(
             width="3px"
             height="3px"
             borderRadius="full"
-            bg={isBoost ? COLORS.indicator.boost : COLORS.indicator.default}
+            bg={
+              isBoost
+                ? COLORS.indicator.boost
+                : isSpecial && specialDetails
+                ? specialDetails.badgeColor || COLORS.indicator.default
+                : COLORS.indicator.default
+            }
             initial={{ opacity: 0, scale: 0 }}
             animate={{
               opacity: [0.5, 1, 0.5],
@@ -396,9 +455,13 @@ export const MobileCategory = React.forwardRef(
               repeat: Infinity,
             }}
             style={{
-              boxShadow: `0 0 12px ${
-                isBoost ? 'rgba(255,184,0,0.7)' : 'rgba(139,92,246,0.7)'
-              }`,
+              boxShadow: isBoost
+                ? '0 0 12px rgba(255,184,0,0.7)'
+                : isSpecial && specialDetails
+                ? `0 0 12px ${
+                    specialDetails.badgeColor || 'rgba(139,92,246,0.7)'
+                  }`
+                : 'rgba(139,92,246,0.7)',
             }}
             zIndex={1}
           />
@@ -409,7 +472,18 @@ export const MobileCategory = React.forwardRef(
 )
 
 export const DesktopCategory = React.forwardRef(
-  ({ category, isActive, isBoost, onClick, display }, ref) => (
+  (
+    {
+      category,
+      isActive,
+      isBoost,
+      onClick,
+      display,
+      isSpecial,
+      specialDetails,
+    },
+    ref,
+  ) => (
     <Link
       as={RouterLink}
       to={`/category/${category.toLowerCase()}`}
@@ -433,6 +507,8 @@ export const DesktopCategory = React.forwardRef(
           backgroundColor: isActive
             ? isBoost
               ? COLORS.background.boostActive
+              : isSpecial
+              ? 'rgba(26, 21, 39, 0.8)'
               : COLORS.background.active
             : COLORS.background.hover,
           scale: 1.05,
@@ -469,6 +545,25 @@ export const DesktopCategory = React.forwardRef(
           </>
         )}
 
+        {isSpecial && (
+          <MotionBox
+            position="absolute"
+            inset={0}
+            borderRadius="xl"
+            bg={`linear-gradient(135deg, ${
+              specialDetails?.badgeColor || 'purple.500'
+            }20, ${specialDetails?.badgeColor || 'purple.500'}40)`}
+            animate={{
+              opacity: [0.5, 0.7, 0.5],
+            }}
+            transition={{
+              duration: 2,
+              repeat: Infinity,
+              repeatType: 'reverse',
+            }}
+          />
+        )}
+
         {isBoost && !isActive && (
           <MotionBox
             position="absolute"
@@ -495,7 +590,13 @@ export const DesktopCategory = React.forwardRef(
             width="3px"
             height="50%"
             borderRadius="full"
-            bg={isBoost ? COLORS.indicator.boost : COLORS.indicator.default}
+            bg={
+              isBoost
+                ? COLORS.indicator.boost
+                : isSpecial && specialDetails
+                ? specialDetails.badgeColor || COLORS.indicator.default
+                : COLORS.indicator.default
+            }
             transform="translateY(-50%)"
             animate={{
               opacity: [0.7, 1, 0.7],
@@ -506,9 +607,13 @@ export const DesktopCategory = React.forwardRef(
               repeat: Infinity,
             }}
             style={{
-              boxShadow: `0 0 12px ${
-                isBoost ? 'rgba(255,184,0,0.7)' : 'rgba(139,92,246,0.7)'
-              }`,
+              boxShadow: isBoost
+                ? '0 0 12px rgba(255,184,0,0.7)'
+                : isSpecial && specialDetails
+                ? `0 0 12px ${
+                    specialDetails.badgeColor || 'rgba(139,92,246,0.7)'
+                  }`
+                : 'rgba(139,92,246,0.7)',
             }}
             zIndex={1}
           />
@@ -516,14 +621,18 @@ export const DesktopCategory = React.forwardRef(
 
         <Text
           fontSize="sm"
-          fontWeight={isActive || isBoost ? '600' : '500'}
+          fontWeight={isActive || isBoost || isSpecial ? '600' : '500'}
           color={
             isActive
               ? isBoost
                 ? COLORS.text.boost
+                : isSpecial && specialDetails
+                ? specialDetails.badgeColor || COLORS.text.active
                 : COLORS.text.active
               : isBoost
               ? COLORS.text.boost
+              : isSpecial && specialDetails
+              ? specialDetails.badgeColor || COLORS.text.default
               : COLORS.text.default
           }
           letterSpacing="0.3px"
@@ -532,9 +641,13 @@ export const DesktopCategory = React.forwardRef(
             color: isActive
               ? isBoost
                 ? COLORS.text.boost
+                : isSpecial && specialDetails
+                ? specialDetails.badgeColor || 'white'
                 : COLORS.text.active
               : isBoost
               ? COLORS.text.boost
+              : isSpecial && specialDetails
+              ? specialDetails.badgeColor || 'white'
               : 'white',
           }}
           style={{
@@ -542,12 +655,16 @@ export const DesktopCategory = React.forwardRef(
               ? '0 0 12px rgba(255,184,0,0.7)'
               : isActive
               ? '0 0 8px rgba(139,92,246,0.5)'
+              : isSpecial
+              ? `0 0 10px ${
+                  specialDetails?.badgeColor || 'rgba(139,92,246,0.3)'
+                }`
               : 'none',
           }}
           zIndex={1}
           position="relative"
         >
-          {category}
+          {isSpecial && specialDetails?.icon} {category}
         </Text>
 
         {isActive && isBoost && (
@@ -572,6 +689,35 @@ export const DesktopCategory = React.forwardRef(
             }}
             style={{
               boxShadow: '0 0 12px rgba(255,184,0,0.7)',
+            }}
+            zIndex={1}
+          />
+        )}
+
+        {isActive && isSpecial && !isBoost && specialDetails && (
+          <MotionBox
+            position="absolute"
+            right="4px"
+            top="50%"
+            width="4px"
+            height="4px"
+            borderRadius="full"
+            bg={specialDetails.badgeColor || 'purple.500'}
+            transform="translateY(-50%)"
+            animate={{
+              y: ['-50%', '-100%', '-50%'],
+              opacity: [0.5, 1, 0.5],
+              scale: [1, 1.5, 1],
+            }}
+            transition={{
+              duration: 2,
+              repeat: Infinity,
+              repeatType: 'reverse',
+            }}
+            style={{
+              boxShadow: `0 0 12px ${
+                specialDetails.badgeColor || 'rgba(139,92,246,0.7)'
+              }`,
             }}
             zIndex={1}
           />

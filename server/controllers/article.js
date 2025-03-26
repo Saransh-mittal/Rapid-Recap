@@ -85,6 +85,10 @@ const allArticles = async (req, res) => {
     })
 
     let result = processedArticles
+    if (!result || result.length === 0) {
+      res.status(200).json({ message: 'No articles found' })
+      return
+    }
     // Apply privilege-based processing if authenticated
     if (req.privileges) {
       result = processArticlesWithPrivileges(processedArticles, req.privileges)

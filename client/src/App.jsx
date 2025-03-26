@@ -95,6 +95,7 @@ import useQuickClashSocket from './customHooks/useQuickClashSocket.js'
 import useQuickClash from './customHooks/useQuickClash.js'
 import NotificationReminderModal from './components/miscellaneous/NotificationReminderModal.jsx'
 import useDailyTasks from './customHooks/useDailyTasks.js'
+import { fetchSpecialCategories } from './services/specialCategoryService.js'
 
 const App = () => {
   // ReactGA.initialize('G-ES5VQ8NW7Z')
@@ -424,6 +425,12 @@ const App = () => {
 
   useEffect(() => {
     let timer
+    const loadInitialData = async () => {
+      // Fetch special categories first - they need to be available for the categories list
+      await fetchSpecialCategories(i18n)
+    }
+
+    loadInitialData()
     if (isAuthenticated) {
       dispatch(isSubscribedChecker())
       dispatch(checkNotificationStatus())

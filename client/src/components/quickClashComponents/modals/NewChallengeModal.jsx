@@ -15,7 +15,7 @@ import { useDispatch } from 'react-redux'
 
 // Import utility functions
 import { processCategories } from '../../../utils/categoryUtils'
-import { categories } from '../../../assets/Categories'
+import { categories, getCategories } from '../../../assets/Categories'
 
 // Import sub-components
 import UserSearchStep from './newChallengeComponents/UserSearchStep'
@@ -58,7 +58,8 @@ const NewChallengeModal = ({ isOpen, onClose, preSelectedUser = null }) => {
   const isMobile = useBreakpointValue({ base: true, md: false })
 
   // Process categories with colors and icons
-  const processedCategories = useMemo(() => processCategories(categories), [])
+  const allCategories = getCategories({ categoryPrivileges: null })
+  const processedCategories = processCategories(allCategories)
 
   // Calculate progress percentage for steps
   const progressPercentage = useMemo(() => (step === 1 ? 50 : 100), [step])
@@ -203,12 +204,7 @@ const NewChallengeModal = ({ isOpen, onClose, preSelectedUser = null }) => {
   }, [selectedCategories, processedCategories])
 
   return (
-    <Modal
-      isOpen={isOpen}
-      onClose={handleClose}
-      size={modalSize}
-      motionPreset="slideInBottom"
-    >
+    <Modal isOpen={isOpen} onClose={handleClose} size={modalSize}>
       <ModalOverlay backdropFilter="blur(10px)" bg="rgba(0,0,0,0.7)" />
       <ModalContent
         bg="linear-gradient(to bottom, #2d1b54, #1a1527)"
