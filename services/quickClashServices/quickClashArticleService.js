@@ -1,6 +1,7 @@
 // services/quickClashServices/quickClashArticleService.js
 const { makeGPTRequest } = require('../../utils/openai')
 const Article = require('../../model/articleSchema')
+const SpecialCategory = require('../../model/specialCategorySchema')
 
 // /**
 //  * Get 5 random source articles from the last 7 days for a given category
@@ -190,15 +191,39 @@ const getSourceArticle = async ({ category, session }) => {
   const sevenDaysAgo = new Date()
   sevenDaysAgo.setDate(sevenDaysAgo.getDate() - 7)
 
-  // Get articles in this category from the last 7 days
-  const articles = await Article.find({
-    category,
-    dateTime: { $gte: sevenDaysAgo.toISOString() },
+  // First, check if this is a special category
+  const specialCategory = await SpecialCategory.findOne({
+    key: category,
+    isActive: true,
   }).session(session)
+
+  let query = {}
+
+  if (specialCategory) {
+    // For special categories, look for articles with the specialCategory reference
+    console.log(`Getting article for special category: ${category}`)
+    query = {
+      specialCategory: specialCategory._id,
+    }
+  } else {
+    // For regular categories, use the category field
+    console.log(`Getting article for regular category: ${category}`)
+    query = {
+      category,
+      dateTime: { $gte: sevenDaysAgo.toISOString() },
+    }
+  }
+
+  // Get articles matching the query
+  const articles = await Article.find(query).session(session)
 
   // If no articles found, throw error
   if (articles.length === 0) {
-    throw new Error(`No articles available in category: ${category}`)
+    if (specialCategory) {
+      throw new Error(`No articles available in special category: ${category}`)
+    } else {
+      throw new Error(`No articles available in category: ${category}`)
+    }
   }
 
   // Select one random article

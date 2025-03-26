@@ -26,6 +26,7 @@ const {
 } = require('./tasks/dummyUserTournamentTasks')
 const { convertISTtoUTCCron } = require('../utils/miscellaneous.utils')
 const forceReloadAll = require('./tasks/forceReload')
+const fetchSpecialCategoryArticles = require('./tasks/fetchSpecialCategoryArticles')
 
 const currentDate = moment().tz('Asia/Kolkata').format('YYYY-MM-DD')
 
@@ -64,6 +65,16 @@ let schedules = [
     'deleteExpiredGuestAccountsTask',
     '21:30',
     deleteExpiredGuestAccountsTask,
+  ),
+  createSchedule(
+    'fetchSpecialCategoryArticles',
+    '08:00',
+    fetchSpecialCategoryArticles,
+  ),
+  createSchedule(
+    'fetchSpecialCategoryArticles',
+    '23:30',
+    fetchSpecialCategoryArticles,
   ),
   createSchedule('forceReload', '23:00', forceReloadAll),
   createSchedule('incFakeQuizAttempts', '03:00', incFakeQuizAttempts),

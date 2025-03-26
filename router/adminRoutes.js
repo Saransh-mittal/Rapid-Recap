@@ -61,8 +61,10 @@ const {
   simulateMultipleInterBotQuickClashes,
   getInterBotResults,
 } = require('../controllers/quickClashAdminController')
+const adminSpecialCategoryRoutes = require('./adminSpecialCategoryRoutes')
 const router = express.Router()
 
+router.use('/special-categories', adminSpecialCategoryRoutes)
 router.post(
   '/tournament/test',
   Authenticate,

@@ -114,6 +114,15 @@ const articleSchema = new mongoose.Schema(
       min: 0.01,
       max: 0.99,
     },
+    specialCategory: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: 'SPECIAL_CATEGORY',
+      default: null,
+    },
+    specialCategoryAdded: {
+      type: Date,
+      default: null,
+    },
     createdAt: {
       type: Date,
       default: Date.now,
