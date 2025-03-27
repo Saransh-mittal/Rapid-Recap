@@ -21,7 +21,7 @@ const NotificationSubscription = () => {
 
   const getButtonText = () => {
     if (!supported) return t('notSupported')
-    if (isSubscribed) return t('reEnableNotifications')
+    if (isSubscribed) return null
     return t('enableNotifications')
   }
 
@@ -50,26 +50,22 @@ const NotificationSubscription = () => {
               : t('notificationsNotSupported')}
           </Text>
 
-          <Tooltip
-            label={
-              !supported
-                ? t('browserNotSupported')
-                : isSubscribed
-                ? t('reEnableTooltip')
-                : t('enableTooltip')
-            }
-          >
-            <ProfileButton
-              buttonText={getButtonText()}
-              onClick={handleEnableNotifications}
-              icon={getButtonIcon()}
-              inGameName=""
-              stateUserInGameName=""
-              Private={false}
-              isGuest={false}
-              notShowVisibility={true}
-            />
-          </Tooltip>
+          {!isSubscribed && (
+            <Tooltip
+              label={!supported ? t('browserNotSupported') : t('enableTooltip')}
+            >
+              <ProfileButton
+                buttonText={getButtonText()}
+                onClick={handleEnableNotifications}
+                icon={getButtonIcon()}
+                inGameName=""
+                stateUserInGameName=""
+                Private={false}
+                isGuest={false}
+                notShowVisibility={true}
+              />
+            </Tooltip>
+          )}
         </>
       )}
       {error && (

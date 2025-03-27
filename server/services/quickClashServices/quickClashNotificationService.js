@@ -37,6 +37,8 @@ const notifyChallengeCreated = async ({ challenge, challenger, opponent }) => {
       url: '/quickclash',
       userId: opponent._id,
       messageId: appUpdate._id.toString(),
+      type: 'quickClash',
+      importance: 'important',
     })
 
     // Emit event for socket notification
@@ -90,6 +92,8 @@ const notifyChallengerAboutCreation = async ({
         url: '/quickclash',
         userId: challenger._id,
         messageId: appUpdate._id.toString(),
+        type: 'quickClash',
+        importance: 'normal',
       })
 
       // Emit event for socket notification to challenger
@@ -119,6 +123,8 @@ const notifyChallengerAboutCreation = async ({
         url: '/quickclash',
         userId: challenger._id,
         messageId: appUpdate._id.toString(),
+        type: 'quickClash',
+        importance: 'normal',
       })
 
       // Emit event for socket notification about failure to challenger
@@ -170,6 +176,8 @@ const notifyChallengeAccepted = async ({ challenge, challenger, opponent }) => {
       url: '/quickclash',
       userId: challenger._id,
       messageId: appUpdate._id.toString(),
+      type: 'quickClash',
+      importance: 'normal',
     })
 
     // Emit event for socket notification
@@ -216,6 +224,8 @@ const notifyChallengeRejected = async ({ challenge, challenger, opponent }) => {
       url: '/quickclash',
       userId: challenger._id,
       messageId: appUpdate._id.toString(),
+      type: 'quickClash',
+      importance: 'normal',
     })
 
     // Emit event for socket notification
@@ -296,7 +306,7 @@ const notifyChallengeCompleted = async ({ challenge, completedByUserId }) => {
       // Save both updates
       await Promise.all([challengerUpdate.save(), opponentUpdate.save()])
 
-      // Send push notifications
+      // Send push notifications - This is IMPORTANT as it contains match results
       await Promise.all([
         sendNotification({
           title: challengerWon
@@ -314,6 +324,8 @@ const notifyChallengeCompleted = async ({ challenge, completedByUserId }) => {
           url: '/quickclash',
           userId: challenger._id,
           messageId: challengerUpdate._id.toString(),
+          type: 'quickClash',
+          importance: 'important', // Results are always important
         }),
         sendNotification({
           title: !challengerWon
@@ -331,6 +343,8 @@ const notifyChallengeCompleted = async ({ challenge, completedByUserId }) => {
           url: '/quickclash',
           userId: opponent._id,
           messageId: opponentUpdate._id.toString(),
+          type: 'quickClash',
+          importance: 'important', // Results are always important
         }),
       ])
 
@@ -355,6 +369,14 @@ const notifyChallengeCompleted = async ({ challenge, completedByUserId }) => {
       const otherPlayerId = isChallenger
         ? challenge.opponent._id
         : challenge.challenger._id
+
+      // Calculate how long since the challenge was created
+      const createdAt = new Date(challenge.createdAt).getTime()
+      const now = new Date().getTime()
+      const timeSinceCreation = now - createdAt
+
+      // If it's been a while, this becomes an important notification
+      const isImportant = timeSinceCreation > 12 * 3600000 // 12 hours
 
       // Get user information for both players
       const [completedPlayer, otherPlayer] = await Promise.all([
@@ -389,12 +411,15 @@ const notifyChallengeCompleted = async ({ challenge, completedByUserId }) => {
         url: `/quickclash`,
         userId: otherPlayerId,
         messageId: appUpdate._id.toString(),
+        type: 'quickClash',
+        importance: isImportant ? 'important' : 'normal', // Important if it's been waiting a while
       })
 
       // Emit event for socket notification
       globalEmitter.emit('quickClash:challengeCompleted', {
         challenge,
         completedByUserId,
+        waitTime: timeSinceCreation,
       })
     }
   } catch (error) {
@@ -434,6 +459,8 @@ const notifyAnalysisReady = async ({ challenge, forOpponent = false }) => {
       url: '/quickclash',
       userId: userId,
       messageId: appUpdate._id.toString(),
+      type: 'quickClash',
+      importance: 'normal', // Analysis is helpful but not urgent
     })
 
     // Emit event for socket notification
@@ -446,6 +473,65 @@ const notifyAnalysisReady = async ({ challenge, forOpponent = false }) => {
   }
 }
 
+/**
+ * Send a time-sensitive reminder about an active challenge
+ * @param {Object} params - Parameters
+ * @param {Object} params.challenge - The challenge document
+ * @param {string} params.playerId - ID of the player to notify
+ * @param {number} params.hoursRemaining - Hours remaining before expiry
+ */
+const sendTimeRemainingNotification = async ({
+  challenge,
+  playerId,
+  hoursRemaining,
+}) => {
+  try {
+    const user = await User.findById(playerId)
+    if (!user) {
+      throw new Error(`User not found: ${playerId}`)
+    }
+
+    // Get opponent information
+    const isChallenger = playerId === challenge.challenger.toString()
+    const opponentId = isChallenger ? challenge.opponent : challenge.challenger
+    const opponent = await User.findById(opponentId).select('name inGameName')
+
+    // Create application update
+    const appUpdate = new ApplicationUpdates({
+      title: 'Quick Clash Time Running Out!',
+      mainText: `You have ${hoursRemaining} hours left to complete your Quick Clash with ${
+        opponent.inGameName || opponent.name
+      }!`,
+      userId: playerId,
+      type: 'applicationUpdate',
+    })
+
+    await appUpdate.save()
+
+    // Send push notification
+    await sendNotification({
+      title: 'Quick Clash Time Running Out!',
+      body: `Only ${hoursRemaining} hours left to complete your challenge with ${
+        opponent.inGameName || opponent.name
+      }!`,
+      url: '/quickclash',
+      userId: playerId,
+      messageId: appUpdate._id.toString(),
+      type: 'quickClash',
+      importance: hoursRemaining <= 6 ? 'important' : 'normal', // More urgent as time decreases
+    })
+
+    // Emit event for socket notification
+    globalEmitter.emit('quickClash:timeRemaining', {
+      challengeId: challenge._id,
+      playerId,
+      hoursRemaining,
+    })
+  } catch (error) {
+    console.error('Error sending time remaining notification:', error)
+  }
+}
+
 module.exports = {
   notifyChallengeCreated,
   notifyChallengeAccepted,
@@ -453,4 +539,5 @@ module.exports = {
   notifyChallengeCompleted,
   notifyAnalysisReady,
   notifyChallengerAboutCreation,
+  sendTimeRemainingNotification,
 }

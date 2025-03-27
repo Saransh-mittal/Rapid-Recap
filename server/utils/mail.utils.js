@@ -113,6 +113,7 @@ const mailForStreakBroken = async () => {
           }),
           image:
             'https://res.cloudinary.com/dxstsrnbs/image/upload/v1720262006/dailyStreakBroken-min_v1w1oo.png',
+          type: 'streak',
         })
         await transporter.sendMail({
           from: MailTemplates.StreakJustBroken.from,
@@ -217,6 +218,7 @@ const mailForMaintainStreakReminder = async ({ template }) => {
           userId: user._id,
           url: '/home/all',
           ...template.notif({ name: user.name.split(' ')[0] }),
+          type: 'streak',
         })
         await transporter.sendMail({
           from: template.from,
