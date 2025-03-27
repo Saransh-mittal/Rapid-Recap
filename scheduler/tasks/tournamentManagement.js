@@ -75,6 +75,8 @@ const startRegistration = async () => {
       body,
       url: '/tournament',
       userId: user._id,
+      type: 'tournament',
+      importance: 'important', // Registration opening is important
     })
   }
   console.log(
@@ -114,6 +116,8 @@ const inRegisterationPeriod = async () => {
       body,
       url: '/tournament',
       userId: user._id,
+      type: 'tournament',
+      importance: 'normal', // Regular reminders are normal priority
     })
   }
 }
@@ -148,6 +152,8 @@ const lastDayOfRegisterationPeriod = async () => {
       body,
       url: '/tournament',
       userId: user._id,
+      type: 'tournament',
+      importance: 'important', // Last day is important - time-sensitive
     })
   }
 }
@@ -185,6 +191,8 @@ const endRegistration = async () => {
       body,
       url: '/tournament',
       userId: registration.user._id,
+      type: 'tournament',
+      importance: 'normal',
     })
   }
 
@@ -216,6 +224,8 @@ const endRegistration = async () => {
       body,
       url: '/tournament',
       userId: user._id,
+      type: 'tournament',
+      importance: 'normal',
     })
   }
   console.log('Tournament registration ended')
@@ -253,6 +263,8 @@ const startTournament = async () => {
       body,
       url: '/tournament',
       userId: registration.user._id,
+      type: 'tournament',
+      importance: 'important', // Tournament start is important
     })
   }
 }
@@ -287,6 +299,8 @@ const day1EndOfTournament = async () => {
       body,
       url: '/tournament',
       userId: registration.user._id,
+      type: 'tournament',
+      importance: 'important', // Day 1 completion is important
     })
   }
 }
@@ -321,6 +335,8 @@ const day2OfTournament = async () => {
       body,
       url: '/tournament',
       userId: registration.user._id,
+      type: 'tournament',
+      importance: 'important', // Final day is important
     })
   }
 }
@@ -358,6 +374,8 @@ const endTournament = async () => {
       body,
       url: '/tournament',
       userId: registration?.user?._id,
+      type: 'tournament',
+      importance: 'important', // Tournament completion is important
     })
   }
 
@@ -389,6 +407,8 @@ const endTournament = async () => {
       body,
       url: user?.role === 'guest' ? '/signup' : '/tournament',
       userId: user._id,
+      type: 'tournament',
+      importance: 'normal',
     })
   }
   // Sending weekly report to all users
@@ -556,6 +576,16 @@ const endTournament = async () => {
     })
 
     await newNotification.save()
+
+    // Notify user about weekly report (important notification)
+    await sendNotification({
+      title: 'Weekly Report Available',
+      body: 'Your weekly performance report is now available. Check it out!',
+      url: '/inbox',
+      userId: user._id,
+      type: 'tournament',
+      importance: 'important', // Weekly report is important
+    })
   }
 
   // make EligibleForTournament of users false

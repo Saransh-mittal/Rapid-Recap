@@ -55,9 +55,10 @@ let schedules = [
     calculateUserIQScores(isCalculating),
   ),
   createSchedule('incFakeQuizAttempts', '20:00', incFakeQuizAttempts),
+  // News Notification 1 - Early morning
   createSchedule(
-    'recommendedNewsNotification11',
-    '20:25',
+    'recommendedNewsNotification1',
+    '05:00',
     sendRecommendedNewsNotification,
   ),
   createSchedule('incFakeQuizAttempts', '21:00', incFakeQuizAttempts),
@@ -88,33 +89,67 @@ let schedules = [
   createSchedule('updateRecommendations', '01:00', updateDailyRecommendations),
   createSchedule('streakBrokenMails', '03:30', sendStreakBrokenMails),
   createSchedule('incFakeQuizAttempts', '05:00', incFakeQuizAttempts),
+  // News Notification 4 - Morning
   createSchedule(
     'recommendedNewsNotification4',
     '06:25',
     sendRecommendedNewsNotification,
   ),
   createSchedule('incFakeQuizAttempts', '07:00', incFakeQuizAttempts),
+  // News Notification 5 - Mid-morning
+  createSchedule(
+    'recommendedNewsNotification5',
+    '08:15',
+    sendRecommendedNewsNotification,
+  ),
   createSchedule('incFakeQuizAttempts', '08:45', incFakeQuizAttempts),
+  // News Notification 6 - Late morning
   createSchedule(
     'recommendedNewsNotification6',
     '10:00',
     sendRecommendedNewsNotification,
   ),
   createSchedule('incFakeQuizAttempts', '10:40', incFakeQuizAttempts),
+  // News Notification 7 - Early afternoon
+  createSchedule(
+    'recommendedNewsNotification7',
+    '12:15',
+    sendRecommendedNewsNotification,
+  ),
   createSchedule('streakReminder1', '12:30', () => sendStreakReminder(0)),
   createSchedule('incFakeQuizAttempts', '13:30', incFakeQuizAttempts),
+  // News Notification 8 - Mid-afternoon
   createSchedule(
     'recommendedNewsNotification8',
     '14:25',
     sendRecommendedNewsNotification,
   ),
+  // News Notification 9 - Late afternoon
+  createSchedule(
+    'recommendedNewsNotification9',
+    '16:20',
+    sendRecommendedNewsNotification,
+  ),
   createSchedule('incFakeQuizAttempts', '17:00', incFakeQuizAttempts),
+  // News Notification 10 - Early evening
   createSchedule(
     'recommendedNewsNotification10',
     '18:00',
     sendRecommendedNewsNotification,
   ),
   createSchedule('streakReminder2', '19:00', () => sendStreakReminder(1)),
+  // News Notification 11 - Evening
+  createSchedule(
+    'recommendedNewsNotification11',
+    '20:25',
+    sendRecommendedNewsNotification,
+  ),
+  // News Notification 12 - Late evening
+  createSchedule(
+    'recommendedNewsNotification12',
+    '22:00',
+    sendRecommendedNewsNotification,
+  ),
   createSchedule('streakReminder3', '22:00', () => sendStreakReminder(2)),
   createSchedule(
     'guestAccountExpiryNotifs1',
