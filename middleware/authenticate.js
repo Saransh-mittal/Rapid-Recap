@@ -1,16 +1,24 @@
 const jwt = require('jsonwebtoken')
 
+/**
+ * Authentication middleware that verifies the access token
+ */
 const Authenticate = async (req, res, next) => {
   try {
-    const token = req.cookies.jwtoken
+    const token = req.cookies.access_token
+
     if (!token) {
-      return res.status(401).json({ message: 'No token provided' })
+      return res.status(401).json({ message: 'Access token required' })
     }
 
-    jwt.verify(token, process.env.SECRET_KEY, async (err, decoded) => {
+    jwt.verify(token, process.env.ACCESS_TOKEN_SECRET, (err, decoded) => {
       if (err) {
-        return res.status(401).json({ message: 'Token is not valid' })
+        return res.status(401).json({
+          message: 'Access token is invalid or expired',
+          tokenExpired: true,
+        })
       }
+
       req.user = decoded
       next()
     })
@@ -20,6 +28,9 @@ const Authenticate = async (req, res, next) => {
   }
 }
 
+/**
+ * Admin authorization middleware
+ */
 const adminMiddleware = (req, res, next) => {
   if (req.user.role !== 'admin') {
     return res.status(403).json({ message: 'Access denied. Admins only.' })

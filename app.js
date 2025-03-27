@@ -33,6 +33,11 @@ const { initBotTracking } = require('./utils/botTracker')
 const i18nMiddleware = require('i18next-http-middleware')
 const i18n = require('./i18n')
 const connectDB = require('./db/conn')
+const configureSession = require('./config/sessionConfig')
+const {
+  generateCsrfToken,
+  validateCsrfToken,
+} = require('./middleware/csrfMiddleware')
 const connect_s4a = require('connect-s4a')
 // const fs = require('fs')
 
@@ -333,6 +338,9 @@ async function initializeServer() {
 
     // API Routes
     const apiRouter = express.Router()
+    app.use(configureSession())
+    app.use(generateCsrfToken)
+    apiRouter.use(validateCsrfToken)
     apiRouter.use('/user', userRoutes)
     apiRouter.use('/articles', articleRoutes)
     apiRouter.use('/quiz', quizRoutes)
