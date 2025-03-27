@@ -249,7 +249,7 @@ const loginUser = async (req, res) => {
         secure: process.env.NODE_ENV === 'production',
         sameSite: 'strict',
         maxAge: 90 * 24 * 60 * 60 * 1000, // 90 days
-        path: '/api/auth/refresh', // Restrict cookie to refresh endpoint
+        path: '/api/user/auth/refresh', // Restrict cookie to refresh endpoint
       })
     }
 
@@ -621,7 +621,7 @@ const handleGoogleLogin = async (req, res) => {
       secure: process.env.NODE_ENV === 'production',
       sameSite: 'strict',
       maxAge: 90 * 24 * 60 * 60 * 1000, // 90 days
-      path: '/api/auth/refresh',
+      path: '/api/user/auth/refresh',
     })
 
     let badges = user?.badges || []
