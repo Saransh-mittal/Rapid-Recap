@@ -69,7 +69,12 @@ const {
   getReferralStats,
   checkReferralCode,
 } = require('../controllers/referralController')
+const { refreshToken } = require('../controllers/refreshTokenController')
 
+router.route('/auth/refresh').post(refreshToken)
+router.route('/csrf-token').get((req, res) => {
+  res.json({ csrfToken: req.csrfToken() })
+})
 router.route('/register').post(registerUser)
 router.route('/login').post(loginUser)
 router.route('/logout').post(Authenticate, logoutUser)

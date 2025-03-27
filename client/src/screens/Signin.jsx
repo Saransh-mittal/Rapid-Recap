@@ -6,7 +6,6 @@ import React, {
   lazy,
   Suspense,
 } from 'react'
-import { useNavigate } from 'react-router-dom'
 import { useDispatch, useSelector } from 'react-redux'
 import { useTranslation } from 'react-i18next'
 import { GoogleOAuthProvider, GoogleLogin } from '@react-oauth/google'
@@ -83,7 +82,6 @@ export default function Signin({ isOpen, onClose, hamburgerOnClose }) {
   const { t } = useTranslation('Signin')
   const toast = useToast()
   const dispatch = useDispatch()
-  const navigate = useNavigate()
   const emailRef = useRef()
   const { forgotPassword, verifyEmail } = useSelector(state => state.auth)
 
@@ -133,8 +131,6 @@ export default function Signin({ isOpen, onClose, hamburgerOnClose }) {
         isClosable: true,
         position: 'top',
       })
-
-      location.pathname === '/' && navigate('/home/all')
     }
   }
 
@@ -222,8 +218,6 @@ export default function Signin({ isOpen, onClose, hamburgerOnClose }) {
           isClosable: true,
           position: 'top',
         })
-
-        location.pathname === '/' && navigate('/home/all')
       }
     } catch (error) {
       toast({

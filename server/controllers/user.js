@@ -182,7 +182,6 @@ const getUserIds = asyncHandler(async (req, res) => {
 })
 
 const loginUser = async (req, res) => {
-  // Implement login logic here
   const { emailOrInGameName, password } = req.body.data
   if (!(emailOrInGameName && password)) {
     return res.status(422).json({ error: 'Please fill the required fields' })
@@ -192,6 +191,7 @@ const loginUser = async (req, res) => {
     let findUser
     const email = isValidEmail(emailOrInGameName) ? emailOrInGameName : null
     const inGameName = email ? null : emailOrInGameName
+
     if (email) {
       findUser = await User.findOne({ email }).populate({
         path: 'previousSeasonData',
@@ -203,8 +203,9 @@ const loginUser = async (req, res) => {
         select: 'season',
       })
     }
-    //console.log(findUser);
+
     if (!findUser) return res.status(422).json({ error: 'Invalid Credentials' })
+
     if (findUser.role === 'guest') {
       if (findUser.expiresAt && findUser.expiresAt <= new Date()) {
         await User.findByIdAndDelete(findUser._id)
@@ -217,13 +218,41 @@ const loginUser = async (req, res) => {
 
     const isMatch = await bcrypt.compare(password, findUser.password)
     if (!isMatch) return res.status(401).json({ error: 'Invalid Credentials' })
-    const token = await findUser.generateAuthToken()
-    // console.log(token);
-    if (findUser.verified && findUser.inGameName)
-      res.cookie('jwtoken', token, {
-        expires: new Date(Date.now() + 365 * 24 * 60 * 60 * 1000),
+
+    // Create access token (short-lived)
+    const accessToken = jwt.sign(
+      { _id: findUser._id, role: findUser.role },
+      process.env.ACCESS_TOKEN_SECRET,
+      { expiresIn: '30m' },
+    )
+
+    // Create refresh token (long-lived)
+    const refreshToken = jwt.sign(
+      { _id: findUser._id },
+      process.env.REFRESH_TOKEN_SECRET,
+      { expiresIn: '90d' },
+    )
+
+    // Set cookies
+    if (findUser.verified && findUser.inGameName) {
+      // Set access token cookie
+      res.cookie('access_token', accessToken, {
         httpOnly: true,
+        secure: process.env.NODE_ENV === 'production',
+        sameSite: 'strict',
+        maxAge: 30 * 60 * 1000, // 30 minutes
       })
+
+      // Set refresh token cookie
+      res.cookie('refresh_token', refreshToken, {
+        httpOnly: true,
+        secure: process.env.NODE_ENV === 'production',
+        sameSite: 'strict',
+        maxAge: 90 * 24 * 60 * 60 * 1000, // 90 days
+        path: '/api/auth/refresh', // Restrict cookie to refresh endpoint
+      })
+    }
+
     let badges = findUser?.badges || []
     const now = moment().tz('Asia/Kolkata')
 
@@ -241,24 +270,30 @@ const loginUser = async (req, res) => {
       const cacheKey = `privilege_${findUser._id.toString()}_${key}`
       cache.put(cacheKey, categoryPrivileges[key], 5 * 60 * 1000)
     })
+
     return res.status(201).json({
-      message: 'SignIn Successfull',
+      message: 'SignIn Successful',
       user: { ...findUser._doc, unClaimedValidBadges, categoryPrivileges },
-      token,
+      token: accessToken, // Still return token for potential legacy clients
     })
   } catch (err) {
     console.log(err)
+    res.status(500).json({ error: 'Internal server error' })
   }
 }
 
 const logoutUser = async (req, res) => {
   try {
     makeFirstLoginFalse(req.user._id)
-    res.clearCookie('jwtoken', { path: '/' })
-    res.status(201).send('User Logout')
+
+    // Clear both tokens
+    res.clearCookie('access_token', { path: '/' })
+    res.clearCookie('refresh_token', { path: '/api/auth/refresh' })
+
+    res.status(200).json({ message: 'Logged out successfully' })
   } catch (error) {
     console.log(error)
-    res.status(422).json({ error: error })
+    res.status(500).json({ error: 'Internal server error' })
   }
 }
 
@@ -474,7 +509,7 @@ const handleGoogleLogin = async (req, res) => {
       path: 'previousSeasonData',
       select: 'season',
     })
-    //console.log(userInfo);
+
     if (user) {
       if (!user.inGameName) {
         if (!inGameName)
@@ -489,7 +524,8 @@ const handleGoogleLogin = async (req, res) => {
           return res.status(422).json({
             error: 'This In Game Name is already Taken',
           })
-        // inGameName cannot have spaces
+
+        // inGameName validation
         if (inGameName.includes(' '))
           return res
             .status(422)
@@ -514,6 +550,7 @@ const handleGoogleLogin = async (req, res) => {
       user.verified = true
       await user.save()
     } else {
+      // Handle new user creation
       if (!inGameName)
         return res.status(200).json({
           EnterInGameName: true,
@@ -521,12 +558,13 @@ const handleGoogleLogin = async (req, res) => {
             'Please provide your chosen In-Game Name for your initial login.',
         })
 
+      // inGameName validation
       const u = await User.findOne({ inGameName })
       if (u)
         return res.status(422).json({
           error: 'This In Game Name is already Taken',
         })
-      // inGameName cannot have spaces
+
       if (inGameName.includes(' '))
         return res
           .status(422)
@@ -543,13 +581,13 @@ const handleGoogleLogin = async (req, res) => {
           error: 'In Game Name cannot be greater than 16 characters',
         })
       }
-      // If not, create a new user with Google data
+
+      // Create new user with Google data
       const name = userInfo.name.split(' ')
       user = new User({
         name: name[0] + ' ' + name[name.length - 1],
         email: userInfo.email,
         inGameName,
-        // Add other necessary Google fields
         googleId: userInfo.sub,
         googleEmail: userInfo.email,
         verified: true,
@@ -557,10 +595,33 @@ const handleGoogleLogin = async (req, res) => {
       await user.save()
     }
 
-    const token = await user.generateAuthToken()
-    res.cookie('jwtoken', token, {
-      expires: new Date(Date.now() + 2592000000),
+    // Create tokens
+    const accessToken = jwt.sign(
+      { _id: user._id, role: user.role },
+      process.env.ACCESS_TOKEN_SECRET,
+      { expiresIn: '30m' },
+    )
+
+    const refreshToken = jwt.sign(
+      { _id: user._id },
+      process.env.REFRESH_TOKEN_SECRET,
+      { expiresIn: '90d' },
+    )
+
+    // Set cookies
+    res.cookie('access_token', accessToken, {
       httpOnly: true,
+      secure: process.env.NODE_ENV === 'production',
+      sameSite: 'strict',
+      maxAge: 30 * 60 * 1000, // 30 minutes
+    })
+
+    res.cookie('refresh_token', refreshToken, {
+      httpOnly: true,
+      secure: process.env.NODE_ENV === 'production',
+      sameSite: 'strict',
+      maxAge: 90 * 24 * 60 * 60 * 1000, // 90 days
+      path: '/api/auth/refresh',
     })
 
     let badges = user?.badges || []
@@ -581,14 +642,15 @@ const handleGoogleLogin = async (req, res) => {
       const cacheKey = `privilege_${user._id.toString()}_${key}`
       cache.put(cacheKey, categoryPrivileges[key], 5 * 60 * 1000)
     })
+
     res.status(201).json({
-      message: 'Google Login Successfull',
+      message: 'Google Login Successful',
       user: { ...user._doc, unClaimedValidBadges, categoryPrivileges },
-      token,
+      token: accessToken, // For backward compatibility
     })
   } catch (error) {
     console.log(error)
-    res.status(422).json({ error: error })
+    res.status(422).json({ error: error.message || 'Login failed' })
   }
 }
 

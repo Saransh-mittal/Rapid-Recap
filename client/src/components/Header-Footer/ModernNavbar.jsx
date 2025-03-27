@@ -120,7 +120,7 @@ const ModernNavbar = ({ onNavbarLoad }) => {
     setIsLoggingOut(true)
     try {
       const response = await axios.post('/api/user/logout')
-      if (response.status === 201) {
+      if (response.status === 200) {
         await i18n.changeLanguage('en')
         await userCacheService.deleteUser()
         dispatch(setIsNotifDrawerOpen(false))

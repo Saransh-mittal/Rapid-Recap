@@ -1,6 +1,8 @@
 // client/src/entry-client.jsx
 import React, { lazy, Suspense } from 'react'
 import ReactDOM from 'react-dom/client'
+import { initializeCsrf } from './services/csrfService.js'
+import { initializeTokenRefresh } from './services/tokenRefreshService.js'
 // import { SocketProvider } from './contextAPI/SocketContext.jsx'
 
 // Lazy load all major components
@@ -85,6 +87,8 @@ const isBot = window.__IS_BOT__
 
 // For bots, we don't need to hydrate since they got static HTML
 if (!isBot) {
+  initializeCsrf()
+  initializeTokenRefresh()
   ReactDOM.createRoot(document.getElementById('root')).render(
     <Suspense fallback={<LoadingFallback />}>
       <BrowserRouter>

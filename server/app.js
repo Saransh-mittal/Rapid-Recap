@@ -32,6 +32,11 @@ const i18nMiddleware = require('i18next-http-middleware')
 const i18n = require('./i18n')
 const { initBotTracking } = require('./utils/botTracker')
 const maintenanceMiddleware = require('./middleware/maintenanceMiddleware')
+const configureSession = require('./config/sessionConfig')
+const {
+  generateCsrfToken,
+  validateCsrfToken,
+} = require('./middleware/csrfMiddleware')
 
 const app = express()
 // CORS configuration - only needed in development
@@ -172,6 +177,9 @@ app.use(errorHandler)
 // require('./scheduler/setupCronJobs')
 const PORT = process.env.PORT
 authRouter.use(cookieParser())
+app.use(configureSession())
+app.use(generateCsrfToken)
+authRouter.use(validateCsrfToken)
 authRouter.use('/user', userRoutes)
 authRouter.use('/articles', articleRoutes)
 authRouter.use('/quiz', quizRoutes)
