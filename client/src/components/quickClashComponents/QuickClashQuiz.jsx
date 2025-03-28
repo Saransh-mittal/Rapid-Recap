@@ -33,6 +33,7 @@ const SubmittedQuizInterface = lazy(() =>
 const ConfirmationModal = lazy(() =>
   import('../quizComponents/customQuizModal/ConfirmationModal'),
 )
+const QuizTimer = lazy(() => import('./QuizTimer'))
 
 const MotionButton = motion(Button)
 
@@ -42,6 +43,7 @@ const QuickClashQuiz = ({
   setStopTimerOnQuizSubmit,
   quizTimeLeft,
   setQuizTimeLeft,
+  setLoadingQuiz,
 }) => {
   const { t } = useTranslation('QuickClash')
   const navigate = useNavigate()
@@ -58,6 +60,11 @@ const QuickClashQuiz = ({
   const [result, setResult] = useState(null)
   const [showConfirmModal, setShowConfirmModal] = useState(false)
 
+  // New state to track if quiz is ready to start
+  const [quizReady, setQuizReady] = useState(false)
+  // New state for internal timer tracking
+  const [remainingTime, setRemainingTime] = useState(50)
+
   // New ref to track if a question switch is in progress
   const switchingQuestionRef = useRef(false)
 
@@ -66,6 +73,8 @@ const QuickClashQuiz = ({
     const fetchQuestions = async () => {
       try {
         setLoading(true)
+        setLoadingQuiz(true)
+
         const response = await axios.get(
           `/api/quickClash/session/${sessionId}/quiz`,
         )
@@ -73,6 +82,11 @@ const QuickClashQuiz = ({
         setUserAnswers({})
         setTimeSpent({})
         setStartTime(Date.now())
+
+        // Set quiz as ready only after questions are loaded
+        setQuizReady(true)
+        // Reset the timer to full time
+        setRemainingTime(50)
       } catch (error) {
         console.error('Error fetching questions:', error)
         toast({
@@ -86,6 +100,7 @@ const QuickClashQuiz = ({
         })
       } finally {
         setLoading(false)
+        setLoadingQuiz(false)
       }
     }
 
@@ -100,19 +115,27 @@ const QuickClashQuiz = ({
         initialAnswers[index] = ''
       })
       setUserAnswers(initialAnswers)
-      setQuizTimeLeft(50)
-      // Initialize first question timing immediately
+
+      // Initialize first question timing
       setTimeSpent(prev => ({
         ...prev,
         [0]: { startTime: Date.now(), timeSpent: 0 },
       }))
     }
   }, [questions])
-  useEffect(() => {
-    if (quizTimeLeft <= 0) {
-      handleSubmit()
-    }
-  }, [quizTimeLeft])
+
+  // Handle timer expiration
+  const handleTimeUp = useCallback(() => {
+    handleSubmit()
+  }, [])
+
+  // Sync timer with parent component
+  const handleTimerTick = useCallback(
+    newTimeLeft => {
+      setQuizTimeLeft(newTimeLeft)
+    },
+    [setQuizTimeLeft],
+  )
 
   // Submit quiz
   const handleSubmit = useCallback(async () => {
@@ -183,8 +206,6 @@ const QuickClashQuiz = ({
     currentQuestionIndex,
     onComplete,
   ])
-
-  // Auto-submit on timer expiration handled by parent component
 
   // Handle navigation between questions
   const handleNext = useCallback(() => {
@@ -278,6 +299,22 @@ const QuickClashQuiz = ({
 
   return (
     <Box p={4} maxW="800px" mx="auto" color="white">
+      {/* Timer - only starts after questions are fully loaded */}
+      {quizReady && (
+        <Flex justify="center" mb={4}>
+          <Suspense fallback={<Box p={2}>Loading timer...</Box>}>
+            <QuizTimer
+              initialTime={50}
+              isPaused={false}
+              isAttention={remainingTime <= 10}
+              onTimeUp={handleTimeUp}
+              colorScheme={remainingTime <= 10 ? 'red' : 'green'}
+              onTick={handleTimerTick}
+            />
+          </Suspense>
+        </Flex>
+      )}
+
       <Suspense fallback={<Spinner size="xl" color="purple.500" />}>
         <QuizInterface
           load={loading}
@@ -331,6 +368,32 @@ const QuickClashQuiz = ({
             cursor={index === currentQuestionIndex ? 'default' : 'pointer'}
             border={currentQuestionIndex === index ? '2px solid white' : 'none'}
             transition="all 0.2s"
+            onClick={() => {
+              if (index !== currentQuestionIndex) {
+                // Save time for current question
+                setTimeSpent(prev => {
+                  const now = Date.now()
+                  const questionData = prev[currentQuestionIndex] || {}
+                  const startTimeForQuestion = questionData.startTime || now
+
+                  return {
+                    ...prev,
+                    [currentQuestionIndex]: {
+                      startTime: startTimeForQuestion,
+                      timeSpent: Math.floor(
+                        (now - startTimeForQuestion) / 1000,
+                      ),
+                    },
+                    [index]: {
+                      startTime: now,
+                      timeSpent: 0,
+                    },
+                  }
+                })
+
+                setCurrentQuestionIndex(index)
+              }
+            }}
           >
             <Text fontSize="sm" color="white">
               {index + 1}

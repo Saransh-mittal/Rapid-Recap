@@ -1,4 +1,3 @@
-// components/screens/QuickClashSession.jsx
 import React, { useState, useEffect, useRef, lazy, Suspense } from 'react'
 import {
   Container,
@@ -59,6 +58,7 @@ const QuickClashSession = () => {
   } = useQuickClash()
   const { emitChallengeCompleted } = useQuickClashSocket()
   const { trackChallengeCompletion } = useDailyTasks()
+
   // State management
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState(null)
@@ -70,6 +70,9 @@ const QuickClashSession = () => {
   const [stopTimerOnQuizSubmit, setStopTimerOnQuizSubmit] = useState(false)
   const [score, setScore] = useState(0)
   const [phaseProgress, setPhaseProgress] = useState(0)
+
+  // New state to track if quiz content is ready
+  const [quizContentReady, setQuizContentReady] = useState(false)
 
   // Results modal control
   const {
@@ -91,6 +94,7 @@ const QuickClashSession = () => {
 
   // Flag to skip confirmation when intentionally navigating away
   const skipConfirmRef = useRef(false)
+
   const initSession = async () => {
     try {
       setLoading(true)
@@ -146,6 +150,7 @@ const QuickClashSession = () => {
       setLoading(false)
     }
   }
+
   // Initialize session
   useEffect(() => {
     if (!loading && !sessionLoading && !session) {
@@ -157,6 +162,7 @@ const QuickClashSession = () => {
       setLoading(false)
     }
   }, [challengeId, user?.userLanguage, session, sessionLoading])
+
   useEffect(() => {
     return () => {
       endSession()
@@ -192,27 +198,6 @@ const QuickClashSession = () => {
     return () => clearInterval(timer)
   }, [phase, session])
 
-  // Quiz timer
-  useEffect(() => {
-    if (phase !== 'quiz' || !quizStartTimeRef.current) return
-
-    const timer = setInterval(() => {
-      const elapsed = Math.floor((Date.now() - quizStartTimeRef.current) / 1000)
-      const remaining = Math.max(0, 50 - elapsed)
-      setQuizTimeLeft(remaining)
-
-      // Calculate progress percentage (inverted - 0% at start, 100% at end)
-      setPhaseProgress(Math.min(100, (elapsed / 50) * 100))
-
-      if (remaining <= 0 || stopTimerOnQuizSubmit) {
-        clearInterval(timer)
-        // The QuickClashQuiz component will handle auto-submission
-      }
-    }, 1000)
-
-    return () => clearInterval(timer)
-  }, [phase, quizStartTimeRef.current, stopTimerOnQuizSubmit])
-
   // Handle reading phase completion
   const handleReadingComplete = async () => {
     try {
@@ -237,9 +222,10 @@ const QuickClashSession = () => {
 
   // Start the quiz phase after instructions
   const handleStartQuiz = () => {
-    quizStartTimeRef.current = Date.now()
     setPhase('quiz')
     setPhaseProgress(0)
+    // We no longer set quizStartTimeRef.current here
+    // The QuickClashQuiz component will handle timing internally
   }
 
   // Handle quiz completion
@@ -314,18 +300,6 @@ const QuickClashSession = () => {
     return `${minutes}:${remainingSeconds.toString().padStart(2, '0')}`
   }
 
-  // Get the current active timer
-  const getCurrentTimer = () => {
-    switch (phase) {
-      case 'reading':
-        return timeLeft
-      case 'quiz':
-        return quizTimeLeft
-      default:
-        return null
-    }
-  }
-
   // Get phase-specific information
   const getPhaseInfo = () => {
     switch (phase) {
@@ -370,12 +344,6 @@ const QuickClashSession = () => {
   // Persistent timer header component
   const TimerHeader = () => {
     const phaseInfo = getPhaseInfo()
-    const timer = getCurrentTimer()
-
-    // Animation for time running out
-    const isAttention =
-      (phase === 'reading' && timeLeft <= 30) ||
-      (phase === 'quiz' && quizTimeLeft <= 10)
 
     return (
       <Box
@@ -391,51 +359,17 @@ const QuickClashSession = () => {
         px={4}
       >
         <VStack spacing={2} w="100%">
-          <Flex w="100%" justify="space-between" align="center">
+          <Flex w="100%" gap={4} align="center">
             <Badge colorScheme="purple" p={2} borderRadius="md" fontSize="sm">
               {challenge?.category || t('Quick Clash')}
             </Badge>
 
-            {phase != 'reading' && (
-              <HStack>
-                <Badge colorScheme="purple">{phaseInfo.label}</Badge>
-
-                {timer !== null && (
-                  <MotionBadge
-                    colorScheme={phaseInfo.colorScheme}
-                    p={2}
-                    borderRadius="md"
-                    display="flex"
-                    alignItems="center"
-                    gap={1}
-                    fontSize="md"
-                    animate={
-                      isAttention
-                        ? {
-                            scale: [1, 1.1, 1],
-                            transition: {
-                              duration: 0.8,
-                              repeat: Infinity,
-                              repeatType: 'reverse',
-                            },
-                          }
-                        : {}
-                    }
-                    boxShadow={
-                      isAttention
-                        ? `0 0 8px var(--chakra-colors-${phaseInfo.colorScheme}-500)`
-                        : 'none'
-                    }
-                  >
-                    <Icon as={Clock} />
-                    <Text>{formatTime(timer)}</Text>
-                  </MotionBadge>
-                )}
-              </HStack>
-            )}
+            <HStack>
+              <Badge colorScheme="purple">{phaseInfo.label}</Badge>
+            </HStack>
           </Flex>
 
-          {(phase === 'reading' || phase === 'quiz') && (
+          {phase === 'reading' && (
             <Progress
               value={phaseProgress}
               size="xs"
@@ -520,6 +454,7 @@ const QuickClashSession = () => {
                 setStopTimerOnQuizSubmit={setStopTimerOnQuizSubmit}
                 quizTimeLeft={quizTimeLeft}
                 setQuizTimeLeft={setQuizTimeLeft}
+                setLoadingQuiz={setQuizContentReady}
               />
             </Suspense>
           )}
