@@ -17,6 +17,18 @@
       "revival": "पुनर्जीवन",
       "revived": "पुनर्जीवित",
       "active": "सक्रिय"
+    },
+    "streakEnded": "{{count}} दिनों की स्ट्रीक समाप्त हो गई",
+    "streakRevived": "आपकी स्ट्रीक सफलतापूर्वक पुनर्जीवित हो गई है!",
+    "streak": "स्ट्रीक: {{count}} दिन",
+    "timeToRevive": "शेष समय: {{formattedTime}}",
+    "streakRestartTip": "नई स्ट्रीक शुरू करने के लिए आज एक क्विज़ पूरा करें",
+    "streakRevivedMessage": "आपकी स्ट्रीक सफलतापूर्वक पुनर्जीवित हो गई है!",
+    "statusBadge": {
+      "broken": "टूटा",
+      "revival": "पुनर्जीवन",
+      "revived": "पुनर्जीवित",
+      "active": "सक्रिय"
     }
   },
   "quiz": "क्विज़",
