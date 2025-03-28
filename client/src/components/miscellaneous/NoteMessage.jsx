@@ -1,3 +1,4 @@
+// NoteMessage.jsx
 import React, { useEffect, useMemo, useCallback, lazy, Suspense } from 'react'
 import {
   Box,
@@ -7,6 +8,8 @@ import {
   VStack,
   HStack,
   Text,
+  Flex,
+  Icon,
 } from '@chakra-ui/react'
 import { motion, AnimatePresence } from 'framer-motion'
 import { useDispatch, useSelector } from 'react-redux'
@@ -41,6 +44,7 @@ const NoteMessage = ({
   width = '320px',
   actions = [],
   customContent,
+  customHeader,
   feedbackContent,
 }) => {
   const dispatch = useDispatch()
@@ -61,21 +65,21 @@ const NoteMessage = ({
         navigateToTournament: () => navigate(`/tournament`),
         handleSubmitFeedback: () =>
           handleSubmitFeedback(
-            feedbackContent.rating,
-            feedbackContent.feedback,
-            feedbackContent.feedbackId,
+            feedbackContent?.rating,
+            feedbackContent?.feedback,
+            feedbackContent?.feedbackId,
           ),
         handleQuizFeedback: () =>
           handleQuizFeedback(
-            feedbackContent.rating,
-            feedbackContent.feedback,
-            feedbackContent.feedbackId,
+            feedbackContent?.rating,
+            feedbackContent?.feedback,
+            feedbackContent?.feedbackId,
           ),
         handleTournamentFeedback: () =>
           handleTournamentFeedback(
-            feedbackContent.rating,
-            feedbackContent.feedback,
-            feedbackContent.feedbackId,
+            feedbackContent?.rating,
+            feedbackContent?.feedback,
+            feedbackContent?.feedbackId,
           ),
       }),
     [dispatch, navigate, feedbackContent],
@@ -120,6 +124,30 @@ const NoteMessage = ({
     }, 500)
   }, [closeDisclosure, onClose, dispatch, messageId])
 
+  // Enhanced animation variants
+  const slideInVariants = {
+    hidden: { x: '110%', opacity: 0 },
+    visible: {
+      x: 0,
+      opacity: 1,
+      transition: {
+        type: 'spring',
+        stiffness: 120,
+        damping: 18,
+        mass: 1.1,
+      },
+    },
+    exit: {
+      x: '110%',
+      opacity: 0,
+      transition: {
+        type: 'spring',
+        stiffness: 150,
+        damping: 20,
+      },
+    },
+  }
+
   return (
     <AnimatePresence>
       {isOpen && (
@@ -128,44 +156,114 @@ const NoteMessage = ({
           top="20px"
           right="20px"
           width={width}
-          initial={{ x: '100%', opacity: 0 }}
-          animate={{ x: 0, opacity: 1 }}
-          exit={{ x: '100%', opacity: 0 }}
-          transition={{ type: 'spring', stiffness: 100, damping: 15 }}
+          initial="hidden"
+          animate="visible"
+          exit="exit"
+          variants={slideInVariants}
           zIndex={1001}
         >
           <Box
-            bg="gray.800"
+            position="relative"
+            bg="rgba(26, 21, 39, 0.94)"
+            backdropFilter="blur(10px)"
             color="gray.100"
             borderRadius="lg"
             overflow="hidden"
-            boxShadow="0 4px 6px rgba(0, 0, 0, 0.1), 0 1px 3px rgba(0, 0, 0, 0.08)"
+            boxShadow="0 5px 20px rgba(0, 0, 0, 0.4), 0 0 0 1px rgba(255, 255, 255, 0.08) inset"
             borderWidth="1px"
-            borderColor="gray.700"
+            borderColor="rgba(255, 255, 255, 0.1)"
+            height="auto"
+            maxHeight="80vh"
+            transition="transform 0.2s, box-shadow 0.2s"
+            _hover={{
+              boxShadow:
+                '0 7px 24px rgba(0, 0, 0, 0.5), 0 0 0 1px rgba(255, 255, 255, 0.1) inset',
+              transform: 'translateY(-1px)',
+            }}
           >
+            {/* Subtle gradient border effect */}
             <Box
-              bg="gray.700"
-              px={4}
-              py={2}
-              display="flex"
-              justifyContent="space-between"
-              alignItems="center"
-            >
-              <Heading
-                as="h3"
-                size="xs"
-                textTransform="uppercase"
-                letterSpacing="wide"
-                color="white"
+              position="absolute"
+              top="0"
+              left="0"
+              right="0"
+              height="2px"
+              bgGradient="linear(to-r, purple.500, blue.400, teal.300)"
+              borderTopLeftRadius="lg"
+              borderTopRightRadius="lg"
+            />
+
+            {/* Render custom header if provided, otherwise use default header */}
+            {customHeader ? (
+              customHeader
+            ) : (
+              <Box
+                px={4}
+                py={2}
+                display="flex"
+                justifyContent="space-between"
+                alignItems="center"
+                borderBottomWidth="1px"
+                borderColor="rgba(255, 255, 255, 0.08)"
               >
-                {title}
-              </Heading>
-              <CloseButton size="sm" onClick={handleClose} color="white" />
-            </Box>
-            <VStack align="stretch" p={3} spacing={2}>
-              {customContent ? customContent : <Text>{content}</Text>}
+                <Heading
+                  as="h3"
+                  size="xs"
+                  textTransform="uppercase"
+                  letterSpacing="wide"
+                  color="white"
+                  fontSize="0.9rem"
+                  fontWeight="600"
+                  textShadow="0 1px 2px rgba(0,0,0,0.2)"
+                >
+                  {title}
+                </Heading>
+                <CloseButton
+                  size="sm"
+                  onClick={handleClose}
+                  color="whiteAlpha.800"
+                  _hover={{
+                    color: 'white',
+                    bg: 'rgba(255, 255, 255, 0.08)',
+                  }}
+                />
+              </Box>
+            )}
+
+            <Flex
+              direction="column"
+              p={3}
+              spacing={2}
+              maxHeight="60vh"
+              overflowY="auto"
+              sx={{
+                '&::-webkit-scrollbar': {
+                  width: '4px',
+                },
+                '&::-webkit-scrollbar-track': {
+                  width: '4px',
+                  background: 'rgba(0,0,0,0.1)',
+                },
+                '&::-webkit-scrollbar-thumb': {
+                  background: 'rgba(255,255,255,0.15)',
+                  borderRadius: '24px',
+                },
+              }}
+            >
+              {customContent ? (
+                customContent
+              ) : (
+                <Text
+                  color="whiteAlpha.900"
+                  fontSize="0.95rem"
+                  lineHeight="1.5"
+                >
+                  {content}
+                </Text>
+              )}
+
               {actions.length > 0 && (
-                <HStack spacing={2} justify="center" pt={2}>
+                <HStack spacing={2} justify="center" pt={3} pb={1}>
                   <Suspense fallback={null}>
                     {actions.map((action, index) => (
                       <ButtonFactory
@@ -176,8 +274,6 @@ const NoteMessage = ({
                         }
                         path={action?.path}
                         size="sm"
-                        variant="outline"
-                        colorScheme="blue"
                         innerText={action.text}
                         GuestLoginTranslate={GuestLoginTranslate}
                       >
@@ -187,7 +283,7 @@ const NoteMessage = ({
                   </Suspense>
                 </HStack>
               )}
-            </VStack>
+            </Flex>
           </Box>
         </MotionBox>
       )}

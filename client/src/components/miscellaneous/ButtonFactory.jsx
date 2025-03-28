@@ -1,41 +1,91 @@
+// ButtonFactory.jsx
 import React from 'react'
-import GetStarted from '../Header-Footer/navbarComponents/GetStarted'
-import { Button as ChakraButton } from '@chakra-ui/react'
-import GuestLogin from '../authComponents/GuestLogin'
-import SecureYourProgress from './SecureYourProgress'
+import { Button as ChakraButton, Text, Flex, Icon } from '@chakra-ui/react'
+import { motion } from 'framer-motion'
 import { useTranslation } from 'react-i18next'
-import LanguageSwitcher from '../../LanguageSwitcher'
 import { useNavigate } from 'react-router-dom'
+import {
+  ArrowForwardIcon,
+  CheckIcon,
+  InfoIcon,
+  StarIcon,
+  ViewIcon,
+} from '@chakra-ui/icons'
+import {
+  Trophy,
+  Calendar,
+  Sword,
+  Target,
+  RefreshCw,
+  MessageCircle,
+} from 'lucide-react'
 
-const ElegantButton = ({ onClick, children }) => (
-  <ChakraButton
+// Create motion button with Chakra
+const MotionButton = motion(ChakraButton)
+
+// Game-style button with animated hover effect
+const GameButton = ({
+  onClick,
+  children,
+  colorScheme = 'blue',
+  leftIcon,
+  rightIcon,
+  ...props
+}) => (
+  <MotionButton
     onClick={onClick}
-    bg="linear-gradient(135deg, #4a5568 0%, #2d3748 100%)"
+    bg={
+      colorScheme === 'blue'
+        ? 'linear-gradient(135deg, rgba(66, 153, 225, 0.9) 0%, rgba(49, 130, 206, 0.9) 100%)'
+        : colorScheme === 'green'
+        ? 'linear-gradient(135deg, rgba(72, 187, 120, 0.9) 0%, rgba(56, 161, 105, 0.9) 100%)'
+        : colorScheme === 'purple'
+        ? 'linear-gradient(135deg, rgba(159, 122, 234, 0.9) 0%, rgba(128, 90, 213, 0.9) 100%)'
+        : colorScheme === 'orange'
+        ? 'linear-gradient(135deg, rgba(237, 137, 54, 0.9) 0%, rgba(221, 107, 32, 0.9) 100%)'
+        : 'linear-gradient(135deg, rgba(74, 85, 104, 0.9) 0%, rgba(45, 55, 72, 0.9) 100%)'
+    }
     color="white"
     fontWeight="semibold"
     letterSpacing="wide"
     borderRadius="full"
-    px={6}
-    py={3}
+    px={4}
+    py={2}
+    height="auto"
+    fontSize="0.85rem"
+    leftIcon={leftIcon}
+    rightIcon={rightIcon}
+    borderWidth="1px"
+    borderColor="rgba(255, 255, 255, 0.15)"
+    boxShadow="0 3px 8px rgba(0, 0, 0, 0.25)"
+    textShadow="0 1px 2px rgba(0,0,0,0.2)"
+    whileHover={{
+      y: -2,
+      boxShadow: '0 6px 12px rgba(0, 0, 0, 0.3)',
+      transition: { duration: 0.2 },
+    }}
+    whileTap={{
+      y: 0,
+      boxShadow: '0 2px 4px rgba(0, 0, 0, 0.3)',
+      transition: { duration: 0.1 },
+    }}
     _hover={{
-      bg: 'linear-gradient(135deg, #4a5568 0%, #3a4a5e 100%)',
-      boxShadow: '0 0 15px rgba(74, 85, 104, 0.4)',
-      transform: 'translateY(-2px)',
+      bg:
+        colorScheme === 'blue'
+          ? 'linear-gradient(135deg, rgba(66, 153, 225, 1) 0%, rgba(49, 130, 206, 1) 100%)'
+          : colorScheme === 'green'
+          ? 'linear-gradient(135deg, rgba(72, 187, 120, 1) 0%, rgba(56, 161, 105, 1) 100%)'
+          : colorScheme === 'purple'
+          ? 'linear-gradient(135deg, rgba(159, 122, 234, 1) 0%, rgba(128, 90, 213, 1) 100%)'
+          : colorScheme === 'orange'
+          ? 'linear-gradient(135deg, rgba(237, 137, 54, 1) 0%, rgba(221, 107, 32, 1) 100%)'
+          : 'linear-gradient(135deg, rgba(74, 85, 104, 1) 0%, rgba(45, 55, 72, 1) 100%)',
     }}
-    _active={{
-      bg: 'linear-gradient(135deg, #2d3748 0%, #4a5568 100%)',
-      boxShadow: 'inset 0 3px 5px rgba(0, 0, 0, 0.2)',
-      transform: 'translateY(0)',
-    }}
-    transition="all 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275)"
-    textTransform="uppercase"
-    fontSize="sm"
-    border="1px solid"
-    borderColor="gray.600"
-    boxShadow="0 0 10px rgba(74, 85, 104, 0.2)"
+    transition="all 0.2s cubic-bezier(0.175, 0.885, 0.32, 1.275)"
+    {...props}
   >
     {children}
-  </ChakraButton>
+  </MotionButton>
 )
 
 const ButtonFactory = ({
@@ -44,133 +94,129 @@ const ButtonFactory = ({
   onClick,
   innerText,
   GuestLoginTranslate,
+  size = 'md',
   ...props
 }) => {
   const { t } = useTranslation('ButtonFactory')
   const navigate = useNavigate()
 
+  // Helper function to get button styling based on action type
+  const getButtonProps = () => {
+    switch (actionType) {
+      case 'REGISTER_TOURNAMENT':
+      case 'VIEW_TOURNAMENT':
+        return {
+          colorScheme: 'purple',
+          leftIcon: <Icon as={Trophy} boxSize="1em" />,
+        }
+
+      case 'VIEW_EXPERIENCE':
+        return {
+          colorScheme: 'yellow',
+          leftIcon: <StarIcon />,
+        }
+
+      case 'SUBMIT_STORY_FEEDBACK':
+      case 'SUBMIT_QUIZ_FEEDBACK':
+      case 'SUBMIT_TOURNAMENT_FEEDBACK':
+        return {
+          colorScheme: 'green',
+          leftIcon: <CheckIcon />,
+        }
+
+      case 'VIEW_PROFILE':
+        return {
+          colorScheme: 'blue',
+          leftIcon: <ViewIcon />,
+        }
+
+      case 'NAVIGATE':
+        return {
+          colorScheme: 'blue',
+          rightIcon: <ArrowForwardIcon />,
+        }
+
+      case 'INBOX':
+        return {
+          colorScheme: 'blue',
+          leftIcon: <Icon as={MessageCircle} boxSize="1em" />,
+        }
+
+      default:
+        return {
+          colorScheme: 'blue',
+        }
+    }
+  }
+
   switch (actionType) {
     case 'NAVIGATE':
       return (
-        <ElegantButton
+        <GameButton
           onClick={() => {
             navigate(path)
             onClick()
           }}
+          size={size}
+          {...getButtonProps()}
           {...props}
         >
           {innerText}
-        </ElegantButton>
+        </GameButton>
       )
 
     case 'SIGN_IN':
       return (
-        <GetStarted
-          width={'150px'}
-          innerText={innerText || t('SIGN_IN')}
+        <GameButton
+          colorScheme="purple"
+          size={size}
           onClick={onClick}
-        />
+          {...props}
+        >
+          {innerText || t('SIGN_IN')}
+        </GameButton>
       )
-    case 'LANGUAGE':
-      return <LanguageSwitcher />
+
     case 'GUEST':
       return (
-        <GuestLogin width={'150px'} onClick={onClick} t={GuestLoginTranslate} />
+        <GameButton colorScheme="gray" size={size} onClick={onClick} {...props}>
+          {innerText || t('LOGIN_AS_GUEST')}
+        </GameButton>
       )
-    case 'VIEW_PROFILE':
-      return (
-        <ElegantButton onClick={onClick} {...props}>
-          {t('VIEW_PROFILE')}
-        </ElegantButton>
-      )
-    case 'REGISTER_TOURNAMENT':
-      return (
-        <ElegantButton onClick={onClick} {...props}>
-          {t('REGISTER_TOURNAMENT')}
-        </ElegantButton>
-      )
-    case 'VIEW_TOURNAMENT':
-      return (
-        <ElegantButton onClick={onClick} {...props}>
-          {t('VIEW_TOURNAMENT')}
-        </ElegantButton>
-      )
-    case 'SWITCH_TO_WEAK_MODE':
-      return (
-        <ElegantButton onClick={onClick} innerText {...props}>
-          {innerText}
-        </ElegantButton>
-      )
-    case 'STAY_IN_NORMAL_MODE':
-      return (
-        <ElegantButton onClick={onClick} innerText {...props}>
-          {innerText}
-        </ElegantButton>
-      )
-    case 'VIEW_EXPERIENCE':
-      return (
-        <ElegantButton onClick={onClick} {...props}>
-          {t('VIEW_EXPERIENCE')}
-        </ElegantButton>
-      )
-    case 'SUBMIT_STORY_FEEDBACK':
-      return (
-        <ElegantButton onClick={onClick} {...props}>
-          {t('SUBMIT_FEEDBACK')}
-        </ElegantButton>
-      )
-    case 'SUBMIT_QUIZ_FEEDBACK':
-      return (
-        <ElegantButton onClick={onClick} {...props}>
-          {t('SUBMIT_QUIZ_FEEDBACK')}
-        </ElegantButton>
-      )
-    case 'SUBMIT_TOURNAMENT_FEEDBACK':
-      return (
-        <ElegantButton onClick={onClick} {...props}>
-          {t('SUBMIT_TOURNAMENT_FEEDBACK')}
-        </ElegantButton>
-      )
-    case 'INBOX':
-      return (
-        <ElegantButton onClick={onClick} {...props}>
-          {t('INBOX')}
-        </ElegantButton>
-      )
-    case 'SECURE_YOUR_PROGRESS':
-      return <SecureYourProgress padding={0} />
-    case 'CONFIRM':
-      return (
-        <ChakraButton colorScheme="green" onClick={onClick} {...props}>
-          {t('CONFIRM')}
-        </ChakraButton>
-      )
-    case 'CANCEL':
-      return (
-        <ChakraButton colorScheme="red" onClick={onClick} {...props}>
-          {t('CANCEL')}
-        </ChakraButton>
-      )
+
     case 'VIEW_ALL':
       return (
-        <ChakraButton colorScheme="blue" onClick={onClick} {...props}>
-          {t('VIEW_ALL')}
-        </ChakraButton>
+        <GameButton
+          colorScheme="blue"
+          onClick={onClick}
+          size={size}
+          leftIcon={<InfoIcon />}
+          {...props}
+        >
+          {innerText || t('VIEW_ALL')}
+        </GameButton>
       )
+
     case 'DISMISS':
       return (
-        <ChakraButton colorScheme="gray" onClick={onClick} {...props}>
-          {t('DISMISS')}
-        </ChakraButton>
+        <GameButton colorScheme="gray" onClick={onClick} size={size} {...props}>
+          {innerText || t('DISMISS')}
+        </GameButton>
       )
-    case 'VIEW_REPORT':
-      return (
-        <ChakraButton colorScheme="blue" onClick={onClick} {...props}>
-          {t('VIEW_REPORT')}
-        </ChakraButton>
-      )
+
+    // Handle all other action types
     default:
-      return null
+      return (
+        <GameButton
+          onClick={onClick}
+          innerText={innerText}
+          size={size}
+          {...getButtonProps()}
+          {...props}
+        >
+          {innerText || t(actionType) || actionType}
+        </GameButton>
+      )
   }
 }
 

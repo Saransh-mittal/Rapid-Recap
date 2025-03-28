@@ -18,6 +18,9 @@ import {
   Button,
   useDisclosure,
   Flex,
+  Divider,
+  Heading,
+  HStack,
 } from '@chakra-ui/react'
 import { useTranslation } from 'react-i18next'
 import { useNavigate } from 'react-router-dom'
@@ -44,6 +47,9 @@ import RevengeConfirmationDialog from './RevengeConfirmationDialog'
 // Use React.lazy for components that aren't always needed
 const QuizReportModal = React.lazy(() => import('./QuizReportModal'))
 const NewChallengeModal = React.lazy(() => import('./modals/NewChallengeModal'))
+const CompletedChallengesView = React.lazy(() =>
+  import('./CompletedChallengesView'),
+)
 
 // Custom hooks
 import useQuickClash from '../../customHooks/useQuickClash'
@@ -51,6 +57,7 @@ import useQuickClashSocket from '../../customHooks/useQuickClashSocket'
 
 const MotionCenter = motion(Center)
 const MotionButton = motion(Button)
+const MotionBox = motion(Box)
 
 /**
  * Displays active challenges, allowing filtering and interaction
@@ -70,7 +77,7 @@ const ActiveChallenges = () => {
     loadMoreActiveChallenges,
     handleAcceptChallenge,
     handleRejectChallenge,
-    createChallenge, // Import this from useQuickClash
+    createChallenge,
   } = useQuickClash()
   const { emitChallengeAccepted, emitChallengeRejected } = useQuickClashSocket()
   const { user } = useSelector(state => state.auth)
@@ -134,12 +141,31 @@ const ActiveChallenges = () => {
     return filtered
   }, [filter, challenges, userId])
 
+  // Extract completed challenges for enhanced view
+  const completedChallenges = useMemo(() => {
+    return filteredChallenges.filter(
+      c =>
+        c.status === 'completed' &&
+        c.challengerAttempted &&
+        c.opponentAttempted,
+    )
+  }, [filteredChallenges])
+
   // Group challenges by their status
   const groupedChallenges = useMemo(() => {
     if (!filteredChallenges.length) return {}
 
-    // Group challenges by status
+    // Group challenges by status, but exclude completed challenges as they'll be shown separately
     return filteredChallenges.reduce((groups, challenge) => {
+      if (
+        challenge.status === 'completed' &&
+        challenge.challengerAttempted &&
+        challenge.opponentAttempted
+      ) {
+        // Skip completed challenges as they'll be shown in the CompletedChallengesView
+        return groups
+      }
+
       const isChallenger = challenge.challenger._id === userId
       let statusGroup
 
@@ -169,7 +195,6 @@ const ActiveChallenges = () => {
     { key: 'new', label: t('New Challenges'), icon: Target },
     { key: 'active', label: t('Ready to Play'), icon: Zap },
     { key: 'awaiting', label: t('Awaiting Response'), icon: HourglassIcon },
-    { key: 'completed', label: t('Completed'), icon: Trophy },
     { key: 'rejected', label: t('Rejected'), icon: X },
     { key: 'other', label: t('Other'), icon: FileText },
   ]
@@ -326,7 +351,7 @@ const ActiveChallenges = () => {
     startProgressTimer,
   ])
 
-  // Handle challenge actions
+  // Challenge action handlers
   const handleAccept = useCallback(
     challengeId => {
       openConfirmDialog('accept', challengeId)
@@ -447,6 +472,18 @@ const ActiveChallenges = () => {
     }
   }, [nextPageLoading, hasMore, loadMoreActiveChallenges, toast, t])
 
+  // Combine all handlers for child components
+  const handlers = useMemo(
+    () => ({
+      onAccept: handleAccept,
+      onDecline: handleDecline,
+      onStart: handleStart,
+      onViewReport: handleViewReport,
+      onRevenge: handleRevenge,
+    }),
+    [handleAccept, handleDecline, handleStart, handleViewReport, handleRevenge],
+  )
+
   // Check if we're still loading and no challenges have been loaded yet
   if (loading && !challenges.length) {
     return (
@@ -537,7 +574,7 @@ const ActiveChallenges = () => {
             <EmptyState filter={filter} />
           ) : (
             <VStack spacing={8} align="stretch" px={1}>
-              {/* Use StatusSection component for each group */}
+              {/* Regular status sections (non-completed challenges) */}
               {statusGroups.map((group, idx) => (
                 <StatusSection
                   key={group.key}
@@ -545,21 +582,60 @@ const ActiveChallenges = () => {
                   icon={group.icon}
                   challenges={groupedChallenges[group.key] || []}
                   userId={userId}
-                  handlers={{
-                    onAccept: handleAccept,
-                    onDecline: handleDecline,
-                    onStart: handleStart,
-                    onViewReport: handleViewReport,
-                    onRevenge: handleRevenge,
-                  }}
+                  handlers={handlers}
                   animationDelay={idx * 0.1}
                 />
               ))}
+
+              {/* Enhanced completed challenges section with date grouping */}
+              {completedChallenges.length > 0 && (
+                <MotionBox
+                  initial={{ opacity: 0, y: 20 }}
+                  animate={{
+                    opacity: 1,
+                    y: 0,
+                    transition: {
+                      delay: statusGroups.length * 0.1,
+                      duration: 0.4,
+                      type: 'spring',
+                      stiffness: 100,
+                      damping: 15,
+                    },
+                  }}
+                >
+                  <HStack mb={3} spacing={2}>
+                    <Icon as={Trophy} color="purple.400" boxSize={5} />
+                    <Heading size="sm" color="white">
+                      {t('Completed')} ({completedChallenges.length})
+                    </Heading>
+                  </HStack>
+
+                  <Divider mb={4} opacity={0.2} />
+
+                  <Suspense
+                    fallback={
+                      <Center py={4}>
+                        <Spinner size="lg" color="purple.400" />
+                      </Center>
+                    }
+                  >
+                    <CompletedChallengesView
+                      challenges={completedChallenges}
+                      userId={userId}
+                      handlers={{
+                        onViewReport: handleViewReport,
+                        onRevenge: handleRevenge,
+                      }}
+                      isLoading={false}
+                    />
+                  </Suspense>
+                </MotionBox>
+              )}
             </VStack>
           )}
         </AnimatePresence>
 
-        {/* Load More Button */}
+        {/* Load More Button - show if there are more challenges to load */}
         {hasMore && filteredChallenges.length > 0 && (
           <Flex justify="center" mt={4} mb={6}>
             <MotionButton

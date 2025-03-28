@@ -1,3 +1,4 @@
+// XPAwardNoteMessage.jsx
 import React, { useState, useEffect, useMemo, lazy, Suspense } from 'react'
 import {
   Text,
@@ -6,12 +7,14 @@ import {
   Flex,
   Divider,
   Center,
-  Icon,
+  HStack,
+  Tag,
   useBreakpointValue,
 } from '@chakra-ui/react'
+import { motion } from 'framer-motion'
 import { keyframes } from '@chakra-ui/system'
 import { useSelector } from 'react-redux'
-import { ArrowRightIcon } from '@chakra-ui/icons'
+import { ArrowForwardIcon, StarIcon } from '@chakra-ui/icons'
 import NoteMessage from '../NoteMessage'
 import { getMilestoneInfo } from './milestones'
 import { useTranslation } from 'react-i18next'
@@ -20,14 +23,26 @@ import { useTranslation } from 'react-i18next'
 const TrophySVG = lazy(() => import('../../../assets/svg/TrophySVG'))
 const Confetti = lazy(() => import('react-confetti'))
 
+// Motion components
+const MotionBox = motion(Box)
+const MotionText = motion(Text)
+const MotionFlex = motion(Flex)
+
+// Animations
 const glowAnimation = keyframes`
-  0% { box-shadow: 0 0 5px #4299E1; }
-  50% { box-shadow: 0 0 20px #4299E1, 0 0 30px #4299E1; }
-  100% { box-shadow: 0 0 5px #4299E1; }
+  0% { box-shadow: 0 0 8px rgba(66, 153, 225, 0.7); }
+  50% { box-shadow: 0 0 25px rgba(66, 153, 225, 0.9), 0 0 40px rgba(66, 153, 225, 0.5); }
+  100% { box-shadow: 0 0 8px rgba(66, 153, 225, 0.7); }
+`
+
+const pulseAnimation = keyframes`
+  0% { transform: scale(1); }
+  50% { transform: scale(1.1); }
+  100% { transform: scale(1); }
 `
 
 const fadeInAnimation = keyframes`
-  0% { opacity: 0; transform: translateY(10px); }
+  0% { opacity: 0; transform: translateY(15px); }
   100% { opacity: 1; transform: translateY(0); }
 `
 
@@ -51,19 +66,15 @@ const XPAwardNoteMessage = ({
   const totalXp = xpAwarded + (milestoneInfo?.xpReward || 0)
   const { user } = useSelector(state => state.auth)
 
-  // Responsive sizes - moved to top level
+  // Responsive sizes
   const fontSize = useBreakpointValue({ base: 'sm', md: 'md', lg: 'lg' })
-  const iconSize = useBreakpointValue({ base: '40px', md: '50px', lg: '60px' })
-  const width = useBreakpointValue({ base: '90%', sm: '320px', md: '400px' })
+  const iconSize = useBreakpointValue({ base: '45px', md: '55px', lg: '65px' })
+  const width = useBreakpointValue({ base: '90%', sm: '320px', md: '350px' })
   const titleFontSize = useBreakpointValue({ base: 'lg', md: 'xl', lg: '2xl' })
   const xpAwardedFontSize = useBreakpointValue({
     base: 'lg',
     md: 'xl',
     lg: '2xl',
-  })
-  const milestoneDescriptionFontSize = useBreakpointValue({
-    base: 'xs',
-    md: 'sm',
   })
   const totalXPFontSize = useBreakpointValue({
     base: 'xl',
@@ -82,39 +93,82 @@ const XPAwardNoteMessage = ({
   }, [isMilestone, milestoneName, isLevelUp])
 
   const LevelUpAnimation = React.memo(() => (
-    <Center
+    <MotionFlex
       w="100%"
-      bg="rgba(66, 153, 225, 0.1)"
+      bg="rgba(66, 153, 225, 0.12)"
       borderRadius="lg"
-      p={2}
-      my={2}
-      boxShadow="0 0 10px rgba(66, 153, 225, 0.3)"
-      animation={`${fadeInAnimation} 0.5s ease-out`}
+      p={3}
+      my={3}
+      boxShadow="0 0 20px rgba(66, 153, 225, 0.3)"
+      initial={{ opacity: 0, y: 20 }}
+      animate={{ opacity: 1, y: 0 }}
+      transition={{ delay: 0.3, duration: 0.5, type: 'spring' }}
+      alignItems="center"
+      justifyContent="center"
     >
-      <Flex align="center" justify="center">
-        <Box textAlign="center">
-          <Text
+      <HStack spacing={2} align="center" width="100%" justify="center">
+        <MotionBox
+          textAlign="center"
+          initial={{ scale: 0.8, opacity: 0 }}
+          animate={{ scale: 1, opacity: 1 }}
+          transition={{ delay: 0.5, duration: 0.3 }}
+        >
+          <MotionText
             fontSize={useBreakpointValue({ base: 'xl', md: '2xl', lg: '3xl' })}
             fontWeight="bold"
             color="yellow.400"
             textShadow="0 0 10px rgba(255,255,255,0.3)"
           >
             {user.level - 1}
-          </Text>
-        </Box>
-        <Icon as={ArrowRightIcon} w={6} h={6} color="blue.300" mx={2} />
-        <Box textAlign="center">
-          <Text
+          </MotionText>
+        </MotionBox>
+
+        <MotionBox
+          initial={{ scale: 0.5, opacity: 0 }}
+          animate={{
+            scale: 1,
+            opacity: 1,
+            transition: {
+              delay: 0.6,
+              duration: 0.5,
+              type: 'spring',
+              stiffness: 150,
+            },
+          }}
+        >
+          <ArrowForwardIcon
+            w={6}
+            h={6}
+            color="blue.300"
+            mx={2}
+            animation={`${pulseAnimation} 2s infinite ease-in-out`}
+          />
+        </MotionBox>
+
+        <MotionBox
+          textAlign="center"
+          initial={{ scale: 0.8, opacity: 0 }}
+          animate={{
+            scale: [1, 1.3, 1],
+            opacity: 1,
+          }}
+          transition={{
+            delay: 0.7,
+            duration: 0.7,
+            times: [0, 0.6, 1],
+          }}
+        >
+          <MotionText
             fontSize={useBreakpointValue({ base: '2xl', md: '3xl', lg: '4xl' })}
             fontWeight="extrabold"
             color="yellow.400"
             textShadow="0 0 15px rgba(255,255,255,0.5)"
           >
             {user.level}
-          </Text>
-        </Box>
-      </Flex>
-    </Center>
+          </MotionText>
+        </MotionBox>
+      </HStack>
+    </MotionFlex>
   ))
 
   const customContent = useMemo(
@@ -126,13 +180,20 @@ const XPAwardNoteMessage = ({
               width={window.innerWidth}
               height={window.innerHeight}
               recycle={false}
-              numberOfPieces={isLevelUp ? 200 : 100}
-              gravity={0.2}
+              numberOfPieces={isLevelUp ? 250 : 120}
+              gravity={0.15}
+              colors={['#F6E05E', '#4299E1', '#9F7AEA', '#48BB78', '#ED64A6']}
+              confettiSource={{
+                x: window.innerWidth / 2,
+                y: window.innerHeight / 3,
+                w: 0,
+                h: 0,
+              }}
             />
           </Suspense>
         )}
         <Suspense fallback={null}>
-          <Box
+          <MotionBox
             bg={
               isLevelUp
                 ? 'blue.500'
@@ -141,56 +202,77 @@ const XPAwardNoteMessage = ({
                 : 'yellow.400'
             }
             borderRadius="full"
-            p={2}
-            mb={3}
+            p={3}
+            mb={4}
             boxShadow={
               isLevelUp
                 ? `0 0 30px rgba(66, 153, 225, 0.8)`
                 : isMilestone || milestoneName
-                ? '0 0 20px rgba(255, 255, 0, 0.5)'
-                : '0 0 15px rgba(255, 255, 0, 0.3)'
+                ? '0 0 20px rgba(255, 215, 0, 0.6)'
+                : '0 0 15px rgba(255, 215, 0, 0.4)'
             }
             animation={isLevelUp ? `${glowAnimation} 2s infinite` : 'none'}
+            initial={{ scale: 0.5, opacity: 0 }}
+            animate={{
+              scale: 1,
+              opacity: 1,
+              rotate: [0, 15, 0, -15, 0],
+            }}
+            transition={{
+              duration: 0.8,
+              times: [0, 0.25, 0.5, 0.75, 1],
+              type: 'spring',
+              stiffness: 200,
+            }}
           >
             <TrophySVG height={iconSize} width={iconSize} />
-          </Box>
+          </MotionBox>
         </Suspense>
         <VStack spacing={1} align="center" w="100%">
-          <Text
+          <MotionText
             fontSize={fontSize}
             fontWeight="bold"
-            color={isLevelUp ? 'blue.300' : 'gray.300'}
+            color={isLevelUp ? 'blue.300' : 'purple.300'}
             textTransform="uppercase"
             letterSpacing="wide"
+            initial={{ opacity: 0, y: -10 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.2, duration: 0.3 }}
           >
             {isLevelUp
               ? t('epicLevelUp')
               : isMilestone || milestoneName
               ? t('milestoneAchieved')
               : t('xpSourceCompleted', { xpSource })}
-          </Text>
-          <Text
+          </MotionText>
+
+          <MotionText
             fontSize={titleFontSize}
             fontWeight="extrabold"
             color="white"
             textAlign="center"
             textShadow="0 0 10px rgba(255,255,255,0.5)"
+            initial={{ opacity: 0, scale: 0.9 }}
+            animate={{ opacity: 1, scale: 1 }}
+            transition={{ delay: 0.3, duration: 0.3 }}
           >
             {isLevelUp ? t('levelUpTitle') : title}
-          </Text>
+          </MotionText>
+
           {isLevelUp && <LevelUpAnimation />}
-          <Box
-            mt={2}
+
+          <MotionBox
+            mt={3}
             bg={
               isLevelUp
-                ? 'blue.500'
+                ? 'rgba(66, 153, 225, 0.8)'
                 : isMilestone && !milestoneName
-                ? 'orange.500'
-                : 'green.500'
+                ? 'rgba(237, 137, 54, 0.8)'
+                : 'rgba(72, 187, 120, 0.8)'
             }
-            px={4}
-            py={1}
-            borderRadius="full"
+            px={5}
+            py={2}
+            borderRadius="xl"
             boxShadow={
               isLevelUp
                 ? '0 0 15px rgba(66, 153, 225, 0.7)'
@@ -198,74 +280,146 @@ const XPAwardNoteMessage = ({
                 ? '0 0 10px rgba(237, 137, 54, 0.5)'
                 : '0 0 10px rgba(72, 187, 120, 0.5)'
             }
+            initial={{ opacity: 0, y: 10 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.4, duration: 0.3 }}
+            whileHover={{
+              y: -2,
+              boxShadow: isLevelUp
+                ? '0 0 20px rgba(66, 153, 225, 0.9)'
+                : isMilestone && !milestoneName
+                ? '0 0 15px rgba(237, 137, 54, 0.7)'
+                : '0 0 15px rgba(72, 187, 120, 0.7)',
+            }}
           >
-            <Text fontSize={xpAwardedFontSize} fontWeight="bold" color="white">
+            <MotionText
+              fontSize={xpAwardedFontSize}
+              fontWeight="bold"
+              color="white"
+              display="flex"
+              alignItems="center"
+              justifyContent="center"
+            >
+              <StarIcon mr={2} />
               {t('xpAwarded', { xpAwarded })}
-            </Text>
-          </Box>
+            </MotionText>
+          </MotionBox>
+
           {milestoneInfo && (
-            <>
-              <Divider my={2} />
-              <Text
+            <MotionBox
+              width="100%"
+              initial={{ opacity: 0, y: 10 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: 0.5, duration: 0.3 }}
+            >
+              <Divider my={3} borderColor="whiteAlpha.300" />
+              <MotionText
                 fontSize={fontSize}
                 fontWeight="semibold"
                 color="purple.300"
+                textAlign="center"
               >
                 {t('milestoneBonus', { milestoneName: milestoneInfo.name })}
-              </Text>
-              <Text
-                fontSize={milestoneDescriptionFontSize}
-                color="gray.400"
+              </MotionText>
+              <MotionText
+                fontSize="0.9rem"
+                color="whiteAlpha.800"
                 textAlign="center"
+                mt={1}
               >
                 {milestoneInfo.description}
-              </Text>
-              <Box
-                mt={2}
-                bg="purple.500"
-                px={3}
-                py={1}
-                borderRadius="full"
-                boxShadow="0 0 15px rgba(128, 90, 213, 0.7)"
-              >
-                <Text
-                  fontSize={xpAwardedFontSize}
-                  fontWeight="bold"
+              </MotionText>
+              <Center mt={3}>
+                <Tag
+                  size="lg"
+                  bg="purple.500"
                   color="white"
+                  borderRadius="full"
+                  px={4}
+                  py={2}
+                  fontWeight="bold"
+                  boxShadow="0 0 10px rgba(128, 90, 213, 0.5)"
                 >
+                  <StarIcon mr={2} />
                   {t('milestoneXP', { xp: milestoneInfo.xpReward })}
-                </Text>
-              </Box>
-            </>
+                </Tag>
+              </Center>
+            </MotionBox>
           )}
+
           {isMilestone && !milestoneName && milestoneContent && (
-            <>
-              <Divider my={2} />
-              <Text fontSize={fontSize} fontWeight="semibold" color="blue.300">
-                {t('milestoneContent')}
-              </Text>
-              <Text
-                fontSize={milestoneDescriptionFontSize}
-                color="gray.400"
+            <MotionBox
+              width="100%"
+              initial={{ opacity: 0, y: 10 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: 0.5, duration: 0.3 }}
+            >
+              <Divider my={3} borderColor="whiteAlpha.300" />
+              <MotionText
+                fontSize={fontSize}
+                fontWeight="semibold"
+                color="blue.300"
                 textAlign="center"
               >
+                {t('milestoneContent')}
+              </MotionText>
+              <MotionText
+                fontSize="0.9rem"
+                color="whiteAlpha.800"
+                textAlign="center"
+                mt={1}
+                px={2}
+              >
                 {milestoneContent}
-              </Text>
-            </>
+              </MotionText>
+            </MotionBox>
           )}
+
           {(isMilestone && milestoneName) || isLevelUp ? (
-            <Box
-              mt={3}
-              bg="blue.600"
-              px={5}
-              py={2}
-              borderRadius="full"
-              boxShadow="0 0 20px rgba(66, 153, 225, 0.8)"
+            <MotionFlex
+              mt={4}
+              bg={
+                isLevelUp
+                  ? 'rgba(49, 130, 206, 0.8)'
+                  : 'rgba(128, 90, 213, 0.8)'
+              }
+              px={6}
+              py={3}
+              borderRadius="xl"
+              boxShadow={
+                isLevelUp
+                  ? '0 0 20px rgba(66, 153, 225, 0.8)'
+                  : '0 0 20px rgba(128, 90, 213, 0.7)'
+              }
+              alignItems="center"
+              justifyContent="center"
+              initial={{ opacity: 0, scale: 0.8 }}
+              animate={{
+                opacity: 1,
+                scale: 1,
+                transition: {
+                  delay: 0.6,
+                  duration: 0.5,
+                  type: 'spring',
+                  stiffness: 120,
+                },
+              }}
+              whileHover={{
+                scale: 1.05,
+                boxShadow: isLevelUp
+                  ? '0 0 25px rgba(66, 153, 225, 0.9)'
+                  : '0 0 25px rgba(128, 90, 213, 0.8)',
+              }}
             >
-              <Text fontSize={totalXPFontSize} fontWeight="black" color="white">
+              <MotionText
+                fontSize={totalXPFontSize}
+                fontWeight="black"
+                color="white"
+                textShadow="0 1px 3px rgba(0,0,0,0.3)"
+              >
                 {t('totalXP', { xp: totalXp })}
-              </Text>
-            </Box>
+              </MotionText>
+            </MotionFlex>
           ) : null}
         </VStack>
       </Flex>
@@ -287,7 +441,6 @@ const XPAwardNoteMessage = ({
       iconSize,
       titleFontSize,
       xpAwardedFontSize,
-      milestoneDescriptionFontSize,
       totalXPFontSize,
     ],
   )

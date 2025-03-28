@@ -17,6 +17,18 @@
       "revival": "Revival",
       "revived": "Revived",
       "active": "Active"
+    },
+    "streakEnded": "Streak of {{count}} days ended",
+    "streakRevived": "Your streak has been successfully revived!",
+    "streak": "Streak: {{count}} days",
+    "timeToRevive": "Time left: {{formattedTime}}",
+    "streakRestartTip": "Complete a quiz today to start a new streak",
+    "streakRevivedMessage": "Your streak has been successfully revived!",
+    "statusBadge": {
+      "broken": "Broken",
+      "revival": "Revival",
+      "revived": "Revived",
+      "active": "Active"
     }
   },
   "quiz": "quiz",
