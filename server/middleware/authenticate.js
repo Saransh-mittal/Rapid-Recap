@@ -8,7 +8,10 @@ const Authenticate = async (req, res, next) => {
     const token = req.cookies.access_token
 
     if (!token) {
-      return res.status(401).json({ message: 'Access token required' })
+      return res.status(401).json({
+        message: 'Access token required',
+        tokenExpired: true,
+      })
     }
 
     jwt.verify(token, process.env.ACCESS_TOKEN_SECRET, (err, decoded) => {
