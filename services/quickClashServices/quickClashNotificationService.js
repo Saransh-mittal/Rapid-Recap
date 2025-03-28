@@ -473,65 +473,6 @@ const notifyAnalysisReady = async ({ challenge, forOpponent = false }) => {
   }
 }
 
-/**
- * Send a time-sensitive reminder about an active challenge
- * @param {Object} params - Parameters
- * @param {Object} params.challenge - The challenge document
- * @param {string} params.playerId - ID of the player to notify
- * @param {number} params.hoursRemaining - Hours remaining before expiry
- */
-const sendTimeRemainingNotification = async ({
-  challenge,
-  playerId,
-  hoursRemaining,
-}) => {
-  try {
-    const user = await User.findById(playerId)
-    if (!user) {
-      throw new Error(`User not found: ${playerId}`)
-    }
-
-    // Get opponent information
-    const isChallenger = playerId === challenge.challenger.toString()
-    const opponentId = isChallenger ? challenge.opponent : challenge.challenger
-    const opponent = await User.findById(opponentId).select('name inGameName')
-
-    // Create application update
-    const appUpdate = new ApplicationUpdates({
-      title: 'Quick Clash Time Running Out!',
-      mainText: `You have ${hoursRemaining} hours left to complete your Quick Clash with ${
-        opponent.inGameName || opponent.name
-      }!`,
-      userId: playerId,
-      type: 'applicationUpdate',
-    })
-
-    await appUpdate.save()
-
-    // Send push notification
-    await sendNotification({
-      title: 'Quick Clash Time Running Out!',
-      body: `Only ${hoursRemaining} hours left to complete your challenge with ${
-        opponent.inGameName || opponent.name
-      }!`,
-      url: '/quickclash',
-      userId: playerId,
-      messageId: appUpdate._id.toString(),
-      type: 'quickClash',
-      importance: hoursRemaining <= 6 ? 'important' : 'normal', // More urgent as time decreases
-    })
-
-    // Emit event for socket notification
-    globalEmitter.emit('quickClash:timeRemaining', {
-      challengeId: challenge._id,
-      playerId,
-      hoursRemaining,
-    })
-  } catch (error) {
-    console.error('Error sending time remaining notification:', error)
-  }
-}
-
 module.exports = {
   notifyChallengeCreated,
   notifyChallengeAccepted,
@@ -539,5 +480,4 @@ module.exports = {
   notifyChallengeCompleted,
   notifyAnalysisReady,
   notifyChallengerAboutCreation,
-  sendTimeRemainingNotification,
 }

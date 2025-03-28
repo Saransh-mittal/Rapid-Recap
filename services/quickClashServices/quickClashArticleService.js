@@ -210,7 +210,7 @@ const getSourceArticle = async ({ category, session }) => {
     console.log(`Getting article for regular category: ${category}`)
     query = {
       category,
-      dateTime: { $gte: sevenDaysAgo.toISOString() },
+      // dateTime: { $gte: sevenDaysAgo.toISOString() },
     }
   }
 
