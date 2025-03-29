@@ -70,6 +70,7 @@ const QuickClashSession = () => {
   const [stopTimerOnQuizSubmit, setStopTimerOnQuizSubmit] = useState(false)
   const [score, setScore] = useState(0)
   const [phaseProgress, setPhaseProgress] = useState(0)
+  const [completeReadingLoading, setCompleteReadingLoading] = useState(false)
 
   // New state to track if quiz content is ready
   const [quizContentReady, setQuizContentReady] = useState(false)
@@ -200,6 +201,7 @@ const QuickClashSession = () => {
 
   // Handle reading phase completion
   const handleReadingComplete = async () => {
+    setCompleteReadingLoading(true)
     try {
       await axios.post(
         `/api/quickClash/session/${session._id}/reading/complete`,
@@ -217,6 +219,8 @@ const QuickClashSession = () => {
         duration: 3000,
         isClosable: true,
       })
+    } finally {
+      setCompleteReadingLoading(false)
     }
   }
 
@@ -424,6 +428,7 @@ const QuickClashSession = () => {
                 article={article}
                 timeLeft={timeLeft}
                 onComplete={handleReadingComplete}
+                completeReadingLoading={completeReadingLoading}
               />
             </Suspense>
           )}

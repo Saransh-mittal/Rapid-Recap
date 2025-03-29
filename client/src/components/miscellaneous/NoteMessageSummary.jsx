@@ -84,7 +84,7 @@ const NoteMessageSummary = ({ messages, onClose }) => {
         <MotionBox
           position="fixed"
           top="20px"
-          right="20px"
+          right="5px"
           width="350px"
           variants={containerVariants}
           initial="hidden"

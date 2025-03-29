@@ -63,6 +63,7 @@ const ChallengeItem = ({
   onStart,
   onViewReport,
   onRevenge,
+  revengeLoading,
   index,
 }) => {
   const { t } = useTranslation('QuickClash')
@@ -400,6 +401,7 @@ const ChallengeItem = ({
               category={challenge.category}
               onRevenge={isDefeat ? () => onRevenge(opponent, challenge) : null}
               revengeStatus={challenge.revengeStatus}
+              revengeLoading={revengeLoading}
             />
           )}
       </Box>

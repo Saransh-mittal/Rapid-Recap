@@ -31,6 +31,7 @@ const StatusSection = ({
   userId,
   handlers,
   animationDelay = 0,
+  revengeLoading,
 }) => {
   const { t } = useTranslation('QuickClash')
 
@@ -97,6 +98,7 @@ const StatusSection = ({
                       onViewReport={onViewReport}
                       onRevenge={onRevenge}
                       index={index}
+                      revengeLoading={revengeLoading}
                     />
                   </GridItem>
                 ))}
@@ -139,6 +141,7 @@ const StatusSection = ({
                   onViewReport={onViewReport}
                   onRevenge={onRevenge}
                   index={index}
+                  revengeLoading={revengeLoading}
                 />
               )}
             </GridItem>

@@ -584,6 +584,7 @@ const ActiveChallenges = () => {
                   userId={userId}
                   handlers={handlers}
                   animationDelay={idx * 0.1}
+                  revengeLoading={revengeLoading}
                 />
               ))}
 
@@ -627,6 +628,7 @@ const ActiveChallenges = () => {
                         onRevenge: handleRevenge,
                       }}
                       isLoading={false}
+                      revengeLoading={revengeLoading}
                     />
                   </Suspense>
                 </MotionBox>

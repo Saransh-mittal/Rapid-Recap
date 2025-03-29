@@ -40,7 +40,7 @@ const RevengeConfirmationDialog = ({
     <AlertDialog
       isOpen={isOpen}
       leastDestructiveRef={cancelRef}
-      onClose={isLoading ? undefined : onClose} // Prevent closing during loading
+      onClose={onClose} // Prevent closing during loading
       motionPreset="slideInBottom"
       isCentered
       closeOnOverlayClick={!isLoading} // Prevent closing by clicking outside when loading
@@ -152,17 +152,15 @@ const RevengeConfirmationDialog = ({
 
           <AlertDialogFooter>
             <HStack spacing={3}>
-              {!isLoading && (
-                <Button
-                  ref={cancelRef}
-                  onClick={onClose}
-                  variant="ghost"
-                  color="whiteAlpha.700"
-                  _hover={{ bg: 'whiteAlpha.100', color: 'white' }}
-                >
-                  Cancel
-                </Button>
-              )}
+              <Button
+                ref={cancelRef}
+                onClick={onClose}
+                variant="ghost"
+                color="whiteAlpha.700"
+                _hover={{ bg: 'whiteAlpha.100', color: 'white' }}
+              >
+                {isLoading ? 'Close' : 'Cancel'}
+              </Button>
 
               {isLoading ? (
                 <Button

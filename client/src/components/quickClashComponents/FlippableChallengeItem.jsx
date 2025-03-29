@@ -65,6 +65,7 @@ const FlippableChallengeItem = ({
   onStart,
   onViewReport,
   onRevenge,
+  revengeLoading,
   index,
 }) => {
   const { t } = useTranslation('QuickClash')
@@ -594,6 +595,7 @@ const FlippableChallengeItem = ({
               category={challenge.category}
               onRevenge={isDefeat ? handleRevenge : null}
               revengeStatus={challenge.revengeStatus}
+              revengeLoading={revengeLoading}
             />
           )}
       </MotionBox>

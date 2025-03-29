@@ -157,7 +157,13 @@ const getButtonStyles = (timeLeft, hasScrolledToBottom) => {
   }
 }
 
-const ReadingPhase = ({ article, timeLeft, onComplete, category }) => {
+const ReadingPhase = ({
+  article,
+  timeLeft,
+  onComplete,
+  category,
+  completeReadingLoading,
+}) => {
   const { t } = useTranslation('QuickClash')
   const articleRef = useRef(null)
   const contentRef = useRef(null)
@@ -613,6 +619,8 @@ const ReadingPhase = ({ article, timeLeft, onComplete, category }) => {
                     )
                   }
                   onClick={onComplete}
+                  isLoading={completeReadingLoading}
+                  loadingText={t('Completing...')}
                   initial={{ scale: 1 }}
                   whileHover={{ scale: 1.05, y: -2 }}
                   whileTap={{ scale: 0.95 }}

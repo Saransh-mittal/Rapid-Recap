@@ -28,6 +28,7 @@ const CompletedChallengesView = ({
   challenges,
   userId,
   handlers,
+  revengeLoading,
   isLoading = false,
 }) => {
   const { t } = useTranslation('QuickClash')
@@ -100,6 +101,7 @@ const CompletedChallengesView = ({
                     userId={userId}
                     onViewReport={onViewReport}
                     onRevenge={onRevenge}
+                    revengeLoading={revengeLoading}
                     index={index}
                   />
                 </GridItem>

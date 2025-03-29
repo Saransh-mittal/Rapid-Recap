@@ -26,6 +26,7 @@ const ResultBanner = ({
   category,
   onRevenge,
   revengeStatus,
+  revengeLoading,
 }) => {
   const { t } = useTranslation('QuickClash')
   const isExpired = new Date(expiresAt) < new Date()
@@ -137,6 +138,7 @@ const ResultBanner = ({
             py={1}
             height={{ base: '28px', md: '32px' }}
             minW="auto"
+            isLoading={revengeLoading}
             fontWeight="bold"
             fontSize={{ base: 'xs', md: 'sm' }}
             boxShadow="0 0 10px rgba(229, 62, 62, 0.4)"

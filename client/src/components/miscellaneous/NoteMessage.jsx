@@ -154,7 +154,7 @@ const NoteMessage = ({
         <MotionBox
           position="fixed"
           top="20px"
-          right="20px"
+          right="5px"
           width={width}
           initial="hidden"
           animate="visible"

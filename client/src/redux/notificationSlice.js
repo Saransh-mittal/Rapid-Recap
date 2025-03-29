@@ -1,6 +1,6 @@
 // src/redux/notificationSlice.js
 import { createSlice, createAsyncThunk } from '@reduxjs/toolkit'
-
+import axios from 'axios'
 import {
   isSupported as notifSupported,
   sendSubscriptionToBackend,
@@ -44,19 +44,9 @@ export const isSubscribedChecker = createAsyncThunk(
         return { isSubscribed: false }
       }
 
-      const response = await fetch('/api/subs/check', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify(subscription),
-      })
+      const response = await axios.post('/api/subs/check', subscription)
 
-      if (!response.ok) {
-        throw new Error('Failed to check subscription')
-      }
-
-      const data = await response.json()
+      const data = response.data
 
       if (data.isSubscribed) {
         return { isSubscribed: true }
