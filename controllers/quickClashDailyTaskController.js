@@ -120,6 +120,7 @@ const claimTaskRewardController = asyncHandler(async (req, res) => {
       message: 'Reward claimed successfully',
       reward: result.reward,
       newTotals: result.newTotals,
+      levelInfo: result.levelInfo,
     })
   } catch (error) {
     console.error('Error claiming task reward:', error)

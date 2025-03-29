@@ -301,8 +301,34 @@ const claimTaskReward = async ({ taskId, userId }) => {
         throw new Error('User not found')
       }
 
+      // Store original level for comparison
+      const originalLevel = user.level || 0
+
       // Add XP to user
-      user.xp = (user.xp || 0) + task.reward.xp
+      const xpAwarded = task.reward.xp
+      user.xp = (user.xp || 0) + xpAwarded
+
+      // Calculate new level based on total XP
+      let level = originalLevel
+      const xpBaseAtCurrLevel = (level * (level + 1) * 10) / 2
+      let totalXp = user.xp
+      let leftXp = totalXp - xpBaseAtCurrLevel
+
+      while (leftXp >= (level + 1) * 10) {
+        level++
+        leftXp -= level * 10
+      }
+
+      // Calculate XP needed for next level
+      const xpForNextLevel = (level + 1) * 10
+      const xpProgress = leftXp
+      const xpProgressPercentage = Math.floor(
+        (xpProgress / xpForNextLevel) * 100,
+      )
+
+      // Update user level
+      user.level = level
+      const levelUp = level > originalLevel
 
       await user.save({ session })
 
@@ -311,6 +337,14 @@ const claimTaskReward = async ({ taskId, userId }) => {
         reward: task.reward,
         newTotals: {
           xp: user.xp,
+        },
+        levelInfo: {
+          currentLevel: level,
+          previousLevel: originalLevel,
+          levelUp,
+          xpProgress,
+          xpForNextLevel,
+          xpProgressPercentage,
         },
       }
     })
