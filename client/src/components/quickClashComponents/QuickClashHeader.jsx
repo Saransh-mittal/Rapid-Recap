@@ -18,6 +18,8 @@ import { Target } from 'lucide-react'
 import { useTranslation } from 'react-i18next'
 import { useNavigate } from 'react-router-dom'
 import QuickClashLeaderboardButton from './leaderboard/QuickClashLeaderboardButton'
+import LevelBadge from './user/LevelBadge'
+import TaskProgressIndicator from './dailyTasks/TaskProgressIndicator'
 
 const MotionBox = motion(Box)
 const MotionButton = motion(Button)
@@ -109,13 +111,15 @@ const QuickClashHeader = ({ onNewChallenge }) => {
       animate="animate"
       position="relative"
     >
-      {/* Fixed position home button for mobile - always visible */}
-      <MotionBox
+      {/* Mobile Header: Fixed Home Button + Level Badge */}
+      <MotionFlex
         position="fixed"
         top="16px"
         left="16px"
+        right="16px"
         zIndex={100}
-        display={{ base: 'block', md: 'none' }}
+        display={{ base: 'flex', md: 'none' }}
+        justifyContent="space-between"
         variants={itemVariants}
       >
         <Tooltip label={t('Back to Home')}>
@@ -141,9 +145,12 @@ const QuickClashHeader = ({ onNewChallenge }) => {
             whileTap="tap"
           />
         </Tooltip>
-      </MotionBox>
 
-      {/* Desktop home button */}
+        {/* Mobile Level Badge */}
+        <LevelBadge />
+      </MotionFlex>
+
+      {/* Desktop Header - includes Home Button, Level Badge & Task Progress */}
       <MotionFlex
         justify="space-between"
         align="center"
@@ -173,6 +180,14 @@ const QuickClashHeader = ({ onNewChallenge }) => {
         >
           {t('Home')}
         </MotionButton>
+
+        <HStack spacing={3}>
+          {/* Desktop Level Badge */}
+          <LevelBadge />
+
+          {/* Daily Task Indicator */}
+          <TaskProgressIndicator size="sm" />
+        </HStack>
       </MotionFlex>
 
       {/* Main Header Content */}
@@ -248,6 +263,11 @@ const QuickClashHeader = ({ onNewChallenge }) => {
 
           {/* Leaderboard button */}
           <QuickClashLeaderboardButton showMobileVersion={isDesktop} />
+
+          {/* Mobile Daily Task Progress */}
+          <Box display={{ base: 'block', md: 'none' }}>
+            <TaskProgressIndicator size="sm" />
+          </Box>
         </HStack>
       </Flex>
     </MotionBox>

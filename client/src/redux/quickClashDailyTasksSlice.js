@@ -1,6 +1,8 @@
 // redux/quickClashDailyTasksSlice.js
 import { createSlice, createAsyncThunk } from '@reduxjs/toolkit'
 import axios from 'axios'
+import { setUser } from './authSlice'
+import { store } from './store'
 
 // Async thunks for fetching and updating tasks
 export const fetchDailyTasks = createAsyncThunk(
@@ -50,15 +52,28 @@ export const updateTaskProgress = createAsyncThunk(
 
 export const claimTaskReward = createAsyncThunk(
   'quickClashDailyTasks/claimReward',
-  async (taskId, { rejectWithValue }) => {
+  async (taskId, { rejectWithValue, dispatch }) => {
     try {
       const response = await axios.post(
         `/api/quickClash/dailyTasks/${taskId}/claim`,
       )
+
+      // Update user XP and level in the auth state
+      if (response.data.levelInfo) {
+        dispatch(
+          setUser({
+            ...store.getState().auth.user,
+            xp: response.data.newTotals.xp,
+            level: response.data.levelInfo.currentLevel,
+          }),
+        )
+      }
+
       return {
         taskId,
         reward: response.data.reward,
         newTotals: response.data.newTotals,
+        levelInfo: response.data.levelInfo,
       }
     } catch (error) {
       return rejectWithValue(
@@ -92,6 +107,8 @@ const initialState = {
 
   // Track claimed reward animation
   lastClaimedReward: null,
+  lastClaimedReward: null,
+  lastLevelInfo: null,
 
   // Statistics
   statistics: {
@@ -177,7 +194,7 @@ const quickClashDailyTasksSlice = createSlice({
         state.tasksError = null
       })
       .addCase(claimTaskReward.fulfilled, (state, action) => {
-        const { taskId, reward } = action.payload
+        const { taskId, reward, levelInfo } = action.payload
 
         // Find and update the task in the state
         const index = state.tasks.findIndex(t => t._id === taskId)
@@ -190,6 +207,9 @@ const quickClashDailyTasksSlice = createSlice({
           taskId,
           ...reward,
         }
+
+        // Store level info for animation
+        state.lastLevelInfo = levelInfo
       })
       .addCase(claimTaskReward.rejected, (state, action) => {
         state.tasksError = action.payload

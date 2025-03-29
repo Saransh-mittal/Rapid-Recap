@@ -10,7 +10,25 @@
   margin: 0;
   padding: 0;
   box-sizing: border-box;
+  -webkit-tap-highlight-color: transparent;
+  tap-highlight-color: transparent;
 }
+button,
+a,
+[role="button"],
+.chakra-popover__trigger,
+.chakra-popover__popper {
+  -webkit-tap-highlight-color: transparent !important;
+  tap-highlight-color: transparent !important;
+  outline: none !important;
+}
+
+/* Fix for Chakra UI specific elements */
+.chakra-popover__trigger:focus {
+  box-shadow: none !important;
+  outline: none !important;
+}
+*/
 body, html {
   margin: 0;
   padding: 0;

@@ -68,6 +68,7 @@ const TaskCard = ({ task, isJustCompleted = false, onClick }) => {
   const [showRewardAnimation, setShowRewardAnimation] = useState(false)
   const [rewardAmount, setRewardAmount] = useState({ xp: 0 })
   const [isHovered, setIsHovered] = useState(false)
+  const [levelInfo, setLevelInfo] = useState(null)
 
   // Calculate progress percentage
   const progressPercentage = Math.min(
@@ -107,6 +108,9 @@ const TaskCard = ({ task, isJustCompleted = false, onClick }) => {
 
         // Show reward animation
         setRewardAmount(result.reward)
+
+        // Pass level info to reward animation
+        setLevelInfo(result.levelInfo)
         setShowRewardAnimation(true)
 
         toast({
@@ -132,7 +136,6 @@ const TaskCard = ({ task, isJustCompleted = false, onClick }) => {
     },
     [task, canClaimReward, claimLoading, dispatch, toast, t],
   )
-
   // Handle animation completion
   const handleRewardAnimationComplete = useCallback(() => {
     setShowRewardAnimation(false)
@@ -491,6 +494,7 @@ const TaskCard = ({ task, isJustCompleted = false, onClick }) => {
         <Portal>
           <RewardAnimation
             xp={rewardAmount.xp}
+            levelInfo={levelInfo}
             onComplete={handleRewardAnimationComplete}
           />
         </Portal>

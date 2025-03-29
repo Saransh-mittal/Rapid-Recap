@@ -1,19 +1,31 @@
 // components/quickClashComponents/dailyTasks/RewardAnimation.jsx
 import React, { useEffect, useRef } from 'react'
-import { Box, Text, HStack, Center, Flex, Icon } from '@chakra-ui/react'
+import {
+  Box,
+  Text,
+  HStack,
+  Center,
+  Flex,
+  Icon,
+  VStack,
+  Button,
+} from '@chakra-ui/react'
 import { motion, useAnimation, AnimatePresence } from 'framer-motion'
-import { Award, Star, Trophy, Sparkles, Zap } from 'lucide-react'
+import { Award, Star, Trophy, Sparkles, Zap, ChevronUp } from 'lucide-react'
 import confetti from 'canvas-confetti'
 import { useTranslation } from 'react-i18next'
+import LevelProgressBar from './LevelProgressBar'
 
 const MotionBox = motion(Box)
 const MotionText = motion(Text)
 const MotionIcon = motion(Icon)
+const MotionButton = motion(Button)
 
-const RewardAnimation = ({ xp, onComplete }) => {
+const RewardAnimation = ({ xp, onComplete, levelInfo = null }) => {
   const controls = useAnimation()
   const { t } = useTranslation('QuickClash')
   const particleRef = useRef([])
+  const levelUpOccurred = levelInfo?.levelUp
 
   // Generate random particles
   useEffect(() => {
@@ -30,7 +42,7 @@ const RewardAnimation = ({ xp, onComplete }) => {
   // Run the animation sequence
   useEffect(() => {
     const runAnimation = async () => {
-      // Trigger confetti
+      // Initial confetti
       confetti({
         particleCount: 150,
         spread: 80,
@@ -40,6 +52,21 @@ const RewardAnimation = ({ xp, onComplete }) => {
         scalar: 1.2,
         shapes: ['circle', 'square'],
       })
+
+      // Level up confetti burst with gold color
+      if (levelUpOccurred) {
+        // Gold confetti for level up
+        setTimeout(() => {
+          confetti({
+            particleCount: 200,
+            spread: 100,
+            origin: { y: 0.5, x: 0.5 },
+            colors: ['#F6E05E', '#FEFCBF', '#F6AD55', '#FEEBC8'],
+            gravity: 0.5,
+            scalar: 1.4,
+          })
+        }, 500)
+      }
 
       // After a short delay, fire another burst for more impact
       setTimeout(() => {
@@ -77,7 +104,7 @@ const RewardAnimation = ({ xp, onComplete }) => {
       })
 
       // Show for a longer duration before fading
-      await new Promise(resolve => setTimeout(resolve, 1500))
+      await new Promise(resolve => setTimeout(resolve, 3000))
 
       // Float and fade out
       await controls.start({
@@ -93,7 +120,7 @@ const RewardAnimation = ({ xp, onComplete }) => {
     }
 
     runAnimation()
-  }, [controls, onComplete])
+  }, [controls, onComplete, levelUpOccurred])
 
   return (
     <Box
@@ -174,6 +201,8 @@ const RewardAnimation = ({ xp, onComplete }) => {
         justify="center"
         zIndex={5}
         position="relative"
+        maxW="90%"
+        w={{ base: '100%', md: '480px' }}
       >
         {/* XP Animation */}
         <MotionBox
@@ -181,6 +210,7 @@ const RewardAnimation = ({ xp, onComplete }) => {
           animate={controls}
           mb={4}
           position="relative"
+          w="100%"
         >
           <Flex
             bg="rgba(26, 32, 44, 0.9)"
@@ -193,6 +223,7 @@ const RewardAnimation = ({ xp, onComplete }) => {
             align="center"
             position="relative"
             overflow="hidden"
+            w="100%"
           >
             {/* Background glow effect */}
             <Box
@@ -255,6 +286,31 @@ const RewardAnimation = ({ xp, onComplete }) => {
             >
               +{xp} XP
             </MotionText>
+
+            {/* Level progress section */}
+            {levelInfo && (
+              <MotionBox
+                mt={4}
+                w="100%"
+                initial={{ opacity: 0, height: 0 }}
+                animate={{
+                  opacity: 1,
+                  height: 'auto',
+                  transition: {
+                    opacity: { delay: 0.8, duration: 0.5 },
+                    height: { delay: 0.7, duration: 0.3 },
+                  },
+                }}
+              >
+                <LevelProgressBar
+                  level={levelInfo.currentLevel}
+                  xpProgress={levelInfo.xpProgress}
+                  xpForNextLevel={levelInfo.xpForNextLevel}
+                  levelUp={levelInfo.levelUp}
+                  animated={true}
+                />
+              </MotionBox>
+            )}
           </Flex>
 
           {/* Small decorative elements around the main box */}
@@ -294,6 +350,86 @@ const RewardAnimation = ({ xp, onComplete }) => {
             <Sparkles size={20} color="#63B3ED" />
           </MotionBox>
         </MotionBox>
+
+        {/* Level up message */}
+        <AnimatePresence>
+          {levelUpOccurred && (
+            <MotionBox
+              initial={{ opacity: 0, y: 20, scale: 0.9 }}
+              animate={{
+                opacity: 1,
+                y: 0,
+                scale: 1,
+                transition: {
+                  type: 'spring',
+                  stiffness: 400,
+                  damping: 10,
+                },
+              }}
+              exit={{ opacity: 0, y: -20 }}
+              mb={4}
+              bg="rgba(246, 224, 94, 0.2)"
+              borderRadius="xl"
+              p={4}
+              border="1px solid"
+              borderColor="yellow.400"
+              boxShadow="0 0 20px rgba(246, 224, 94, 0.4)"
+              maxW="80%"
+            >
+              <VStack spacing={1}>
+                <HStack spacing={2}>
+                  <MotionIcon
+                    as={ChevronUp}
+                    color="yellow.400"
+                    boxSize={5}
+                    animate={{
+                      y: [0, -4, 0],
+                      transition: {
+                        repeat: Infinity,
+                        repeatType: 'reverse',
+                        duration: 1,
+                      },
+                    }}
+                  />
+                  <MotionText
+                    fontWeight="bold"
+                    fontSize="xl"
+                    color="yellow.400"
+                    textShadow="0 0 5px rgba(246, 224, 94, 0.6)"
+                    animate={{
+                      scale: [1, 1.1, 1],
+                      transition: {
+                        repeat: 3,
+                        repeatType: 'reverse',
+                        duration: 0.7,
+                      },
+                    }}
+                  >
+                    {t('Level Up!')}
+                  </MotionText>
+                  <MotionIcon
+                    as={ChevronUp}
+                    color="yellow.400"
+                    boxSize={5}
+                    animate={{
+                      y: [0, -4, 0],
+                      transition: {
+                        repeat: Infinity,
+                        repeatType: 'reverse',
+                        duration: 1,
+                        delay: 0.5,
+                      },
+                    }}
+                  />
+                </HStack>
+                <Text color="white" textAlign="center">
+                  {t('You reached Level')}{' '}
+                  <strong>{levelInfo.currentLevel}</strong>
+                </Text>
+              </VStack>
+            </MotionBox>
+          )}
+        </AnimatePresence>
 
         {/* Congratulation Text */}
         <MotionBox
@@ -359,6 +495,21 @@ const RewardAnimation = ({ xp, onComplete }) => {
             {t('Keep up the great work!')}
           </Text>
         </MotionBox>
+
+        {/* Continue button */}
+        <MotionButton
+          mt={5}
+          colorScheme="purple"
+          variant="outline"
+          onClick={onComplete}
+          initial={{ opacity: 0, y: 10 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 2 }}
+          whileHover={{ scale: 1.05 }}
+          whileTap={{ scale: 0.95 }}
+        >
+          {t('Continue')}
+        </MotionButton>
       </Flex>
     </Box>
   )
