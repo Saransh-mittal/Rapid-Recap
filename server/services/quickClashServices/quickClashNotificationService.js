@@ -72,30 +72,6 @@ const notifyChallengerAboutCreation = async ({
   try {
     if (success) {
       // Create application update for successful creation
-      const appUpdate = new ApplicationUpdates({
-        title: 'Challenge Created Successfully',
-        mainText: `Your Quick Clash challenge to ${
-          opponent.inGameName || opponent.name
-        } in the ${challenge.category} category has been sent!`,
-        userId: challenger._id,
-        type: 'applicationUpdate',
-      })
-
-      await appUpdate.save()
-
-      // Send push notification
-      await sendNotification({
-        title: 'Challenge Created!',
-        body: `Your Quick Clash challenge to ${
-          opponent.inGameName || opponent.name
-        } has been sent.`,
-        url: '/quickclash',
-        userId: challenger._id,
-        messageId: appUpdate._id.toString(),
-        type: 'quickClash',
-        importance: 'normal',
-      })
-
       // Emit event for socket notification to challenger
       globalEmitter.emit('quickClash:challengerNotified', {
         challenge,
@@ -473,6 +449,80 @@ const notifyAnalysisReady = async ({ challenge, forOpponent = false }) => {
   }
 }
 
+/**
+ * Send notifications to both players when a match is found through matchmaking
+ * @param {Object} params - Parameters
+ * @param {Object} params.challenge - The challenge document with basic info
+ * @param {Object} params.challenger - The user who was matched as challenger
+ * @param {Object} params.opponent - The user who was matched as opponent
+ */
+const notifyMatchmakingSuccess = async ({
+  challenge,
+  challenger,
+  opponent,
+}) => {
+  try {
+    // Create application update for the challenger
+    const challengerUpdate = new ApplicationUpdates({
+      title: 'Match Found!',
+      mainText: `You've been matched with ${
+        opponent.inGameName || opponent.name
+      } for a Quick Clash battle in the ${challenge.category} category!`,
+      userId: challenger._id,
+      type: 'applicationUpdate',
+    })
+
+    // Create application update for the opponent
+    const opponentUpdate = new ApplicationUpdates({
+      title: 'Match Found!',
+      mainText: `You've been matched with ${
+        challenger.inGameName || challenger.name
+      } for a Quick Clash battle in the ${challenge.category} category!`,
+      userId: opponent._id,
+      type: 'applicationUpdate',
+    })
+
+    // Save both updates
+    await Promise.all([challengerUpdate.save(), opponentUpdate.save()])
+
+    // Send push notifications to both players
+    await Promise.all([
+      sendNotification({
+        title: 'Quick Clash Match Found!',
+        body: `You've been matched with ${
+          opponent.inGameName || opponent.name
+        }. Challenge is ready to play!`,
+        url: '/quickclash',
+        userId: challenger._id,
+        messageId: challengerUpdate._id.toString(),
+        type: 'quickClash',
+        importance: 'important',
+      }),
+      sendNotification({
+        title: 'Quick Clash Match Found!',
+        body: `You've been matched with ${
+          challenger.inGameName || challenger.name
+        }. Challenge is ready to play!`,
+        url: '/quickclash',
+        userId: opponent._id,
+        messageId: opponentUpdate._id.toString(),
+        type: 'quickClash',
+        importance: 'important',
+      }),
+    ])
+
+    // Emit event for socket notifications
+    globalEmitter.emit('quickClash:matchFound', {
+      challengeId: challenge._id,
+      category: challenge.category,
+      challenger,
+      opponent,
+    })
+  } catch (error) {
+    console.error('Error sending matchmaking success notifications:', error)
+  }
+}
+
 module.exports = {
   notifyChallengeCreated,
   notifyChallengeAccepted,
@@ -480,4 +530,5 @@ module.exports = {
   notifyChallengeCompleted,
   notifyAnalysisReady,
   notifyChallengerAboutCreation,
+  notifyMatchmakingSuccess,
 }

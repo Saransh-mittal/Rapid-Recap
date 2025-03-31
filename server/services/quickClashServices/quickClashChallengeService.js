@@ -23,6 +23,7 @@ const {
   notifyChallengeAccepted,
   notifyChallengeRejected,
   notifyChallengeCompleted,
+  notifyMatchmakingSuccess,
 } = require('./quickClashNotificationService')
 const ArticleHighlight = require('../../model/articleHighlightSchema')
 const {
@@ -290,8 +291,6 @@ const createChallenge = async ({
   }
 }
 
-// After the transaction completes successfully,
-// schedule the actual highlight generation in the background
 const postChallengeCreation = async (challengeId, notifyData) => {
   try {
     // Schedule both English and Hindi highlight generation outside of the transaction
@@ -309,16 +308,34 @@ const postChallengeCreation = async (challengeId, notifyData) => {
     )
 
     if (notifyData) {
-      notifyChallengeCreated({
-        challenge: notifyData.challenge,
-        challenger: notifyData.challenger,
-        opponent: notifyData.opponent,
-      }).catch(err => {
-        console.error(
-          'Error sending challenge creation notification:',
-          err.message,
-        )
-      })
+      // Get the challenge to check if it's from matchmaking
+      const challenge = await QuickClashChallenge.findById(challengeId)
+
+      if (challenge && challenge.fromMatchmaking) {
+        // For matchmaking, send different notifications
+        notifyMatchmakingSuccess({
+          challenge: notifyData.challenge,
+          challenger: notifyData.challenger,
+          opponent: notifyData.opponent,
+        }).catch(err => {
+          console.error(
+            'Error sending matchmaking success notification:',
+            err.message,
+          )
+        })
+      } else {
+        // For normal challenges, send the regular challenge creation notification
+        notifyChallengeCreated({
+          challenge: notifyData.challenge,
+          challenger: notifyData.challenger,
+          opponent: notifyData.opponent,
+        }).catch(err => {
+          console.error(
+            'Error sending challenge creation notification:',
+            err.message,
+          )
+        })
+      }
     }
   } catch (error) {
     console.error(
