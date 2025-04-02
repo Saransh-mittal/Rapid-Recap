@@ -33,6 +33,7 @@ import { Users, Activity, X, Clock, Shield, Zap } from 'lucide-react'
 import useQuickClashMatchmaking from '../../customHooks/useQuickClashMatchmaking'
 import { useNavigate } from 'react-router-dom'
 import { keyframes } from '@emotion/react'
+import MatchPreparationModal from './modals/MatchPreparationModal'
 
 const MotionButton = motion(Button)
 const MotionFlex = motion(Flex)
@@ -51,6 +52,7 @@ const MatchmakingButton = forwardRef(({ compact = false }, ref) => {
   const navigate = useNavigate()
   const [isModalOpen, setIsModalOpen] = useState(false)
   const [matchmakingTime, setMatchmakingTime] = useState(0)
+  const [showPreparationModal, setShowPreparationModal] = useState(false)
 
   // Get matchmaking state and functions from our custom hook
   const {
@@ -59,6 +61,7 @@ const MatchmakingButton = forwardRef(({ compact = false }, ref) => {
     matchmakingError,
     challengeCreationData,
     challengeReady,
+    preparingChallenge, // NEW: Added this from the updated hook
 
     joinMatchmaking,
     leaveMatchmaking,
@@ -102,25 +105,43 @@ const MatchmakingButton = forwardRef(({ compact = false }, ref) => {
     return () => clearInterval(interval)
   }, [inMatchmaking])
 
+  // NEW: Show preparation modal when match is found
+  useEffect(() => {
+    if (preparingChallenge) {
+      // Close the matchmaking modal if it's open
+      setIsModalOpen(false)
+      // Open the preparation modal
+      setShowPreparationModal(true)
+
+      // Play a sound if you have one (optional)
+      // const foundSound = new Audio('/sounds/match-found.mp3');
+      // foundSound.play().catch(e => console.log('Error playing sound:', e));
+    }
+  }, [preparingChallenge])
+
   // Handle the ready challenge - navigate to the session
   useEffect(() => {
     if (challengeReady) {
-      toast({
-        title: t('Match Found!'),
-        description: t('Your match is ready, redirecting...'),
-        status: 'success',
-        duration: 3000,
-        isClosable: true,
-      })
+      // If we have the match preparation modal open already, keep it open
+      // and update it to show the Play Now button
+      if (!showPreparationModal) {
+        toast({
+          title: t('Match Found!'),
+          description: t('Your challenge is ready, redirecting...'),
+          status: 'success',
+          duration: 3000,
+          isClosable: true,
+        })
 
-      // Navigate to the challenge after a short delay
-      const timer = setTimeout(() => {
-        navigate(`/quickclash/session/${challengeReady.challengeId}`)
-      }, 1500)
+        // Navigate to the challenge after a short delay
+        const timer = setTimeout(() => {
+          navigate(`/quickclash/session/${challengeReady.challengeId}`)
+        }, 1500)
 
-      return () => clearTimeout(timer)
+        return () => clearTimeout(timer)
+      }
     }
-  }, [challengeReady, navigate, toast, t])
+  }, [challengeReady, navigate, toast, t, showPreparationModal])
 
   // Handle join matchmaking
   const handleJoinMatchmaking = useCallback(() => {
@@ -157,6 +178,11 @@ const MatchmakingButton = forwardRef(({ compact = false }, ref) => {
   // Close modal without leaving matchmaking
   const handleCloseModal = () => {
     setIsModalOpen(false)
+  }
+
+  // Close preparation modal
+  const handleClosePreparationModal = () => {
+    setShowPreparationModal(false)
   }
 
   // The waiting modal
@@ -367,6 +393,14 @@ const MatchmakingButton = forwardRef(({ compact = false }, ref) => {
         )}
 
         {renderWaitingModal()}
+
+        {/* NEW: Preparation Modal */}
+        <MatchPreparationModal
+          isOpen={showPreparationModal}
+          onClose={handleClosePreparationModal}
+          preparingData={preparingChallenge}
+          challengeId={challengeReady?.challengeId}
+        />
       </>
     )
   }
@@ -437,6 +471,14 @@ const MatchmakingButton = forwardRef(({ compact = false }, ref) => {
       )}
 
       {renderWaitingModal()}
+
+      {/* NEW: Preparation Modal */}
+      <MatchPreparationModal
+        isOpen={showPreparationModal}
+        onClose={handleClosePreparationModal}
+        preparingData={preparingChallenge}
+        challengeId={challengeReady?.challengeId}
+      />
     </>
   )
 })

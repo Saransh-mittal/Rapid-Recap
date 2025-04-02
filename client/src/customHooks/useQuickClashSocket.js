@@ -7,6 +7,8 @@ import {
   setChallengeAnalysisLoading,
   setChallengeAnalysis,
   setSocketListening,
+  fetchUserTrophies,
+  fetchUserStats,
 } from '../redux/quickClashSlice'
 import { addNoteMessageIfAllowed } from '../redux/appSlice'
 import { useNavigate } from 'react-router-dom'
@@ -220,6 +222,8 @@ const useQuickClashSocket = () => {
           )
           // Refresh active challenges list
           dispatch(fetchActiveChallenges())
+          dispatch(fetchUserTrophies())
+          dispatch(fetchUserStats())
         }
 
         //data.trackWinnerOutcomeResult

@@ -1,5 +1,5 @@
 // components/quickClashComponents/analysisComponents/KnowledgeTab.jsx
-import React from 'react'
+import React, { useState } from 'react'
 import {
   Box,
   VStack,
@@ -15,6 +15,13 @@ import {
   ListItem,
   ListIcon,
   useBreakpointValue,
+  Button,
+  Tooltip,
+  Tabs,
+  TabList,
+  Tab,
+  TabPanels,
+  TabPanel,
 } from '@chakra-ui/react'
 import { motion } from 'framer-motion'
 import {
@@ -24,6 +31,11 @@ import {
   BookOpen,
   CheckCircle,
   ChevronRight,
+  Users,
+  User,
+  Repeat,
+  Activity,
+  ExternalLink,
 } from 'lucide-react'
 import { useTranslation } from 'react-i18next'
 
@@ -31,14 +43,25 @@ import { useTranslation } from 'react-i18next'
 const MotionBox = motion(Box)
 const MotionProgress = motion(Progress)
 const MotionText = motion(Text)
+const MotionButton = motion(Button)
 
 // Knowledge Pattern Chart Component
-const KnowledgePatternChart = ({ patterns }) => {
+const KnowledgePatternChart = ({
+  patterns,
+  opponentPatterns,
+  showComparison,
+}) => {
   const { t } = useTranslation('QuickClash')
   const { factualRecall, technicalTerms, strategicAnalysis } = patterns
 
   const animationDuration = useBreakpointValue({ base: 0.5, md: 0.8 })
   const animationDelay = useBreakpointValue({ base: 0.1, md: 0.2 })
+
+  // For comparison mode, calculate the max value to ensure proper scaling
+  const getMaxValue = (userValue, opponentValue) => {
+    if (!showComparison || !opponentValue) return userValue
+    return Math.max(userValue, opponentValue) * 1.1 // Add 10% for visual scale
+  }
 
   return (
     <VStack spacing={4} w="100%" align="stretch" mt={2}>
@@ -48,12 +71,24 @@ const KnowledgePatternChart = ({ patterns }) => {
           <Text fontSize="sm" fontWeight="medium">
             {t('Factual Recall')}
           </Text>
-          <Text fontWeight="bold" fontSize="sm">
-            {Math.round(factualRecall)}%
-          </Text>
+          <HStack>
+            <Text fontWeight="bold" fontSize="sm">
+              {Math.round(factualRecall)}%
+            </Text>
+            {showComparison && opponentPatterns && (
+              <Text fontSize="xs" color="whiteAlpha.800">
+                ({opponentPatterns.factualRecall > factualRecall ? '-' : '+'}
+                {Math.abs(
+                  Math.round(factualRecall - opponentPatterns.factualRecall),
+                )}
+                %)
+              </Text>
+            )}
+          </HStack>
         </HStack>
         <MotionProgress
           value={Math.round(factualRecall)}
+          max={100}
           colorScheme="green"
           borderRadius="full"
           size="sm"
@@ -62,6 +97,21 @@ const KnowledgePatternChart = ({ patterns }) => {
           animate={{ width: '100%', opacity: 1 }}
           transition={{ duration: animationDuration }}
         />
+        {showComparison && opponentPatterns && (
+          <MotionProgress
+            value={Math.round(opponentPatterns.factualRecall)}
+            max={100}
+            colorScheme="blue"
+            borderRadius="full"
+            size="sm"
+            w="100%"
+            initial={{ width: 0, opacity: 0 }}
+            animate={{ width: '100%', opacity: 1 }}
+            transition={{ duration: animationDuration, delay: 0.1 }}
+            opacity={0.7}
+            mt={1}
+          />
+        )}
         <Text fontSize="xs" color="whiteAlpha.700">
           {t('Your ability to remember specific facts from the article')}
         </Text>
@@ -73,12 +123,24 @@ const KnowledgePatternChart = ({ patterns }) => {
           <Text fontSize="sm" fontWeight="medium">
             {t('Technical Terms')}
           </Text>
-          <Text fontWeight="bold" fontSize="sm">
-            {Math.round(technicalTerms)}%
-          </Text>
+          <HStack>
+            <Text fontWeight="bold" fontSize="sm">
+              {Math.round(technicalTerms)}%
+            </Text>
+            {showComparison && opponentPatterns && (
+              <Text fontSize="xs" color="whiteAlpha.800">
+                ({opponentPatterns.technicalTerms > technicalTerms ? '-' : '+'}
+                {Math.abs(
+                  Math.round(technicalTerms - opponentPatterns.technicalTerms),
+                )}
+                %)
+              </Text>
+            )}
+          </HStack>
         </HStack>
         <MotionProgress
           value={technicalTerms}
+          max={100}
           colorScheme="blue"
           borderRadius="full"
           size="sm"
@@ -87,6 +149,24 @@ const KnowledgePatternChart = ({ patterns }) => {
           animate={{ width: '100%', opacity: 1 }}
           transition={{ duration: animationDuration, delay: animationDelay }}
         />
+        {showComparison && opponentPatterns && (
+          <MotionProgress
+            value={Math.round(opponentPatterns.technicalTerms)}
+            max={100}
+            colorScheme="purple"
+            borderRadius="full"
+            size="sm"
+            w="100%"
+            initial={{ width: 0, opacity: 0 }}
+            animate={{ width: '100%', opacity: 1 }}
+            transition={{
+              duration: animationDuration,
+              delay: animationDelay + 0.1,
+            }}
+            opacity={0.7}
+            mt={1}
+          />
+        )}
         <Text fontSize="xs" color="whiteAlpha.700">
           {t('Your grasp of specialized terminology in this topic')}
         </Text>
@@ -98,12 +178,29 @@ const KnowledgePatternChart = ({ patterns }) => {
           <Text fontSize="sm" fontWeight="medium">
             {t('Strategic Analysis')}
           </Text>
-          <Text fontWeight="bold" fontSize="sm">
-            {Math.round(strategicAnalysis)}%
-          </Text>
+          <HStack>
+            <Text fontWeight="bold" fontSize="sm">
+              {Math.round(strategicAnalysis)}%
+            </Text>
+            {showComparison && opponentPatterns && (
+              <Text fontSize="xs" color="whiteAlpha.800">
+                (
+                {opponentPatterns.strategicAnalysis > strategicAnalysis
+                  ? '-'
+                  : '+'}
+                {Math.abs(
+                  Math.round(
+                    strategicAnalysis - opponentPatterns.strategicAnalysis,
+                  ),
+                )}
+                %)
+              </Text>
+            )}
+          </HStack>
         </HStack>
         <MotionProgress
           value={strategicAnalysis}
+          max={100}
           colorScheme="purple"
           borderRadius="full"
           size="sm"
@@ -115,12 +212,44 @@ const KnowledgePatternChart = ({ patterns }) => {
             delay: animationDelay * 2,
           }}
         />
+        {showComparison && opponentPatterns && (
+          <MotionProgress
+            value={Math.round(opponentPatterns.strategicAnalysis)}
+            max={100}
+            colorScheme="green"
+            borderRadius="full"
+            size="sm"
+            w="100%"
+            initial={{ width: 0, opacity: 0 }}
+            animate={{ width: '100%', opacity: 1 }}
+            transition={{
+              duration: animationDuration,
+              delay: animationDelay * 2 + 0.1,
+            }}
+            opacity={0.7}
+            mt={1}
+          />
+        )}
         <Text fontSize="xs" color="whiteAlpha.700">
           {t(
             'Your ability to understand complex relationships and implications',
           )}
         </Text>
       </VStack>
+
+      {/* Legend for comparison mode */}
+      {showComparison && opponentPatterns && (
+        <HStack spacing={4} mt={1} fontSize="xs" color="whiteAlpha.800">
+          <HStack>
+            <Box w="3" h="3" bg="blue.500" borderRadius="sm" />
+            <Text>{t('You')}</Text>
+          </HStack>
+          <HStack>
+            <Box w="3" h="3" bg="purple.500" borderRadius="sm" />
+            <Text>{t('Opponent')}</Text>
+          </HStack>
+        </HStack>
+      )}
     </VStack>
   )
 }
@@ -256,8 +385,137 @@ const OpponentComparison = ({ userAnalysis, opponentAnalysis }) => {
   )
 }
 
+// Opponent Detail Component (New)
+const OpponentDetail = ({ opponentAnalysis, opponentName }) => {
+  const { t } = useTranslation('QuickClash')
+
+  return (
+    <MotionBox
+      initial={{ opacity: 0, y: 20 }}
+      animate={{ opacity: 1, y: 0 }}
+      transition={{ duration: 0.5 }}
+    >
+      <VStack spacing={4} align="stretch">
+        <HStack>
+          <Icon as={User} color="blue.400" />
+          <Text fontWeight="bold">
+            {opponentName}'s {t('Knowledge Patterns')}
+          </Text>
+        </HStack>
+
+        <SimpleGrid columns={{ base: 1, md: 3 }} spacing={3}>
+          <Box p={3} bg="rgba(45, 55, 72, 0.3)" borderRadius="md">
+            <Text fontSize="sm" fontWeight="medium" mb={1}>
+              {t('Factual Recall')}
+            </Text>
+            <HStack>
+              <Progress
+                value={Math.round(
+                  opponentAnalysis.knowledgePatterns.factualRecall,
+                )}
+                size="sm"
+                colorScheme="blue"
+                borderRadius="full"
+                flex="1"
+              />
+              <Text
+                fontSize="sm"
+                fontWeight="bold"
+                minW="40px"
+                textAlign="right"
+              >
+                {Math.round(opponentAnalysis.knowledgePatterns.factualRecall)}%
+              </Text>
+            </HStack>
+          </Box>
+
+          <Box p={3} bg="rgba(45, 55, 72, 0.3)" borderRadius="md">
+            <Text fontSize="sm" fontWeight="medium" mb={1}>
+              {t('Technical Terms')}
+            </Text>
+            <HStack>
+              <Progress
+                value={Math.round(
+                  opponentAnalysis.knowledgePatterns.technicalTerms,
+                )}
+                size="sm"
+                colorScheme="purple"
+                borderRadius="full"
+                flex="1"
+              />
+              <Text
+                fontSize="sm"
+                fontWeight="bold"
+                minW="40px"
+                textAlign="right"
+              >
+                {Math.round(opponentAnalysis.knowledgePatterns.technicalTerms)}%
+              </Text>
+            </HStack>
+          </Box>
+
+          <Box p={3} bg="rgba(45, 55, 72, 0.3)" borderRadius="md">
+            <Text fontSize="sm" fontWeight="medium" mb={1}>
+              {t('Strategic Analysis')}
+            </Text>
+            <HStack>
+              <Progress
+                value={Math.round(
+                  opponentAnalysis.knowledgePatterns.strategicAnalysis,
+                )}
+                size="sm"
+                colorScheme="green"
+                borderRadius="full"
+                flex="1"
+              />
+              <Text
+                fontSize="sm"
+                fontWeight="bold"
+                minW="40px"
+                textAlign="right"
+              >
+                {Math.round(
+                  opponentAnalysis.knowledgePatterns.strategicAnalysis,
+                )}
+                %
+              </Text>
+            </HStack>
+          </Box>
+        </SimpleGrid>
+
+        <Box>
+          <Text fontSize="sm" fontWeight="medium" mb={2}>
+            {t('Strengths')}
+          </Text>
+          <SimpleGrid columns={{ base: 1, md: 2 }} spacing={2}>
+            {opponentAnalysis.strengths.slice(0, 2).map((strength, idx) => (
+              <HStack key={idx} spacing={1} align="flex-start">
+                <Icon
+                  as={CheckCircle}
+                  color="green.400"
+                  boxSize="14px"
+                  mt="3px"
+                />
+                <Text fontSize="sm">{strength}</Text>
+              </HStack>
+            ))}
+          </SimpleGrid>
+        </Box>
+      </VStack>
+    </MotionBox>
+  )
+}
+
 // Main Knowledge Tab Component
 const KnowledgeTab = ({ analysis, t }) => {
+  const [showComparison, setShowComparison] = useState(false)
+  const opponentName = analysis.opponentAnalysis.username || 'Opponent'
+
+  // Toggle comparison view
+  const toggleComparison = () => {
+    setShowComparison(!showComparison)
+  }
+
   return (
     <VStack spacing={5} align="stretch">
       <MotionBox
@@ -265,9 +523,26 @@ const KnowledgeTab = ({ analysis, t }) => {
         animate={{ opacity: 1 }}
         transition={{ duration: 0.3 }}
       >
-        <Text fontSize="lg" fontWeight="bold" mb={3}>
-          {t('Knowledge Patterns')}
-        </Text>
+        <HStack justify="space-between" mb={3}>
+          <Text fontSize="lg" fontWeight="bold">
+            {t('Knowledge Patterns')}
+          </Text>
+          <MotionButton
+            size="sm"
+            leftIcon={
+              <Icon as={showComparison ? User : Users} boxSize="14px" />
+            }
+            colorScheme="purple"
+            variant="outline"
+            onClick={toggleComparison}
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            transition={{ delay: 0.5 }}
+          >
+            {showComparison ? t('Hide Comparison') : t('Compare')}
+          </MotionButton>
+        </HStack>
+
         <Text fontSize="sm" color="whiteAlpha.800" mb={4}>
           {t(
             'This analysis shows how you process and recall different types of knowledge',
@@ -281,6 +556,10 @@ const KnowledgeTab = ({ analysis, t }) => {
         >
           <KnowledgePatternChart
             patterns={analysis.userAnalysis.analysis.knowledgePatterns}
+            opponentPatterns={
+              analysis.opponentAnalysis.analysis.knowledgePatterns
+            }
+            showComparison={showComparison}
           />
         </Box>
       </MotionBox>
@@ -321,6 +600,16 @@ const KnowledgeTab = ({ analysis, t }) => {
           userAnalysis={analysis.userAnalysis.analysis}
           opponentAnalysis={analysis.opponentAnalysis.analysis}
         />
+
+        {/* Opponent Details Section */}
+        {showComparison && (
+          <Box mt={4}>
+            <OpponentDetail
+              opponentAnalysis={analysis.opponentAnalysis.analysis}
+              opponentName={opponentName}
+            />
+          </Box>
+        )}
 
         <MotionBox
           p={3}

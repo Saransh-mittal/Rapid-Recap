@@ -9,9 +9,13 @@ import {
   SimpleGrid,
   Flex,
   useBreakpointValue,
+  Tooltip,
+  Icon,
 } from '@chakra-ui/react'
 import { motion } from 'framer-motion'
 import { useTranslation } from 'react-i18next'
+import { Trophy, Shield } from 'lucide-react'
+import EnhancedTrophyChangeDisplay from '../ui/EnhancedTrophyChangeDisplay'
 
 const MotionBox = motion(Box)
 const MotionBadge = motion(Badge)
@@ -44,6 +48,25 @@ const BattleResultsBanner = ({ analysis, userIsWinner, isTie, userId }) => {
   // Result emoji
   const resultEmoji = userIsWinner ? '🏆' : isTie ? '🤝' : '📊'
 
+  // Trophy data
+  const userTrophyData = analysis.userAnalysis.trophyData
+  const opponentTrophyData = analysis.opponentAnalysis.trophyData
+
+  // Protection info
+  const hasProtection =
+    userTrophyData &&
+    !userIsWinner &&
+    !isTie &&
+    userTrophyData.protectionApplied
+  const protectionType = hasProtection ? userTrophyData.protectionType : null
+
+  const protectionText =
+    protectionType === 'streak'
+      ? t('Streak Protection')
+      : protectionType === 'activity'
+      ? t('Beginner Protection')
+      : t('Protection')
+
   return (
     <MotionBox
       initial={{ opacity: 0, y: -5 }}
@@ -66,15 +89,43 @@ const BattleResultsBanner = ({ analysis, userIsWinner, isTie, userId }) => {
         position="relative"
         mb={4}
       >
-        <MotionText
-          fontSize="lg"
-          fontWeight="bold"
-          initial={{ opacity: 0 }}
-          animate={{ opacity: 1 }}
-          transition={{ delay: 0.1 }}
-        >
-          {resultEmoji} {resultText}
-        </MotionText>
+        <Flex justify="center" align="center">
+          <MotionText
+            fontSize="lg"
+            fontWeight="bold"
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            transition={{ delay: 0.1 }}
+          >
+            {resultEmoji} {resultText}
+          </MotionText>
+
+          {/* Protection badge */}
+          {hasProtection && (
+            <Tooltip
+              label={
+                userTrophyData.protectionType === 'streak'
+                  ? t('Your win streak protected you from trophy loss')
+                  : t('As a newer player, your trophies were protected')
+              }
+              placement="top"
+            >
+              <MotionBadge
+                ml={2}
+                colorScheme="yellow"
+                display="flex"
+                alignItems="center"
+                gap={1}
+                initial={{ opacity: 0, scale: 0 }}
+                animate={{ opacity: 1, scale: 1 }}
+                transition={{ delay: 0.3, duration: 0.3 }}
+              >
+                <Icon as={Shield} boxSize={3} />
+                {protectionText}
+              </MotionBadge>
+            </Tooltip>
+          )}
+        </Flex>
       </MotionBox>
 
       {/* Score comparison */}
@@ -104,6 +155,16 @@ const BattleResultsBanner = ({ analysis, userIsWinner, isTie, userId }) => {
           >
             {userScore}
           </MotionText>
+
+          {/* Trophy change indicator */}
+          {userTrophyData && !isTie && (
+            <Box mt={2}>
+              <EnhancedTrophyChangeDisplay
+                trophyChange={userTrophyData.change}
+                showAnimation={true}
+              />
+            </Box>
+          )}
         </Box>
 
         <Box
@@ -131,6 +192,16 @@ const BattleResultsBanner = ({ analysis, userIsWinner, isTie, userId }) => {
           >
             {opponentScore}
           </MotionText>
+
+          {/* Trophy change indicator */}
+          {opponentTrophyData && !isTie && (
+            <Box mt={2}>
+              <EnhancedTrophyChangeDisplay
+                trophyChange={opponentTrophyData.change}
+                showAnimation={false}
+              />
+            </Box>
+          )}
         </Box>
       </SimpleGrid>
 

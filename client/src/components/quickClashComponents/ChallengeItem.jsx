@@ -1,3 +1,4 @@
+// components/quickClashComponents/ChallengeItem.jsx
 import React, { useMemo } from 'react'
 import {
   Box,
@@ -30,6 +31,9 @@ import {
 import StatusBadge from './ui/StatusBadge'
 import PlayerStatus from './ui/PlayerStatus'
 import ResultBanner from './ui/ResultBanner'
+import VSLine from './VSLine'
+// Import the enhanced trophy displays
+import EnhancedPotentialTrophyDisplay from './ui/EnhancedPotentialTrophyDisplay'
 
 const MotionBox = motion(Box)
 const MotionButton = motion(Button)
@@ -40,15 +44,6 @@ const pulseAnimation = `
     0% { transform: scale(1); }
     50% { transform: scale(1.05); }
     100% { transform: scale(1); }
-  }
-`
-
-// Define flame animation for revenge button
-const flameAnimation = `
-  @keyframes flameFlicker {
-    0% { box-shadow: 0 0 10px rgba(229, 62, 62, 0.5); }
-    50% { box-shadow: 0 0 20px rgba(229, 62, 62, 0.8); }
-    100% { box-shadow: 0 0 10px rgba(229, 62, 62, 0.5); }
   }
 `
 
@@ -127,29 +122,43 @@ const ChallengeItem = ({
   const cardStyles = useMemo(() => {
     let borderColorStyle = 'whiteAlpha.200'
     let boxShadowStyle = 'none'
+    let borderWidthStyle = '1px'
+    let gradientOverlay = 'none'
 
     if (challenge.status === 'completed') {
       if (isWinner) {
         borderColorStyle = 'purple.400'
         boxShadowStyle = '0 0 15px rgba(124, 58, 237, 0.3)'
+        gradientOverlay =
+          'linear-gradient(135deg, rgba(124, 58, 237, 0.05), transparent)'
       } else if (isTie) {
         borderColorStyle = 'yellow.400'
+        gradientOverlay =
+          'linear-gradient(135deg, rgba(236, 201, 75, 0.05), transparent)'
       } else if (isDefeat) {
         borderColorStyle = 'red.400'
         boxShadowStyle = '0 0 15px rgba(245, 101, 101, 0.3)'
+        gradientOverlay =
+          'linear-gradient(135deg, rgba(245, 101, 101, 0.05), transparent)'
       }
     } else if (challenge.status === 'active' && !myAttempted) {
       borderColorStyle = 'green.400'
       boxShadowStyle = '0 0 10px rgba(72, 187, 120, 0.3)'
+      gradientOverlay =
+        'linear-gradient(135deg, rgba(72, 187, 120, 0.05), transparent)'
     } else if (challenge.status === 'pending') {
       // Use gold border for both 'New' and 'Awaiting' status
       borderColorStyle = 'yellow.400'
       boxShadowStyle = '0 0 10px rgba(236, 201, 75, 0.2)'
+      gradientOverlay =
+        'linear-gradient(135deg, rgba(236, 201, 75, 0.05), transparent)'
     }
 
     return {
       borderColor: borderColorStyle,
       boxShadow: boxShadowStyle,
+      borderWidth: borderWidthStyle,
+      gradientOverlay,
     }
   }, [challenge.status, isWinner, isTie, isDefeat, myAttempted])
 
@@ -167,6 +176,30 @@ const ChallengeItem = ({
     }
 
     return categoryColors[challenge.category] || 'purple'
+  }
+
+  const getTrophyPotential = () => {
+    // For active or pending challenges, return potential gain
+    if (challenge.status === 'active' || challenge.status === 'pending') {
+      if (!challenge.trophyPotential) return 0
+
+      return isChallenger
+        ? challenge.trophyPotential.challenger.potentialGain
+        : challenge.trophyPotential.opponent.potentialGain
+    }
+
+    return 0
+  }
+
+  // Get trophy change
+  const getTrophyChange = () => {
+    if (!challenge.trophyUpdates) return undefined
+
+    const trophyChange = isChallenger
+      ? challenge.trophyUpdates.challenger.change
+      : challenge.trophyUpdates.opponent.change
+
+    return trophyChange
   }
 
   // Determine if we should show player status section
@@ -190,17 +223,27 @@ const ChallengeItem = ({
       whileHover="hover"
       position="relative"
     >
-      {/* We'll handle the Revenge button in the ResultBanner component instead of here */}
-
       <Box
         bg="rgba(26, 32, 44, 0.8)"
         borderRadius="lg"
         overflow="hidden"
-        borderWidth="1px"
+        borderWidth={cardStyles.borderWidth}
         borderColor={cardStyles.borderColor}
         boxShadow={cardStyles.boxShadow}
         transition="all 0.3s"
         position="relative"
+        _before={{
+          content: '""',
+          position: 'absolute',
+          top: 0,
+          left: 0,
+          right: 0,
+          bottom: 0,
+          background: cardStyles.gradientOverlay,
+          opacity: 0.7,
+          pointerEvents: 'none',
+          borderRadius: 'lg',
+        }}
       >
         {/* Card Header - Show status badge and category for active/pending */}
         {challenge.status !== 'completed' && (
@@ -240,7 +283,17 @@ const ChallengeItem = ({
                 </Text>
               </HStack>
 
-              <CategoryTag />
+              <HStack spacing={2}>
+                {/* Show potential trophy gain with enhanced component */}
+                {challenge.trophyPotential && (
+                  <EnhancedPotentialTrophyDisplay
+                    potentialGain={getTrophyPotential()}
+                    size="sm"
+                    compact={true}
+                  />
+                )}
+                <CategoryTag />
+              </HStack>
             </HStack>
           )}
 
@@ -253,54 +306,26 @@ const ChallengeItem = ({
                   score={challenge.challengerScore}
                   attempted={challenge.challengerAttempted}
                   isUser={isChallenger}
+                  trophies={challenge.challenger.quickClashTrophies}
                 />
 
-                <Flex
-                  justify="center"
-                  align="center"
-                  py={1}
-                  position="relative"
-                >
-                  <HStack spacing={2}>
-                    <Tag
-                      size="sm"
-                      colorScheme="gray"
-                      variant="subtle"
-                      borderRadius="full"
-                    >
-                      {t('vs')}
-                    </Tag>
-                  </HStack>
-                  {challenge.status === 'active' && (
-                    <Tag
-                      position={'absolute'}
-                      right={0}
-                      size="sm"
-                      colorScheme={getCategoryStyle()}
-                      borderRadius="full"
-                      px={3}
-                      animation={
-                        challenge.status === 'active' && !myAttempted
-                          ? 'pulse 3s infinite ease-in-out'
-                          : 'none'
-                      }
-                      css={
-                        challenge.status === 'active' && !myAttempted
-                          ? pulseAnimation
-                          : ''
-                      }
-                    >
-                      <Icon as={Target} size={12} mr={1} />
-                      {challenge.category}
-                    </Tag>
-                  )}
-                </Flex>
+                {/* VS Line with Trophy Change Display */}
+                <VSLine
+                  trophyChange={getTrophyChange()}
+                  category={
+                    challenge.status === 'active' ? challenge.category : null
+                  }
+                  categoryColorScheme={getCategoryStyle()}
+                  isActiveChallenge={challenge.status === 'active'}
+                  myAttempted={myAttempted}
+                />
 
                 <PlayerStatus
                   player={challenge.opponent}
                   score={challenge.opponentScore}
                   attempted={challenge.opponentAttempted}
                   isUser={!isChallenger}
+                  trophies={challenge.opponent.quickClashTrophies}
                 />
               </VStack>
             </>
@@ -365,31 +390,40 @@ const ChallengeItem = ({
                   </Button>
                 </HStack>
               ) : challenge.status === 'active' && !myAttempted ? (
-                <Button
-                  size="sm"
-                  colorScheme="green"
-                  onClick={() => onStart(challenge._id)}
-                  leftIcon={<PlayCircle size={14} />}
-                  as={motion.button}
-                  whileHover={{ scale: 1.05 }}
-                  whileTap={{ scale: 0.95 }}
-                  fontWeight="bold"
-                  px={6}
-                  boxShadow="0 0 10px rgba(72, 187, 120, 0.4)"
-                  _hover={{
-                    boxShadow: '0 0 15px rgba(72, 187, 120, 0.7)',
-                  }}
-                  animation="pulse 2s infinite ease-in-out"
-                  css={pulseAnimation}
-                >
-                  {t('Start')}
-                </Button>
+                <Flex align="center" gap={2}>
+                  {/* Show potential trophy gain with enhanced component */}
+                  <EnhancedPotentialTrophyDisplay
+                    potentialGain={getTrophyPotential()}
+                    size="sm"
+                    compact={true}
+                  />
+
+                  <Button
+                    size="sm"
+                    colorScheme="green"
+                    onClick={() => onStart(challenge._id)}
+                    leftIcon={<PlayCircle size={14} />}
+                    as={motion.button}
+                    whileHover={{ scale: 1.05 }}
+                    whileTap={{ scale: 0.95 }}
+                    fontWeight="bold"
+                    px={6}
+                    boxShadow="0 0 10px rgba(72, 187, 120, 0.4)"
+                    _hover={{
+                      boxShadow: '0 0 15px rgba(72, 187, 120, 0.7)',
+                    }}
+                    animation="pulse 2s infinite ease-in-out"
+                    css={pulseAnimation}
+                  >
+                    {t('Start')}
+                  </Button>
+                </Flex>
               ) : null}
             </Flex>
           )}
         </Box>
 
-        {/* Result Banner - Show for completed challenges */}
+        {/* Result Banner - Without trophy display */}
         {challenge.status === 'completed' &&
           challenge.challengerAttempted &&
           challenge.opponentAttempted && (
@@ -402,6 +436,20 @@ const ChallengeItem = ({
               onRevenge={isDefeat ? () => onRevenge(opponent, challenge) : null}
               revengeStatus={challenge.revengeStatus}
               revengeLoading={revengeLoading}
+              protectionApplied={
+                isDefeat &&
+                challenge.trophyUpdates?.protectionApplied &&
+                (isChallenger
+                  ? challenge.trophyUpdates.protectionApplied.challenger
+                  : challenge.trophyUpdates.protectionApplied.opponent)
+              }
+              protectionType={
+                isDefeat &&
+                challenge.trophyUpdates?.protectionApplied &&
+                (isChallenger
+                  ? challenge.trophyUpdates.protectionApplied.challenger_type
+                  : challenge.trophyUpdates.protectionApplied.opponent_type)
+              }
             />
           )}
       </Box>

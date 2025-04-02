@@ -64,8 +64,14 @@ const joinMatchmaking = async ({ userId }) => {
         // Use the matched user's categories if available, otherwise use our random ones
         const matchCategories = potentialMatch.preferredCategories || categories
 
-        // Start challenge creation in the background
+        // NEW: Notify users that a match has been found before starting challenge creation
+        globalEmitter.emit('quickClash:matchFound', {
+          challenger: joiningUser,
+          opponent: matchedUser,
+          tempChallengeId,
+        })
 
+        // Start challenge creation in the background
         const challengeResult = await createChallenge({
           challengerId: userId,
           opponentId: potentialMatch.user,
@@ -199,6 +205,13 @@ const scheduleRandomBotResponse = async (userId, categories) => {
           User.findById(userId).select('_id name inGameName pic').lean(),
           User.findById(botUser._id).select('_id name inGameName pic').lean(),
         ])
+
+        // NEW: Notify users that a match has been found
+        globalEmitter.emit('quickClash:matchFound', {
+          challenger: creatorData,
+          opponent: accepterData,
+          tempChallengeId: challengeId,
+        })
 
         // Create the challenge in the background
         const challengeResult = await createChallenge({
@@ -412,4 +425,5 @@ module.exports = {
   updateMatchmakingStatus,
   isBot,
   getRandomCategories,
+  lockUserForChallenge,
 }

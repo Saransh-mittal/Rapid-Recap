@@ -60,10 +60,14 @@ const initialState = {
   // Socket connection status
   socketConnected: false,
 
-  // Pending challenge data (for UI state)
+  // Match preparation states
   preparingChallenge: null,
   challengeCreationData: null,
   challengeReady: null,
+
+  // NEW: Progress tracking for preparation
+  preparationProgress: 0,
+  preparationStep: null,
 }
 
 const quickClashMatchmakingSlice = createSlice({
@@ -75,15 +79,30 @@ const quickClashMatchmakingSlice = createSlice({
       state.socketConnected = action.payload
     },
 
-    // Handle challenge preparation
+    // Handle match preparation
     setPreparingChallenge: (state, action) => {
       state.preparingChallenge = action.payload
+      // Initialize progress when starting preparation
+      state.preparationProgress = 5
+      state.preparationStep = 'matchFound'
+    },
+
+    // NEW: Progress tracking actions
+    setPreparationProgress: (state, action) => {
+      state.preparationProgress = action.payload
+    },
+
+    setPreparationStep: (state, action) => {
+      state.preparationStep = action.payload
     },
 
     // Handle challenge ready notification
     setChallengeReady: (state, action) => {
-      state.preparingChallenge = null
+      // Don't clear preparingChallenge here so modal stays open
       state.challengeReady = action.payload
+      // Ensure progress is shown as complete
+      state.preparationProgress = 100
+      state.preparationStep = 'challengeReady'
     },
 
     setMatchCreationStarted: (state, action) => {
@@ -103,6 +122,10 @@ const quickClashMatchmakingSlice = createSlice({
           fromMatchmaking: true,
         }
       }
+
+      // Ensure progress is shown as complete
+      state.preparationProgress = 100
+      state.preparationStep = 'challengeReady'
     },
 
     // For when creation fails
@@ -126,6 +149,9 @@ const quickClashMatchmakingSlice = createSlice({
     clearChallengeStates: state => {
       state.challengeCreationData = null
       state.challengeReady = null
+      state.preparingChallenge = null
+      state.preparationProgress = 0
+      state.preparationStep = null
     },
 
     // Reset state
@@ -188,6 +214,9 @@ export const {
   clearChallengeStates,
   clearChallengeError,
   resetMatchmakingState,
+  // NEW: Progress tracking actions
+  setPreparationProgress,
+  setPreparationStep,
 } = quickClashMatchmakingSlice.actions
 
 export default quickClashMatchmakingSlice.reducer

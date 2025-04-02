@@ -186,11 +186,39 @@ const QuickClashContent = ({ message }) => {
       case 'challengeCompletedByBothPlayers':
         return (
           <VStack align="start" spacing={1}>
-            <Text fontSize="sm" fontWeight="medium">
-              {t('viewResults')}
-            </Text>
+            <HStack justify="space-between" width="100%">
+              <Text fontSize="sm" fontWeight="medium">
+                {typeof data.userScore === 'number' &&
+                typeof data.opponentScore === 'number'
+                  ? data.userScore > data.opponentScore
+                    ? t('Victory')
+                    : data.userScore === data.opponentScore
+                    ? t('Tie')
+                    : t('Defeat')
+                  : t('Results Ready')}
+              </Text>
+              <Badge
+                colorScheme={
+                  data.userScore > data.opponentScore
+                    ? 'green'
+                    : data.userScore === data.opponentScore
+                    ? 'yellow'
+                    : 'red'
+                }
+              >
+                {typeof data.userScore === 'number' ? data.userScore : '?'} -{' '}
+                {typeof data.opponentScore === 'number'
+                  ? data.opponentScore
+                  : '?'}
+              </Badge>
+            </HStack>
             <Text fontSize="xs" color="whiteAlpha.800">
-              {t('opponentCompletedChallenge')}
+              {t('challengeCompleted')}{' '}
+              {data.category && (
+                <Badge size="sm" colorScheme="purple" ml={1}>
+                  {data.category}
+                </Badge>
+              )}
             </Text>
           </VStack>
         )

@@ -43,6 +43,11 @@ const User = require('../model/userSchema')
 const {
   getLeaderboard,
 } = require('../services/quickClashServices/quickClashLeaderboardService')
+const {
+  calculatePotentialTrophyExchange,
+  getUserTrophyHistory,
+  getUserTrophies,
+} = require('../services/quickClashServices/quickClashTrophyService')
 
 // Create a new challenge
 const createNewChallenge = asyncHandler(async (req, res) => {
@@ -445,7 +450,7 @@ const getSessionIdFromChallenge = asyncHandler(async (req, res) => {
 const generateAnalysis = asyncHandler(async (req, res) => {
   const { challengeId } = req.params
   const userId = req.user._id
-
+  console.log('Generating analysis for challenge:', challengeId)
   try {
     // Check if user is part of the challenge
     const challenge = await QuickClashChallenge.findById(challengeId)
@@ -701,6 +706,88 @@ const markChallengeRevenge = asyncHandler(async (req, res) => {
   }
 })
 
+/**
+ * @desc    Get a user's current trophy count
+ * @route   GET /api/quickClash/trophies
+ * @access  Private
+ */
+const getUserTrophiesController = asyncHandler(async (req, res) => {
+  const userId = req.user._id
+
+  try {
+    const trophies = await getUserTrophies({ userId })
+
+    res.status(200).json({
+      success: true,
+      trophies,
+    })
+  } catch (error) {
+    console.error('Error getting user trophies:', error)
+    res.status(500).json({
+      success: false,
+      message: error.message || 'Failed to get trophies',
+    })
+  }
+})
+
+/**
+ * @desc    Get a user's trophy history
+ * @route   GET /api/quickClash/trophies/history
+ * @access  Private
+ */
+const getUserTrophyHistoryController = asyncHandler(async (req, res) => {
+  const userId = req.user._id
+  const { limit = 10 } = req.query
+
+  try {
+    const history = await getUserTrophyHistory({
+      userId,
+      limit: parseInt(limit),
+    })
+
+    res.status(200).json({
+      success: true,
+      history,
+    })
+  } catch (error) {
+    console.error('Error getting trophy history:', error)
+    res.status(500).json({
+      success: false,
+      message: error.message || 'Failed to get trophy history',
+    })
+  }
+})
+
+/**
+ * @desc    Calculate potential trophy exchange for a match
+ * @route   GET /api/quickClash/trophies/exchange/:opponentId
+ * @access  Private
+ */
+const calculatePotentialTrophyExchangeController = asyncHandler(
+  async (req, res) => {
+    const userId = req.user._id
+    const { opponentId } = req.params
+
+    try {
+      const exchange = await calculatePotentialTrophyExchange({
+        userId,
+        opponentId,
+      })
+
+      res.status(200).json({
+        success: true,
+        ...exchange,
+      })
+    } catch (error) {
+      console.error('Error calculating potential trophy exchange:', error)
+      res.status(500).json({
+        success: false,
+        message: error.message || 'Failed to calculate trophy exchange',
+      })
+    }
+  },
+)
+
 module.exports = {
   createNewChallenge,
   handleAcceptChallenge,
@@ -721,4 +808,7 @@ module.exports = {
   getAnalysisStatus,
   getQuickClashLeaderboard,
   markChallengeRevenge,
+  getUserTrophiesController,
+  getUserTrophyHistoryController,
+  calculatePotentialTrophyExchangeController,
 }

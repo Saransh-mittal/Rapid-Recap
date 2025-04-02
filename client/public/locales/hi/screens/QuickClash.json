@@ -314,5 +314,9 @@
   "pts": "अंक",
   "hasChallengedYou": "ने आपको एक ज्ञान युद्ध के लिए चुनौती दी है!",
   "completedTheChallenge": "ने अपना हिस्सा पूरा किया है",
-  "viewResults": "अपने चुनौती परिणाम देखें"
+  "viewResults": "अपने चुनौती परिणाम देखें",
+  "challengeComplete": "चुनौती पूरी हुई",
+  "youWon": "आप जीत गए!",
+  "youLost": "आप हार गए!",
+  "itsTie": "यह बराबरी है!"
 }

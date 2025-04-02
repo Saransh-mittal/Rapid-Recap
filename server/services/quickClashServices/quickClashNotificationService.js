@@ -232,6 +232,10 @@ const notifyChallengeCompleted = async ({ challenge, completedByUserId }) => {
         User.findById(challenge.opponent),
       ])
 
+      // Update challenge with user details for socket emission
+      challenge.challenger = challenger
+      challenge.opponent = opponent
+
       const challengerWon = challenge.challengerScore > challenge.opponentScore
       const isTie = challenge.challengerScore === challenge.opponentScore
 

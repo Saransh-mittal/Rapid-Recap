@@ -15,6 +15,8 @@ import {
   setMatchCreationFailed,
   clearChallengeError,
   setInMatchmaking,
+  setPreparationProgress,
+  setPreparationStep,
 } from '../redux/quickClashMatchmakingSlice'
 import { useSocket } from './useSocket'
 import { fetchActiveChallenges } from '../redux/quickClashSlice'
@@ -49,6 +51,9 @@ const useQuickClashMatchmaking = () => {
     socketConnected,
     challengeCreationData,
     challengeReady,
+    preparingChallenge,
+    preparationProgress,
+    preparationStep,
   } = useSelector(state => state.quickClashMatchmaking)
 
   // Setup socket event listeners - only for matchmaking events
@@ -59,13 +64,53 @@ const useQuickClashMatchmaking = () => {
       // Clean up any existing listeners first to avoid duplicates
       cleanupSocketListeners(currentSocket)
 
-      currentSocket.on('quickClash:matchChallengeReady', data => {
+      // NEW: Listen for match found events
+      currentSocket.on('quickClash:matchFound', data => {
+        // Set match preparation state in Redux
+        dispatch(setPreparingChallenge(data))
+
+        // If we're in matchmaking, consider us "out" now as we found a match
         dispatch(setInMatchmaking(false))
+
+        // Initialize progress
+        dispatch(setPreparationProgress(5))
+        dispatch(setPreparationStep('matchFound'))
+
+        // You can also play a sound here if desired
+        toast({
+          title: t('Match Found!'),
+          description: t('Preparing your challenge...'),
+          status: 'success',
+          duration: 3000,
+          isClosable: true,
+        })
+      })
+
+      // NEW: Listen for challenge progress updates
+      currentSocket.on('quickClash:challengeProgress', data => {
+        if (data.progress) {
+          dispatch(setPreparationProgress(data.progress))
+        }
+
+        if (data.step) {
+          dispatch(setPreparationStep(data.step))
+        }
+      })
+
+      // Listen for challenge ready events
+      currentSocket.on('quickClash:matchChallengeReady', data => {
+        // Update Redux state
         dispatch(setMatchChallengeReady(data))
+
+        // Ensure progress is shown as complete
+        dispatch(setPreparationProgress(100))
+        dispatch(setPreparationStep('challengeReady'))
+
+        // Refresh active challenges list
         dispatch(fetchActiveChallenges())
 
         toast({
-          title: t('Challenge Ready'),
+          title: t('Challenge Ready!'),
           description: t('Your challenge is ready to play!'),
           status: 'success',
           duration: 3000,
@@ -109,6 +154,8 @@ const useQuickClashMatchmaking = () => {
     if (!currentSocket) return
     // Remove all matchmaking-related event listeners
     currentSocket.off('quickClash:joinedMatchmaking')
+    currentSocket.off('quickClash:matchFound')
+    currentSocket.off('quickClash:challengeProgress')
     currentSocket.off('quickClash:matchChallengeReady')
     currentSocket.off('quickClash:botAcceptedChallenge')
     currentSocket.off('reconnect')
@@ -240,7 +287,7 @@ const useQuickClashMatchmaking = () => {
 
         throw error
       })
-  }, [dispatch, getSocket, userId, toast, t])
+  }, [dispatch, t, toast])
 
   return {
     // State
@@ -254,6 +301,9 @@ const useQuickClashMatchmaking = () => {
     socketConnected,
     challengeCreationData,
     challengeReady,
+    preparingChallenge,
+    preparationProgress,
+    preparationStep,
 
     // Actions
     joinMatchmaking: handleJoinMatchmaking,

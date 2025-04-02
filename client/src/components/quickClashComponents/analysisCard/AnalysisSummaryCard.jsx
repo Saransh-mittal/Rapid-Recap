@@ -69,10 +69,13 @@ const AnalysisSummaryCard = ({
   const isTie = userScore === opponentScore && userScore > 0
 
   // Get the user's analysis data
+
   const userAnalysis =
     analysis?.challenger?._id === userId
       ? analysis?.challenger
-      : analysis?.opponent || {}
+      : analysis?.opponent || analysis?.userAnalysis?.userId === userId
+      ? analysis?.userAnalysis
+      : {}
   const metrics = analysis?.battleMetrics || {}
   const engagement = analysis?.engagement || {}
 

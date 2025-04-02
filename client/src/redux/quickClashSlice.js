@@ -147,6 +147,37 @@ export const getChallengeAnalysis = createAsyncThunk(
   },
 )
 
+export const fetchUserTrophies = createAsyncThunk(
+  'quickClash/fetchUserTrophies',
+  async (_, { rejectWithValue }) => {
+    try {
+      const response = await axios.get('/api/quickClash/trophies')
+      return response.data.trophies || 0
+    } catch (error) {
+      return rejectWithValue(
+        error.response?.data?.message || 'Failed to fetch trophies',
+      )
+    }
+  },
+)
+
+// Add new async thunk for fetching trophy history
+export const fetchTrophyHistory = createAsyncThunk(
+  'quickClash/fetchTrophyHistory',
+  async ({ limit = 10 } = {}, { rejectWithValue }) => {
+    try {
+      const response = await axios.get('/api/quickClash/trophies/history', {
+        params: { limit },
+      })
+      return response.data.history || []
+    } catch (error) {
+      return rejectWithValue(
+        error.response?.data?.message || 'Failed to fetch trophy history',
+      )
+    }
+  },
+)
+
 const initialState = {
   // Active challenges section
   activeChallenges: [],
@@ -192,6 +223,18 @@ const initialState = {
   challengeAnalyses: {},
   challengeAnalysesLoading: {},
   challengeAnalysesError: {},
+
+  userTrophies: 0,
+  userTrophiesLoading: false,
+  userTrophiesError: null,
+
+  trophyHistory: [],
+  trophyHistoryLoading: false,
+  trophyHistoryError: null,
+
+  potentialTrophyExchange: null,
+  trophyExchangeLoading: false,
+  trophyExchangeError: null,
 
   socketListening: false,
 }
@@ -306,6 +349,32 @@ const quickClashSlice = createSlice({
         state.completedChallengesError = action.payload
       })
 
+      .addCase(fetchUserTrophies.pending, state => {
+        state.userTrophiesLoading = true
+        state.userTrophiesError = null
+      })
+      .addCase(fetchUserTrophies.fulfilled, (state, action) => {
+        state.userTrophies = action.payload
+        state.userTrophiesLoading = false
+      })
+      .addCase(fetchUserTrophies.rejected, (state, action) => {
+        state.userTrophiesLoading = false
+        state.userTrophiesError = action.payload
+      })
+
+      .addCase(fetchTrophyHistory.pending, state => {
+        state.trophyHistoryLoading = true
+        state.trophyHistoryError = null
+      })
+      .addCase(fetchTrophyHistory.fulfilled, (state, action) => {
+        state.trophyHistory = action.payload
+        state.trophyHistoryLoading = false
+      })
+      .addCase(fetchTrophyHistory.rejected, (state, action) => {
+        state.trophyHistoryLoading = false
+        state.trophyHistoryError = action.payload
+      })
+
       // Fetch user stats
       .addCase(fetchUserStats.pending, state => {
         state.userStatsLoading = true
@@ -313,6 +382,10 @@ const quickClashSlice = createSlice({
       })
       .addCase(fetchUserStats.fulfilled, (state, action) => {
         state.userStats = action.payload
+        // Copy the trophy count from userStats to userTrophies if it exists
+        if (action.payload.trophies !== undefined) {
+          state.userTrophies = action.payload.trophies
+        }
         state.userStatsLoading = false
       })
       .addCase(fetchUserStats.rejected, (state, action) => {

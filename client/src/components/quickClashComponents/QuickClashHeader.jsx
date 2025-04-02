@@ -1,5 +1,5 @@
 // components/quickClashComponents/QuickClashHeader.jsx
-import React, { memo } from 'react'
+import React, { memo, useEffect } from 'react'
 import {
   Box,
   Heading,
@@ -17,9 +17,12 @@ import { FiZap, FiHome } from 'react-icons/fi'
 import { Target } from 'lucide-react'
 import { useTranslation } from 'react-i18next'
 import { useNavigate } from 'react-router-dom'
+import { useDispatch } from 'react-redux'
 import QuickClashLeaderboardButton from './leaderboard/QuickClashLeaderboardButton'
 import LevelBadge from './user/LevelBadge'
 import TaskProgressIndicator from './dailyTasks/TaskProgressIndicator'
+import TrophyDisplay from './user/TrophyDisplay'
+import { fetchUserTrophies } from '../../redux/quickClashSlice'
 
 const MotionBox = motion(Box)
 const MotionButton = motion(Button)
@@ -29,7 +32,13 @@ const MotionIconButton = motion(IconButton)
 const QuickClashHeader = ({ onNewChallenge }) => {
   const { t } = useTranslation('QuickClash')
   const navigate = useNavigate()
+  const dispatch = useDispatch()
   const isDesktop = useBreakpointValue({ base: false, md: true })
+
+  // Fetch trophy data when component mounts
+  useEffect(() => {
+    dispatch(fetchUserTrophies())
+  }, [dispatch])
 
   const handleBackToHome = () => {
     navigate('/home')
@@ -146,11 +155,14 @@ const QuickClashHeader = ({ onNewChallenge }) => {
           />
         </Tooltip>
 
-        {/* Mobile Level Badge */}
-        <LevelBadge />
+        {/* Mobile Level Badge and Trophy Display */}
+        <HStack spacing={2}>
+          <TrophyDisplay />
+          <LevelBadge />
+        </HStack>
       </MotionFlex>
 
-      {/* Desktop Header - includes Home Button, Level Badge & Task Progress */}
+      {/* Desktop Header - includes Home Button, Level Badge, Trophy Display & Task Progress */}
       <MotionFlex
         justify="space-between"
         align="center"
@@ -182,6 +194,9 @@ const QuickClashHeader = ({ onNewChallenge }) => {
         </MotionButton>
 
         <HStack spacing={3}>
+          {/* Desktop Trophy Display */}
+          <TrophyDisplay />
+
           {/* Desktop Level Badge */}
           <LevelBadge />
 

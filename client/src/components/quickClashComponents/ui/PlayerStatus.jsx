@@ -1,15 +1,25 @@
+// Update to components/quickClashComponents/ui/PlayerStatus.jsx
 import React from 'react'
-import { Box, HStack, Text, Badge, Avatar } from '@chakra-ui/react'
+import { Box, HStack, Text, Badge, Avatar, Flex, Icon } from '@chakra-ui/react'
 import { motion } from 'framer-motion'
 import { useTranslation } from 'react-i18next'
 import ScoreDisplay from './ScoreDisplay'
+import { Trophy, ChevronUp, ChevronDown } from 'lucide-react'
 
 const MotionBox = motion(Box)
+const MotionText = motion(Text)
 
 /**
  * Displays a player's status in a Quick Clash challenge
  */
-const PlayerStatus = ({ player, score, attempted, isUser }) => {
+const PlayerStatus = ({
+  player,
+  score,
+  attempted,
+  isUser,
+  trophies,
+  trophyChange,
+}) => {
   const { t } = useTranslation('QuickClash')
   const bgGradient = isUser
     ? 'linear(to-r, purple.900, purple.800)'
@@ -29,6 +39,24 @@ const PlayerStatus = ({ player, score, attempted, isUser }) => {
         },
       }
     : {}
+
+  // Trophy change animation
+  const trophyAnimation =
+    trophyChange !== undefined
+      ? {
+          initial: { scale: 1, opacity: 0 },
+          animate: {
+            scale: [1, 1.1, 1],
+            opacity: 1,
+            transition: {
+              duration: 1,
+              delay: 0.5,
+              repeat: 3,
+              repeatType: 'reverse',
+            },
+          },
+        }
+      : {}
 
   return (
     <MotionBox
@@ -86,14 +114,76 @@ const PlayerStatus = ({ player, score, attempted, isUser }) => {
             {attempted && <ScoreDisplay score={score} size="sm" />}
           </HStack>
 
-          <Badge
-            colorScheme={attempted ? 'green' : 'yellow'}
-            fontSize="xs"
-            variant={attempted ? 'solid' : 'outline'}
-            borderRadius="full"
-          >
-            {attempted ? t('Completed') : t('Pending')}
-          </Badge>
+          <Flex justifyContent="space-between" align="center">
+            <Badge
+              colorScheme={attempted ? 'green' : 'yellow'}
+              fontSize="xs"
+              variant={attempted ? 'solid' : 'outline'}
+              borderRadius="full"
+            >
+              {attempted ? t('Completed') : t('Pending')}
+            </Badge>
+
+            {/* Trophy display with change indicator */}
+            {trophies !== undefined && (
+              <HStack spacing={1}>
+                <MotionBox
+                  bg="rgba(255, 215, 0, 0.1)"
+                  borderRadius="full"
+                  px={2}
+                  py={0.5}
+                  borderWidth="1px"
+                  borderColor="rgba(255, 215, 0, 0.3)"
+                  display="flex"
+                  alignItems="center"
+                  {...(trophyChange !== undefined && trophyAnimation)}
+                >
+                  <Icon as={Trophy} color="yellow.400" boxSize={3} mr={1} />
+                  <Text color="white" fontWeight="semibold" fontSize="xs">
+                    {trophies}
+                  </Text>
+
+                  {/* Trophy change indicator */}
+                  {trophyChange !== undefined && trophyChange !== 0 && (
+                    <Flex
+                      ml={1}
+                      align="center"
+                      justify="center"
+                      bg={
+                        trophyChange > 0
+                          ? 'rgba(72, 187, 120, 0.3)'
+                          : 'rgba(245, 101, 101, 0.3)'
+                      }
+                      borderRadius="full"
+                      w="18px"
+                      h="18px"
+                    >
+                      {trophyChange > 0 ? (
+                        <Icon as={ChevronUp} color="green.400" boxSize="12px" />
+                      ) : (
+                        <Icon as={ChevronDown} color="red.400" boxSize="12px" />
+                      )}
+                    </Flex>
+                  )}
+                </MotionBox>
+              </HStack>
+            )}
+          </Flex>
+
+          {/* Show trophy change text */}
+          {trophyChange !== undefined && trophyChange !== 0 && (
+            <MotionText
+              fontSize="2xs"
+              fontWeight="medium"
+              color={trophyChange > 0 ? 'green.400' : 'red.400'}
+              textAlign="right"
+              mt={0.5}
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1, transition: { delay: 0.8 } }}
+            >
+              {trophyChange > 0 ? `+${trophyChange}` : trophyChange}
+            </MotionText>
+          )}
         </Box>
       </HStack>
     </MotionBox>

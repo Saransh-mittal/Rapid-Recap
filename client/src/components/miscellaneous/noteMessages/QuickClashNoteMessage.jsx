@@ -542,17 +542,31 @@ const QuickClashNoteMessage = ({
 
               <Divider borderColor="whiteAlpha.200" />
 
+              {/* User Score */}
               <HStack justify="space-between" w="100%">
                 <Avatar
                   size="sm"
                   name={data.user?.inGameName || data.user?.name || t('You')}
                   src={data.user?.pic}
                 />
-                <Text fontWeight="bold" color="green.300">
-                  {data.userScore || '?'} {t('pts')}
-                </Text>
+                <MotionText
+                  fontWeight="bold"
+                  color="green.300"
+                  animate={{
+                    scale: [1, 1.1, 1],
+                    transition: {
+                      duration: 0.8,
+                      repeat: 2,
+                      repeatType: 'reverse',
+                    },
+                  }}
+                >
+                  {typeof data.userScore === 'number' ? data.userScore : '?'}{' '}
+                  {t('pts')}
+                </MotionText>
               </HStack>
 
+              {/* Opponent Score */}
               <HStack justify="space-between" w="100%">
                 <Avatar
                   size="sm"
@@ -564,9 +578,58 @@ const QuickClashNoteMessage = ({
                   src={data.opponent?.pic}
                 />
                 <Text fontWeight="bold" color="red.300">
-                  {data.opponentScore || '?'} {t('pts')}
+                  {typeof data.opponentScore === 'number'
+                    ? data.opponentScore
+                    : '?'}{' '}
+                  {t('pts')}
                 </Text>
               </HStack>
+
+              {/* Result indicator */}
+              {data.userScore !== undefined &&
+                data.opponentScore !== undefined && (
+                  <Flex
+                    w="100%"
+                    justify="center"
+                    py={1}
+                    mt={1}
+                    bg={
+                      data.userScore > data.opponentScore
+                        ? 'rgba(72, 187, 120, 0.15)'
+                        : data.userScore === data.opponentScore
+                        ? 'rgba(236, 201, 75, 0.15)'
+                        : 'rgba(245, 101, 101, 0.15)'
+                    }
+                    borderRadius="md"
+                  >
+                    <MotionText
+                      fontSize="sm"
+                      fontWeight="bold"
+                      color={
+                        data.userScore > data.opponentScore
+                          ? 'green.300'
+                          : data.userScore === data.opponentScore
+                          ? 'yellow.300'
+                          : 'red.300'
+                      }
+                      animate={{
+                        scale: [1, 1.05, 1],
+                        opacity: [0.9, 1, 0.9],
+                      }}
+                      transition={{
+                        duration: 1.5,
+                        repeat: Infinity,
+                        repeatType: 'reverse',
+                      }}
+                    >
+                      {data.userScore > data.opponentScore
+                        ? t('youWon')
+                        : data.userScore === data.opponentScore
+                        ? t('itsTie')
+                        : t('youLost')}
+                    </MotionText>
+                  </Flex>
+                )}
             </Flex>
 
             <Flex

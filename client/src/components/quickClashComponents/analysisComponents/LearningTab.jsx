@@ -16,6 +16,7 @@ import {
   ListIcon,
   Button,
   useBreakpointValue,
+  Tooltip,
 } from '@chakra-ui/react'
 import { motion } from 'framer-motion'
 import {
@@ -28,6 +29,11 @@ import {
   Zap,
   TrendingUp,
   Bookmark,
+  Trophy,
+  Award,
+  BarChart4,
+  TrendingDown,
+  Shield,
 } from 'lucide-react'
 import { useTranslation } from 'react-i18next'
 
@@ -178,6 +184,167 @@ const CategoryExpertise = ({ category }) => {
   )
 }
 
+// Trophy Progression (New Component)
+const TrophyProgression = ({ trophyInsights, trophyData }) => {
+  const { t } = useTranslation('QuickClash')
+
+  // If no trophy data is available, don't show this component
+  if (!trophyInsights || !trophyData) return null
+
+  // Determine trend icon and color
+  const getTrendIcon = () => {
+    if (trophyInsights.progressTrend === 'Rising') return TrendingUp
+    if (trophyInsights.progressTrend === 'Declining') return TrendingDown
+    return BarChart4
+  }
+
+  const getTrendColor = () => {
+    if (trophyInsights.progressTrend === 'Rising') return 'green.400'
+    if (trophyInsights.progressTrend === 'Declining') return 'red.400'
+    return 'blue.400'
+  }
+
+  const getLevelColor = () => {
+    if (trophyInsights.currentLevel === 'Advanced') return 'purple'
+    if (trophyInsights.currentLevel === 'Intermediate') return 'blue'
+    return 'green'
+  }
+
+  // Get trophy protection info
+  const hasProtection = trophyData.protectionApplied
+  const protectionType = trophyData.protectionType
+
+  return (
+    <MotionBox
+      p={4}
+      borderRadius="lg"
+      bg="linear-gradient(135deg, rgba(255, 215, 0, 0.15), rgba(255, 215, 0, 0.05))"
+      boxShadow="0 4px 12px rgba(0,0,0,0.1)"
+      borderWidth="1px"
+      borderColor="yellow.700"
+      borderStyle="solid"
+      initial={{ opacity: 0, y: 20 }}
+      animate={{ opacity: 1, y: 0 }}
+      transition={{ duration: 0.5, delay: 0.3 }}
+      mt={5}
+    >
+      <HStack mb={3} spacing={3}>
+        <Icon as={Trophy} color="yellow.400" boxSize={5} />
+        <Text fontWeight="bold" fontSize="md">
+          {t('Trophy Progression Path')}
+        </Text>
+
+        {hasProtection && (
+          <Tooltip
+            label={
+              protectionType === 'streak'
+                ? t('Your win streak protected you from trophy loss')
+                : t('As a newer player, your trophies were protected')
+            }
+          >
+            <Badge
+              colorScheme="yellow"
+              ml="auto"
+              display="flex"
+              alignItems="center"
+            >
+              <Icon as={Shield} boxSize={3} mr={1} />
+              {protectionType === 'streak'
+                ? t('Streak Protection')
+                : t('Beginner Protection')}
+            </Badge>
+          </Tooltip>
+        )}
+      </HStack>
+
+      <SimpleGrid columns={{ base: 1, md: 3 }} spacing={4} mb={3}>
+        <MotionBox
+          p={3}
+          borderRadius="md"
+          bg="rgba(255, 255, 255, 0.08)"
+          initial={{ opacity: 0, y: 10 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.3, delay: 0.1 }}
+        >
+          <HStack mb={1}>
+            <Icon as={Award} color="yellow.400" />
+            <Text fontWeight="bold" fontSize="sm">
+              {t('Current Level')}
+            </Text>
+          </HStack>
+          <HStack>
+            <Badge colorScheme={getLevelColor()} fontSize="sm" px={2} py={1}>
+              {trophyInsights.currentLevel}
+            </Badge>
+            <Text fontSize="sm">({trophyData.newTrophies})</Text>
+          </HStack>
+        </MotionBox>
+
+        <MotionBox
+          p={3}
+          borderRadius="md"
+          bg="rgba(255, 255, 255, 0.08)"
+          initial={{ opacity: 0, y: 10 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.3, delay: 0.2 }}
+        >
+          <HStack mb={1}>
+            <Icon as={getTrendIcon()} color={getTrendColor()} />
+            <Text fontWeight="bold" fontSize="sm">
+              {t('Progression')}
+            </Text>
+          </HStack>
+          <HStack>
+            <Badge
+              colorScheme={
+                trophyInsights.progressTrend === 'Rising'
+                  ? 'green'
+                  : trophyInsights.progressTrend === 'Declining'
+                  ? 'red'
+                  : 'blue'
+              }
+              fontSize="sm"
+              px={2}
+              py={1}
+            >
+              {trophyInsights.progressTrend}
+            </Badge>
+            <Text fontSize="sm">
+              {trophyData.change > 0
+                ? `+${trophyData.change}`
+                : trophyData.change}
+            </Text>
+          </HStack>
+        </MotionBox>
+
+        <MotionBox
+          p={3}
+          borderRadius="md"
+          bg="rgba(255, 255, 255, 0.08)"
+          initial={{ opacity: 0, y: 10 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.3, delay: 0.3 }}
+        >
+          <HStack mb={1}>
+            <Icon as={Target} color="purple.400" />
+            <Text fontWeight="bold" fontSize="sm">
+              {t('Next Goal')}
+            </Text>
+          </HStack>
+          <Text fontSize="sm">{trophyInsights.nextMilestone}</Text>
+        </MotionBox>
+      </SimpleGrid>
+
+      <Text fontSize="sm" color="whiteAlpha.900">
+        {trophyData.performance?.trophyAnalysis ||
+          t(
+            'Continue challenging other players to improve your trophy ranking and progress to higher levels.',
+          )}
+      </Text>
+    </MotionBox>
+  )
+}
+
 const SkillImprovement = ({ analysis }) => {
   const { t } = useTranslation('QuickClash')
 
@@ -286,6 +453,15 @@ const LearningTab = ({ analysis, t }) => {
           <SkillImprovement analysis={analysis} />
         </MotionBox>
       </Box>
+
+      {/* Trophy progression (new section) */}
+      {analysis.userAnalysis.trophyInsights &&
+        analysis.userAnalysis.trophyData && (
+          <TrophyProgression
+            trophyInsights={analysis.userAnalysis.trophyInsights}
+            trophyData={analysis.userAnalysis.trophyData}
+          />
+        )}
 
       <Divider borderColor="whiteAlpha.300" />
 

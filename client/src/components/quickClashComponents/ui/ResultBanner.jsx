@@ -1,5 +1,15 @@
+// components/quickClashComponents/ui/ResultBanner.jsx
 import React from 'react'
-import { Flex, Badge, HStack, Text, Icon, Box, Button } from '@chakra-ui/react'
+import {
+  Flex,
+  Badge,
+  HStack,
+  Text,
+  Icon,
+  Box,
+  Button,
+  Tooltip,
+} from '@chakra-ui/react'
 import { motion } from 'framer-motion'
 import { useTranslation } from 'react-i18next'
 import { Trophy, Shield, Swords, AlertCircle } from 'lucide-react'
@@ -16,7 +26,8 @@ const resultBannerAnimations = `
 `
 
 /**
- * Sleek banner showing the result of a completed challenge - adjusted for all screen sizes
+ * Enhanced banner showing the result of a completed challenge without trophy displays
+ * Protection information moved to VSLine component
  */
 const ResultBanner = ({
   isWinner,
@@ -64,11 +75,10 @@ const ResultBanner = ({
   // Select appropriate icon for result
   const resultIcon = isWinner ? Trophy : isTie ? Shield : AlertCircle
 
-  // Combined banner with revenge button for sleek design
   return (
     <MotionFlex
       position="relative"
-      py={{ base: 2, md: 2.5 }} // Slightly bigger padding, responsive
+      py={{ base: 2, md: 2.5 }}
       px={{ base: 3, md: 4 }}
       bg={bgGradient}
       backgroundSize="200% 100%"
@@ -100,12 +110,12 @@ const ResultBanner = ({
         <Icon
           as={resultIcon}
           color={isWinner ? 'yellow.300' : isTie ? 'yellow.100' : 'red.100'}
-          boxSize={{ base: 4, md: 4.5 }} // Slightly bigger icon, responsive
+          boxSize={{ base: 4, md: 4.5 }}
         />
         <Text
           textTransform="uppercase"
           letterSpacing="wide"
-          fontSize={{ base: 'sm', md: 'sm' }} // Adjusted text size, responsive
+          fontSize={{ base: 'sm', md: 'sm' }}
           fontWeight="bold"
         >
           {isWinner ? t('Victory!') : isTie ? t('Tie!') : t('Defeat!')}
@@ -128,7 +138,7 @@ const ResultBanner = ({
         {/* Inline revenge button for defeats - bigger for better usability */}
         {isDefeat && onRevenge && !revengeStatus && (
           <MotionButton
-            size={{ base: 'sm', md: 'sm' }} // Larger button size
+            size={{ base: 'sm', md: 'sm' }}
             colorScheme="red"
             bg="#e15b5b"
             leftIcon={<Icon as={Swords} boxSize={{ base: 3, md: 3.5 }} />}
@@ -153,13 +163,25 @@ const ResultBanner = ({
             }}
             whileHover={{ scale: 1.05 }}
             whileTap={{ scale: 0.95 }}
+            animate={{
+              boxShadow: [
+                '0 0 10px rgba(229, 62, 62, 0.4)',
+                '0 0 15px rgba(229, 62, 62, 0.7)',
+                '0 0 10px rgba(229, 62, 62, 0.4)',
+              ],
+              transition: {
+                duration: 1.5,
+                repeat: Infinity,
+                repeatType: 'reverse',
+              },
+            }}
           >
             {t('Revenge')}
           </MotionButton>
         )}
         {isDefeat && revengeStatus && (
           <Text fontSize="xs" color="whiteAlpha.600" textAlign="center">
-            Revenge sent
+            {t('Revenge sent')}
           </Text>
         )}
       </HStack>

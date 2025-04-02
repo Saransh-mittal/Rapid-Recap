@@ -21,6 +21,9 @@ const {
   getAnalysisStatus,
   getQuickClashLeaderboard,
   markChallengeRevenge,
+  getUserTrophiesController,
+  getUserTrophyHistoryController,
+  calculatePotentialTrophyExchangeController,
 } = require('../controllers/quickClashController')
 const {
   joinMatchmakingRoom,
@@ -69,5 +72,13 @@ router.get('/matchmaking/status', getMatchmakingStatus)
 
 // Leaderboard routes
 router.get('/leaderboard', getQuickClashLeaderboard)
+
+// Trophy routes
+router.get('/trophies', getUserTrophiesController)
+router.get('/trophies/history', getUserTrophyHistoryController)
+router.get(
+  '/trophies/exchange/:opponentId',
+  calculatePotentialTrophyExchangeController,
+)
 
 module.exports = router

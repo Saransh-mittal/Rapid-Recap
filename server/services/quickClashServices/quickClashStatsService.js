@@ -1,6 +1,7 @@
 // services/quickClashServices/quickClashStatsService.js
 const QuickClashChallenge = require('../../model/quickClashSchemas/quickClashChallengeSchema')
 const QuickClashSession = require('../../model/quickClashSchemas/quickClashSessionSchema')
+const { getUserTrophies } = require('./quickClashTrophyService')
 
 /**
  * Calculate Quick Clash statistics for a user
@@ -174,6 +175,14 @@ const getUserStats = async ({ userId }) => {
       // Include reading metrics for more detailed analytics
       stats.avgReadingTime = Math.round(totalReadingTime / sessions.length)
       stats.totalSessions = sessions.length
+    }
+
+    try {
+      const trophies = await getUserTrophies({ userId })
+      stats.trophies = trophies
+    } catch (error) {
+      console.error('Error getting user trophies:', error)
+      // Continue with other stats even if trophies fail
     }
 
     return stats

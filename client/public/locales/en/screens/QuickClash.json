@@ -338,5 +338,9 @@
   "pts": "pts",
   "hasChallengedYou": "has challenged you to a quiz battle!",
   "completedTheChallenge": "has completed the challenge you sent",
-  "viewResults": "View Results"
+  "viewResults": "View Results",
+  "challengeComplete": "Challenge Complete",
+  "youWon": "You won!",
+  "youLost": "You lost!",
+  "itsTie": "It's a tie!"
 }

@@ -80,6 +80,26 @@ const setupQuickClashGlobalEvents = io => {
     },
   )
 
+  // NEW: Listen for challenge progress updates and relay to clients
+  globalEmitter.on(
+    'quickClash:challengeProgress',
+    ({ userId, step, progress }) => {
+      if (!userId) {
+        console.error('Invalid userId in quickClash:challengeProgress event')
+        return
+      }
+
+      // Emit to the user's room with a small delay to avoid race conditions
+      setTimeout(() => {
+        const userRoom = `quickClash:${userId}`
+        io.to(userRoom).emit('quickClash:challengeProgress', {
+          step,
+          progress,
+        })
+      }, 50)
+    },
+  )
+
   globalEmitter.on(
     'quickClash:challengerNotified',
     ({ challenge, challenger, opponent, success, errorMessage }) => {
@@ -162,33 +182,72 @@ const setupQuickClashGlobalEvents = io => {
         return
       }
 
+      // Create detailed data objects for both players
+      const challengerData = {
+        userId: challenge.challenger._id,
+        user: {
+          _id: challenge.challenger._id,
+          name: challenge.challenger.name,
+          inGameName: challenge.challenger.inGameName,
+          pic: challenge.challenger.pic,
+        },
+        opponent: {
+          _id: challenge.opponent._id,
+          name: challenge.opponent.name,
+          inGameName: challenge.opponent.inGameName,
+          pic: challenge.opponent.pic,
+        },
+        userScore: challenge.challengerScore,
+        opponentScore: challenge.opponentScore,
+        category: challenge.category,
+        challengeId: challenge._id.toString(),
+        trackWinnerOutcomeResult,
+        completedByUserId,
+      }
+
+      const opponentData = {
+        userId: challenge.opponent._id,
+        user: {
+          _id: challenge.opponent._id,
+          name: challenge.opponent.name,
+          inGameName: challenge.opponent.inGameName,
+          pic: challenge.opponent.pic,
+        },
+        opponent: {
+          _id: challenge.challenger._id,
+          name: challenge.challenger.name,
+          inGameName: challenge.challenger.inGameName,
+          pic: challenge.challenger.pic,
+        },
+        userScore: challenge.opponentScore,
+        opponentScore: challenge.challengerScore,
+        category: challenge.category,
+        challengeId: challenge._id.toString(),
+        trackWinnerOutcomeResult,
+        completedByUserId,
+      }
+
       // Add a small delay to avoid race conditions
       setTimeout(() => {
-        // Emit to recipient's room
-        const recipientRoom = `quickClash:${challenge.challenger._id.toString()}`
-        io.to(recipientRoom).emit(
+        // Emit to challenger's room with challenger-specific data
+        const challengerRoom = `quickClash:${challenge.challenger._id.toString()}`
+        io.to(challengerRoom).emit(
           'quickClash:challengeCompletedByBothPlayers',
-          {
-            challengeId: challenge._id,
-            trackWinnerOutcomeResult,
-            completedByUserId,
-          },
+          challengerData,
         )
       }, 100)
+
       setTimeout(() => {
-        // Emit to recipient's room
-        const recipientRoom = `quickClash:${challenge.opponent._id.toString()}`
-        io.to(recipientRoom).emit(
+        // Emit to opponent's room with opponent-specific data
+        const opponentRoom = `quickClash:${challenge.opponent._id.toString()}`
+        io.to(opponentRoom).emit(
           'quickClash:challengeCompletedByBothPlayers',
-          {
-            challengeId: challenge._id,
-            trackWinnerOutcomeResult,
-            completedByUserId,
-          },
+          opponentData,
         )
       }, 200)
     },
   )
+
   // Listen for challenge completed event from controller
   globalEmitter.on(
     'quickClash:challengeCompleted',
@@ -247,9 +306,38 @@ const setupQuickClashGlobalEvents = io => {
     },
   )
 
-  // Event for when a bot completes a challenge
+  // New event for match preparation notification
+  globalEmitter.on(
+    'quickClash:matchFound',
+    ({ challenger, opponent, tempChallengeId }) => {
+      // Send match found notification to both users
+      if (challenger && challenger._id) {
+        io.to(`quickClash:${challenger._id}`).emit('quickClash:matchFound', {
+          opponent: {
+            name: opponent.name,
+            inGameName: opponent.inGameName,
+            pic: opponent.pic,
+            _id: opponent._id,
+          },
+          tempChallengeId,
+          isChallenger: true,
+        })
+      }
 
-  // Add these event handlers to setupQuickClashGlobalEvents function
+      if (opponent && opponent._id) {
+        io.to(`quickClash:${opponent._id}`).emit('quickClash:matchFound', {
+          opponent: {
+            name: challenger.name,
+            inGameName: challenger.inGameName,
+            pic: challenger.pic,
+            _id: challenger._id,
+          },
+          tempChallengeId,
+          isChallenger: false,
+        })
+      }
+    },
+  )
 
   globalEmitter.on('quickClash:challengeRaceCondition', ({ accepterId }) => {
     // Notify user who tried to accept a challenge that was already taken

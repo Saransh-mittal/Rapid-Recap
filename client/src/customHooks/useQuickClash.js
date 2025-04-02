@@ -18,11 +18,12 @@ import {
   setChallengeAnalysis,
   setChallengeAnalysisError,
   resetActiveChallenges,
+  fetchUserTrophies,
+  fetchTrophyHistory,
 } from '../redux/quickClashSlice'
 import { useToast } from '@chakra-ui/react'
 import { useTranslation } from 'react-i18next'
 import axios from 'axios'
-import { isRetryableError } from '../components/quickClashComponents/analysisCard/AnalysisErrorCard'
 
 // List of error substrings that indicate a non-retryable error (duplicated here for the hook)
 const NON_RETRYABLE_ERRORS = [
@@ -529,6 +530,18 @@ const useQuickClash = () => {
     ],
   )
 
+  // Trophy-specific functions
+  const loadUserTrophies = useCallback(() => {
+    return dispatch(fetchUserTrophies())
+  }, [dispatch])
+
+  const loadTrophyHistory = useCallback(
+    (limit = 10) => {
+      return dispatch(fetchTrophyHistory({ limit }))
+    },
+    [dispatch],
+  )
+
   return {
     // State
     activeChallenges: quickClashState.activeChallenges,
@@ -560,6 +573,23 @@ const useQuickClash = () => {
     challengeAnalyses: quickClashState.challengeAnalyses,
     challengeAnalysesLoading: quickClashState.challengeAnalysesLoading,
     challengeAnalysesError: quickClashState.challengeAnalysesError,
+
+    // Trophy data
+    userTrophies: quickClashState.userTrophies,
+    userTrophiesLoading: quickClashState.userTrophiesLoading,
+    userTrophiesError: quickClashState.userTrophiesError,
+
+    trophyHistory: quickClashState.trophyHistory,
+    trophyHistoryLoading: quickClashState.trophyHistoryLoading,
+    trophyHistoryError: quickClashState.trophyHistoryError,
+
+    potentialTrophyExchange: quickClashState.potentialTrophyExchange,
+    trophyExchangeLoading: quickClashState.trophyExchangeLoading,
+    trophyExchangeError: quickClashState.trophyExchangeError,
+
+    // Trophy actions
+    loadUserTrophies,
+    loadTrophyHistory,
 
     // Actions
     loadMoreActiveChallenges,

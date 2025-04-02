@@ -37,7 +37,8 @@ const PerformanceMetrics = ({
         {/* Left column - Knowledge patterns */}
         <Box flex="1">
           {/* Factual recall */}
-          {userAnalysis?.analysis?.knowledgePatterns?.factualRecall && (
+          {userAnalysis?.analysis?.knowledgePatterns?.factualRecall !==
+            undefined && (
             <VStack align="start" spacing={0.5}>
               <HStack justify="space-between" w="100%" fontSize="2xs">
                 <HStack spacing={1}>
@@ -76,7 +77,8 @@ const PerformanceMetrics = ({
           )}
 
           {/* Technical Terms */}
-          {userAnalysis?.analysis?.knowledgePatterns?.technicalTerms && (
+          {userAnalysis?.analysis?.knowledgePatterns?.technicalTerms !==
+            undefined && (
             <VStack align="start" spacing={0.5} mt={1}>
               <HStack justify="space-between" w="100%" fontSize="2xs">
                 <HStack spacing={1}>

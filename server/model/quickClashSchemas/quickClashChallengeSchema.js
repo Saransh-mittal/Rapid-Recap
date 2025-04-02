@@ -1,4 +1,4 @@
-// models/quickClashChallengeSchema.js
+// Update to model/quickClashSchemas/quickClashChallengeSchema.js
 const mongoose = require('mongoose')
 
 const quickClashChallengeSchema = new mongoose.Schema({
@@ -70,6 +70,39 @@ const quickClashChallengeSchema = new mongoose.Schema({
   fromMatchmaking: {
     type: Boolean,
     default: false,
+  },
+  // Potential trophy exchanges - calculated at challenge creation
+  trophyPotential: {
+    challenger: {
+      currentTrophies: Number,
+      potentialGain: Number,
+      potentialLoss: Number,
+    },
+    opponent: {
+      currentTrophies: Number,
+      potentialGain: Number,
+      potentialLoss: Number,
+    },
+  },
+  // Actual trophy updates - added after challenge completion
+  trophyUpdates: {
+    challenger: {
+      previousTrophies: Number,
+      newTrophies: Number,
+      change: Number,
+    },
+    opponent: {
+      previousTrophies: Number,
+      newTrophies: Number,
+      change: Number,
+    },
+    isTie: Boolean,
+    protectionApplied: {
+      challenger: Boolean,
+      challenger_type: String,
+      opponent: Boolean,
+      opponent_type: String,
+    },
   },
   createdAt: {
     type: Date,
