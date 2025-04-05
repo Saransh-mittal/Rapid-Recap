@@ -30,6 +30,13 @@ const {
   leaveMatchmakingRoom,
   getMatchmakingStatus,
 } = require('../controllers/quickClashMatchmakingController')
+const {
+  joinGlobalMatchmakingQueue,
+  leaveGlobalMatchmakingQueue,
+  getGlobalMatchmakingStatusController,
+  processGlobalMatchmakingController,
+} = require('../controllers/quickClashGlobalMatchmakingController')
+const teamRoutes = require('./quickClashTeamRoutes')
 
 const router = express.Router()
 const dailyTaskRoutes = require('./quickClashDailyTaskRoutes')
@@ -39,6 +46,9 @@ router.use(Authenticate)
 
 // Mount daily task routes
 router.use('/dailyTasks', dailyTaskRoutes)
+
+// Mount team routes
+router.use('/', teamRoutes)
 
 // Challenge management routes
 router.post('/challenge/create', createNewChallenge)
@@ -65,10 +75,16 @@ router.get('/analysis/:challengeId/status', getAnalysisStatus)
 
 router.get('/stats', getUserClashStats)
 
-// Simplified matchmaking routes - remove accept endpoint
+// Simplified 1v1 matchmaking routes
 router.post('/matchmaking/join', joinMatchmakingRoom)
 router.post('/matchmaking/leave', leaveMatchmakingRoom)
 router.get('/matchmaking/status', getMatchmakingStatus)
+
+// Global 4v4 matchmaking routes (new)
+router.post('/global-matchmaking/join', joinGlobalMatchmakingQueue)
+router.post('/global-matchmaking/leave', leaveGlobalMatchmakingQueue)
+router.get('/global-matchmaking/status', getGlobalMatchmakingStatusController)
+router.post('/global-matchmaking/process', processGlobalMatchmakingController)
 
 // Leaderboard routes
 router.get('/leaderboard', getQuickClashLeaderboard)

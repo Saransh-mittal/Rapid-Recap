@@ -62,36 +62,36 @@ const ChallengeItem = ({
   index,
 }) => {
   const { t } = useTranslation('QuickClash')
-  const isChallenger = challenge.challenger._id === userId
-  const opponent = isChallenger ? challenge.opponent : challenge.challenger
+  const isChallenger = challenge?.challenger?._id === userId
+  const opponent = isChallenger ? challenge?.opponent : challenge?.challenger
 
   const myAttempted = isChallenger
-    ? challenge.challengerAttempted
-    : challenge.opponentAttempted
+    ? challenge?.challengerAttempted
+    : challenge?.opponentAttempted
 
-  const isExpired = new Date(challenge.expiresAt) < new Date()
+  const isExpired = new Date(challenge?.expiresAt) < new Date()
   const myScore = isChallenger
-    ? challenge.challengerScore
-    : challenge.opponentScore
+    ? challenge?.challengerScore
+    : challenge?.opponentScore
   const hasCompleted = myScore > 0
 
   const isWinner =
-    challenge.status === 'completed' &&
-    challenge.challengerAttempted &&
-    challenge.opponentAttempted &&
-    ((isChallenger && challenge.challengerScore > challenge.opponentScore) ||
-      (!isChallenger && challenge.opponentScore > challenge.challengerScore))
+    challenge?.status === 'completed' &&
+    challenge?.challengerAttempted &&
+    challenge?.opponentAttempted &&
+    ((isChallenger && challenge?.challengerScore > challenge?.opponentScore) ||
+      (!isChallenger && challenge?.opponentScore > challenge?.challengerScore))
 
   const isTie =
-    challenge.status === 'completed' &&
-    challenge.challengerAttempted &&
-    challenge.opponentAttempted &&
-    challenge.challengerScore === challenge.opponentScore
+    challenge?.status === 'completed' &&
+    challenge?.challengerAttempted &&
+    challenge?.opponentAttempted &&
+    challenge?.challengerScore === challenge?.opponentScore
 
   const isDefeat =
-    challenge.status === 'completed' &&
-    challenge.challengerAttempted &&
-    challenge.opponentAttempted &&
+    challenge?.status === 'completed' &&
+    challenge?.challengerAttempted &&
+    challenge?.opponentAttempted &&
     !isWinner &&
     !isTie
 
@@ -125,7 +125,7 @@ const ChallengeItem = ({
     let borderWidthStyle = '1px'
     let gradientOverlay = 'none'
 
-    if (challenge.status === 'completed') {
+    if (challenge?.status === 'completed') {
       if (isWinner) {
         borderColorStyle = 'purple.400'
         boxShadowStyle = '0 0 15px rgba(124, 58, 237, 0.3)'
@@ -141,12 +141,12 @@ const ChallengeItem = ({
         gradientOverlay =
           'linear-gradient(135deg, rgba(245, 101, 101, 0.05), transparent)'
       }
-    } else if (challenge.status === 'active' && !myAttempted) {
+    } else if (challenge?.status === 'active' && !myAttempted) {
       borderColorStyle = 'green.400'
       boxShadowStyle = '0 0 10px rgba(72, 187, 120, 0.3)'
       gradientOverlay =
         'linear-gradient(135deg, rgba(72, 187, 120, 0.05), transparent)'
-    } else if (challenge.status === 'pending') {
+    } else if (challenge?.status === 'pending') {
       // Use gold border for both 'New' and 'Awaiting' status
       borderColorStyle = 'yellow.400'
       boxShadowStyle = '0 0 10px rgba(236, 201, 75, 0.2)'
@@ -160,7 +160,7 @@ const ChallengeItem = ({
       borderWidth: borderWidthStyle,
       gradientOverlay,
     }
-  }, [challenge.status, isWinner, isTie, isDefeat, myAttempted])
+  }, [challenge?.status, isWinner, isTie, isDefeat, myAttempted])
 
   // Determine category badge style
   const getCategoryStyle = () => {
@@ -175,17 +175,17 @@ const ChallengeItem = ({
       Environment: 'green',
     }
 
-    return categoryColors[challenge.category] || 'purple'
+    return categoryColors[challenge?.category] || 'purple'
   }
 
   const getTrophyPotential = () => {
     // For active or pending challenges, return potential gain
-    if (challenge.status === 'active' || challenge.status === 'pending') {
-      if (!challenge.trophyPotential) return 0
+    if (challenge?.status === 'active' || challenge?.status === 'pending') {
+      if (!challenge?.trophyPotential) return 0
 
       return isChallenger
-        ? challenge.trophyPotential.challenger.potentialGain
-        : challenge.trophyPotential.opponent.potentialGain
+        ? challenge?.trophyPotential.challenger?.potentialGain
+        : challenge?.trophyPotential.opponent.potentialGain
     }
 
     return 0
@@ -193,24 +193,24 @@ const ChallengeItem = ({
 
   // Get trophy change
   const getTrophyChange = () => {
-    if (!challenge.trophyUpdates) return undefined
+    if (!challenge?.trophyUpdates) return undefined
 
     const trophyChange = isChallenger
-      ? challenge.trophyUpdates.challenger.change
-      : challenge.trophyUpdates.opponent.change
+      ? challenge?.trophyUpdates.challenger?.change
+      : challenge?.trophyUpdates.opponent.change
 
     return trophyChange
   }
 
   // Determine if we should show player status section
   const showPlayerStatus =
-    challenge.status !== 'pending' && challenge.status !== 'rejected'
+    challenge?.status !== 'pending' && challenge?.status !== 'rejected'
 
   // Create a category tag that can be reused
   const CategoryTag = () => (
     <Tag size="sm" colorScheme={getCategoryStyle()} borderRadius="full" px={3}>
       <Icon as={Target} size={12} mr={1} />
-      {challenge.category}
+      {challenge?.category}
     </Tag>
   )
 
@@ -246,7 +246,7 @@ const ChallengeItem = ({
         }}
       >
         {/* Card Header - Show status badge and category for active/pending */}
-        {challenge.status !== 'completed' && (
+        {challenge?.status !== 'completed' && (
           <Flex
             p={3}
             justify="space-between"
@@ -256,9 +256,9 @@ const ChallengeItem = ({
             bg="rgba(45, 55, 72, 0.3)"
           >
             <StatusBadge
-              status={challenge.status}
+              status={challenge?.status}
               isChallenger={isChallenger}
-              expiresAt={challenge.expiresAt}
+              expiresAt={challenge?.expiresAt}
             />
           </Flex>
         )}
@@ -266,8 +266,8 @@ const ChallengeItem = ({
         {/* Card Body */}
         <Box p={3}>
           {/* For pending/new challenges, show opponent and category in body */}
-          {(challenge.status === 'pending' ||
-            (challenge.status === 'active' && !showPlayerStatus)) && (
+          {(challenge?.status === 'pending' ||
+            (challenge?.status === 'active' && !showPlayerStatus)) && (
             <HStack mb={3} justify="space-between">
               <HStack spacing={2}>
                 <Icon
@@ -285,7 +285,7 @@ const ChallengeItem = ({
 
               <HStack spacing={2}>
                 {/* Show potential trophy gain with enhanced component */}
-                {challenge.trophyPotential && (
+                {challenge?.trophyPotential && (
                   <EnhancedPotentialTrophyDisplay
                     potentialGain={getTrophyPotential()}
                     size="sm"
@@ -302,30 +302,30 @@ const ChallengeItem = ({
             <>
               <VStack spacing={2} align="stretch" mb={2}>
                 <PlayerStatus
-                  player={challenge.challenger}
-                  score={challenge.challengerScore}
-                  attempted={challenge.challengerAttempted}
+                  player={challenge?.challenger}
+                  score={challenge?.challengerScore}
+                  attempted={challenge?.challengerAttempted}
                   isUser={isChallenger}
-                  trophies={challenge.challenger.quickClashTrophies}
+                  trophies={challenge?.challenger?.quickClashTrophies}
                 />
 
                 {/* VS Line with Trophy Change Display */}
                 <VSLine
                   trophyChange={getTrophyChange()}
                   category={
-                    challenge.status === 'active' ? challenge.category : null
+                    challenge?.status === 'active' ? challenge?.category : null
                   }
                   categoryColorScheme={getCategoryStyle()}
-                  isActiveChallenge={challenge.status === 'active'}
+                  isActiveChallenge={challenge?.status === 'active'}
                   myAttempted={myAttempted}
                 />
 
                 <PlayerStatus
-                  player={challenge.opponent}
-                  score={challenge.opponentScore}
-                  attempted={challenge.opponentAttempted}
+                  player={challenge?.opponent}
+                  score={challenge?.opponentScore}
+                  attempted={challenge?.opponentAttempted}
                   isUser={!isChallenger}
-                  trophies={challenge.opponent.quickClashTrophies}
+                  trophies={challenge?.opponent?.quickClashTrophies}
                 />
               </VStack>
             </>
@@ -357,12 +357,12 @@ const ChallengeItem = ({
                 >
                   {t('View Report')}
                 </Button>
-              ) : challenge.status === 'pending' && !isChallenger ? (
+              ) : challenge?.status === 'pending' && !isChallenger ? (
                 <HStack spacing={3}>
                   <Button
                     size="sm"
                     colorScheme="green"
-                    onClick={() => onAccept(challenge._id)}
+                    onClick={() => onAccept(challenge?._id)}
                     leftIcon={<Check size={14} />}
                     as={motion.button}
                     whileHover={{ scale: 1.03 }}
@@ -379,7 +379,7 @@ const ChallengeItem = ({
                     size="sm"
                     variant="outline"
                     colorScheme="red"
-                    onClick={() => onDecline(challenge._id)}
+                    onClick={() => onDecline(challenge?._id)}
                     leftIcon={<X size={14} />}
                     as={motion.button}
                     whileHover={{ scale: 1.03 }}
@@ -389,7 +389,7 @@ const ChallengeItem = ({
                     {t('Decline')}
                   </Button>
                 </HStack>
-              ) : challenge.status === 'active' && !myAttempted ? (
+              ) : challenge?.status === 'active' && !myAttempted ? (
                 <Flex align="center" gap={2}>
                   {/* Show potential trophy gain with enhanced component */}
                   <EnhancedPotentialTrophyDisplay
@@ -401,7 +401,7 @@ const ChallengeItem = ({
                   <Button
                     size="sm"
                     colorScheme="green"
-                    onClick={() => onStart(challenge._id)}
+                    onClick={() => onStart(challenge?._id)}
                     leftIcon={<PlayCircle size={14} />}
                     as={motion.button}
                     whileHover={{ scale: 1.05 }}
@@ -424,31 +424,31 @@ const ChallengeItem = ({
         </Box>
 
         {/* Result Banner - Without trophy display */}
-        {challenge.status === 'completed' &&
-          challenge.challengerAttempted &&
-          challenge.opponentAttempted && (
+        {challenge?.status === 'completed' &&
+          challenge?.challengerAttempted &&
+          challenge?.opponentAttempted && (
             <ResultBanner
               isWinner={isWinner}
               isTie={isTie}
               isDefeat={isDefeat}
-              expiresAt={challenge.expiresAt}
-              category={challenge.category}
+              expiresAt={challenge?.expiresAt}
+              category={challenge?.category}
               onRevenge={isDefeat ? () => onRevenge(opponent, challenge) : null}
-              revengeStatus={challenge.revengeStatus}
+              revengeStatus={challenge?.revengeStatus}
               revengeLoading={revengeLoading}
               protectionApplied={
                 isDefeat &&
-                challenge.trophyUpdates?.protectionApplied &&
+                challenge?.trophyUpdates?.protectionApplied &&
                 (isChallenger
-                  ? challenge.trophyUpdates.protectionApplied.challenger
-                  : challenge.trophyUpdates.protectionApplied.opponent)
+                  ? challenge?.trophyUpdates.protectionApplied.challenger
+                  : challenge?.trophyUpdates.protectionApplied.opponent)
               }
               protectionType={
                 isDefeat &&
-                challenge.trophyUpdates?.protectionApplied &&
+                challenge?.trophyUpdates?.protectionApplied &&
                 (isChallenger
-                  ? challenge.trophyUpdates.protectionApplied.challenger_type
-                  : challenge.trophyUpdates.protectionApplied.opponent_type)
+                  ? challenge?.trophyUpdates.protectionApplied.challenger_type
+                  : challenge?.trophyUpdates.protectionApplied.opponent_type)
               }
             />
           )}

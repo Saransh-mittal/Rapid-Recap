@@ -86,8 +86,8 @@ const PlayerStatus = ({
 
       <HStack spacing={3} position="relative" zIndex={1}>
         <Avatar
-          name={player.name}
-          src={player.pic}
+          name={player?.name}
+          src={player?.pic}
           size="sm"
           bg={isUser ? 'purple.400' : 'gray.500'}
           borderWidth={2}
@@ -103,7 +103,7 @@ const PlayerStatus = ({
               noOfLines={1}
               maxW="150px"
             >
-              {player.inGameName || player.name}
+              {player?.inGameName || player?.name}
               {isUser && (
                 <Badge size="sm" ml={1} colorScheme="purple" variant="solid">
                   {t('You')}

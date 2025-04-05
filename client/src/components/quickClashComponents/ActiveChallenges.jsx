@@ -35,6 +35,7 @@ import {
   X,
   FileText,
   ChevronDown,
+  Users,
 } from 'lucide-react'
 
 // Import custom components
@@ -50,22 +51,29 @@ const NewChallengeModal = React.lazy(() => import('./modals/NewChallengeModal'))
 const CompletedChallengesView = React.lazy(() =>
   import('./CompletedChallengesView'),
 )
+const TeamBattleList = React.lazy(() => import('./team/TeamBattleList'))
 
 // Custom hooks
 import useQuickClash from '../../customHooks/useQuickClash'
 import useQuickClashSocket from '../../customHooks/useQuickClashSocket'
+import useQuickClashTeamBattle from '../../customHooks/useQuickClashTeamBattle'
 
 const MotionCenter = motion(Center)
 const MotionButton = motion(Button)
 const MotionBox = motion(Box)
 
 /**
- * Displays active challenges, allowing filtering and interaction
+ * Displays active challenges, allowing filtering between 1v1 and 4v4 modes
  */
 const ActiveChallenges = () => {
   const { t } = useTranslation('QuickClash')
   const toast = useToast()
   const navigate = useNavigate()
+
+  // Mode state (1v1 or 4v4)
+  const [mode, setMode] = useState('1v1')
+
+  // 1v1 Challenge states
   const [filter, setFilter] = useState('all')
   const {
     activeChallenges: challenges,
@@ -85,6 +93,15 @@ const ActiveChallenges = () => {
   const [selectedSession, setSelectedSession] = useState(null)
   const [nextPageLoading, setNextPageLoading] = useState(false)
 
+  // 4v4 Team battle states
+  const {
+    activeBattles,
+    activeBattlesLoading,
+    activeBattlesError,
+    loadTeamBattles,
+    goToBattle,
+  } = useQuickClashTeamBattle()
+
   // Modal disclosures
   const [isConfirmOpen, setIsConfirmOpen] = useState(false)
   const [isReportOpen, setIsReportOpen] = useState(false)
@@ -97,16 +114,20 @@ const ActiveChallenges = () => {
   const [revengeProgress, setRevengeProgress] = useState(0)
   const progressTimerRef = useRef(null)
 
-  // Fetch challenges
+  // Fetch challenges/battles on mount and when mode changes
   useEffect(() => {
     if (userId) {
-      loadActiveChallenges()
+      if (mode === '1v1') {
+        loadActiveChallenges()
+      } else if (mode === '4v4') {
+        loadTeamBattles()
+      }
     }
-  }, [userId, loadActiveChallenges])
+  }, [userId, mode, loadActiveChallenges, loadTeamBattles])
 
-  // Filter challenges based on the selected filter
+  // Filter 1v1 challenges based on the selected filter
   const filteredChallenges = useMemo(() => {
-    if (!challenges || !userId) return []
+    if (!challenges || !userId || mode !== '1v1') return []
 
     let filtered = [...challenges]
 
@@ -139,21 +160,28 @@ const ActiveChallenges = () => {
     })
 
     return filtered
-  }, [filter, challenges, userId])
+  }, [filter, challenges, userId, mode])
+
+  // Handle tab changes between 1v1 and 4v4
+  const handleModeChange = newMode => {
+    setMode(newMode)
+  }
 
   // Extract completed challenges for enhanced view
   const completedChallenges = useMemo(() => {
+    if (mode !== '1v1') return []
+
     return filteredChallenges.filter(
       c =>
         c.status === 'completed' &&
         c.challengerAttempted &&
         c.opponentAttempted,
     )
-  }, [filteredChallenges])
+  }, [filteredChallenges, mode])
 
   // Group challenges by their status
   const groupedChallenges = useMemo(() => {
-    if (!filteredChallenges.length) return {}
+    if (!filteredChallenges.length || mode !== '1v1') return {}
 
     // Group challenges by status, but exclude completed challenges as they'll be shown separately
     return filteredChallenges.reduce((groups, challenge) => {
@@ -166,7 +194,7 @@ const ActiveChallenges = () => {
         return groups
       }
 
-      const isChallenger = challenge.challenger._id === userId
+      const isChallenger = challenge?.challenger?._id === userId
       let statusGroup
 
       if (challenge.status === 'completed') {
@@ -188,7 +216,7 @@ const ActiveChallenges = () => {
       groups[statusGroup].push(challenge)
       return groups
     }, {})
-  }, [filteredChallenges, userId])
+  }, [filteredChallenges, userId, mode])
 
   // Define display order and labels for status groups
   const statusGroups = [
@@ -472,6 +500,14 @@ const ActiveChallenges = () => {
     }
   }, [nextPageLoading, hasMore, loadMoreActiveChallenges, toast, t])
 
+  // Handle entering a team battle
+  const handleEnterTeamBattle = useCallback(
+    battleId => {
+      goToBattle(battleId)
+    },
+    [goToBattle],
+  )
+
   // Combine all handlers for child components
   const handlers = useMemo(
     () => ({
@@ -484,8 +520,32 @@ const ActiveChallenges = () => {
     [handleAccept, handleDecline, handleStart, handleViewReport, handleRevenge],
   )
 
+  // Check if both modes are loading
+  const isLoading = useMemo(() => {
+    if (mode === '1v1') {
+      return loading && !challenges.length
+    } else {
+      return activeBattlesLoading && !activeBattles.length
+    }
+  }, [
+    mode,
+    loading,
+    challenges.length,
+    activeBattlesLoading,
+    activeBattles.length,
+  ])
+
+  // Get error based on current mode
+  const currentError = useMemo(() => {
+    if (mode === '1v1') {
+      return error
+    } else {
+      return activeBattlesError
+    }
+  }, [mode, error, activeBattlesError])
+
   // Check if we're still loading and no challenges have been loaded yet
-  if (loading && !challenges.length) {
+  if (isLoading) {
     return (
       <MotionCenter
         py={12}
@@ -502,7 +562,9 @@ const ActiveChallenges = () => {
             emptyColor="gray.700"
           />
           <Text color="whiteAlpha.800" fontWeight="medium">
-            {t('Loading challenges...')}
+            {mode === '1v1'
+              ? t('Loading challenges...')
+              : t('Loading team battles...')}
           </Text>
         </VStack>
       </MotionCenter>
@@ -510,7 +572,11 @@ const ActiveChallenges = () => {
   }
 
   // If there was an error and no challenges have been loaded yet
-  if (error && !challenges.length) {
+  if (
+    currentError &&
+    ((mode === '1v1' && !challenges.length) ||
+      (mode === '4v4' && !activeBattles.length))
+  ) {
     return (
       <MotionCenter
         py={12}
@@ -529,11 +595,13 @@ const ActiveChallenges = () => {
         >
           <Icon as={FileText} boxSize={10} color="red.400" />
           <Text color="white" fontWeight="medium" textAlign="center">
-            {error}
+            {currentError}
           </Text>
           <Button
             colorScheme="purple"
-            onClick={() => loadActiveChallenges()}
+            onClick={() =>
+              mode === '1v1' ? loadActiveChallenges() : loadTeamBattles()
+            }
             as={motion.button}
             whileHover={{ scale: 1.05 }}
             whileTap={{ scale: 0.95 }}
@@ -548,118 +616,131 @@ const ActiveChallenges = () => {
   return (
     <Box>
       <VStack align="stretch" spacing={6}>
-        {/* Filter Tabs */}
-        <FilterTabs selectedFilter={filter} onFilterChange={setFilter} />
+        {/* Mode Selection Tabs */}
+        <FilterTabs selectedFilter={mode} onFilterChange={handleModeChange} />
 
-        {/* Challenge Count */}
-        {filteredChallenges.length > 0 && filter !== 'all' && (
-          <Box textAlign="center">
-            <Text color="whiteAlpha.700" fontSize="sm">
-              {filteredChallenges.length}{' '}
-              {filteredChallenges.length === 1
-                ? t('challenge')
-                : t('challenges')}{' '}
-              {filter === 'sent'
-                ? t('sent')
-                : filter === 'received'
-                ? t('received')
-                : ''}
-            </Text>
-          </Box>
-        )}
-
-        {/* Challenge List Grouped by Status */}
-        <AnimatePresence>
-          {filteredChallenges.length === 0 ? (
-            <EmptyState filter={filter} />
-          ) : (
-            <VStack spacing={8} align="stretch" px={1}>
-              {/* Regular status sections (non-completed challenges) */}
-              {statusGroups.map((group, idx) => (
-                <StatusSection
-                  key={group.key}
-                  title={group.label}
-                  icon={group.icon}
-                  challenges={groupedChallenges[group.key] || []}
-                  userId={userId}
-                  handlers={handlers}
-                  animationDelay={idx * 0.1}
-                  revengeLoading={revengeLoading}
-                />
-              ))}
-
-              {/* Enhanced completed challenges section with date grouping */}
-              {completedChallenges.length > 0 && (
-                <MotionBox
-                  initial={{ opacity: 0, y: 20 }}
-                  animate={{
-                    opacity: 1,
-                    y: 0,
-                    transition: {
-                      delay: statusGroups.length * 0.1,
-                      duration: 0.4,
-                      type: 'spring',
-                      stiffness: 100,
-                      damping: 15,
-                    },
-                  }}
-                >
-                  <HStack mb={3} spacing={2}>
-                    <Icon as={Trophy} color="purple.400" boxSize={5} />
-                    <Heading size="sm" color="white">
-                      {t('Completed')} ({completedChallenges.length})
-                    </Heading>
-                  </HStack>
-
-                  <Divider mb={4} opacity={0.2} />
-
-                  <Suspense
-                    fallback={
-                      <Center py={4}>
-                        <Spinner size="lg" color="purple.400" />
-                      </Center>
-                    }
-                  >
-                    <CompletedChallengesView
-                      challenges={completedChallenges}
+        {/* Challenge Lists based on selected mode */}
+        <AnimatePresence mode="wait">
+          {mode === '1v1' ? (
+            /* 1v1 Challenges View */
+            <MotionBox
+              key="1v1-view"
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0, y: -20 }}
+              transition={{ duration: 0.4 }}
+            >
+              {filteredChallenges.length === 0 ? (
+                <EmptyState filter={filter} />
+              ) : (
+                <VStack spacing={8} align="stretch" px={1}>
+                  {/* Regular status sections (non-completed challenges) */}
+                  {statusGroups.map((group, idx) => (
+                    <StatusSection
+                      key={group.key}
+                      title={group.label}
+                      icon={group.icon}
+                      challenges={groupedChallenges[group.key] || []}
                       userId={userId}
-                      handlers={{
-                        onViewReport: handleViewReport,
-                        onRevenge: handleRevenge,
-                      }}
-                      isLoading={false}
+                      handlers={handlers}
+                      animationDelay={idx * 0.1}
                       revengeLoading={revengeLoading}
                     />
-                  </Suspense>
-                </MotionBox>
+                  ))}
+
+                  {/* Enhanced completed challenges section with date grouping */}
+                  {completedChallenges.length > 0 && (
+                    <MotionBox
+                      initial={{ opacity: 0, y: 20 }}
+                      animate={{
+                        opacity: 1,
+                        y: 0,
+                        transition: {
+                          delay: statusGroups.length * 0.1,
+                          duration: 0.4,
+                          type: 'spring',
+                          stiffness: 100,
+                          damping: 15,
+                        },
+                      }}
+                    >
+                      <HStack mb={3} spacing={2}>
+                        <Icon as={Trophy} color="purple.400" boxSize={5} />
+                        <Heading size="sm" color="white">
+                          {t('Completed')} ({completedChallenges.length})
+                        </Heading>
+                      </HStack>
+
+                      <Divider mb={4} opacity={0.2} />
+
+                      <Suspense
+                        fallback={
+                          <Center py={4}>
+                            <Spinner size="lg" color="purple.400" />
+                          </Center>
+                        }
+                      >
+                        <CompletedChallengesView
+                          challenges={completedChallenges}
+                          userId={userId}
+                          handlers={{
+                            onViewReport: handleViewReport,
+                            onRevenge: handleRevenge,
+                          }}
+                          isLoading={false}
+                          revengeLoading={revengeLoading}
+                        />
+                      </Suspense>
+                    </MotionBox>
+                  )}
+                </VStack>
               )}
-            </VStack>
+
+              {/* Load More Button - show if there are more challenges to load */}
+              {hasMore && filteredChallenges.length > 0 && (
+                <Flex justify="center" mt={4} mb={6}>
+                  <MotionButton
+                    onClick={handleLoadMore}
+                    isLoading={nextPageLoading}
+                    colorScheme="purple"
+                    variant="outline"
+                    size="md"
+                    leftIcon={<ChevronDown size={18} />}
+                    whileHover={{ scale: 1.05 }}
+                    whileTap={{ scale: 0.95 }}
+                    initial={{ opacity: 0 }}
+                    animate={{ opacity: 1 }}
+                    transition={{ delay: 0.2 }}
+                  >
+                    {t('Load More Challenges')}
+                  </MotionButton>
+                </Flex>
+              )}
+            </MotionBox>
+          ) : (
+            /* 4v4 Team Battles View */
+            <MotionBox
+              key="4v4-view"
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0, y: -20 }}
+              transition={{ duration: 0.4 }}
+            >
+              <Suspense
+                fallback={
+                  <Center py={4}>
+                    <Spinner size="lg" color="purple.400" />
+                  </Center>
+                }
+              >
+                <TeamBattleList />
+              </Suspense>
+            </MotionBox>
           )}
         </AnimatePresence>
-
-        {/* Load More Button - show if there are more challenges to load */}
-        {hasMore && filteredChallenges.length > 0 && (
-          <Flex justify="center" mt={4} mb={6}>
-            <MotionButton
-              onClick={handleLoadMore}
-              isLoading={nextPageLoading}
-              colorScheme="purple"
-              variant="outline"
-              size="md"
-              leftIcon={<ChevronDown size={18} />}
-              whileHover={{ scale: 1.05 }}
-              whileTap={{ scale: 0.95 }}
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
-              transition={{ delay: 0.2 }}
-            >
-              {t('Load More Challenges')}
-            </MotionButton>
-          </Flex>
-        )}
       </VStack>
 
-      {/* Confirmation Dialog */}
+      {/* Confirmation Dialog - only for 1v1 mode */}
       <ConfirmationDialog
         isOpen={isConfirmOpen}
         onClose={closeConfirmDialog}
@@ -679,7 +760,7 @@ const ActiveChallenges = () => {
         }
       />
 
-      {/* Revenge Confirmation Dialog */}
+      {/* Revenge Confirmation Dialog - only for 1v1 mode */}
       {revengeData && (
         <RevengeConfirmationDialog
           isOpen={isRevengeConfirmOpen}
@@ -694,7 +775,7 @@ const ActiveChallenges = () => {
         />
       )}
 
-      {/* Quiz Report Modal */}
+      {/* Quiz Report Modal - only for 1v1 mode */}
       <Suspense fallback={null}>
         {isReportOpen && selectedSession && (
           <QuizReportModal

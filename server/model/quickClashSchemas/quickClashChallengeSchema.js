@@ -1,16 +1,16 @@
-// Update to model/quickClashSchemas/quickClashChallengeSchema.js
+// model/quickClashSchemas/quickClashChallengeSchema.js
 const mongoose = require('mongoose')
 
 const quickClashChallengeSchema = new mongoose.Schema({
   challenger: {
     type: mongoose.Schema.Types.ObjectId,
     ref: 'USER',
-    required: true,
+    required: false, // Changed to false since team battle challenges start without a challenger
   },
   opponent: {
     type: mongoose.Schema.Types.ObjectId,
     ref: 'USER',
-    required: true,
+    required: false, // Changed to false since team battle challenges start without an opponent
   },
   selectedCategories: [
     {
@@ -71,6 +71,16 @@ const quickClashChallengeSchema = new mongoose.Schema({
     type: Boolean,
     default: false,
   },
+  // NEW: Team battle related fields
+  fromTeamBattle: {
+    type: Boolean,
+    default: false,
+  },
+  teamBattle: {
+    type: mongoose.Schema.Types.ObjectId,
+    ref: 'QUICK_CLASH_TEAM_BATTLE',
+    default: null,
+  },
   // Potential trophy exchanges - calculated at challenge creation
   trophyPotential: {
     challenger: {
@@ -118,6 +128,7 @@ const quickClashChallengeSchema = new mongoose.Schema({
 quickClashChallengeSchema.index({ expiresAt: 1 })
 quickClashChallengeSchema.index({ challenger: 1, status: 1 })
 quickClashChallengeSchema.index({ opponent: 1, status: 1 })
+quickClashChallengeSchema.index({ teamBattle: 1 }) // NEW: Index for team battle lookup
 
 const QuickClashChallenge = mongoose.model(
   'QUICK_CLASH_CHALLENGE',

@@ -15,6 +15,8 @@ import inventoryReducer from './inventorySlice'
 import quickClashReducer from './quickClashSlice'
 import quickClashMatchmakingReducer from './quickClashMatchmakingSlice'
 import quickClashDailyTasksReducer from './quickClashDailyTasksSlice'
+import quickClashTeamBattleReducer from './quickClashTeamBattleSlice'
+import quickClashGlobalMatchmakingReducer from './quickClashGlobalMatchmakingSlice'
 
 export const store = configureStore({
   reducer: {
@@ -34,5 +36,7 @@ export const store = configureStore({
     quickClash: quickClashReducer,
     quickClashMatchmaking: quickClashMatchmakingReducer,
     quickClashDailyTasks: quickClashDailyTasksReducer,
+    quickClashTeamBattle: quickClashTeamBattleReducer,
+    quickClashGlobalMatchmaking: quickClashGlobalMatchmakingReducer,
   },
 })

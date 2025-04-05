@@ -26,6 +26,9 @@ const QuickClashSession = lazy(() => import('../screens/QuickClashSession'))
 const OnboardingProcess = lazy(() => import('../screens/OnboardingProcess'))
 const DemotionSummary = lazy(() => import('../screens/DemotionSummary'))
 const PrivacyPolicy = lazy(() => import('../screens/PrivacyPolicy'))
+const TeamBattlePage = lazy(() =>
+  import('../components/quickClashComponents/team/TeamBattlePage'),
+)
 const QuickClashSocketTest =
   process.env.NODE_ENV === 'production'
     ? null
@@ -67,6 +70,12 @@ const AppRoutes = ({ isToken, needsOnboarding, setIsGuestLoggedin }) => {
             <Route
               path="/quickclash"
               element={isToken ? <QuickClash /> : <Navigate to="/" replace />}
+            />
+            <Route
+              path="/quickclash/teamBattle/:battleId"
+              element={
+                isToken ? <TeamBattlePage /> : <Navigate to="/" replace />
+              }
             />
             <Route
               path="/quickclash/session/:challengeId"

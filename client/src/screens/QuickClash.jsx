@@ -1,3 +1,4 @@
+// Updated screens/QuickClash.jsx to incorporate global matchmaking components
 import React, { useCallback, useState, useEffect } from 'react'
 import {
   Container,
@@ -6,6 +7,7 @@ import {
   TabPanel,
   Center,
   useBreakpointValue,
+  HStack,
 } from '@chakra-ui/react'
 import { motion } from 'framer-motion'
 import { lazy, Suspense } from 'react'
@@ -46,6 +48,25 @@ const FloatingActionMenu = lazy(() =>
   import('../components/quickClashComponents/FloatingActionMenu'),
 )
 
+// New Team components
+const TeamDashboard = lazy(() =>
+  import('../components/quickClashComponents/team/TeamDashboard'),
+)
+const TeamBattlePage = lazy(() =>
+  import('../components/quickClashComponents/team/TeamBattlePage'),
+)
+
+// New Global Matchmaking components
+const GlobalMatchmakingButton = lazy(() =>
+  import('../components/quickClashComponents/GlobalMatchmakingButton'),
+)
+const GlobalMatchmakingFloatingButton = lazy(() =>
+  import('../components/quickClashComponents/GlobalMatchmakingFloatingButton'),
+)
+
+// Import custom hook for global matchmaking
+import useQuickClashGlobalMatchmaking from '../customHooks/useQuickClashGlobalMatchmaking'
+
 // Loading fallback
 const LoadingFallback = () => (
   <Box
@@ -82,6 +103,9 @@ const QuickClash = () => {
   const showCenterMatchButton = useBreakpointValue({ base: false, md: true })
   const showDesktopTaskPopup = useBreakpointValue({ base: false, md: true })
 
+  // Get global matchmaking state
+  const { checkMatchmakingStatus } = useQuickClashGlobalMatchmaking()
+
   // Initial setup - check URL hash, localStorage, etc.
   useEffect(() => {
     const lastVisit = localStorage.getItem('quickClashLastVisit')
@@ -94,6 +118,8 @@ const QuickClash = () => {
       const hashToIndex = {
         active: 0,
         tasks: 1,
+        teams: 2,
+        'team-battles': 3,
       }
 
       if (hashToIndex[hash] !== undefined) {
@@ -116,7 +142,10 @@ const QuickClash = () => {
       }, 2000)
       return () => clearTimeout(timer)
     }
-  }, [showDesktopTaskPopup])
+
+    // Check matchmaking status on mount
+    checkMatchmakingStatus()
+  }, [showDesktopTaskPopup, checkMatchmakingStatus])
 
   // Show popup when a task is completed (desktop only)
   useEffect(() => {
@@ -183,13 +212,16 @@ const QuickClash = () => {
           <StatsCard />
         </Suspense>
 
-        {/* Matchmaking Button at the top center - desktop only */}
+        {/* Matchmaking Buttons at the top center - desktop only */}
         {showCenterMatchButton && (
           <Center my={5}>
             <Suspense fallback={<LoadingFallback />}>
-              <MatchmakingButton
-                ref={el => (window.matchmakingButtonRef = el)}
-              />
+              <HStack spacing={4}>
+                <MatchmakingButton
+                  ref={el => (window.matchmakingButtonRef = el)}
+                />
+                <GlobalMatchmakingButton />
+              </HStack>
             </Suspense>
           </Center>
         )}
@@ -211,7 +243,8 @@ const QuickClash = () => {
               <CustomTabs
                 initialTabIndex={activeTabIndex}
                 onChange={handleTabChange}
-                tabNames={['Active', 'Daily Tasks']}
+                tabNames={['Active', 'Daily Tasks', 'Teams', 'Team Battles']}
+                tabIcons={['Swords', 'Calendar', 'Users', 'Trophy']}
               >
                 <TabPanel px={0}>
                   <Suspense fallback={<LoadingFallback />}>
@@ -224,10 +257,31 @@ const QuickClash = () => {
                     <DailyTasksDashboard />
                   </Suspense>
                 </TabPanel>
+
+                {/* Team Tab */}
+                <TabPanel px={0}>
+                  <Suspense fallback={<LoadingFallback />}>
+                    <TeamDashboard />
+                  </Suspense>
+                </TabPanel>
+
+                {/* Team Battles Tab */}
+                <TabPanel px={0}>
+                  <Suspense fallback={<LoadingFallback />}>
+                    <TeamBattlePage />
+                  </Suspense>
+                </TabPanel>
               </CustomTabs>
             </Box>
           </Box>
         </MotionBox>
+
+        {/* Floating Global Matchmaking Button for mobile */}
+        {showFloatingMenu && (
+          <Suspense fallback={null}>
+            <GlobalMatchmakingFloatingButton position="bottom-right" />
+          </Suspense>
+        )}
 
         {/* Floating Action Menu for mobile - Using the enhanced version with integrated task popup */}
         {showFloatingMenu && (

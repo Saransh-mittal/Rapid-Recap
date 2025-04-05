@@ -28,10 +28,14 @@ const setupQuickClashSocketHandlers = (io, socket, user) => {
   if (!joinedUsers.has(joinKey)) {
     socket.join(quickClashRoom)
     joinedUsers.add(joinKey)
+    console.log(
+      `User ${userId} joined QuickClash socket room ${quickClashRoom}`,
+    )
 
     // Remove from tracking when socket disconnects
     socket.on('disconnect', () => {
       joinedUsers.delete(joinKey)
+      console.log(`User ${userId} left QuickClash socket room (disconnected)`)
     })
   }
 
@@ -40,16 +44,40 @@ const setupQuickClashSocketHandlers = (io, socket, user) => {
     // No need to join again if already joined
     if (!socket.explicitlyJoinedQuickClash) {
       socket.explicitlyJoinedQuickClash = true
+      console.log(`User ${userId} explicitly joined QuickClash socket channel`)
     }
   })
 
   socket.on('join', room => {
     socket.join(room)
+    console.log(`User ${userId} joined room: ${room}`)
   })
+
   // Set up matchmaking event handlers
   handleMatchmakingEvents(io, socket)
 
-  // Listen for bot response events
+  // Add listeners for team matchmaking
+  socket.on('quickClash:joinGlobalMatchmaking', data => {
+    console.log(
+      `Socket event: User ${userId} requested to join global matchmaking`,
+    )
+    // The actual joining is handled via API, this is just for tracking
+  })
+
+  socket.on('quickClash:leaveGlobalMatchmaking', () => {
+    console.log(
+      `Socket event: User ${userId} requested to leave global matchmaking`,
+    )
+    // The actual leaving is handled via API, this is just for tracking
+  })
+
+  socket.on('quickClash:joinTeamMatchmaking', data => {
+    const teamId = data?.teamId
+    console.log(
+      `Socket event: User ${userId} requested to join team matchmaking with team ${teamId}`,
+    )
+    // The actual joining is handled via API, this is just for tracking
+  })
 }
 
 /**
@@ -80,7 +108,7 @@ const setupQuickClashGlobalEvents = io => {
     },
   )
 
-  // NEW: Listen for challenge progress updates and relay to clients
+  // Listen for challenge progress updates and relay to clients
   globalEmitter.on(
     'quickClash:challengeProgress',
     ({ userId, step, progress }) => {
@@ -367,6 +395,299 @@ const setupQuickClashGlobalEvents = io => {
       )
     },
   )
+
+  // ==========================================
+  // NEW TEAM MATCHMAKING SOCKET EVENT HANDLERS
+  // ==========================================
+
+  // Listen for user matchmaking progress updates
+  globalEmitter.on(
+    'quickClash:userMatchmakingProgress',
+    ({ userId, step, progress }) => {
+      if (!userId) {
+        console.error(
+          'Invalid userId in quickClash:userMatchmakingProgress event',
+        )
+        return
+      }
+
+      console.log(
+        `SOCKET: Sending progress update to user ${userId}: ${step} (${progress}%)`,
+      )
+
+      // Emit to the user's room with a small delay to avoid race conditions
+      setTimeout(() => {
+        const userRoom = `quickClash:${userId}`
+        io.to(userRoom).emit('quickClash:userMatchmakingProgress', {
+          step,
+          progress,
+        })
+      }, 50)
+    },
+  )
+
+  // Listen for team matchmaking progress updates
+  globalEmitter.on(
+    'quickClash:teamMatchmakingProgress',
+    ({ teamId, step, progress }) => {
+      if (!teamId) {
+        console.error(
+          'Invalid teamId in quickClash:teamMatchmakingProgress event',
+        )
+        return
+      }
+
+      console.log(
+        `SOCKET: Sending team progress update for team ${teamId}: ${step} (${progress}%)`,
+      )
+
+      // We need to emit to all team members' rooms
+      // This is handled by the client listening to the teamMatchmakingProgress event
+      io.to('quickClash:teams').emit('quickClash:teamMatchmakingProgress', {
+        teamId,
+        step,
+        progress,
+      })
+    },
+  )
+
+  // Listen for user joined global matchmaking
+  globalEmitter.on(
+    'quickClash:userJoinedMatchmaking',
+    ({ userId, trophies, userName }) => {
+      if (!userId) {
+        console.error(
+          'Invalid userId in quickClash:userJoinedMatchmaking event',
+        )
+        return
+      }
+
+      console.log(
+        `SOCKET: User ${userId} (${userName}) joined global matchmaking with ${trophies} trophies`,
+      )
+
+      // Emit to the user's room to confirm joining
+      const userRoom = `quickClash:${userId}`
+      io.to(userRoom).emit('quickClash:joinedGlobalMatchmaking', {
+        userId,
+        trophies,
+      })
+    },
+  )
+
+  // Listen for user left global matchmaking
+  globalEmitter.on('quickClash:userLeftMatchmaking', ({ userId }) => {
+    if (!userId) {
+      console.error('Invalid userId in quickClash:userLeftMatchmaking event')
+      return
+    }
+
+    console.log(`SOCKET: User ${userId} left global matchmaking`)
+
+    // Emit to the user's room to confirm leaving
+    const userRoom = `quickClash:${userId}`
+    io.to(userRoom).emit('quickClash:leftGlobalMatchmaking', {
+      userId,
+    })
+  })
+
+  // Listen for team joined matchmaking
+  globalEmitter.on(
+    'quickClash:teamJoinedMatchmaking',
+    ({ teamId, avgTrophies, teamName }) => {
+      if (!teamId) {
+        console.error(
+          'Invalid teamId in quickClash:teamJoinedMatchmaking event',
+        )
+        return
+      }
+
+      console.log(
+        `SOCKET: Team ${teamId} (${teamName}) joined matchmaking with ${avgTrophies} avg trophies`,
+      )
+
+      // Emit to all clients in the teams room
+      io.to('quickClash:teams').emit('quickClash:teamJoinedMatchmaking', {
+        teamId,
+        avgTrophies,
+        teamName,
+      })
+    },
+  )
+
+  // Listen for team left matchmaking
+  globalEmitter.on('quickClash:teamLeftMatchmaking', ({ teamId }) => {
+    if (!teamId) {
+      console.error('Invalid teamId in quickClash:teamLeftMatchmaking event')
+      return
+    }
+
+    console.log(`SOCKET: Team ${teamId} left matchmaking`)
+
+    // Emit to all clients in the teams room
+    io.to('quickClash:teams').emit('quickClash:teamLeftMatchmaking', {
+      teamId,
+    })
+  })
+
+  // Listen for team battle created
+  globalEmitter.on(
+    'quickClash:teamBattleCreated',
+    ({ teamBattle, teamA, teamB, categories }) => {
+      console.log(
+        `SOCKET: Team battle created between teams ${teamA} and ${teamB}`,
+      )
+
+      // Emit to all clients in the teams room
+      io.to('quickClash:teams').emit('quickClash:teamBattleCreated', {
+        teamBattle,
+        teamA,
+        teamB,
+        categories,
+      })
+    },
+  )
+
+  // Listen for team battle ready
+  globalEmitter.on(
+    'quickClash:teamBattleReady',
+    ({
+      battleId,
+      teamA,
+      teamB,
+      categories,
+      teamAMembers,
+      teamBMembers,
+      userId,
+    }) => {
+      console.log(
+        `SOCKET: Team battle ${battleId} ready between teams ${
+          teamA || 'auto-formed'
+        } and ${teamB || 'auto-formed'}`,
+      )
+
+      // If there's a specific userId, send to just that user (this happens for solo players)
+      if (userId) {
+        console.log(
+          `SOCKET: Sending battle ready notification to solo player ${userId}`,
+        )
+        io.to(`quickClash:${userId}`).emit('quickClash:teamBattleReady', {
+          battleId,
+          teamId: teamA, // For solo players, we set the teamId to teamA by default
+          teamA, // Include these for consistent payload format
+          teamB,
+          isSoloPlayer: true, // Add flag to indicate this is a solo player
+        })
+        return
+      }
+
+      // Otherwise, send to all team members
+      if (teamAMembers) {
+        teamAMembers.forEach(member => {
+          if (member.userId) {
+            console.log(
+              `SOCKET: Sending battle ready notification to team A member ${member.userId}`,
+            )
+            io.to(`quickClash:${member.userId}`).emit(
+              'quickClash:teamBattleReady',
+              {
+                battleId,
+                teamId: teamA,
+                teamA,
+                teamB,
+              },
+            )
+          }
+        })
+      }
+
+      if (teamBMembers) {
+        teamBMembers.forEach(member => {
+          if (member.userId) {
+            console.log(
+              `SOCKET: Sending battle ready notification to team B member ${member.userId}`,
+            )
+            io.to(`quickClash:${member.userId}`).emit(
+              'quickClash:teamBattleReady',
+              {
+                battleId,
+                teamId: teamB,
+                teamA,
+                teamB,
+              },
+            )
+          }
+        })
+      }
+    },
+  )
+
+  // Listen for team battle completed
+  globalEmitter.on(
+    'quickClash:teamBattleCompleted',
+    ({ battleId, winner, teamA, teamB }) => {
+      console.log(
+        `SOCKET: Team battle ${battleId} completed. Winner: ${winner}`,
+      )
+
+      // Emit to all clients in the teams room
+      io.to('quickClash:teams').emit('quickClash:teamBattleCompleted', {
+        battleId,
+        winner,
+        teamA,
+        teamB,
+      })
+    },
+  )
+
+  // Listen for team member selected category
+  globalEmitter.on(
+    'quickClash:teamMemberSelectedCategory',
+    ({ battleId, userId, category, team }) => {
+      if (!battleId || !userId || !category) {
+        console.error(
+          'Invalid data in quickClash:teamMemberSelectedCategory event',
+        )
+        return
+      }
+
+      console.log(
+        `SOCKET: User ${userId} selected category ${category} for team ${team} in battle ${battleId}`,
+      )
+
+      // Emit to all clients in the teams room
+      io.to('quickClash:teams').emit('quickClash:teamMemberSelectedCategory', {
+        battleId,
+        userId,
+        category,
+        team,
+      })
+    },
+  )
+
+  // Listen for bot added to team
+  globalEmitter.on('quickClash:botAddedToTeam', ({ team, bot }) => {
+    console.log(`SOCKET: Bot ${bot} added to team ${team}`)
+
+    // Emit to all clients in the teams room
+    io.to('quickClash:teams').emit('quickClash:teamUpdated', {
+      teamId: team,
+      action: 'botAdded',
+      botId: bot,
+    })
+  })
+
+  // Listen for team filled with bots
+  globalEmitter.on('quickClash:teamFilledWithBots', ({ team, botsAdded }) => {
+    console.log(`SOCKET: Team ${team} filled with ${botsAdded} bots`)
+
+    // Emit to all clients in the teams room
+    io.to('quickClash:teams').emit('quickClash:teamUpdated', {
+      teamId: team,
+      action: 'filledWithBots',
+      botsAdded,
+    })
+  })
 }
 
 module.exports = {

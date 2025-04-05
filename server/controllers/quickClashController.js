@@ -48,6 +48,9 @@ const {
   getUserTrophyHistory,
   getUserTrophies,
 } = require('../services/quickClashServices/quickClashTrophyService')
+const {
+  updateBattleWithQuizResults,
+} = require('../services/quickClashServices/quickClashTeamBattleService')
 
 // Create a new challenge
 const createNewChallenge = asyncHandler(async (req, res) => {
@@ -268,7 +271,6 @@ const completeReadingPhase = asyncHandler(async (req, res) => {
   })
 })
 
-// Submit quiz answers
 const submitQuizAnswers = asyncHandler(async (req, res) => {
   const { sessionId } = req.params
   const { responses } = req.body
@@ -284,21 +286,46 @@ const submitQuizAnswers = asyncHandler(async (req, res) => {
       .select('challenge')
       .lean()
 
-    // Get the challenge to check if it's now completed
+    if (!session) {
+      throw new Error('Session not found')
+    }
+
+    // Get the challenge to check if it's from a team battle
     const challenge = await QuickClashChallenge.findById(session.challenge)
-      .select('challengerAttempted opponentAttempted status')
+      .select(
+        'challengerAttempted opponentAttempted status fromTeamBattle teamBattle',
+      )
       .lean()
 
-    // If both users have submitted their quizzes, the challenge is completed
-    if (
-      challenge &&
-      challenge.challengerAttempted &&
-      challenge.opponentAttempted
-    ) {
-      // Start analysis generation in the background
-      initiateBackgroundAnalysis({
-        challengeId: session.challenge.toString(),
-      })
+    if (!challenge) {
+      throw new Error('Challenge not found')
+    }
+
+    // Check if the challenge is from a team battle
+    if (challenge.fromTeamBattle && challenge.teamBattle) {
+      // Update the team battle with the quiz results
+      try {
+        const userId = req.user._id
+        await updateBattleWithQuizResults({
+          battleId: challenge.teamBattle,
+          challengeId: challenge._id,
+          userId: userId,
+          score: result.RQM_score,
+        })
+      } catch (error) {
+        console.error('Error updating team battle with quiz results:', error)
+        // We don't want to fail the quiz submission if this update fails
+        // Just log the error and continue
+      }
+    } else {
+      // Regular challenge completion logic
+      // If both users have submitted their quizzes, the challenge is completed
+      if (challenge.challengerAttempted && challenge.opponentAttempted) {
+        // Start analysis generation in the background
+        initiateBackgroundAnalysis({
+          challengeId: session.challenge.toString(),
+        })
+      }
     }
 
     res.status(200).json({

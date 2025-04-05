@@ -14,7 +14,7 @@ import {
   Badge,
 } from '@chakra-ui/react'
 import { motion } from 'framer-motion'
-import { Swords, Zap, Calendar } from 'lucide-react'
+import { Swords, Zap, Calendar, Users, Trophy } from 'lucide-react'
 import { useTranslation } from 'react-i18next'
 import { useSelector } from 'react-redux'
 
@@ -26,12 +26,25 @@ const MotionBadge = motion(Badge)
 const TAB_HASH_MAP = {
   0: 'active',
   1: 'tasks',
+  2: 'teams',
+  3: 'team-battles',
 }
 
 // Reverse map for looking up index from hash
 const HASH_TAB_MAP = {
   active: 0,
   tasks: 1,
+  teams: 2,
+  'team-battles': 3,
+}
+
+// Map icon names to actual icon components
+const ICON_MAP = {
+  Swords: Swords,
+  Zap: Zap,
+  Calendar: Calendar,
+  Users: Users,
+  Trophy: Trophy,
 }
 
 /**
@@ -41,8 +54,15 @@ const HASH_TAB_MAP = {
  * @param {number} props.initialTabIndex - Initial active tab index
  * @param {Function} props.onChange - Callback when tab changes
  * @param {Array} props.tabNames - Optional custom tab names
+ * @param {Array} props.tabIcons - Optional icon names for tabs
  */
-const CustomTabs = ({ children, initialTabIndex = 0, onChange, tabNames }) => {
+const CustomTabs = ({
+  children,
+  initialTabIndex = 0,
+  onChange,
+  tabNames,
+  tabIcons = [],
+}) => {
   const { t } = useTranslation('QuickClash')
   const [tabIndex, setTabIndex] = useState(initialTabIndex)
   const isMobile = useBreakpointValue({ base: true, md: false })
@@ -55,8 +75,8 @@ const CustomTabs = ({ children, initialTabIndex = 0, onChange, tabNames }) => {
   // Tab data with icons, labels and colors
   const defaultTabs = [
     {
-      label: t('Challenges'),
-      icon: Swords,
+      label: tabNames?.[0] || t('Challenges'),
+      icon: tabIcons[0] ? ICON_MAP[tabIcons[0]] : Swords,
       ariaLabel: 'active challenges tab',
       color: 'purple.400',
       hoverColor: 'purple.300',
@@ -65,8 +85,8 @@ const CustomTabs = ({ children, initialTabIndex = 0, onChange, tabNames }) => {
       hash: 'active',
     },
     {
-      label: t('Tasks'),
-      icon: Calendar,
+      label: tabNames?.[1] || t('Tasks'),
+      icon: tabIcons[1] ? ICON_MAP[tabIcons[1]] : Calendar,
       ariaLabel: 'Daily Tasks tab',
       color: 'yellow.400',
       hoverColor: 'yellow.300',
@@ -74,7 +94,34 @@ const CustomTabs = ({ children, initialTabIndex = 0, onChange, tabNames }) => {
       iconAnimation: { y: [0, -3, 0], transition: { duration: 0.5 } },
       hash: 'tasks',
     },
+    // New tab for Teams
+    {
+      label: tabNames?.[2] || t('Teams'),
+      icon: tabIcons[2] ? ICON_MAP[tabIcons[2]] : Users,
+      ariaLabel: 'Teams tab',
+      color: 'blue.400',
+      hoverColor: 'blue.300',
+      activeGradient: 'linear(to-r, blue.600, blue.400)',
+      iconAnimation: { scale: [1, 1.1, 1], transition: { duration: 0.5 } },
+      hash: 'teams',
+    },
+    // New tab for Team Battles
+    {
+      label: tabNames?.[3] || t('Team Battles'),
+      icon: tabIcons[3] ? ICON_MAP[tabIcons[3]] : Trophy,
+      ariaLabel: 'Team Battles tab',
+      color: 'red.400',
+      hoverColor: 'red.300',
+      activeGradient: 'linear(to-r, red.600, red.400)',
+      iconAnimation: { y: [0, -3, 0], transition: { duration: 0.5 } },
+      hash: 'team-battles',
+    },
   ]
+
+  // Only use tabs that have names provided
+  const tabs = tabNames
+    ? defaultTabs.slice(0, tabNames.length)
+    : defaultTabs.slice(0, 2) // Default to just the first two tabs if no names provided
 
   // Check URL hash on mount and when hash changes
   useEffect(() => {
@@ -162,7 +209,7 @@ const CustomTabs = ({ children, initialTabIndex = 0, onChange, tabNames }) => {
           zIndex="0"
         />
 
-        {defaultTabs.map((tab, idx) => (
+        {tabs.map((tab, idx) => (
           <Tab
             key={idx}
             flex={1}

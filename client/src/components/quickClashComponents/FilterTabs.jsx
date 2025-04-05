@@ -1,8 +1,9 @@
+// components/quickClashComponents/FilterTabs.jsx
 import React from 'react'
 import { HStack, Button, Icon } from '@chakra-ui/react'
 import { motion } from 'framer-motion'
 import { useTranslation } from 'react-i18next'
-import { Zap, Shield, Target } from 'lucide-react'
+import { Zap, Users } from 'lucide-react'
 
 const MotionHStack = motion(HStack)
 
@@ -33,7 +34,7 @@ const FilterTab = ({ isSelected, label, icon, onClick }) => {
 }
 
 /**
- * Filter tabs component for filtering challenges
+ * Filter tabs component for filtering between 1v1 and 4v4 challenges
  */
 const FilterTabs = ({ selectedFilter, onFilterChange }) => {
   const { t } = useTranslation('QuickClash')
@@ -75,26 +76,18 @@ const FilterTabs = ({ selectedFilter, onFilterChange }) => {
     >
       <motion.div variants={tabVariants}>
         <FilterTab
-          isSelected={selectedFilter === 'all'}
-          label={t('All')}
+          isSelected={selectedFilter === '1v1'}
+          label={t('1v1')}
           icon={Zap}
-          onClick={() => onFilterChange('all')}
+          onClick={() => onFilterChange('1v1')}
         />
       </motion.div>
       <motion.div variants={tabVariants}>
         <FilterTab
-          isSelected={selectedFilter === 'sent'}
-          label={t('Sent')}
-          icon={Shield}
-          onClick={() => onFilterChange('sent')}
-        />
-      </motion.div>
-      <motion.div variants={tabVariants}>
-        <FilterTab
-          isSelected={selectedFilter === 'received'}
-          label={t('Received')}
-          icon={Target}
-          onClick={() => onFilterChange('received')}
+          isSelected={selectedFilter === '4v4'}
+          label={t('4v4')}
+          icon={Users}
+          onClick={() => onFilterChange('4v4')}
         />
       </motion.div>
     </MotionHStack>

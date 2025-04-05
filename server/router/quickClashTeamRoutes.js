@@ -1,0 +1,54 @@
+// routes/quickClashTeamRoutes.js
+const express = require('express')
+const { Authenticate } = require('../middleware/authenticate')
+const {
+  createNewTeam,
+  getTeam,
+  getTeamByCodeController,
+  joinTeam,
+  inviteUserToTeam,
+  respondToTeamInvitation,
+  leaveTeamController,
+  updateTeamMemberStatus,
+  getMyTeams,
+  toggleTeamPersistenceController,
+  addBotToTeamController,
+  removeMemberFromTeam,
+  joinTeamMatchmakingController,
+  leaveTeamMatchmakingController,
+  getTeamMatchmakingStatusController,
+  selectCategoryForBattle,
+  getMyTeamBattles,
+  getTeamBattle,
+} = require('../controllers/quickClashTeamController')
+
+const router = express.Router()
+
+// Team management routes
+router.post('/team', createNewTeam)
+router.get('/team/:teamId', getTeam)
+router.get('/team/code/:teamCode', getTeamByCodeController)
+router.post('/team/join', joinTeam)
+router.post('/team/:teamId/invite', inviteUserToTeam)
+router.post('/team/:teamId/respond', respondToTeamInvitation)
+router.post('/team/:teamId/leave', leaveTeamController)
+router.post('/team/:teamId/status', updateTeamMemberStatus)
+router.get('/teams', getMyTeams)
+router.post('/team/:teamId/persistence', toggleTeamPersistenceController)
+router.post('/team/:teamId/bot', addBotToTeamController)
+router.post('/team/:teamId/remove', removeMemberFromTeam)
+
+// Team matchmaking routes
+router.post('/team/:teamId/matchmaking/join', joinTeamMatchmakingController)
+router.post('/team/:teamId/matchmaking/leave', leaveTeamMatchmakingController)
+router.get(
+  '/team/:teamId/matchmaking/status',
+  getTeamMatchmakingStatusController,
+)
+
+// Team battle routes
+router.post('/team-battle/:battleId/select-category', selectCategoryForBattle)
+router.get('/team-battles', getMyTeamBattles)
+router.get('/team-battle/:battleId', getTeamBattle)
+
+module.exports = router
