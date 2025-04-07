@@ -15,6 +15,7 @@ import { useNavigate } from 'react-router-dom'
 import { useTranslation } from 'react-i18next'
 import { v4 as uuidv4 } from 'uuid'
 import { updateTaskProgressDirectInRedux } from '../redux/quickClashDailyTasksSlice'
+import { fetchTeamBattleDetails } from '../redux/quickClashTeamBattleSlice'
 
 /**
  * Custom hook for managing Quick Clash socket events
@@ -82,6 +83,7 @@ const useQuickClashSocket = () => {
       socket.off('quickClash:challengeRejected')
       socket.off('quickClash:challengeCompleted')
       socket.off('quickClash:challengeCompletedByBothPlayers')
+      socket.off('quickClash:teamBattleRefetch')
       socket.off('quickClash:analysisReady')
 
       // New challenge received
@@ -184,6 +186,12 @@ const useQuickClashSocket = () => {
         dispatch(fetchActiveChallenges())
       })
 
+      socket.on('quickClash:teamBattleRefetch', data => {
+        if (data.battleId) {
+          dispatch(fetchTeamBattleDetails(data.battleId))
+        }
+      })
+
       // Challenge completed
       socket.on('quickClash:challengeCompleted', data => {
         setLastEvent({
@@ -220,6 +228,10 @@ const useQuickClashSocket = () => {
               width: '350px',
             }),
           )
+
+          if (data.battleId) {
+            dispatch(fetchTeamBattleDetails(battleId))
+          }
           // Refresh active challenges list
           dispatch(fetchActiveChallenges())
           dispatch(fetchUserTrophies())
@@ -285,6 +297,7 @@ const useQuickClashSocket = () => {
       socket.off('quickClash:challengeAccepted')
       socket.off('quickClash:challengeRejected')
       socket.off('quickClash:challengeCompleted')
+      socket.off('quickClash:teamBattleRefetch')
       socket.off('quickClash:challengeCompletedByBothPlayers')
       socket.off('quickClash:analysisReady')
       socket.off('reconnect')

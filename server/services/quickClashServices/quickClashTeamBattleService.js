@@ -1564,7 +1564,6 @@ const getTeamBattleDetails = async ({ battleId }) => {
       path: 'challenges.challenge',
       select: 'category article status expiresAt',
     })
-  console.log(battle)
   if (!battle) {
     throw new Error('Team battle not found')
   }

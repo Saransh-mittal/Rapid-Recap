@@ -202,106 +202,147 @@ const setupQuickClashGlobalEvents = io => {
 
   globalEmitter.on(
     'quickClash:challengeCompletedByBothPlayers',
-    ({ challenge, trackWinnerOutcomeResult, completedByUserId }) => {
-      if (!challenge || !challenge.challenger || !challenge.opponent) {
+    ({
+      challenge,
+      trackWinnerOutcomeResult,
+      completedByUserId,
+      teamBattleParticipantIds,
+    }) => {
+      if (!challenge) {
         console.error(
-          'Invalid challenge object in quickClash:challengeCompleted event',
+          'Invalid challenge object in quickClash:challengeCompletedByBothPlayers event',
         )
         return
       }
+      if (teamBattleParticipantIds.length > 0) {
+        setTimeout(() => {
+          // make a new socket event for team battle refetch
+          for (let id of teamBattleParticipantIds) {
+            const userRoom = `quickClash:${id.toString()}`
+            io.to(userRoom).emit('quickClash:teamBattleRefetch', {
+              battleId: challenge.teamBattle.toString(),
+            })
+          }
+        }, 300)
+      } else {
+        if (!challenge || !challenge.challenger || !challenge.opponent) {
+          console.error(
+            'Invalid challenge object in quickClash:challengeCompleted event',
+          )
+          return
+        }
 
-      // Create detailed data objects for both players
-      const challengerData = {
-        userId: challenge.challenger._id,
-        user: {
-          _id: challenge.challenger._id,
-          name: challenge.challenger.name,
-          inGameName: challenge.challenger.inGameName,
-          pic: challenge.challenger.pic,
-        },
-        opponent: {
-          _id: challenge.opponent._id,
-          name: challenge.opponent.name,
-          inGameName: challenge.opponent.inGameName,
-          pic: challenge.opponent.pic,
-        },
-        userScore: challenge.challengerScore,
-        opponentScore: challenge.opponentScore,
-        category: challenge.category,
-        challengeId: challenge._id.toString(),
-        trackWinnerOutcomeResult,
-        completedByUserId,
+        // Create detailed data objects for both players
+        const challengerData = {
+          userId: challenge.challenger._id,
+          user: {
+            _id: challenge.challenger._id,
+            name: challenge.challenger.name,
+            inGameName: challenge.challenger.inGameName,
+            pic: challenge.challenger.pic,
+          },
+          opponent: {
+            _id: challenge.opponent._id,
+            name: challenge.opponent.name,
+            inGameName: challenge.opponent.inGameName,
+            pic: challenge.opponent.pic,
+          },
+          userScore: challenge.challengerScore,
+          opponentScore: challenge.opponentScore,
+          category: challenge.category,
+          challengeId: challenge._id.toString(),
+          trackWinnerOutcomeResult,
+          completedByUserId,
+        }
+
+        const opponentData = {
+          userId: challenge.opponent._id,
+          user: {
+            _id: challenge.opponent._id,
+            name: challenge.opponent.name,
+            inGameName: challenge.opponent.inGameName,
+            pic: challenge.opponent.pic,
+          },
+          opponent: {
+            _id: challenge.challenger._id,
+            name: challenge.challenger.name,
+            inGameName: challenge.challenger.inGameName,
+            pic: challenge.challenger.pic,
+          },
+          userScore: challenge.opponentScore,
+          opponentScore: challenge.challengerScore,
+          category: challenge.category,
+          challengeId: challenge._id.toString(),
+          trackWinnerOutcomeResult,
+          completedByUserId,
+        }
+
+        // Add a small delay to avoid race conditions
+        setTimeout(() => {
+          // Emit to challenger's room with challenger-specific data
+          const challengerRoom = `quickClash:${challenge.challenger._id.toString()}`
+          io.to(challengerRoom).emit(
+            'quickClash:challengeCompletedByBothPlayers',
+            challengerData,
+          )
+        }, 100)
+
+        setTimeout(() => {
+          // Emit to opponent's room with opponent-specific data
+          const opponentRoom = `quickClash:${challenge.opponent._id.toString()}`
+          io.to(opponentRoom).emit(
+            'quickClash:challengeCompletedByBothPlayers',
+            opponentData,
+          )
+        }, 200)
       }
-
-      const opponentData = {
-        userId: challenge.opponent._id,
-        user: {
-          _id: challenge.opponent._id,
-          name: challenge.opponent.name,
-          inGameName: challenge.opponent.inGameName,
-          pic: challenge.opponent.pic,
-        },
-        opponent: {
-          _id: challenge.challenger._id,
-          name: challenge.challenger.name,
-          inGameName: challenge.challenger.inGameName,
-          pic: challenge.challenger.pic,
-        },
-        userScore: challenge.opponentScore,
-        opponentScore: challenge.challengerScore,
-        category: challenge.category,
-        challengeId: challenge._id.toString(),
-        trackWinnerOutcomeResult,
-        completedByUserId,
-      }
-
-      // Add a small delay to avoid race conditions
-      setTimeout(() => {
-        // Emit to challenger's room with challenger-specific data
-        const challengerRoom = `quickClash:${challenge.challenger._id.toString()}`
-        io.to(challengerRoom).emit(
-          'quickClash:challengeCompletedByBothPlayers',
-          challengerData,
-        )
-      }, 100)
-
-      setTimeout(() => {
-        // Emit to opponent's room with opponent-specific data
-        const opponentRoom = `quickClash:${challenge.opponent._id.toString()}`
-        io.to(opponentRoom).emit(
-          'quickClash:challengeCompletedByBothPlayers',
-          opponentData,
-        )
-      }, 200)
     },
   )
 
   // Listen for challenge completed event from controller
   globalEmitter.on(
     'quickClash:challengeCompleted',
-    ({ challenge, completedByUserId }) => {
-      if (!challenge || !challenge.challenger || !challenge.opponent) {
+    ({ challenge, completedByUserId, teamBattleParticipantIds }) => {
+      if (!challenge) {
         console.error(
           'Invalid challenge object in quickClash:challengeCompleted event',
         )
         return
       }
+      if (teamBattleParticipantIds.length > 0) {
+        setTimeout(() => {
+          // make a new socket event for team battle refetch
+          for (let id of teamBattleParticipantIds) {
+            const userRoom = `quickClash:${id.toString()}`
+            io.to(userRoom).emit('quickClash:teamBattleRefetch', {
+              battleId: challenge.teamBattle.toString(),
+            })
+          }
+        }, 300)
+      } else {
+        if (!challenge || !challenge.challenger || !challenge.opponent) {
+          console.error(
+            'Invalid challenge object in quickClash:challengeCompleted event',
+          )
+          return
+        }
 
-      // Determine recipient
-      const recipientId =
-        completedByUserId.toString() === challenge.challenger._id.toString()
-          ? challenge.opponent._id.toString()
-          : challenge.challenger._id.toString()
+        // Determine recipient
+        const recipientId =
+          completedByUserId.toString() === challenge.challenger._id.toString()
+            ? challenge.opponent._id.toString()
+            : challenge.challenger._id.toString()
 
-      // Add a small delay to avoid race conditions
-      setTimeout(() => {
-        // Emit to recipient's room
-        const recipientRoom = `quickClash:${recipientId}`
-        io.to(recipientRoom).emit('quickClash:challengeCompleted', {
-          challengeId: challenge._id,
-          completedByUserId,
-        })
-      }, 100)
+        // Add a small delay to avoid race conditions
+        setTimeout(() => {
+          // Emit to recipient's room
+          const recipientRoom = `quickClash:${recipientId}`
+          io.to(recipientRoom).emit('quickClash:challengeCompleted', {
+            challengeId: challenge._id,
+            completedByUserId,
+          })
+        }, 100)
+      }
     },
   )
 

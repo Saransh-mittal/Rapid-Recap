@@ -664,10 +664,10 @@ const updateChallengeScore = async ({
       challenge.challengerAttempted && challenge.opponentAttempted
 
     // Update appropriate score and attempted status based on user role
-    if (challenge.challenger._id.equals(userId)) {
+    if (challenge?.challenger?._id.equals(userId)) {
       challenge.challengerScore = score
       challenge.challengerAttempted = true // Mark as attempted regardless of score
-    } else if (challenge.opponent._id.equals(userId)) {
+    } else if (challenge?.opponent?._id.equals(userId)) {
       challenge.opponentScore = score
       challenge.opponentAttempted = true // Mark as attempted regardless of score
     } else {
@@ -693,20 +693,22 @@ const updateChallengeScore = async ({
       shouldNotify = true
 
       // Calculate and update trophies
-      try {
-        const trophyUpdates = await updateTrophiesAfterChallenge({
-          challengeId: challenge._id,
-          winnerId: challenge.winner || null,
-          challengerId: challenge.challenger._id,
-          opponentId: challenge.opponent._id,
-          session, // Pass the current session
-        })
+      if (!challenge.fromTeamBattle) {
+        try {
+          const trophyUpdates = await updateTrophiesAfterChallenge({
+            challengeId: challenge._id,
+            winnerId: challenge.winner || null,
+            challengerId: challenge.challenger._id,
+            opponentId: challenge.opponent._id,
+            session, // Pass the current session
+          })
 
-        // Store trophy updates in the challenge for UI display
-        challenge.trophyUpdates = trophyUpdates
-      } catch (trophyError) {
-        console.error('Error updating trophies:', trophyError)
-        // Continue with challenge completion even if trophy update fails
+          // Store trophy updates in the challenge for UI display
+          challenge.trophyUpdates = trophyUpdates
+        } catch (trophyError) {
+          console.error('Error updating trophies:', trophyError)
+          // Continue with challenge completion even if trophy update fails
+        }
       }
     } else if (
       !isNowComplete &&
