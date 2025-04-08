@@ -199,10 +199,10 @@ const createChallenge = async ({
 
         const [challenger, opponent] = await Promise.all([
           User.findById(challengerId)
-            .select('_id inGameName name quickClashTrophies')
+            .select('_id inGameName name pic quickClashTrophies')
             .session(session),
           User.findById(opponentId)
-            .select('_id inGameName name quickClashTrophies')
+            .select('_id inGameName name pic quickClashTrophies')
             .session(session),
         ])
 

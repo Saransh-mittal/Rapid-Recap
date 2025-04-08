@@ -474,7 +474,7 @@ const MatchmakingButton = forwardRef(({ compact = false }, ref) => {
 
       {/* NEW: Preparation Modal */}
       <MatchPreparationModal
-        isOpen={showPreparationModal}
+        isOpen={showPreparationModal }
         onClose={handleClosePreparationModal}
         preparingData={preparingChallenge}
         challengeId={challengeReady?.challengeId}
