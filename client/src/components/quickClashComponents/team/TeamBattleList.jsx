@@ -12,6 +12,9 @@ import {
   Center,
   Spinner,
   useToast,
+  Input,
+  InputGroup,
+  InputRightElement,
 } from '@chakra-ui/react'
 import { motion } from 'framer-motion'
 import { useTranslation } from 'react-i18next'
@@ -25,6 +28,7 @@ import EmptyBattlesState from './EmptyBattlesState'
 
 // Custom hooks
 import useQuickClashTeamBattle from '../../../customHooks/useQuickClashTeamBattle'
+import { useSocket } from '../../../customHooks/useSocket'
 
 const MotionBox = motion(Box)
 const MotionFlex = motion(Flex)
@@ -62,10 +66,13 @@ const TeamBattleList = () => {
   const { t } = useTranslation('QuickClash')
   const toast = useToast()
   const navigate = useNavigate()
+  const { getSocket } = useSocket()
 
   // State
   const [activeTab, setActiveTab] = useState('active')
-  const [loading, setLoading] = useState(false)
+  const [loading, setLoading] = useState(true)
+  const [error, setError] = useState(null)
+  const [refreshing, setRefreshing] = useState(false)
 
   // Get team battle data from hook
   const {
@@ -84,7 +91,19 @@ const TeamBattleList = () => {
     goToBattle,
   } = useQuickClashTeamBattle()
 
+  // Join teams socket room when component mounts
+  useEffect(() => {
+    const socket = getSocket()
+    if (socket) {
+      socket.emit('quickClash:viewTeamBattles')
+      console.log('Joined quickClash:teams room from TeamBattleList')
+    }
+  }, [getSocket])
+
   // Fetch active battles on mount
+  useEffect(() => {
+    loadTeamBattles('active')
+  }, [loadTeamBattles])
 
   // Handle tab change
   const handleTabChange = useCallback(
@@ -113,9 +132,9 @@ const TeamBattleList = () => {
 
   // Handle refreshing battle list
   const handleRefresh = useCallback(() => {
-    setLoading(true)
+    setRefreshing(true)
     loadTeamBattles(activeTab).finally(() => {
-      setLoading(false)
+      setRefreshing(false)
     })
   }, [activeTab, loadTeamBattles])
 
@@ -222,7 +241,7 @@ const TeamBattleList = () => {
             variant="ghost"
             size="sm"
             onClick={handleRefresh}
-            isLoading={loading}
+            isLoading={refreshing}
             loadingText={t('Refreshing')}
             whileHover={{ rotate: 180 }}
             transition={{ duration: 0.3 }}

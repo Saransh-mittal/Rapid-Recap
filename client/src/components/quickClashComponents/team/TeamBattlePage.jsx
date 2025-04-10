@@ -21,6 +21,7 @@ import axios from 'axios'
 
 // Custom hooks
 import useQuickClashTeamBattle from '../../../customHooks/useQuickClashTeamBattle'
+import { useSocket } from '../../../customHooks/useSocket'
 
 // Import components
 import TeamBattleHeader from './teamBattlePageComponents/TeamBattleHeader'
@@ -69,6 +70,7 @@ const TeamBattlePage = () => {
   const navigate = useNavigate()
   const { battleId } = useParams()
   const { user } = useSelector(state => state.auth)
+  const { getSocket } = useSocket()
 
   // State for quiz report modal
   const [selectedSessionId, setSelectedSessionId] = useState(null)
@@ -93,6 +95,15 @@ const TeamBattlePage = () => {
 
   // Local state
   const [selectedCategoryId, setSelectedCategoryId] = useState(null)
+
+  // Join the teams socket room when this page loads
+  useEffect(() => {
+    const socket = getSocket()
+    if (socket) {
+      socket.emit('quickClash:viewTeamBattles')
+      console.log('Joined quickClash:teams room from TeamBattlePage')
+    }
+  }, [getSocket])
 
   // Fetch battle details on mount and when battleId changes
   useEffect(() => {

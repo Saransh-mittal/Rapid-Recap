@@ -1,5 +1,5 @@
 // customHooks/useQuickClashTeamBattle.js
-import { useCallback } from 'react'
+import { useCallback, useEffect, useRef } from 'react'
 import { useDispatch, useSelector } from 'react-redux'
 import { useToast } from '@chakra-ui/react'
 import { useTranslation } from 'react-i18next'
@@ -30,6 +30,7 @@ const useQuickClashTeamBattle = () => {
   const toast = useToast()
   const { t } = useTranslation('QuickClash')
   const navigate = useNavigate()
+  const joinedTeamsRoom = useRef(false)
 
   // Get state from Redux
   const teamBattleState = useSelector(state => state.quickClashTeamBattle)
@@ -38,6 +39,13 @@ const useQuickClashTeamBattle = () => {
   const setupTeamBattleSocketListeners = useCallback(() => {
     const socket = getSocket()
     if (!socket) return
+
+    // Join the teams room first to receive team battle events
+    if (!joinedTeamsRoom.current) {
+      socket.emit('quickClash:joinTeamsRoom')
+      joinedTeamsRoom.current = true
+      console.log('Joined quickClash:teams room for team battle events')
+    }
 
     // Clean up any existing listeners first
     cleanupSocketListeners()
@@ -107,14 +115,34 @@ const useQuickClashTeamBattle = () => {
     socket.off('quickClash:teamBattleReady')
     socket.off('quickClash:teamBattleCompleted')
     socket.off('quickClash:teamMemberSelectedCategory')
+    socket.off('quickClash:teamBattleRefetch')
   }, [getSocket])
+
+  // Setup socket listeners on mount
+  useEffect(() => {
+    setupTeamBattleSocketListeners()
+
+    return () => {
+      cleanupSocketListeners()
+      // Reset joined room flag when unmounting
+      joinedTeamsRoom.current = false
+    }
+  }, [setupTeamBattleSocketListeners, cleanupSocketListeners])
 
   // Fetch team battles with status filter
   const loadTeamBattles = useCallback(
     (status = 'active', page = 1, limit = 10) => {
+      // Signal to the server that we're viewing team battles
+      const socket = getSocket()
+      if (socket && !joinedTeamsRoom.current) {
+        socket.emit('quickClash:viewTeamBattles')
+        joinedTeamsRoom.current = true
+        console.log('Joined quickClash:teams room via loadTeamBattles')
+      }
+
       return dispatch(fetchTeamBattles({ status, page, limit }))
     },
-    [dispatch],
+    [dispatch, getSocket],
   )
 
   // Fetch more team battles (pagination)
@@ -137,9 +165,17 @@ const useQuickClashTeamBattle = () => {
   // Fetch team battle details
   const getBattleDetails = useCallback(
     battleId => {
+      // Ensure we're in the teams socket room when viewing battle details
+      const socket = getSocket()
+      if (socket && !joinedTeamsRoom.current) {
+        socket.emit('quickClash:viewTeamBattles')
+        joinedTeamsRoom.current = true
+        console.log('Joined quickClash:teams room via getBattleDetails')
+      }
+
       return dispatch(fetchTeamBattleDetails(battleId))
     },
-    [dispatch],
+    [dispatch, getSocket],
   )
 
   // Select a category for battle
@@ -176,6 +212,14 @@ const useQuickClashTeamBattle = () => {
   // Join team matchmaking
   const joinMatchmaking = useCallback(
     (teamId, allowBots = true) => {
+      // Ensure we're in the teams socket room
+      const socket = getSocket()
+      if (socket && !joinedTeamsRoom.current) {
+        socket.emit('quickClash:joinTeamsRoom')
+        joinedTeamsRoom.current = true
+        console.log('Joined quickClash:teams room via joinMatchmaking')
+      }
+
       return dispatch(joinTeamMatchmaking({ teamId, allowBots }))
         .unwrap()
         .then(result => {
@@ -201,7 +245,7 @@ const useQuickClashTeamBattle = () => {
           throw error
         })
     },
-    [dispatch, toast, t],
+    [dispatch, toast, t, getSocket],
   )
 
   // Leave team matchmaking
@@ -237,9 +281,17 @@ const useQuickClashTeamBattle = () => {
   // Check matchmaking status
   const checkMatchmakingStatus = useCallback(
     teamId => {
+      // Ensure we're in the teams socket room
+      const socket = getSocket()
+      if (socket && !joinedTeamsRoom.current) {
+        socket.emit('quickClash:joinTeamsRoom')
+        joinedTeamsRoom.current = true
+        console.log('Joined quickClash:teams room via checkMatchmakingStatus')
+      }
+
       return dispatch(getTeamMatchmakingStatus(teamId))
     },
-    [dispatch],
+    [dispatch, getSocket],
   )
 
   // Clear current battle
@@ -250,9 +302,17 @@ const useQuickClashTeamBattle = () => {
   // Go to battle page
   const goToBattle = useCallback(
     battleId => {
+      // Ensure we're in the teams socket room when navigating to a battle
+      const socket = getSocket()
+      if (socket && !joinedTeamsRoom.current) {
+        socket.emit('quickClash:viewTeamBattles')
+        joinedTeamsRoom.current = true
+        console.log('Joined quickClash:teams room via goToBattle')
+      }
+
       navigate(`/quickclash/teamBattle/${battleId}`)
     },
-    [navigate],
+    [navigate, getSocket],
   )
 
   // Clear battle ready notification

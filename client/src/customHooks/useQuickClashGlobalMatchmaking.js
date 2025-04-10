@@ -23,6 +23,7 @@ import {
   setAllowBots,
   setSocketConnected,
   updateMatchmakingState,
+  resetGlobalMatchmakingState,
 } from '../redux/quickClashGlobalMatchmakingSlice'
 
 let matchmakingTimerRef = null
@@ -37,6 +38,7 @@ const useQuickClashGlobalMatchmaking = () => {
   const toast = useToast()
   const { t } = useTranslation('QuickClash')
   const { getSocket } = useSocket()
+  const joinedTeamsRoom = useRef(false)
 
   // Get global matchmaking state from Redux
   const globalMatchmakingState = useSelector(
@@ -54,6 +56,16 @@ const useQuickClashGlobalMatchmaking = () => {
     // Inform we're connected
     dispatch(setSocketConnected(true))
     console.log('Global matchmaking socket connected')
+
+    // Join the teams socket room if needed (especially for team matchmaking)
+    if (
+      globalMatchmakingState.matchmakingType === 'team' &&
+      !joinedTeamsRoom.current
+    ) {
+      socket.emit('quickClash:joinTeamsRoom')
+      joinedTeamsRoom.current = true
+      console.log('Joined quickClash:teams room for team matchmaking')
+    }
 
     // User matchmaking progress updates
     socket.on('quickClash:userMatchmakingProgress', data => {
@@ -196,6 +208,9 @@ const useQuickClashGlobalMatchmaking = () => {
       socket.off('quickClash:joinedGlobalMatchmaking')
       socket.off('quickClash:leftGlobalMatchmaking')
       socket.off('quickClash:teamBattleCompleted')
+
+      // Reset joined teams room flag
+      joinedTeamsRoom.current = false
     }
   }, [
     dispatch,
@@ -291,6 +306,14 @@ const useQuickClashGlobalMatchmaking = () => {
       }
 
       try {
+        // Join the teams socket room
+        const socket = getSocket()
+        if (socket && !joinedTeamsRoom.current) {
+          socket.emit('quickClash:joinTeamsRoom')
+          joinedTeamsRoom.current = true
+          console.log('Joined quickClash:teams room for joinWithTeam')
+        }
+
         const result = await dispatch(
           joinTeamMatchmaking({ teamId, allowBots }),
         ).unwrap()
@@ -315,7 +338,7 @@ const useQuickClashGlobalMatchmaking = () => {
         throw error
       }
     },
-    [dispatch, toast, t],
+    [dispatch, toast, t, getSocket],
   )
 
   // Leave matchmaking
@@ -361,8 +384,18 @@ const useQuickClashGlobalMatchmaking = () => {
   const selectTeam = useCallback(
     teamId => {
       dispatch(setSelectedTeamId(teamId))
+
+      // Join teams room if selecting a team
+      if (teamId) {
+        const socket = getSocket()
+        if (socket && !joinedTeamsRoom.current) {
+          socket.emit('quickClash:joinTeamsRoom')
+          joinedTeamsRoom.current = true
+          console.log('Joined quickClash:teams room for selectTeam')
+        }
+      }
     },
-    [dispatch],
+    [dispatch, getSocket],
   )
 
   // Set whether to allow bots in matchmaking
@@ -398,7 +431,7 @@ const useQuickClashGlobalMatchmaking = () => {
           return t('Setting up battle materials...')
         case 'generating_challenges':
           return t('Creating challenges for all players...')
-        case 'battle_ready':
+        case 'battleReady':
           return t('Battle ready! Redirecting...')
         default:
           return t('Waiting in matchmaking queue...')
@@ -420,7 +453,7 @@ const useQuickClashGlobalMatchmaking = () => {
         return 'purple'
       case 'preparing_battle':
         return 'orange'
-      case 'battle_ready':
+      case 'battleReady':
         return 'green'
       default:
         return 'gray'

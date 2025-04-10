@@ -5,6 +5,7 @@ const {
 } = require('../controllers/quickClashMatchmakingController')
 
 const joinedUsers = new Set()
+const joinedTeamsRoom = new Set()
 
 /**
  * Setup socket event handlers for Quick Clash feature
@@ -35,6 +36,7 @@ const setupQuickClashSocketHandlers = (io, socket, user) => {
     // Remove from tracking when socket disconnects
     socket.on('disconnect', () => {
       joinedUsers.delete(joinKey)
+      joinedTeamsRoom.delete(joinKey)
       console.log(`User ${userId} left QuickClash socket room (disconnected)`)
     })
   }
@@ -45,6 +47,15 @@ const setupQuickClashSocketHandlers = (io, socket, user) => {
     if (!socket.explicitlyJoinedQuickClash) {
       socket.explicitlyJoinedQuickClash = true
       console.log(`User ${userId} explicitly joined QuickClash socket channel`)
+    }
+  })
+
+  // NEW: Listen for explicit request to join the teams room
+  socket.on('quickClash:joinTeamsRoom', () => {
+    if (!joinedTeamsRoom.has(joinKey)) {
+      socket.join('quickClash:teams')
+      joinedTeamsRoom.add(joinKey)
+      console.log(`User ${userId} joined QuickClash teams room`)
     }
   })
 
@@ -76,7 +87,28 @@ const setupQuickClashSocketHandlers = (io, socket, user) => {
     console.log(
       `Socket event: User ${userId} requested to join team matchmaking with team ${teamId}`,
     )
+
+    // Automatically join the teams room when joining team matchmaking
+    if (!joinedTeamsRoom.has(joinKey)) {
+      socket.join('quickClash:teams')
+      joinedTeamsRoom.add(joinKey)
+      console.log(
+        `User ${userId} joined QuickClash teams room (via team matchmaking)`,
+      )
+    }
+
     // The actual joining is handled via API, this is just for tracking
+  })
+
+  // Handle viewing team battles - also join the teams room
+  socket.on('quickClash:viewTeamBattles', () => {
+    if (!joinedTeamsRoom.has(joinKey)) {
+      socket.join('quickClash:teams')
+      joinedTeamsRoom.add(joinKey)
+      console.log(
+        `User ${userId} joined QuickClash teams room (via team battles view)`,
+      )
+    }
   })
 }
 
@@ -594,6 +626,7 @@ const setupQuickClashGlobalEvents = io => {
     'quickClash:teamBattleReady',
     ({
       battleId,
+      teamId,
       teamA,
       teamB,
       categories,
