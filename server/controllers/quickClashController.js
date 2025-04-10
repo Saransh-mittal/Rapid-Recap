@@ -383,6 +383,7 @@ const getCompletedChallenges = asyncHandler(async (req, res) => {
     const query = {
       $or: [{ challenger: userId }, { opponent: userId }],
       status: 'completed',
+      fromTeamBattle: false,
     }
 
     const challenges = await QuickClashChallenge.find(query)

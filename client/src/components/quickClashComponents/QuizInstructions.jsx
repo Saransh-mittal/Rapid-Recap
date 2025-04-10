@@ -13,6 +13,8 @@ import {
   Flex,
   Badge,
   useBreakpointValue,
+  IconButton,
+  Divider,
 } from '@chakra-ui/react'
 import { motion } from 'framer-motion'
 import {
@@ -23,6 +25,9 @@ import {
   Star,
   Lightbulb,
   ArrowRight,
+  Book,
+  X,
+  ArrowLeft,
 } from 'lucide-react'
 import { useTranslation } from 'react-i18next'
 
@@ -32,17 +37,31 @@ const MotionText = motion(Text)
 const MotionIcon = motion(Icon)
 const MotionButton = motion(Button)
 
-const QuizInstructions = ({ onStart }) => {
+const QuizInstructions = ({ onStart, onBack }) => {
   const { t } = useTranslation('QuickClash')
   const isSmallScreen = useBreakpointValue({ base: true, md: false })
 
   return (
-    <Center minH="calc(100vh - 200px)" py={6}>
+    <Center minH="calc(100vh - 200px)" py={6} position="relative">
+      {/* Back Button */}
+      <IconButton
+        icon={<ArrowLeft size={20} />}
+        aria-label="Back"
+        position="absolute"
+        top={4}
+        left={4}
+        colorScheme="whiteAlpha"
+        variant="ghost"
+        onClick={onBack}
+        zIndex={10}
+        _hover={{ bg: 'whiteAlpha.200' }}
+      />
+
       <MotionBox
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.5 }}
-        maxW="700px"
+        maxW="800px"
         w="100%"
         p={{ base: 4, md: 8 }}
         borderRadius="xl"
@@ -79,7 +98,7 @@ const QuizInstructions = ({ onStart }) => {
             animate={{ opacity: 1 }}
             transition={{ delay: 0.2, duration: 0.5 }}
           >
-            {t('Quiz Challenge Instructions')}
+            {t('Quick Clash Challenge Instructions')}
           </MotionHeading>
 
           <MotionText
@@ -91,142 +110,262 @@ const QuizInstructions = ({ onStart }) => {
             transition={{ delay: 0.3, duration: 0.5 }}
           >
             {t(
-              "It's time to test your knowledge! Get ready for the quiz challenge.",
+              'This challenge has two phases: Reading and Quiz. Master both to win!',
             )}
           </MotionText>
 
-          <Flex
-            wrap="wrap"
-            justifyContent="center"
-            gap={4}
-            as={motion.div}
+          {/* Reading Phase Section */}
+          <MotionBox
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             transition={{ delay: 0.4, duration: 0.5 }}
           >
-            <Box
-              bg="rgba(255, 255, 255, 0.05)"
-              p={4}
-              borderRadius="md"
-              boxShadow="inset 0 1px 2px rgba(255, 255, 255, 0.1)"
-              flex="1"
-              minW={{ base: '100%', md: '180px' }}
-              maxW={{ base: '100%', md: '200px' }}
-              border="1px solid"
-              borderColor="whiteAlpha.200"
-              _hover={{ bg: 'rgba(255, 255, 255, 0.07)' }}
-              transition="all 0.2s"
-            >
-              <VStack>
-                <Icon as={Clock} color="yellow.400" boxSize={8} />
-                <Text fontWeight="medium" color="white">
-                  {t('Time Limit')}
-                </Text>
-                <Text
-                  as="span"
-                  color="yellow.300"
-                  fontSize="lg"
-                  fontWeight="bold"
-                >
-                  50 {t('seconds')}
-                </Text>
-              </VStack>
-            </Box>
+            <HStack mb={2}>
+              <Icon as={Book} color="blue.400" boxSize={5} />
+              <Heading size="md" color="blue.300">
+                {t('Phase 1: Reading')}
+              </Heading>
+            </HStack>
+
+            <Flex wrap="wrap" justifyContent="center" gap={4} mb={4}>
+              <Box
+                bg="rgba(66, 153, 225, 0.1)"
+                p={4}
+                borderRadius="md"
+                boxShadow="inset 0 1px 2px rgba(255, 255, 255, 0.1)"
+                flex="1"
+                minW={{ base: '100%', md: '180px' }}
+                maxW={{ base: '100%', md: '220px' }}
+                border="1px solid"
+                borderColor="blue.700"
+                _hover={{ bg: 'rgba(66, 153, 225, 0.15)' }}
+                transition="all 0.2s"
+              >
+                <VStack>
+                  <Icon as={Clock} color="blue.400" boxSize={8} />
+                  <Text fontWeight="medium" color="white">
+                    {t('Time Limit')}
+                  </Text>
+                  <Text
+                    as="span"
+                    color="blue.300"
+                    fontSize="lg"
+                    fontWeight="bold"
+                  >
+                    2 {t('minutes')}
+                  </Text>
+                </VStack>
+              </Box>
+
+              <Box
+                bg="rgba(66, 153, 225, 0.1)"
+                p={4}
+                borderRadius="md"
+                boxShadow="inset 0 1px 2px rgba(255, 255, 255, 0.1)"
+                flex="1"
+                minW={{ base: '100%', md: '180px' }}
+                maxW={{ base: '100%', md: '220px' }}
+                border="1px solid"
+                borderColor="blue.700"
+                _hover={{ bg: 'rgba(66, 153, 225, 0.15)' }}
+                transition="all 0.2s"
+              >
+                <VStack>
+                  <Icon as={Book} color="blue.400" boxSize={8} />
+                  <Text fontWeight="medium" color="white">
+                    {t('Task')}
+                  </Text>
+                  <Text
+                    as="span"
+                    color="blue.300"
+                    fontSize="lg"
+                    fontWeight="bold"
+                    textAlign="center"
+                  >
+                    {t('Read & Understand')}
+                  </Text>
+                </VStack>
+              </Box>
+            </Flex>
 
             <Box
-              bg="rgba(255, 255, 255, 0.05)"
+              bg="rgba(66, 153, 225, 0.05)"
+              borderRadius="lg"
               p={4}
-              borderRadius="md"
-              boxShadow="inset 0 1px 2px rgba(255, 255, 255, 0.1)"
-              flex="1"
-              minW={{ base: '100%', md: '180px' }}
-              maxW={{ base: '100%', md: '200px' }}
-              border="1px solid"
-              borderColor="whiteAlpha.200"
-              _hover={{ bg: 'rgba(255, 255, 255, 0.07)' }}
-              transition="all 0.2s"
+              borderLeft="4px solid"
+              borderColor="blue.400"
             >
-              <VStack>
-                <Icon as={Award} color="yellow.400" boxSize={8} />
-                <Text fontWeight="medium" color="white">
-                  {t('Questions')}
-                </Text>
-                <Text
-                  as="span"
-                  color="yellow.300"
-                  fontSize="lg"
-                  fontWeight="bold"
-                >
-                  5 {t('questions')}
-                </Text>
-              </VStack>
+              <HStack align="flex-start" spacing={3}>
+                <Icon as={Lightbulb} color="blue.400" boxSize={5} mt={1} />
+                <Box>
+                  <Text fontWeight="medium" color="blue.200" mb={2}>
+                    {t('Reading Tips')}:
+                  </Text>
+                  <UnorderedList
+                    color="gray.300"
+                    spacing={2}
+                    pl={2}
+                    fontSize={{ base: 'sm', md: 'md' }}
+                  >
+                    <ListItem>
+                      {t('Pay attention to key facts and details')}
+                    </ListItem>
+                    <ListItem>
+                      {t(
+                        'Note important concepts that might appear in questions',
+                      )}
+                    </ListItem>
+                    <ListItem>
+                      {t('Use the progress bar to track your remaining time')}
+                    </ListItem>
+                    <ListItem>
+                      {t("You can finish early if you're ready for the quiz")}
+                    </ListItem>
+                  </UnorderedList>
+                </Box>
+              </HStack>
             </Box>
+          </MotionBox>
 
-            <Box
-              bg="rgba(255, 255, 255, 0.05)"
-              p={4}
-              borderRadius="md"
-              boxShadow="inset 0 1px 2px rgba(255, 255, 255, 0.1)"
-              flex="1"
-              minW={{ base: '100%', md: '180px' }}
-              maxW={{ base: '100%', md: '200px' }}
-              border="1px solid"
-              borderColor="whiteAlpha.200"
-              _hover={{ bg: 'rgba(255, 255, 255, 0.07)' }}
-              transition="all 0.2s"
-            >
-              <VStack>
-                <Icon as={Star} color="yellow.400" boxSize={8} />
-                <Text fontWeight="medium" color="white">
-                  {t('Scoring')}
-                </Text>
-                <Text
-                  as="span"
-                  color="yellow.300"
-                  textAlign="center"
-                  fontSize={{ base: 'sm', md: 'md' }}
-                >
-                  {t('Accuracy + Speed')}
-                </Text>
-              </VStack>
-            </Box>
-          </Flex>
+          <Divider borderColor="whiteAlpha.300" />
 
+          {/* Quiz Phase Section */}
           <MotionBox
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
-            transition={{ delay: 0.5, duration: 0.5 }}
-            bg="rgba(255, 255, 255, 0.03)"
-            borderRadius="lg"
-            p={4}
-            borderLeft="4px solid"
-            borderColor="yellow.400"
+            transition={{ delay: 0.6, duration: 0.5 }}
           >
-            <HStack align="flex-start" spacing={3}>
-              <Icon as={Lightbulb} color="yellow.400" boxSize={5} mt={1} />
-              <Box>
-                <Text fontWeight="medium" color="yellow.200" mb={2}>
-                  {t('Quick Tips')}:
-                </Text>
-                <UnorderedList
-                  color="gray.300"
-                  spacing={2}
-                  pl={2}
-                  fontSize={{ base: 'sm', md: 'md' }}
-                >
-                  <ListItem>{t('Read each question carefully')}</ListItem>
-                  <ListItem>
-                    {t('Use the navigation buttons to move between questions')}
-                  </ListItem>
-                  <ListItem>
-                    {t("You can come back to questions if you're unsure")}
-                  </ListItem>
-                  <ListItem>
-                    {t('The timer in the header shows your remaining time')}
-                  </ListItem>
-                </UnorderedList>
-              </Box>
+            <HStack mb={2}>
+              <Icon as={Award} color="yellow.400" boxSize={5} />
+              <Heading size="md" color="yellow.300">
+                {t('Phase 2: Quiz')}
+              </Heading>
             </HStack>
+
+            <Flex wrap="wrap" justifyContent="center" gap={4} mb={4}>
+              <Box
+                bg="rgba(255, 255, 255, 0.05)"
+                p={4}
+                borderRadius="md"
+                boxShadow="inset 0 1px 2px rgba(255, 255, 255, 0.1)"
+                flex="1"
+                minW={{ base: '100%', md: '180px' }}
+                maxW={{ base: '100%', md: '220px' }}
+                border="1px solid"
+                borderColor="yellow.700"
+                _hover={{ bg: 'rgba(255, 255, 255, 0.07)' }}
+                transition="all 0.2s"
+              >
+                <VStack>
+                  <Icon as={Clock} color="yellow.400" boxSize={8} />
+                  <Text fontWeight="medium" color="white">
+                    {t('Time Limit')}
+                  </Text>
+                  <Text
+                    as="span"
+                    color="yellow.300"
+                    fontSize="lg"
+                    fontWeight="bold"
+                  >
+                    50 {t('seconds')}
+                  </Text>
+                </VStack>
+              </Box>
+
+              <Box
+                bg="rgba(255, 255, 255, 0.05)"
+                p={4}
+                borderRadius="md"
+                boxShadow="inset 0 1px 2px rgba(255, 255, 255, 0.1)"
+                flex="1"
+                minW={{ base: '100%', md: '180px' }}
+                maxW={{ base: '100%', md: '220px' }}
+                border="1px solid"
+                borderColor="yellow.700"
+                _hover={{ bg: 'rgba(255, 255, 255, 0.07)' }}
+                transition="all 0.2s"
+              >
+                <VStack>
+                  <Icon as={Award} color="yellow.400" boxSize={8} />
+                  <Text fontWeight="medium" color="white">
+                    {t('Questions')}
+                  </Text>
+                  <Text
+                    as="span"
+                    color="yellow.300"
+                    fontSize="lg"
+                    fontWeight="bold"
+                  >
+                    5 {t('questions')}
+                  </Text>
+                </VStack>
+              </Box>
+
+              <Box
+                bg="rgba(255, 255, 255, 0.05)"
+                p={4}
+                borderRadius="md"
+                boxShadow="inset 0 1px 2px rgba(255, 255, 255, 0.1)"
+                flex="1"
+                minW={{ base: '100%', md: '180px' }}
+                maxW={{ base: '100%', md: '220px' }}
+                border="1px solid"
+                borderColor="yellow.700"
+                _hover={{ bg: 'rgba(255, 255, 255, 0.07)' }}
+                transition="all 0.2s"
+              >
+                <VStack>
+                  <Icon as={Star} color="yellow.400" boxSize={8} />
+                  <Text fontWeight="medium" color="white">
+                    {t('Scoring')}
+                  </Text>
+                  <Text
+                    as="span"
+                    color="yellow.300"
+                    textAlign="center"
+                    fontSize={{ base: 'sm', md: 'md' }}
+                  >
+                    {t('Accuracy + Speed')}
+                  </Text>
+                </VStack>
+              </Box>
+            </Flex>
+
+            <Box
+              bg="rgba(255, 255, 255, 0.03)"
+              borderRadius="lg"
+              p={4}
+              borderLeft="4px solid"
+              borderColor="yellow.400"
+            >
+              <HStack align="flex-start" spacing={3}>
+                <Icon as={Lightbulb} color="yellow.400" boxSize={5} mt={1} />
+                <Box>
+                  <Text fontWeight="medium" color="yellow.200" mb={2}>
+                    {t('Quiz Tips')}:
+                  </Text>
+                  <UnorderedList
+                    color="gray.300"
+                    spacing={2}
+                    pl={2}
+                    fontSize={{ base: 'sm', md: 'md' }}
+                  >
+                    <ListItem>{t('Read each question carefully')}</ListItem>
+                    <ListItem>
+                      {t(
+                        'Use the navigation buttons to move between questions',
+                      )}
+                    </ListItem>
+                    <ListItem>
+                      {t("You can come back to questions if you're unsure")}
+                    </ListItem>
+                    <ListItem>
+                      {t('The timer in the header shows your remaining time')}
+                    </ListItem>
+                  </UnorderedList>
+                </Box>
+              </HStack>
+            </Box>
           </MotionBox>
 
           <MotionBox
@@ -245,10 +384,10 @@ const QuizInstructions = ({ onStart }) => {
               whileHover={{ transform: 'translateY(-2px)', boxShadow: 'lg' }}
               whileTap={{ transform: 'translateY(0)' }}
               transition="all 0.2s"
-              bgGradient="linear(to-r, yellow.400, orange.400)"
-              _hover={{ bgGradient: 'linear(to-r, yellow.500, orange.500)' }}
-              _active={{ bgGradient: 'linear(to-r, yellow.600, orange.600)' }}
-              boxShadow="0 4px 15px rgba(255, 186, 8, 0.4)"
+              bgGradient="linear(to-r, blue.400, purple.500)"
+              _hover={{ bgGradient: 'linear(to-r, blue.500, purple.600)' }}
+              _active={{ bgGradient: 'linear(to-r, blue.600, purple.700)' }}
+              boxShadow="0 4px 15px rgba(66, 153, 225, 0.4)"
             >
               {t('Begin Challenge')}
             </MotionButton>

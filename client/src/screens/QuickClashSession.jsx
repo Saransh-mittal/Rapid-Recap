@@ -60,9 +60,9 @@ const QuickClashSession = () => {
   const { trackChallengeCompletion } = useDailyTasks()
 
   // State management
+  const [phase, setPhase] = useState('instruction') // instruction, loading, reading, quiz, completed
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState(null)
-  const [phase, setPhase] = useState('loading') // loading, reading, instruction, quiz, completed
   const [challenge, setChallenge] = useState(null)
   const [article, setArticle] = useState(null)
   const [timeLeft, setTimeLeft] = useState(120) // 2 minutes for reading
@@ -99,6 +99,7 @@ const QuickClashSession = () => {
   const initSession = async () => {
     try {
       setLoading(true)
+      setPhase('loading')
 
       // First get the challenge details
       const challengeResponse = await axios.get(
@@ -131,14 +132,15 @@ const QuickClashSession = () => {
             },
       )
 
-      // Start reading phase
+      // Move to reading phase after loading
+      setPhase('reading')
+      readingStartTimeRef.current = Date.now()
+
+      // Start reading phase on the server
       await axios.post(
         `/api/quickClash/session/${currentSession._id}/reading/start`,
       )
 
-      setPhase('reading')
-      setTimeLeft(120) // 2 minutes
-      readingStartTimeRef.current = Date.now()
       setError(null)
     } catch (err) {
       console.error('Error initializing session:', err)
@@ -147,34 +149,28 @@ const QuickClashSession = () => {
           reduxSessionError ||
           'Failed to initialize challenge session',
       )
+      setPhase('instruction') // Go back to instructions if there's an error
     } finally {
       setLoading(false)
     }
   }
 
-  // Initialize session
-  useEffect(() => {
-    if (!loading && !sessionLoading && !session) {
-      initSession()
-    }
-
-    // If session was loaded from Redux, we can update UI
-    if (session && loading) {
-      setLoading(false)
-    }
-  }, [challengeId, user?.userLanguage, session, sessionLoading])
-
-  useEffect(() => {
-    return () => {
-      endSession()
-    }
-  }, [])
+  // Start session after instructions
+  const handleStartSession = () => {
+    initSession()
+  }
 
   useEffect(() => {
     if (reduxSessionError) {
       setError(reduxSessionError)
     }
   }, [reduxSessionError])
+
+  useEffect(() => {
+    return () => {
+      endSession()
+    }
+  }, [])
 
   // Reading timer
   useEffect(() => {
@@ -206,7 +202,8 @@ const QuickClashSession = () => {
       await axios.post(
         `/api/quickClash/session/${session._id}/reading/complete`,
       )
-      setPhase('instruction')
+      // Go directly to quiz phase after reading is complete
+      setPhase('quiz')
       setPhaseProgress(0)
     } catch (error) {
       console.error('Error completing reading phase:', error)
@@ -222,14 +219,6 @@ const QuickClashSession = () => {
     } finally {
       setCompleteReadingLoading(false)
     }
-  }
-
-  // Start the quiz phase after instructions
-  const handleStartQuiz = () => {
-    setPhase('quiz')
-    setPhaseProgress(0)
-    // We no longer set quizStartTimeRef.current here
-    // The QuickClashQuiz component will handle timing internally
   }
 
   // Handle quiz completion
@@ -256,10 +245,20 @@ const QuickClashSession = () => {
     })
   }
 
+  const handleBack = () => {
+    if (phase === 'instruction') {
+      if (challenge?.fromTeamBattle)
+        navigate(`/quickclash/teamBattle/${challenge.teamBattle.toString()}`)
+      else navigate('/quickclash')
+    } else {
+      openConfirmDialog()
+    }
+  }
+
   // Handle browser's back button and page refresh attempts
   useBeforeUnload(event => {
     // Only show native browser warning if in an active phase
-    if (phase === 'reading' || phase === 'instruction' || phase === 'quiz') {
+    if (phase === 'reading' || phase === 'loading' || phase === 'quiz') {
       event.preventDefault()
       // Browser standard requires us to set returnValue
       event.returnValue = ''
@@ -270,7 +269,7 @@ const QuickClashSession = () => {
   // Handle browser back button
   useEffect(() => {
     const handlePopState = e => {
-      if (phase === 'reading' || phase === 'instruction' || phase === 'quiz') {
+      if (phase === 'reading' || phase === 'loading' || phase === 'quiz') {
         // Prevent the default action
         e.preventDefault()
         // Show our custom dialog
@@ -294,7 +293,9 @@ const QuickClashSession = () => {
   // Function for confirmed navigation
   const confirmNavigation = () => {
     skipConfirmRef.current = true
-    navigate('/quickclash')
+    if (challenge?.fromTeamBattle)
+      navigate(`/quickclash/teamBattle/${challenge.teamBattle.toString()}`)
+    else navigate('/quickclash')
   }
 
   // Format time display
@@ -307,19 +308,26 @@ const QuickClashSession = () => {
   // Get phase-specific information
   const getPhaseInfo = () => {
     switch (phase) {
-      case 'reading':
-        return {
-          label: t('Reading Phase'),
-          totalTime: 120,
-          currentTime: timeLeft,
-          colorScheme: timeLeft <= 30 ? 'red' : 'blue',
-        }
       case 'instruction':
         return {
           label: t('Instructions'),
           totalTime: null,
           currentTime: null,
           colorScheme: 'purple',
+        }
+      case 'loading':
+        return {
+          label: t('Loading'),
+          totalTime: null,
+          currentTime: null,
+          colorScheme: 'gray',
+        }
+      case 'reading':
+        return {
+          label: t('Reading Phase'),
+          totalTime: 120,
+          currentTime: timeLeft,
+          colorScheme: timeLeft <= 30 ? 'red' : 'blue',
         }
       case 'quiz':
         return {
@@ -387,24 +395,25 @@ const QuickClashSession = () => {
     )
   }
 
-  // Render based on current state
-  if (loading) {
-    return (
-      <Center h="100vh" bg="rgba(13, 10, 20, 0.98)">
-        <VStack spacing={6}>
-          <Spinner
-            size="xl"
-            thickness="4px"
-            color="purple.500"
-            emptyColor="whiteAlpha.200"
-            speed="0.8s"
-          />
-          <Text color="whiteAlpha.800">{t('Preparing your challenge...')}</Text>
-        </VStack>
-      </Center>
-    )
-  }
+  // Loading screen during session initialization
+  const renderLoadingScreen = () => (
+    <Center h="60vh">
+      <VStack spacing={6}>
+        <Spinner
+          size="xl"
+          thickness="4px"
+          color="purple.500"
+          emptyColor="whiteAlpha.200"
+          speed="0.8s"
+        />
+        <Text color="whiteAlpha.800">
+          {t('Preparing reading materials...')}
+        </Text>
+      </VStack>
+    </Center>
+  )
 
+  // If there's an error at any point
   if (error) {
     return <QuickClashError error={error} onBackClick={confirmNavigation} />
   }
@@ -415,6 +424,23 @@ const QuickClashSession = () => {
 
       <Container maxW="container.lg" py={4} px={{ base: 2, md: 4 }}>
         <VStack spacing={6} align="stretch">
+          {phase === 'instruction' && (
+            <Suspense
+              fallback={
+                <Center py={10}>
+                  <Spinner size="xl" color="purple.500" />
+                </Center>
+              }
+            >
+              <QuizInstructions
+                onStart={handleStartSession}
+                onBack={handleBack}
+              />
+            </Suspense>
+          )}
+
+          {phase === 'loading' && renderLoadingScreen()}
+
           {phase === 'reading' && article && (
             <Suspense
               fallback={
@@ -430,18 +456,6 @@ const QuickClashSession = () => {
                 onComplete={handleReadingComplete}
                 completeReadingLoading={completeReadingLoading}
               />
-            </Suspense>
-          )}
-
-          {phase === 'instruction' && (
-            <Suspense
-              fallback={
-                <Center py={10}>
-                  <Spinner size="xl" color="purple.500" />
-                </Center>
-              }
-            >
-              <QuizInstructions onStart={handleStartQuiz} />
             </Suspense>
           )}
 

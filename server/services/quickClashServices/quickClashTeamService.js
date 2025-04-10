@@ -435,6 +435,7 @@ const updateMemberStatus = async ({ teamId, userId, status }) => {
 const getUserTeams = async ({ userId }) => {
   const teams = await QuickClashTeam.find({
     'members.user': userId,
+    isPersistent: true,
   })
     .populate('creator', '_id name inGameName pic')
     .populate('members.user', '_id name inGameName pic quickClashTrophies')
