@@ -51,10 +51,10 @@ const joinMatchmaking = async ({ userId }) => {
         // Get user details for both users
         const [joiningUser, matchedUser] = await Promise.all([
           User.findById(userId)
-            .select('_id name inGameName pic')
+            .select('_id name inGameName quickClashTrophies pic')
             .session(session),
           User.findById(potentialMatch.user)
-            .select('_id name inGameName pic')
+            .select('_id name inGameName quickClashTrophies pic')
             .session(session),
         ])
 
@@ -202,8 +202,12 @@ const scheduleRandomBotResponse = async (userId, categories) => {
 
         // Get both user details for UI
         const [creatorData, accepterData] = await Promise.all([
-          User.findById(userId).select('_id name inGameName pic').lean(),
-          User.findById(botUser._id).select('_id name inGameName pic').lean(),
+          User.findById(userId)
+            .select('_id name inGameName quickClashTrophies pic')
+            .lean(),
+          User.findById(botUser._id)
+            .select('_id name inGameName quickClashTrophies pic')
+            .lean(),
         ])
 
         // NEW: Notify users that a match has been found
