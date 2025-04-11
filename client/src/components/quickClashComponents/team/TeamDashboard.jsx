@@ -257,35 +257,6 @@ const TeamDashboard = () => {
     [toast, fetchTeams],
   )
 
-  // Handle adding a bot to a team
-  const handleAddBot = useCallback(
-    async teamId => {
-      try {
-        const response = await axios.post(`/api/quickClash/team/${teamId}/bot`)
-
-        toast({
-          title: 'Bot Added',
-          description: 'A bot has been added to your team',
-          status: 'success',
-          duration: 3000,
-          isClosable: true,
-        })
-
-        // Refresh team list
-        fetchTeams()
-      } catch (error) {
-        toast({
-          title: 'Error',
-          description: error.response?.data?.message || 'Failed to add bot',
-          status: 'error',
-          duration: 3000,
-          isClosable: true,
-        })
-      }
-    },
-    [toast, fetchTeams],
-  )
-
   // Handle removing a member from a team
   const handleRemoveMember = useCallback(
     async (teamId, memberId) => {
@@ -530,7 +501,6 @@ const TeamDashboard = () => {
               isLeader={isUserTeamLeader(team)}
               userId={user._id}
               onLeave={() => handleLeaveTeam(team._id)}
-              onAddBot={() => handleAddBot(team._id)}
               onRemoveMember={memberId =>
                 handleRemoveMember(team._id, memberId)
               }

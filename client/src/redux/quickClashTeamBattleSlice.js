@@ -70,11 +70,10 @@ export const selectBattleCategory = createAsyncThunk(
 
 export const joinTeamMatchmaking = createAsyncThunk(
   'quickClashTeamBattle/joinTeamMatchmaking',
-  async ({ teamId, allowBots = true }, { rejectWithValue }) => {
+  async ({ teamId }, { rejectWithValue }) => {
     try {
       const response = await axios.post(
         `/api/quickClash/team/${teamId}/matchmaking/join`,
-        { allowBots },
       )
       return response.data.matchmaking
     } catch (error) {

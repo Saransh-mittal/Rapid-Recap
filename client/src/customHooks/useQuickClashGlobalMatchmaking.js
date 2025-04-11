@@ -20,7 +20,6 @@ import {
   clearBattleReady,
   setSelectedTeamId,
   setTeamMembers,
-  setAllowBots,
   setSocketConnected,
   updateMatchmakingState,
   resetGlobalMatchmakingState,
@@ -55,7 +54,6 @@ const useQuickClashGlobalMatchmaking = () => {
 
     // Inform we're connected
     dispatch(setSocketConnected(true))
-    console.log('Global matchmaking socket connected')
 
     // Join the teams socket room if needed (especially for team matchmaking)
     if (
@@ -64,12 +62,10 @@ const useQuickClashGlobalMatchmaking = () => {
     ) {
       socket.emit('quickClash:joinTeamsRoom')
       joinedTeamsRoom.current = true
-      console.log('Joined quickClash:teams room for team matchmaking')
     }
 
     // User matchmaking progress updates
     socket.on('quickClash:userMatchmakingProgress', data => {
-      console.log('Received user matchmaking progress:', data)
       if (data.progress) {
         dispatch(setMatchmakingProgress(data.progress))
       }
@@ -85,7 +81,6 @@ const useQuickClashGlobalMatchmaking = () => {
 
     // Team matchmaking progress updates
     socket.on('quickClash:teamMatchmakingProgress', data => {
-      console.log('Received team matchmaking progress:', data)
       if (
         globalMatchmakingState.selectedTeamId &&
         data.teamId === globalMatchmakingState.selectedTeamId
@@ -102,7 +97,6 @@ const useQuickClashGlobalMatchmaking = () => {
 
     // Team dissolved notification
     socket.on('quickClash:teamDissolved', data => {
-      console.log('Team dissolved event received:', data)
       toast({
         title: t('Team Dissolved'),
         description: t(
@@ -126,8 +120,6 @@ const useQuickClashGlobalMatchmaking = () => {
 
     // Battle ready notification
     socket.on('quickClash:teamBattleReady', data => {
-      console.log('Received team battle ready event:', data)
-
       // For solo players, there won't be selectedTeamId but there will be battleId
       const isSoloPlayer = globalMatchmakingState.matchmakingType === 'solo'
 
@@ -137,37 +129,22 @@ const useQuickClashGlobalMatchmaking = () => {
       if (isSoloPlayer && data.battleId) {
         // Solo player should receive all battle ready events
         isForUser = true
-        console.log('Solo player receiving battle ready notification')
       } else if (globalMatchmakingState.selectedTeamId) {
         // Team player should receive only events for their team
         isForUser =
           data.teamId === globalMatchmakingState.selectedTeamId ||
           data.teamA === globalMatchmakingState.selectedTeamId ||
           data.teamB === globalMatchmakingState.selectedTeamId
-
-        console.log(
-          'Team player, isForUser:',
-          isForUser,
-          'selectedTeamId:',
-          globalMatchmakingState.selectedTeamId,
-        )
       }
 
       if (isForUser) {
-        console.log(
-          'Battle ready notification is for this user, updating state',
-        )
-
         // Update the state with the battle ready info
         dispatch(setBattleReady(data))
-      } else {
-        console.log('Battle ready notification is not for this user')
       }
     })
 
     // Handle notification when user joined matchmaking
     socket.on('quickClash:joinedGlobalMatchmaking', data => {
-      console.log('User joined global matchmaking:', data)
       dispatch(
         updateMatchmakingState({
           inMatchmaking: true,
@@ -180,7 +157,6 @@ const useQuickClashGlobalMatchmaking = () => {
 
     // Handle notification when user left matchmaking
     socket.on('quickClash:leftGlobalMatchmaking', data => {
-      console.log('User left global matchmaking:', data)
       dispatch(
         updateMatchmakingState({
           inMatchmaking: false,
@@ -192,7 +168,6 @@ const useQuickClashGlobalMatchmaking = () => {
 
     // Add new handler for team battle completed
     socket.on('quickClash:teamBattleCompleted', data => {
-      console.log('Team battle completed:', data)
       // Clear matchmaking state if needed
       if (globalMatchmakingState.inMatchmaking) {
         dispatch(resetGlobalMatchmakingState())
@@ -293,7 +268,7 @@ const useQuickClashGlobalMatchmaking = () => {
 
   // Join matchmaking with a team
   const joinWithTeam = useCallback(
-    async (teamId, allowBots = true) => {
+    async teamId => {
       if (!teamId) {
         toast({
           title: t('No Team Selected'),
@@ -311,12 +286,9 @@ const useQuickClashGlobalMatchmaking = () => {
         if (socket && !joinedTeamsRoom.current) {
           socket.emit('quickClash:joinTeamsRoom')
           joinedTeamsRoom.current = true
-          console.log('Joined quickClash:teams room for joinWithTeam')
         }
 
-        const result = await dispatch(
-          joinTeamMatchmaking({ teamId, allowBots }),
-        ).unwrap()
+        const result = await dispatch(joinTeamMatchmaking({ teamId })).unwrap()
 
         toast({
           title: t('Team Joined Matchmaking'),
@@ -391,19 +363,10 @@ const useQuickClashGlobalMatchmaking = () => {
         if (socket && !joinedTeamsRoom.current) {
           socket.emit('quickClash:joinTeamsRoom')
           joinedTeamsRoom.current = true
-          console.log('Joined quickClash:teams room for selectTeam')
         }
       }
     },
     [dispatch, getSocket],
-  )
-
-  // Set whether to allow bots in matchmaking
-  const toggleAllowBots = useCallback(
-    allowBots => {
-      dispatch(setAllowBots(allowBots))
-    },
-    [dispatch],
   )
 
   // Helper to format time display (MM:SS)
@@ -462,16 +425,7 @@ const useQuickClashGlobalMatchmaking = () => {
 
   // Navigate to battle when ready
   const enterBattle = useCallback(() => {
-    console.log(
-      'Attempting to enter battle with state:',
-      globalMatchmakingState,
-    )
-
     if (globalMatchmakingState.battleReady?.battleId) {
-      console.log(
-        'Navigating to battle:',
-        globalMatchmakingState.battleReady.battleId,
-      )
       navigate(
         `/quickclash/teamBattle/${globalMatchmakingState.battleReady.battleId}`,
       )
@@ -482,7 +436,6 @@ const useQuickClashGlobalMatchmaking = () => {
     ) {
       // If we somehow missed the battleReady but have the battleReady step and 100% progress,
       // redirect to the matchmaking screen
-      console.log('Battle ready but no battleId, redirecting to matchmaking')
       navigate('/quickclash')
       toast({
         title: t('Battle Ready'),
@@ -506,7 +459,6 @@ const useQuickClashGlobalMatchmaking = () => {
     battleReady: globalMatchmakingState.battleReady,
     loading: globalMatchmakingState.loading,
     error: globalMatchmakingState.error,
-    allowBots: globalMatchmakingState.allowBots,
     teamMembers: globalMatchmakingState.teamMembers,
     socketConnected: globalMatchmakingState.socketConnected,
 
@@ -516,7 +468,6 @@ const useQuickClashGlobalMatchmaking = () => {
     joinWithTeam,
     leaveMatchmaking,
     selectTeam,
-    toggleAllowBots,
     enterBattle,
     clearBattleReady: () => dispatch(clearBattleReady()),
 

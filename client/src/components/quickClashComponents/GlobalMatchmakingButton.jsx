@@ -84,7 +84,6 @@ const GlobalMatchmakingButton = ({ compact = false }) => {
     matchmakingTime,
     battleReady,
     loading,
-    allowBots,
 
     // Actions
     checkMatchmakingStatus,
@@ -92,7 +91,6 @@ const GlobalMatchmakingButton = ({ compact = false }) => {
     joinWithTeam,
     leaveMatchmaking,
     selectTeam,
-    toggleAllowBots,
     enterBattle,
 
     // Helper functions
@@ -144,7 +142,7 @@ const GlobalMatchmakingButton = ({ compact = false }) => {
     try {
       if (selectedTeamId) {
         // Join with team
-        await joinWithTeam(selectedTeamId, allowBots)
+        await joinWithTeam(selectedTeamId)
       } else {
         // Join solo
         await joinSoloMatchmaking()
@@ -505,32 +503,6 @@ const GlobalMatchmakingButton = ({ compact = false }) => {
               </MotionBadge>
             </VStack>
           </HStack>
-
-          {/* Bot Option - Only show if in team matchmaking */}
-          {matchmakingType === 'team' && (
-            <Box w="100%">
-              <Text color="whiteAlpha.700" fontSize="sm" mb={2}>
-                {t('Match Options:')}
-              </Text>
-              <HStack spacing={4} w="100%">
-                <Text color="white" fontSize="sm">
-                  {t('Allow bots if no match found:')}
-                </Text>
-                <Select
-                  value={allowBots ? 'yes' : 'no'}
-                  onChange={e => toggleAllowBots(e.target.value === 'yes')}
-                  size="sm"
-                  width="100px"
-                  bg="whiteAlpha.200"
-                  borderColor="whiteAlpha.300"
-                  color="white"
-                >
-                  <option value="yes">{t('Yes')}</option>
-                  <option value="no">{t('No')}</option>
-                </Select>
-              </HStack>
-            </Box>
-          )}
 
           {/* Additional Info */}
           <Box w="100%" pt={4}>
