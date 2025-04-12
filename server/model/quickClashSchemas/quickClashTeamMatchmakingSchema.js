@@ -42,11 +42,6 @@ const quickClashTeamMatchmakingSchema = new mongoose.Schema({
     type: Number,
     default: 0,
   },
-  // Flag to indicate if bots should be added to reach 4 members
-  allowBots: {
-    type: Boolean,
-    default: true,
-  },
 })
 
 // Create indexes for efficient queries

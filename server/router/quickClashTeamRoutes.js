@@ -12,7 +12,6 @@ const {
   updateTeamMemberStatus,
   getMyTeams,
   toggleTeamPersistenceController,
-  addBotToTeamController,
   removeMemberFromTeam,
   joinTeamMatchmakingController,
   leaveTeamMatchmakingController,
@@ -35,7 +34,6 @@ router.post('/team/:teamId/leave', leaveTeamController)
 router.post('/team/:teamId/status', updateTeamMemberStatus)
 router.get('/teams', getMyTeams)
 router.post('/team/:teamId/persistence', toggleTeamPersistenceController)
-router.post('/team/:teamId/bot', addBotToTeamController)
 router.post('/team/:teamId/remove', removeMemberFromTeam)
 
 // Team matchmaking routes

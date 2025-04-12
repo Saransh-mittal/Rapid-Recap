@@ -583,7 +583,10 @@ const getUserChallenges = async ({
 
   let query = {
     $and: [
-      { $or: [{ challenger: userId }, { opponent: userId }] },
+      {
+        $or: [{ challenger: userId }, { opponent: userId }],
+        fromTeamBattle: false,
+      },
       {
         $or: [
           { status: 'completed' },

@@ -58,7 +58,6 @@ const TeamCard = ({
   isLeader,
   userId,
   onLeave,
-  onAddBot,
   onRemoveMember,
   onInvite,
   onOpenSettings,
@@ -287,16 +286,6 @@ const TeamCard = ({
                 onClick={onInvite}
               >
                 {t('Invite')}
-              </Button>
-              <Button
-                size="xs"
-                leftIcon={<Icon as={Bot} size={14} />}
-                colorScheme="purple"
-                variant="ghost"
-                onClick={onAddBot}
-                isDisabled={team.members.length >= 4}
-              >
-                {t('Add Bot')}
               </Button>
             </HStack>
           )}

@@ -237,21 +237,6 @@ const TeamBattleItem = ({ battle, index, onEnter }) => {
             {t('Tie')}
           </Badge>
         )
-      case 'inProgress':
-        return (
-          <Badge
-            colorScheme="blue"
-            p={2}
-            borderRadius="md"
-            display="flex"
-            alignItems="center"
-          >
-            <Icon as={Target} mr={1} boxSize={4} />
-            {uncompletedCategories.length > 0
-              ? `${t('Your Turn')} (${uncompletedCategories.length})`
-              : t('In Progress')}
-          </Badge>
-        )
       case 'waitingForOpponent':
         return (
           <Badge

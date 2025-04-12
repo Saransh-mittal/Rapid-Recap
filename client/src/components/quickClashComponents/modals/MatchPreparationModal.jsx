@@ -312,7 +312,7 @@ const MatchPreparationModal = ({
       name: 'Alex Johnson',
       quickClashTrophies: 1150,
       inGameName: 'CodeWarrior',
-      pic: 'https://randomuser.me/api/portraits/men/32.jpg',
+      pic: 'https://randomuser?.me/api/portraits/men/32.jpg',
     },
 
     // Whether the current user is the challenger or not
@@ -603,12 +603,12 @@ const MatchPreparationModal = ({
                 {/* User */}
                 <VStack spacing={2}>
                   <Text color="whiteAlpha.700" fontSize="sm">
-                    {user.inGameName}
+                    {user?.inGameName}
                   </Text>
                   <MotionAvatar
                     size={avatarSize}
-                    name={user.name}
-                    src={user.pic}
+                    name={user?.name}
+                    src={user?.pic}
                     bg="purple.500"
                     border="2px solid"
                     borderColor="purple.300"
@@ -626,7 +626,7 @@ const MatchPreparationModal = ({
                     }}
                   />
                   <Text color="white" fontWeight="bold" fontSize="md">
-                    {user.name}
+                    {user?.name}
                   </Text>
 
                   {/* Premium Trophy Badge */}

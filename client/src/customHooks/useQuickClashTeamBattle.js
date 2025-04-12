@@ -44,7 +44,6 @@ const useQuickClashTeamBattle = () => {
     if (!joinedTeamsRoom.current) {
       socket.emit('quickClash:joinTeamsRoom')
       joinedTeamsRoom.current = true
-      console.log('Joined quickClash:teams room for team battle events')
     }
 
     // Clean up any existing listeners first
@@ -137,7 +136,6 @@ const useQuickClashTeamBattle = () => {
       if (socket && !joinedTeamsRoom.current) {
         socket.emit('quickClash:viewTeamBattles')
         joinedTeamsRoom.current = true
-        console.log('Joined quickClash:teams room via loadTeamBattles')
       }
 
       return dispatch(fetchTeamBattles({ status, page, limit }))
@@ -170,7 +168,6 @@ const useQuickClashTeamBattle = () => {
       if (socket && !joinedTeamsRoom.current) {
         socket.emit('quickClash:viewTeamBattles')
         joinedTeamsRoom.current = true
-        console.log('Joined quickClash:teams room via getBattleDetails')
       }
 
       return dispatch(fetchTeamBattleDetails(battleId))
@@ -211,16 +208,15 @@ const useQuickClashTeamBattle = () => {
 
   // Join team matchmaking
   const joinMatchmaking = useCallback(
-    (teamId, allowBots = true) => {
+    teamId => {
       // Ensure we're in the teams socket room
       const socket = getSocket()
       if (socket && !joinedTeamsRoom.current) {
         socket.emit('quickClash:joinTeamsRoom')
         joinedTeamsRoom.current = true
-        console.log('Joined quickClash:teams room via joinMatchmaking')
       }
 
-      return dispatch(joinTeamMatchmaking({ teamId, allowBots }))
+      return dispatch(joinTeamMatchmaking({ teamId }))
         .unwrap()
         .then(result => {
           toast({
@@ -286,7 +282,6 @@ const useQuickClashTeamBattle = () => {
       if (socket && !joinedTeamsRoom.current) {
         socket.emit('quickClash:joinTeamsRoom')
         joinedTeamsRoom.current = true
-        console.log('Joined quickClash:teams room via checkMatchmakingStatus')
       }
 
       return dispatch(getTeamMatchmakingStatus(teamId))
@@ -307,7 +302,6 @@ const useQuickClashTeamBattle = () => {
       if (socket && !joinedTeamsRoom.current) {
         socket.emit('quickClash:viewTeamBattles')
         joinedTeamsRoom.current = true
-        console.log('Joined quickClash:teams room via goToBattle')
       }
 
       navigate(`/quickclash/teamBattle/${battleId}`)

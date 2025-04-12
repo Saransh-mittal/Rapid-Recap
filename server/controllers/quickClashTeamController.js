@@ -11,7 +11,6 @@ const {
   updateMemberStatus,
   getUserTeams,
   toggleTeamPersistence,
-  addBotToTeam,
   updateMemberCategory,
   removeMember,
 } = require('../services/quickClashServices/quickClashTeamService')
@@ -283,31 +282,6 @@ const toggleTeamPersistenceController = asyncHandler(async (req, res) => {
 })
 
 /**
- * @desc    Add bot to team
- * @route   POST /api/quickClash/team/:teamId/bot
- * @access  Private
- */
-const addBotToTeamController = asyncHandler(async (req, res) => {
-  const { teamId } = req.params
-  const leaderId = req.user._id
-
-  try {
-    const team = await addBotToTeam({ teamId, leaderId })
-
-    res.status(200).json({
-      success: true,
-      message: 'Bot added to team',
-      team,
-    })
-  } catch (error) {
-    res.status(400).json({
-      success: false,
-      message: error.message || 'Failed to add bot to team',
-    })
-  }
-})
-
-/**
  * @desc    Remove a member from team
  * @route   POST /api/quickClash/team/:teamId/remove
  * @access  Private
@@ -340,12 +314,11 @@ const removeMemberFromTeam = asyncHandler(async (req, res) => {
  */
 const joinTeamMatchmakingController = asyncHandler(async (req, res) => {
   const { teamId } = req.params
-  const { allowBots = true } = req.body
 
   try {
     // Verify user is member of the team - this will be handled by service
 
-    const matchmaking = await joinTeamMatchmaking({ teamId, allowBots })
+    const matchmaking = await joinTeamMatchmaking({ teamId })
 
     res.status(200).json({
       success: true,
@@ -499,7 +472,6 @@ module.exports = {
   updateTeamMemberStatus,
   getMyTeams,
   toggleTeamPersistenceController,
-  addBotToTeamController,
   removeMemberFromTeam,
   joinTeamMatchmakingController,
   leaveTeamMatchmakingController,

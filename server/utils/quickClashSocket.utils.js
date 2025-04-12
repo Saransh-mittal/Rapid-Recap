@@ -740,30 +740,6 @@ const setupQuickClashGlobalEvents = io => {
       })
     },
   )
-
-  // Listen for bot added to team
-  globalEmitter.on('quickClash:botAddedToTeam', ({ team, bot }) => {
-    console.log(`SOCKET: Bot ${bot} added to team ${team}`)
-
-    // Emit to all clients in the teams room
-    io.to('quickClash:teams').emit('quickClash:teamUpdated', {
-      teamId: team,
-      action: 'botAdded',
-      botId: bot,
-    })
-  })
-
-  // Listen for team filled with bots
-  globalEmitter.on('quickClash:teamFilledWithBots', ({ team, botsAdded }) => {
-    console.log(`SOCKET: Team ${team} filled with ${botsAdded} bots`)
-
-    // Emit to all clients in the teams room
-    io.to('quickClash:teams').emit('quickClash:teamUpdated', {
-      teamId: team,
-      action: 'filledWithBots',
-      botsAdded,
-    })
-  })
 }
 
 module.exports = {

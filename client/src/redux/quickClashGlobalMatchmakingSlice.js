@@ -53,11 +53,10 @@ export const getGlobalMatchmakingStatus = createAsyncThunk(
 
 export const joinTeamMatchmaking = createAsyncThunk(
   'quickClashGlobalMatchmaking/joinTeam',
-  async ({ teamId, allowBots = true }, { rejectWithValue }) => {
+  async ({ teamId }, { rejectWithValue }) => {
     try {
       const response = await axios.post(
         `/api/quickClash/team/${teamId}/matchmaking/join`,
-        { allowBots },
       )
       return { ...response.data, teamId }
     } catch (error) {
@@ -121,7 +120,6 @@ const initialState = {
   error: null,
 
   // Additional state
-  allowBots: true,
   teamMembers: [],
 
   // Socket connection status
@@ -177,9 +175,6 @@ const quickClashGlobalMatchmakingSlice = createSlice({
     },
     setTeamMembers: (state, action) => {
       state.teamMembers = action.payload
-    },
-    setAllowBots: (state, action) => {
-      state.allowBots = action.payload
     },
 
     // Socket connection
@@ -329,7 +324,6 @@ export const {
   clearBattleReady,
   setSelectedTeamId,
   setTeamMembers,
-  setAllowBots,
   setSocketConnected,
   updateMatchmakingState,
 } = quickClashGlobalMatchmakingSlice.actions

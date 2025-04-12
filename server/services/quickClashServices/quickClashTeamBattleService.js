@@ -61,7 +61,6 @@ const emitTeamBattleProgress = (teamAId, teamBId, step, progress) => {
  * @param {string} params.teamAId - Team A ID
  * @param {string} params.teamBId - Team B ID
  * @param {Array<string>} params.categories - Categories for the battle (4 categories)
- * @param {Object} [params.botTeamData=null] - Bot team data if match against bots
  * @param {mongoose.ClientSession} [params.session] - Mongoose session for transactions
  * @returns {Promise<Object>} Created team battle
  */

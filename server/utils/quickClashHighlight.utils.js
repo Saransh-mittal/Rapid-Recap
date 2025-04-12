@@ -248,44 +248,20 @@ const getQuickClashHighlights = async ({ challengeId, lang = 'en' }) => {
 
     // If we have a pending highlight that's old, retry generation
     if (pendingHighlight) {
-      const fiveMinutesAgo = new Date(Date.now() - 5 * 60 * 1000)
-
-      if (
-        pendingHighlight.processingStatus === 'pending' &&
-        pendingHighlight.lastUpdated < fiveMinutesAgo
-      ) {
-        // Retry generation if it's been pending for more than 5 minutes
-        console.log(
-          `Retrying highlight generation for challenge ${challengeId} (${lang})`,
-        )
-        return await scheduleHighlightGeneration({ challengeId, lang })
-      }
-
-      if (pendingHighlight.processingStatus === 'failed') {
-        // Retry generation if previous attempt failed
-        console.log(
-          `Retrying failed highlight generation for challenge ${challengeId} (${lang})`,
-        )
-        return await scheduleHighlightGeneration({ challengeId, lang })
-      }
-
-      // Otherwise return the pending highlight
-      return pendingHighlight
+      console.log(
+        `Retrying failed highlight generation for challenge ${challengeId} (${lang})`,
+      )
+      return await scheduleHighlightGeneration({ challengeId, lang })
     }
 
     // If no highlight exists at all, create a placeholder and schedule generation
-    const newHighlight = await generateQuickClashHighlights({
+    let newHighlight = await generateQuickClashHighlights({
       challengeId,
       lang,
     })
 
     // Schedule the actual generation to happen in the background
-    scheduleHighlightGeneration({ challengeId, lang }).catch(err =>
-      console.error(
-        `Background highlight generation error for ${challengeId} (${lang}):`,
-        err,
-      ),
-    )
+    newHighlight = await scheduleHighlightGeneration({ challengeId, lang })
 
     return newHighlight
   } catch (error) {
