@@ -1,6 +1,6 @@
-// scheduler/quickClashScheduleConfig.js
 const { convertISTtoUTCCron } = require('../utils/miscellaneous.utils')
 const processExpiredChallenges = require('./tasks/processExpiredChallenges')
+const { cleanupExpiredSessions } = require('./tasks/simpleSessionCleanup')
 
 /**
  * Schedule configuration for Quick Clash related tasks
@@ -36,6 +36,12 @@ const quickClashSchedules = [
     name: 'process-expired-challenges-midnight',
     cronPattern: convertISTtoUTCCron(0, 0, '*'), // 12 AM IST daily
     task: processExpiredChallenges,
+  },
+  // Run every 5 minutes to clean up expired sessions
+  {
+    name: 'cleanup-expired-sessions',
+    cronPattern: '*/5 * * * *', // Every 5 minutes
+    task: cleanupExpiredSessions,
   },
 ]
 

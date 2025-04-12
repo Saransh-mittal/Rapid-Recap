@@ -10,7 +10,7 @@ const mongoose = require('mongoose')
 const User = require('../../model/userSchema')
 
 const READING_TIME_LIMIT = 120 // 2 minutes in seconds
-const SESSION_EXPIRY = 24 * 60 * 60 * 1000 // 24 hours
+const SESSION_EXPIRY = 5 * 60 * 1000 // 5 minutes
 
 /**
  * Create a new session for a challenge with language support
