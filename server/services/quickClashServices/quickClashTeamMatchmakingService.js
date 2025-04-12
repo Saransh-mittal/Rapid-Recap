@@ -77,15 +77,6 @@ const joinTeamMatchmaking = async ({ teamId, session: providedSession }) => {
       throw new Error('Team not found')
     }
 
-    if (team.members.length < 4) {
-      setTimeout(() => {
-        processGlobalMatchmaking().catch(err => {
-          console.error('Error during team completion process:', err)
-        })
-      }, 100)
-      return
-    }
-
     // Check if all members are ready
     const allReady = team.members.every(member => member.status === 'ready')
     if (!allReady) {
@@ -123,6 +114,15 @@ const joinTeamMatchmaking = async ({ teamId, session: providedSession }) => {
       })
 
       await matchmakingEntry.save({ session })
+    }
+
+    if (team.members.length < 4) {
+      setTimeout(() => {
+        processGlobalMatchmaking().catch(err => {
+          console.error('Error during team completion process:', err)
+        })
+      }, 100)
+      return
     }
 
     // Emit event for real-time updates
@@ -463,12 +463,21 @@ const performMatchmaking = async () => {
       }
 
       // Find all partial teams
+      const teamsInMatchmaking = await QuickClashTeamMatchmaking.find({
+        status: 'available',
+      })
+        .select('team')
+        .lean()
+
+      const teamIdsInMatchmaking = teamsInMatchmaking.map(entry => entry.team)
+
+      // Then find partial teams that are both in matchmaking AND have fewer than 4 members
       const partialTeams = await QuickClashTeam.find({
+        _id: { $in: teamIdsInMatchmaking }, // Only teams in matchmaking
         'members.3': { $exists: false }, // Less than 4 members
-        'members.0': { $exists: true }, // At least 1 member
         isInMatch: false,
       })
-        .sort({ members: -1 }) // Teams with more members first
+        .sort({ lastActive: -1 })
         .populate('members.user', '_id name inGameName quickClashTrophies')
         .session(session)
 
