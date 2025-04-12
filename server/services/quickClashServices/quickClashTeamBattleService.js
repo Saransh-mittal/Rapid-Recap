@@ -130,6 +130,17 @@ const createTeamBattle = async ({
       `[TeamBattle] Team B loaded: ${teamB.name}, Members: ${teamB.members.length}`,
     )
 
+    // Set team names if they're empty (matchmaking-created teams)
+    if (!teamA.name || teamA.name.trim() === '') {
+      teamA.name = 'Team A'
+      await teamA.save({ session })
+    }
+
+    if (!teamB.name || teamB.name.trim() === '') {
+      teamB.name = 'Team B'
+      await teamB.save({ session })
+    }
+
     // ======= PROGRESS: TEAMS LOADED (25%) =======
     console.log(`[TeamBattle] PHASE 3: Teams loaded (25%)`)
     // Teams data has been successfully loaded

@@ -7,7 +7,7 @@ const {
 } = require('../../services/quickClashServices/quickClashChallengeService')
 const {
   updateBattleWithQuizResults,
-} = require('../services/quickClashServices/quickClashTeamBattleService')
+} = require('../../services/quickClashServices/quickClashTeamBattleService')
 
 /**
  * Clean up expired, non-completed QuickClash sessions
