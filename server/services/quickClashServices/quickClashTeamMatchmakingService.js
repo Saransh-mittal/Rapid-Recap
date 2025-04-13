@@ -49,6 +49,53 @@ const emitUserMatchmakingProgress = (userId, step, progress) => {
   })
 }
 
+// Module-level variables for state management between function calls
+const teamFormationState = {
+  lastProcessingTime: 0,
+  isCurrentlyProcessing: false,
+  pendingPartialTeams: new Set(), // Teams waiting to be completed
+  pendingSoloPlayers: new Set(), // Solo players waiting to be assigned
+  formingTeamCache: new Map(), // Cache of teams being formed (key: teamId, value: member count)
+}
+
+/**
+ * Helper to clean up team state when a team is removed from matchmaking
+ * @param {string} teamId - Team ID to clean up
+ */
+const cleanupTeamState = teamId => {
+  if (!teamId) return
+
+  const teamIdStr = teamId.toString()
+
+  // Remove from pending partial teams
+  if (teamFormationState.pendingPartialTeams.has(teamIdStr)) {
+    console.log(`Cleaning up pendingPartialTeams state for team ${teamIdStr}`)
+    teamFormationState.pendingPartialTeams.delete(teamIdStr)
+  }
+
+  // Remove from forming team cache
+  if (teamFormationState.formingTeamCache.has(teamIdStr)) {
+    console.log(`Cleaning up formingTeamCache state for team ${teamIdStr}`)
+    teamFormationState.formingTeamCache.delete(teamIdStr)
+  }
+}
+
+/**
+ * Helper to clean up player state when a player is removed from matchmaking
+ * @param {string} userId - User ID to clean up
+ */
+const cleanupPlayerState = userId => {
+  if (!userId) return
+
+  const userIdStr = userId.toString()
+
+  // Remove from pending solo players
+  if (teamFormationState.pendingSoloPlayers.has(userIdStr)) {
+    console.log(`Cleaning up pendingSoloPlayers state for user ${userIdStr}`)
+    teamFormationState.pendingSoloPlayers.delete(userIdStr)
+  }
+}
+
 /**
  * Join team matchmaking queue with existing team
  * @param {Object} params - Parameters
@@ -117,6 +164,12 @@ const joinTeamMatchmaking = async ({ teamId, session: providedSession }) => {
     }
 
     if (team.members.length < 4) {
+      // Add to pending partial teams if not a full team
+      teamFormationState.pendingPartialTeams.add(teamId.toString())
+      teamFormationState.formingTeamCache.set(
+        teamId.toString(),
+        team.members.length,
+      )
       await performMatchmaking(session)
     } else {
       // Emit event for real-time updates
@@ -193,6 +246,9 @@ const joinGlobalMatchmaking = async ({ userId }) => {
         await matchmakingEntry.save({ session })
       }
 
+      // Add to pending solo players state
+      teamFormationState.pendingSoloPlayers.add(userId.toString())
+
       // Emit event for real-time updates
       globalEmitter.emit('quickClash:userJoinedMatchmaking', {
         userId,
@@ -231,6 +287,9 @@ const leaveTeamMatchmaking = async ({ teamId }) => {
       team: teamId,
     })
 
+    // Clean up team state
+    cleanupTeamState(teamId)
+
     // Emit event if successfully left
     if (result) {
       globalEmitter.emit('quickClash:teamLeftMatchmaking', {
@@ -268,6 +327,9 @@ const leaveGlobalMatchmaking = async ({ userId }) => {
         return false // Not in matchmaking
       }
 
+      // Clean up player state immediately
+      cleanupPlayerState(userId)
+
       // Check if player is part of an auto-formed team
       if (playerEntry.team && playerEntry.status === 'matched') {
         console.log(
@@ -283,6 +345,9 @@ const leaveGlobalMatchmaking = async ({ userId }) => {
         if (team && !team.isPersistent) {
           console.log(`Team ${team._id} is auto-formed, dissolving it`)
 
+          // Clean up team state
+          cleanupTeamState(team._id)
+
           // Find all other players in this team's matchmaking
           const teamPlayers = await QuickClashGlobalMatchmaking.find({
             team: team._id,
@@ -292,6 +357,9 @@ const leaveGlobalMatchmaking = async ({ userId }) => {
           // Reset all other players back to available status
           for (const player of teamPlayers) {
             console.log(`Resetting player ${player.user} status to available`)
+            // Clean up each team player's state
+            cleanupPlayerState(player.user)
+
             player.status = 'available'
             player.team = null
             await player.save({ session })
@@ -384,15 +452,6 @@ const getGlobalMatchmakingStatus = async ({ userId }) => {
   }
 }
 
-// Module-level variables for state management between function calls
-const teamFormationState = {
-  lastProcessingTime: 0,
-  isCurrentlyProcessing: false,
-  pendingPartialTeams: new Set(), // Teams waiting to be completed
-  pendingSoloPlayers: new Set(), // Solo players waiting to be assigned
-  formingTeamCache: new Map(), // Cache of teams being formed (key: teamId, value: member count)
-}
-
 // Debounce function to prevent excessive processing
 const DEBOUNCE_INTERVAL = 3000 // 3 seconds
 
@@ -429,9 +488,6 @@ const processGlobalMatchmaking = async () => {
 
 /**
  * Main matchmaking logic - extracted to separate function for clarity
- */
-/**
- * Main matchmaking logic - extracted to separate function for clarity
  * @param {Object} options
  * @param {mongoose.ClientSession} [options.providedSession] - Optional mongoose session
  * @returns {Promise<void>}
@@ -450,7 +506,7 @@ const performMatchmaking = async providedSession => {
 
     // Get all available solo players in matchmaking
     const soloPlayersAvailable = await QuickClashGlobalMatchmaking.find({
-      status: 'available',
+      status: { $in: ['available', 'processing'] }, // Include processing players that weren't matched
       team: null,
     })
       .sort({ createdAt: 1 })
@@ -544,6 +600,10 @@ const performMatchmaking = async providedSession => {
             })
 
             processedTeamIds.add(otherTeam._id.toString())
+
+            // Clean up the other team from the state since it's being merged
+            cleanupTeamState(otherTeam._id)
+
             break // Found perfect match, stop looking
           }
         }
@@ -561,6 +621,9 @@ const performMatchmaking = async providedSession => {
             })
 
             processedTeamIds.add(otherTeam._id.toString())
+
+            // Clean up the other team from the state since it's being merged
+            cleanupTeamState(otherTeam._id)
           }
         }
       }
@@ -615,6 +678,7 @@ const performMatchmaking = async providedSession => {
         // Clean up state tracking
         processedTeamIds.add(team._id.toString())
         teamFormationState.pendingPartialTeams.delete(team._id.toString())
+        teamFormationState.formingTeamCache.delete(team._id.toString())
 
         // Update all players' matchmaking status
         for (const member of newMembers) {
@@ -638,6 +702,10 @@ const performMatchmaking = async providedSession => {
     // Second phase: Create teams from remaining solo players
     const remainingSoloPlayers = soloPlayersAvailable.filter(
       player => !assignedPlayerIds.has(player.user._id.toString()),
+    )
+
+    console.log(
+      `Found ${remainingSoloPlayers.length} remaining solo players for team formation`,
     )
 
     // Process in groups of 4
@@ -678,6 +746,9 @@ const performMatchmaking = async providedSession => {
           player.team = newTeam._id
           await player.save({ session })
 
+          // Mark as assigned
+          assignedPlayerIds.add(player.user._id.toString())
+
           // Remove from pending solo players
           teamFormationState.pendingSoloPlayers.delete(
             player.user._id.toString(),
@@ -708,6 +779,20 @@ const performMatchmaking = async providedSession => {
 
     // Process teams in matchmaking to find matches
     await processTeamMatchmaking(session)
+
+    // Reset unassigned players back to 'available' status
+    const unassignedPlayers = soloPlayersAvailable.filter(
+      player => !assignedPlayerIds.has(player.user._id.toString()),
+    )
+
+    console.log(
+      `Resetting status for ${unassignedPlayers.length} unassigned players back to available`,
+    )
+    for (const player of unassignedPlayers) {
+      // Reset back to available so they're picked up in next cycle
+      player.status = 'available'
+      await player.save({ session })
+    }
 
     // Log remaining pending players/teams for the next run
     console.log(
@@ -776,6 +861,9 @@ const processTeamMatchmaking = async providedSession => {
         await QuickClashTeamMatchmaking.findOneAndDelete({
           _id: teamEntry._id,
         }).session(session)
+
+        // Clean up team state
+        cleanupTeamState(teamEntry.team)
         continue
       }
 
@@ -818,6 +906,9 @@ const processTeamMatchmaking = async providedSession => {
           await QuickClashTeamMatchmaking.findOneAndDelete({
             _id: matchedTeamEntry._id,
           }).session(session)
+
+          // Clean up team state
+          cleanupTeamState(matchedTeamEntry.team)
           continue
         }
 
@@ -874,7 +965,10 @@ const processTeamMatchmaking = async providedSession => {
               QuickClashGlobalMatchmaking.findOneAndDelete(
                 { user: member.user._id },
                 { session },
-              ),
+              ).then(() => {
+                // Clean up each player's state
+                cleanupPlayerState(member.user._id)
+              }),
             ),
           )
           await Promise.all(
@@ -882,7 +976,10 @@ const processTeamMatchmaking = async providedSession => {
               QuickClashGlobalMatchmaking.findOneAndDelete(
                 { user: member.user._id },
                 { session },
-              ),
+              ).then(() => {
+                // Clean up each player's state
+                cleanupPlayerState(member.user._id)
+              }),
             ),
           )
           const teamBattle = await createTeamBattle({
@@ -906,6 +1003,10 @@ const processTeamMatchmaking = async providedSession => {
                 _id: matchedTeamEntry._id,
               }).session(session),
             ])
+
+            // Clean up both teams from the state
+            cleanupTeamState(team._id)
+            cleanupTeamState(matchedTeam._id)
 
             console.log(
               `Created team battle ${teamBattle._id} between teams ${team._id} and ${matchedTeam._id}`,
@@ -977,6 +1078,9 @@ const checkForTeamMatch = async ({ teamId }) => {
         await QuickClashTeamMatchmaking.findOneAndDelete({
           team: teamId,
         }).session(session)
+
+        // Clean up team state
+        cleanupTeamState(teamId)
         return null
       }
 
@@ -1016,6 +1120,9 @@ const checkForTeamMatch = async ({ teamId }) => {
             await QuickClashTeamMatchmaking.findOneAndDelete({
               _id: matchedEntry._id,
             }).session(session)
+
+            // Clean up team state
+            cleanupTeamState(matchedEntry.team)
             continue
           }
 
@@ -1091,20 +1198,16 @@ const checkForTeamMatch = async ({ teamId }) => {
             session,
           }),
         ])
-        // for (const member of [...team.members, ...matchedTeam.members]) {
-        //   // Remove player from global matchmaking
-        //   await QuickClashGlobalMatchmaking.findOneAndDelete(
-        //     { user: member.user._id },
-        //     { session },
-        //   )
-        // }
-        // convert above loc in promise.all
+
         await Promise.all(
           team.members.map(member =>
             QuickClashGlobalMatchmaking.findOneAndDelete(
               { user: member.user._id },
               { session },
-            ),
+            ).then(() => {
+              // Clean up each player's state
+              cleanupPlayerState(member.user._id)
+            }),
           ),
         )
         await Promise.all(
@@ -1112,9 +1215,13 @@ const checkForTeamMatch = async ({ teamId }) => {
             QuickClashGlobalMatchmaking.findOneAndDelete(
               { user: member.user._id },
               { session },
-            ),
+            ).then(() => {
+              // Clean up each player's state
+              cleanupPlayerState(member.user._id)
+            }),
           ),
         )
+
         // Create team battle between the two teams
         const teamBattle = await createTeamBattle({
           teamAId: teamId,
@@ -1137,6 +1244,10 @@ const checkForTeamMatch = async ({ teamId }) => {
               team: matchedTeam._id,
             }).session(session),
           ])
+
+          // Clean up both teams from the state
+          cleanupTeamState(teamId)
+          cleanupTeamState(matchedTeam._id)
 
           // Return the match result
           return {
@@ -1167,6 +1278,11 @@ const getRandomCategories = (categories, count) => {
   return shuffled.slice(0, count)
 }
 
+// Expose for testing
+const _getTeamFormationState = () => {
+  return { ...teamFormationState }
+}
+
 module.exports = {
   joinTeamMatchmaking,
   joinGlobalMatchmaking,
@@ -1178,4 +1294,6 @@ module.exports = {
   getRandomCategories,
   processGlobalMatchmaking,
   processTeamMatchmaking,
+  // For testing
+  _getTeamFormationState,
 }

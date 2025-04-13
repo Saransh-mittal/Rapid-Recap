@@ -1,5 +1,5 @@
 // customHooks/useQuickClashGlobalMatchmaking.js
-import { useCallback, useEffect, useRef } from 'react'
+import { useCallback, useEffect, useRef, useState } from 'react'
 import { useDispatch, useSelector } from 'react-redux'
 import { useNavigate } from 'react-router-dom'
 import { useToast } from '@chakra-ui/react'
@@ -14,8 +14,6 @@ import {
   getTeamMatchmakingStatus,
   setMatchmakingProgress,
   setMatchmakingStep,
-  incrementMatchmakingTime,
-  resetMatchmakingTime,
   setBattleReady,
   clearBattleReady,
   setSelectedTeamId,
@@ -24,8 +22,6 @@ import {
   updateMatchmakingState,
   resetGlobalMatchmakingState,
 } from '../redux/quickClashGlobalMatchmakingSlice'
-
-let matchmakingTimerRef = null
 
 /**
  * Custom hook for managing the global matchmaking state for Quick Clash
@@ -39,13 +35,18 @@ const useQuickClashGlobalMatchmaking = () => {
   const { getSocket } = useSocket()
   const joinedTeamsRoom = useRef(false)
 
+  // Local timer state instead of Redux to prevent unnecessary re-renders
+  const [localMatchmakingTime, setLocalMatchmakingTime] = useState(0)
+
   // Get global matchmaking state from Redux
   const globalMatchmakingState = useSelector(
     state => state.quickClashGlobalMatchmaking,
   )
 
-  // Initialize timer reference
+  // Timer reference
   const timerRef = useRef(null)
+  // Track last update timestamp to ensure consistent timing
+  const lastUpdateRef = useRef(Date.now())
 
   // Setup socket listeners
   useEffect(() => {
@@ -198,12 +199,32 @@ const useQuickClashGlobalMatchmaking = () => {
     globalMatchmakingState.inMatchmaking,
   ])
 
-  // Manage matchmaking timer
+  // Manage matchmaking timer with local state for better performance
   useEffect(() => {
     if (globalMatchmakingState.inMatchmaking) {
-      // Start timer
+      // Clean up any existing intervals first
+      if (timerRef.current) {
+        clearInterval(timerRef.current)
+      }
+
+      // Reset time when starting matchmaking
+      setLocalMatchmakingTime(0)
+      lastUpdateRef.current = Date.now()
+
+      // Start a new interval timer at exactly 1-second increments
       timerRef.current = setInterval(() => {
-        dispatch(incrementMatchmakingTime())
+        const now = Date.now()
+        const elapsed = now - lastUpdateRef.current
+
+        // We only want to increment if at least 1 second has passed
+        if (elapsed >= 1000) {
+          // Calculate how many seconds have passed
+          const secondsToAdd = Math.floor(elapsed / 1000)
+          setLocalMatchmakingTime(prev => prev + secondsToAdd)
+
+          // Update the last time we incremented
+          lastUpdateRef.current = now - (elapsed % 1000)
+        }
       }, 1000)
     } else {
       // Stop and reset timer
@@ -211,7 +232,7 @@ const useQuickClashGlobalMatchmaking = () => {
         clearInterval(timerRef.current)
         timerRef.current = null
       }
-      dispatch(resetMatchmakingTime())
+      setLocalMatchmakingTime(0)
     }
 
     // Cleanup
@@ -221,7 +242,7 @@ const useQuickClashGlobalMatchmaking = () => {
         timerRef.current = null
       }
     }
-  }, [dispatch, globalMatchmakingState.inMatchmaking])
+  }, [globalMatchmakingState.inMatchmaking])
 
   // Check matchmaking status on initial load
   const checkMatchmakingStatus = useCallback(async () => {
@@ -455,7 +476,7 @@ const useQuickClashGlobalMatchmaking = () => {
     selectedTeamId: globalMatchmakingState.selectedTeamId,
     progress: globalMatchmakingState.progress,
     step: globalMatchmakingState.step,
-    matchmakingTime: globalMatchmakingState.matchmakingTime,
+    matchmakingTime: localMatchmakingTime, // Use local time state
     battleReady: globalMatchmakingState.battleReady,
     loading: globalMatchmakingState.loading,
     error: globalMatchmakingState.error,
