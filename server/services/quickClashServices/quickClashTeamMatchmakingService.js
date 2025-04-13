@@ -77,15 +77,6 @@ const joinTeamMatchmaking = async ({ teamId, session: providedSession }) => {
       throw new Error('Team not found')
     }
 
-    if (team.members.length < 4) {
-      setTimeout(() => {
-        processGlobalMatchmaking().catch(err => {
-          console.error('Error during team completion process:', err)
-        })
-      }, 100)
-      return
-    }
-
     // Check if all members are ready
     const allReady = team.members.every(member => member.status === 'ready')
     if (!allReady) {
@@ -125,20 +116,23 @@ const joinTeamMatchmaking = async ({ teamId, session: providedSession }) => {
       await matchmakingEntry.save({ session })
     }
 
-    // Emit event for real-time updates
-    globalEmitter.emit('quickClash:teamJoinedMatchmaking', {
-      teamId,
-      avgTrophies,
-      teamName: team.name,
-    })
-
-    // Try to find a match right away (async)
-    setTimeout(() => {
-      checkForTeamMatch({ teamId }).catch(err => {
-        console.error('Error checking for team match:', err)
+    if (team.members.length < 4) {
+      await performMatchmaking(session)
+    } else {
+      // Emit event for real-time updates
+      globalEmitter.emit('quickClash:teamJoinedMatchmaking', {
+        teamId,
+        avgTrophies,
+        teamName: team.name,
       })
-    }, 100)
 
+      // Try to find a match right away (async)
+      setTimeout(() => {
+        checkForTeamMatch({ teamId }).catch(err => {
+          console.error('Error checking for team match:', err)
+        })
+      }, 100)
+    }
     // Only commit if we started our own transaction
     if (startedTransaction) {
       await session.commitTransaction()
@@ -436,275 +430,303 @@ const processGlobalMatchmaking = async () => {
 /**
  * Main matchmaking logic - extracted to separate function for clarity
  */
-const performMatchmaking = async () => {
-  const session = await mongoose.startSession()
+/**
+ * Main matchmaking logic - extracted to separate function for clarity
+ * @param {Object} options
+ * @param {mongoose.ClientSession} [options.providedSession] - Optional mongoose session
+ * @returns {Promise<void>}
+ */
+const performMatchmaking = async providedSession => {
+  const session = providedSession || (await mongoose.startSession())
+  let startedTransaction = false
 
   try {
-    await session.withTransaction(async () => {
-      console.log('Processing global matchmaking queue')
+    if (!providedSession) {
+      startedTransaction = true
+      await session.startTransaction()
+    }
 
-      // Get all available solo players in matchmaking
-      const soloPlayersAvailable = await QuickClashGlobalMatchmaking.find({
-        status: 'available',
-        team: null,
-      })
-        .sort({ createdAt: 1 })
-        .populate('user', '_id name inGameName quickClashTrophies')
-        .session(session)
+    console.log('Processing global matchmaking queue')
 
-      console.log(`Found ${soloPlayersAvailable.length} available solo players`)
+    // Get all available solo players in matchmaking
+    const soloPlayersAvailable = await QuickClashGlobalMatchmaking.find({
+      status: 'available',
+      team: null,
+    })
+      .sort({ createdAt: 1 })
+      .populate('user', '_id name inGameName quickClashTrophies')
+      .session(session)
 
-      // Mark all available players as processing
-      for (const player of soloPlayersAvailable) {
-        player.status = 'processing'
-        await player.save({ session })
-        teamFormationState.pendingSoloPlayers.add(player.user._id.toString())
-        emitUserMatchmakingProgress(player.user._id, 'forming_team', 30)
-      }
+    console.log(`Found ${soloPlayersAvailable.length} available solo players`)
 
-      // Find all partial teams
-      const partialTeams = await QuickClashTeam.find({
-        'members.3': { $exists: false }, // Less than 4 members
-        'members.0': { $exists: true }, // At least 1 member
-        isInMatch: false,
-      })
-        .sort({ members: -1 }) // Teams with more members first
-        .populate('members.user', '_id name inGameName quickClashTrophies')
-        .session(session)
+    // Mark all available players as processing
+    for (const player of soloPlayersAvailable) {
+      player.status = 'processing'
+      await player.save({ session })
+      teamFormationState.pendingSoloPlayers.add(player.user._id.toString())
+      emitUserMatchmakingProgress(player.user._id, 'forming_team', 30)
+    }
 
-      console.log(`Found ${partialTeams.length} partial teams`)
+    // Find all partial teams
+    const teamsInMatchmaking = await QuickClashTeamMatchmaking.find({
+      status: 'available',
+    })
+      .select('team')
+      .lean()
+      .session(session)
 
-      // Update our cached state of partial teams
-      partialTeams.forEach(team => {
-        teamFormationState.pendingPartialTeams.add(team._id.toString())
-        teamFormationState.formingTeamCache.set(
-          team._id.toString(),
-          team.members.length,
-        )
-      })
+    console.log(`Found ${teamsInMatchmaking.length} teams in matchmaking`)
+    const teamIdsInMatchmaking = teamsInMatchmaking.map(entry => entry.team)
 
-      // State tracking for this session
-      const usedPlayerIds = new Set()
-      const completeTeams = []
-      const processedTeamIds = new Set()
-      const assignedPlayerIds = new Set()
+    // Then find partial teams that are both in matchmaking AND have fewer than 4 members
+    const partialTeams = await QuickClashTeam.find({
+      _id: { $in: teamIdsInMatchmaking }, // Only teams in matchmaking
+      'members.3': { $exists: false }, // Less than 4 members
+    })
+      .sort({ lastActive: -1 })
+      .populate('members.user', '_id name inGameName quickClashTrophies')
+      .session(session)
 
-      // First phase: Complete partial teams by combining them or adding solo players
-      for (let i = 0; i < partialTeams.length; i++) {
-        const team = partialTeams[i]
-        if (processedTeamIds.has(team._id.toString())) continue
+    console.log(`Found ${partialTeams.length} partial teams`)
 
-        // Skip teams that already have 4 members (defensive check)
-        if (team.members.length === 4) {
-          processedTeamIds.add(team._id.toString())
-          completeTeams.push(team)
-          continue
-        }
-
-        // Mark team members as used
-        team.members.forEach(member => {
-          usedPlayerIds.add(member.user._id.toString())
-        })
-
-        // Create a new team with these members as the base
-        let newMembers = [...team.members]
-
-        // Try to find another partial team to merge with
-        for (let j = i + 1; j < partialTeams.length; j++) {
-          const otherTeam = partialTeams[j]
-          if (processedTeamIds.has(otherTeam._id.toString())) continue
-
-          // Check if combining would make a team of exactly 4
-          if (newMembers.length + otherTeam.members.length === 4) {
-            // Perfect match! Check for duplicate members
-            const hasDuplicates = otherTeam.members.some(m =>
-              usedPlayerIds.has(m.user._id.toString()),
-            )
-
-            if (!hasDuplicates) {
-              // We can merge these teams perfectly
-              otherTeam.members.forEach(member => {
-                newMembers.push(member)
-                usedPlayerIds.add(member.user._id.toString())
-              })
-
-              processedTeamIds.add(otherTeam._id.toString())
-              break // Found perfect match, stop looking
-            }
-          }
-          // If adding would keep us under 4 members, consider it
-          else if (newMembers.length + otherTeam.members.length < 4) {
-            const hasDuplicates = otherTeam.members.some(m =>
-              usedPlayerIds.has(m.user._id.toString()),
-            )
-
-            if (!hasDuplicates) {
-              // Add these members
-              otherTeam.members.forEach(member => {
-                newMembers.push(member)
-                usedPlayerIds.add(member.user._id.toString())
-              })
-
-              processedTeamIds.add(otherTeam._id.toString())
-            }
-          }
-        }
-
-        // If still need more players, add solo players
-        if (newMembers.length < 4) {
-          // Find eligible solo players not yet assigned
-          const neededCount = 4 - newMembers.length
-          let addedCount = 0
-
-          for (const player of soloPlayersAvailable) {
-            if (assignedPlayerIds.has(player.user._id.toString())) continue
-
-            newMembers.push({
-              user: player.user._id,
-              role: 'member',
-              status: 'ready',
-            })
-
-            assignedPlayerIds.add(player.user._id.toString())
-            // Remove from pending solo players
-            teamFormationState.pendingSoloPlayers.delete(
-              player.user._id.toString(),
-            )
-            addedCount++
-
-            // Update matchmaking status
-            player.status = 'matched'
-            await player.save({ session })
-
-            if (addedCount >= neededCount) break
-          }
-        }
-
-        // If we have exactly 4 members now, create the team
-        if (newMembers.length === 4) {
-          // Create a new team with empty name
-          const newTeam = new QuickClashTeam({
-            name: '', // Will be set by battle service
-            creator: newMembers[0].user._id || newMembers[0].user,
-            isPersistent: false,
-            members: newMembers.map((member, idx) => ({
-              user: member.user._id || member.user,
-              role: idx === 0 ? 'leader' : 'member',
-              status: 'ready',
-            })),
-          })
-
-          await newTeam.save({ session })
-          completeTeams.push(newTeam)
-
-          // Clean up state tracking
-          processedTeamIds.add(team._id.toString())
-          teamFormationState.pendingPartialTeams.delete(team._id.toString())
-
-          // Update all players' matchmaking status
-          for (const member of newMembers) {
-            const userId = member.user._id || member.user
-
-            const entry = await QuickClashGlobalMatchmaking.findOne({
-              user: userId,
-            }).session(session)
-
-            if (entry) {
-              entry.status = 'matched'
-              entry.team = newTeam._id
-              await entry.save({ session })
-
-              emitUserMatchmakingProgress(userId, 'team_formed', 60)
-            }
-          }
-        }
-      }
-
-      // Second phase: Create teams from remaining solo players
-      const remainingSoloPlayers = soloPlayersAvailable.filter(
-        player => !assignedPlayerIds.has(player.user._id.toString()),
-      )
-
-      // Process in groups of 4
-      for (let i = 0; i < remainingSoloPlayers.length; i += 4) {
-        // Make sure we have 4 players for this team
-        if (i + 3 < remainingSoloPlayers.length) {
-          const teamPlayers = remainingSoloPlayers.slice(i, i + 4)
-
-          // Create the new team
-          const newTeam = new QuickClashTeam({
-            name: '',
-            creator: teamPlayers[0].user._id,
-            isPersistent: false,
-            members: [
-              {
-                user: teamPlayers[0].user._id,
-                role: 'leader',
-                status: 'ready',
-              },
-            ],
-          })
-
-          // Add the other members
-          for (let j = 1; j < 4; j++) {
-            newTeam.members.push({
-              user: teamPlayers[j].user._id,
-              role: 'member',
-              status: 'ready',
-            })
-          }
-
-          await newTeam.save({ session })
-          completeTeams.push(newTeam)
-
-          // Update matchmaking entries
-          for (const player of teamPlayers) {
-            player.status = 'matched'
-            player.team = newTeam._id
-            await player.save({ session })
-
-            // Remove from pending solo players
-            teamFormationState.pendingSoloPlayers.delete(
-              player.user._id.toString(),
-            )
-
-            emitUserMatchmakingProgress(player.user._id, 'team_formed', 60)
-          }
-        }
-      }
-
-      // Add all complete teams to matchmaking
-      console.log(
-        `Adding ${completeTeams.length} complete teams to matchmaking`,
-      )
-      for (const team of completeTeams) {
-        await joinTeamMatchmaking({ teamId: team._id, session })
-
-        // Update progress for team members
-        for (const member of team.members) {
-          const userId = member.user._id || member.user
-          setTimeout(() => {
-            globalEmitter.emit('quickClash:userMatchmakingProgress', {
-              userId: userId,
-              step: 'searching_opponents',
-              progress: 70,
-            })
-          }, 500)
-        }
-      }
-
-      // Process teams in matchmaking to find matches
-      await processTeamMatchmaking(session)
-
-      // Log remaining pending players/teams for the next run
-      console.log(
-        `After processing: ${teamFormationState.pendingSoloPlayers.size} pending solo players, ${teamFormationState.pendingPartialTeams.size} pending partial teams`,
+    // Update our cached state of partial teams
+    partialTeams.forEach(team => {
+      teamFormationState.pendingPartialTeams.add(team._id.toString())
+      teamFormationState.formingTeamCache.set(
+        team._id.toString(),
+        team.members.length,
       )
     })
+
+    // State tracking for this session
+    const usedPlayerIds = new Set()
+    const completeTeams = []
+    const processedTeamIds = new Set()
+    const assignedPlayerIds = new Set()
+
+    // First phase: Complete partial teams by combining them or adding solo players
+    for (let i = 0; i < partialTeams.length; i++) {
+      const team = partialTeams[i]
+      if (processedTeamIds.has(team._id.toString())) continue
+
+      // Skip teams that already have 4 members (defensive check)
+      if (team.members.length === 4) {
+        processedTeamIds.add(team._id.toString())
+        completeTeams.push(team)
+        continue
+      }
+
+      // Mark team members as used
+      team.members.forEach(member => {
+        usedPlayerIds.add(member.user._id.toString())
+      })
+
+      // Create a new team with these members as the base
+      let newMembers = [...team.members]
+
+      // Try to find another partial team to merge with
+      for (let j = i + 1; j < partialTeams.length; j++) {
+        const otherTeam = partialTeams[j]
+        if (processedTeamIds.has(otherTeam._id.toString())) continue
+
+        // Check if combining would make a team of exactly 4
+        if (newMembers.length + otherTeam.members.length === 4) {
+          // Perfect match! Check for duplicate members
+          const hasDuplicates = otherTeam.members.some(m =>
+            usedPlayerIds.has(m.user._id.toString()),
+          )
+
+          if (!hasDuplicates) {
+            // We can merge these teams perfectly
+            otherTeam.members.forEach(member => {
+              newMembers.push(member)
+              usedPlayerIds.add(member.user._id.toString())
+            })
+
+            processedTeamIds.add(otherTeam._id.toString())
+            break // Found perfect match, stop looking
+          }
+        }
+        // If adding would keep us under 4 members, consider it
+        else if (newMembers.length + otherTeam.members.length < 4) {
+          const hasDuplicates = otherTeam.members.some(m =>
+            usedPlayerIds.has(m.user._id.toString()),
+          )
+
+          if (!hasDuplicates) {
+            // Add these members
+            otherTeam.members.forEach(member => {
+              newMembers.push(member)
+              usedPlayerIds.add(member.user._id.toString())
+            })
+
+            processedTeamIds.add(otherTeam._id.toString())
+          }
+        }
+      }
+
+      // If still need more players, add solo players
+      if (newMembers.length < 4) {
+        // Find eligible solo players not yet assigned
+        const neededCount = 4 - newMembers.length
+        let addedCount = 0
+
+        for (const player of soloPlayersAvailable) {
+          if (assignedPlayerIds.has(player.user._id.toString())) continue
+
+          newMembers.push({
+            user: player.user._id,
+            role: 'member',
+            status: 'ready',
+          })
+
+          assignedPlayerIds.add(player.user._id.toString())
+          // Remove from pending solo players
+          teamFormationState.pendingSoloPlayers.delete(
+            player.user._id.toString(),
+          )
+          addedCount++
+
+          // Update matchmaking status
+          player.status = 'matched'
+          await player.save({ session })
+
+          if (addedCount >= neededCount) break
+        }
+      }
+
+      // If we have exactly 4 members now, create the team
+      if (newMembers.length === 4) {
+        // Create a new team with empty name
+        const newTeam = new QuickClashTeam({
+          name: '', // Will be set by battle service
+          creator: newMembers[0].user._id || newMembers[0].user,
+          isPersistent: false,
+          members: newMembers.map((member, idx) => ({
+            user: member.user._id || member.user,
+            role: idx === 0 ? 'leader' : 'member',
+            status: 'ready',
+          })),
+        })
+
+        await newTeam.save({ session })
+        completeTeams.push(newTeam)
+
+        // Clean up state tracking
+        processedTeamIds.add(team._id.toString())
+        teamFormationState.pendingPartialTeams.delete(team._id.toString())
+
+        // Update all players' matchmaking status
+        for (const member of newMembers) {
+          const userId = member.user._id || member.user
+
+          const entry = await QuickClashGlobalMatchmaking.findOne({
+            user: userId,
+          }).session(session)
+
+          if (entry) {
+            entry.status = 'matched'
+            entry.team = newTeam._id
+            await entry.save({ session })
+
+            emitUserMatchmakingProgress(userId, 'team_formed', 60)
+          }
+        }
+      }
+    }
+
+    // Second phase: Create teams from remaining solo players
+    const remainingSoloPlayers = soloPlayersAvailable.filter(
+      player => !assignedPlayerIds.has(player.user._id.toString()),
+    )
+
+    // Process in groups of 4
+    for (let i = 0; i < remainingSoloPlayers.length; i += 4) {
+      // Make sure we have 4 players for this team
+      if (i + 3 < remainingSoloPlayers.length) {
+        const teamPlayers = remainingSoloPlayers.slice(i, i + 4)
+
+        // Create the new team
+        const newTeam = new QuickClashTeam({
+          name: '',
+          creator: teamPlayers[0].user._id,
+          isPersistent: false,
+          members: [
+            {
+              user: teamPlayers[0].user._id,
+              role: 'leader',
+              status: 'ready',
+            },
+          ],
+        })
+
+        // Add the other members
+        for (let j = 1; j < 4; j++) {
+          newTeam.members.push({
+            user: teamPlayers[j].user._id,
+            role: 'member',
+            status: 'ready',
+          })
+        }
+
+        await newTeam.save({ session })
+        completeTeams.push(newTeam)
+
+        // Update matchmaking entries
+        for (const player of teamPlayers) {
+          player.status = 'matched'
+          player.team = newTeam._id
+          await player.save({ session })
+
+          // Remove from pending solo players
+          teamFormationState.pendingSoloPlayers.delete(
+            player.user._id.toString(),
+          )
+
+          emitUserMatchmakingProgress(player.user._id, 'team_formed', 60)
+        }
+      }
+    }
+
+    // Add all complete teams to matchmaking
+    console.log(`Adding ${completeTeams.length} complete teams to matchmaking`)
+    for (const team of completeTeams) {
+      await joinTeamMatchmaking({ teamId: team._id, session })
+
+      // Update progress for team members
+      for (const member of team.members) {
+        const userId = member.user._id || member.user
+        setTimeout(() => {
+          globalEmitter.emit('quickClash:userMatchmakingProgress', {
+            userId: userId,
+            step: 'searching_opponents',
+            progress: 70,
+          })
+        }, 500)
+      }
+    }
+
+    // Process teams in matchmaking to find matches
+    await processTeamMatchmaking(session)
+
+    // Log remaining pending players/teams for the next run
+    console.log(
+      `After processing: ${teamFormationState.pendingSoloPlayers.size} pending solo players, ${teamFormationState.pendingPartialTeams.size} pending partial teams`,
+    )
+
+    if (startedTransaction) {
+      await session.commitTransaction()
+    }
   } catch (error) {
     console.error('Error in matchmaking transaction:', error)
+    if (startedTransaction) {
+      await session.abortTransaction()
+    }
+    throw error // Re-throw for caller to handle
   } finally {
-    session.endSession()
+    if (!providedSession) {
+      session.endSession()
+    }
   }
 }
 
@@ -749,7 +771,7 @@ const processTeamMatchmaking = async providedSession => {
         .populate('members.user', '_id name inGameName quickClashTrophies')
         .session(session)
 
-      if (!team) {
+      if (!team || team.members.length < 4) {
         // Team no longer exists, remove from matchmaking
         await QuickClashTeamMatchmaking.findOneAndDelete({
           _id: teamEntry._id,
@@ -950,7 +972,7 @@ const checkForTeamMatch = async ({ teamId }) => {
         .populate('members.user', '_id quickClashTrophies name inGameName')
         .session(session)
 
-      if (!team) {
+      if (!team || team.members.length < 4) {
         // Team no longer exists, remove from matchmaking
         await QuickClashTeamMatchmaking.findOneAndDelete({
           team: teamId,
@@ -981,6 +1003,7 @@ const checkForTeamMatch = async ({ teamId }) => {
             $gte: teamEntry.avgTrophies - trophyRange,
             $lte: teamEntry.avgTrophies + trophyRange,
           },
+          memberCount: 4,
         }).session(session)
 
         if (matchedEntry) {
