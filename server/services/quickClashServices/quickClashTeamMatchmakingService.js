@@ -835,6 +835,7 @@ const processTeamMatchmaking = async providedSession => {
     // Get teams available for matchmaking
     const teams = await QuickClashTeamMatchmaking.find({
       status: 'available',
+      memberCount: 4,
     })
       .sort({ createdAt: 1 }) // Process oldest entries first
       .populate('team')
@@ -884,6 +885,7 @@ const processTeamMatchmaking = async providedSession => {
             $gte: teamEntry.avgTrophies - trophyRange,
             $lte: teamEntry.avgTrophies + trophyRange,
           },
+          memberCount: 4,
         }).session(session)
 
         if (matchedTeamEntry) break
