@@ -274,48 +274,153 @@ const joinGlobalMatchmaking = async ({ userId }) => {
 }
 
 /**
+ * Helper function to handle auto-team cleanup
+ * @param {Object} params - Parameters
+ * @param {Object} params.autoTeam - The auto-formed team to clean up
+ * @param {Array} params.sourcePlayers - Players from the source team
+ * @param {mongoose.ClientSession} params.session - Mongoose session
+ * @returns {Promise<void>}
+ */
+const handleAutoTeamCleanup = async ({ autoTeam, sourcePlayers, session }) => {
+  // Remove from matchmaking if present
+  await QuickClashTeamMatchmaking.findOneAndDelete({
+    team: autoTeam._id,
+  }).session(session)
+
+  // Clean up team state
+  cleanupTeamState(autoTeam._id)
+
+  // Reset all players in the auto-team
+  for (const member of autoTeam.members) {
+    // Get user ID
+    const userId = member.user._id || member.user
+
+    // Find user's matchmaking entry
+    const playerEntry = await QuickClashGlobalMatchmaking.findOne({
+      user: userId,
+      team: autoTeam._id,
+    }).session(session)
+
+    if (playerEntry) {
+      // If player is from a source team, just delete their entry
+      if (
+        sourcePlayers.some(p => {
+          const playerId = p.user._id || p.user
+          return playerId.toString() === userId.toString()
+        })
+      ) {
+        await QuickClashGlobalMatchmaking.findOneAndDelete({
+          user: userId,
+        }).session(session)
+      }
+      // Otherwise reset to available
+      else {
+        playerEntry.status = 'available'
+        playerEntry.team = null
+        await playerEntry.save({ session })
+
+        // Notify player
+        globalEmitter.emit('quickClash:teamDissolved', {
+          userId,
+          reason: 'teamLeft',
+        })
+      }
+
+      // Clean up player state
+      cleanupPlayerState(userId)
+    }
+  }
+
+  // Delete the auto-formed team
+  await QuickClashTeam.findByIdAndDelete(autoTeam._id).session(session)
+
+  console.log(`Auto-team ${autoTeam._id} cleaned up successfully`)
+}
+
+/**
+/**
  * Leave team matchmaking queue
  * @param {Object} params - Parameters
  * @param {string} params.teamId - Team ID
  * @returns {Promise<boolean>} Success status
  */
 const leaveTeamMatchmaking = async ({ teamId }) => {
+  const session = await mongoose.startSession()
+
   try {
-    console.log(`Team ${teamId} leaving matchmaking queue`)
+    return await session.withTransaction(async () => {
+      console.log(`Team ${teamId} leaving matchmaking queue`)
 
-    // Find the entry first to check its status
-    const entry = await QuickClashTeamMatchmaking.findOne({
-      team: teamId,
-    })
-
-    // If the entry is 'processed', we should remove it too
-    // This can happen if a team was already included in a new team formation
-    // but the user still tries to leave matchmaking
-    if (
-      entry &&
-      (entry.status === 'available' || entry.status === 'processed')
-    ) {
-      await QuickClashTeamMatchmaking.findOneAndDelete({
+      // Find the entry first to check its status
+      const entry = await QuickClashTeamMatchmaking.findOne({
         team: teamId,
-      })
+      }).session(session)
 
-      // Clean up team state
-      cleanupTeamState(teamId)
+      // If the entry is 'processed', we should remove it too
+      // This can happen if a team was already included in a new team formation
+      // but the user still tries to leave matchmaking
+      if (
+        entry &&
+        (entry.status === 'available' || entry.status === 'processed')
+      ) {
+        await QuickClashTeamMatchmaking.findOneAndDelete({
+          team: teamId,
+        }).session(session)
 
-      // Emit event if successfully left
-      if (entry.status === 'available') {
-        globalEmitter.emit('quickClash:teamLeftMatchmaking', {
-          teamId,
-        })
+        // Clean up team state
+        cleanupTeamState(teamId)
+
+        // If the team was processed (used in auto-team formation)
+        if (entry.status === 'processed') {
+          console.log(
+            `Team ${teamId} was processed, checking auto-formed teams`,
+          )
+
+          // Find auto-teams that used this team as a source
+          const autoTeams = await QuickClashTeam.find({
+            'formationInfo.sourceTeams': teamId,
+            'formationInfo.isAutoFormed': true,
+          }).session(session)
+
+          console.log(
+            `Found ${autoTeams.length} auto-formed teams using this team`,
+          )
+
+          for (const autoTeam of autoTeams) {
+            console.log(`Handling cleanup for auto-team ${autoTeam._id}`)
+
+            // Find all players from this team in the auto-team
+            const sourcePlayers = autoTeam.members.filter(
+              m =>
+                m.sourceTeam && m.sourceTeam.toString() === teamId.toString(),
+            )
+
+            // Clean up the auto-formed team
+            await handleAutoTeamCleanup({
+              autoTeam,
+              sourcePlayers,
+              session,
+            })
+          }
+        }
+
+        // Emit event if successfully left
+        if (entry.status === 'available') {
+          globalEmitter.emit('quickClash:teamLeftMatchmaking', {
+            teamId,
+          })
+        }
+
+        return true
       }
 
-      return true
-    }
-
-    return false
+      return false
+    })
   } catch (error) {
     console.error('Error leaving team matchmaking:', error)
     throw error
+  } finally {
+    session.endSession()
   }
 }
 
@@ -384,6 +489,48 @@ const leaveGlobalMatchmaking = async ({ userId }) => {
               userId: player.user,
               reason: 'playerLeft',
             })
+          }
+
+          // Check if this was an auto-formed team and reset source teams if needed
+          if (team.formationInfo && team.formationInfo.isAutoFormed) {
+            const sourceTeams = team.formationInfo.sourceTeams || []
+            console.log(
+              `Checking ${sourceTeams.length} source teams to reset status`,
+            )
+
+            // Reset all source teams' matchmaking entries back to available
+            for (const sourceTeamId of sourceTeams) {
+              console.log(`Resetting source team ${sourceTeamId} status`)
+              const sourceTeamEntry = await QuickClashTeamMatchmaking.findOne({
+                team: sourceTeamId,
+                status: 'processed', // Only reset if still marked as processed
+              }).session(session)
+
+              if (sourceTeamEntry) {
+                console.log(
+                  `Found entry for team ${sourceTeamId}, resetting to available`,
+                )
+                sourceTeamEntry.status = 'available'
+                await sourceTeamEntry.save({ session })
+
+                // Re-add to pending partial teams state
+                teamFormationState.pendingPartialTeams.add(
+                  sourceTeamId.toString(),
+                )
+
+                // Get member count for cache
+                const sourceTeam = await QuickClashTeam.findById(sourceTeamId)
+                  .select('members')
+                  .session(session)
+
+                if (sourceTeam) {
+                  teamFormationState.formingTeamCache.set(
+                    sourceTeamId.toString(),
+                    sourceTeam.members.length,
+                  )
+                }
+              }
+            }
           }
 
           // Remove the team from team matchmaking if it's there
