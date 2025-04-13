@@ -593,12 +593,17 @@ const performMatchmaking = async providedSession => {
       })
 
       // Create a new team with these members as the base
-      let newMembers = [
-        ...team.members.map(member => ({
-          ...member,
+      let newMembers = team.members.map(member => {
+        // Extract only the data we need from the Mongoose document
+        return {
+          user: member.user, // Keep the reference intact
+          role: member.role || 'member',
+          status: member.status || 'ready',
+          joinedAt: member.joinedAt || new Date(),
+          selectedCategory: member.selectedCategory || null,
           sourceTeam: team._id, // Track original team for each member
-        })),
-      ]
+        }
+      })
 
       // Keep track of teams used to form this new team
       const usedTeamIds = [team._id.toString()]
@@ -621,10 +626,17 @@ const performMatchmaking = async providedSession => {
             // We can merge these teams perfectly
             otherTeam.members.forEach(member => {
               newMembers.push({
-                ...member,
+                user: member.user,
+                role: member.role || 'member',
+                status: member.status || 'ready',
+                joinedAt: member.joinedAt || new Date(),
+                selectedCategory: member.selectedCategory || null,
                 sourceTeam: otherTeam._id, // Track original team for each member
               })
-              usedPlayerIds.add(member.user._id.toString())
+
+              if (member.user && member.user._id) {
+                usedPlayerIds.add(member.user._id.toString())
+              }
             })
 
             processedTeamIds.add(otherTeam._id.toString())
@@ -647,10 +659,17 @@ const performMatchmaking = async providedSession => {
             // Add these members
             otherTeam.members.forEach(member => {
               newMembers.push({
-                ...member,
+                user: member.user,
+                role: member.role || 'member',
+                status: member.status || 'ready',
+                joinedAt: member.joinedAt || new Date(),
+                selectedCategory: member.selectedCategory || null,
                 sourceTeam: otherTeam._id, // Track original team for each member
               })
-              usedPlayerIds.add(member.user._id.toString())
+
+              if (member.user && member.user._id) {
+                usedPlayerIds.add(member.user._id.toString())
+              }
             })
 
             processedTeamIds.add(otherTeam._id.toString())
@@ -740,12 +759,18 @@ const performMatchmaking = async providedSession => {
           creator: newMembers[0].user._id || newMembers[0].user,
           isPersistent: false,
           teamType: 'auto', // Mark as auto-formed team
-          members: newMembers.map((member, idx) => ({
-            user: member.user._id || member.user,
-            role: idx === 0 ? 'leader' : 'member',
-            status: 'ready',
-            sourceTeam: member.sourceTeam,
-          })),
+          members: newMembers
+            .map((member, idx) => {
+              const userId =
+                member.user && member.user._id ? member.user._id : member.user
+              return {
+                user: userId,
+                role: idx === 0 ? 'leader' : 'member',
+                status: 'ready',
+                sourceTeam: member.sourceTeam,
+              }
+            })
+            .filter(m => m.user),
           // Add formation info for tracking origin
           formationInfo: {
             isAutoFormed: true,
