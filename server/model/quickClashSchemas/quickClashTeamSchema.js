@@ -37,6 +37,12 @@ const quickClashTeamSchema = new mongoose.Schema(
           type: String,
           default: null,
         },
+        // Track which team the member originally came from (if auto-formed)
+        sourceTeam: {
+          type: mongoose.Schema.Types.ObjectId,
+          ref: 'QUICK_CLASH_TEAM',
+          default: null,
+        },
       },
     ],
     teamType: {
@@ -68,6 +74,29 @@ const quickClashTeamSchema = new mongoose.Schema(
     lastActive: {
       type: Date,
       default: Date.now,
+    },
+    // Add fields to track origin for auto-formed teams
+    formationInfo: {
+      isAutoFormed: {
+        type: Boolean,
+        default: false,
+      },
+      sourceTeams: [
+        {
+          type: mongoose.Schema.Types.ObjectId,
+          ref: 'QUICK_CLASH_TEAM',
+        },
+      ],
+      soloPlayers: [
+        {
+          type: mongoose.Schema.Types.ObjectId,
+          ref: 'USER',
+        },
+      ],
+      formationDate: {
+        type: Date,
+        default: null,
+      },
     },
   },
   {
@@ -152,6 +181,8 @@ quickClashTeamSchema.index({ teamCode: 1 })
 quickClashTeamSchema.index({ 'members.user': 1 })
 quickClashTeamSchema.index({ isInMatch: 1, avgTrophies: 1 })
 quickClashTeamSchema.index({ lastActive: -1 })
+quickClashTeamSchema.index({ 'formationInfo.isAutoFormed': 1 }) // Index for auto-formed teams
+quickClashTeamSchema.index({ 'formationInfo.sourceTeams': 1 }) // Index for source teams
 
 const QuickClashTeam = mongoose.model('QUICK_CLASH_TEAM', quickClashTeamSchema)
 

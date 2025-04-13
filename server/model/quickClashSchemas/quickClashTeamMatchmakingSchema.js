@@ -10,7 +10,7 @@ const quickClashTeamMatchmakingSchema = new mongoose.Schema({
   },
   status: {
     type: String,
-    enum: ['available', 'matching', 'in_battle', 'offline'],
+    enum: ['available', 'matching', 'in_battle', 'offline', 'processed'],
     default: 'available',
   },
   preferredCategories: [
