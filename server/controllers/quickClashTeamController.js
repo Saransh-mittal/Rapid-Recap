@@ -26,6 +26,7 @@ const {
   getUserTeamBattles,
   getTeamBattleDetails,
 } = require('../services/quickClashServices/quickClashTeamBattleService')
+const QuickClashTeam = require('../model/quickClashSchemas/quickClashTeamSchema')
 
 /**
  * @desc    Create a new team

@@ -283,6 +283,7 @@ const useQuickClashGlobalMatchmaking = () => {
           description:
             error.reason ||
             error.message ||
+            error ||
             t('You are already in an active matchmaking queue'),
           status: 'warning',
           duration: 5000, // Longer duration for more detailed messages
@@ -292,7 +293,10 @@ const useQuickClashGlobalMatchmaking = () => {
         toast({
           title: t('Error'),
           description:
-            error.reason || error.message || t('Failed to join matchmaking'),
+            error.reason ||
+            error.message ||
+            error ||
+            t('Failed to join matchmaking'),
           status: 'error',
           duration: 5000, // Longer duration for more detailed messages
           isClosable: true,
@@ -349,6 +353,7 @@ const useQuickClashGlobalMatchmaking = () => {
             description:
               error.reason ||
               error.message ||
+              error ||
               t('A team member is already in an active matchmaking queue'),
             status: 'warning',
             duration: 5000, // Longer duration for more detailed messages
@@ -360,6 +365,7 @@ const useQuickClashGlobalMatchmaking = () => {
             description:
               error.reason ||
               error.message ||
+              error ||
               t('Failed to join team matchmaking'),
             status: 'error',
             duration: 5000, // Longer duration for more detailed messages
