@@ -314,9 +314,33 @@ const removeMemberFromTeam = asyncHandler(async (req, res) => {
  */
 const joinTeamMatchmakingController = asyncHandler(async (req, res) => {
   const { teamId } = req.params
+  const userId = req.user._id
 
   try {
-    // Verify user is member of the team - this will be handled by service
+    // Verify user is team leader
+    const team = await QuickClashTeam.findById(teamId)
+
+    if (!team) {
+      return res.status(404).json({
+        success: false,
+        message: 'Team not found',
+      })
+    }
+
+    // Check if the user is a leader of this team
+    const isLeader = team.members.some(
+      member =>
+        member.user.toString() === userId.toString() &&
+        member.role === 'leader',
+    )
+
+    if (!isLeader) {
+      return res.status(403).json({
+        success: false,
+        message: 'Only team leaders can start matchmaking',
+        code: 'NOT_LEADER',
+      })
+    }
 
     const matchmaking = await joinTeamMatchmaking({ teamId })
 
