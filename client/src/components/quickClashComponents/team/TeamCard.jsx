@@ -404,8 +404,12 @@ const TeamCard = ({
           </Button>
         </HStack>
 
-        {/* Team Matchmaking Button */}
-        <TeamMatchmakingButton teamId={team._id} compact={true} />
+        {/* Team Matchmaking Button - Pass isLeader prop */}
+        <TeamMatchmakingButton
+          teamId={team._id}
+          compact={true}
+          isLeader={isLeader}
+        />
       </Flex>
 
       {/* Leave Confirmation Popover */}
