@@ -117,7 +117,7 @@ const joinTeamMatchmaking = async ({ teamId, session: providedSession }) => {
 
     // Check if team exists
     const team = await QuickClashTeam.findById(teamId)
-      .populate('members.user', 'quickClashTrophies')
+      .populate('members.user', 'name inGameName quickClashTrophies')
       .session(session)
 
     if (!team) {
@@ -332,9 +332,7 @@ const joinGlobalMatchmaking = async ({ userId }) => {
           throw new Error('You are already in matchmaking queue')
         } else {
           // User is in team matchmaking
-          throw new Error(
-            'You are already in team matchmaking. Please leave that queue first',
-          )
+          throw new Error('You are already in team matchmaking.')
         }
       }
 

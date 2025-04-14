@@ -12,9 +12,7 @@ export const joinGlobalMatchmaking = createAsyncThunk(
       )
       return response.data
     } catch (error) {
-      return rejectWithValue(
-        error.response?.data?.message || 'Failed to join global matchmaking',
-      )
+      return rejectWithValue(error)
     }
   },
 )
@@ -60,9 +58,7 @@ export const joinTeamMatchmaking = createAsyncThunk(
       )
       return { ...response.data, teamId }
     } catch (error) {
-      return rejectWithValue(
-        error.response?.data?.message || 'Failed to join team matchmaking',
-      )
+      return rejectWithValue(error)
     }
   },
 )
