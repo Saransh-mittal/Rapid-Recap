@@ -139,23 +139,23 @@ const joinTeamMatchmaking = async ({ teamId, session: providedSession }) => {
       })
 
       if (matchmakingStatus.isInMatchmaking) {
+        // Get a proper name for the user
+        const memberName =
+          member.user.name || member.user.inGameName || 'A player'
+
         // Check if they're in the same team
         if (matchmakingStatus.type === 'team') {
           const inMatchmakingTeamId =
             matchmakingStatus.details.team._id.toString()
           if (inMatchmakingTeamId !== teamId.toString()) {
             throw new Error(
-              `Team member ${
-                member.user.name || 'A player'
-              } is already in another team's matchmaking queue`,
+              `Team member ${memberName} is already in another team's matchmaking queue. Please wait for their current matchmaking to complete.`,
             )
           }
         } else {
           // They're in global matchmaking
           throw new Error(
-            `Team member ${
-              member.user.name || 'A player'
-            } is already in global matchmaking queue`,
+            `Team member ${memberName} is already in global matchmaking queue. Please wait for their current matchmaking to complete.`,
           )
         }
       }

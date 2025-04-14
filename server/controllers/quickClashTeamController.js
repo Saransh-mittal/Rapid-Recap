@@ -336,12 +336,19 @@ const joinTeamMatchmakingController = asyncHandler(async (req, res) => {
         success: false,
         message: error.message,
         code: 'ALREADY_IN_MATCHMAKING',
+        reason: error.message, // Include full error message for display
+        memberName: error.message.match(/Team member (.+?) is already/)
+          ? error.message.match(/Team member (.+?) is already/)[1]
+          : null, // Extract member name if present
       })
     }
 
     res.status(400).json({
       success: false,
       message: error.message || 'Failed to join team matchmaking',
+      reason:
+        error.message ||
+        'Unknown error occurred while joining team matchmaking', // Include reason
     })
   }
 })

@@ -281,18 +281,20 @@ const useQuickClashGlobalMatchmaking = () => {
         toast({
           title: t('Already in Matchmaking'),
           description:
+            error.reason ||
             error.message ||
             t('You are already in an active matchmaking queue'),
           status: 'warning',
-          duration: 3000,
+          duration: 5000, // Longer duration for more detailed messages
           isClosable: true,
         })
       } else {
         toast({
           title: t('Error'),
-          description: error.message || t('Failed to join matchmaking'),
+          description:
+            error.reason || error.message || t('Failed to join matchmaking'),
           status: 'error',
-          duration: 3000,
+          duration: 5000, // Longer duration for more detailed messages
           isClosable: true,
         })
       }
@@ -300,7 +302,7 @@ const useQuickClashGlobalMatchmaking = () => {
     }
   }, [dispatch, toast, t])
 
-  // Join matchmaking with a team
+  // Enhance the joinWithTeam function to handle specific errors
   const joinWithTeam = useCallback(
     async teamId => {
       if (!teamId) {
@@ -336,21 +338,31 @@ const useQuickClashGlobalMatchmaking = () => {
       } catch (error) {
         // Check for special error codes
         if (error.code === 'ALREADY_IN_MATCHMAKING') {
+          // If we have a member name, create a more personalized message
+          let title = t('Already in Matchmaking')
+          if (error.memberName) {
+            title = t(`${error.memberName} Already in Matchmaking`)
+          }
+
           toast({
-            title: t('Already in Matchmaking'),
+            title: title,
             description:
+              error.reason ||
               error.message ||
               t('A team member is already in an active matchmaking queue'),
             status: 'warning',
-            duration: 3000,
+            duration: 5000, // Longer duration for more detailed messages
             isClosable: true,
           })
         } else {
           toast({
             title: t('Error'),
-            description: error.message || t('Failed to join team matchmaking'),
+            description:
+              error.reason ||
+              error.message ||
+              t('Failed to join team matchmaking'),
             status: 'error',
-            duration: 3000,
+            duration: 5000, // Longer duration for more detailed messages
             isClosable: true,
           })
         }

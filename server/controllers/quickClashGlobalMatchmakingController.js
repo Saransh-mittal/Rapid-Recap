@@ -34,12 +34,15 @@ const joinGlobalMatchmakingQueue = asyncHandler(async (req, res) => {
         success: false,
         message: error.message,
         code: 'ALREADY_IN_MATCHMAKING',
+        reason: error.message, // Include full error message for display
       })
     }
 
     res.status(400).json({
       success: false,
       message: error.message || 'Failed to join global matchmaking',
+      reason:
+        error.message || 'Unknown error occurred while joining matchmaking', // Include reason
     })
   }
 })
