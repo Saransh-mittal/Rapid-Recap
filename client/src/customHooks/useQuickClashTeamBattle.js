@@ -230,13 +230,26 @@ const useQuickClashTeamBattle = () => {
           return result
         })
         .catch(error => {
-          toast({
-            title: t('Error'),
-            description: error || t('Failed to join matchmaking'),
-            status: 'error',
-            duration: 3000,
-            isClosable: true,
-          })
+          // Check for special error codes
+          if (error.code === 'ALREADY_IN_MATCHMAKING') {
+            toast({
+              title: t('Already in Matchmaking'),
+              description:
+                error.message ||
+                t('A team member is already in an active matchmaking queue'),
+              status: 'warning',
+              duration: 3000,
+              isClosable: true,
+            })
+          } else {
+            toast({
+              title: t('Error'),
+              description: error.message || t('Failed to join matchmaking'),
+              status: 'error',
+              duration: 3000,
+              isClosable: true,
+            })
+          }
 
           throw error
         })

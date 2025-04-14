@@ -79,6 +79,7 @@ const TeamMatchmakingButton = forwardRef(({ teamId, compact = false }, ref) => {
       await joinWithTeam(teamId, true)
       openModal()
     } catch (error) {
+      // The error toasts are already handled in joinWithTeam hook
       console.error('Error joining team matchmaking:', error)
     }
   }, [joinWithTeam, teamId, openModal])

@@ -326,6 +326,19 @@ const joinTeamMatchmakingController = asyncHandler(async (req, res) => {
       matchmaking,
     })
   } catch (error) {
+    // Check if the error is related to users already being in matchmaking
+    if (
+      error.message.includes('already in matchmaking') ||
+      error.message.includes('already in global matchmaking') ||
+      error.message.includes('already in another team')
+    ) {
+      return res.status(400).json({
+        success: false,
+        message: error.message,
+        code: 'ALREADY_IN_MATCHMAKING',
+      })
+    }
+
     res.status(400).json({
       success: false,
       message: error.message || 'Failed to join team matchmaking',

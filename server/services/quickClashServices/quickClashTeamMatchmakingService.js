@@ -130,6 +130,37 @@ const joinTeamMatchmaking = async ({ teamId, session: providedSession }) => {
       throw new Error('All team members must be ready to join matchmaking')
     }
 
+    // Check if any team member is already in matchmaking
+    for (const member of team.members) {
+      const userId = member.user._id || member.user
+      const matchmakingStatus = await checkUserInMatchmaking({
+        userId,
+        session,
+      })
+
+      if (matchmakingStatus.isInMatchmaking) {
+        // Check if they're in the same team
+        if (matchmakingStatus.type === 'team') {
+          const inMatchmakingTeamId =
+            matchmakingStatus.details.team._id.toString()
+          if (inMatchmakingTeamId !== teamId.toString()) {
+            throw new Error(
+              `Team member ${
+                member.user.name || 'A player'
+              } is already in another team's matchmaking queue`,
+            )
+          }
+        } else {
+          // They're in global matchmaking
+          throw new Error(
+            `Team member ${
+              member.user.name || 'A player'
+            } is already in global matchmaking queue`,
+          )
+        }
+      }
+    }
+
     // Calculate team's average trophies
     let totalTrophies = 0
     team.members.forEach(member => {
@@ -204,6 +235,80 @@ const joinTeamMatchmaking = async ({ teamId, session: providedSession }) => {
 }
 
 /**
+ * Check if a user is already in any matchmaking queue
+ * @param {Object} params - Parameters
+ * @param {string} params.userId - User ID to check
+ * @param {mongoose.ClientSession} [params.session] - Optional mongoose session
+ * @returns {Promise<Object>} Result with isInMatchmaking flag and details
+ */
+const checkUserInMatchmaking = async ({ userId, session: providedSession }) => {
+  const session = providedSession || (await mongoose.startSession())
+  let startedTransaction = false
+
+  try {
+    if (!providedSession) {
+      startedTransaction = true
+      session.startTransaction()
+    }
+
+    // Check if user is in global matchmaking
+    const globalEntry = await QuickClashGlobalMatchmaking.findOne({
+      user: userId,
+      status: { $ne: 'in_battle' }, // Exclude users already in battle
+    }).session(session)
+
+    if (globalEntry) {
+      return {
+        isInMatchmaking: true,
+        type: 'global',
+        details: globalEntry,
+      }
+    }
+
+    // Check if user is in any team that's in matchmaking
+    const userTeams = await QuickClashTeam.find({
+      'members.user': userId,
+    }).session(session)
+
+    const teamIds = userTeams.map(team => team._id)
+
+    if (teamIds.length > 0) {
+      const teamEntry = await QuickClashTeamMatchmaking.findOne({
+        team: { $in: teamIds },
+        status: { $ne: 'in_battle' }, // Exclude teams already in battle
+      })
+        .populate('team')
+        .session(session)
+
+      if (teamEntry) {
+        return {
+          isInMatchmaking: true,
+          type: 'team',
+          details: teamEntry,
+        }
+      }
+    }
+
+    if (startedTransaction) {
+      await session.commitTransaction()
+    }
+
+    return {
+      isInMatchmaking: false,
+    }
+  } catch (error) {
+    if (startedTransaction) {
+      await session.abortTransaction()
+    }
+    throw error
+  } finally {
+    if (!providedSession) {
+      session.endSession()
+    }
+  }
+}
+
+/**
  * Join global matchmaking queue as a solo player
  * @param {Object} params - Parameters
  * @param {string} params.userId - User ID
@@ -215,6 +320,23 @@ const joinGlobalMatchmaking = async ({ userId }) => {
   try {
     return await session.withTransaction(async () => {
       console.log(`User ${userId} joining global matchmaking queue`)
+
+      // First check if user is already in any matchmaking
+      const matchmakingStatus = await checkUserInMatchmaking({
+        userId,
+        session,
+      })
+
+      if (matchmakingStatus.isInMatchmaking) {
+        if (matchmakingStatus.type === 'global') {
+          throw new Error('You are already in matchmaking queue')
+        } else {
+          // User is in team matchmaking
+          throw new Error(
+            'You are already in team matchmaking. Please leave that queue first',
+          )
+        }
+      }
 
       // Check if user exists
       const user = await User.findById(userId).session(session)
@@ -1583,6 +1705,7 @@ module.exports = {
   getRandomCategories,
   processGlobalMatchmaking,
   processTeamMatchmaking,
+  checkUserInMatchmaking,
   // For testing
   _getTeamFormationState,
 }

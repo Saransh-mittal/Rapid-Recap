@@ -25,6 +25,18 @@ const joinGlobalMatchmakingQueue = asyncHandler(async (req, res) => {
       matchmaking,
     })
   } catch (error) {
+    // Specific error message when user is already in matchmaking
+    if (
+      error.message.includes('already in matchmaking') ||
+      error.message.includes('already in team matchmaking')
+    ) {
+      return res.status(400).json({
+        success: false,
+        message: error.message,
+        code: 'ALREADY_IN_MATCHMAKING',
+      })
+    }
+
     res.status(400).json({
       success: false,
       message: error.message || 'Failed to join global matchmaking',

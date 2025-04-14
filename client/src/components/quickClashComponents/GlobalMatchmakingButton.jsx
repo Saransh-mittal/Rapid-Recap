@@ -147,8 +147,10 @@ const GlobalMatchmakingButton = ({ compact = false }) => {
         // Join solo
         await joinSoloMatchmaking()
       }
+      // Don't close the modal on error - it will already be handled in the hooks
     } catch (error) {
       console.error('Error joining matchmaking:', error)
+      // No need to show additional error messages or close the modal
     }
   }
 
