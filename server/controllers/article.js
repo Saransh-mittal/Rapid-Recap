@@ -783,10 +783,10 @@ const updateArticle = asyncHandler(async (req, res) => {
         quiz = await Quiz.findByIdAndUpdate(
           article.quiz[0],
           {
-            overAllDifficulty: quizData.overAllDifficulty,
-            para1: quizData.para1,
-            para2: quizData.para2,
-            para3: quizData.para3,
+            overAllDifficulty: quizData?.overAllDifficulty,
+            para1: quizData?.para1,
+            para2: quizData?.para2,
+            para3: quizData?.para3,
           },
           { new: true, session },
         )

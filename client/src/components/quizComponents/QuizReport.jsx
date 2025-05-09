@@ -28,6 +28,7 @@ const QuizReport = ({
   const [timeTaken, setTimeTaken] = useState(0)
   const [quizGivenSummary, setQuizGivenSummary] = useState([])
   const [result, setResult] = useState({})
+  const [technicalError, setTechnicalError] = useState(null)
   const toast = useToast()
 
   const fetchQuizSummary = useCallback(async () => {
@@ -45,6 +46,7 @@ const QuizReport = ({
       setTimeTaken(response.data.timeTaken)
       setResult(response.data)
       setQuizGivenSummary(() => [...response.data.result])
+      setTechnicalError(response.data.technicalError)
     } catch (error) {
       toast({
         title: 'Error',
@@ -103,6 +105,7 @@ const QuizReport = ({
           result={result}
           onViewReport={() => setShowQuizSummary(true)}
           isTournament={isTournament}
+          technicalError={technicalError}
         />
       </Suspense>
     )

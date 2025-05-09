@@ -58,6 +58,7 @@ const TournamentQuiz = () => {
   const [userAnswers, setUserAnswers] = useState([])
   const [submitted, setSubmitted] = useState(false)
   const [result, setResult] = useState(null)
+  const [technicalError, setTechnicalError] = useState(null)
   const [showConfirmationModal, setShowConfirmationModal] = useState(false)
   const [loading, setLoading] = useState(true)
   const [submitting, setSubmitting] = useState(false)
@@ -171,7 +172,7 @@ const TournamentQuiz = () => {
           timeTaken,
         })
         setResult(response.data)
-
+        setTechnicalError(response.data.technicalError)
         dispatch(
           updateCategoryStatus({
             category: category,
@@ -354,6 +355,7 @@ const TournamentQuiz = () => {
               playClick()
               setShowCategoryQuizSummary(true)
             }}
+            technicalError={technicalError}
           />
         </Suspense>
       )
