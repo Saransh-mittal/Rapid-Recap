@@ -550,19 +550,20 @@ const getQuizSummary = async (req, res) => {
     }
 
     const result = quizSession.questions.map((question, index) => {
-      const response = quizSession.responses[index]
+      const response = quizSession.responses?.[index]
+
       return {
         question: question.question,
         options: {
-          a: question.options.a.text,
-          b: question.options.b.text,
-          c: question.options.c.text,
-          d: question.options.d.text,
+          a: question.options.a?.text || '',
+          b: question.options.b?.text || '',
+          c: question.options.c?.text || '',
+          d: question.options.d?.text || '',
         },
         answer: question.answer,
         explanation: question.explanation,
-        userAnswer: response.userAnswer,
-        isCorrect: response.isCorrect,
+        userAnswer: response?.userAnswer || null,
+        isCorrect: response?.isCorrect ?? null,
       }
     })
 
@@ -581,10 +582,13 @@ const getQuizSummary = async (req, res) => {
 
     res.status(200).json({
       result,
-      timeTaken: Object.values(quizSession.timeTaken).find(t => t),
+      timeTaken: Object.values(quizSession.timeTaken).find(t => t) || 0,
       RQM_score: Object.values(quizSession.RQM_score).find(s => s) || 0,
       quizDifficulty: articleDifficultyLevel,
       score: scoreString,
+      technicalError: Object.values(quizSession.timeTaken).find(t => t)
+        ? null
+        : 'Sorry for the inconvenience caused due to some technical error in the quiz submission. Please try other article quiz.',
     })
   } catch (error) {
     res.status(400).json({ error: error.message || 'Something went wrong' })

@@ -66,14 +66,14 @@ const ScoreCards = React.memo(
     const cards = [
       {
         icon: Award,
-        value: `${quizData.score.correct}/${quizData.score.total}`,
+        value: `${quizData?.score?.correct}/${quizData?.score?.total}`,
         label: t('score'),
         color: isTournament ? 'yellow.400' : 'purple.400',
         delay: animationDelay,
       },
       {
         icon: Clock,
-        value: `${quizData.timeTaken}${t('seconds')}`,
+        value: `${quizData?.timeTaken}${t('seconds')}`,
         label: t('timeTaken'),
         color: isTournament ? 'yellow.400' : 'blue.400',
         delay: animationDelay + 0.1,
@@ -96,7 +96,7 @@ const ScoreCards = React.memo(
         w={'100%'}
       >
         <Grid templateColumns="repeat(3, 1fr)" gap={3} w={'100%'}>
-          {cards.map((card, i) => (
+          {cards?.map((card, i) => (
             <ScoreCard key={i} {...card} isDifficultyCard={i === 2} />
           ))}
         </Grid>

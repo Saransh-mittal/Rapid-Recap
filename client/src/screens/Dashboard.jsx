@@ -379,14 +379,14 @@ const Dashboard = () => {
         const timeData = timeSpent.find(user => user.email === email) || {}
 
         return {
-          name: quizData.name || loginData.name || timeData.name || '',
+          name: quizData?.name || loginData.name || timeData.name || '',
           email,
           inGameName:
-            quizData.inGameName ||
+            quizData?.inGameName ||
             loginData.inGameName ||
             timeData.inGameName ||
             '',
-          quizAttempts: quizData.quizAttempts || 0,
+          quizAttempts: quizData?.quizAttempts || 0,
           lastLogin: loginData.lastLogin || '',
           timeSpent: timeData.timeSpent || 0,
         }
