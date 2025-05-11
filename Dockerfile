@@ -23,14 +23,20 @@ COPY . .
 
 # Install Python and required packages
 RUN apt-get update && apt-get install -y python3 python3-venv python3-pip
+
+# Create virtual environment
 RUN python3 -m venv /opt/venv
-RUN /opt/venv/bin/pip install --upgrade pip
-RUN /opt/venv/bin/pip install -r requirements.txt
+
+# Upgrade pip and install Python dependencies
+RUN /opt/venv/bin/pip install --upgrade pip && \
+  /opt/venv/bin/pip install -r requirements.txt && \
+  /opt/venv/bin/pip install setuptools && \
+  /opt/venv/bin/python -m playwright install chromium && \
+  /opt/venv/bin/python -c "import nltk; nltk.download('punkt'); nltk.download('stopwords')"
 
 # Ensure the virtual environment activation script has execution permissions
 RUN chmod +x /opt/venv/bin/activate
 
-# No need for npm run build since we've already installed dependencies
 # Set environment variables
 ENV PATH="/opt/venv/bin:$PATH"
 ENV NODE_ENV=production

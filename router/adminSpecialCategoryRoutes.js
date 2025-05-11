@@ -13,6 +13,10 @@ const {
   getSpecialCategoryArticlesAdmin,
   addArticleToSpecialCategoryBatch,
 } = require('../controllers/specialCategoryController')
+const {
+  fetchIndoPakNewsOnDemand,
+  getIndoPakScraperStatus,
+} = require('../controllers/indoPakNewsController')
 
 // All routes here are already protected by adminMiddleware in the parent router
 
@@ -26,5 +30,7 @@ router.delete('/:id/articles/:articleId', removeArticleFromSpecialCategory)
 router.post('/:id/fetch', fetchArticlesForSpecialCategory)
 router.get('/:id/articles', getSpecialCategoryArticlesAdmin)
 router.post('/articles/batch', addArticleToSpecialCategoryBatch)
+router.get('/indo-pak-status', getIndoPakScraperStatus)
+router.post('/fetch-indo-pak', fetchIndoPakNewsOnDemand)
 
 module.exports = router
