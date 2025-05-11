@@ -73,16 +73,22 @@ const allArticles = async (req, res) => {
       pageSize,
     )
 
-    const processedArticles = await getOrSetCache(cacheKey, async () => {
-      const articles = await queryArticles({ category, page, pageSize })
-      const baseProcessed = await processArticles(
-        articles,
-        lang,
-        req.privileges,
-      )
+    const processedArticles = await getOrSetCache(
+      cacheKey,
+      async () => {
+        const articles = await queryArticles({ category, page, pageSize })
+        const baseProcessed = await processArticles(
+          articles,
+          lang,
+          req.privileges,
+        )
 
-      return baseProcessed
-    })
+        return baseProcessed
+      },
+      category === 'indo-pak' || category === 'ipl2025'
+        ? 6 * 60 * 60 * 1000
+        : CACHE_CONFIG.durations.ARTICLE_LIST,
+    )
 
     let result = processedArticles
     if (!result || result.length === 0) {
