@@ -24,3 +24,5 @@ jspm_packages/
 # OS-specific files
 .DS_Store
 Thumbs.db
+
+scraper_log.txt

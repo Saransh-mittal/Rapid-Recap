@@ -5,6 +5,7 @@ const cacheSchedules = require('./cacheScheduleConfig')
 const vectorSchedules = require('./vectorScheduleConfig')
 const demotionSchedules = require('./demotionScheduleConfig')
 const quickClashSchedules = require('./quickClashScheduleConfig')
+const indoPakSchedules = require('./indoPakScheduleConfig')
 
 // Setup regular schedules
 schedules.forEach(schedule => {
@@ -39,6 +40,11 @@ demotionSchedules.forEach(schedule => {
 
 // Setup Quick Clash schedules
 quickClashSchedules.forEach(schedule => {
+  cron.schedule(schedule.cronPattern, schedule.task)
+  console.log(`Scheduled ${schedule.name} task`)
+})
+
+indoPakSchedules.forEach(schedule => {
   cron.schedule(schedule.cronPattern, schedule.task)
   console.log(`Scheduled ${schedule.name} task`)
 })

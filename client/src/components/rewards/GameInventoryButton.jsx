@@ -1,4 +1,10 @@
-import { Badge, Box, Button, useDisclosure } from '@chakra-ui/react'
+import {
+  Badge,
+  Box,
+  Button,
+  useDisclosure,
+  useMediaQuery,
+} from '@chakra-ui/react'
 import { Package } from 'lucide-react'
 import React from 'react'
 import GameInventory from './GameInventory'
@@ -7,6 +13,7 @@ import { useSelector } from 'react-redux'
 const GameInventoryButton = ({ page }) => {
   const { isOpen, onOpen, onClose } = useDisclosure()
   const { availableAbilities } = useSelector(state => state.inventory)
+  const isScreenGreaterThan992 = useMediaQuery('(min-width: 992px)')[0]
   return (
     <>
       {/* Game Inventory Button */}
@@ -24,14 +31,20 @@ const GameInventoryButton = ({ page }) => {
             transform: 'scale(1.05)',
           }}
           color="white"
-          leftIcon={<Package />}
           position="relative"
           transition="all 0.3s"
           rounded="full"
           px="4"
           py="6"
         >
-          Treasure Vault
+          <Package
+            size={24}
+            style={{
+              marginRight: isScreenGreaterThan992 ? '8px' : '0',
+              color: 'white',
+            }}
+          />
+          {isScreenGreaterThan992 && 'Treasure Vault'}
           {availableAbilities.length != 0 && (
             <Badge
               position="absolute"
