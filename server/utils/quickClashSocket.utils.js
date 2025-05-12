@@ -594,7 +594,12 @@ const setupQuickClashGlobalEvents = io => {
       )
 
       // Emit to all clients in the teams room
-      io.to('quickClash:teams').emit('quickClash:teamJoinedMatchmaking', {
+      // io.to('quickClash:teams').emit('quickClash:teamJoinedMatchmaking', {
+      //   teamId,
+      //   avgTrophies,
+      //   teamName,
+      // })
+      notifyTeamMembers(teamId, 'quickClash:teamJoinedMatchmaking', {
         teamId,
         avgTrophies,
         teamName,

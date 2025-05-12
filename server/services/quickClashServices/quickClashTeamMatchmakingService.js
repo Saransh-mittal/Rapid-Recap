@@ -145,6 +145,14 @@ const joinTeamMatchmaking = async ({
         teamId.toString(),
         team.members.length,
       )
+      globalEmitter.emit('quickClash:teamJoinedMatchmaking', {
+        teamId: team._id.toString(),
+        teamName: team.name,
+        avgTrophies: avgTrophies,
+        memberCount: team.members.length,
+        preferredCategories: [], // Can be added if implemented
+        timestamp: new Date(),
+      })
       await performMatchmaking(session)
     } else {
       // Emit event for real-time updates
@@ -495,6 +503,7 @@ const leaveTeamMatchmaking = async ({ teamId, userId = null }) => {
                 globalEmitter.emit('quickClash:teamLeftMatchmaking', {
                   userId: member.user,
                   teamId: teamId.toString(),
+                  teamName: team?.name,
                   reason: 'memberLeft',
                   memberName: initiatorName,
                 })
@@ -505,6 +514,7 @@ const leaveTeamMatchmaking = async ({ teamId, userId = null }) => {
           // Emit event for system tracking
           globalEmitter.emit('quickClash:teamLeftMatchmaking', {
             teamId: teamId.toString(),
+            teamName: team?.name,
             reason: userId ? 'memberLeft' : 'user_initiated',
             initiator: userId,
             timestamp: new Date(),
@@ -646,6 +656,7 @@ const leaveGlobalMatchmaking = async ({ userId }) => {
           // Emit event for team leaving matchmaking
           globalEmitter.emit('quickClash:teamLeftMatchmaking', {
             teamId: userSourceTeamId.toString(),
+            teamName: deleteResult?.team?.name,
             reason: 'member_left_autoformed',
             timestamp: new Date(),
           })
@@ -953,6 +964,7 @@ const cleanupAutoFormedTeam = async ({
               globalEmitter.emit('quickClash:teamLeftMatchmaking', {
                 userId: srcUserId.toString(),
                 teamId: sourceTeamIdStr,
+                teamName: sourceTeam?.name,
                 reason: 'memberLeft',
                 memberName: initiatorName,
               })

@@ -230,18 +230,17 @@ const GlobalMatchmakingButton = ({ compact = false }) => {
           duration: 5000,
           isClosable: true,
         })
-      } else if (data.reason === 'user_initiated') {
-        // Generic notification for other cases
-        toast({
-          title: t('Team Left Matchmaking'),
-          description: t(
-            'Your team has been removed from the matchmaking queue.',
-          ),
-          status: 'info',
-          duration: 5000,
-          isClosable: true,
-        })
       }
+      // Generic notification for other cases
+      toast({
+        title: t('Team Left Matchmaking'),
+        description: t(
+          `Your team ${data.teamName} has been removed from the matchmaking queue.`,
+        ),
+        status: 'info',
+        duration: 5000,
+        isClosable: true,
+      })
 
       // Reset matchmaking state
       if (inMatchmaking) {
@@ -261,9 +260,28 @@ const GlobalMatchmakingButton = ({ compact = false }) => {
       }
     })
 
+    socket.on('quickClash:teamJoinedMatchmaking', data => {
+      console.log('Received teamJoinedMatchmaking event:', data)
+      if (user?._id) {
+        checkMatchmakingStatus()
+        fetchMyTeams()
+        toast({
+          title: t('Team Joined Matchmaking'),
+          description: t(
+            `Your team ${data.teamName} has successfully joined the matchmaking queue.`,
+          ),
+          status: 'success',
+          duration: 5000,
+          isClosable: true,
+          position: 'bottom',
+        })
+      }
+    })
+
     return () => {
       socket.off('quickClash:teamLeftMatchmaking')
       socket.off('quickClash:teamReturnedToMatchmaking')
+      socket.off('quickClash:teamJoinedMatchmaking')
     }
   }, [
     getSocket,
