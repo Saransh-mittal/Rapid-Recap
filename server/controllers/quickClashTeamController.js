@@ -385,9 +385,14 @@ const joinTeamMatchmakingController = asyncHandler(async (req, res) => {
  */
 const leaveTeamMatchmakingController = asyncHandler(async (req, res) => {
   const { teamId } = req.params
+  const userId = req.user._id
 
   try {
-    const success = await leaveTeamMatchmaking({ teamId })
+    // Pass the user ID to the service for better notifications
+    const success = await leaveTeamMatchmaking({
+      teamId,
+      userId, // Pass the user ID who initiated the leave action
+    })
 
     res.status(200).json({
       success,
@@ -506,6 +511,117 @@ const getTeamBattle = asyncHandler(async (req, res) => {
   }
 })
 
+/**
+ * @desc    Get team info for matchmaking
+ * @route   GET /api/quickClash/team/:teamId/matchmaking-info
+ * @access  Private
+ */
+const getTeamMatchmakingInfo = asyncHandler(async (req, res) => {
+  const { teamId } = req.params
+  const userId = req.user._id
+
+  try {
+    // Find the team
+    let team = await QuickClashTeam.findById(teamId)
+      .populate('members.user', '_id name inGameName pic')
+      .populate('formationInfo.sourceTeams', 'name members')
+
+    if (!team) {
+      return res.status(404).json({
+        success: false,
+        message: 'Team not found',
+      })
+    }
+
+    // Check if user is a member of the team
+    const isMember = team.members.some(
+      member => member.user._id.toString() === userId.toString(),
+    )
+
+    if (!isMember) {
+      return res.status(403).json({
+        success: false,
+        message: 'You are not a member of this team',
+      })
+    }
+
+    // Get matchmaking status
+    const matchmakingStatus = await getTeamMatchmakingStatus({ teamId })
+
+    // Determine if this is an auto-formed team
+    let joinType = 'regular'
+    let originalTeam = null
+
+    if (
+      team.teamType === 'auto' &&
+      team.formationInfo &&
+      team.formationInfo.isAutoFormed
+    ) {
+      // Check if the user was originally a solo player
+      if (
+        team.formationInfo.soloPlayers &&
+        team.formationInfo.soloPlayers.length > 0 &&
+        team.formationInfo.soloPlayers.some(
+          playerId => playerId.toString() === userId.toString(),
+        )
+      ) {
+        joinType = 'solo'
+      }
+      // Check if the user was originally from a source team
+      else if (
+        team.formationInfo.sourceTeams &&
+        team.formationInfo.sourceTeams.length > 0
+      ) {
+        // Find the member in the current team to get their sourceTeam info
+        const teamMember = team.members.find(
+          member => member.user._id.toString() === userId.toString(),
+        )
+
+        if (teamMember && teamMember.sourceTeam) {
+          joinType = 'sourceTeam'
+
+          // Find the source team details
+          const sourceTeamId = teamMember.sourceTeam.toString()
+          const sourceTeam = team.formationInfo.sourceTeams.find(
+            st => st._id.toString() === sourceTeamId,
+          )
+
+          if (sourceTeam) {
+            originalTeam = {
+              _id: sourceTeam._id,
+              name: sourceTeam.name,
+            }
+          }
+        }
+      }
+    }
+
+    // Return team info with matchmaking status and join type
+    res.status(200).json({
+      success: true,
+      team: {
+        _id: team._id,
+        name: team.name,
+        members: team.members.map(member => ({
+          _id: member.user._id,
+          name: member.user.name || member.user.inGameName,
+          pic: member.user.pic,
+          role: member.role,
+        })),
+        isInMatch: team.isInMatch,
+      },
+      matchmaking: matchmakingStatus,
+      joinType: joinType,
+      originalTeam: originalTeam,
+    })
+  } catch (error) {
+    res.status(400).json({
+      success: false,
+      message: error.message || 'Failed to get team matchmaking info',
+    })
+  }
+})
+
 module.exports = {
   createNewTeam,
   getTeam,
@@ -524,4 +640,5 @@ module.exports = {
   selectCategoryForBattle,
   getMyTeamBattles,
   getTeamBattle,
+  getTeamMatchmakingInfo,
 }

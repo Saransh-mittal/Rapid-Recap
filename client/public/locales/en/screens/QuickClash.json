@@ -342,5 +342,13 @@
   "challengeComplete": "Challenge Complete",
   "youWon": "You won!",
   "youLost": "You lost!",
-  "itsTie": "It's a tie!"
+  "itsTie": "It's a tie!",
+  "Team Left Matchmaking": "Team Left Matchmaking",
+  "{{memberName}} left matchmaking. Your team has been removed from the queue.": "{{memberName}} left matchmaking. Your team has been removed from the queue.",
+  "Team Disbanded": "Team Disbanded",
+  "{{memberName}} left matchmaking. Your auto-formed team has been disbanded.": "{{memberName}} left matchmaking. Your auto-formed team has been disbanded.",
+  "Your auto-formed team has been disbanded because a source team left matchmaking.": "Your auto-formed team has been disbanded because a source team left matchmaking.",
+  "Your auto-formed team has been disbanded.": "Your auto-formed team has been disbanded.",
+  "A member left matchmaking": "A member left matchmaking",
+  "A team member left matchmaking, removing your team from the queue": "A team member left matchmaking, removing your team from the queue"
 }

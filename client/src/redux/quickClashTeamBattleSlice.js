@@ -69,16 +69,18 @@ export const selectBattleCategory = createAsyncThunk(
 )
 
 export const joinTeamMatchmaking = createAsyncThunk(
-  'quickClashTeamBattle/joinTeamMatchmaking',
-  async ({ teamId }, { rejectWithValue }) => {
+  'quickClashGlobalMatchmaking/joinTeam',
+  async ({ teamId, teamName }, { rejectWithValue }) => {
     try {
       const response = await axios.post(
         `/api/quickClash/team/${teamId}/matchmaking/join`,
       )
-      return response.data.matchmaking
+      return { ...response.data, teamId, teamName }
     } catch (error) {
       return rejectWithValue(
-        error.response?.data?.message || 'Failed to join team matchmaking',
+        error.response?.data?.reason ||
+          error.response?.data?.message ||
+          'Failed to join team matchmaking',
       )
     }
   },
@@ -150,8 +152,6 @@ const initialState = {
   matchmakingLoading: false,
   matchmakingError: null,
 
-  // Matchmaking progress
-  matchmakingProgress: 0,
   matchmakingStep: null,
 
   // Battle ready
@@ -170,15 +170,11 @@ const quickClashTeamBattleSlice = createSlice({
       state.battleDetailsError = null
       state.categorySelectionError = null
     },
-    setMatchmakingProgress: (state, action) => {
-      state.matchmakingProgress = action.payload
-    },
     setMatchmakingStep: (state, action) => {
       state.matchmakingStep = action.payload
     },
     setBattleReady: (state, action) => {
       state.battleReady = action.payload
-      state.matchmakingProgress = 100
       state.matchmakingStep = 'battleReady'
       state.inMatchmaking = false
     },
@@ -303,7 +299,6 @@ const quickClashTeamBattleSlice = createSlice({
         state.inMatchmaking = false
         state.matchmakingEntry = null
         state.matchmakingLoading = false
-        state.matchmakingProgress = 0
         state.matchmakingStep = null
       })
       .addCase(leaveTeamMatchmaking.rejected, (state, action) => {
@@ -331,7 +326,6 @@ export const {
   resetTeamBattleState,
   clearCurrentBattle,
   clearBattleError,
-  setMatchmakingProgress,
   setMatchmakingStep,
   setBattleReady,
   clearBattleReady,

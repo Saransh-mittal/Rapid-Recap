@@ -49,8 +49,6 @@ const TeamMatchmakingButton = forwardRef(
       inMatchmaking,
       selectedTeamId,
       loading,
-      progress,
-      step,
 
       joinWithTeam,
       leaveMatchmaking,
@@ -81,7 +79,19 @@ const TeamMatchmakingButton = forwardRef(
       }
 
       try {
-        await joinWithTeam(teamId, true)
+        // Get team details first to get the name
+        let teamName = 'Team'
+        try {
+          const teamResponse = await axios.get(`/api/quickClash/team/${teamId}`)
+          if (teamResponse.data && teamResponse.data.team) {
+            teamName = teamResponse.data.team.name || 'Team'
+          }
+        } catch (teamError) {
+          console.error('Error fetching team details:', teamError)
+        }
+
+        // Pass teamName to the joinWithTeam function
+        await joinWithTeam(teamId, true, teamName)
         openModal()
       } catch (error) {
         // The error toasts are already handled in joinWithTeam hook

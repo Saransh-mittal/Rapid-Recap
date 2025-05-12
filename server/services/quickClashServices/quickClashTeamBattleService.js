@@ -31,31 +31,6 @@ const BASE_TROPHIES = 120 // Base trophies for 4v4 mode
 const TROPHY_K_FACTOR = 0.8 // From trophy formula
 
 /**
- * Helper to emit progress updates to teams
- * @param {string} teamAId - Team A ID
- * @param {string} teamBId - Team B ID (optional, for bot teams)
- * @param {string} step - Progress step
- * @param {number} progress - Progress percentage
- */
-const emitTeamBattleProgress = (teamAId, teamBId, step, progress) => {
-  // Emit progress event for Team A
-  globalEmitter.emit('quickClash:teamBattleProgress', {
-    teamId: teamAId,
-    step,
-    progress,
-  })
-
-  // Emit progress event for Team B if it exists
-  if (teamBId) {
-    globalEmitter.emit('quickClash:teamBattleProgress', {
-      teamId: teamBId,
-      step,
-      progress,
-    })
-  }
-}
-
-/**
  * Create a new team battle between two teams
  * @param {Object} params - Parameters
  * @param {string} params.teamAId - Team A ID
@@ -92,13 +67,9 @@ const createTeamBattle = async ({
 
     // ======= PROGRESS: BATTLE INITIALIZATION (5%) =======
     console.log(`[TeamBattle] PHASE 1: Battle initialization (5%)`)
-    // Initial notification to indicate the process has started
-    emitTeamBattleProgress(teamAId, teamBId, 'battleStarted', 5)
 
     // ======= PROGRESS: LOADING TEAM DATA (15%) =======
     console.log(`[TeamBattle] PHASE 2: Loading team data (15%)`)
-    // Notify that we're loading the team data
-    emitTeamBattleProgress(teamAId, teamBId, 'teamDataLoading', 15)
 
     // Get team data
     let teamA, teamB
@@ -143,20 +114,13 @@ const createTeamBattle = async ({
 
     // ======= PROGRESS: TEAMS LOADED (25%) =======
     console.log(`[TeamBattle] PHASE 3: Teams loaded (25%)`)
-    // Teams data has been successfully loaded
-    emitTeamBattleProgress(teamAId, teamBId, 'teamsLoaded', 25)
 
     // ======= PROGRESS: PREPARING CONTENT (35%) =======
     console.log(`[TeamBattle] PHASE 4: Preparing content (35%)`)
-    // Notify that we're preparing the battle content
-    emitTeamBattleProgress(teamAId, teamBId, 'contentPreparing', 35)
 
     // Create challenges for each category
     const challengesData = []
     const challengeCreationPromises = []
-
-    // Progress update - Starting article processing
-    emitTeamBattleProgress(teamAId, teamBId, 'articlesLoading', 40)
 
     // Create placeholder data structure for challenges
     console.log(
@@ -186,8 +150,6 @@ const createTeamBattle = async ({
 
     // ======= PROGRESS: PROCESSING ARTICLES (45%) =======
     console.log(`[TeamBattle] PHASE 5: Processing articles (45%)`)
-    // Notify that we're processing the articles
-    emitTeamBattleProgress(teamAId, teamBId, 'articlesProcessing', 45)
 
     // Extract team member data
     console.log(`[TeamBattle] Extracting team member data`)
@@ -224,8 +186,6 @@ const createTeamBattle = async ({
 
     // ======= PROGRESS: BATTLE SETUP (55%) =======
     console.log(`[TeamBattle] PHASE 6: Battle setup (55%)`)
-    // Notify that we're setting up the battle details
-    emitTeamBattleProgress(teamAId, teamBId, 'battleSetup', 55)
 
     // Create the team battle
     console.log(`[TeamBattle] Creating team battle object`)
@@ -284,8 +244,6 @@ const createTeamBattle = async ({
 
     // ======= PROGRESS: GENERATING CHALLENGES (65%) =======
     console.log(`[TeamBattle] PHASE 7: Generating challenges (65%)`)
-    // Notify that we're creating the challenges
-    emitTeamBattleProgress(teamAId, teamBId, 'generatingChallenges', 65)
 
     // Store created challenges for quiz generation
     const createdChallenges = []
@@ -387,12 +345,6 @@ const createTeamBattle = async ({
           categories.length
         } (${progressPercent}%)`,
       )
-      emitTeamBattleProgress(
-        teamAId,
-        teamBId,
-        'creatingChallenge',
-        progressPercent,
-      )
 
       // Create the challenge
       const challenge = new QuickClashChallenge({
@@ -418,8 +370,6 @@ const createTeamBattle = async ({
 
     // ======= PROGRESS: CHALLENGES READY (85%) =======
     console.log(`[TeamBattle] PHASE 8: Challenges ready (85%)`)
-    // Notify that all challenges have been created
-    emitTeamBattleProgress(teamAId, teamBId, 'challengesReady', 85)
 
     // Save team battle again with challenge IDs
     console.log(`[TeamBattle] Updating team battle with challenge IDs`)
@@ -428,8 +378,6 @@ const createTeamBattle = async ({
 
     // ======= PROGRESS: GENERATING QUIZZES (90%) =======
     console.log(`[TeamBattle] PHASE 9: Generating quizzes (90%)`)
-    // Notify that we're generating quizzes for challenges
-    emitTeamBattleProgress(teamAId, teamBId, 'generatingQuizzes', 90)
 
     // For each challenge, generate quizzes and highlights in parallel
     console.log(
@@ -448,12 +396,6 @@ const createTeamBattle = async ({
         try {
           // Update progress with more granular steps
           const progressStep = 90 + index * (5 / createdChallenges.length)
-          emitTeamBattleProgress(
-            teamAId,
-            teamBId,
-            'generatingQuizzes',
-            progressStep,
-          )
 
           // Generate English quiz
           console.log(
@@ -614,8 +556,6 @@ const createTeamBattle = async ({
 
       // ======= PROGRESS: BATTLE FINALIZING (95%) =======
       console.log(`[TeamBattle] PHASE 10: Battle finalizing (95%)`)
-      // Notify that the battle is being finalized
-      emitTeamBattleProgress(teamAId, teamBId, 'battleFinalizing', 95)
 
       // If we started a transaction, commit it
       if (startedTransaction) {
@@ -626,8 +566,6 @@ const createTeamBattle = async ({
 
       // ======= PROGRESS: BATTLE READY (100%) =======
       console.log(`[TeamBattle] PHASE 11: Battle ready (100%)`)
-      // Final notification - battle is ready
-      emitTeamBattleProgress(teamAId, teamBId, 'battleReady', 100)
 
       // Schedule translations (outside transaction)
       translationData.forEach(

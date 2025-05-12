@@ -1,47 +1,51 @@
-import { useCallback } from 'react'
+import { useCallback, useEffect } from 'react'
 import { useSelector } from 'react-redux'
-import io from 'socket.io-client'
 import { useSocketContext } from '../contextAPI/SocketContext'
+import socketManager from '../services/socketInitManager'
 
-const ENDPOINT =
-  process.env.NODE_ENV === 'production'
-    ? 'https://rapidrecap.ai'
-    : 'http://localhost:3000'
-
+/**
+ * Custom hook to interact with the socket connection
+ * Uses the singleton pattern to ensure only one socket connection app-wide
+ */
 export const useSocket = () => {
   const { user } = useSelector(state => state.auth)
-  const { socket, setSocket, isConnected, setIsConnected } = useSocketContext()
+  const { isConnected } = useSocketContext()
 
+  // Initialize socket when hook is first used with a user
+  useEffect(() => {
+    // Skip if no user
+    if (!user || !Object.keys(user).length) return
+
+    // Initialize socket with user data if not already connected
+    if (
+      !socketManager.isConnected() &&
+      !socketManager.isConnectionAttempted()
+    ) {
+      socketManager.initializeSocket(user)
+    }
+  }, [user])
+
+  /**
+   * Get the socket instance
+   * @returns {Object|null} Socket instance or null
+   */
   const getSocket = useCallback(() => {
-    if (!socket && user && Object.keys(user).length > 0) {
-      const newSocket = io(ENDPOINT)
+    return socketManager.getSocket()
+  }, [])
 
-      newSocket.emit('setup', user)
-
-      newSocket.on('connected', () => {
-        setIsConnected(true)
-      })
-      newSocket.on('force-reload', () => {
-        console.log('Force reload signal received')
-        window.location.reload()
-      })
-      setSocket(newSocket)
-      return newSocket
-    }
-    return socket
-  }, [user, socket, setSocket, setIsConnected])
-
+  /**
+   * Disconnect the socket (for logout)
+   */
   const disconnectSocket = useCallback(() => {
-    if (socket) {
-      socket.emit('user-disconnected', user?._id)
-      socket.disconnect()
-      setSocket(null)
-      setIsConnected(false)
+    if (user?._id) {
+      socketManager.disconnect(user._id)
+    } else {
+      socketManager.disconnect()
     }
-  }, [socket, user, setSocket, setIsConnected])
+  }, [user])
 
   return {
-    socket,
+    socket: socketManager.getSocket(),
     socketConnected: isConnected,
     getSocket,
     disconnectSocket,

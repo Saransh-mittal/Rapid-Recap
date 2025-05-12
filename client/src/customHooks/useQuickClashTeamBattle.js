@@ -12,12 +12,8 @@ import {
   leaveTeamMatchmaking,
   getTeamMatchmakingStatus,
   clearCurrentBattle,
-  clearBattleError,
-  setMatchmakingProgress,
-  setMatchmakingStep,
   setBattleReady,
   clearBattleReady,
-  setInMatchmaking,
 } from '../redux/quickClashTeamBattleSlice'
 import { useSocket } from './useSocket'
 
@@ -48,28 +44,6 @@ const useQuickClashTeamBattle = () => {
 
     // Clean up any existing listeners first
     cleanupSocketListeners()
-
-    // Team battle progress updates
-    socket.on('quickClash:teamBattleProgress', data => {
-      if (data.progress) {
-        dispatch(setMatchmakingProgress(data.progress))
-      }
-
-      if (data.step) {
-        dispatch(setMatchmakingStep(data.step))
-      }
-    })
-
-    // Team matchmaking progress updates
-    socket.on('quickClash:teamMatchmakingProgress', data => {
-      if (data.progress) {
-        dispatch(setMatchmakingProgress(data.progress))
-      }
-
-      if (data.step) {
-        dispatch(setMatchmakingStep(data.step))
-      }
-    })
 
     // Battle ready notification
     socket.on('quickClash:teamBattleReady', data => {
@@ -109,8 +83,6 @@ const useQuickClashTeamBattle = () => {
     const socket = getSocket()
     if (!socket) return
 
-    socket.off('quickClash:teamBattleProgress')
-    socket.off('quickClash:teamMatchmakingProgress')
     socket.off('quickClash:teamBattleReady')
     socket.off('quickClash:teamBattleCompleted')
     socket.off('quickClash:teamMemberSelectedCategory')
@@ -361,8 +333,6 @@ const useQuickClashTeamBattle = () => {
     matchmakingEntry: teamBattleState.matchmakingEntry,
     matchmakingLoading: teamBattleState.matchmakingLoading,
     matchmakingError: teamBattleState.matchmakingError,
-
-    matchmakingProgress: teamBattleState.matchmakingProgress,
     matchmakingStep: teamBattleState.matchmakingStep,
 
     battleReady: teamBattleState.battleReady,

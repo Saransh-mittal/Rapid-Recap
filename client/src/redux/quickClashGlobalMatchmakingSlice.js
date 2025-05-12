@@ -55,12 +55,12 @@ export const getGlobalMatchmakingStatus = createAsyncThunk(
 
 export const joinTeamMatchmaking = createAsyncThunk(
   'quickClashGlobalMatchmaking/joinTeam',
-  async ({ teamId }, { rejectWithValue }) => {
+  async ({ teamId, teamName }, { rejectWithValue }) => {
     try {
       const response = await axios.post(
         `/api/quickClash/team/${teamId}/matchmaking/join`,
       )
-      return { ...response.data, teamId }
+      return { ...response.data, teamId, teamName }
     } catch (error) {
       return rejectWithValue(
         error.response?.data?.reason ||
@@ -110,9 +110,7 @@ const initialState = {
   inMatchmaking: false,
   matchmakingType: null, // 'solo' or 'team'
   selectedTeamId: null,
-
-  // Progress and status
-  progress: 0,
+  teamName: null, // Add this to store the team name
   step: null,
   matchmakingTime: 0,
 
@@ -128,6 +126,9 @@ const initialState = {
 
   // Socket connection status
   socketConnected: false,
+
+  joinType: null, // 'regular', 'solo', or 'sourceTeam'
+  originalTeam: null, // Source team details if user was part of a source team
 }
 
 const quickClashGlobalMatchmakingSlice = createSlice({
@@ -135,13 +136,11 @@ const quickClashGlobalMatchmakingSlice = createSlice({
   initialState,
   reducers: {
     resetGlobalMatchmakingState: () => initialState,
-
-    // Update progress and step
-    setMatchmakingProgress: (state, action) => {
-      state.progress = action.payload
-    },
     setMatchmakingStep: (state, action) => {
       state.step = action.payload
+    },
+    setTeamName: (state, action) => {
+      state.teamName = action.payload
     },
 
     // Update time
@@ -159,18 +158,25 @@ const quickClashGlobalMatchmakingSlice = createSlice({
         action.payload,
       )
       state.battleReady = action.payload
-      state.progress = 100
       state.step = 'battleReady'
 
       console.log('Global Matchmaking: Updated state:', {
         battleReady: state.battleReady,
-        progress: state.progress,
         step: state.step,
       })
     },
     clearBattleReady: state => {
       state.battleReady = null
       state.inMatchmaking = false
+    },
+
+    // Add these actions to the reducers in quickClashGlobalMatchmakingSlice.js
+    setJoinType: (state, action) => {
+      state.joinType = action.payload
+    },
+
+    setOriginalTeam: (state, action) => {
+      state.originalTeam = action.payload
     },
 
     // User/team related actions
@@ -188,19 +194,25 @@ const quickClashGlobalMatchmakingSlice = createSlice({
 
     // Manual state updates (for socket events)
     updateMatchmakingState: (state, action) => {
-      const { inMatchmaking, progress, step, matchmakingType, battleReady } =
-        action.payload
+      const {
+        inMatchmaking,
+        step,
+        matchmakingType,
+        battleReady,
+        teamName,
+        joinType,
+        originalTeam,
+      } = action.payload
       console.log('Updating matchmaking state with:', action.payload)
 
       if (inMatchmaking !== undefined) state.inMatchmaking = inMatchmaking
-      if (progress !== undefined) state.progress = progress
       if (step !== undefined) state.step = step
       if (matchmakingType !== undefined) state.matchmakingType = matchmakingType
+      if (teamName !== undefined) state.teamName = teamName
+      if (joinType !== undefined) state.joinType = joinType
+      if (originalTeam !== undefined) state.originalTeam = originalTeam
 
-      // If step is battleReady, ensure progress is 100%
       if (step === 'battleReady') {
-        state.progress = 100
-        // If battleReady payload is provided, update that too
         if (battleReady) {
           state.battleReady = battleReady
         }
@@ -218,7 +230,6 @@ const quickClashGlobalMatchmakingSlice = createSlice({
         state.loading = false
         state.inMatchmaking = true
         state.matchmakingType = 'solo'
-        state.progress = 10
         state.step = 'searching'
         state.matchmakingTime = 0
       })
@@ -234,7 +245,6 @@ const quickClashGlobalMatchmakingSlice = createSlice({
       .addCase(leaveGlobalMatchmaking.fulfilled, state => {
         state.loading = false
         state.inMatchmaking = false
-        state.progress = 0
         state.step = null
         state.matchmakingTime = 0
       })
@@ -252,7 +262,6 @@ const quickClashGlobalMatchmakingSlice = createSlice({
         state.inMatchmaking = action.payload.inMatchmaking
         if (action.payload.matchmaking) {
           state.matchmakingType = 'solo'
-          state.progress = action.payload.progress || 0
           state.step = action.payload.step || 'searching'
         }
       })
@@ -271,7 +280,10 @@ const quickClashGlobalMatchmakingSlice = createSlice({
         state.inMatchmaking = true
         state.matchmakingType = 'team'
         state.selectedTeamId = action.payload.teamId
-        state.progress = 10
+        // If teamName is provided in the action payload, set it
+        if (action.payload.teamName) {
+          state.teamName = action.payload.teamName
+        }
         state.step = 'searching'
         state.matchmakingTime = 0
       })
@@ -287,7 +299,6 @@ const quickClashGlobalMatchmakingSlice = createSlice({
       .addCase(leaveTeamMatchmaking.fulfilled, state => {
         state.loading = false
         state.inMatchmaking = false
-        state.progress = 0
         state.step = null
         state.matchmakingTime = 0
         // Keep selectedTeamId to maintain the selection in the UI
@@ -307,7 +318,6 @@ const quickClashGlobalMatchmakingSlice = createSlice({
         if (action.payload.inMatchmaking) {
           state.matchmakingType = 'team'
           state.selectedTeamId = action.payload.teamId
-          state.progress = action.payload.progress || 0
           state.step = action.payload.step || 'searching'
         }
       })
@@ -320,8 +330,10 @@ const quickClashGlobalMatchmakingSlice = createSlice({
 
 export const {
   resetGlobalMatchmakingState,
-  setMatchmakingProgress,
   setMatchmakingStep,
+  setTeamName,
+  setJoinType,
+  setOriginalTeam,
   incrementMatchmakingTime,
   resetMatchmakingTime,
   setBattleReady,

@@ -1,4 +1,3 @@
-// components/quickClashComponents/GlobalMatchmakingPreparationModal.jsx
 import React from 'react'
 import {
   Modal,
@@ -11,7 +10,6 @@ import {
   Button,
   Text,
   VStack,
-  Progress,
   Box,
   Flex,
   HStack,
@@ -19,6 +17,7 @@ import {
   Spinner,
   Badge,
   Center,
+  Tooltip,
 } from '@chakra-ui/react'
 import { motion, AnimatePresence } from 'framer-motion'
 import { useTranslation } from 'react-i18next'
@@ -33,6 +32,9 @@ import {
   BookOpen,
   Target,
   CloudLightning,
+  User,
+  UserPlus,
+  Info,
 } from 'lucide-react'
 
 // Import our custom hook
@@ -42,17 +44,22 @@ const MotionBox = motion(Box)
 const MotionFlex = motion(Flex)
 const MotionHStack = motion(HStack)
 const MotionText = motion(Text)
+const MotionBadge = motion(Badge)
 
-/**
- * Modal that shows progress of global matchmaking and preparation
- */
 const GlobalMatchmakingPreparationModal = ({ isOpen, onClose }) => {
   const { t } = useTranslation('QuickClash')
   const navigate = useNavigate()
 
   // Use our custom hook
-  const { progress, step, battleReady, enterBattle } =
-    useQuickClashGlobalMatchmaking()
+  const {
+    step,
+    battleReady,
+    enterBattle,
+    matchmakingType,
+    teamName,
+    joinType,
+    originalTeam,
+  } = useQuickClashGlobalMatchmaking()
 
   // Step configuration with detailed information
   const steps = [
@@ -140,6 +147,70 @@ const GlobalMatchmakingPreparationModal = ({ isOpen, onClose }) => {
     }
   }
 
+  // Determine the badge text and icon based on joinType and matchmakingType
+  const getBadgeInfo = () => {
+    // Pure solo player (directly joined individually)
+    if (joinType === 'solo' && matchmakingType === 'solo') {
+      return {
+        icon: User,
+        color: 'blue',
+        text: t('Joined Individually'),
+        tooltip: t('You joined matchmaking as an individual player'),
+      }
+    }
+
+    // Solo player assigned to auto-formed team
+    if (joinType === 'solo' && matchmakingType === 'team') {
+      return {
+        icon: UserPlus,
+        color: 'teal',
+        text: t('Joined Individually → Auto-Team'),
+        tooltip: t(
+          'You joined individually and were assigned to an auto-formed team',
+        ),
+      }
+    }
+
+    // Player from a source team that was merged into auto-formed team
+    if (joinType === 'sourceTeam' && originalTeam) {
+      return {
+        icon: Users,
+        color: 'purple',
+        text: t('Joined with Team: {{teamName}}', {
+          teamName: originalTeam.name || t('Original Team'),
+        }),
+        tooltip: t('Your original team was merged into an auto-formed team'),
+      }
+    }
+
+    // Regular team member
+    if (joinType === 'regular' && matchmakingType === 'team') {
+      return {
+        icon: Users,
+        color: 'purple',
+        text: t('Joined with Team: {{teamName}}', {
+          teamName: teamName || t('Team'),
+        }),
+        tooltip: t('You joined matchmaking with your team'),
+      }
+    }
+
+    // Default fallback
+    return {
+      icon: Users,
+      color: 'blue',
+      text:
+        matchmakingType === 'team'
+          ? t('Joined with Team: {{teamName}}', {
+              teamName: teamName || t('Team'),
+            })
+          : t('Joined Individually'),
+      tooltip: t('Matchmaking information'),
+    }
+  }
+
+  const badgeInfo = getBadgeInfo()
+
   return (
     <Modal
       isOpen={isOpen}
@@ -176,25 +247,84 @@ const GlobalMatchmakingPreparationModal = ({ isOpen, onClose }) => {
 
         <ModalBody py={6}>
           <VStack spacing={6} align="stretch">
-            {/* Progress Bar */}
-            <Box>
-              <Flex justify="space-between" mb={2}>
-                <Text color="whiteAlpha.700" fontSize="sm">
-                  {t('Progress')}
-                </Text>
-                <Text color="whiteAlpha.700" fontSize="sm" fontWeight="bold">
-                  {progress}%
-                </Text>
+            {/* Show matchmaking type badge - with improved info */}
+            <Tooltip label={badgeInfo.tooltip} hasArrow placement="top">
+              <Flex justify="center">
+                <MotionBadge
+                  colorScheme={badgeInfo.color}
+                  px={3}
+                  py={2}
+                  borderRadius="full"
+                  fontSize="sm"
+                  display="flex"
+                  alignItems="center"
+                  animate={{
+                    y: [0, -2, 0],
+                  }}
+                  transition={{
+                    duration: 2,
+                    repeat: Infinity,
+                    repeatType: 'reverse',
+                  }}
+                >
+                  <Icon as={badgeInfo.icon} mr={2} boxSize={4} />
+                  {badgeInfo.text}
+
+                  {joinType !== 'regular' && (
+                    <Icon as={Info} ml={2} boxSize={3} opacity={0.7} />
+                  )}
+                </MotionBadge>
               </Flex>
-              <Progress
-                value={progress}
-                size="sm"
-                colorScheme={currentStep.color}
-                borderRadius="full"
-                hasStripe
-                isAnimated
-              />
-            </Box>
+            </Tooltip>
+
+            {/* If this is an auto-formed team from a source team, show additional info */}
+            {joinType === 'sourceTeam' && originalTeam && (
+              <Box
+                bg="rgba(121, 80, 242, 0.1)"
+                borderWidth="1px"
+                borderColor="purple.500"
+                borderRadius="md"
+                p={3}
+                mx={4}
+              >
+                <HStack mb={1}>
+                  <Icon as={Info} color="purple.300" boxSize={4} />
+                  <Text color="white" fontWeight="bold" fontSize="sm">
+                    {t('Auto-Team Formation')}
+                  </Text>
+                </HStack>
+                <Text color="whiteAlpha.800" fontSize="sm">
+                  {t(
+                    'Your team "{{originalTeam}}" has been merged with other players to form a 4v4 battle team.',
+                    { originalTeam: originalTeam.name || t('Original Team') },
+                  )}
+                </Text>
+              </Box>
+            )}
+
+            {/* If this is a solo player added to auto-formed team, show additional info */}
+            {joinType === 'solo' && matchmakingType === 'team' && (
+              <Box
+                bg="rgba(49, 151, 149, 0.1)"
+                borderWidth="1px"
+                borderColor="teal.500"
+                borderRadius="md"
+                p={3}
+                mx={4}
+              >
+                <HStack mb={1}>
+                  <Icon as={Info} color="teal.300" boxSize={4} />
+                  <Text color="white" fontWeight="bold" fontSize="sm">
+                    {t('Auto-Team Formation')}
+                  </Text>
+                </HStack>
+                <Text color="whiteAlpha.800" fontSize="sm">
+                  {t(
+                    'You joined individually and have been assigned to a team with other players for a 4v4 battle.',
+                  )}
+                </Text>
+              </Box>
+            )}
 
             {/* Current Step Display */}
             <MotionBox

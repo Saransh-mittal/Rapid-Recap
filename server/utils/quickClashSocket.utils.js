@@ -3,9 +3,17 @@ const globalEmitter = require('../eventEmitter')
 const {
   handleMatchmakingEvents,
 } = require('../controllers/quickClashMatchmakingController')
+const QuickClashTeam = require('../model/quickClashSchemas/quickClashTeamSchema')
 
-const joinedUsers = new Set()
-const joinedTeamsRoom = new Set()
+/**
+ * Improved socket connection tracking using Maps
+ * - userSocketMap: Maps user IDs to a Set of their socket IDs
+ * - socketUserMap: Maps socket IDs to their user ID for reverse lookup
+ * - teamRoomMembers: Maps user IDs to a boolean indicating if they're in the teams room
+ */
+const userSocketMap = new Map() // userId -> Set of socketIds
+const socketUserMap = new Map() // socketId -> userId
+const teamRoomMembers = new Map() // userId -> boolean (in teams room)
 
 /**
  * Setup socket event handlers for Quick Clash feature
@@ -21,41 +29,58 @@ const setupQuickClashSocketHandlers = (io, socket, user) => {
   }
 
   const userId = user._id.toString()
+  const socketId = socket.id
   const quickClashRoom = `quickClash:${userId}`
 
-  // Use a composite key that includes socket ID to track this specific join
-  const joinKey = `${userId}:${socket.id}`
-
-  if (!joinedUsers.has(joinKey)) {
-    socket.join(quickClashRoom)
-    joinedUsers.add(joinKey)
-    console.log(
-      `User ${userId} joined QuickClash socket room ${quickClashRoom}`,
-    )
-
-    // Remove from tracking when socket disconnects
-    socket.on('disconnect', () => {
-      joinedUsers.delete(joinKey)
-      joinedTeamsRoom.delete(joinKey)
-      console.log(`User ${userId} left QuickClash socket room (disconnected)`)
-    })
+  // Initialize user's socket set if not exists
+  if (!userSocketMap.has(userId)) {
+    userSocketMap.set(userId, new Set())
   }
 
-  // Listen for explicit join requests (redundant but kept for backward compatibility)
-  socket.on('quickClash:join', () => {
-    // No need to join again if already joined
-    if (!socket.explicitlyJoinedQuickClash) {
-      socket.explicitlyJoinedQuickClash = true
-      console.log(`User ${userId} explicitly joined QuickClash socket channel`)
+  // Add this socket to user's set if not already there
+  if (!userSocketMap.get(userId).has(socketId)) {
+    userSocketMap.get(userId).add(socketId)
+    socketUserMap.set(socketId, userId)
+
+    // Join the user's Quick Clash room
+    socket.join(quickClashRoom)
+
+    // Log connection (only for new connections)
+    if (userSocketMap.get(userId).size === 1) {
+      console.log(
+        `User ${userId} joined QuickClash socket room (first connection)`,
+      )
+    } else {
+      console.log(
+        `User ${userId} added new connection to QuickClash room (total: ${
+          userSocketMap.get(userId).size
+        })`,
+      )
     }
+  }
+
+  // Handle socket disconnection
+  socket.on('disconnect', () => {
+    cleanupSocketConnection(socketId, userId)
+    console.log(
+      `User ${userId} socket ${socketId} disconnected from QuickClash`,
+    )
   })
 
-  // NEW: Listen for explicit request to join the teams room
+  // Listen for explicit join requests
+  socket.on('quickClash:join', () => {
+    console.log(`User ${userId} explicitly joined QuickClash socket channel`)
+  })
+
+  // Listen for explicit request to join the teams room
   socket.on('quickClash:joinTeamsRoom', () => {
-    if (!joinedTeamsRoom.has(joinKey)) {
+    if (!teamRoomMembers.get(userId)) {
+      // Only join if not already in room
       socket.join('quickClash:teams')
-      joinedTeamsRoom.add(joinKey)
+      teamRoomMembers.set(userId, true)
       console.log(`User ${userId} joined QuickClash teams room`)
+    } else {
+      console.log(`User ${userId} already in QuickClash teams room`)
     }
   })
 
@@ -89,27 +114,65 @@ const setupQuickClashSocketHandlers = (io, socket, user) => {
     )
 
     // Automatically join the teams room when joining team matchmaking
-    if (!joinedTeamsRoom.has(joinKey)) {
+    if (!teamRoomMembers.get(userId)) {
       socket.join('quickClash:teams')
-      joinedTeamsRoom.add(joinKey)
+      teamRoomMembers.set(userId, true)
       console.log(
         `User ${userId} joined QuickClash teams room (via team matchmaking)`,
       )
     }
-
-    // The actual joining is handled via API, this is just for tracking
   })
 
   // Handle viewing team battles - also join the teams room
   socket.on('quickClash:viewTeamBattles', () => {
-    if (!joinedTeamsRoom.has(joinKey)) {
+    if (!teamRoomMembers.get(userId)) {
       socket.join('quickClash:teams')
-      joinedTeamsRoom.add(joinKey)
+      teamRoomMembers.set(userId, true)
       console.log(
         `User ${userId} joined QuickClash teams room (via team battles view)`,
       )
     }
   })
+}
+
+/**
+ * Clean up socket connection when a socket disconnects
+ * @param {string} socketId - The ID of the disconnected socket
+ * @param {string} userId - The ID of the user associated with the socket
+ */
+const cleanupSocketConnection = (socketId, userId) => {
+  // Remove this socket ID from the user's set
+  if (userSocketMap.has(userId)) {
+    userSocketMap.get(userId).delete(socketId)
+
+    // If this was the user's last socket, clean up user entry
+    if (userSocketMap.get(userId).size === 0) {
+      userSocketMap.delete(userId)
+      teamRoomMembers.delete(userId)
+      console.log(
+        `User ${userId} completely disconnected from QuickClash (no active sockets)`,
+      )
+    }
+  }
+
+  // Remove from socket->user map
+  socketUserMap.delete(socketId)
+}
+
+/**
+ * Utility to get all connected users for debugging
+ * @returns {Array} Array of objects containing userId and their socket count
+ */
+const getConnectedUserStats = () => {
+  const stats = []
+  for (const [userId, socketSet] of userSocketMap.entries()) {
+    stats.push({
+      userId,
+      socketCount: socketSet.size,
+      inTeamsRoom: teamRoomMembers.has(userId),
+    })
+  }
+  return stats
 }
 
 /**
@@ -246,7 +309,7 @@ const setupQuickClashGlobalEvents = io => {
         )
         return
       }
-      if (teamBattleParticipantIds.length > 0) {
+      if (teamBattleParticipantIds && teamBattleParticipantIds.length > 0) {
         setTimeout(() => {
           // make a new socket event for team battle refetch
           for (let id of teamBattleParticipantIds) {
@@ -341,7 +404,7 @@ const setupQuickClashGlobalEvents = io => {
         )
         return
       }
-      if (teamBattleParticipantIds.length > 0) {
+      if (teamBattleParticipantIds && teamBattleParticipantIds.length > 0) {
         setTimeout(() => {
           // make a new socket event for team battle refetch
           for (let id of teamBattleParticipantIds) {
@@ -472,59 +535,8 @@ const setupQuickClashGlobalEvents = io => {
   )
 
   // ==========================================
-  // NEW TEAM MATCHMAKING SOCKET EVENT HANDLERS
+  // TEAM MATCHMAKING SOCKET EVENT HANDLERS
   // ==========================================
-
-  // Listen for user matchmaking progress updates
-  globalEmitter.on(
-    'quickClash:userMatchmakingProgress',
-    ({ userId, step, progress }) => {
-      if (!userId) {
-        console.error(
-          'Invalid userId in quickClash:userMatchmakingProgress event',
-        )
-        return
-      }
-
-      console.log(
-        `SOCKET: Sending progress update to user ${userId}: ${step} (${progress}%)`,
-      )
-
-      // Emit to the user's room with a small delay to avoid race conditions
-      setTimeout(() => {
-        const userRoom = `quickClash:${userId}`
-        io.to(userRoom).emit('quickClash:userMatchmakingProgress', {
-          step,
-          progress,
-        })
-      }, 50)
-    },
-  )
-
-  // Listen for team matchmaking progress updates
-  globalEmitter.on(
-    'quickClash:teamMatchmakingProgress',
-    ({ teamId, step, progress }) => {
-      if (!teamId) {
-        console.error(
-          'Invalid teamId in quickClash:teamMatchmakingProgress event',
-        )
-        return
-      }
-
-      console.log(
-        `SOCKET: Sending team progress update for team ${teamId}: ${step} (${progress}%)`,
-      )
-
-      // We need to emit to all team members' rooms
-      // This is handled by the client listening to the teamMatchmakingProgress event
-      io.to('quickClash:teams').emit('quickClash:teamMatchmakingProgress', {
-        teamId,
-        step,
-        progress,
-      })
-    },
-  )
 
   // Listen for user joined global matchmaking
   globalEmitter.on(
@@ -590,19 +602,49 @@ const setupQuickClashGlobalEvents = io => {
     },
   )
 
-  // Listen for team left matchmaking
-  globalEmitter.on('quickClash:teamLeftMatchmaking', ({ teamId }) => {
-    if (!teamId) {
+  globalEmitter.on('quickClash:teamLeftMatchmaking', data => {
+    if (!data.teamId) {
       console.error('Invalid teamId in quickClash:teamLeftMatchmaking event')
       return
     }
 
-    console.log(`SOCKET: Team ${teamId} left matchmaking`)
+    console.log(
+      `SOCKET: Team ${data.teamId} left matchmaking` +
+        (data.reason ? ` (Reason: ${data.reason})` : '') +
+        (data.initiator ? ` (Initiated by: ${data.initiator})` : ''),
+    )
 
-    // Emit to all clients in the teams room
-    io.to('quickClash:teams').emit('quickClash:teamLeftMatchmaking', {
-      teamId,
-    })
+    // If there's a specific userId target, send directly to that user ONLY
+    if (data.userId) {
+      const userSocket = getUserSocket(data.userId)
+      if (userSocket) {
+        userSocket.emit('quickClash:teamLeftMatchmaking', data)
+      }
+      return
+    }
+
+    // Do NOT broadcast to all teams - this would be a serious mistake!
+    // Instead, we need to find all sockets for members of this specific team
+    // and notify only them
+    notifyTeamMembers(data.teamId, 'quickClash:teamLeftMatchmaking', data)
+  })
+
+  // Fixed handler for team returned to matchmaking - only notify team members
+  globalEmitter.on('quickClash:teamReturnedToMatchmaking', data => {
+    if (!data.teamId) {
+      console.error(
+        'Invalid teamId in quickClash:teamReturnedToMatchmaking event',
+      )
+      return
+    }
+
+    console.log(
+      `SOCKET: Team ${data.teamId} returned to matchmaking` +
+        (data.reason ? ` (Reason: ${data.reason})` : ''),
+    )
+
+    // Only notify members of this specific team
+    notifyTeamMembers(data.teamId, 'quickClash:teamReturnedToMatchmaking', data)
   })
 
   // Listen for team battle created
@@ -740,9 +782,54 @@ const setupQuickClashGlobalEvents = io => {
       })
     },
   )
+
+  /**
+   * Helper function to notify all members of a specific team
+   * @param {string} teamId - Team ID
+   * @param {string} event - Event name
+   * @param {Object} data - Event data
+   */
+  async function notifyTeamMembers(teamId, event, data) {
+    try {
+      // Fetch team members from the database
+      const team = await QuickClashTeam.findById(teamId)
+        .select('members')
+        .lean()
+
+      if (!team || !team.members || !Array.isArray(team.members)) {
+        console.error(
+          `Cannot notify team members: Team ${teamId} not found or has no members`,
+        )
+        return
+      }
+
+      // Send event to each team member
+      team.members.forEach(member => {
+        const userId = member.user.toString()
+        const userSocket = getUserSocket(userId)
+        if (userSocket) {
+          userSocket.emit(event, data)
+        }
+      })
+    } catch (error) {
+      console.error(`Error notifying team members for team ${teamId}:`, error)
+    }
+  }
+
+  // Helper function to get a user's socket (implement this if not already available)
+  function getUserSocket(userId) {
+    // This implementation depends on how you're tracking user sockets
+    // Example implementation:
+    const userSocketId = userSocketMap.get(userId)?.values().next().value
+    if (userSocketId) {
+      return io.sockets.sockets.get(userSocketId)
+    }
+    return null
+  }
 }
 
 module.exports = {
   setupQuickClashSocketHandlers,
   setupQuickClashGlobalEvents,
+  getConnectedUserStats,
 }

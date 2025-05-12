@@ -338,14 +338,6 @@ const leaveTeam = async ({ teamId, userId }) => {
       if (team.members.length === 0 || isLeader) {
         await QuickClashTeam.findByIdAndDelete(teamId).session(session)
 
-        // Emit event
-        setTimeout(() => {
-          globalEmitter.emit('quickClash:teamDissolved', {
-            team: teamId,
-            user: userId,
-          })
-        }, 0)
-
         return null
       }
 

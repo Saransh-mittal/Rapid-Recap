@@ -38,7 +38,7 @@ const GlobalMatchmakingFloatingButton = ({ position = 'bottom-right' }) => {
   const { t } = useTranslation('QuickClash')
 
   // Use matchmaking hook
-  const { inMatchmaking, progress, step } = useQuickClashGlobalMatchmaking()
+  const { inMatchmaking, step } = useQuickClashGlobalMatchmaking()
 
   // Modal state
   const {
@@ -55,7 +55,7 @@ const GlobalMatchmakingFloatingButton = ({ position = 'bottom-right' }) => {
 
   // Open the appropriate modal based on matchmaking state
   const handleButtonClick = () => {
-    if (inMatchmaking && progress > 0 && step) {
+    if (inMatchmaking && step) {
       openPrepModal() // Show progress modal if matchmaking is in progress
     } else {
       openModal() // Show standard matchmaking modal
