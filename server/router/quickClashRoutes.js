@@ -35,6 +35,7 @@ const {
   leaveGlobalMatchmakingQueue,
   getGlobalMatchmakingStatusController,
   processGlobalMatchmakingController,
+  getGlobalMatchmakingStatusDetailed,
 } = require('../controllers/quickClashGlobalMatchmakingController')
 const teamRoutes = require('./quickClashTeamRoutes')
 
@@ -85,6 +86,10 @@ router.post('/global-matchmaking/join', joinGlobalMatchmakingQueue)
 router.post('/global-matchmaking/leave', leaveGlobalMatchmakingQueue)
 router.get('/global-matchmaking/status', getGlobalMatchmakingStatusController)
 router.post('/global-matchmaking/process', processGlobalMatchmakingController)
+router.get(
+  '/global-matchmaking-status-detailed',
+  getGlobalMatchmakingStatusDetailed,
+)
 
 // Leaderboard routes
 router.get('/leaderboard', getQuickClashLeaderboard)

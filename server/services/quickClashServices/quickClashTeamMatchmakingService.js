@@ -150,7 +150,17 @@ const joinTeamMatchmaking = async ({
         teamName: team.name,
         avgTrophies: avgTrophies,
         memberCount: team.members.length,
-        preferredCategories: [], // Can be added if implemented
+        // ADD THESE NEW FIELDS:
+        isAutoFormed: team.formationInfo?.isAutoFormed || false,
+        teamMembers: team.members.map(member => ({
+          userId: member.user._id
+            ? member.user._id.toString()
+            : member.user.toString(),
+          name: member.user.name || member.user.inGameName,
+          sourceTeam: member.sourceTeam,
+          originalTeam: member.originalTeam, // If available
+        })),
+        formationInfo: team.formationInfo,
         timestamp: new Date(),
       })
       await performMatchmaking(session)
@@ -413,10 +423,116 @@ const leaveTeamMatchmaking = async ({ teamId, userId = null }) => {
         }`,
       )
 
-      // Get the team first to check if it's auto-formed
+      // Get the team first to check if it exists and its properties
       const team = await QuickClashTeam.findById(teamId).session(session)
 
-      if (team && team.formationInfo && team.formationInfo.isAutoFormed) {
+      // If team doesn't exist, we need to clean up any orphaned matchmaking entries
+      if (!team) {
+        console.log(
+          `Team ${teamId} doesn't exist, cleaning up orphaned matchmaking entries`,
+        )
+
+        // Remove any orphaned team matchmaking entry
+        const teamMatchEntry = await QuickClashTeamMatchmaking.findOneAndDelete(
+          {
+            team: teamId,
+          },
+        ).session(session)
+
+        if (teamMatchEntry) {
+          console.log(
+            `Removed orphaned team matchmaking entry for team ${teamId}`,
+          )
+          cleanupTeamState(teamId)
+        }
+
+        // If userId is provided, also check and clean up that user's entries
+        if (userId) {
+          console.log(`Cleaning up matchmaking entries for user ${userId}`)
+
+          // Check if user is in global matchmaking
+          const globalEntry =
+            await QuickClashGlobalMatchmaking.findOneAndDelete({
+              user: userId,
+            }).session(session)
+
+          if (globalEntry) {
+            console.log(`Removed global matchmaking entry for user ${userId}`)
+            cleanupPlayerState(userId)
+
+            // Emit event for user leaving global matchmaking
+            globalEmitter.emit('quickClash:userLeftMatchmaking', {
+              userId,
+            })
+          }
+
+          // Check if user is part of any other team matchmaking
+          const userTeams = await QuickClashTeam.find({
+            'members.user': userId,
+          }).session(session)
+
+          if (userTeams.length > 0) {
+            const teamIds = userTeams.map(team => team._id)
+
+            // Check if any of these teams are in matchmaking
+            const teamEntries = await QuickClashTeamMatchmaking.find({
+              team: { $in: teamIds },
+            }).session(session)
+
+            for (const entry of teamEntries) {
+              console.log(
+                `Found user ${userId} in team matchmaking for team ${entry.team}`,
+              )
+
+              // If this is an auto-formed team, use the cleanup function
+              const teamInEntry = userTeams.find(
+                t => t._id.toString() === entry.team.toString(),
+              )
+              if (
+                teamInEntry &&
+                teamInEntry.formationInfo &&
+                teamInEntry.formationInfo.isAutoFormed
+              ) {
+                console.log(
+                  `Team ${entry.team} is auto-formed, using cleanup function`,
+                )
+                await cleanupAutoFormedTeam({
+                  teamId: entry.team,
+                  session,
+                  initiatorUserId: userId,
+                })
+              } else {
+                // For regular teams, remove the matchmaking entry
+                await QuickClashTeamMatchmaking.findOneAndDelete({
+                  team: entry.team,
+                }).session(session)
+
+                cleanupTeamState(entry.team)
+
+                // Notify other team members
+                if (teamInEntry) {
+                  for (const member of teamInEntry.members) {
+                    if (member.user.toString() !== userId.toString()) {
+                      globalEmitter.emit('quickClash:teamLeftMatchmaking', {
+                        userId: member.user,
+                        teamId: entry.team.toString(),
+                        teamName: teamInEntry.name,
+                        reason: 'memberLeft',
+                        memberName: 'A team member',
+                      })
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+
+        return true
+      }
+
+      // Team exists - continue with existing logic
+      if (team.formationInfo && team.formationInfo.isAutoFormed) {
         console.log(`Team ${teamId} is auto-formed, using cleanup function`)
 
         // Use our dedicated cleanup function for auto-formed teams

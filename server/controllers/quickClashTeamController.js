@@ -27,6 +27,8 @@ const {
   getTeamBattleDetails,
 } = require('../services/quickClashServices/quickClashTeamBattleService')
 const QuickClashTeam = require('../model/quickClashSchemas/quickClashTeamSchema')
+const QuickClashTeamMatchmaking = require('../model/quickClashSchemas/quickClashTeamMatchmakingSchema')
+const QuickClashGlobalMatchmaking = require('../model/quickClashSchemas/quickClashGlobalMatchmakingSchema')
 
 /**
  * @desc    Create a new team
@@ -622,6 +624,191 @@ const getTeamMatchmakingInfo = asyncHandler(async (req, res) => {
   }
 })
 
+/**
+ * @desc    Get detailed team matchmaking status
+ * @route   GET /api/quickClash/team/:teamId/matchmaking-status-detailed
+ * @access  Private
+ */
+const getTeamMatchmakingStatusDetailed = asyncHandler(async (req, res) => {
+  const { teamId } = req.params
+  const userId = req.user._id
+
+  try {
+    // Verify user is part of the team
+    const team = await QuickClashTeam.findById(teamId)
+      .populate('members.user', '_id name inGameName')
+      .populate('formationInfo.sourceTeams', 'name members')
+
+    if (!team) {
+      return res.status(404).json({
+        success: false,
+        message: 'Team not found',
+      })
+    }
+
+    const isMember = team.members.some(
+      member => member.user._id.toString() === userId.toString(),
+    )
+
+    if (!isMember) {
+      return res.status(403).json({
+        success: false,
+        message: 'You are not a member of this team',
+      })
+    }
+
+    // Get matchmaking entry
+    const matchmakingEntry = await QuickClashTeamMatchmaking.findOne({
+      team: teamId,
+    })
+
+    if (!matchmakingEntry) {
+      return res.json({
+        success: true,
+        inMatchmaking: false,
+        status: null,
+      })
+    }
+
+    // Check if this team has been processed (used in auto-formation)
+    if (matchmakingEntry.status === 'processed') {
+      // This team has been incorporated into an auto-formed team
+      // Find the auto-formed team that contains members from this source team
+      const autoFormedTeam = await QuickClashTeam.findOne({
+        'formationInfo.isAutoFormed': true,
+        'formationInfo.sourceTeams': teamId,
+        'members.user': { $in: team.members.map(m => m.user._id || m.user) },
+      })
+        .populate('members.user', '_id name inGameName')
+        .populate('formationInfo.sourceTeams', 'name members')
+
+      if (autoFormedTeam) {
+        // Get the auto-formed team's matchmaking status
+        const autoTeamMatchmaking = await QuickClashTeamMatchmaking.findOne({
+          team: autoFormedTeam._id,
+        })
+
+        let statusData = {
+          status: 'team_formation_in_progress',
+          isAutoFormed: true,
+          originalTeam: {
+            _id: team._id,
+            name: team.name,
+          },
+          autoFormedTeam: {
+            _id: autoFormedTeam._id,
+            name: autoFormedTeam.name || 'Auto-formed Team',
+            members: autoFormedTeam.members.length,
+            maxMembers: 4,
+          },
+          message:
+            'Your team has been merged with other players to form a 4v4 battle team',
+          timeInQueue: Math.floor(
+            (Date.now() - matchmakingEntry.createdAt) / 1000,
+          ),
+        }
+
+        // Check the status of the auto-formed team
+        if (autoTeamMatchmaking) {
+          if (autoTeamMatchmaking.status === 'available') {
+            if (autoFormedTeam.members.length === 4) {
+              statusData.status = 'team_completed'
+              statusData.message =
+                'Auto-team formation complete! Now searching for opponents...'
+
+              // Count available opponents
+              const availableTeams =
+                await QuickClashTeamMatchmaking.countDocuments({
+                  status: 'available',
+                  memberCount: 4,
+                  _id: { $ne: autoTeamMatchmaking._id },
+                  avgTrophies: {
+                    $gte: autoTeamMatchmaking.avgTrophies - 200,
+                    $lte: autoTeamMatchmaking.avgTrophies + 200,
+                  },
+                })
+
+              statusData.status = 'matching_teams'
+              statusData.availableOpponents = availableTeams
+            } else {
+              statusData.status = 'forming_team'
+              statusData.message =
+                'Adding more players to complete your team...'
+            }
+          } else if (autoTeamMatchmaking.status === 'matching') {
+            statusData.status = 'preparing_battle'
+            statusData.message = 'Match found! Preparing your battle...'
+          }
+        }
+
+        return res.json({
+          success: true,
+          inMatchmaking: true,
+          ...statusData,
+        })
+      }
+    }
+
+    // Normal team matchmaking flow (not processed)
+    if (matchmakingEntry.status !== 'available') {
+      return res.json({
+        success: true,
+        inMatchmaking: false,
+        status: null,
+      })
+    }
+
+    // Get detailed status information for regular teams
+    let statusData = {
+      status: 'searching_teams',
+      teamMembersCount: team.members.length,
+      maxMembers: 4,
+      avgTrophies: matchmakingEntry.avgTrophies,
+      timeInQueue: Math.floor((Date.now() - matchmakingEntry.createdAt) / 1000),
+    }
+
+    // Check if team is partial (less than 4 members)
+    if (team.members.length < 4) {
+      // Count solo players available for team formation
+      const soloPlayersInQueue =
+        await QuickClashGlobalMatchmaking.countDocuments({
+          status: 'available',
+          team: null,
+        })
+
+      statusData.status = 'searching_players'
+      statusData.soloPlayersInQueue = soloPlayersInQueue
+      statusData.teamMembersCount = team.members.length
+    } else {
+      // Full team - looking for opponents
+      const availableTeams = await QuickClashTeamMatchmaking.countDocuments({
+        status: 'available',
+        memberCount: 4,
+        _id: { $ne: matchmakingEntry._id },
+        avgTrophies: {
+          $gte: matchmakingEntry.avgTrophies - 200,
+          $lte: matchmakingEntry.avgTrophies + 200,
+        },
+      })
+
+      statusData.status = 'matching_teams'
+      statusData.availableOpponents = availableTeams
+    }
+
+    res.json({
+      success: true,
+      inMatchmaking: true,
+      ...statusData,
+    })
+  } catch (error) {
+    console.error('Error getting detailed team matchmaking status:', error)
+    res.status(500).json({
+      success: false,
+      message: 'Failed to get matchmaking status',
+    })
+  }
+})
+
 module.exports = {
   createNewTeam,
   getTeam,
@@ -641,4 +828,5 @@ module.exports = {
   getMyTeamBattles,
   getTeamBattle,
   getTeamMatchmakingInfo,
+  getTeamMatchmakingStatusDetailed,
 }

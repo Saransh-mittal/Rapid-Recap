@@ -579,33 +579,24 @@ const setupQuickClashGlobalEvents = io => {
   })
 
   // Listen for team joined matchmaking
-  globalEmitter.on(
-    'quickClash:teamJoinedMatchmaking',
-    ({ teamId, avgTrophies, teamName }) => {
-      if (!teamId) {
-        console.error(
-          'Invalid teamId in quickClash:teamJoinedMatchmaking event',
-        )
-        return
-      }
+  globalEmitter.on('quickClash:teamJoinedMatchmaking', data => {
+    if (!data.teamId) {
+      console.error('Invalid teamId in quickClash:teamJoinedMatchmaking event')
+      return
+    }
 
-      console.log(
-        `SOCKET: Team ${teamId} (${teamName}) joined matchmaking with ${avgTrophies} avg trophies`,
-      )
+    console.log(
+      `SOCKET: Team ${data?.teamId} (${data?.teamName}) joined matchmaking with ${data?.avgTrophies} avg trophies`,
+    )
 
-      // Emit to all clients in the teams room
-      // io.to('quickClash:teams').emit('quickClash:teamJoinedMatchmaking', {
-      //   teamId,
-      //   avgTrophies,
-      //   teamName,
-      // })
-      notifyTeamMembers(teamId, 'quickClash:teamJoinedMatchmaking', {
-        teamId,
-        avgTrophies,
-        teamName,
-      })
-    },
-  )
+    // Emit to all clients in the teams room
+    // io.to('quickClash:teams').emit('quickClash:teamJoinedMatchmaking', {
+    //   teamId,
+    //   avgTrophies,
+    //   teamName,
+    // })
+    notifyTeamMembers(data?.teamId, 'quickClash:teamJoinedMatchmaking', data)
+  })
 
   globalEmitter.on('quickClash:teamLeftMatchmaking', data => {
     if (!data.teamId) {

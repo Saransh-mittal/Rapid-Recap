@@ -25,8 +25,7 @@ import {
 import axios from 'axios'
 
 /**
- * Custom hook for managing the global matchmaking state for Quick Clash
- * Handles both solo players and team-based matchmaking
+ * Custom hook for managing the global matchmaking state with HTTP polling
  */
 const useQuickClashGlobalMatchmaking = () => {
   const dispatch = useDispatch()
@@ -35,8 +34,9 @@ const useQuickClashGlobalMatchmaking = () => {
   const { t } = useTranslation('QuickClash')
   const { getSocket } = useSocket()
   const joinedTeamsRoom = useRef(false)
+  const matchmakingStartTimeRef = useRef(null)
 
-  // Local timer state instead of Redux to prevent unnecessary re-renders
+  // Local timer state for better performance
   const [localMatchmakingTime, setLocalMatchmakingTime] = useState(0)
 
   // Get global matchmaking state from Redux
@@ -44,12 +44,10 @@ const useQuickClashGlobalMatchmaking = () => {
     state => state.quickClashGlobalMatchmaking,
   )
 
-  // Timer reference
+  // Timer references
   const timerRef = useRef(null)
-  // Track last update timestamp to ensure consistent timing
-  const lastUpdateRef = useRef(Date.now())
 
-  // Setup socket listeners
+  // Setup socket listeners (only for battle ready and team events)
   useEffect(() => {
     const socket = getSocket()
     if (!socket) return
@@ -57,7 +55,7 @@ const useQuickClashGlobalMatchmaking = () => {
     // Inform we're connected
     dispatch(setSocketConnected(true))
 
-    // Join the teams socket room if needed (especially for team matchmaking)
+    // Join the teams socket room if needed
     if (
       globalMatchmakingState.matchmakingType === 'team' &&
       !joinedTeamsRoom.current
@@ -66,19 +64,14 @@ const useQuickClashGlobalMatchmaking = () => {
       joinedTeamsRoom.current = true
     }
 
-    // Battle ready notification
+    // Battle ready notification - the main important socket event we keep
     socket.on('quickClash:teamBattleReady', data => {
-      // For solo players, there won't be selectedTeamId but there will be battleId
       const isSoloPlayer = globalMatchmakingState.matchmakingType === 'solo'
-
-      // Determine if this event is meant for this user
       let isForUser = false
 
       if (isSoloPlayer && data.battleId) {
-        // Solo player should receive all battle ready events
         isForUser = true
       } else if (globalMatchmakingState.selectedTeamId) {
-        // Team player should receive only events for their team
         isForUser =
           data.teamId === globalMatchmakingState.selectedTeamId ||
           data.teamA === globalMatchmakingState.selectedTeamId ||
@@ -86,231 +79,283 @@ const useQuickClashGlobalMatchmaking = () => {
       }
 
       if (isForUser) {
-        // Update the state with the battle ready info
         dispatch(setBattleReady(data))
-      }
-    })
-
-    // Add new handler for team battle completed
-    socket.on('quickClash:teamBattleCompleted', data => {
-      // Clear matchmaking state if needed
-      if (globalMatchmakingState.inMatchmaking) {
-        dispatch(resetGlobalMatchmakingState())
       }
     })
 
     return () => {
       dispatch(setSocketConnected(false))
       socket.off('quickClash:teamBattleReady')
-      socket.off('quickClash:joinedGlobalMatchmaking')
-      socket.off('quickClash:leftGlobalMatchmaking')
-      socket.off('quickClash:teamBattleCompleted')
-
-      // Reset joined teams room flag
       joinedTeamsRoom.current = false
     }
   }, [
     dispatch,
     getSocket,
-    toast,
-    t,
-    navigate,
     globalMatchmakingState.selectedTeamId,
     globalMatchmakingState.matchmakingType,
-    globalMatchmakingState.inMatchmaking,
   ])
 
-  // Manage matchmaking timer with local state for better performance
+  // Manage matchmaking timer - fixed to not restart during polling
   useEffect(() => {
-    // Define condition for when the timer should be stopped
-    const shouldStopTimer =
-      !globalMatchmakingState.inMatchmaking ||
-      globalMatchmakingState.battleReady !== null ||
-      globalMatchmakingState.step === 'battleReady' ||
-      globalMatchmakingState.step === 'match_found'
-
-    if (globalMatchmakingState.inMatchmaking && !shouldStopTimer) {
-      // Clean up any existing intervals first
-      if (timerRef.current) {
-        clearInterval(timerRef.current)
-      }
-
-      // Reset time when starting matchmaking
-      if (localMatchmakingTime === 0) {
-        lastUpdateRef.current = Date.now()
-      }
-
-      // Start a new interval timer at exactly 1-second increments
-      timerRef.current = setInterval(() => {
-        const now = Date.now()
-        const elapsed = now - lastUpdateRef.current
-
-        // We only want to increment if at least 1 second has passed
-        if (elapsed >= 1000) {
-          // Calculate how many seconds have passed
-          const secondsToAdd = Math.floor(elapsed / 1000)
-          setLocalMatchmakingTime(prev => prev + secondsToAdd)
-
-          // Update the last time we incremented
-          lastUpdateRef.current = now - (elapsed % 1000)
+    if (
+      globalMatchmakingState.inMatchmaking &&
+      !globalMatchmakingState.battleReady
+    ) {
+      // Start timer only if it's not already running
+      if (!timerRef.current) {
+        // Set the start time if not already set
+        if (!matchmakingStartTimeRef.current) {
+          matchmakingStartTimeRef.current = Date.now()
+          setLocalMatchmakingTime(0)
         }
-      }, 1000)
+
+        timerRef.current = setInterval(() => {
+          const elapsed = Math.floor(
+            (Date.now() - matchmakingStartTimeRef.current) / 1000,
+          )
+          setLocalMatchmakingTime(elapsed)
+        }, 1000)
+      }
     } else {
-      // Stop timer but don't reset the time if match is found
+      // Stop timer and reset start time when not in matchmaking
       if (timerRef.current) {
         clearInterval(timerRef.current)
         timerRef.current = null
       }
 
-      // Only reset the time if we're exiting matchmaking completely
       if (!globalMatchmakingState.inMatchmaking) {
+        matchmakingStartTimeRef.current = null
         setLocalMatchmakingTime(0)
       }
     }
 
-    // Cleanup
     return () => {
       if (timerRef.current) {
         clearInterval(timerRef.current)
         timerRef.current = null
       }
     }
+  }, [globalMatchmakingState.inMatchmaking, globalMatchmakingState.battleReady])
+
+  // Separate function for polling that doesn't update Redux state unnecessarily
+  const pollMatchmakingStatus = useCallback(async () => {
+    try {
+      // Only check detailed status without updating Redux state
+      let statusData = null
+
+      if (
+        globalMatchmakingState.matchmakingType === 'team' &&
+        globalMatchmakingState.selectedTeamId
+      ) {
+        // Get detailed status for team matchmaking
+        statusData = await getDetailedMatchmakingStatus(
+          globalMatchmakingState.selectedTeamId,
+          'team',
+        )
+
+        // Handle auto-team formation status
+        if (
+          statusData &&
+          statusData.isAutoFormed &&
+          statusData.status === 'team_formation_in_progress'
+        ) {
+          // Update Redux state with auto-team information
+          dispatch(setJoinType('sourceTeam'))
+          dispatch(setOriginalTeam(statusData.originalTeam))
+          dispatch(
+            setTeamName(statusData.autoFormedTeam?.name || 'Auto-formed Team'),
+          )
+          dispatch(setSelectedTeamId(statusData.autoFormedTeam?._id))
+
+          dispatch(
+            updateMatchmakingState({
+              matchmakingType: 'team',
+              joinType: 'sourceTeam',
+              originalTeam: statusData.originalTeam,
+              teamName: statusData.autoFormedTeam?.name || 'Auto-formed Team',
+            }),
+          )
+        }
+      } else if (globalMatchmakingState.matchmakingType === 'solo') {
+        // Get detailed status for solo matchmaking
+        statusData = await getDetailedMatchmakingStatus(null, 'solo')
+      }
+
+      return statusData
+    } catch (error) {
+      console.error('Error polling matchmaking status:', error)
+      return null
+    }
   }, [
-    globalMatchmakingState.inMatchmaking,
-    globalMatchmakingState.step,
-    globalMatchmakingState.battleReady,
-    localMatchmakingTime,
+    globalMatchmakingState.matchmakingType,
+    globalMatchmakingState.selectedTeamId,
+    dispatch,
   ])
 
-  // Check matchmaking status on initial load
-  const checkMatchmakingStatus = useCallback(async () => {
-    try {
-      // First check global matchmaking
-      const globalStatus = await dispatch(getGlobalMatchmakingStatus()).unwrap()
-      let inAnyMatchmaking = false
+  // Check matchmaking status - only for initial checks and major state changes
+  const checkMatchmakingStatus = useCallback(
+    async passedTeamId => {
+      try {
+        // Check global matchmaking first
+        const globalStatus = await dispatch(
+          getGlobalMatchmakingStatus(),
+        ).unwrap()
+        let inAnyMatchmaking = false
+        let statusData = null
 
-      // If user is in matchmaking through a team, get the team info
-      if (
-        globalStatus.inMatchmaking &&
-        globalStatus.matchmaking &&
-        globalStatus.matchmaking.team
-      ) {
-        const teamId = globalStatus.matchmaking.team
-        inAnyMatchmaking = true
+        // If user is in matchmaking through a team, get the team info
+        if (
+          globalStatus.inMatchmaking &&
+          globalStatus.matchmaking &&
+          globalStatus.matchmaking.team
+        ) {
+          const teamId = passedTeamId || globalStatus.matchmaking.team
+          inAnyMatchmaking = true
 
-        try {
-          // Use the new endpoint to get matchmaking-specific team info
-          const teamResponse = await axios.get(
-            `/api/quickClash/team/${teamId}/matchmaking-info`,
-          )
-
-          if (teamResponse.data && teamResponse.data.success) {
-            const teamData = teamResponse.data.team
-            const joinType = teamResponse.data.joinType || 'regular'
-            const originalTeam = teamResponse.data.originalTeam
-
-            // Update Redux state
-            dispatch(setSelectedTeamId(teamId))
-            dispatch(setTeamName(teamData.name || 'Team'))
-            dispatch(setJoinType(joinType))
-
-            if (originalTeam) {
-              dispatch(setOriginalTeam(originalTeam))
-            }
-
-            // Determine matchmaking type based on join type
-            let effectiveMatchmakingType = 'team'
-            if (joinType === 'solo') {
-              effectiveMatchmakingType = 'solo'
-            }
-
-            // Update matchmaking state
-            dispatch(
-              updateMatchmakingState({
-                inMatchmaking: true,
-                matchmakingType: effectiveMatchmakingType,
-                teamName:
-                  joinType === 'sourceTeam' && originalTeam
-                    ? originalTeam.name
-                    : teamData.name,
-                joinType: joinType,
-                originalTeam: originalTeam,
-              }),
+          try {
+            // Get detailed team matchmaking info
+            const teamResponse = await axios.get(
+              `/api/quickClash/team/${teamId}/matchmaking-info`,
             )
-          }
-        } catch (teamError) {
-          console.error('Error fetching matchmaking team info:', teamError)
-        }
-      } else if (globalStatus.inMatchmaking) {
-        // If user is in matchmaking but not through a team, they joined individually
-        inAnyMatchmaking = true
-        dispatch(
-          updateMatchmakingState({
-            inMatchmaking: true,
-            matchmakingType: 'solo',
-            joinType: 'solo',
-          }),
-        )
-      }
 
-      // If not in global matchmaking, check if user is in any team that's in matchmaking
-      if (!inAnyMatchmaking) {
-        try {
-          // Get the user's teams
-          const teamsResponse = await axios.get('/api/quickClash/teams')
+            if (teamResponse.data && teamResponse.data.success) {
+              const teamData = teamResponse.data.team
+              const joinType = teamResponse.data.joinType || 'regular'
+              const originalTeam = teamResponse.data.originalTeam
 
-          if (
-            teamsResponse.data &&
-            teamsResponse.data.teams &&
-            teamsResponse.data.teams.length > 0
-          ) {
-            const userTeams = teamsResponse.data.teams
+              dispatch(setSelectedTeamId(teamId))
+              dispatch(setTeamName(teamData.name || 'Team'))
+              dispatch(setJoinType(joinType))
 
-            // For each team, check if it's in matchmaking
-            for (const team of userTeams) {
-              const teamMatchmakingResponse = await axios.get(
-                `/api/quickClash/team/${team._id}/matchmaking/status`,
+              if (originalTeam) {
+                dispatch(setOriginalTeam(originalTeam))
+              }
+
+              let effectiveMatchmakingType = 'team'
+              if (joinType === 'solo') {
+                effectiveMatchmakingType = 'solo'
+              }
+
+              dispatch(
+                updateMatchmakingState({
+                  inMatchmaking: true,
+                  matchmakingType: effectiveMatchmakingType,
+                  teamName:
+                    joinType === 'sourceTeam' && originalTeam
+                      ? originalTeam.name
+                      : teamData.name,
+                  joinType: joinType,
+                  originalTeam: originalTeam,
+                }),
               )
 
-              if (
-                teamMatchmakingResponse.data &&
-                teamMatchmakingResponse.data.inMatchmaking
-              ) {
-                // Found a team in matchmaking
-                inAnyMatchmaking = true
+              // Get detailed status for team matchmaking
+              statusData = await getDetailedMatchmakingStatus(teamId, 'team')
+            }
+          } catch (teamError) {
+            console.error('Error fetching matchmaking team info:', teamError)
+          }
+        } else if (globalStatus.inMatchmaking) {
+          inAnyMatchmaking = true
+          dispatch(
+            updateMatchmakingState({
+              inMatchmaking: true,
+              matchmakingType: 'solo',
+              joinType: 'solo',
+            }),
+          )
 
-                // Update Redux state
-                dispatch(setSelectedTeamId(team._id))
-                dispatch(setTeamName(team.name || 'Team'))
-                dispatch(setJoinType('regular'))
+          // Get detailed status for solo matchmaking
+          statusData = await getDetailedMatchmakingStatus(null, 'solo')
+        }
 
-                // Update matchmaking state
-                dispatch(
-                  updateMatchmakingState({
-                    inMatchmaking: true,
-                    matchmakingType: 'team',
-                    teamName: team.name || 'Team',
-                    joinType: 'regular',
-                    step: 'searching', // Partial teams are still in searching step
-                  }),
+        // If not in global matchmaking, check team matchmaking
+        if (!inAnyMatchmaking) {
+          try {
+            const teamsResponse = await axios.get('/api/quickClash/teams')
+
+            if (
+              teamsResponse.data &&
+              teamsResponse.data.teams &&
+              teamsResponse.data.teams.length > 0
+            ) {
+              const userTeams = teamsResponse.data.teams
+
+              for (const team of userTeams) {
+                const teamMatchmakingResponse = await axios.get(
+                  `/api/quickClash/team/${team._id}/matchmaking/status`,
                 )
 
-                break // Exit loop after finding first team in matchmaking
+                if (
+                  teamMatchmakingResponse.data &&
+                  teamMatchmakingResponse.data.inMatchmaking
+                ) {
+                  inAnyMatchmaking = true
+
+                  dispatch(setSelectedTeamId(team._id))
+                  dispatch(setTeamName(team.name || 'Team'))
+                  dispatch(setJoinType('regular'))
+
+                  dispatch(
+                    updateMatchmakingState({
+                      inMatchmaking: true,
+                      matchmakingType: 'team',
+                      teamName: team.name || 'Team',
+                      joinType: 'regular',
+                    }),
+                  )
+
+                  // Get detailed status
+                  statusData = await getDetailedMatchmakingStatus(
+                    team._id,
+                    'team',
+                  )
+                  break
+                }
               }
             }
+          } catch (teamsError) {
+            console.error('Error checking user teams matchmaking:', teamsError)
           }
-        } catch (teamsError) {
-          console.error('Error checking user teams matchmaking:', teamsError)
         }
+
+        // If not in any matchmaking, make sure Redux state reflects this
+        if (!inAnyMatchmaking && globalMatchmakingState.inMatchmaking) {
+          dispatch(resetGlobalMatchmakingState())
+        }
+
+        return statusData
+      } catch (error) {
+        console.error('Error checking matchmaking status:', error)
+        return null
       }
+    },
+    [dispatch, globalMatchmakingState.inMatchmaking],
+  )
+
+  // Get detailed matchmaking status from backend
+  const getDetailedMatchmakingStatus = async (teamId, type) => {
+    try {
+      const endpoint =
+        type === 'team' && teamId
+          ? `/api/quickClash/team/${teamId}/matchmaking-status-detailed`
+          : '/api/quickClash/global-matchmaking-status-detailed'
+
+      const response = await axios.get(endpoint)
+      return response.data || null
     } catch (error) {
-      console.error('Error checking matchmaking status:', error)
+      console.error('Error getting detailed matchmaking status:', error)
+      return null
     }
-  }, [dispatch])
+  }
 
   // Join global matchmaking as solo player
   const joinSoloMatchmaking = useCallback(async () => {
     try {
+      // Reset and start timer
+      matchmakingStartTimeRef.current = Date.now()
+      setLocalMatchmakingTime(0)
+
       const result = await dispatch(joinGlobalMatchmaking()).unwrap()
 
       toast({
@@ -323,7 +368,6 @@ const useQuickClashGlobalMatchmaking = () => {
 
       return result
     } catch (error) {
-      // Check for special error codes
       if (error.code === 'ALREADY_IN_MATCHMAKING') {
         toast({
           title: t('Already in Matchmaking'),
@@ -333,7 +377,7 @@ const useQuickClashGlobalMatchmaking = () => {
             error ||
             t('You are already in an active matchmaking queue'),
           status: 'warning',
-          duration: 5000, // Longer duration for more detailed messages
+          duration: 5000,
           isClosable: true,
         })
       } else {
@@ -345,7 +389,7 @@ const useQuickClashGlobalMatchmaking = () => {
             error ||
             t('Failed to join matchmaking'),
           status: 'error',
-          duration: 5000, // Longer duration for more detailed messages
+          duration: 5000,
           isClosable: true,
         })
       }
@@ -353,9 +397,9 @@ const useQuickClashGlobalMatchmaking = () => {
     }
   }, [dispatch, toast, t])
 
-  // Enhance the joinWithTeam function to handle specific errors
+  // Join with team
   const joinWithTeam = useCallback(
-    async teamId => {
+    async (teamId, teamName) => {
       if (!teamId) {
         toast({
           title: t('No Team Selected'),
@@ -368,19 +412,26 @@ const useQuickClashGlobalMatchmaking = () => {
       }
 
       try {
-        // First get the team details to store the name
-        let teamName = 'Team'
-        try {
-          const teamResponse = await axios.get(`/api/quickClash/team/${teamId}`)
-          if (teamResponse.data && teamResponse.data.team) {
-            teamName = teamResponse.data.team.name || 'Team'
-            dispatch(setTeamName(teamName))
+        // Reset and start timer
+        matchmakingStartTimeRef.current = Date.now()
+        setLocalMatchmakingTime(0)
+
+        if (!teamName) {
+          try {
+            const teamResponse = await axios.get(
+              `/api/quickClash/team/${teamId}`,
+            )
+            if (teamResponse.data && teamResponse.data.team) {
+              teamName = teamResponse.data.team.name || 'Team'
+              dispatch(setTeamName(teamName))
+            }
+          } catch (teamError) {
+            console.error('Error fetching team details:', teamError)
           }
-        } catch (teamError) {
-          console.error('Error fetching team details:', teamError)
+        } else {
+          dispatch(setTeamName(teamName))
         }
 
-        // Join the teams socket room
         const socket = getSocket()
         if (socket && !joinedTeamsRoom.current) {
           socket.emit('quickClash:joinTeamsRoom')
@@ -388,9 +439,6 @@ const useQuickClashGlobalMatchmaking = () => {
         }
 
         const result = await dispatch(joinTeamMatchmaking({ teamId })).unwrap()
-
-        // Include team name in the response for socket events
-        const responseWithTeam = { ...result, teamName }
 
         toast({
           title: t('Team Joined Matchmaking'),
@@ -400,10 +448,43 @@ const useQuickClashGlobalMatchmaking = () => {
           isClosable: true,
         })
 
-        return responseWithTeam
+        return { ...result, teamName }
       } catch (error) {
-        // Error handling code remains the same
-        // ...
+        if (error.code === 'ALREADY_IN_MATCHMAKING') {
+          let title = t('Already in Matchmaking')
+          if (error.memberName) {
+            title = t(`${error.memberName} Already in Matchmaking`)
+          }
+
+          toast({
+            title: title,
+            description:
+              error.reason ||
+              error.message ||
+              t('A team member is already in an active matchmaking queue'),
+            status: 'warning',
+            duration: 5000,
+            isClosable: true,
+          })
+        } else if (error.code === 'NOT_LEADER') {
+          toast({
+            title: t('Permission Denied'),
+            description: t('Only team leaders can start matchmaking'),
+            status: 'warning',
+            duration: 5000,
+            isClosable: true,
+          })
+        } else {
+          toast({
+            title: t('Error'),
+            description:
+              error.reason || error.message || t('Failed to join matchmaking'),
+            status: 'error',
+            duration: 5000,
+            isClosable: true,
+          })
+        }
+        throw error
       }
     },
     [dispatch, toast, t, getSocket],
@@ -412,7 +493,10 @@ const useQuickClashGlobalMatchmaking = () => {
   // Leave matchmaking
   const leaveMatchmaking = useCallback(async () => {
     try {
-      // Determine if we're in solo or team matchmaking
+      // Reset timer when leaving
+      matchmakingStartTimeRef.current = null
+      setLocalMatchmakingTime(0)
+
       if (
         globalMatchmakingState.matchmakingType === 'team' &&
         globalMatchmakingState.selectedTeamId
@@ -453,7 +537,6 @@ const useQuickClashGlobalMatchmaking = () => {
     teamId => {
       dispatch(setSelectedTeamId(teamId))
 
-      // Join teams room if selecting a team
       if (teamId) {
         const socket = getSocket()
         if (socket && !joinedTeamsRoom.current) {
@@ -465,58 +548,16 @@ const useQuickClashGlobalMatchmaking = () => {
     [dispatch, getSocket],
   )
 
+  // Get selected team ID
+  const getSelectedTeamId = () => {
+    return globalMatchmakingState.selectedTeamId
+  }
+
   // Helper to format time display (MM:SS)
   const formatMatchmakingTime = useCallback(seconds => {
     const mins = Math.floor(seconds / 60)
     const secs = seconds % 60
     return `${mins}:${secs.toString().padStart(2, '0')}`
-  }, [])
-
-  // Get status description based on current step
-  const getStatusDescription = useCallback(
-    step => {
-      switch (step) {
-        case 'searching':
-          return t('Searching for players...')
-        case 'forming_team':
-          return t('Forming your team of 4 players...')
-        case 'team_formed':
-          return t('Team formed! You have 4 teammates.')
-        case 'searching_opponents':
-          return t('Searching for an opponent team...')
-        case 'match_found':
-          return t('Opponent team found! Preparing battle...')
-        case 'preparing_battle':
-          return t('Setting up battle materials...')
-        case 'generating_challenges':
-          return t('Creating challenges for all players...')
-        case 'battleReady':
-          return t('Battle ready! Redirecting...')
-        default:
-          return t('Waiting in matchmaking queue...')
-      }
-    },
-    [t],
-  )
-
-  // Get color for current step
-  const getStepColor = useCallback(step => {
-    switch (step) {
-      case 'searching':
-        return 'blue'
-      case 'forming_team':
-        return 'teal'
-      case 'team_formed':
-        return 'green'
-      case 'match_found':
-        return 'purple'
-      case 'preparing_battle':
-        return 'orange'
-      case 'battleReady':
-        return 'green'
-      default:
-        return 'gray'
-    }
   }, [])
 
   // Navigate to battle when ready
@@ -526,9 +567,7 @@ const useQuickClashGlobalMatchmaking = () => {
         `/quickclash/teamBattle/${globalMatchmakingState.battleReady.battleId}`,
       )
       dispatch(clearBattleReady())
-    } else if (globalMatchmakingState.step === 'battleReady') {
-      // If we somehow missed the battleReady but have the battleReady step
-      // redirect to the matchmaking screen
+    } else {
       navigate('/quickclash')
       toast({
         title: t('Battle Ready'),
@@ -546,8 +585,7 @@ const useQuickClashGlobalMatchmaking = () => {
     inMatchmaking: globalMatchmakingState.inMatchmaking,
     matchmakingType: globalMatchmakingState.matchmakingType,
     selectedTeamId: globalMatchmakingState.selectedTeamId,
-    step: globalMatchmakingState.step,
-    matchmakingTime: localMatchmakingTime, // Use local time state
+    matchmakingTime: localMatchmakingTime,
     teamName: globalMatchmakingState.teamName,
     joinType: globalMatchmakingState.joinType,
     originalTeam: globalMatchmakingState.originalTeam,
@@ -558,6 +596,7 @@ const useQuickClashGlobalMatchmaking = () => {
     socketConnected: globalMatchmakingState.socketConnected,
 
     // Actions
+    pollMatchmakingStatus,
     checkMatchmakingStatus,
     joinSoloMatchmaking,
     joinWithTeam,
@@ -568,8 +607,7 @@ const useQuickClashGlobalMatchmaking = () => {
 
     // Helper functions
     formatMatchmakingTime,
-    getStatusDescription,
-    getStepColor,
+    getSelectedTeamId,
   }
 }
 

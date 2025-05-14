@@ -20,6 +20,7 @@ const {
   getMyTeamBattles,
   getTeamBattle,
   getTeamMatchmakingInfo,
+  getTeamMatchmakingStatusDetailed,
 } = require('../controllers/quickClashTeamController')
 
 const router = express.Router()
@@ -50,5 +51,9 @@ router.get('/team/:teamId/matchmaking-info', getTeamMatchmakingInfo)
 router.post('/team-battle/:battleId/select-category', selectCategoryForBattle)
 router.get('/team-battles', getMyTeamBattles)
 router.get('/team-battle/:battleId', getTeamBattle)
+router.get(
+  '/team/:teamId/matchmaking-status-detailed',
+  getTeamMatchmakingStatusDetailed,
+)
 
 module.exports = router

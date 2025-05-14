@@ -1,5 +1,5 @@
 // components/quickClashComponents/GlobalMatchmakingButton.jsx
-import React, { useState, useEffect, useCallback } from 'react'
+import React, { useState, useEffect, useCallback, useRef } from 'react'
 import {
   Button,
   Icon,
@@ -21,7 +21,7 @@ import {
   useToast,
   Tooltip,
   Center,
-  Select,
+  useColorModeValue,
 } from '@chakra-ui/react'
 import { motion, AnimatePresence } from 'framer-motion'
 import { useTranslation } from 'react-i18next'
@@ -42,13 +42,22 @@ import {
   RefreshCw,
   User,
   Info,
+  Sword,
+  Globe,
 } from 'lucide-react'
 import { keyframes } from '@emotion/react'
 
 // Import our custom hook
 import useQuickClashGlobalMatchmaking from '../../customHooks/useQuickClashGlobalMatchmaking'
 import { useSocket } from '../../customHooks/useSocket'
-import { resetGlobalMatchmakingState } from '../../redux/quickClashGlobalMatchmakingSlice'
+import {
+  resetGlobalMatchmakingState,
+  setJoinType,
+  setOriginalTeam,
+  setSelectedTeamId,
+  setTeamName,
+  updateMatchmakingState,
+} from '../../redux/quickClashGlobalMatchmakingSlice'
 
 const MotionButton = motion(Button)
 const MotionBox = motion(Box)
@@ -63,8 +72,21 @@ const pulsing = keyframes`
   100% { box-shadow: 0 0 0 0 rgba(92, 219, 149, 0); }
 `
 
+// Floating animation for icons
+const floating = keyframes`
+  0% { transform: translateY(0px); }
+  50% { transform: translateY(-10px); }
+  100% { transform: translateY(0px); }
+`
+
+// Rotation animation
+const rotate = keyframes`
+  0% { transform: rotate(0deg); }
+  100% { transform: rotate(360deg); }
+`
+
 /**
- * Global Matchmaking Button allows players to join 4v4 matchmaking individually or in teams
+ * Simplified Global Matchmaking Button with HTTP polling
  */
 const GlobalMatchmakingButton = ({ compact = false }) => {
   const { t } = useTranslation('QuickClash')
@@ -72,15 +94,26 @@ const GlobalMatchmakingButton = ({ compact = false }) => {
   const navigate = useNavigate()
   const toast = useToast()
 
-  // Local UI state
+  // Local state for UI
   const [isModalOpen, setIsModalOpen] = useState(false)
   const [myTeams, setMyTeams] = useState([])
   const [loadingTeams, setLoadingTeams] = useState(false)
-  const [isPrepModalOpen, setIsPrepModalOpen] = useState(false)
+  const [statusUpdates, setStatusUpdates] = useState([])
+  const [lastUpdateTime, setLastUpdateTime] = useState(Date.now())
+
+  // HTTP polling refs
+  const pollingIntervalRef = useRef(null)
+  const mountTimeRef = useRef(Date.now())
+
   const { getSocket } = useSocket()
   const dispatch = useDispatch()
 
-  // Use our custom hook for global matchmaking
+  // Color values for consistent dark theming
+  const bgColor = 'rgba(26, 21, 39, 0.95)'
+  const borderColor = 'purple.600'
+  const textColor = 'white'
+
+  // Use polling function for status updates
   const {
     inMatchmaking,
     matchmakingType,
@@ -88,43 +121,24 @@ const GlobalMatchmakingButton = ({ compact = false }) => {
     teamName,
     joinType,
     originalTeam,
-    step,
-    matchmakingTime,
     battleReady,
     loading,
+    matchmakingTime,
 
     // Actions
     checkMatchmakingStatus,
+    pollMatchmakingStatus, // New polling-specific function
     joinSoloMatchmaking,
     joinWithTeam,
     leaveMatchmaking,
     selectTeam,
     enterBattle,
-
-    // Helper functions
-    formatMatchmakingTime,
-    getStatusDescription,
-    getStepColor,
     clearBattleReady,
+    formatMatchmakingTime,
   } = useQuickClashGlobalMatchmaking()
 
-  // Check initial status and load teams on mount
-  useEffect(() => {
-    if (user?._id) {
-      checkMatchmakingStatus()
-      fetchMyTeams()
-    }
-  }, [user])
-
-  // Show prep modal if we're already in matchmaking
-  useEffect(() => {
-    if (inMatchmaking) {
-      setIsPrepModalOpen(true)
-    }
-  }, [inMatchmaking])
-
   // Fetch user's teams
-  const fetchMyTeams = async () => {
+  const fetchMyTeams = useCallback(async () => {
     try {
       setLoadingTeams(true)
       const response = await axios.get('/api/quickClash/teams')
@@ -134,80 +148,118 @@ const GlobalMatchmakingButton = ({ compact = false }) => {
     } finally {
       setLoadingTeams(false)
     }
-  }
+  }, [])
 
-  // Open matchmaking modal
-  const openModal = () => {
-    setIsModalOpen(true)
-
-    // Refresh teams when opening modal
-    fetchMyTeams()
-  }
-
-  // Close matchmaking modal
-  const closeModal = () => {
-    setIsModalOpen(false)
-    if (battleReady) {
-      clearBattleReady()
+  // Initialize and fetch data on mount
+  useEffect(() => {
+    if (user?._id) {
+      checkMatchmakingStatus()
+      fetchMyTeams()
     }
-  }
+  }, [user])
 
-  // Open preparation modal
-  const openPrepModal = () => {
-    setIsPrepModalOpen(true)
-  }
+  // Setup HTTP polling for matchmaking status when in matchmaking
+  useEffect(() => {
+    if (inMatchmaking && isModalOpen) {
+      // Start polling every 15 seconds - use the polling-specific function
+      const startPolling = () => {
+        pollingIntervalRef.current = setInterval(async () => {
+          try {
+            // Use polling function that doesn't update Redux state
+            const statusData = await pollMatchmakingStatus()
 
-  // Close preparation modal
-  const closePrepModal = () => {
-    setIsPrepModalOpen(false)
-  }
+            // Process the status data to create informative updates
+            if (statusData) {
+              let updateMessage = t('Checking for updates...')
 
-  // Handle joining the matchmaking based on selection
-  const handleJoinMatchmaking = async () => {
-    try {
-      if (selectedTeamId) {
-        // Fetch team details to get the name
-        try {
-          const teamResponse = await axios.get(
-            `/api/quickClash/team/${selectedTeamId}`,
-          )
-          if (teamResponse.data && teamResponse.data.team) {
-            const teamName = teamResponse.data.team.name || 'Team'
-            // Join with team and pass the team name
-            await joinWithTeam(selectedTeamId, teamName)
-          } else {
-            // If team details can't be fetched, still try to join with default name
-            await joinWithTeam(selectedTeamId)
+              // Interpret status data to create meaningful messages
+              if (statusData.status === 'searching_players') {
+                updateMessage = t(
+                  'Searching for players with similar skill level...',
+                )
+              } else if (statusData.status === 'forming_team') {
+                updateMessage = t('Found players! Forming your team...')
+              } else if (statusData.status === 'team_completed') {
+                updateMessage = t(
+                  'Team formed successfully! Looking for opponents...',
+                )
+              } else if (statusData.status === 'matching_teams') {
+                updateMessage = t(
+                  'Finding an opponent team to battle against...',
+                )
+              } else if (statusData.status === 'preparing_battle') {
+                updateMessage = t(
+                  'Match found! Setting up your battle arena...',
+                )
+              } else if (statusData.teamMembersCount) {
+                updateMessage = t('Team has {{count}} of 4 players', {
+                  count: statusData.teamMembersCount,
+                })
+              } else if (statusData.soloPlayersInQueue) {
+                updateMessage = t('{{count}} players searching globally', {
+                  count: statusData.soloPlayersInQueue,
+                })
+              }
+
+              // Add the status update
+              const timeElapsed = Math.floor(
+                (Date.now() - mountTimeRef.current) / 1000,
+              )
+              setStatusUpdates(prev => [
+                {
+                  id: Date.now(),
+                  message: updateMessage,
+                  time: timeElapsed,
+                },
+                ...prev.slice(0, 2), // Keep only the last 3 updates
+              ])
+            } else {
+              // Fallback message if no detailed status available
+              const timeElapsed = Math.floor(
+                (Date.now() - mountTimeRef.current) / 1000,
+              )
+              setStatusUpdates(prev => [
+                {
+                  id: Date.now(),
+                  message: t('Still searching for the perfect match...'),
+                  time: timeElapsed,
+                },
+                ...prev.slice(0, 2),
+              ])
+            }
+
+            setLastUpdateTime(Date.now())
+          } catch (error) {
+            console.error('Error polling matchmaking status:', error)
+
+            // Add error status update
+            const timeElapsed = Math.floor(
+              (Date.now() - mountTimeRef.current) / 1000,
+            )
+            setStatusUpdates(prev => [
+              {
+                id: Date.now(),
+                message: t('Connection issue, retrying...'),
+                time: timeElapsed,
+              },
+              ...prev.slice(0, 2),
+            ])
           }
-        } catch (teamError) {
-          console.error('Error fetching team details:', teamError)
-          // Still try to join matchmaking even if team details fetch fails
-          await joinWithTeam(selectedTeamId)
-        }
-      } else {
-        // Join solo
-        await joinSoloMatchmaking()
+        }, 15000) // 15 second polling
       }
 
-      // Close modal and open prep modal
-      closeModal()
-      openPrepModal()
-    } catch (error) {
-      console.error('Error joining matchmaking:', error)
-      // No need to show additional error messages or close the modal
-    }
-  }
+      startPolling()
 
-  // Handle leaving matchmaking
-  const handleLeaveMatchmaking = async () => {
-    try {
-      await leaveMatchmaking()
-      closePrepModal()
-    } catch (error) {
-      console.error('Error leaving matchmaking:', error)
+      return () => {
+        if (pollingIntervalRef.current) {
+          clearInterval(pollingIntervalRef.current)
+          pollingIntervalRef.current = null
+        }
+      }
     }
-  }
+  }, [inMatchmaking, isModalOpen, pollMatchmakingStatus, t])
 
+  // Socket listeners for team events (keep existing ones)
   useEffect(() => {
     const socket = getSocket()
     if (!socket) return
@@ -216,38 +268,34 @@ const GlobalMatchmakingButton = ({ compact = false }) => {
     socket.on('quickClash:teamLeftMatchmaking', data => {
       console.log('Received teamLeftMatchmaking event:', data)
 
-      // Only show notification if it contains needed info
       if (data.reason === 'memberLeft' && data.memberName) {
         toast({
           title: t('Team Left Matchmaking'),
           description: t(
             '{{memberName}} left matchmaking. Your team has been removed from the queue.',
-            {
-              memberName: data.memberName,
-            },
+            { memberName: data.memberName },
+          ),
+          status: 'info',
+          duration: 5000,
+          isClosable: true,
+        })
+      } else {
+        toast({
+          title: t('Team Left Matchmaking'),
+          description: t(
+            'Your team has been removed from the matchmaking queue.',
           ),
           status: 'info',
           duration: 5000,
           isClosable: true,
         })
       }
-      // Generic notification for other cases
-      toast({
-        title: t('Team Left Matchmaking'),
-        description: t(
-          `Your team ${data.teamName} has been removed from the matchmaking queue.`,
-        ),
-        status: 'info',
-        duration: 5000,
-        isClosable: true,
-      })
 
       // Reset matchmaking state
       if (inMatchmaking) {
         dispatch(resetGlobalMatchmakingState())
-        if (isPrepModalOpen) {
-          closePrepModal()
-        }
+        setStatusUpdates([])
+        mountTimeRef.current = Date.now()
       }
     })
 
@@ -257,23 +305,89 @@ const GlobalMatchmakingButton = ({ compact = false }) => {
       if (user?._id) {
         checkMatchmakingStatus()
         fetchMyTeams()
+
+        // Add status update
+        setStatusUpdates(prev => [
+          {
+            id: Date.now(),
+            message: t('Team returned to matchmaking'),
+            time: Math.floor((Date.now() - mountTimeRef.current) / 1000),
+          },
+          ...prev.slice(0, 2),
+        ])
       }
     })
 
+    // Team joined matchmaking
     socket.on('quickClash:teamJoinedMatchmaking', data => {
       console.log('Received teamJoinedMatchmaking event:', data)
       if (user?._id) {
-        checkMatchmakingStatus()
+        // Update Redux state based on socket data
+        const userIsInThisTeam =
+          data.teamMembers &&
+          data.teamMembers.some(member => member.userId === user._id)
+
+        if (userIsInThisTeam || data.teamId === selectedTeamId) {
+          dispatch(setSelectedTeamId(data.teamId))
+          dispatch(setTeamName(data.teamName || 'Team'))
+
+          let joinType = 'regular'
+          let effectiveMatchmakingType = 'team'
+
+          if (data.isAutoFormed) {
+            const currentUserMember = data.teamMembers?.find(
+              member => member.userId === user._id,
+            )
+
+            if (currentUserMember) {
+              if (currentUserMember.sourceTeam) {
+                joinType = 'sourceTeam'
+                if (currentUserMember.originalTeam) {
+                  dispatch(setOriginalTeam(currentUserMember.originalTeam))
+                }
+              } else {
+                joinType = 'solo'
+                effectiveMatchmakingType = 'solo'
+              }
+            }
+          }
+
+          dispatch(setJoinType(joinType))
+          dispatch(
+            updateMatchmakingState({
+              inMatchmaking: true,
+              matchmakingType: effectiveMatchmakingType,
+              teamName:
+                joinType === 'sourceTeam' && data.originalTeam
+                  ? data.originalTeam.name
+                  : data.teamName,
+              joinType: joinType,
+              originalTeam:
+                joinType === 'sourceTeam' ? data.originalTeam : null,
+            }),
+          )
+        }
+
         fetchMyTeams()
+
+        // Add status update
+        setStatusUpdates(prev => [
+          {
+            id: Date.now(),
+            message: t('Team joined matchmaking successfully'),
+            time: Math.floor((Date.now() - mountTimeRef.current) / 1000),
+          },
+          ...prev.slice(0, 2),
+        ])
+
         toast({
           title: t('Team Joined Matchmaking'),
           description: t(
-            `Your team ${data.teamName} has successfully joined the matchmaking queue.`,
+            'Your team has successfully joined the matchmaking queue.',
           ),
           status: 'success',
-          duration: 5000,
+          duration: 3000,
           isClosable: true,
-          position: 'bottom',
         })
       }
     })
@@ -288,14 +402,94 @@ const GlobalMatchmakingButton = ({ compact = false }) => {
     toast,
     t,
     inMatchmaking,
-    isPrepModalOpen,
     dispatch,
-    closePrepModal,
     selectedTeamId,
     user?._id,
+    checkMatchmakingStatus,
+    fetchMyTeams,
   ])
 
-  // Render team selection list
+  // Open modal and setup
+  const openModal = () => {
+    setIsModalOpen(true)
+    mountTimeRef.current = Date.now()
+    setStatusUpdates([])
+    fetchMyTeams()
+  }
+
+  // Close modal
+  const closeModal = () => {
+    setIsModalOpen(false)
+    if (battleReady) {
+      clearBattleReady()
+    }
+  }
+
+  // Handle joining matchmaking
+  const handleJoinMatchmaking = async () => {
+    try {
+      mountTimeRef.current = Date.now()
+      setStatusUpdates([
+        {
+          id: Date.now(),
+          message: t('Joining matchmaking...'),
+          time: 0,
+        },
+      ])
+
+      if (selectedTeamId) {
+        try {
+          const teamResponse = await axios.get(
+            `/api/quickClash/team/${selectedTeamId}`,
+          )
+          if (teamResponse.data && teamResponse.data.team) {
+            const teamName = teamResponse.data.team.name || 'Team'
+            await joinWithTeam(selectedTeamId, teamName)
+          } else {
+            await joinWithTeam(selectedTeamId)
+          }
+        } catch (teamError) {
+          console.error('Error fetching team details:', teamError)
+          await joinWithTeam(selectedTeamId)
+        }
+      } else {
+        await joinSoloMatchmaking()
+      }
+
+      // Don't close modal, keep it open to show progress
+      setStatusUpdates(prev => [
+        {
+          id: Date.now(),
+          message: t('Successfully joined matchmaking'),
+          time: Math.floor((Date.now() - mountTimeRef.current) / 1000),
+        },
+        ...prev.slice(0, 2),
+      ])
+    } catch (error) {
+      console.error('Error joining matchmaking:', error)
+      setStatusUpdates(prev => [
+        {
+          id: Date.now(),
+          message: t('Failed to join matchmaking'),
+          time: Math.floor((Date.now() - mountTimeRef.current) / 1000),
+        },
+        ...prev.slice(0, 2),
+      ])
+    }
+  }
+
+  // Handle leaving matchmaking
+  const handleLeaveMatchmaking = async () => {
+    try {
+      await leaveMatchmaking()
+      setStatusUpdates([])
+      closeModal()
+    } catch (error) {
+      console.error('Error leaving matchmaking:', error)
+    }
+  }
+
+  // Render team selection
   const renderTeamSelection = () => {
     if (loadingTeams) {
       return (
@@ -315,7 +509,7 @@ const GlobalMatchmakingButton = ({ compact = false }) => {
 
     return (
       <VStack spacing={2} align="stretch" maxH="200px" overflowY="auto">
-        {/* Solo option at the top */}
+        {/* Solo option */}
         <MotionBox
           p={3}
           borderRadius="md"
@@ -342,7 +536,7 @@ const GlobalMatchmakingButton = ({ compact = false }) => {
                 {t('Join Individually')}
               </Text>
             </HStack>
-            <Badge colorScheme="green">{t('You')}</Badge>
+            <Badge colorScheme="green">{t('Solo')}</Badge>
           </HStack>
         </MotionBox>
 
@@ -377,9 +571,7 @@ const GlobalMatchmakingButton = ({ compact = false }) => {
                   {team.name}
                 </Text>
               </HStack>
-              <Badge colorScheme="blue">
-                {team.members.length}/4 {t('Members')}
-              </Badge>
+              <Badge colorScheme="blue">{team.members.length}/4</Badge>
             </HStack>
           </MotionBox>
         ))}
@@ -387,77 +579,63 @@ const GlobalMatchmakingButton = ({ compact = false }) => {
     )
   }
 
-  // Determine the badge info based on joinType and matchmakingType
+  // Get badge info for matchmaking type
   const getBadgeInfo = () => {
-    // Pure solo player (directly joined individually)
     if (joinType === 'solo' && matchmakingType === 'solo') {
       return {
         icon: User,
         color: 'blue',
-        text: t('Joined Individually'),
+        text: t('Solo Player'),
         tooltip: t('You joined matchmaking as an individual player'),
       }
     }
 
-    // Solo player assigned to auto-formed team
     if (joinType === 'solo' && matchmakingType === 'team') {
       return {
         icon: UserPlus,
         color: 'teal',
-        text: t('Joined Individually → Auto-Team'),
-        tooltip: t(
-          'You joined individually and were assigned to an auto-formed team',
-        ),
+        text: t('Auto-Team Member'),
+        tooltip: t('You were assigned to an auto-formed team'),
       }
     }
 
-    // Player from a source team that was merged into auto-formed team
     if (joinType === 'sourceTeam' && originalTeam) {
       return {
         icon: Users,
         color: 'purple',
-        text: t('Joined with Team: {{teamName}}', {
-          teamName: originalTeam.name || t('Original Team'),
-        }),
-        tooltip: t('Your original team was merged into an auto-formed team'),
+        text: originalTeam.name || t('Team Member'),
+        tooltip: t('Your original team was merged into a larger team'),
       }
     }
 
-    // Regular team member
     if (joinType === 'regular' && matchmakingType === 'team') {
       return {
         icon: Users,
         color: 'purple',
-        text: t('Joined with Team: {{teamName}}', {
-          teamName: teamName || t('Team'),
-        }),
+        text: teamName || t('Team Member'),
         tooltip: t('You joined matchmaking with your team'),
       }
     }
 
-    // Default fallback
     return {
       icon: Users,
       color: 'blue',
       text:
         matchmakingType === 'team'
-          ? t('Joined with Team: {{teamName}}', {
-              teamName: teamName || t('Team'),
-            })
-          : t('Joined Individually'),
+          ? teamName || t('Team Member')
+          : t('Solo Player'),
       tooltip: t('Matchmaking information'),
     }
   }
 
-  // Render matchmaking button based on state and compact mode
+  // Render the matchmaking button
   const renderButton = () => {
-    // If currently in matchmaking
     if (inMatchmaking) {
       return compact ? (
         <Tooltip label={t('View matchmaking status')}>
           <MotionButton
             colorScheme="green"
-            onClick={openPrepModal} // Open prep modal instead of regular modal
+            onClick={openModal}
             borderRadius="full"
             bgGradient="linear(to-r, green.500, teal.500)"
             boxShadow="0 4px 10px rgba(0,0,0,0.25)"
@@ -477,7 +655,12 @@ const GlobalMatchmakingButton = ({ compact = false }) => {
             whileHover={{ scale: 1.05 }}
             whileTap={{ scale: 0.95 }}
           >
-            <Spinner size="sm" color="white" />
+            <MotionBox
+              animate={{ rotate: 360 }}
+              transition={{ duration: 2, repeat: Infinity, ease: 'linear' }}
+            >
+              <Icon as={Globe} boxSize={5} />
+            </MotionBox>
           </MotionButton>
         </Tooltip>
       ) : (
@@ -485,8 +668,15 @@ const GlobalMatchmakingButton = ({ compact = false }) => {
           <MotionButton
             colorScheme="green"
             leftIcon={<Icon as={Activity} />}
-            rightIcon={<Spinner size="sm" />}
-            onClick={openPrepModal} // Open prep modal instead of regular modal
+            rightIcon={
+              <MotionBox
+                animate={{ rotate: 360 }}
+                transition={{ duration: 2, repeat: Infinity, ease: 'linear' }}
+              >
+                <Icon as={Globe} />
+              </MotionBox>
+            }
+            onClick={openModal}
             borderRadius="full"
             px={6}
             py={6}
@@ -511,7 +701,6 @@ const GlobalMatchmakingButton = ({ compact = false }) => {
       )
     }
 
-    // If not in matchmaking
     return compact ? (
       <Tooltip label={t('Join 4v4 Matchmaking')}>
         <MotionButton
@@ -561,35 +750,23 @@ const GlobalMatchmakingButton = ({ compact = false }) => {
     )
   }
 
-  // Render the matchmaking modal content
+  // Render modal content
   const renderModalContent = () => {
     if (inMatchmaking) {
       const badgeInfo = getBadgeInfo()
 
       return (
         <VStack spacing={6} align="center">
-          {/* Animated Spinner with Orbiting Elements */}
+          {/* Animated Matchmaking Status */}
           <MotionFlex
             justify="center"
             align="center"
             w="120px"
             h="120px"
             borderRadius="full"
-            bg={`rgba(${
-              getStepColor(step) === 'blue'
-                ? '66, 153, 225'
-                : getStepColor(step) === 'green'
-                ? '72, 187, 120'
-                : getStepColor(step) === 'purple'
-                ? '159, 122, 234'
-                : getStepColor(step) === 'orange'
-                ? '237, 137, 54'
-                : getStepColor(step) === 'teal'
-                ? '56, 178, 172'
-                : '113, 128, 150'
-            }, 0.1)`}
+            bg="rgba(66, 153, 225, 0.1)"
             border="2px solid"
-            borderColor={`${getStepColor(step)}.400`}
+            borderColor="blue.400"
             position="relative"
             animate={{
               scale: [1, 1.05, 1],
@@ -603,35 +780,28 @@ const GlobalMatchmakingButton = ({ compact = false }) => {
               animation: `${pulsing} 2s infinite`,
             }}
           >
-            <Spinner
-              size="xl"
-              thickness="4px"
-              speed="0.8s"
-              color={`${getStepColor(step)}.400`}
-            />
-            <MotionFlex
-              position="absolute"
-              justify="center"
-              align="center"
+            <MotionBox
               animate={{ rotate: 360 }}
-              transition={{ duration: 30, repeat: Infinity, ease: 'linear' }}
+              transition={{ duration: 3, repeat: Infinity, ease: 'linear' }}
             >
-              {Array.from({ length: 12 }).map((_, i) => (
-                <Box
-                  key={i}
-                  position="absolute"
-                  w="8px"
-                  h="8px"
-                  borderRadius="full"
-                  bg={`${getStepColor(step)}.400`}
-                  transform={`rotate(${i * 30}deg) translateY(-60px)`}
-                  opacity={0.5 + (i % 2) * 0.5}
-                />
-              ))}
-            </MotionFlex>
+              <Icon as={Globe} color="blue.400" boxSize={12} />
+            </MotionBox>
+            <MotionBox
+              position="absolute"
+              animate={{
+                y: [0, -10, 0],
+              }}
+              transition={{
+                duration: 2,
+                repeat: Infinity,
+                repeatType: 'reverse',
+              }}
+            >
+              <Icon as={Search} color="blue.200" boxSize={6} opacity={0.7} />
+            </MotionBox>
           </MotionFlex>
 
-          {/* Matchmaking Type Badge - Using the badgeInfo */}
+          {/* Matchmaking Type Badge */}
           <Tooltip label={badgeInfo.tooltip} hasArrow placement="top">
             <MotionBadge
               colorScheme={badgeInfo.color}
@@ -652,14 +822,13 @@ const GlobalMatchmakingButton = ({ compact = false }) => {
             >
               <Icon as={badgeInfo.icon} mr={2} boxSize={4} />
               {badgeInfo.text}
-
               {joinType !== 'regular' && (
                 <Icon as={Info} ml={2} boxSize={3} opacity={0.7} />
               )}
             </MotionBadge>
           </Tooltip>
 
-          {/* Show additional info for auto-formed teams */}
+          {/* Auto-team formation info */}
           {joinType === 'sourceTeam' && originalTeam && (
             <Box
               bg="rgba(121, 80, 242, 0.1)"
@@ -684,7 +853,6 @@ const GlobalMatchmakingButton = ({ compact = false }) => {
             </Box>
           )}
 
-          {/* Show additional info for solo players in auto-formed teams */}
           {joinType === 'solo' && matchmakingType === 'team' && (
             <Box
               bg="rgba(49, 151, 149, 0.1)"
@@ -708,17 +876,16 @@ const GlobalMatchmakingButton = ({ compact = false }) => {
             </Box>
           )}
 
-          {/* Informative Text */}
-          <VStack spacing={2} align="center">
-            <Text color="white" fontSize="xl" fontWeight="bold">
+          {/* Main Status */}
+          <VStack spacing={3} align="center">
+            <Text color="white" fontSize="2xl" fontWeight="bold">
               {t('Finding Your 4v4 Battle')}
             </Text>
             <Text color="whiteAlpha.700" fontSize="md" textAlign="center">
-              {getStatusDescription(step)}
+              {t('We are matching you with players of similar skill level...')}
             </Text>
           </VStack>
 
-          {/* Separator */}
           <Divider borderColor="whiteAlpha.300" />
 
           {/* Time and Status Display */}
@@ -734,11 +901,7 @@ const GlobalMatchmakingButton = ({ compact = false }) => {
                 border="1px solid"
                 borderColor="whiteAlpha.200"
               >
-                <Icon
-                  as={Clock}
-                  color={`${getStepColor(step)}.300`}
-                  boxSize={4}
-                />
+                <Icon as={Clock} color="blue.300" boxSize={4} />
                 <Text color="white" fontWeight="bold" fontFamily="mono">
                   {formatMatchmakingTime(matchmakingTime)}
                 </Text>
@@ -750,7 +913,7 @@ const GlobalMatchmakingButton = ({ compact = false }) => {
                 {t('Status')}
               </Text>
               <MotionBadge
-                colorScheme={getStepColor(step)}
+                colorScheme="blue"
                 px={3}
                 py={1}
                 animate={{
@@ -762,16 +925,58 @@ const GlobalMatchmakingButton = ({ compact = false }) => {
                   repeatType: 'reverse',
                 }}
               >
-                {step || t('Searching')}
+                {t('Searching')}
               </MotionBadge>
             </VStack>
           </HStack>
 
-          {/* Additional Info */}
+          {/* Status Updates Box */}
+          {statusUpdates.length > 0 && (
+            <Box
+              w="100%"
+              bg="rgba(0, 0, 0, 0.3)"
+              borderRadius="md"
+              p={3}
+              borderWidth="1px"
+              borderColor="whiteAlpha.200"
+            >
+              <Text color="whiteAlpha.600" fontSize="xs" mb={2}>
+                {t('Recent Updates')}
+              </Text>
+              <VStack spacing={1} align="stretch">
+                <AnimatePresence>
+                  {statusUpdates.map(update => (
+                    <MotionBox
+                      key={update.id}
+                      initial={{ opacity: 0, y: 10 }}
+                      animate={{ opacity: 1, y: 0 }}
+                      exit={{ opacity: 0, y: -10 }}
+                      transition={{ duration: 0.3 }}
+                    >
+                      <HStack justify="space-between">
+                        <Text color="whiteAlpha.900" fontSize="sm">
+                          {update.message}
+                        </Text>
+                        <Text
+                          color="whiteAlpha.500"
+                          fontSize="xs"
+                          fontFamily="mono"
+                        >
+                          {update.time}s
+                        </Text>
+                      </HStack>
+                    </MotionBox>
+                  ))}
+                </AnimatePresence>
+              </VStack>
+            </Box>
+          )}
+
+          {/* Info */}
           <Box w="100%" pt={4}>
             <Text color="whiteAlpha.600" fontSize="sm" textAlign="center">
               {t(
-                'You can close this modal and continue browsing. We will notify you when your battle is ready.',
+                'You can close this modal and continue using the app. We will notify you when your battle is ready.',
               )}
             </Text>
           </Box>
@@ -782,7 +987,7 @@ const GlobalMatchmakingButton = ({ compact = false }) => {
     // Not in matchmaking - show team selection
     return (
       <VStack spacing={6} align="stretch">
-        {/* Header section */}
+        {/* Header */}
         <VStack spacing={2} align="center">
           <MotionBox
             animate={{
@@ -802,7 +1007,7 @@ const GlobalMatchmakingButton = ({ compact = false }) => {
           </Text>
           <Text color="whiteAlpha.700" textAlign="center">
             {t(
-              "Join with your team or as an individual player and we'll match you with others.",
+              "Choose to join with your team or as an individual player. We'll handle the rest!",
             )}
           </Text>
         </VStack>
@@ -812,275 +1017,94 @@ const GlobalMatchmakingButton = ({ compact = false }) => {
           <Text color="whiteAlpha.900" fontWeight="bold" mb={3}>
             {t('Choose Your Entry')}
           </Text>
-
           {renderTeamSelection()}
         </Box>
 
-        {/* Info section */}
+        {/* How it works */}
         <Box bg="whiteAlpha.100" p={4} borderRadius="md">
           <HStack mb={2}>
             <Icon as={Shield} color="blue.400" boxSize={5} />
             <Text color="white" fontWeight="bold">
-              {t('About 4v4 Team Battles')}
+              {t('How It Works')}
             </Text>
           </HStack>
           <VStack spacing={2} align="start">
-            <Text color="whiteAlpha.800" fontSize="sm">
-              • {t('Compete in 4v4 team battles with friends or new teammates')}
-            </Text>
-            <Text color="whiteAlpha.800" fontSize="sm">
-              • {t('Solo players will be matched with others to form a team')}
-            </Text>
-            <Text color="whiteAlpha.800" fontSize="sm">
-              • {t('Each player battles in one of four different categories')}
-            </Text>
-            <Text color="whiteAlpha.800" fontSize="sm">
-              • {t("Win trophies based on your team's performance")}
-            </Text>
+            <HStack>
+              <Box
+                w="20px"
+                h="20px"
+                bg="blue.400"
+                borderRadius="full"
+                display="flex"
+                alignItems="center"
+                justifyContent="center"
+              >
+                <Text color="white" fontSize="xs" fontWeight="bold">
+                  1
+                </Text>
+              </Box>
+              <Text color="whiteAlpha.800" fontSize="sm">
+                {t(
+                  'We find 3 other players or complete your team to 4 members',
+                )}
+              </Text>
+            </HStack>
+            <HStack>
+              <Box
+                w="20px"
+                h="20px"
+                bg="blue.400"
+                borderRadius="full"
+                display="flex"
+                alignItems="center"
+                justifyContent="center"
+              >
+                <Text color="white" fontSize="xs" fontWeight="bold">
+                  2
+                </Text>
+              </Box>
+              <Text color="whiteAlpha.800" fontSize="sm">
+                {t('We match your team with another team of similar skill')}
+              </Text>
+            </HStack>
+            <HStack>
+              <Box
+                w="20px"
+                h="20px"
+                bg="blue.400"
+                borderRadius="full"
+                display="flex"
+                alignItems="center"
+                justifyContent="center"
+              >
+                <Text color="white" fontSize="xs" fontWeight="bold">
+                  3
+                </Text>
+              </Box>
+              <Text color="whiteAlpha.800" fontSize="sm">
+                {t('Each player battles in one of four different categories')}
+              </Text>
+            </HStack>
+            <HStack>
+              <Box
+                w="20px"
+                h="20px"
+                bg="blue.400"
+                borderRadius="full"
+                display="flex"
+                alignItems="center"
+                justifyContent="center"
+              >
+                <Text color="white" fontSize="xs" fontWeight="bold">
+                  4
+                </Text>
+              </Box>
+              <Text color="whiteAlpha.800" fontSize="sm">
+                {t("Win trophies based on your team's performance!")}
+              </Text>
+            </HStack>
           </VStack>
         </Box>
-      </VStack>
-    )
-  }
-
-  // Render preparation modal content
-  const renderPrepModalContent = () => {
-    const badgeInfo = getBadgeInfo()
-
-    return (
-      <VStack spacing={6} align="stretch">
-        {/* Show matchmaking type badge */}
-        <Tooltip label={badgeInfo.tooltip} hasArrow placement="top">
-          <Flex justify="center">
-            <MotionBadge
-              colorScheme={badgeInfo.color}
-              px={3}
-              py={2}
-              borderRadius="full"
-              fontSize="sm"
-              display="flex"
-              alignItems="center"
-              animate={{
-                y: [0, -2, 0],
-              }}
-              transition={{
-                duration: 2,
-                repeat: Infinity,
-                repeatType: 'reverse',
-              }}
-            >
-              <Icon as={badgeInfo.icon} mr={2} boxSize={4} />
-              {badgeInfo.text}
-
-              {joinType !== 'regular' && (
-                <Icon as={Info} ml={2} boxSize={3} opacity={0.7} />
-              )}
-            </MotionBadge>
-          </Flex>
-        </Tooltip>
-
-        {/* If this is an auto-formed team from a source team, show additional info */}
-        {joinType === 'sourceTeam' && originalTeam && (
-          <Box
-            bg="rgba(121, 80, 242, 0.1)"
-            borderWidth="1px"
-            borderColor="purple.500"
-            borderRadius="md"
-            p={3}
-            mx={4}
-          >
-            <HStack mb={1}>
-              <Icon as={Info} color="purple.300" boxSize={4} />
-              <Text color="white" fontWeight="bold" fontSize="sm">
-                {t('Auto-Team Formation')}
-              </Text>
-            </HStack>
-            <Text color="whiteAlpha.800" fontSize="sm">
-              {t(
-                'Your team "{{originalTeam}}" has been merged with other players to form a 4v4 battle team.',
-                { originalTeam: originalTeam.name || t('Original Team') },
-              )}
-            </Text>
-          </Box>
-        )}
-
-        {/* If this is a solo player added to auto-formed team, show additional info */}
-        {joinType === 'solo' && matchmakingType === 'team' && (
-          <Box
-            bg="rgba(49, 151, 149, 0.1)"
-            borderWidth="1px"
-            borderColor="teal.500"
-            borderRadius="md"
-            p={3}
-            mx={4}
-          >
-            <HStack mb={1}>
-              <Icon as={Info} color="teal.300" boxSize={4} />
-              <Text color="white" fontWeight="bold" fontSize="sm">
-                {t('Auto-Team Formation')}
-              </Text>
-            </HStack>
-            <Text color="whiteAlpha.800" fontSize="sm">
-              {t(
-                'You joined individually and have been assigned to a team with other players for a 4v4 battle.',
-              )}
-            </Text>
-          </Box>
-        )}
-
-        {/* Current Step Display */}
-        <MotionBox
-          animate={{
-            scale: [1, 1.05, 1],
-            transition: {
-              duration: 1,
-              repeat: Infinity,
-              repeatType: 'reverse',
-            },
-          }}
-          p={4}
-          borderRadius="md"
-          bg={`${getStepColor(step)}.900`}
-          borderWidth="1px"
-          borderColor={`${getStepColor(step)}.500`}
-          boxShadow={`0 0 10px ${getStepColor(step)}.400`}
-        >
-          <HStack spacing={4}>
-            <Center
-              boxSize="50px"
-              borderRadius="full"
-              bg={`${getStepColor(step)}.600`}
-            >
-              <Icon
-                as={
-                  step === 'searching'
-                    ? Search
-                    : step === 'forming_team'
-                    ? Users
-                    : step === 'team_formed'
-                    ? CheckCircle
-                    : step === 'searching_opponents'
-                    ? Target
-                    : step === 'preparing_battle'
-                    ? FileText
-                    : step === 'battleReady'
-                    ? Zap
-                    : Activity
-                }
-                color="white"
-                boxSize={6}
-              />
-            </Center>
-            <VStack align="start" spacing={1}>
-              <Text color="white" fontWeight="bold" fontSize="lg">
-                {step === 'searching'
-                  ? t('Searching for Players')
-                  : step === 'forming_team'
-                  ? t('Forming Your Team')
-                  : step === 'team_formed'
-                  ? t('Team Formed')
-                  : step === 'searching_opponents'
-                  ? t('Finding Opponents')
-                  : step === 'preparing_battle'
-                  ? t('Preparing Battle')
-                  : step === 'battleReady'
-                  ? t('Battle Ready')
-                  : t('Matchmaking')}
-              </Text>
-              <Text color="whiteAlpha.700">{getStatusDescription(step)}</Text>
-            </VStack>
-          </HStack>
-        </MotionBox>
-
-        {/* Steps Timeline */}
-        <VStack align="stretch" spacing={0}>
-          {[
-            'searching',
-            'forming_team',
-            'team_formed',
-            'searching_opponents',
-            'preparing_battle',
-            'battleReady',
-          ].map((stepId, index) => {
-            const isActive = stepId === step
-            const isCompleted =
-              [
-                'searching',
-                'forming_team',
-                'team_formed',
-                'searching_opponents',
-                'preparing_battle',
-                'battleReady',
-              ].indexOf(step) >
-              [
-                'searching',
-                'forming_team',
-                'team_formed',
-                'searching_opponents',
-                'preparing_battle',
-                'battleReady',
-              ].indexOf(stepId)
-
-            return (
-              <MotionHStack
-                key={stepId}
-                spacing={3}
-                py={2}
-                opacity={isActive ? 1 : isCompleted ? 0.7 : 0.4}
-                animate={
-                  isActive
-                    ? {
-                        scale: [1, 1.05, 1],
-                        transition: {
-                          duration: 1,
-                          repeat: Infinity,
-                          repeatType: 'reverse',
-                        },
-                      }
-                    : {}
-                }
-              >
-                <Center
-                  boxSize="30px"
-                  borderRadius="full"
-                  bg={
-                    isCompleted || isActive
-                      ? `${getStepColor(stepId)}.500`
-                      : 'whiteAlpha.200'
-                  }
-                >
-                  {isCompleted ? (
-                    <Icon as={CheckCircle} color="white" boxSize={4} />
-                  ) : isActive ? (
-                    <Spinner size="sm" color="white" />
-                  ) : (
-                    <Text color="white" fontSize="xs">
-                      {index + 1}
-                    </Text>
-                  )}
-                </Center>
-                <Text
-                  color={isActive ? 'white' : 'whiteAlpha.800'}
-                  fontWeight={isActive ? 'bold' : 'normal'}
-                >
-                  {stepId === 'searching'
-                    ? t('Searching for Players')
-                    : stepId === 'forming_team'
-                    ? t('Forming Your Team')
-                    : stepId === 'team_formed'
-                    ? t('Team Formed')
-                    : stepId === 'searching_opponents'
-                    ? t('Finding Opponents')
-                    : stepId === 'preparing_battle'
-                    ? t('Preparing Battle')
-                    : stepId === 'battleReady'
-                    ? t('Battle Ready')
-                    : t('Unknown Step')}
-                </Text>
-              </MotionHStack>
-            )
-          })}
-        </VStack>
       </VStack>
     )
   }
@@ -1100,86 +1124,54 @@ const GlobalMatchmakingButton = ({ compact = false }) => {
       >
         <ModalOverlay backdropFilter="blur(3px)" bg="rgba(0, 0, 0, 0.7)" />
         <ModalContent
-          bg="rgba(26, 21, 39, 0.95)"
+          bg={bgColor}
           borderRadius="xl"
           borderWidth="1px"
-          borderColor={inMatchmaking ? `${getStepColor(step)}.500` : 'blue.500'}
+          borderColor={inMatchmaking ? 'green.500' : borderColor}
           boxShadow={`0 0 20px rgba(${
-            inMatchmaking && getStepColor(step) === 'green'
-              ? '72, 187, 120'
-              : inMatchmaking && getStepColor(step) === 'purple'
-              ? '159, 122, 234'
-              : '66, 153, 225'
-          }, 0.4)`}
+            inMatchmaking ? '72, 187, 120, 0.4' : '66, 153, 225, 0.4'
+          })`}
         >
           <ModalHeader
-            color="white"
+            color={textColor}
             borderBottomWidth="1px"
             borderColor="whiteAlpha.200"
           >
             <HStack>
               <Icon
                 as={inMatchmaking ? Activity : Users}
-                color={inMatchmaking ? `${getStepColor(step)}.400` : 'blue.400'}
+                color={inMatchmaking ? 'green.400' : 'blue.400'}
                 boxSize={5}
               />
               <Text>
                 {inMatchmaking
-                  ? t('Matchmaking Status')
-                  : t('4v4 Team Matchmaking')}
+                  ? t('4v4 Matchmaking Active')
+                  : t('Join 4v4 Matchmaking')}
               </Text>
-
-              {inMatchmaking && step === 'battle_ready' && (
+              {inMatchmaking && (
                 <Badge colorScheme="green" ml={2}>
-                  {t('Ready')}
+                  {t('Finding Battle')}
                 </Badge>
               )}
             </HStack>
           </ModalHeader>
-          <ModalCloseButton color="white" />
+          <ModalCloseButton color={textColor} />
 
           <ModalBody py={6}>{renderModalContent()}</ModalBody>
 
           <ModalFooter borderTopWidth="1px" borderColor="whiteAlpha.200">
             {inMatchmaking ? (
-              <>
-                {step === 'battleReady' ? (
-                  <Button
-                    colorScheme="green"
-                    onClick={enterBattle}
-                    leftIcon={<Icon as={Zap} />}
-                    as={motion.button}
-                    whileHover={{ scale: 1.05 }}
-                    whileTap={{ scale: 0.95 }}
-                    animate={{
-                      boxShadow: [
-                        '0 0 0px rgba(72, 187, 120, 0.4)',
-                        '0 0 20px rgba(72, 187, 120, 0.7)',
-                        '0 0 0px rgba(72, 187, 120, 0.4)',
-                      ],
-                    }}
-                    transition={{
-                      duration: 2,
-                      repeat: Infinity,
-                      repeatType: 'reverse',
-                    }}
-                  >
-                    {t('Enter Battle')}
-                  </Button>
-                ) : (
-                  <Button
-                    colorScheme="red"
-                    variant="outline"
-                    onClick={handleLeaveMatchmaking}
-                    isLoading={loading}
-                    loadingText={t('Leaving...')}
-                    leftIcon={<Icon as={X} />}
-                    _hover={{ bg: 'red.900' }}
-                  >
-                    {t('Leave Queue')}
-                  </Button>
-                )}
-              </>
+              <Button
+                colorScheme="red"
+                variant="outline"
+                onClick={handleLeaveMatchmaking}
+                isLoading={loading}
+                loadingText={t('Leaving...')}
+                leftIcon={<Icon as={X} />}
+                _hover={{ bg: 'red.900' }}
+              >
+                {t('Leave Queue')}
+              </Button>
             ) : (
               <>
                 <Button
@@ -1203,87 +1195,6 @@ const GlobalMatchmakingButton = ({ compact = false }) => {
                     : t('Join Individually')}
                 </Button>
               </>
-            )}
-          </ModalFooter>
-        </ModalContent>
-      </Modal>
-
-      {/* Preparation Modal */}
-      <Modal
-        isOpen={isPrepModalOpen}
-        onClose={closePrepModal}
-        size="lg"
-        isCentered
-        closeOnOverlayClick={false}
-      >
-        <ModalOverlay backdropFilter="blur(3px)" bg="rgba(0, 0, 0, 0.7)" />
-        <ModalContent
-          bg="rgba(26, 21, 39, 0.95)"
-          borderRadius="xl"
-          borderWidth="1px"
-          borderColor={`${getStepColor(step)}.500`}
-          boxShadow={`0 0 20px rgba(128, 90, 213, 0.4)`}
-        >
-          <ModalHeader
-            color="white"
-            borderBottomWidth="1px"
-            borderColor="whiteAlpha.200"
-          >
-            <HStack>
-              <Icon
-                as={Users}
-                color={`${getStepColor(step)}.400`}
-                boxSize={5}
-              />
-              <Text>{t('Team Battle Preparation')}</Text>
-
-              {step === 'battleReady' && (
-                <Badge colorScheme="green" ml={2}>
-                  {t('Ready')}
-                </Badge>
-              )}
-            </HStack>
-          </ModalHeader>
-          <ModalCloseButton color="white" />
-
-          <ModalBody py={6}>{renderPrepModalContent()}</ModalBody>
-
-          <ModalFooter borderTopWidth="1px" borderColor="whiteAlpha.200">
-            {step === 'battleReady' && battleReady ? (
-              <Button
-                colorScheme="green"
-                leftIcon={<Icon as={Zap} />}
-                onClick={enterBattle}
-                size="lg"
-                as={motion.button}
-                whileHover={{ scale: 1.05 }}
-                whileTap={{ scale: 0.95 }}
-                animate={{
-                  boxShadow: [
-                    '0 0 0px rgba(72, 187, 120, 0.4)',
-                    '0 0 20px rgba(72, 187, 120, 0.7)',
-                    '0 0 0px rgba(72, 187, 120, 0.4)',
-                  ],
-                }}
-                transition={{
-                  duration: 2,
-                  repeat: Infinity,
-                  repeatType: 'reverse',
-                }}
-              >
-                {t('Enter Battle')}
-              </Button>
-            ) : (
-              <Button
-                colorScheme="red"
-                variant="outline"
-                onClick={handleLeaveMatchmaking}
-                isLoading={loading}
-                leftIcon={<Icon as={X} />}
-                _hover={{ bg: 'red.900' }}
-              >
-                {t('Leave Queue')}
-              </Button>
             )}
           </ModalFooter>
         </ModalContent>

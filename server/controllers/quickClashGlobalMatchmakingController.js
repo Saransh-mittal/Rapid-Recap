@@ -6,6 +6,7 @@ const {
   getGlobalMatchmakingStatus,
   processGlobalMatchmaking,
 } = require('../services/quickClashServices/quickClashTeamMatchmakingService')
+const QuickClashGlobalMatchmaking = require('../model/quickClashSchemas/quickClashGlobalMatchmakingSchema')
 
 /**
  * @desc    Join global matchmaking queue
@@ -124,9 +125,124 @@ const processGlobalMatchmakingController = asyncHandler(async (req, res) => {
   }
 })
 
+/**
+ * @desc    Get detailed global matchmaking status for solo players
+ * @route   GET /api/quickClash/global-matchmaking-status-detailed
+ * @access  Private
+ */
+const getGlobalMatchmakingStatusDetailed = asyncHandler(async (req, res) => {
+  const userId = req.user._id
+
+  try {
+    // Check if user is in global matchmaking
+    const matchmakingEntry = await QuickClashGlobalMatchmaking.findOne({
+      user: userId,
+      status: { $ne: 'in_battle' },
+    })
+
+    if (!matchmakingEntry) {
+      return res.json({
+        success: true,
+        inMatchmaking: false,
+        status: null,
+      })
+    }
+
+    let statusData = {
+      status: 'searching_players',
+      timeInQueue: Math.floor((Date.now() - matchmakingEntry.createdAt) / 1000),
+      trophies: matchmakingEntry.trophies,
+    }
+
+    // Count solo players in queue
+    const soloPlayersInQueue = await QuickClashGlobalMatchmaking.countDocuments(
+      {
+        status: 'available',
+        team: null,
+      },
+    )
+
+    statusData.soloPlayersInQueue = soloPlayersInQueue
+
+    // Check if user has been assigned to a team
+    if (matchmakingEntry.team) {
+      const team = await QuickClashTeam.findById(
+        matchmakingEntry.team,
+      ).populate('members.user', '_id name inGameName')
+
+      if (team) {
+        statusData.status = 'team_formed'
+        statusData.teamName = team.name || 'Auto-formed Team'
+        statusData.teamMembers = team.members.length
+        statusData.maxMembers = 4
+
+        // Check if team is looking for opponents
+        const teamMatchmaking = await QuickClashTeamMatchmaking.findOne({
+          team: team._id,
+        })
+
+        if (teamMatchmaking && teamMatchmaking.status === 'available') {
+          const availableTeams = await QuickClashTeamMatchmaking.countDocuments(
+            {
+              status: 'available',
+              memberCount: 4,
+              _id: { $ne: teamMatchmaking._id },
+              avgTrophies: {
+                $gte: teamMatchmaking.avgTrophies - 200,
+                $lte: teamMatchmaking.avgTrophies + 200,
+              },
+            },
+          )
+
+          statusData.status = 'matching_teams'
+          statusData.availableOpponents = availableTeams
+        }
+
+        // Check if this is a first auto-formed team
+        if (team.formationInfo && team.formationInfo.isAutoFormed) {
+          if (team.members.length === 4) {
+            statusData.status = 'team_completed'
+          } else {
+            statusData.status = 'forming_team'
+          }
+        }
+      }
+    }
+
+    // Count partial teams that might need members
+    const partialTeams = await QuickClashTeamMatchmaking.countDocuments({
+      status: 'available',
+      memberCount: { $lt: 4 },
+    })
+
+    statusData.partialTeams = partialTeams
+
+    // Determine specific status based on conditions
+    if (matchmakingEntry.status === 'processing') {
+      statusData.status = 'forming_team'
+      statusData.message = 'Being matched with other players to form a team'
+    } else if (matchmakingEntry.status === 'matched' && matchmakingEntry.team) {
+      statusData.status = 'team_formed'
+    }
+
+    res.json({
+      success: true,
+      inMatchmaking: true,
+      ...statusData,
+    })
+  } catch (error) {
+    console.error('Error getting detailed global matchmaking status:', error)
+    res.status(500).json({
+      success: false,
+      message: 'Failed to get matchmaking status',
+    })
+  }
+})
+
 module.exports = {
   joinGlobalMatchmakingQueue,
   leaveGlobalMatchmakingQueue,
   getGlobalMatchmakingStatusController,
   processGlobalMatchmakingController,
+  getGlobalMatchmakingStatusDetailed,
 }
