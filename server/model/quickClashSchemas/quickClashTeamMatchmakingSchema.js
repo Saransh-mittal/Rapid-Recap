@@ -38,10 +38,6 @@ const quickClashTeamMatchmakingSchema = new mongoose.Schema({
     type: Number,
     default: 0,
   },
-  matchingAttempts: {
-    type: Number,
-    default: 0,
-  },
 })
 
 // Create indexes for efficient queries

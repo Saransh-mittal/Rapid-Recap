@@ -466,74 +466,6 @@ const toggleTeamPersistence = async ({ teamId, userId }) => {
 }
 
 /**
- * Update team member category selection
- * @param {Object} params - Parameters
- * @param {string} params.teamId - Team ID
- * @param {string} params.userId - User ID
- * @param {string} params.category - Selected category
- * @returns {Promise<Object>} Updated team
- */
-const updateMemberCategory = async ({ teamId, userId, category }) => {
-  const session = await mongoose.startSession()
-
-  try {
-    return await session.withTransaction(async () => {
-      // Find the team
-      const team = await QuickClashTeam.findById(teamId).session(session)
-      if (!team) {
-        throw new Error('Team not found')
-      }
-
-      // Check if team is in a match
-      if (!team.isInMatch) {
-        throw new Error('Team is not in a match')
-      }
-
-      // Find the member
-      const memberIndex = team.members.findIndex(
-        member => member.user.toString() === userId.toString(),
-      )
-
-      if (memberIndex === -1) {
-        throw new Error('Not a member of this team')
-      }
-
-      // Check if category is already selected by another team member
-      const categoryAlreadySelected = team.members.some(
-        member =>
-          member.user.toString() !== userId.toString() &&
-          member.selectedCategory === category,
-      )
-
-      if (categoryAlreadySelected) {
-        throw new Error('Category already selected by another team member')
-      }
-
-      // Update member's selected category
-      team.members[memberIndex].selectedCategory = category
-
-      // Update last active timestamp
-      team.lastActive = new Date()
-
-      await team.save({ session })
-
-      // Emit event
-      setTimeout(() => {
-        globalEmitter.emit('quickClash:memberCategoryUpdated', {
-          team: team._id,
-          user: userId,
-          category,
-        })
-      }, 0)
-
-      return team
-    })
-  } finally {
-    session.endSession()
-  }
-}
-
-/**
  * Update team match status
  * @param {Object} params - Parameters
  * @param {string} params.teamId - Team ID
@@ -674,7 +606,6 @@ module.exports = {
   updateMemberStatus,
   getUserTeams,
   toggleTeamPersistence,
-  updateMemberCategory,
   updateTeamMatchStatus,
   removeMember,
 }

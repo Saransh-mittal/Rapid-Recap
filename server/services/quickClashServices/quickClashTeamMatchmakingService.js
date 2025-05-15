@@ -1424,15 +1424,6 @@ const performMatchmaking = async providedSession => {
           `Created auto-formed team ${newTeam._id} from ${sourceTeams.length} source teams and ${soloPlayers.length} solo players`,
         )
 
-        globalEmitter.emit('quickClash:autoTeamFormed', {
-          teamId: newTeam._id,
-          teamName: newTeam.name || 'Auto-formed Team',
-          sourceTeams: sourceTeams, // Teams that were combined
-          soloPlayers: soloPlayers, // Solo players that were added
-          memberCount: newTeam.members.length,
-          formationDate: new Date(),
-        })
-
         // Mark all used teams as 'processed' in the matchmaking entry
         // AND REMOVE ALL INDIVIDUAL PLAYER ENTRIES
         for (const usedTeamId of usedTeamIds) {
@@ -2189,11 +2180,6 @@ const getRandomCategories = (categories, count) => {
   return shuffled.slice(0, count)
 }
 
-// Expose for testing
-const _getTeamFormationState = () => {
-  return { ...teamFormationState }
-}
-
 module.exports = {
   joinTeamMatchmaking,
   joinGlobalMatchmaking,
@@ -2206,6 +2192,4 @@ module.exports = {
   processGlobalMatchmaking,
   processTeamMatchmaking,
   checkUserInMatchmaking,
-  // For testing
-  _getTeamFormationState,
 }

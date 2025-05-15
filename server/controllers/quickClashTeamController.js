@@ -11,7 +11,6 @@ const {
   updateMemberStatus,
   getUserTeams,
   toggleTeamPersistence,
-  updateMemberCategory,
   removeMember,
 } = require('../services/quickClashServices/quickClashTeamService')
 
