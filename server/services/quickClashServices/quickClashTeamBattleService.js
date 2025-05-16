@@ -24,6 +24,7 @@ const {
   createPlaceholderHighlight,
 } = require('../../utils/quickClashHighlightIntegration.utils')
 const QuickClashGlobalMatchmaking = require('../../model/quickClashSchemas/quickClashGlobalMatchmakingSchema')
+const QuickClashTeamMatchmaking = require('../../model/quickClashSchemas/quickClashTeamMatchmakingSchema')
 
 // Constants
 const TEAM_BATTLE_EXPIRY = 24 * 60 * 60 * 1000 // 24 hours same as regular challenges
@@ -554,8 +555,24 @@ const createTeamBattle = async ({
         englishQuiz: result.englishQuiz,
       }))
 
-      // ======= PROGRESS: BATTLE FINALIZING (95%) =======
-      console.log(`[TeamBattle] PHASE 10: Battle finalizing (95%)`)
+      console.log(`[TeamBattle] PHASE 10: Matchmaking cleanup (95%)`)
+
+      // Clean up all matchmaking entries before emitting events
+      try {
+        await cleanupMatchmakingEntries({
+          teamAId,
+          teamBId,
+          session,
+        })
+        console.log(`[TeamBattle] Matchmaking cleanup completed successfully`)
+      } catch (cleanupError) {
+        console.error(
+          `[TeamBattle] Error during matchmaking cleanup:`,
+          cleanupError,
+        )
+        // Don't throw here - the battle is created, we just log the error
+        // The cleanup is important but shouldn't fail the entire battle creation
+      }
 
       // If we started a transaction, commit it
       if (startedTransaction) {
@@ -605,53 +622,16 @@ const createTeamBattle = async ({
       console.log(`[TeamBattle] Setting up event emission`)
       setTimeout(() => {
         console.log(
-          `[TeamBattle] Emitting teamBattleCreated event for battle: ${teamBattle._id}`,
+          `[TeamBattle] Emitting teamBattleReady event for battle: ${teamBattle._id}`,
         )
-        globalEmitter.emit('quickClash:teamBattleCreated', {
-          teamBattle: teamBattle._id,
+
+        // Only emit teamBattleReady event
+        globalEmitter.emit('quickClash:teamBattleReady', {
+          battleId: teamBattle._id,
           teamA: teamAId,
           teamB: teamBId,
           categories,
         })
-
-        // Also emit the teamBattleReady event with appropriate information
-        // For team A members
-        console.log(
-          `[TeamBattle] Team A: ${teamA.name} with ${teamA.members.length} members`,
-        )
-        if (teamA && teamA.members) {
-          teamA.members.forEach(member => {
-            console.log(
-              `[TeamBattle] Emitting teamBattleReady event for Team A member: ${member.user._id}`,
-            )
-            globalEmitter.emit('quickClash:teamBattleReady', {
-              battleId: teamBattle._id,
-              teamId: teamAId,
-              teamA: teamAId,
-              teamB: teamBId,
-              userId: member.user._id,
-            })
-          })
-        }
-
-        // For team B members
-        console.log(
-          `[TeamBattle] Team B: ${teamB.name} with ${teamB.members.length} members`,
-        )
-        if (teamB && teamB.members) {
-          teamB.members.forEach(member => {
-            console.log(
-              `[TeamBattle] Emitting teamBattleReady event for Team B member: ${member.user._id}`,
-            )
-            globalEmitter.emit('quickClash:teamBattleReady', {
-              battleId: teamBattle._id,
-              teamId: teamBId,
-              teamA: teamAId,
-              teamB: teamBId,
-              userId: member.user._id,
-            })
-          })
-        }
       }, 0)
 
       console.log(
@@ -1517,6 +1497,105 @@ const getTeamBattleDetails = async ({ battleId }) => {
   }
 
   return battle
+}
+
+/**
+ * Clean up all matchmaking entries for teams and their members when a battle is created
+ * @param {Object} params - Parameters
+ * @param {string} params.teamAId - Team A ID
+ * @param {string} params.teamBId - Team B ID
+ * @param {mongoose.ClientSession} params.session - Database session
+ * @returns {Promise<void>}
+ */
+const cleanupMatchmakingEntries = async ({ teamAId, teamBId, session }) => {
+  console.log(
+    `[TeamBattle] Starting matchmaking cleanup for teams ${teamAId} and ${teamBId}`,
+  )
+
+  try {
+    // Get both teams with their formation info
+    const teams = await QuickClashTeam.find({
+      _id: { $in: [teamAId, teamBId] },
+    })
+      .populate('members.user', '_id')
+      .session(session)
+
+    const teamsToProcess = []
+    const usersToCleanup = new Set()
+    const sourceTeamsToCleanup = new Set()
+
+    // Process each team
+    for (const team of teams) {
+      console.log(`[TeamBattle] Processing team ${team._id}`)
+
+      // Add team to cleanup list
+      teamsToProcess.push(team._id)
+
+      // Add all team members to user cleanup list
+      team.members.forEach(member => {
+        const userId = member.user._id || member.user
+        usersToCleanup.add(userId.toString())
+      })
+
+      // If this is an auto-formed team, also cleanup source teams
+      if (team.formationInfo && team.formationInfo.isAutoFormed) {
+        console.log(
+          `[TeamBattle] Team ${team._id} is auto-formed, adding source teams to cleanup`,
+        )
+
+        // Add source teams to cleanup
+        if (team.formationInfo.sourceTeams) {
+          team.formationInfo.sourceTeams.forEach(sourceTeamId => {
+            sourceTeamsToCleanup.add(sourceTeamId.toString())
+          })
+        }
+
+        // Add solo players to cleanup
+        if (team.formationInfo.soloPlayers) {
+          team.formationInfo.soloPlayers.forEach(playerId => {
+            usersToCleanup.add(playerId.toString())
+          })
+        }
+      }
+    }
+
+    // 1. Remove all team matchmaking entries
+    console.log(
+      `[TeamBattle] Removing team matchmaking entries for ${teamsToProcess.length} teams`,
+    )
+    const teamCleanupResult = await QuickClashTeamMatchmaking.deleteMany({
+      team: { $in: [...teamsToProcess, ...Array.from(sourceTeamsToCleanup)] },
+    }).session(session)
+    console.log(
+      `[TeamBattle] Removed ${teamCleanupResult.deletedCount} team matchmaking entries`,
+    )
+
+    // 2. Remove all global matchmaking entries for users
+    console.log(
+      `[TeamBattle] Removing global matchmaking entries for ${usersToCleanup.size} users`,
+    )
+    const userCleanupResult = await QuickClashGlobalMatchmaking.deleteMany({
+      user: { $in: Array.from(usersToCleanup) },
+    }).session(session)
+    console.log(
+      `[TeamBattle] Removed ${userCleanupResult.deletedCount} global matchmaking entries`,
+    )
+
+    // 3. Clean up any remaining processed teams that might be lingering
+    console.log(`[TeamBattle] Cleaning up any processed teams`)
+    const processedCleanupResult = await QuickClashTeamMatchmaking.deleteMany({
+      status: 'processed',
+      team: { $in: [...teamsToProcess, ...Array.from(sourceTeamsToCleanup)] },
+    }).session(session)
+    console.log(
+      `[TeamBattle] Removed ${processedCleanupResult.deletedCount} processed team entries`,
+    )
+
+    console.log(`[TeamBattle] Matchmaking cleanup completed successfully`)
+  } catch (error) {
+    console.error(`[TeamBattle] Error during matchmaking cleanup:`, error)
+    throw error
+  }
 }
 
 module.exports = {

@@ -687,50 +687,32 @@ const setupQuickClashGlobalEvents = io => {
         )
         io.to(`quickClash:${userId}`).emit('quickClash:teamBattleReady', {
           battleId,
-          teamId: teamA, // For solo players, we set the teamId to teamA by default
-          teamA, // Include these for consistent payload format
+          teamId: teamId || teamA,
+          teamA,
           teamB,
-          isSoloPlayer: true, // Add flag to indicate this is a solo player
+          isSoloPlayer: true,
         })
         return
       }
 
-      // Otherwise, send to all team members
-      if (teamAMembers) {
-        teamAMembers.forEach(member => {
-          if (member.userId) {
-            console.log(
-              `SOCKET: Sending battle ready notification to team A member ${member.userId}`,
-            )
-            io.to(`quickClash:${member.userId}`).emit(
-              'quickClash:teamBattleReady',
-              {
-                battleId,
-                teamId: teamA,
-                teamA,
-                teamB,
-              },
-            )
-          }
+      // For regular teams, use notifyTeamMembers to send to all team members
+      if (teamA) {
+        console.log(`SOCKET: Notifying Team A members about battle ready`)
+        notifyTeamMembers(teamA, 'quickClash:teamBattleReady', {
+          battleId,
+          teamId: teamA,
+          teamA,
+          teamB,
         })
       }
 
-      if (teamBMembers) {
-        teamBMembers.forEach(member => {
-          if (member.userId) {
-            console.log(
-              `SOCKET: Sending battle ready notification to team B member ${member.userId}`,
-            )
-            io.to(`quickClash:${member.userId}`).emit(
-              'quickClash:teamBattleReady',
-              {
-                battleId,
-                teamId: teamB,
-                teamA,
-                teamB,
-              },
-            )
-          }
+      if (teamB) {
+        console.log(`SOCKET: Notifying Team B members about battle ready`)
+        notifyTeamMembers(teamB, 'quickClash:teamBattleReady', {
+          battleId,
+          teamId: teamB,
+          teamA,
+          teamB,
         })
       }
     },

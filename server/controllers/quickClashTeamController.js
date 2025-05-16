@@ -28,6 +28,7 @@ const {
 const QuickClashTeam = require('../model/quickClashSchemas/quickClashTeamSchema')
 const QuickClashTeamMatchmaking = require('../model/quickClashSchemas/quickClashTeamMatchmakingSchema')
 const QuickClashGlobalMatchmaking = require('../model/quickClashSchemas/quickClashGlobalMatchmakingSchema')
+const QuickClashTeamBattle = require('../model/quickClashSchemas/quickClashTeamBattleSchema')
 
 /**
  * @desc    Create a new team
@@ -654,6 +655,45 @@ const getTeamMatchmakingStatusDetailed = asyncHandler(async (req, res) => {
         success: false,
         message: 'You are not a member of this team',
       })
+    }
+
+    // Check if user has an active battle ready for them
+    const userTeamBattles = await QuickClashTeamBattle.find({
+      $or: [{ 'teamAMembers.user': userId }, { 'teamBMembers.user': userId }],
+      status: 'active',
+      createdAt: { $gte: new Date(Date.now() - 5 * 60 * 1000) }, // Battle created in last 5 minutes
+    }).populate([
+      { path: 'teamA', select: '_id name' },
+      { path: 'teamB', select: '_id name' },
+    ])
+
+    // Check if any battle is ready for this user
+    for (const battle of userTeamBattles) {
+      // Check if this battle has all challenges (battle is ready)
+      if (
+        battle.challenges &&
+        battle.challenges.length === battle.categories.length
+      ) {
+        // Check if this user is part of this battle
+        const isTeamAMember = battle.teamAMembers.some(
+          m => m.user._id.toString() === userId.toString(),
+        )
+        const isTeamBMember = battle.teamBMembers.some(
+          m => m.user._id.toString() === userId.toString(),
+        )
+
+        if (isTeamAMember || isTeamBMember) {
+          return res.json({
+            success: true,
+            inMatchmaking: false,
+            status: 'battleReady',
+            battleId: battle._id,
+            teamId: isTeamAMember ? battle.teamA._id : battle.teamB._id,
+            teamA: battle.teamA._id,
+            teamB: battle.teamB._id,
+          })
+        }
+      }
     }
 
     // Get matchmaking entry

@@ -52,6 +52,7 @@ import useQuickClashGlobalMatchmaking from '../../customHooks/useQuickClashGloba
 import { useSocket } from '../../customHooks/useSocket'
 import {
   resetGlobalMatchmakingState,
+  setBattleReady,
   setJoinType,
   setOriginalTeam,
   setSelectedTeamId,
@@ -172,7 +173,48 @@ const GlobalMatchmakingButton = ({ compact = false }) => {
             if (statusData) {
               let updateMessage = t('Checking for updates...')
 
-              // Interpret status data to create meaningful messages
+              // CRITICAL FIX: Check if battle is ready
+              if (statusData.status === 'battleReady') {
+                console.log(
+                  'Battle ready detected via HTTP polling:',
+                  statusData,
+                )
+
+                // Set battle ready state in Redux
+                dispatch(
+                  setBattleReady({
+                    battleId: statusData.battleId,
+                    teamId: statusData.teamId,
+                    teamA: statusData.teamA,
+                    teamB: statusData.teamB,
+                  }),
+                )
+
+                // Stop polling since battle is ready
+                if (pollingIntervalRef.current) {
+                  clearInterval(pollingIntervalRef.current)
+                  pollingIntervalRef.current = null
+                }
+
+                // Add final status update
+                const timeElapsed = Math.floor(
+                  (Date.now() - mountTimeRef.current) / 1000,
+                )
+                setStatusUpdates(prev => [
+                  {
+                    id: Date.now(),
+                    message: t(
+                      'Battle is ready! You can now enter the battle.',
+                    ),
+                    time: timeElapsed,
+                  },
+                  ...prev.slice(0, 2),
+                ])
+
+                return // Exit early since battle is ready
+              }
+
+              // Interpret other status data to create meaningful messages
               if (statusData.status === 'searching_players') {
                 updateMessage = t(
                   'Searching for players with similar skill level...',
@@ -199,6 +241,12 @@ const GlobalMatchmakingButton = ({ compact = false }) => {
                 updateMessage = t('{{count}} players searching globally', {
                   count: statusData.soloPlayersInQueue,
                 })
+              } else if (statusData.status === 'team_formation_in_progress') {
+                updateMessage = t(
+                  'Your team is being merged with other players...',
+                )
+              } else if (statusData.status === 'matching_teams') {
+                updateMessage = t('Looking for an opponent team to battle...')
               }
 
               // Add the status update
@@ -257,7 +305,14 @@ const GlobalMatchmakingButton = ({ compact = false }) => {
         }
       }
     }
-  }, [inMatchmaking, isModalOpen, pollMatchmakingStatus, t])
+  }, [
+    inMatchmaking,
+    isModalOpen,
+    pollMatchmakingStatus,
+    t,
+    dispatch,
+    setBattleReady,
+  ])
 
   // Socket listeners for team events (keep existing ones)
   useEffect(() => {
@@ -752,11 +807,156 @@ const GlobalMatchmakingButton = ({ compact = false }) => {
 
   // Render modal content
   const renderModalContent = () => {
+    // If battle is ready, show the battle ready UI
+    if (battleReady) {
+      const badgeInfo = getBadgeInfo()
+
+      return (
+        <VStack spacing={6} align="center">
+          {/* Battle Ready Animation */}
+          <MotionFlex
+            justify="center"
+            align="center"
+            w="120px"
+            h="120px"
+            borderRadius="full"
+            bg="rgba(72, 187, 120, 0.1)"
+            border="2px solid"
+            borderColor="green.400"
+            position="relative"
+            animate={{
+              scale: [1, 1.05, 1],
+              boxShadow: [
+                '0 0 0px rgba(72, 187, 120, 0.4)',
+                '0 0 30px rgba(72, 187, 120, 0.8)',
+                '0 0 0px rgba(72, 187, 120, 0.4)',
+              ],
+            }}
+            transition={{
+              duration: 1.5,
+              repeat: Infinity,
+              repeatType: 'reverse',
+            }}
+          >
+            <Icon as={Zap} color="green.400" boxSize={16} />
+            <MotionBox
+              position="absolute"
+              animate={{
+                y: [0, -20, 0],
+                opacity: [0.5, 1, 0.5],
+              }}
+              transition={{
+                duration: 2,
+                repeat: Infinity,
+                repeatType: 'reverse',
+              }}
+            >
+              <Icon as={Trophy} color="green.200" boxSize={8} />
+            </MotionBox>
+          </MotionFlex>
+
+          {/* Battle Ready Status */}
+          <VStack spacing={2} align="center">
+            <Text color="green.400" fontSize="3xl" fontWeight="bold">
+              {t('Battle Ready!')}
+            </Text>
+            <Text color="whiteAlpha.800" fontSize="lg" textAlign="center">
+              {t('Your 4v4 team battle is ready to begin')}
+            </Text>
+          </VStack>
+
+          {/* Matchmaking Type Badge */}
+          <Tooltip label={badgeInfo.tooltip} hasArrow placement="top">
+            <MotionBadge
+              colorScheme={badgeInfo.color}
+              px={4}
+              py={2}
+              borderRadius="full"
+              fontSize="md"
+              display="flex"
+              alignItems="center"
+              animate={{
+                y: [0, -3, 0],
+              }}
+              transition={{
+                duration: 2,
+                repeat: Infinity,
+                repeatType: 'reverse',
+              }}
+            >
+              <Icon as={badgeInfo.icon} mr={2} boxSize={5} />
+              {badgeInfo.text}
+            </MotionBadge>
+          </Tooltip>
+
+          {/* Battle Information */}
+          {battleReady && (
+            <Box
+              w="100%"
+              bg="rgba(72, 187, 120, 0.1)"
+              borderRadius="md"
+              p={4}
+              borderWidth="1px"
+              borderColor="green.500"
+            >
+              <VStack spacing={3}>
+                <HStack justify="space-between" w="100%">
+                  <Text color="whiteAlpha.700" fontSize="sm">
+                    {t('Total Time in Queue')}
+                  </Text>
+                  <Text color="white" fontWeight="bold" fontFamily="mono">
+                    {formatMatchmakingTime(matchmakingTime)}
+                  </Text>
+                </HStack>
+
+                {battleReady.teamA && battleReady.teamB && (
+                  <VStack spacing={2} w="100%">
+                    <Text color="green.400" fontWeight="bold" fontSize="sm">
+                      {t('Match Details')}
+                    </Text>
+                    <HStack justify="space-between" w="100%">
+                      <HStack>
+                        <Icon as={Users} color="blue.400" boxSize={4} />
+                        <Text color="whiteAlpha.800" fontSize="sm">
+                          {t('Your Team')}
+                        </Text>
+                      </HStack>
+                      <Text color="white" fontSize="sm">
+                        vs
+                      </Text>
+                      <HStack>
+                        <Icon as={Users} color="purple.400" boxSize={4} />
+                        <Text color="whiteAlpha.800" fontSize="sm">
+                          {t('Opponent Team')}
+                        </Text>
+                      </HStack>
+                    </HStack>
+                  </VStack>
+                )}
+              </VStack>
+            </Box>
+          )}
+
+          {/* Instructions */}
+          <Box w="100%" textAlign="center">
+            <Text color="whiteAlpha.600" fontSize="sm">
+              {t(
+                'Click "Enter Battle" to join your team and select your category',
+              )}
+            </Text>
+          </Box>
+        </VStack>
+      )
+    }
+
     if (inMatchmaking) {
       const badgeInfo = getBadgeInfo()
 
       return (
         <VStack spacing={6} align="center">
+          {/* Rest of the existing matchmaking UI... */}
+          {/* (Keep the existing matchmaking content as is) */}
+
           {/* Animated Matchmaking Status */}
           <MotionFlex
             justify="center"
@@ -984,7 +1184,7 @@ const GlobalMatchmakingButton = ({ compact = false }) => {
       )
     }
 
-    // Not in matchmaking - show team selection
+    // Rest of the function (not in matchmaking case) remains the same...
     return (
       <VStack spacing={6} align="stretch">
         {/* Header */}
@@ -1160,7 +1360,44 @@ const GlobalMatchmakingButton = ({ compact = false }) => {
           <ModalBody py={6}>{renderModalContent()}</ModalBody>
 
           <ModalFooter borderTopWidth="1px" borderColor="whiteAlpha.200">
-            {inMatchmaking ? (
+            {battleReady ? (
+              // Battle is ready - show Enter Battle button
+              <Button
+                colorScheme="green"
+                size="lg"
+                leftIcon={<Icon as={Zap} />}
+                onClick={enterBattle}
+                w="100%"
+                fontSize="lg"
+                py={6}
+                bgGradient="linear(to-r, green.500, teal.500)"
+                _hover={{
+                  bgGradient: 'linear(to-r, green.400, teal.400)',
+                  transform: 'translateY(-2px)',
+                }}
+                _active={{
+                  bgGradient: 'linear(to-r, green.600, teal.600)',
+                }}
+                as={motion.button}
+                whileHover={{ scale: 1.02 }}
+                whileTap={{ scale: 0.98 }}
+                animate={{
+                  boxShadow: [
+                    '0 0 0px rgba(72, 187, 120, 0.4)',
+                    '0 0 20px rgba(72, 187, 120, 0.7)',
+                    '0 0 0px rgba(72, 187, 120, 0.4)',
+                  ],
+                }}
+                transition={{
+                  duration: 2,
+                  repeat: Infinity,
+                  repeatType: 'reverse',
+                }}
+              >
+                {t('Enter Battle')}
+              </Button>
+            ) : inMatchmaking ? (
+              // Currently in matchmaking - show Leave Queue button
               <Button
                 colorScheme="red"
                 variant="outline"
@@ -1173,6 +1410,7 @@ const GlobalMatchmakingButton = ({ compact = false }) => {
                 {t('Leave Queue')}
               </Button>
             ) : (
+              // Not in matchmaking - show Join/Cancel buttons
               <>
                 <Button
                   variant="ghost"

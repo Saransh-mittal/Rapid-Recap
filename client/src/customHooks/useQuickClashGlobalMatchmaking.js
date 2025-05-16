@@ -64,23 +64,14 @@ const useQuickClashGlobalMatchmaking = () => {
       joinedTeamsRoom.current = true
     }
 
-    // Battle ready notification - the main important socket event we keep
+    // Battle ready notification - simplified since backend uses notifyTeamMembers
     socket.on('quickClash:teamBattleReady', data => {
-      const isSoloPlayer = globalMatchmakingState.matchmakingType === 'solo'
-      let isForUser = false
+      console.log('Received teamBattleReady event:', data)
 
-      if (isSoloPlayer && data.battleId) {
-        isForUser = true
-      } else if (globalMatchmakingState.selectedTeamId) {
-        isForUser =
-          data.teamId === globalMatchmakingState.selectedTeamId ||
-          data.teamA === globalMatchmakingState.selectedTeamId ||
-          data.teamB === globalMatchmakingState.selectedTeamId
-      }
-
-      if (isForUser) {
-        dispatch(setBattleReady(data))
-      }
+      // Since backend uses notifyTeamMembers, this event is already targeted to the right users
+      // Just set the battle ready state
+      console.log('Setting battle ready for user')
+      dispatch(setBattleReady(data))
     })
 
     return () => {
@@ -117,13 +108,17 @@ const useQuickClashGlobalMatchmaking = () => {
         }, 1000)
       }
     } else {
-      // Stop timer and reset start time when not in matchmaking
+      // Stop timer when not in matchmaking OR when battle is ready
       if (timerRef.current) {
         clearInterval(timerRef.current)
         timerRef.current = null
       }
 
-      if (!globalMatchmakingState.inMatchmaking) {
+      // Reset start time only when completely leaving matchmaking (not when battle is ready)
+      if (
+        !globalMatchmakingState.inMatchmaking &&
+        !globalMatchmakingState.battleReady
+      ) {
         matchmakingStartTimeRef.current = null
         setLocalMatchmakingTime(0)
       }
