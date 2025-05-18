@@ -150,7 +150,7 @@ const GlobalMatchmakingButton = ({ compact = false }) => {
     try {
       setLoadingTeams(true)
       const response = await axios.get('/api/quickClash/teams')
-      setMyTeams(response.data.teams || [])
+      setMyTeams(response.data?.teams || [])
     } catch (error) {
       console.error('Error fetching teams:', error)
     } finally {
@@ -181,7 +181,7 @@ const GlobalMatchmakingButton = ({ compact = false }) => {
               let updateMessage = t('Checking for updates...')
 
               // CRITICAL FIX: Check if battle is ready
-              if (statusData.status === 'battleReady') {
+              if (statusData?.status === 'battleReady') {
                 console.log(
                   'Battle ready detected via HTTP polling:',
                   statusData,
@@ -190,10 +190,10 @@ const GlobalMatchmakingButton = ({ compact = false }) => {
                 // Set battle ready state in Redux
                 dispatch(
                   setBattleReady({
-                    battleId: statusData.battleId,
-                    teamId: statusData.teamId,
-                    teamA: statusData.teamA,
-                    teamB: statusData.teamB,
+                    battleId: statusData?.battleId,
+                    teamId: statusData?.teamId,
+                    teamA: statusData?.teamA,
+                    teamB: statusData?.teamB,
                   }),
                 )
 
@@ -222,37 +222,37 @@ const GlobalMatchmakingButton = ({ compact = false }) => {
               }
 
               // Interpret other status data to create meaningful messages
-              if (statusData.status === 'searching_players') {
+              if (statusData?.status === 'searching_players') {
                 updateMessage = t(
                   'Searching for players with similar skill level...',
                 )
-              } else if (statusData.status === 'forming_team') {
+              } else if (statusData?.status === 'forming_team') {
                 updateMessage = t('Found players! Forming your team...')
-              } else if (statusData.status === 'team_completed') {
+              } else if (statusData?.status === 'team_completed') {
                 updateMessage = t(
                   'Team formed successfully! Looking for opponents...',
                 )
-              } else if (statusData.status === 'matching_teams') {
+              } else if (statusData?.status === 'matching_teams') {
                 updateMessage = t(
                   'Finding an opponent team to battle against...',
                 )
-              } else if (statusData.status === 'preparing_battle') {
+              } else if (statusData?.status === 'preparing_battle') {
                 updateMessage = t(
                   'Match found! Setting up your battle arena...',
                 )
-              } else if (statusData.teamMembersCount) {
+              } else if (statusData?.teamMembersCount) {
                 updateMessage = t('Team has {{count}} of 4 players', {
-                  count: statusData.teamMembersCount,
+                  count: statusData?.teamMembersCount,
                 })
-              } else if (statusData.soloPlayersInQueue) {
+              } else if (statusData?.soloPlayersInQueue) {
                 updateMessage = t('{{count}} players searching globally', {
-                  count: statusData.soloPlayersInQueue,
+                  count: statusData?.soloPlayersInQueue,
                 })
-              } else if (statusData.status === 'team_formation_in_progress') {
+              } else if (statusData?.status === 'team_formation_in_progress') {
                 updateMessage = t(
                   'Your team is being merged with other players...',
                 )
-              } else if (statusData.status === 'matching_teams') {
+              } else if (statusData?.status === 'matching_teams') {
                 updateMessage = t('Looking for an opponent team to battle...')
               }
 
@@ -330,12 +330,12 @@ const GlobalMatchmakingButton = ({ compact = false }) => {
     socket.on('quickClash:teamLeftMatchmaking', data => {
       console.log('Received teamLeftMatchmaking event:', data)
 
-      if (data.reason === 'memberLeft' && data.memberName) {
+      if (data?.reason === 'memberLeft' && data?.memberName) {
         toast({
           title: t('Team Left Matchmaking'),
           description: t(
             '{{memberName}} left matchmaking. Your team has been removed from the queue.',
-            { memberName: data.memberName },
+            { memberName: data?.memberName },
           ),
           status: 'info',
           duration: 5000,
@@ -386,18 +386,18 @@ const GlobalMatchmakingButton = ({ compact = false }) => {
       if (user?._id) {
         // Update Redux state based on socket data
         const userIsInThisTeam =
-          data.teamMembers &&
-          data.teamMembers.some(member => member.userId === user._id)
+          data?.teamMembers &&
+          data?.teamMembers.some(member => member.userId === user._id)
 
-        if (userIsInThisTeam || data.teamId === selectedTeamId) {
-          dispatch(setSelectedTeamId(data.teamId))
-          dispatch(setTeamName(data.teamName || 'Team'))
+        if (userIsInThisTeam || data?.teamId === selectedTeamId) {
+          dispatch(setSelectedTeamId(data?.teamId))
+          dispatch(setTeamName(data?.teamName || 'Team'))
 
           let joinType = 'regular'
           let effectiveMatchmakingType = 'team'
 
-          if (data.isAutoFormed) {
-            const currentUserMember = data.teamMembers?.find(
+          if (data?.isAutoFormed) {
+            const currentUserMember = data?.teamMembers?.find(
               member => member.userId === user._id,
             )
 
@@ -420,12 +420,12 @@ const GlobalMatchmakingButton = ({ compact = false }) => {
               inMatchmaking: true,
               matchmakingType: effectiveMatchmakingType,
               teamName:
-                joinType === 'sourceTeam' && data.originalTeam
-                  ? data.originalTeam.name
-                  : data.teamName,
+                joinType === 'sourceTeam' && data?.originalTeam
+                  ? data?.originalTeam.name
+                  : data?.teamName,
               joinType: joinType,
               originalTeam:
-                joinType === 'sourceTeam' ? data.originalTeam : null,
+                joinType === 'sourceTeam' ? data?.originalTeam : null,
             }),
           )
         }
@@ -504,8 +504,8 @@ const GlobalMatchmakingButton = ({ compact = false }) => {
           const teamResponse = await axios.get(
             `/api/quickClash/team/${selectedTeamId}`,
           )
-          if (teamResponse.data && teamResponse.data.team) {
-            const teamName = teamResponse.data.team.name || 'Team'
+          if (teamResponse.data && teamResponse.data?.team) {
+            const teamName = teamResponse.data?.team.name || 'Team'
             await joinWithTeam(selectedTeamId, teamName)
           } else {
             await joinWithTeam(selectedTeamId)
