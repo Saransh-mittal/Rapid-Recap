@@ -60,12 +60,10 @@ const TeamBattlePage = lazy(() =>
 const GlobalMatchmakingButton = lazy(() =>
   import('../components/quickClashComponents/GlobalMatchmakingButton'),
 )
-const GlobalMatchmakingFloatingButton = lazy(() =>
-  import('../components/quickClashComponents/GlobalMatchmakingFloatingButton'),
-)
 
 // Import custom hook for global matchmaking
 import useQuickClashGlobalMatchmaking from '../customHooks/useQuickClashGlobalMatchmaking'
+import BattleCreationNotifications from '../components/quickClashComponents/BattleCreationNotifications.jsx'
 
 // Loading fallback
 const LoadingFallback = () => (
@@ -276,13 +274,6 @@ const QuickClash = () => {
           </Box>
         </MotionBox>
 
-        {/* Floating Global Matchmaking Button for mobile */}
-        {showFloatingMenu && (
-          <Suspense fallback={null}>
-            <GlobalMatchmakingFloatingButton position="bottom-right" />
-          </Suspense>
-        )}
-
         {/* Floating Action Menu for mobile - Using the enhanced version with integrated task popup */}
         {showFloatingMenu && (
           <Suspense fallback={null}>
@@ -312,6 +303,7 @@ const QuickClash = () => {
           <TaskCompletionHandler />
         </Suspense>
       </Container>
+      <BattleCreationNotifications />
     </>
   )
 }

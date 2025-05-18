@@ -761,6 +761,290 @@ const setupQuickClashGlobalEvents = io => {
     },
   )
 
+  globalEmitter.on('quickClash:matchmakingLocked', data => {
+    if (!data.teamA || !data.teamB) {
+      console.error('Invalid data in quickClash:matchmakingLocked event')
+      return
+    }
+
+    console.log(
+      `SOCKET: Teams ${data.teamA} and ${data.teamB} locked in matchmaking`,
+    )
+
+    // If we have member IDs, use direct notification
+    if (data.allMembers && data.allMembers.length > 0) {
+      // Notify all members directly
+      data.allMembers.forEach(userId => {
+        // Get the team id this user belongs to
+        const userTeamId = data.teamAMembers.includes(userId)
+          ? data.teamA
+          : data.teamB
+        const teamName = data.teamAMembers.includes(userId)
+          ? data.teamAName
+          : data.teamBName
+
+        // Get the user's socket(s)
+        if (userSocketMap.has(userId)) {
+          const userSocketIds = userSocketMap.get(userId)
+          userSocketIds.forEach(socketId => {
+            const socket = io.sockets.sockets.get(socketId)
+            if (socket) {
+              socket.emit('quickClash:matchmakingLocked', {
+                status: data.status,
+                teamId: userTeamId,
+                teamName: teamName,
+              })
+            }
+          })
+        } else {
+          // Fallback: Try to use the room
+          io.to(`quickClash:${userId}`).emit('quickClash:matchmakingLocked', {
+            status: data.status,
+            teamId: userTeamId,
+            teamName: teamName,
+          })
+        }
+      })
+    } else {
+      // Fallback to team-based notification if no member IDs provided
+      try {
+        notifyTeamMembers(data.teamA, 'quickClash:matchmakingLocked', {
+          status: data.status,
+          teamId: data.teamA,
+        })
+
+        notifyTeamMembers(data.teamB, 'quickClash:matchmakingLocked', {
+          status: data.status,
+          teamId: data.teamB,
+        })
+      } catch (err) {
+        console.error(
+          'Error notifying team members about matchmaking lock:',
+          err,
+        )
+      }
+    }
+  })
+
+  // Listen for matchmaking unlocked event - use direct member notification
+  globalEmitter.on('quickClash:matchmakingUnlocked', data => {
+    if (!data.teamA || !data.teamB) {
+      console.error('Invalid data in quickClash:matchmakingUnlocked event')
+      return
+    }
+
+    console.log(
+      `SOCKET: Teams ${data.teamA} and ${data.teamB} unlocked from matchmaking`,
+    )
+
+    // If we have member IDs, use direct notification
+    if (data.allMembers && data.allMembers.length > 0) {
+      // Notify all members directly
+      data.allMembers.forEach(userId => {
+        // Get the team id this user belongs to
+        const userTeamId = data.teamAMembers.includes(userId)
+          ? data.teamA
+          : data.teamB
+
+        // Get the user's socket(s)
+        if (userSocketMap.has(userId)) {
+          const userSocketIds = userSocketMap.get(userId)
+          userSocketIds.forEach(socketId => {
+            const socket = io.sockets.sockets.get(socketId)
+            if (socket) {
+              socket.emit('quickClash:matchmakingUnlocked', {
+                status: data.status,
+                teamId: userTeamId,
+              })
+            }
+          })
+        } else {
+          // Fallback: Try to use the room
+          io.to(`quickClash:${userId}`).emit('quickClash:matchmakingUnlocked', {
+            status: data.status,
+            teamId: userTeamId,
+          })
+        }
+      })
+    } else {
+      // Fallback to team-based notification if no member IDs provided
+      try {
+        notifyTeamMembers(data.teamA, 'quickClash:matchmakingUnlocked', {
+          status: data.status,
+          teamId: data.teamA,
+        })
+
+        notifyTeamMembers(data.teamB, 'quickClash:matchmakingUnlocked', {
+          status: data.status,
+          teamId: data.teamB,
+        })
+      } catch (err) {
+        console.error(
+          'Error notifying team members about matchmaking unlock:',
+          err,
+        )
+      }
+    }
+  })
+
+  // Listen for battle creation started event - use direct member notification
+  globalEmitter.on('quickClash:battleCreationStarted', data => {
+    if (!data.teamA || !data.teamB) {
+      console.error('Invalid data in quickClash:battleCreationStarted event')
+      return
+    }
+
+    console.log(
+      `SOCKET: Battle creation started for teams ${data.teamA} and ${data.teamB}`,
+    )
+
+    // If we have member IDs, use direct notification
+    if (data.allMembers && data.allMembers.length > 0) {
+      // Notify all members directly
+      data.allMembers.forEach(userId => {
+        // Get the team id this user belongs to
+        const userTeamId = data.teamAMembers.includes(userId)
+          ? data.teamA
+          : data.teamB
+        const opponentTeamId = data.teamAMembers.includes(userId)
+          ? data.teamB
+          : data.teamA
+
+        // Get the user's socket(s)
+        if (userSocketMap.has(userId)) {
+          const userSocketIds = userSocketMap.get(userId)
+          userSocketIds.forEach(socketId => {
+            const socket = io.sockets.sockets.get(socketId)
+            if (socket) {
+              socket.emit('quickClash:battleCreationStarted', {
+                teamId: userTeamId,
+                opponentTeam: opponentTeamId,
+              })
+            }
+          })
+        } else {
+          // Fallback: Try to use the room
+          io.to(`quickClash:${userId}`).emit(
+            'quickClash:battleCreationStarted',
+            {
+              teamId: userTeamId,
+              opponentTeam: opponentTeamId,
+            },
+          )
+        }
+      })
+    } else {
+      // Fallback to team-based notification if no member IDs provided
+      try {
+        notifyTeamMembers(data.teamA, 'quickClash:battleCreationStarted', {
+          teamId: data.teamA,
+          opponentTeam: data.teamB,
+        })
+
+        notifyTeamMembers(data.teamB, 'quickClash:battleCreationStarted', {
+          teamId: data.teamB,
+          opponentTeam: data.teamA,
+        })
+      } catch (err) {
+        console.error(
+          'Error notifying team members about battle creation:',
+          err,
+        )
+      }
+    }
+  })
+
+  // Listen for battle creation failed event - use direct member notification
+  globalEmitter.on('quickClash:battleCreationFailed', data => {
+    if (!data.teamA || !data.teamB) {
+      console.error('Invalid data in quickClash:battleCreationFailed event')
+      return
+    }
+
+    console.log(
+      `SOCKET: Battle creation failed for teams ${data.teamA} and ${data.teamB}`,
+    )
+
+    // If we have member IDs, use direct notification
+    if (data.allMembers && data.allMembers.length > 0) {
+      // Notify all members directly
+      data.allMembers.forEach(userId => {
+        // Get the team id this user belongs to
+        const userTeamId = data.teamAMembers.includes(userId)
+          ? data.teamA
+          : data.teamB
+
+        // Get the user's socket(s)
+        if (userSocketMap.has(userId)) {
+          const userSocketIds = userSocketMap.get(userId)
+          userSocketIds.forEach(socketId => {
+            const socket = io.sockets.sockets.get(socketId)
+            if (socket) {
+              socket.emit('quickClash:battleCreationFailed', {
+                teamId: userTeamId,
+                error: data.error,
+              })
+            }
+          })
+        } else {
+          // Fallback: Try to use the room
+          io.to(`quickClash:${userId}`).emit(
+            'quickClash:battleCreationFailed',
+            {
+              teamId: userTeamId,
+              error: data.error,
+            },
+          )
+        }
+      })
+    } else {
+      // Fallback to team-based notification if no member IDs provided
+      try {
+        notifyTeamMembers(data.teamA, 'quickClash:battleCreationFailed', {
+          teamId: data.teamA,
+          error: data.error,
+        })
+
+        notifyTeamMembers(data.teamB, 'quickClash:battleCreationFailed', {
+          teamId: data.teamB,
+          error: data.error,
+        })
+      } catch (err) {
+        console.error(
+          'Error notifying team members about battle creation failure:',
+          err,
+        )
+      }
+    }
+  })
+
+  globalEmitter.on('quickClash:battleCreationCleanedUp', data => {
+    console.log(
+      `SOCKET: Battle creation cleaned up for teams ${data.teamA} and ${data.teamB}`,
+    )
+
+    // Send notification to all affected members
+    if (data.memberIds && data.memberIds.length > 0) {
+      data.memberIds.forEach(memberId => {
+        io.to(memberId).emit('quickClash:battleCreationCleanedUp', {
+          message: data.message,
+          teamA: data.teamA,
+          teamB: data.teamB,
+        })
+      })
+    }
+
+    // Also send to the battle creation room if it exists
+    if (data.teamA && data.teamB) {
+      const roomId = `battle_creation_${data.teamA}_${data.teamB}`
+      io.to(roomId).emit('quickClash:battleCreationCleanedUp', {
+        message: data.message,
+        teamA: data.teamA,
+        teamB: data.teamB,
+      })
+    }
+  })
+
   /**
    * Helper function to notify all members of a specific team
    * @param {string} teamId - Team ID

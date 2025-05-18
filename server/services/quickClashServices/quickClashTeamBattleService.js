@@ -25,11 +25,87 @@ const {
 } = require('../../utils/quickClashHighlightIntegration.utils')
 const QuickClashGlobalMatchmaking = require('../../model/quickClashSchemas/quickClashGlobalMatchmakingSchema')
 const QuickClashTeamMatchmaking = require('../../model/quickClashSchemas/quickClashTeamMatchmakingSchema')
+const {
+  lockTeamsInMatchmaking,
+  unlockTeamsInMatchmaking,
+} = require('../../utils/quickClashTeamUtils')
+const { makeRetryable } = require('../../utils/retryUtils')
 
 // Constants
 const TEAM_BATTLE_EXPIRY = 24 * 60 * 60 * 1000 // 24 hours same as regular challenges
 const BASE_TROPHIES = 120 // Base trophies for 4v4 mode
 const TROPHY_K_FACTOR = 0.8 // From trophy formula
+
+/**
+ * Clean up all matchmaking entries when battle creation fails completely
+ * @param {Object} params - Parameters
+ * @param {string} params.teamAId - Team A ID
+ * @param {string} params.teamBId - Team B ID
+ * @returns {Promise<void>}
+ */
+const cleanupFailedBattleMatchmaking = async ({ teamAId, teamBId }) => {
+  console.log(`[TeamBattle] Starting cleanup for failed battle creation`)
+
+  try {
+    // Get both teams to extract member IDs
+    const [teamA, teamB] = await Promise.all([
+      QuickClashTeam.findById(teamAId).populate('members.user', '_id').lean(),
+      QuickClashTeam.findById(teamBId).populate('members.user', '_id').lean(),
+    ])
+
+    // Extract all member IDs
+    const allMemberIds = []
+    if (teamA && teamA.members) {
+      allMemberIds.push(...teamA.members.map(m => m.user._id))
+    }
+    if (teamB && teamB.members) {
+      allMemberIds.push(...teamB.members.map(m => m.user._id))
+    }
+
+    console.log(
+      `[TeamBattle] Cleaning up matchmaking for ${allMemberIds.length} players`,
+    )
+
+    // Remove all team matchmaking entries for both teams
+    await Promise.all([
+      QuickClashTeamMatchmaking.deleteMany({
+        team: { $in: [teamAId, teamBId] },
+      }),
+      // Remove global matchmaking entries for all team members
+      QuickClashGlobalMatchmaking.deleteMany({ user: { $in: allMemberIds } }),
+      // Reset team status to not in match
+      QuickClashTeam.updateMany(
+        { _id: { $in: [teamAId, teamBId] } },
+        { isInMatch: false },
+      ),
+    ])
+
+    console.log(`[TeamBattle] Cleanup completed successfully`)
+
+    // Emit event to notify users about the cleanup
+    setTimeout(() => {
+      globalEmitter.emit('quickClash:battleCreationCleanedUp', {
+        teamA: teamAId,
+        teamB: teamBId,
+        memberIds: allMemberIds.map(id => id.toString()),
+        message:
+          'Battle creation failed. Please try joining matchmaking again.',
+      })
+    }, 0)
+  } catch (cleanupError) {
+    console.error(`[TeamBattle] Error during cleanup:`, cleanupError)
+    // Even if cleanup fails, we should still notify users
+    setTimeout(() => {
+      globalEmitter.emit('quickClash:battleCreationCleanedUp', {
+        teamA: teamAId,
+        teamB: teamBId,
+        memberIds: [],
+        message:
+          'Battle creation failed. Please restart the app and try again.',
+      })
+    }, 0)
+  }
+}
 
 /**
  * Create a new team battle between two teams
@@ -40,631 +116,738 @@ const TROPHY_K_FACTOR = 0.8 // From trophy formula
  * @param {mongoose.ClientSession} [params.session] - Mongoose session for transactions
  * @returns {Promise<Object>} Created team battle
  */
-const createTeamBattle = async ({
-  teamAId,
-  teamBId,
-  categories,
-  session: providedSession,
-}) => {
-  console.log(`[TeamBattle] ===== STARTING TEAM BATTLE CREATION =====`)
-  console.log(
-    `[TeamBattle] TeamA: ${teamAId}, TeamB: ${teamBId}, Categories: ${categories.join(
-      ', ',
-    )}`,
-  )
-
-  // Use provided session or create a new one
-  const session = providedSession || (await mongoose.startSession())
-  let startedTransaction = false
-
-  try {
-    if (!providedSession) {
-      startedTransaction = true
-      await session.startTransaction()
-      console.log(`[TeamBattle] Started new transaction`)
-    } else {
-      console.log(`[TeamBattle] Using provided transaction session`)
-    }
-
-    // ======= PROGRESS: BATTLE INITIALIZATION (5%) =======
-    console.log(`[TeamBattle] PHASE 1: Battle initialization (5%)`)
-
-    // ======= PROGRESS: LOADING TEAM DATA (15%) =======
-    console.log(`[TeamBattle] PHASE 2: Loading team data (15%)`)
-
-    // Get team data
-    let teamA, teamB
-
-    console.log(`[TeamBattle] Fetching Team A (${teamAId}) data`)
-    teamA = await QuickClashTeam.findById(teamAId)
-      .populate('members.user', '_id name inGameName quickClashTrophies')
-      .session(session)
-
-    if (!teamA) {
-      console.error(`[TeamBattle] ERROR: Team A (${teamAId}) not found`)
-      throw new Error('Team A not found')
-    }
+const createTeamBattle = makeRetryable(
+  async ({ teamAId, teamBId, categories, session: providedSession }) => {
+    console.log(`[TeamBattle] ===== STARTING TEAM BATTLE CREATION =====`)
     console.log(
-      `[TeamBattle] Team A loaded: ${teamA.name}, Members: ${teamA.members.length}`,
+      `[TeamBattle] TeamA: ${teamAId}, TeamB: ${teamBId}, Categories: ${categories.join(
+        ', ',
+      )}`,
     )
 
-    // Get real team B data
-    console.log(`[TeamBattle] Fetching Team B (${teamBId}) data`)
-    teamB = await QuickClashTeam.findById(teamBId)
-      .populate('members.user', '_id name inGameName quickClashTrophies')
-      .session(session)
+    // Use provided session or create a new one
+    const session = providedSession || (await mongoose.startSession())
+    let startedTransaction = false
 
-    if (!teamB) {
-      console.error(`[TeamBattle] ERROR: Team B (${teamBId}) not found`)
-      throw new Error('Team B not found')
-    }
-    console.log(
-      `[TeamBattle] Team B loaded: ${teamB.name}, Members: ${teamB.members.length}`,
-    )
-
-    // Set team names if they're empty (matchmaking-created teams)
-    if (!teamA.name || teamA.name.trim() === '') {
-      teamA.name = 'Team A'
-      await teamA.save({ session })
-    }
-
-    if (!teamB.name || teamB.name.trim() === '') {
-      teamB.name = 'Team B'
-      await teamB.save({ session })
-    }
-
-    // ======= PROGRESS: TEAMS LOADED (25%) =======
-    console.log(`[TeamBattle] PHASE 3: Teams loaded (25%)`)
-
-    // ======= PROGRESS: PREPARING CONTENT (35%) =======
-    console.log(`[TeamBattle] PHASE 4: Preparing content (35%)`)
-
-    // Create challenges for each category
-    const challengesData = []
-    const challengeCreationPromises = []
-
-    // Create placeholder data structure for challenges
-    console.log(
-      `[TeamBattle] Creating challenge placeholder data for ${categories.length} categories`,
-    )
-    for (const category of categories) {
-      challengesData.push({
-        category,
-        challenge: null, // Will be filled later
-        teamAPlayer: null,
-        teamBPlayer: null,
-        teamAScore: 0,
-        teamBScore: 0,
-        winner: null,
-        teamACompleted: false,
-        teamBCompleted: false,
-      })
-    }
-
-    // Calculate average trophies for each team
-    console.log(`[TeamBattle] Calculating team trophy averages`)
-    const teamAAvgTrophies = calculateTeamAverageTrophies(teamA)
-    const teamBAvgTrophies = calculateTeamAverageTrophies(teamB)
-    console.log(
-      `[TeamBattle] Trophy averages - Team A: ${teamAAvgTrophies}, Team B: ${teamBAvgTrophies}`,
-    )
-
-    // ======= PROGRESS: PROCESSING ARTICLES (45%) =======
-    console.log(`[TeamBattle] PHASE 5: Processing articles (45%)`)
-
-    // Extract team member data
-    console.log(`[TeamBattle] Extracting team member data`)
-    const teamAMembers = teamA.members.map(member => ({
-      user: member.user._id,
-      category: null,
-      challenge: null,
-      participated: false,
-      completed: false,
-      score: 0,
-      previousTrophies:
-        member.user.quickClashTrophies || DEFAULT_STARTING_TROPHIES,
-      newTrophies: 0,
-      trophyChange: 0,
-    }))
-
-    const teamBMembers = teamB.members.map(member => ({
-      user: member.user._id,
-      category: null,
-      challenge: null,
-      participated: false,
-      completed: false,
-      score: 0,
-      previousTrophies:
-        member.user.quickClashTrophies || DEFAULT_STARTING_TROPHIES,
-      newTrophies: 0,
-      trophyChange: 0,
-    }))
-
-    // Check if this is the first team battle of the day for team A
-    console.log(`[TeamBattle] Checking if first daily team battle for Team A`)
-    const isFirstDaily = await isFirstDailyTeamBattle(teamAId)
-    console.log(`[TeamBattle] Is first daily battle: ${isFirstDaily}`)
-
-    // ======= PROGRESS: BATTLE SETUP (55%) =======
-    console.log(`[TeamBattle] PHASE 6: Battle setup (55%)`)
-
-    // Create the team battle
-    console.log(`[TeamBattle] Creating team battle object`)
-    const teamBattle = new QuickClashTeamBattle({
-      teamA: teamAId,
-      teamB: teamBId,
-      status: 'active',
-      categories,
-      challenges: challengesData,
-      teamAMembers,
-      teamBMembers,
-      expiresAt: new Date(Date.now() + TEAM_BATTLE_EXPIRY),
-      isFirstDailyBattle: isFirstDaily,
-      fromMatchmaking: true,
-    })
-
-    // Calculate potential trophy exchange
-    console.log(`[TeamBattle] Calculating potential trophy exchange`)
-    const potentialTrophyExchange = calculatePotentialTrophyExchange(
-      teamAAvgTrophies,
-      teamBAvgTrophies,
-    )
-    console.log(
-      `[TeamBattle] Potential trophy exchange: ${potentialTrophyExchange}`,
-    )
-
-    // Set trophy exchange base info in battle
-    teamBattle.trophyExchange = {
-      baseAmount: BASE_TROPHIES,
-      adjustedAmount: potentialTrophyExchange,
-      bonuses: {
-        firstDaily: {
-          applied: isFirstDaily,
-          amount: isFirstDaily ? Math.round(potentialTrophyExchange * 0.1) : 0,
-        },
-        strongerTeam: {
-          applied: false, // Will be determined at the end
-          amount: 0,
-        },
-        comebackWin: {
-          applied: false, // Will be determined at the end
-          amount: 0,
-        },
-        allWins: {
-          applied: false, // Will be determined at the end
-          amount: 0,
-        },
-      },
-      finalAmount: potentialTrophyExchange,
-      perPlayerAmount: Math.round(potentialTrophyExchange / 4),
-    }
-
-    console.log(`[TeamBattle] Saving initial team battle`)
-    await teamBattle.save({ session })
-    console.log(`[TeamBattle] Team battle saved with ID: ${teamBattle._id}`)
-
-    // ======= PROGRESS: GENERATING CHALLENGES (65%) =======
-    console.log(`[TeamBattle] PHASE 7: Generating challenges (65%)`)
-
-    // Store created challenges for quiz generation
-    const createdChallenges = []
-
-    // Now fetch articles and create challenges for each category
-    console.log(
-      `[TeamBattle] Creating challenges for ${categories.length} categories`,
-    )
-    for (let i = 0; i < categories.length; i++) {
-      const category = categories[i]
-      console.log(
-        `[TeamBattle] Processing category ${i + 1}/${
-          categories.length
-        }: ${category}`,
-      )
-
-      // Get a source article for this category
-      console.log(
-        `[TeamBattle] Fetching source article for category: ${category}`,
-      )
-      const article = await getSourceArticle({ category })
-      console.log(
-        `[TeamBattle] Got article: ${article._id}, Title: ${article.title}`,
-      )
-
-      // Check if Hindi translation exists
-      const hasHindiTranslation = !!(
-        article.hindiTitle &&
-        article.hindiMainText &&
-        article.hindiMainText.length > 0
-      )
-      console.log(
-        `[TeamBattle] Article has Hindi translation: ${hasHindiTranslation}`,
-      )
-
-      // Format article data
-      let articleData = {
-        title: {
-          english: article.title,
-          hindi: article.hindiTitle || '',
-        },
-        content: {
-          english: article.mainText,
-          hindi: article.hindiMainText ? article.hindiMainText.join(' ') : '',
-        },
-        sourceArticles: [article._id],
-      }
-
-      // Generate Hindi translation if it doesn't exist
-      if (!hasHindiTranslation) {
-        console.log(
-          `[TeamBattle] Generating Hindi translation for article ${article._id}`,
-        )
-        try {
-          const hindiTranslation = await generateHindiTranslation({
-            title: article.title,
-            content: article.mainText,
-          })
-          console.log(`[TeamBattle] Hindi translation generated successfully`)
-
-          // Update article data with the new translation
-          articleData.title.hindi = hindiTranslation.title
-          articleData.content.hindi = hindiTranslation.content
-
-          // Optionally update the original article for future use
-          try {
-            // Convert content string to array format as expected by schema
-            const hindiContentArray = [hindiTranslation.content]
-
-            await Article.findByIdAndUpdate(article._id, {
-              hindiTitle: hindiTranslation.title,
-              hindiMainText: hindiContentArray,
-            })
-
-            console.log(
-              `[TeamBattle] Updated article ${article._id} with Hindi translation`,
-            )
-          } catch (updateError) {
-            console.error(
-              `[TeamBattle] Error updating article with Hindi translation: ${updateError.message}`,
-              updateError,
-            )
-            // Continue with the challenge creation even if saving to article fails
-          }
-        } catch (translationError) {
-          console.error(
-            `[TeamBattle] Error generating Hindi translation for team battle: ${translationError.message}`,
-            translationError,
-          )
-          // Continue with empty Hindi content if translation fails
-        }
-      }
-
-      // ======= PROGRESS: CHALLENGE CREATION (70% + i*5) =======
-      // Update progress as each challenge is created (65% to 85%)
-      const progressPercent = 70 + i * 5 // Will increment from 70% to 85% as i goes from 0 to 3
-      console.log(
-        `[TeamBattle] Creating challenge ${i + 1}/${
-          categories.length
-        } (${progressPercent}%)`,
-      )
-
-      // Create the challenge
-      const challenge = new QuickClashChallenge({
-        challenger: null, // Will be set when a player selects this category
-        opponent: null, // Will be set when a player selects this category
-        selectedCategories: [category],
-        category,
-        status: 'active',
-        article: articleData,
-        expiresAt: teamBattle.expiresAt,
-        fromTeamBattle: true,
-        teamBattle: teamBattle._id,
-      })
-
-      console.log(`[TeamBattle] Saving challenge for category: ${category}`)
-      await challenge.save({ session })
-      console.log(`[TeamBattle] Challenge saved with ID: ${challenge._id}`)
-      createdChallenges.push({ challenge, article, articleData })
-
-      // Update the team battle with the challenge ID
-      teamBattle.challenges[i].challenge = challenge._id
-    }
-
-    // ======= PROGRESS: CHALLENGES READY (85%) =======
-    console.log(`[TeamBattle] PHASE 8: Challenges ready (85%)`)
-
-    // Save team battle again with challenge IDs
-    console.log(`[TeamBattle] Updating team battle with challenge IDs`)
-    await teamBattle.save({ session })
-    console.log(`[TeamBattle] Team battle updated with challenge IDs`)
-
-    // ======= PROGRESS: GENERATING QUIZZES (90%) =======
-    console.log(`[TeamBattle] PHASE 9: Generating quizzes (90%)`)
-
-    // For each challenge, generate quizzes and highlights in parallel
-    console.log(
-      `[TeamBattle] Generating quizzes for ${createdChallenges.length} challenges in parallel`,
-    )
-
-    // Create an array of promises for quiz generation
-    const quizGenerationPromises = createdChallenges.map(
-      async ({ challenge, article, articleData }, index) => {
-        console.log(
-          `[TeamBattle] Starting quiz generation for challenge ${index + 1}/${
-            createdChallenges.length
-          }: ${challenge._id} (Category: ${challenge.category})`,
-        )
-
-        try {
-          // Update progress with more granular steps
-          const progressStep = 90 + index * (5 / createdChallenges.length)
-
-          // Generate English quiz
-          console.log(
-            `[TeamBattle] Generating English quiz for challenge: ${challenge._id}`,
-          )
-          console.log(
-            `[TeamBattle] Article title: "${articleData.title.english}"`,
-          )
-          console.log(
-            `[TeamBattle] Article content length: ${articleData.content.english.length} chars`,
-          )
-
-          const englishQuiz = await generateQuickClashQuiz({
-            title: articleData.title.english,
-            author: article.author || 'Rapid Recap Team',
-            mainText: articleData.content.english,
-            challenge,
-            language: 'en',
-            session,
-          })
-          console.log(
-            `[TeamBattle] English quiz generated with ID: ${englishQuiz._id}, Questions: ${englishQuiz.questions.length}`,
-          )
-
-          // Create Hindi quiz placeholder
-          console.log(
-            `[TeamBattle] Creating Hindi quiz placeholder for challenge: ${challenge._id}`,
-          )
-          const hindiQuiz = new QuickClashQuiz({
-            challenge: challenge._id,
-            language: 'hi',
-            questions: [], // Empty initially
-            overallDifficulty: englishQuiz.overallDifficulty,
-            translationStatus: 'pending',
-          })
-
-          await hindiQuiz.save({ session })
-          console.log(
-            `[TeamBattle] Hindi quiz placeholder created with ID: ${hindiQuiz._id}`,
-          )
-
-          // Process highlights in parallel (if applicable)
-          const highlightPromises = []
-
-          // English highlights
-          highlightPromises.push(
-            (async () => {
-              console.log(
-                `[TeamBattle] Processing English highlights for article: ${article._id}`,
-              )
-              let englishHighlight = await ArticleHighlight.findOne({
-                articleId: article._id,
-                language: 'en',
-                processingStatus: 'completed',
-              }).session(session)
-
-              if (englishHighlight) {
-                console.log(
-                  `[TeamBattle] Found existing English highlights, copying to challenge`,
-                )
-                return copyHighlightsToChallenge({
-                  articleHighlight: englishHighlight,
-                  challengeId: challenge._id,
-                  lang: 'en',
-                  session,
-                })
-              } else {
-                console.log(
-                  `[TeamBattle] No existing English highlights found, creating placeholder`,
-                )
-                return createPlaceholderHighlight({
-                  challengeId: challenge._id,
-                  lang: 'en',
-                  session,
-                })
-              }
-            })(),
-          )
-
-          // Hindi highlights
-          highlightPromises.push(
-            (async () => {
-              console.log(
-                `[TeamBattle] Processing Hindi highlights for article: ${article._id}`,
-              )
-              let hindiHighlight = await ArticleHighlight.findOne({
-                articleId: article._id,
-                language: 'hi',
-                processingStatus: 'completed',
-              }).session(session)
-
-              if (hindiHighlight) {
-                console.log(
-                  `[TeamBattle] Found existing Hindi highlights, copying to challenge`,
-                )
-                return copyHighlightsToChallenge({
-                  articleHighlight: hindiHighlight,
-                  challengeId: challenge._id,
-                  lang: 'hi',
-                  session,
-                })
-              } else {
-                console.log(
-                  `[TeamBattle] No existing Hindi highlights found, creating placeholder`,
-                )
-                return createPlaceholderHighlight({
-                  challengeId: challenge._id,
-                  lang: 'hi',
-                  session,
-                })
-              }
-            })(),
-          )
-
-          // Wait for highlights to be processed
-          const [englishHighlight, hindiHighlight] = await Promise.all(
-            highlightPromises,
-          )
-          console.log(
-            `[TeamBattle] Highlights processing completed for challenge: ${challenge._id}`,
-          )
-
-          // Return data needed for translation after transaction completes
-          return {
-            challengeId: challenge._id,
-            hindiQuizId: hindiQuiz._id,
-            hindiTitle: articleData.title.hindi,
-            hindiMainText: articleData.content.hindi,
-            englishQuiz,
-          }
-        } catch (error) {
-          console.error(
-            `[TeamBattle] Error processing challenge ${challenge._id}: ${error.message}`,
-          )
-          console.error(`[TeamBattle] Stack: ${error.stack}`)
-          // Rethrow to fail the Promise.all if needed
-          throw error
-        }
-      },
-    )
-
-    // Execute all quiz generation promises in parallel
     try {
-      console.log(
-        `[TeamBattle] Waiting for all ${quizGenerationPromises.length} quiz generation tasks to complete`,
-      )
-      const quizResults = await Promise.all(quizGenerationPromises)
-      console.log(`[TeamBattle] All quizzes generated successfully`)
-
-      // Store translation data for later scheduling
-      const translationData = quizResults.map(result => ({
-        challengeId: result.challengeId,
-        hindiQuizId: result.hindiQuizId,
-        hindiTitle: result.hindiTitle,
-        hindiMainText: result.hindiMainText,
-        englishQuiz: result.englishQuiz,
-      }))
-
-      console.log(`[TeamBattle] PHASE 10: Matchmaking cleanup (95%)`)
-
-      // Clean up all matchmaking entries before emitting events
-      try {
-        await cleanupMatchmakingEntries({
-          teamAId,
-          teamBId,
-          session,
-        })
-        console.log(`[TeamBattle] Matchmaking cleanup completed successfully`)
-      } catch (cleanupError) {
-        console.error(
-          `[TeamBattle] Error during matchmaking cleanup:`,
-          cleanupError,
-        )
-        // Don't throw here - the battle is created, we just log the error
-        // The cleanup is important but shouldn't fail the entire battle creation
+      if (!providedSession) {
+        startedTransaction = true
+        await session.startTransaction()
+        console.log(`[TeamBattle] Started new transaction`)
+      } else {
+        console.log(`[TeamBattle] Using provided transaction session`)
       }
 
-      // If we started a transaction, commit it
-      if (startedTransaction) {
-        console.log(`[TeamBattle] Committing transaction`)
-        await session.commitTransaction()
-        console.log(`[TeamBattle] Transaction committed successfully`)
-      }
+      // ======= PHASE 0: LOCK TEAMS IN MATCHMAKING (0%) =======
+      console.log(`[TeamBattle] PHASE 0: Locking teams in matchmaking`)
+      await lockTeamsInMatchmaking({ teamAId, teamBId, session })
+      // Get both teams with their members for notifications
+      const [teamAData, teamBData] = await Promise.all([
+        QuickClashTeam.findById(teamAId)
+          .populate('members.user', '_id name inGameName')
+          .lean()
+          .session(session),
+        QuickClashTeam.findById(teamBId)
+          .populate('members.user', '_id name inGameName')
+          .lean()
+          .session(session),
+      ])
 
-      // ======= PROGRESS: BATTLE READY (100%) =======
-      console.log(`[TeamBattle] PHASE 11: Battle ready (100%)`)
+      // Extract member IDs for each team
+      const teamAMemberIds =
+        teamAData?.members?.map(m => m.user._id.toString()) || []
+      const teamBMemberIds =
+        teamBData?.members?.map(m => m.user._id.toString()) || []
 
-      // Schedule translations (outside transaction)
-      translationData.forEach(
-        ({
-          challengeId,
-          hindiQuizId,
-          hindiTitle,
-          hindiMainText,
-          englishQuiz,
-        }) => {
-          if (challengeId && hindiQuizId) {
-            console.log(
-              `[TeamBattle] Scheduling background Hindi translation for challenge: ${challengeId}`,
-            )
-            setTimeout(() => {
-              console.log(
-                `[TeamBattle] Starting background Hindi translation for challenge: ${challengeId}`,
-              )
-              translateQuizBackground({
-                englishQuiz,
-                challengeId,
-                hindiQuizId,
-                hindiTitle,
-                hindiMainText,
-              }).catch(err => {
-                console.error(
-                  `[TeamBattle] Background Hindi translation failed for challenge ${challengeId}: ${err.message}`,
-                  err,
-                )
-              })
-            }, 1000)
-          }
-        },
-      )
-
-      // Emit event after transaction is complete
-      console.log(`[TeamBattle] Setting up event emission`)
+      // Combined list of all involved members
+      const allMemberIds = [...teamAMemberIds, ...teamBMemberIds]
+      // Emit event to notify users that battle creation started with all member IDs
       setTimeout(() => {
-        console.log(
-          `[TeamBattle] Emitting teamBattleReady event for battle: ${teamBattle._id}`,
-        )
-
-        // Only emit teamBattleReady event
-        globalEmitter.emit('quickClash:teamBattleReady', {
-          battleId: teamBattle._id,
+        globalEmitter.emit('quickClash:battleCreationStarted', {
           teamA: teamAId,
           teamB: teamBId,
-          categories,
+          teamAMembers: teamAMemberIds,
+          teamBMembers: teamBMemberIds,
+          allMembers: allMemberIds,
         })
       }, 0)
 
+      // ======= PROGRESS: BATTLE INITIALIZATION (5%) =======
+      console.log(`[TeamBattle] PHASE 1: Battle initialization (5%)`)
+
+      // ======= PROGRESS: LOADING TEAM DATA (15%) =======
+      console.log(`[TeamBattle] PHASE 2: Loading team data (15%)`)
+
+      // Get team data
+      let teamA, teamB
+
+      console.log(`[TeamBattle] Fetching Team A (${teamAId}) data`)
+      teamA = await QuickClashTeam.findById(teamAId)
+        .populate('members.user', '_id name inGameName quickClashTrophies')
+        .session(session)
+
+      if (!teamA) {
+        console.error(`[TeamBattle] ERROR: Team A (${teamAId}) not found`)
+        throw new Error('Team A not found')
+      }
       console.log(
-        `[TeamBattle] ===== TEAM BATTLE CREATION COMPLETED SUCCESSFULLY =====`,
+        `[TeamBattle] Team A loaded: ${teamA.name}, Members: ${teamA.members.length}`,
+      )
+
+      // Get real team B data
+      console.log(`[TeamBattle] Fetching Team B (${teamBId}) data`)
+      teamB = await QuickClashTeam.findById(teamBId)
+        .populate('members.user', '_id name inGameName quickClashTrophies')
+        .session(session)
+
+      if (!teamB) {
+        console.error(`[TeamBattle] ERROR: Team B (${teamBId}) not found`)
+        throw new Error('Team B not found')
+      }
+      console.log(
+        `[TeamBattle] Team B loaded: ${teamB.name}, Members: ${teamB.members.length}`,
+      )
+
+      // Set team names if they're empty (matchmaking-created teams)
+      if (!teamA.name || teamA.name.trim() === '') {
+        teamA.name = 'Team A'
+        await teamA.save({ session })
+      }
+
+      if (!teamB.name || teamB.name.trim() === '') {
+        teamB.name = 'Team B'
+        await teamB.save({ session })
+      }
+
+      // ======= PROGRESS: TEAMS LOADED (25%) =======
+      console.log(`[TeamBattle] PHASE 3: Teams loaded (25%)`)
+
+      // ======= PROGRESS: PREPARING CONTENT (35%) =======
+      console.log(`[TeamBattle] PHASE 4: Preparing content (35%)`)
+
+      // Create challenges for each category
+      const challengesData = []
+      const challengeCreationPromises = []
+
+      // Create placeholder data structure for challenges
+      console.log(
+        `[TeamBattle] Creating challenge placeholder data for ${categories.length} categories`,
+      )
+      for (const category of categories) {
+        challengesData.push({
+          category,
+          challenge: null, // Will be filled later
+          teamAPlayer: null,
+          teamBPlayer: null,
+          teamAScore: 0,
+          teamBScore: 0,
+          winner: null,
+          teamACompleted: false,
+          teamBCompleted: false,
+        })
+      }
+
+      // Calculate average trophies for each team
+      console.log(`[TeamBattle] Calculating team trophy averages`)
+      const teamAAvgTrophies = calculateTeamAverageTrophies(teamA)
+      const teamBAvgTrophies = calculateTeamAverageTrophies(teamB)
+      console.log(
+        `[TeamBattle] Trophy averages - Team A: ${teamAAvgTrophies}, Team B: ${teamBAvgTrophies}`,
+      )
+
+      // ======= PROGRESS: PROCESSING ARTICLES (45%) =======
+      console.log(`[TeamBattle] PHASE 5: Processing articles (45%)`)
+
+      // Extract team member data
+      console.log(`[TeamBattle] Extracting team member data`)
+      const teamAMembers = teamA.members.map(member => ({
+        user: member.user._id,
+        category: null,
+        challenge: null,
+        participated: false,
+        completed: false,
+        score: 0,
+        previousTrophies:
+          member.user.quickClashTrophies || DEFAULT_STARTING_TROPHIES,
+        newTrophies: 0,
+        trophyChange: 0,
+      }))
+
+      const teamBMembers = teamB.members.map(member => ({
+        user: member.user._id,
+        category: null,
+        challenge: null,
+        participated: false,
+        completed: false,
+        score: 0,
+        previousTrophies:
+          member.user.quickClashTrophies || DEFAULT_STARTING_TROPHIES,
+        newTrophies: 0,
+        trophyChange: 0,
+      }))
+
+      // Check if this is the first team battle of the day for team A
+      console.log(`[TeamBattle] Checking if first daily team battle for Team A`)
+      const isFirstDaily = await isFirstDailyTeamBattle(teamAId)
+      console.log(`[TeamBattle] Is first daily battle: ${isFirstDaily}`)
+
+      // ======= PROGRESS: BATTLE SETUP (55%) =======
+      console.log(`[TeamBattle] PHASE 6: Battle setup (55%)`)
+
+      // Create the team battle
+      console.log(`[TeamBattle] Creating team battle object`)
+      const teamBattle = new QuickClashTeamBattle({
+        teamA: teamAId,
+        teamB: teamBId,
+        status: 'active',
+        categories,
+        challenges: challengesData,
+        teamAMembers,
+        teamBMembers,
+        expiresAt: new Date(Date.now() + TEAM_BATTLE_EXPIRY),
+        isFirstDailyBattle: isFirstDaily,
+        fromMatchmaking: true,
+      })
+
+      // Calculate potential trophy exchange
+      console.log(`[TeamBattle] Calculating potential trophy exchange`)
+      const potentialTrophyExchange = calculatePotentialTrophyExchange(
+        teamAAvgTrophies,
+        teamBAvgTrophies,
       )
       console.log(
-        `[TeamBattle] Battle ID: ${teamBattle._id}, Team A: ${teamAId}, Team B: ${teamBId}`,
+        `[TeamBattle] Potential trophy exchange: ${potentialTrophyExchange}`,
       )
-      return teamBattle
-    } catch (quizError) {
+
+      // Set trophy exchange base info in battle
+      teamBattle.trophyExchange = {
+        baseAmount: BASE_TROPHIES,
+        adjustedAmount: potentialTrophyExchange,
+        bonuses: {
+          firstDaily: {
+            applied: isFirstDaily,
+            amount: isFirstDaily
+              ? Math.round(potentialTrophyExchange * 0.1)
+              : 0,
+          },
+          strongerTeam: {
+            applied: false, // Will be determined at the end
+            amount: 0,
+          },
+          comebackWin: {
+            applied: false, // Will be determined at the end
+            amount: 0,
+          },
+          allWins: {
+            applied: false, // Will be determined at the end
+            amount: 0,
+          },
+        },
+        finalAmount: potentialTrophyExchange,
+        perPlayerAmount: Math.round(potentialTrophyExchange / 4),
+      }
+
+      console.log(`[TeamBattle] Saving initial team battle`)
+      await teamBattle.save({ session })
+      console.log(`[TeamBattle] Team battle saved with ID: ${teamBattle._id}`)
+
+      // ======= PROGRESS: GENERATING CHALLENGES (65%) =======
+      console.log(`[TeamBattle] PHASE 7: Generating challenges (65%)`)
+
+      // Store created challenges for quiz generation
+      const createdChallenges = []
+
+      // Now fetch articles and create challenges for each category
+      console.log(
+        `[TeamBattle] Creating challenges for ${categories.length} categories`,
+      )
+      for (let i = 0; i < categories.length; i++) {
+        const category = categories[i]
+        console.log(
+          `[TeamBattle] Processing category ${i + 1}/${
+            categories.length
+          }: ${category}`,
+        )
+
+        // Get a source article for this category
+        console.log(
+          `[TeamBattle] Fetching source article for category: ${category}`,
+        )
+        const article = await getSourceArticle({ category })
+        console.log(
+          `[TeamBattle] Got article: ${article._id}, Title: ${article.title}`,
+        )
+
+        // Check if Hindi translation exists
+        const hasHindiTranslation = !!(
+          article.hindiTitle &&
+          article.hindiMainText &&
+          article.hindiMainText.length > 0
+        )
+        console.log(
+          `[TeamBattle] Article has Hindi translation: ${hasHindiTranslation}`,
+        )
+
+        // Format article data
+        let articleData = {
+          title: {
+            english: article.title,
+            hindi: article.hindiTitle || '',
+          },
+          content: {
+            english: article.mainText,
+            hindi: article.hindiMainText ? article.hindiMainText.join(' ') : '',
+          },
+          sourceArticles: [article._id],
+        }
+
+        // Generate Hindi translation if it doesn't exist
+        if (!hasHindiTranslation) {
+          console.log(
+            `[TeamBattle] Generating Hindi translation for article ${article._id}`,
+          )
+          try {
+            const hindiTranslation = await generateHindiTranslation({
+              title: article.title,
+              content: article.mainText,
+            })
+            console.log(`[TeamBattle] Hindi translation generated successfully`)
+
+            // Update article data with the new translation
+            articleData.title.hindi = hindiTranslation.title
+            articleData.content.hindi = hindiTranslation.content
+
+            // Optionally update the original article for future use
+            try {
+              // Convert content string to array format as expected by schema
+              const hindiContentArray = [hindiTranslation.content]
+
+              await Article.findByIdAndUpdate(article._id, {
+                hindiTitle: hindiTranslation.title,
+                hindiMainText: hindiContentArray,
+              })
+
+              console.log(
+                `[TeamBattle] Updated article ${article._id} with Hindi translation`,
+              )
+            } catch (updateError) {
+              console.error(
+                `[TeamBattle] Error updating article with Hindi translation: ${updateError.message}`,
+                updateError,
+              )
+              // Continue with the challenge creation even if saving to article fails
+            }
+          } catch (translationError) {
+            console.error(
+              `[TeamBattle] Error generating Hindi translation for team battle: ${translationError.message}`,
+              translationError,
+            )
+            // Continue with empty Hindi content if translation fails
+          }
+        }
+
+        // ======= PROGRESS: CHALLENGE CREATION (70% + i*5) =======
+        // Update progress as each challenge is created (65% to 85%)
+        const progressPercent = 70 + i * 5 // Will increment from 70% to 85% as i goes from 0 to 3
+        console.log(
+          `[TeamBattle] Creating challenge ${i + 1}/${
+            categories.length
+          } (${progressPercent}%)`,
+        )
+
+        // Create the challenge
+        const challenge = new QuickClashChallenge({
+          challenger: null, // Will be set when a player selects this category
+          opponent: null, // Will be set when a player selects this category
+          selectedCategories: [category],
+          category,
+          status: 'active',
+          article: articleData,
+          expiresAt: teamBattle.expiresAt,
+          fromTeamBattle: true,
+          teamBattle: teamBattle._id,
+        })
+
+        console.log(`[TeamBattle] Saving challenge for category: ${category}`)
+        await challenge.save({ session })
+        console.log(`[TeamBattle] Challenge saved with ID: ${challenge._id}`)
+        createdChallenges.push({ challenge, article, articleData })
+
+        // Update the team battle with the challenge ID
+        teamBattle.challenges[i].challenge = challenge._id
+      }
+
+      // ======= PROGRESS: CHALLENGES READY (85%) =======
+      console.log(`[TeamBattle] PHASE 8: Challenges ready (85%)`)
+
+      // Save team battle again with challenge IDs
+      console.log(`[TeamBattle] Updating team battle with challenge IDs`)
+      await teamBattle.save({ session })
+      console.log(`[TeamBattle] Team battle updated with challenge IDs`)
+
+      // ======= PROGRESS: GENERATING QUIZZES (90%) =======
+      console.log(`[TeamBattle] PHASE 9: Generating quizzes (90%)`)
+
+      // For each challenge, generate quizzes and highlights in parallel
+      console.log(
+        `[TeamBattle] Generating quizzes for ${createdChallenges.length} challenges in parallel`,
+      )
+
+      // Create an array of promises for quiz generation
+      const quizGenerationPromises = createdChallenges.map(
+        async ({ challenge, article, articleData }, index) => {
+          console.log(
+            `[TeamBattle] Starting quiz generation for challenge ${index + 1}/${
+              createdChallenges.length
+            }: ${challenge._id} (Category: ${challenge.category})`,
+          )
+
+          try {
+            // Update progress with more granular steps
+            const progressStep = 90 + index * (5 / createdChallenges.length)
+
+            // Generate English quiz
+            console.log(
+              `[TeamBattle] Generating English quiz for challenge: ${challenge._id}`,
+            )
+            console.log(
+              `[TeamBattle] Article title: "${articleData.title.english}"`,
+            )
+            console.log(
+              `[TeamBattle] Article content length: ${articleData.content.english.length} chars`,
+            )
+
+            const englishQuiz = await generateQuickClashQuiz({
+              title: articleData.title.english,
+              author: article.author || 'Rapid Recap Team',
+              mainText: articleData.content.english,
+              challenge,
+              language: 'en',
+              session,
+            })
+            console.log(
+              `[TeamBattle] English quiz generated with ID: ${englishQuiz._id}, Questions: ${englishQuiz.questions.length}`,
+            )
+
+            // Create Hindi quiz placeholder
+            console.log(
+              `[TeamBattle] Creating Hindi quiz placeholder for challenge: ${challenge._id}`,
+            )
+            const hindiQuiz = new QuickClashQuiz({
+              challenge: challenge._id,
+              language: 'hi',
+              questions: [], // Empty initially
+              overallDifficulty: englishQuiz.overallDifficulty,
+              translationStatus: 'pending',
+            })
+
+            await hindiQuiz.save({ session })
+            console.log(
+              `[TeamBattle] Hindi quiz placeholder created with ID: ${hindiQuiz._id}`,
+            )
+
+            // Process highlights in parallel (if applicable)
+            const highlightPromises = []
+
+            // English highlights
+            highlightPromises.push(
+              (async () => {
+                console.log(
+                  `[TeamBattle] Processing English highlights for article: ${article._id}`,
+                )
+                let englishHighlight = await ArticleHighlight.findOne({
+                  articleId: article._id,
+                  language: 'en',
+                  processingStatus: 'completed',
+                }).session(session)
+
+                if (englishHighlight) {
+                  console.log(
+                    `[TeamBattle] Found existing English highlights, copying to challenge`,
+                  )
+                  return copyHighlightsToChallenge({
+                    articleHighlight: englishHighlight,
+                    challengeId: challenge._id,
+                    lang: 'en',
+                    session,
+                  })
+                } else {
+                  console.log(
+                    `[TeamBattle] No existing English highlights found, creating placeholder`,
+                  )
+                  return createPlaceholderHighlight({
+                    challengeId: challenge._id,
+                    lang: 'en',
+                    session,
+                  })
+                }
+              })(),
+            )
+
+            // Hindi highlights
+            highlightPromises.push(
+              (async () => {
+                console.log(
+                  `[TeamBattle] Processing Hindi highlights for article: ${article._id}`,
+                )
+                let hindiHighlight = await ArticleHighlight.findOne({
+                  articleId: article._id,
+                  language: 'hi',
+                  processingStatus: 'completed',
+                }).session(session)
+
+                if (hindiHighlight) {
+                  console.log(
+                    `[TeamBattle] Found existing Hindi highlights, copying to challenge`,
+                  )
+                  return copyHighlightsToChallenge({
+                    articleHighlight: hindiHighlight,
+                    challengeId: challenge._id,
+                    lang: 'hi',
+                    session,
+                  })
+                } else {
+                  console.log(
+                    `[TeamBattle] No existing Hindi highlights found, creating placeholder`,
+                  )
+                  return createPlaceholderHighlight({
+                    challengeId: challenge._id,
+                    lang: 'hi',
+                    session,
+                  })
+                }
+              })(),
+            )
+
+            // Wait for highlights to be processed
+            const [englishHighlight, hindiHighlight] = await Promise.all(
+              highlightPromises,
+            )
+            console.log(
+              `[TeamBattle] Highlights processing completed for challenge: ${challenge._id}`,
+            )
+
+            // Return data needed for translation after transaction completes
+            return {
+              challengeId: challenge._id,
+              hindiQuizId: hindiQuiz._id,
+              hindiTitle: articleData.title.hindi,
+              hindiMainText: articleData.content.hindi,
+              englishQuiz,
+            }
+          } catch (error) {
+            console.error(
+              `[TeamBattle] Error processing challenge ${challenge._id}: ${error.message}`,
+            )
+            console.error(`[TeamBattle] Stack: ${error.stack}`)
+            // Rethrow to fail the Promise.all if needed
+            throw error
+          }
+        },
+      )
+
+      // Execute all quiz generation promises in parallel
+      try {
+        console.log(
+          `[TeamBattle] Waiting for all ${quizGenerationPromises.length} quiz generation tasks to complete`,
+        )
+        const quizResults = await Promise.all(quizGenerationPromises)
+        console.log(`[TeamBattle] All quizzes generated successfully`)
+
+        // Store translation data for later scheduling
+        const translationData = quizResults.map(result => ({
+          challengeId: result.challengeId,
+          hindiQuizId: result.hindiQuizId,
+          hindiTitle: result.hindiTitle,
+          hindiMainText: result.hindiMainText,
+          englishQuiz: result.englishQuiz,
+        }))
+
+        console.log(`[TeamBattle] PHASE 10: Matchmaking cleanup (95%)`)
+
+        // Clean up all matchmaking entries before emitting events
+        try {
+          await cleanupMatchmakingEntries({
+            teamAId,
+            teamBId,
+            session,
+          })
+          console.log(`[TeamBattle] Matchmaking cleanup completed successfully`)
+        } catch (cleanupError) {
+          console.error(
+            `[TeamBattle] Error during matchmaking cleanup:`,
+            cleanupError,
+          )
+          // Don't throw here - the battle is created, we just log the error
+          // The cleanup is important but shouldn't fail the entire battle creation
+        }
+
+        // If we started a transaction, commit it
+        if (startedTransaction) {
+          console.log(`[TeamBattle] Committing transaction`)
+          await session.commitTransaction()
+          console.log(`[TeamBattle] Transaction committed successfully`)
+        }
+
+        // ======= PROGRESS: BATTLE READY (100%) =======
+        console.log(`[TeamBattle] PHASE 11: Battle ready (100%)`)
+
+        // Schedule translations (outside transaction)
+        translationData.forEach(
+          ({
+            challengeId,
+            hindiQuizId,
+            hindiTitle,
+            hindiMainText,
+            englishQuiz,
+          }) => {
+            if (challengeId && hindiQuizId) {
+              console.log(
+                `[TeamBattle] Scheduling background Hindi translation for challenge: ${challengeId}`,
+              )
+              setTimeout(() => {
+                console.log(
+                  `[TeamBattle] Starting background Hindi translation for challenge: ${challengeId}`,
+                )
+                translateQuizBackground({
+                  englishQuiz,
+                  challengeId,
+                  hindiQuizId,
+                  hindiTitle,
+                  hindiMainText,
+                }).catch(err => {
+                  console.error(
+                    `[TeamBattle] Background Hindi translation failed for challenge ${challengeId}: ${err.message}`,
+                    err,
+                  )
+                })
+              }, 1000)
+            }
+          },
+        )
+
+        // Emit event after transaction is complete
+        console.log(`[TeamBattle] Setting up event emission`)
+
+        console.log(
+          `[TeamBattle] ===== TEAM BATTLE CREATION COMPLETED SUCCESSFULLY =====`,
+        )
+        console.log(
+          `[TeamBattle] Battle ID: ${teamBattle._id}, Team A: ${teamAId}, Team B: ${teamBId}`,
+        )
+        return teamBattle
+      } catch (quizError) {
+        console.error(
+          `[TeamBattle] Failed to generate quizzes for all challenges: ${quizError.message}`,
+        )
+        // Transaction will be aborted in the outer catch block
+        throw quizError
+      }
+    } catch (error) {
       console.error(
-        `[TeamBattle] Failed to generate quizzes for all challenges: ${quizError.message}`,
+        `[TeamBattle] ===== ERROR CREATING TEAM BATTLE =====`,
+        error,
       )
-      // Transaction will be aborted in the outer catch block
-      throw quizError
+      console.error(`[TeamBattle] Error message: ${error.message}`)
+      console.error(`[TeamBattle] TeamA: ${teamAId}, TeamB: ${teamBId}`)
+
+      // IMPORTANT: Unlock teams when battle creation fails
+      try {
+        console.log(`[TeamBattle] Unlocking teams due to error`)
+        // Get both teams with their members for notifications
+        const [teamAData, teamBData] = await Promise.all([
+          QuickClashTeam.findById(teamAId)
+            .populate('members.user', '_id name inGameName')
+            .lean()
+            .session(session),
+          QuickClashTeam.findById(teamBId)
+            .populate('members.user', '_id name inGameName')
+            .lean()
+            .session(session),
+        ])
+
+        // Extract member IDs for each team
+        const teamAMemberIds =
+          teamAData?.members?.map(m => m.user._id.toString()) || []
+        const teamBMemberIds =
+          teamBData?.members?.map(m => m.user._id.toString()) || []
+
+        // Combined list of all involved members
+        const allMemberIds = [...teamAMemberIds, ...teamBMemberIds]
+        await unlockTeamsInMatchmaking({
+          teamAId,
+          teamBId,
+          teamAMembers: teamAMemberIds,
+          teamBMembers: teamBMemberIds,
+          allMembers: allMemberIds,
+          session,
+        })
+
+        // Emit event to notify users that battle creation failed
+        setTimeout(() => {
+          globalEmitter.emit('quickClash:battleCreationFailed', {
+            teamA: teamAId,
+            teamB: teamBId,
+            teamAMembers: teamAMemberIds || [],
+            teamBMembers: teamBMemberIds || [],
+            allMembers: allMemberIds || [],
+            error: error.message,
+          })
+        }, 0)
+      } catch (unlockError) {
+        console.error(`[TeamBattle] Error unlocking teams:`, unlockError)
+      }
+
+      if (startedTransaction) {
+        console.log(`[TeamBattle] Aborting transaction due to error`)
+        await session.abortTransaction()
+        console.log(`[TeamBattle] Transaction aborted`)
+      }
+      throw error
+    } finally {
+      if (startedTransaction) {
+        console.log(`[TeamBattle] Ending session`)
+        session.endSession()
+      }
     }
-  } catch (error) {
-    console.error(`[TeamBattle] ===== ERROR CREATING TEAM BATTLE =====`, error)
-    console.error(`[TeamBattle] Error message: ${error.message}`)
-    console.error(`[TeamBattle] TeamA: ${teamAId}, TeamB: ${teamBId}`)
-    if (startedTransaction) {
-      console.log(`[TeamBattle] Aborting transaction due to error`)
-      await session.abortTransaction()
-      console.log(`[TeamBattle] Transaction aborted`)
-    }
-    throw error
-  } finally {
-    if (startedTransaction) {
-      console.log(`[TeamBattle] Ending session`)
-      session.endSession()
-    }
-  }
-}
+  },
+  {
+    maxRetries: 3,
+    operationName: 'CreateTeamBattle',
+    initialDelay: 1000,
+    maxDelay: 5000,
+    onRetry: (error, attempt) => {
+      console.log(
+        `[TeamBattle] Retry attempt ${attempt}/3 after error: ${error.message}`,
+      )
+      // Emit retry event for UI feedback
+      setTimeout(() => {
+        globalEmitter.emit('quickClash:battleCreationRetrying', {
+          attempt,
+          error: error.message,
+          maxRetries: 3,
+        })
+      }, 0)
+    },
+    // Custom error handler for when all retries fail
+    onAllRetriesFailed: async (error, { teamAId, teamBId }) => {
+      console.error(
+        `[TeamBattle] All retries failed for teams ${teamAId} and ${teamBId}`,
+      )
+
+      // Clean up all matchmaking state
+      await cleanupFailedBattleMatchmaking({ teamAId, teamBId })
+
+      // Create a more user-friendly error message
+      const finalError = new Error(
+        'Battle creation failed after multiple attempts. Please join matchmaking again.',
+      )
+      finalError.isRetryExhausted = true
+      finalError.originalError = error
+      throw finalError
+    },
+  },
+)
 
 /**
  * Calculate potential trophy exchange based on team average trophies
@@ -1600,6 +1783,7 @@ const cleanupMatchmakingEntries = async ({ teamAId, teamBId, session }) => {
 
 module.exports = {
   createTeamBattle,
+  cleanupFailedBattleMatchmaking,
   selectCategoryForUser,
   updateBattleWithQuizResults,
   getUserTeamBattles,

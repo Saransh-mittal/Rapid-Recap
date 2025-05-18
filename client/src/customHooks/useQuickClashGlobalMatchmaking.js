@@ -21,6 +21,9 @@ import {
   updateMatchmakingState,
   setJoinType,
   setOriginalTeam,
+  setBattleCreationError,
+  setBattleCreationStatus,
+  clearBattleCreationError,
 } from '../redux/quickClashGlobalMatchmakingSlice'
 import axios from 'axios'
 
@@ -74,10 +77,38 @@ const useQuickClashGlobalMatchmaking = () => {
       dispatch(setBattleReady(data))
     })
 
+    socket.on('quickClash:battleCreationStarted', data => {
+      console.log('Battle creation started:', data)
+      dispatch(setBattleCreationStatus('creating'))
+    })
+
+    // Battle creation failed
+    socket.on('quickClash:battleCreationFailed', data => {
+      console.log('Battle creation failed:', data)
+      dispatch(setBattleCreationError(data.error || 'Battle creation failed'))
+
+      toast({
+        title: t('Battle Creation Failed'),
+        description: t('Something went wrong. Please try again.'),
+        status: 'error',
+        duration: 5000,
+        isClosable: true,
+      })
+    })
+
+    // Matchmaking locked
+    socket.on('quickClash:matchmakingLocked', data => {
+      console.log('Matchmaking locked:', data)
+      dispatch(setBattleCreationStatus('creating'))
+    })
+
     return () => {
       dispatch(setSocketConnected(false))
       socket.off('quickClash:teamBattleReady')
       joinedTeamsRoom.current = false
+      socket.off('quickClash:battleCreationStarted')
+      socket.off('quickClash:battleCreationFailed')
+      socket.off('quickClash:matchmakingLocked')
     }
   }, [
     dispatch,
@@ -186,6 +217,16 @@ const useQuickClashGlobalMatchmaking = () => {
     globalMatchmakingState.selectedTeamId,
     dispatch,
   ])
+
+  const checkCanLeaveMatchmaking = useCallback(async () => {
+    try {
+      const response = await axios.get('/api/quickClash/can-leave-matchmaking')
+      return response.data.canLeave
+    } catch (error) {
+      console.error('Error checking if can leave matchmaking:', error)
+      return true // Allow leaving if check fails
+    }
+  }, [])
 
   // Check matchmaking status - only for initial checks and major state changes
   const checkMatchmakingStatus = useCallback(
@@ -488,6 +529,20 @@ const useQuickClashGlobalMatchmaking = () => {
   // Leave matchmaking
   const leaveMatchmaking = useCallback(async () => {
     try {
+      // Check if user can leave
+      const canLeave = await checkCanLeaveMatchmaking()
+
+      if (!canLeave) {
+        toast({
+          title: t('Cannot Leave'),
+          description: t('Your battle is being created. Please wait.'),
+          status: 'warning',
+          duration: 3000,
+          isClosable: true,
+        })
+        return
+      }
+
       // Reset timer when leaving
       matchmakingStartTimeRef.current = null
       setLocalMatchmakingTime(0)
@@ -525,6 +580,7 @@ const useQuickClashGlobalMatchmaking = () => {
     t,
     globalMatchmakingState.matchmakingType,
     globalMatchmakingState.selectedTeamId,
+    checkCanLeaveMatchmaking,
   ])
 
   // Select team ID for team matchmaking
@@ -589,8 +645,12 @@ const useQuickClashGlobalMatchmaking = () => {
     error: globalMatchmakingState.error,
     teamMembers: globalMatchmakingState.teamMembers,
     socketConnected: globalMatchmakingState.socketConnected,
+    battleCreationStatus: globalMatchmakingState.battleCreationStatus,
+    battleCreationError: globalMatchmakingState.battleCreationError,
 
     // Actions
+    clearBattleCreationError: () => dispatch(clearBattleCreationError()),
+    checkCanLeaveMatchmaking,
     pollMatchmakingStatus,
     checkMatchmakingStatus,
     joinSoloMatchmaking,

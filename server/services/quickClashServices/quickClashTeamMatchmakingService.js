@@ -7,7 +7,6 @@ const User = require('../../model/userSchema')
 const globalEmitter = require('../../eventEmitter')
 const { getCategories } = require('../../data/categories')
 const { createTeamBattle } = require('./quickClashTeamBattleService')
-const QuickClashTeamBattle = require('../../model/quickClashSchemas/quickClashTeamBattleSchema')
 const { updateTeamMatchStatus } = require('./quickClashTeamService')
 
 // Constants

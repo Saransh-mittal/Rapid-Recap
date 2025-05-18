@@ -44,6 +44,9 @@ import {
   Info,
   Sword,
   Globe,
+  Loader,
+  AlertTriangle,
+  FileText,
 } from 'lucide-react'
 import { keyframes } from '@emotion/react'
 
@@ -125,6 +128,8 @@ const GlobalMatchmakingButton = ({ compact = false }) => {
     battleReady,
     loading,
     matchmakingTime,
+    battleCreationStatus,
+    battleCreationError,
 
     // Actions
     checkMatchmakingStatus,
@@ -136,6 +141,8 @@ const GlobalMatchmakingButton = ({ compact = false }) => {
     enterBattle,
     clearBattleReady,
     formatMatchmakingTime,
+    clearBattleCreationError,
+    checkCanLeaveMatchmaking,
   } = useQuickClashGlobalMatchmaking()
 
   // Fetch user's teams
@@ -536,6 +543,20 @@ const GlobalMatchmakingButton = ({ compact = false }) => {
   // Handle leaving matchmaking
   const handleLeaveMatchmaking = async () => {
     try {
+      // Check if user can leave
+      const canLeave = await checkCanLeaveMatchmaking()
+
+      if (!canLeave) {
+        toast({
+          title: t('Cannot Leave'),
+          description: t('Your battle is being created. Please wait.'),
+          status: 'warning',
+          duration: 3000,
+          isClosable: true,
+        })
+        return
+      }
+
       await leaveMatchmaking()
       setStatusUpdates([])
       closeModal()
@@ -799,6 +820,7 @@ const GlobalMatchmakingButton = ({ compact = false }) => {
         _active={{
           bgGradient: 'linear(to-r, blue.700, purple.700)',
         }}
+        className={'global-matchmaking-button'}
       >
         {t('Join 4v4 Matchmaking')}
       </MotionButton>
@@ -807,6 +829,195 @@ const GlobalMatchmakingButton = ({ compact = false }) => {
 
   // Render modal content
   const renderModalContent = () => {
+    // Handle battle creation status
+    if (battleCreationStatus === 'creating') {
+      return (
+        <VStack spacing={6} align="center">
+          {/* Battle Creation Animation */}
+          <MotionFlex
+            justify="center"
+            align="center"
+            w="120px"
+            h="120px"
+            borderRadius="full"
+            bg="rgba(128, 90, 213, 0.1)"
+            border="2px solid"
+            borderColor="purple.400"
+            position="relative"
+            animate={{
+              scale: [1, 1.05, 1],
+              rotate: [0, 360],
+            }}
+            transition={{
+              scale: {
+                duration: 2,
+                repeat: Infinity,
+                repeatType: 'reverse',
+              },
+              rotate: {
+                duration: 3,
+                repeat: Infinity,
+                ease: 'linear',
+              },
+            }}
+          >
+            <Icon as={Loader} color="purple.400" boxSize={12} />
+            <MotionBox
+              position="absolute"
+              animate={{
+                y: [0, -10, 0],
+                opacity: [0.5, 1, 0.5],
+              }}
+              transition={{
+                duration: 1.5,
+                repeat: Infinity,
+                repeatType: 'reverse',
+              }}
+            >
+              <Icon as={Shield} color="purple.200" boxSize={6} />
+            </MotionBox>
+          </MotionFlex>
+
+          {/* Battle Creation Status */}
+          <VStack spacing={2} align="center">
+            <Text color="purple.400" fontSize="2xl" fontWeight="bold">
+              {t('Creating Your Battle')}
+            </Text>
+            <Text color="whiteAlpha.800" fontSize="md" textAlign="center">
+              {t('Please wait while we set up your 4v4 team battle')}
+            </Text>
+          </VStack>
+
+          {/* Progress Information */}
+          <Box
+            w="100%"
+            bg="rgba(128, 90, 213, 0.1)"
+            borderRadius="md"
+            p={4}
+            borderWidth="1px"
+            borderColor="purple.500"
+          >
+            <VStack spacing={3}>
+              <Text color="purple.400" fontWeight="bold" fontSize="md">
+                {t('Setting Up Battle')}
+              </Text>
+
+              <VStack spacing={2} w="100%">
+                <HStack justify="space-between" w="100%">
+                  <HStack>
+                    <Icon as={Users} color="purple.300" boxSize={4} />
+                    <Text color="whiteAlpha.800" fontSize="sm">
+                      {t('Preparing teams')}
+                    </Text>
+                  </HStack>
+                  <Spinner size="sm" color="purple.400" />
+                </HStack>
+
+                <HStack justify="space-between" w="100%">
+                  <HStack>
+                    <Icon as={FileText} color="purple.300" boxSize={4} />
+                    <Text color="whiteAlpha.800" fontSize="sm">
+                      {t('Generating questions')}
+                    </Text>
+                  </HStack>
+                  <Spinner size="sm" color="purple.400" />
+                </HStack>
+
+                <HStack justify="space-between" w="100%">
+                  <HStack>
+                    <Icon as={Zap} color="purple.300" boxSize={4} />
+                    <Text color="whiteAlpha.800" fontSize="sm">
+                      {t('Almost ready')}
+                    </Text>
+                  </HStack>
+                  <Spinner size="sm" color="purple.400" />
+                </HStack>
+              </VStack>
+            </VStack>
+          </Box>
+
+          {/* Warning - Cannot Leave */}
+          <Box
+            w="100%"
+            bg="rgba(245, 166, 35, 0.1)"
+            borderRadius="md"
+            p={3}
+            borderWidth="1px"
+            borderColor="orange.400"
+          >
+            <HStack>
+              <Icon as={AlertTriangle} color="orange.400" boxSize={5} />
+              <Text color="orange.300" fontSize="sm" fontWeight="bold">
+                {t('Cannot leave during battle creation')}
+              </Text>
+            </HStack>
+            <Text color="whiteAlpha.700" fontSize="xs" mt={1}>
+              {t('Your battle will be ready shortly')}
+            </Text>
+          </Box>
+        </VStack>
+      )
+    }
+
+    // Handle battle creation failure
+    if (battleCreationStatus === 'failed') {
+      return (
+        <VStack spacing={6} align="center">
+          {/* Error Icon */}
+          <MotionFlex
+            justify="center"
+            align="center"
+            w="120px"
+            h="120px"
+            borderRadius="full"
+            bg="rgba(245, 101, 101, 0.1)"
+            border="2px solid"
+            borderColor="red.400"
+            animate={{
+              scale: [1, 1.05, 1],
+            }}
+            transition={{
+              duration: 2,
+              repeat: Infinity,
+              repeatType: 'reverse',
+            }}
+          >
+            <Icon as={AlertTriangle} color="red.400" boxSize={12} />
+          </MotionFlex>
+
+          {/* Error Status */}
+          <VStack spacing={2} align="center">
+            <Text color="red.400" fontSize="2xl" fontWeight="bold">
+              {t('Battle Creation Failed')}
+            </Text>
+            <Text color="whiteAlpha.800" fontSize="md" textAlign="center">
+              {battleCreationError ||
+                t('Something went wrong while creating your battle')}
+            </Text>
+          </VStack>
+
+          {/* Retry Information */}
+          <Box
+            w="100%"
+            bg="rgba(245, 101, 101, 0.1)"
+            borderRadius="md"
+            p={4}
+            borderWidth="1px"
+            borderColor="red.500"
+          >
+            <Text color="red.300" fontWeight="bold" fontSize="sm" mb={2}>
+              {t('What happened?')}
+            </Text>
+            <Text color="whiteAlpha.700" fontSize="sm">
+              {t(
+                'We encountered an issue while setting up your battle. You can try joining matchmaking again.',
+              )}
+            </Text>
+          </Box>
+        </VStack>
+      )
+    }
+
     // If battle is ready, show the battle ready UI
     if (battleReady) {
       const badgeInfo = getBadgeInfo()
@@ -1360,7 +1571,43 @@ const GlobalMatchmakingButton = ({ compact = false }) => {
           <ModalBody py={6}>{renderModalContent()}</ModalBody>
 
           <ModalFooter borderTopWidth="1px" borderColor="whiteAlpha.200">
-            {battleReady ? (
+            {battleCreationStatus === 'creating' ? (
+              // Battle is being created - no actions available
+              <Text
+                color="whiteAlpha.700"
+                fontSize="sm"
+                textAlign="center"
+                w="100%"
+              >
+                {t('Please wait while your battle is being created...')}
+              </Text>
+            ) : battleCreationStatus === 'failed' ? (
+              // Battle creation failed - allow retry
+              <>
+                <Button
+                  variant="ghost"
+                  mr={3}
+                  onClick={() => {
+                    clearBattleCreationError()
+                    closeModal()
+                  }}
+                  color="whiteAlpha.800"
+                  _hover={{ bg: 'whiteAlpha.100' }}
+                >
+                  {t('Close')}
+                </Button>
+                <Button
+                  colorScheme="blue"
+                  onClick={() => {
+                    clearBattleCreationError()
+                    handleJoinMatchmaking()
+                  }}
+                  leftIcon={<Icon as={RefreshCw} />}
+                >
+                  {t('Try Again')}
+                </Button>
+              </>
+            ) : battleReady ? (
               // Battle is ready - show Enter Battle button
               <Button
                 colorScheme="green"

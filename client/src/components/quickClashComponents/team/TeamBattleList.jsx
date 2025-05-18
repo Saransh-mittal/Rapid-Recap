@@ -248,9 +248,6 @@ const TeamBattleList = () => {
           >
             {t('Refresh')}
           </MotionButton>
-
-          {/* Team Matchmaking Button */}
-          <TeamMatchmakingButton compact={true} />
         </HStack>
       </MotionFlex>
 

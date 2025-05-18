@@ -116,6 +116,9 @@ const initialState = {
 
   // Battle info
   battleReady: null,
+  // Battle creation state
+  battleCreationStatus: null, // 'creating', 'failed', null
+  battleCreationError: null,
 
   // Loading and error states
   loading: false,
@@ -159,12 +162,37 @@ const quickClashGlobalMatchmakingSlice = createSlice({
       )
       state.battleReady = action.payload
       state.step = 'battleReady'
-
+      // IMPORTANT: Clear any battle creation status when battle is ready
+      state.battleCreationStatus = null
+      state.battleCreationError = null
       console.log('Global Matchmaking: Updated state:', {
         battleReady: state.battleReady,
         step: state.step,
       })
     },
+
+    setBattleCreationStatus: (state, action) => {
+      state.battleCreationStatus = action.payload
+
+      // Set step based on status
+      if (action.payload === 'creating') {
+        state.step = 'creating_battle'
+      } else if (action.payload === 'failed') {
+        state.step = 'ready'
+      }
+    },
+
+    setBattleCreationError: (state, action) => {
+      state.battleCreationError = action.payload
+      state.battleCreationStatus = 'failed'
+      state.step = 'ready'
+    },
+
+    clearBattleCreationError: state => {
+      state.battleCreationError = null
+      state.battleCreationStatus = null
+    },
+
     clearBattleReady: state => {
       state.battleReady = null
       state.inMatchmaking = false
@@ -342,6 +370,9 @@ export const {
   setTeamMembers,
   setSocketConnected,
   updateMatchmakingState,
+  setBattleCreationStatus,
+  setBattleCreationError,
+  clearBattleCreationError,
 } = quickClashGlobalMatchmakingSlice.actions
 
 export default quickClashGlobalMatchmakingSlice.reducer

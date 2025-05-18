@@ -403,13 +403,6 @@ const TeamCard = ({
             {t('Leave')}
           </Button>
         </HStack>
-
-        {/* Team Matchmaking Button - Pass isLeader prop */}
-        <TeamMatchmakingButton
-          teamId={team._id}
-          compact={true}
-          isLeader={isLeader}
-        />
       </Flex>
 
       {/* Leave Confirmation Popover */}

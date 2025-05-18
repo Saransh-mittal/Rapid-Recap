@@ -281,10 +281,66 @@ const getGlobalMatchmakingStatusDetailed = asyncHandler(async (req, res) => {
   }
 })
 
+/**
+ * @desc    Check if a user can leave matchmaking
+ * @route   GET /api/quickClash/can-leave-matchmaking
+ * @access  Private
+ */
+const canLeaveMatchmakingController = asyncHandler(async (req, res) => {
+  const userId = req.user._id
+
+  try {
+    // Check if user is in global matchmaking
+    const globalEntry = await QuickClashGlobalMatchmaking.findOne({
+      user: userId,
+    })
+
+    let canLeave = true
+    let reason = null
+
+    if (globalEntry) {
+      // User can't leave if status is 'creating_battle'
+      if (globalEntry.status === 'creating_battle') {
+        canLeave = false
+        reason = 'Battle is being created'
+      }
+    } else {
+      // Check if user is in team matchmaking
+      const userTeam = await QuickClashTeam.findOne({
+        'members.user': userId,
+      })
+
+      if (userTeam) {
+        const teamMatchmaking = await QuickClashTeamMatchmaking.findOne({
+          team: userTeam._id,
+        })
+
+        if (teamMatchmaking && teamMatchmaking.status === 'creating_battle') {
+          canLeave = false
+          reason = 'Battle is being created'
+        }
+      }
+    }
+
+    res.json({
+      success: true,
+      canLeave,
+      reason,
+    })
+  } catch (error) {
+    console.error('Error checking if user can leave matchmaking:', error)
+    res.status(500).json({
+      success: false,
+      message: 'Failed to check matchmaking status',
+    })
+  }
+})
+
 module.exports = {
   joinGlobalMatchmakingQueue,
   leaveGlobalMatchmakingQueue,
   getGlobalMatchmakingStatusController,
   processGlobalMatchmakingController,
   getGlobalMatchmakingStatusDetailed,
+  canLeaveMatchmakingController,
 }

@@ -36,6 +36,7 @@ const {
   getGlobalMatchmakingStatusController,
   processGlobalMatchmakingController,
   getGlobalMatchmakingStatusDetailed,
+  canLeaveMatchmakingController,
 } = require('../controllers/quickClashGlobalMatchmakingController')
 const teamRoutes = require('./quickClashTeamRoutes')
 
@@ -90,6 +91,7 @@ router.get(
   '/global-matchmaking-status-detailed',
   getGlobalMatchmakingStatusDetailed,
 )
+router.get('/can-leave-matchmaking', canLeaveMatchmakingController)
 
 // Leaderboard routes
 router.get('/leaderboard', getQuickClashLeaderboard)
