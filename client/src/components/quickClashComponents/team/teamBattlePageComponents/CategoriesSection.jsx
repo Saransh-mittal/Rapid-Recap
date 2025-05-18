@@ -1,4 +1,4 @@
-// components/quickClashComponents/team/CategoriesSection.jsx
+// components/quickClashComponents/team/teamBattlePageComponents/CategoriesSection.jsx
 import React from 'react'
 import {
   Box,
@@ -10,24 +10,32 @@ import {
   HStack,
   Icon,
   Text,
+  VStack,
+  Button,
+  useBreakpointValue,
 } from '@chakra-ui/react'
 import { motion } from 'framer-motion'
 import { useTranslation } from 'react-i18next'
-import { AlertTriangle } from 'lucide-react'
-
-import CategoryCard from './CategoryCard'
+import { useNavigate } from 'react-router-dom'
+import {
+  AlertTriangle,
+  Play,
+  FileText,
+  CheckCircle,
+  Clock,
+  Star,
+  Target,
+} from 'lucide-react'
 
 const MotionBox = motion(Box)
+const MotionGridItem = motion(GridItem)
 
 /**
- * Component to display the categories section in team battle
+ * Enhanced component to display the categories section in team battle
  */
 const CategoriesSection = ({
   currentBattle,
   uncompletedCategories,
-  userCompletedCategories,
-  hasUserParticipated,
-  teammatesSelectedCategories,
   userTeam,
   user,
   onSelectCategory,
@@ -38,6 +46,342 @@ const CategoriesSection = ({
   variants,
 }) => {
   const { t } = useTranslation('QuickClash')
+  const navigate = useNavigate()
+
+  // Responsive values
+  const padding = useBreakpointValue({ base: 4, md: 6 })
+  const columns = useBreakpointValue({ base: 1, sm: 2, lg: 4 })
+  const spacing = useBreakpointValue({ base: 3, md: 4 })
+
+  // Get user's completed categories
+  const userCompletedCategories = React.useMemo(() => {
+    if (!currentBattle || !userTeam || !user) return []
+
+    const teamMembers =
+      userTeam === 'teamA'
+        ? currentBattle.teamAMembers
+        : currentBattle.teamBMembers
+
+    const userMember = teamMembers.find(m => m.user._id === user._id)
+
+    if (userMember && userMember.completed && userMember.category) {
+      return [userMember.category]
+    }
+
+    return []
+  }, [currentBattle, userTeam, user])
+
+  // Check if the current user has already participated
+  const hasUserParticipated = React.useMemo(() => {
+    if (!currentBattle || !userTeam || !user) return false
+
+    const teamMembers =
+      userTeam === 'teamA'
+        ? currentBattle.teamAMembers
+        : currentBattle.teamBMembers
+
+    const userMember = teamMembers.find(m => m.user._id === user._id)
+
+    return userMember && (userMember.participated || userMember.completed)
+  }, [currentBattle, userTeam, user])
+
+  // Get categories selected by teammates
+  const teammatesSelectedCategories = React.useMemo(() => {
+    if (!currentBattle || !userTeam || !user) return []
+
+    const teamMembers = (
+      userTeam === 'teamA'
+        ? currentBattle.teamAMembers
+        : currentBattle.teamBMembers
+    ).filter(m => m.user._id !== user._id)
+
+    return teamMembers
+      .filter(m => m.category && !m.completed)
+      .map(m => m.category)
+  }, [currentBattle, userTeam, user])
+
+  // Enhanced CategoryCard component
+  const EnhancedCategoryCard = ({ challenge }) => {
+    const isAvailable =
+      uncompletedCategories.some(c => c.category === challenge.category) &&
+      !hasUserParticipated
+    const isCompleted = userCompletedCategories.includes(challenge.category)
+    const isSelectedByTeammate = teammatesSelectedCategories.includes(
+      challenge.category,
+    )
+
+    const teamField = userTeam === 'teamA' ? 'teamACompleted' : 'teamBCompleted'
+    const playerField = userTeam === 'teamA' ? 'teamAPlayer' : 'teamBPlayer'
+    const opponentCompleted =
+      userTeam === 'teamA' ? challenge.teamBCompleted : challenge.teamACompleted
+    const userScore =
+      userTeam === 'teamA' ? challenge.teamAScore : challenge.teamBScore
+    const opponentScore =
+      userTeam === 'teamA' ? challenge.teamBScore : challenge.teamAScore
+
+    const isUserAssigned = challenge[playerField] === user._id
+
+    // Get category icon based on category name
+    const getCategoryInfo = () => {
+      const categoryLower = challenge.category.toLowerCase()
+      if (categoryLower.includes('business')) {
+        return { icon: '💼', color: 'green' }
+      } else if (categoryLower.includes('tech')) {
+        return { icon: '💻', color: 'blue' }
+      } else if (categoryLower.includes('entertainment')) {
+        return { icon: '🎬', color: 'purple' }
+      } else if (categoryLower.includes('food')) {
+        return { icon: '🍔', color: 'orange' }
+      } else if (categoryLower.includes('sports')) {
+        return { icon: '⚽', color: 'red' }
+      } else if (categoryLower.includes('science')) {
+        return { icon: '🔬', color: 'cyan' }
+      } else {
+        return { icon: '🎯', color: 'gray' }
+      }
+    }
+
+    const categoryInfo = getCategoryInfo()
+
+    return (
+      <MotionBox
+        bg={
+          isAvailable
+            ? 'rgba(72, 187, 120, 0.1)'
+            : isCompleted
+            ? 'rgba(128, 90, 213, 0.1)'
+            : isSelectedByTeammate
+            ? 'rgba(237, 137, 54, 0.1)'
+            : 'rgba(160, 174, 192, 0.1)'
+        }
+        borderWidth="2px"
+        borderColor={
+          isAvailable
+            ? 'green.500'
+            : isCompleted
+            ? 'purple.500'
+            : isSelectedByTeammate
+            ? 'orange.500'
+            : 'gray.600'
+        }
+        borderRadius="xl"
+        p={padding}
+        position="relative"
+        overflow="hidden"
+        whileHover={
+          isAvailable
+            ? {
+                y: -8,
+                boxShadow: '0 15px 30px rgba(0, 0, 0, 0.2)',
+                borderColor: 'green.400',
+              }
+            : {}
+        }
+        whileTap={isAvailable ? { scale: 0.98 } : {}}
+        transition={{ duration: 0.2 }}
+        cursor={isAvailable ? 'pointer' : 'default'}
+        onClick={() => isAvailable && onSelectCategory(challenge.category)}
+        height="fit-content"
+        minHeight="200px"
+      >
+        {/* Animated background gradient */}
+        <Box
+          position="absolute"
+          top={0}
+          left={0}
+          right={0}
+          bottom={0}
+          bgGradient={`linear(135deg, transparent 0%, rgba(${
+            isAvailable
+              ? '72, 187, 120'
+              : isCompleted
+              ? '128, 90, 213'
+              : isSelectedByTeammate
+              ? '237, 137, 54'
+              : '160, 174, 192'
+          }, 0.05) 100%)`}
+          opacity={0.8}
+        />
+
+        {/* Top highlight stripe */}
+        {isAvailable && (
+          <Box
+            position="absolute"
+            top={0}
+            left={0}
+            right={0}
+            height="4px"
+            bgGradient="linear(to-r, green.400, teal.400)"
+            borderTopRadius="xl"
+          />
+        )}
+
+        {/* Floating icon */}
+        <Box position="absolute" top={4} right={4} fontSize="2xl" opacity={0.3}>
+          {categoryInfo.icon}
+        </Box>
+
+        <VStack spacing={4} align="stretch" position="relative" zIndex={1}>
+          <VStack spacing={2} align="flex-start">
+            <Badge
+              colorScheme={categoryInfo.color}
+              variant="solid"
+              px={3}
+              py={1}
+              borderRadius="full"
+              fontSize="md"
+              fontWeight="bold"
+            >
+              {challenge.category}
+            </Badge>
+
+            {isAvailable && (
+              <Badge
+                colorScheme="green"
+                variant="subtle"
+                px={3}
+                py={1}
+                borderRadius="full"
+                fontSize="sm"
+                animate={{
+                  scale: [1, 1.05, 1],
+                  opacity: [0.8, 1, 0.8],
+                }}
+                transition={{
+                  duration: 2,
+                  repeat: Infinity,
+                  repeatType: 'reverse',
+                }}
+              >
+                <Icon as={Target} boxSize={3} mr={1} />
+                {t('Available')}
+              </Badge>
+            )}
+          </VStack>
+
+          {/* Status Information */}
+          <VStack spacing={2} align="stretch">
+            {isCompleted ? (
+              <HStack justify="space-between">
+                <Badge colorScheme="green" variant="outline">
+                  <Icon as={CheckCircle} boxSize={3} mr={1} />
+                  {t('Completed')}
+                </Badge>
+                <Badge colorScheme="purple" variant="solid">
+                  {userScore} {t('pts')}
+                </Badge>
+              </HStack>
+            ) : isUserAssigned && !isCompleted ? (
+              <HStack justify="space-between">
+                <Badge colorScheme="yellow" variant="outline">
+                  <Icon as={Clock} boxSize={3} mr={1} />
+                  {t('In Progress')}
+                </Badge>
+                <Badge colorScheme="blue" variant="subtle">
+                  {t('Continue')}
+                </Badge>
+              </HStack>
+            ) : isSelectedByTeammate ? (
+              <Badge colorScheme="orange" variant="outline">
+                <Icon as={Star} boxSize={3} mr={1} />
+                {t('Selected by Teammate')}
+              </Badge>
+            ) : isAvailable ? (
+              <Badge colorScheme="green" variant="outline">
+                <Icon as={Play} boxSize={3} mr={1} />
+                {t('Ready to Start')}
+              </Badge>
+            ) : (
+              <Badge colorScheme="gray" variant="outline">
+                {t('Unavailable')}
+              </Badge>
+            )}
+
+            {/* Battle Result if both completed */}
+            {isCompleted && opponentCompleted && (
+              <HStack justify="space-between" pt={2}>
+                <Text fontSize="sm" color="whiteAlpha.700">
+                  {t('Result')}:
+                </Text>
+                {userScore > opponentScore ? (
+                  <Badge colorScheme="green" fontSize="sm">
+                    {t('Victory!')}
+                  </Badge>
+                ) : userScore < opponentScore ? (
+                  <Badge colorScheme="red" fontSize="sm">
+                    {t('Defeat')}
+                  </Badge>
+                ) : (
+                  <Badge colorScheme="yellow" fontSize="sm">
+                    {t('Draw')}
+                  </Badge>
+                )}
+              </HStack>
+            )}
+          </VStack>
+
+          {/* Action Button */}
+          <Box pt={2}>
+            {isCompleted ? (
+              <Button
+                size="sm"
+                colorScheme="purple"
+                leftIcon={<Icon as={FileText} />}
+                width="100%"
+                onClick={e => {
+                  e.stopPropagation()
+                  onViewReport(challenge.challenge?._id)
+                }}
+                isLoading={reportModalLoading}
+                borderRadius="lg"
+              >
+                {t('View Report')}
+              </Button>
+            ) : isUserAssigned && !isCompleted ? (
+              <Button
+                size="sm"
+                colorScheme="blue"
+                leftIcon={<Icon as={Play} />}
+                width="100%"
+                onClick={e => {
+                  e.stopPropagation()
+                  navigate(`/quickclash/session/${challenge.challenge?._id}`)
+                }}
+                borderRadius="lg"
+              >
+                {t('Continue Challenge')}
+              </Button>
+            ) : (
+              isAvailable && (
+                <Button
+                  size="sm"
+                  colorScheme="green"
+                  leftIcon={<Icon as={Play} />}
+                  width="100%"
+                  isLoading={
+                    categorySelectionLoading &&
+                    selectedCategoryId === challenge.challenge
+                  }
+                  loadingText={t('Starting...')}
+                  borderRadius="lg"
+                  _hover={{
+                    transform: 'translateY(-2px)',
+                    boxShadow: '0 4px 12px rgba(72, 187, 120, 0.3)',
+                  }}
+                  _active={{
+                    transform: 'translateY(0)',
+                  }}
+                  transition="all 0.2s"
+                >
+                  {t('Start Challenge')}
+                </Button>
+              )
+            )}
+          </Box>
+        </VStack>
+      </MotionBox>
+    )
+  }
 
   // If no battle or user is not part of it, don't render
   if (!currentBattle || !userTeam) return null
@@ -45,113 +389,115 @@ const CategoriesSection = ({
   return (
     <MotionBox
       variants={variants}
-      bg="rgba(26, 32, 44, 0.8)"
-      borderRadius="lg"
-      p={4}
-      mb={6}
+      mx={{ base: 4, md: 6 }}
+      mb={8}
+      bg="rgba(26, 32, 44, 0.6)"
+      backdropFilter="blur(10px)"
+      borderRadius="xl"
+      p={padding}
+      borderWidth="1px"
+      borderColor="whiteAlpha.200"
+      position="relative"
+      overflow="hidden"
     >
-      <Flex justify="space-between" align="center" mb={4}>
-        <Heading size="md" color="white">
-          {t('Categories')}
-        </Heading>
+      {/* Background decoration */}
+      <Box
+        position="absolute"
+        top={0}
+        right={0}
+        width="200px"
+        height="200px"
+        bgGradient="radial(circle, rgba(128, 90, 213, 0.1) 0%, transparent 70%)"
+        transform="translate(50%, -50%)"
+      />
 
-        {uncompletedCategories.length > 0 && !hasUserParticipated ? (
-          <Badge colorScheme="green">
-            {uncompletedCategories.length} {t('Available')}
-          </Badge>
-        ) : userCompletedCategories.length > 0 ? (
-          <Badge colorScheme="purple">
-            {t('You selected')}: {userCompletedCategories[0]}
-          </Badge>
-        ) : (
-          <Badge colorScheme="yellow">{t('All categories selected')}</Badge>
-        )}
-      </Flex>
-
-      <Grid
-        templateColumns={{
-          base: '1fr',
-          md: 'repeat(2, 1fr)',
-          lg: 'repeat(4, 1fr)',
-        }}
-        gap={4}
-      >
-        {currentBattle.challenges.map(challenge => {
-          // Determine if this challenge is currently available to the user
-          const isAvailable =
-            uncompletedCategories.some(
-              c => c.category === challenge.category,
-            ) && !hasUserParticipated // User hasn't participated in any challenge yet
-
-          // Check if the user has already completed this category
-          const isCompleted = userCompletedCategories.includes(
-            challenge.category,
-          )
-
-          // Check if another teammate has selected this category
-          const isSelectedByTeammate = teammatesSelectedCategories.includes(
-            challenge.category,
-          )
-
-          // Get the challenge associated with this category
-          const teamField =
-            userTeam === 'teamA' ? 'teamACompleted' : 'teamBCompleted'
-          const playerField =
-            userTeam === 'teamA' ? 'teamAPlayer' : 'teamBPlayer'
-          const opponentCompleted =
-            userTeam === 'teamA'
-              ? challenge.teamBCompleted
-              : challenge.teamACompleted
-          const userScore =
-            userTeam === 'teamA' ? challenge.teamAScore : challenge.teamBScore
-          const opponentScore =
-            userTeam === 'teamA' ? challenge.teamBScore : challenge.teamAScore
-
-          // Determine if the user is the assigned player for this challenge
-          const isUserAssigned = challenge[playerField] === user._id
-
-          return (
-            <GridItem key={challenge.category}>
-              <CategoryCard
-                challenge={challenge}
-                isAvailable={isAvailable}
-                isCompleted={isCompleted}
-                isSelectedByTeammate={isSelectedByTeammate}
-                isUserAssigned={isUserAssigned}
-                userScore={userScore}
-                opponentScore={opponentScore}
-                opponentCompleted={opponentCompleted}
-                onSelect={onSelectCategory}
-                onViewReport={onViewReport}
-                reportModalLoading={reportModalLoading}
-                categorySelectionLoading={categorySelectionLoading}
-                selectedCategoryId={selectedCategoryId}
-              />
-            </GridItem>
-          )
-        })}
-      </Grid>
-
-      {/* Display message when user already participated */}
-      {hasUserParticipated && !userCompletedCategories.length && (
-        <Box
-          mt={4}
-          p={4}
-          bg="rgba(237, 137, 54, 0.1)"
-          borderRadius="md"
-          borderWidth="1px"
-          borderColor="orange.500"
-        >
-          <HStack spacing={2}>
-            <Icon as={AlertTriangle} color="orange.400" boxSize={5} />
-            <Text color="white">
-              {t(
-                'You are already participating in a challenge. Complete your current challenge before selecting another.',
-              )}
+      <VStack spacing={spacing} position="relative" zIndex={1}>
+        <Flex justify="space-between" align="center" w="100%">
+          <VStack align="flex-start" spacing={1}>
+            <Heading size="lg" color="white">
+              {t('Categories')}
+            </Heading>
+            <Text color="whiteAlpha.700" fontSize="sm">
+              {t('Choose a category to battle in')}
             </Text>
-          </HStack>
-        </Box>
-      )}
+          </VStack>
+
+          {uncompletedCategories.length > 0 && !hasUserParticipated ? (
+            <Badge
+              colorScheme="green"
+              px={3}
+              py={1}
+              borderRadius="full"
+              fontSize="md"
+            >
+              {uncompletedCategories.length} {t('Available')}
+            </Badge>
+          ) : userCompletedCategories.length > 0 ? (
+            <Badge
+              colorScheme="purple"
+              px={3}
+              py={1}
+              borderRadius="full"
+              fontSize="md"
+            >
+              {t('You selected')}: {userCompletedCategories[0]}
+            </Badge>
+          ) : (
+            <Badge
+              colorScheme="yellow"
+              px={3}
+              py={1}
+              borderRadius="full"
+              fontSize="md"
+            >
+              {t('All categories selected')}
+            </Badge>
+          )}
+        </Flex>
+
+        <Grid
+          templateColumns={`repeat(${columns}, 1fr)`}
+          gap={spacing}
+          w="100%"
+        >
+          {currentBattle.challenges.map((challenge, index) => (
+            <MotionGridItem
+              key={challenge.category}
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: index * 0.1 }}
+            >
+              <EnhancedCategoryCard challenge={challenge} />
+            </MotionGridItem>
+          ))}
+        </Grid>
+
+        {/* Display message when user already participated */}
+        {hasUserParticipated && !userCompletedCategories.length && (
+          <Box
+            mt={4}
+            p={4}
+            bg="rgba(237, 137, 54, 0.1)"
+            borderRadius="lg"
+            borderWidth="1px"
+            borderColor="orange.500"
+          >
+            <HStack spacing={3}>
+              <Icon as={AlertTriangle} color="orange.400" boxSize={6} />
+              <VStack align="flex-start" spacing={1}>
+                <Text color="white" fontWeight="bold">
+                  {t('Challenge in Progress')}
+                </Text>
+                <Text color="whiteAlpha.700" fontSize="sm">
+                  {t(
+                    'You are already participating in a challenge. Complete your current challenge before selecting another.',
+                  )}
+                </Text>
+              </VStack>
+            </HStack>
+          </Box>
+        )}
+      </VStack>
     </MotionBox>
   )
 }
