@@ -23,7 +23,6 @@ import { RefreshCw, PlusCircle, Users, Trophy } from 'lucide-react'
 
 // Custom components
 import TeamBattleItem from './TeamBattleItem'
-import TeamMatchmakingButton from './TeamMatchmakingButton'
 import EmptyBattlesState from './EmptyBattlesState'
 
 // Custom hooks

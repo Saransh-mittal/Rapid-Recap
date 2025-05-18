@@ -44,7 +44,6 @@ import {
   Activity,
   Check,
 } from 'lucide-react'
-import TeamMatchmakingButton from './TeamMatchmakingButton'
 
 const MotionBox = motion(Box)
 const MotionButton = motion(Button)
