@@ -193,6 +193,7 @@ const QuickClash = () => {
       )}
 
       <Container
+        className="quick-clash-container"
         maxW="container.xl"
         py={8}
         style={{
@@ -229,6 +230,7 @@ const QuickClash = () => {
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
           transition={{ duration: 0.3 }}
+          className={'quick-clash-tabs'}
         >
           <Box
             borderRadius="lg"
@@ -237,7 +239,7 @@ const QuickClash = () => {
             borderColor="whiteAlpha.100"
             mb={4}
           >
-            <Box p={4}>
+            <Box p={{ base: 1, md: 4 }}>
               <CustomTabs
                 initialTabIndex={activeTabIndex}
                 onChange={handleTabChange}
