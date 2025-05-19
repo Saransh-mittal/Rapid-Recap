@@ -27,7 +27,6 @@ const TAB_HASH_MAP = {
   0: 'active',
   1: 'tasks',
   2: 'teams',
-  3: 'team-battles',
 }
 
 // Reverse map for looking up index from hash
@@ -35,7 +34,6 @@ const HASH_TAB_MAP = {
   active: 0,
   tasks: 1,
   teams: 2,
-  'team-battles': 3,
 }
 
 // Map icon names to actual icon components
@@ -44,7 +42,6 @@ const ICON_MAP = {
   Zap: Zap,
   Calendar: Calendar,
   Users: Users,
-  Trophy: Trophy,
 }
 
 /**
@@ -104,17 +101,6 @@ const CustomTabs = ({
       activeGradient: 'linear(to-r, blue.600, blue.400)',
       iconAnimation: { scale: [1, 1.1, 1], transition: { duration: 0.5 } },
       hash: 'teams',
-    },
-    // New tab for Team Battles
-    {
-      label: tabNames?.[3] || t('Team Battles'),
-      icon: tabIcons[3] ? ICON_MAP[tabIcons[3]] : Trophy,
-      ariaLabel: 'Team Battles tab',
-      color: 'red.400',
-      hoverColor: 'red.300',
-      activeGradient: 'linear(to-r, red.600, red.400)',
-      iconAnimation: { y: [0, -3, 0], transition: { duration: 0.5 } },
-      hash: 'team-battles',
     },
   ]
 

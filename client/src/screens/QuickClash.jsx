@@ -117,7 +117,6 @@ const QuickClash = () => {
         active: 0,
         tasks: 1,
         teams: 2,
-        'team-battles': 3,
       }
 
       if (hashToIndex[hash] !== undefined) {
@@ -195,6 +194,7 @@ const QuickClash = () => {
       <Container
         className="quick-clash-container"
         maxW="container.xl"
+        px={2}
         py={8}
         style={{
           visibility: showEntrance ? 'hidden' : 'visible',
@@ -243,8 +243,8 @@ const QuickClash = () => {
               <CustomTabs
                 initialTabIndex={activeTabIndex}
                 onChange={handleTabChange}
-                tabNames={['Active', 'Daily Tasks', 'Teams', 'Team Battles']}
-                tabIcons={['Swords', 'Calendar', 'Users', 'Trophy']}
+                tabNames={['Active', 'Daily Tasks', 'Teams']}
+                tabIcons={['Swords', 'Calendar', 'Users']}
               >
                 <TabPanel px={0}>
                   <Suspense fallback={<LoadingFallback />}>
@@ -262,13 +262,6 @@ const QuickClash = () => {
                 <TabPanel px={0}>
                   <Suspense fallback={<LoadingFallback />}>
                     <TeamDashboard />
-                  </Suspense>
-                </TabPanel>
-
-                {/* Team Battles Tab */}
-                <TabPanel px={0}>
-                  <Suspense fallback={<LoadingFallback />}>
-                    <TeamBattlePage />
                   </Suspense>
                 </TabPanel>
               </CustomTabs>
