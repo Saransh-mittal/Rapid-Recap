@@ -1,6 +1,11 @@
 const { convertISTtoUTCCron } = require('../utils/miscellaneous.utils')
 const processExpiredChallenges = require('./tasks/processExpiredChallenges')
 const { cleanupExpiredSessions } = require('./tasks/simpleSessionCleanup')
+const {
+  processBattleExpiryEvents,
+  cleanupBattleExpiryEvents,
+} = require('./tasks/processBattleExpiryEvents')
+const { fallbackBattleCompletion } = require('./tasks/fallbackBattleCompletion')
 
 /**
  * Schedule configuration for Quick Clash related tasks
@@ -42,6 +47,24 @@ const quickClashSchedules = [
     name: 'cleanup-expired-sessions',
     cronPattern: '*/5 * * * *', // Every 5 minutes
     task: cleanupExpiredSessions,
+  },
+  // NEW: Process battle expiry events every minute for precise timing
+  {
+    name: 'process-battle-expiry-events',
+    cronPattern: '*/1 * * * *', // Every minute
+    task: processBattleExpiryEvents,
+  },
+  // NEW: Cleanup failed battle expiry events every 30 minutes
+  {
+    name: 'cleanup-battle-expiry-events',
+    cronPattern: '*/30 * * * *', // Every 30 minutes
+    task: cleanupBattleExpiryEvents,
+  },
+  // NEW: Fallback battle completion check every 15 minutes (safety net)
+  {
+    name: 'fallback-battle-completion',
+    cronPattern: '*/15 * * * *', // Every 15 minutes
+    task: fallbackBattleCompletion,
   },
 ]
 
