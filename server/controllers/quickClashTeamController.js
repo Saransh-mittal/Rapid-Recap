@@ -10,7 +10,6 @@ const {
   leaveTeam,
   updateMemberStatus,
   getUserTeams,
-  toggleTeamPersistence,
   removeMember,
 } = require('../services/quickClashServices/quickClashTeamService')
 
@@ -36,11 +35,11 @@ const QuickClashTeamBattle = require('../model/quickClashSchemas/quickClashTeamB
  * @access  Private
  */
 const createNewTeam = asyncHandler(async (req, res) => {
-  const { name, isPersistent } = req.body
+  const { name } = req.body
   const creatorId = req.user._id
 
   try {
-    const team = await createTeam({ name, creatorId, isPersistent })
+    const team = await createTeam({ name, creatorId })
 
     res.status(201).json({
       success: true,
@@ -255,31 +254,6 @@ const getMyTeams = asyncHandler(async (req, res) => {
     res.status(400).json({
       success: false,
       message: error.message || 'Failed to get teams',
-    })
-  }
-})
-
-/**
- * @desc    Toggle team persistence
- * @route   POST /api/quickClash/team/:teamId/persistence
- * @access  Private
- */
-const toggleTeamPersistenceController = asyncHandler(async (req, res) => {
-  const { teamId } = req.params
-  const userId = req.user._id
-
-  try {
-    const team = await toggleTeamPersistence({ teamId, userId })
-
-    res.status(200).json({
-      success: true,
-      message: `Team is now ${team.isPersistent ? 'persistent' : 'temporary'}`,
-      team,
-    })
-  } catch (error) {
-    res.status(400).json({
-      success: false,
-      message: error.message || 'Failed to update team persistence',
     })
   }
 })
@@ -858,7 +832,6 @@ module.exports = {
   leaveTeamController,
   updateTeamMemberStatus,
   getMyTeams,
-  toggleTeamPersistenceController,
   removeMemberFromTeam,
   joinTeamMatchmakingController,
   leaveTeamMatchmakingController,

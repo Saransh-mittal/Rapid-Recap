@@ -50,10 +50,6 @@ const quickClashTeamSchema = new mongoose.Schema(
       enum: ['manual', 'auto'],
       default: 'manual',
     },
-    isPersistent: {
-      type: Boolean,
-      default: false,
-    },
     isInMatch: {
       type: Boolean,
       default: false,

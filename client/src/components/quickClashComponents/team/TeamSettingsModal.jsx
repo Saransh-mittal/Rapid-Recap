@@ -177,9 +177,6 @@ const TeamSettingsModal = ({ isOpen, onClose, team, onUpdate }) => {
                     isChecked={isPersistent}
                     onChange={e => setIsPersistent(e.target.checked)}
                   />
-                  <Text color="whiteAlpha.800" fontSize="sm">
-                    {isPersistent ? t('Yes') : t('No')}
-                  </Text>
                 </HStack>
                 <FormHelperText color="whiteAlpha.600">
                   {t(

@@ -41,11 +41,8 @@ import { useInView } from 'react-intersection-observer'
 
 // Import custom components
 import TeamBattleItem from './TeamBattleItem'
-<<<<<<< HEAD
-=======
 import DateGroupHeader from '../DateGroupHeader'
-import TeamMatchmakingButton from './TeamMatchmakingButton'
->>>>>>> quickClash--feature
+
 import EmptyBattlesState from './EmptyBattlesState'
 
 // Custom hooks

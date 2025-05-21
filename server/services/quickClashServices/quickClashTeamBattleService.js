@@ -1667,8 +1667,8 @@ const getUserTeamBattles = async ({
  */
 const getTeamBattleDetails = async ({ battleId }) => {
   const battle = await QuickClashTeamBattle.findById(battleId)
-    .populate('teamA', 'name avgTrophies')
-    .populate('teamB', 'name avgTrophies')
+    .populate('teamA', 'name avgTrophies formationInfo')
+    .populate('teamB', 'name avgTrophies formationInfo')
     .populate('teamAMembers.user', '_id name inGameName pic quickClashTrophies')
     .populate('teamBMembers.user', '_id name inGameName pic quickClashTrophies')
     .populate({

@@ -715,7 +715,7 @@ const leaveGlobalMatchmaking = async ({ userId }) => {
           })
         }
         // For regular teams that aren't auto-formed
-        else if (team && !team.isPersistent) {
+        else if (team && !team?.formationInfo?.isAutoFormed) {
           console.log(
             `Team ${team._id} is not auto-formed but temporary, dissolving it`,
           )
@@ -1387,7 +1387,6 @@ const performMatchmaking = async providedSession => {
         const newTeam = new QuickClashTeam({
           name: '', // Will be set later
           creator: newMembers[0].user._id || newMembers[0].user,
-          isPersistent: false,
           teamType: 'auto', // Mark as auto-formed team
           members: newMembers
             .map((member, idx) => {
@@ -1515,7 +1514,6 @@ const performMatchmaking = async providedSession => {
         const newTeam = new QuickClashTeam({
           name: '',
           creator: teamPlayers[0].user._id,
-          isPersistent: false,
           teamType: 'auto', // Mark as auto-formed team
           members: [
             {

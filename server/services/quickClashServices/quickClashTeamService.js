@@ -10,10 +10,9 @@ const globalEmitter = require('../../eventEmitter')
  * @param {Object} params - Parameters
  * @param {string} params.name - Team name
  * @param {string} params.creatorId - Creator user ID
- * @param {boolean} [params.isPersistent=false] - Whether team persists after battles
  * @returns {Promise<Object>} Created team
  */
-const createTeam = async ({ name, creatorId, isPersistent = false }) => {
+const createTeam = async ({ name, creatorId }) => {
   const session = await mongoose.startSession()
 
   try {
@@ -28,7 +27,6 @@ const createTeam = async ({ name, creatorId, isPersistent = false }) => {
       const team = new QuickClashTeam({
         name,
         creator: creatorId,
-        isPersistent,
         members: [
           {
             user: creatorId,
@@ -427,42 +425,13 @@ const updateMemberStatus = async ({ teamId, userId, status }) => {
 const getUserTeams = async ({ userId }) => {
   const teams = await QuickClashTeam.find({
     'members.user': userId,
-    isPersistent: true,
+    'formationInfo.isAutoFormed': false,
   })
     .populate('creator', '_id name inGameName pic')
     .populate('members.user', '_id name inGameName pic quickClashTrophies')
     .sort({ lastActive: -1 })
 
   return teams
-}
-
-/**
- * Toggle team persistence
- * @param {Object} params - Parameters
- * @param {string} params.teamId - Team ID
- * @param {string} params.userId - User ID (must be leader)
- * @returns {Promise<Object>} Updated team
- */
-const toggleTeamPersistence = async ({ teamId, userId }) => {
-  const team = await QuickClashTeam.findById(teamId)
-  if (!team) {
-    throw new Error('Team not found')
-  }
-
-  // Verify user is team leader
-  const member = team.members.find(
-    member => member.user.toString() === userId.toString(),
-  )
-
-  if (!member || member.role !== 'leader') {
-    throw new Error('Only the team leader can change persistence settings')
-  }
-
-  team.isPersistent = !team.isPersistent
-
-  await team.save()
-
-  return team
 }
 
 /**
@@ -605,7 +574,6 @@ module.exports = {
   leaveTeam,
   updateMemberStatus,
   getUserTeams,
-  toggleTeamPersistence,
   updateTeamMatchStatus,
   removeMember,
 }

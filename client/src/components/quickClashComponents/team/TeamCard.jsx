@@ -223,11 +223,6 @@ const TeamCard = ({
                 <Icon as={teamStatus.icon} boxSize={3} mr={1} />
                 {teamStatus.label}
               </Badge>
-              {team.isPersistent && (
-                <Badge colorScheme="blue" variant="subtle" fontSize="xs">
-                  {t('Persistent')}
-                </Badge>
-              )}
             </HStack>
           </VStack>
         </HStack>
