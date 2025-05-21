@@ -85,6 +85,18 @@ const ActiveChallenges = () => {
   // Mode state (1v1 or 4v4)
   const [mode, setMode] = useState('1v1')
 
+  // Track initial data loads to prevent infinite loading cycles
+  const initialDataLoadedRef = useRef({
+    '1v1': false,
+    '4v4': false,
+  })
+
+  // Track if we've shown the empty state to prevent cycling
+  const [emptyStateShown, setEmptyStateShown] = useState({
+    '1v1': false,
+    '4v4': false,
+  })
+
   // 1v1 Challenge states
   const [filter, setFilter] = useState('all')
   const {
@@ -132,16 +144,49 @@ const ActiveChallenges = () => {
   const [revengeProgress, setRevengeProgress] = useState(0)
   const progressTimerRef = useRef(null)
 
+  // Track when data has been loaded
+  useEffect(() => {
+    if (!loading && challenges.length > 0) {
+      initialDataLoadedRef.current['1v1'] = true
+    } else if (
+      !loading &&
+      !initialDataLoadedRef.current['1v1'] &&
+      challenges.length === 0
+    ) {
+      setEmptyStateShown(prev => ({ ...prev, '1v1': true }))
+    }
+  }, [loading, challenges])
+
+  useEffect(() => {
+    if (!activeBattlesLoading && activeBattles.length > 0) {
+      initialDataLoadedRef.current['4v4'] = true
+    } else if (
+      !activeBattlesLoading &&
+      !initialDataLoadedRef.current['4v4'] &&
+      activeBattles.length === 0
+    ) {
+      setEmptyStateShown(prev => ({ ...prev, '4v4': true }))
+    }
+  }, [activeBattlesLoading, activeBattles])
+
   // Fetch challenges/battles on mount and when mode changes
   useEffect(() => {
     if (userId) {
-      if (mode === '1v1') {
+      if (
+        mode === '1v1' &&
+        !initialDataLoadedRef.current['1v1'] &&
+        !emptyStateShown['1v1']
+      ) {
         loadActiveChallenges()
-      } else if (mode === '4v4') {
+      } else if (
+        mode === '4v4' &&
+        !initialDataLoadedRef.current['4v4'] &&
+        !emptyStateShown['4v4']
+      ) {
         loadTeamBattles()
       }
     }
-  }, [userId, mode, loadActiveChallenges, loadTeamBattles])
+  }, [userId, mode, loadActiveChallenges, loadTeamBattles, emptyStateShown])
 
   // Handle infinite scrolling
   useEffect(() => {
@@ -554,20 +599,22 @@ const ActiveChallenges = () => {
     [handleAccept, handleDecline, handleStart, handleViewReport, handleRevenge],
   )
 
-  // Check if both modes are loading
+  // Improved loading state determination with more precise conditions
   const isLoading = useMemo(() => {
     if (mode === '1v1') {
-      return loading && !challenges.length
+      return (
+        loading &&
+        !initialDataLoadedRef.current['1v1'] &&
+        !emptyStateShown['1v1']
+      )
     } else {
-      return activeBattlesLoading && !activeBattles.length
+      return (
+        activeBattlesLoading &&
+        !initialDataLoadedRef.current['4v4'] &&
+        !emptyStateShown['4v4']
+      )
     }
-  }, [
-    mode,
-    loading,
-    challenges.length,
-    activeBattlesLoading,
-    activeBattles.length,
-  ])
+  }, [mode, loading, activeBattlesLoading, emptyStateShown])
 
   // Get error based on current mode
   const currentError = useMemo(() => {
@@ -577,6 +624,21 @@ const ActiveChallenges = () => {
       return activeBattlesError
     }
   }, [mode, error, activeBattlesError])
+
+  // Manual refresh function that clears tracked states
+  const handleManualRefresh = useCallback(() => {
+    if (mode === '1v1') {
+      // Reset states for 1v1 mode
+      initialDataLoadedRef.current['1v1'] = false
+      setEmptyStateShown(prev => ({ ...prev, '1v1': false }))
+      loadActiveChallenges()
+    } else {
+      // Reset states for 4v4 mode
+      initialDataLoadedRef.current['4v4'] = false
+      setEmptyStateShown(prev => ({ ...prev, '4v4': false }))
+      loadTeamBattles()
+    }
+  }, [mode, loadActiveChallenges, loadTeamBattles])
 
   // Render loading skeleton
   if (isLoading) {
@@ -610,10 +672,9 @@ const ActiveChallenges = () => {
           </Text>
           <Button
             colorScheme="purple"
-            onClick={() =>
-              mode === '1v1' ? loadActiveChallenges() : loadTeamBattles()
-            }
+            onClick={handleManualRefresh}
             size={buttonSize}
+            leftIcon={<RefreshCw size={16} />}
           >
             {t('Retry')}
           </Button>
@@ -706,7 +767,17 @@ const ActiveChallenges = () => {
           /* 4v4 Team Battles View */
           <Box className="team-battles-view" data-testid="team-battles-view">
             <Suspense fallback={<TeamBattlesSkeleton />}>
-              <TeamBattleList />
+              {initialDataLoadedRef.current['4v4'] || emptyStateShown['4v4'] ? (
+                <TeamBattleList
+                  key={`team-battle-list-${emptyStateShown['4v4']}`}
+                />
+              ) : (
+                <Box py={8} textAlign="center">
+                  <Text color="whiteAlpha.700">
+                    {t('Loading team battles...')}
+                  </Text>
+                </Box>
+              )}
             </Suspense>
           </Box>
         )}
