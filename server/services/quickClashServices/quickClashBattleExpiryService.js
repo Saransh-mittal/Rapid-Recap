@@ -5,6 +5,7 @@ const QuickClashTeamBattle = require('../../model/quickClashSchemas/quickClashTe
 
 const { makeRetryable } = require('../../utils/retryUtils')
 const { calculateFinalTrophies } = require('../../utils/quickClashTeamUtils')
+const { updateTeamMatchStatus } = require('./quickClashTeamService')
 
 /**
  * Create a battle expiry event when team battle is created
@@ -266,8 +267,23 @@ const completeBattleOnExpiry = async ({ battle, session }) => {
   console.log(`[BattleExpiry] Final result: ${battle.winner}`)
 
   // Calculate final trophies (reuse existing logic)
-  const { calculateFinalTrophies } = require('./quickClashTeamBattleService')
   await calculateFinalTrophies(battle, session)
+
+  if (battle.teamA) {
+    await updateTeamMatchStatus({
+      teamId: battle.teamA,
+      isInMatch: false,
+      session,
+    })
+  }
+
+  if (battle.teamB) {
+    await updateTeamMatchStatus({
+      teamId: battle.teamB,
+      isInMatch: false,
+      session,
+    })
+  }
 
   // Save the completed battle
   await battle.save({ session })
