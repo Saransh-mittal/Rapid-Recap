@@ -170,6 +170,12 @@ const joinTeamMatchmaking = async ({
         teamName: team.name,
         avgTrophies: avgTrophies,
         memberCount: team.members.length,
+        teamMembers: team.members.map(member => ({
+          userId: member.user._id
+            ? member.user._id.toString()
+            : member.user.toString(),
+          name: member.user.name || member.user.inGameName,
+        })),
         preferredCategories: [], // Can be added if implemented
         timestamp: new Date(),
       })

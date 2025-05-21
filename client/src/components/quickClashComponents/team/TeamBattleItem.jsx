@@ -11,7 +11,6 @@ import {
   AvatarGroup,
   Icon,
   useBreakpointValue,
-  Tooltip,
   Progress,
 } from '@chakra-ui/react'
 import { motion } from 'framer-motion'
@@ -22,368 +21,375 @@ import {
   Trophy,
   Swords,
   Shield,
-  Users,
   Clock,
   ArrowRight,
+  Target,
+  Zap,
 } from 'lucide-react'
 import { formatDistanceToNow } from 'date-fns'
 
 const MotionBox = motion(Box)
-const MotionButton = motion(Button)
 
 /**
- * Enhanced visual representation of a 4v4 team battle
+ * Simple and minimalistic TeamBattleItem with high design standards
  */
 const TeamBattleItem = memo(({ battle, index, onEnter, onViewAnalysis }) => {
   const { t } = useTranslation('QuickClash')
   const { user } = useSelector(state => state.auth)
-  const avatarSize = useBreakpointValue({
-    base: '2xs',
-    sm: '2xs',
-    md: 'xs',
-    lg: 'sm',
+
+  // Responsive values with granular breakpoints
+  const avatarSize = useBreakpointValue({ base: 'sm', md: 'md', lg: 'md' })
+  const fontSize = useBreakpointValue({ base: 'sm', md: 'md' })
+  const padding = useBreakpointValue({ base: 3, md: 4 })
+  const buttonSize = useBreakpointValue({ base: 'xs', md: 'sm' })
+  // Progressive avatar display: +3 (xs) -> +2 (sm) -> +1 (md) -> all (lg+)
+  const avatarMax = useBreakpointValue({
+    base: 2, // Shows 1 + "+3" on very small screens
+    md: 1,
+    lg: 4, // Shows all 4 on large screens
   })
-  const fontSize = useBreakpointValue({
-    base: '2xs',
-    sm: '2xs',
-    md: 'xs',
-    lg: 'sm',
-  })
-  const scoreFontSize = useBreakpointValue({
-    base: 'lg',
-    sm: 'lg',
-    md: 'xl',
-    lg: '2xl',
-  })
-  const padding = useBreakpointValue({ base: 2, sm: 2, md: 3, lg: 4 })
 
-  // Determine if the current user is in team A or B
-  const userTeam = useMemo(() => {
-    if (!battle || !user) return null
+  // Memoized calculations
+  const { userTeam, battleOutcome, completionPercentage, timeInfo } =
+    useMemo(() => {
+      if (!battle || !user)
+        return {
+          userTeam: null,
+          battleOutcome: { label: 'ACTIVE', color: 'green', icon: Zap },
+          completionPercentage: 0,
+          timeInfo: { label: '', timeText: '', color: 'gray.500' },
+        }
 
-    const isInTeamA = battle.teamAMembers?.some(
-      member => member.user._id === user._id,
-    )
+      // User team calculation
+      const isInTeamA = battle.teamAMembers?.some(
+        member => member.user._id === user._id,
+      )
+      const isInTeamB = battle.teamBMembers?.some(
+        member => member.user._id === user._id,
+      )
+      const userTeam = isInTeamA ? 'teamA' : isInTeamB ? 'teamB' : null
 
-    const isInTeamB = battle.teamBMembers?.some(
-      member => member.user._id === user._id,
-    )
+      // Battle outcome - using green for active instead of blue
+      let battleOutcome = { label: 'ACTIVE', color: 'green', icon: Zap }
 
-    return isInTeamA ? 'teamA' : isInTeamB ? 'teamB' : null
-  }, [battle, user])
-
-  // Get battle outcome details
-  const battleOutcome = useMemo(() => {
-    if (!battle) return { label: 'UNKNOWN', color: 'gray', icon: Swords }
-
-    if (battle.status === 'completed') {
-      if (battle.winner === 'tie') {
-        return { label: 'TIE!', color: 'yellow', icon: Shield }
-      } else if (battle.winner === userTeam) {
-        return { label: 'VICTORY!', color: 'green', icon: Trophy }
-      } else {
-        return { label: 'DEFEAT!', color: 'red', icon: Swords }
+      if (battle.status === 'completed') {
+        if (battle.winner === 'tie') {
+          battleOutcome = { label: 'DRAW', color: 'yellow', icon: Shield }
+        } else if (battle.winner === userTeam) {
+          battleOutcome = { label: 'VICTORY', color: 'purple', icon: Trophy }
+        } else {
+          battleOutcome = { label: 'DEFEAT', color: 'red', icon: Swords }
+        }
+      } else if (battle.status === 'expired') {
+        battleOutcome = { label: 'EXPIRED', color: 'gray', icon: Clock }
       }
-    } else if (battle.status === 'active') {
-      return { label: 'ACTIVE', color: 'blue', icon: Users }
-    } else {
-      return { label: 'EXPIRED', color: 'gray', icon: Clock }
-    }
-  }, [battle, userTeam])
 
-  // Get category styles
+      // Completion calculation
+      const totalChallenges = battle.challenges?.length || 0
+      const completedChallenges =
+        battle.challenges?.filter(
+          challenge => challenge.teamACompleted && challenge.teamBCompleted,
+        ).length || 0
+      const completionPercentage =
+        totalChallenges > 0
+          ? Math.round((completedChallenges / totalChallenges) * 100)
+          : 0
 
-  // Calculate battle completion
-  const completionPercentage = useMemo(() => {
-    if (!battle?.challenges) return 0
+      // Time info
+      let timeInfo = { label: '', timeText: '', color: 'gray.500' }
+      if (battle.expiresAt) {
+        const now = new Date()
+        const expiresAt = new Date(battle.expiresAt)
+        const isExpired = now > expiresAt
 
-    const totalChallenges = battle.challenges.length
-    if (totalChallenges === 0) return 0
-
-    const completedChallenges = battle.challenges.filter(
-      challenge => challenge.teamACompleted && challenge.teamBCompleted,
-    ).length
-
-    return Math.round((completedChallenges / totalChallenges) * 100)
-  }, [battle])
-
-  // Get time info
-  const getTimeInfo = () => {
-    if (!battle?.expiresAt) return { label: '', timeText: '' }
-
-    const now = new Date()
-    const expiresAt = new Date(battle.expiresAt)
-    const isExpired = now > expiresAt
-
-    if (isExpired) {
-      return {
-        label: t('Ended'),
-        timeText: formatDistanceToNow(expiresAt, { addSuffix: true }),
-        color: 'gray.500',
+        timeInfo = {
+          label: isExpired ? t('Ended') : t('Expires'),
+          timeText: formatDistanceToNow(expiresAt, { addSuffix: true }),
+          color: isExpired ? 'gray.500' : 'blue.400',
+        }
       }
-    } else {
-      return {
-        label: t('Expires'),
-        timeText: formatDistanceToNow(expiresAt, { addSuffix: true }),
-        color: 'blue.400',
-      }
-    }
+
+      return { userTeam, battleOutcome, completionPercentage, timeInfo }
+    }, [battle, user, t])
+
+  // Simple entrance animation
+  const cardVariants = {
+    initial: { opacity: 0, y: 10 },
+    animate: {
+      opacity: 1,
+      y: 0,
+      transition: {
+        duration: 0.3,
+        delay: index * 0.05,
+        ease: 'easeOut',
+      },
+    },
   }
-
-  const timeInfo = getTimeInfo()
 
   if (!battle) return null
 
   return (
     <MotionBox
-      initial={{ opacity: 0, y: 10 }}
-      animate={{ opacity: 1, y: 0 }}
-      transition={{ duration: 0.3, delay: index * 0.05 }}
+      variants={cardVariants}
+      initial="initial"
+      animate="animate"
       width="100%"
       maxWidth="100%"
       minWidth="0"
-      borderRadius="xl"
-      overflow="hidden"
-      borderWidth="1px"
-      borderColor={
-        battleOutcome.color === 'green'
-          ? 'green.500'
-          : battleOutcome.color === 'red'
-          ? 'red.500'
-          : battleOutcome.color === 'yellow'
-          ? 'yellow.500'
-          : 'whiteAlpha.200'
-      }
-      bg="rgba(26, 21, 39, 0.8)"
-      backdropFilter="blur(10px)"
-      position="relative"
-      height={'300px'}
-      whileHover={{
-        y: -4,
-        boxShadow:
-          '0 20px 25px -5px rgba(0, 0, 0, 0.2), 0 10px 10px -5px rgba(0, 0, 0, 0.1)',
-      }}
-      // transition={{ duration: 0.2 }}
     >
-      {/* Battle header with status */}
-      <Box bg={`${battleOutcome.color}.600`} px={padding} py={2}>
-        <Flex justify="space-between" align="center">
-          <HStack spacing={2}>
-            <Icon as={battleOutcome.icon} color="white" boxSize={4} />
-            <Text color="white" fontWeight="bold" fontSize={fontSize}>
-              {battleOutcome.label}
-            </Text>
-          </HStack>
-          {/* <Badge
-            bg={'purple.500'}
+      <Box
+        bg="rgba(26, 32, 44, 0.8)"
+        borderRadius="xl"
+        borderWidth="1px"
+        borderColor={
+          battleOutcome.color === 'purple'
+            ? 'purple.500'
+            : battleOutcome.color === 'red'
+            ? 'red.500'
+            : battleOutcome.color === 'yellow'
+            ? 'yellow.500'
+            : battleOutcome.color === 'green'
+            ? 'green.500'
+            : 'whiteAlpha.200'
+        }
+        overflow="hidden"
+        position="relative"
+      >
+        {/* Header */}
+        <Flex
+          bg={`${battleOutcome.color}.600`}
+          px={padding}
+          py={2}
+          justify="space-between"
+          align="center"
+        >
+          <Badge
+            display="flex"
+            alignItems="center"
+            gap={2}
+            bg="rgba(255, 255, 255, 0.2)"
             color="white"
-            fontSize="xs"
             px={2}
             py={1}
-            borderRadius="full"
-            textTransform="uppercase"
-          >
-            {'MIXED'}
-          </Badge> */}
-        </Flex>
-      </Box>
-
-      {/* Battle progress bar */}
-      <Box px={padding} pt={3}>
-        <Flex justify="space-between" align="center" mb={2}>
-          <Text fontSize="xs" color="whiteAlpha.700">
-            {t('Battle Progress')}
-          </Text>
-          <Text fontSize="xs" color="whiteAlpha.700">
-            {completionPercentage}%
-          </Text>
-        </Flex>
-        <Progress
-          value={completionPercentage}
-          size="sm"
-          colorScheme={battleOutcome.color}
-          borderRadius="full"
-        />
-      </Box>
-
-      {/* Team A vs Team B Section */}
-      <Flex px={padding} py={3} justify="space-between" align="center" flex="1">
-        {/* Team A */}
-        <VStack spacing={2} align="center" flex="1" minWidth="0">
-          <Text
-            fontSize={fontSize}
+            borderRadius="md"
+            fontSize="xs"
             fontWeight="bold"
+          >
+            <Icon as={battleOutcome.icon} boxSize={3} />
+            {battleOutcome.label}
+          </Badge>
+
+          <Badge
+            bg="rgba(0, 0, 0, 0.3)"
             color="white"
-            noOfLines={1}
-            maxWidth="100%"
-            textAlign="center"
-            overflow="hidden"
-            textOverflow="ellipsis"
+            px={2}
+            py={1}
+            borderRadius="md"
+            fontSize="xs"
           >
-            {battle.teamA?.name || t('Team A')}
-          </Text>
-          <AvatarGroup
-            size={avatarSize}
-            max={4}
-            spacing={{
-              base: '0.1rem',
-              sm: '0.1rem',
-              md: '0.2rem',
-              lg: '0.3rem',
-            }}
-            flexWrap="wrap"
-            justifyContent="center"
-          >
-            {battle.teamAMembers?.map(member => (
-              <Tooltip
-                key={member.user._id}
-                label={member.user.name || member.user.inGameName}
-                placement="top"
-              >
-                <Avatar
-                  name={member.user.name || member.user.inGameName}
-                  src={member.user.pic}
-                  borderWidth={member.user._id === user?._id ? '2px' : '1px'}
-                  borderColor={
-                    member.user._id === user?._id
-                      ? 'purple.500'
-                      : 'whiteAlpha.300'
-                  }
-                />
-              </Tooltip>
-            ))}
-          </AvatarGroup>
-          <Text fontSize={scoreFontSize} fontWeight="black" color="blue.400">
-            {battle.teamAWins || 0}
-          </Text>
-        </VStack>
+            4v4
+          </Badge>
+        </Flex>
 
-        {/* VS with action buttons */}
-        <VStack
-          spacing={2}
-          px={{ base: 1, sm: 1, md: 2, lg: 4 }}
-          flex="0 0 auto"
-          minWidth="0"
-        >
-          <Text
-            fontSize={{ base: 'sm', sm: 'sm', md: 'md', lg: 'lg' }}
-            fontWeight="bold"
-            color="whiteAlpha.700"
-          >
-            VS
-          </Text>
-          <VStack spacing={2}>
-            {battle.status === 'completed' && (
-              <MotionButton
-                size={{ base: '2xs', sm: '2xs', md: 'xs', lg: 'sm' }}
-                colorScheme="purple"
-                leftIcon={<Icon as={BarChart2} size={10} />}
-                onClick={() => onViewAnalysis?.(battle._id)}
-                whileHover={{ scale: 1.05 }}
-                whileTap={{ scale: 0.95 }}
-                fontSize={{ base: '2xs', sm: 'xs', md: 'xs', lg: 'sm' }}
-                px={{ base: 1, sm: 2, md: 3, lg: 4 }}
-                minWidth="0"
-                flexShrink={1}
-              >
-                {t('Analysis')}
-              </MotionButton>
-            )}
-            <MotionButton
-              size={{ base: 'xs', lg: 'sm' }}
-              colorScheme={battle.status === 'active' ? 'green' : 'gray'}
-              rightIcon={<Icon as={ArrowRight} size={10} />}
-              onClick={() => onEnter?.(battle._id)}
-              whileHover={{ scale: 1.05 }}
-              whileTap={{ scale: 0.95 }}
-              fontSize={{ base: '2xs', sm: 'xs', md: 'xs', lg: 'sm' }}
-              px={{ base: 1, sm: 2, md: 3, lg: 4 }}
-              isDisabled={battle.status !== 'active'}
-              minWidth="0"
-              flexShrink={1}
-            >
-              {battle.status === 'active' ? t('Enter') : t('View')}
-            </MotionButton>
-          </VStack>
-        </VStack>
-
-        {/* Team B */}
-        <VStack spacing={2} align="center" flex="1" minWidth="0">
-          <Text
-            fontSize={fontSize}
-            fontWeight="bold"
-            color="white"
-            noOfLines={1}
-            maxWidth="100%"
-            textAlign="center"
-            overflow="hidden"
-            textOverflow="ellipsis"
-          >
-            {battle.teamB?.name || t('Team B')}
-          </Text>
-          <AvatarGroup
-            size={avatarSize}
-            max={4}
-            spacing={{
-              base: '0.1rem',
-              sm: '0.1rem',
-              md: '0.2rem',
-              lg: '0.3rem',
-            }}
-            flexWrap="wrap"
-            justifyContent="center"
-          >
-            {battle.teamBMembers?.map(member => (
-              <Tooltip
-                key={member.user._id}
-                label={member.user.name || member.user.inGameName}
-                placement="top"
-              >
-                <Avatar
-                  name={member.user.name || member.user.inGameName}
-                  src={member.user.pic}
-                  borderWidth={member.user._id === user?._id ? '2px' : '1px'}
-                  borderColor={
-                    member.user._id === user?._id
-                      ? 'purple.500'
-                      : 'whiteAlpha.300'
-                  }
-                />
-              </Tooltip>
-            ))}
-          </AvatarGroup>
-          <Text fontSize={scoreFontSize} fontWeight="black" color="red.400">
-            {battle.teamBWins || 0}
-          </Text>
-        </VStack>
-      </Flex>
-
-      {/* Footer with time info */}
-      {timeInfo.timeText && (
-        <Box px={padding} pb={3}>
-          <HStack spacing={1} color={timeInfo.color} fontSize="xs">
-            <Icon as={Clock} boxSize={3} />
-            <Text>
-              {timeInfo.label}: {timeInfo.timeText}
+        {/* Progress Bar */}
+        <Box px={padding} pt={3}>
+          <Flex justify="space-between" align="center" mb={2}>
+            <HStack spacing={1}>
+              <Icon as={Target} color="purple.400" boxSize={3} />
+              <Text fontSize="xs" color="whiteAlpha.700">
+                {t('Progress')}
+              </Text>
+            </HStack>
+            <Text fontSize="xs" color="whiteAlpha.700">
+              {completionPercentage}%
             </Text>
-          </HStack>
+          </Flex>
+          <Progress
+            value={completionPercentage}
+            size="sm"
+            colorScheme={battleOutcome.color}
+            borderRadius="full"
+            bg="rgba(255, 255, 255, 0.1)"
+          />
         </Box>
-      )}
 
-      {/* Special hover effect */}
-      <Box
-        position="absolute"
-        top={0}
-        left={0}
-        right={0}
-        bottom={0}
-        opacity={0}
-        transition="opacity 0.3s ease"
-        bg="linear-gradient(135deg, rgba(128, 90, 213, 0.1) 0%, rgba(128, 90, 213, 0) 100%)"
-        _hover={{ opacity: 1 }}
-        zIndex={1}
-        pointerEvents="none"
-      />
+        {/* Teams Section */}
+        <Flex px={padding} py={4} justify="space-between" align="center">
+          {/* Team A */}
+          <VStack spacing={2} align="center" flex="1" minWidth="0">
+            <Text
+              fontSize={fontSize}
+              fontWeight="bold"
+              color="white"
+              noOfLines={1}
+              textAlign="center"
+              maxWidth="100%"
+            >
+              {battle.teamA?.name || t('Team A')}
+            </Text>
+            <AvatarGroup
+              size={avatarSize}
+              max={avatarMax}
+              spacing="-1"
+              // Custom styling for the excess avatar (+X indicator)
+              css={{
+                '& > .chakra-avatar__excess': {
+                  backgroundColor: 'rgba(255, 255, 255, 0.1)',
+                  borderColor: 'rgba(255, 255, 255, 0.3)',
+                  borderWidth: '2px',
+                  color: 'white',
+                  fontSize: 'xs',
+                  fontWeight: 'bold',
+                  backdropFilter: 'blur(10px)',
+                  boxShadow: '0 2px 8px rgba(0, 0, 0, 0.3)',
+                },
+              }}
+            >
+              {battle.teamAMembers?.map(member => (
+                <Avatar
+                  key={member.user._id}
+                  name={member.user.name || member.user.inGameName}
+                  src={member.user.pic}
+                  borderWidth="2px"
+                  borderColor={
+                    member.user._id === user?._id ? 'purple.400' : 'blue.400'
+                  }
+                />
+              ))}
+            </AvatarGroup>
+            <Text
+              fontSize="xl"
+              fontWeight="black"
+              color="blue.400"
+              lineHeight="1"
+            >
+              {battle.teamAWins || 0}
+            </Text>
+          </VStack>
+
+          {/* VS Section */}
+          <VStack spacing={2} px={3} minWidth="0">
+            <Text
+              fontSize="lg"
+              fontWeight="bold"
+              color="whiteAlpha.600"
+              letterSpacing="wider"
+            >
+              VS
+            </Text>
+
+            <VStack spacing={1}>
+              {battle.status === 'completed' && (
+                <Button
+                  size={buttonSize}
+                  colorScheme="purple"
+                  leftIcon={<BarChart2 size={12} />}
+                  onClick={e => {
+                    e.stopPropagation()
+                    onViewAnalysis?.(battle._id)
+                  }}
+                  fontSize="xs"
+                  minWidth="80px"
+                  borderRadius="md"
+                >
+                  {t('Analysis')}
+                </Button>
+              )}
+
+              <Button
+                size={buttonSize}
+                colorScheme={battle.status === 'active' ? 'green' : 'gray'}
+                rightIcon={<ArrowRight size={12} />}
+                onClick={e => {
+                  e.stopPropagation()
+                  onEnter?.(battle._id)
+                }}
+                isDisabled={battle.status !== 'active'}
+                fontSize="xs"
+                minWidth="80px"
+                borderRadius="md"
+              >
+                {battle.status === 'active' ? t('Enter') : t('View')}
+              </Button>
+            </VStack>
+          </VStack>
+
+          {/* Team B */}
+          <VStack spacing={2} align="center" flex="1" minWidth="0">
+            <Text
+              fontSize={fontSize}
+              fontWeight="bold"
+              color="white"
+              noOfLines={1}
+              textAlign="center"
+              maxWidth="100%"
+            >
+              {battle.teamB?.name || t('Team B')}
+            </Text>
+            <AvatarGroup
+              size={avatarSize}
+              max={avatarMax}
+              spacing="-1"
+              // Custom styling for the excess avatar (+X indicator)
+              css={{
+                '& > .chakra-avatar__excess': {
+                  backgroundColor: 'rgba(255, 255, 255, 0.1)',
+                  borderColor: 'rgba(255, 255, 255, 0.3)',
+                  borderWidth: '2px',
+                  color: 'white',
+                  fontSize: 'xs',
+                  fontWeight: 'bold',
+                  backdropFilter: 'blur(10px)',
+                  boxShadow: '0 2px 8px rgba(0, 0, 0, 0.3)',
+                },
+              }}
+            >
+              {battle.teamBMembers?.map(member => (
+                <Avatar
+                  key={member.user._id}
+                  name={member.user.name || member.user.inGameName}
+                  src={member.user.pic}
+                  borderWidth="2px"
+                  borderColor={
+                    member.user._id === user?._id ? 'purple.400' : 'red.400'
+                  }
+                />
+              ))}
+            </AvatarGroup>
+            <Text
+              fontSize="xl"
+              fontWeight="black"
+              color="red.400"
+              lineHeight="1"
+            >
+              {battle.teamBWins || 0}
+            </Text>
+          </VStack>
+        </Flex>
+
+        {/* Footer - Time Info */}
+        {timeInfo.timeText && (
+          <Box
+            px={padding}
+            py={2}
+            borderTop="1px"
+            borderColor="whiteAlpha.100"
+            bg="rgba(0, 0, 0, 0.2)"
+          >
+            <HStack
+              spacing={1}
+              justify="center"
+              fontSize="xs"
+              color={timeInfo.color}
+            >
+              <Icon as={Clock} boxSize={3} />
+              <Text>
+                {timeInfo.label}: {timeInfo.timeText}
+              </Text>
+            </HStack>
+          </Box>
+        )}
+      </Box>
     </MotionBox>
   )
 })

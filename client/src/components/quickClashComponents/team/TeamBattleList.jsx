@@ -23,6 +23,7 @@ import {
   useToast,
   useBreakpointValue,
   useDisclosure,
+  Collapse,
 } from '@chakra-ui/react'
 import { motion } from 'framer-motion'
 import { useTranslation } from 'react-i18next'
@@ -33,16 +34,16 @@ import {
   Trophy,
   Users,
   Calendar,
-  Filter,
-  ArrowUpDown,
   ChevronDown,
+  ChevronUp,
+  Swords,
+  Shield,
 } from 'lucide-react'
 import { useInView } from 'react-intersection-observer'
 
 // Import custom components
 import TeamBattleItem from './TeamBattleItem'
 import DateGroupHeader from '../DateGroupHeader'
-
 import EmptyBattlesState from './EmptyBattlesState'
 
 // Custom hooks
@@ -59,25 +60,283 @@ const MotionFlex = motion(Flex)
 const MotionButton = motion(Button)
 
 /**
- * Enhanced component for displaying team battles with date grouping
+ * Battle Section Component - Accordion style section for battles
+ */
+const BattleSection = memo(
+  ({
+    title,
+    icon,
+    battles,
+    loading,
+    error,
+    hasMore,
+    onLoadMore,
+    onRefresh,
+    onEnterBattle,
+    onViewAnalysis,
+    isRefreshing,
+    sectionType,
+  }) => {
+    const { t } = useTranslation('QuickClash')
+    const { isOpen, onToggle } = useDisclosure({ defaultIsOpen: true })
+
+    // Responsive styling
+    const columns = useBreakpointValue({ base: 1, md: 2 })
+    const spacing = useBreakpointValue({ base: 3, md: 4 })
+    const iconSize = useBreakpointValue({ base: 4, md: 5 })
+    const headingSize = useBreakpointValue({ base: 'sm', md: 'md' })
+    const padding = useBreakpointValue({ base: 2, md: 4 })
+
+    // Group battles by date
+    const groupedBattles = useMemo(() => {
+      if (!battles.length) return {}
+
+      const grouped = battles.reduce((acc, battle) => {
+        const battleDate = parseISO(battle.createdAt)
+        let dateKey
+
+        if (isToday(battleDate)) {
+          dateKey = t('Today')
+        } else if (isYesterday(battleDate)) {
+          dateKey = t('Yesterday')
+        } else if (isSameWeek(battleDate, new Date())) {
+          dateKey = format(battleDate, 'EEEE')
+        } else {
+          dateKey = format(battleDate, 'MMMM d, yyyy')
+        }
+
+        if (!acc[dateKey]) {
+          acc[dateKey] = []
+        }
+
+        acc[dateKey].push(battle)
+        return acc
+      }, {})
+
+      return grouped
+    }, [battles, t])
+
+    // Sort date keys
+    const sortedDateKeys = useMemo(() => {
+      const keys = Object.keys(groupedBattles)
+      return keys.sort((a, b) => {
+        if (a === t('Today')) return -1
+        if (b === t('Today')) return 1
+        if (a === t('Yesterday')) return -1
+        if (b === t('Yesterday')) return 1
+        return new Date(b) - new Date(a)
+      })
+    }, [groupedBattles, t])
+
+    // Ref for infinite scrolling
+    const { ref: bottomRef, inView } = useInView({
+      threshold: 0.1,
+      triggerOnce: false,
+    })
+
+    // Handle infinite scroll
+    useEffect(() => {
+      if (inView && hasMore && !loading && !isRefreshing) {
+        onLoadMore()
+      }
+    }, [inView, hasMore, loading, isRefreshing, onLoadMore])
+
+    return (
+      <MotionBox
+        bg="rgba(26, 32, 44, 0.6)"
+        borderRadius="xl"
+        borderWidth="1px"
+        borderColor="whiteAlpha.200"
+        overflow="hidden"
+        initial={{ opacity: 0, y: 20 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.3 }}
+        _hover={{
+          borderColor: 'whiteAlpha.300',
+          boxShadow: '0 4px 12px rgba(0, 0, 0, 0.1)',
+        }}
+      >
+        {/* Section Header */}
+        <MotionFlex
+          justify="space-between"
+          align="center"
+          p={padding}
+          bg="rgba(76, 39, 143, 0.1)"
+          borderBottom="1px"
+          borderColor="whiteAlpha.100"
+          cursor="pointer"
+          onClick={onToggle}
+          _hover={{ bg: 'rgba(76, 39, 143, 0.2)' }}
+          transition="all 0.2s"
+        >
+          <HStack spacing={3}>
+            <Icon
+              as={icon}
+              color={sectionType === 'active' ? 'green.400' : 'purple.400'}
+              boxSize={iconSize}
+            />
+            <Heading size={headingSize} color="white">
+              {title}
+            </Heading>
+            <Badge
+              colorScheme={sectionType === 'active' ? 'green' : 'purple'}
+              variant="subtle"
+              borderRadius="full"
+              px={2}
+              py={1}
+            >
+              {battles.length}
+            </Badge>
+          </HStack>
+
+          <HStack spacing={2}>
+            <MotionButton
+              size="sm"
+              variant="ghost"
+              colorScheme="purple"
+              onClick={e => {
+                e.stopPropagation()
+                onRefresh()
+              }}
+              isLoading={isRefreshing}
+              aria-label={t('Refresh')}
+              whileHover={{ rotate: 180 }}
+              transition={{ duration: 0.3 }}
+            >
+              <Icon as={RefreshCw} />
+            </MotionButton>
+
+            <Button
+              size="sm"
+              variant="ghost"
+              colorScheme="purple"
+              p={1}
+              minW="auto"
+              h="auto"
+            >
+              <Icon
+                as={isOpen ? ChevronUp : ChevronDown}
+                boxSize={4}
+                color="whiteAlpha.700"
+              />
+            </Button>
+          </HStack>
+        </MotionFlex>
+
+        {/* Section Content */}
+        <Collapse in={isOpen} animateOpacity>
+          <Box p={padding}>
+            {loading && battles.length === 0 ? (
+              <Center py={8}>
+                <VStack spacing={3}>
+                  <Spinner
+                    thickness="3px"
+                    speed="0.65s"
+                    emptyColor="whiteAlpha.300"
+                    color="purple.500"
+                    size="lg"
+                  />
+                  <Text color="whiteAlpha.700" fontSize="sm">
+                    {t('Loading battles...')}
+                  </Text>
+                </VStack>
+              </Center>
+            ) : error && battles.length === 0 ? (
+              <Center py={8}>
+                <VStack spacing={4}>
+                  <Icon as={Shield} color="red.400" boxSize={8} />
+                  <Text color="red.400" fontSize="sm" textAlign="center">
+                    {error}
+                  </Text>
+                  <Button
+                    size="sm"
+                    colorScheme="purple"
+                    variant="outline"
+                    onClick={onRefresh}
+                    leftIcon={<RefreshCw size={16} />}
+                  >
+                    {t('Try Again')}
+                  </Button>
+                </VStack>
+              </Center>
+            ) : battles.length === 0 ? (
+              <EmptyBattlesState
+                type={sectionType}
+                onCreateMatch={() => {
+                  window.location.hash = 'teams'
+                }}
+              />
+            ) : (
+              <VStack spacing={spacing} align="stretch">
+                {sortedDateKeys.map((dateKey, dateIndex) => (
+                  <Box key={dateKey}>
+                    <DateGroupHeader date={dateKey} index={dateIndex} />
+
+                    <Grid
+                      templateColumns={`repeat(${columns}, 1fr)`}
+                      gap={spacing}
+                      mt={2}
+                    >
+                      {groupedBattles[dateKey].map((battle, index) => (
+                        <GridItem key={battle._id}>
+                          <TeamBattleItem
+                            battle={battle}
+                            index={index}
+                            onEnter={onEnterBattle}
+                            onViewAnalysis={onViewAnalysis}
+                          />
+                        </GridItem>
+                      ))}
+                    </Grid>
+                  </Box>
+                ))}
+
+                {/* Load more indicator */}
+                {hasMore && (
+                  <Center ref={bottomRef} py={4}>
+                    <MotionBox
+                      animate={{
+                        scale: [1, 1.05, 1],
+                        opacity: [0.7, 1, 0.7],
+                      }}
+                      transition={{
+                        duration: 1.5,
+                        repeat: Infinity,
+                        repeatType: 'reverse',
+                      }}
+                    >
+                      <Spinner size="sm" color="purple.500" thickness="2px" />
+                    </MotionBox>
+                  </Center>
+                )}
+              </VStack>
+            )}
+          </Box>
+        </Collapse>
+      </MotionBox>
+    )
+  },
+)
+
+BattleSection.displayName = 'BattleSection'
+
+/**
+ * Enhanced TeamBattleList with Accordion Sections
  */
 const TeamBattleList = memo(() => {
   const { t } = useTranslation('QuickClash')
   const toast = useToast()
   const { getSocket } = useSocket()
 
-  // Responsive sizing with more granular breakpoints
-  const columns = useBreakpointValue({ base: 1, md: 2 })
-  const spacing = useBreakpointValue({ base: 3, sm: 3, md: 4, lg: 5 })
-  const containerPadding = useBreakpointValue({ base: 3, sm: 3, md: 2, lg: 4 })
-  const buttonSize = useBreakpointValue({ base: 'xs', md: 'sm' })
-  const headerSize = useBreakpointValue({ base: 'sm', md: 'md' })
+  // Responsive sizing
+  const headerSize = useBreakpointValue({ base: 'md', md: 'lg' })
+  const containerPadding = useBreakpointValue({ base: 1, md: 4 })
+  const sectionSpacing = useBreakpointValue({ base: 4, md: 6 })
 
   // State
-  const [activeTab, setActiveTab] = useState('active')
-  const [loading, setLoading] = useState(true)
-  const [refreshing, setRefreshing] = useState(false)
   const [selectedBattleId, setSelectedBattleId] = useState(null)
+  const [refreshingActive, setRefreshingActive] = useState(false)
+  const [refreshingCompleted, setRefreshingCompleted] = useState(false)
 
   // Analysis modal state
   const {
@@ -85,12 +344,6 @@ const TeamBattleList = memo(() => {
     onOpen: openAnalysisModal,
     onClose: closeAnalysisModal,
   } = useDisclosure()
-
-  // Ref for the bottom observer (infinite loading)
-  const { ref: bottomRef, inView } = useInView({
-    threshold: 0.1,
-    triggerOnce: false,
-  })
 
   // Get team battle data from hook
   const {
@@ -118,104 +371,83 @@ const TeamBattleList = memo(() => {
     }
 
     return () => {
-      // Clean up socket listener when component unmounts
       if (socket) {
         socket.off('quickClash:teamBattleUpdated')
       }
     }
   }, [getSocket])
 
-  // Fetch active battles on mount
+  // Fetch both active and completed battles on mount
   useEffect(() => {
     loadTeamBattles('active')
+    loadTeamBattles('completed')
   }, [loadTeamBattles])
 
-  // Handle infinite scrolling
-  useEffect(() => {
-    if (inView && !refreshing) {
-      const hasMore =
-        activeTab === 'active' ? activeBattlesHasMore : completedBattlesHasMore
-      const isLoading =
-        activeTab === 'active' ? activeBattlesLoading : completedBattlesLoading
-
-      if (hasMore && !isLoading) {
-        handleLoadMore()
-      }
-    }
-  }, [
-    inView,
-    activeTab,
-    refreshing,
-    activeBattlesHasMore,
-    completedBattlesHasMore,
-  ])
-
-  // Handle tab change
-  const handleTabChange = useCallback(
-    tab => {
-      setActiveTab(tab)
-
-      // Load data for the selected tab if not already loaded
-      if (tab === 'active' && !activeBattles.length && !activeBattlesLoading) {
-        loadTeamBattles('active')
-      } else if (
-        tab === 'completed' &&
-        !completedBattles.length &&
-        !completedBattlesLoading
-      ) {
-        loadTeamBattles('completed')
-      }
-    },
-    [
-      activeBattles.length,
-      activeBattlesLoading,
-      completedBattles.length,
-      completedBattlesLoading,
-      loadTeamBattles,
-    ],
-  )
-
-  // Handle refreshing battle list
-  const handleRefresh = useCallback(() => {
-    setRefreshing(true)
-    loadTeamBattles(activeTab).finally(() => {
-      setRefreshing(false)
-      // Display success toast
+  // Handle refreshing active battles
+  const handleRefreshActive = useCallback(async () => {
+    setRefreshingActive(true)
+    try {
+      await loadTeamBattles('active')
       toast({
         title: t('Refreshed'),
-        description: t('Team battles have been refreshed'),
+        description: t('Active battles have been refreshed'),
         status: 'success',
         duration: 2000,
         isClosable: true,
         position: 'top-right',
       })
-    })
-  }, [activeTab, loadTeamBattles, toast, t])
+    } finally {
+      setRefreshingActive(false)
+    }
+  }, [loadTeamBattles, toast, t])
+
+  // Handle refreshing completed battles
+  const handleRefreshCompleted = useCallback(async () => {
+    setRefreshingCompleted(true)
+    try {
+      await loadTeamBattles('completed')
+      toast({
+        title: t('Refreshed'),
+        description: t('Completed battles have been refreshed'),
+        status: 'success',
+        duration: 2000,
+        isClosable: true,
+        position: 'top-right',
+      })
+    } finally {
+      setRefreshingCompleted(false)
+    }
+  }, [loadTeamBattles, toast, t])
 
   // Handle loading more battles
-  const handleLoadMore = useCallback(() => {
-    if (refreshing) return
-
-    const isLoading =
-      activeTab === 'active' ? activeBattlesLoading : completedBattlesLoading
-    const hasMore =
-      activeTab === 'active' ? activeBattlesHasMore : completedBattlesHasMore
-
-    if (!isLoading && hasMore) {
-      loadMoreTeamBattles(activeTab)
+  const handleLoadMoreActive = useCallback(() => {
+    if (!activeBattlesLoading && activeBattlesHasMore && !refreshingActive) {
+      loadMoreTeamBattles('active')
     }
   }, [
-    activeTab,
-    loadMoreTeamBattles,
-    refreshing,
     activeBattlesLoading,
-    completedBattlesLoading,
     activeBattlesHasMore,
-    completedBattlesHasMore,
+    refreshingActive,
+    loadMoreTeamBattles,
   ])
 
-  // Handle clicking Enter on a battle
-  const handleEnterBattle = useCallback(
+  const handleLoadMoreCompleted = useCallback(() => {
+    if (
+      !completedBattlesLoading &&
+      completedBattlesHasMore &&
+      !refreshingCompleted
+    ) {
+      loadMoreTeamBattles('completed')
+    }
+  }, [
+    completedBattlesLoading,
+    completedBattlesHasMore,
+    refreshingCompleted,
+    loadMoreTeamBattles,
+  ])
+
+  // Handle entering a team battle
+  const handleEnterTeamBattle = useCallback(
     battleId => {
       goToBattle(battleId)
     },
@@ -231,121 +463,6 @@ const TeamBattleList = memo(() => {
     [openAnalysisModal],
   )
 
-  // Group battles by date
-  const groupedBattles = useMemo(() => {
-    const battles = activeTab === 'active' ? activeBattles : completedBattles
-    if (!battles.length) return {}
-
-    const grouped = battles.reduce((acc, battle) => {
-      // Parse date from createdAt
-      const battleDate = parseISO(battle.createdAt)
-      let dateKey
-
-      if (isToday(battleDate)) {
-        dateKey = t('Today')
-      } else if (isYesterday(battleDate)) {
-        dateKey = t('Yesterday')
-      } else if (isSameWeek(battleDate, new Date())) {
-        // Format to day name (Monday, Tuesday, etc)
-        dateKey = format(battleDate, 'EEEE')
-      } else {
-        // Format to date (March 11, 2025)
-        dateKey = format(battleDate, 'MMMM d, yyyy')
-      }
-
-      if (!acc[dateKey]) {
-        acc[dateKey] = []
-      }
-
-      acc[dateKey].push(battle)
-      return acc
-    }, {})
-
-    return grouped
-  }, [activeTab, activeBattles, completedBattles, t])
-
-  // Get current battles based on active tab
-  const currentBattles =
-    activeTab === 'active' ? activeBattles : completedBattles
-  const isCurrentLoading =
-    (activeTab === 'active' ? activeBattlesLoading : completedBattlesLoading) ||
-    loading
-  const currentError =
-    activeTab === 'active' ? activeBattlesError : completedBattlesError
-  const hasMore =
-    activeTab === 'active' ? activeBattlesHasMore : completedBattlesHasMore
-
-  // Sort date keys with "Today" and "Yesterday" first
-  const sortedDateKeys = useMemo(() => {
-    const keys = Object.keys(groupedBattles)
-
-    return keys.sort((a, b) => {
-      if (a === t('Today')) return -1
-      if (b === t('Today')) return 1
-      if (a === t('Yesterday')) return -1
-      if (b === t('Yesterday')) return 1
-
-      // Simply compare dates for the rest (newest first)
-      return new Date(b) - new Date(a)
-    })
-  }, [groupedBattles, t])
-
-  // Render loading state
-  if (isCurrentLoading && currentBattles.length === 0) {
-    return (
-      <Center h="300px">
-        <VStack spacing={4}>
-          <Spinner
-            thickness="3px"
-            speed="0.65s"
-            emptyColor="whiteAlpha.300"
-            color="purple.500"
-            size="xl"
-          />
-          <MotionBox
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            transition={{ delay: 0.3 }}
-          >
-            <Text color="whiteAlpha.800" fontSize="lg" fontWeight="medium">
-              {t('Loading team battles...')}
-            </Text>
-          </MotionBox>
-        </VStack>
-      </Center>
-    )
-  }
-
-  // Render error state
-  if (currentError && currentBattles.length === 0) {
-    return (
-      <Center h="300px">
-        <VStack spacing={5}>
-          <MotionBox
-            initial={{ scale: 0.8, opacity: 0 }}
-            animate={{ scale: 1, opacity: 1 }}
-            transition={{ type: 'spring', stiffness: 150 }}
-          >
-            <Icon as={RefreshCw} color="red.400" boxSize={10} />
-          </MotionBox>
-          <Text color="red.400" fontSize="lg" fontWeight="medium">
-            {currentError}
-          </Text>
-          <MotionButton
-            leftIcon={<RefreshCw size={18} />}
-            colorScheme="purple"
-            onClick={handleRefresh}
-            size={buttonSize}
-            whileHover={{ scale: 1.05 }}
-            whileTap={{ scale: 0.95 }}
-          >
-            {t('Try Again')}
-          </MotionButton>
-        </VStack>
-      </Center>
-    )
-  }
-
   return (
     <Box
       width="100%"
@@ -355,149 +472,61 @@ const TeamBattleList = memo(() => {
       className="enhanced-team-battle-list"
       data-testid="team-battle-list"
     >
-      {/* Header with tabs and actions */}
+      {/* Header */}
       <MotionFlex
-        justify="space-between"
+        direction="column"
         align="center"
-        mb={6}
-        flexDir={{ base: 'column', sm: 'row' }}
-        gap={{ base: 3, sm: 0 }}
+        mb={sectionSpacing}
         initial={{ opacity: 0, y: -10 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.4 }}
       >
-        <MotionFlex
-          direction="column"
-          align={{ base: 'center', sm: 'flex-start' }}
-          initial={{ opacity: 0 }}
-          animate={{ opacity: 1 }}
-          transition={{ delay: 0.2 }}
-        >
-          <HStack spacing={2} mb={1}>
-            <Icon as={Users} boxSize={5} color="purple.400" />
-            <Heading size={headerSize} color="white">
-              {t('Team Battles')}
-            </Heading>
-          </HStack>
-
-          <Text color="whiteAlpha.700" fontSize="sm">
-            {t('Compete with your team in 4v4 knowledge battles')}
-          </Text>
-        </MotionFlex>
-
-        <HStack spacing={3}>
-          <MotionButton
-            leftIcon={
-              <Icon as={activeTab === 'active' ? Users : Trophy} boxSize={4} />
-            }
-            rightIcon={<Icon as={ChevronDown} boxSize={4} />}
-            colorScheme="purple"
-            variant="outline"
-            size={buttonSize}
-            onClick={() =>
-              handleTabChange(activeTab === 'active' ? 'completed' : 'active')
-            }
-            whileHover={{ scale: 1.05 }}
-            whileTap={{ scale: 0.95 }}
-          >
-            {activeTab === 'active' ? t('Active') : t('Completed')}
-          </MotionButton>
-
-          <MotionButton
-            icon={<RefreshCw size={16} />}
-            colorScheme="purple"
-            variant="ghost"
-            size={buttonSize}
-            isRound
-            onClick={handleRefresh}
-            isLoading={refreshing}
-            aria-label={t('Refresh')}
-            whileHover={{ rotate: 180 }}
-            transition={{ duration: 0.3 }}
-          >
-            <Icon as={RefreshCw} />
-          </MotionButton>
+        <HStack spacing={3} mb={2}>
+          <Icon as={Users} boxSize={6} color="purple.400" />
+          <Heading size={headerSize} color="white">
+            {t('Team Battles')}
+          </Heading>
         </HStack>
+
+        <Text color="whiteAlpha.700" fontSize="md" textAlign="center">
+          {t('Compete with your team in 4v4 knowledge battles')}
+        </Text>
       </MotionFlex>
 
-      {/* Team battle list */}
-      {currentBattles.length === 0 ? (
-        <EmptyBattlesState
-          type={activeTab}
-          onCreateMatch={() => {
-            // Navigate to teams tab where user can create/join team
-            window.location.hash = 'teams'
-          }}
+      {/* Battle Sections */}
+      <VStack spacing={sectionSpacing} align="stretch">
+        {/* Active Battles Section */}
+        <BattleSection
+          title={t('Active Battles')}
+          icon={Swords}
+          battles={activeBattles}
+          loading={activeBattlesLoading}
+          error={activeBattlesError}
+          hasMore={activeBattlesHasMore}
+          onLoadMore={handleLoadMoreActive}
+          onRefresh={handleRefreshActive}
+          onEnterBattle={handleEnterTeamBattle}
+          onViewAnalysis={handleViewBattleAnalysis}
+          isRefreshing={refreshingActive}
+          sectionType="active"
         />
-      ) : (
-        <MotionBox
-          initial={{ opacity: 0 }}
-          animate={{ opacity: 1 }}
-          transition={{ duration: 0.5 }}
-          width="100%"
-          maxWidth="100vw"
-          overflow="hidden"
-        >
-          {/* Render battles grouped by date */}
-          {sortedDateKeys.map((dateKey, dateIndex) => (
-            <Box key={dateKey} mb={spacing}>
-              <DateGroupHeader date={dateKey} index={dateIndex} />
 
-              <Box width="100%" overflow="hidden">
-                <Grid
-                  templateColumns={{
-                    base: '1fr',
-                    md: 'repeat(2, 1fr)',
-                  }}
-                  gap={spacing}
-                  width="100%"
-                  maxWidth="100%"
-                  px={0}
-                  boxSizing="border-box"
-                >
-                  {groupedBattles[dateKey].map((battle, index) => (
-                    <GridItem
-                      key={battle._id}
-                      width="100%"
-                      maxWidth="100%"
-                      minWidth="0"
-                      overflow="hidden"
-                    >
-                      <Box width="100%" maxWidth="100%" minWidth="0">
-                        <TeamBattleItem
-                          battle={battle}
-                          index={index}
-                          onEnter={handleEnterBattle}
-                          onViewAnalysis={handleViewBattleAnalysis}
-                        />
-                      </Box>
-                    </GridItem>
-                  ))}
-                </Grid>
-              </Box>
-            </Box>
-          ))}
-
-          {/* Load more indicator */}
-          {hasMore && (
-            <Center ref={bottomRef} py={6} opacity={0.8}>
-              <MotionBox
-                animate={{
-                  scale: [1, 1.05, 1],
-                  opacity: [0.7, 1, 0.7],
-                }}
-                transition={{
-                  duration: 1.5,
-                  repeat: Infinity,
-                  repeatType: 'reverse',
-                }}
-              >
-                <Spinner size="md" color="purple.500" thickness="3px" />
-              </MotionBox>
-            </Center>
-          )}
-        </MotionBox>
-      )}
+        {/* Completed Battles Section */}
+        <BattleSection
+          title={t('Completed Battles')}
+          icon={Trophy}
+          battles={completedBattles}
+          loading={completedBattlesLoading}
+          error={completedBattlesError}
+          hasMore={completedBattlesHasMore}
+          onLoadMore={handleLoadMoreCompleted}
+          onRefresh={handleRefreshCompleted}
+          onEnterBattle={handleEnterTeamBattle}
+          onViewAnalysis={handleViewBattleAnalysis}
+          isRefreshing={refreshingCompleted}
+          sectionType="completed"
+        />
+      </VStack>
 
       {/* Analysis Modal */}
       {isAnalysisOpen && selectedBattleId && (
