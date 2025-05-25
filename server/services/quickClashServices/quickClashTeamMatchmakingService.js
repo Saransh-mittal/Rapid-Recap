@@ -13,7 +13,7 @@ const { updateTeamMatchStatus } = require('./quickClashTeamService')
 const MATCHMAKING_EXPIRY = 30 * 60 * 1000 // 30 minutes
 const TROPHY_RANGE_INITIAL = 200 // Initial trophy range for matching
 const TROPHY_RANGE_INCREMENT = 100 // How much to increase range each check
-const MAX_TROPHY_RANGE = 500 // Maximum trophy range difference
+const MAX_TROPHY_RANGE = 1000 // Maximum trophy range difference
 
 // Module-level variables for state management between function calls
 const teamFormationState = {

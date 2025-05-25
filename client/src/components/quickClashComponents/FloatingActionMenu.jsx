@@ -1,4 +1,3 @@
-// components/quickClashComponents/FloatingActionMenu.jsx
 import React, {
   useState,
   useEffect,
@@ -21,7 +20,7 @@ import {
 } from '@chakra-ui/react'
 import { motion, AnimatePresence } from 'framer-motion'
 import { useTranslation } from 'react-i18next'
-import { Menu as MenuIcon, X, Sword } from 'lucide-react'
+import { Menu as MenuIcon, X, Sword, Users } from 'lucide-react'
 import { useSelector } from 'react-redux'
 
 // Import existing components to reuse
@@ -31,6 +30,10 @@ import TaskProgressIndicator from './dailyTasks/TaskProgressIndicator'
 
 // Lazy load the TaskPopup component
 const TaskPopup = lazy(() => import('./dailyTasks/TaskPopup'))
+
+// Import the compact version instead of the full GlobalMatchmakingButton
+// import CompactGlobalMatchmakingButton from './SimpleCompactGlobalMatchmakingButton'
+import GlobalMatchmakingButton from './GlobalMatchmakingButton'
 
 const MotionBox = motion(Box)
 const MotionButton = motion(Button)
@@ -340,32 +343,25 @@ const FloatingActionMenu = ({ onNewChallenge, onFindMatch }) => {
                 animate="visible"
                 exit="exit"
               >
-                <Tooltip
-                  label={t('Start a New Challenge')}
-                  placement="left"
-                  hasArrow
-                  openDelay={500}
+                <MotionButton
+                  onClick={handleNewChallengeClick}
+                  size="md"
+                  colorScheme="purple"
+                  borderRadius="full"
+                  width="48px"
+                  height="48px"
+                  bgGradient="linear(to-r, purple.500, pink.500)"
+                  boxShadow="0 4px 10px rgba(0,0,0,0.25)"
+                  _hover={{ transform: 'translateY(-2px)' }}
+                  whileHover={{ scale: 1.05 }}
+                  whileTap={{ scale: 0.95 }}
+                  userSelect="none"
                 >
-                  <MotionButton
-                    onClick={handleNewChallengeClick}
-                    size="md"
-                    colorScheme="purple"
-                    borderRadius="full"
-                    width="48px"
-                    height="48px"
-                    bgGradient="linear(to-r, purple.500, pink.500)"
-                    boxShadow="0 4px 10px rgba(0,0,0,0.25)"
-                    _hover={{ transform: 'translateY(-2px)' }}
-                    whileHover={{ scale: 1.05 }}
-                    whileTap={{ scale: 0.95 }}
-                    userSelect="none"
-                  >
-                    <Icon as={Sword} boxSize={5} />
-                  </MotionButton>
-                </Tooltip>
+                  <Icon as={Sword} boxSize={5} />
+                </MotionButton>
               </MotionBox>
 
-              {/* Find Match - Using MatchmakingButton but with wrapper for animation */}
+              {/* Find 1v1 Match - Using MatchmakingButton but with wrapper for animation */}
               <MotionBox
                 custom={1}
                 variants={menuItemVariants}
@@ -377,9 +373,20 @@ const FloatingActionMenu = ({ onNewChallenge, onFindMatch }) => {
                 <MatchmakingButton compact={true} />
               </MotionBox>
 
-              {/* Leaderboard Button - Fix positioning issue */}
+              {/* Find 4v4 Match - Using CompactGlobalMatchmakingButton */}
               <MotionBox
                 custom={2}
+                variants={menuItemVariants}
+                initial="hidden"
+                animate="visible"
+                exit="exit"
+              >
+                <GlobalMatchmakingButton compact={true} />
+              </MotionBox>
+
+              {/* Leaderboard Button - Fix positioning issue */}
+              <MotionBox
+                custom={3}
                 variants={menuItemVariants}
                 initial="hidden"
                 animate="visible"
@@ -392,7 +399,7 @@ const FloatingActionMenu = ({ onNewChallenge, onFindMatch }) => {
 
               {/* View Tasks Button - With dynamic badge for pending tasks */}
               <MotionBox
-                custom={3}
+                custom={4}
                 variants={menuItemVariants}
                 initial="hidden"
                 animate="visible"
