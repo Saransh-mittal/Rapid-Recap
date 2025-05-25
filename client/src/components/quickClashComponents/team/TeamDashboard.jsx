@@ -17,7 +17,7 @@ import {
   useToast,
   useBreakpointValue,
   IconButton,
-  SimpleGrid,
+  SimpleGrid, // Ensure SimpleGrid is imported if not already
   Divider,
   Avatar,
   AvatarGroup,
@@ -37,7 +37,6 @@ import {
   RefreshCw,
   PlusCircle,
   LogOut,
-  Settings,
   Zap,
   Check,
   ArrowRight,
@@ -51,7 +50,7 @@ import CreateTeamModal from './CreateTeamModal'
 import JoinTeamModal from './JoinTeamModal'
 import EmptyTeamState from './EmptyTeamState'
 import InviteUserModal from './InviteUserModal'
-import TeamSettingsModal from './TeamSettingsModal'
+
 import QuickClashBackground from '../QuickClashBackground'
 
 // Import custom hook for team operations
@@ -173,7 +172,7 @@ const EnhancedTeamCard = ({
   onLeave,
   onRemoveMember,
   onInvite,
-  onOpenSettings,
+
   onCopyTeamCode,
 }) => {
   const { t } = useTranslation('QuickClash')
@@ -190,10 +189,10 @@ const EnhancedTeamCard = ({
       bg="#131823"
       borderWidth="1px"
       borderColor="#2D3748"
-      width="100%"
-      maxWidth={{ base: '100%', md: '400px' }}
+      width="100%" // Card takes full width of its grid cell
+      maxWidth={{ base: '100%', md: '400px' }} // Max width for larger screens
       boxShadow="0 4px 10px rgba(0, 0, 0, 0.2)"
-      marginBottom={4}
+      // Removed marginBottom={4} as SimpleGrid will handle spacing
     >
       {/* Team Header with name and trophy */}
       <Flex
@@ -238,7 +237,9 @@ const EnhancedTeamCard = ({
       </Flex>
 
       {/* Status Badges Row */}
-      <Flex px={4} py={2.5} gap={2}>
+      <Flex px={4} py={2.5} gap={2} wrap="wrap">
+        {' '}
+        {/* Added wrap for badges */}
         {isLeader && (
           <Badge
             bg="purple.500"
@@ -250,7 +251,6 @@ const EnhancedTeamCard = ({
             {t('LEADER')}
           </Badge>
         )}
-
         {team.isInMatch && (
           <Badge bg="cyan.500" color="white" px={3} py={1} borderRadius="full">
             {t('IN BATTLE')}
@@ -284,13 +284,15 @@ const EnhancedTeamCard = ({
         <MotionIconButton
           icon={<Copy size={16} />}
           size="xs"
+          mr="auto"
           colorScheme="blue"
           variant="ghost"
-          mr="auto"
+          // mr="auto" // Removed mr="auto" as it might conflict in flex
           onClick={() => onCopyTeamCode(team.teamCode)}
           aria-label={t('Copy Team Code')}
           whileHover={{ scale: 1.1 }}
           whileTap={{ scale: 0.9 }}
+          ml={2} // Added small margin for spacing
         />
       </Flex>
 
@@ -333,7 +335,9 @@ const EnhancedTeamCard = ({
                 />
 
                 <Box>
-                  <HStack spacing={1} mb={1}>
+                  <HStack spacing={1} mb={0.5}>
+                    {' '}
+                    {/* Adjusted mb */}
                     <Text
                       color={
                         member.user._id === userId ? 'purple.300' : 'white'
@@ -342,15 +346,16 @@ const EnhancedTeamCard = ({
                         member.user._id === userId ? 'bold' : 'medium'
                       }
                       fontSize="sm"
+                      noOfLines={1} // Ensure name doesn't wrap excessively
                     >
                       {member.user.name || member.user.inGameName}
                     </Text>
-
                     {member.user._id === userId && (
                       <Badge
                         colorScheme="purple"
                         variant="solid"
                         fontSize="2xs"
+                        ml={1} // Ensure spacing for YOU badge
                       >
                         {t('YOU')}
                       </Badge>
@@ -380,6 +385,7 @@ const EnhancedTeamCard = ({
                   variant="ghost"
                   onClick={() => onRemoveMember(member.user._id)}
                   isDisabled={team.isInMatch}
+                  ml={2} // Ensure button doesn't touch member name
                 >
                   {t('Remove')}
                 </Button>
@@ -398,20 +404,6 @@ const EnhancedTeamCard = ({
         borderTopWidth="1px"
         borderTopColor="gray.700"
       >
-        {isLeader ? (
-          <Button
-            size="sm"
-            leftIcon={<Settings size={14} />}
-            colorScheme="blue"
-            variant="ghost"
-            onClick={onOpenSettings}
-          >
-            {t('Settings')}
-          </Button>
-        ) : (
-          <Box /> // Empty spacer
-        )}
-
         <Button
           size="sm"
           leftIcon={<LogOut size={14} />}
@@ -435,7 +427,7 @@ const TeamDashboard = () => {
   // Responsive values
   const buttonSize = useBreakpointValue({ base: 'sm', md: 'md' })
   const headingSize = useBreakpointValue({ base: 'md', md: 'lg' })
-  const cardColumns = useBreakpointValue({ base: 1, md: 2, lg: 2, xl: 3 })
+  const cardColumns = useBreakpointValue({ base: 1, md: 2, lg: 2, xl: 3 }) // md:2, lg:2, xl:3 columns
   const iconSize = useBreakpointValue({ base: 5, md: 6 })
 
   // State
@@ -467,12 +459,6 @@ const TeamDashboard = () => {
     isOpen: isInviteModalOpen,
     onOpen: openInviteModal,
     onClose: closeInviteModal,
-  } = useDisclosure()
-
-  const {
-    isOpen: isSettingsModalOpen,
-    onOpen: openSettingsModal,
-    onClose: closeSettingsModal,
   } = useDisclosure()
 
   // Set up socket listeners on mount
@@ -680,41 +666,6 @@ const TeamDashboard = () => {
     [toast, closeInviteModal, fetchTeams],
   )
 
-  // Handle updating team settings
-  const handleUpdateTeamSettings = useCallback(
-    async (teamId, settings) => {
-      try {
-        if (settings.persistence !== undefined) {
-          await axios.post(`/api/quickClash/team/${teamId}/persistence`)
-        }
-
-        toast({
-          title: 'Settings Updated',
-          description: 'Team settings have been updated successfully',
-          status: 'success',
-          duration: 3000,
-          isClosable: true,
-        })
-
-        // Close modal
-        closeSettingsModal()
-
-        // Refresh team list
-        fetchTeams()
-      } catch (error) {
-        toast({
-          title: 'Error',
-          description:
-            error.response?.data?.message || 'Failed to update settings',
-          status: 'error',
-          duration: 3000,
-          isClosable: true,
-        })
-      }
-    },
-    [toast, closeSettingsModal, fetchTeams],
-  )
-
   // Function to copy team code to clipboard
   const copyTeamCode = code => {
     navigator.clipboard.writeText(code)
@@ -809,23 +760,29 @@ const TeamDashboard = () => {
       initial="hidden"
       animate="visible"
       width="100%"
+      px={{ base: 2, md: 4 }} // Add some padding to the main container
     >
       {/* Header with title and action buttons */}
-      <Box mb={6}>
+      <Box mb={6} mt={4}>
+        {' '}
+        {/* Added mt for spacing from top */}
         <MotionFlex
           variants={itemVariants}
           justify="space-between"
           align="center"
           wrap={{ base: 'wrap', md: 'nowrap' }}
-          gap={4}
+          gap={{ base: 3, md: 4 }} // Responsive gap
         >
           {/* Title Section */}
           <Flex
             direction="row"
             align="center"
-            flex={{ base: '1 1 100%', md: '1 1 auto' }}
+            flex={{ base: '1 1 100%', md: '1 1 auto' }} // Ensure title takes space on mobile
+            mb={{ base: 3, md: 0 }} // Margin bottom on mobile when wrapped
           >
-            <HStack spacing={2}>
+            <HStack spacing={{ base: 2, md: 3 }}>
+              {' '}
+              {/* Responsive spacing */}
               <Icon as={Users} boxSize={iconSize} color="purple.400" />
               <Heading size={headingSize} color="white">
                 {t('My Teams')}
@@ -847,9 +804,10 @@ const TeamDashboard = () => {
 
           {/* Action Buttons */}
           <Flex
-            gap={3}
-            justify={{ base: 'center', md: 'flex-end' }}
-            flex={{ base: '1 1 100%', md: '0 0 auto' }}
+            gap={{ base: 2, md: 3 }} // Responsive gap for buttons
+            justify={{ base: 'flex-start', md: 'flex-end' }} // Start align on mobile
+            flex={{ base: '1 1 100%', md: '0 0 auto' }} // Full width on mobile for buttons
+            width={{ base: '100%', md: 'auto' }} // Ensure buttons can span full width if needed
           >
             <MotionButton
               leftIcon={<PlusCircle size={18} />}
@@ -858,6 +816,7 @@ const TeamDashboard = () => {
               size={buttonSize}
               whileHover={{ scale: 1.05 }}
               whileTap={{ scale: 0.95 }}
+              flexGrow={{ base: 1, md: 0 }} // Allow button to grow on mobile
             >
               {t('Create Team')}
             </MotionButton>
@@ -870,6 +829,7 @@ const TeamDashboard = () => {
               size={buttonSize}
               whileHover={{ scale: 1.05 }}
               whileTap={{ scale: 0.95 }}
+              flexGrow={{ base: 1, md: 0 }} // Allow button to grow on mobile
             >
               {t('Join Team')}
             </MotionButton>
@@ -879,18 +839,26 @@ const TeamDashboard = () => {
 
       {/* No Teams State */}
       {!loading && teams.length === 0 ? (
-        <EmptyTeamState
-          onCreateTeam={openCreateModal}
-          onJoinTeam={openJoinModal}
-        />
+        <MotionBox variants={itemVariants}>
+          {' '}
+          {/* Wrap EmptyTeamState for animation */}
+          <EmptyTeamState
+            onCreateTeam={openCreateModal}
+            onJoinTeam={openJoinModal}
+          />
+        </MotionBox>
       ) : (
-        // Teams List - Simple vertical stack
-        <VStack spacing={4} align="stretch">
+        // Teams List - Responsive Grid
+        <MotionSimpleGrid
+          columns={cardColumns}
+          spacing={{ base: 4, md: 6 }} // Responsive spacing for grid items
+          variants={itemVariants} // Apply item variant for the grid container itself
+        >
           {teams.map((team, index) => (
             <EnhancedTeamCard
               key={team._id}
               team={team}
-              index={index}
+              index={index} // Used for card animation delay
               isLeader={isUserTeamLeader(team)}
               userId={user._id}
               onLeave={() => handleLeaveTeam(team._id)}
@@ -901,14 +869,10 @@ const TeamDashboard = () => {
                 setSelectedTeam(team)
                 openInviteModal()
               }}
-              onOpenSettings={() => {
-                setSelectedTeam(team)
-                openSettingsModal()
-              }}
               onCopyTeamCode={() => copyTeamCode(team.teamCode)}
             />
           ))}
-        </VStack>
+        </MotionSimpleGrid>
       )}
 
       {/* Modals */}
@@ -933,15 +897,6 @@ const TeamDashboard = () => {
             teamName={selectedTeam.name}
             onInvite={inviteeId =>
               handleInviteUser(selectedTeam._id, inviteeId)
-            }
-          />
-
-          <TeamSettingsModal
-            isOpen={isSettingsModalOpen}
-            onClose={closeSettingsModal}
-            team={selectedTeam}
-            onUpdate={settings =>
-              handleUpdateTeamSettings(selectedTeam._id, settings)
             }
           />
         </>

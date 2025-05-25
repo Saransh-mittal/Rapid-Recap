@@ -1,362 +1,362 @@
 [
   {
-    "question": "Which country paused the Indus Waters Treaty with Pakistan following a terror attack in Kashmir?",
-    "hindiQuestion": "किस देश ने कश्मीर में आतंकी हमले के बाद पाकिस्तान के साथ सिंधु जल संधि को निलंबित किया?",
+    "question": "Which country hosted the G7 Summit in May 2025?",
+    "hindiQuestion": "मई 2025 में जी7 शिखर सम्मेलन की मेजबानी किस देश ने की?",
     "options": {
-      "a": "China",
-      "b": "India",
-      "c": "United States",
+      "a": "Germany",
+      "b": "Canada",
+      "c": "Japan",
+      "d": "Italy"
+    },
+    "hindiOptions": {
+      "a": "जर्मनी",
+      "b": "कनाडा",
+      "c": "जापान",
+      "d": "इटली"
+    },
+    "correctAnswer": "c",
+    "difficulty": "0.6"
+  },
+  {
+    "question": "What major environmental agreement was signed this week to combat ocean pollution?",
+    "hindiQuestion": "इस सप्ताह समुद्री प्रदूषण से निपटने के लिए कौन सा बड़ा पर्यावरण समझौता हस्ताक्षरित हुआ?",
+    "options": {
+      "a": "OceanClean Pact",
+      "b": "BlueEarth Treaty",
+      "c": "Global Marine Accord",
+      "d": "SeaSafe Initiative"
+    },
+    "hindiOptions": {
+      "a": "ओशनक्लीन संधि",
+      "b": "ब्लूअर्थ संधि",
+      "c": "ग्लोबल मरीन समझौता",
+      "d": "सीसेफ पहल"
+    },
+    "correctAnswer": "c",
+    "difficulty": "0.7"
+  },
+  {
+    "question": "Which tech company launched a new AI-powered smartphone this week?",
+    "hindiQuestion": "इस सप्ताह किस टेक कंपनी ने नया एआई-संचालित स्मार्टफोन लॉन्च किया?",
+    "options": {
+      "a": "Apple",
+      "b": "Samsung",
+      "c": "Google",
+      "d": "Xiaomi"
+    },
+    "hindiOptions": {
+      "a": "एप्पल",
+      "b": "सैमसंग",
+      "c": "गूगल",
+      "d": "शाओमी"
+    },
+    "correctAnswer": "b",
+    "difficulty": "0.5"
+  },
+  {
+    "question": "What was the main focus of the UN Climate Conference held this week?",
+    "hindiQuestion": "इस सप्ताह आयोजित संयुक्त राष्ट्र जलवायु सम्मेलन का मुख्य फोकस क्या था?",
+    "options": {
+      "a": "Carbon Neutrality",
+      "b": "Deforestation",
+      "c": "Renewable Energy",
+      "d": "Water Conservation"
+    },
+    "hindiOptions": {
+      "a": "कार्बन न्यूट्रैलिटी",
+      "b": "वनों की कटाई",
+      "c": "नवीकरणीय ऊर्जा",
+      "d": "जल संरक्षण"
+    },
+    "correctAnswer": "c",
+    "difficulty": "0.6"
+  },
+  {
+    "question": "Which country announced a new space mission to Mars this week?",
+    "hindiQuestion": "इस सप्ताह किस देश ने मंगल ग्रह के लिए एक नया अंतरिक्ष मिशन घोषित किया?",
+    "options": {
+      "a": "USA",
+      "b": "China",
+      "c": "India",
       "d": "Russia"
     },
     "hindiOptions": {
-      "a": "चीन",
-      "b": "भारत",
-      "c": "संयुक्त राज्य अमेरिका",
+      "a": "अमेरिका",
+      "b": "चीन",
+      "c": "भारत",
       "d": "रूस"
     },
-    "correctAnswer": "b",
-    "difficulty": "0.7"
-  },
-  {
-    "question": "How many tourists were killed in the Pahalgam terror attack in India-controlled Kashmir on April 22, 2025?",
-    "hindiQuestion": "22 अप्रैल 2025 को भारत नियंत्रित कश्मीर में पहलगाम आतंकी हमले में कितने पर्यटक मारे गए?",
-    "options": {
-      "a": "32",
-      "b": "17",
-      "c": "26",
-      "d": "51"
-    },
-    "hindiOptions": {
-      "a": "32",
-      "b": "17",
-      "c": "26",
-      "d": "51"
-    },
     "correctAnswer": "c",
-    "difficulty": "0.9"
+    "difficulty": "0.5"
   },
   {
-    "question": "Which global leader died of a stroke on Easter Monday, 2025, as announced by the Vatican?",
-    "hindiQuestion": "वेटिकन द्वारा घोषित, 2025 में ईस्टर सोमवार को स्ट्रोक से किस वैश्विक नेता की मृत्यु हुई?",
+    "question": "Who won the 2025 French Open Men's Singles title this week?",
+    "hindiQuestion": "इस सप्ताह 2025 फ्रेंच ओपन पुरुष एकल खिताब किसने जीता?",
     "options": {
-      "a": "Pope Francis",
-      "b": "Dalai Lama",
-      "c": "Justin Trudeau",
-      "d": "Emmanuel Macron"
-    },
-    "hindiOptions": {
-      "a": "पोप फ्रांसिस",
-      "b": "दलाई लामा",
-      "c": "जस्टिन ट्रूडो",
-      "d": "इमैनुएल मैक्रों"
-    },
-    "correctAnswer": "a",
-    "difficulty": "0.8"
-  },
-  {
-    "question": "What is the name of the new wildlife sanctuary declared by the Madhya Pradesh government in Sagar district?",
-    "hindiQuestion": "मध्य प्रदेश सरकार द्वारा सागर जिले में घोषित नए वन्यजीव अभयारण्य का नाम क्या है?",
-    "options": {
-      "a": "Sardar Patel Sanctuary",
-      "b": "Dr. Bhimrao Ambedkar Sanctuary",
-      "c": "Indira Gandhi Sanctuary",
-      "d": "Rajiv Gandhi Sanctuary"
-    },
-    "hindiOptions": {
-      "a": "सरदार पटेल अभयारण्य",
-      "b": "डॉ. भीमराव अंबेडकर अभयारण्य",
-      "c": "इंदिरा गांधी अभयारण्य",
-      "d": "राजीव गांधी अभयारण्य"
-    },
-    "correctAnswer": "b",
-    "difficulty": "0.85"
-  },
-  {
-    "question": "Which organization slashed its global growth forecast to 2.8% due to potential trade wars from U.S. tariffs?",
-    "hindiQuestion": "अमेरिकी टैरिफ के कारण संभावित व्यापार युद्धों से किस संगठन ने वैश्विक विकास अनुमान को 2.8% तक कम किया?",
-    "options": {
-      "a": "World Bank",
-      "b": "United Nations",
-      "c": "International Monetary Fund",
-      "d": "World Trade Organization"
-    },
-    "hindiOptions": {
-      "a": "विश्व बैंक",
-      "b": "संयुक्त राष्ट्र",
-      "c": "अंतरराष्ट्रीय मुद्रा कोष",
-      "d": "विश्व व्यापार संगठन"
-    },
-    "correctAnswer": "c",
-    "difficulty": "0.75"
-  },
-  {
-    "question": "What new type of diabetes was officially recognized by the International Diabetes Federation in April 2025?",
-    "hindiQuestion": "अप्रैल 2025 में अंतरराष्ट्रीय मधुमेह महासंघ द्वारा आधिकारिक तौर पर किस नए प्रकार के मधुमेह को मान्यता दी गई?",
-    "options": {
-      "a": "Type 3 Diabetes",
-      "b": "Type 4 Diabetes",
-      "c": "Type 5 Diabetes",
-      "d": "Type 6 Diabetes"
-    },
-    "hindiOptions": {
-      "a": "टाइप 3 मधुमेह",
-      "b": "टाइप 4 मधुमेह",
-      "c": "टाइप 5 मधुमेह",
-      "d": "टाइप 6 मधुमेह"
-    },
-    "correctAnswer": "c",
-    "difficulty": "0.9"
-  },
-  {
-    "question": "Which Indian cricketer set a new IPL record for the highest individual score by an Indian in 2025?",
-    "hindiQuestion": "2025 में किस भारतीय क्रिकेटर ने आईपीएल में किसी भारतीय द्वारा सर्वोच्च व्यक्तिगत स्कोर का नया रिकॉर्ड बनाया?",
-    "options": {
-      "a": "Virat Kohli",
-      "b": "Rohit Sharma",
-      "c": "Abhishek Sharma",
-      "d": "KL Rahul"
-    },
-    "hindiOptions": {
-      "a": "विराट कोहली",
-      "b": "रोहित शर्मा",
-      "c": "अभिषेक शर्मा",
-      "d": "केएल राहुल"
-    },
-    "correctAnswer": "c",
-    "difficulty": "0.8"
-  },
-  {
-    "question": "Which country’s air force participated in a military exercise at Al Dhafra Air Base in the UAE in April 2025?",
-    "hindiQuestion": "अप्रैल 2025 में यूएई के अल धफरा एयर बेस पर सैन्य अभ्यास में किस देश की वायु सेना ने भाग लिया?",
-    "options": {
-      "a": "India",
-      "b": "France",
-      "c": "Japan",
-      "d": "Australia"
-    },
-    "hindiOptions": {
-      "a": "भारत",
-      "b": "फ्रांस",
-      "c": "जापान",
-      "d": "ऑस्ट्रेलिया"
-    },
-    "correctAnswer": "a",
-    "difficulty": "0.7"
-  },
-  {
-    "question": "Who won the Monte-Carlo Masters tennis title in 2025?",
-    "hindiQuestion": "2025 में मॉन्टे-कार्लो मास्टर्स टेनिस खिताब किसने जीता?",
-    "options": {
-      "a": "Rafael Nadal",
+      "a": "Carlos Alcaraz",
       "b": "Novak Djokovic",
-      "c": "Carlos Alcaraz",
-      "d": "Roger Federer"
+      "c": "Rafael Nadal",
+      "d": "Jannik Sinner"
     },
     "hindiOptions": {
-      "a": "राफेल नडाल",
+      "a": "कार्लोस अल्काराज़",
       "b": "नोवाक जोकोविच",
-      "c": "कार्लोस अल्काराज",
-      "d": "रोजर फेडरर"
+      "c": "राफेल नडाल",
+      "d": "जानिक सिनर"
     },
-    "correctAnswer": "c",
-    "difficulty": "0.8"
+    "correctAnswer": "a",
+    "difficulty": "0.4"
   },
   {
-    "question": "What was the theme of World Health Day 2025, observed on April 7?",
-    "hindiQuestion": "7 अप्रैल को मनाए गए विश्व स्वास्थ्य दिवस 2025 की थीम क्या थी?",
+    "question": "Which city was named the host for the 2030 Winter Olympics this week?",
+    "hindiQuestion": "इस सप्ताह 2030 शीतकालीन ओलंपिक की मेजबानी के लिए किस शहर को चुना गया?",
     "options": {
-      "a": "Healthy Planet, Healthy People",
-      "b": "Health for All",
-      "c": "Healthy Start, Hopeful Future",
-      "d": "Universal Healthcare"
+      "a": "Salt Lake City",
+      "b": "Sapporo",
+      "c": "Oslo",
+      "d": "Vancouver"
     },
     "hindiOptions": {
-      "a": "स्वस्थ ग्रह, स्वस्थ लोग",
-      "b": "सभी के लिए स्वास्थ्य",
-      "c": "स्वस्थ शुरुआत, आशावान भविष्य",
-      "d": "सार्वभौमिक स्वास्थ्य सेवा"
+      "a": "सॉल्ट लेक सिटी",
+      "b": "सपोरो",
+      "c": "ओस्लो",
+      "d": "वैंकूवर"
     },
-    "correctAnswer": "c",
-    "difficulty": "0.85"
+    "correctAnswer": "a",
+    "difficulty": "0.6"
   },
   {
-    "question": "Which U.S. President signed an executive order on expediting offshore mining in April 2025?",
-    "hindiQuestion": "अप्रैल 2025 में अपतटीय खनन को तेज करने के लिए कार्यकारी आदेश पर हस्ताक्षर करने वाला अमेरिकी राष्ट्रपति कौन था?",
+    "question": "What new policy did the European Union introduce this week to regulate AI development?",
+    "hindiQuestion": "इस सप्ताह यूरोपीय संघ ने एआई विकास को नियंत्रित करने के लिए कौन सी नई नीति पेश की?",
     "options": {
-      "a": "Joe Biden",
-      "b": "Donald Trump",
-      "c": "Barack Obama",
-      "d": "Kamala Harris"
+      "a": "AI Ethics Charter",
+      "b": "AI Safety Act",
+      "c": "Digital Innovation Law",
+      "d": "Tech Transparency Code"
     },
     "hindiOptions": {
-      "a": "जो बाइडन",
-      "b": "डोनाल्ड ट्रम्प",
-      "c": "बराक ओबामा",
-      "d": "कमला हैरिस"
+      "a": "एआई नैतिकता चार्टर",
+      "b": "एआई सुरक्षा अधिनियम",
+      "c": "डिजिटल नवाचार कानून",
+      "d": "टेक पारदर्शिता कोड"
     },
     "correctAnswer": "b",
     "difficulty": "0.7"
   },
   {
-    "question": "How many medals did Indian shooters win at the ISSF World Cup Lima 2025?",
-    "hindiQuestion": "ISSF विश्व कप लीमा 2025 में भारतीय निशानेबाजों ने कितने पदक जीते?",
+    "question": "Which African country launched its first domestically-built satellite this week?",
+    "hindiQuestion": "इस सप्ताह किस अफ्रीकी देश ने अपना पहला स्वदेशी निर्मित उपग्रह लॉन्च किया?",
     "options": {
-      "a": "Five",
-      "b": "Seven",
-      "c": "Three",
-      "d": "Nine"
+      "a": "Nigeria",
+      "b": "South Africa",
+      "c": "Kenya",
+      "d": "Ghana"
     },
     "hindiOptions": {
-      "a": "पांच",
-      "b": "सात",
-      "c": "तीन",
-      "d": "नौ"
+      "a": "नाइजीरिया",
+      "b": "दक्षिण अफ्रीका",
+      "c": "केन्या",
+      "d": "घाना"
     },
-    "correctAnswer": "b",
-    "difficulty": "0.9"
+    "correctAnswer": "c",
+    "difficulty": "0.6"
   },
   {
-    "question": "Which island is connected to the mainland by the new Pamban Rail Bridge in India?",
-    "hindiQuestion": "भारत में नए पंबन रेल पुल द्वारा कौन सा द्वीप मुख्य भूमि से जुड़ा है?",
+    "question": "What was the theme of World Environment Day celebrated this week?",
+    "hindiQuestion": "इस सप्ताह मनाए गए विश्व पर्यावरण दिवस की थीम क्या थी?",
     "options": {
-      "a": "Andaman",
-      "b": "Lakshadweep",
-      "c": "Sriharikota",
-      "d": "Rameswaram"
+      "a": "Restore Our Earth",
+      "b": "Beat Plastic Pollution",
+      "c": "Climate Action Now",
+      "d": "Biodiversity Matters"
     },
     "hindiOptions": {
-      "a": "अंडमान",
-      "b": "लक्षद्वीप",
-      "c": "श्रीहरिकोटा",
-      "d": "रामेश्वरम"
+      "a": "हमारी पृथ्वी को पुनर्जनन",
+      "b": "प्लास्टिक प्रदूषण को हराएं",
+      "c": "जलवायु कार्रवाई अब",
+      "d": "जैव विविधता मायने रखती है"
+    },
+    "correctAnswer": "c",
+    "difficulty": "0.5"
+  },
+  {
+    "question": "Which company became the world's largest electric vehicle manufacturer this week?",
+    "hindiQuestion": "इस सप्ताह कौन सी कंपनी विश्व की सबसे बड़ी इलेक्ट्रिक वाहन निर्माता बन गई?",
+    "options": {
+      "a": "Tesla",
+      "b": "BYD",
+      "c": "Volkswagen",
+      "d": "Toyota"
+    },
+    "hindiOptions": {
+      "a": "टेस्ला",
+      "b": "बीवाईडी",
+      "c": "वोक्सवैगन",
+      "d": "टोयोटा"
+    },
+    "correctAnswer": "b",
+    "difficulty": "0.6"
+  },
+  {
+    "question": "Which country passed a landmark bill to legalize same-sex marriage this week?",
+    "hindiQuestion": "इस सप्ताह किस देश ने समलैंगिक विवाह को वैध करने वाला एक ऐतिहासिक विधेयक पारित किया?",
+    "options": {
+      "a": "Thailand",
+      "b": "Poland",
+      "c": "Hungary",
+      "d": "Turkey"
+    },
+    "hindiOptions": {
+      "a": "थाईलैंड",
+      "b": "पोलैंड",
+      "c": "हंगरी",
+      "d": "तुर्की"
+    },
+    "correctAnswer": "a",
+    "difficulty": "0.5"
+  },
+  {
+    "question": "What new cryptocurrency regulation was introduced by the US this week?",
+    "hindiQuestion": "इस सप्ताह अमेरिका ने क्रिप्टोकरेंसी के लिए कौन सा नया नियम लागू किया?",
+    "options": {
+      "a": "Crypto Tax Law",
+      "b": "Digital Asset Framework",
+      "c": "Blockchain Security Act",
+      "d": "Stablecoin Regulation"
+    },
+    "hindiOptions": {
+      "a": "क्रिप्टो कर कानून",
+      "b": "डिजिटल संपत्ति ढांचा",
+      "c": "ब्लॉकचेन सुरक्षा अधिनियम",
+      "d": "स्टेबलकॉइन विनियमन"
     },
     "correctAnswer": "d",
-    "difficulty": "0.8"
-  },
-  {
-    "question": "Which two countries signed four memorandums of understanding in April 2025 to expand their strategic partnership?",
-    "hindiQuestion": "अप्रैल 2025 में किन दो देशों ने अपनी रणनीतिक साझेदारी को विस्तार देने के लिए चार समझौता ज्ञापनों पर हस्ताक्षर किए?",
-    "options": {
-      "a": "India and Japan",
-      "b": "India and Saudi Arabia",
-      "c": "China and Russia",
-      "d": "USA and UK"
-    },
-    "hindiOptions": {
-      "a": "भारत और जापान",
-      "b": "भारत और सऊदी अरब",
-      "c": "चीन और रूस",
-      "d": "यूएसए और यूके"
-    },
-    "correctAnswer": "b",
-    "difficulty": "0.75"
-  },
-  {
-    "question": "What was the score made by Abhishek Sharma in his record-breaking IPL innings in 2025?",
-    "hindiQuestion": "2025 में अभिषेक शर्मा ने अपनी रिकॉर्ड तोड़ आईपीएल पारी में कितने रन बनाए?",
-    "options": {
-      "a": "132",
-      "b": "141",
-      "c": "126",
-      "d": "150"
-    },
-    "hindiOptions": {
-      "a": "132",
-      "b": "141",
-      "c": "126",
-      "d": "150"
-    },
-    "correctAnswer": "b",
-    "difficulty": "0.9"
-  },
-  {
-    "question": "Which city hosted the Khelo India Youth Games 2025, inaugurated by PM Narendra Modi?",
-    "hindiQuestion": "प्रधानमंत्री नरेंद्र मोदी द्वारा उद्घाटित खेलो इंडिया यूथ गेम्स 2025 की मेजबानी किस शहर ने की?",
-    "options": {
-      "a": "Patna",
-      "b": "Mumbai",
-      "c": "Delhi",
-      "d": "Chennai"
-    },
-    "hindiOptions": {
-      "a": "पटना",
-      "b": "मुंबई",
-      "c": "दिल्ली",
-      "d": "चेन्नई"
-    },
-    "correctAnswer": "a",
-    "difficulty": "0.8"
-  },
-  {
-    "question": "Which global body’s leader’s body was displayed at the Vatican starting April 23, 2025?",
-    "hindiQuestion": "23 अप्रैल 2025 से वेटिकन में किस वैश्विक संगठन के नेता का शव प्रदर्शित किया गया?",
-    "options": {
-      "a": "United Nations",
-      "b": "Catholic Church",
-      "c": "World Health Organization",
-      "d": "European Union"
-    },
-    "hindiOptions": {
-      "a": "संयुक्त राष्ट्र",
-      "b": "कैथोलिक चर्च",
-      "c": "विश्व स्वास्थ्य संगठन",
-      "d": "यूरोपीय संघ"
-    },
-    "correctAnswer": "b",
     "difficulty": "0.7"
   },
   {
-    "question": "What is the area of the Dr. Bhimrao Ambedkar Wildlife Sanctuary in Madhya Pradesh?",
-    "hindiQuestion": "मध्य प्रदेश में डॉ. भीमराव अंबेडकर वन्यजीव अभयारण्य का क्षेत्रफल कितना है?",
+    "question": "Which organization released a report on global hunger crisis this week?",
+    "hindiQuestion": "इस सप्ताह वैश्विक भूख संकट पर किस संगठन ने एक रिपोर्ट जारी की?",
     "options": {
-      "a": "258.64 sq km",
-      "b": "300.50 sq km",
-      "c": "200.25 sq km",
-      "d": "275.80 sq km"
+      "a": "WHO",
+      "b": "UNICEF",
+      "c": "FAO",
+      "d": "WFP"
     },
     "hindiOptions": {
-      "a": "258.64 वर्ग किमी",
-      "b": "300.50 वर्ग किमी",
-      "c": "200.25 वर्ग किमी",
-      "d": "275.80 वर्ग किमी"
+      "a": "डब्ल्यूएचओ",
+      "b": "यूनिसेफ",
+      "c": "एफएओ",
+      "d": "डब्ल्यूएफपी"
     },
-    "correctAnswer": "a",
-    "difficulty": "0.95"
+    "correctAnswer": "d",
+    "difficulty": "0.6"
   },
   {
-    "question": "Which cricketers were named the World’s Leading Men’s and Women’s cricketers by Wisden in 2025?",
-    "hindiQuestion": "2025 में विस्डन द्वारा विश्व के अग्रणी पुरुष और महिला क्रिकेटर के रूप में किन्हें नामित किया गया?",
+    "question": "Which country won the most medals at the 2025 Asian Games this week?",
+    "hindiQuestion": "इस सप्ताह 2025 एशियाई खेलों में किस देश ने सबसे अधिक पदक जीते?",
     "options": {
-      "a": "Virat Kohli and Ellyse Perry",
-      "b": "Jasprit Bumrah and Smriti Mandhana",
-      "c": "Joe Root and Nat Sciver",
-      "d": "Ben Stokes and Meg Lanning"
+      "a": "China",
+      "b": "Japan",
+      "c": "South Korea",
+      "d": "India"
     },
     "hindiOptions": {
-      "a": "विराट कोहली और एलिस पेरी",
-      "b": "जसप्रीत बुमराह और स्मृति मंधाना",
-      "c": "जो रूट और नट सिवर",
-      "d": "बेन स्टोक्स और मेग लैनिंग"
+      "a": "चीन",
+      "b": "जापान",
+      "c": "दक्षिण कोरिया",
+      "d": "भारत"
+    },
+    "correctAnswer": "a",
+    "difficulty": "0.5"
+  },
+  {
+    "question": "What new health initiative was launched by the WHO this week?",
+    "hindiQuestion": "इस सप्ताह डब्ल्यूएचओ ने कौन सी नई स्वास्थ्य पहल शुरू की?",
+    "options": {
+      "a": "Global Vaccine Equity",
+      "b": "Mental Health for All",
+      "c": "End Malaria Campaign",
+      "d": "Clean Air Program"
+    },
+    "hindiOptions": {
+      "a": "वैश्विक वैक्सीन समानता",
+      "b": "सभी के लिए मानसिक स्वास्थ्य",
+      "c": "मलेरिया समाप्ति अभियान",
+      "d": "स्वच्छ वायु कार्यक्रम"
     },
     "correctAnswer": "b",
-    "difficulty": "0.85"
+    "difficulty": "0.6"
   },
   {
-    "question": "Which U.S. official did President Trump confirm he had no plans to sack in April 2025?",
-    "hindiQuestion": "अप्रैल 2025 में राष्ट्रपति ट्रम्प ने पुष्टि की कि वह किस अमेरिकी अधिकारी को बर्खास्त करने की योजना नहीं बना रहे हैं?",
+    "question": "Which Indian state launched a new renewable energy project this week?",
+    "hindiQuestion": "इस सप्ताह किस भारतीय राज्य ने एक नया नवीकरणीय ऊर्जा प्रोजेक्ट शुरू किया?",
     "options": {
-      "a": "Jerome Powell",
-      "b": "Antony Blinken",
-      "c": "Janet Yellen",
-      "d": "Lloyd Austin"
+      "a": "Rajasthan",
+      "b": "Gujarat",
+      "c": "Tamil Nadu",
+      "d": "Maharashtra"
     },
     "hindiOptions": {
-      "a": "जेरोम पॉवेल",
-      "b": "एंटनी ब्लिंकन",
-      "c": "जेनेट येलेन",
-      "d": "लॉयड ऑस्टिन"
+      "a": "राजस्थान",
+      "b": "गुजरात",
+      "c": "तमिलनाडु",
+      "d": "महाराष्ट्र"
     },
     "correctAnswer": "a",
-    "difficulty": "0.8"
+    "difficulty": "0.5"
+  },
+  {
+    "question": "Which scientist won the 2025 Nobel Prize in Physics announced this week?",
+    "hindiQuestion": "इस सप्ताह घोषित 2025 भौतिकी के नोबेल पुरस्कार को किस वैज्ञानिक ने जीता?",
+    "options": {
+      "a": "John Clauser",
+      "b": "Alain Aspect",
+      "c": "Anton Zeilinger",
+      "d": "Anne L'Huillier"
+    },
+    "hindiOptions": {
+      "a": "जॉन क्लॉज़र",
+      "b": "एलन एस्पेक्ट",
+      "c": "एंटोन ज़ेलिंगर",
+      "d": "ऐनी ल'हुइलियर"
+    },
+    "correctAnswer": "d",
+    "difficulty": "0.7"
+  },
+  {
+    "question": "What was the main agenda of the ASEAN Summit held this week?",
+    "hindiQuestion": "इस सप्ताह आयोजित आसियान शिखर सम्मेलन का मुख्य एजेंडा क्या था?",
+    "options": {
+      "a": "Regional Trade",
+      "b": "Climate Change",
+      "c": "Digital Economy",
+      "d": "South China Sea Dispute"
+    },
+    "hindiOptions": {
+      "a": "क्षेत्रीय व्यापार",
+      "b": "जलवायु परिवर्तन",
+      "c": "डिजिटल अर्थव्यवस्था",
+      "d": "दक्षिण चीन सागर विवाद"
+    },
+    "correctAnswer": "d",
+    "difficulty": "0.6"
+  },
+  {
+    "question": "Which country introduced a new digital currency this week?",
+    "hindiQuestion": "इस सप्ताह किस देश ने एक नई डिजिटल मुद्रा शुरू की?",
+    "options": {
+      "a": "Brazil",
+      "b": "Australia",
+      "c": "South Africa",
+      "d": "Sweden"
+    },
+    "hindiOptions": {
+      "a": "ब्राजील",
+      "b": "ऑस्ट्रेलिया",
+      "c": "दक्षिण अफ्रीका",
+      "d": "स्वीडन"
+    },
+    "correctAnswer": "b",
+    "difficulty": "0.6"
   }
 ]
