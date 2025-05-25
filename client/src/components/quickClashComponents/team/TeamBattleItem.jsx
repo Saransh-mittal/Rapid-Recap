@@ -282,7 +282,7 @@ const TeamBattleItem = memo(({ battle, index, onEnter, onViewAnalysis }) => {
               {battle.status === 'completed' && (
                 <Button
                   size={buttonSize}
-                  colorScheme="purple"
+                  colorScheme="teal"
                   leftIcon={<BarChart2 size={12} />}
                   onClick={e => {
                     e.stopPropagation()
@@ -296,21 +296,23 @@ const TeamBattleItem = memo(({ battle, index, onEnter, onViewAnalysis }) => {
                 </Button>
               )}
 
-              <Button
-                size={buttonSize}
-                colorScheme={battle.status === 'active' ? 'green' : 'gray'}
-                rightIcon={<ArrowRight size={12} />}
-                onClick={e => {
-                  e.stopPropagation()
-                  onEnter?.(battle._id)
-                }}
-                isDisabled={battle.status !== 'active'}
-                fontSize="xs"
-                minWidth="80px"
-                borderRadius="md"
-              >
-                {battle.status === 'active' ? t('Enter') : t('View')}
-              </Button>
+              {battle.status === 'active' && (
+                <Button
+                  size={buttonSize}
+                  colorScheme={battle.status === 'active' ? 'green' : 'gray'}
+                  rightIcon={<ArrowRight size={12} />}
+                  onClick={e => {
+                    e.stopPropagation()
+                    onEnter?.(battle._id)
+                  }}
+                  isDisabled={battle.status !== 'active'}
+                  fontSize="xs"
+                  minWidth="80px"
+                  borderRadius="md"
+                >
+                  {t('Enter')}
+                </Button>
+              )}
             </VStack>
           </VStack>
 

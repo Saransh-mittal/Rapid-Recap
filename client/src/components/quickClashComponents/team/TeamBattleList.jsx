@@ -49,6 +49,7 @@ import EmptyBattlesState from './EmptyBattlesState'
 // Custom hooks
 import useQuickClashTeamBattle from '../../../customHooks/useQuickClashTeamBattle'
 import { useSocket } from '../../../customHooks/useSocket'
+import { useNavigate } from 'react-router-dom'
 
 // Import battle analysis modal (lazy loaded)
 const ChallengeAnalysisModal = React.lazy(() =>
@@ -327,7 +328,7 @@ const TeamBattleList = memo(() => {
   const { t } = useTranslation('QuickClash')
   const toast = useToast()
   const { getSocket } = useSocket()
-
+  const navigate = useNavigate()
   // Responsive sizing
   const headerSize = useBreakpointValue({ base: 'md', md: 'lg' })
   const containerPadding = useBreakpointValue({ base: 1, md: 4 })
@@ -457,10 +458,9 @@ const TeamBattleList = memo(() => {
   // Handle viewing battle analysis
   const handleViewBattleAnalysis = useCallback(
     battleId => {
-      setSelectedBattleId(battleId)
-      openAnalysisModal()
+      navigate(`/quickclash/analysis/${battleId}`)
     },
-    [openAnalysisModal],
+    [navigate],
   )
 
   return (

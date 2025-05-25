@@ -41,9 +41,7 @@ const quickClashTeamTrophyHistorySchema = new mongoose.Schema({
     required: true,
   },
   bonusesApplied: {
-    firstDaily: Boolean,
     strongerTeam: Boolean,
-    comebackWin: Boolean,
     allWins: Boolean,
   },
   userParticipated: {

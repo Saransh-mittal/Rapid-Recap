@@ -105,15 +105,7 @@ const quickClashTeamBattleSchema = new mongoose.Schema(
         default: 0,
       },
       bonuses: {
-        firstDaily: {
-          applied: { type: Boolean, default: false },
-          amount: { type: Number, default: 0 },
-        },
         strongerTeam: {
-          applied: { type: Boolean, default: false },
-          amount: { type: Number, default: 0 },
-        },
-        comebackWin: {
           applied: { type: Boolean, default: false },
           amount: { type: Number, default: 0 },
         },
@@ -223,14 +215,6 @@ const quickClashTeamBattleSchema = new mongoose.Schema(
     expiresAt: {
       type: Date,
       required: true,
-    },
-    isFirstDailyBattle: {
-      type: Boolean,
-      default: false,
-    },
-    isComeback: {
-      type: Boolean,
-      default: false,
     },
     allMatchesWon: {
       type: Boolean,

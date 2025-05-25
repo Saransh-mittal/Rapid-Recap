@@ -29,6 +29,9 @@ const PrivacyPolicy = lazy(() => import('../screens/PrivacyPolicy'))
 const TeamBattlePage = lazy(() =>
   import('../components/quickClashComponents/team/TeamBattlePage'),
 )
+const TeamBattleAnalysisPage = lazy(() =>
+  import('../screens/TeamBattleAnalysisPage'),
+)
 const QuickClashSocketTest =
   process.env.NODE_ENV === 'production'
     ? null
@@ -75,6 +78,16 @@ const AppRoutes = ({ isToken, needsOnboarding, setIsGuestLoggedin }) => {
               path="/quickclash/teamBattle/:battleId"
               element={
                 isToken ? <TeamBattlePage /> : <Navigate to="/" replace />
+              }
+            />
+            <Route
+              path="/quickclash/analysis/:battleId"
+              element={
+                isToken ? (
+                  <TeamBattleAnalysisPage />
+                ) : (
+                  <Navigate to="/" replace />
+                )
               }
             />
             <Route

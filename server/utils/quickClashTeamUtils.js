@@ -318,83 +318,59 @@ const unlockTeamsInMatchmaking = async ({
  * @returns {Promise<void>}
  */
 const calculateFinalTrophies = async (battle, session) => {
-  // Base amount already set during battle creation
-  const baseAmount = battle.trophyExchange.adjustedAmount
+  // Use the base adjusted amount (no bonuses applied)
+  const finalAmount = battle.trophyExchange.adjustedAmount
 
-  // Apply bonuses if Team A won
-  let finalAmount = baseAmount
-  const bonuses = battle.trophyExchange.bonuses
-
-  // First daily bonus (already set during creation)
-  if (bonuses.firstDaily.applied) {
-    finalAmount += bonuses.firstDaily.amount
-  }
-
-  // Stronger team bonus (+20% if winning against team with 200+ more trophies)
-  let teamAAvgTrophies = 0
-  let teamBAvgTrophies = 0
-
-  // Calculate current average trophies
+  // Calculate current average trophies for record keeping
   const teamAMemberCount = battle.teamAMembers.length
-  teamAAvgTrophies =
+  const teamAAvgTrophies =
     battle.teamAMembers.reduce((sum, m) => sum + m.previousTrophies, 0) /
     teamAMemberCount
 
   const teamBMemberCount = battle.teamBMembers.length
-  teamBAvgTrophies =
+  const teamBAvgTrophies =
     battle.teamBMembers.reduce((sum, m) => sum + m.previousTrophies, 0) /
     teamBMemberCount
 
-  const teamAIsWeaker = teamAAvgTrophies + 200 <= teamBAvgTrophies
+  // Apply stronger team bonus only (if applicable)
+  let adjustedFinalAmount = finalAmount
+  const bonuses = battle.trophyExchange.bonuses
 
+  // Stronger team bonus (+20% if weaker team wins against team with 200+ more trophies)
+  const teamAIsWeaker = teamAAvgTrophies + 200 <= teamBAvgTrophies
   if (battle.winner === 'teamA' && teamAIsWeaker) {
-    const strongerTeamBonus = Math.round(baseAmount * 0.2)
+    const strongerTeamBonus = Math.round(finalAmount * 0.2)
     bonuses.strongerTeam.applied = true
     bonuses.strongerTeam.amount = strongerTeamBonus
-    finalAmount += strongerTeamBonus
+    adjustedFinalAmount += strongerTeamBonus
   }
 
-  // Comeback win bonus (+10%)
-  if (battle.isComeback && battle.winner === 'teamA') {
-    const comebackBonus = Math.round(baseAmount * 0.1)
-    bonuses.comebackWin.applied = true
-    bonuses.comebackWin.amount = comebackBonus
-    finalAmount += comebackBonus
-  }
-
-  // All wins bonus (+15%)
+  // All wins bonus (+15% if team wins all challenges)
   if (battle.allMatchesWon && battle.winner === 'teamA') {
-    const allWinsBonus = Math.round(baseAmount * 0.15)
+    const allWinsBonus = Math.round(finalAmount * 0.15)
     bonuses.allWins.applied = true
     bonuses.allWins.amount = allWinsBonus
-    finalAmount += allWinsBonus
+    adjustedFinalAmount += allWinsBonus
   }
 
   // Update trophy exchange data
-  battle.trophyExchange.finalAmount = finalAmount
+  battle.trophyExchange.finalAmount = adjustedFinalAmount
 
-  // Calculate per-player amounts
-  let winnerTeamTrophies = 0
-  let loserTeamTrophies = 0
+  // Calculate per-player amounts (NO MULTIPLIERS)
+  const perPlayerAmount = Math.round(adjustedFinalAmount / 4) // Divide by 4 players per team
 
   if (battle.winner === 'teamA') {
-    // Team A won
-    winnerTeamTrophies = Math.round(finalAmount * 1.25)
-    loserTeamTrophies = Math.round(finalAmount * 0.75)
-
-    // Per player amount
-    const winnerPerPlayer = Math.round(winnerTeamTrophies / teamAMemberCount)
-    const loserPerPlayer = Math.round(loserTeamTrophies / teamBMemberCount)
+    // Team A won - they gain trophies, Team B loses trophies
 
     // Update team A members (winners)
     for (const member of battle.teamAMembers) {
-      member.trophyChange = winnerPerPlayer
-      member.newTrophies = member.previousTrophies + winnerPerPlayer
+      member.trophyChange = perPlayerAmount
+      member.newTrophies = member.previousTrophies + perPlayerAmount
 
       // Update user trophies in database
       await User.findByIdAndUpdate(
         member.user,
-        { $inc: { quickClashTrophies: winnerPerPlayer } },
+        { $inc: { quickClashTrophies: perPlayerAmount } },
         { session },
       )
 
@@ -403,15 +379,13 @@ const calculateFinalTrophies = async (battle, session) => {
         user: member.user,
         team: battle.teamA,
         teamBattle: battle._id,
-        trophiesChange: winnerPerPlayer,
+        trophiesChange: perPlayerAmount,
         trophiesAfter: member.newTrophies,
         opponentTeam: battle.teamB,
         opponentTeamAvgTrophies: teamBAvgTrophies,
         result: 'win',
         bonusesApplied: {
-          firstDaily: bonuses.firstDaily.applied,
           strongerTeam: bonuses.strongerTeam.applied,
-          comebackWin: bonuses.comebackWin.applied,
           allWins: bonuses.allWins.applied,
         },
         userParticipated: member.participated,
@@ -422,8 +396,11 @@ const calculateFinalTrophies = async (battle, session) => {
 
     // Update team B members (losers)
     for (const member of battle.teamBMembers) {
-      member.trophyChange = -loserPerPlayer
-      member.newTrophies = Math.max(0, member.previousTrophies - loserPerPlayer)
+      member.trophyChange = -perPlayerAmount
+      member.newTrophies = Math.max(
+        0,
+        member.previousTrophies - perPlayerAmount,
+      )
 
       // Calculate actual trophy change (in case of floor protection)
       const actualChange = member.newTrophies - member.previousTrophies
@@ -446,9 +423,7 @@ const calculateFinalTrophies = async (battle, session) => {
         opponentTeamAvgTrophies: teamAAvgTrophies,
         result: 'loss',
         bonusesApplied: {
-          firstDaily: false,
           strongerTeam: false,
-          comebackWin: false,
           allWins: false,
         },
         userParticipated: member.participated,
@@ -457,23 +432,17 @@ const calculateFinalTrophies = async (battle, session) => {
       }).save({ session })
     }
   } else if (battle.winner === 'teamB') {
-    // Team B won
-    winnerTeamTrophies = Math.round(finalAmount * 1.25)
-    loserTeamTrophies = Math.round(finalAmount * 0.75)
-
-    // Per player amount
-    const winnerPerPlayer = Math.round(winnerTeamTrophies / teamBMemberCount)
-    const loserPerPlayer = Math.round(loserTeamTrophies / teamAMemberCount)
+    // Team B won - they gain trophies, Team A loses trophies
 
     // Update team B members (winners)
     for (const member of battle.teamBMembers) {
-      member.trophyChange = winnerPerPlayer
-      member.newTrophies = member.previousTrophies + winnerPerPlayer
+      member.trophyChange = perPlayerAmount
+      member.newTrophies = member.previousTrophies + perPlayerAmount
 
       // Update user trophies in database
       await User.findByIdAndUpdate(
         member.user,
-        { $inc: { quickClashTrophies: winnerPerPlayer } },
+        { $inc: { quickClashTrophies: perPlayerAmount } },
         { session },
       )
 
@@ -482,15 +451,13 @@ const calculateFinalTrophies = async (battle, session) => {
         user: member.user,
         team: battle.teamB,
         teamBattle: battle._id,
-        trophiesChange: winnerPerPlayer,
+        trophiesChange: perPlayerAmount,
         trophiesAfter: member.newTrophies,
         opponentTeam: battle.teamA,
         opponentTeamAvgTrophies: teamAAvgTrophies,
         result: 'win',
         bonusesApplied: {
-          firstDaily: false, // Bonuses only apply to team A
-          strongerTeam: false,
-          comebackWin: false,
+          strongerTeam: false, // Only Team A gets bonuses in current system
           allWins: false,
         },
         userParticipated: member.participated,
@@ -501,8 +468,11 @@ const calculateFinalTrophies = async (battle, session) => {
 
     // Update team A members (losers)
     for (const member of battle.teamAMembers) {
-      member.trophyChange = -loserPerPlayer
-      member.newTrophies = Math.max(0, member.previousTrophies - loserPerPlayer)
+      member.trophyChange = -perPlayerAmount
+      member.newTrophies = Math.max(
+        0,
+        member.previousTrophies - perPlayerAmount,
+      )
 
       // Calculate actual trophy change (in case of floor protection)
       const actualChange = member.newTrophies - member.previousTrophies
@@ -525,10 +495,8 @@ const calculateFinalTrophies = async (battle, session) => {
         opponentTeamAvgTrophies: teamBAvgTrophies,
         result: 'loss',
         bonusesApplied: {
-          firstDaily: bonuses.firstDaily.applied,
-          strongerTeam: false,
-          comebackWin: false,
-          allWins: false,
+          strongerTeam: bonuses.strongerTeam.applied,
+          allWins: bonuses.allWins.applied,
         },
         userParticipated: member.participated,
         userCompleted: member.completed,
@@ -536,37 +504,26 @@ const calculateFinalTrophies = async (battle, session) => {
       }).save({ session })
     }
   } else {
-    // Tie - distribute trophies evenly
-    // For ties, we give a small amount to both teams
-    const tieAmount = Math.round(finalAmount * 0.1)
+    // Tie - no trophies awarded (as per previous change)
 
-    // Update team A members
+    // Update team A members - no trophy change
     for (const member of battle.teamAMembers) {
-      member.trophyChange = tieAmount
-      member.newTrophies = member.previousTrophies + tieAmount
+      member.trophyChange = 0
+      member.newTrophies = member.previousTrophies
 
-      // Update user trophies in database
-      await User.findByIdAndUpdate(
-        member.user,
-        { $inc: { quickClashTrophies: tieAmount } },
-        { session },
-      )
-
-      // Create trophy history entry
+      // Create trophy history entry for record keeping
       await new QuickClashTeamTrophyHistory({
         user: member.user,
         team: battle.teamA,
         teamBattle: battle._id,
-        trophiesChange: tieAmount,
+        trophiesChange: 0,
         trophiesAfter: member.newTrophies,
         opponentTeam: battle.teamB,
         opponentTeamAvgTrophies: teamBAvgTrophies,
         result: 'tie',
         bonusesApplied: {
-          firstDaily: bonuses.firstDaily.applied,
-          strongerTeam: false,
-          comebackWin: false,
-          allWins: false,
+          strongerTeam: bonuses.strongerTeam.applied,
+          allWins: bonuses.allWins.applied,
         },
         userParticipated: member.participated,
         userCompleted: member.completed,
@@ -574,32 +531,23 @@ const calculateFinalTrophies = async (battle, session) => {
       }).save({ session })
     }
 
-    // Update team B members
+    // Update team B members - no trophy change
     for (const member of battle.teamBMembers) {
-      member.trophyChange = tieAmount
-      member.newTrophies = member.previousTrophies + tieAmount
+      member.trophyChange = 0
+      member.newTrophies = member.previousTrophies
 
-      // Update user trophies in database
-      await User.findByIdAndUpdate(
-        member.user,
-        { $inc: { quickClashTrophies: tieAmount } },
-        { session },
-      )
-
-      // Create trophy history entry
+      // Create trophy history entry for record keeping
       await new QuickClashTeamTrophyHistory({
         user: member.user,
         team: battle.teamB,
         teamBattle: battle._id,
-        trophiesChange: tieAmount,
+        trophiesChange: 0,
         trophiesAfter: member.newTrophies,
         opponentTeam: battle.teamA,
         opponentTeamAvgTrophies: teamAAvgTrophies,
         result: 'tie',
         bonusesApplied: {
-          firstDaily: false,
           strongerTeam: false,
-          comebackWin: false,
           allWins: false,
         },
         userParticipated: member.participated,

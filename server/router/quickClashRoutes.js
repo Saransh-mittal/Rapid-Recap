@@ -39,6 +39,7 @@ const {
   canLeaveMatchmakingController,
 } = require('../controllers/quickClashGlobalMatchmakingController')
 const teamRoutes = require('./quickClashTeamRoutes')
+const analysisRoutes = require('./quickClashAnalysisRoutes')
 
 const router = express.Router()
 const dailyTaskRoutes = require('./quickClashDailyTaskRoutes')
@@ -51,6 +52,9 @@ router.use('/dailyTasks', dailyTaskRoutes)
 
 // Mount team routes
 router.use('/', teamRoutes)
+
+// Mount analysis routes
+router.use('/analysis', analysisRoutes)
 
 // Challenge management routes
 router.post('/challenge/create', createNewChallenge)

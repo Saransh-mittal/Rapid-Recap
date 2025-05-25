@@ -288,11 +288,6 @@ const createTeamBattle = makeRetryable(
         trophyChange: 0,
       }))
 
-      // Check if this is the first team battle of the day for team A
-      console.log(`[TeamBattle] Checking if first daily team battle for Team A`)
-      const isFirstDaily = await isFirstDailyTeamBattle(teamAId)
-      console.log(`[TeamBattle] Is first daily battle: ${isFirstDaily}`)
-
       // ======= PROGRESS: BATTLE SETUP (55%) =======
       console.log(`[TeamBattle] PHASE 6: Battle setup (55%)`)
 
@@ -307,7 +302,6 @@ const createTeamBattle = makeRetryable(
         teamAMembers,
         teamBMembers,
         expiresAt: new Date(Date.now() + TEAM_BATTLE_EXPIRY),
-        isFirstDailyBattle: isFirstDaily,
         fromMatchmaking: true,
       })
 
@@ -326,17 +320,7 @@ const createTeamBattle = makeRetryable(
         baseAmount: BASE_TROPHIES,
         adjustedAmount: potentialTrophyExchange,
         bonuses: {
-          firstDaily: {
-            applied: isFirstDaily,
-            amount: isFirstDaily
-              ? Math.round(potentialTrophyExchange * 0.1)
-              : 0,
-          },
           strongerTeam: {
-            applied: false, // Will be determined at the end
-            amount: 0,
-          },
-          comebackWin: {
             applied: false, // Will be determined at the end
             amount: 0,
           },
@@ -906,23 +890,6 @@ const calculateTeamAverageTrophies = team => {
 }
 
 /**
- * Check if this is the first team battle of the day for a team
- * @param {string} teamId - Team ID
- * @returns {Promise<boolean>} Whether this is the first battle of the day
- */
-const isFirstDailyTeamBattle = async teamId => {
-  const today = new Date()
-  today.setHours(0, 0, 0, 0)
-
-  const existingBattles = await QuickClashTeamBattle.countDocuments({
-    $or: [{ teamA: teamId }, { teamB: teamId }],
-    createdAt: { $gte: today },
-  })
-
-  return existingBattles === 0
-}
-
-/**
  * Select a category for a team member
  * @param {Object} params - Parameters
  * @param {string} params.battleId - Team battle ID
@@ -1287,11 +1254,9 @@ const updateBattleWithQuizResults = async ({
         }
 
         // Calculate and apply trophy bonuses
-        const hasTeamAComeback = determineComeback(battle)
         const didTeamAWinAll = battle.teamAWins === battle.challenges.length
 
         // Mark bonus flags
-        battle.isComeback = hasTeamAComeback
         battle.allMatchesWon = didTeamAWinAll
 
         // Calculate final trophies
@@ -1335,28 +1300,6 @@ const updateBattleWithQuizResults = async ({
   } finally {
     session.endSession()
   }
-}
-
-/**
- * Determine if this was a comeback win
- * @param {Object} battle - Team battle object
- * @returns {boolean} Whether this was a comeback win
- */
-const determineComeback = battle => {
-  if (battle.winner !== 'teamA') {
-    return false
-  }
-
-  // Check if Team A was losing after the first match
-  const firstCompletedChallenge = battle.challenges.find(
-    c => c.teamACompleted && c.teamBCompleted,
-  )
-
-  if (firstCompletedChallenge && firstCompletedChallenge.winner === 'teamB') {
-    return true
-  }
-
-  return false
 }
 
 /**
