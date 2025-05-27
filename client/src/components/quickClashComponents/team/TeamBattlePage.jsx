@@ -277,10 +277,7 @@ const TeamBattlePage = () => {
   // Rendering loading state
   if (battleDetailsLoading && !currentBattle) {
     return (
-      <Center
-        minH="100vh"
-        bg="linear-gradient(135deg, #1a1527 0%, #2d1b4e 100%)"
-      >
+      <Center minH="100vh" bg="gray.900">
         <VStack spacing={6}>
           <MotionBox
             animate={{
@@ -312,10 +309,7 @@ const TeamBattlePage = () => {
   // Render error state
   if (battleDetailsError && !currentBattle) {
     return (
-      <Center
-        minH="100vh"
-        bg="linear-gradient(135deg, #1a1527 0%, #2d1b4e 100%)"
-      >
+      <Center minH="100vh" bg="gray.900">
         <VStack spacing={6}>
           <Icon as={AlertTriangle} color="red.400" boxSize={12} />
           <Text color="red.400" fontSize="xl" textAlign="center">
@@ -337,10 +331,7 @@ const TeamBattlePage = () => {
   // If no battle found
   if (!currentBattle) {
     return (
-      <Center
-        minH="100vh"
-        bg="linear-gradient(135deg, #1a1527 0%, #2d1b4e 100%)"
-      >
+      <Center minH="100vh" bg="gray.900">
         <VStack spacing={6}>
           <Icon as={AlertTriangle} color="yellow.400" boxSize={12} />
           <Text color="yellow.400" fontSize="xl">
@@ -360,12 +351,7 @@ const TeamBattlePage = () => {
   }
 
   return (
-    <Box
-      minH="100vh"
-      bg="linear-gradient(135deg, #1a1527 0%, #2d1b4e 45%, #1a1527 100%)"
-      position="relative"
-      overflow="hidden"
-    >
+    <Box minH="100vh" bg="gray.900" position="relative" overflow="hidden">
       {/* Animated background particles */}
       <Box
         position="absolute"

@@ -16,6 +16,9 @@ import {
   Button,
   useDisclosure,
   Portal,
+  SimpleGrid,
+  Collapse,
+  IconButton,
 } from '@chakra-ui/react'
 import { motion, AnimatePresence } from 'framer-motion'
 import { useTranslation } from 'react-i18next'
@@ -27,8 +30,14 @@ import {
   Medal,
   UserRound,
   ExternalLink,
+  Hash,
+  Users,
+  Percent,
+  Target,
+  ChevronDown,
+  ChevronUp,
 } from 'lucide-react'
-import StatItem from './StatItem'
+import StatItem from './StatItem' // Assuming StatItem will also be made more compact
 
 const MotionBox = motion(Box)
 const MotionButton = motion(Button)
@@ -37,312 +46,458 @@ const LeaderboardCard = React.memo(
   ({ user, currentUserId, rank, onViewProfile }) => {
     const { t } = useTranslation('QuickClash')
     const isCurrentUser = user._id === currentUserId
-    const { isOpen, onOpen, onClose } = useDisclosure()
+    const {
+      isOpen: isPopoverOpen,
+      onOpen: onPopoverOpen,
+      onClose: onPopoverClose,
+    } = useDisclosure()
     const cardRef = useRef()
 
-    // Determine rank badge styling and icon - memoized to prevent recalculation
-    const rankBadge = useMemo(() => {
-      if (rank === 1)
-        return {
-          color: '#FFD700',
-          icon: Crown,
-          bg: 'linear-gradient(135deg, rgba(255, 215, 0, 0.15) 0%, rgba(255, 215, 0, 0.05) 100%)',
-          borderColor: 'rgba(255, 215, 0, 0.3)',
-          label: t('Champion'),
-        }
-      if (rank === 2)
-        return {
-          color: '#C0C0C0',
-          icon: Medal,
-          bg: 'linear-gradient(135deg, rgba(192, 192, 192, 0.15) 0%, rgba(192, 192, 192, 0.05) 100%)',
-          borderColor: 'rgba(192, 192, 192, 0.3)',
-          label: t('Silver'),
-        }
-      if (rank === 3)
-        return {
-          color: '#CD7F32',
-          icon: Medal,
-          bg: 'linear-gradient(135deg, rgba(205, 127, 50, 0.15) 0%, rgba(205, 127, 50, 0.05) 100%)',
-          borderColor: 'rgba(205, 127, 50, 0.3)',
-          label: t('Bronze'),
-        }
-      return {
-        color: 'whiteAlpha.600',
-        icon: null,
-        bg: 'transparent',
-        borderColor: 'transparent',
-        label: null,
+    const [isStatsExpanded, setIsStatsExpanded] = useState(false)
+
+    const handleToggleStats = event => {
+      event.stopPropagation()
+      setIsStatsExpanded(!isStatsExpanded)
+    }
+
+    const handleCardClickForPopover = () => onPopoverOpen()
+
+    const rankStyle = useMemo(() => {
+      // Base styles remain largely the same for colors/gradients
+      const base = {
+        textColor: 'whiteAlpha.900',
+        iconColor: 'whiteAlpha.700',
+        rankIconContainerBg: 'rgba(255, 255, 255, 0.05)',
+        rankIconContainerBorder: 'rgba(255, 255, 255, 0.1)',
+        rankLabelBg: 'rgba(255, 255, 255, 0.05)',
+        rankLabelBorder: 'rgba(255, 255, 255, 0.1)',
+        rankIcon: Hash,
+        rankLabelText: null,
+        cardBg: isCurrentUser
+          ? 'linear-gradient(140deg, rgba(138, 75, 255, 0.22) 0%, rgba(138, 75, 255, 0.1) 100%)'
+          : 'linear-gradient(140deg, rgba(45, 55, 72, 0.6) 0%, rgba(30, 35, 45, 0.6) 100%)',
+        cardBorder: isCurrentUser ? 'purple.400' : 'rgba(255, 255, 255, 0.08)',
+        cardShadow: isCurrentUser
+          ? '0 0 15px rgba(138, 75, 255, 0.2)' // Reduced shadow for thinner look
+          : '0 3px 10px rgba(0,0,0,0.15)', // Reduced shadow
+        trophySectionBg: isCurrentUser
+          ? 'rgba(138, 75, 255, 0.1)'
+          : 'rgba(0,0,0,0.2)',
+        trophyTextColor: 'yellow.400',
+        nameColor: 'whiteAlpha.900',
       }
-    }, [rank, t])
-
-    // Calculate gradient based on rank - memoized
-    const cardGradient = useMemo(() => {
+      // Rank-specific style overrides remain the same logic
       if (rank === 1)
-        return 'linear-gradient(135deg, rgba(255, 215, 0, 0.12) 0%, rgba(255, 215, 0, 0.03) 100%)'
+        return {
+          ...base,
+          textColor: 'yellow.400',
+          iconColor: 'yellow.400',
+          rankIcon: Crown,
+          rankIconContainerBg: 'rgba(255, 215, 0, 0.2)',
+          rankIconContainerBorder: 'rgba(255, 215, 0, 0.6)',
+          rankLabelBg: 'rgba(255, 215, 0, 0.2)',
+          rankLabelBorder: 'rgba(255, 215, 0, 0.6)',
+          rankLabelText: t('Champion'),
+          cardBg:
+            'linear-gradient(140deg, rgba(255, 215, 0, 0.25) 0%, rgba(255, 215, 0, 0.1) 100%)',
+          cardBorder: 'yellow.400',
+          cardShadow: `0 0 20px rgba(255, 215, 0, 0.3), 0 0 0 1px rgba(255,215,0,0.5)`, // Slightly reduced shadow
+          trophySectionBg: 'rgba(255, 215, 0, 0.15)',
+          trophyTextColor: 'yellow.300',
+          nameColor: 'yellow.400',
+        }
       if (rank === 2)
-        return 'linear-gradient(135deg, rgba(192, 192, 192, 0.12) 0%, rgba(192, 192, 192, 0.03) 100%)'
+        return {
+          ...base,
+          textColor: 'gray.200',
+          iconColor: 'gray.200',
+          rankIcon: Medal,
+          rankIconContainerBg: 'rgba(192, 192, 192, 0.2)',
+          rankIconContainerBorder: 'rgba(192, 192, 192, 0.6)',
+          rankLabelBg: 'rgba(192, 192, 192, 0.2)',
+          rankLabelBorder: 'rgba(192, 192, 192, 0.6)',
+          rankLabelText: t('Silver'),
+          cardBg:
+            'linear-gradient(140deg, rgba(192, 192, 192, 0.25) 0%, rgba(192, 192, 192, 0.1) 100%)',
+          cardBorder: 'gray.300',
+          cardShadow: `0 0 20px rgba(192,192,192,0.25), 0 0 0 1px rgba(192,192,192,0.4)`, // Slightly reduced shadow
+          trophySectionBg: 'rgba(192, 192, 192, 0.15)',
+          trophyTextColor: 'gray.100',
+          nameColor: 'gray.200',
+        }
       if (rank === 3)
-        return 'linear-gradient(135deg, rgba(205, 127, 50, 0.12) 0%, rgba(205, 127, 50, 0.03) 100%)'
-      return isCurrentUser
-        ? 'linear-gradient(135deg, rgba(138, 75, 255, 0.12) 0%, rgba(138, 75, 255, 0.03) 100%)'
-        : 'linear-gradient(135deg, rgba(30, 41, 59, 0.8) 0%, rgba(15, 23, 42, 0.8) 100%)'
-    }, [rank, isCurrentUser])
+        return {
+          ...base,
+          textColor: 'orange.300',
+          iconColor: 'orange.300',
+          rankIcon: Medal,
+          rankIconContainerBg: 'rgba(205, 127, 50, 0.2)',
+          rankIconContainerBorder: 'rgba(205, 127, 50, 0.6)',
+          rankLabelBg: 'rgba(205, 127, 50, 0.2)',
+          rankLabelBorder: 'rgba(205, 127, 50, 0.6)',
+          rankLabelText: t('Bronze'),
+          cardBg:
+            'linear-gradient(140deg, rgba(205, 127, 50, 0.25) 0%, rgba(205, 127, 50, 0.1) 100%)',
+          cardBorder: 'orange.400',
+          cardShadow: `0 0 20px rgba(205,127,50,0.3), 0 0 0 1px rgba(205,127,50,0.4)`, // Slightly reduced shadow
+          trophySectionBg: 'rgba(205, 127, 50, 0.15)',
+          trophyTextColor: 'orange.200',
+          nameColor: 'orange.300',
+        }
+      return base
+    }, [rank, t, isCurrentUser])
 
-    // Animation variants
     const cardVariants = {
-      hidden: { opacity: 0, scale: 0.96, y: 10 },
+      // Animation variants remain the same
+      hidden: { opacity: 0, y: 20, scale: 0.96 },
       visible: {
         opacity: 1,
-        scale: 1,
         y: 0,
+        scale: 1,
         transition: {
           type: 'spring',
-          stiffness: 260,
-          damping: 20,
-          duration: 0.2,
+          stiffness: 320,
+          damping: 28,
+          duration: 0.3,
         },
       },
       hover: {
-        scale: 1.02,
-        boxShadow:
-          '0 4px 15px -3px rgba(0,0,0,0.2), 0 3px 6px -2px rgba(0,0,0,0.1)',
-        transition: {
-          type: 'spring',
-          stiffness: 400,
-          damping: 15,
-        },
+        scale: 1.01, // Slightly less scale on hover
+        boxShadow: isPopoverOpen
+          ? rankStyle.cardShadow
+          : rank <= 3
+          ? rankStyle.cardShadow.replace('20px', '25px').replace('0.3)', '0.4)') // Adjust hover shadow
+          : '0 5px 15px rgba(0,0,0,0.2)', // Adjust hover shadow
+        borderColor: isPopoverOpen
+          ? 'purple.300'
+          : rank <= 3
+          ? rankStyle.borderColor
+          : 'rgba(255,255,255,0.12)',
+        transition: { type: 'spring', stiffness: 380, damping: 18 },
       },
       tap: {
-        scale: 0.98,
-        transition: {
-          type: 'spring',
-          stiffness: 300,
-          damping: 10,
-        },
+        scale: 0.99, // Slightly less scale on tap
+        transition: { type: 'spring', stiffness: 400, damping: 15 },
       },
     }
 
-    // Button animation variants
     const buttonVariants = {
-      initial: { opacity: 0, y: 10 },
-      animate: {
-        opacity: 1,
-        y: 0,
-        transition: {
-          type: 'spring',
-          stiffness: 300,
-          damping: 20,
-        },
-      },
-      hover: {
-        scale: 1.05,
-        boxShadow: '0 0 15px rgba(138, 75, 255, 0.4)',
-        transition: {
-          type: 'spring',
-          stiffness: 400,
-          damping: 10,
-        },
-      },
-      tap: { scale: 0.95 },
+      /* Popover button variants remain same */
     }
 
-    const topRankBeforeStyle =
-      rank <= 3
-        ? {
-            content: '""',
-            position: 'absolute',
-            top: 0,
-            left: 0,
-            right: 0,
-            height: '1px',
-            background: `linear-gradient(90deg, transparent 0%, ${rankBadge.color} 50%, transparent 100%)`,
-            opacity: 0.5,
-          }
-        : {}
-
-    const handleCardClick = () => {
-      onOpen()
-    }
-
-    const handleProfileClick = () => {
-      onClose()
+    const handleProfileClickInPopover = () => {
+      onPopoverClose()
       onViewProfile(user.inGameName)
+    }
+
+    const formatStatValue = (value, isPercentage = false) => {
+      if (value === undefined || value === null) return 'N/A'
+      const numValue = parseFloat(value)
+      if (isNaN(numValue)) return 'N/A'
+      return isPercentage ? `${numValue.toFixed(1)}%` : numValue.toFixed(1)
+    }
+
+    const formatStatValueInteger = value => {
+      if (value === undefined || value === null) return 'N/A'
+      const numValue = parseInt(value, 10)
+      if (isNaN(numValue)) return 'N/A'
+      return numValue
     }
 
     return (
       <Popover
-        isOpen={isOpen}
-        onClose={onClose}
+        isOpen={isPopoverOpen}
+        onClose={onPopoverClose}
         closeOnBlur={true}
         autoFocus={false}
         isLazy
       >
         <PopoverTrigger>
-          <Box ref={cardRef}>
+          <Box ref={cardRef} px={{ base: 0.5, md: 1 }}>
+            {' '}
+            {/* Outer spacing for scrollbar */}
             <MotionBox
               variants={cardVariants}
               initial="hidden"
               animate="visible"
               whileHover="hover"
               whileTap="tap"
-              onClick={handleCardClick}
+              onClick={handleCardClickForPopover}
               cursor="pointer"
               position="relative"
               overflow="hidden"
-              background={cardGradient}
-              borderRadius="xl"
-              p={3}
-              my={1.5}
-              mx={0}
+              bg={rankStyle.cardBg}
+              borderRadius="lg" // Slightly less rounded for thinner feel
+              px={3} // Reduced horizontal padding
+              py={2} // Reduced vertical padding
+              my={1.5} // Reduced inter-card margin
               borderWidth="1px"
-              borderColor={
-                isCurrentUser
-                  ? 'rgba(138, 75, 255, 0.2)'
-                  : isOpen
-                  ? 'rgba(138, 75, 255, 0.3)'
-                  : 'rgba(255, 255, 255, 0.03)'
-              }
+              borderColor={isPopoverOpen ? 'purple.300' : rankStyle.cardBorder}
               boxShadow={
-                isCurrentUser
-                  ? '0 0 15px -5px rgba(138, 75, 255, 0.15)'
-                  : isOpen
-                  ? '0 0 20px -5px rgba(138, 75, 255, 0.3)'
-                  : rank <= 3
-                  ? '0 0 15px -5px rgba(255, 215, 0, 0.1)'
-                  : 'none'
+                isPopoverOpen
+                  ? '0 0 25px rgba(138, 75, 255, 0.3)' // Reduced popover open shadow
+                  : rankStyle.cardShadow
               }
-              _before={topRankBeforeStyle}
             >
-              {/* Rank indicator and user info */}
-              <Flex align="center" ml={-1}>
-                <Box
-                  minW="28px"
-                  height="28px"
-                  bg={rankBadge.bg}
-                  borderRadius="lg"
-                  display="flex"
-                  alignItems="center"
-                  justifyContent="center"
-                  mr={2}
-                  border="1px solid"
-                  borderColor={rankBadge.borderColor}
-                >
-                  {rankBadge.icon ? (
+              {/* Top Section */}
+              <VStack align="stretch" spacing={0.5} mb={1.5}>
+                {' '}
+                {/* Reduced spacing and mb */}
+                <HStack spacing={2} align="center" width="100%">
+                  {' '}
+                  {/* Reduced spacing */}
+                  <VStack
+                    w="36px"
+                    h="36px" // Reduced size
+                    flexShrink={0}
+                    bg={rankStyle.rankIconContainerBg}
+                    borderRadius="md" // Reduced border radius
+                    alignItems="center"
+                    justifyContent="center"
+                    border="1px solid" // Thinner border
+                    borderColor={rankStyle.rankIconContainerBorder}
+                    spacing={0}
+                  >
                     <Icon
-                      as={rankBadge.icon}
-                      color={rankBadge.color}
-                      boxSize={4}
+                      as={rankStyle.rankIcon}
+                      color={rankStyle.iconColor}
+                      boxSize={rank <= 3 ? '18px' : '14px'} // Reduced icon size
                     />
-                  ) : (
+                    {rank > 3 && (
+                      <Text
+                        fontWeight="semibold" // Slightly less bold
+                        fontSize="xs" // Reduced font size
+                        color={rankStyle.iconColor}
+                        mt={-0.5}
+                      >
+                        {rank}
+                      </Text>
+                    )}
+                  </VStack>
+                  <Avatar
+                    size="sm" // Reduced avatar size
+                    name={user.name}
+                    src={user.pic}
+                    borderWidth="1.5px" // Thinner border
+                    flexShrink={0}
+                    borderColor={
+                      rank <= 3
+                        ? rankStyle.borderColor
+                        : isCurrentUser
+                        ? 'purple.300'
+                        : 'transparent'
+                    }
+                    boxShadow={
+                      // Reduced shadow
+                      rank <= 3
+                        ? `0 0 5px ${rankStyle.iconColor}44`
+                        : isCurrentUser
+                        ? '0 0 5px rgba(138,75,255,0.4)'
+                        : 'none'
+                    }
+                  />
+                  <VStack align="start" spacing={0} flexGrow={1} minWidth={0}>
                     <Text
-                      fontWeight="bold"
-                      fontSize="xs"
-                      color={rankBadge.color}
+                      fontWeight="semibold"
+                      color={rankStyle.nameColor}
+                      fontSize="sm" // Reduced font size
+                      lineHeight="1.2" // Reduced line height
+                      wordBreak="break-word"
+                      noOfLines={1} // Attempt to keep name on one line, will truncate with ... if too long
                     >
-                      {rank}
+                      {user.inGameName || user.name}
                     </Text>
-                  )}
-                </Box>
-
-                {/* User info */}
-                <Avatar
-                  size="sm"
-                  name={user.name}
-                  src={user.pic}
-                  mr={2}
-                  borderWidth={isCurrentUser || rank <= 3 ? '1.5px' : '0px'}
-                  borderColor={
-                    rank <= 3
-                      ? rankBadge.color
-                      : isCurrentUser
-                      ? 'purple.500'
-                      : 'transparent'
-                  }
-                />
-
-                <VStack spacing={0} align="start" flex="1">
-                  <Text
-                    fontWeight="semibold"
-                    color={rank <= 3 ? rankBadge.color : 'white'}
-                    fontSize="sm"
-                    isTruncated
-                  >
-                    {user.inGameName || user.name}
-                  </Text>
-                  {user.inGameName !== user.name && (
                     <Text
-                      fontSize="xs"
-                      color="whiteAlpha.600"
-                      isTruncated
-                      noOfLines={1}
-                    >
-                      {user.name}
-                    </Text>
-                  )}
-                </VStack>
-
-                {/* Badge for top ranks */}
-                {rankBadge.label && (
-                  <Box
-                    px={2}
-                    py={0.5}
-                    borderRadius="full"
-                    bg={rankBadge.bg}
-                    borderWidth="1px"
-                    borderColor={rankBadge.borderColor}
-                  >
-                    <Text
-                      fontSize="xs"
+                      fontSize="2xs" // Reduced font size
+                      color={isCurrentUser ? 'purple.300' : 'whiteAlpha.600'}
                       fontWeight="medium"
-                      color={rankBadge.color}
                     >
-                      {rankBadge.label}
+                      {isCurrentUser ? t('You') : t('Player')}
                     </Text>
+                  </VStack>
+                </HStack>
+                {rankStyle.rankLabelText && (
+                  <Box>
+                    <Box
+                      display="inline-block"
+                      px={2} // Reduced padding
+                      py={0.5} // Reduced padding
+                      borderRadius="sm" // Reduced border radius
+                      bg={rankStyle.rankLabelBg}
+                      borderWidth="1px"
+                      borderColor={rankStyle.rankLabelBorder}
+                      boxShadow={`0 1px 2px ${rankStyle.iconColor}11`} // Reduced shadow
+                    >
+                      <Text
+                        fontSize="2xs" // Reduced font size
+                        fontWeight="semibold" // Slightly less bold
+                        color={rankStyle.textColor}
+                        textTransform="uppercase"
+                        letterSpacing="0.03em" // Tighter letter spacing
+                      >
+                        {rankStyle.rankLabelText}
+                      </Text>
+                    </Box>
                   </Box>
                 )}
+              </VStack>
+
+              {/* Trophy Section */}
+              <Flex
+                align="center"
+                justify="center"
+                py={1.5} // Reduced vertical padding
+                px={3} // Reduced horizontal padding
+                bg={rankStyle.trophySectionBg}
+                borderRadius="md" // Reduced border radius
+                border="1px solid" // Thinner border
+                borderColor={
+                  rank <= 3
+                    ? `${rankStyle.iconColor}33` // Softer border for top ranks
+                    : 'rgba(255,255,255,0.05)'
+                }
+                boxShadow={`inset 0 1px 2px rgba(0,0,0,0.15), 0 1px 1px ${
+                  // Reduced shadow
+                  rank <= 3 ? `${rankStyle.iconColor}11` : 'transparent'
+                }`}
+              >
+                <Icon
+                  as={Trophy}
+                  color={rankStyle.trophyTextColor}
+                  boxSize={5} // Reduced icon size
+                  mr={1.5} // Reduced margin
+                />
+                <VStack spacing={0} align="flex-start">
+                  <Text
+                    fontSize="lg" // Reduced font size
+                    fontWeight="bold" // Slightly less bold
+                    color={rankStyle.trophyTextColor}
+                    lineHeight={1}
+                  >
+                    {user.trophies || 0}
+                  </Text>
+                  <Text
+                    fontSize="3xs" // Reduced font size (ensure this is defined or use 2xs)
+                    color="whiteAlpha.600" // Slightly dimmer
+                    fontWeight="normal"
+                    textTransform="uppercase"
+                    letterSpacing="0.03em" // Tighter
+                  >
+                    {t('Trophies')}
+                  </Text>
+                </VStack>
               </Flex>
 
-              {/* Stats */}
-              <Flex justify="space-between" align="center" mt={2} px={1}>
-                <StatItem
-                  icon={Trophy}
-                  label={t('Wins')}
-                  value={user.wins}
-                  color="#4ADE80"
-                />
-                <StatItem
-                  icon={TrendingUp}
-                  label={t('Win %')}
-                  value={`${user.winRate}%`}
-                  color="#5EADFF"
-                />
-                <StatItem
-                  icon={Award}
-                  label={t('Avg')}
-                  value={user.avgScore}
-                  color="#A78BFA"
+              {/* Arrow Button to Toggle Stats */}
+              <Flex justifyContent="center" mt={1} mb={isStatsExpanded ? 0 : 0}>
+                {' '}
+                {/* Reduced mt, mb set to 0 when collapsed */}
+                <IconButton
+                  aria-label={
+                    isStatsExpanded ? t('Hide stats') : t('Show stats')
+                  }
+                  aria-expanded={isStatsExpanded}
+                  icon={
+                    isStatsExpanded ? (
+                      <Icon as={ChevronUp} boxSize={4} />
+                    ) : (
+                      <Icon as={ChevronDown} boxSize={4} />
+                    )
+                  } // Reduced icon size
+                  onClick={handleToggleStats}
+                  variant="ghost"
+                  size="xs" // Reduced button size
+                  minW="auto" // Allow button to be smaller
+                  h="auto" // Allow button to be smaller
+                  p={1} // Minimal padding for the button
+                  isRound
+                  color="whiteAlpha.500" // Dimmer color
+                  _hover={{ bg: 'whiteAlpha.05', color: 'whiteAlpha.800' }}
+                  zIndex={1}
                 />
               </Flex>
+
+              {/* Collapsible Stats Section */}
+              <Collapse in={isStatsExpanded} animateOpacity unmountOnExit>
+                <Box pt={1.5}>
+                  {' '}
+                  {/* Reduced padding top */}
+                  <SimpleGrid columns={2} spacing={1.5}>
+                    {' '}
+                    {/* Reduced spacing */}
+                    {/* StatItems - Consider making StatItem internally more compact too */}
+                    <StatItem
+                      icon={Trophy}
+                      label={t('1v1 Wins')}
+                      value={formatStatValueInteger(
+                        user.wins1v1 !== undefined ? user.wins1v1 : user.wins,
+                      )}
+                      color="#58D68D"
+                    />
+                    {/* ... other StatItems ... */}
+                    <StatItem
+                      icon={Users}
+                      label={t('4v4 Wins')}
+                      value={formatStatValueInteger(user.wins4v4)}
+                      color="#F39C12"
+                    />
+                    <StatItem
+                      icon={TrendingUp}
+                      label={t('1v1 Win %')}
+                      value={formatStatValue(
+                        user.winRate1v1 !== undefined
+                          ? user.winRate1v1
+                          : user.winRate,
+                        true,
+                      )}
+                      color="#5DADE2"
+                    />
+                    <StatItem
+                      icon={Percent}
+                      label={t('4v4 Win Rate')}
+                      value={formatStatValue(user.winRate4v4, true)}
+                      color="#3498DB"
+                    />
+                    <StatItem
+                      icon={Award}
+                      label={t('1v1 Avg Score')}
+                      value={formatStatValue(
+                        user.avgScore1v1 !== undefined
+                          ? user.avgScore1v1
+                          : user.avgScore,
+                      )}
+                      color="#AF7AC5"
+                    />
+                    <StatItem
+                      icon={Target}
+                      label={t('4v4 Avg Score')}
+                      value={formatStatValue(user.avgScore4v4)}
+                      color="#1ABC9C"
+                    />
+                  </SimpleGrid>
+                </Box>
+              </Collapse>
             </MotionBox>
           </Box>
         </PopoverTrigger>
 
+        {/* Popover Content - remains same */}
         <Portal>
           <PopoverContent
-            bg="rgba(20, 20, 40, 0.95)"
-            borderColor="purple.500"
+            bg="rgba(18, 21, 40, 0.97)"
+            borderColor="purple.400"
             borderWidth="1px"
-            boxShadow="0 10px 25px rgba(0, 0, 0, 0.5)"
-            backdropFilter="blur(10px)"
+            boxShadow="0 12px 30px rgba(0, 0, 0, 0.6)"
+            backdropFilter="blur(12px)"
             _focus={{ outline: 'none' }}
-            zIndex={1500} // Ensure it appears above the modal
-            borderRadius="lg"
+            zIndex={1500}
+            borderRadius="md"
             overflow="hidden"
-            width="160px"
+            width="170px"
           >
             <PopoverArrow
-              bg="rgba(20, 20, 40, 0.95)"
-              borderColor="purple.500"
+              bg="rgba(18, 21, 40, 0.97)"
+              borderColor="purple.400"
             />
             <PopoverBody p={0}>
               <AnimatePresence>
@@ -353,20 +508,24 @@ const LeaderboardCard = React.memo(
                   animate="animate"
                   whileHover="hover"
                   whileTap="tap"
-                  leftIcon={<Icon as={UserRound} />}
-                  rightIcon={<Icon as={ExternalLink} size={14} />}
-                  onClick={handleProfileClick}
-                  bg="rgba(138, 75, 255, 0.2)"
-                  _hover={{}}
+                  leftIcon={<Icon as={UserRound} boxSize="18px" />}
+                  rightIcon={<Icon as={ExternalLink} size={16} />}
+                  onClick={handleProfileClickInPopover}
+                  bg="transparent"
+                  _hover={{
+                    bgGradient:
+                      'linear(to-r, rgba(138, 75, 255, 0.35), rgba(138, 75, 255, 0.45))',
+                  }}
                   _active={{}}
-                  color="white"
+                  color="whiteAlpha.900"
                   fontSize="sm"
                   width="100%"
                   borderRadius="0"
                   height="50px"
                   justifyContent="space-between"
                   fontWeight="medium"
-                  bgGradient="linear(to-r, rgba(138, 75, 255, 0.2), rgba(138, 75, 255, 0.3))"
+                  px={4}
+                  bgGradient="linear(to-r, rgba(138, 75, 255, 0.25), rgba(138, 75, 255, 0.35))"
                 >
                   {t('View Profile')}
                 </MotionButton>
@@ -380,5 +539,4 @@ const LeaderboardCard = React.memo(
 )
 
 LeaderboardCard.displayName = 'LeaderboardCard'
-
 export default LeaderboardCard

@@ -1,10 +1,17 @@
 // services/quickClashServices/quickClashLeaderboardService.js
-const QuickClashChallenge = require('../../model/quickClashSchemas/quickClashChallengeSchema')
 const User = require('../../model/userSchema')
-const mongoose = require('mongoose')
+// Import the new history schemas
+const QuickClashTrophyHistory = require('../../model/quickClashSchemas/quickClashTrophyHistorySchema')
+const QuickClashTeamTrophyHistory = require('../../model/quickClashSchemas/quickClashTeamTrophyHistorySchema')
+// QuickClashChallenge is needed for the $lookup target collection name and its schema structure (scores, fromTeamBattle).
+const QuickClashChallenge = require('../../model/quickClashSchemas/quickClashChallengeSchema')
+// QuickClashTeamBattle model might not be directly queried for stats aggregation anymore,
+// but keeping the import in case its collection name or other details are needed.
+const QuickClashTeamBattle = require('../../model/quickClashSchemas/quickClashTeamBattleSchema')
 
 /**
- * Get Quick Clash leaderboard data
+ * Get Quick Clash leaderboard data, sorted by trophies.
+ * Includes 1v1 and 4v4 auxiliary stats.
  * @param {Object} params - Parameters
  * @param {number} params.page - Page number (starting from 1)
  * @param {number} params.limit - Number of items per page
@@ -13,192 +20,274 @@ const mongoose = require('mongoose')
  */
 const getLeaderboard = async ({ page = 1, limit = 20, searchQuery = '' }) => {
   try {
-    // Convert page and limit to numbers
-    page = parseInt(page)
-    limit = parseInt(limit)
+    page = parseInt(page) || 1
+    limit = parseInt(limit) || 20
 
-    // First perform a basic pipeline to gather all user stats
-    const baseStatsPipeline = [
-      // Match completed challenges
-      { $match: { status: 'completed' } },
-
-      // Unwind both challenger and opponent
+    // === 1. Fetch 1v1 Auxiliary Stats using QuickClashTrophyHistory ===
+    const individualStatsPipeline = [
       {
-        $facet: {
-          // Process challenger stats
-          challengerStats: [
-            { $match: { challengerAttempted: true, opponentAttempted: true } },
-            {
-              $project: {
-                userId: '$challenger',
-                isWinner: {
-                  $cond: [
-                    { $and: [{ $gt: ['$challengerScore', '$opponentScore'] }] },
-                    true,
-                    false,
-                  ],
-                },
-                score: '$challengerScore',
-                isTie: { $eq: ['$challengerScore', '$opponentScore'] },
-              },
-            },
-          ],
-          // Process opponent stats
-          opponentStats: [
-            { $match: { challengerAttempted: true, opponentAttempted: true } },
-            {
-              $project: {
-                userId: '$opponent',
-                isWinner: {
-                  $cond: [
-                    { $and: [{ $gt: ['$opponentScore', '$challengerScore'] }] },
-                    true,
-                    false,
-                  ],
-                },
-                score: '$opponentScore',
-                isTie: { $eq: ['$challengerScore', '$opponentScore'] },
-              },
-            },
-          ],
+        $lookup: {
+          // Use Model.collection.name to robustly get the collection name
+          from: QuickClashChallenge.collection.name,
+          localField: 'challenge',
+          foreignField: '_id',
+          as: 'challengeDetailsArr', // Use a different name to avoid conflict if 'challengeDetails' is a field
         },
       },
-
-      // Combine the challenger and opponent stats
+      {
+        // $unwind will filter out history records with no matching challenge (if any)
+        $unwind: '$challengeDetailsArr',
+      },
+      {
+        // Filter based on the properties of the looked-up challenge
+        $match: {
+          'challengeDetailsArr.status': 'completed',
+          'challengeDetailsArr.challenger': { $ne: null, $exists: true },
+          'challengeDetailsArr.opponent': { $ne: null, $exists: true },
+          // Ensure it's a standalone 1v1 challenge, not part of a team battle
+          'challengeDetailsArr.fromTeamBattle': { $ne: true },
+        },
+      },
       {
         $project: {
-          combinedStats: {
-            $concatArrays: ['$challengerStats', '$opponentStats'],
+          userId: '$user', // User from the QuickClashTrophyHistory record
+          isWinner: { $eq: ['$result', 'win'] }, // Result from QuickClashTrophyHistory
+          // Determine the score of THIS user in that specific challenge
+          score: {
+            $cond: {
+              if: { $eq: ['$user', '$challengeDetailsArr.challenger'] },
+              then: '$challengeDetailsArr.challengerScore',
+              else: {
+                // User must be the opponent
+                $cond: {
+                  if: { $eq: ['$user', '$challengeDetailsArr.opponent'] },
+                  then: '$challengeDetailsArr.opponentScore',
+                  else: 0, // Fallback, ideally $user is always challenger or opponent
+                },
+              },
+            },
           },
         },
       },
-      { $unwind: '$combinedStats' },
-      { $replaceRoot: { newRoot: '$combinedStats' } },
-
-      // Group by user and calculate stats
       {
         $group: {
           _id: '$userId',
-          totalChallenges: { $sum: 1 },
-          wins: { $sum: { $cond: ['$isWinner', 1, 0] } },
-          ties: { $sum: { $cond: ['$isTie', 1, 0] } },
-          totalScore: { $sum: '$score' },
+          totalChallenges1v1: { $sum: 1 },
+          wins1v1: { $sum: { $cond: ['$isWinner', 1, 0] } },
+          totalScore1v1: { $sum: '$score' },
         },
       },
-
-      // Calculate derived stats
       {
         $project: {
-          _id: 1,
-          totalChallenges: 1,
-          wins: 1,
-          ties: 1,
-          winRate: {
-            $round: [
-              {
-                $multiply: [
-                  { $divide: ['$wins', { $max: ['$totalChallenges', 1] }] },
-                  100,
+          _id: 1, // User ID
+          wins1v1: 1,
+          winRate1v1: {
+            $cond: {
+              if: { $gt: ['$totalChallenges1v1', 0] },
+              then: {
+                $round: [
+                  {
+                    $multiply: [
+                      { $divide: ['$wins1v1', '$totalChallenges1v1'] },
+                      100,
+                    ],
+                  },
+                  1,
                 ],
               },
-              1,
-            ],
+              else: 0,
+            },
           },
-          avgScore: {
-            $round: [
-              { $divide: ['$totalScore', { $max: ['$totalChallenges', 1] }] },
-              1,
-            ],
+          avgScore1v1: {
+            $cond: {
+              if: { $gt: ['$totalChallenges1v1', 0] },
+              then: {
+                $round: [
+                  { $divide: ['$totalScore1v1', '$totalChallenges1v1'] },
+                  1,
+                ],
+              },
+              else: 0,
+            },
           },
         },
       },
     ]
-
-    // Execute the base pipeline
-    const userStatsResults = await QuickClashChallenge.aggregate(
-      baseStatsPipeline,
+    const individualAggregatedStats = await QuickClashTrophyHistory.aggregate(
+      individualStatsPipeline,
     )
 
-    // Get ALL user details regardless of search query
-    const allUserIds = userStatsResults.map(stat => stat._id)
-    const allUsers = await User.find({ _id: { $in: allUserIds } })
-      .select('_id name inGameName pic')
-      .lean()
-
-    // Create maps for quick lookups
-    const userDetailsMap = {}
-    allUsers.forEach(user => {
-      userDetailsMap[user._id.toString()] = user
+    const individualStatsMap = new Map()
+    individualAggregatedStats.forEach(stat => {
+      if (stat._id) {
+        // stat._id is the user's ObjectId
+        individualStatsMap.set(stat._id.toString(), {
+          wins1v1: stat.wins1v1 || 0,
+          winRate1v1: stat.winRate1v1 || 0,
+          avgScore1v1: stat.avgScore1v1 || 0,
+        })
+      }
     })
 
-    // Combine ALL stats with user details and apply sorting to get global rankings
-    const allCombinedResults = userStatsResults
-      .filter(stat => userDetailsMap[stat._id.toString()])
-      .map(stat => {
-        const user = userDetailsMap[stat._id.toString()]
-        return {
-          _id: stat._id,
-          name: user.name,
-          inGameName: user.inGameName,
-          pic: user.pic,
-          totalChallenges: stat.totalChallenges,
-          wins: stat.wins,
-          ties: stat.ties,
-          winRate: stat.winRate,
-          avgScore: stat.avgScore,
-        }
-      })
+    // === 2. Fetch 4v4 Auxiliary Stats using QuickClashTeamTrophyHistory ===
+    // This approach is much simpler as QuickClashTeamTrophyHistory contains user-specific battle outcomes and scores.
+    const teamBattleStatsPipeline = [
+      // We assume QuickClashTeamTrophyHistory records are created for completed battles
+      // where a result ('win', 'loss', 'tie') is determined for the user's team.
+      // The 'userParticipated' field is crucial.
+      {
+        $match: {
+          userParticipated: true, // Only consider stats if the user actually participated
+        },
+      },
+      {
+        $group: {
+          _id: '$user', // Group by user
+          totalBattles4v4: { $sum: 1 }, // Each matching record is a participated battle
+          wins4v4: {
+            $sum: {
+              $cond: [{ $eq: ['$result', 'win'] }, 1, 0], // Count if result is 'win'
+            },
+          },
+          // Sum userScore (directly available in QuickClashTeamTrophyHistory)
+          totalScore4v4: { $sum: '$userScore' },
+        },
+      },
+      {
+        $project: {
+          _id: 1, // User ID
+          wins4v4: 1,
+          winRate4v4: {
+            $cond: {
+              if: { $gt: ['$totalBattles4v4', 0] },
+              then: {
+                $round: [
+                  {
+                    $multiply: [
+                      { $divide: ['$wins4v4', '$totalBattles4v4'] },
+                      100,
+                    ],
+                  },
+                  1,
+                ],
+              },
+              else: 0,
+            },
+          },
+          avgScore4v4: {
+            $cond: {
+              if: { $gt: ['$totalBattles4v4', 0] },
+              then: {
+                $round: [
+                  { $divide: ['$totalScore4v4', '$totalBattles4v4'] },
+                  1,
+                ],
+              },
+              else: 0,
+            },
+          },
+        },
+      },
+    ]
+    const teamBattleAggregatedStats =
+      await QuickClashTeamTrophyHistory.aggregate(teamBattleStatsPipeline)
 
-    // Sort by wins, then winRate, then avgScore to determine global ranks
-    allCombinedResults.sort((a, b) => {
-      // Sort by wins first
-      if (b.wins !== a.wins) return b.wins - a.wins
-      // Then by win rate
-      if (b.winRate !== a.winRate) return b.winRate - a.winRate
-      // Then by avg score
-      return b.avgScore - a.avgScore
+    const teamStatsMap = new Map()
+    teamBattleAggregatedStats.forEach(stat => {
+      if (stat._id) {
+        // stat._id is the user's ObjectId
+        teamStatsMap.set(stat._id.toString(), {
+          wins4v4: stat.wins4v4 || 0,
+          winRate4v4: stat.winRate4v4 || 0,
+          avgScore4v4: stat.avgScore4v4 || 0,
+        })
+      }
     })
 
-    // Assign global ranks to all users
-    const resultsWithGlobalRanks = allCombinedResults.map((user, index) => ({
-      ...user,
-      rank: index + 1, // Global rank (1-based)
-    }))
-
-    // Now apply search filter if provided while preserving global ranks
-    let filteredResults = resultsWithGlobalRanks
-
+    // === 3. Fetch Users, Rank, and Paginate ===
+    let userQuery = {}
     if (searchQuery) {
       const searchRegex = new RegExp(searchQuery, 'i')
-      filteredResults = resultsWithGlobalRanks.filter(
-        user =>
-          searchRegex.test(user.name) || searchRegex.test(user.inGameName),
-      )
+      // Ensure search targets fields present in the User model
+      userQuery = { $or: [{ name: searchRegex }, { inGameName: searchRegex }] }
     }
 
-    // Calculate pagination info based on filtered results
-    const totalUsers = filteredResults.length
-    const totalPages = Math.ceil(totalUsers / limit)
+    const totalMatchingUsers = await User.countDocuments(userQuery)
+
+    const usersFromDB = await User.find(userQuery)
+      .select('_id name inGameName pic quickClashTrophies')
+      .sort({ quickClashTrophies: -1, name: 1 }) // Primary sort by trophies, secondary by name for tie-breaking
+      .skip((page - 1) * limit)
+      .limit(limit)
+      .lean()
+
+    // For global ranking: Fetch all users' trophies.
+    // This matches the original implementation for determining global rank.
+    const allUserTrophiesForRanking = await User.find({}) // Fetch all users for global ranking context
+      .select('_id quickClashTrophies')
+      .sort({ quickClashTrophies: -1, name: 1 }) // Consistent sort for ranking
+      .lean()
+
+    const rankMap = new Map()
+    // Assign rank based on the sorted order. Users with same trophies, sorted by name next, get sequential ranks.
+    allUserTrophiesForRanking.forEach((u, index) => {
+      rankMap.set(u._id.toString(), index + 1)
+    })
+
+    // === 4. Combine All Data ===
+    const leaderboardUsers = usersFromDB.map(user => {
+      const stats1v1 = individualStatsMap.get(user._id.toString()) || {
+        wins1v1: 0,
+        winRate1v1: 0,
+        avgScore1v1: 0,
+      }
+      const stats4v4 = teamStatsMap.get(user._id.toString()) || {
+        wins4v4: 0,
+        winRate4v4: 0,
+        avgScore4v4: 0,
+      }
+
+      return {
+        _id: user._id.toString(),
+        name: user.name,
+        inGameName: user.inGameName,
+        pic: user.pic,
+        trophies: user.quickClashTrophies || 0,
+        rank: rankMap.get(user._id.toString()) || 0, // Get global rank from map
+
+        // Original fields for backward compatibility or primary display (derived from 1v1)
+        wins: stats1v1.wins1v1,
+        winRate: stats1v1.winRate1v1,
+        avgScore: stats1v1.avgScore1v1,
+
+        // Explicit 1v1 stats
+        wins1v1: stats1v1.wins1v1,
+        winRate1v1: stats1v1.winRate1v1,
+        avgScore1v1: stats1v1.avgScore1v1,
+
+        // Explicit 4v4 stats
+        wins4v4: stats4v4.wins4v4,
+        winRate4v4: stats4v4.winRate4v4,
+        avgScore4v4: stats4v4.avgScore4v4,
+      }
+    })
+
+    const totalPages = Math.ceil(totalMatchingUsers / limit)
     const hasMore = page < totalPages
 
-    // Calculate skip value for pagination
-    const skip = (page - 1) * limit
-
-    // Paginate results while preserving original ranks
-    const paginatedResults = filteredResults.slice(skip, skip + limit)
-
     return {
-      users: paginatedResults,
+      users: leaderboardUsers,
       pagination: {
         page,
         limit,
-        totalUsers,
+        totalUsers: totalMatchingUsers, // Total users matching the search query
         totalPages,
         hasMore,
       },
     }
   } catch (error) {
     console.error('Error fetching leaderboard data:', error)
+    // Depending on application's error handling strategy, rethrow or return a formatted error
     throw error
   }
 }

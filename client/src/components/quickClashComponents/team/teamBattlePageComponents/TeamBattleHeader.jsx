@@ -92,6 +92,7 @@ const TeamBattleHeader = ({
             leftIcon={<ArrowLeft size={18} />}
             variant="ghost"
             colorScheme="purple"
+            mr="auto"
             onClick={onGoBack}
             size="md"
             mb={3}

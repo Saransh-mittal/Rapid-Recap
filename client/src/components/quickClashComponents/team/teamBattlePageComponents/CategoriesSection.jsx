@@ -56,45 +56,36 @@ const CategoriesSection = ({
   // Get user's completed categories
   const userCompletedCategories = React.useMemo(() => {
     if (!currentBattle || !userTeam || !user) return []
-
     const teamMembers =
       userTeam === 'teamA'
         ? currentBattle.teamAMembers
         : currentBattle.teamBMembers
-
     const userMember = teamMembers.find(m => m.user._id === user._id)
-
     if (userMember && userMember.completed && userMember.category) {
       return [userMember.category]
     }
-
     return []
   }, [currentBattle, userTeam, user])
 
   // Check if the current user has already participated
   const hasUserParticipated = React.useMemo(() => {
     if (!currentBattle || !userTeam || !user) return false
-
     const teamMembers =
       userTeam === 'teamA'
         ? currentBattle.teamAMembers
         : currentBattle.teamBMembers
-
     const userMember = teamMembers.find(m => m.user._id === user._id)
-
     return userMember && (userMember.participated || userMember.completed)
   }, [currentBattle, userTeam, user])
 
   // Get categories selected by teammates
   const teammatesSelectedCategories = React.useMemo(() => {
     if (!currentBattle || !userTeam || !user) return []
-
     const teamMembers = (
       userTeam === 'teamA'
         ? currentBattle.teamAMembers
         : currentBattle.teamBMembers
     ).filter(m => m.user._id !== user._id)
-
     return teamMembers
       .filter(m => m.category && !m.completed)
       .map(m => m.category)
@@ -121,23 +112,45 @@ const CategoriesSection = ({
 
     const isUserAssigned = challenge[playerField] === user._id
 
-    // Get category icon based on category name
+    // Get category icon and specific colors based on category name
     const getCategoryInfo = () => {
       const categoryLower = challenge.category.toLowerCase()
-      if (categoryLower.includes('business')) {
-        return { icon: '💼', color: 'green' }
-      } else if (categoryLower.includes('tech')) {
-        return { icon: '💻', color: 'blue' }
-      } else if (categoryLower.includes('entertainment')) {
-        return { icon: '🎬', color: 'purple' }
-      } else if (categoryLower.includes('food')) {
-        return { icon: '🍔', color: 'orange' }
-      } else if (categoryLower.includes('sports')) {
-        return { icon: '⚽', color: 'red' }
-      } else if (categoryLower.includes('science')) {
-        return { icon: '🔬', color: 'cyan' }
-      } else {
-        return { icon: '🎯', color: 'gray' }
+      const defaultTextColor = 'white' // Most badges will have white text
+
+      if (categoryLower === 'world') {
+        return { icon: '🌍', bgColor: '#3182CE', textColor: defaultTextColor } // Blue
+      } else if (categoryLower === 'politics') {
+        return { icon: '🏛️', bgColor: '#718096', textColor: defaultTextColor } // Gray
+      } else if (categoryLower === 'business') {
+        return { icon: '💼', bgColor: '#38A169', textColor: defaultTextColor } // Green
+      } else if (categoryLower === 'technology') {
+        return { icon: '💻', bgColor: '#00A3C4', textColor: defaultTextColor } // Cyan/Teal
+      } else if (categoryLower === 'sports') {
+        return { icon: '⚽', bgColor: '#E53E3E', textColor: defaultTextColor } // Red
+      } else if (categoryLower === 'health') {
+        return { icon: '⚕️', bgColor: '#D53F8C', textColor: defaultTextColor } // Pink
+      } else if (categoryLower === 'science') {
+        return { icon: '🔬', bgColor: '#319795', textColor: defaultTextColor } // Teal
+      } else if (categoryLower === 'environment') {
+        return { icon: '🌳', bgColor: '#2F855A', textColor: defaultTextColor } // Dark Green
+      } else if (categoryLower === 'crime') {
+        return { icon: '⚖️', bgColor: '#2D3748', textColor: defaultTextColor } // Very Dark Gray
+      } else if (categoryLower === 'education') {
+        return { icon: '📚', bgColor: '#DD6B20', textColor: defaultTextColor } // Orange
+      } else if (categoryLower === 'entertainment') {
+        return { icon: '🎬', bgColor: '#805AD5', textColor: defaultTextColor } // Purple
+      } else if (categoryLower === 'food') {
+        // Using a yellow that might need dark text, or pick a darker yellow/amber.
+        // Let's use a darker yellow that works with white text.
+        return { icon: '🍔', bgColor: '#B7791F', textColor: defaultTextColor } // Dark Yellow/Brownish
+      } else if (categoryLower === 'lifestyle') {
+        return { icon: '💃', bgColor: '#ED64A6', textColor: defaultTextColor } // Brighter Pink/Magenta
+      } else if (categoryLower === 'tourism') {
+        return { icon: '✈️', bgColor: '#4299E1', textColor: defaultTextColor } // Lighter Blue
+      }
+      // Default fallback
+      else {
+        return { icon: '🎯', bgColor: '#A0AEC0', textColor: defaultTextColor } // Fallback Gray
       }
     }
 
@@ -184,7 +197,6 @@ const CategoriesSection = ({
         height="fit-content"
         minHeight="200px"
       >
-        {/* Animated background gradient */}
         <Box
           position="absolute"
           top={0}
@@ -203,7 +215,6 @@ const CategoriesSection = ({
           opacity={0.8}
         />
 
-        {/* Top highlight stripe */}
         {isAvailable && (
           <Box
             position="absolute"
@@ -216,7 +227,6 @@ const CategoriesSection = ({
           />
         )}
 
-        {/* Floating icon */}
         <Box position="absolute" top={4} right={4} fontSize="2xl" opacity={0.3}>
           {categoryInfo.icon}
         </Box>
@@ -224,8 +234,10 @@ const CategoriesSection = ({
         <VStack spacing={4} align="stretch" position="relative" zIndex={1}>
           <VStack spacing={2} align="flex-start">
             <Badge
-              colorScheme={categoryInfo.color}
-              variant="solid"
+              // Instead of colorScheme, we now use bg and color directly
+              bg={categoryInfo.bgColor}
+              color={categoryInfo.textColor}
+              variant="solid" // Ensure variant is solid for these direct bg/color to work as expected
               px={3}
               py={1}
               borderRadius="full"
@@ -237,21 +249,12 @@ const CategoriesSection = ({
 
             {isAvailable && (
               <Badge
-                colorScheme="green"
+                colorScheme="green" // This badge can still use colorScheme
                 variant="subtle"
                 px={3}
                 py={1}
                 borderRadius="full"
                 fontSize="sm"
-                animate={{
-                  scale: [1, 1.05, 1],
-                  opacity: [0.8, 1, 0.8],
-                }}
-                transition={{
-                  duration: 2,
-                  repeat: Infinity,
-                  repeatType: 'reverse',
-                }}
               >
                 <Icon as={Target} boxSize={3} mr={1} />
                 {t('Available')}
@@ -259,7 +262,6 @@ const CategoriesSection = ({
             )}
           </VStack>
 
-          {/* Status Information */}
           <VStack spacing={2} align="stretch">
             {isCompleted ? (
               <HStack justify="space-between">
@@ -297,7 +299,6 @@ const CategoriesSection = ({
               </Badge>
             )}
 
-            {/* Battle Result if both completed */}
             {isCompleted && opponentCompleted && (
               <HStack justify="space-between" pt={2}>
                 <Text fontSize="sm" color="whiteAlpha.700">
@@ -320,7 +321,6 @@ const CategoriesSection = ({
             )}
           </VStack>
 
-          {/* Action Button */}
           <Box pt={2}>
             {isCompleted ? (
               <Button
@@ -360,7 +360,7 @@ const CategoriesSection = ({
                   width="100%"
                   isLoading={
                     categorySelectionLoading &&
-                    selectedCategoryId === challenge.challenge
+                    selectedCategoryId === challenge.challenge?._id
                   }
                   loadingText={t('Starting...')}
                   borderRadius="lg"
@@ -383,7 +383,6 @@ const CategoriesSection = ({
     )
   }
 
-  // If no battle or user is not part of it, don't render
   if (!currentBattle || !userTeam) return null
 
   return (
@@ -400,7 +399,6 @@ const CategoriesSection = ({
       position="relative"
       overflow="hidden"
     >
-      {/* Background decoration */}
       <Box
         position="absolute"
         top={0}
@@ -462,7 +460,9 @@ const CategoriesSection = ({
         >
           {currentBattle.challenges.map((challenge, index) => (
             <MotionGridItem
-              key={challenge.category}
+              key={`${challenge.category}-${index}-${
+                challenge.challenge?._id || index
+              }`} // More robust key
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ delay: index * 0.1 }}
@@ -472,7 +472,6 @@ const CategoriesSection = ({
           ))}
         </Grid>
 
-        {/* Display message when user already participated */}
         {hasUserParticipated && !userCompletedCategories.length && (
           <Box
             mt={4}
