@@ -1,5 +1,5 @@
-// customHooks/useQuickClashAnalysis.js (Enhanced Version)
-import { useCallback, useEffect, useRef, useState } from 'react'
+// customHooks/useQuickClashAnalysis.js (Optimized Version)
+import { useCallback, useEffect, useRef, useMemo } from 'react'
 import { useDispatch, useSelector } from 'react-redux'
 import { useToast } from '@chakra-ui/react'
 import { useTranslation } from 'react-i18next'
@@ -27,319 +27,135 @@ const useQuickClashAnalysis = () => {
   const { t } = useTranslation('QuickClash')
   const navigate = useNavigate()
 
-  const analysisState = useSelector(state => state.quickClashAnalysis)
-
-  // Enhanced tracking states
-  const [engagementData, setEngagementData] = useState({
-    startTime: null,
-    readingTime: 0,
-    scrollDepth: 0,
-    expanded: false,
-    interactions: [],
-    lastScrollTime: null,
-  })
-
-  const [feedbackState, setFeedbackState] = useState({
-    pendingFeedback: [],
-    submittedFeedback: new Set(),
-    autoFeedbackEnabled: true,
-  })
-
-  // Refs for tracking
-  const pageVisitRef = useRef(null)
-  const scrollTrackingRef = useRef(null)
-  const readingTimerRef = useRef(null)
-  const engagementTimerRef = useRef(null)
-
-  // Initialize engagement tracking when analysis loads
-  useEffect(() => {
-    if (analysisState.currentBattleAnalysis && analysisState.analysisId) {
-      setEngagementData(prev => ({
-        ...prev,
-        startTime: Date.now(),
-        interactions: [],
-      }))
-
-      // Start engagement tracking
-      startEngagementTracking()
-    }
-
-    return () => {
-      // Cleanup timers
-      if (readingTimerRef.current) clearInterval(readingTimerRef.current)
-      if (engagementTimerRef.current) clearInterval(engagementTimerRef.current)
-    }
-  }, [analysisState.currentBattleAnalysis, analysisState.analysisId])
-
-  // Auto-submit engagement data periodically
-  useEffect(() => {
-    if (analysisState.analysisId && engagementData.startTime) {
-      const submitEngagementData = () => {
-        const currentTime = Date.now()
-        const totalTime = currentTime - engagementData.startTime
-
-        if (totalTime > 5000) {
-          // Only submit if user has been on page for 5+ seconds
-          submitImplicitFeedback({
-            readingTime: engagementData.readingTime,
-            scrollDepth: engagementData.scrollDepth,
-            expanded: engagementData.expanded,
-            timeSpent: totalTime,
-            interactions: engagementData.interactions.length,
-          })
-        }
-      }
-
-      // Submit engagement data every 30 seconds
-      engagementTimerRef.current = setInterval(submitEngagementData, 30000)
-
-      // Submit on page unload
-      const handleBeforeUnload = () => {
-        submitEngagementData()
-      }
-      window.addEventListener('beforeunload', handleBeforeUnload)
-
-      return () => {
-        clearInterval(engagementTimerRef.current)
-        window.removeEventListener('beforeunload', handleBeforeUnload)
-      }
-    }
-  }, [analysisState.analysisId, engagementData.startTime])
-
-  const startEngagementTracking = useCallback(() => {
-    // Track reading time (when user is actively reading)
-    let isReading = false
-    let readingStartTime = null
-
-    const handleMouseMove = () => {
-      if (!isReading) {
-        isReading = true
-        readingStartTime = Date.now()
-      }
-    }
-
-    const handleMouseLeave = () => {
-      if (isReading && readingStartTime) {
-        const readingDuration = Date.now() - readingStartTime
-        setEngagementData(prev => ({
-          ...prev,
-          readingTime: prev.readingTime + readingDuration,
-        }))
-        isReading = false
-      }
-    }
-
-    // Track scroll depth
-    const handleScroll = () => {
-      const scrollPercent = Math.round(
-        (window.scrollY / (document.body.scrollHeight - window.innerHeight)) *
-          100,
+  // Memoized selector to prevent unnecessary re-renders
+  const analysisState = useSelector(
+    state => state.quickClashAnalysis,
+    (left, right) => {
+      // Custom equality check for performance
+      return (
+        left.currentBattleAnalysis?._id === right.currentBattleAnalysis?._id &&
+        left.battleAnalysisLoading === right.battleAnalysisLoading &&
+        left.battleAnalysisError === right.battleAnalysisError &&
+        left.followUpQuestions?.length === right.followUpQuestions?.length &&
+        left.allQuestions?.length === right.allQuestions?.length &&
+        left.expandedSections === right.expandedSections
       )
+    },
+  )
 
-      setEngagementData(prev => ({
-        ...prev,
-        scrollDepth: Math.max(prev.scrollDepth, scrollPercent),
-        lastScrollTime: Date.now(),
-      }))
-    }
+  // Refs for performance tracking
+  const performanceRef = useRef({
+    startTime: null,
+    interactions: [],
+    lastSubmission: null,
+  })
 
-    // Add event listeners
-    document.addEventListener('mousemove', handleMouseMove)
-    document.addEventListener('mouseleave', handleMouseLeave)
-    window.addEventListener('scroll', handleScroll)
-
-    // Cleanup function
-    return () => {
-      document.removeEventListener('mousemove', handleMouseMove)
-      document.removeEventListener('mouseleave', handleMouseLeave)
-      window.removeEventListener('scroll', handleScroll)
-
-      if (isReading && readingStartTime) {
-        const finalReadingTime = Date.now() - readingStartTime
-        setEngagementData(prev => ({
-          ...prev,
-          readingTime: prev.readingTime + finalReadingTime,
-        }))
+  // Debounced interaction tracking
+  const trackInteractionDebounced = useRef(
+    debounce((interactionType, data = {}) => {
+      if (process.env.NODE_ENV === 'development') {
+        // Only log in development, removed console.log
       }
-    }
-  }, [])
 
-  const getBattleAnalysis = useCallback(
-    battleId => {
-      // Track interaction
-      trackInteraction('analysis_request', { battleId })
-
-      return dispatch(fetchBattleAnalysis(battleId))
-        .unwrap()
-        .catch(error => {
-          trackInteraction('analysis_error', { battleId, error })
-          toast({
-            title: t('ErrorLoadingAnalysis', 'Error Loading Analysis'),
-            description:
-              error ||
-              t(
-                'FailedToLoadBattleAnalysis',
-                'Failed to load battle analysis details.',
-              ),
-            status: 'error',
-            duration: 5000,
-            isClosable: true,
-          })
-          throw error
-        })
-    },
-    [dispatch, toast, t],
-  )
-
-  const getUserBattleHistory = useCallback(
-    (limit = 10) => {
-      trackInteraction('history_request', { limit })
-
-      return dispatch(fetchUserBattleHistory(limit))
-        .unwrap()
-        .catch(error => {
-          toast({
-            title: t('ErrorLoadingHistory', 'Error Loading History'),
-            description:
-              error ||
-              t(
-                'FailedToLoadBattleHistory',
-                'Failed to load your battle history.',
-              ),
-            status: 'error',
-            duration: 5000,
-            isClosable: true,
-          })
-          throw error
-        })
-    },
-    [dispatch, toast, t],
-  )
-
-  const goToAnalysis = useCallback(
-    battleId => {
-      navigate(`/quickclash/analysis/${battleId}`)
-    },
-    [navigate],
-  )
-
-  const goBack = useCallback(() => {
-    // Submit final engagement data before leaving
-    if (analysisState.analysisId && engagementData.startTime) {
-      const totalTime = Date.now() - engagementData.startTime
-      submitImplicitFeedback({
-        readingTime: engagementData.readingTime,
-        scrollDepth: engagementData.scrollDepth,
-        expanded: engagementData.expanded,
-        timeSpent: totalTime,
-        interactions: engagementData.interactions.length,
-        exitAction: 'navigate_back',
+      performanceRef.current.interactions.push({
+        type: interactionType,
+        data,
+        timestamp: Date.now(),
       })
-    }
+    }, 100),
+  ).current
 
-    navigate('/quickclash')
-  }, [navigate, analysisState.analysisId, engagementData])
-
-  const handleSelectInsight = useCallback(
-    index => {
-      trackInteraction('insight_select', { index })
-      dispatch(selectInsight(index))
-    },
-    [dispatch],
+  // Memoized analysis data
+  const memoizedAnalysisData = useMemo(
+    () => ({
+      currentBattleAnalysis: analysisState.currentBattleAnalysis,
+      userTeam: analysisState.userTeam,
+      aiInsights: analysisState.aiInsights,
+      battleRecap: analysisState.battleRecap,
+      followUpQuestions: analysisState.followUpQuestions,
+      allQuestions: analysisState.allQuestions,
+      questionProgression: analysisState.questionProgression,
+      trophyHistory: analysisState.trophyHistory,
+      userBattleHistory: analysisState.userBattleHistory,
+      userBattleStats: analysisState.userBattleStats,
+      analysisId: analysisState.analysisId,
+      mvpAwards: analysisState.mvpAwards,
+      simplifiedTrophyData: analysisState.simplifiedTrophyData,
+      enhancedMemberPerformance: analysisState.enhancedMemberPerformance,
+    }),
+    [analysisState],
   )
 
-  const handleToggleSection = useCallback(
-    section => {
-      const isExpanding = !analysisState.expandedSections[section]
+  // Memoized loading states
+  const memoizedLoadingStates = useMemo(
+    () => ({
+      battleAnalysisLoading: analysisState.battleAnalysisLoading,
+      battleAnalysisError: analysisState.battleAnalysisError,
+      questionAnswerLoading: analysisState.questionAnswerLoading,
+      questionAnswerError: analysisState.questionAnswerError,
+      historyLoading: analysisState.historyLoading,
+      historyError: analysisState.historyError,
+    }),
+    [
+      analysisState.battleAnalysisLoading,
+      analysisState.battleAnalysisError,
+      analysisState.questionAnswerLoading,
+      analysisState.questionAnswerError,
+      analysisState.historyLoading,
+      analysisState.historyError,
+    ],
+  )
 
-      trackInteraction('section_toggle', { section, expanding: isExpanding })
+  // Memoized UI states
+  const memoizedUIStates = useMemo(
+    () => ({
+      selectedInsightIndex: analysisState.selectedInsightIndex,
+      expandedSections: analysisState.expandedSections,
+      typewriterStates: analysisState.typewriterStates,
+    }),
+    [
+      analysisState.selectedInsightIndex,
+      analysisState.expandedSections,
+      analysisState.typewriterStates,
+    ],
+  )
 
-      if (isExpanding) {
-        setEngagementData(prev => ({
-          ...prev,
-          expanded: true,
-          interactions: [
-            ...prev.interactions,
-            { type: 'expand', section, timestamp: Date.now() },
-          ],
-        }))
+  // Optimized battle analysis fetcher with caching
+  const getBattleAnalysis = useCallback(
+    async battleId => {
+      // Prevent duplicate requests
+      if (
+        analysisState.battleAnalysisLoading ||
+        analysisState.currentBattleAnalysis?._id === battleId
+      ) {
+        return
       }
 
-      dispatch(toggleSection(section))
-    },
-    [dispatch, analysisState.expandedSections],
-  )
+      trackInteractionDebounced('analysis_request', { battleId })
+      performanceRef.current.startTime = Date.now()
 
-  const handleExpandAll = useCallback(() => {
-    trackInteraction('expand_all_sections')
-    setEngagementData(prev => ({
-      ...prev,
-      expanded: true,
-      interactions: [
-        ...prev.interactions,
-        { type: 'expand_all', timestamp: Date.now() },
-      ],
-    }))
-    dispatch(expandAllSections())
-  }, [dispatch])
-
-  const handleCollapseAll = useCallback(() => {
-    trackInteraction('collapse_all_sections')
-    dispatch(collapseAllSections())
-  }, [dispatch])
-
-  const clearAnalysis = useCallback(() => {
-    // Reset engagement tracking
-    setEngagementData({
-      startTime: null,
-      readingTime: 0,
-      scrollDepth: 0,
-      expanded: false,
-      interactions: [],
-      lastScrollTime: null,
-    })
-
-    dispatch(clearCurrentAnalysis())
-  }, [dispatch])
-
-  const answerQuestion = useCallback(
-    async ({ battleId, questionId, questionText }) => {
       try {
-        trackInteraction('question_answer_start', { questionId, questionText })
+        const result = await dispatch(fetchBattleAnalysis(battleId)).unwrap()
 
-        const result = await dispatch(
-          answerFollowUpQuestion({ battleId, questionId, questionText }),
-        ).unwrap()
-
-        trackInteraction('question_answer_success', {
-          questionId,
-          hasNextQuestion: !!result.nextQuestion,
+        const loadTime = Date.now() - performanceRef.current.startTime
+        trackInteractionDebounced('analysis_loaded', {
+          battleId,
+          loadTime,
+          dataSize: JSON.stringify(result).length,
         })
-
-        // Track successful question interaction
-        setEngagementData(prev => ({
-          ...prev,
-          interactions: [
-            ...prev.interactions,
-            {
-              type: 'question_answered',
-              questionId,
-              timestamp: Date.now(),
-            },
-          ],
-        }))
 
         return result
       } catch (error) {
-        trackInteraction('question_answer_error', { questionId, error })
+        trackInteractionDebounced('analysis_error', {
+          battleId,
+          error: error.message,
+        })
+
+        // Optimized error handling
+        const errorMessage = getErrorMessage(error, t)
         toast({
-          title: t('Answer Generation Failed', 'Answer Generation Failed'),
-          description:
-            error ||
-            t(
-              'Failed to generate answer',
-              'Failed to generate answer. Please try again.',
-            ),
+          title: t('ErrorLoadingAnalysis', 'Error Loading Analysis'),
+          description: errorMessage,
           status: 'error',
           duration: 5000,
           isClosable: true,
@@ -348,15 +164,171 @@ const useQuickClashAnalysis = () => {
         throw error
       }
     },
-    [dispatch, toast, t],
+    [
+      dispatch,
+      toast,
+      t,
+      analysisState.battleAnalysisLoading,
+      analysisState.currentBattleAnalysis,
+      trackInteractionDebounced,
+    ],
   )
 
+  // Optimized user battle history fetcher
+  const getUserBattleHistory = useCallback(
+    async (limit = 10) => {
+      // Prevent duplicate requests
+      if (analysisState.historyLoading) return
+
+      trackInteractionDebounced('history_request', { limit })
+
+      try {
+        return await dispatch(fetchUserBattleHistory(limit)).unwrap()
+      } catch (error) {
+        const errorMessage = getErrorMessage(error, t)
+        toast({
+          title: t('ErrorLoadingHistory', 'Error Loading History'),
+          description: errorMessage,
+          status: 'error',
+          duration: 5000,
+          isClosable: true,
+          position: 'top',
+        })
+        throw error
+      }
+    },
+    [
+      dispatch,
+      toast,
+      t,
+      analysisState.historyLoading,
+      trackInteractionDebounced,
+    ],
+  )
+
+  // Optimized navigation functions
+  const goToAnalysis = useCallback(
+    battleId => {
+      navigate(`/quickclash/analysis/${battleId}`)
+    },
+    [navigate],
+  )
+
+  const goBack = useCallback(() => {
+    // Submit final performance data
+    if (performanceRef.current.startTime) {
+      const totalTime = Date.now() - performanceRef.current.startTime
+      submitPerformanceData({
+        totalTime,
+        interactions: performanceRef.current.interactions.length,
+        exitAction: 'navigate_back',
+      })
+    }
+
+    navigate('/quickclash')
+  }, [navigate])
+
+  // Memoized section handlers
+  const handleSelectInsight = useCallback(
+    index => {
+      trackInteractionDebounced('insight_select', { index })
+      dispatch(selectInsight(index))
+    },
+    [dispatch, trackInteractionDebounced],
+  )
+
+  const handleToggleSection = useCallback(
+    section => {
+      const isExpanding = !analysisState.expandedSections[section]
+      trackInteractionDebounced('section_toggle', {
+        section,
+        expanding: isExpanding,
+      })
+      dispatch(toggleSection(section))
+    },
+    [dispatch, analysisState.expandedSections, trackInteractionDebounced],
+  )
+
+  const handleExpandAll = useCallback(() => {
+    trackInteractionDebounced('expand_all_sections')
+    dispatch(expandAllSections())
+  }, [dispatch, trackInteractionDebounced])
+
+  const handleCollapseAll = useCallback(() => {
+    trackInteractionDebounced('collapse_all_sections')
+    dispatch(collapseAllSections())
+  }, [dispatch, trackInteractionDebounced])
+
+  // Optimized clear function
+  const clearAnalysis = useCallback(() => {
+    performanceRef.current = {
+      startTime: null,
+      interactions: [],
+      lastSubmission: null,
+    }
+    dispatch(clearCurrentAnalysis())
+  }, [dispatch])
+
+  // Optimized answer question function
+  const answerQuestion = useCallback(
+    async ({ battleId, questionId, questionText }) => {
+      // Prevent duplicate submissions
+      if (analysisState.questionAnswerLoading) return
+
+      const submissionKey = `${questionId}-${Date.now()}`
+      if (performanceRef.current.lastSubmission === submissionKey) return
+      performanceRef.current.lastSubmission = submissionKey
+
+      try {
+        trackInteractionDebounced('question_answer_start', {
+          questionId,
+          questionText,
+        })
+
+        const result = await dispatch(
+          answerFollowUpQuestion({ battleId, questionId, questionText }),
+        ).unwrap()
+
+        trackInteractionDebounced('question_answer_success', {
+          questionId,
+          hasNextQuestion: !!result.nextQuestion,
+        })
+
+        return result
+      } catch (error) {
+        trackInteractionDebounced('question_answer_error', {
+          questionId,
+          error: error.message,
+        })
+
+        const errorMessage = getErrorMessage(error, t)
+        toast({
+          title: t('Answer Generation Failed', 'Answer Generation Failed'),
+          description: errorMessage,
+          status: 'error',
+          duration: 5000,
+          isClosable: true,
+          position: 'top',
+        })
+        throw error
+      }
+    },
+    [
+      dispatch,
+      toast,
+      t,
+      analysisState.questionAnswerLoading,
+      trackInteractionDebounced,
+    ],
+  )
+
+  // Optimized typewriter functions
   const startTypewriterEffect = useCallback(
     questionId => {
-      trackInteraction('typewriter_start', { questionId })
+      trackInteractionDebounced('typewriter_start', { questionId })
       dispatch(startTypewriter({ questionId }))
     },
-    [dispatch],
+    [dispatch, trackInteractionDebounced],
   )
 
   const updateTypewriterState = useCallback(
@@ -364,46 +336,38 @@ const useQuickClashAnalysis = () => {
       dispatch(updateTypewriterText({ questionId, text, isComplete }))
 
       if (isComplete) {
-        trackInteraction('typewriter_complete', {
+        trackInteractionDebounced('typewriter_complete', {
           questionId,
           textLength: text.length,
         })
       }
     },
-    [dispatch],
+    [dispatch, trackInteractionDebounced],
   )
 
   const skipTypewriterEffect = useCallback(
     ({ questionId, fullText }) => {
-      trackInteraction('typewriter_skip', { questionId })
+      trackInteractionDebounced('typewriter_skip', { questionId })
       dispatch(skipTypewriter({ questionId, fullText }))
     },
-    [dispatch],
+    [dispatch, trackInteractionDebounced],
   )
 
-  // Enhanced feedback submission with automatic data collection
+  // Optimized feedback submission
   const submitInsightFeedbackToServer = useCallback(
     async (insightData, feedbackType, rating, options = {}) => {
       if (!analysisState.analysisId) {
         toast({
-          title: t('ErrorNoAnalysisId', 'Error: Analysis ID Missing'),
-          description: t(
-            'AnalysisSessionNotFoundFeedback',
-            'Analysis session not found. Cannot submit feedback.',
-          ),
+          title: t('Invalid Data'),
+          description: t('Cannot submit feedback without valid insight data.'),
           status: 'error',
           duration: 3000,
           isClosable: true,
         })
-        return
+        return { success: false, error: 'Invalid analysis ID' }
       }
 
       try {
-        const currentTime = Date.now()
-        const totalEngagementTime = engagementData.startTime
-          ? currentTime - engagementData.startTime
-          : 0
-
         const feedbackPayload = {
           analysisId: analysisState.analysisId,
           insightTitle: insightData.title,
@@ -415,66 +379,32 @@ const useQuickClashAnalysis = () => {
           comment: options.comment || '',
           specificAspects: options.specificAspects || {},
           improvementSuggestions: options.improvementSuggestions || '',
-
-          // Enhanced implicit feedback data
           implicitFeedback: {
-            timeSpent: {
-              readingTime: engagementData.readingTime,
-              totalViewTime: totalEngagementTime,
-              revisitCount: 1,
-            },
-            interactions: {
-              expanded: engagementData.expanded,
-              scrollDepth: engagementData.scrollDepth,
-              clickedFollowUp: engagementData.interactions.some(
-                i => i.type === 'question_answered',
-              ),
-              sharedInsight: options.shared || false,
-              screenshotTaken: options.screenshot || false,
-            },
-            followUpBehavior: {
-              askedFollowUp: engagementData.interactions.some(
-                i => i.type === 'question_answered',
-              ),
-              followUpEngagementTime: engagementData.interactions
-                .filter(i => i.type === 'question_answered')
-                .reduce((total, i) => total + (i.duration || 1000), 0),
-            },
+            interactions: performanceRef.current.interactions.length,
+            timeSpent: performanceRef.current.startTime
+              ? Date.now() - performanceRef.current.startTime
+              : 0,
           },
-
-          // Context data
           contextData: {
             userScore: options.userScore || 0,
             trophyChange: options.trophyChange || 0,
             teamRole: options.teamRole || 'average',
-            sessionLength: totalEngagementTime,
-            battlesAnalyzedInSession: 1,
             deviceType: /Mobile|Tablet/.test(navigator.userAgent)
               ? 'mobile'
               : 'desktop',
           },
         }
 
-        await axios.post(
+        const response = await axios.post(
           '/api/quickClash/analysis/insight-feedback',
           feedbackPayload,
         )
 
-        // Track successful feedback submission
-        trackInteraction('feedback_submitted', {
+        trackInteractionDebounced('feedback_submitted', {
           feedbackType,
           rating,
           insightType: insightData.type,
         })
-
-        // Update local feedback state
-        setFeedbackState(prev => ({
-          ...prev,
-          submittedFeedback: new Set([
-            ...prev.submittedFeedback,
-            insightData.title,
-          ]),
-        }))
 
         toast({
           title: t('Feedback Submitted', 'Feedback Submitted'),
@@ -487,22 +417,17 @@ const useQuickClashAnalysis = () => {
           isClosable: true,
         })
 
-        return { success: true }
+        return { success: true, data: response.data }
       } catch (error) {
-        console.error('Error submitting enhanced insight feedback:', error)
-        trackInteraction('feedback_error', { error: error.message })
+        trackInteractionDebounced('feedback_error', { error: error.message })
 
+        const errorMessage = getErrorMessage(error, t)
         toast({
           title: t(
             'FeedbackSubmissionFailedTitle',
             'Feedback Submission Failed',
           ),
-          description:
-            error.response?.data?.message ||
-            t(
-              'CouldNotSubmitFeedback',
-              'Could not submit feedback. Please try again.',
-            ),
+          description: errorMessage,
           status: 'error',
           duration: 3000,
           isClosable: true,
@@ -511,126 +436,37 @@ const useQuickClashAnalysis = () => {
         return { success: false, error: error.message }
       }
     },
-    [analysisState.analysisId, engagementData, toast, t],
+    [analysisState.analysisId, toast, t, trackInteractionDebounced],
   )
 
-  // Submit implicit feedback without explicit user action
-  const submitImplicitFeedback = useCallback(
+  // Submit performance data for analytics
+  const submitPerformanceData = useCallback(
     async data => {
-      if (!analysisState.analysisId || !feedbackState.autoFeedbackEnabled) {
-        return
-      }
+      if (!analysisState.analysisId) return
 
       try {
-        await axios.post('/api/quickClash/analysis/track-engagement', {
+        await axios.post('/api/quickClash/analysis/track-performance', {
           analysisId: analysisState.analysisId,
-          engagementData: data,
+          performanceData: data,
         })
-
-        trackInteraction('implicit_feedback_sent', data)
       } catch (error) {
-        console.error('Error submitting implicit feedback:', error)
+        // Silent fail for performance tracking
+        if (process.env.NODE_ENV === 'development') {
+          // Only log in development
+        }
       }
     },
-    [analysisState.analysisId, feedbackState.autoFeedbackEnabled],
+    [analysisState.analysisId],
   )
 
-  // Track user interactions for analytics
-  const trackInteraction = useCallback((interactionType, data = {}) => {
-    setEngagementData(prev => ({
-      ...prev,
-      interactions: [
-        ...prev.interactions,
-        {
-          type: interactionType,
-          data,
-          timestamp: Date.now(),
-        },
-      ],
-    }))
-
-    // Log to console in development
-    if (process.env.NODE_ENV === 'development') {
-      console.log(`[Engagement] ${interactionType}:`, data)
-    }
-  }, [])
-
-  // Get feedback recommendations for user
-  const getFeedbackRecommendations = useCallback(async () => {
-    try {
-      const response = await axios.get(
-        '/api/quickClash/analysis/feedback-analytics',
-      )
-      return response.data
-    } catch (error) {
-      console.error('Error getting feedback recommendations:', error)
-      return null
-    }
-  }, [])
-
-  // Debug function to log current state
-  const debugState = useCallback(() => {
-    console.log('Current Analysis State:', {
-      battleRecap: !!analysisState.battleRecap,
-      followUpQuestions: analysisState.followUpQuestions?.length || 0,
-      allQuestions: analysisState.allQuestions?.length || 0,
-      questionProgression: analysisState.questionProgression,
-      typewriterStates: Object.keys(analysisState.typewriterStates),
-      loading: analysisState.questionAnswerLoading,
-      engagement: engagementData,
-      feedback: feedbackState,
-      battle: analysisState.currentBattleAnalysis,
-    })
-  }, [analysisState, engagementData, feedbackState])
-
-  // Auto-debug in development
-  useEffect(() => {
-    if (process.env.NODE_ENV === 'development') {
-      debugState()
-    }
-  }, [
-    analysisState.allQuestions,
-    analysisState.followUpQuestions,
-    debugState,
-    analysisState.currentBattleAnalysis,
-  ])
-
+  // Return optimized hook interface
   return {
-    // Data from slice
-    currentBattleAnalysis: analysisState.currentBattleAnalysis,
-    userTeam: analysisState.userTeam,
-    aiInsights: analysisState.aiInsights,
-    battleRecap: analysisState.battleRecap,
-    followUpQuestions: analysisState.followUpQuestions,
-    allQuestions: analysisState.allQuestions,
-    questionProgression: analysisState.questionProgression,
-    trophyHistory: analysisState.trophyHistory,
-    userBattleHistory: analysisState.userBattleHistory,
-    userBattleStats: analysisState.userBattleStats,
-    analysisId: analysisState.analysisId,
-    mvpAwards: analysisState.mvpAwards,
-    simplifiedTrophyData: analysisState.simplifiedTrophyData,
-    enhancedMemberPerformance: analysisState.enhancedMemberPerformance,
+    // Memoized data
+    ...memoizedAnalysisData,
+    ...memoizedLoadingStates,
+    ...memoizedUIStates,
 
-    // Loading and error states from slice
-    battleAnalysisLoading: analysisState.battleAnalysisLoading,
-    battleAnalysisError: analysisState.battleAnalysisError,
-    questionAnswerLoading: analysisState.questionAnswerLoading,
-    questionAnswerError: analysisState.questionAnswerError,
-    historyLoading: analysisState.historyLoading,
-    historyError: analysisState.historyError,
-
-    // UI states from slice
-    selectedInsightIndex: analysisState.selectedInsightIndex,
-    expandedSections: analysisState.expandedSections,
-    typewriterStates: analysisState.typewriterStates,
-
-    // Enhanced engagement and feedback states
-    engagementData,
-    feedbackState,
-    setFeedbackState,
-
-    // Actions/Thunks dispatched from hook
+    // Optimized functions
     getBattleAnalysis,
     getUserBattleHistory,
     goToAnalysis,
@@ -648,14 +484,42 @@ const useQuickClashAnalysis = () => {
     updateTypewriterState,
     skipTypewriterEffect,
 
-    // Enhanced feedback functions
-    submitImplicitFeedback,
-    trackInteraction,
-    getFeedbackRecommendations,
+    // Performance tracking
+    trackInteraction: trackInteractionDebounced,
+    submitPerformanceData,
 
-    // Debug function
-    debugState,
+    // Engagement data (simplified)
+    engagementData: {
+      interactions: performanceRef.current.interactions,
+      startTime: performanceRef.current.startTime,
+      timeSpent: performanceRef.current.startTime
+        ? Date.now() - performanceRef.current.startTime
+        : 0,
+    },
   }
+}
+
+// Utility functions
+function debounce(func, wait) {
+  let timeout
+  return function executedFunction(...args) {
+    const later = () => {
+      clearTimeout(timeout)
+      func(...args)
+    }
+    clearTimeout(timeout)
+    timeout = setTimeout(later, wait)
+  }
+}
+
+function getErrorMessage(error, t) {
+  if (error?.response?.data?.message) {
+    return error.response.data.message
+  }
+  if (error?.message) {
+    return error.message
+  }
+  return t('An unexpected error occurred. Please try again.')
 }
 
 export default useQuickClashAnalysis

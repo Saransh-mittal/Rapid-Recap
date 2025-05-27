@@ -23,29 +23,46 @@ const MotionFlex = motion(Flex)
 const MotionText = motion(Text)
 
 /**
- * Ultra Premium Battle Result Banner with innovative design
+ * Optimized Battle Result Banner with simplified animations for better performance
  */
 const BattleResultBanner = ({ battle, userTeam, onShare }) => {
   const { t } = useTranslation('QuickClash')
   const controls = useAnimationControls()
   const [showDetails, setShowDetails] = useState(false)
 
-  const isMobile = useBreakpointValue({ base: true, md: false })
-  const scoreSize = useBreakpointValue({ base: '3xl', md: '5xl', lg: '6xl' })
-  const titleSize = useBreakpointValue({ base: 'xl', md: '2xl', lg: '3xl' })
-  const subtitleSize = useBreakpointValue({ base: 'md', md: 'lg' })
-  const containerH = useBreakpointValue({
-    base: 'auto',
-    md: '380px',
-    lg: '420px',
+  // Optimized responsive values
+  const responsiveConfig = useBreakpointValue({
+    base: {
+      scoreSize: '2xl',
+      titleSize: 'lg',
+      subtitleSize: 'sm',
+      containerH: 'auto',
+      padding: 4,
+      circleSize: '50px',
+      iconSize: 6,
+      isMobile: true,
+    },
+    md: {
+      scoreSize: '4xl',
+      titleSize: 'xl',
+      subtitleSize: 'md',
+      containerH: '320px',
+      padding: 6,
+      circleSize: '60px',
+      iconSize: 8,
+      isMobile: false,
+    },
+    lg: {
+      scoreSize: '5xl',
+      titleSize: '2xl',
+      subtitleSize: 'lg',
+      containerH: '360px',
+      padding: 8,
+      circleSize: '70px',
+      iconSize: 9,
+      isMobile: false,
+    },
   })
-  const padding = useBreakpointValue({ base: 5, md: 8 })
-  const circleSize = useBreakpointValue({
-    base: '60px',
-    md: '70px',
-    lg: '80px',
-  })
-  const iconInCircleSize = useBreakpointValue({ base: 8, md: 9, lg: 10 })
 
   const isUserWinner = battle.winner === userTeam
   const isTie = battle.winner === 'tie'
@@ -53,39 +70,33 @@ const BattleResultBanner = ({ battle, userTeam, onShare }) => {
   const getResultConfig = () => {
     if (isUserWinner) {
       return {
-        title: t('LEGENDARY VICTORY'),
-        subtitle: t('Epic Performance Achieved'),
+        title: t('VICTORY!'),
+        subtitle: t('Great Performance!'),
         color: 'green',
         icon: Crown,
-        primaryGradient: 'linear(45deg, green.600, green.800)',
-        secondaryGradient: 'linear(135deg, green.500, purple.500)',
+        primaryGradient: 'linear(45deg, green.500, green.700)',
         accentColor: 'green.400',
-        glowColor: 'rgba(16, 185, 129, 0.5)',
-        particlesColor: 'green.300',
+        glowColor: 'rgba(16, 185, 129, 0.3)',
       }
     } else if (isTie) {
       return {
-        title: t('HONORABLE DRAW'),
-        subtitle: t('Perfectly Balanced Match'),
+        title: t('DRAW!'),
+        subtitle: t('Well Fought!'),
         color: 'yellow',
         icon: Shield,
-        primaryGradient: 'linear(45deg, yellow.600, yellow.800)',
-        secondaryGradient: 'linear(135deg, yellow.500, orange.500)',
+        primaryGradient: 'linear(45deg, yellow.500, yellow.700)',
         accentColor: 'yellow.400',
-        glowColor: 'rgba(245, 158, 11, 0.5)',
-        particlesColor: 'yellow.300',
+        glowColor: 'rgba(245, 158, 11, 0.3)',
       }
     } else {
       return {
-        title: t('VALIANT EFFORT'),
-        subtitle: t('Learn and Conquer Next Time'),
+        title: t('DEFEAT'),
+        subtitle: t('Try Again!'),
         color: 'red',
         icon: Swords,
-        primaryGradient: 'linear(45deg, red.600, red.800)',
-        secondaryGradient: 'linear(135deg, red.500, pink.500)',
+        primaryGradient: 'linear(45deg, red.500, red.700)',
         accentColor: 'red.400',
-        glowColor: 'rgba(239, 68, 68, 0.5)',
-        particlesColor: 'red.300',
+        glowColor: 'rgba(239, 68, 68, 0.3)',
       }
     }
   }
@@ -95,108 +106,87 @@ const BattleResultBanner = ({ battle, userTeam, onShare }) => {
   useEffect(() => {
     const animateSequence = async () => {
       await controls.start({
-        scale: [0.9, 1.03, 1],
+        scale: [0.95, 1],
         opacity: [0, 1],
-        rotateX: [10, 0],
-        transition: { duration: 1, ease: [0.22, 1, 0.36, 1] }, // Smooth ease
+        transition: { duration: 0.6, ease: 'easeOut' },
       })
-      setTimeout(() => setShowDetails(true), 600)
+      setTimeout(() => setShowDetails(true), 400)
     }
     animateSequence()
 
-    if (isUserWinner) {
+    // Simplified confetti for winners - less intensive
+    if (isUserWinner && !responsiveConfig?.isMobile) {
       setTimeout(() => {
-        const particleColors = [
-          resultConfig.particlesColor,
-          '#A855F7',
-          '#FBBF24',
-          '#EC4899',
-        ]
         confetti({
-          particleCount: isMobile ? 80 : 150,
-          spread: isMobile ? 70 : 100,
-          origin: { y: 0.5 },
-          colors: particleColors,
-          shapes: ['star', 'circle'],
-          scalar: 1.2,
-          gravity: 0.7,
+          particleCount: responsiveConfig?.isMobile ? 30 : 80,
+          spread: 60,
+          origin: { y: 0.6 },
+          colors: ['#16A34A', '#A855F7', '#F59E0B'],
+          shapes: ['circle'],
+          scalar: 0.8,
+          gravity: 0.8,
         })
-        setTimeout(() => {
-          confetti({
-            particleCount: isMobile ? 50 : 100,
-            angle: 60,
-            spread: isMobile ? 50 : 70,
-            origin: { x: 0, y: 0.6 },
-            colors: particleColors,
-          })
-          confetti({
-            particleCount: isMobile ? 50 : 100,
-            angle: 120,
-            spread: isMobile ? 50 : 70,
-            origin: { x: 1, y: 0.6 },
-            colors: particleColors,
-          })
-        }, 300)
       }, 800)
     }
-  }, [controls, isUserWinner, resultConfig.particlesColor, isMobile])
+  }, [controls, isUserWinner, responsiveConfig?.isMobile])
 
   return (
     <MotionBox
-      h={containerH}
-      minH={isMobile ? '320px' : undefined} // Ensure minimum height on mobile
+      h={responsiveConfig?.containerH}
+      minH="280px"
       position="relative"
       overflow="hidden"
-      borderRadius="3xl" // Slightly larger radius
+      borderRadius="2xl"
       bgGradient={resultConfig.primaryGradient}
-      boxShadow={`0 15px 50px -10px ${resultConfig.glowColor}`}
+      boxShadow={
+        responsiveConfig?.isMobile
+          ? '0 8px 25px rgba(0,0,0,0.2)'
+          : `0 12px 35px ${resultConfig.glowColor}`
+      }
       animate={controls}
-      p={padding}
+      p={responsiveConfig?.padding}
     >
+      {/* Simplified background elements */}
       <Box position="absolute" inset={0} overflow="hidden" zIndex={0}>
-        {[...Array(isMobile ? 6 : 10)].map((_, i) => (
-          <MotionBox
-            key={i}
-            position="absolute"
-            w={`${Math.random() * (isMobile ? 3 : 5) + 1}px`}
-            h={`${Math.random() * (isMobile ? 3 : 5) + 1}px`}
-            bg={resultConfig.particlesColor}
-            borderRadius="full"
-            initial={{
-              x: `${Math.random() * 100}%`,
-              y: `${Math.random() * 100}%`,
-              opacity: 0,
-            }}
-            animate={{
-              y: ['-10px', '-100px'],
-              opacity: [0, 0.7, 0],
-              scale: [0.5, 1, 0.5],
-            }}
-            transition={{
-              duration: Math.random() * 3 + 2.5,
-              repeat: Infinity,
-              delay: Math.random() * 2.5,
-              ease: 'easeOut',
-            }}
-          />
-        ))}
-        <Box
-          position="absolute"
-          inset={0}
-          bgGradient={resultConfig.secondaryGradient}
-          opacity={0.3}
-          mixBlendMode="hard-light" // Softer blend
-        />
-        <Box
-          position="absolute"
-          top="15%"
-          left="50%"
-          transform="translateX(-50%)"
-          w={{ base: '200px', md: '250px' }}
-          h={{ base: '200px', md: '250px' }}
-          bgGradient={`radial-gradient(circle, rgba(255,255,255,0.12) 0%, transparent 65%)`}
-          borderRadius="full"
-        />
+        {!responsiveConfig?.isMobile && (
+          <>
+            {[...Array(4)].map((_, i) => (
+              <MotionBox
+                key={i}
+                position="absolute"
+                w={`${Math.random() * 3 + 1}px`}
+                h={`${Math.random() * 3 + 1}px`}
+                bg="whiteAlpha.600"
+                borderRadius="full"
+                initial={{
+                  x: `${Math.random() * 100}%`,
+                  y: `${Math.random() * 100}%`,
+                  opacity: 0,
+                }}
+                animate={{
+                  y: ['-5px', '-80px'],
+                  opacity: [0, 0.5, 0],
+                }}
+                transition={{
+                  duration: Math.random() * 2 + 2,
+                  repeat: Infinity,
+                  delay: Math.random() * 2,
+                  ease: 'easeOut',
+                }}
+              />
+            ))}
+            <Box
+              position="absolute"
+              top="20%"
+              left="50%"
+              transform="translateX(-50%)"
+              w="180px"
+              h="180px"
+              bgGradient="radial-gradient(circle, rgba(255,255,255,0.08) 0%, transparent 70%)"
+              borderRadius="full"
+            />
+          </>
+        )}
       </Box>
 
       <Flex
@@ -207,34 +197,46 @@ const BattleResultBanner = ({ battle, userTeam, onShare }) => {
         justify="space-between"
         color="white"
       >
-        <VStack spacing={{ base: 2, md: 3 }} textAlign="center">
+        <VStack spacing={2} textAlign="center">
           <MotionBox
-            animate={{ rotate: [0, 3, -3, 0], scale: [1, 1.05, 1] }}
-            transition={{ duration: 3.5, repeat: Infinity, ease: 'easeInOut' }}
+            animate={
+              !responsiveConfig?.isMobile
+                ? {
+                    scale: [1, 1.02, 1],
+                  }
+                : {}
+            }
+            transition={{ duration: 2, repeat: Infinity, ease: 'easeInOut' }}
           >
             <Circle
-              size={circleSize}
-              bg="rgba(255,255,255,0.15)"
-              backdropFilter="blur(8px)"
+              size={responsiveConfig?.circleSize}
+              bg="rgba(255,255,255,0.12)"
+              backdropFilter={responsiveConfig?.isMobile ? 'none' : 'blur(8px)'}
               border="2px solid rgba(255,255,255,0.2)"
             >
-              <Icon as={resultConfig.icon} boxSize={iconInCircleSize} />
+              <Icon
+                as={resultConfig.icon}
+                boxSize={responsiveConfig?.iconSize}
+              />
             </Circle>
           </MotionBox>
-          <VStack spacing={{ base: 1, md: 1.5 }}>
+          <VStack spacing={1}>
             <Heading
-              fontSize={titleSize}
-              fontWeight="extrabold" // Bolder
+              fontSize={responsiveConfig?.titleSize}
+              fontWeight="bold"
               letterSpacing="wide"
-              textShadow="0 3px 15px rgba(0,0,0,0.4)"
+              textShadow={
+                responsiveConfig?.isMobile
+                  ? 'none'
+                  : '0 2px 8px rgba(0,0,0,0.3)'
+              }
             >
               {resultConfig.title}
             </Heading>
             <Text
-              fontSize={subtitleSize}
-              opacity={0.85}
+              fontSize={responsiveConfig?.subtitleSize}
+              opacity={0.9}
               fontWeight="medium"
-              letterSpacing="tight"
             >
               {resultConfig.subtitle}
             </Text>
@@ -244,11 +246,11 @@ const BattleResultBanner = ({ battle, userTeam, onShare }) => {
         <MotionFlex
           justify="center"
           align="center"
-          gap={{ base: 4, md: 6, lg: 8 }}
-          initial={{ opacity: 0, y: 15 }}
-          animate={{ opacity: showDetails ? 1 : 0, y: showDetails ? 0 : 15 }}
-          transition={{ delay: 0.4, duration: 0.7, ease: 'easeOut' }}
-          my={{ base: 4, md: 0 }} // Margin for mobile
+          gap={{ base: 3, md: 5 }}
+          initial={{ opacity: 0, y: 10 }}
+          animate={{ opacity: showDetails ? 1 : 0, y: showDetails ? 0 : 10 }}
+          transition={{ delay: 0.3, duration: 0.5 }}
+          my={4}
         >
           {[
             {
@@ -264,52 +266,51 @@ const BattleResultBanner = ({ battle, userTeam, onShare }) => {
           ].map((item, index) => (
             <React.Fragment key={item.team}>
               {index === 1 && (
-                <VStack spacing={1.5} display={{ base: 'none', md: 'flex' }}>
-                  <Text fontSize="xl" fontWeight="bold" opacity={0.7}>
+                <VStack spacing={1} display={{ base: 'none', md: 'flex' }}>
+                  <Text fontSize="lg" fontWeight="bold" opacity={0.7}>
                     VS
                   </Text>
-                  <Box w="1.5px" h="50px" bg="rgba(255,255,255,0.25)" />
+                  <Box w="1px" h="40px" bg="rgba(255,255,255,0.3)" />
                 </VStack>
               )}
-              <VStack spacing={{ base: 1.5, md: 2.5 }} flex={1} minW="120px">
+              <VStack spacing={2} flex={1} minW="100px">
                 <Badge
                   bg="rgba(255,255,255,0.15)"
                   color="white"
-                  px={3}
-                  py={1.5}
+                  px={2}
+                  py={1}
                   borderRadius="full"
                   fontSize="xs"
                   fontWeight="semibold"
-                  backdropFilter="blur(5px)"
-                  textTransform="uppercase"
-                  letterSpacing="wider"
+                  backdropFilter={
+                    responsiveConfig?.isMobile ? 'none' : 'blur(5px)'
+                  }
                 >
                   {userTeam === item.team ? t('YOUR TEAM') : t('OPPONENT')}
                 </Badge>
-                <Text
-                  fontSize={{ base: 'sm', md: 'md' }}
-                  fontWeight="semibold"
-                  noOfLines={1}
-                >
+                <Text fontSize="sm" fontWeight="semibold" noOfLines={1}>
                   {item.name}
                 </Text>
                 <MotionText
-                  fontSize={scoreSize}
+                  fontSize={responsiveConfig?.scoreSize}
                   fontWeight="black"
                   lineHeight={1}
-                  textShadow="0 0 25px rgba(255,255,255,0.4)"
-                  animate={{
-                    scale: [0.9, 1.1, 1],
-                    textShadow: [
-                      '0 0 15px rgba(255,255,255,0.25)',
-                      '0 0 35px rgba(255,255,255,0.6)',
-                      '0 0 25px rgba(255,255,255,0.4)',
-                    ],
-                  }}
+                  textShadow={
+                    responsiveConfig?.isMobile
+                      ? 'none'
+                      : '0 0 20px rgba(255,255,255,0.4)'
+                  }
+                  animate={
+                    !responsiveConfig?.isMobile
+                      ? {
+                          scale: [0.95, 1.02, 1],
+                        }
+                      : {}
+                  }
                   transition={{
-                    delay: 0.8 + index * 0.15,
-                    duration: 1.2,
-                    ease: 'elastic.out(1, 0.5)',
+                    delay: 0.6 + index * 0.1,
+                    duration: 0.8,
+                    ease: 'easeOut',
                   }}
                 >
                   {item.score}
@@ -324,11 +325,11 @@ const BattleResultBanner = ({ battle, userTeam, onShare }) => {
           align="center"
           initial={{ opacity: 0 }}
           animate={{ opacity: showDetails ? 1 : 0 }}
-          transition={{ delay: 1.2, duration: 0.6 }}
-          direction={{ base: 'column', sm: 'row' }} // Stack on very small screens
-          gap={{ base: 3, sm: 0 }}
+          transition={{ delay: 0.8, duration: 0.4 }}
+          direction={{ base: 'column', sm: 'row' }}
+          gap={{ base: 2, sm: 0 }}
         >
-          <HStack spacing={{ base: 2, md: 3 }}>
+          <HStack spacing={2} flexWrap="wrap">
             {[
               {
                 value:
@@ -359,10 +360,12 @@ const BattleResultBanner = ({ battle, userTeam, onShare }) => {
                 key={stat.label}
                 bg="rgba(255,255,255,0.1)"
                 color="whiteAlpha.900"
-                px={{ base: 2, md: 2.5 }}
-                py={1.5}
+                px={2}
+                py={1}
                 borderRadius="lg"
-                backdropFilter="blur(5px)"
+                backdropFilter={
+                  responsiveConfig?.isMobile ? 'none' : 'blur(5px)'
+                }
                 border="1px solid rgba(255,255,255,0.15)"
                 fontSize="xs"
               >
@@ -372,25 +375,24 @@ const BattleResultBanner = ({ battle, userTeam, onShare }) => {
             ))}
           </HStack>
           <Button
-            leftIcon={<Share2 size={16} />}
+            leftIcon={<Share2 size={14} />}
             bg="rgba(255,255,255,0.15)"
             color="white"
-            backdropFilter="blur(8px)"
+            backdropFilter={responsiveConfig?.isMobile ? 'none' : 'blur(8px)'}
             border="1px solid rgba(255,255,255,0.25)"
-            borderRadius="xl"
-            px={{ base: 5, md: 6 }}
-            py={3} // Adjusted padding
-            fontSize={{ base: 'sm', md: 'sm' }}
+            borderRadius="lg"
+            px={4}
+            py={2}
+            fontSize="sm"
             _hover={{
               bg: 'rgba(255,255,255,0.25)',
-              transform: 'translateY(-2px)',
-              boxShadow: '0 6px 20px rgba(0,0,0,0.25)',
+              transform: 'translateY(-1px)',
             }}
             _active={{ transform: 'translateY(0)' }}
-            transition="all 0.25s"
+            transition="all 0.2s ease"
             onClick={onShare}
           >
-            {t('Share Analysis')} {/* Changed from Share Victory */}
+            {t('Share')}
           </Button>
         </MotionFlex>
       </Flex>

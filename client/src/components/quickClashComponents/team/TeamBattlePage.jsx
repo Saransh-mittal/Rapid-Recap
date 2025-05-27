@@ -360,12 +360,7 @@ const TeamBattlePage = () => {
   }
 
   return (
-    <Box
-      minH="100vh"
-      bg="linear-gradient(135deg, #1a1527 0%, #2d1b4e 45%, #1a1527 100%)"
-      position="relative"
-      overflow="hidden"
-    >
+    <Box minH="100vh" bg="gray.900" position="relative" overflow="hidden">
       {/* Animated background particles */}
       <Box
         position="absolute"
