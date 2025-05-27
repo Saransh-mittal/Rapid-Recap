@@ -1,90 +1,57 @@
 // components/quickClashComponents/team/battleAnalysis/TeamBattleAnalysis.jsx
-import React, { useEffect, useMemo, useState } from 'react'
+import React, { useEffect, useMemo, Suspense, lazy } from 'react'
 import {
   Box,
   VStack,
   Button,
-  Spinner,
   Center,
   Text,
   Icon,
   useBreakpointValue,
-  useDisclosure,
   Container,
-  Flex,
-  HStack,
-  Progress,
 } from '@chakra-ui/react'
 import { motion, AnimatePresence } from 'framer-motion'
 import { useTranslation } from 'react-i18next'
 import { useParams } from 'react-router-dom'
-import {
-  ArrowLeft,
-  AlertTriangle,
-  Sparkles,
-  Trophy,
-  Clock,
-  Brain,
-  Activity,
-} from 'lucide-react'
+import { ArrowLeft, AlertTriangle } from 'lucide-react'
 import { useSelector } from 'react-redux'
 
 // Custom hooks
 import useQuickClashAnalysis from '../../../../customHooks/useQuickClashAnalysis'
 
-// Enhanced Component imports
-import BattleResultBanner from './components/BattleResultBanner'
-import TrophyExchangeSummary from './components/TrophyExchangeSummary'
-import AIInsights from './components/aiInsights/AIInsights'
-import TeamContributionSection from './components/TeamContributionSection'
-import CategoryBreakdownSection from './components/CategoryBreakdownSection'
-import DetailedBonusExplanation from './components/DetailedBonusExplanation'
-import ShareResultsModal from './components/ShareResultsModal'
-import MVPRecognition from './components/MVPRecognition'
+// Error Boundary
+import ErrorBoundary from '../../../common/ErrorBoundary'
 
-const MotionBox = motion(Box)
+// Optimized Components - Lazy loaded for better performance
+const LoadingScreen = lazy(() => import('./components/LoadingScreen'))
+const ErrorScreen = lazy(() => import('./components/ErrorScreen'))
+const BattleResultBanner = lazy(() => import('./components/BattleResultBanner'))
+const AnalysisContent = lazy(() => import('./components/AnalysisContent'))
+
+// Import feedback context
+import { FeedbackProvider } from '../../../../contextAPI/FeedbackContext'
+
 const MotionContainer = motion(Container)
+const MotionBox = motion(Box)
 
+// Simplified container variants for better performance
 const containerVariants = {
-  hidden: { opacity: 0, y: 20 },
+  hidden: { opacity: 0 },
   visible: {
     opacity: 1,
-    y: 0,
     transition: {
-      staggerChildren: 0.1,
-      delayChildren: 0.2,
-      duration: 0.6,
+      duration: 0.4,
+      staggerChildren: 0.05,
     },
   },
 }
 
-const itemVariants = {
-  hidden: {
-    opacity: 0,
-    y: 30,
-    scale: 0.98,
-    filter: 'blur(5px)',
-  },
-  visible: {
-    opacity: 1,
-    y: 0,
-    scale: 1,
-    filter: 'blur(0px)',
-    transition: {
-      type: 'spring',
-      stiffness: 80,
-      damping: 15,
-      duration: 0.8,
-    },
-  },
-}
-
-const floatingVariants = {
+// Simplified floating animation - less intensive
+const simpleFloatVariants = {
   animate: {
-    y: [0, -10, 0], // Subtle float
-    rotate: [0, 3, 0, -3, 0], // Gentle sway
+    y: [0, -5, 0],
     transition: {
-      duration: 5,
+      duration: 3,
       repeat: Infinity,
       ease: 'easeInOut',
     },
@@ -92,214 +59,44 @@ const floatingVariants = {
 }
 
 /**
- * Loading Screen Component with Enhanced Animation
+ * Optimized Inner component that uses the feedback context
  */
-const LoadingScreen = ({ progress, step }) => {
-  const { t } = useTranslation('QuickClash')
-
-  return (
-    <Box minH="100vh" position="relative" bg="gray.900">
-      <Center minH="100vh" p={4}>
-        <VStack spacing={10} maxW="md" w="full">
-          <MotionBox
-            animate={{
-              scale: [1, 1.1, 1],
-              opacity: [0.8, 1, 0.8],
-              rotate: [0, 120, 240, 360],
-            }}
-            transition={{ duration: 4, repeat: Infinity, ease: 'linear' }}
-          >
-            <Box
-              position="relative"
-              p={6}
-              borderRadius="full"
-              bg="rgba(139, 92, 246, 0.15)"
-              border="3px solid"
-              borderColor="purple.500"
-              boxShadow="0 0 30px rgba(139, 92, 246, 0.5)"
-            >
-              <Spinner
-                thickness="4px"
-                speed="0.7s"
-                emptyColor="rgba(255,255,255,0.05)"
-                color="purple.400"
-                size="xl"
-              />
-              <Icon
-                as={Brain}
-                position="absolute"
-                top="50%"
-                left="50%"
-                transform="translate(-50%, -50%)"
-                color="purple.300"
-                boxSize={10}
-              />
-            </Box>
-          </MotionBox>
-
-          <VStack spacing={5} textAlign="center" w="100%">
-            <VStack spacing={2}>
-              <Text
-                color="whiteAlpha.900"
-                fontSize={{ base: 'xl', md: '2xl' }}
-                fontWeight="bold"
-                letterSpacing="tight"
-              >
-                {t('Analyzing Battle')}
-              </Text>
-              <AnimatePresence mode="wait">
-                <MotionBox
-                  key={step}
-                  initial={{ opacity: 0, y: 8 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  exit={{ opacity: 0, y: -8 }}
-                  transition={{ duration: 0.25 }}
-                >
-                  <Text
-                    color="whiteAlpha.700"
-                    fontSize={{ base: 'md', md: 'lg' }}
-                  >
-                    {step || t('Loading battle data...')}
-                  </Text>
-                </MotionBox>
-              </AnimatePresence>
-            </VStack>
-
-            <Box w="100%">
-              <Progress
-                value={progress}
-                size="lg"
-                borderRadius="full"
-                bg="rgba(255, 255, 255, 0.1)"
-                sx={{
-                  '& > div': {
-                    background:
-                      'linear-gradient(90deg, #A855F7, #C084FC, #D8B4FE)',
-                    boxShadow: '0 0 15px rgba(168, 85, 247, 0.5)',
-                  },
-                }}
-              />
-              <HStack justify="space-between" mt={2.5}>
-                <Text fontSize="xs" color="whiteAlpha.600">
-                  0%
-                </Text>
-                <Text fontSize="xs" color="purple.300" fontWeight="bold">
-                  {progress}%
-                </Text>
-                <Text fontSize="xs" color="whiteAlpha.600">
-                  100%
-                </Text>
-              </HStack>
-            </Box>
-
-            <Box
-              mt={6}
-              p={4}
-              bg="rgba(255, 255, 255, 0.05)"
-              borderRadius="xl"
-              border="1px solid rgba(255, 255, 255, 0.1)"
-              w="full"
-            >
-              <HStack spacing={3}>
-                <Icon as={Sparkles} color="purple.400" boxSize={5} />
-                <Text fontSize="sm" color="whiteAlpha.800">
-                  {t('BattleSage AI is preparing personalized insights')}
-                </Text>
-              </HStack>
-            </Box>
-          </VStack>
-        </VStack>
-      </Center>
-    </Box>
-  )
-}
-
-/**
- * Main TeamBattleAnalysis Component
- */
-const TeamBattleAnalysis = () => {
+const TeamBattleAnalysisInner = React.memo(() => {
   const { t } = useTranslation('QuickClash')
   const { battleId } = useParams()
   const { user } = useSelector(state => state.auth)
-  const [loadingProgress, setLoadingProgress] = useState(0)
-  const [analysisStep, setAnalysisStep] = useState('')
-  const {
-    isOpen: isShareOpen,
-    onOpen: openShare,
-    onClose: closeShare,
-  } = useDisclosure()
 
-  const spacing = useBreakpointValue({ base: 6, md: 8, lg: 10 })
+  // Responsive values - called at top level, then memoized
   const containerMaxW = useBreakpointValue({
     base: 'full',
     md: 'container.lg',
     xl: 'container.xl',
   })
   const containerPx = useBreakpointValue({ base: 4, sm: 6, md: 8 })
+  const isMobile = useBreakpointValue({ base: true, md: false })
+
+  // Memoized responsive values object
+  const responsiveValues = useMemo(
+    () => ({
+      containerMaxW,
+      containerPx,
+      isMobile,
+    }),
+    [containerMaxW, containerPx, isMobile],
+  )
 
   const {
     currentBattleAnalysis: battle,
     userTeam,
-    aiInsights,
-    battleRecap,
-    followUpQuestions,
     battleAnalysisLoading,
     battleAnalysisError,
     getBattleAnalysis,
     goBack,
-    expandedSections,
-    handleToggleSection,
-    submitInsightFeedbackToServer,
     clearAnalysis,
-    mvpAwards,
-    simplifiedTrophyData,
-    enhancedMemberPerformance,
+    trackInteraction,
   } = useQuickClashAnalysis()
 
-  // Enhanced loading sequence
-  useEffect(() => {
-    if (battleId) {
-      const steps = [
-        { step: t('Connecting to battle data...'), progress: 15 },
-        { step: t('Loading team performance metrics...'), progress: 30 },
-        { step: t('Analyzing battle patterns...'), progress: 45 },
-        { step: t('Processing team dynamics...'), progress: 60 },
-        { step: t('Identifying key moments...'), progress: 75 },
-        { step: t('Generating BattleSage AI insights...'), progress: 90 },
-        { step: t('Finalizing personalized analysis...'), progress: 100 },
-      ]
-
-      setLoadingProgress(0)
-      setAnalysisStep(steps[0].step)
-      let currentStepIndex = 0
-
-      const stepInterval = setInterval(() => {
-        currentStepIndex++
-        if (currentStepIndex < steps.length) {
-          setAnalysisStep(steps[currentStepIndex].step)
-          setLoadingProgress(steps[currentStepIndex].progress)
-        } else {
-          clearInterval(stepInterval)
-        }
-      }, 400) // Slightly faster steps
-
-      getBattleAnalysis(battleId).catch(err => {
-        clearInterval(stepInterval)
-      })
-
-      return () => {
-        clearInterval(stepInterval)
-      }
-    }
-  }, [battleId, getBattleAnalysis, t])
-
-  // Cleanup on unmount
-  useEffect(() => {
-    return () => {
-      clearAnalysis()
-    }
-  }, [clearAnalysis])
-
+  // Memoized user member data calculation
   const userMemberData = useMemo(() => {
     if (!battle || !user || !userTeam) return null
     const teamMembers =
@@ -309,88 +106,70 @@ const TeamBattleAnalysis = () => {
     )
   }, [battle, user, userTeam])
 
-  if (battleAnalysisLoading && !battle) {
-    return <LoadingScreen progress={loadingProgress} step={analysisStep} />
-  }
+  // Enhanced loading sequence with better performance
+  useEffect(() => {
+    if (battleId && !battle) {
+      getBattleAnalysis(battleId).catch(err => {
+        // Error handled by the hook's toast system
+      })
+    }
+  }, [battleId, getBattleAnalysis, battle])
 
-  if (battleAnalysisError && !battle) {
+  // Cleanup on unmount - optimized
+  useEffect(() => {
+    return () => {
+      clearAnalysis()
+    }
+  }, [clearAnalysis])
+
+  // Track page view with debouncing for performance
+  useEffect(() => {
+    if (battle && userTeam) {
+      const timer = setTimeout(() => {
+        trackInteraction('analysis_page_view', {
+          battleId,
+          userTeam,
+          hasRecap: !!battle.battleRecap,
+        })
+      }, 1000)
+
+      return () => clearTimeout(timer)
+    }
+  }, [battle, userTeam, trackInteraction, battleId])
+
+  // Loading state with Suspense fallback
+  if (battleAnalysisLoading && !battle) {
     return (
-      <Box minH="100vh" position="relative" bg="gray.900">
-        <Center minH="100vh" p={4}>
-          <VStack spacing={8} maxW="md" textAlign="center">
-            <MotionBox
-              initial={{ scale: 0.5, rotate: -90 }}
-              animate={{ scale: 1, rotate: 0 }}
-              transition={{ type: 'spring', stiffness: 150, damping: 12 }}
-            >
-              <Box
-                p={6}
-                borderRadius="full"
-                bg="rgba(239, 68, 68, 0.15)"
-                border="3px solid"
-                borderColor="red.500"
-                boxShadow="0 0 30px rgba(239, 68, 68, 0.5)"
-              >
-                <Icon as={AlertTriangle} color="red.400" boxSize={12} />
-              </Box>
-            </MotionBox>
-            <VStack spacing={4}>
-              <Text
-                color="red.400"
-                fontSize={{ base: 'xl', md: '2xl' }}
-                fontWeight="bold"
-              >
-                {t('Analysis Failed')}
-              </Text>
-              <Text
-                color="whiteAlpha.800"
-                fontSize={{ base: 'md', md: 'lg' }}
-                maxW="sm"
-              >
-                {battleAnalysisError}
-              </Text>
-              <Button
-                leftIcon={<ArrowLeft size={18} />}
-                colorScheme="purple"
-                size="lg"
-                onClick={goBack}
-                bgGradient="linear(to-r, purple.500, purple.600)"
-                borderRadius="xl"
-                px={8}
-                py={6}
-                mt={4}
-                _hover={{
-                  bgGradient: 'linear(to-r, purple.600, purple.700)',
-                  transform: 'translateY(-3px)',
-                  boxShadow: '0 10px 25px rgba(139, 92, 246, 0.4)',
-                }}
-                _active={{ transform: 'translateY(-1px)' }}
-                transition="all 0.25s cubic-bezier(0.4, 0, 0.2, 1)"
-              >
-                {t('Back to Battles')}
-              </Button>
-            </VStack>
-          </VStack>
-        </Center>
-      </Box>
+      <Suspense fallback={<div>Loading...</div>}>
+        <LoadingScreen />
+      </Suspense>
     )
   }
 
+  // Error state
+  if (battleAnalysisError && !battle) {
+    return (
+      <Suspense fallback={<div>Error occurred</div>}>
+        <ErrorScreen error={battleAnalysisError} onRetry={goBack} />
+      </Suspense>
+    )
+  }
+
+  // Battle not found state - optimized
   if (!battle || !userTeam) {
     return (
       <Box minH="100vh" position="relative" bg="gray.900">
         <Center minH="100vh" p={4}>
-          <VStack spacing={8} textAlign="center" maxW="md">
-            <MotionBox variants={floatingVariants} animate="animate">
+          <VStack spacing={6} textAlign="center" maxW="md">
+            <MotionBox variants={simpleFloatVariants} animate="animate">
               <Box
-                p={6}
+                p={4}
                 borderRadius="full"
-                bg="rgba(245, 158, 11, 0.15)"
-                border="3px solid"
+                bg="rgba(245, 158, 11, 0.1)"
+                border="2px solid"
                 borderColor="yellow.500"
-                boxShadow="0 0 30px rgba(245, 158, 11, 0.5)"
               >
-                <Icon as={AlertTriangle} color="yellow.400" boxSize={12} />
+                <Icon as={AlertTriangle} color="yellow.400" boxSize={8} />
               </Box>
             </MotionBox>
             <VStack spacing={4}>
@@ -415,18 +194,15 @@ const TeamBattleAnalysis = () => {
                 colorScheme="purple"
                 size="lg"
                 onClick={goBack}
-                bgGradient="linear(to-r, purple.500, purple.600)"
                 borderRadius="xl"
-                px={8}
-                py={6}
+                px={6}
+                py={5}
                 mt={4}
                 _hover={{
-                  bgGradient: 'linear(to-r, purple.600, purple.700)',
-                  transform: 'translateY(-3px)',
-                  boxShadow: '0 10px 25px rgba(139, 92, 246, 0.4)',
+                  transform: 'translateY(-1px)',
                 }}
-                _active={{ transform: 'translateY(-1px)' }}
-                transition="all 0.25s cubic-bezier(0.4, 0, 0.2, 1)"
+                _active={{ transform: 'translateY(0)' }}
+                transition="all 0.2s ease"
               >
                 {t('Back to Battles')}
               </Button>
@@ -437,7 +213,7 @@ const TeamBattleAnalysis = () => {
     )
   }
 
-  // Main Content Render
+  // Main Content Render with optimized structure
   return (
     <Box
       minH="100vh"
@@ -446,331 +222,144 @@ const TeamBattleAnalysis = () => {
       bg="gray.900"
       pb={2}
     >
-      {/* Subtle Animated background elements */}
-      <Box
-        position="fixed"
-        top={0}
-        left={0}
-        right={0}
-        bottom={0}
-        zIndex={0}
-        overflow="hidden"
-      >
-        <MotionBox
-          position="absolute"
-          top="10%"
-          left="5%"
-          w={{ base: '100px', md: '150px' }}
-          h={{ base: '100px', md: '150px' }}
-          bg="purple.700"
-          borderRadius="full"
-          opacity={0.15}
-          filter="blur(60px)"
-          animate={{
-            x: [0, 20, 0, -20, 0],
-            y: [0, -20, 0, 20, 0],
-            scale: [1, 1.05, 1],
-          }}
-          transition={{ duration: 15, repeat: Infinity, ease: 'easeInOut' }}
-        />
-        <MotionBox
-          position="absolute"
-          bottom="15%"
-          right="8%"
-          w={{ base: '120px', md: '180px' }}
-          h={{ base: '120px', md: '180px' }}
-          bg="pink.600"
-          borderRadius="full"
-          opacity={0.1}
-          filter="blur(70px)"
-          animate={{
-            x: [0, -15, 0, 15, 0],
-            y: [0, 15, 0, -15, 0],
-            rotate: [0, 90, 180, 270, 360],
-          }}
-          transition={{ duration: 20, repeat: Infinity, ease: 'linear' }}
-        />
-      </Box>
+      {/* Simplified background elements - only for desktop */}
+      {!responsiveValues.isMobile && (
+        <Box
+          position="fixed"
+          top={0}
+          left={0}
+          right={0}
+          bottom={0}
+          zIndex={0}
+          overflow="hidden"
+          pointerEvents="none"
+        >
+          <MotionBox
+            position="absolute"
+            top="15%"
+            left="8%"
+            w="120px"
+            h="120px"
+            bg="purple.700"
+            borderRadius="full"
+            opacity={0.08}
+            filter="blur(40px)"
+            animate={{
+              scale: [1, 1.02, 1],
+            }}
+            transition={{ duration: 8, repeat: Infinity, ease: 'easeInOut' }}
+          />
+          <MotionBox
+            position="absolute"
+            bottom="20%"
+            right="10%"
+            w="100px"
+            h="100px"
+            bg="pink.600"
+            borderRadius="full"
+            opacity={0.06}
+            filter="blur(35px)"
+            animate={{
+              scale: [1, 1.03, 1],
+            }}
+            transition={{ duration: 10, repeat: Infinity, ease: 'easeInOut' }}
+          />
+        </Box>
+      )}
 
       <MotionContainer
-        maxW={containerMaxW}
-        px={containerPx}
-        pt={{ base: 6, md: 8 }}
+        maxW={responsiveValues.containerMaxW}
+        px={responsiveValues.containerPx}
+        pt={{ base: 4, md: 6 }}
         position="relative"
         zIndex={1}
         variants={containerVariants}
         initial="hidden"
         animate="visible"
       >
-        <MotionBox variants={itemVariants} mb={{ base: 6, md: 8 }}>
+        {/* Back Button - simplified */}
+        <MotionBox
+          variants={{ hidden: { opacity: 0 }, visible: { opacity: 1 } }}
+          mb={{ base: 4, md: 6 }}
+        >
           <Button
-            leftIcon={<ArrowLeft size={18} />}
+            leftIcon={<ArrowLeft size={16} />}
             variant="outline"
             onClick={goBack}
             color="whiteAlpha.800"
             borderColor="whiteAlpha.300"
-            borderRadius="xl"
-            px={{ base: 5, md: 6 }}
-            py={{ base: 5, md: 6 }}
-            fontSize={{ base: 'sm', md: 'md' }}
+            borderRadius="lg"
+            px={5}
+            py={4}
+            fontSize="sm"
             fontWeight="medium"
             _hover={{
-              bg: 'rgba(255, 255, 255, 0.1)',
+              bg: 'rgba(255, 255, 255, 0.08)',
               borderColor: 'purple.400',
               color: 'white',
-              transform: 'translateX(-2px)',
-              boxShadow: '0 8px 20px rgba(139, 92, 246, 0.25)',
             }}
-            _active={{ transform: 'translateX(0)' }}
-            transition="all 0.25s cubic-bezier(0.4, 0, 0.2, 1)"
+            transition="all 0.2s ease"
           >
             {t('Back to Battles')}
           </Button>
         </MotionBox>
 
-        <VStack spacing={spacing} align="stretch">
-          <MotionBox variants={itemVariants}>
-            <BattleResultBanner
-              battle={battle}
-              userTeam={userTeam}
-              onShare={openShare}
-            />
-          </MotionBox>
-
-          <MotionBox variants={itemVariants}>
-            <TrophyExchangeSummary
-              battle={battle}
-              userTeam={userTeam}
-              userMemberData={userMemberData}
-              isExpanded={expandedSections.trophies}
-              onToggle={() => handleToggleSection('trophies')}
-              simplifiedTrophyData={simplifiedTrophyData}
-            />
-          </MotionBox>
-
-          {/* NEW MVP RECOGNITION COMPONENT */}
-          {(mvpAwards.matchMVP ||
-            mvpAwards.teamMVP ||
-            mvpAwards.pivotalPlayer ||
-            (mvpAwards.performanceRecognitions &&
-              mvpAwards.performanceRecognitions.length > 0)) && (
-            <MotionBox variants={itemVariants}>
-              <MVPRecognition
-                mvpAwards={mvpAwards}
-                userTeam={userTeam}
-                isExpanded={expandedSections.mvpRecognition}
-                onToggle={() => handleToggleSection('mvpRecognition')}
-              />
-            </MotionBox>
-          )}
-
-          {(battleRecap ||
-            followUpQuestions ||
-            (aiInsights && aiInsights.length > 0)) && (
-            <MotionBox variants={itemVariants}>
-              <AIInsights
-                battleRecap={battleRecap}
-                followUpQuestions={followUpQuestions}
-                userStats={
-                  userMemberData
-                    ? {
-                        score: userMemberData.score,
-                        trophyChange: userMemberData.trophyChange,
-                        contribution: Math.round(
-                          (userMemberData.score /
-                            Math.max(
-                              1,
-                              battle[`${userTeam}Members`].reduce(
-                                (sum, m) => sum + m.score,
-                                0,
-                              ),
-                            )) *
-                            100,
-                        ),
-                      }
-                    : null
-                }
-                battleId={battleId}
-                isExpanded={expandedSections.aiInsights}
-                onToggle={() => handleToggleSection('aiInsights')}
-              />
-            </MotionBox>
-          )}
-
-          {user && user._id && (
-            <MotionBox variants={itemVariants}>
-              <TeamContributionSection
-                battle={battle}
-                userTeam={userTeam}
-                userId={user._id}
-                isExpanded={expandedSections.teamPerformance}
-                onToggle={() => handleToggleSection('teamPerformance')}
-                enhancedMemberPerformance={enhancedMemberPerformance}
-                mvpAwards={mvpAwards}
-              />
-            </MotionBox>
-          )}
-
-          <MotionBox variants={itemVariants}>
-            <CategoryBreakdownSection
-              battle={battle}
-              userTeam={userTeam}
-              userMemberData={userMemberData}
-              isExpanded={expandedSections.categoryBreakdown}
-              onToggle={() => handleToggleSection('categoryBreakdown')}
-            />
-          </MotionBox>
-
-          {simplifiedTrophyData.activeBonuses &&
-            simplifiedTrophyData.activeBonuses.length > 0 && (
-              <MotionBox variants={itemVariants}>
-                <DetailedBonusExplanation
-                  trophyExchange={battle.trophyExchange}
-                  isExpanded={expandedSections.bonuses}
-                  onToggle={() => handleToggleSection('bonuses')}
-                  simplifiedData={simplifiedTrophyData}
-                />
-              </MotionBox>
-            )}
-
-          <MotionBox
-            variants={itemVariants}
-            textAlign="center"
-            pt={{ base: 8, md: 10 }}
-            pb={{ base: 10, md: 12 }}
+        {/* Battle Result Banner - lazy loaded with error boundary */}
+        <ErrorBoundary
+          title="Banner Error"
+          fallbackText="Failed to load battle result banner"
+        >
+          <Suspense
+            fallback={<Box h="300px" bg="whiteAlpha.50" borderRadius="xl" />}
           >
-            <VStack spacing={{ base: 6, md: 8 }}>
-              <Box
-                bg="rgba(139, 92, 246, 0.1)"
-                backdropFilter="blur(15px)"
-                borderRadius="2xl"
-                border="1px solid rgba(139, 92, 246, 0.3)"
-                p={{ base: 5, md: 6 }}
-                maxW="lg"
-                w="full"
-                mx="auto"
-                boxShadow="0 8px 25px rgba(0,0,0,0.2)"
-              >
-                <HStack
-                  justify="space-around"
-                  spacing={{ base: 4, md: 6 }}
-                  flexWrap="wrap"
-                >
-                  <VStack>
-                    <Icon as={Trophy} color="purple.300" boxSize={5} />
-                    <Text color="white" fontWeight="bold" fontSize="lg">
-                      {userMemberData?.score || 0}
-                    </Text>
-                    <Text color="whiteAlpha.700" fontSize="xs">
-                      {t('Your Score')}
-                    </Text>
-                  </VStack>
-                  <VStack>
-                    <Icon
-                      as={
-                        (userMemberData?.trophyChange || 0) >= 0
-                          ? Trophy
-                          : AlertTriangle
-                      }
-                      color={
-                        (userMemberData?.trophyChange || 0) >= 0
-                          ? 'green.400'
-                          : 'red.400'
-                      }
-                      boxSize={5}
-                    />
-                    <Text color="white" fontWeight="bold" fontSize="lg">
-                      {userMemberData?.trophyChange > 0 ? '+' : ''}
-                      {userMemberData?.trophyChange || 0}
-                    </Text>
-                    <Text color="whiteAlpha.700" fontSize="xs">
-                      {t('Trophy Change')}
-                    </Text>
-                  </VStack>
-                  <VStack>
-                    <Icon as={Clock} color="blue.400" boxSize={5} />
-                    <Text color="white" fontWeight="bold" fontSize="lg">
-                      {battle.challenges?.length || 0}
-                    </Text>
-                    <Text color="whiteAlpha.700" fontSize="xs">
-                      {t('Categories')}
-                    </Text>
-                  </VStack>
-                </HStack>
-              </Box>
+            <BattleResultBanner battle={battle} userTeam={userTeam} />
+          </Suspense>
+        </ErrorBoundary>
 
-              <Flex
-                justify="center"
-                align="center"
-                gap={{ base: 4, md: 6 }}
-                wrap="wrap"
-                direction={{ base: 'column', sm: 'row' }}
-                w="full"
-              >
-                <Button
-                  leftIcon={<ArrowLeft size={18} />}
-                  size="lg"
-                  onClick={goBack}
-                  bgGradient="linear(to-r, purple.500, purple.600)"
-                  color="white"
-                  borderRadius="xl"
-                  px={{ base: 8, md: 10 }}
-                  py={{ base: 6, md: 7 }}
-                  fontSize={{ base: 'md', md: 'lg' }}
-                  fontWeight="medium"
-                  _hover={{
-                    bgGradient: 'linear(to-r, purple.600, purple.700)',
-                    transform: 'translateY(-3px)',
-                    boxShadow: '0 12px 30px rgba(139, 92, 246, 0.45)',
-                  }}
-                  _active={{ transform: 'translateY(-1px)' }}
-                  transition="all 0.25s cubic-bezier(0.4, 0, 0.2, 1)"
-                  boxShadow="0 8px 20px rgba(139, 92, 246, 0.3)"
-                  w={{ base: 'full', sm: 'auto' }}
-                >
-                  {t('Back to Battles')}
-                </Button>
-                <Button
-                  leftIcon={<Sparkles size={18} />}
-                  variant="outline"
-                  size="lg"
-                  onClick={openShare}
-                  borderColor="purple.400"
-                  color="purple.300"
-                  borderRadius="xl"
-                  px={{ base: 8, md: 10 }}
-                  py={{ base: 6, md: 7 }}
-                  fontSize={{ base: 'md', md: 'lg' }}
-                  fontWeight="medium"
-                  _hover={{
-                    bg: 'rgba(139, 92, 246, 0.15)',
-                    borderColor: 'purple.300',
-                    color: 'purple.200',
-                    transform: 'translateY(-3px)',
-                    boxShadow: '0 12px 30px rgba(139, 92, 246, 0.3)',
-                  }}
-                  _active={{ transform: 'translateY(-1px)' }}
-                  transition="all 0.25s cubic-bezier(0.4, 0, 0.2, 1)"
-                  w={{ base: 'full', sm: 'auto' }}
-                >
-                  {t('Share Analysis')}
-                </Button>
-              </Flex>
-            </VStack>
-          </MotionBox>
-        </VStack>
+        {/* Main Analysis Content - lazy loaded with error boundary */}
+        <ErrorBoundary
+          title="Analysis Error"
+          fallbackText="Failed to load battle analysis content"
+        >
+          <Suspense
+            fallback={
+              <Box h="200px" bg="whiteAlpha.50" borderRadius="xl" mt={4} />
+            }
+          >
+            <AnalysisContent
+              battle={battle}
+              userTeam={userTeam}
+              userMemberData={userMemberData}
+              user={user}
+              battleId={battleId}
+            />
+          </Suspense>
+        </ErrorBoundary>
       </MotionContainer>
-
-      {isShareOpen && battle && (
-        <ShareResultsModal
-          isOpen={isShareOpen}
-          onClose={closeShare}
-          battle={battle}
-          userTeam={userTeam}
-        />
-      )}
     </Box>
   )
-}
+})
+
+// Display name for debugging
+TeamBattleAnalysisInner.displayName = 'TeamBattleAnalysisInner'
+
+/**
+ * Main TeamBattleAnalysis Component wrapped with FeedbackProvider and ErrorBoundary
+ * Optimized with React.memo and proper context isolation
+ */
+const TeamBattleAnalysis = React.memo(() => {
+  return (
+    <ErrorBoundary
+      title="Battle Analysis Error"
+      fallbackText="Failed to load the battle analysis system"
+    >
+      <FeedbackProvider>
+        <TeamBattleAnalysisInner />
+      </FeedbackProvider>
+    </ErrorBoundary>
+  )
+})
+
+TeamBattleAnalysis.displayName = 'TeamBattleAnalysis'
 
 export default TeamBattleAnalysis

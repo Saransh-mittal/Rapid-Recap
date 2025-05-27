@@ -37,6 +37,9 @@ const {
   generateCsrfToken,
   validateCsrfToken,
 } = require('./middleware/csrfMiddleware')
+const {
+  trackAnalysisInteraction,
+} = require('./middleware/feedbackTrackingMiddleware')
 
 const app = express()
 // CORS configuration - only needed in development
@@ -71,6 +74,13 @@ app.use(helmet())
 // Body parser middleware
 app.use(bodyParser.json())
 require('./db/conn')
+
+// ADD: Initialize feedback tracking middleware BEFORE routes
+console.log('Initializing feedback tracking system...')
+
+// ADD: Apply feedback tracking middleware for all requests
+app.use(trackAnalysisInteraction)
+
 webpush.setVapidDetails(
   'mailto:rapidrecap2k23@gmail.com',
   process.env.PUBLIC_VAPID_KEY,

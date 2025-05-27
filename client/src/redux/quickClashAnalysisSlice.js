@@ -108,6 +108,7 @@ const quickClashAnalysisSlice = createSlice({
   reducers: {
     resetAnalysisState: () => initialState,
     clearCurrentAnalysis: state => {
+      // Removed console.log
       state.currentBattleAnalysis = null
       state.userTeam = null
       state.aiInsights = []
@@ -164,7 +165,7 @@ const quickClashAnalysisSlice = createSlice({
     },
     startTypewriter: (state, action) => {
       const { questionId } = action.payload
-      console.log('Starting typewriter for question:', questionId)
+      // Removed console.log
       state.typewriterStates[questionId] = {
         isTyping: true,
         currentText: '',
@@ -280,15 +281,7 @@ const quickClashAnalysisSlice = createSlice({
 
             state.aiInsights = [] // Clear old aiInsights format
 
-            console.log('QuickClashAnalysisSlice: Initial questions loaded:', {
-              allQuestionsCount: state.allQuestions.length,
-              activeInFollowUpQuestions: state.followUpQuestions.length,
-              answeredQuestionsCount: state.allQuestions.filter(q => q.answered)
-                .length,
-              progression: state.questionProgression,
-              firstAllQuestion: state.allQuestions[0],
-              firstActiveQuestion: state.followUpQuestions[0],
-            })
+            // Removed console.log
           } else if (action.payload.analysis.aiInsights) {
             // Legacy aiInsights format
             state.aiInsights = action.payload.analysis.aiInsights
@@ -370,10 +363,7 @@ const quickClashAnalysisSlice = createSlice({
         state.questionAnswerLoading = true
         state.questionAnswerError = null
         const { questionId } = action.meta.arg
-        console.log(
-          'QuickClashAnalysisSlice: Question answer pending, starting typewriter for:',
-          questionId,
-        )
+        // Removed console.log
         state.typewriterStates[questionId] = {
           isTyping: true,
           currentText: '',
@@ -386,15 +376,7 @@ const quickClashAnalysisSlice = createSlice({
           const { questionId, answer, nextQuestion, progression } =
             action.payload
 
-          console.log(
-            'QuickClashAnalysisSlice: Question answered successfully:',
-            {
-              answeredQuestionId: questionId,
-              hasAnswer: !!answer,
-              hasNextQuestion: !!nextQuestion,
-              newProgression: progression,
-            },
-          )
+          // Removed console.log
 
           const allQuestionIndex = state.allQuestions.findIndex(
             q => q.id === questionId,
@@ -409,10 +391,7 @@ const quickClashAnalysisSlice = createSlice({
               },
               isActive: false,
             }
-            console.log(
-              'QuickClashAnalysisSlice: Updated question in allQuestions:',
-              state.allQuestions[allQuestionIndex],
-            )
+            // Removed console.log
           }
 
           // Current active question (followUpQuestions) should be updated/cleared
@@ -441,19 +420,13 @@ const quickClashAnalysisSlice = createSlice({
               }
             }
             state.followUpQuestions = [newQuestionPayload] // Set as the new active question
-            console.log(
-              'QuickClashAnalysisSlice: Added next question:',
-              newQuestionPayload,
-            )
+            // Removed console.log
           }
 
           if (progression) {
             // Backend now sends the authoritative progression
             state.questionProgression = progression
-            console.log(
-              'QuickClashAnalysisSlice: Updated progression from backend:',
-              state.questionProgression,
-            )
+            // Removed console.log
           }
         } else {
           state.questionAnswerError =
