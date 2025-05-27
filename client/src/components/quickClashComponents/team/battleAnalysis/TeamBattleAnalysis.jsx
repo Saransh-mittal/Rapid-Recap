@@ -1,5 +1,5 @@
 // components/quickClashComponents/team/battleAnalysis/TeamBattleAnalysis.jsx
-import React, { useEffect, useMemo, useState } from 'react'
+import React, { useEffect, useMemo, useState, useCallback } from 'react'
 import {
   Box,
   VStack,
@@ -14,6 +14,12 @@ import {
   Flex,
   HStack,
   Progress,
+  Modal,
+  ModalOverlay,
+  ModalContent,
+  ModalHeader,
+  ModalCloseButton,
+  ModalBody,
 } from '@chakra-ui/react'
 import { motion, AnimatePresence } from 'framer-motion'
 import { useTranslation } from 'react-i18next'
@@ -41,6 +47,20 @@ import CategoryBreakdownSection from './components/CategoryBreakdownSection'
 import DetailedBonusExplanation from './components/DetailedBonusExplanation'
 import ShareResultsModal from './components/ShareResultsModal'
 import MVPRecognition from './components/MVPRecognition'
+
+// Enhanced feedback components with context
+import EnhancedFeedbackWidget, {
+  SmartFeedbackTrigger,
+  useFeedbackIntegration,
+  FeedbackSummary,
+  FloatingFeedbackButton,
+} from './components/EnhancedFeedbackWidget'
+
+// Import feedback context
+import {
+  FeedbackProvider,
+  useFeedbackContext,
+} from '../../../../contextAPI/FeedbackContext'
 
 const MotionBox = motion(Box)
 const MotionContainer = motion(Container)
@@ -81,8 +101,8 @@ const itemVariants = {
 
 const floatingVariants = {
   animate: {
-    y: [0, -10, 0], // Subtle float
-    rotate: [0, 3, 0, -3, 0], // Gentle sway
+    y: [0, -10, 0],
+    rotate: [0, 3, 0, -3, 0],
     transition: {
       duration: 5,
       repeat: Infinity,
@@ -92,7 +112,7 @@ const floatingVariants = {
 }
 
 /**
- * Loading Screen Component with Enhanced Animation
+ * Enhanced Loading Screen Component with AI Processing Animation
  */
 const LoadingScreen = ({ progress, step }) => {
   const { t } = useTranslation('QuickClash')
@@ -215,18 +235,105 @@ const LoadingScreen = ({ progress, step }) => {
 }
 
 /**
- * Main TeamBattleAnalysis Component
+ * Error Screen Component
  */
-const TeamBattleAnalysis = () => {
+const ErrorScreen = ({ error, onRetry }) => {
+  const { t } = useTranslation('QuickClash')
+
+  return (
+    <Box minH="100vh" position="relative" bg="gray.900">
+      <Center minH="100vh" p={4}>
+        <VStack spacing={8} maxW="md" textAlign="center">
+          <MotionBox
+            initial={{ scale: 0.5, rotate: -90 }}
+            animate={{ scale: 1, rotate: 0 }}
+            transition={{ type: 'spring', stiffness: 150, damping: 12 }}
+          >
+            <Box
+              p={6}
+              borderRadius="full"
+              bg="rgba(239, 68, 68, 0.15)"
+              border="3px solid"
+              borderColor="red.500"
+              boxShadow="0 0 30px rgba(239, 68, 68, 0.5)"
+            >
+              <Icon as={AlertTriangle} color="red.400" boxSize={12} />
+            </Box>
+          </MotionBox>
+          <VStack spacing={4}>
+            <Text
+              color="red.400"
+              fontSize={{ base: 'xl', md: '2xl' }}
+              fontWeight="bold"
+            >
+              {t('Analysis Failed')}
+            </Text>
+            <Text
+              color="whiteAlpha.800"
+              fontSize={{ base: 'md', md: 'lg' }}
+              maxW="sm"
+            >
+              {error}
+            </Text>
+            <Button
+              leftIcon={<ArrowLeft size={18} />}
+              colorScheme="purple"
+              size="lg"
+              onClick={onRetry}
+              bgGradient="linear(to-r, purple.500, purple.600)"
+              borderRadius="xl"
+              px={8}
+              py={6}
+              mt={4}
+              _hover={{
+                bgGradient: 'linear(to-r, purple.600, purple.700)',
+                transform: 'translateY(-3px)',
+                boxShadow: '0 10px 25px rgba(139, 92, 246, 0.4)',
+              }}
+              _active={{ transform: 'translateY(-1px)' }}
+              transition="all 0.25s cubic-bezier(0.4, 0, 0.2, 1)"
+            >
+              {t('Back to Battles')}
+            </Button>
+          </VStack>
+        </VStack>
+      </Center>
+    </Box>
+  )
+}
+
+/**
+ * Inner component that uses the feedback context
+ */
+const TeamBattleAnalysisInner = () => {
   const { t } = useTranslation('QuickClash')
   const { battleId } = useParams()
   const { user } = useSelector(state => state.auth)
   const [loadingProgress, setLoadingProgress] = useState(0)
   const [analysisStep, setAnalysisStep] = useState('')
+
+  // Feedback context
+  const { clearFeedbackCache } = useFeedbackContext()
+
+  // Enhanced feedback integration with performance optimizations
+  const {
+    feedbackPrompts,
+    feedbackData,
+    addFeedbackPrompt,
+    removeFeedbackPrompt,
+    recordFeedback,
+  } = useFeedbackIntegration()
+
   const {
     isOpen: isShareOpen,
     onOpen: openShare,
     onClose: closeShare,
+  } = useDisclosure()
+
+  const {
+    isOpen: isFeedbackOpen,
+    onOpen: openFeedback,
+    onClose: closeFeedback,
   } = useDisclosure()
 
   const spacing = useBreakpointValue({ base: 6, md: 8, lg: 10 })
@@ -249,14 +356,16 @@ const TeamBattleAnalysis = () => {
     goBack,
     expandedSections,
     handleToggleSection,
-    submitInsightFeedbackToServer,
     clearAnalysis,
     mvpAwards,
     simplifiedTrophyData,
     enhancedMemberPerformance,
+    engagementData,
+    trackInteraction,
+    analysisId,
   } = useQuickClashAnalysis()
 
-  // Enhanced loading sequence
+  // Enhanced loading sequence with personalization steps
   useEffect(() => {
     if (battleId) {
       const steps = [
@@ -281,7 +390,7 @@ const TeamBattleAnalysis = () => {
         } else {
           clearInterval(stepInterval)
         }
-      }, 400) // Slightly faster steps
+      }, 400)
 
       getBattleAnalysis(battleId).catch(err => {
         clearInterval(stepInterval)
@@ -293,12 +402,38 @@ const TeamBattleAnalysis = () => {
     }
   }, [battleId, getBattleAnalysis, t])
 
-  // Cleanup on unmount
+  // Cleanup on unmount - clear both analysis and feedback cache
   useEffect(() => {
     return () => {
       clearAnalysis()
+      if (analysisId) {
+        clearFeedbackCache(analysisId)
+      }
     }
-  }, [clearAnalysis])
+  }, [])
+
+  // Track page view (debounced to prevent excessive calls)
+  useEffect(() => {
+    if (battle && userTeam) {
+      const timer = setTimeout(() => {
+        trackInteraction('analysis_page_view', {
+          battleId,
+          userTeam,
+          hasRecap: !!battleRecap,
+          questionsCount: followUpQuestions?.length || 0,
+        })
+      }, 1000) // Debounce by 1 second
+
+      return () => clearTimeout(timer)
+    }
+  }, [
+    battle,
+    userTeam,
+    battleRecap,
+    followUpQuestions,
+    trackInteraction,
+    battleId,
+  ])
 
   const userMemberData = useMemo(() => {
     if (!battle || !user || !userTeam) return null
@@ -309,73 +444,64 @@ const TeamBattleAnalysis = () => {
     )
   }, [battle, user, userTeam])
 
+  // Enhanced feedback submission handler with performance optimization
+  const handleFeedbackSubmitted = useCallback(
+    (feedbackType, method, insightId) => {
+      recordFeedback(insightId, {
+        type: feedbackType,
+        method,
+        timestamp: Date.now(),
+        battleId,
+        userTeam,
+      })
+      removeFeedbackPrompt(insightId)
+
+      // Debounced tracking
+      setTimeout(() => {
+        trackInteraction('feedback_submitted', {
+          feedbackType,
+          method,
+          insightId,
+          engagementLevel: engagementData?.scrollDepth > 70 ? 'high' : 'medium',
+        })
+      }, 500)
+    },
+    [
+      recordFeedback,
+      removeFeedbackPrompt,
+      trackInteraction,
+      battleId,
+      userTeam,
+      engagementData,
+    ],
+  )
+
+  // Determine user's team role for better feedback context (memoized)
+  const userTeamRole = useMemo(() => {
+    if (!userMemberData || !battle || !user) return 'average'
+
+    const teamMembers =
+      userTeam === 'teamA' ? battle.teamAMembers : battle.teamBMembers
+    const sortedByScore = [...teamMembers].sort((a, b) => b.score - a.score)
+    const userRank = sortedByScore.findIndex(m => m.user._id === user._id) + 1
+
+    if (userRank === 1) return 'top_performer'
+    if (userRank === teamMembers.length) return 'bottom_performer'
+    if (mvpAwards?.matchMVP?.user._id === user._id) return 'mvp'
+    return 'average'
+  }, [userMemberData, battle, userTeam, user, mvpAwards])
+
+  // Loading state
   if (battleAnalysisLoading && !battle) {
     return <LoadingScreen progress={loadingProgress} step={analysisStep} />
   }
 
+  // Error state
   if (battleAnalysisError && !battle) {
-    return (
-      <Box minH="100vh" position="relative" bg="gray.900">
-        <Center minH="100vh" p={4}>
-          <VStack spacing={8} maxW="md" textAlign="center">
-            <MotionBox
-              initial={{ scale: 0.5, rotate: -90 }}
-              animate={{ scale: 1, rotate: 0 }}
-              transition={{ type: 'spring', stiffness: 150, damping: 12 }}
-            >
-              <Box
-                p={6}
-                borderRadius="full"
-                bg="rgba(239, 68, 68, 0.15)"
-                border="3px solid"
-                borderColor="red.500"
-                boxShadow="0 0 30px rgba(239, 68, 68, 0.5)"
-              >
-                <Icon as={AlertTriangle} color="red.400" boxSize={12} />
-              </Box>
-            </MotionBox>
-            <VStack spacing={4}>
-              <Text
-                color="red.400"
-                fontSize={{ base: 'xl', md: '2xl' }}
-                fontWeight="bold"
-              >
-                {t('Analysis Failed')}
-              </Text>
-              <Text
-                color="whiteAlpha.800"
-                fontSize={{ base: 'md', md: 'lg' }}
-                maxW="sm"
-              >
-                {battleAnalysisError}
-              </Text>
-              <Button
-                leftIcon={<ArrowLeft size={18} />}
-                colorScheme="purple"
-                size="lg"
-                onClick={goBack}
-                bgGradient="linear(to-r, purple.500, purple.600)"
-                borderRadius="xl"
-                px={8}
-                py={6}
-                mt={4}
-                _hover={{
-                  bgGradient: 'linear(to-r, purple.600, purple.700)',
-                  transform: 'translateY(-3px)',
-                  boxShadow: '0 10px 25px rgba(139, 92, 246, 0.4)',
-                }}
-                _active={{ transform: 'translateY(-1px)' }}
-                transition="all 0.25s cubic-bezier(0.4, 0, 0.2, 1)"
-              >
-                {t('Back to Battles')}
-              </Button>
-            </VStack>
-          </VStack>
-        </Center>
-      </Box>
-    )
+    return <ErrorScreen error={battleAnalysisError} onRetry={goBack} />
   }
 
+  // Battle not found state
   if (!battle || !userTeam) {
     return (
       <Box minH="100vh" position="relative" bg="gray.900">
@@ -455,6 +581,7 @@ const TeamBattleAnalysis = () => {
         bottom={0}
         zIndex={0}
         overflow="hidden"
+        pointerEvents="none" // Prevent interference with scrolling
       >
         <MotionBox
           position="absolute"
@@ -502,6 +629,7 @@ const TeamBattleAnalysis = () => {
         initial="hidden"
         animate="visible"
       >
+        {/* Back Button */}
         <MotionBox variants={itemVariants} mb={{ base: 6, md: 8 }}>
           <Button
             leftIcon={<ArrowLeft size={18} />}
@@ -529,6 +657,7 @@ const TeamBattleAnalysis = () => {
         </MotionBox>
 
         <VStack spacing={spacing} align="stretch">
+          {/* Battle Result Banner */}
           <MotionBox variants={itemVariants}>
             <BattleResultBanner
               battle={battle}
@@ -537,80 +666,169 @@ const TeamBattleAnalysis = () => {
             />
           </MotionBox>
 
+          {/* Trophy Exchange Summary with Feedback */}
           <MotionBox variants={itemVariants}>
-            <TrophyExchangeSummary
-              battle={battle}
-              userTeam={userTeam}
-              userMemberData={userMemberData}
-              isExpanded={expandedSections.trophies}
-              onToggle={() => handleToggleSection('trophies')}
-              simplifiedTrophyData={simplifiedTrophyData}
-            />
+            <VStack spacing={4} align="stretch">
+              <TrophyExchangeSummary
+                battle={battle}
+                userTeam={userTeam}
+                userMemberData={userMemberData}
+                isExpanded={expandedSections.trophies}
+                onToggle={() => handleToggleSection('trophies')}
+                simplifiedTrophyData={simplifiedTrophyData}
+              />
+
+              {/* Feedback widget for trophy insights */}
+              <EnhancedFeedbackWidget
+                insightData={{
+                  title: 'Trophy Exchange Analysis',
+                  description:
+                    'Analysis of trophy gains/losses and performance bonuses in this battle',
+                  type: 'trophy_analysis',
+                  category: 'improvement',
+                }}
+                compact={true}
+                userStats={{
+                  score: userMemberData?.score || 0,
+                  trophyChange: userMemberData?.trophyChange || 0,
+                  teamRole: userTeamRole,
+                }}
+                onFeedbackSubmitted={(type, method) =>
+                  handleFeedbackSubmitted(type, method, 'trophy_analysis')
+                }
+                battleId={battleId}
+              />
+            </VStack>
           </MotionBox>
 
-          {/* NEW MVP RECOGNITION COMPONENT */}
-          {(mvpAwards.matchMVP ||
-            mvpAwards.teamMVP ||
-            mvpAwards.pivotalPlayer ||
-            (mvpAwards.performanceRecognitions &&
+          {/* MVP Recognition with Feedback */}
+          {(mvpAwards?.matchMVP ||
+            mvpAwards?.teamMVP ||
+            mvpAwards?.pivotalPlayer ||
+            (mvpAwards?.performanceRecognitions &&
               mvpAwards.performanceRecognitions.length > 0)) && (
             <MotionBox variants={itemVariants}>
-              <MVPRecognition
-                mvpAwards={mvpAwards}
-                userTeam={userTeam}
-                isExpanded={expandedSections.mvpRecognition}
-                onToggle={() => handleToggleSection('mvpRecognition')}
-              />
+              <VStack spacing={4} align="stretch">
+                <MVPRecognition
+                  mvpAwards={mvpAwards}
+                  userTeam={userTeam}
+                  isExpanded={expandedSections.mvpRecognition}
+                  onToggle={() => handleToggleSection('mvpRecognition')}
+                />
+
+                {/* Feedback for MVP insights */}
+                <EnhancedFeedbackWidget
+                  insightData={{
+                    title: 'MVP Recognition Analysis',
+                    description:
+                      'Recognition of standout performances and key achievements in this battle',
+                    type: 'achievement',
+                    category: 'validation',
+                  }}
+                  compact={true}
+                  userStats={{
+                    score: userMemberData?.score || 0,
+                    trophyChange: userMemberData?.trophyChange || 0,
+                    teamRole: userTeamRole,
+                  }}
+                  onFeedbackSubmitted={(type, method) =>
+                    handleFeedbackSubmitted(type, method, 'mvp_analysis')
+                  }
+                  battleId={battleId}
+                />
+              </VStack>
             </MotionBox>
           )}
 
+          {/* AI Insights with Smart Feedback Trigger */}
           {(battleRecap ||
             followUpQuestions ||
             (aiInsights && aiInsights.length > 0)) && (
             <MotionBox variants={itemVariants}>
-              <AIInsights
-                battleRecap={battleRecap}
-                followUpQuestions={followUpQuestions}
-                userStats={
-                  userMemberData
-                    ? {
-                        score: userMemberData.score,
-                        trophyChange: userMemberData.trophyChange,
-                        contribution: Math.round(
-                          (userMemberData.score /
-                            Math.max(
-                              1,
-                              battle[`${userTeam}Members`].reduce(
-                                (sum, m) => sum + m.score,
-                                0,
-                              ),
-                            )) *
-                            100,
-                        ),
-                      }
-                    : null
-                }
-                battleId={battleId}
-                isExpanded={expandedSections.aiInsights}
-                onToggle={() => handleToggleSection('aiInsights')}
-              />
+              <VStack spacing={4} align="stretch">
+                <AIInsights
+                  battleRecap={battleRecap}
+                  followUpQuestions={followUpQuestions}
+                  userStats={
+                    userMemberData
+                      ? {
+                          score: userMemberData.score,
+                          trophyChange: userMemberData.trophyChange,
+                          contribution: Math.round(
+                            (userMemberData.score /
+                              Math.max(
+                                1,
+                                battle[`${userTeam}Members`].reduce(
+                                  (sum, m) => sum + m.score,
+                                  0,
+                                ),
+                              )) *
+                              100,
+                          ),
+                        }
+                      : null
+                  }
+                  battleId={battleId}
+                  isExpanded={expandedSections.aiInsights}
+                  onToggle={() => handleToggleSection('aiInsights')}
+                />
+
+                {/* Smart feedback trigger for AI insights (debounced) */}
+                <SmartFeedbackTrigger
+                  insightData={{
+                    title: 'AI Battle Analysis',
+                    description:
+                      battleRecap?.content ||
+                      'AI-generated strategic battle insights and recommendations',
+                    type: 'battle_recap',
+                    category: 'strategic',
+                  }}
+                  engagementData={engagementData}
+                  onFeedbackPrompt={() => addFeedbackPrompt('ai_insights')}
+                />
+              </VStack>
             </MotionBox>
           )}
 
+          {/* Team Contribution with Feedback */}
           {user && user._id && (
             <MotionBox variants={itemVariants}>
-              <TeamContributionSection
-                battle={battle}
-                userTeam={userTeam}
-                userId={user._id}
-                isExpanded={expandedSections.teamPerformance}
-                onToggle={() => handleToggleSection('teamPerformance')}
-                enhancedMemberPerformance={enhancedMemberPerformance}
-                mvpAwards={mvpAwards}
-              />
+              <VStack spacing={4} align="stretch">
+                <TeamContributionSection
+                  battle={battle}
+                  userTeam={userTeam}
+                  userId={user._id}
+                  isExpanded={expandedSections.teamPerformance}
+                  onToggle={() => handleToggleSection('teamPerformance')}
+                  enhancedMemberPerformance={enhancedMemberPerformance}
+                  mvpAwards={mvpAwards}
+                />
+
+                {/* Feedback for team performance insights */}
+                <EnhancedFeedbackWidget
+                  insightData={{
+                    title: 'Team Performance Analysis',
+                    description:
+                      'Detailed analysis of individual contributions and team synergy patterns',
+                    type: 'team_dynamics',
+                    category: 'tactical',
+                  }}
+                  compact={true}
+                  userStats={{
+                    score: userMemberData?.score || 0,
+                    trophyChange: userMemberData?.trophyChange || 0,
+                    teamRole: userTeamRole,
+                  }}
+                  onFeedbackSubmitted={(type, method) =>
+                    handleFeedbackSubmitted(type, method, 'team_performance')
+                  }
+                  battleId={battleId}
+                />
+              </VStack>
             </MotionBox>
           )}
 
+          {/* Category Breakdown */}
           <MotionBox variants={itemVariants}>
             <CategoryBreakdownSection
               battle={battle}
@@ -621,7 +839,8 @@ const TeamBattleAnalysis = () => {
             />
           </MotionBox>
 
-          {simplifiedTrophyData.activeBonuses &&
+          {/* Detailed Bonus Explanation */}
+          {simplifiedTrophyData?.activeBonuses &&
             simplifiedTrophyData.activeBonuses.length > 0 && (
               <MotionBox variants={itemVariants}>
                 <DetailedBonusExplanation
@@ -633,6 +852,12 @@ const TeamBattleAnalysis = () => {
               </MotionBox>
             )}
 
+          {/* Feedback Summary Section */}
+          <MotionBox variants={itemVariants}>
+            <FeedbackSummary userId={user?._id} />
+          </MotionBox>
+
+          {/* Final Summary and Action Buttons */}
           <MotionBox
             variants={itemVariants}
             textAlign="center"
@@ -658,27 +883,6 @@ const TeamBattleAnalysis = () => {
                 >
                   <VStack>
                     <Icon as={Trophy} color="purple.300" boxSize={5} />
-                    <Text color="white" fontWeight="bold" fontSize="lg">
-                      {userMemberData?.score || 0}
-                    </Text>
-                    <Text color="whiteAlpha.700" fontSize="xs">
-                      {t('Your Score')}
-                    </Text>
-                  </VStack>
-                  <VStack>
-                    <Icon
-                      as={
-                        (userMemberData?.trophyChange || 0) >= 0
-                          ? Trophy
-                          : AlertTriangle
-                      }
-                      color={
-                        (userMemberData?.trophyChange || 0) >= 0
-                          ? 'green.400'
-                          : 'red.400'
-                      }
-                      boxSize={5}
-                    />
                     <Text color="white" fontWeight="bold" fontSize="lg">
                       {userMemberData?.trophyChange > 0 ? '+' : ''}
                       {userMemberData?.trophyChange || 0}
@@ -761,6 +965,7 @@ const TeamBattleAnalysis = () => {
         </VStack>
       </MotionContainer>
 
+      {/* Share Results Modal */}
       {isShareOpen && battle && (
         <ShareResultsModal
           isOpen={isShareOpen}
@@ -769,7 +974,86 @@ const TeamBattleAnalysis = () => {
           userTeam={userTeam}
         />
       )}
+
+      {/* Floating Feedback Button */}
+      <FloatingFeedbackButton
+        onOpen={openFeedback}
+        hasUnseenInsights={feedbackPrompts.size > 0}
+      />
+
+      {/* Global Feedback Modal */}
+      <Modal
+        isOpen={isFeedbackOpen}
+        onClose={closeFeedback}
+        size="lg"
+        isCentered
+      >
+        <ModalOverlay bg="blackAlpha.700" backdropFilter="blur(8px)" />
+        <ModalContent
+          bg="rgba(26, 32, 44, 0.95)"
+          backdropFilter="blur(20px)"
+          borderRadius="2xl"
+          borderWidth="1px"
+          borderColor="purple.600"
+          boxShadow="0 10px 40px rgba(0,0,0,0.5)"
+        >
+          <ModalHeader color="whiteAlpha.900">
+            <HStack>
+              <Icon as={Brain} color="purple.400" boxSize={5} />
+              <Text fontWeight="semibold">{t('Battle Analysis Feedback')}</Text>
+            </HStack>
+          </ModalHeader>
+          <ModalCloseButton color="whiteAlpha.700" />
+
+          <ModalBody pb={6}>
+            <VStack spacing={6} align="stretch">
+              <Text color="whiteAlpha.800" fontSize="sm">
+                {t(
+                  'Help us improve the AI analysis by sharing your thoughts on the insights provided.',
+                )}
+              </Text>
+
+              {/* Overall Battle Analysis Feedback */}
+              <EnhancedFeedbackWidget
+                insightData={{
+                  title: 'Overall Battle Analysis',
+                  description:
+                    'Complete analysis including AI insights, team performance, and strategic recommendations',
+                  type: 'battle_recap',
+                  category: 'general',
+                }}
+                compact={false}
+                showDetailedForm={true}
+                userStats={{
+                  score: userMemberData?.score || 0,
+                  trophyChange: userMemberData?.trophyChange || 0,
+                  teamRole: userTeamRole,
+                }}
+                onFeedbackSubmitted={(type, method) => {
+                  handleFeedbackSubmitted(type, method, 'overall_analysis')
+                  closeFeedback()
+                }}
+                battleId={battleId}
+              />
+
+              {/* Feedback Summary */}
+              <FeedbackSummary userId={user?._id} />
+            </VStack>
+          </ModalBody>
+        </ModalContent>
+      </Modal>
     </Box>
+  )
+}
+
+/**
+ * Main TeamBattleAnalysis Component wrapped with FeedbackProvider
+ */
+const TeamBattleAnalysis = () => {
+  return (
+    <FeedbackProvider>
+      <TeamBattleAnalysisInner />
+    </FeedbackProvider>
   )
 }
 

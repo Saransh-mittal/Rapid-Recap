@@ -108,6 +108,7 @@ const quickClashAnalysisSlice = createSlice({
   reducers: {
     resetAnalysisState: () => initialState,
     clearCurrentAnalysis: state => {
+      console.log('QuickClashAnalysisSlice: Clearing current analysis state')
       state.currentBattleAnalysis = null
       state.userTeam = null
       state.aiInsights = []
