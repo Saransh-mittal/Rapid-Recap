@@ -1,5 +1,5 @@
 // components/quickClashComponents/team/battleAnalysis/components/DetailedBonusExplanation.jsx
-import React, { useEffect } from 'react'
+import React, { useEffect, useMemo } from 'react'
 import {
   Box,
   Flex,
@@ -8,7 +8,6 @@ import {
   Icon,
   HStack,
   VStack,
-  useBreakpointValue,
   Collapse,
   Divider,
 } from '@chakra-ui/react'
@@ -17,15 +16,13 @@ import { useTranslation } from 'react-i18next'
 import {
   Award,
   ChevronDown,
-  ChevronUp,
   Calendar,
   Shield,
-  Zap, // Changed from TrendingUp
+  Zap,
   Trophy,
   Info,
-  AlertTriangle,
   Star,
-  Gift, // Generic bonus
+  Gift,
 } from 'lucide-react'
 
 const MotionBox = motion(Box)
@@ -59,7 +56,6 @@ const BONUS_EXPLANATIONS = {
       'Your team dominated every category in this battle. A perfect performance deserves extra rewards!',
     color: 'green',
   },
-  // Add more known bonuses here
   default: {
     icon: Gift,
     titleKey: 'Special Bonus',
@@ -73,11 +69,18 @@ const DetailedBonusExplanation = ({ trophyExchange, isExpanded, onToggle }) => {
   const { t } = useTranslation('QuickClash')
   const controls = useAnimationControls()
 
-  const padding = useBreakpointValue({ base: 4, md: 6 })
-  const headerIconSize = useBreakpointValue({ base: 5, md: 6 })
-  const itemIconSize = useBreakpointValue({ base: 4, md: 5 })
-  const headingSize = useBreakpointValue({ base: 'md', md: 'lg' })
-  const fontSize = useBreakpointValue({ base: 'sm', md: 'md' })
+  // Memoized responsive configuration - static values for performance
+  const config = useMemo(
+    () => ({
+      isMobile: window.innerWidth < 768,
+      padding: { base: 3, md: 5 }, // Reduced padding
+      headerIconSize: { base: 5, md: 6 },
+      itemIconSize: { base: 4, md: 5 },
+      headingSize: { base: 'md', md: 'lg' },
+      fontSize: { base: 'sm', md: 'md' },
+    }),
+    [],
+  )
 
   const activeBonuses = Object.entries(trophyExchange?.bonuses || {})
     .filter(([_, bonus]) => bonus && bonus.applied)
@@ -97,7 +100,7 @@ const DetailedBonusExplanation = ({ trophyExchange, isExpanded, onToggle }) => {
     controls.start({
       opacity: 1,
       y: 0,
-      transition: { duration: 0.5, ease: 'easeOut' },
+      transition: { duration: 0.4, ease: 'easeOut' }, // Reduced duration
     })
   }, [controls, isExpanded])
 
@@ -107,31 +110,39 @@ const DetailedBonusExplanation = ({ trophyExchange, isExpanded, onToggle }) => {
 
   return (
     <MotionBox
-      bg="rgba(20, 15, 35, 0.7)" // Darker, purplish base
-      backdropFilter="blur(15px)"
-      borderRadius="2xl" // Consistent rounding
-      boxShadow="0 8px 30px rgba(0, 0, 0, 0.25)"
+      bg="rgba(20, 15, 35, 0.7)"
+      backdropFilter={config.isMobile ? 'none' : 'blur(10px)'} // No blur on mobile
+      borderRadius="2xl"
+      boxShadow={
+        config.isMobile
+          ? '0 6px 20px rgba(0, 0, 0, 0.2)'
+          : '0 8px 25px rgba(0, 0, 0, 0.25)' // Reduced shadow
+      }
       overflow="hidden"
       borderWidth="1px"
-      borderColor="yellow.500" // Highlight for bonus
-      initial={{ opacity: 0, y: 20 }}
+      borderColor="yellow.500"
+      initial={{ opacity: 0, y: 15 }} // Reduced movement
       animate={controls}
     >
       <Flex
         bg="transparent"
-        px={padding}
+        px={config.padding}
         py={4}
         justify="space-between"
         align="center"
         cursor="pointer"
         onClick={onToggle}
         borderBottom="1px solid"
-        borderColor="rgba(226, 175, 50, 0.3)" // Yellowish border
+        borderColor="rgba(226, 175, 50, 0.3)"
         _hover={{ bg: 'rgba(226, 175, 50, 0.05)' }}
       >
         <HStack spacing={3}>
-          <Icon as={Award} color="yellow.400" boxSize={headerIconSize} />
-          <Heading size={headingSize} color="white" fontWeight="semibold">
+          <Icon as={Award} color="yellow.400" boxSize={config.headerIconSize} />
+          <Heading
+            size={config.headingSize}
+            color="white"
+            fontWeight="semibold"
+          >
             {t('Trophy Bonuses')}
           </Heading>
         </HStack>
@@ -144,7 +155,7 @@ const DetailedBonusExplanation = ({ trophyExchange, isExpanded, onToggle }) => {
       </Flex>
 
       <Flex
-        px={padding}
+        px={config.padding}
         py={isExpanded ? 3 : 4}
         justify="space-between"
         align="center"
@@ -154,22 +165,32 @@ const DetailedBonusExplanation = ({ trophyExchange, isExpanded, onToggle }) => {
       >
         <HStack spacing={2}>
           <Icon as={Star} color="yellow.400" boxSize={4} />
-          <Text color="white" fontSize={fontSize}>
+          <Text color="white" fontSize={config.fontSize}>
             {activeBonusCount} {t('Active Bonus', { count: activeBonusCount })}
           </Text>
         </HStack>
-        <Text color="yellow.300" fontWeight="bold" fontSize={fontSize}>
+        <Text color="yellow.300" fontWeight="bold" fontSize={config.fontSize}>
           +{totalBonusAmount} {t('Extra Trophies')}
         </Text>
       </Flex>
 
       <Collapse in={isExpanded} animateOpacity>
-        <Box px={padding} py={4}>
-          <VStack spacing={5} align="stretch">
+        <Box px={config.padding} py={4}>
+          <VStack spacing={4} align="stretch">
+            {' '}
+            {/* Reduced spacing */}
             <HStack alignItems="center">
-              <Icon as={Trophy} color="blue.400" boxSize={itemIconSize} />
+              <Icon
+                as={Trophy}
+                color="blue.400"
+                boxSize={config.itemIconSize}
+              />
               <VStack align="flex-start" spacing={0} flex={1}>
-                <Text fontWeight="medium" color="white" fontSize={fontSize}>
+                <Text
+                  fontWeight="medium"
+                  color="white"
+                  fontSize={config.fontSize}
+                >
                   {t('Base Trophy Exchange')}
                 </Text>
                 <Text fontSize="xs" color="whiteAlpha.700">
@@ -180,7 +201,7 @@ const DetailedBonusExplanation = ({ trophyExchange, isExpanded, onToggle }) => {
                 ml="auto"
                 color="blue.300"
                 fontWeight="bold"
-                fontSize={fontSize}
+                fontSize={config.fontSize}
               >
                 {trophyExchange.baseAmount > 0
                   ? `+${trophyExchange.baseAmount}`
@@ -188,24 +209,26 @@ const DetailedBonusExplanation = ({ trophyExchange, isExpanded, onToggle }) => {
                 {t('trophies')}
               </Text>
             </HStack>
-
             <Divider borderColor="whiteAlpha.100" />
-
             {activeBonuses.map((bonus, index) => (
               <MotionBox
                 key={bonus.key}
-                initial={{ opacity: 0, x: -15 }}
+                initial={{ opacity: 0, x: -10 }} // Reduced movement
                 animate={{ opacity: 1, x: 0 }}
-                transition={{ delay: 0.1 + index * 0.1, duration: 0.4 }}
+                transition={{ delay: 0.05 + index * 0.05, duration: 0.3 }} // Faster
               >
                 <HStack alignItems="center">
                   <Icon
                     as={bonus.icon}
                     color={`${bonus.color}.400`}
-                    boxSize={itemIconSize}
+                    boxSize={config.itemIconSize}
                   />
                   <VStack align="flex-start" spacing={0} flex={1}>
-                    <Text fontWeight="medium" color="white" fontSize={fontSize}>
+                    <Text
+                      fontWeight="medium"
+                      color="white"
+                      fontSize={config.fontSize}
+                    >
                       {t(bonus.titleKey)}
                     </Text>
                     <Text fontSize="xs" color="whiteAlpha.700" noOfLines={2}>
@@ -216,20 +239,26 @@ const DetailedBonusExplanation = ({ trophyExchange, isExpanded, onToggle }) => {
                     ml="auto"
                     color={`${bonus.color}.300`}
                     fontWeight="bold"
-                    fontSize={fontSize}
+                    fontSize={config.fontSize}
                   >
                     +{bonus.amount} {t('trophies')}
                   </Text>
                 </HStack>
               </MotionBox>
             ))}
-
             <Divider borderColor="whiteAlpha.100" />
-
             <HStack alignItems="center">
-              <Icon as={Award} color="yellow.400" boxSize={itemIconSize} />
+              <Icon
+                as={Award}
+                color="yellow.400"
+                boxSize={config.itemIconSize}
+              />
               <VStack align="flex-start" spacing={0} flex={1}>
-                <Text fontWeight="bold" color="white" fontSize={fontSize}>
+                <Text
+                  fontWeight="bold"
+                  color="white"
+                  fontSize={config.fontSize}
+                >
                   {t('Final Trophy Exchange')}
                 </Text>
                 <Text fontSize="xs" color="whiteAlpha.700">
@@ -240,7 +269,7 @@ const DetailedBonusExplanation = ({ trophyExchange, isExpanded, onToggle }) => {
                 ml="auto"
                 color="yellow.300"
                 fontWeight="extrabold"
-                fontSize={headingSize}
+                fontSize={config.headingSize}
               >
                 {trophyExchange.finalAmount > 0
                   ? `+${trophyExchange.finalAmount}`
@@ -248,7 +277,6 @@ const DetailedBonusExplanation = ({ trophyExchange, isExpanded, onToggle }) => {
                 {t('trophies')}
               </Text>
             </HStack>
-
             <Box
               mt={2}
               p={3}
@@ -258,7 +286,7 @@ const DetailedBonusExplanation = ({ trophyExchange, isExpanded, onToggle }) => {
               borderStyle="dashed"
               borderColor="yellow.600"
             >
-              <HStack spacing={2.5}>
+              <HStack spacing={2}>
                 <Icon as={Info} color="yellow.500" boxSize={4} />
                 <Text fontSize="xs" color="whiteAlpha.800">
                   {t(

@@ -23,6 +23,11 @@ export const FeedbackProvider = ({ children }) => {
   const [loadingCache, setLoadingCache] = useState({})
   const checkingRef = useRef(new Set()) // Track ongoing checks
 
+  // NEW: Track overall feedback submission
+  const [overallFeedbackSubmitted, setOverallFeedbackSubmitted] =
+    useState(false)
+  const [overallFeedbackLoading, setOverallFeedbackLoading] = useState(false)
+
   // Generate cache key for feedback status
   const getCacheKey = useCallback((analysisId, insightTitle) => {
     if (!analysisId || !insightTitle) return null
@@ -86,12 +91,52 @@ export const FeedbackProvider = ({ children }) => {
     [feedbackCache, getCacheKey],
   )
 
+  // NEW: Check if overall feedback has been submitted
+  const checkOverallFeedbackExists = useCallback(
+    async analysisId => {
+      if (!analysisId) return false
+
+      // Check if we already know it's submitted
+      if (overallFeedbackSubmitted) return true
+
+      setOverallFeedbackLoading(true)
+
+      try {
+        const response = await fetch(
+          `/api/quickClash/analysis/check-feedback?analysisId=${analysisId}&insightTitle=${encodeURIComponent(
+            'Complete Battle Analysis Experience',
+          )}`,
+        )
+
+        if (response.ok) {
+          const data = await response.json()
+          const exists = data.exists || false
+          setOverallFeedbackSubmitted(exists)
+          return exists
+        }
+
+        return false
+      } catch (error) {
+        console.error('Error checking overall feedback existence:', error)
+        return false
+      } finally {
+        setOverallFeedbackLoading(false)
+      }
+    },
+    [overallFeedbackSubmitted],
+  )
+
   // Mark feedback as provided (update cache)
   const markFeedbackProvided = useCallback(
     (analysisId, insightTitle) => {
       const cacheKey = getCacheKey(analysisId, insightTitle)
       if (cacheKey) {
         setFeedbackCache(prev => ({ ...prev, [cacheKey]: true }))
+      }
+
+      // If this is overall feedback, mark it as submitted
+      if (insightTitle === 'Complete Battle Analysis Experience') {
+        setOverallFeedbackSubmitted(true)
       }
     },
     [getCacheKey],
@@ -111,6 +156,7 @@ export const FeedbackProvider = ({ children }) => {
     if (!analysisId) {
       setFeedbackCache({})
       setLoadingCache({})
+      setOverallFeedbackSubmitted(false)
       checkingRef.current.clear()
       return
     }
@@ -141,6 +187,9 @@ export const FeedbackProvider = ({ children }) => {
       key.startsWith(`${analysisId}_`),
     )
     keysToDelete.forEach(key => checkingRef.current.delete(key))
+
+    // Reset overall feedback state
+    setOverallFeedbackSubmitted(false)
   }, [])
 
   const value = {
@@ -149,6 +198,10 @@ export const FeedbackProvider = ({ children }) => {
     isFeedbackLoading,
     clearFeedbackCache,
     feedbackCache, // Expose for debugging
+    // NEW: Overall feedback methods
+    checkOverallFeedbackExists,
+    overallFeedbackSubmitted,
+    overallFeedbackLoading,
   }
 
   return (

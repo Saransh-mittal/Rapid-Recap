@@ -398,6 +398,7 @@ const CategoriesSection = ({
       borderColor="whiteAlpha.200"
       position="relative"
       overflow="hidden"
+      mt={10}
     >
       <Box
         position="absolute"

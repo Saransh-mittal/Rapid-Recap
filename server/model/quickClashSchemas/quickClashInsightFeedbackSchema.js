@@ -58,6 +58,11 @@ const quickClashInsightFeedbackSchema = new mongoose.Schema(
           'follow_up_question',
           'follow_up_answer',
           'trophy_analysis',
+          'ai_insights',
+          'team_performance',
+          'category_analysis',
+          'bonus_system',
+          'complete_analysis',
         ],
         required: true,
       },
@@ -69,8 +74,11 @@ const quickClashInsightFeedbackSchema = new mongoose.Schema(
           'psychological',
           'improvement',
           'general',
-          'validation', // Added this missing value
-          'achievement', // Added this missing value
+          'validation', // FIXED: Added missing validation category
+          'achievement', // FIXED: Added missing achievement category
+          'detailed',
+          'educational',
+          'comprehensive',
         ],
         required: true,
       },
@@ -96,6 +104,7 @@ const quickClashInsightFeedbackSchema = new mongoose.Schema(
         enum: [
           'helpful',
           'not_helpful',
+          'excellent', // Core simplified types
           'more_info_requested',
           'irrelevant',
           'confusing',
@@ -118,6 +127,7 @@ const quickClashInsightFeedbackSchema = new mongoose.Schema(
         relevance: { type: Number, min: 1, max: 5 },
         actionability: { type: Number, min: 1, max: 5 },
         clarity: { type: Number, min: 1, max: 5 },
+        mobile_experience: { type: Number, min: 1, max: 5 }, // FIXED: Added mobile_experience aspect
       },
       improvement_suggestions: {
         type: String,
@@ -162,6 +172,9 @@ const quickClashInsightFeedbackSchema = new mongoose.Schema(
       },
       sessionLength: Number, // How long was the user's session
       battlesAnalyzedInSession: Number,
+      screenSize: String, // FIXED: Added screenSize for mobile tracking
+      touchSupport: Boolean, // FIXED: Added touchSupport for mobile detection
+      mobileOptimized: Boolean, // FIXED: Added mobileOptimized flag
 
       // Battle context
       battleResult: {
@@ -237,7 +250,7 @@ const quickClashInsightFeedbackSchema = new mongoose.Schema(
       includedInMetrics: { type: Boolean, default: false },
       contributedToImprovement: { type: Boolean, default: false },
     },
-
+    simplified: { type: Boolean, default: false },
     // Tracking
     createdAt: {
       type: Date,
@@ -281,6 +294,12 @@ quickClashInsightFeedbackSchema.index({
   createdAt: 1,
   'contextData.timeOfDay': 1,
   'explicitFeedback.type': 1,
+})
+
+// Mobile-specific indexing for better analytics
+quickClashInsightFeedbackSchema.index({
+  'contextData.deviceType': 1,
+  'explicitFeedback.rating': 1,
 })
 
 // SIMPLIFIED: Basic unique constraint without partial filter (more compatible)

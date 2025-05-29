@@ -1,5 +1,5 @@
 // components/quickClashComponents/team/battleAnalysis/components/BattleResultBanner.jsx
-import React, { useEffect, useState } from 'react'
+import React, { useEffect, useState, useMemo } from 'react'
 import {
   Box,
   Flex,
@@ -10,7 +10,6 @@ import {
   Button,
   HStack,
   VStack,
-  useBreakpointValue,
   Circle,
 } from '@chakra-ui/react'
 import { motion, useAnimationControls } from 'framer-motion'
@@ -30,39 +29,25 @@ const BattleResultBanner = ({ battle, userTeam, onShare }) => {
   const controls = useAnimationControls()
   const [showDetails, setShowDetails] = useState(false)
 
-  // Optimized responsive values
-  const responsiveConfig = useBreakpointValue({
-    base: {
-      scoreSize: '2xl',
-      titleSize: 'lg',
-      subtitleSize: 'sm',
-      containerH: 'auto',
-      padding: 4,
-      circleSize: '50px',
-      iconSize: 6,
-      isMobile: true,
-    },
-    md: {
-      scoreSize: '4xl',
-      titleSize: 'xl',
-      subtitleSize: 'md',
-      containerH: '320px',
-      padding: 6,
-      circleSize: '60px',
-      iconSize: 8,
-      isMobile: false,
-    },
-    lg: {
-      scoreSize: '5xl',
-      titleSize: '2xl',
-      subtitleSize: 'lg',
-      containerH: '360px',
-      padding: 8,
-      circleSize: '70px',
-      iconSize: 9,
-      isMobile: false,
-    },
-  })
+  // Memoized responsive configuration - static values for better performance
+  const config = useMemo(
+    () => ({
+      isMobile: window.innerWidth < 768,
+      scoreSize:
+        window.innerWidth < 480
+          ? '2xl'
+          : window.innerWidth < 768
+          ? '3xl'
+          : '4xl',
+      titleSize: window.innerWidth < 480 ? 'lg' : 'xl',
+      subtitleSize: window.innerWidth < 480 ? 'sm' : 'md',
+      containerH: window.innerWidth < 768 ? 'auto' : '300px',
+      padding: window.innerWidth < 480 ? 4 : 6,
+      circleSize: window.innerWidth < 480 ? '45px' : '55px',
+      iconSize: window.innerWidth < 480 ? 5 : 7,
+    }),
+    [],
+  )
 
   const isUserWinner = battle.winner === userTeam
   const isTie = battle.winner === 'tie'
@@ -106,57 +91,59 @@ const BattleResultBanner = ({ battle, userTeam, onShare }) => {
   useEffect(() => {
     const animateSequence = async () => {
       await controls.start({
-        scale: [0.95, 1],
+        scale: [0.98, 1], // Reduced animation
         opacity: [0, 1],
-        transition: { duration: 0.6, ease: 'easeOut' },
+        transition: { duration: 0.4, ease: 'easeOut' }, // Reduced duration
       })
-      setTimeout(() => setShowDetails(true), 400)
+      setTimeout(() => setShowDetails(true), 300) // Faster reveal
     }
     animateSequence()
 
-    // Simplified confetti for winners - less intensive
-    if (isUserWinner && !responsiveConfig?.isMobile) {
+    // Simplified confetti for winners - much less intensive and only on desktop
+    if (isUserWinner && !config.isMobile) {
       setTimeout(() => {
         confetti({
-          particleCount: responsiveConfig?.isMobile ? 30 : 80,
-          spread: 60,
-          origin: { y: 0.6 },
-          colors: ['#16A34A', '#A855F7', '#F59E0B'],
+          particleCount: 30, // Reduced from 80
+          spread: 45, // Reduced spread
+          origin: { y: 0.7 },
+          colors: ['#16A34A', '#A855F7'],
           shapes: ['circle'],
-          scalar: 0.8,
-          gravity: 0.8,
+          scalar: 0.6, // Reduced size
+          gravity: 1, // Faster fall
         })
-      }, 800)
+      }, 600) // Earlier trigger
     }
-  }, [controls, isUserWinner, responsiveConfig?.isMobile])
+  }, [controls, isUserWinner, config.isMobile])
 
   return (
     <MotionBox
-      h={responsiveConfig?.containerH}
-      minH="280px"
+      h={config.containerH}
+      minH="260px" // Reduced from 280px
       position="relative"
       overflow="hidden"
       borderRadius="2xl"
       bgGradient={resultConfig.primaryGradient}
       boxShadow={
-        responsiveConfig?.isMobile
-          ? '0 8px 25px rgba(0,0,0,0.2)'
-          : `0 12px 35px ${resultConfig.glowColor}`
+        config.isMobile
+          ? '0 6px 20px rgba(0,0,0,0.2)' // Reduced shadow
+          : `0 10px 30px ${resultConfig.glowColor}` // Reduced shadow
       }
       animate={controls}
-      p={responsiveConfig?.padding}
+      p={config.padding}
+      mb={8}
     >
-      {/* Simplified background elements */}
+      {/* Simplified background elements - only on desktop */}
       <Box position="absolute" inset={0} overflow="hidden" zIndex={0}>
-        {!responsiveConfig?.isMobile && (
+        {!config.isMobile && (
           <>
-            {[...Array(4)].map((_, i) => (
+            {/* Reduced from 4 to 2 floating particles */}
+            {[...Array(2)].map((_, i) => (
               <MotionBox
                 key={i}
                 position="absolute"
-                w={`${Math.random() * 3 + 1}px`}
-                h={`${Math.random() * 3 + 1}px`}
-                bg="whiteAlpha.600"
+                w={`${Math.random() * 2 + 1}px`} // Smaller particles
+                h={`${Math.random() * 2 + 1}px`}
+                bg="whiteAlpha.500" // Reduced opacity
                 borderRadius="full"
                 initial={{
                   x: `${Math.random() * 100}%`,
@@ -164,25 +151,26 @@ const BattleResultBanner = ({ battle, userTeam, onShare }) => {
                   opacity: 0,
                 }}
                 animate={{
-                  y: ['-5px', '-80px'],
-                  opacity: [0, 0.5, 0],
+                  y: ['-5px', '-60px'], // Reduced movement
+                  opacity: [0, 0.4, 0], // Reduced max opacity
                 }}
                 transition={{
-                  duration: Math.random() * 2 + 2,
+                  duration: Math.random() * 3 + 3, // Slower animation
                   repeat: Infinity,
                   delay: Math.random() * 2,
                   ease: 'easeOut',
                 }}
               />
             ))}
+            {/* Single background glow */}
             <Box
               position="absolute"
-              top="20%"
+              top="25%"
               left="50%"
               transform="translateX(-50%)"
-              w="180px"
-              h="180px"
-              bgGradient="radial-gradient(circle, rgba(255,255,255,0.08) 0%, transparent 70%)"
+              w="150px" // Reduced from 180px
+              h="150px"
+              bgGradient="radial-gradient(circle, rgba(255,255,255,0.06) 0%, transparent 70%)" // Reduced opacity
               borderRadius="full"
             />
           </>
@@ -198,43 +186,39 @@ const BattleResultBanner = ({ battle, userTeam, onShare }) => {
         color="white"
       >
         <VStack spacing={2} textAlign="center">
+          {/* Simplified icon animation - only on desktop */}
           <MotionBox
             animate={
-              !responsiveConfig?.isMobile
+              !config.isMobile
                 ? {
-                    scale: [1, 1.02, 1],
+                    scale: [1, 1.01, 1], // Reduced animation
                   }
                 : {}
             }
-            transition={{ duration: 2, repeat: Infinity, ease: 'easeInOut' }}
+            transition={{ duration: 3, repeat: Infinity, ease: 'easeInOut' }} // Slower
           >
             <Circle
-              size={responsiveConfig?.circleSize}
+              size={config.circleSize}
               bg="rgba(255,255,255,0.12)"
-              backdropFilter={responsiveConfig?.isMobile ? 'none' : 'blur(8px)'}
+              backdropFilter={config.isMobile ? 'none' : 'blur(6px)'} // Reduced blur
               border="2px solid rgba(255,255,255,0.2)"
             >
-              <Icon
-                as={resultConfig.icon}
-                boxSize={responsiveConfig?.iconSize}
-              />
+              <Icon as={resultConfig.icon} boxSize={config.iconSize} />
             </Circle>
           </MotionBox>
           <VStack spacing={1}>
             <Heading
-              fontSize={responsiveConfig?.titleSize}
+              fontSize={config.titleSize}
               fontWeight="bold"
               letterSpacing="wide"
               textShadow={
-                responsiveConfig?.isMobile
-                  ? 'none'
-                  : '0 2px 8px rgba(0,0,0,0.3)'
+                config.isMobile ? 'none' : '0 2px 6px rgba(0,0,0,0.3)' // Reduced shadow
               }
             >
               {resultConfig.title}
             </Heading>
             <Text
-              fontSize={responsiveConfig?.subtitleSize}
+              fontSize={config.subtitleSize}
               opacity={0.9}
               fontWeight="medium"
             >
@@ -246,11 +230,11 @@ const BattleResultBanner = ({ battle, userTeam, onShare }) => {
         <MotionFlex
           justify="center"
           align="center"
-          gap={{ base: 3, md: 5 }}
-          initial={{ opacity: 0, y: 10 }}
-          animate={{ opacity: showDetails ? 1 : 0, y: showDetails ? 0 : 10 }}
-          transition={{ delay: 0.3, duration: 0.5 }}
-          my={4}
+          gap={{ base: 3, md: 4 }} // Reduced gap
+          initial={{ opacity: 0, y: 8 }} // Reduced movement
+          animate={{ opacity: showDetails ? 1 : 0, y: showDetails ? 0 : 8 }}
+          transition={{ delay: 0.2, duration: 0.4 }} // Faster
+          my={3} // Reduced margin
         >
           {[
             {
@@ -267,10 +251,11 @@ const BattleResultBanner = ({ battle, userTeam, onShare }) => {
             <React.Fragment key={item.team}>
               {index === 1 && (
                 <VStack spacing={1} display={{ base: 'none', md: 'flex' }}>
-                  <Text fontSize="lg" fontWeight="bold" opacity={0.7}>
+                  <Text fontSize="md" fontWeight="bold" opacity={0.7}>
                     VS
                   </Text>
-                  <Box w="1px" h="40px" bg="rgba(255,255,255,0.3)" />
+                  <Box w="1px" h="30px" bg="rgba(255,255,255,0.3)" />{' '}
+                  {/* Reduced height */}
                 </VStack>
               )}
               <VStack spacing={2} flex={1} minW="100px">
@@ -283,7 +268,7 @@ const BattleResultBanner = ({ battle, userTeam, onShare }) => {
                   fontSize="xs"
                   fontWeight="semibold"
                   backdropFilter={
-                    responsiveConfig?.isMobile ? 'none' : 'blur(5px)'
+                    config.isMobile ? 'none' : 'blur(4px)' // Reduced blur
                   }
                 >
                   {userTeam === item.team ? t('YOUR TEAM') : t('OPPONENT')}
@@ -292,24 +277,22 @@ const BattleResultBanner = ({ battle, userTeam, onShare }) => {
                   {item.name}
                 </Text>
                 <MotionText
-                  fontSize={responsiveConfig?.scoreSize}
+                  fontSize={config.scoreSize}
                   fontWeight="black"
                   lineHeight={1}
                   textShadow={
-                    responsiveConfig?.isMobile
-                      ? 'none'
-                      : '0 0 20px rgba(255,255,255,0.4)'
+                    config.isMobile ? 'none' : '0 0 15px rgba(255,255,255,0.3)' // Reduced shadow
                   }
                   animate={
-                    !responsiveConfig?.isMobile
+                    !config.isMobile
                       ? {
-                          scale: [0.95, 1.02, 1],
+                          scale: [0.98, 1.01, 1], // Reduced animation
                         }
                       : {}
                   }
                   transition={{
-                    delay: 0.6 + index * 0.1,
-                    duration: 0.8,
+                    delay: 0.4 + index * 0.1,
+                    duration: 0.6, // Reduced duration
                     ease: 'easeOut',
                   }}
                 >
@@ -325,7 +308,7 @@ const BattleResultBanner = ({ battle, userTeam, onShare }) => {
           align="center"
           initial={{ opacity: 0 }}
           animate={{ opacity: showDetails ? 1 : 0 }}
-          transition={{ delay: 0.8, duration: 0.4 }}
+          transition={{ delay: 0.6, duration: 0.3 }} // Faster
           direction={{ base: 'column', sm: 'row' }}
           gap={{ base: 2, sm: 0 }}
         >
@@ -364,7 +347,7 @@ const BattleResultBanner = ({ battle, userTeam, onShare }) => {
                 py={1}
                 borderRadius="lg"
                 backdropFilter={
-                  responsiveConfig?.isMobile ? 'none' : 'blur(5px)'
+                  config.isMobile ? 'none' : 'blur(4px)' // Reduced blur
                 }
                 border="1px solid rgba(255,255,255,0.15)"
                 fontSize="xs"
@@ -378,7 +361,7 @@ const BattleResultBanner = ({ battle, userTeam, onShare }) => {
             leftIcon={<Share2 size={14} />}
             bg="rgba(255,255,255,0.15)"
             color="white"
-            backdropFilter={responsiveConfig?.isMobile ? 'none' : 'blur(8px)'}
+            backdropFilter={config.isMobile ? 'none' : 'blur(6px)'} // Reduced blur
             border="1px solid rgba(255,255,255,0.25)"
             borderRadius="lg"
             px={4}

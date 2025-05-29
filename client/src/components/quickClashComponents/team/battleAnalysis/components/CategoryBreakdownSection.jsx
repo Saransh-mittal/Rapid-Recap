@@ -1,5 +1,5 @@
 // components/quickClashComponents/team/battleAnalysis/components/CategoryBreakdownSection.jsx
-import React, { useEffect } from 'react'
+import React, { useEffect, useMemo } from 'react'
 import {
   Box,
   Flex,
@@ -11,7 +11,6 @@ import {
   VStack,
   Grid,
   GridItem,
-  useBreakpointValue,
   Collapse,
   Avatar,
 } from '@chakra-ui/react'
@@ -20,7 +19,6 @@ import { useTranslation } from 'react-i18next'
 import {
   BookOpen,
   ChevronDown,
-  ChevronUp,
   Trophy,
   Clock,
   CheckCircle,
@@ -42,20 +40,27 @@ const CategoryBreakdownSection = ({
   const { t } = useTranslation('QuickClash')
   const controls = useAnimationControls()
 
-  const columns = useBreakpointValue({ base: 1, md: 2, lg: 3 }) // More columns on large screens
-  const padding = useBreakpointValue({ base: 4, md: 6 })
-  const headerIconSize = useBreakpointValue({ base: 5, md: 6 })
-  const cardIconSize = useBreakpointValue({ base: 4, md: 5 })
-  const headingSize = useBreakpointValue({ base: 'md', md: 'lg' })
-  const categoryNameFontSize = useBreakpointValue({ base: 'sm', md: 'md' })
+  // Memoized responsive configuration - static values for performance
+  const config = useMemo(
+    () => ({
+      isMobile: window.innerWidth < 768,
+      columns: window.innerWidth < 768 ? 1 : window.innerWidth < 1024 ? 2 : 3,
+      padding: { base: 3, md: 5 }, // Reduced padding
+      headerIconSize: { base: 5, md: 6 },
+      cardIconSize: { base: 4, md: 5 },
+      headingSize: { base: 'md', md: 'lg' },
+      categoryNameFontSize: { base: 'sm', md: 'md' },
+    }),
+    [],
+  )
 
   useEffect(() => {
     controls.start({
       opacity: 1,
       y: 0,
-      transition: { duration: 0.5, ease: 'easeOut' },
+      transition: { duration: 0.4, ease: 'easeOut' }, // Reduced duration
     })
-  }, [controls, isExpanded]) // Re-animate slightly if needed, or just control initial
+  }, [controls, isExpanded])
 
   const getCategoryWinnerStyle = challenge => {
     let winnerTeam = null
@@ -119,35 +124,45 @@ const CategoryBreakdownSection = ({
 
     return (
       <MotionBox
-        initial={{ opacity: 0, y: 15 }}
+        initial={{ opacity: 0, y: 10 }} // Reduced movement
         animate={{ opacity: 1, y: 0 }}
-        transition={{ delay: 0.05 + index * 0.08, duration: 0.4 }}
-        whileHover={{ y: -3, boxShadow: '0 10px 20px rgba(0,0,0,0.2)' }}
+        transition={{ delay: 0.05 + index * 0.05, duration: 0.3 }} // Faster
+        whileHover={
+          config.isMobile
+            ? {}
+            : { y: -2, boxShadow: '0 8px 15px rgba(0,0,0,0.15)' }
+        } // Reduced hover effect
       >
         <Box
           bg={
             isUserCategory
-              ? 'rgba(128, 90, 213, 0.1)'
-              : 'rgba(255, 255, 255, 0.03)'
+              ? 'rgba(128, 90, 213, 0.08)' // Reduced opacity
+              : 'rgba(255, 255, 255, 0.02)' // Reduced opacity
           }
-          borderRadius="xl" // More rounded
-          p={4}
+          borderRadius="xl"
+          p={3} // Reduced padding
           borderWidth="1px"
           borderColor={isUserCategory ? 'purple.500' : 'whiteAlpha.200'}
           transition="all 0.2s ease-out"
-          h="full" // Ensure cards have same height in a row if needed
+          h="full"
           display="flex"
           flexDirection="column"
           justifyContent="space-between"
         >
-          <VStack spacing={3} align="stretch" flexGrow={1}>
+          <VStack spacing={2.5} align="stretch" flexGrow={1}>
+            {' '}
+            {/* Reduced spacing */}
             <Flex justify="space-between" align="center">
               <HStack spacing={2}>
-                <Icon as={BookOpen} color="purple.300" boxSize={cardIconSize} />
+                <Icon
+                  as={BookOpen}
+                  color="purple.300"
+                  boxSize={config.cardIconSize}
+                />
                 <Text
                   fontWeight="bold"
                   color="white"
-                  fontSize={categoryNameFontSize}
+                  fontSize={config.categoryNameFontSize}
                   noOfLines={1}
                 >
                   {challenge.category}
@@ -157,17 +172,18 @@ const CategoryBreakdownSection = ({
                 colorScheme={badgeColorScheme}
                 variant="subtle"
                 fontSize="xs"
-                px={2}
+                px={1.5} // Reduced padding
                 py={0.5}
                 borderRadius="md"
               >
-                <HStack spacing={1}>
-                  <Icon as={WinnerIcon} boxSize={3} />
+                <HStack spacing={0.5}>
+                  {' '}
+                  {/* Reduced spacing */}
+                  <Icon as={WinnerIcon} boxSize={2.5} /> {/* Reduced size */}
                   <Text>{winnerText}</Text>
                 </HStack>
               </Badge>
             </Flex>
-
             {isUserCategory && (
               <Badge
                 colorScheme="purple"
@@ -180,9 +196,10 @@ const CategoryBreakdownSection = ({
                 {t('Your Category')}
               </Badge>
             )}
-
             <Grid templateColumns="1fr auto 1fr" gap={2} alignItems="center">
-              <HStack spacing={1.5} justifySelf="start">
+              <HStack spacing={1} justifySelf="start">
+                {' '}
+                {/* Reduced spacing */}
                 <Avatar
                   size="xs"
                   name={
@@ -202,7 +219,9 @@ const CategoryBreakdownSection = ({
               <Text color="whiteAlpha.500" fontSize="xs" fontWeight="bold">
                 VS
               </Text>
-              <HStack spacing={1.5} justifySelf="end">
+              <HStack spacing={1} justifySelf="end">
+                {' '}
+                {/* Reduced spacing */}
                 <Text color="white" fontSize="sm" fontWeight="medium">
                   {challenge.teamBScore} {t('pts')}
                 </Text>
@@ -220,11 +239,10 @@ const CategoryBreakdownSection = ({
                 />
               </HStack>
             </Grid>
-
             <HStack
               justify="space-between"
               spacing={2}
-              pt={2}
+              pt={1.5} // Reduced padding
               borderTop="1px dashed"
               borderColor="whiteAlpha.100"
             >
@@ -232,7 +250,7 @@ const CategoryBreakdownSection = ({
                 <Icon
                   as={challenge.teamACompleted ? CheckCircle : XCircle}
                   color={challenge.teamACompleted ? 'green.400' : 'red.400'}
-                  boxSize={3.5}
+                  boxSize={3}
                 />
                 <Text fontSize="xs" color="whiteAlpha.700" noOfLines={1}>
                   {battle.teamA?.name || t('Team A')}
@@ -242,7 +260,7 @@ const CategoryBreakdownSection = ({
                 <Icon
                   as={challenge.teamBCompleted ? CheckCircle : XCircle}
                   color={challenge.teamBCompleted ? 'green.400' : 'red.400'}
-                  boxSize={3.5}
+                  boxSize={3}
                 />
                 <Text fontSize="xs" color="whiteAlpha.700" noOfLines={1}>
                   {battle.teamB?.name || t('Team B')}
@@ -257,19 +275,23 @@ const CategoryBreakdownSection = ({
 
   return (
     <MotionBox
-      bg="rgba(20, 15, 35, 0.7)" // Darker, purplish base
-      backdropFilter="blur(15px)"
-      borderRadius="2xl" // Consistent rounding
-      boxShadow="0 8px 30px rgba(0, 0, 0, 0.25)"
+      bg="rgba(20, 15, 35, 0.7)"
+      backdropFilter={config.isMobile ? 'none' : 'blur(10px)'} // No blur on mobile
+      borderRadius="2xl"
+      boxShadow={
+        config.isMobile
+          ? '0 6px 20px rgba(0, 0, 0, 0.2)'
+          : '0 8px 25px rgba(0, 0, 0, 0.25)' // Reduced shadow
+      }
       overflow="hidden"
       borderWidth="1px"
       borderColor="rgba(255, 255, 255, 0.1)"
-      initial={{ opacity: 0, y: 20 }}
+      initial={{ opacity: 0, y: 15 }} // Reduced movement
       animate={controls}
     >
       <Flex
-        bg="transparent" // Let MotionBox handle background
-        px={padding}
+        bg="transparent"
+        px={config.padding}
         py={4}
         justify="space-between"
         align="center"
@@ -280,8 +302,16 @@ const CategoryBreakdownSection = ({
         _hover={{ bg: 'rgba(255, 255, 255, 0.03)' }}
       >
         <HStack spacing={3}>
-          <Icon as={BookOpen} color="purple.300" boxSize={headerIconSize} />
-          <Heading size={headingSize} color="white" fontWeight="semibold">
+          <Icon
+            as={BookOpen}
+            color="purple.300"
+            boxSize={config.headerIconSize}
+          />
+          <Heading
+            size={config.headingSize}
+            color="white"
+            fontWeight="semibold"
+          >
             {t('Category Breakdown')}
           </Heading>
         </HStack>
@@ -294,8 +324,8 @@ const CategoryBreakdownSection = ({
       </Flex>
 
       <Flex
-        px={padding}
-        py={isExpanded ? 3 : 4} // Adjust padding when collapsed
+        px={config.padding}
+        py={isExpanded ? 3 : 4}
         direction={{ base: 'column', md: 'row' }}
         justify="space-between"
         align={{ base: 'flex-start', md: 'center' }}
@@ -310,11 +340,13 @@ const CategoryBreakdownSection = ({
             {battle.challenges.length} {t('Categories Played')}
           </Text>
         </HStack>
-        <HStack spacing={3} wrap="wrap">
+        <HStack spacing={2} wrap="wrap">
+          {' '}
+          {/* Reduced spacing */}
           <Badge
             colorScheme="green"
             variant="subtle"
-            px={2}
+            px={1.5} // Reduced padding
             py={1}
             borderRadius="md"
           >
@@ -323,7 +355,7 @@ const CategoryBreakdownSection = ({
           <Badge
             colorScheme="red"
             variant="subtle"
-            px={2}
+            px={1.5} // Reduced padding
             py={1}
             borderRadius="md"
           >
@@ -333,7 +365,7 @@ const CategoryBreakdownSection = ({
             <Badge
               colorScheme="yellow"
               variant="subtle"
-              px={2}
+              px={1.5} // Reduced padding
               py={1}
               borderRadius="md"
             >
@@ -344,15 +376,21 @@ const CategoryBreakdownSection = ({
       </Flex>
 
       <Collapse in={isExpanded} animateOpacity>
-        <Box px={padding} py={4}>
-          <Grid templateColumns={`repeat(${columns}, 1fr)`} gap={4}>
+        <Box px={config.padding} py={3}>
+          {' '}
+          {/* Reduced padding */}
+          <Grid templateColumns={`repeat(${config.columns}, 1fr)`} gap={3}>
+            {' '}
+            {/* Reduced gap */}
             {battle.challenges.map((challenge, index) => (
               <GridItem key={challenge._id || index} colSpan={1}>
                 {renderCategoryCard(challenge, index)}
               </GridItem>
             ))}
           </Grid>
-          <Text fontSize="xs" color="whiteAlpha.600" mt={6} textAlign="center">
+          <Text fontSize="xs" color="whiteAlpha.600" mt={4} textAlign="center">
+            {' '}
+            {/* Reduced margin */}
             {t(
               'Each card represents a category matchup. Highlighted card (if any) is your assigned category.',
             )}

@@ -1,5 +1,5 @@
 // components/quickClashComponents/team/battleAnalysis/components/ShareResultsModal.jsx
-import React, { useState, useRef } from 'react'
+import React, { useState, useRef, useMemo } from 'react'
 import {
   Modal,
   ModalOverlay,
@@ -20,17 +20,14 @@ import {
   Switch,
   FormControl,
   FormLabel,
-  Input,
   Tabs,
   TabList,
   TabPanels,
   Tab,
   TabPanel,
   useToast,
-  useBreakpointValue,
-  Textarea, // For custom message
+  Textarea,
 } from '@chakra-ui/react'
-import { motion } from 'framer-motion'
 import { useTranslation } from 'react-i18next'
 import {
   Share2,
@@ -43,11 +40,9 @@ import {
   Twitter,
   MessageCircle,
   Image as ImageIcon,
-  Type, // For text
+  Type,
 } from 'lucide-react'
 import html2canvas from 'html2canvas'
-
-const MotionBox = motion(Box)
 
 const ShareResultsModal = ({ isOpen, onClose, battle, userTeam }) => {
   const { t } = useTranslation('QuickClash')
@@ -58,13 +53,26 @@ const ShareResultsModal = ({ isOpen, onClose, battle, userTeam }) => {
   const [customMessage, setCustomMessage] = useState('')
   const resultCardRef = useRef(null)
 
-  const modalSize = useBreakpointValue({ base: 'full', sm: 'md', md: 'lg' })
-  const previewWidth = useBreakpointValue({
-    base: '90vw',
-    sm: '400px',
-    md: '450px',
-  })
-  const formLabelFontSize = useBreakpointValue({ base: 'sm', md: 'md' })
+  // Memoized responsive configuration - static values for performance
+  const config = useMemo(
+    () => ({
+      isMobile: window.innerWidth < 768,
+      modalSize:
+        window.innerWidth < 480
+          ? 'full'
+          : window.innerWidth < 768
+          ? 'md'
+          : 'lg',
+      previewWidth:
+        window.innerWidth < 480
+          ? '90vw'
+          : window.innerWidth < 768
+          ? '350px'
+          : '400px',
+      formLabelFontSize: window.innerWidth < 768 ? 'sm' : 'md',
+    }),
+    [],
+  )
 
   const isUserWinner = battle.winner === userTeam
   const isTie = battle.winner === 'tie'
@@ -74,7 +82,7 @@ const ShareResultsModal = ({ isOpen, onClose, battle, userTeam }) => {
       return {
         title: t('VICTORY!'),
         color: 'green',
-        icon: Trophy,
+        icon: Trophy, // Changed from Crown
         bgGradient: 'linear(to-br, green.600, green.800)',
         borderColor: 'green.400',
       }
@@ -130,12 +138,14 @@ const ShareResultsModal = ({ isOpen, onClose, battle, userTeam }) => {
     setIsGeneratingImage(true)
     try {
       const canvas = await html2canvas(resultCardRef.current, {
-        backgroundColor: '#1A202C', // Dark background for canvas
-        scale: 2.5, // Higher resolution
-        useCORS: true, // If images are external
-        logging: true,
+        backgroundColor: '#1A202C',
+        scale: config.isMobile ? 2 : 2.5, // Lower scale on mobile for performance
+        useCORS: true,
+        logging: false, // Disabled logging for performance
+        allowTaint: true,
+        foreignObjectRendering: false, // Disabled for better mobile compatibility
       })
-      const image = canvas.toDataURL('image/png')
+      const image = canvas.toDataURL('image/png', 0.8) // Reduced quality for smaller file size
       const link = document.createElement('a')
       link.href = image
       link.download = `quickclash-result-${battle._id}.png`
@@ -213,15 +223,19 @@ const ShareResultsModal = ({ isOpen, onClose, battle, userTeam }) => {
   }
 
   return (
-    <Modal isOpen={isOpen} onClose={onClose} size={modalSize} isCentered>
-      <ModalOverlay bg="blackAlpha.700" backdropFilter="blur(8px)" />
+    <Modal isOpen={isOpen} onClose={onClose} size={config.modalSize} isCentered>
+      <ModalOverlay
+        bg="blackAlpha.700"
+        backdropFilter={config.isMobile ? 'none' : 'blur(6px)'}
+      />{' '}
+      {/* Reduced blur, none on mobile */}
       <ModalContent
-        bg="rgba(26, 32, 44, 0.9)" // Slightly transparent
-        backdropFilter="blur(15px)"
+        bg="rgba(26, 32, 44, 0.9)"
+        backdropFilter={config.isMobile ? 'none' : 'blur(12px)'} // Reduced blur, none on mobile
         borderRadius="2xl"
         borderWidth="1px"
         borderColor="purple.600"
-        boxShadow="0 10px 40px rgba(0,0,0,0.5)"
+        boxShadow="0 8px 30px rgba(0,0,0,0.4)" // Reduced shadow
       >
         <ModalHeader color="whiteAlpha.900">
           <HStack>
@@ -236,7 +250,9 @@ const ShareResultsModal = ({ isOpen, onClose, battle, userTeam }) => {
 
         <ModalBody pb={6}>
           <Tabs isFitted variant="soft-rounded" colorScheme="purple">
-            <TabList mb={5}>
+            <TabList mb={4}>
+              {' '}
+              {/* Reduced margin */}
               <Tab
                 fontWeight="medium"
                 _selected={{ bg: 'purple.600', color: 'white' }}
@@ -254,26 +270,30 @@ const ShareResultsModal = ({ isOpen, onClose, battle, userTeam }) => {
             </TabList>
             <TabPanels>
               <TabPanel px={0}>
-                <VStack spacing={5} align="stretch">
+                <VStack spacing={4} align="stretch">
+                  {' '}
+                  {/* Reduced spacing */}
                   <Text color="whiteAlpha.700" fontSize="sm" textAlign="center">
                     {t('Download a shareable image of your results.')}
                   </Text>
                   <Box
                     ref={resultCardRef}
-                    bg="gray.800" // Solid color for image generation
+                    bg="gray.800"
                     borderRadius="xl"
                     overflow="hidden"
                     borderWidth="2px"
                     borderColor={resultConfig.borderColor}
-                    w={previewWidth}
+                    w={config.previewWidth}
                     mx="auto"
-                    p={5} // Padding inside the card
+                    p={4} // Reduced padding
                     color="white"
                   >
-                    <VStack spacing={4}>
+                    <VStack spacing={3}>
+                      {' '}
+                      {/* Reduced spacing */}
                       <Flex
                         bgGradient={resultConfig.bgGradient}
-                        py={3}
+                        py={2.5} // Reduced padding
                         px={4}
                         borderRadius="lg"
                         justify="center"
@@ -284,15 +304,18 @@ const ShareResultsModal = ({ isOpen, onClose, battle, userTeam }) => {
                           <Icon
                             as={resultConfig.icon}
                             color="white"
-                            boxSize={5}
+                            boxSize={4} // Reduced size
                           />
-                          <Heading size="md" color="white" fontWeight="bold">
+                          <Heading size="sm" color="white" fontWeight="bold">
+                            {' '}
+                            {/* Reduced size */}
                             {resultConfig.title}
                           </Heading>
                         </HStack>
                       </Flex>
-
-                      <VStack spacing={3} w="full">
+                      <VStack spacing={2.5} w="full">
+                        {' '}
+                        {/* Reduced spacing */}
                         {[
                           {
                             teamLabel:
@@ -328,14 +351,14 @@ const ShareResultsModal = ({ isOpen, onClose, battle, userTeam }) => {
                               justify="space-between"
                               align="center"
                               bg="whiteAlpha.50"
-                              p={3}
+                              p={2.5} // Reduced padding
                               borderRadius="md"
                             >
                               <VStack spacing={0.5} align="flex-start">
                                 <Badge
                                   colorScheme={teamData.colorScheme}
                                   variant="solid"
-                                  fontSize="2xs"
+                                  fontSize="3xs"
                                   px={1.5}
                                   py={0.5}
                                 >
@@ -350,7 +373,7 @@ const ShareResultsModal = ({ isOpen, onClose, battle, userTeam }) => {
                                 </Text>
                               </VStack>
                               <Text
-                                fontSize="2xl"
+                                fontSize="xl" // Reduced size
                                 fontWeight="extrabold"
                                 color={`${teamData.colorScheme}.300`}
                               >
@@ -360,20 +383,19 @@ const ShareResultsModal = ({ isOpen, onClose, battle, userTeam }) => {
                           </React.Fragment>
                         ))}
                       </VStack>
-
                       {showTrophies && trophyChange !== 0 && (
                         <HStack
                           spacing={2}
                           justify="center"
                           bg={trophyChange > 0 ? 'green.700' : 'red.700'}
-                          p={2.5}
+                          p={2}
                           borderRadius="md"
                           w="full"
                         >
                           <Icon
                             as={Trophy}
                             color={trophyChange > 0 ? 'green.300' : 'red.300'}
-                            boxSize={4}
+                            boxSize={3.5} // Reduced size
                           />
                           <Text
                             fontWeight="bold"
@@ -390,11 +412,12 @@ const ShareResultsModal = ({ isOpen, onClose, battle, userTeam }) => {
                           spacing={2}
                           justify="center"
                           bg="purple.700"
-                          p={2.5}
+                          p={2}
                           borderRadius="md"
                           w="full"
                         >
-                          <Icon as={Users} color="purple.300" boxSize={4} />
+                          <Icon as={Users} color="purple.300" boxSize={3.5} />{' '}
+                          {/* Reduced size */}
                           <Text
                             fontWeight="bold"
                             fontSize="sm"
@@ -405,18 +428,19 @@ const ShareResultsModal = ({ isOpen, onClose, battle, userTeam }) => {
                         </HStack>
                       )}
                       <Text
-                        fontSize="2xs"
+                        fontSize="3xs"
                         color="whiteAlpha.500"
                         position="absolute"
-                        bottom={2}
-                        right={3}
+                        bottom={1.5} // Reduced position
+                        right={2.5}
                       >
                         Rapid Recap by BattleSage AI
                       </Text>
                     </VStack>
                   </Box>
-
-                  <VStack spacing={3} pt={3}>
+                  <VStack spacing={2.5} pt={2}>
+                    {' '}
+                    {/* Reduced spacing */}
                     <FormControl
                       display="flex"
                       alignItems="center"
@@ -425,7 +449,7 @@ const ShareResultsModal = ({ isOpen, onClose, battle, userTeam }) => {
                       <FormLabel
                         mb={0}
                         color="whiteAlpha.800"
-                        fontSize={formLabelFontSize}
+                        fontSize={config.formLabelFontSize}
                       >
                         {t('Show Trophy Change')}
                       </FormLabel>
@@ -443,7 +467,7 @@ const ShareResultsModal = ({ isOpen, onClose, battle, userTeam }) => {
                       <FormLabel
                         mb={0}
                         color="whiteAlpha.800"
-                        fontSize={formLabelFontSize}
+                        fontSize={config.formLabelFontSize}
                       >
                         {t('Show Personal Score')}
                       </FormLabel>
@@ -471,14 +495,16 @@ const ShareResultsModal = ({ isOpen, onClose, battle, userTeam }) => {
               </TabPanel>
 
               <TabPanel px={0}>
-                <VStack spacing={5} align="stretch">
+                <VStack spacing={4} align="stretch">
+                  {' '}
+                  {/* Reduced spacing */}
                   <Text color="whiteAlpha.700" fontSize="sm" textAlign="center">
                     {t('Copy a text summary of your results.')}
                   </Text>
                   <FormControl>
                     <FormLabel
                       color="whiteAlpha.800"
-                      fontSize={formLabelFontSize}
+                      fontSize={config.formLabelFontSize}
                     >
                       {t('Add a Custom Message (optional)')}
                     </FormLabel>
@@ -494,10 +520,9 @@ const ShareResultsModal = ({ isOpen, onClose, battle, userTeam }) => {
                       rows={2}
                     />
                   </FormControl>
-
                   <Box
                     bg="whiteAlpha.50"
-                    p={4}
+                    p={3} // Reduced padding
                     borderRadius="lg"
                     borderWidth="1px"
                     borderColor="whiteAlpha.200"
@@ -532,8 +557,9 @@ const ShareResultsModal = ({ isOpen, onClose, battle, userTeam }) => {
                       {`\n#QuickClash #RapidRecap`}
                     </Text>
                   </Box>
-
-                  <VStack spacing={3} pt={2}>
+                  <VStack spacing={2.5} pt={1}>
+                    {' '}
+                    {/* Reduced spacing */}
                     <FormControl
                       display="flex"
                       alignItems="center"
@@ -542,7 +568,7 @@ const ShareResultsModal = ({ isOpen, onClose, battle, userTeam }) => {
                       <FormLabel
                         mb={0}
                         color="whiteAlpha.800"
-                        fontSize={formLabelFontSize}
+                        fontSize={config.formLabelFontSize}
                       >
                         {t('Include Trophy Change')}
                       </FormLabel>
@@ -560,7 +586,7 @@ const ShareResultsModal = ({ isOpen, onClose, battle, userTeam }) => {
                       <FormLabel
                         mb={0}
                         color="whiteAlpha.800"
-                        fontSize={formLabelFontSize}
+                        fontSize={config.formLabelFontSize}
                       >
                         {t('Include Personal Score')}
                       </FormLabel>
@@ -573,7 +599,6 @@ const ShareResultsModal = ({ isOpen, onClose, battle, userTeam }) => {
                       />
                     </FormControl>
                   </VStack>
-
                   <Button
                     leftIcon={<Copy />}
                     colorScheme="purple"
@@ -583,8 +608,9 @@ const ShareResultsModal = ({ isOpen, onClose, battle, userTeam }) => {
                   >
                     {t('Copy to Clipboard')}
                   </Button>
-
-                  <HStack spacing={4} pt={2}>
+                  <HStack spacing={3} pt={1}>
+                    {' '}
+                    {/* Reduced spacing */}
                     <Button
                       leftIcon={<Twitter />}
                       colorScheme="twitter"

@@ -70,7 +70,8 @@ const getUserStats = async ({ userId }) => {
         continue
       }
 
-      const isChallenger = challenge.challenger.toString() === userId.toString()
+      const isChallenger =
+        challenge?.challenger?.toString() === userId?.toString()
       const userScore = isChallenger
         ? challenge.challengerScore
         : challenge.opponentScore

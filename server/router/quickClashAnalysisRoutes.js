@@ -16,6 +16,12 @@ const {
   trackEngagement: trackEngagementMiddleware,
 } = require('../middleware/feedbackTrackingMiddleware')
 const QuickClashInsightFeedback = require('../model/quickClashSchemas/quickClashInsightFeedbackSchema')
+const {
+  trackEngagementOptimized,
+} = require('../controllers/optimizedEngagementController')
+const {
+  getUserPersonalization,
+} = require('../controllers/personalizationController')
 
 const router = express.Router()
 
@@ -72,11 +78,24 @@ router.post(
   submitInsightFeedback,
 )
 
-// NEW: Engagement tracking endpoint for implicit feedback
 router.post(
   '/track-engagement',
-  trackEngagementMiddleware, // Apply engagement tracking middleware
-  trackEngagement,
+  trackUserAction('batch_engagement'),
+  makeRetryable(trackEngagementOptimized, {
+    maxRetries: 2,
+    operationName: 'TrackEngagementBatch',
+  }),
+)
+
+// Update the existing personalization route (around line 120)
+// REPLACE the existing personalization route with:
+router.get(
+  '/personalization',
+  trackUserAction('personalization_view'),
+  makeRetryable(getUserPersonalization, {
+    maxRetries: 1,
+    operationName: 'GetPersonalization',
+  }),
 )
 
 // NEW: Admin analytics endpoints
@@ -110,7 +129,7 @@ router.get('/health', (req, res) => {
   })
 })
 
-// NEW: Check if feedback already exists for specific insight
+// Enhanced: Check if feedback already exists for specific insight
 router.get('/check-feedback', async (req, res) => {
   try {
     const { analysisId, insightTitle } = req.query
@@ -120,56 +139,86 @@ router.get('/check-feedback', async (req, res) => {
       return res.status(400).json({
         success: false,
         message: 'Missing required parameters',
+        details: 'Both analysisId and insightTitle are required',
       })
     }
 
+    // Enhanced feedback check with better title matching
+    // This handles cases where titles might have timestamps or slight variations
     const existingFeedback = await QuickClashInsightFeedback.findOne({
       battleAnalysis: analysisId,
       user: userId,
-      'insightData.title': insightTitle,
+      $or: [
+        { 'insightData.title': insightTitle },
+        {
+          'insightData.title': {
+            $regex: insightTitle.split('-')[0],
+            $options: 'i',
+          },
+        },
+        // Handle cases where frontend sends base title but backend has timestamped version
+        {
+          'insightData.title': {
+            $regex: `^${insightTitle.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}`,
+            $options: 'i',
+          },
+        },
+      ],
       'explicitFeedback.type': { $ne: 'not_provided' },
     })
+
+    // Enhanced response with mobile context
+    const userAgent = req.headers['user-agent'] || ''
+    const isMobile =
+      userAgent.includes('Mobile') ||
+      userAgent.includes('Android') ||
+      userAgent.includes('iPhone')
 
     res.status(200).json({
       success: true,
       exists: !!existingFeedback,
       feedback: existingFeedback
         ? {
+            id: existingFeedback._id,
             type: existingFeedback.explicitFeedback.type,
             rating: existingFeedback.explicitFeedback.rating,
+            comment: existingFeedback.explicitFeedback.comment || '',
             createdAt: existingFeedback.createdAt,
+            updatedAt: existingFeedback.updatedAt,
+            deviceType: existingFeedback.contextData?.deviceType || 'unknown',
+            isMobileFeedback:
+              existingFeedback.contextData?.deviceType === 'mobile',
+            hasDetailedFeedback: !!(
+              existingFeedback.explicitFeedback.comment ||
+              Object.keys(
+                existingFeedback.explicitFeedback.specificAspects || {},
+              ).length > 0
+            ),
+            mobileExperienceRating:
+              existingFeedback.explicitFeedback.specificAspects
+                ?.mobile_experience || null,
           }
         : null,
+      // Add context for frontend widget
+      context: {
+        currentDevice: isMobile ? 'mobile' : 'desktop',
+        canProvideFeedback: !existingFeedback,
+        recommendedFeedbackType: isMobile ? 'mobile_priority' : 'standard',
+      },
+      message: existingFeedback
+        ? `Feedback already exists (${existingFeedback.explicitFeedback.type}${
+            existingFeedback.contextData?.deviceType === 'mobile'
+              ? ' - mobile'
+              : ''
+          })`
+        : 'No feedback found - ready to collect',
     })
   } catch (error) {
     console.error('Error checking feedback:', error)
     res.status(500).json({
       success: false,
       message: 'Failed to check feedback status',
-    })
-  }
-})
-
-// NEW: User personalization endpoint
-router.get('/personalization', async (req, res) => {
-  try {
-    const QuickClashFeedbackAnalyticsService = require('../services/quickClashServices/quickClashFeedbackAnalyticsService')
-
-    const personalization =
-      await QuickClashFeedbackAnalyticsService.getUserPersonalizationInsights({
-        userId: req.user._id,
-      })
-
-    res.status(200).json({
-      success: true,
-      personalization,
-      message: 'User personalization data retrieved',
-    })
-  } catch (error) {
-    console.error('Error getting personalization data:', error)
-    res.status(500).json({
-      success: false,
-      message: 'Failed to retrieve personalization data',
+      error: process.env.NODE_ENV === 'development' ? error.message : undefined,
     })
   }
 })

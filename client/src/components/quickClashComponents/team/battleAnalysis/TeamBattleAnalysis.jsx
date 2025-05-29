@@ -34,24 +34,24 @@ import { FeedbackProvider } from '../../../../contextAPI/FeedbackContext'
 const MotionContainer = motion(Container)
 const MotionBox = motion(Box)
 
-// Simplified container variants for better performance
+// Simplified container variants for better performance - removed staggerChildren
 const containerVariants = {
   hidden: { opacity: 0 },
   visible: {
     opacity: 1,
     transition: {
-      duration: 0.4,
-      staggerChildren: 0.05,
+      duration: 0.3, // Reduced from 0.4
+      ease: 'easeOut',
     },
   },
 }
 
-// Simplified floating animation - less intensive
-const simpleFloatVariants = {
+// Simplified floating animation - much less intensive
+const floatVariants = {
   animate: {
-    y: [0, -5, 0],
+    y: [0, -2, 0], // Reduced from -5
     transition: {
-      duration: 3,
+      duration: 4, // Increased from 3
       repeat: Infinity,
       ease: 'easeInOut',
     },
@@ -66,23 +66,14 @@ const TeamBattleAnalysisInner = React.memo(() => {
   const { battleId } = useParams()
   const { user } = useSelector(state => state.auth)
 
-  // Responsive values - called at top level, then memoized
-  const containerMaxW = useBreakpointValue({
-    base: 'full',
-    md: 'container.lg',
-    xl: 'container.xl',
-  })
-  const containerPx = useBreakpointValue({ base: 4, sm: 6, md: 8 })
-  const isMobile = useBreakpointValue({ base: true, md: false })
-
-  // Memoized responsive values object
-  const responsiveValues = useMemo(
+  // Memoized responsive values - reduced breakpoint calculations
+  const responsiveConfig = useMemo(
     () => ({
-      containerMaxW,
-      containerPx,
-      isMobile,
+      containerMaxW: 'container.xl',
+      containerPx: { base: 3, sm: 4, md: 6 }, // Reduced padding
+      isMobile: window.innerWidth < 768, // Static check instead of useBreakpointValue
     }),
-    [containerMaxW, containerPx, isMobile],
+    [],
   )
 
   const {
@@ -161,7 +152,7 @@ const TeamBattleAnalysisInner = React.memo(() => {
       <Box minH="100vh" position="relative" bg="gray.900">
         <Center minH="100vh" p={4}>
           <VStack spacing={6} textAlign="center" maxW="md">
-            <MotionBox variants={simpleFloatVariants} animate="animate">
+            <MotionBox variants={floatVariants} animate="animate">
               <Box
                 p={4}
                 borderRadius="full"
@@ -198,10 +189,6 @@ const TeamBattleAnalysisInner = React.memo(() => {
                 px={6}
                 py={5}
                 mt={4}
-                _hover={{
-                  transform: 'translateY(-1px)',
-                }}
-                _active={{ transform: 'translateY(0)' }}
                 transition="all 0.2s ease"
               >
                 {t('Back to Battles')}
@@ -222,8 +209,8 @@ const TeamBattleAnalysisInner = React.memo(() => {
       bg="gray.900"
       pb={2}
     >
-      {/* Simplified background elements - only for desktop */}
-      {!responsiveValues.isMobile && (
+      {/* Simplified background elements - only for desktop and fewer elements */}
+      {!responsiveConfig.isMobile && (
         <Box
           position="fixed"
           top={0}
@@ -238,38 +225,23 @@ const TeamBattleAnalysisInner = React.memo(() => {
             position="absolute"
             top="15%"
             left="8%"
-            w="120px"
-            h="120px"
+            w="100px" // Reduced from 120px
+            h="100px"
             bg="purple.700"
             borderRadius="full"
-            opacity={0.08}
-            filter="blur(40px)"
+            opacity={0.06} // Reduced from 0.08
+            filter="blur(30px)" // Reduced from 40px
             animate={{
-              scale: [1, 1.02, 1],
+              scale: [1, 1.01, 1], // Reduced animation
             }}
-            transition={{ duration: 8, repeat: Infinity, ease: 'easeInOut' }}
-          />
-          <MotionBox
-            position="absolute"
-            bottom="20%"
-            right="10%"
-            w="100px"
-            h="100px"
-            bg="pink.600"
-            borderRadius="full"
-            opacity={0.06}
-            filter="blur(35px)"
-            animate={{
-              scale: [1, 1.03, 1],
-            }}
-            transition={{ duration: 10, repeat: Infinity, ease: 'easeInOut' }}
+            transition={{ duration: 10, repeat: Infinity, ease: 'easeInOut' }} // Slower
           />
         </Box>
       )}
 
       <MotionContainer
-        maxW={responsiveValues.containerMaxW}
-        px={responsiveValues.containerPx}
+        maxW={responsiveConfig.containerMaxW}
+        px={responsiveConfig.containerPx}
         pt={{ base: 4, md: 6 }}
         position="relative"
         zIndex={1}
@@ -310,7 +282,7 @@ const TeamBattleAnalysisInner = React.memo(() => {
           fallbackText="Failed to load battle result banner"
         >
           <Suspense
-            fallback={<Box h="300px" bg="whiteAlpha.50" borderRadius="xl" />}
+            fallback={<Box h="280px" bg="whiteAlpha.50" borderRadius="xl" />}
           >
             <BattleResultBanner battle={battle} userTeam={userTeam} />
           </Suspense>
