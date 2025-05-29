@@ -6,7 +6,6 @@ import {
   Heading,
   Icon,
   Flex,
-  Badge,
   Text,
   Box,
   useBreakpointValue,
@@ -14,19 +13,18 @@ import {
 import { motion } from 'framer-motion'
 import { useTranslation } from 'react-i18next'
 import { format } from 'date-fns'
-import { Users, ArrowLeft, Clock, Trophy, Swords } from 'lucide-react'
+import { Users, ArrowLeft, Clock } from 'lucide-react' // Ensured only used icons are imported
 
 const MotionFlex = motion(Flex)
-const MotionBadge = motion(Badge)
 const MotionButton = motion(Button)
 
 /**
  * Enhanced Header component for the Team Battle page with better visual appeal
  */
 const TeamBattleHeader = ({
-  battle,
-  battleStatus,
-  userTeam,
+  battle, // Retained as battle.expiresAt is used
+  // battleStatus, // Removed as it was likely for getStatusInfo
+  // userTeam, // Removed as it was likely for getStatusInfo
   onGoBack,
   variants,
 }) => {
@@ -37,24 +35,7 @@ const TeamBattleHeader = ({
   const padding = useBreakpointValue({ base: 4, md: 6 })
   const iconSize = useBreakpointValue({ base: 6, md: 8 })
 
-  // Get battle status icon and color
-  const getStatusInfo = () => {
-    if (battle.status === 'completed') {
-      if (battle.winner === userTeam) {
-        return { icon: Trophy, color: 'green', text: t('Victory!') }
-      } else if (battle.winner === 'tie') {
-        return { icon: Swords, color: 'yellow', text: t('Draw!') }
-      } else {
-        return { icon: Swords, color: 'red', text: t('Defeat!') }
-      }
-    } else if (battle.status === 'active') {
-      return { icon: Swords, color: 'blue', text: t('In Progress') }
-    } else {
-      return { icon: Clock, color: 'gray', text: t('Expired') }
-    }
-  }
-
-  const statusInfo = getStatusInfo()
+  // getStatusInfo function and statusInfo variable have been completely removed.
 
   return (
     <MotionFlex
@@ -80,19 +61,19 @@ const TeamBattleHeader = ({
       />
 
       <Flex
-        justify="space-between"
-        align={{ base: 'flex-start', md: 'center' }}
+        justify="space-between" // This might not be needed if the right column is truly empty.
+        align={{ base: 'flex-start', md: 'center' }} // md: 'center' might also be less relevant now.
         direction={{ base: 'column', md: 'row' }}
         gap={{ base: 4, md: 0 }}
         position="relative"
         zIndex={1}
       >
-        <Flex direction="column" align={{ base: 'center', md: 'flex-start' }}>
+        {/* Main Content Column (formerly Left Column) */}
+        <Flex direction="column" align="flex-start">
           <MotionButton
             leftIcon={<ArrowLeft size={18} />}
             variant="ghost"
             colorScheme="purple"
-            mr="auto"
             onClick={onGoBack}
             size="md"
             mb={3}
@@ -106,6 +87,22 @@ const TeamBattleHeader = ({
           >
             {t('Back')}
           </MotionButton>
+
+          {/* Moved and Styled Expires Text */}
+          {battle.expiresAt && (
+            <HStack spacing={2} color="whiteAlpha.700" fontSize="sm" mb={3}>
+              <Icon as={Clock} boxSize={4} />
+              <Text>
+                {new Date(battle.expiresAt) > new Date()
+                  ? t('Expires {{time}}', {
+                      time: format(new Date(battle.expiresAt), 'MMM dd, HH:mm'),
+                    })
+                  : t('Expired {{time}}', {
+                      time: format(new Date(battle.expiresAt), 'MMM dd, HH:mm'),
+                    })}
+              </Text>
+            </HStack>
+          )}
 
           <HStack spacing={3} mb={2}>
             <Icon as={Users} boxSize={iconSize} color="purple.400" />
@@ -127,53 +124,16 @@ const TeamBattleHeader = ({
           </Text>
         </Flex>
 
+        {/* Right Column: This Flex container is now empty.
+            Consider removing it or repurposing if needed in the future.
+            For now, leaving it to maintain the original structure slightly,
+            but it doesn't render anything visible. */}
         <Flex
           direction="column"
           align={{ base: 'center', md: 'flex-end' }}
           gap={3}
         >
-          <MotionBadge
-            colorScheme={statusInfo.color}
-            variant="solid"
-            p={3}
-            borderRadius="lg"
-            fontSize="md"
-            fontWeight="bold"
-            display="flex"
-            alignItems="center"
-            gap={2}
-            initial={{ scale: 0.8 }}
-            animate={{ scale: 1 }}
-            whileHover={{ scale: 1.05 }}
-            boxShadow={`0 0 20px rgba(${
-              statusInfo.color === 'green'
-                ? '72, 187, 120'
-                : statusInfo.color === 'red'
-                ? '245, 101, 101'
-                : statusInfo.color === 'yellow'
-                ? '236, 201, 75'
-                : '66, 153, 225'
-            }, 0.4)`}
-          >
-            <Icon as={statusInfo.icon} />
-            {statusInfo.text}
-          </MotionBadge>
-
-          {/* Time info */}
-          {battle.expiresAt && (
-            <HStack spacing={2} color="whiteAlpha.700" fontSize="sm">
-              <Icon as={Clock} boxSize={4} />
-              <Text>
-                {new Date(battle.expiresAt) > new Date()
-                  ? t('Expires {{time}}', {
-                      time: format(new Date(battle.expiresAt), 'MMM dd, HH:mm'),
-                    })
-                  : t('Expired {{time}}', {
-                      time: format(new Date(battle.expiresAt), 'MMM dd, HH:mm'),
-                    })}
-              </Text>
-            </HStack>
-          )}
+          {/* Content previously here (MotionBadge, Expires text) has been removed or moved */}
         </Flex>
       </Flex>
     </MotionFlex>
