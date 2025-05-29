@@ -32,8 +32,7 @@ import TaskProgressIndicator from './dailyTasks/TaskProgressIndicator'
 const TaskPopup = lazy(() => import('./dailyTasks/TaskPopup'))
 
 // Import the compact version instead of the full GlobalMatchmakingButton
-// import CompactGlobalMatchmakingButton from './SimpleCompactGlobalMatchmakingButton'
-import GlobalMatchmakingButton from './GlobalMatchmakingButton'
+import GlobalMatchmakingButton from './globalmatchmaking/GlobalMatchmakingButton'
 
 const MotionBox = motion(Box)
 const MotionButton = motion(Button)

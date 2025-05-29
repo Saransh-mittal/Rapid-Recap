@@ -58,7 +58,9 @@ const TeamBattlePage = lazy(() =>
 
 // New Global Matchmaking components
 const GlobalMatchmakingButton = lazy(() =>
-  import('../components/quickClashComponents/GlobalMatchmakingButton'),
+  import(
+    '../components/quickClashComponents/globalmatchmaking/GlobalMatchmakingButton'
+  ),
 )
 
 // Import custom hook for global matchmaking
