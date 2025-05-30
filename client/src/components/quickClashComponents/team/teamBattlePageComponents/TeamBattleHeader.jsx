@@ -9,11 +9,12 @@ import {
   Text,
   Box,
   useBreakpointValue,
+  VStack,
 } from '@chakra-ui/react'
 import { motion } from 'framer-motion'
 import { useTranslation } from 'react-i18next'
 import { format } from 'date-fns'
-import { Users, ArrowLeft, Clock } from 'lucide-react' // Ensured only used icons are imported
+import { Users, ArrowLeft, Clock } from 'lucide-react'
 
 const MotionFlex = motion(Flex)
 const MotionButton = motion(Button)
@@ -21,21 +22,13 @@ const MotionButton = motion(Button)
 /**
  * Enhanced Header component for the Team Battle page with better visual appeal
  */
-const TeamBattleHeader = ({
-  battle, // Retained as battle.expiresAt is used
-  // battleStatus, // Removed as it was likely for getStatusInfo
-  // userTeam, // Removed as it was likely for getStatusInfo
-  onGoBack,
-  variants,
-}) => {
+const TeamBattleHeader = ({ battle, onGoBack, variants }) => {
   const { t } = useTranslation('QuickClash')
 
   // Responsive values
   const headerSize = useBreakpointValue({ base: 'lg', md: 'xl' })
   const padding = useBreakpointValue({ base: 4, md: 6 })
   const iconSize = useBreakpointValue({ base: 6, md: 8 })
-
-  // getStatusInfo function and statusInfo variable have been completely removed.
 
   return (
     <MotionFlex
@@ -60,23 +53,17 @@ const TeamBattleHeader = ({
         zIndex={0}
       />
 
-      <Flex
-        justify="space-between" // This might not be needed if the right column is truly empty.
-        align={{ base: 'flex-start', md: 'center' }} // md: 'center' might also be less relevant now.
-        direction={{ base: 'column', md: 'row' }}
-        gap={{ base: 4, md: 0 }}
-        position="relative"
-        zIndex={1}
-      >
-        {/* Main Content Column (formerly Left Column) */}
-        <Flex direction="column" align="flex-start">
+      {/* Main content container within the header card */}
+      <VStack spacing={4} align="stretch" position="relative" zIndex={1}>
+        {/* Top Row: Back Button and Expires Time */}
+        <Flex justify="space-between" align="center" w="100%">
           <MotionButton
             leftIcon={<ArrowLeft size={18} />}
             variant="ghost"
             colorScheme="purple"
             onClick={onGoBack}
             size="md"
-            mb={3}
+            // mb={3} // Removed margin bottom as it's now part of a Flex row
             whileHover={{ scale: 1.05, x: -5 }}
             whileTap={{ scale: 0.95 }}
             _hover={{
@@ -88,9 +75,13 @@ const TeamBattleHeader = ({
             {t('Back')}
           </MotionButton>
 
-          {/* Moved and Styled Expires Text */}
           {battle.expiresAt && (
-            <HStack spacing={2} color="whiteAlpha.700" fontSize="sm" mb={3}>
+            <HStack
+              // Removed absolute positioning props
+              spacing={2}
+              color="whiteAlpha.700"
+              fontSize="sm"
+            >
               <Icon as={Clock} boxSize={4} />
               <Text>
                 {new Date(battle.expiresAt) > new Date()
@@ -103,8 +94,11 @@ const TeamBattleHeader = ({
               </Text>
             </HStack>
           )}
+        </Flex>
 
-          <HStack spacing={3} mb={2}>
+        {/* Title and Subtitle Section - Aligned to start (left) */}
+        <VStack align="flex-start" spacing={1}>
+          <HStack spacing={3}>
             <Icon as={Users} boxSize={iconSize} color="purple.400" />
             <Heading
               size={headerSize}
@@ -119,23 +113,12 @@ const TeamBattleHeader = ({
             color="whiteAlpha.700"
             fontSize={{ base: 'sm', md: 'md' }}
             fontWeight="medium"
+            pl={iconSize + 12} // Indent subtitle to align with text of heading
           >
             {t('Challenge other teams in knowledge combat')}
           </Text>
-        </Flex>
-
-        {/* Right Column: This Flex container is now empty.
-            Consider removing it or repurposing if needed in the future.
-            For now, leaving it to maintain the original structure slightly,
-            but it doesn't render anything visible. */}
-        <Flex
-          direction="column"
-          align={{ base: 'center', md: 'flex-end' }}
-          gap={3}
-        >
-          {/* Content previously here (MotionBadge, Expires text) has been removed or moved */}
-        </Flex>
-      </Flex>
+        </VStack>
+      </VStack>
     </MotionFlex>
   )
 }

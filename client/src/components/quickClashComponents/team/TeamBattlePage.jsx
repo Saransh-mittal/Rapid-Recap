@@ -24,7 +24,7 @@ import { useSocket } from '../../../customHooks/useSocket'
 
 // Import enhanced components
 import TeamBattleHeader from './teamBattlePageComponents/TeamBattleHeader'
-import TeamBattleProgress from './teamBattlePageComponents/TeamBattleProgress'
+// import TeamBattleProgress from './teamBattlePageComponents/TeamBattleProgress' // Progress bar removed
 import TeamsGrid from './teamBattlePageComponents/TeamsGrid'
 import CategoriesSection from './teamBattlePageComponents/CategoriesSection'
 import BattleResultsSection from './teamBattlePageComponents/BattleResultsSection'
@@ -142,9 +142,15 @@ const TeamBattlePage = () => {
 
   // Calculate battle status and completion
   const battleStatus = React.useMemo(() => {
-    if (!currentBattle) return {}
+    if (!currentBattle)
+      return {
+        status: 'loading',
+        statusColor: 'gray',
+        completionPercentage: 0,
+        completedChallenges: 0,
+        totalChallenges: 0,
+      } // Added default values
 
-    // Calculate completion percentage
     const totalChallenges = currentBattle.challenges.length
     const completedChallenges = currentBattle.challenges.filter(
       challenge => challenge.teamACompleted && challenge.teamBCompleted,
@@ -155,7 +161,6 @@ const TeamBattlePage = () => {
         ? Math.round((completedChallenges / totalChallenges) * 100)
         : 0
 
-    // Determine battle status
     let status = currentBattle.status
     let statusColor = 'gray'
 
@@ -401,17 +406,17 @@ const TeamBattlePage = () => {
         {/* Enhanced Header */}
         <TeamBattleHeader
           battle={currentBattle}
-          battleStatus={battleStatus}
-          userTeam={userTeam}
           onGoBack={handleGoBack}
           variants={itemVariants}
         />
 
-        {/* Enhanced Progress Bar */}
+        {/* Enhanced Progress Bar - REMOVED */}
+        {/*
         <TeamBattleProgress
           battleStatus={battleStatus}
           variants={itemVariants}
         />
+        */}
 
         {/* Enhanced Teams Section */}
         <TeamsGrid
@@ -434,6 +439,9 @@ const TeamBattlePage = () => {
             categorySelectionLoading={categorySelectionLoading}
             selectedCategoryId={selectedCategoryId}
             variants={itemVariants}
+            // Pass progress data
+            completedChallenges={battleStatus.completedChallenges}
+            totalChallenges={battleStatus.totalChallenges}
           />
         )}
 

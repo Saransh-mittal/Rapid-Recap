@@ -2,7 +2,6 @@
 import React from 'react'
 import {
   Box,
-  Flex,
   Heading,
   Badge,
   Grid,
@@ -13,6 +12,7 @@ import {
   VStack,
   Button,
   useBreakpointValue,
+  Progress,
 } from '@chakra-ui/react'
 import { motion } from 'framer-motion'
 import { useTranslation } from 'react-i18next'
@@ -24,7 +24,7 @@ import {
   CheckCircle,
   Clock,
   Star,
-  Sparkles, // Using Sparkles for "Available" aesthetic
+  Sparkles,
   Globe2,
   Landmark,
   Briefcase,
@@ -39,6 +39,12 @@ import {
   UtensilsCrossed,
   SmilePlus,
   PlaneTakeoff,
+  Zap,
+  Target,
+  Sword,
+  Shield,
+  Crown,
+  Flame,
 } from 'lucide-react'
 
 const MotionBox = motion(Box)
@@ -59,9 +65,11 @@ const CategoriesSection = ({
   const { t } = useTranslation('QuickClash')
   const navigate = useNavigate()
 
-  const sectionPadding = useBreakpointValue({ base: 3, sm: 4, md: 5 })
-  const columns = useBreakpointValue({ base: 2, sm: 2, md: 3, lg: 4 })
-  const gridSpacing = useBreakpointValue({ base: 3, sm: 4, md: 4 })
+  // Responsive values
+  const sectionPadding = useBreakpointValue({ base: 4, sm: 5, md: 6, lg: 8 })
+  const columns = useBreakpointValue({ base: 2, sm: 2, md: 3, lg: 4, xl: 5 })
+  const gridSpacing = useBreakpointValue({ base: 3, sm: 4, md: 5, lg: 6 })
+  const headerSize = useBreakpointValue({ base: 'lg', sm: 'xl', md: '2xl' })
 
   const userCompletedCategories = React.useMemo(() => {
     if (!currentBattle || !userTeam || !user) return []
@@ -107,431 +115,465 @@ const CategoriesSection = ({
     )
 
     const playerField = userTeam === 'teamA' ? 'teamAPlayer' : 'teamBPlayer'
-    const opponentCompleted =
-      userTeam === 'teamA' ? challenge.teamBCompleted : challenge.teamACompleted
     const userScore =
       userTeam === 'teamA' ? challenge.teamAScore : challenge.teamBScore
     const opponentScore =
       userTeam === 'teamA' ? challenge.teamBScore : challenge.teamAScore
     const isUserAssigned = challenge[playerField] === user._id
 
-    const cardPadding = useBreakpointValue({ base: 3, sm: 3.5, md: 4 })
-    const iconContainerSize = useBreakpointValue({
-      base: '48px',
-      sm: '52px',
-      md: '56px',
-    })
+    const cardPadding = useBreakpointValue({ base: 3, sm: 4 })
     const iconSize = useBreakpointValue({
       base: '24px',
-      sm: '26px',
-      md: '28px',
+      sm: '28px',
+      md: '30px',
     })
-
-    const categoryNameFontSize = useBreakpointValue({
-      base: '10px',
-      sm: '11px',
-      md: 'xs',
-    })
-    const categoryNamePaddingX = useBreakpointValue({ base: 2.5, sm: 3 })
-    const categoryNamePaddingY = useBreakpointValue({ base: 1, sm: 1.25 })
-
-    const availableBadgeFontSize = useBreakpointValue({
+    const categoryFontSize = useBreakpointValue({ base: 'xs', sm: 'sm' })
+    const badgeFontSize = useBreakpointValue({
       base: '9px',
-      sm: '10px',
-    })
-    const availableBadgeIconSize = useBreakpointValue({
-      base: '10px',
-      sm: '12px',
-    })
-    const availableBadgePaddingX = useBreakpointValue({ base: 2, sm: 2.5 })
-    const availableBadgePaddingY = useBreakpointValue({ base: 0.5, sm: 1 })
-
-    const statusBadgeFontSize = useBreakpointValue({
-      base: '10px',
       sm: '10px',
       md: '11px',
     })
-    const statusBadgePaddingX = useBreakpointValue({ base: 2, sm: 2.5 })
-    const statusBadgePaddingY = useBreakpointValue({ base: 1, sm: 1.2 })
-    const statusIconSize = useBreakpointValue({ base: '12px', sm: '13px' })
 
-    const secondaryStatusBadgeFontSize = useBreakpointValue({
-      base: '9px',
-      sm: '10px',
+    const smallButtonFontSize = useBreakpointValue({
+      base: '10px',
+      sm: '11px',
+      md: '12px',
     })
-    const secondaryStatusBadgePaddingX = useBreakpointValue({
-      base: 2.5,
-      sm: 3,
+    const buttonSize = useBreakpointValue({ base: 'sm', sm: 'md' })
+    const cardHeight = useBreakpointValue({
+      base: '170px',
+      sm: '200px',
+      md: '230px',
     })
-    const secondaryStatusBadgePaddingY = useBreakpointValue({
-      base: 1.25,
-      sm: 1.5,
-    })
-
-    const buttonSize = 'sm'
-    const buttonFontSize = useBreakpointValue({ base: '11px', sm: 'xs' })
-    const buttonIconSize = useBreakpointValue({ base: '12px', sm: '14px' })
-    const buttonPaddingY = useBreakpointValue({ base: 3, sm: 3.5 })
-
-    const internalCardMainSpacing = useBreakpointValue({ base: 2.5, sm: 3 })
-    const topGroupInternalSpacing = useBreakpointValue({ base: 2, sm: 2.5 })
 
     const getCategoryInfo = () => {
       const categoryLower = challenge.category.toLowerCase()
-      const defaultTextColor = 'white'
-      const categoryMap = {
+      const categoryStyles = {
         world: {
+          primaryColor: '#3B82F6',
+          secondaryColor: '#1E40AF',
           iconComponent: Globe2,
-          bgColor: '#3182CE',
-          textColor: defaultTextColor,
-          gradientFrom: '#63B3ED',
-          gradientTo: '#3182CE',
-          availableShade: 'blue.300',
+          battleIcon: Target,
         },
         politics: {
+          primaryColor: '#EF4444',
+          secondaryColor: '#B91C1C',
           iconComponent: Landmark,
-          bgColor: '#718096',
-          textColor: defaultTextColor,
-          gradientFrom: '#A0AEC0',
-          gradientTo: '#718096',
-          availableShade: 'gray.400',
+          battleIcon: Crown,
         },
         business: {
+          primaryColor: '#10B981',
+          secondaryColor: '#047857',
           iconComponent: Briefcase,
-          bgColor: '#38A169',
-          textColor: defaultTextColor,
-          gradientFrom: '#68D391',
-          gradientTo: '#38A169',
-          availableShade: 'green.300',
+          battleIcon: Sword,
         },
         technology: {
+          primaryColor: '#8B5CF6',
+          secondaryColor: '#5B21B6',
           iconComponent: Cpu,
-          bgColor: '#00A3C4',
-          textColor: defaultTextColor,
-          gradientFrom: '#4FD1C5',
-          gradientTo: '#00A3C4',
-          availableShade: 'cyan.300',
+          battleIcon: Zap,
         },
         sports: {
+          primaryColor: '#F59E0B',
+          secondaryColor: '#D97706',
           iconComponent: Trophy,
-          bgColor: '#E53E3E',
-          textColor: defaultTextColor,
-          gradientFrom: '#FC8181',
-          gradientTo: '#E53E3E',
-          availableShade: 'red.300',
+          battleIcon: Flame,
         },
         health: {
+          primaryColor: '#EC4899',
+          secondaryColor: '#BE185D',
           iconComponent: HeartPulse,
-          bgColor: '#D53F8C',
-          textColor: defaultTextColor,
-          gradientFrom: '#F687B3',
-          gradientTo: '#D53F8C',
-          availableShade: 'pink.300',
+          battleIcon: Shield,
         },
         science: {
+          primaryColor: '#06B6D4',
+          secondaryColor: '#0891B2',
           iconComponent: FlaskConical,
-          bgColor: '#319795',
-          textColor: defaultTextColor,
-          gradientFrom: '#4FD1C5',
-          gradientTo: '#319795',
-          availableShade: 'teal.300',
+          battleIcon: Star,
         },
         environment: {
+          primaryColor: '#84CC16',
+          secondaryColor: '#65A30D',
           iconComponent: Leaf,
-          bgColor: '#2F855A',
-          textColor: defaultTextColor,
-          gradientFrom: '#68D391',
-          gradientTo: '#2F855A',
-          availableShade: 'green.300',
+          battleIcon: Target,
         },
         crime: {
+          primaryColor: '#6B7280',
+          secondaryColor: '#374151',
           iconComponent: Gavel,
-          bgColor: '#2D3748',
-          textColor: defaultTextColor,
-          gradientFrom: '#4A5568',
-          gradientTo: '#2D3748',
-          availableShade: 'gray.500',
+          battleIcon: Sword,
         },
         education: {
+          primaryColor: '#F97316',
+          secondaryColor: '#C2410C',
           iconComponent: BookOpenText,
-          bgColor: '#DD6B20',
-          textColor: defaultTextColor,
-          gradientFrom: '#F6AD55',
-          gradientTo: '#DD6B20',
-          availableShade: 'orange.300',
+          battleIcon: Crown,
         },
         entertainment: {
+          primaryColor: '#E11D48',
+          secondaryColor: '#BE185D',
           iconComponent: Film,
-          bgColor: '#805AD5',
-          textColor: defaultTextColor,
-          gradientFrom: '#B794F4',
-          gradientTo: '#805AD5',
-          availableShade: 'purple.300',
+          battleIcon: Star,
         },
         food: {
+          primaryColor: '#F59E0B',
+          secondaryColor: '#D97706',
           iconComponent: UtensilsCrossed,
-          bgColor: '#B7791F',
-          textColor: defaultTextColor,
-          gradientFrom: '#D69E2E',
-          gradientTo: '#B7791F',
-          availableShade: 'yellow.400',
+          battleIcon: Flame,
         },
         lifestyle: {
+          primaryColor: '#8B5CF6',
+          secondaryColor: '#5B21B6',
           iconComponent: SmilePlus,
-          bgColor: '#ED64A6',
-          textColor: defaultTextColor,
-          gradientFrom: '#FBB6CE',
-          gradientTo: '#ED64A6',
-          availableShade: 'pink.300',
+          battleIcon: Shield,
         },
         tourism: {
+          primaryColor: '#0EA5E9',
+          secondaryColor: '#0284C7',
           iconComponent: PlaneTakeoff,
-          bgColor: '#4299E1',
-          textColor: defaultTextColor,
-          gradientFrom: '#63B3ED',
-          gradientTo: '#3182CE',
-          availableShade: 'blue.300',
+          battleIcon: Target,
         },
       }
-      return (
-        categoryMap[categoryLower] || {
-          iconComponent: Globe2,
-          bgColor: 'gray.500',
-          textColor: 'white',
-          gradientFrom: 'gray.400',
-          gradientTo: 'gray.600',
-          availableShade: 'gray.400',
-        }
-      )
+      return categoryStyles[categoryLower] || categoryStyles.world
     }
     const categoryInfo = getCategoryInfo()
-    const cardBg = 'rgba(30, 35, 48, 0.85)'
 
-    let borderColor = isCompleted
-      ? 'purple.500'
-      : isSelectedByTeammate
-      ? 'orange.500'
-      : isAvailable
-      ? categoryInfo.bgColor
-      : 'gray.700'
+    let cardBg = 'rgba(15, 23, 42, 0.9)'
+    let borderColorValue = 'rgba(71, 85, 105, 0.3)'
+    let shadowColor = 'rgba(0, 0, 0, 0.1)'
 
-    const cardHoverVariants = isAvailable
-      ? {
-          y: -5,
-          scale: 1.03,
-          boxShadow: `0 0 30px 0px ${borderColor}B3, 0 0 0 2px ${borderColor}`,
-          transition: { duration: 0.25, ease: 'circOut' },
-        }
-      : {}
+    if (isCompleted) {
+      borderColorValue = '#10B981'
+      shadowColor = 'rgba(16, 185, 129, 0.3)'
+    } else if (isAvailable) {
+      borderColorValue = categoryInfo.primaryColor
+      shadowColor = `${categoryInfo.primaryColor}40`
+    } else if (isSelectedByTeammate) {
+      borderColorValue = '#F59E0B'
+      shadowColor = 'rgba(245, 158, 11, 0.3)'
+    }
 
     return (
       <MotionBox
         bg={cardBg}
-        backdropFilter="blur(10px)"
-        borderWidth="2px"
-        borderColor={borderColor}
         borderRadius="xl"
         p={cardPadding}
         position="relative"
         overflow="hidden"
-        minHeight={{ base: '185px', sm: '200px', md: '215px' }}
+        height={cardHeight}
         display="flex"
         flexDirection="column"
-        boxShadow={`0 5px 15px rgba(0,0,0,0.2), 0 0 0 1.5px ${borderColor}50`}
-        whileHover={cardHoverVariants}
+        border="2px solid"
+        borderColor={borderColorValue}
+        boxShadow={`0 8px 25px ${shadowColor}`}
+        backdropFilter="blur(10px)"
+        whileHover={{
+          y: isAvailable ? -6 : -3,
+          scale: isAvailable ? 1.03 : 1.01,
+          boxShadow: `0 12px 35px ${shadowColor}`,
+          transition: { duration: 0.3, ease: 'easeOut' },
+        }}
         cursor={isAvailable ? 'pointer' : 'default'}
+        _before={{
+          content: '""',
+          position: 'absolute',
+          top: 0,
+          left: 0,
+          right: 0,
+          bottom: 0,
+          bgGradient: `linear(135deg, ${categoryInfo.primaryColor}15, transparent 60%)`,
+          opacity: 0.8,
+          zIndex: 0,
+        }}
       >
-        <Box
+        <Icon
+          as={categoryInfo.battleIcon}
           position="absolute"
-          top={0}
-          left={0}
-          right={0}
-          bottom={0}
-          bgGradient={`linear-gradient(155deg, ${categoryInfo.bgColor}26 0%, transparent 50%)`}
-          opacity={0.9}
-          zIndex={0}
+          top="8px"
+          right="8px"
+          boxSize={{ base: '14px', sm: '16px' }}
+          color={categoryInfo.primaryColor}
+          opacity={0.4}
+          zIndex={1}
         />
 
+        {isCompleted && (
+          <Icon
+            as={CheckCircle}
+            position="absolute"
+            top="8px"
+            left="8px"
+            boxSize={{ base: '16px', sm: '18px' }}
+            color="#10B981"
+            opacity={0.9}
+            zIndex={1}
+          />
+        )}
+
+        {/* Main content VStack */}
         <VStack
-          spacing={internalCardMainSpacing}
-          alignItems="stretch"
+          spacing={{ base: 1, sm: 1.5 }}
+          alignItems="center"
           flex={1}
           position="relative"
-          zIndex={1}
+          zIndex={2}
+          justify="space-between"
+          py={{ base: 1, sm: 1.5 }}
         >
-          <VStack
-            spacing={topGroupInternalSpacing}
-            alignItems="center"
-            flexShrink={0}
-            mt={{ base: 1.5, sm: 2 }}
-          >
-            <Flex
-              w={iconContainerSize}
-              h={iconContainerSize}
-              borderRadius="lg"
-              bg={categoryInfo.bgColor}
-              alignItems="center"
-              justifyContent="center"
-              boxShadow={`0 4px 12px ${categoryInfo.bgColor}7A`}
+          {/* Content Block - Different layout for completed vs non-completed */}
+          {isCompleted ? (
+            // Completed state layout with left-aligned scores
+            <VStack
+              w="full"
+              spacing={{ base: 1, sm: 1.5 }}
+              alignItems="flex-start"
+              mt={{ base: 1, sm: 1.5 }} // Margin for top-left checkmark
             >
-              <Icon
-                as={categoryInfo.iconComponent}
-                boxSize={iconSize}
-                color={categoryInfo.textColor}
-              />
-            </Flex>
-            <Badge
-              bg={`${categoryInfo.bgColor}E6`}
-              color={categoryInfo.textColor}
-              px={categoryNamePaddingX}
-              py={categoryNamePaddingY}
-              borderRadius="full"
-              fontSize={categoryNameFontSize}
-              fontWeight="600"
-              textTransform="uppercase" // CHANGED HERE
-              letterSpacing="0.1px"
-              boxShadow={`0 1px 3px ${categoryInfo.bgColor}4D`}
-            >
-              {challenge.category}
-            </Badge>
-          </VStack>
-
-          <Box
-            flexGrow={1}
-            display="flex"
-            flexDirection="column"
-            justifyContent="center"
-            alignItems="center"
-            py={1}
-          >
-            {isCompleted ? (
-              <VStack spacing={2}>
-                <HStack spacing={2} justifyContent="center" w="full">
-                  <Badge
-                    bg="green.400"
+              {/* Icon and Category Name - centered within its own block */}
+              <VStack
+                spacing={{ base: 0.5, sm: 1 }}
+                alignItems="center"
+                w="full"
+                alignSelf="center"
+              >
+                <MotionBox
+                  bg={`linear-gradient(135deg, ${categoryInfo.primaryColor}, ${categoryInfo.secondaryColor})`}
+                  borderRadius="lg"
+                  p={{ base: 1.5, sm: 2 }}
+                  boxShadow={`0 4px 15px ${categoryInfo.primaryColor}40`}
+                  whileHover={{
+                    rotate: [0, -5, 5, 0],
+                    transition: { duration: 0.6, ease: 'easeInOut' },
+                  }}
+                >
+                  <Icon
+                    as={categoryInfo.iconComponent}
+                    boxSize={iconSize}
                     color="white"
-                    px={statusBadgePaddingX}
-                    py={statusBadgePaddingY}
-                    borderRadius="md"
-                    fontSize={statusBadgeFontSize}
+                  />
+                </MotionBox>
+                <Text
+                  fontSize={categoryFontSize}
+                  fontWeight="bold"
+                  color="white"
+                  textAlign="center"
+                  lineHeight="1.2"
+                  textTransform="capitalize"
+                  letterSpacing="0.5px"
+                >
+                  {challenge.category}
+                </Text>
+              </VStack>
+
+              {/* Score display */}
+              <Box
+                w="full"
+                bg="rgba(15, 23, 42, 0.4)"
+                borderRadius="md"
+                p={{ base: 1.5, sm: 2 }}
+                border="1px solid"
+                borderColor="rgba(16, 185, 129, 0.15)"
+                backdropFilter="blur(3px)"
+              >
+                <HStack
+                  spacing={1.5}
+                  alignItems="center"
+                  justifyContent="flex-start"
+                  w="full"
+                >
+                  <Text
+                    color="gray.300"
+                    fontWeight="medium"
+                    fontSize={{ base: '11px', sm: '12px', md: '13px' }}
+                    letterSpacing="0.3px"
+                  >
+                    RQM:
+                  </Text>
+                  <HStack spacing={1} alignItems="center">
+                    <Text
+                      color="#10B981"
+                      fontWeight="bold"
+                      fontSize={{ base: '13px', sm: '14px', md: '15px' }}
+                      bg="rgba(16, 185, 129, 0.1)"
+                      px={1.5}
+                      py={0.5}
+                      borderRadius="sm"
+                      minW="20px"
+                      textAlign="center"
+                    >
+                      {userScore !== undefined ? userScore : '-'}
+                    </Text>
+                    <Text
+                      color="gray.400"
+                      fontSize={{ base: '10px', sm: '11px', md: '12px' }}
+                      fontWeight="medium"
+                      mx={0.5}
+                    >
+                      VS
+                    </Text>
+                    <Text
+                      color="#EF4444"
+                      fontWeight="bold"
+                      fontSize={{ base: '13px', sm: '14px', md: '15px' }}
+                      bg="rgba(239, 68, 68, 0.1)"
+                      px={1.5}
+                      py={0.5}
+                      borderRadius="sm"
+                      minW="20px"
+                      textAlign="center"
+                    >
+                      {opponentScore !== undefined ? opponentScore : '-'}
+                    </Text>
+                  </HStack>
+                </HStack>
+              </Box>
+            </VStack>
+          ) : (
+            // Non-completed state layout with centered alignment
+            <VStack
+              w="full"
+              spacing={{ base: 2, sm: 2.5 }}
+              alignItems="center"
+              justify="center"
+              flex={1}
+            >
+              {/* Icon and Category Name */}
+              <VStack spacing={{ base: 1, sm: 1.5 }} alignItems="center">
+                <MotionBox
+                  bg={`linear-gradient(135deg, ${categoryInfo.primaryColor}, ${categoryInfo.secondaryColor})`}
+                  borderRadius="lg"
+                  p={{ base: 1.5, sm: 2 }}
+                  boxShadow={`0 4px 15px ${categoryInfo.primaryColor}40`}
+                  whileHover={{
+                    rotate: [0, -5, 5, 0],
+                    transition: { duration: 0.6, ease: 'easeInOut' },
+                  }}
+                >
+                  <Icon
+                    as={categoryInfo.iconComponent}
+                    boxSize={iconSize}
+                    color="white"
+                  />
+                </MotionBox>
+                <Text
+                  fontSize={categoryFontSize}
+                  fontWeight="bold"
+                  color="white"
+                  textAlign="center"
+                  lineHeight="1.2"
+                  textTransform="capitalize"
+                  letterSpacing="0.5px"
+                >
+                  {challenge.category}
+                </Text>
+              </VStack>
+
+              {/* Status Badge */}
+              <Box textAlign="center">
+                {isUserAssigned ? (
+                  <VStack spacing={1.5}>
+                    <Badge
+                      bg="linear-gradient(135deg, #F59E0B, #D97706)"
+                      color="white"
+                      px={{ base: 2, sm: 3 }}
+                      py={{ base: 1, sm: 1.5 }}
+                      borderRadius="lg"
+                      fontSize={badgeFontSize}
+                      fontWeight="bold"
+                      display="flex"
+                      alignItems="center"
+                      boxShadow="0 4px 15px rgba(245, 158, 11, 0.3)"
+                    >
+                      <Icon as={Clock} boxSize="12px" mr={1.5} />
+                      {t('In Progress')}
+                    </Badge>
+                    <Progress
+                      value={75}
+                      size="sm"
+                      colorScheme="orange"
+                      borderRadius="full"
+                      width={{ base: '60px', sm: '80px' }}
+                      bg="rgba(245, 158, 11, 0.2)"
+                    />
+                  </VStack>
+                ) : isSelectedByTeammate ? (
+                  <Badge
+                    bg="linear-gradient(135deg, #8B5CF6, #7C3AED)"
+                    color="white"
+                    px={{ base: 2, sm: 3 }}
+                    py={{ base: 1, sm: 1.5 }}
+                    borderRadius="lg"
+                    fontSize={badgeFontSize}
                     fontWeight="bold"
-                    textTransform="uppercase"
                     display="flex"
                     alignItems="center"
-                    boxShadow="0 3px 10px rgba(72, 187, 120, 0.5)"
+                    boxShadow="0 4px 15px rgba(139, 92, 246, 0.3)"
                   >
-                    <Icon as={CheckCircle} boxSize={statusIconSize} mr={1.5} />
-                    {t('Completed')}
+                    <Icon as={Star} boxSize="12px" mr={1.5} />
+                    {t('Teammate')}
                   </Badge>
+                ) : !isAvailable ? (
                   <Badge
-                    bg="purple.500"
-                    color="white"
-                    px={statusBadgePaddingX}
-                    py={statusBadgePaddingY}
-                    borderRadius="md"
-                    fontSize={statusBadgeFontSize}
-                    fontWeight="bold"
-                    boxShadow="0 3px 10px rgba(128, 90, 213, 0.5)"
+                    bg="rgba(71, 85, 105, 0.8)"
+                    color="slate.300"
+                    px={{ base: 2, sm: 3 }}
+                    py={{ base: 1, sm: 1.5 }}
+                    borderRadius="lg"
+                    fontSize={badgeFontSize}
+                    fontWeight="500"
+                    backdropFilter="blur(5px)"
                   >
-                    {userScore} {t('PTS')}
+                    {t('Locked')}
                   </Badge>
-                </HStack>
-              </VStack>
-            ) : isUserAssigned && !isCompleted ? (
-              <Badge
-                bg="yellow.500"
-                color="white"
-                px={secondaryStatusBadgePaddingX}
-                py={secondaryStatusBadgePaddingY}
-                borderRadius="lg"
-                fontSize={secondaryStatusBadgeFontSize}
-                fontWeight="600"
-                display="flex"
-                alignItems="center"
-                boxShadow="0 3px 10px rgba(237, 137, 54, 0.4)"
-              >
-                <Icon as={Clock} boxSize={statusIconSize} mr={1.5} />
-                {t('In Progress')}
-              </Badge>
-            ) : isSelectedByTeammate ? (
-              <Badge
-                bg="orange.500"
-                color="white"
-                px={secondaryStatusBadgePaddingX}
-                py={secondaryStatusBadgePaddingY}
-                borderRadius="lg"
-                fontSize={secondaryStatusBadgeFontSize}
-                fontWeight="600"
-                display="flex"
-                alignItems="center"
-                boxShadow="0 3px 10px rgba(237, 137, 54, 0.4)"
-              >
-                <Icon as={Star} boxSize={statusIconSize} mr={1.5} />
-                {t('Teammate')}
-              </Badge>
-            ) : !isAvailable ? (
-              <Badge
-                bg="gray.600"
-                color="whiteAlpha.800"
-                px={secondaryStatusBadgePaddingX}
-                py={secondaryStatusBadgePaddingY}
-                borderRadius="lg"
-                fontSize={secondaryStatusBadgeFontSize}
-                fontWeight="600"
-                textTransform="uppercase"
-                boxShadow="0 3px 8px rgba(113, 128, 150, 0.4)"
-              >
-                {t('Unavailable')}
-              </Badge>
-            ) : (
-              <Badge
-                bg={`${categoryInfo.availableShade}33`}
-                color={categoryInfo.availableShade}
-                px={availableBadgePaddingX}
-                py={availableBadgePaddingY}
-                borderRadius="full"
-                fontSize={availableBadgeFontSize}
-                fontWeight="600"
-                textTransform="uppercase"
-                letterSpacing="0.5px"
-                display="inline-flex"
-                alignItems="center"
-                border="1px solid"
-                borderColor={`${categoryInfo.availableShade}80`}
-                boxShadow={`0 1px 5px ${categoryInfo.availableShade}33`}
-              >
-                <Icon as={Sparkles} boxSize={availableBadgeIconSize} mr={1} />
-                {t('Available')}
-              </Badge>
-            )}
-          </Box>
+                ) : (
+                  <MotionBox
+                    animate={{ scale: [1, 1.05, 1], opacity: [0.9, 1, 0.9] }}
+                    transition={{
+                      duration: 2,
+                      repeat: Infinity,
+                      ease: 'easeInOut',
+                    }}
+                  >
+                    <Badge
+                      bg={`${categoryInfo.primaryColor}20`}
+                      color={categoryInfo.primaryColor}
+                      px={{ base: 2, sm: 3 }}
+                      py={{ base: 1, sm: 1.5 }}
+                      borderRadius="full"
+                      fontSize={badgeFontSize}
+                      fontWeight="bold"
+                      display="flex"
+                      alignItems="center"
+                      border="2px solid"
+                      borderColor={`${categoryInfo.primaryColor}60`}
+                      boxShadow={`0 0 20px ${categoryInfo.primaryColor}30`}
+                    >
+                      <Icon as={Sparkles} boxSize="12px" mr={1.5} />
+                      {t('Ready')}
+                    </Badge>
+                  </MotionBox>
+                )}
+              </Box>
+            </VStack>
+          )}
 
-          <Box
-            flexShrink={0}
-            w="100%"
-            mt={
-              isAvailable &&
-              !isCompleted &&
-              !(isUserAssigned && !isCompleted) &&
-              !isSelectedByTeammate
-                ? 'auto'
-                : undefined
-            }
-          >
+          {/* Action Button */}
+          <Box w="100%">
             {isCompleted ? (
               <Button
                 size={buttonSize}
                 variant="outline"
-                borderColor="purple.400"
-                color="purple.300"
-                bg="rgba(128, 90, 213, 0.2)"
+                borderColor="#10B981"
+                color="#10B981"
+                bg="rgba(16, 185, 129, 0.08)"
                 _hover={{
-                  bg: 'rgba(128, 90, 213, 0.3)',
-                  borderColor: 'purple.300',
+                  bg: 'rgba(16, 185, 129, 0.15)',
                   transform: 'translateY(-2px)',
-                  boxShadow: '0 5px 15px rgba(128,90,213,0.35)',
+                  boxShadow: '0 5px 15px rgba(16, 185, 129, 0.25)',
                 }}
-                leftIcon={<Icon as={FileText} boxSize={buttonIconSize} />}
+                leftIcon={
+                  <Icon as={FileText} boxSize={{ base: '11px', sm: '13px' }} />
+                }
                 width="100%"
                 onClick={e => {
                   e.stopPropagation()
@@ -539,43 +581,45 @@ const CategoriesSection = ({
                 }}
                 isLoading={reportModalLoading}
                 borderRadius="lg"
-                py={buttonPaddingY}
-                fontSize={buttonFontSize}
-                fontWeight="600"
+                fontSize={smallButtonFontSize}
+                fontWeight="semibold"
               >
                 {t('View Report')}
               </Button>
             ) : isUserAssigned && !isCompleted ? (
               <Button
                 size={buttonSize}
-                bgGradient={`linear(135deg, blue.500, blue.700)`}
+                bg={`linear-gradient(135deg, ${categoryInfo.primaryColor}, ${categoryInfo.secondaryColor})`}
                 color="white"
                 _hover={{
-                  bgGradient: `linear(135deg, blue.600, blue.800)`,
+                  filter: 'brightness(110%)',
                   transform: 'translateY(-2px)',
-                  boxShadow: '0 7px 18px rgba(49,130,206,0.45)',
+                  boxShadow: `0 6px 20px ${categoryInfo.primaryColor}50`,
                 }}
-                leftIcon={<Icon as={Play} boxSize={buttonIconSize} />}
+                leftIcon={
+                  <Icon as={Play} boxSize={{ base: '12px', sm: '14px' }} />
+                }
                 width="100%"
                 onClick={e => {
                   e.stopPropagation()
                   navigate(`/quickclash/session/${challenge.challenge?._id}`)
                 }}
                 borderRadius="lg"
-                py={buttonPaddingY}
-                fontSize={buttonFontSize}
-                fontWeight="600"
+                fontSize={smallButtonFontSize}
+                fontWeight="bold"
               >
-                {t('Continue Challenge')}
+                {t('Continue')}
               </Button>
             ) : (
               isAvailable && (
                 <MotionBox
                   as={Button}
                   size={buttonSize}
-                  bg={categoryInfo.bgColor}
-                  color={categoryInfo.textColor}
-                  leftIcon={<Icon as={Play} boxSize={buttonIconSize} />}
+                  bg={`linear-gradient(135deg, ${categoryInfo.primaryColor}, ${categoryInfo.secondaryColor})`}
+                  color="white"
+                  leftIcon={
+                    <Icon as={Play} boxSize={{ base: '12px', sm: '14px' }} />
+                  }
                   width="100%"
                   onClick={e => {
                     e.stopPropagation()
@@ -590,23 +634,18 @@ const CategoriesSection = ({
                   }
                   loadingText={t('Starting...')}
                   borderRadius="lg"
-                  py={buttonPaddingY}
-                  fontSize={buttonFontSize}
-                  fontWeight="600"
-                  letterSpacing="0.2px"
-                  boxShadow={`0 4px 15px -3px ${categoryInfo.bgColor}99`}
+                  fontSize={smallButtonFontSize}
+                  fontWeight="bold"
+                  boxShadow={`0 4px 15px ${categoryInfo.primaryColor}40`}
                   whileHover={{
-                    scale: 1.03,
-                    y: -2.5,
-                    filter: 'brightness(115%)',
-                    boxShadow: `0 7px 20px -3px ${categoryInfo.bgColor}77`,
+                    scale: 1.02,
+                    y: -2,
+                    boxShadow: `0 8px 25px ${categoryInfo.primaryColor}60`,
+                    transition: { duration: 0.2 },
                   }}
+                  whileTap={{ scale: 0.98, transition: { duration: 0.1 } }}
                   _hover={{}}
-                  _active={{
-                    transform: 'scale(0.97)',
-                    filter: 'brightness(0.9)',
-                  }}
-                  transition={{ duration: 0.15 }}
+                  _active={{}}
                 >
                   {t('Start Challenge')}
                 </MotionBox>
@@ -623,94 +662,153 @@ const CategoriesSection = ({
   return (
     <MotionBox
       variants={variants}
-      mx={{ base: 2, sm: 3, md: 4 }}
-      mb={5}
-      bg="gray.900"
-      borderRadius="2xl"
-      p={sectionPadding}
-      border="1px solid rgba(255, 255, 255, 0.05)"
+      mx={{ base: 3, sm: 4, md: 6, lg: 8 }}
+      mb={{ base: 6, sm: 8, md: 10 }}
       position="relative"
       overflow="hidden"
-      boxShadow="0 15px 50px rgba(0, 0, 0, 0.3)"
     >
-      <VStack spacing={{ base: 4, sm: 5 }} position="relative" zIndex={1}>
-        <VStack spacing={1.5} w="100%" textAlign="center">
-          <Heading
-            size={useBreakpointValue({ base: 'md', sm: 'lg' })}
-            color="white"
-            fontWeight="bold"
-            letterSpacing="-0.5px"
-          >
-            {t('Categories')}
-          </Heading>
-          <Text
-            color="whiteAlpha.700"
-            fontSize={{ base: 'sm', sm: 'md' }}
-            fontWeight="normal"
-          >
-            {t('Choose a category to battle in')}
-          </Text>
-        </VStack>
+      <Box
+        position="absolute"
+        top={0}
+        left={0}
+        right={0}
+        bottom={0}
+        bg="rgba(15, 23, 42, 0.95)"
+        backdropFilter="blur(20px)"
+        borderRadius="2xl"
+        border="1px solid"
+        borderColor="rgba(71, 85, 105, 0.3)"
+        boxShadow="0 25px 50px rgba(0, 0, 0, 0.25)"
+      />
 
-        <Grid
-          templateColumns={`repeat(${columns}, 1fr)`}
-          gap={gridSpacing}
-          w="100%"
-        >
-          {currentBattle.challenges.map((challenge, index) => (
-            <MotionGridItem
-              key={`${challenge.category}-${index}-${
-                challenge.challenge?._id || index
-              }`}
-              initial={{ opacity: 0, y: 20, scale: 0.97 }}
-              animate={{ opacity: 1, y: 0, scale: 1 }}
-              transition={{
-                delay: index * 0.07,
-                type: 'spring',
-                stiffness: 100,
-                damping: 12,
-              }}
+      <Box position="relative" zIndex={1} p={sectionPadding}>
+        <VStack spacing={{ base: 4, sm: 6, md: 8 }} w="100%">
+          <VStack spacing={{ base: 1.5, sm: 2, md: 3 }} textAlign="center">
+            <MotionBox
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.6, ease: 'easeOut' }}
             >
-              <EnhancedCategoryCard challenge={challenge} />
-            </MotionGridItem>
-          ))}
-        </Grid>
+              <HStack spacing={3} justify="center" align="center">
+                <Icon
+                  as={Zap}
+                  boxSize={{ base: 5, sm: 6, md: 7 }}
+                  color="#3B82F6"
+                />
+                <Heading
+                  size={headerSize}
+                  color="white"
+                  fontWeight="bold"
+                  letterSpacing="-0.02em"
+                  textAlign="center"
+                >
+                  {t('Battle Arena')}
+                </Heading>
+                <Icon
+                  as={Target}
+                  boxSize={{ base: 5, sm: 6, md: 7 }}
+                  color="#10B981"
+                />
+              </HStack>
+            </MotionBox>
 
-        {hasUserParticipated && !userCompletedCategories.length && (
-          <Box
-            mt={4}
-            p={3.5}
-            bg="rgba(237, 137, 54, 0.15)"
-            backdropFilter="blur(8px)"
-            borderRadius="xl"
-            borderWidth="1px"
-            borderColor="rgba(237, 137, 54, 0.25)"
+            <MotionBox
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.6, delay: 0.1, ease: 'easeOut' }}
+            >
+              <Text
+                color="slate.400"
+                fontSize={{ base: 'sm', sm: 'md', md: 'lg' }}
+                fontWeight="medium"
+                textAlign="center"
+                lineHeight="1.5"
+                maxW="md"
+                mx="auto"
+              >
+                {t('Choose your battlefield & prove your skills!')}
+              </Text>
+            </MotionBox>
+          </VStack>
+
+          <Grid
+            templateColumns={`repeat(${columns}, 1fr)`}
+            gap={gridSpacing}
+            w="100%"
+            maxW="6xl"
+            mx="auto"
           >
-            <HStack spacing={2.5}>
-              <Icon as={AlertTriangle} color="orange.300" boxSize={4.5} />
-              <VStack alignItems="flex-start" spacing={0.5}>
-                <Text
-                  color="orange.200"
-                  fontWeight="semibold"
-                  fontSize={{ base: 'xs', sm: 'sm' }}
-                >
-                  {t('Challenge in Progress')}
-                </Text>
-                <Text
-                  color="orange.300"
-                  fontSize={{ base: '10px', sm: 'xs' }}
-                  opacity={0.9}
-                  lineHeight="1.35"
-                >
-                  {t(
-                    'You are already participating in a challenge. Complete your current challenge before selecting another.',
-                  )}
-                </Text>
-              </VStack>
-            </HStack>
-          </Box>
-        )}
-      </VStack>
+            {currentBattle.challenges.map((challenge, index) => (
+              <MotionGridItem
+                key={`${challenge.category}-${index}-${
+                  challenge.challenge?._id || `fallback-${index}`
+                }`}
+                initial={{ opacity: 0, y: 30, scale: 0.9 }}
+                animate={{ opacity: 1, y: 0, scale: 1 }}
+                transition={{
+                  delay: index * 0.08,
+                  type: 'spring',
+                  stiffness: 100,
+                  damping: 20,
+                  duration: 0.8,
+                }}
+              >
+                <EnhancedCategoryCard challenge={challenge} />
+              </MotionGridItem>
+            ))}
+          </Grid>
+
+          {hasUserParticipated && !userCompletedCategories.length && (
+            <MotionBox
+              initial={{ opacity: 0, scale: 0.95 }}
+              animate={{ opacity: 1, scale: 1 }}
+              transition={{ delay: 0.4, duration: 0.5 }}
+              w="100%"
+              maxW="md"
+              mx="auto"
+            >
+              <Box
+                bg="rgba(245, 158, 11, 0.1)"
+                backdropFilter="blur(10px)"
+                borderRadius="xl"
+                p={{ base: 4, sm: 5 }}
+                border="1px solid"
+                borderColor="rgba(245, 158, 11, 0.3)"
+                boxShadow="0 10px 30px rgba(245, 158, 11, 0.1)"
+              >
+                <HStack spacing={3} align="flex-start">
+                  <Icon
+                    as={AlertTriangle}
+                    color="#F59E0B"
+                    boxSize={{ base: 5, sm: 6 }}
+                    flexShrink={0}
+                    mt={0.5}
+                  />
+                  <VStack alignItems="flex-start" spacing={1} flex={1}>
+                    <Text
+                      color="#F59E0B"
+                      fontWeight="bold"
+                      fontSize={{ base: 'sm', sm: 'md' }}
+                    >
+                      {t('Challenge in Progress')}
+                    </Text>
+                    <Text
+                      color="amber.200"
+                      fontSize={{ base: 'xs', sm: 'sm' }}
+                      lineHeight="1.5"
+                      opacity={0.9}
+                    >
+                      {t(
+                        'You are currently participating in a challenge. Complete your current challenge before selecting another category.',
+                      )}
+                    </Text>
+                  </VStack>
+                </HStack>
+              </Box>
+            </MotionBox>
+          )}
+        </VStack>
+      </Box>
     </MotionBox>
   )
 }
