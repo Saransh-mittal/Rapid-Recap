@@ -22,7 +22,7 @@ const MotionButton = motion(Button)
 /**
  * Enhanced Header component for the Team Battle page with better visual appeal
  */
-const TeamBattleHeader = ({ battle, onGoBack, variants }) => {
+const TeamBattleHeader = ({ battle, onGoBack }) => {
   const { t } = useTranslation('QuickClash')
 
   // Responsive values
@@ -32,13 +32,15 @@ const TeamBattleHeader = ({ battle, onGoBack, variants }) => {
 
   return (
     <MotionFlex
-      variants={variants}
       direction="column"
       px={padding}
       py={6}
       mb={4}
       position="relative"
       overflow="hidden"
+      initial={{ opacity: 0 }}
+      animate={{ opacity: 1 }}
+      transition={{ duration: 0.3 }}
     >
       {/* Background glow effect */}
       <Box
@@ -63,7 +65,6 @@ const TeamBattleHeader = ({ battle, onGoBack, variants }) => {
             colorScheme="purple"
             onClick={onGoBack}
             size="md"
-            // mb={3} // Removed margin bottom as it's now part of a Flex row
             whileHover={{ scale: 1.05, x: -5 }}
             whileTap={{ scale: 0.95 }}
             _hover={{
@@ -72,16 +73,11 @@ const TeamBattleHeader = ({ battle, onGoBack, variants }) => {
             }}
             transition="all 0.2s"
           >
-            {t('Back')}
+            {t('Back to Battles')}
           </MotionButton>
 
           {battle.expiresAt && (
-            <HStack
-              // Removed absolute positioning props
-              spacing={2}
-              color="whiteAlpha.700"
-              fontSize="sm"
-            >
+            <HStack spacing={2} color="whiteAlpha.700" fontSize="sm">
               <Icon as={Clock} boxSize={4} />
               <Text>
                 {new Date(battle.expiresAt) > new Date()

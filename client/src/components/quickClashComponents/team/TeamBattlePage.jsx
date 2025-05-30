@@ -11,9 +11,9 @@ import {
   useToast,
   useDisclosure,
 } from '@chakra-ui/react'
-import { motion } from 'framer-motion'
+import { motion, AnimatePresence } from 'framer-motion'
 import { useTranslation } from 'react-i18next'
-import { useNavigate, useParams } from 'react-router-dom'
+import { useNavigate, useParams, useLocation } from 'react-router-dom'
 import { useSelector } from 'react-redux'
 import { AlertTriangle, ArrowLeft } from 'lucide-react'
 import axios from 'axios'
@@ -33,39 +33,47 @@ const QuizReportModal = React.lazy(() => import('../QuizReportModal'))
 
 const MotionBox = motion(Box)
 
-// Optimized animation variants for weaker devices
-const containerVariants = {
-  hidden: { opacity: 0 },
-  visible: {
+// Simple fade-only animation variants - NO vertical movement
+const pageVariants = {
+  initial: {
+    opacity: 0,
+  },
+  animate: {
     opacity: 1,
     transition: {
-      staggerChildren: 0.1,
-      delayChildren: 0.1,
+      duration: 0.4,
+      ease: 'easeOut',
+    },
+  },
+  exit: {
+    opacity: 0,
+    transition: {
+      duration: 0.3,
     },
   },
 }
 
-const itemVariants = {
-  hidden: { opacity: 0, y: 20 },
-  visible: {
+// Simple variants for child components - NO vertical movement
+const sectionVariants = {
+  initial: { opacity: 0 },
+  animate: {
     opacity: 1,
-    y: 0,
     transition: {
-      type: 'tween',
-      duration: 0.4,
+      duration: 0.3,
       ease: 'easeOut',
     },
   },
 }
 
 /**
- * Optimized Team Battle Page Component with better performance and maintainability
+ * Optimized Team Battle Page Component with consistent top-down animations
  */
 const TeamBattlePage = React.memo(() => {
   const { t } = useTranslation('QuickClash')
   const toast = useToast()
   const navigate = useNavigate()
   const { battleId } = useParams()
+  const location = useLocation()
   const { user } = useSelector(state => state.auth)
   const { getSocket } = useSocket()
 
@@ -92,6 +100,7 @@ const TeamBattlePage = React.memo(() => {
 
   // Local state
   const [selectedCategoryId, setSelectedCategoryId] = useState(null)
+  const [isPageReady, setIsPageReady] = useState(false)
 
   // Memoized user team calculation
   const userTeam = useMemo(() => {
@@ -170,6 +179,16 @@ const TeamBattlePage = React.memo(() => {
       }))
   }, [currentBattle, userTeam])
 
+  // Reset page ready state on route changes
+  useEffect(() => {
+    setIsPageReady(false)
+    const timer = setTimeout(() => {
+      setIsPageReady(true)
+    }, 100)
+
+    return () => clearTimeout(timer)
+  }, [battleId, location.pathname])
+
   // Optimized socket room joining
   useEffect(() => {
     const socket = getSocket()
@@ -191,9 +210,9 @@ const TeamBattlePage = React.memo(() => {
     return cleanupSocketListeners
   }, [setupTeamBattleSocketListeners, cleanupSocketListeners])
 
-  // Memoized event handlers
+  // Memoized event handlers - Fixed navigation to go back to team battles
   const handleGoBack = useCallback(() => {
-    navigate('/quickclash')
+    navigate('/quickclash#active/4v4')
   }, [navigate])
 
   const handleCategorySelect = useCallback(
@@ -300,7 +319,7 @@ const TeamBattlePage = React.memo(() => {
             size="lg"
             onClick={handleGoBack}
           >
-            {t('Back to Challenges')}
+            {t('Back to Team Battles')}
           </Button>
         </VStack>
       </Center>
@@ -322,7 +341,7 @@ const TeamBattlePage = React.memo(() => {
             size="lg"
             onClick={handleGoBack}
           >
-            {t('Back to Challenges')}
+            {t('Back to Team Battles')}
           </Button>
         </VStack>
       </Center>
@@ -331,78 +350,115 @@ const TeamBattlePage = React.memo(() => {
 
   return (
     <Box minH="100vh" bg="gray.900" position="relative" overflow="hidden">
-      <MotionBox
-        variants={containerVariants}
-        initial="hidden"
-        animate="visible"
-        width="100%"
-        position="relative"
-        zIndex={1}
-      >
-        {/* Header */}
-        <TeamBattleHeader
-          battle={currentBattle}
-          onGoBack={handleGoBack}
-          variants={itemVariants}
-        />
-
-        {/* Teams Section */}
-        <TeamsGrid
-          currentBattle={currentBattle}
-          userTeam={userTeam}
-          userId={user._id}
-          variants={itemVariants}
-        />
-
-        {/* Categories Section */}
-        {currentBattle.status === 'active' && userTeam && (
-          <CategoriesSection
-            currentBattle={currentBattle}
-            uncompletedCategories={uncompletedCategories}
-            userTeam={userTeam}
-            user={user}
-            onSelectCategory={handleCategorySelect}
-            onViewReport={handleViewReport}
-            reportModalLoading={reportModalLoading}
-            categorySelectionLoading={categorySelectionLoading}
-            selectedCategoryId={selectedCategoryId}
-            variants={itemVariants}
-            completedChallenges={battleStatus.completedChallenges}
-            totalChallenges={battleStatus.totalChallenges}
-          />
-        )}
-
-        {/* Battle Results Section */}
-        {currentBattle.status === 'completed' && (
-          <BattleResultsSection
-            currentBattle={currentBattle}
-            userTeam={userTeam}
-            variants={itemVariants}
-          />
-        )}
-
-        {/* Bottom Actions */}
-        <MotionBox variants={itemVariants} textAlign="center" pt={8} pb={12}>
-          <Button
-            leftIcon={<ArrowLeft size={18} />}
-            colorScheme="purple"
-            size="lg"
-            onClick={handleGoBack}
-            bg="rgba(128, 90, 213, 0.8)"
-            _hover={{
-              bg: 'rgba(128, 90, 213, 1)',
-              transform: 'translateY(-2px)',
-              boxShadow: '0 6px 20px rgba(128, 90, 213, 0.4)',
-            }}
-            _active={{
-              transform: 'translateY(0)',
-            }}
-            transition="all 0.2s"
+      <AnimatePresence mode="wait">
+        {isPageReady && (
+          <MotionBox
+            key={`battle-page-${battleId}-${Date.now()}`}
+            variants={pageVariants}
+            initial="initial"
+            animate="animate"
+            exit="exit"
+            width="100%"
+            position="relative"
+            zIndex={1}
           >
-            {t('Back to Challenges')}
-          </Button>
-        </MotionBox>
-      </MotionBox>
+            {/* Header */}
+            <MotionBox
+              variants={sectionVariants}
+              initial="initial"
+              animate="animate"
+            >
+              <TeamBattleHeader
+                battle={currentBattle}
+                onGoBack={handleGoBack}
+              />
+            </MotionBox>
+
+            {/* Teams Section */}
+            <MotionBox
+              variants={sectionVariants}
+              initial="initial"
+              animate="animate"
+              transition={{ delay: 0.1 }}
+            >
+              <TeamsGrid
+                currentBattle={currentBattle}
+                userTeam={userTeam}
+                userId={user._id}
+              />
+            </MotionBox>
+
+            {/* Categories Section */}
+            {currentBattle.status === 'active' && userTeam && (
+              <MotionBox
+                variants={sectionVariants}
+                initial="initial"
+                animate="animate"
+                transition={{ delay: 0.2 }}
+              >
+                <CategoriesSection
+                  currentBattle={currentBattle}
+                  uncompletedCategories={uncompletedCategories}
+                  userTeam={userTeam}
+                  user={user}
+                  onSelectCategory={handleCategorySelect}
+                  onViewReport={handleViewReport}
+                  reportModalLoading={reportModalLoading}
+                  categorySelectionLoading={categorySelectionLoading}
+                  selectedCategoryId={selectedCategoryId}
+                  completedChallenges={battleStatus.completedChallenges}
+                  totalChallenges={battleStatus.totalChallenges}
+                />
+              </MotionBox>
+            )}
+
+            {/* Battle Results Section */}
+            {currentBattle.status === 'completed' && (
+              <MotionBox
+                variants={sectionVariants}
+                initial="initial"
+                animate="animate"
+                transition={{ delay: 0.2 }}
+              >
+                <BattleResultsSection
+                  currentBattle={currentBattle}
+                  userTeam={userTeam}
+                />
+              </MotionBox>
+            )}
+
+            {/* Bottom Actions */}
+            <MotionBox
+              variants={sectionVariants}
+              initial="initial"
+              animate="animate"
+              transition={{ delay: 0.3 }}
+              textAlign="center"
+              pt={8}
+              pb={12}
+            >
+              <Button
+                leftIcon={<ArrowLeft size={18} />}
+                colorScheme="purple"
+                size="lg"
+                onClick={handleGoBack}
+                bg="rgba(128, 90, 213, 0.8)"
+                _hover={{
+                  bg: 'rgba(128, 90, 213, 1)',
+                  transform: 'translateY(-2px)',
+                  boxShadow: '0 6px 20px rgba(128, 90, 213, 0.4)',
+                }}
+                _active={{
+                  transform: 'translateY(0)',
+                }}
+                transition="all 0.2s"
+              >
+                {t('Back to Team Battles')}
+              </Button>
+            </MotionBox>
+          </MotionBox>
+        )}
+      </AnimatePresence>
 
       {/* Quiz Report Modal */}
       {isReportOpen && selectedSessionId && (

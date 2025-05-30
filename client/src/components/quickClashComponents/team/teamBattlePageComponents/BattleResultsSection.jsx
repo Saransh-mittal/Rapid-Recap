@@ -18,7 +18,7 @@ const MotionBox = motion(Box)
  * Optimized Battle Results Section - Main Component
  * Broken down into smaller, maintainable components with performance optimizations
  */
-const BattleResultsSection = memo(({ currentBattle, userTeam, variants }) => {
+const BattleResultsSection = memo(({ currentBattle, userTeam }) => {
   const { t } = useTranslation('QuickClash')
   const [showCelebration, setShowCelebration] = useState(false)
   const [animationPhase, setAnimationPhase] = useState('initial')
@@ -64,11 +64,13 @@ const BattleResultsSection = memo(({ currentBattle, userTeam, variants }) => {
 
   return (
     <MotionBox
-      variants={variants}
       mx={{ base: 3, md: 6, lg: 8 }}
       mb={{ base: 6, md: 8, lg: 10 }}
       position="relative"
       overflow="hidden"
+      initial={{ opacity: 0 }}
+      animate={{ opacity: 1 }}
+      transition={{ duration: 0.4 }}
     >
       {/* Main Container */}
       <MotionBox
@@ -114,12 +116,12 @@ const BattleResultsSection = memo(({ currentBattle, userTeam, variants }) => {
 
           {/* Score Display */}
           <MotionBox
-            initial={{ opacity: 0, y: 20 }}
+            initial={{ opacity: 0 }}
             animate={
               animationPhase === 'details'
-                ? { opacity: 1, y: 0 }
+                ? { opacity: 1 }
                 : animationPhase === 'reveal'
-                ? { opacity: 0.3, y: 10 }
+                ? { opacity: 0.3 }
                 : {}
             }
             transition={{ duration: 0.4, delay: 0.1 }}
@@ -134,8 +136,8 @@ const BattleResultsSection = memo(({ currentBattle, userTeam, variants }) => {
 
           {/* Team Cards */}
           <MotionBox
-            initial={{ opacity: 0, y: 20 }}
-            animate={animationPhase === 'details' ? { opacity: 1, y: 0 } : {}}
+            initial={{ opacity: 0 }}
+            animate={animationPhase === 'details' ? { opacity: 1 } : {}}
             transition={{ duration: 0.4, delay: 0.2 }}
             w="100%"
           >
@@ -263,7 +265,7 @@ const BattleResultsSection = memo(({ currentBattle, userTeam, variants }) => {
           {/* Trophy Bonuses */}
           {currentBattle.trophyExchange && (
             <MotionBox
-              initial={{ opacity: 0, scale: 0.9 }}
+              initial={{ opacity: 0, scale: 0.95 }}
               animate={
                 animationPhase === 'details' ? { opacity: 1, scale: 1 } : {}
               }

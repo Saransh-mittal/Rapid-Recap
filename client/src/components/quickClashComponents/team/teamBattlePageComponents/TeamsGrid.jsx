@@ -12,7 +12,7 @@ const MotionFlex = motion(Box)
 /**
  * Optimized TeamsGrid Component with better performance and maintainability
  */
-const TeamsGrid = memo(({ currentBattle, userTeam, userId, variants }) => {
+const TeamsGrid = memo(({ currentBattle, userTeam, userId }) => {
   const { t } = useTranslation('QuickClash')
 
   // Responsive values
@@ -105,9 +105,9 @@ const TeamsGrid = memo(({ currentBattle, userTeam, userId, variants }) => {
         justifyContent="space-between"
         gap={gapValue}
         width="100%"
-        initial={{ opacity: 0, y: 20 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ duration: 0.6 }}
+        initial={{ opacity: 0 }}
+        animate={{ opacity: 1 }}
+        transition={{ duration: 0.4 }}
       >
         {/* Left Team */}
         <VStack

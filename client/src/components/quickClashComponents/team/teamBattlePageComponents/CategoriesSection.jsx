@@ -34,7 +34,6 @@ const CategoriesSection = memo(
     reportModalLoading,
     categorySelectionLoading,
     selectedCategoryId,
-    variants,
   }) => {
     const { t } = useTranslation('QuickClash')
 
@@ -125,11 +124,13 @@ const CategoriesSection = memo(
 
     return (
       <MotionBox
-        variants={variants}
         mx={{ base: 3, sm: 4, md: 6, lg: 8 }}
         mb={{ base: 6, sm: 8, md: 10 }}
         position="relative"
         overflow="hidden"
+        initial={{ opacity: 0 }}
+        animate={{ opacity: 1 }}
+        transition={{ duration: 0.4 }}
       >
         <Box
           position="absolute"
@@ -150,9 +151,9 @@ const CategoriesSection = memo(
             {/* Header Section */}
             <VStack spacing={{ base: 1.5, sm: 2, md: 3 }} textAlign="center">
               <MotionBox
-                initial={{ opacity: 0, y: 20 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ duration: 0.6, ease: 'easeOut' }}
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                transition={{ duration: 0.5, ease: 'easeOut' }}
               >
                 <HStack spacing={3} justify="center" align="center">
                   <Icon
@@ -178,9 +179,9 @@ const CategoriesSection = memo(
               </MotionBox>
 
               <MotionBox
-                initial={{ opacity: 0, y: 20 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ duration: 0.6, delay: 0.1, ease: 'easeOut' }}
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                transition={{ duration: 0.5, delay: 0.1, ease: 'easeOut' }}
               >
                 <Text
                   color="slate.400"
@@ -209,14 +210,12 @@ const CategoriesSection = memo(
                   key={`${challenge.category}-${index}-${
                     challenge.challenge?._id || `fallback-${index}`
                   }`}
-                  initial={{ opacity: 0, y: 30, scale: 0.9 }}
-                  animate={{ opacity: 1, y: 0, scale: 1 }}
+                  initial={{ opacity: 0, scale: 0.95 }}
+                  animate={{ opacity: 1, scale: 1 }}
                   transition={{
-                    delay: index * 0.08,
-                    type: 'spring',
-                    stiffness: 100,
-                    damping: 20,
-                    duration: 0.8,
+                    delay: index * 0.05,
+                    duration: 0.4,
+                    ease: 'easeOut',
                   }}
                 >
                   <CategoryCard
@@ -244,7 +243,7 @@ const CategoriesSection = memo(
               <MotionBox
                 initial={{ opacity: 0, scale: 0.95 }}
                 animate={{ opacity: 1, scale: 1 }}
-                transition={{ delay: 0.4, duration: 0.5 }}
+                transition={{ delay: 0.3, duration: 0.4 }}
                 w="100%"
                 maxW="md"
                 mx="auto"
