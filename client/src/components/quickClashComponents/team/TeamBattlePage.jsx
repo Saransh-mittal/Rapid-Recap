@@ -1,5 +1,5 @@
 // components/quickClashComponents/team/TeamBattlePage.jsx
-import React, { useState, useEffect, useCallback } from 'react'
+import React, { useState, useEffect, useCallback, useMemo } from 'react'
 import {
   Box,
   Button,
@@ -22,19 +22,18 @@ import axios from 'axios'
 import useQuickClashTeamBattle from '../../../customHooks/useQuickClashTeamBattle'
 import { useSocket } from '../../../customHooks/useSocket'
 
-// Import enhanced components
+// Import optimized components
 import TeamBattleHeader from './teamBattlePageComponents/TeamBattleHeader'
-// import TeamBattleProgress from './teamBattlePageComponents/TeamBattleProgress' // Progress bar removed
 import TeamsGrid from './teamBattlePageComponents/TeamsGrid'
 import CategoriesSection from './teamBattlePageComponents/CategoriesSection'
 import BattleResultsSection from './teamBattlePageComponents/BattleResultsSection'
 
-// Import QuizReportModal
+// Import QuizReportModal with React.lazy
 const QuizReportModal = React.lazy(() => import('../QuizReportModal'))
 
 const MotionBox = motion(Box)
 
-// Enhanced animation variants
+// Optimized animation variants for weaker devices
 const containerVariants = {
   hidden: { opacity: 0 },
   visible: {
@@ -47,24 +46,22 @@ const containerVariants = {
 }
 
 const itemVariants = {
-  hidden: { opacity: 0, y: 30, scale: 0.95 },
+  hidden: { opacity: 0, y: 20 },
   visible: {
     opacity: 1,
     y: 0,
-    scale: 1,
     transition: {
-      type: 'spring',
-      stiffness: 100,
-      damping: 15,
-      duration: 0.6,
+      type: 'tween',
+      duration: 0.4,
+      ease: 'easeOut',
     },
   },
 }
 
 /**
- * Enhanced Team Battle Page Component with better aesthetics and responsiveness
+ * Optimized Team Battle Page Component with better performance and maintainability
  */
-const TeamBattlePage = () => {
+const TeamBattlePage = React.memo(() => {
   const { t } = useTranslation('QuickClash')
   const toast = useToast()
   const navigate = useNavigate()
@@ -96,43 +93,13 @@ const TeamBattlePage = () => {
   // Local state
   const [selectedCategoryId, setSelectedCategoryId] = useState(null)
 
-  // Join the teams socket room when this page loads
-  useEffect(() => {
-    const socket = getSocket()
-    if (socket) {
-      socket.emit('quickClash:viewTeamBattles')
-      console.log('Joined quickClash:teams room from TeamBattlePage')
-    }
-  }, [getSocket])
-
-  // Fetch battle details on mount and when battleId changes
-  useEffect(() => {
-    if (battleId) {
-      getBattleDetails(battleId)
-    }
-
-    return () => {
-      // Cleanup
-    }
-  }, [battleId, getBattleDetails])
-
-  // Setup socket listeners on mount
-  useEffect(() => {
-    setupTeamBattleSocketListeners()
-
-    return () => {
-      cleanupSocketListeners()
-    }
-  }, [setupTeamBattleSocketListeners, cleanupSocketListeners])
-
-  // Determine if the current user is in team A or B
-  const userTeam = React.useMemo(() => {
+  // Memoized user team calculation
+  const userTeam = useMemo(() => {
     if (!currentBattle || !user) return null
 
     const isInTeamA = currentBattle.teamAMembers.some(
       member => member.user._id === user._id,
     )
-
     const isInTeamB = currentBattle.teamBMembers.some(
       member => member.user._id === user._id,
     )
@@ -140,8 +107,8 @@ const TeamBattlePage = () => {
     return isInTeamA ? 'teamA' : isInTeamB ? 'teamB' : null
   }, [currentBattle, user])
 
-  // Calculate battle status and completion
-  const battleStatus = React.useMemo(() => {
+  // Memoized battle status calculation
+  const battleStatus = useMemo(() => {
     if (!currentBattle)
       return {
         status: 'loading',
@@ -149,7 +116,7 @@ const TeamBattlePage = () => {
         completionPercentage: 0,
         completedChallenges: 0,
         totalChallenges: 0,
-      } // Added default values
+      }
 
     const totalChallenges = currentBattle.challenges.length
     const completedChallenges = currentBattle.challenges.filter(
@@ -185,8 +152,8 @@ const TeamBattlePage = () => {
     }
   }, [currentBattle, userTeam])
 
-  // Get uncompleted categories for the user's team
-  const uncompletedCategories = React.useMemo(() => {
+  // Memoized uncompleted categories
+  const uncompletedCategories = useMemo(() => {
     if (!currentBattle || !userTeam) return []
 
     const teamField = userTeam === 'teamA' ? 'teamACompleted' : 'teamBCompleted'
@@ -203,12 +170,32 @@ const TeamBattlePage = () => {
       }))
   }, [currentBattle, userTeam])
 
-  // Handle go back
+  // Optimized socket room joining
+  useEffect(() => {
+    const socket = getSocket()
+    if (socket) {
+      socket.emit('quickClash:viewTeamBattles')
+    }
+  }, [getSocket])
+
+  // Fetch battle details on mount and when battleId changes
+  useEffect(() => {
+    if (battleId) {
+      getBattleDetails(battleId)
+    }
+  }, [battleId, getBattleDetails])
+
+  // Setup socket listeners on mount
+  useEffect(() => {
+    setupTeamBattleSocketListeners()
+    return cleanupSocketListeners
+  }, [setupTeamBattleSocketListeners, cleanupSocketListeners])
+
+  // Memoized event handlers
   const handleGoBack = useCallback(() => {
     navigate('/quickclash')
   }, [navigate])
 
-  // Handle selecting a category
   const handleCategorySelect = useCallback(
     category => {
       if (!currentBattle || !category) return
@@ -239,7 +226,6 @@ const TeamBattlePage = () => {
     [currentBattle, selectCategory, toast],
   )
 
-  // Handle viewing a challenge report
   const handleViewReport = useCallback(
     async challengeId => {
       if (!challengeId) return
@@ -279,30 +265,18 @@ const TeamBattlePage = () => {
     [user, openReportModal, toast, t],
   )
 
-  // Rendering loading state
+  // Loading state
   if (battleDetailsLoading && !currentBattle) {
     return (
       <Center minH="100vh" bg="gray.900">
         <VStack spacing={6}>
-          <MotionBox
-            animate={{
-              scale: [1, 1.1, 1],
-              opacity: [0.8, 1, 0.8],
-            }}
-            transition={{
-              duration: 2,
-              repeat: Infinity,
-              repeatType: 'reverse',
-            }}
-          >
-            <Spinner
-              thickness="4px"
-              speed="0.65s"
-              emptyColor="gray.700"
-              color="purple.500"
-              size="xl"
-            />
-          </MotionBox>
+          <Spinner
+            thickness="4px"
+            speed="0.65s"
+            emptyColor="gray.700"
+            color="purple.500"
+            size="xl"
+          />
           <Text color="whiteAlpha.800" fontSize="lg">
             {t('Loading battle details...')}
           </Text>
@@ -311,7 +285,7 @@ const TeamBattlePage = () => {
     )
   }
 
-  // Render error state
+  // Error state
   if (battleDetailsError && !currentBattle) {
     return (
       <Center minH="100vh" bg="gray.900">
@@ -333,7 +307,7 @@ const TeamBattlePage = () => {
     )
   }
 
-  // If no battle found
+  // Battle not found
   if (!currentBattle) {
     return (
       <Center minH="100vh" bg="gray.900">
@@ -357,44 +331,6 @@ const TeamBattlePage = () => {
 
   return (
     <Box minH="100vh" bg="gray.900" position="relative" overflow="hidden">
-      {/* Animated background particles */}
-      <Box
-        position="absolute"
-        top={0}
-        left={0}
-        right={0}
-        bottom={0}
-        opacity={0.1}
-        overflow="hidden"
-      >
-        {[...Array(15)].map((_, i) => (
-          <MotionBox
-            key={i}
-            position="absolute"
-            width={`${Math.random() * 4 + 2}px`}
-            height={`${Math.random() * 4 + 2}px`}
-            bg="white"
-            borderRadius="full"
-            initial={{
-              x: Math.random() * window.innerWidth,
-              y: Math.random() * window.innerHeight,
-            }}
-            animate={{
-              y: [
-                Math.random() * window.innerHeight,
-                Math.random() * window.innerHeight,
-              ],
-              opacity: [0, 1, 0],
-            }}
-            transition={{
-              duration: Math.random() * 10 + 10,
-              repeat: Infinity,
-              ease: 'linear',
-            }}
-          />
-        ))}
-      </Box>
-
       <MotionBox
         variants={containerVariants}
         initial="hidden"
@@ -403,22 +339,14 @@ const TeamBattlePage = () => {
         position="relative"
         zIndex={1}
       >
-        {/* Enhanced Header */}
+        {/* Header */}
         <TeamBattleHeader
           battle={currentBattle}
           onGoBack={handleGoBack}
           variants={itemVariants}
         />
 
-        {/* Enhanced Progress Bar - REMOVED */}
-        {/*
-        <TeamBattleProgress
-          battleStatus={battleStatus}
-          variants={itemVariants}
-        />
-        */}
-
-        {/* Enhanced Teams Section */}
+        {/* Teams Section */}
         <TeamsGrid
           currentBattle={currentBattle}
           userTeam={userTeam}
@@ -426,7 +354,7 @@ const TeamBattlePage = () => {
           variants={itemVariants}
         />
 
-        {/* Enhanced Categories Section */}
+        {/* Categories Section */}
         {currentBattle.status === 'active' && userTeam && (
           <CategoriesSection
             currentBattle={currentBattle}
@@ -439,13 +367,12 @@ const TeamBattlePage = () => {
             categorySelectionLoading={categorySelectionLoading}
             selectedCategoryId={selectedCategoryId}
             variants={itemVariants}
-            // Pass progress data
             completedChallenges={battleStatus.completedChallenges}
             totalChallenges={battleStatus.totalChallenges}
           />
         )}
 
-        {/* Enhanced Battle Results Section */}
+        {/* Battle Results Section */}
         {currentBattle.status === 'completed' && (
           <BattleResultsSection
             currentBattle={currentBattle}
@@ -489,6 +416,8 @@ const TeamBattlePage = () => {
       )}
     </Box>
   )
-}
+})
+
+TeamBattlePage.displayName = 'TeamBattlePage'
 
 export default TeamBattlePage
