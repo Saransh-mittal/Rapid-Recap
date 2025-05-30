@@ -10,14 +10,14 @@ import {
   Flex,
   Text,
   Badge,
-  Icon,
+  // Icon, // Icon from chakra-ui is not explicitly used for lucide-react icons in CategoryIcon
   HStack,
   Progress,
 } from '@chakra-ui/react'
 import { useParams, useNavigate, useBeforeUnload } from 'react-router-dom'
 import { useTranslation } from 'react-i18next'
 import { motion } from 'framer-motion'
-import { Clock, AlertTriangle } from 'lucide-react'
+// import { Clock, AlertTriangle } from 'lucide-react'; // Not directly used in this file after changes
 import axios from 'axios'
 
 // Component imports
@@ -28,6 +28,10 @@ import { useSelector } from 'react-redux'
 import useQuickClash from '../customHooks/useQuickClash'
 import useQuickClashSocket from '../customHooks/useQuickClashSocket'
 import useDailyTasks from '../customHooks/useDailyTasks'
+
+// Category Icon and Utils
+import { getCategoryInfo } from '../components/quickClashComponents/team/teamBattlePageComponents/categoriesSection/categoryUtils'
+import CategoryIcon from '../components/quickClashComponents/team/teamBattlePageComponents/categoriesSection/CategoryIcon'
 
 // Lazy-loaded components
 const ReadingPhase = lazy(() =>
@@ -40,7 +44,7 @@ const QuickClashQuiz = lazy(() =>
   import('../components/quickClashComponents/QuickClashQuiz'),
 )
 
-const MotionBadge = motion(Badge)
+// const MotionBadge = motion(Badge) // Not used in the final code
 
 const QuickClashSession = () => {
   const { t } = useTranslation('QuickClash')
@@ -53,7 +57,7 @@ const QuickClashSession = () => {
     setActiveChallenge,
     endSession,
     currentSession: session,
-    sessionLoading,
+    // sessionLoading, // Not directly used, loading state is managed locally
     sessionError: reduxSessionError,
   } = useQuickClash()
   const { emitChallengeCompleted } = useQuickClashSocket()
@@ -67,13 +71,13 @@ const QuickClashSession = () => {
   const [article, setArticle] = useState(null)
   const [timeLeft, setTimeLeft] = useState(120) // 2 minutes for reading
   const [quizTimeLeft, setQuizTimeLeft] = useState(50) // 50 seconds for quiz
-  const [stopTimerOnQuizSubmit, setStopTimerOnQuizSubmit] = useState(false)
+  // const [stopTimerOnQuizSubmit, setStopTimerOnQuizSubmit] = useState(false); // Prop for QuickClashQuiz but not used in this file
   const [score, setScore] = useState(0)
   const [phaseProgress, setPhaseProgress] = useState(0)
   const [completeReadingLoading, setCompleteReadingLoading] = useState(false)
 
   // New state to track if quiz content is ready
-  const [quizContentReady, setQuizContentReady] = useState(false)
+  // const [quizContentReady, setQuizContentReady] = useState(false); // Prop for QuickClashQuiz but not used in this file
 
   // Results modal control
   const {
@@ -90,11 +94,11 @@ const QuickClashSession = () => {
   } = useDisclosure()
 
   // Quiz start time reference
-  const quizStartTimeRef = useRef(null)
+  // const quizStartTimeRef = useRef(null); // Not used
   const readingStartTimeRef = useRef(null)
 
   // Flag to skip confirmation when intentionally navigating away
-  const skipConfirmRef = useRef(false)
+  // const skipConfirmRef = useRef(false); // Not used
 
   const initSession = async () => {
     try {
@@ -105,9 +109,9 @@ const QuickClashSession = () => {
       const challengeResponse = await axios.get(
         `/api/quickClash/challenge/${challengeId}`,
       )
-      const challenge = challengeResponse.data.challenge
-      setChallenge(challenge)
-      setActiveChallenge(challenge)
+      const fetchedChallenge = challengeResponse.data.challenge
+      setChallenge(fetchedChallenge)
+      setActiveChallenge(fetchedChallenge)
 
       // Start the session using our Redux action
       const currentSession = await startSession(
@@ -119,16 +123,18 @@ const QuickClashSession = () => {
       setArticle(
         user?.userLanguage === 'en' || !user?.userLanguage
           ? {
-              title: challenge.article.title.english,
-              content: challenge.article.content.english,
-              importantSentences: challenge.article.englishImportantSentences,
-              dictionary: challenge.article.englishDictionary,
+              title: fetchedChallenge.article.title.english,
+              content: fetchedChallenge.article.content.english,
+              importantSentences:
+                fetchedChallenge.article.englishImportantSentences,
+              dictionary: fetchedChallenge.article.englishDictionary,
             }
           : {
-              title: challenge.article.title.hindi,
-              content: challenge.article.content.hindi,
-              importantSentences: challenge.article.hindiImportantSentences,
-              dictionary: challenge.article.hindiDictionary,
+              title: fetchedChallenge.article.title.hindi,
+              content: fetchedChallenge.article.content.hindi,
+              importantSentences:
+                fetchedChallenge.article.hindiImportantSentences,
+              dictionary: fetchedChallenge.article.hindiDictionary,
             },
       )
 
@@ -170,6 +176,7 @@ const QuickClashSession = () => {
     return () => {
       endSession()
     }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [])
 
   // Reading timer
@@ -193,6 +200,7 @@ const QuickClashSession = () => {
     }, 1000)
 
     return () => clearInterval(timer)
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [phase, session])
 
   // Handle reading phase completion
@@ -292,18 +300,18 @@ const QuickClashSession = () => {
 
   // Function for confirmed navigation
   const confirmNavigation = () => {
-    skipConfirmRef.current = true
+    // skipConfirmRef.current = true; // Not strictly needed if we always navigate
     if (challenge?.fromTeamBattle)
       navigate(`/quickclash/teamBattle/${challenge.teamBattle.toString()}`)
     else navigate('/quickclash')
   }
 
   // Format time display
-  const formatTime = seconds => {
-    const minutes = Math.floor(seconds / 60)
-    const remainingSeconds = seconds % 60
-    return `${minutes}:${remainingSeconds.toString().padStart(2, '0')}`
-  }
+  // const formatTime = seconds => { // Not used in this file directly
+  //   const minutes = Math.floor(seconds / 60)
+  //   const remainingSeconds = seconds % 60
+  //   return `${minutes}:${remainingSeconds.toString().padStart(2, '0')}`
+  // }
 
   // Get phase-specific information
   const getPhaseInfo = () => {
@@ -356,6 +364,9 @@ const QuickClashSession = () => {
   // Persistent timer header component
   const TimerHeader = () => {
     const phaseInfo = getPhaseInfo()
+    const categoryInfo = challenge?.category
+      ? getCategoryInfo(challenge.category)
+      : null
 
     return (
       <Box
@@ -371,19 +382,45 @@ const QuickClashSession = () => {
         px={4}
       >
         <VStack spacing={2} w="100%">
-          <Flex w="100%" gap={4} align="center">
-            <Badge colorScheme="purple" p={2} borderRadius="md" fontSize="sm">
-              {challenge?.category || t('Quick Clash')}
-            </Badge>
+          <Flex w="100%" justifyContent="space-between" align="center">
+            <HStack spacing={2}>
+              {categoryInfo && challenge?.category && (
+                <CategoryIcon categoryInfo={categoryInfo} />
+              )}
+              <Badge
+                colorScheme="purple"
+                p={categoryInfo ? 1.5 : 2} // Adjust padding if icon is present
+                borderRadius="md"
+                fontSize="sm"
+              >
+                {challenge?.category || t('Quick Clash')}
+              </Badge>
+            </HStack>
 
             <HStack>
-              <Badge colorScheme="purple">{phaseInfo.label}</Badge>
+              {phase === 'quiz' && phaseInfo.currentTime !== null && (
+                <Badge
+                  colorScheme={phaseInfo.colorScheme}
+                  p={2}
+                  borderRadius="md"
+                  fontSize="sm"
+                >
+                  {Math.floor(phaseInfo.currentTime / 60)}:
+                  {(phaseInfo.currentTime % 60).toString().padStart(2, '0')}
+                </Badge>
+              )}
             </HStack>
           </Flex>
 
-          {phase === 'reading' && (
+          {(phase === 'reading' || phase === 'quiz') && (
             <Progress
-              value={phaseProgress}
+              value={
+                phase === 'reading'
+                  ? phaseProgress
+                  : ((phaseInfo.totalTime - phaseInfo.currentTime) /
+                      phaseInfo.totalTime) *
+                    100
+              }
               size="xs"
               w="100%"
               colorScheme={phaseInfo.colorScheme}
@@ -470,10 +507,10 @@ const QuickClashSession = () => {
               <QuickClashQuiz
                 sessionId={session._id}
                 onComplete={handleQuizComplete}
-                setStopTimerOnQuizSubmit={setStopTimerOnQuizSubmit}
+                setStopTimerOnQuizSubmit={() => {}} // Placeholder, original prop was setStopTimerOnQuizSubmit
                 quizTimeLeft={quizTimeLeft}
                 setQuizTimeLeft={setQuizTimeLeft}
-                setLoadingQuiz={setQuizContentReady}
+                setLoadingQuiz={() => {}} // Placeholder, original prop was setQuizContentReady
               />
             </Suspense>
           )}
