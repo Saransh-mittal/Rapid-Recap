@@ -230,15 +230,15 @@ const quickClashGlobalMatchmakingSlice = createSlice({
         teamName,
         joinType,
         originalTeam,
+        selectedTeamId,
       } = action.payload
-      console.log('Updating matchmaking state with:', action.payload)
-
       if (inMatchmaking !== undefined) state.inMatchmaking = inMatchmaking
       if (step !== undefined) state.step = step
       if (matchmakingType !== undefined) state.matchmakingType = matchmakingType
       if (teamName !== undefined) state.teamName = teamName
       if (joinType !== undefined) state.joinType = joinType
       if (originalTeam !== undefined) state.originalTeam = originalTeam
+      if (selectedTeamId !== undefined) state.selectedTeamId = selectedTeamId
 
       if (step === 'battleReady') {
         if (battleReady) {

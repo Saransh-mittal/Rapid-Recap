@@ -505,10 +505,10 @@ const EnhancedTrophyBonuses = ({ trophyExchange }) => {
   if (
     !trophyExchange ||
     !(
-      trophyExchange.bonuses.firstDaily.applied ||
-      trophyExchange.bonuses.strongerTeam.applied ||
-      trophyExchange.bonuses.comebackWin.applied ||
-      trophyExchange.bonuses.allWins.applied
+      trophyExchange?.bonuses?.firstDaily?.applied ||
+      trophyExchange?.bonuses?.strongerTeam?.applied ||
+      trophyExchange?.bonuses?.comebackWin?.applied ||
+      trophyExchange?.bonuses?.allWins?.applied
     )
   ) {
     return null

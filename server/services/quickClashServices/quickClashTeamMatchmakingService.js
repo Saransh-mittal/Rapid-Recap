@@ -834,22 +834,124 @@ const getTeamMatchmakingStatus = async ({ teamId }) => {
 }
 
 /**
- * Get global matchmaking status for a user
+ * Get global matchmaking status for a user (includes team matchmaking check)
  * @param {Object} params - Parameters
  * @param {string} params.userId - User ID
  * @returns {Promise<Object>} Matchmaking status
  */
 const getGlobalMatchmakingStatus = async ({ userId }) => {
   try {
-    const matchmaking = await QuickClashGlobalMatchmaking.findOne({
+    // First check for direct global matchmaking entry
+    const globalMatchmaking = await QuickClashGlobalMatchmaking.findOne({
       user: userId,
       status: { $ne: 'in_battle' }, // Exclude users already in battle
     })
 
+    if (globalMatchmaking) {
+      return {
+        inMatchmaking: true,
+        status: globalMatchmaking.status,
+        matchmaking: globalMatchmaking,
+        type: 'global',
+      }
+    }
+
+    // If not in global matchmaking, check if user is part of any team in matchmaking
+    const userTeams = await QuickClashTeam.find({
+      'members.user': userId,
+    }).select('_id name members formationInfo')
+
+    if (userTeams.length > 0) {
+      const teamIds = userTeams.map(team => team._id)
+
+      // Check if any of these teams are in matchmaking (exclude 'processed' teams)
+      const teamMatchmaking = await QuickClashTeamMatchmaking.findOne({
+        team: { $in: teamIds },
+        status: { $in: ['available', 'matching'] }, // Only active matchmaking
+      }).populate('team', '_id name members formationInfo')
+
+      if (teamMatchmaking) {
+        // Found team in matchmaking
+        const team = teamMatchmaking.team
+
+        // Determine join type and step based on team info
+        let joinType = 'regular'
+        let step = 'searching'
+        let originalTeam = null
+
+        // Check if this is an auto-formed team
+        if (team.formationInfo && team.formationInfo.isAutoFormed) {
+          // Check if user was originally a solo player
+          if (
+            team.formationInfo.soloPlayers &&
+            team.formationInfo.soloPlayers.some(
+              playerId => playerId.toString() === userId.toString(),
+            )
+          ) {
+            joinType = 'solo'
+          }
+          // Check if user was from a source team
+          else {
+            const userMember = team.members.find(
+              member =>
+                (member.user._id || member.user).toString() ===
+                userId.toString(),
+            )
+
+            if (userMember && userMember.sourceTeam) {
+              joinType = 'sourceTeam'
+
+              // Find original team info if available
+              if (team.formationInfo.sourceTeams) {
+                const sourceTeamId = userMember.sourceTeam.toString()
+                const sourceTeam = await QuickClashTeam.findById(
+                  sourceTeamId,
+                ).select('_id name')
+
+                if (sourceTeam) {
+                  originalTeam = {
+                    _id: sourceTeam._id,
+                    name: sourceTeam.name,
+                  }
+                }
+              }
+            }
+          }
+        }
+
+        // Determine step based on team status
+        if (teamMatchmaking.status === 'matching') {
+          step = 'creating_battle'
+        } else if (team.members.length < 4) {
+          step = 'forming_team'
+        } else {
+          step = 'searching'
+        }
+
+        return {
+          inMatchmaking: true,
+          status: teamMatchmaking.status,
+          matchmaking: {
+            team: team._id,
+            teamName: team.name,
+            joinType: joinType,
+            originalTeam: originalTeam,
+            step: step,
+            avgTrophies: teamMatchmaking.avgTrophies,
+            memberCount: teamMatchmaking.memberCount,
+            createdAt: teamMatchmaking.createdAt,
+          },
+          type: 'team',
+        }
+      }
+    }
+
+    // Not in any matchmaking
     return {
-      inMatchmaking: !!matchmaking,
-      status: matchmaking ? matchmaking.status : null,
-      matchmaking,
+      inMatchmaking: false,
+      status: null,
+      matchmaking: null,
+      type: null,
     }
   } catch (error) {
     console.error('Error getting global matchmaking status:', error)

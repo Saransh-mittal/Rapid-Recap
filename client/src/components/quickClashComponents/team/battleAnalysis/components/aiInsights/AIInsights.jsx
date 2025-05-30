@@ -15,7 +15,6 @@ import {
   Icon,
   HStack,
   VStack,
-  useBreakpointValue,
   Collapse,
   Badge,
   Circle,
@@ -45,10 +44,11 @@ import useQuickClashAnalysis from '../../../../../../customHooks/useQuickClashAn
 const MotionBox = motion(Box)
 
 /**
- * Optimized Progress Ring Component
+ * Optimized Progress Ring Component - simplified for mobile performance
  */
 const ProgressRing = React.memo(
   ({ progress, size = '60px', color = 'purple' }) => {
+    // Static calculation to avoid re-renders
     const radius = 48
     const circumference = 2 * Math.PI * radius
     const strokeDashoffset = circumference * (1 - progress / 100)
@@ -69,7 +69,7 @@ const ProgressRing = React.memo(
           cy="50"
           r={radius}
           fill="transparent"
-          strokeWidth="4"
+          strokeWidth="3" // Reduced from 4
           stroke="rgba(251, 191, 36, 0.2)"
         />
         <MotionBox
@@ -78,12 +78,12 @@ const ProgressRing = React.memo(
           cy="50"
           r={radius}
           fill="transparent"
-          strokeWidth="4"
+          strokeWidth="3" // Reduced from 4
           stroke={`${color}.400`}
           strokeLinecap="round"
           strokeDasharray={circumference}
           strokeDashoffset={strokeDashoffset}
-          transition={{ duration: 0.6, ease: 'easeInOut' }}
+          transition={{ duration: 0.5, ease: 'easeInOut' }} // Reduced duration
         />
       </Box>
     )
@@ -93,14 +93,14 @@ const ProgressRing = React.memo(
 ProgressRing.displayName = 'ProgressRing'
 
 /**
- * Optimized Progress Steps Component
+ * Optimized Progress Steps Component - simplified animations
  */
 const ProgressSteps = React.memo(
   ({ currentStep, totalSteps = 3, answeredCount = 0 }) => {
     const { t } = useTranslation('QuickClash')
 
     return (
-      <HStack spacing={{ base: 3, md: 5 }} w="100%" justify="center">
+      <HStack spacing={{ base: 3, md: 4 }} w="100%" justify="center">
         {Array.from({ length: totalSteps }, (_, index) => {
           const step = index + 1
           const isAnswered = step <= answeredCount
@@ -109,7 +109,7 @@ const ProgressSteps = React.memo(
 
           let circleBg = 'whiteAlpha.200'
           let circleBorderColor = 'transparent'
-          let pulse = false
+          let shouldPulse = false
 
           if (isAnswered) {
             circleBg = 'green.500'
@@ -117,7 +117,7 @@ const ProgressSteps = React.memo(
           } else if (isActive) {
             circleBg = 'purple.500'
             circleBorderColor = 'purple.300'
-            pulse = true
+            shouldPulse = true
           } else if (isPending) {
             circleBg = 'gray.600'
             circleBorderColor = 'gray.500'
@@ -127,21 +127,21 @@ const ProgressSteps = React.memo(
             <VStack key={step} spacing={1.5}>
               <MotionBox
                 animate={
-                  pulse
+                  shouldPulse && window.innerWidth >= 768 // Only pulse on desktop
                     ? {
-                        scale: [1, 1.15, 1],
+                        scale: [1, 1.1, 1],
                         boxShadow: [
                           '0 0 0px rgba(192, 132, 252,0)',
-                          '0 0 15px rgba(192, 132, 252,0.7)',
+                          '0 0 12px rgba(192, 132, 252,0.6)', // Reduced glow
                           '0 0 0px rgba(192, 132, 252,0)',
                         ],
                       }
                     : {}
                 }
                 transition={
-                  pulse
+                  shouldPulse && window.innerWidth >= 768
                     ? {
-                        duration: 1.5,
+                        duration: 2, // Slower
                         repeat: Infinity,
                         ease: 'easeInOut',
                       }
@@ -150,17 +150,19 @@ const ProgressSteps = React.memo(
                 borderRadius="full"
               >
                 <Circle
-                  size="35px"
+                  size="32px" // Reduced from 35px
                   bg={circleBg}
                   border="2px solid"
                   borderColor={circleBorderColor}
                   color="white"
                   boxShadow={
-                    isActive ? `0 0 10px ${circleBorderColor}` : 'none'
+                    isActive && window.innerWidth >= 768
+                      ? `0 0 8px ${circleBorderColor}` // Reduced shadow
+                      : 'none'
                   }
                 >
                   <Text fontSize="sm" fontWeight="bold">
-                    {isAnswered ? <CheckCircle size={16} /> : step}
+                    {isAnswered ? <CheckCircle size={14} /> : step}
                   </Text>
                 </Circle>
               </MotionBox>
@@ -220,24 +222,27 @@ const NoContentAvailable = React.memo(() => {
 
   return (
     <MotionBox
-      initial={{ opacity: 0, y: 10 }}
+      initial={{ opacity: 0, y: 8 }} // Reduced movement
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.3 }}
     >
       <Box
         bg="rgba(20, 15, 35, 0.7)"
-        backdropFilter="blur(15px)"
+        backdropFilter="blur(10px)" // Reduced blur
         borderRadius="2xl"
         p={6}
         textAlign="center"
         border="1px solid"
         borderColor="rgba(255,255,255,0.1)"
-        boxShadow="0 8px 30px rgba(0, 0, 0, 0.25)"
+        boxShadow="0 6px 20px rgba(0, 0, 0, 0.2)" // Reduced shadow
       >
         <VStack spacing={4}>
           <MotionBox
-            animate={{ scale: [1, 1.1, 1], opacity: [0.7, 1, 0.7] }}
-            transition={{ duration: 2, repeat: Infinity, ease: 'easeInOut' }}
+            animate={{
+              scale: window.innerWidth >= 768 ? [1, 1.05, 1] : [1], // No animation on mobile
+              opacity: window.innerWidth >= 768 ? [0.7, 1, 0.7] : [0.8],
+            }}
+            transition={{ duration: 3, repeat: Infinity, ease: 'easeInOut' }}
           >
             <Icon as={HelpCircle} color="purple.400" boxSize={10} />
           </MotionBox>
@@ -270,6 +275,19 @@ const AIInsights = React.memo(
     const { t } = useTranslation('QuickClash')
     const { questionProgression, allQuestions } = useQuickClashAnalysis()
 
+    // Memoized responsive configuration - static values
+    const config = useMemo(
+      () => ({
+        isMobile: window.innerWidth < 768,
+        padding: { base: 4, md: 5 }, // Reduced padding
+        headerIconSize: { base: 6, md: 7 },
+        headingSize: { base: 'lg', md: 'xl' },
+        circleSize: window.innerWidth < 768 ? '50px' : '60px',
+        brainInCircleSize: window.innerWidth < 768 ? 5 : 6,
+      }),
+      [],
+    )
+
     // Memoized calculations for performance
     const { totalAnswered, insightProgress, progressStatus } = useMemo(() => {
       const answered = allQuestions?.filter(q => q.answered).length || 0
@@ -295,18 +313,6 @@ const AIInsights = React.memo(
       }
     }, [allQuestions, battleRecap, t])
 
-    // Responsive values - memoized
-    const responsiveValues = useMemo(
-      () => ({
-        padding: { base: 4, md: 6 },
-        headerIconSize: { base: 6, md: 7 },
-        headingSize: { base: 'lg', md: 'xl' },
-        circleSize: { base: '50px', md: '60px' },
-        brainInCircleSize: { base: 5, md: 6 },
-      }),
-      [],
-    )
-
     // Check if content is available
     const hasContent = useMemo(() => {
       return (
@@ -323,21 +329,25 @@ const AIInsights = React.memo(
 
     return (
       <MotionBox
-        initial={{ opacity: 0, scale: 0.98 }}
+        initial={{ opacity: 0, scale: 0.99 }} // Reduced animation
         animate={{ opacity: 1, scale: 1 }}
-        transition={{ duration: 0.5, ease: 'easeOut' }}
+        transition={{ duration: 0.4, ease: 'easeOut' }} // Reduced duration
         position="relative"
         overflow="hidden"
         borderRadius="2xl"
         bg="rgba(20, 15, 35, 0.88)"
-        backdropFilter="blur(25px)"
+        backdropFilter={config.isMobile ? 'none' : 'blur(15px)'} // No blur on mobile
         border="1px solid"
         borderColor="purple.500"
-        boxShadow="0 20px 50px rgba(139, 92, 246, 0.3)"
+        boxShadow={
+          config.isMobile
+            ? '0 8px 25px rgba(0,0,0,0.3)'
+            : '0 15px 40px rgba(139, 92, 246, 0.25)' // Reduced shadow
+        }
       >
         {/* Enhanced Header with Progress */}
         <Flex
-          px={responsiveValues.padding}
+          px={config.padding}
           py={4}
           justify="space-between"
           alignItems="center"
@@ -350,27 +360,31 @@ const AIInsights = React.memo(
         >
           <HStack spacing={{ base: 3, md: 4 }}>
             <Circle
-              size={responsiveValues.circleSize}
+              size={config.circleSize}
               bgGradient="linear(to-br, purple.600, purple.800)"
               border="2px solid"
               borderColor="purple.400"
-              boxShadow="0 0 25px rgba(139, 92, 246, 0.5)"
+              boxShadow={
+                config.isMobile
+                  ? '0 0 15px rgba(139, 92, 246, 0.3)'
+                  : '0 0 20px rgba(139, 92, 246, 0.4)' // Reduced shadow
+              }
               position="relative"
             >
               <Icon
                 as={Brain}
                 color="white"
-                boxSize={responsiveValues.brainInCircleSize}
+                boxSize={config.brainInCircleSize}
               />
               <ProgressRing
                 progress={insightProgress}
-                size={responsiveValues.circleSize}
+                size={config.circleSize}
                 color={progressStatus.color}
               />
             </Circle>
             <VStack align="flex-start" spacing={0.5}>
               <Heading
-                size={responsiveValues.headingSize}
+                size={config.headingSize}
                 color="white"
                 fontWeight="bold"
                 letterSpacing="tight"
@@ -389,7 +403,7 @@ const AIInsights = React.memo(
                   fontSize="xs"
                   fontWeight="bold"
                   textTransform="uppercase"
-                  boxShadow="0 3px 8px rgba(0,0,0,0.2)"
+                  boxShadow="0 2px 6px rgba(0,0,0,0.2)" // Reduced shadow
                 >
                   <HStack spacing={1.5}>
                     <Icon as={Target} boxSize="10px" />
@@ -406,7 +420,7 @@ const AIInsights = React.memo(
                   borderRadius="full"
                   fontSize="xs"
                   fontWeight="bold"
-                  boxShadow="0 3px 8px rgba(0,0,0,0.2)"
+                  boxShadow="0 2px 6px rgba(0,0,0,0.2)" // Reduced shadow
                 >
                   <HStack spacing={1.5}>
                     <Icon as={MessageSquare} boxSize="10px" />
@@ -422,7 +436,7 @@ const AIInsights = React.memo(
           <VStack spacing={0.5} align="flex-end">
             <MotionBox
               animate={{ rotate: isExpanded ? 180 : 0 }}
-              transition={{ duration: 0.3, ease: 'backInOut' }}
+              transition={{ duration: 0.3, ease: 'easeInOut' }} // Simplified easing
             >
               <Icon as={ChevronDown} color="purple.300" boxSize={6} />
             </MotionBox>
@@ -433,35 +447,43 @@ const AIInsights = React.memo(
         </Flex>
 
         <Collapse in={isExpanded} animateOpacity>
-          <Box p={responsiveValues.padding} position="relative">
-            {/* Optimized floating background elements */}
-            <MotionBox
-              position="absolute"
-              top="5%"
-              right="2%"
-              w={{ base: '100px', md: '200px' }}
-              h={{ base: '100px', md: '200px' }}
-              bg="purple.600"
-              borderRadius="full"
-              filter="blur(100px)"
-              opacity={0.25}
-              animate={{ scale: [1, 1.15, 1], opacity: [0.25, 0.4, 0.25] }}
-              transition={{ duration: 10, repeat: Infinity, ease: 'easeInOut' }}
-            />
+          <Box p={config.padding} position="relative">
+            {/* Simplified floating background elements - only on desktop */}
+            {!config.isMobile && (
+              <MotionBox
+                position="absolute"
+                top="5%"
+                right="2%"
+                w="150px" // Reduced from 200px
+                h="150px"
+                bg="purple.600"
+                borderRadius="full"
+                filter="blur(80px)" // Reduced blur
+                opacity={0.2} // Reduced opacity
+                animate={{ scale: [1, 1.08, 1], opacity: [0.2, 0.3, 0.2] }} // Reduced animation
+                transition={{
+                  duration: 12,
+                  repeat: Infinity,
+                  ease: 'easeInOut',
+                }} // Slower
+              />
+            )}
 
-            <VStack spacing={{ base: 6, md: 8 }} align="stretch">
+            <VStack spacing={{ base: 5, md: 6 }} align="stretch">
+              {' '}
+              {/* Reduced spacing */}
               {/* Battle Recap Section */}
               {battleRecap && (
                 <AnimatePresence>
                   <MotionBox
-                    initial={{ opacity: 0, y: 20 }}
+                    initial={{ opacity: 0, y: 15 }} // Reduced movement
                     animate={{ opacity: 1, y: 0 }}
-                    transition={{ duration: 0.5, ease: 'circOut' }}
+                    transition={{ duration: 0.4, ease: 'easeOut' }} // Simplified
                   >
                     <Suspense
                       fallback={
                         <ComponentLoader
-                          height="300px"
+                          height="280px" // Reduced height
                           message={t('Loading battle recap...')}
                         />
                       }
@@ -471,24 +493,22 @@ const AIInsights = React.memo(
                   </MotionBox>
                 </AnimatePresence>
               )}
-
               {/* Divider between sections */}
               {battleRecap && allQuestions && allQuestions.length > 0 && (
-                <Divider borderColor="rgba(255,255,255,0.15)" my={2} />
+                <Divider borderColor="rgba(255,255,255,0.15)" my={1} />
               )}
-
               {/* Follow-up Questions Section */}
               {allQuestions && allQuestions.length > 0 && (
                 <AnimatePresence>
                   <MotionBox
-                    initial={{ opacity: 0, y: 20 }}
+                    initial={{ opacity: 0, y: 15 }} // Reduced movement
                     animate={{ opacity: 1, y: 0 }}
-                    transition={{ duration: 0.5, delay: 0.2, ease: 'circOut' }}
+                    transition={{ duration: 0.4, delay: 0.1, ease: 'easeOut' }} // Reduced delay
                   >
                     <Suspense
                       fallback={
                         <ComponentLoader
-                          height="400px"
+                          height="350px" // Reduced height
                           message={t('Loading questions...')}
                         />
                       }
@@ -502,12 +522,11 @@ const AIInsights = React.memo(
                   </MotionBox>
                 </AnimatePresence>
               )}
-
               {/* Progress Journey Section */}
               {allQuestions && allQuestions.length > 0 && (
                 <Box
-                  mt={8}
-                  p={{ base: 4, md: 5 }}
+                  mt={6} // Reduced margin
+                  p={{ base: 4, md: 4 }} // Reduced padding
                   bg="rgba(139, 92, 246, 0.1)"
                   borderRadius="xl"
                   border="1px solid rgba(139, 92, 246, 0.25)"
@@ -533,7 +552,9 @@ const AIInsights = React.memo(
             </VStack>
 
             {/* Footer Section */}
-            <Box mt={8} pt={6} borderTop="1px solid rgba(255,255,255,0.1)">
+            <Box mt={6} pt={4} borderTop="1px solid rgba(255,255,255,0.1)">
+              {' '}
+              {/* Reduced margins */}
               <Flex
                 justify="space-between"
                 align={{ base: 'flex-start', sm: 'center' }}

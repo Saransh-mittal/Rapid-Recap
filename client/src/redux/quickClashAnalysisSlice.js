@@ -76,6 +76,10 @@ const initialState = {
   historyError: null,
   selectedInsightIndex: 0,
   typewriterStates: {},
+  // NEW: Track which question is currently being processed
+  currentlyProcessingQuestionId: null,
+  // NEW: Track if we're waiting for next question to appear
+  waitingForNextQuestion: false,
   expandedSections: {
     battleResult: true,
     trophies: true,
@@ -108,7 +112,6 @@ const quickClashAnalysisSlice = createSlice({
   reducers: {
     resetAnalysisState: () => initialState,
     clearCurrentAnalysis: state => {
-      // Removed console.log
       state.currentBattleAnalysis = null
       state.userTeam = null
       state.aiInsights = []
@@ -124,6 +127,8 @@ const quickClashAnalysisSlice = createSlice({
       state.questionAnswerError = null
       state.selectedInsightIndex = 0
       state.typewriterStates = {}
+      state.currentlyProcessingQuestionId = null
+      state.waitingForNextQuestion = false
       // RESET NEW FIELDS
       state.mvpAwards = {
         matchMVP: null,
@@ -165,7 +170,6 @@ const quickClashAnalysisSlice = createSlice({
     },
     startTypewriter: (state, action) => {
       const { questionId } = action.payload
-      // Removed console.log
       state.typewriterStates[questionId] = {
         isTyping: true,
         currentText: '',
@@ -208,6 +212,30 @@ const quickClashAnalysisSlice = createSlice({
           ...updates,
         }
       }
+    },
+    // NEW: Action to handle typewriter completion and trigger next question visibility
+    completeTypewriterAndShowNext: (state, action) => {
+      const { questionId } = action.payload
+      if (state.typewriterStates[questionId]) {
+        state.typewriterStates[questionId].isTyping = false
+        state.typewriterStates[questionId].isComplete = true
+      }
+      state.waitingForNextQuestion = false
+      state.currentlyProcessingQuestionId = null
+
+      // Check if there are pending questions to show
+      const pendingQuestions = state.allQuestions.filter(
+        q => q.isActive && !q.answered,
+      )
+
+      if (pendingQuestions.length > 0 && state.followUpQuestions.length === 0) {
+        // Show the next pending question
+        state.followUpQuestions = pendingQuestions.slice(0, 1)
+      }
+    },
+    // NEW: Set waiting state for smooth transitions
+    setWaitingForNextQuestion: (state, action) => {
+      state.waitingForNextQuestion = action.payload
     },
   },
   extraReducers: builder => {
@@ -280,8 +308,6 @@ const quickClashAnalysisSlice = createSlice({
             }
 
             state.aiInsights = [] // Clear old aiInsights format
-
-            // Removed console.log
           } else if (action.payload.analysis.aiInsights) {
             // Legacy aiInsights format
             state.aiInsights = action.payload.analysis.aiInsights
@@ -363,7 +389,11 @@ const quickClashAnalysisSlice = createSlice({
         state.questionAnswerLoading = true
         state.questionAnswerError = null
         const { questionId } = action.meta.arg
-        // Removed console.log
+
+        // NEW: Track which question is currently being processed
+        state.currentlyProcessingQuestionId = questionId
+        state.waitingForNextQuestion = true
+
         state.typewriterStates[questionId] = {
           isTyping: true,
           currentText: '',
@@ -375,8 +405,6 @@ const quickClashAnalysisSlice = createSlice({
         if (action.payload.success) {
           const { questionId, answer, nextQuestion, progression } =
             action.payload
-
-          // Removed console.log
 
           const allQuestionIndex = state.allQuestions.findIndex(
             q => q.id === questionId,
@@ -391,7 +419,6 @@ const quickClashAnalysisSlice = createSlice({
               },
               isActive: false,
             }
-            // Removed console.log
           }
 
           // Current active question (followUpQuestions) should be updated/cleared
@@ -419,19 +446,30 @@ const quickClashAnalysisSlice = createSlice({
                 ...newQuestionPayload, // Ensure it's marked active
               }
             }
-            state.followUpQuestions = [newQuestionPayload] // Set as the new active question
-            // Removed console.log
+
+            // NEW: Don't immediately show next question - wait for typewriter to complete
+            // The next question will be shown after typewriter animation completes
+            setTimeout(() => {
+              state.followUpQuestions = [newQuestionPayload]
+            }, 100) // Small delay to ensure smooth transition
+          } else {
+            // No next question - this means we're done with all questions
+            // Ensure the progression reflects completion
+            if (state.questionProgression) {
+              state.questionProgression.isComplete = true
+            }
           }
 
           if (progression) {
             // Backend now sends the authoritative progression
             state.questionProgression = progression
-            // Removed console.log
           }
         } else {
           state.questionAnswerError =
             action.payload.message || 'Failed to get answer'
           const { questionId } = action.meta.arg
+          state.currentlyProcessingQuestionId = null
+          state.waitingForNextQuestion = false
           if (state.typewriterStates[questionId]) {
             state.typewriterStates[questionId].isTyping = false
             state.typewriterStates[questionId].isComplete = true // Mark as complete to stop animation
@@ -442,6 +480,8 @@ const quickClashAnalysisSlice = createSlice({
         state.questionAnswerLoading = false
         state.questionAnswerError = action.payload
         const { questionId } = action.meta.arg
+        state.currentlyProcessingQuestionId = null
+        state.waitingForNextQuestion = false
         if (state.typewriterStates[questionId]) {
           state.typewriterStates[questionId].isTyping = false
           state.typewriterStates[questionId].isComplete = true
@@ -481,6 +521,8 @@ export const {
   updateTypewriterText,
   skipTypewriter,
   updateQuestionInPlace,
+  completeTypewriterAndShowNext,
+  setWaitingForNextQuestion,
 } = quickClashAnalysisSlice.actions
 
 export default quickClashAnalysisSlice.reducer

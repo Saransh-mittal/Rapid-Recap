@@ -488,7 +488,7 @@ const TeamsGrid = ({ currentBattle, userTeam, userId, variants }) => {
                   transition="all 0.2s cubic-bezier(.08,.52,.52,1)"
                   zIndex="1"
                 >
-                  {team.isUserTeam ? t('YOUR TEAM') : t('TEAM')}
+                  {t('SQUAD')}
                 </MotionFlex>
               </PopoverTrigger>
               <Portal>

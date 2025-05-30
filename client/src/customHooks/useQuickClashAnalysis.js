@@ -1,4 +1,4 @@
-// customHooks/useQuickClashAnalysis.js (Optimized Version)
+// customHooks/useQuickClashAnalysis.js (Updated Version)
 import { useCallback, useEffect, useRef, useMemo } from 'react'
 import { useDispatch, useSelector } from 'react-redux'
 import { useToast } from '@chakra-ui/react'
@@ -18,6 +18,8 @@ import {
   updateTypewriterText,
   skipTypewriter,
   updateQuestionInPlace,
+  completeTypewriterAndShowNext,
+  setWaitingForNextQuestion,
 } from '../redux/quickClashAnalysisSlice'
 import axios from 'axios'
 
@@ -38,7 +40,10 @@ const useQuickClashAnalysis = () => {
         left.battleAnalysisError === right.battleAnalysisError &&
         left.followUpQuestions?.length === right.followUpQuestions?.length &&
         left.allQuestions?.length === right.allQuestions?.length &&
-        left.expandedSections === right.expandedSections
+        left.expandedSections === right.expandedSections &&
+        left.currentlyProcessingQuestionId ===
+          right.currentlyProcessingQuestionId &&
+        left.waitingForNextQuestion === right.waitingForNextQuestion
       )
     },
   )
@@ -82,6 +87,10 @@ const useQuickClashAnalysis = () => {
       mvpAwards: analysisState.mvpAwards,
       simplifiedTrophyData: analysisState.simplifiedTrophyData,
       enhancedMemberPerformance: analysisState.enhancedMemberPerformance,
+      // NEW: Add the new state properties
+      currentlyProcessingQuestionId:
+        analysisState.currentlyProcessingQuestionId,
+      waitingForNextQuestion: analysisState.waitingForNextQuestion,
     }),
     [analysisState],
   )
@@ -117,6 +126,21 @@ const useQuickClashAnalysis = () => {
       analysisState.selectedInsightIndex,
       analysisState.expandedSections,
       analysisState.typewriterStates,
+    ],
+  )
+
+  // NEW: Helper function to check if a question is clickable
+  const isQuestionClickable = useCallback(
+    questionId => {
+      return (
+        !analysisState.questionAnswerLoading &&
+        !analysisState.currentlyProcessingQuestionId &&
+        questionId !== analysisState.currentlyProcessingQuestionId
+      )
+    },
+    [
+      analysisState.questionAnswerLoading,
+      analysisState.currentlyProcessingQuestionId,
     ],
   )
 
@@ -269,11 +293,13 @@ const useQuickClashAnalysis = () => {
     dispatch(clearCurrentAnalysis())
   }, [dispatch])
 
-  // Optimized answer question function
+  // Optimized answer question function with better loading management
   const answerQuestion = useCallback(
     async ({ battleId, questionId, questionText }) => {
-      // Prevent duplicate submissions
-      if (analysisState.questionAnswerLoading) return
+      // Prevent duplicate submissions and check if question is clickable
+      if (!isQuestionClickable(questionId)) {
+        return
+      }
 
       const submissionKey = `${questionId}-${Date.now()}`
       if (performanceRef.current.lastSubmission === submissionKey) return
@@ -313,13 +339,7 @@ const useQuickClashAnalysis = () => {
         throw error
       }
     },
-    [
-      dispatch,
-      toast,
-      t,
-      analysisState.questionAnswerLoading,
-      trackInteractionDebounced,
-    ],
+    [dispatch, toast, t, isQuestionClickable, trackInteractionDebounced],
   )
 
   // Optimized typewriter functions
@@ -351,6 +371,22 @@ const useQuickClashAnalysis = () => {
       dispatch(skipTypewriter({ questionId, fullText }))
     },
     [dispatch, trackInteractionDebounced],
+  )
+
+  // NEW: Complete typewriter and show next question
+  const completeTypewriterAndShowNextQuestion = useCallback(
+    ({ questionId }) => {
+      dispatch(completeTypewriterAndShowNext({ questionId }))
+    },
+    [dispatch],
+  )
+
+  // NEW: Set waiting state
+  const setWaitingState = useCallback(
+    waiting => {
+      dispatch(setWaitingForNextQuestion(waiting))
+    },
+    [dispatch],
   )
 
   // Optimized feedback submission
@@ -483,6 +519,11 @@ const useQuickClashAnalysis = () => {
     startTypewriterEffect,
     updateTypewriterState,
     skipTypewriterEffect,
+    completeTypewriterAndShowNextQuestion,
+    setWaitingState,
+
+    // NEW: Question state helper
+    isQuestionClickable,
 
     // Performance tracking
     trackInteraction: trackInteractionDebounced,

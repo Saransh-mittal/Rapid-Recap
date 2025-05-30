@@ -1,6 +1,6 @@
 // components/quickClashComponents/team/battleAnalysis/components/TrophyExchangeSummary.jsx
 
-import React, { useState, useEffect } from 'react'
+import React, { useState, useEffect, useMemo } from 'react'
 import {
   Box,
   Flex,
@@ -10,7 +10,6 @@ import {
   Badge,
   HStack,
   VStack,
-  useBreakpointValue,
   Collapse,
   Progress,
   Divider,
@@ -28,7 +27,6 @@ import {
   ChevronDown,
   Info,
   Shield,
-  Coins,
   Sparkles,
   Gift,
   Users,
@@ -77,36 +75,31 @@ const TrophyExchangeSummary = ({
   const [countedTrophies, setCountedTrophies] = useState(0)
   const [showBreakdownElements, setShowBreakdownElements] = useState(false)
 
-  const padding = useBreakpointValue({ base: 4, md: 6 })
-  const trophyFontSize = useBreakpointValue({
-    base: '3xl',
-    sm: '3xl',
-    md: '4xl',
-    lg: '5xl',
-  })
-  const headerIconSize = useBreakpointValue({ base: 5, sm: 6, md: 7 })
-  const bonusIconSize = useBreakpointValue({ base: 3, md: 4 })
-  const headingSize = useBreakpointValue({ base: 'md', sm: 'lg', md: 'lg' })
-  const isMobileView = useBreakpointValue({ base: true, md: false })
-
-  const trophiesLabelFontSize = useBreakpointValue({
-    base: 'md',
-    sm: 'lg',
-    md: 'xl',
-  })
-  const impactLabelFontSize = useBreakpointValue({ base: 'xs', sm: 'sm' })
-  const impactValueFontSize = useBreakpointValue({ base: 'xs', sm: 'sm' })
-  const appliedBonusesLabelFontSize = useBreakpointValue({
-    base: 'sm',
-    md: 'md',
-  })
-  const smallBonusBadgeFontSize = useBreakpointValue({ base: 'xs', sm: 'sm' })
-  const headerSubBadgeFontSize = useBreakpointValue({ base: 'xs', sm: 'sm' })
-  const collapsedLabelFontSize = useBreakpointValue({ base: 'sm', md: 'md' })
-  const collapsedValueFontSize = useBreakpointValue({ base: 'sm', md: 'md' })
-  const finalShareLabelFontSize = useBreakpointValue({ base: 'md', md: 'lg' })
-  const finalShareValueFontSize = useBreakpointValue({ base: 'lg', md: 'xl' })
-  const infoTextFontSize = useBreakpointValue({ base: 'xs', sm: 'sm' })
+  // Memoized responsive configuration - static values for performance
+  const config = useMemo(
+    () => ({
+      isMobile: window.innerWidth < 768,
+      padding: { base: 3, md: 5 }, // Reduced padding
+      trophyFontSize:
+        window.innerWidth < 480
+          ? '2xl'
+          : window.innerWidth < 768
+          ? '3xl'
+          : '4xl',
+      headerIconSize: window.innerWidth < 768 ? 5 : 6,
+      bonusIconSize: window.innerWidth < 768 ? 3 : 4,
+      headingSize: window.innerWidth < 480 ? 'md' : 'lg',
+      trophiesLabelFontSize: window.innerWidth < 480 ? 'md' : 'lg',
+      impactLabelFontSize: window.innerWidth < 768 ? 'xs' : 'sm',
+      appliedBonusesLabelFontSize: window.innerWidth < 768 ? 'sm' : 'md',
+      smallBonusBadgeFontSize: window.innerWidth < 768 ? 'xs' : 'sm',
+      headerSubBadgeFontSize: window.innerWidth < 768 ? 'xs' : 'sm',
+      collapsedLabelFontSize: window.innerWidth < 768 ? 'sm' : 'md',
+      finalShareLabelFontSize: window.innerWidth < 768 ? 'md' : 'lg',
+      infoTextFontSize: window.innerWidth < 768 ? 'xs' : 'sm',
+    }),
+    [],
+  )
 
   const getTrophyData = () => {
     // Use simplified trophy data if provided
@@ -160,7 +153,7 @@ const TrophyExchangeSummary = ({
         bgColor: 'rgba(72, 187, 120, 0.1)',
         borderColor: 'green.500',
         icon: TrendingUp,
-        glow: 'rgba(72, 187, 120, 0.3)',
+        glow: 'rgba(72, 187, 120, 0.25)', // Reduced glow
         gradient: 'linear(135deg, green.500, green.700)',
       }
     if (trophyChange < 0)
@@ -169,7 +162,7 @@ const TrophyExchangeSummary = ({
         bgColor: 'rgba(245, 101, 101, 0.1)',
         borderColor: 'red.500',
         icon: TrendingDown,
-        glow: 'rgba(245, 101, 101, 0.3)',
+        glow: 'rgba(245, 101, 101, 0.25)', // Reduced glow
         gradient: 'linear(135deg, red.500, red.700)',
       }
     return {
@@ -177,7 +170,7 @@ const TrophyExchangeSummary = ({
       bgColor: 'rgba(236, 201, 75, 0.1)',
       borderColor: 'yellow.500',
       icon: Star,
-      glow: 'rgba(236, 201, 75, 0.3)',
+      glow: 'rgba(236, 201, 75, 0.25)', // Reduced glow
       gradient: 'linear(135deg, yellow.500, yellow.700)',
     }
   }
@@ -189,21 +182,21 @@ const TrophyExchangeSummary = ({
         opacity: 1,
         y: 0,
         scale: 1,
-        transition: { duration: 0.6, ease: 'easeOut' },
+        transition: { duration: 0.4, ease: 'easeOut' }, // Reduced duration
       })
       .then(() => {
-        const duration = 1500
+        // Simplified counting animation
+        const duration = config.isMobile ? 800 : 1200 // Faster on mobile
         const frameDuration = 1000 / 60
         const totalFrames = Math.round(duration / frameDuration)
-        const easeOutExpo = tParam =>
-          tParam === 1 ? 1 : 1 - Math.pow(2, -10 * tParam)
+        const easeOutQuad = t => t * (2 - t) // Simpler easing function
         let frame = 0
         const countTo = trophyChange
         const startVal = 0
 
         const counter = setInterval(() => {
           frame++
-          const progress = easeOutExpo(frame / totalFrames)
+          const progress = easeOutQuad(frame / totalFrames)
           const currentCount = Math.round(
             startVal + (countTo - startVal) * progress,
           )
@@ -215,21 +208,25 @@ const TrophyExchangeSummary = ({
         }, frameDuration)
         return () => clearInterval(counter)
       })
-  }, [controls, trophyChange])
+  }, [controls, trophyChange, config.isMobile])
 
   return (
     <Box
       position="relative"
       overflow="hidden"
       bg="rgba(20, 15, 35, 0.7)"
-      backdropFilter="blur(15px)"
+      backdropFilter={config.isMobile ? 'none' : 'blur(10px)'} // No blur on mobile
       borderRadius="2xl"
-      boxShadow="0 8px 30px rgba(0, 0, 0, 0.25)"
+      boxShadow={
+        config.isMobile
+          ? '0 6px 20px rgba(0, 0, 0, 0.2)'
+          : '0 8px 25px rgba(0, 0, 0, 0.25)' // Reduced shadow
+      }
       border="1px solid"
       borderColor="rgba(255,255,255,0.1)"
     >
       <Flex
-        px={padding}
+        px={config.padding}
         py={4}
         justifyContent="space-between"
         alignItems="center"
@@ -245,23 +242,31 @@ const TrophyExchangeSummary = ({
             p={2.5}
             borderRadius="lg"
             bgGradient={trophyStyle.gradient}
-            boxShadow={`0 2px 10px ${trophyStyle.glow}`}
+            boxShadow={
+              config.isMobile
+                ? `0 2px 8px ${trophyStyle.glow}`
+                : `0 2px 10px ${trophyStyle.glow}` // Reduced shadow
+            }
           >
             <Icon
               as={trophyStyle.icon}
               color="white"
-              boxSize={headerIconSize - 1}
+              boxSize={config.headerIconSize}
             />
           </MotionBox>
           <VStack align="flex-start" spacing={0}>
-            <Heading size={headingSize} color="white" fontWeight="semibold">
+            <Heading
+              size={config.headingSize}
+              color="white"
+              fontWeight="semibold"
+            >
               {t('Trophy Exchange')}
             </Heading>
             <HStack spacing={1.5}>
               <Badge
                 colorScheme={trophyStyle.color.split('.')[0]}
                 variant="subtle"
-                fontSize={headerSubBadgeFontSize}
+                fontSize={config.headerSubBadgeFontSize}
                 px={1.5}
                 borderRadius="sm"
               >
@@ -275,14 +280,14 @@ const TrophyExchangeSummary = ({
                 <Badge
                   colorScheme="purple"
                   variant="solid"
-                  fontSize={headerSubBadgeFontSize}
+                  fontSize={config.headerSubBadgeFontSize}
                   px={1.5}
                   borderRadius="sm"
                 >
                   <HStack spacing={0.5}>
                     <Icon
                       as={Sparkles}
-                      boxSize={headerSubBadgeFontSize === 'xs' ? 2.5 : 3}
+                      boxSize={config.headerSubBadgeFontSize === 'xs' ? 2.5 : 3}
                     />
                     <span>
                       {activeBonusCount}{' '}
@@ -304,7 +309,7 @@ const TrophyExchangeSummary = ({
       </Flex>
 
       <Box
-        p={padding}
+        p={config.padding}
         borderBottom={isExpanded ? '1px solid' : '0'}
         borderColor="rgba(255,255,255,0.08)"
       >
@@ -312,7 +317,7 @@ const TrophyExchangeSummary = ({
           direction={{ base: 'column', md: 'row' }}
           justify="space-between"
           align="center"
-          gap={{ base: 4, md: 6 }}
+          gap={{ base: 4, md: 5 }} // Reduced gap
         >
           <VStack
             spacing={3}
@@ -321,15 +326,17 @@ const TrophyExchangeSummary = ({
           >
             <HStack spacing={2.5} align="baseline">
               <MotionText
-                fontSize={trophyFontSize}
+                fontSize={config.trophyFontSize}
                 fontWeight="black"
                 color={trophyStyle.color}
-                textShadow={`0 0 15px ${trophyStyle.glow}`}
+                textShadow={
+                  config.isMobile ? 'none' : `0 0 12px ${trophyStyle.glow}` // Reduced shadow
+                }
               >
                 {countedTrophies >= 0 ? `+${countedTrophies}` : countedTrophies}
               </MotionText>
               <Text
-                fontSize={trophiesLabelFontSize}
+                fontSize={config.trophiesLabelFontSize}
                 color="whiteAlpha.800"
                 fontWeight="medium"
                 pb={1}
@@ -340,10 +347,10 @@ const TrophyExchangeSummary = ({
             {showBreakdownElements && percentage > 0 && (
               <MotionBox
                 w="full"
-                maxW="280px"
+                maxW="260px" // Reduced width
                 initial={{ opacity: 0 }}
                 animate={{ opacity: 1 }}
-                transition={{ delay: 0.2, duration: 0.4 }}
+                transition={{ delay: 0.2, duration: 0.3 }} // Faster
               >
                 <Progress
                   value={percentage}
@@ -354,11 +361,14 @@ const TrophyExchangeSummary = ({
                   sx={{ '& > div': { background: trophyStyle.gradient } }}
                 />
                 <HStack justify="space-between" mt={1}>
-                  <Text fontSize={impactLabelFontSize} color="whiteAlpha.600">
+                  <Text
+                    fontSize={config.impactLabelFontSize}
+                    color="whiteAlpha.600"
+                  >
                     {t('Previous Trophies Impact')}
                   </Text>
                   <Text
-                    fontSize={impactValueFontSize}
+                    fontSize={config.impactLabelFontSize}
                     color={trophyStyle.color}
                     fontWeight="semibold"
                   >
@@ -373,10 +383,10 @@ const TrophyExchangeSummary = ({
             <VStack
               spacing={2}
               align={{ base: 'center', md: 'flex-end' }}
-              minW={{ base: 'full', md: '220px' }}
+              minW={{ base: 'full', md: '200px' }} // Reduced width
             >
               <Text
-                fontSize={appliedBonusesLabelFontSize}
+                fontSize={config.appliedBonusesLabelFontSize}
                 color="whiteAlpha.700"
                 fontWeight="medium"
               >
@@ -387,7 +397,7 @@ const TrophyExchangeSummary = ({
                 wrap="wrap"
                 justifyContent={{ base: 'center', md: 'flex-end' }}
               >
-                {activeBonuses.slice(0, isMobileView ? 2 : 3).map(bonus => (
+                {activeBonuses.slice(0, config.isMobile ? 2 : 3).map(bonus => (
                   <MotionBadge
                     key={bonus.key}
                     bg={`rgba(${(() => {
@@ -404,30 +414,30 @@ const TrophyExchangeSummary = ({
                     py={1}
                     px={2}
                     borderRadius="md"
-                    fontSize={smallBonusBadgeFontSize}
+                    fontSize={config.smallBonusBadgeFontSize}
                     fontWeight="semibold"
-                    initial={{ opacity: 0, y: 10 }}
+                    initial={{ opacity: 0, y: 8 }} // Reduced movement
                     animate={{ opacity: 1, y: 0 }}
-                    transition={{ delay: 0.3 + Math.random() * 0.3 }}
+                    transition={{ delay: 0.2 + Math.random() * 0.2 }} // Reduced randomness
                   >
                     <HStack spacing={1}>
                       <Icon
                         as={BONUS_ICON_MAP[bonus.key] || BONUS_ICON_MAP.default}
-                        boxSize={bonusIconSize - 1}
+                        boxSize={config.bonusIconSize - 1}
                       />
                       <span>+{bonus.amount}</span>
                     </HStack>
                   </MotionBadge>
                 ))}
-                {activeBonuses.length > (isMobileView ? 2 : 3) && (
+                {activeBonuses.length > (config.isMobile ? 2 : 3) && (
                   <Badge
                     colorScheme="gray"
                     variant="outline"
-                    fontSize={smallBonusBadgeFontSize}
+                    fontSize={config.smallBonusBadgeFontSize}
                     px={1.5}
                     py={0.5}
                   >
-                    +{activeBonuses.length - (isMobileView ? 2 : 3)} more
+                    +{activeBonuses.length - (config.isMobile ? 2 : 3)} more
                   </Badge>
                 )}
               </HStack>
@@ -437,7 +447,15 @@ const TrophyExchangeSummary = ({
       </Box>
 
       <Collapse in={isExpanded} animateOpacity>
-        <Box p={padding} bg="rgba(255,255,255,0.01)" backdropFilter="blur(5px)">
+        <Box
+          p={config.padding}
+          bg={
+            config.isMobile
+              ? 'rgba(255,255,255,0.01)'
+              : 'rgba(255,255,255,0.01)'
+          }
+          backdropFilter={config.isMobile ? 'none' : 'blur(5px)'}
+        >
           <VStack spacing={4} align="stretch">
             <VStack
               spacing={3}
@@ -497,7 +515,7 @@ const TrophyExchangeSummary = ({
                           />
                           <VStack align="flex-start" spacing={0.5}>
                             <Text
-                              fontSize={collapsedLabelFontSize}
+                              fontSize={config.collapsedLabelFontSize}
                               color="white"
                               fontWeight="medium"
                             >
@@ -543,7 +561,7 @@ const TrophyExchangeSummary = ({
                   <HStack spacing={2}>
                     <Icon as={Users} color="blue.400" boxSize={4.5} />
                     <Text
-                      fontSize={finalShareLabelFontSize}
+                      fontSize={config.finalShareLabelFontSize}
                       color="white"
                       fontWeight="medium"
                     >
@@ -551,7 +569,7 @@ const TrophyExchangeSummary = ({
                     </Text>
                   </HStack>
                   <Text
-                    fontSize={finalShareValueFontSize}
+                    fontSize={config.finalShareLabelFontSize}
                     color="blue.300"
                     fontWeight="bold"
                   >
@@ -566,7 +584,7 @@ const TrophyExchangeSummary = ({
                   <HStack spacing={2}>
                     <Icon as={Trophy} color={trophyStyle.color} boxSize={4.5} />
                     <Text
-                      fontSize={finalShareLabelFontSize}
+                      fontSize={config.finalShareLabelFontSize}
                       color="white"
                       fontWeight="bold"
                     >
@@ -574,10 +592,12 @@ const TrophyExchangeSummary = ({
                     </Text>
                   </HStack>
                   <Text
-                    fontSize={finalShareValueFontSize}
+                    fontSize={config.finalShareLabelFontSize}
                     color={trophyStyle.color}
                     fontWeight="bold"
-                    textShadow={`0 0 8px ${trophyStyle.glow}`}
+                    textShadow={
+                      config.isMobile ? 'none' : `0 0 6px ${trophyStyle.glow}` // Reduced shadow
+                    }
                   >
                     {trophyChange >= 0 ? `+${trophyChange}` : trophyChange}{' '}
                     {t('trophies')}
@@ -617,7 +637,7 @@ const TrophyExchangeSummary = ({
             >
               <HStack spacing={2.5}>
                 <Icon as={Info} color="purple.400" boxSize={4} />
-                <Text fontSize={infoTextFontSize} color="whiteAlpha.700">
+                <Text fontSize={config.infoTextFontSize} color="whiteAlpha.700">
                   {activeBonuses.length > 0
                     ? t(
                         'Your trophy change includes performance bonuses and team contribution adjustments.',

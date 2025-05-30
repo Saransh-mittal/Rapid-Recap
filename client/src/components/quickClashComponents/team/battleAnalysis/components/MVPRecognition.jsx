@@ -11,7 +11,6 @@ import {
   HStack,
   VStack,
   Avatar,
-  useBreakpointValue,
   Collapse,
   Grid,
   GridItem,
@@ -26,9 +25,6 @@ import {
   ChevronDown,
   Star,
   Award,
-  Target,
-  TrendingUp,
-  Sparkles,
   Users,
 } from 'lucide-react'
 import confetti from 'canvas-confetti'
@@ -42,7 +38,7 @@ const MVP_CONFIGS = {
     color: 'purple',
     gradient: 'linear(135deg, #A855F7, #8B5CF6)',
     bgGradient: 'linear(to-br, purple.600, purple.800)',
-    glowColor: 'rgba(168, 85, 247, 0.4)',
+    glowColor: 'rgba(168, 85, 247, 0.3)', // Reduced opacity
     borderColor: 'purple.400',
     tier: 'S+',
     celebrationColor: '#A855F7',
@@ -53,7 +49,7 @@ const MVP_CONFIGS = {
     color: 'green',
     gradient: 'linear(135deg, #22C55E, #10B981)',
     bgGradient: 'linear(to-br, green.600, green.800)',
-    glowColor: 'rgba(34, 197, 94, 0.4)',
+    glowColor: 'rgba(34, 197, 94, 0.3)', // Reduced opacity
     borderColor: 'green.400',
     tier: 'S',
     celebrationColor: '#22C55E',
@@ -64,7 +60,7 @@ const MVP_CONFIGS = {
     color: 'orange',
     gradient: 'linear(135deg, #F59E0B, #D97706)',
     bgGradient: 'linear(to-br, orange.600, orange.800)',
-    glowColor: 'rgba(245, 158, 11, 0.4)',
+    glowColor: 'rgba(245, 158, 11, 0.3)', // Reduced opacity
     borderColor: 'orange.400',
     tier: 'A+',
     celebrationColor: '#F59E0B',
@@ -75,10 +71,18 @@ const MVPRecognition = ({ mvpAwards, userTeam, isExpanded, onToggle }) => {
   const { t } = useTranslation('QuickClash')
   const controls = useAnimationControls()
 
-  const padding = useBreakpointValue({ base: 4, md: 6 })
-  const headerIconSize = useBreakpointValue({ base: 6, md: 7 })
-  const headingSize = useBreakpointValue({ base: 'lg', md: 'xl' })
-  const avatarSize = useBreakpointValue({ base: 'lg', md: 'xl' })
+  // Memoized responsive configuration - static values for performance
+  const config = useMemo(
+    () => ({
+      isMobile: typeof window !== 'undefined' && window.innerWidth < 768,
+      padding: { base: 3, md: 5 }, // Reduced padding
+      headerIconSize: { base: 5, md: 6 }, // Reduced sizes
+      headingSize: { base: 'md', md: 'lg' }, // Reduced sizes
+      avatarSize:
+        typeof window !== 'undefined' && window.innerWidth < 768 ? 'md' : 'lg',
+    }),
+    [],
+  )
 
   // FILTER AWARDS TO ONLY SHOW USER'S TEAM MEMBERS
   const filteredAwards = useMemo(() => {
@@ -126,32 +130,29 @@ const MVPRecognition = ({ mvpAwards, userTeam, isExpanded, onToggle }) => {
     ) || []
 
   // Dynamic grid columns based on number of awards (max 2)
-  const gridColumns = useBreakpointValue({
-    base: 1,
-    md: availableAwards.length === 1 ? 1 : 2,
-  })
+  const gridColumns = config.isMobile ? 1 : availableAwards.length === 1 ? 1 : 2
 
   useEffect(() => {
     controls.start({
       opacity: 1,
       y: 0,
-      transition: { duration: 0.6, ease: 'easeOut' },
+      transition: { duration: 0.4, ease: 'easeOut' }, // Reduced duration
     })
 
-    // Celebration effect for legendary performances
-    if (legendaryPerformers.length > 0) {
+    // Simplified celebration effect for legendary performances - only on desktop
+    if (legendaryPerformers.length > 0 && !config.isMobile) {
       setTimeout(() => {
         confetti({
-          particleCount: 50,
-          spread: 60,
-          origin: { y: 0.7 },
+          particleCount: 25, // Reduced from 50
+          spread: 45, // Reduced spread
+          origin: { y: 0.8 },
           colors: ['#A855F7', '#EC4899', '#FBBF24'],
           shapes: ['star'],
-          scalar: 0.8,
+          scalar: 0.6, // Reduced size
         })
-      }, 1000)
+      }, 800) // Faster trigger
     }
-  }, [controls, legendaryPerformers.length])
+  }, [controls, legendaryPerformers.length, config.isMobile])
 
   // Don't render if no awards for user's team
   if (!hasAnyAward && legendaryPerformers.length === 0) {
@@ -161,14 +162,18 @@ const MVPRecognition = ({ mvpAwards, userTeam, isExpanded, onToggle }) => {
   const renderMVPCard = (award, type) => {
     if (!award) return null
 
-    const config = MVP_CONFIGS[type]
+    const mvpConfig = MVP_CONFIGS[type]
 
     return (
       <MotionBox
-        initial={{ opacity: 0, scale: 0.9, y: 20 }}
+        initial={{ opacity: 0, scale: 0.95, y: 15 }} // Reduced animation
         animate={{ opacity: 1, scale: 1, y: 0 }}
-        transition={{ duration: 0.5, type: 'spring', stiffness: 100 }}
-        whileHover={{ y: -4, boxShadow: `0 10px 25px ${config.glowColor}` }}
+        transition={{ duration: 0.4, type: 'spring', stiffness: 120 }} // Simplified spring
+        whileHover={
+          config.isMobile
+            ? {}
+            : { y: -2, boxShadow: `0 8px 20px ${mvpConfig.glowColor}` }
+        } // Reduced hover effect
         h="100%" // Ensure full height
       >
         <Box
@@ -176,31 +181,37 @@ const MVPRecognition = ({ mvpAwards, userTeam, isExpanded, onToggle }) => {
           overflow="hidden"
           borderRadius="xl"
           bg="rgba(10, 5, 20, 0.8)"
-          backdropFilter="blur(15px)"
+          backdropFilter={config.isMobile ? 'none' : 'blur(10px)'} // No blur on mobile
           border="2px solid"
-          borderColor={config.borderColor}
-          p={5}
-          boxShadow={`0 8px 20px ${config.glowColor}`}
+          borderColor={mvpConfig.borderColor}
+          p={4} // Reduced padding
+          boxShadow={
+            config.isMobile
+              ? `0 6px 15px ${mvpConfig.glowColor}`
+              : `0 8px 20px ${mvpConfig.glowColor}` // Reduced shadow
+          }
           h="100%" // Full height
           display="flex"
           flexDirection="column"
         >
-          {/* Animated background */}
-          <MotionBox
-            position="absolute"
-            inset={0}
-            bgGradient={config.bgGradient}
-            opacity={0.15}
-            animate={{ opacity: [0.1, 0.2, 0.1] }}
-            transition={{ duration: 3, repeat: Infinity, ease: 'easeInOut' }}
-          />
+          {/* Simplified animated background - only on desktop */}
+          {!config.isMobile && (
+            <MotionBox
+              position="absolute"
+              inset={0}
+              bgGradient={mvpConfig.bgGradient}
+              opacity={0.12} // Reduced opacity
+              animate={{ opacity: [0.1, 0.15, 0.1] }} // Reduced animation
+              transition={{ duration: 4, repeat: Infinity, ease: 'easeInOut' }} // Slower
+            />
+          )}
 
           {/* Tier badge */}
           <Badge
             position="absolute"
-            top={3}
-            right={3}
-            bgGradient={config.gradient}
+            top={2} // Reduced position
+            right={2}
+            bgGradient={mvpConfig.gradient}
             color="white"
             px={2}
             py={1}
@@ -208,14 +219,14 @@ const MVPRecognition = ({ mvpAwards, userTeam, isExpanded, onToggle }) => {
             fontSize="xs"
             fontWeight="bold"
           >
-            {config.tier}
+            {mvpConfig.tier}
           </Badge>
 
           {/* Team badge */}
           <Badge
             position="absolute"
-            top={3}
-            left={3}
+            top={2} // Reduced position
+            left={2}
             colorScheme="blue"
             variant="solid"
             fontSize="xs"
@@ -227,47 +238,57 @@ const MVPRecognition = ({ mvpAwards, userTeam, isExpanded, onToggle }) => {
           </Badge>
 
           <VStack
-            spacing={4}
+            spacing={3} // Reduced spacing
             position="relative"
             zIndex={1}
-            pt={4}
+            pt={3} // Reduced padding
             flex={1}
             justify="space-between"
           >
             {/* Header Section */}
             <VStack spacing={2}>
               <Circle
-                size="60px"
-                bgGradient={config.gradient}
-                boxShadow={`0 0 20px ${config.glowColor}`}
+                size="50px" // Reduced from 60px
+                bgGradient={mvpConfig.gradient}
+                boxShadow={
+                  config.isMobile
+                    ? `0 0 15px ${mvpConfig.glowColor}`
+                    : `0 0 20px ${mvpConfig.glowColor}` // Reduced shadow
+                }
               >
-                <Icon as={config.icon} color="white" boxSize={7} />
+                <Icon as={mvpConfig.icon} color="white" boxSize={6} />{' '}
+                {/* Reduced size */}
               </Circle>
               <Text
-                color={`${config.color}.300`}
-                fontSize="lg"
+                color={`${mvpConfig.color}.300`}
+                fontSize="md" // Reduced from lg
                 fontWeight="bold"
                 textAlign="center"
                 noOfLines={1}
               >
-                {t(config.title)}
+                {t(mvpConfig.title)}
               </Text>
             </VStack>
 
             {/* Player Info Section */}
-            <VStack spacing={3} w="100%">
+            <VStack spacing={2.5} w="100%">
+              {' '}
+              {/* Reduced spacing */}
               <Avatar
-                size={avatarSize}
+                size={config.avatarSize}
                 name={award.user.name || award.user.inGameName}
                 src={award.user.pic}
                 border="3px solid"
-                borderColor={config.borderColor}
-                boxShadow={`0 0 15px ${config.glowColor}`}
+                borderColor={mvpConfig.borderColor}
+                boxShadow={
+                  config.isMobile
+                    ? `0 0 12px ${mvpConfig.glowColor}`
+                    : `0 0 15px ${mvpConfig.glowColor}` // Reduced shadow
+                }
               />
-
               <Text
                 color="white"
-                fontSize="lg"
+                fontSize="md" // Reduced from lg
                 fontWeight="bold"
                 textAlign="center"
                 noOfLines={1}
@@ -278,20 +299,21 @@ const MVPRecognition = ({ mvpAwards, userTeam, isExpanded, onToggle }) => {
             </VStack>
 
             {/* Stats Section - Fixed Height */}
-            <VStack spacing={2} w="100%" minH="120px" justify="center">
+            <VStack spacing={2} w="100%" minH="100px" justify="center">
+              {' '}
+              {/* Reduced spacing and height */}
               <HStack justify="space-between" w="100%">
                 <Text color="whiteAlpha.700" fontSize="sm">
                   {t('Score')}
                 </Text>
                 <Text
-                  color={`${config.color}.300`}
+                  color={`${mvpConfig.color}.300`}
                   fontSize="lg"
                   fontWeight="bold"
                 >
                   {award.score}
                 </Text>
               </HStack>
-
               <HStack justify="space-between" w="100%">
                 <Text color="whiteAlpha.700" fontSize="sm">
                   {t('Category')}
@@ -305,7 +327,6 @@ const MVPRecognition = ({ mvpAwards, userTeam, isExpanded, onToggle }) => {
                   {award.category || 'N/A'}
                 </Text>
               </HStack>
-
               {award.difference && (
                 <HStack justify="space-between" w="100%">
                   <Text color="whiteAlpha.700" fontSize="sm">
@@ -326,7 +347,7 @@ const MVPRecognition = ({ mvpAwards, userTeam, isExpanded, onToggle }) => {
               w="100%"
               border="1px solid"
               borderColor="rgba(255,255,255,0.1)"
-              minH="60px"
+              minH="55px" // Reduced height
               display="flex"
               alignItems="center"
             >
@@ -350,17 +371,21 @@ const MVPRecognition = ({ mvpAwards, userTeam, isExpanded, onToggle }) => {
   return (
     <MotionBox
       bg="rgba(20, 15, 35, 0.8)"
-      backdropFilter="blur(15px)"
+      backdropFilter={config.isMobile ? 'none' : 'blur(10px)'} // No blur on mobile
       borderRadius="2xl"
-      boxShadow="0 8px 30px rgba(0, 0, 0, 0.25)"
+      boxShadow={
+        config.isMobile
+          ? '0 6px 20px rgba(0, 0, 0, 0.2)'
+          : '0 8px 25px rgba(0, 0, 0, 0.25)' // Reduced shadow
+      }
       overflow="hidden"
       borderWidth="1px"
       borderColor="rgba(255, 255, 255, 0.1)"
-      initial={{ opacity: 0, y: 20 }}
+      initial={{ opacity: 0, y: 15 }} // Reduced movement
       animate={controls}
     >
       <Flex
-        px={padding}
+        px={config.padding}
         py={4}
         justify="space-between"
         align="center"
@@ -375,20 +400,28 @@ const MVPRecognition = ({ mvpAwards, userTeam, isExpanded, onToggle }) => {
             p={2.5}
             borderRadius="lg"
             bgGradient="linear(to-br, purple.600, pink.600)"
-            boxShadow="0 0 20px rgba(168, 85, 247, 0.4)"
-            animate={{
-              boxShadow: [
-                '0 0 20px rgba(168, 85, 247, 0.4)',
-                '0 0 30px rgba(168, 85, 247, 0.6)',
-                '0 0 20px rgba(168, 85, 247, 0.4)',
-              ],
-            }}
-            transition={{ duration: 2, repeat: Infinity, ease: 'easeInOut' }}
+            boxShadow={
+              config.isMobile
+                ? '0 0 15px rgba(168, 85, 247, 0.3)'
+                : '0 0 20px rgba(168, 85, 247, 0.4)' // Reduced shadow
+            }
+            animate={
+              config.isMobile
+                ? {}
+                : {
+                    boxShadow: [
+                      '0 0 20px rgba(168, 85, 247, 0.4)',
+                      '0 0 25px rgba(168, 85, 247, 0.5)', // Reduced max glow
+                      '0 0 20px rgba(168, 85, 247, 0.4)',
+                    ],
+                  }
+            }
+            transition={{ duration: 3, repeat: Infinity, ease: 'easeInOut' }} // Slower
           >
-            <Icon as={Award} color="white" boxSize={headerIconSize} />
+            <Icon as={Award} color="white" boxSize={config.headerIconSize} />
           </MotionBox>
           <VStack align="flex-start" spacing={0.5}>
-            <Heading size={headingSize} color="white" fontWeight="bold">
+            <Heading size={config.headingSize} color="white" fontWeight="bold">
               {t('Team Recognition')}
             </Heading>
             <HStack spacing={2}>
@@ -432,8 +465,10 @@ const MVPRecognition = ({ mvpAwards, userTeam, isExpanded, onToggle }) => {
       </Flex>
 
       <Collapse in={isExpanded} animateOpacity>
-        <Box p={padding}>
-          <VStack spacing={6} align="stretch">
+        <Box p={config.padding}>
+          <VStack spacing={config.isMobile ? 4 : 5} align="stretch">
+            {' '}
+            {/* Adjusted spacing */}
             {/* MVP Awards Section */}
             {hasAnyAward && (
               <VStack spacing={4} align="stretch">
@@ -449,7 +484,9 @@ const MVPRecognition = ({ mvpAwards, userTeam, isExpanded, onToggle }) => {
                   {availableAwards.length === 1 ? (
                     // Single card - centered
                     <Flex justify="center">
-                      <Box maxW="400px" w="100%">
+                      <Box maxW="350px" w="100%">
+                        {' '}
+                        {/* Reduced max width */}
                         {filteredAwards.matchMVP &&
                           renderMVPCard(filteredAwards.matchMVP, 'matchMVP')}
                         {filteredAwards.teamMVP &&
@@ -465,7 +502,7 @@ const MVPRecognition = ({ mvpAwards, userTeam, isExpanded, onToggle }) => {
                     // Multiple cards - grid
                     <Grid
                       templateColumns={`repeat(${gridColumns}, 1fr)`}
-                      gap={4}
+                      gap={3} // Reduced gap
                     >
                       {filteredAwards.matchMVP && (
                         <GridItem>
@@ -490,45 +527,69 @@ const MVPRecognition = ({ mvpAwards, userTeam, isExpanded, onToggle }) => {
                 </Box>
               </VStack>
             )}
-
             {/* Legendary Performances - Compact */}
             {legendaryPerformers.length > 0 && (
-              <VStack spacing={4} align="stretch">
-                <HStack spacing={2}>
-                  <Icon as={Crown} color="purple.400" boxSize={5} />
-                  <Text color="white" fontSize="lg" fontWeight="bold">
+              <VStack spacing={config.isMobile ? 3 : 4} align="stretch">
+                {' '}
+                {/* Adjusted spacing */}
+                <HStack
+                  spacing={config.isMobile ? 1.5 : 2}
+                  align="center"
+                  w="100%"
+                >
+                  <Icon
+                    as={Crown}
+                    color="purple.400"
+                    boxSize={config.isMobile ? 4 : 5}
+                  />
+                  <Text
+                    color="white"
+                    fontSize={config.isMobile ? 'md' : 'lg'}
+                    fontWeight="bold"
+                    noOfLines={1}
+                  >
                     {t('Legendary Performances')}
                   </Text>
-                  <Badge colorScheme="purple" variant="outline" fontSize="xs">
-                    100+ {t('Points')}
+                  <Badge
+                    colorScheme="purple"
+                    variant="outline"
+                    fontSize="xs"
+                    px={config.isMobile ? 1.5 : 2}
+                    py={config.isMobile ? 0.5 : 'auto'}
+                    ml="auto"
+                  >
+                    100+ {config.isMobile ? t('Pts') : t('Points')}
                   </Badge>
                 </HStack>
                 <Box
                   bg="rgba(168, 85, 247, 0.1)"
                   borderRadius="xl"
-                  p={4}
+                  p={config.isMobile ? 3 : 4} // Adjusted padding
                   border="1px solid"
                   borderColor="purple.500"
                 >
-                  <VStack spacing={3}>
+                  <VStack spacing={config.isMobile ? 2 : 3}>
+                    {' '}
+                    {/* Adjusted spacing */}
                     {legendaryPerformers.map((performer, index) => (
                       <MotionBox
                         key={performer.user._id}
-                        initial={{ opacity: 0, x: -20 }}
+                        initial={{ opacity: 0, x: -15 }} // Reduced movement
                         animate={{ opacity: 1, x: 0 }}
-                        transition={{ delay: index * 0.1, duration: 0.4 }}
+                        transition={{ delay: index * 0.1, duration: 0.3 }} // Faster
                         w="100%"
                       >
                         <HStack
-                          spacing={4}
+                          spacing={config.isMobile ? 2 : 4} // Adjusted spacing
                           bg="rgba(255,255,255,0.05)"
-                          p={3}
+                          p={config.isMobile ? 2 : 3} // Adjusted padding
                           borderRadius="lg"
                           border="1px solid"
                           borderColor="rgba(255,255,255,0.1)"
+                          w="100%"
                         >
                           <Avatar
-                            size="md"
+                            size={config.isMobile ? 'sm' : 'md'} // Adjusted size
                             name={
                               performer.user.name || performer.user.inGameName
                             }
@@ -536,11 +597,33 @@ const MVPRecognition = ({ mvpAwards, userTeam, isExpanded, onToggle }) => {
                             border="2px solid"
                             borderColor="purple.400"
                           />
-                          <VStack align="flex-start" spacing={0.5} flex={1}>
-                            <Text color="white" fontWeight="bold" fontSize="md">
+                          <VStack
+                            align="flex-start"
+                            spacing={0.5}
+                            flex={1}
+                            minW="0"
+                          >
+                            {' '}
+                            {/* Added minW="0" */}
+                            <Text
+                              color="white"
+                              fontWeight="bold"
+                              fontSize={config.isMobile ? 'sm' : 'md'} // Adjusted size
+                              noOfLines={1}
+                              title={
+                                performer.user.name || performer.user.inGameName
+                              }
+                            >
                               {performer.user.name || performer.user.inGameName}
                             </Text>
-                            <Text color="whiteAlpha.700" fontSize="sm">
+                            <Text
+                              color="whiteAlpha.700"
+                              fontSize={config.isMobile ? 'xs' : 'sm'} // Adjusted size
+                              noOfLines={1}
+                              title={`${performer.category} • ${
+                                performer.score
+                              } ${t('points')}`}
+                            >
                               {performer.category} • {performer.score}{' '}
                               {t('points')}
                             </Text>
@@ -548,14 +631,18 @@ const MVPRecognition = ({ mvpAwards, userTeam, isExpanded, onToggle }) => {
                           <Badge
                             bgGradient="linear(to-r, purple.500, pink.500)"
                             color="white"
-                            px={3}
+                            px={config.isMobile ? 2 : 3} // Adjusted padding
                             py={1}
                             borderRadius="full"
-                            fontSize="sm"
+                            fontSize={config.isMobile ? 'xs' : 'sm'} // Adjusted size
                             fontWeight="bold"
                           >
                             <HStack spacing={1}>
-                              <Icon as={Crown} boxSize={3} />
+                              <Icon
+                                as={Crown}
+                                boxSize={config.isMobile ? 2.5 : 3}
+                              />{' '}
+                              {/* Adjusted size */}
                               <span>LEGENDARY</span>
                             </HStack>
                           </Badge>
@@ -566,26 +653,44 @@ const MVPRecognition = ({ mvpAwards, userTeam, isExpanded, onToggle }) => {
                 </Box>
               </VStack>
             )}
-
             {/* Recognition Summary */}
             <Box
-              mt={4}
-              p={4}
+              mt={config.isMobile ? 2 : 3} // Adjusted margin
+              p={config.isMobile ? 3 : 4} // Adjusted padding
               bg="rgba(255,255,255,0.02)"
               borderRadius="xl"
               border="1px solid"
               borderColor="rgba(255,255,255,0.1)"
             >
-              <HStack justify="space-between" wrap="wrap" spacing={4}>
-                <VStack align="flex-start" spacing={1}>
-                  <Text color="whiteAlpha.900" fontWeight="medium">
+              <HStack
+                justify="space-between"
+                wrap="wrap"
+                spacing={config.isMobile ? 2 : 4}
+                rowGap={config.isMobile ? 3 : 'auto'}
+              >
+                <VStack align="flex-start" spacing={config.isMobile ? 0.5 : 1}>
+                  <Text
+                    color="whiteAlpha.900"
+                    fontWeight="medium"
+                    fontSize={config.isMobile ? 'sm' : 'md'}
+                  >
                     {t('Team Recognition System')}
                   </Text>
-                  <Text color="whiteAlpha.600" fontSize="sm">
+                  <Text
+                    color="whiteAlpha.600"
+                    fontSize={config.isMobile ? 'xs' : 'sm'}
+                  >
                     {t('Showing awards for your team members only')}
                   </Text>
                 </VStack>
-                <HStack spacing={3} wrap="wrap">
+                <HStack
+                  spacing={config.isMobile ? 1.5 : 2}
+                  wrap="wrap"
+                  rowGap={config.isMobile ? 1.5 : 'auto'}
+                  justify={config.isMobile ? 'flex-start' : 'flex-end'}
+                >
+                  {' '}
+                  {/* Reduced spacing */}
                   <Badge colorScheme="purple" variant="outline" fontSize="xs">
                     100+ = Legendary
                   </Badge>

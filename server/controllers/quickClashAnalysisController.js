@@ -1,4 +1,4 @@
-// controllers/quickClashAnalysisController.js (Enhanced Version)
+// controllers/quickClashAnalysisController.js (Updated for Simplified Feedback)
 const asyncHandler = require('express-async-handler')
 const QuickClashTeamBattle = require('../model/quickClashSchemas/quickClashTeamBattleSchema')
 const QuickClashTeamTrophyHistory = require('../model/quickClashSchemas/quickClashTeamTrophyHistorySchema')
@@ -339,7 +339,7 @@ const answerFollowUpQuestion = asyncHandler(async (req, res) => {
 })
 
 /**
- * @desc    Submit enhanced insight feedback with better duplicate handling
+ * @desc    Submit simplified insight feedback with auto-scroll prevention
  * @route   POST /api/quickClash/analysis/insight-feedback
  * @access  Private
  */
@@ -357,20 +357,27 @@ const submitInsightFeedback = asyncHandler(async (req, res) => {
     improvementSuggestions,
     implicitFeedback,
     contextData,
+    preventAutoScroll, // NEW: Flag to prevent auto-scroll behavior
   } = req.body
   const userId = req.user._id
 
-  if (
-    !analysisId ||
-    !insightTitle ||
-    !insightDescription ||
-    !insightType ||
-    !feedbackType ||
-    !rating
-  ) {
+  // SIMPLIFIED: Only validate core required fields
+  if (!analysisId || !insightTitle || !feedbackType || !rating) {
     return res.status(400).json({
       success: false,
       message: 'Missing required feedback fields.',
+      requiredFields: ['analysisId', 'insightTitle', 'feedbackType', 'rating'],
+    })
+  }
+
+  // SIMPLIFIED: Validate feedback type against simplified options
+  const validFeedbackTypes = ['helpful', 'not_helpful', 'excellent']
+  if (!validFeedbackTypes.includes(feedbackType)) {
+    return res.status(400).json({
+      success: false,
+      message:
+        'Invalid feedback type. Must be: helpful, not_helpful, or excellent.',
+      validTypes: validFeedbackTypes,
     })
   }
 
@@ -404,6 +411,40 @@ const submitInsightFeedback = asyncHandler(async (req, res) => {
         ? insightTitle.trim()
         : `Feedback-${userId.toString().slice(-8)}-${Date.now()}`
 
+    // Enhanced mobile detection and context data processing
+    const userAgent = req.headers['user-agent'] || ''
+    const isMobileDevice =
+      userAgent.includes('Mobile') ||
+      userAgent.includes('Android') ||
+      userAgent.includes('iPhone')
+    const isTabletDevice =
+      userAgent.includes('Tablet') || userAgent.includes('iPad')
+
+    // Process device type with better detection
+    let deviceType = 'desktop'
+    if (contextData?.deviceType) {
+      deviceType = contextData.deviceType
+    } else if (isMobileDevice) {
+      deviceType = 'mobile'
+    } else if (isTabletDevice) {
+      deviceType = 'tablet'
+    }
+
+    // SIMPLIFIED: Clean specific aspects - only keep essential ones
+    const cleanedSpecificAspects = {}
+    if (specificAspects) {
+      const allowedAspects = ['accuracy', 'relevance', 'mobile_experience']
+      Object.entries(specificAspects).forEach(([key, value]) => {
+        if (
+          allowedAspects.includes(key) &&
+          value !== undefined &&
+          value !== null
+        ) {
+          cleanedSpecificAspects[key] = value
+        }
+      })
+    }
+
     // Use findOneAndUpdate with upsert to prevent duplicates
     const feedbackData = {
       battleAnalysis: analysisId,
@@ -413,8 +454,8 @@ const submitInsightFeedback = asyncHandler(async (req, res) => {
       // Enhanced insight data
       insightData: {
         title: safeInsightTitle,
-        description: insightDescription,
-        type: insightType,
+        description: insightDescription || 'User feedback submission',
+        type: insightType || 'general',
         category: insightCategory || 'general',
         generationContext: {
           userExperienceLevel:
@@ -425,12 +466,12 @@ const submitInsightFeedback = asyncHandler(async (req, res) => {
         },
       },
 
-      // Explicit feedback
+      // SIMPLIFIED: Explicit feedback with core types only
       explicitFeedback: {
         type: feedbackType,
-        rating: rating,
+        rating: Math.max(1, Math.min(5, rating)), // Ensure rating is between 1-5
         comment: comment || '',
-        specificAspects: specificAspects || {},
+        specificAspects: cleanedSpecificAspects,
         improvement_suggestions: improvementSuggestions || '',
       },
 
@@ -450,17 +491,27 @@ const submitInsightFeedback = asyncHandler(async (req, res) => {
         },
       },
 
-      // Context data
+      // Enhanced context data with mobile support and auto-scroll prevention
       contextData: {
         userTrophies: req.user.quickClashTrophies || 1000,
         userLevel: req.user.level || 0,
-        deviceType: req.headers['user-agent']?.includes('Mobile')
-          ? 'mobile'
-          : 'desktop',
+        deviceType: deviceType,
         battleResult: battleResult,
         userScore: contextData?.userScore || 0,
         trophyChange: contextData?.trophyChange || 0,
         teamRole: contextData?.teamRole || 'average',
+        // Mobile-specific enhancements
+        screenSize:
+          contextData?.screenSize ||
+          `${req.headers['screen-width'] || 'unknown'}x${
+            req.headers['screen-height'] || 'unknown'
+          }`,
+        touchSupport: contextData?.touchSupport || isMobileDevice,
+        mobileOptimized: contextData?.mobileOptimized || false,
+        priorityFeedback: contextData?.priorityFeedback || false,
+        // NEW: Auto-scroll prevention tracking
+        preventAutoScroll: preventAutoScroll || false,
+        sectionId: contextData?.sectionId || null,
         ...contextData,
       },
 
@@ -515,36 +566,65 @@ const submitInsightFeedback = asyncHandler(async (req, res) => {
       }
     }
 
-    // Update user preferences based on feedback
-    await QuickClashPersonalizationService.updateUserPreferences({
-      userId,
-      feedbackData: newFeedback,
-    })
+    // Update user preferences based on feedback (if personalization service available)
+    try {
+      await QuickClashPersonalizationService.updateUserPreferences({
+        userId,
+        feedbackData: newFeedback,
+      })
+    } catch (personalizationError) {
+      // Don't fail the entire request if personalization fails
+      console.warn(
+        'Personalization update failed:',
+        personalizationError.message,
+      )
+    }
+
+    // SIMPLIFIED: Enhanced response with mobile-specific messaging and auto-scroll prevention
+    const responseMessage =
+      deviceType === 'mobile'
+        ? 'Mobile feedback submitted successfully - thank you for helping improve the mobile experience!'
+        : 'Feedback submitted successfully.'
 
     res.status(201).json({
       success: true,
-      message: 'Enhanced feedback submitted successfully.',
+      message: responseMessage,
       feedback: {
         id: newFeedback._id,
         type: feedbackType,
         rating: rating,
         processingStatus: newFeedback.processingStatus,
+        deviceType: deviceType,
+        isMobileFeedback: deviceType === 'mobile',
+        preventAutoScroll: preventAutoScroll || false, // NEW: Include auto-scroll prevention flag
+        simplified: true, // NEW: Flag indicating simplified feedback system
+      },
+      // NEW: Auto-scroll prevention guidance
+      guidance: {
+        preventAutoScroll: preventAutoScroll,
+        message: preventAutoScroll
+          ? 'Feedback submitted without triggering additional widgets.'
+          : 'Standard feedback submission completed.',
       },
     })
   } catch (error) {
-    console.error('Error submitting enhanced insight feedback:', error)
+    console.error('Error submitting simplified insight feedback:', error)
 
     // Handle duplicate key errors gracefully
     if (error.code === 11000) {
       return res.status(200).json({
         success: true,
         message: 'Feedback already exists for this insight.',
+        isDuplicate: true,
+        simplified: true,
       })
     }
 
     res.status(500).json({
       success: false,
       message: 'Failed to submit feedback.',
+      error: process.env.NODE_ENV === 'development' ? error.message : undefined,
+      simplified: true,
     })
   }
 })
@@ -747,6 +827,7 @@ const getFeedbackAnalytics = asyncHandler(async (req, res) => {
       patterns: patterns.insights || [],
       recommendations: patterns.overall_recommendations || {},
       generated: new Date(),
+      simplified: true, // NEW: Flag indicating simplified system
     })
   } catch (error) {
     console.error('Error fetching feedback analytics:', error)
@@ -780,6 +861,7 @@ const triggerFeedbackAnalysis = asyncHandler(async (req, res) => {
         insights: analysis.insights,
         recommendations: analysis.overall_recommendations,
       },
+      simplified: true, // NEW: Flag indicating simplified system
     })
   } catch (error) {
     console.error('Error triggering feedback analysis:', error)
