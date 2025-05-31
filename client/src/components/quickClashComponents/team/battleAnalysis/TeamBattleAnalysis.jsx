@@ -277,6 +277,7 @@ const TeamBattleAnalysisInner = React.memo(() => {
         </MotionBox>
 
         {/* Battle Result Banner - lazy loaded with error boundary */}
+        {/* UPDATED: Removed onShare prop */}
         <ErrorBoundary
           title="Banner Error"
           fallbackText="Failed to load battle result banner"

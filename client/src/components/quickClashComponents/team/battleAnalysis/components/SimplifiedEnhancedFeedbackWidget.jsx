@@ -1024,51 +1024,56 @@ const SimplifiedEnhancedFeedbackWidget = ({
                     >
                       {t('Overall Rating')}
                     </FormLabel>
-                    <HStack>
-                      <Text
-                        color="whiteAlpha.700"
-                        fontSize={config.textSizes.body}
-                      >
-                        1
-                      </Text>
-                      <Slider
-                        value={feedbackState.rating}
-                        onChange={value =>
-                          setFeedbackState(prev => ({ ...prev, rating: value }))
-                        }
-                        min={1}
-                        max={5}
-                        step={1}
-                        colorScheme={smartPrompt.color}
-                        flex={1}
-                      >
-                        <SliderTrack bg="blackAlpha.400">
-                          <SliderFilledTrack />
-                        </SliderTrack>
-                        <SliderThumb boxSize={isMobile ? 4 : 5}>
-                          <Icon
-                            as={Star}
-                            color={`${smartPrompt.color}.500`}
-                            boxSize={isMobile ? 3 : 4}
-                          />
-                        </SliderThumb>
-                      </Slider>
-                      <Text
-                        color="whiteAlpha.700"
-                        fontSize={config.textSizes.body}
-                      >
-                        5
-                      </Text>
+                    <VStack spacing={3} w="100%">
+                      <HStack w="100%">
+                        <Text
+                          color="whiteAlpha.700"
+                          fontSize={config.textSizes.body}
+                        >
+                          1
+                        </Text>
+                        <Slider
+                          value={feedbackState.rating}
+                          onChange={value =>
+                            setFeedbackState(prev => ({
+                              ...prev,
+                              rating: value,
+                            }))
+                          }
+                          min={1}
+                          max={5}
+                          step={1}
+                          colorScheme={smartPrompt.color}
+                          flex={1}
+                        >
+                          <SliderTrack bg="blackAlpha.400">
+                            <SliderFilledTrack />
+                          </SliderTrack>
+                          <SliderThumb boxSize={isMobile ? 4 : 5}>
+                            <Icon
+                              as={Star}
+                              color={`${smartPrompt.color}.500`}
+                              boxSize={isMobile ? 3 : 4}
+                            />
+                          </SliderThumb>
+                        </Slider>
+                        <Text
+                          color="whiteAlpha.700"
+                          fontSize={config.textSizes.body}
+                        >
+                          5
+                        </Text>
+                      </HStack>
+                      {/* UPDATED: Rating value below slider */}
                       <Text
                         color={`${smartPrompt.color}.300`}
-                        fontSize={config.textSizes.subtitle}
+                        fontSize={config.textSizes.title}
                         fontWeight="bold"
-                        minW="20px"
                         textAlign="center"
                       >
-                        {feedbackState.rating}
+                        {t('Rating')}: {feedbackState.rating}
                       </Text>
-                    </HStack>
+                    </VStack>
                   </FormControl>
 
                   <FormControl>
@@ -1288,34 +1293,6 @@ const SmartDetailedFeedbackModal = ({
         <ModalBody pb={6} px={isMobile ? 4 : 6}>
           {!feedbackState.submitted || !feedbackState.alreadyProvided ? (
             <VStack spacing={config.spacing} align="stretch">
-              {insightData && (
-                <Box
-                  p={config.padding - 1}
-                  bg="blackAlpha.400"
-                  borderRadius="md"
-                  border="1px solid"
-                  borderColor={`${smartPrompt.color}.700`}
-                >
-                  <Text
-                    color="whiteAlpha.900"
-                    fontSize={config.textSizes.subtitle}
-                    fontWeight="medium"
-                  >
-                    {t('Insight:')} {insightData.title}
-                  </Text>
-                  {insightData.description && (
-                    <Text
-                      color="whiteAlpha.700"
-                      fontSize={config.textSizes.body}
-                      mt={1}
-                      noOfLines={2}
-                    >
-                      {insightData.description}
-                    </Text>
-                  )}
-                </Box>
-              )}
-
               {/* NEW: Show smart confidence if available */}
               {showSmartPrompt && smartFeedback.confidence && (
                 <Box
@@ -1434,45 +1411,53 @@ const SmartDetailedFeedbackModal = ({
                 >
                   {t('Overall Rating')}
                 </FormLabel>
-                <HStack>
-                  <Text color="whiteAlpha.700" fontSize={config.textSizes.body}>
-                    1
-                  </Text>
-                  <Slider
-                    value={feedbackState.rating}
-                    onChange={value =>
-                      setFeedbackState(prev => ({ ...prev, rating: value }))
-                    }
-                    min={1}
-                    max={5}
-                    step={1}
-                    colorScheme={smartPrompt.color}
-                    flex={1}
-                  >
-                    <SliderTrack bg="blackAlpha.400">
-                      <SliderFilledTrack />
-                    </SliderTrack>
-                    <SliderThumb boxSize={isMobile ? 4 : 5}>
-                      <Icon
-                        as={Star}
-                        color={`${smartPrompt.color}.500`}
-                        boxSize={isMobile ? 3 : 4}
-                      />
-                    </SliderThumb>
-                  </Slider>
-                  <Text color="whiteAlpha.700" fontSize={config.textSizes.body}>
-                    5
-                  </Text>
+                <VStack spacing={3} w="100%">
+                  <HStack w="100%">
+                    <Text
+                      color="whiteAlpha.700"
+                      fontSize={config.textSizes.body}
+                    >
+                      1
+                    </Text>
+                    <Slider
+                      value={feedbackState.rating}
+                      onChange={value =>
+                        setFeedbackState(prev => ({ ...prev, rating: value }))
+                      }
+                      min={1}
+                      max={5}
+                      step={1}
+                      colorScheme={smartPrompt.color}
+                      flex={1}
+                    >
+                      <SliderTrack bg="blackAlpha.400">
+                        <SliderFilledTrack />
+                      </SliderTrack>
+                      <SliderThumb boxSize={isMobile ? 4 : 5}>
+                        <Icon
+                          as={Star}
+                          color={`${smartPrompt.color}.500`}
+                          boxSize={isMobile ? 3 : 4}
+                        />
+                      </SliderThumb>
+                    </Slider>
+                    <Text
+                      color="whiteAlpha.700"
+                      fontSize={config.textSizes.body}
+                    >
+                      5
+                    </Text>
+                  </HStack>
+                  {/* UPDATED: Rating value below slider */}
                   <Text
                     color={`${smartPrompt.color}.300`}
-                    fontSize={config.textSizes.subtitle}
+                    fontSize={config.textSizes.title}
                     fontWeight="bold"
-                    minW="20px"
                     textAlign="center"
                   >
-                    {feedbackState.rating}
+                    {t('Rating')}: {feedbackState.rating}
                   </Text>
-                </HStack>
+                </VStack>
               </FormControl>
 
               <FormControl>
@@ -1555,52 +1540,57 @@ const SmartDetailedFeedbackModal = ({
                           >
                             {t(label)}
                           </FormLabel>
-                          <HStack>
-                            <Text
-                              color="whiteAlpha.600"
-                              fontSize={config.textSizes.body}
-                            >
-                              1
-                            </Text>
-                            <Slider
-                              value={feedbackState.specificAspects[aspect] || 3}
-                              onChange={value =>
-                                setFeedbackState(prev => ({
-                                  ...prev,
-                                  specificAspects: {
-                                    ...prev.specificAspects,
-                                    [aspect]: value,
-                                  },
-                                }))
-                              }
-                              min={1}
-                              max={5}
-                              step={1}
-                              colorScheme={smartPrompt.color}
-                              flex={1}
-                              size="sm"
-                            >
-                              <SliderTrack bg="blackAlpha.400">
-                                <SliderFilledTrack />
-                              </SliderTrack>
-                              <SliderThumb boxSize={3} />
-                            </Slider>
-                            <Text
-                              color="whiteAlpha.600"
-                              fontSize={config.textSizes.body}
-                            >
-                              5
-                            </Text>
+                          <VStack spacing={2} w="100%">
+                            <HStack w="100%">
+                              <Text
+                                color="whiteAlpha.600"
+                                fontSize={config.textSizes.body}
+                              >
+                                1
+                              </Text>
+                              <Slider
+                                value={
+                                  feedbackState.specificAspects[aspect] || 3
+                                }
+                                onChange={value =>
+                                  setFeedbackState(prev => ({
+                                    ...prev,
+                                    specificAspects: {
+                                      ...prev.specificAspects,
+                                      [aspect]: value,
+                                    },
+                                  }))
+                                }
+                                min={1}
+                                max={5}
+                                step={1}
+                                colorScheme={smartPrompt.color}
+                                flex={1}
+                                size="sm"
+                              >
+                                <SliderTrack bg="blackAlpha.400">
+                                  <SliderFilledTrack />
+                                </SliderTrack>
+                                <SliderThumb boxSize={3} />
+                              </Slider>
+                              <Text
+                                color="whiteAlpha.600"
+                                fontSize={config.textSizes.body}
+                              >
+                                5
+                              </Text>
+                            </HStack>
+                            {/* UPDATED: Aspect rating value below slider */}
                             <Text
                               color={`${smartPrompt.color}.300`}
                               fontSize={config.textSizes.subtitle}
                               fontWeight="bold"
-                              minW="15px"
                               textAlign="center"
                             >
+                              {t('Rating')}:{' '}
                               {feedbackState.specificAspects[aspect] || 3}
                             </Text>
-                          </HStack>
+                          </VStack>
                         </FormControl>
                       )
                     })}
