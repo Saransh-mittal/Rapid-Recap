@@ -92,7 +92,7 @@ const LevelBadge = () => {
             as={Star}
             color="#F7D147"
             boxSize={4}
-            mr={2}
+            mr={1.5} // Adjusted margin for a tighter look
             animate={{
               rotate: [0, 10, 0],
               scale: [1, 1.1, 1],
@@ -112,12 +112,13 @@ const LevelBadge = () => {
             fontWeight="bold"
             fontSize="lg"
             zIndex={1}
-            mr={3}
+            // Removed mr={3} to bring it closer to the star
           >
             {level}
           </MotionText>
 
-          {/* Mini progress bar */}
+          {/* Mini progress bar - REMOVED */}
+          {/*
           <Box
             w="32px"
             h="3px"
@@ -132,6 +133,7 @@ const LevelBadge = () => {
               bgGradient="linear(to-r, #9F7AFA, #7551CC)"
             />
           </Box>
+          */}
         </MotionFlex>
       </PopoverTrigger>
 

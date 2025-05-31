@@ -202,7 +202,8 @@ const CategoriesSection = memo(
               gap={gridSpacing}
               w="100%"
               maxW="6xl"
-              mx="auto"
+              ml="auto" // MODIFIED: Changed from mx="auto" to ml="auto" to shift right
+              // mr will default to 0 or be influenced by parent padding
             >
               {enhancedChallenges.map((challenge, index) => (
                 <MotionGridItem

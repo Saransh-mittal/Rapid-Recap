@@ -2,10 +2,10 @@ import React, {
   useState,
   useEffect,
   useRef,
-  lazy,
-  Suspense,
+  // lazy, // No longer needed for TaskPopup here
+  // Suspense, // No longer needed for TaskPopup here
   useCallback,
-  useMemo,
+  // useMemo, // No longer needed for pendingTasks badge
 } from 'react'
 import {
   Box,
@@ -14,25 +14,19 @@ import {
   useDisclosure,
   Button,
   useToast,
-  Tooltip,
   Portal,
   Center,
 } from '@chakra-ui/react'
 import { motion, AnimatePresence } from 'framer-motion'
 import { useTranslation } from 'react-i18next'
-import { Menu as MenuIcon, X, Sword, Users } from 'lucide-react'
-import { useSelector } from 'react-redux'
+import { Menu as MenuIcon, X, Sword } from 'lucide-react' // Removed Users
+// import { useSelector } from 'react-redux'; // Kept for potential future use, but not strictly needed now
 
 // Import existing components to reuse
 import QuickClashLeaderboardButton from './leaderboard/QuickClashLeaderboardButton'
-import MatchmakingButton from './MatchmakingButton'
-import TaskProgressIndicator from './dailyTasks/TaskProgressIndicator'
+// MatchmakingButton and GlobalMatchmakingButton are removed from here
 
-// Lazy load the TaskPopup component
-const TaskPopup = lazy(() => import('./dailyTasks/TaskPopup'))
-
-// Import the compact version instead of the full GlobalMatchmakingButton
-import GlobalMatchmakingButton from './globalmatchmaking/GlobalMatchmakingButton'
+// const TaskPopup = lazy(() => import('./dailyTasks/TaskPopup')) // TaskPopup is no longer triggered from here
 
 const MotionBox = motion(Box)
 const MotionButton = motion(Button)
@@ -92,54 +86,20 @@ const leaderboardButtonStyle = {
   },
 }
 
-const matchmakingButtonStyle = {
-  button: {
-    width: '48px',
-    height: '48px',
-    borderRadius: 'full',
-    p: 0,
-    minWidth: 'auto',
-  },
-  'button > span': {
-    display: 'none',
-  },
-}
+// matchmakingButtonStyle is no longer needed here
 
-const FloatingActionMenu = ({ onNewChallenge, onFindMatch }) => {
+const FloatingActionMenu = ({
+  onNewChallenge /* onFindMatch prop is no longer used here */,
+}) => {
   const { t } = useTranslation('QuickClash')
   const { isOpen, onToggle, onClose } = useDisclosure()
   const [position, setPosition] = useState({ x: 0, y: 0 })
   const [isDragging, setIsDragging] = useState(false)
-  const [showTaskPopup, setShowTaskPopup] = useState(false)
   const toast = useToast()
   const menuRef = useRef(null)
 
-  // Get task completion status from Redux - only extract what we need
-  const { justCompletedTaskId, tasks } = useSelector(
-    state => ({
-      justCompletedTaskId: state.quickClashDailyTasks.justCompletedTaskId,
-      tasks: state.quickClashDailyTasks.tasks,
-    }),
-    (prev, next) => {
-      // Only re-render if these specific values changed
-      return (
-        prev.justCompletedTaskId === next.justCompletedTaskId &&
-        prev.tasks.length === next.tasks.length &&
-        prev.tasks.filter(t => !t.completed).length ===
-          next.tasks.filter(t => !t.completed).length
-      )
-    },
-  )
-
-  // Count pending tasks for the badge - memoize this calculation
-  const pendingTasks = useMemo(
-    () => tasks.filter(task => !task.completed).length,
-    [tasks],
-  )
-
   // Load saved position on mount
   useEffect(() => {
-    // Set initial position once on component mount
     setPosition({ x: window.innerWidth - 70, y: window.innerHeight - 160 })
   }, [])
 
@@ -150,14 +110,6 @@ const FloatingActionMenu = ({ onNewChallenge, onFindMatch }) => {
     }
   }, [position, isDragging])
 
-  // Show task popup when tasks are completed
-  useEffect(() => {
-    if (justCompletedTaskId) {
-      setShowTaskPopup(true)
-    }
-  }, [justCompletedTaskId])
-
-  // Memoize handlers to prevent recreating on each render
   const handleDragStart = useCallback(() => {
     setIsDragging(true)
     onClose()
@@ -165,8 +117,6 @@ const FloatingActionMenu = ({ onNewChallenge, onFindMatch }) => {
 
   const handleDragEnd = useCallback((_, info) => {
     setIsDragging(false)
-
-    // Update position while ensuring it stays within screen boundaries
     setPosition(prevPosition => {
       const newX = Math.max(
         20,
@@ -181,7 +131,6 @@ const FloatingActionMenu = ({ onNewChallenge, onFindMatch }) => {
   }, [])
 
   const handleResetPosition = useCallback(() => {
-    // Reset to default position
     const defaultPosition = {
       x: window.innerWidth - 80,
       y: window.innerHeight - 100,
@@ -191,7 +140,6 @@ const FloatingActionMenu = ({ onNewChallenge, onFindMatch }) => {
       'floatingMenuPosition',
       JSON.stringify(defaultPosition),
     )
-
     toast({
       title: t('Position Reset'),
       description: t('Menu position has been reset to default'),
@@ -205,20 +153,6 @@ const FloatingActionMenu = ({ onNewChallenge, onFindMatch }) => {
     onNewChallenge()
     onClose()
   }, [onNewChallenge, onClose])
-
-  const handleViewTasksClick = useCallback(() => {
-    setShowTaskPopup(true)
-    onClose()
-  }, [onClose])
-
-  const handleCloseTaskPopup = useCallback(() => {
-    setShowTaskPopup(false)
-  }, [])
-
-  const handleViewAllTasks = useCallback(() => {
-    window.location.hash = 'tasks'
-    // Don't close the popup here, let the component handle it
-  }, [])
 
   return (
     <Portal>
@@ -238,7 +172,6 @@ const FloatingActionMenu = ({ onNewChallenge, onFindMatch }) => {
         transition={{ type: 'spring', damping: 20 }}
         userSelect="none"
       >
-        {/* Main button - gamified yet sleek */}
         <MotionButton
           width="60px"
           height="60px"
@@ -266,7 +199,6 @@ const FloatingActionMenu = ({ onNewChallenge, onFindMatch }) => {
           onDoubleClick={handleResetPosition}
           _active={{ transform: 'scale(0.95)' }}
         >
-          {/* Decorative element - subtle particle effect */}
           {!isOpen && (
             <Box
               position="absolute"
@@ -316,14 +248,11 @@ const FloatingActionMenu = ({ onNewChallenge, onFindMatch }) => {
               />
             </Box>
           )}
-
-          {/* Icon */}
           <Center>
             <Icon as={isOpen ? X : MenuIcon} boxSize={6} zIndex={2} />
           </Center>
         </MotionButton>
 
-        {/* Menu items */}
         <AnimatePresence mode="wait">
           {isOpen && (
             <VStack
@@ -334,9 +263,8 @@ const FloatingActionMenu = ({ onNewChallenge, onFindMatch }) => {
               align="flex-end"
               userSelect="none"
             >
-              {/* New Challenge Button - Gamified but sleek */}
               <MotionBox
-                custom={0}
+                custom={0} // First item
                 variants={menuItemVariants}
                 initial="hidden"
                 animate="visible"
@@ -360,32 +288,11 @@ const FloatingActionMenu = ({ onNewChallenge, onFindMatch }) => {
                 </MotionButton>
               </MotionBox>
 
-              {/* Find 1v1 Match - Using MatchmakingButton but with wrapper for animation */}
-              <MotionBox
-                custom={1}
-                variants={menuItemVariants}
-                initial="hidden"
-                animate="visible"
-                exit="exit"
-                sx={matchmakingButtonStyle}
-              >
-                <MatchmakingButton compact={true} />
-              </MotionBox>
+              {/* MatchmakingButton (1v1) - REMOVED */}
+              {/* GlobalMatchmakingButton (4v4) - REMOVED */}
 
-              {/* Find 4v4 Match - Using CompactGlobalMatchmakingButton */}
               <MotionBox
-                custom={2}
-                variants={menuItemVariants}
-                initial="hidden"
-                animate="visible"
-                exit="exit"
-              >
-                <GlobalMatchmakingButton compact={true} />
-              </MotionBox>
-
-              {/* Leaderboard Button - Fix positioning issue */}
-              <MotionBox
-                custom={3}
+                custom={1} // Adjusted custom index
                 variants={menuItemVariants}
                 initial="hidden"
                 animate="visible"
@@ -395,39 +302,11 @@ const FloatingActionMenu = ({ onNewChallenge, onFindMatch }) => {
               >
                 <QuickClashLeaderboardButton />
               </MotionBox>
-
-              {/* View Tasks Button - With dynamic badge for pending tasks */}
-              <MotionBox
-                custom={4}
-                variants={menuItemVariants}
-                initial="hidden"
-                animate="visible"
-                exit="exit"
-                position="relative"
-              >
-                <TaskProgressIndicator
-                  onViewTasks={handleViewTasksClick}
-                  size="md"
-                />
-              </MotionBox>
             </VStack>
           )}
         </AnimatePresence>
-
-        {/* Task Popup - only render when needed */}
-        {showTaskPopup && (
-          <Suspense fallback={null}>
-            <TaskPopup
-              onViewAllTasks={handleViewAllTasks}
-              isOpen={showTaskPopup}
-              onClose={handleCloseTaskPopup}
-            />
-          </Suspense>
-        )}
       </MotionBox>
     </Portal>
   )
 }
-
-// Use React.memo to prevent unnecessary re-renders
 export default React.memo(FloatingActionMenu)

@@ -292,7 +292,7 @@ const CompletedCategoryContent = memo(
     <VStack
       w="full"
       spacing={{ base: 1, sm: 1.5 }}
-      alignItems="flex-start"
+      alignItems="flex-start" // Keep this for the VStack items overall alignment
       mt={{ base: 1, sm: 1.5 }}
     >
       {/* Icon and Category Name - centered */}
@@ -329,7 +329,7 @@ const CompletedCategoryContent = memo(
         <HStack
           spacing={1.5}
           alignItems="center"
-          justifyContent="flex-start"
+          justifyContent="center" // MODIFIED: Changed to "center" for proper centering of the RQM block
           w="full"
         >
           <Text

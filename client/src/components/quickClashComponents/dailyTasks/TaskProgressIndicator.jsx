@@ -4,7 +4,6 @@ import {
   Box,
   CircularProgress,
   CircularProgressLabel,
-  Tooltip,
   Icon,
 } from '@chakra-ui/react'
 import { motion } from 'framer-motion'
@@ -95,207 +94,184 @@ const TaskProgressIndicator = ({ onViewTasks, size = 'md' }) => {
     )
   }
 
-  // Determine tooltip content
-  const getTooltipContent = () => {
-    if (unclaimedRewards > 0) {
-      return `${unclaimedRewards} ${t(
-        'rewards to claim',
-      )} - ${completedTasks}/${totalTasks} ${t('tasks')}`
-    } else {
-      return `${completedTasks}/${totalTasks} ${t('daily tasks completed')}`
-    }
-  }
-
   // The icon to display - Trophy for completed, Gift otherwise
   const ProgressIcon = isComplete ? Trophy : Gift
 
   return (
-    <Tooltip
-      label={getTooltipContent()}
-      placement="top"
-      hasArrow
-      bg="rgba(22, 18, 33, 0.95)"
-      color="white"
-      borderRadius="lg"
-      px={3}
-      py={2}
-      fontWeight="medium"
+    <MotionBox
+      onClick={onViewTasks}
+      cursor={onViewTasks ? 'pointer' : 'default'}
+      position="relative"
+      height={currentSize.outerContainer}
+      width={currentSize.outerContainer}
+      initial={{ opacity: 0 }}
+      animate={{ opacity: 1 }}
+      whileHover={
+        onViewTasks
+          ? {
+              scale: 1.08,
+              transition: { duration: 0.2 },
+            }
+          : {}
+      }
+      whileTap={onViewTasks ? { scale: 0.95 } : {}}
+      // Outer container - darker circular background
+      borderRadius="full"
+      bg="rgba(30, 24, 50, 0.8)"
+      boxShadow="0 4px 12px rgba(0, 0, 0, 0.4)"
+      display="flex"
+      alignItems="center"
+      justifyContent="center"
+      transition="all 0.2s"
+      _hover={{
+        boxShadow: '0 6px 16px rgba(0, 0, 0, 0.5)',
+      }}
+      // Border glow effect for complete tasks
+      css={
+        isComplete
+          ? {
+              '&::after': {
+                content: '""',
+                position: 'absolute',
+                top: '-2px',
+                left: '-2px',
+                right: '-2px',
+                bottom: '-2px',
+                borderRadius: 'full',
+                border: '2px solid #F7D147',
+                animation: `${glowPulse} 2s infinite ease-in-out`,
+              },
+            }
+          : {}
+      }
     >
-      <MotionBox
-        onClick={onViewTasks}
-        cursor={onViewTasks ? 'pointer' : 'default'}
+      {/* Decorative stars when complete */}
+      {isComplete && (
+        <>
+          <Box
+            position="absolute"
+            top="0"
+            right="5%"
+            boxSize={currentSize.starSize}
+            color="#F7D147"
+            as={motion.div}
+            animate={{
+              y: [0, -4, 0],
+              opacity: [0.6, 1, 0.6],
+            }}
+            transition={{
+              duration: 2,
+              repeat: Infinity,
+              repeatType: 'reverse',
+            }}
+          >
+            <Icon as={Star} boxSize="100%" />
+          </Box>
+          <Box
+            position="absolute"
+            bottom="10%"
+            left="0"
+            boxSize={currentSize.starSize}
+            color="#F7D147"
+            as={motion.div}
+            animate={{
+              y: [0, 3, 0],
+              opacity: [0.6, 1, 0.6],
+            }}
+            transition={{
+              duration: 1.7,
+              repeat: Infinity,
+              repeatType: 'reverse',
+              delay: 0.5,
+            }}
+          >
+            <Icon as={Star} boxSize="100%" />
+          </Box>
+        </>
+      )}
+
+      {/* Inner container with subtle gradient background */}
+      <Box
         position="relative"
-        height={currentSize.outerContainer}
-        width={currentSize.outerContainer}
-        initial={{ opacity: 0 }}
-        animate={{ opacity: 1 }}
-        whileHover={
-          onViewTasks
-            ? {
-                scale: 1.08,
-                transition: { duration: 0.2 },
-              }
-            : {}
-        }
-        whileTap={onViewTasks ? { scale: 0.95 } : {}}
-        // Outer container - darker circular background
+        height={currentSize.container}
+        width={currentSize.container}
         borderRadius="full"
-        bg="rgba(30, 24, 50, 0.8)"
-        boxShadow="0 4px 12px rgba(0, 0, 0, 0.4)"
+        bgGradient="linear(to-b, rgba(114, 94, 204, 0.2), rgba(70, 58, 126, 0.2))"
         display="flex"
         alignItems="center"
         justifyContent="center"
-        transition="all 0.2s"
-        _hover={{
-          boxShadow: '0 6px 16px rgba(0, 0, 0, 0.5)',
-        }}
-        // Border glow effect for complete tasks
-        css={
-          isComplete
-            ? {
-                '&::after': {
-                  content: '""',
-                  position: 'absolute',
-                  top: '-2px',
-                  left: '-2px',
-                  right: '-2px',
-                  bottom: '-2px',
-                  borderRadius: 'full',
-                  border: '2px solid #F7D147',
-                  animation: `${glowPulse} 2s infinite ease-in-out`,
-                },
-              }
-            : {}
-        }
+        border="2px solid rgba(138, 116, 219, 0.3)"
       >
-        {/* Decorative stars when complete */}
-        {isComplete && (
-          <>
-            <Box
-              position="absolute"
-              top="0"
-              right="5%"
-              boxSize={currentSize.starSize}
-              color="#F7D147"
-              as={motion.div}
-              animate={{
-                y: [0, -4, 0],
-                opacity: [0.6, 1, 0.6],
-              }}
-              transition={{
-                duration: 2,
-                repeat: Infinity,
-                repeatType: 'reverse',
-              }}
-            >
-              <Icon as={Star} boxSize="100%" />
-            </Box>
-            <Box
-              position="absolute"
-              bottom="10%"
-              left="0"
-              boxSize={currentSize.starSize}
-              color="#F7D147"
-              as={motion.div}
-              animate={{
-                y: [0, 3, 0],
-                opacity: [0.6, 1, 0.6],
-              }}
-              transition={{
-                duration: 1.7,
-                repeat: Infinity,
-                repeatType: 'reverse',
-                delay: 0.5,
-              }}
-            >
-              <Icon as={Star} boxSize="100%" />
-            </Box>
-          </>
-        )}
-
-        {/* Inner container with subtle gradient background */}
-        <Box
-          position="relative"
-          height={currentSize.container}
-          width={currentSize.container}
-          borderRadius="full"
-          bgGradient="linear(to-b, rgba(114, 94, 204, 0.2), rgba(70, 58, 126, 0.2))"
-          display="flex"
-          alignItems="center"
-          justifyContent="center"
-          border="2px solid rgba(138, 116, 219, 0.3)"
+        {/* Progress Circle */}
+        <CircularProgress
+          value={progressPercentage}
+          size={currentSize.container}
+          thickness={currentSize.thickness}
+          color={isComplete ? '#F7D147' : '#9F7AFA'}
+          trackColor="rgba(255, 255, 255, 0.08)"
+          capIsRound
         >
-          {/* Progress Circle */}
-          <CircularProgress
-            value={progressPercentage}
-            size={currentSize.container}
-            thickness={currentSize.thickness}
-            color={isComplete ? '#F7D147' : '#9F7AFA'}
-            trackColor="rgba(255, 255, 255, 0.08)"
-            capIsRound
-          >
-            <CircularProgressLabel>
-              <Box position="relative">
-                <Icon
-                  as={ProgressIcon}
-                  color={isComplete ? '#F7D147' : '#9F7AFA'}
-                  boxSize={currentSize.icon}
-                  filter={
-                    isComplete
-                      ? 'drop-shadow(0 0 4px rgba(247, 209, 71, 0.6))'
-                      : 'none'
-                  }
-                  animate={
-                    isComplete
-                      ? {
-                          scale: [1, 1.1, 1],
-                        }
-                      : {}
-                  }
-                  transition={{
-                    duration: 2,
-                    repeat: Infinity,
-                    repeatType: 'reverse',
-                  }}
-                />
+          <CircularProgressLabel>
+            <Box position="relative">
+              <Icon
+                as={ProgressIcon}
+                color={isComplete ? '#F7D147' : '#9F7AFA'}
+                boxSize={currentSize.icon}
+                filter={
+                  isComplete
+                    ? 'drop-shadow(0 0 4px rgba(247, 209, 71, 0.6))'
+                    : 'none'
+                }
+                animate={
+                  isComplete
+                    ? {
+                        scale: [1, 1.1, 1],
+                      }
+                    : {}
+                }
+                transition={{
+                  duration: 2,
+                  repeat: Infinity,
+                  repeatType: 'reverse',
+                }}
+              />
 
-                {/* Badge for unclaimed rewards */}
-                {unclaimedRewards > 0 && (
-                  <MotionBox
-                    position="absolute"
-                    bottom={currentSize.badgeOffset}
-                    right={currentSize.badgeOffset}
-                    width={currentSize.badge}
-                    height={currentSize.badge}
-                    borderRadius="full"
-                    bgGradient="linear(to-br, #FF5757, #FF2E2E)"
-                    color="white"
-                    fontSize={currentSize.badgeFont}
-                    fontWeight="bold"
-                    display="flex"
-                    alignItems="center"
-                    justifyContent="center"
-                    boxShadow="0 2px 8px rgba(255, 86, 86, 0.6)"
-                    border="2px solid rgba(255, 255, 255, 0.7)"
-                    initial={{ scale: 0 }}
-                    animate={{
-                      scale: [1, 1.15, 1],
-                      transition: {
-                        duration: 1.5,
-                        repeat: Infinity,
-                        repeatType: 'reverse',
-                      },
-                    }}
-                  >
-                    {unclaimedRewards}
-                  </MotionBox>
-                )}
-              </Box>
-            </CircularProgressLabel>
-          </CircularProgress>
-        </Box>
-      </MotionBox>
-    </Tooltip>
+              {/* Badge for unclaimed rewards */}
+              {unclaimedRewards > 0 && (
+                <MotionBox
+                  position="absolute"
+                  bottom={currentSize.badgeOffset}
+                  right={currentSize.badgeOffset}
+                  width={currentSize.badge}
+                  height={currentSize.badge}
+                  borderRadius="full"
+                  bgGradient="linear(to-br, #FF5757, #FF2E2E)"
+                  color="white"
+                  fontSize={currentSize.badgeFont}
+                  fontWeight="bold"
+                  display="flex"
+                  alignItems="center"
+                  justifyContent="center"
+                  boxShadow="0 2px 8px rgba(255, 86, 86, 0.6)"
+                  border="2px solid rgba(255, 255, 255, 0.7)"
+                  initial={{ scale: 0 }}
+                  animate={{
+                    scale: [1, 1.15, 1],
+                    transition: {
+                      duration: 1.5,
+                      repeat: Infinity,
+                      repeatType: 'reverse',
+                    },
+                  }}
+                >
+                  {unclaimedRewards}
+                </MotionBox>
+              )}
+            </Box>
+          </CircularProgressLabel>
+        </CircularProgress>
+      </Box>
+    </MotionBox>
   )
 }
 

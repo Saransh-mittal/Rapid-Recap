@@ -29,7 +29,7 @@ import {
 } from '@chakra-ui/react'
 import { motion } from 'framer-motion'
 import { useTranslation } from 'react-i18next'
-import { Users, Activity, X, Clock, Shield, Zap } from 'lucide-react'
+import { Users, Activity, X, Clock, Shield, Zap, Globe } from 'lucide-react' // Added Globe
 import useQuickClashMatchmaking from '../../customHooks/useQuickClashMatchmaking'
 import { useNavigate } from 'react-router-dom'
 import { keyframes } from '@emotion/react'
@@ -370,8 +370,20 @@ const MatchmakingButton = forwardRef(({ compact = false }, ref) => {
               _hover={{ transform: 'translateY(-2px)' }}
               whileHover={{ scale: 1.05 }}
               whileTap={{ scale: 0.95 }}
+              // Ensure button has enough padding or size if icon is the only child
+              p={2} // Add padding if needed, or set minW/minH
             >
-              <Spinner size="sm" color="white" />
+              {/* <Spinner size="sm" color="white" /> */}
+              <motion.div
+                animate={{ rotate: 360 }}
+                transition={{
+                  duration: 2,
+                  repeat: Infinity,
+                  ease: 'linear',
+                }}
+              >
+                <Icon as={Globe} boxSize={4} color="white" />
+              </motion.div>
             </MotionButton>
           </Tooltip>
         ) : (
@@ -386,6 +398,7 @@ const MatchmakingButton = forwardRef(({ compact = false }, ref) => {
               _hover={{ transform: 'translateY(-2px)' }}
               whileHover={{ scale: 1.05 }}
               whileTap={{ scale: 0.95 }}
+              p={2} // Add padding if needed
             >
               <Icon as={Zap} boxSize={5} />
             </MotionButton>
@@ -412,7 +425,7 @@ const MatchmakingButton = forwardRef(({ compact = false }, ref) => {
         <Tooltip label={t('View matchmaking status')}>
           <MotionButton
             colorScheme="green"
-            leftIcon={<Icon as={Activity} />}
+            leftIcon={<Icon as={Activity} boxSize={4} />} // RE-INSERTED Activity icon
             onClick={() => setIsModalOpen(true)}
             borderRadius="full"
             px={6}
@@ -432,9 +445,21 @@ const MatchmakingButton = forwardRef(({ compact = false }, ref) => {
             }}
             _hover={{ transform: 'translateY(-3px)' }}
           >
-            <HStack>
-              <Spinner size="sm" color="white" mr={1} />
-              <Text>{t('Matchmaking Active')}</Text>
+            <HStack spacing={1.5}>
+              {' '}
+              {/* Manages space between Text and Globe */}
+              <Text>{t('Active')}</Text> {/* Text is "Active" */}
+              <motion.div
+                animate={{ rotate: 360 }}
+                transition={{
+                  duration: 2,
+                  repeat: Infinity,
+                  ease: 'linear',
+                }}
+              >
+                <Icon as={Globe} boxSize={4} color="white" />{' '}
+                {/* Animated Globe icon */}
+              </motion.div>
             </HStack>
           </MotionButton>
         </Tooltip>
@@ -443,7 +468,7 @@ const MatchmakingButton = forwardRef(({ compact = false }, ref) => {
           colorScheme="purple"
           size="lg"
           leftIcon={<Icon as={Shield} />}
-          rightIcon={<Icon as={Zap} />}
+          rightIcon={null}
           onClick={handleJoinMatchmaking}
           isLoading={matchmakingLoading}
           loadingText={t('Joining...')}
@@ -466,7 +491,7 @@ const MatchmakingButton = forwardRef(({ compact = false }, ref) => {
             bgGradient: 'linear(to-r, purple.700, blue.700)',
           }}
         >
-          {t('Find Match')}
+          {t('SOLO')}
         </MotionButton>
       )}
 
@@ -474,7 +499,7 @@ const MatchmakingButton = forwardRef(({ compact = false }, ref) => {
 
       {/* NEW: Preparation Modal */}
       <MatchPreparationModal
-        isOpen={showPreparationModal }
+        isOpen={showPreparationModal}
         onClose={handleClosePreparationModal}
         preparingData={preparingChallenge}
         challengeId={challengeReady?.challengeId}

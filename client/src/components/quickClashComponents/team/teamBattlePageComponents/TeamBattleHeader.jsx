@@ -63,7 +63,6 @@ const TeamBattleHeader = ({ battle, onGoBack, variants }) => {
             colorScheme="purple"
             onClick={onGoBack}
             size="md"
-            // mb={3} // Removed margin bottom as it's now part of a Flex row
             whileHover={{ scale: 1.05, x: -5 }}
             whileTap={{ scale: 0.95 }}
             _hover={{
@@ -76,12 +75,7 @@ const TeamBattleHeader = ({ battle, onGoBack, variants }) => {
           </MotionButton>
 
           {battle.expiresAt && (
-            <HStack
-              // Removed absolute positioning props
-              spacing={2}
-              color="whiteAlpha.700"
-              fontSize="sm"
-            >
+            <HStack spacing={2} color="whiteAlpha.700" fontSize="sm">
               <Icon as={Clock} boxSize={4} />
               <Text>
                 {new Date(battle.expiresAt) > new Date()
@@ -96,8 +90,10 @@ const TeamBattleHeader = ({ battle, onGoBack, variants }) => {
           )}
         </Flex>
 
-        {/* Title and Subtitle Section - Aligned to start (left) */}
-        <VStack align="flex-start" spacing={1}>
+        {/* Title and Subtitle Section - Aligned to center */}
+        <VStack align="center" spacing={1}>
+          {' '}
+          {/* MODIFIED: align="center" */}
           <HStack spacing={3}>
             <Icon as={Users} boxSize={iconSize} color="purple.400" />
             <Heading
@@ -108,12 +104,11 @@ const TeamBattleHeader = ({ battle, onGoBack, variants }) => {
               {t('4v4 Team Battle')}
             </Heading>
           </HStack>
-
           <Text
             color="whiteAlpha.700"
             fontSize={{ base: 'sm', md: 'md' }}
             fontWeight="medium"
-            pl={iconSize + 12} // Indent subtitle to align with text of heading
+            // pl={iconSize + 12} // REMOVED: Padding for left alignment no longer needed
           >
             {t('Challenge other teams in knowledge combat')}
           </Text>
