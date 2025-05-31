@@ -37,9 +37,7 @@ import CategoryIcon from '../components/quickClashComponents/team/teamBattlePage
 const ReadingPhase = lazy(() =>
   import('../components/quickClashComponents/ReadingPhase'),
 )
-const QuizInstructions = lazy(() =>
-  import('../components/quickClashComponents/QuizInstructions'),
-)
+
 const QuickClashQuiz = lazy(() =>
   import('../components/quickClashComponents/QuickClashQuiz'),
 )
@@ -62,9 +60,10 @@ const QuickClashSession = () => {
   } = useQuickClash()
   const { emitChallengeCompleted } = useQuickClashSocket()
   const { trackChallengeCompletion } = useDailyTasks()
+  const params = useParams()
 
   // State management
-  const [phase, setPhase] = useState('instruction') // instruction, loading, reading, quiz, completed
+  const [phase, setPhase] = useState('loading') //  loading, reading, quiz, completed
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState(null)
   const [challenge, setChallenge] = useState(null)
@@ -155,15 +154,9 @@ const QuickClashSession = () => {
           reduxSessionError ||
           'Failed to initialize challenge session',
       )
-      setPhase('instruction') // Go back to instructions if there's an error
     } finally {
       setLoading(false)
     }
-  }
-
-  // Start session after instructions
-  const handleStartSession = () => {
-    initSession()
   }
 
   useEffect(() => {
@@ -173,6 +166,7 @@ const QuickClashSession = () => {
   }, [reduxSessionError])
 
   useEffect(() => {
+    initSession()
     return () => {
       endSession()
     }
@@ -202,6 +196,33 @@ const QuickClashSession = () => {
     return () => clearInterval(timer)
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [phase, session])
+
+  // Add this useEffect early in the component
+  useEffect(() => {
+    const challengeId = params.challengeId // Get from useParams()
+    const storedAssignment = localStorage.getItem(`challenge_${challengeId}`)
+
+    if (storedAssignment) {
+      const assignment = JSON.parse(storedAssignment)
+
+      // Check if this is the same user and within reasonable timeframe (30 minutes)
+      if (
+        assignment.userId !== user._id ||
+        Date.now() - assignment.timestamp > 30 * 60 * 1000
+      ) {
+        // Unauthorized access attempt
+        navigate('/quickclash')
+        toast({
+          title: 'Unauthorized Access',
+          description: 'You are not authorized to access this challenge',
+          status: 'error',
+          duration: 5000,
+          isClosable: true,
+        })
+        return
+      }
+    }
+  }, [params.challengeId, user._id, navigate, toast])
 
   // Handle reading phase completion
   const handleReadingComplete = async () => {
@@ -251,16 +272,6 @@ const QuickClashSession = () => {
       category: challenge?.category,
       challengeId: challenge?._id,
     })
-  }
-
-  const handleBack = () => {
-    if (phase === 'instruction') {
-      if (challenge?.fromTeamBattle)
-        navigate(`/quickclash/teamBattle/${challenge.teamBattle.toString()}`)
-      else navigate('/quickclash')
-    } else {
-      openConfirmDialog()
-    }
   }
 
   // Handle browser's back button and page refresh attempts
@@ -316,13 +327,6 @@ const QuickClashSession = () => {
   // Get phase-specific information
   const getPhaseInfo = () => {
     switch (phase) {
-      case 'instruction':
-        return {
-          label: t('Instructions'),
-          totalTime: null,
-          currentTime: null,
-          colorScheme: 'purple',
-        }
       case 'loading':
         return {
           label: t('Loading'),
@@ -461,21 +465,6 @@ const QuickClashSession = () => {
 
       <Container maxW="container.lg" py={4} px={{ base: 2, md: 4 }}>
         <VStack spacing={6} align="stretch">
-          {phase === 'instruction' && (
-            <Suspense
-              fallback={
-                <Center py={10}>
-                  <Spinner size="xl" color="purple.500" />
-                </Center>
-              }
-            >
-              <QuizInstructions
-                onStart={handleStartSession}
-                onBack={handleBack}
-              />
-            </Suspense>
-          )}
-
           {phase === 'loading' && renderLoadingScreen()}
 
           {phase === 'reading' && article && (

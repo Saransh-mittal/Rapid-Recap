@@ -11,16 +11,12 @@ import {
   useBreakpointValue,
   VStack,
 } from '@chakra-ui/react'
-import { motion } from 'framer-motion'
 import { useTranslation } from 'react-i18next'
 import { format } from 'date-fns'
 import { Users, ArrowLeft, Clock } from 'lucide-react'
 
-const MotionFlex = motion(Flex)
-const MotionButton = motion(Button)
-
 /**
- * Enhanced Header component for the Team Battle page with better visual appeal
+ * Header component for the Team Battle page (Animations Removed)
  */
 const TeamBattleHeader = ({ battle, onGoBack }) => {
   const { t } = useTranslation('QuickClash')
@@ -31,16 +27,13 @@ const TeamBattleHeader = ({ battle, onGoBack }) => {
   const iconSize = useBreakpointValue({ base: 6, md: 8 })
 
   return (
-    <MotionFlex
+    <Flex
       direction="column"
       px={padding}
       py={6}
       mb={4}
       position="relative"
       overflow="hidden"
-      initial={{ opacity: 0 }}
-      animate={{ opacity: 1 }}
-      transition={{ duration: 0.3 }}
     >
       {/* Background glow effect */}
       <Box
@@ -59,22 +52,19 @@ const TeamBattleHeader = ({ battle, onGoBack }) => {
       <VStack spacing={4} align="stretch" position="relative" zIndex={1}>
         {/* Top Row: Back Button and Expires Time */}
         <Flex justify="space-between" align="center" w="100%">
-          <MotionButton
+          <Button
             leftIcon={<ArrowLeft size={18} />}
             variant="ghost"
             colorScheme="purple"
             onClick={onGoBack}
             size="md"
-            whileHover={{ scale: 1.05, x: -5 }}
-            whileTap={{ scale: 0.95 }}
             _hover={{
               bg: 'rgba(128, 90, 213, 0.2)',
-              transform: 'translateX(-5px)',
             }}
             transition="all 0.2s"
           >
             {t('Back to Battles')}
-          </MotionButton>
+          </Button>
 
           {battle.expiresAt && (
             <HStack spacing={2} color="whiteAlpha.700" fontSize="sm">
@@ -115,7 +105,7 @@ const TeamBattleHeader = ({ battle, onGoBack }) => {
           </Text>
         </VStack>
       </VStack>
-    </MotionFlex>
+    </Flex>
   )
 }
 

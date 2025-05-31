@@ -1,12 +1,9 @@
 // components/quickClashComponents/team/teamBattlePageComponents/teamsGrid/MemoizedAvatar.jsx
 import React, { memo } from 'react'
-import { Avatar, Tooltip } from '@chakra-ui/react'
-import { motion } from 'framer-motion'
-
-const MotionBox = motion.div
+import { Avatar, Tooltip, Box } from '@chakra-ui/react'
 
 /**
- * Memoized Avatar component for better performance
+ * Memoized Avatar component (Animations Removed)
  */
 const MemoizedAvatar = memo(({ member, teamColor, userId, t }) => (
   <Tooltip
@@ -27,7 +24,7 @@ const MemoizedAvatar = memo(({ member, teamColor, userId, t }) => (
     hasArrow
     offset={[0, 10]}
   >
-    <MotionBox whileHover={{ scale: 1.1 }} transition={{ duration: 0.2 }}>
+    <Box>
       <Avatar
         name={member.user.name || member.user.inGameName}
         src={member.user.pic}
@@ -43,7 +40,7 @@ const MemoizedAvatar = memo(({ member, teamColor, userId, t }) => (
         }
         bg="gray.700"
       />
-    </MotionBox>
+    </Box>
   </Tooltip>
 ))
 

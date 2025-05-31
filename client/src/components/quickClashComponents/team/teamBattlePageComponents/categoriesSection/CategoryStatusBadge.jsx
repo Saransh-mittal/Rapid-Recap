@@ -7,23 +7,51 @@ import {
   Progress,
   useBreakpointValue,
 } from '@chakra-ui/react'
-import { motion } from 'framer-motion'
-import { Clock, Star, Sparkles } from 'lucide-react'
-
-const MotionBox = motion.div
+import { Clock, Star, Sparkles, CheckCircle, Zap, X } from 'lucide-react'
 
 /**
- * Category Status Badge Component
+ * Category Status Badge Component with All States Including Locked
  */
 const CategoryStatusBadge = memo(
-  ({ isUserAssigned, isSelectedByTeammate, isAvailable, t }) => {
+  ({
+    isInProgress,
+    isSelectedButNotStarted,
+    isSelectedByTeammate,
+    isAvailable,
+    isLockedDueToExit, // NEW PROP
+    t,
+  }) => {
     const badgeFontSize = useBreakpointValue({
       base: '9px',
       sm: '10px',
       md: '11px',
     })
 
-    if (isUserAssigned) {
+    // NEW: Locked state - highest priority
+    if (isLockedDueToExit) {
+      return (
+        <Badge
+          bg="rgba(107, 114, 128, 0.8)"
+          color="gray.300"
+          px={{ base: 2, sm: 3 }}
+          py={{ base: 1, sm: 1.5 }}
+          borderRadius="lg"
+          fontSize={badgeFontSize}
+          fontWeight="bold"
+          display="flex"
+          alignItems="center"
+          border="1px solid"
+          borderColor="rgba(107, 114, 128, 0.5)"
+          boxShadow="0 2px 8px rgba(107, 114, 128, 0.2)"
+        >
+          <Icon as={X} boxSize="12px" mr={1.5} />
+          {t('Locked')}
+        </Badge>
+      )
+    }
+
+    // In Progress - User has started the challenge
+    if (isInProgress) {
       return (
         <VStack spacing={1.5}>
           <Badge
@@ -38,7 +66,7 @@ const CategoryStatusBadge = memo(
             alignItems="center"
             boxShadow="0 4px 15px rgba(245, 158, 11, 0.3)"
           >
-            <Icon as={Clock} boxSize="12px" mr={1.5} />
+            <Icon as={Zap} boxSize="12px" mr={1.5} />
             {t('In Progress')}
           </Badge>
           <Progress
@@ -53,6 +81,38 @@ const CategoryStatusBadge = memo(
       )
     }
 
+    // Selected but not started - User selected this category but hasn't begun the challenge
+    if (isSelectedButNotStarted) {
+      return (
+        <VStack spacing={1.5}>
+          <Badge
+            bg="linear-gradient(135deg, #3B82F6, #1D4ED8)"
+            color="white"
+            px={{ base: 2, sm: 3 }}
+            py={{ base: 1, sm: 1.5 }}
+            borderRadius="lg"
+            fontSize={badgeFontSize}
+            fontWeight="bold"
+            display="flex"
+            alignItems="center"
+            boxShadow="0 4px 15px rgba(59, 130, 246, 0.3)"
+          >
+            <Icon as={CheckCircle} boxSize="12px" mr={1.5} />
+            {t('Selected')}
+          </Badge>
+          <Progress
+            value={25}
+            size="sm"
+            colorScheme="blue"
+            borderRadius="full"
+            width={{ base: '60px', sm: '80px' }}
+            bg="rgba(59, 130, 246, 0.2)"
+          />
+        </VStack>
+      )
+    }
+
+    // Selected by teammate
     if (isSelectedByTeammate) {
       return (
         <Badge
@@ -73,6 +133,7 @@ const CategoryStatusBadge = memo(
       )
     }
 
+    // Not available/locked (but not due to exit)
     if (!isAvailable) {
       return (
         <Badge
@@ -92,32 +153,23 @@ const CategoryStatusBadge = memo(
 
     // Available state
     return (
-      <MotionBox
-        animate={{ scale: [1, 1.05, 1], opacity: [0.9, 1, 0.9] }}
-        transition={{
-          duration: 2,
-          repeat: Infinity,
-          ease: 'easeInOut',
-        }}
+      <Badge
+        bg="rgba(59, 130, 246, 0.2)"
+        color="#3B82F6"
+        px={{ base: 2, sm: 3 }}
+        py={{ base: 1, sm: 1.5 }}
+        borderRadius="full"
+        fontSize={badgeFontSize}
+        fontWeight="bold"
+        display="flex"
+        alignItems="center"
+        border="2px solid"
+        borderColor="rgba(59, 130, 246, 0.6)"
+        boxShadow="0 0 20px rgba(59, 130, 246, 0.3)"
       >
-        <Badge
-          bg="rgba(59, 130, 246, 0.2)"
-          color="#3B82F6"
-          px={{ base: 2, sm: 3 }}
-          py={{ base: 1, sm: 1.5 }}
-          borderRadius="full"
-          fontSize={badgeFontSize}
-          fontWeight="bold"
-          display="flex"
-          alignItems="center"
-          border="2px solid"
-          borderColor="rgba(59, 130, 246, 0.6)"
-          boxShadow="0 0 20px rgba(59, 130, 246, 0.3)"
-        >
-          <Icon as={Sparkles} boxSize="12px" mr={1.5} />
-          {t('Ready')}
-        </Badge>
-      </MotionBox>
+        <Icon as={Sparkles} boxSize="12px" mr={1.5} />
+        {t('Ready')}
+      </Badge>
     )
   },
 )

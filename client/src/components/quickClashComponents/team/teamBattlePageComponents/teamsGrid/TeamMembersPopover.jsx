@@ -17,13 +17,10 @@ import {
   PopoverCloseButton,
   Portal,
 } from '@chakra-ui/react'
-import { motion } from 'framer-motion'
 import { Users, CheckCircle, Zap, Clock } from 'lucide-react'
 
-const MotionFlex = motion(Flex)
-
 /**
- * Team Members Popover Component - Shows detailed team member info
+ * Team Members Popover Component (Animations Removed)
  */
 const TeamMembersPopover = memo(({ team, teamColorForStyling, userId, t }) => {
   return (
@@ -34,7 +31,7 @@ const TeamMembersPopover = memo(({ team, teamColorForStyling, userId, t }) => {
       gutter={12}
     >
       <PopoverTrigger>
-        <MotionFlex
+        <Flex
           as="button"
           align="center"
           justifyContent="center"
@@ -52,16 +49,12 @@ const TeamMembersPopover = memo(({ team, teamColorForStyling, userId, t }) => {
           bg={`${teamColorForStyling}.600`}
           _hover={{
             bg: `${teamColorForStyling}.500`,
-            transform: 'scale(1.03)',
-          }}
-          _active={{
-            transform: 'scale(0.98)',
           }}
           transition="all 0.2s cubic-bezier(.08,.52,.52,1)"
           zIndex="1"
         >
           {t('SQUAD')}
-        </MotionFlex>
+        </Flex>
       </PopoverTrigger>
       <Portal>
         <PopoverContent

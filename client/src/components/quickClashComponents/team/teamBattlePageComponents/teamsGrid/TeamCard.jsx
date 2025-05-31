@@ -8,28 +8,16 @@ import {
   Icon,
   useBreakpointValue,
   AvatarGroup,
-  Popover,
-  PopoverTrigger,
-  PopoverContent,
-  PopoverHeader,
-  PopoverBody,
-  PopoverArrow,
-  PopoverCloseButton,
-  Portal,
 } from '@chakra-ui/react'
-import { motion } from 'framer-motion'
 import { useTranslation } from 'react-i18next'
-import { Trophy, Users } from 'lucide-react'
+import { Trophy } from 'lucide-react'
 
 import MemoizedAvatar from './MemoizedAvatar'
 import FuturisticDivider from './FuturisticDivider'
 import TeamMembersPopover from './TeamMembersPopover'
 
-const MotionBox = motion(Box)
-const MotionFlex = motion(Box)
-
 /**
- * Individual Team Card Component - Optimized for performance
+ * Individual Team Card Component (Animations Removed)
  */
 const TeamCard = memo(({ team, position, userId }) => {
   const { t } = useTranslation('QuickClash')
@@ -69,30 +57,6 @@ const TeamCard = memo(({ team, position, userId }) => {
     [team.data?.name, team.type, t],
   )
 
-  const cardMotionVariants = useMemo(
-    () => ({
-      hidden: {
-        opacity: 0,
-        y: 20,
-        x: position === 'left' ? -20 : 20,
-        scale: 0.95,
-      },
-      visible: {
-        opacity: 1,
-        y: 0,
-        x: 0,
-        scale: 1,
-        transition: {
-          type: 'spring',
-          stiffness: 100,
-          damping: 15,
-          duration: 0.7,
-        },
-      },
-    }),
-    [position],
-  )
-
   // Memoized card glow styles for better performance
   const cardGlowStyles = useMemo(() => {
     if (team.isUserTeam) {
@@ -118,7 +82,6 @@ const TeamCard = memo(({ team, position, userId }) => {
           borderRadius: 'xl',
           zIndex: '0',
           opacity: 0.8,
-          animation: 'pulseBorder 3s infinite alternate',
         },
         _after: {
           content: '""',
@@ -130,22 +93,6 @@ const TeamCard = memo(({ team, position, userId }) => {
           background: 'rgba(15, 23, 42, 0.90)',
           borderRadius: { base: 'lg', md: 'xl' },
           zIndex: '1',
-        },
-        sx: {
-          '@keyframes pulseBorder': {
-            '0%': {
-              opacity: 0.7,
-              boxShadow: `0 0 8px 2px rgba(${
-                teamColorForStyling === 'blue' ? '0, 210, 255' : '255, 56, 56'
-              }, 0.5)`,
-            },
-            '100%': {
-              opacity: 0.9,
-              boxShadow: `0 0 15px 4px rgba(${
-                teamColorForStyling === 'blue' ? '0, 210, 255' : '255, 56, 56'
-              }, 0.7)`,
-            },
-          },
         },
       }
     } else {
@@ -170,7 +117,6 @@ const TeamCard = memo(({ team, position, userId }) => {
           borderRadius: 'xl',
           zIndex: '0',
           opacity: 0.6,
-          animation: 'subtlePulse 4s infinite alternate',
         },
         _after: {
           content: '""',
@@ -183,29 +129,12 @@ const TeamCard = memo(({ team, position, userId }) => {
           borderRadius: { base: 'lg', md: 'xl' },
           zIndex: '1',
         },
-        sx: {
-          '@keyframes subtlePulse': {
-            '0%': {
-              opacity: 0.5,
-              boxShadow: `0 0 5px 1px rgba(${
-                teamColorForStyling === 'blue' ? '59, 130, 246' : '239, 68, 68'
-              }, 0.3)`,
-            },
-            '100%': {
-              opacity: 0.7,
-              boxShadow: `0 0 8px 2px rgba(${
-                teamColorForStyling === 'blue' ? '59, 130, 246' : '239, 68, 68'
-              }, 0.5)`,
-            },
-          },
-        },
       }
     }
   }, [team.isUserTeam, teamColorForStyling])
 
   return (
-    <MotionBox
-      variants={cardMotionVariants}
+    <Box
       width="95%"
       minH="auto"
       backgroundColor="transparent"
@@ -354,7 +283,7 @@ const TeamCard = memo(({ team, position, userId }) => {
           />
         </VStack>
       </VStack>
-    </MotionBox>
+    </Box>
   )
 })
 

@@ -20,6 +20,8 @@ const {
   getTeamBattle,
   getTeamMatchmakingInfo,
   getTeamMatchmakingStatusDetailed,
+  deselectCategoryForBattle,
+  beginChallengeForBattle,
 } = require('../controllers/quickClashTeamController')
 
 const router = express.Router()
@@ -47,6 +49,11 @@ router.get('/team/:teamId/matchmaking-info', getTeamMatchmakingInfo)
 
 // Team battle routes
 router.post('/team-battle/:battleId/select-category', selectCategoryForBattle)
+router.post(
+  '/team-battle/:battleId/deselect-category',
+  deselectCategoryForBattle,
+)
+router.post('/team-battle/:battleId/begin-challenge', beginChallengeForBattle)
 router.get('/team-battles', getMyTeamBattles)
 router.get('/team-battle/:battleId', getTeamBattle)
 router.get(

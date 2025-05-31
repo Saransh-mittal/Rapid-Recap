@@ -9,22 +9,18 @@ import {
   Icon,
   useBreakpointValue,
 } from '@chakra-ui/react'
-import { motion } from 'framer-motion'
 import { useTranslation } from 'react-i18next'
 import { Swords } from 'lucide-react'
 
-const MotionFlex = motion(Flex)
-const MotionBox = motion.div
-
 /**
- * VS Section Component - Shows battle score and sword animation
+ * VS Section Component (Animations Removed)
  */
 const VSSection = memo(
   ({ leftTeam, rightTeam, vsSectionEffectiveWidth, vsSpacing }) => {
     const { t } = useTranslation('QuickClash')
 
     return (
-      <MotionFlex
+      <Flex
         align="center"
         justifyContent="center"
         direction="column"
@@ -33,59 +29,25 @@ const VSSection = memo(
         flex="0 0 auto"
         my={{ base: 'auto', md: 0 }}
         py={2}
-        initial={{ opacity: 0, scale: 0.5 }}
-        animate={{
-          opacity: 1,
-          scale: 1,
-          transition: {
-            type: 'spring',
-            stiffness: 200,
-            damping: 15,
-            delay: 0.3,
-          },
-        }}
       >
         <VStack spacing={{ base: 1.5, md: 2.5 }}>
-          <MotionBox
-            animate={{
-              textShadow: [
-                '0 0 6px rgba(0, 210, 255, 0.5), 0 0 12px rgba(0, 210, 255, 0.3)',
-                '0 0 8px rgba(124, 58, 237, 0.5), 0 0 16px rgba(124, 58, 237, 0.3)',
-                '0 0 6px rgba(0, 210, 255, 0.5), 0 0 12px rgba(0, 210, 255, 0.3)',
-              ],
-            }}
-            transition={{ duration: 3, repeat: Infinity }}
+          <Text
+            fontFamily="'Orbitron', sans-serif"
+            fontSize={{ base: '2xl', md: '3xl', lg: '4xl' }}
+            fontWeight="bold"
+            bgGradient="linear(to-r, cyan.400, purple.500, cyan.400)"
+            bgClip="text"
+            letterSpacing="1.5px"
+            lineHeight="1"
           >
-            <Text
-              fontFamily="'Orbitron', sans-serif"
-              fontSize={{ base: '2xl', md: '3xl', lg: '4xl' }}
-              fontWeight="bold"
-              bgGradient="linear(to-r, cyan.400, purple.500, cyan.400)"
-              bgClip="text"
-              letterSpacing="1.5px"
-              lineHeight="1"
-            >
-              VS
-            </Text>
-          </MotionBox>
+            VS
+          </Text>
 
-          <MotionBox
-            animate={{
-              rotate: [0, 5, 0, -5, 0],
-              filter: [
-                'drop-shadow(0 0 6px rgba(124, 58, 237, 0.6))',
-                'drop-shadow(0 0 8px rgba(124, 58, 237, 0.8))',
-                'drop-shadow(0 0 6px rgba(124, 58, 237, 0.6))',
-              ],
-            }}
-            transition={{ duration: 4, repeat: Infinity, ease: 'easeInOut' }}
-          >
-            <Icon
-              as={Swords}
-              boxSize={{ base: 4, md: 6, lg: 8 }}
-              color="purple.300"
-            />
-          </MotionBox>
+          <Icon
+            as={Swords}
+            boxSize={{ base: 4, md: 6, lg: 8 }}
+            color="purple.300"
+          />
 
           <HStack spacing={{ base: 1, md: 1.5 }} mt={{ base: 0.5, md: 1 }}>
             <Badge
@@ -132,7 +94,7 @@ const VSSection = memo(
             </Badge>
           </HStack>
         </VStack>
-      </MotionFlex>
+      </Flex>
     )
   },
 )

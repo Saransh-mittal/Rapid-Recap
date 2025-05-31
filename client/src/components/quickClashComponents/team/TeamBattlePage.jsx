@@ -11,7 +11,6 @@ import {
   useToast,
   useDisclosure,
 } from '@chakra-ui/react'
-import { motion, AnimatePresence } from 'framer-motion'
 import { useTranslation } from 'react-i18next'
 import { useNavigate, useParams, useLocation } from 'react-router-dom'
 import { useSelector } from 'react-redux'
@@ -31,42 +30,8 @@ import BattleResultsSection from './teamBattlePageComponents/BattleResultsSectio
 // Import QuizReportModal with React.lazy
 const QuizReportModal = React.lazy(() => import('../QuizReportModal'))
 
-const MotionBox = motion(Box)
-
-// Simple fade-only animation variants - NO vertical movement
-const pageVariants = {
-  initial: {
-    opacity: 0,
-  },
-  animate: {
-    opacity: 1,
-    transition: {
-      duration: 0.4,
-      ease: 'easeOut',
-    },
-  },
-  exit: {
-    opacity: 0,
-    transition: {
-      duration: 0.3,
-    },
-  },
-}
-
-// Simple variants for child components - NO vertical movement
-const sectionVariants = {
-  initial: { opacity: 0 },
-  animate: {
-    opacity: 1,
-    transition: {
-      duration: 0.3,
-      ease: 'easeOut',
-    },
-  },
-}
-
 /**
- * Optimized Team Battle Page Component with consistent top-down animations
+ * Team Battle Page Component - Animations Removed
  */
 const TeamBattlePage = React.memo(() => {
   const { t } = useTranslation('QuickClash')
@@ -91,30 +56,38 @@ const TeamBattlePage = React.memo(() => {
     currentBattle,
     battleDetailsLoading,
     battleDetailsError,
+    // New loading states
+    categoryOperationLoading,
+    categoryOperationType,
+    categoryOperationError,
+    selectedCategoryForOperation,
+    // Legacy loading states (for backward compatibility)
     categorySelectionLoading,
     getBattleDetails,
     selectCategory,
+    deselectCategory,
+    beginChallenge,
+    clearOperationError,
+    resetOperationState,
     setupTeamBattleSocketListeners,
     cleanupSocketListeners,
   } = useQuickClashTeamBattle()
-
   // Local state
   const [selectedCategoryId, setSelectedCategoryId] = useState(null)
-  const [isPageReady, setIsPageReady] = useState(false)
 
   // Memoized user team calculation
   const userTeam = useMemo(() => {
     if (!currentBattle || !user) return null
 
     const isInTeamA = currentBattle.teamAMembers.some(
-      member => member.user._id === user._id,
+      member => member.user._id === user._id || member.user === user._id,
     )
     const isInTeamB = currentBattle.teamBMembers.some(
-      member => member.user._id === user._id,
+      member => member.user._id === user._id || member.user === user._id,
     )
 
     return isInTeamA ? 'teamA' : isInTeamB ? 'teamB' : null
-  }, [currentBattle, user])
+  }, [currentBattle, user?._id])
 
   // Memoized battle status calculation
   const battleStatus = useMemo(() => {
@@ -179,16 +152,6 @@ const TeamBattlePage = React.memo(() => {
       }))
   }, [currentBattle, userTeam])
 
-  // Reset page ready state on route changes
-  useEffect(() => {
-    setIsPageReady(false)
-    const timer = setTimeout(() => {
-      setIsPageReady(true)
-    }, 100)
-
-    return () => clearTimeout(timer)
-  }, [battleId, location.pathname])
-
   // Optimized socket room joining
   useEffect(() => {
     const socket = getSocket()
@@ -217,33 +180,44 @@ const TeamBattlePage = React.memo(() => {
 
   const handleCategorySelect = useCallback(
     category => {
-      if (!currentBattle || !category) return
+      if (!currentBattle) return
 
-      const challenge = currentBattle.challenges.find(
-        c => c.category === category,
-      )
-      if (!challenge) return
-
-      setSelectedCategoryId(challenge.challenge)
-
-      selectCategory(currentBattle._id, category)
-        .then(() => {
-          console.log('Category selected successfully')
-        })
-        .catch(error => {
-          console.error('Error selecting category:', error)
-          setSelectedCategoryId(null)
-          toast({
-            title: 'Error',
-            description: error.message || 'Failed to select category',
-            status: 'error',
-            duration: 3000,
-            isClosable: true,
-          })
-        })
+      selectCategory(currentBattle._id, category).catch(error => {
+        console.error('Error selecting category:', error)
+      })
     },
-    [currentBattle, selectCategory, toast],
+    [currentBattle, selectCategory],
   )
+
+  const handleCategoryDeselect = useCallback(() => {
+    if (!currentBattle) return
+
+    deselectCategory(currentBattle._id).catch(error => {
+      console.error('Error deselecting category:', error)
+    })
+  }, [currentBattle, deselectCategory])
+
+  const handleBeginChallenge = useCallback(() => {
+    if (!currentBattle) return
+
+    beginChallenge(currentBattle._id).catch(error => {
+      console.error('Error beginning challenge:', error)
+    })
+  }, [currentBattle, beginChallenge])
+
+  // Clear operation errors when component unmounts or battle changes
+  useEffect(() => {
+    return () => {
+      resetOperationState()
+    }
+  }, [resetOperationState])
+
+  // Clear errors when battle changes
+  useEffect(() => {
+    if (categoryOperationError) {
+      clearOperationError()
+    }
+  }, [currentBattle?._id, categoryOperationError, clearOperationError])
 
   const handleViewReport = useCallback(
     async challengeId => {
@@ -350,115 +324,67 @@ const TeamBattlePage = React.memo(() => {
 
   return (
     <Box minH="100vh" bg="gray.900" position="relative" overflow="hidden">
-      <AnimatePresence mode="wait">
-        {isPageReady && (
-          <MotionBox
-            key={`battle-page-${battleId}-${Date.now()}`}
-            variants={pageVariants}
-            initial="initial"
-            animate="animate"
-            exit="exit"
-            width="100%"
-            position="relative"
-            zIndex={1}
-          >
-            {/* Header */}
-            <MotionBox
-              variants={sectionVariants}
-              initial="initial"
-              animate="animate"
-            >
-              <TeamBattleHeader
-                battle={currentBattle}
-                onGoBack={handleGoBack}
-              />
-            </MotionBox>
+      <Box width="100%" position="relative" zIndex={1}>
+        {/* Header */}
+        <TeamBattleHeader battle={currentBattle} onGoBack={handleGoBack} />
 
-            {/* Teams Section */}
-            <MotionBox
-              variants={sectionVariants}
-              initial="initial"
-              animate="animate"
-              transition={{ delay: 0.1 }}
-            >
-              <TeamsGrid
-                currentBattle={currentBattle}
-                userTeam={userTeam}
-                userId={user._id}
-              />
-            </MotionBox>
+        {/* Teams Section */}
+        <TeamsGrid
+          currentBattle={currentBattle}
+          userTeam={userTeam}
+          userId={user?._id}
+        />
 
-            {/* Categories Section */}
-            {currentBattle.status === 'active' && userTeam && (
-              <MotionBox
-                variants={sectionVariants}
-                initial="initial"
-                animate="animate"
-                transition={{ delay: 0.2 }}
-              >
-                <CategoriesSection
-                  currentBattle={currentBattle}
-                  uncompletedCategories={uncompletedCategories}
-                  userTeam={userTeam}
-                  user={user}
-                  onSelectCategory={handleCategorySelect}
-                  onViewReport={handleViewReport}
-                  reportModalLoading={reportModalLoading}
-                  categorySelectionLoading={categorySelectionLoading}
-                  selectedCategoryId={selectedCategoryId}
-                  completedChallenges={battleStatus.completedChallenges}
-                  totalChallenges={battleStatus.totalChallenges}
-                />
-              </MotionBox>
-            )}
-
-            {/* Battle Results Section */}
-            {currentBattle.status === 'completed' && (
-              <MotionBox
-                variants={sectionVariants}
-                initial="initial"
-                animate="animate"
-                transition={{ delay: 0.2 }}
-              >
-                <BattleResultsSection
-                  currentBattle={currentBattle}
-                  userTeam={userTeam}
-                />
-              </MotionBox>
-            )}
-
-            {/* Bottom Actions */}
-            <MotionBox
-              variants={sectionVariants}
-              initial="initial"
-              animate="animate"
-              transition={{ delay: 0.3 }}
-              textAlign="center"
-              pt={8}
-              pb={12}
-            >
-              <Button
-                leftIcon={<ArrowLeft size={18} />}
-                colorScheme="purple"
-                size="lg"
-                onClick={handleGoBack}
-                bg="rgba(128, 90, 213, 0.8)"
-                _hover={{
-                  bg: 'rgba(128, 90, 213, 1)',
-                  transform: 'translateY(-2px)',
-                  boxShadow: '0 6px 20px rgba(128, 90, 213, 0.4)',
-                }}
-                _active={{
-                  transform: 'translateY(0)',
-                }}
-                transition="all 0.2s"
-              >
-                {t('Back to Team Battles')}
-              </Button>
-            </MotionBox>
-          </MotionBox>
+        {/* Categories Section */}
+        {currentBattle.status === 'active' && userTeam && (
+          <CategoriesSection
+            currentBattle={currentBattle}
+            uncompletedCategories={uncompletedCategories}
+            userTeam={userTeam}
+            user={user}
+            onSelectCategory={handleCategorySelect}
+            onDeselectCategory={handleCategoryDeselect}
+            onBeginChallenge={handleBeginChallenge}
+            onViewReport={handleViewReport}
+            reportModalLoading={reportModalLoading}
+            // New loading props
+            categoryOperationLoading={categoryOperationLoading}
+            categoryOperationType={categoryOperationType}
+            categoryOperationError={categoryOperationError}
+            selectedCategoryForOperation={selectedCategoryForOperation}
+            // Legacy props for backward compatibility
+            categorySelectionLoading={categorySelectionLoading}
+            selectedCategoryId={selectedCategoryId}
+            completedChallenges={battleStatus.completedChallenges}
+            totalChallenges={battleStatus.totalChallenges}
+          />
         )}
-      </AnimatePresence>
+
+        {/* Battle Results Section */}
+        {currentBattle.status === 'completed' && (
+          <BattleResultsSection
+            currentBattle={currentBattle}
+            userTeam={userTeam}
+          />
+        )}
+
+        {/* Bottom Actions */}
+        <Box textAlign="center" pt={8} pb={12}>
+          <Button
+            leftIcon={<ArrowLeft size={18} />}
+            colorScheme="purple"
+            size="lg"
+            onClick={handleGoBack}
+            bg="rgba(128, 90, 213, 0.8)"
+            _hover={{
+              bg: 'rgba(128, 90, 213, 1)',
+            }}
+            transition="all 0.2s"
+          >
+            {t('Back to Team Battles')}
+          </Button>
+        </Box>
+      </Box>
 
       {/* Quiz Report Modal */}
       {isReportOpen && selectedSessionId && (

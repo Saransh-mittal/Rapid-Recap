@@ -1,7 +1,6 @@
 // components/quickClashComponents/team/teamBattlePageComponents/BattleResultsSection.jsx
-import React, { useState, useEffect, useMemo, memo } from 'react'
+import React, { useMemo, memo } from 'react'
 import { Box, VStack, Grid } from '@chakra-ui/react'
-import { motion, AnimatePresence } from 'framer-motion'
 import { useTranslation } from 'react-i18next'
 
 // Import optimized subcomponents
@@ -9,19 +8,13 @@ import ResultHeader from './battleResultsSection/ResultHeader'
 import MobileScoreDisplay from './battleResultsSection/MobileScoreDisplay'
 import MobileTeamCard from './battleResultsSection/MobileTeamCard'
 import MobileTrophyBonuses from './battleResultsSection/MobileTrophyBonuses'
-import CelebrationParticles from './battleResultsSection/CelebrationParticles'
 import { calculateResultData } from './battleResultsSection/battleResultsUtils'
 
-const MotionBox = motion(Box)
-
 /**
- * Optimized Battle Results Section - Main Component
- * Broken down into smaller, maintainable components with performance optimizations
+ * Battle Results Section - Main Component (Animations Removed)
  */
 const BattleResultsSection = memo(({ currentBattle, userTeam }) => {
   const { t } = useTranslation('QuickClash')
-  const [showCelebration, setShowCelebration] = useState(false)
-  const [animationPhase, setAnimationPhase] = useState('initial')
 
   // Early return for non-completed battles
   if (currentBattle.status !== 'completed') return null
@@ -32,48 +25,15 @@ const BattleResultsSection = memo(({ currentBattle, userTeam }) => {
     [currentBattle, userTeam],
   )
 
-  // Optimized animation sequence
-  useEffect(() => {
-    let timeouts = []
-
-    const runSequence = async () => {
-      setAnimationPhase('reveal')
-
-      timeouts.push(
-        setTimeout(() => {
-          setAnimationPhase('details')
-        }, 400),
-      )
-
-      if (resultData.isUserWinner) {
-        timeouts.push(
-          setTimeout(() => {
-            setShowCelebration(true)
-          }, 600),
-        )
-      }
-    }
-
-    runSequence()
-
-    // Cleanup timeouts on unmount
-    return () => {
-      timeouts.forEach(timeout => clearTimeout(timeout))
-    }
-  }, [resultData.isUserWinner])
-
   return (
-    <MotionBox
+    <Box
       mx={{ base: 3, md: 6, lg: 8 }}
       mb={{ base: 6, md: 8, lg: 10 }}
       position="relative"
       overflow="hidden"
-      initial={{ opacity: 0 }}
-      animate={{ opacity: 1 }}
-      transition={{ duration: 0.4 }}
     >
       {/* Main Container */}
-      <MotionBox
+      <Box
         bg="rgba(15, 23, 42, 0.95)"
         backdropFilter="blur(15px)"
         borderRadius={{ base: 'xl', md: '2xl' }}
@@ -94,13 +54,6 @@ const BattleResultsSection = memo(({ currentBattle, userTeam }) => {
           opacity={0.8}
         />
 
-        {/* Celebration Particles */}
-        <AnimatePresence>
-          {showCelebration && resultData.isUserWinner && (
-            <CelebrationParticles />
-          )}
-        </AnimatePresence>
-
         <VStack
           spacing={{ base: 4, md: 6, lg: 8 }}
           p={{ base: 4, md: 6, lg: 8 }}
@@ -108,39 +61,19 @@ const BattleResultsSection = memo(({ currentBattle, userTeam }) => {
           zIndex={1}
         >
           {/* Header with Result Badge */}
-          <ResultHeader
-            resultData={resultData}
-            animationPhase={animationPhase}
-            t={t}
-          />
+          <ResultHeader resultData={resultData} t={t} />
 
           {/* Score Display */}
-          <MotionBox
-            initial={{ opacity: 0 }}
-            animate={
-              animationPhase === 'details'
-                ? { opacity: 1 }
-                : animationPhase === 'reveal'
-                ? { opacity: 0.3 }
-                : {}
-            }
-            transition={{ duration: 0.4, delay: 0.1 }}
-            w="100%"
-          >
+          <Box w="100%">
             <MobileScoreDisplay
               currentBattle={currentBattle}
               userTeam={userTeam}
               resultData={resultData}
             />
-          </MotionBox>
+          </Box>
 
           {/* Team Cards */}
-          <MotionBox
-            initial={{ opacity: 0 }}
-            animate={animationPhase === 'details' ? { opacity: 1 } : {}}
-            transition={{ duration: 0.4, delay: 0.2 }}
-            w="100%"
-          >
+          <Box w="100%">
             {/* Mobile Layout - Stacked */}
             <VStack spacing={3} display={{ base: 'flex', lg: 'none' }}>
               {/* User's Team (always displayed as Team A) */}
@@ -260,26 +193,19 @@ const BattleResultsSection = memo(({ currentBattle, userTeam }) => {
                 isUserTeam={false}
               />
             </Grid>
-          </MotionBox>
+          </Box>
 
           {/* Trophy Bonuses */}
           {currentBattle.trophyExchange && (
-            <MotionBox
-              initial={{ opacity: 0, scale: 0.95 }}
-              animate={
-                animationPhase === 'details' ? { opacity: 1, scale: 1 } : {}
-              }
-              transition={{ duration: 0.4, delay: 0.3 }}
-              w="100%"
-            >
+            <Box w="100%">
               <MobileTrophyBonuses
                 trophyExchange={currentBattle.trophyExchange}
               />
-            </MotionBox>
+            </Box>
           )}
         </VStack>
-      </MotionBox>
-    </MotionBox>
+      </Box>
+    </Box>
   )
 })
 
