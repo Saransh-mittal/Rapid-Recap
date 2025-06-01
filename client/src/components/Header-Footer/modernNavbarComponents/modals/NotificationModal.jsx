@@ -21,6 +21,9 @@ import { useDispatch, useSelector } from 'react-redux'
 import axios from 'axios'
 import { setUpdates } from '../../../../redux/appSlice'
 
+// Import the team invitation component
+import TeamInvitationNotification from '../../../quickClashComponents/team/TeamInvitationNotification'
+
 //SSR images
 const rr = '/images/rrlogo.webp'
 
@@ -40,6 +43,7 @@ const NotificationModal = ({
   const { user } = useSelector(state => state.auth)
   const updates = useSelector(state => state.app.updates)
   const dispatch = useDispatch()
+
   useEffect(() => {
     setReadUpdate()
     onOpen()
@@ -73,11 +77,34 @@ const NotificationModal = ({
     handleNotifModalClose && handleNotifModalClose()
   }, [onClose, setIsModalOpen, setIsDrawerOpen, handleNotifModalClose])
 
+  // Handle team invitation responses
+  const handleInvitationHandled = useCallback(
+    async (action, team) => {
+      // Refresh the notifications list
+      try {
+        const response = await axios.get('/api/user/getUpdates')
+        dispatch(setUpdates(response.data.updates))
+
+        // If accepted, you might want to refresh teams list as well
+        if (action === 'accepted' && team) {
+          // Emit an event or update team state if needed
+          console.log('Team invitation accepted:', team)
+        }
+      } catch (error) {
+        console.error('Error refreshing notifications:', error)
+      }
+    },
+    [dispatch],
+  )
+
   const formattedDate = useMemo(() => {
     return selectedNotification
       ? new Date(selectedNotification.date).toLocaleString()
       : ''
   }, [selectedNotification])
+
+  // Check if this is a team invitation notification
+  const isTeamInvitation = selectedNotification?.type === 'teamInvitation'
 
   return (
     <Modal
@@ -115,23 +142,28 @@ const NotificationModal = ({
                 h="64px"
                 borderRadius="full"
                 border="2px solid"
-                borderColor="purple.400"
+                borderColor={isTeamInvitation ? 'purple.400' : 'blue.400'}
                 bg="whiteAlpha.100"
                 fallback={
-                  <Icon as={BellIcon} w="64px" h="64px" color="purple.400" />
+                  <Icon
+                    as={BellIcon}
+                    w="64px"
+                    h="64px"
+                    color={isTeamInvitation ? 'purple.400' : 'blue.400'}
+                  />
                 }
               />
               <Badge
                 position="absolute"
                 bottom="-2"
                 right="-2"
-                colorScheme="purple"
+                colorScheme={isTeamInvitation ? 'purple' : 'blue'}
                 variant="solid"
                 fontSize="xs"
                 borderRadius="full"
                 px={2}
               >
-                New
+                {isTeamInvitation ? 'Team' : 'New'}
               </Badge>
             </Box>
 
@@ -165,28 +197,40 @@ const NotificationModal = ({
 
         <ModalBody px={6} pb={6}>
           {selectedNotification ? (
-            <Suspense
-              fallback={
-                <Flex justify="center" py={8}>
-                  <Spinner color="purple.400" size="xl" />
-                </Flex>
-              }
-            >
-              <Box
-                bg="whiteAlpha.50"
-                borderRadius="lg"
-                p={6}
-                backdropFilter="blur(8px)"
-                border="1px solid"
-                borderColor="whiteAlpha.100"
-              >
-                <LazyNotificationContent
-                  user={user}
-                  selectedNotification={selectedNotification}
-                  formattedDate={formattedDate}
+            <>
+              {/* Team Invitation Notification */}
+              {isTeamInvitation ? (
+                <TeamInvitationNotification
+                  notification={selectedNotification}
+                  onInvitationHandled={handleInvitationHandled}
+                  onClose={handleModalClose}
                 />
-              </Box>
-            </Suspense>
+              ) : (
+                /* Regular Notification */
+                <Suspense
+                  fallback={
+                    <Flex justify="center" py={8}>
+                      <Spinner color="purple.400" size="xl" />
+                    </Flex>
+                  }
+                >
+                  <Box
+                    bg="whiteAlpha.50"
+                    borderRadius="lg"
+                    p={6}
+                    backdropFilter="blur(8px)"
+                    border="1px solid"
+                    borderColor="whiteAlpha.100"
+                  >
+                    <LazyNotificationContent
+                      user={user}
+                      selectedNotification={selectedNotification}
+                      formattedDate={formattedDate}
+                    />
+                  </Box>
+                </Suspense>
+              )}
+            </>
           ) : (
             <Flex
               direction="column"

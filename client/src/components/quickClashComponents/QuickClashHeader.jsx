@@ -1,5 +1,5 @@
 // components/quickClashComponents/QuickClashHeader.jsx
-import React, { memo, useEffect } from 'react'
+import React, { memo, useEffect, useMemo } from 'react'
 import {
   Box,
   Heading,
@@ -11,18 +11,20 @@ import {
   useBreakpointValue,
   Tooltip,
   IconButton,
+  Badge,
 } from '@chakra-ui/react'
 import { motion } from 'framer-motion'
 import { FiZap, FiHome } from 'react-icons/fi'
-import { Target } from 'lucide-react'
+import { Target, Bell } from 'lucide-react'
 import { useTranslation } from 'react-i18next'
 import { useNavigate } from 'react-router-dom'
-import { useDispatch } from 'react-redux'
+import { useDispatch, useSelector } from 'react-redux'
 import QuickClashLeaderboardButton from './leaderboard/QuickClashLeaderboardButton'
 import LevelBadge from './user/LevelBadge'
 import TaskProgressIndicator from './dailyTasks/TaskProgressIndicator'
 import TrophyDisplay from './user/TrophyDisplay'
 import { fetchUserTrophies } from '../../redux/quickClashSlice'
+import { setIsNotifDrawerOpen } from '../../redux/appSlice'
 
 const MotionBox = motion(Box)
 const MotionButton = motion(Button)
@@ -35,6 +37,21 @@ const QuickClashHeader = ({ onNewChallenge }) => {
   const dispatch = useDispatch()
   const isDesktop = useBreakpointValue({ base: false, md: true })
 
+  // Get notification data from Redux
+  const { updates, unreadFriendRequests, notification } = useSelector(
+    state => state.app,
+  )
+
+  // Calculate notification count - memoized
+  const notificationCount = useMemo(() => {
+    const unreadUpdates = updates?.filter(u => !u.read).length || 0
+    const friendRequests = unreadFriendRequests || 0
+    const notificationItems = Array.isArray(notification)
+      ? notification.length
+      : 0
+    return unreadUpdates + friendRequests + notificationItems
+  }, [updates, unreadFriendRequests, notification])
+
   // Fetch trophy data when component mounts
   useEffect(() => {
     dispatch(fetchUserTrophies())
@@ -42,6 +59,10 @@ const QuickClashHeader = ({ onNewChallenge }) => {
 
   const handleBackToHome = () => {
     navigate('/home')
+  }
+
+  const handleInboxClick = () => {
+    dispatch(setIsNotifDrawerOpen(true))
   }
 
   // Animation variants
@@ -111,6 +132,19 @@ const QuickClashHeader = ({ onNewChallenge }) => {
         ease: 'easeInOut',
       },
     },
+  }
+
+  const inboxButtonVariants = {
+    hover: {
+      scale: 1.1,
+      boxShadow: '0 0 12px rgba(66, 153, 225, 0.6)',
+      transition: {
+        duration: 0.3,
+        type: 'spring',
+        stiffness: 200,
+      },
+    },
+    tap: { scale: 0.9 },
   }
 
   return (
@@ -199,6 +233,53 @@ const QuickClashHeader = ({ onNewChallenge }) => {
 
           {/* Desktop Level Badge */}
           <LevelBadge />
+
+          {/* Inbox Button - Desktop */}
+          <Box position="relative">
+            <Tooltip label={t('Notifications')}>
+              <MotionIconButton
+                as={motion.button}
+                icon={<Bell size={20} />}
+                onClick={handleInboxClick}
+                variant="ghost"
+                colorScheme="blue"
+                color="whiteAlpha.900"
+                size="md"
+                borderRadius="full"
+                p={3}
+                _hover={{
+                  bg: 'rgba(66, 153, 225, 0.2)',
+                  color: 'blue.300',
+                  transform: 'translateY(-2px)',
+                }}
+                aria-label={t('Open Notifications')}
+                variants={inboxButtonVariants}
+                whileHover="hover"
+                whileTap="tap"
+              />
+            </Tooltip>
+            {notificationCount > 0 && (
+              <Badge
+                position="absolute"
+                top="-2px"
+                right="-2px"
+                bg="red.500"
+                color="white"
+                borderRadius="full"
+                fontSize="xs"
+                minW="18px"
+                h="18px"
+                display="flex"
+                alignItems="center"
+                justifyContent="center"
+                border="2px solid"
+                borderColor="blue.500"
+                zIndex={1}
+              >
+                {notificationCount > 99 ? '99+' : notificationCount}
+              </Badge>
+            )}
+          </Box>
 
           {/* Daily Task Indicator */}
           <TaskProgressIndicator size="sm" />

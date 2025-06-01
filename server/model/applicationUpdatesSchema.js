@@ -25,8 +25,30 @@ const applicationUpdatesSchema = new mongoose.Schema({
   },
   type: {
     type: String,
-    enum: ['weeklyReport', 'applicationUpdate', 'demotion'],
+    enum: ['weeklyReport', 'applicationUpdate', 'demotion', 'teamInvitation'],
     default: 'applicationUpdate',
+  },
+  // Team invitation specific fields
+  invitationData: {
+    teamId: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: 'QUICK_CLASH_TEAM',
+    },
+    teamName: {
+      type: String,
+    },
+    inviterName: {
+      type: String,
+    },
+    inviterId: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: 'USER',
+    },
+    status: {
+      type: String,
+      enum: ['pending', 'accepted', 'rejected'],
+      default: 'pending',
+    },
   },
 })
 

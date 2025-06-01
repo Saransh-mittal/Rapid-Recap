@@ -1,5 +1,5 @@
 // customHooks/useQuickClashSocket.js
-import { useState, useCallback, useRef } from 'react'
+import { useState, useCallback, useRef, useEffect } from 'react'
 import { useSocket } from './useSocket'
 import { useDispatch, useSelector } from 'react-redux'
 import {
@@ -18,25 +18,55 @@ import { updateTaskProgressDirectInRedux } from '../redux/quickClashDailyTasksSl
 import { fetchTeamBattleDetails } from '../redux/quickClashTeamBattleSlice'
 
 /**
- * Custom hook for managing Quick Clash socket events
+ * Enhanced custom hook for managing Quick Clash socket events with device fingerprinting
  * @returns {Object} Quick Clash socket event handlers and state
  */
 const useQuickClashSocket = () => {
-  const { socket, getSocket } = useSocket()
+  const {
+    socket,
+    getSocket,
+    emitWithDeviceContext,
+    addEventListener,
+    deviceFingerprint,
+    deviceConflictDetected,
+    isSocketReady,
+  } = useSocket()
   const dispatch = useDispatch()
   const navigate = useNavigate()
   const { t } = useTranslation('QuickClash')
 
-  // Ref to track initialization status
+  // Ref to track initialization status and cleanup functions
   const initAttemptedRef = useRef(false)
-  const maxRetries = 5
-  const retryCount = useRef(0)
+  const eventCleanupFunctions = useRef([])
 
   // State for tracking socket events
   const [lastEvent, setLastEvent] = useState(null)
+  const [deviceConflictCount, setDeviceConflictCount] = useState(0)
   const isListening = useSelector(state => state.quickClash.socketListening)
   const { user } = useSelector(state => state.auth)
   const userId = user?._id
+
+  // Handle device conflicts
+  useEffect(() => {
+    if (deviceConflictDetected) {
+      setDeviceConflictCount(prev => prev + 1)
+
+      // Add note message for device conflict
+      dispatch(
+        addNoteMessageIfAllowed({
+          id: uuidv4(),
+          messageType: 'system',
+          eventType: 'deviceConflict',
+          data: {
+            message: t('Another device/tab is using your account'),
+            deviceFingerprint,
+          },
+          duration: 8000,
+          width: '350px',
+        }),
+      )
+    }
+  }, [deviceConflictDetected, deviceFingerprint, dispatch, t])
 
   // Initialize and setup socket handlers
   const initializeQuickClashSocket = useCallback(() => {
@@ -48,10 +78,8 @@ const useQuickClashSocket = () => {
     // Mark that we've attempted initialization
     initAttemptedRef.current = true
 
-    const currentSocket = getSocket()
-
-    if (!currentSocket) {
-      console.warn('Socket not available yet for Quick Clash initialization')
+    if (!isSocketReady()) {
+      console.warn('Socket not ready for Quick Clash initialization')
 
       // Reset the attempted flag to allow future attempts
       setTimeout(() => {
@@ -61,33 +89,27 @@ const useQuickClashSocket = () => {
       return
     }
 
-    // Set up event listeners
-    setupSocketListeners(currentSocket)
+    // Clean up any existing listeners first
+    cleanupSocketListeners()
 
-    // Join the quick clash notification room
-    currentSocket.emit('quickClash:join')
+    // Set up event listeners with device context
+    setupSocketListeners()
+
+    // Join the quick clash notification room with device context
+    emitWithDeviceContext('quickClash:join')
 
     // Mark as listening
     dispatch(setSocketListening(true))
-  }, [getSocket, isListening, dispatch])
+  }, [isSocketReady, isListening, dispatch, emitWithDeviceContext])
 
-  // Set up socket event listeners
-  const setupSocketListeners = useCallback(
-    socket => {
-      if (!socket) return
+  // Set up socket event listeners with device awareness
+  const setupSocketListeners = useCallback(() => {
+    const cleanupFunctions = []
 
-      // Clean up any existing listeners first to prevent duplicates
-      socket.off('quickClash:newChallenge')
-      socket.off('quickClash:challengerNotified')
-      socket.off('quickClash:challengeAccepted')
-      socket.off('quickClash:challengeRejected')
-      socket.off('quickClash:challengeCompleted')
-      socket.off('quickClash:challengeCompletedByBothPlayers')
-      socket.off('quickClash:teamBattleRefetch')
-      socket.off('quickClash:analysisReady')
-
-      // New challenge received
-      socket.on('quickClash:newChallenge', data => {
+    // New challenge received
+    const cleanupNewChallenge = addEventListener(
+      'quickClash:newChallenge',
+      data => {
         setLastEvent({ type: 'newChallenge', data, timestamp: new Date() })
 
         // Add to note message queue for in-app notification
@@ -104,9 +126,14 @@ const useQuickClashSocket = () => {
 
         // Refresh active challenges list
         dispatch(fetchActiveChallenges())
-      })
+      },
+    )
+    cleanupFunctions.push(cleanupNewChallenge)
 
-      socket.on('quickClash:challengerNotified', data => {
+    // Challenger notified
+    const cleanupChallengerNotified = addEventListener(
+      'quickClash:challengerNotified',
+      data => {
         setLastEvent({
           type: 'challengerNotified',
           data,
@@ -144,10 +171,14 @@ const useQuickClashSocket = () => {
 
         // Refresh active challenges list in either case
         dispatch(fetchActiveChallenges())
-      })
+      },
+    )
+    cleanupFunctions.push(cleanupChallengerNotified)
 
-      // Challenge accepted
-      socket.on('quickClash:challengeAccepted', data => {
+    // Challenge accepted
+    const cleanupChallengeAccepted = addEventListener(
+      'quickClash:challengeAccepted',
+      data => {
         setLastEvent({ type: 'challengeAccepted', data, timestamp: new Date() })
 
         // Add to note message queue
@@ -164,10 +195,14 @@ const useQuickClashSocket = () => {
 
         // Refresh active challenges list
         dispatch(fetchActiveChallenges())
-      })
+      },
+    )
+    cleanupFunctions.push(cleanupChallengeAccepted)
 
-      // Challenge rejected
-      socket.on('quickClash:challengeRejected', data => {
+    // Challenge rejected
+    const cleanupChallengeRejected = addEventListener(
+      'quickClash:challengeRejected',
+      data => {
         setLastEvent({ type: 'challengeRejected', data, timestamp: new Date() })
 
         // Add to note message queue
@@ -184,16 +219,25 @@ const useQuickClashSocket = () => {
 
         // Refresh active challenges list
         dispatch(fetchActiveChallenges())
-      })
+      },
+    )
+    cleanupFunctions.push(cleanupChallengeRejected)
 
-      socket.on('quickClash:teamBattleRefetch', data => {
+    // Team battle refetch
+    const cleanupTeamBattleRefetch = addEventListener(
+      'quickClash:teamBattleRefetch',
+      data => {
         if (data.battleId) {
           dispatch(fetchTeamBattleDetails(data.battleId))
         }
-      })
+      },
+    )
+    cleanupFunctions.push(cleanupTeamBattleRefetch)
 
-      // Challenge completed
-      socket.on('quickClash:challengeCompleted', data => {
+    // Challenge completed
+    const cleanupChallengeCompleted = addEventListener(
+      'quickClash:challengeCompleted',
+      data => {
         setLastEvent({
           type: 'challengeCompleted',
           data,
@@ -214,8 +258,14 @@ const useQuickClashSocket = () => {
 
         // Refresh active challenges list
         dispatch(fetchActiveChallenges())
-      })
-      socket.on('quickClash:challengeCompletedByBothPlayers', data => {
+      },
+    )
+    cleanupFunctions.push(cleanupChallengeCompleted)
+
+    // Challenge completed by both players
+    const cleanupChallengeCompletedByBoth = addEventListener(
+      'quickClash:challengeCompletedByBothPlayers',
+      data => {
         // Add to note message queue
         if (data.completedByUserId != userId) {
           dispatch(
@@ -230,7 +280,7 @@ const useQuickClashSocket = () => {
           )
 
           if (data.battleId) {
-            dispatch(fetchTeamBattleDetails(battleId))
+            dispatch(fetchTeamBattleDetails(data.battleId))
           }
           // Refresh active challenges list
           dispatch(fetchActiveChallenges())
@@ -238,24 +288,27 @@ const useQuickClashSocket = () => {
           dispatch(fetchUserStats())
         }
 
-        //data.trackWinnerOutcomeResult
-        //updateTaskProgressDirectInRedux
+        // Handle task updates
         if (data?.trackWinnerOutcomeResult?.tasksDone) {
-          // convert tasksDone object to array
+          // Convert tasksDone object to array
           const tasksDoneArray = Object.keys(
             data.trackWinnerOutcomeResult.tasksDone,
           ).map(key => data.trackWinnerOutcomeResult.tasksDone[key])
-          // update task progress directly in redux
+          // Update task progress directly in redux
           tasksDoneArray.forEach(task => {
             if (task) {
               dispatch(updateTaskProgressDirectInRedux(task))
             }
           })
         }
-      })
+      },
+    )
+    cleanupFunctions.push(cleanupChallengeCompletedByBoth)
 
-      // Analysis ready
-      socket.on('quickClash:analysisReady', data => {
+    // Analysis ready
+    const cleanupAnalysisReady = addEventListener(
+      'quickClash:analysisReady',
+      data => {
         setLastEvent({ type: 'analysisReady', data, timestamp: new Date() })
 
         // Add to note message queue
@@ -277,133 +330,190 @@ const useQuickClashSocket = () => {
             isLoading: false,
           }),
         )
-      })
+      },
+    )
+    cleanupFunctions.push(cleanupAnalysisReady)
 
-      // Handle socket reconnection
-      socket.on('reconnect', () => {
-        // Reset the initialization flag
-        initAttemptedRef.current = false
-        dispatch(setSocketListening(false))
-      })
-    },
-    [dispatch, t, fetchActiveChallenges],
-  )
+    // Handle socket reconnection
+    const cleanupReconnect = addEventListener('reconnect', () => {
+      console.log('Quick Clash socket reconnected, re-initializing...')
+
+      // Reset the initialization flag
+      initAttemptedRef.current = false
+      dispatch(setSocketListening(false))
+
+      // Re-initialize after a short delay
+      setTimeout(() => {
+        initializeQuickClashSocket()
+      }, 1000)
+    })
+    cleanupFunctions.push(cleanupReconnect)
+
+    // Store cleanup functions for later use
+    eventCleanupFunctions.current = cleanupFunctions
+  }, [
+    addEventListener,
+    dispatch,
+    t,
+    fetchActiveChallenges,
+    userId,
+    initializeQuickClashSocket,
+  ])
 
   // Clean up event listeners
   const cleanupSocketListeners = useCallback(() => {
-    if (socket) {
-      socket.off('quickClash:newChallenge')
-      socket.off('quickClash:challengerNotified')
-      socket.off('quickClash:challengeAccepted')
-      socket.off('quickClash:challengeRejected')
-      socket.off('quickClash:challengeCompleted')
-      socket.off('quickClash:teamBattleRefetch')
-      socket.off('quickClash:challengeCompletedByBothPlayers')
-      socket.off('quickClash:analysisReady')
-      socket.off('reconnect')
+    // Clean up all registered event listeners
+    eventCleanupFunctions.current.forEach(cleanup => {
+      if (typeof cleanup === 'function') {
+        cleanup()
+      }
+    })
+    eventCleanupFunctions.current = []
 
-      // Reset state
-      initAttemptedRef.current = false
-      dispatch(setSocketListening(false))
+    // Reset state
+    initAttemptedRef.current = false
+    dispatch(setSocketListening(false))
+  }, [dispatch])
+
+  // Cleanup on unmount
+  useEffect(() => {
+    return () => {
+      cleanupSocketListeners()
     }
-  }, [socket, dispatch])
+  }, [cleanupSocketListeners])
 
-  // Emit events - all with improved error handling
+  // Enhanced emit functions with device context
   const emitChallengeCreated = useCallback(
     data => {
-      if (socket && socket.connected) {
+      if (isSocketReady()) {
         try {
-          socket.emit('quickClash:createChallenge', data)
+          emitWithDeviceContext('quickClash:createChallenge', data)
         } catch (error) {
           console.error('Error emitting quickClash:createChallenge:', error)
         }
       } else {
         console.warn(
-          'Socket not connected, unable to emit quickClash:createChallenge',
+          'Socket not ready, unable to emit quickClash:createChallenge',
         )
       }
     },
-    [socket],
+    [isSocketReady, emitWithDeviceContext],
   )
 
   const emitChallengeAccepted = useCallback(
     data => {
-      if (socket && socket.connected) {
+      if (isSocketReady()) {
         try {
-          socket.emit('quickClash:acceptChallenge', data)
+          emitWithDeviceContext('quickClash:acceptChallenge', data)
         } catch (error) {
           console.error('Error emitting quickClash:acceptChallenge:', error)
         }
       } else {
         console.warn(
-          'Socket not connected, unable to emit quickClash:acceptChallenge',
+          'Socket not ready, unable to emit quickClash:acceptChallenge',
         )
       }
     },
-    [socket],
+    [isSocketReady, emitWithDeviceContext],
   )
 
   const emitChallengeRejected = useCallback(
     data => {
-      if (socket && socket.connected) {
+      if (isSocketReady()) {
         try {
-          socket.emit('quickClash:rejectChallenge', data)
+          emitWithDeviceContext('quickClash:rejectChallenge', data)
         } catch (error) {
           console.error('Error emitting quickClash:rejectChallenge:', error)
         }
       } else {
         console.warn(
-          'Socket not connected, unable to emit quickClash:rejectChallenge',
+          'Socket not ready, unable to emit quickClash:rejectChallenge',
         )
       }
     },
-    [socket],
+    [isSocketReady, emitWithDeviceContext],
   )
 
   const emitChallengeCompleted = useCallback(
     data => {
-      if (socket && socket.connected) {
+      if (isSocketReady()) {
         try {
-          socket.emit('quickClash:completeChallenge', data)
+          emitWithDeviceContext('quickClash:completeChallenge', data)
         } catch (error) {
           console.error('Error emitting quickClash:completeChallenge:', error)
         }
       } else {
         console.warn(
-          'Socket not connected, unable to emit quickClash:completeChallenge',
+          'Socket not ready, unable to emit quickClash:completeChallenge',
         )
       }
     },
-    [socket],
+    [isSocketReady, emitWithDeviceContext],
   )
 
   const emitAnalysisReady = useCallback(
     data => {
-      if (socket && socket.connected) {
+      if (isSocketReady()) {
         try {
-          socket.emit('quickClash:analysisReady', data)
+          emitWithDeviceContext('quickClash:analysisReady', data)
         } catch (error) {
           console.error('Error emitting quickClash:analysisReady:', error)
         }
       } else {
         console.warn(
-          'Socket not connected, unable to emit quickClash:analysisReady',
+          'Socket not ready, unable to emit quickClash:analysisReady',
         )
       }
     },
-    [socket],
+    [isSocketReady, emitWithDeviceContext],
   )
 
+  // Enhanced join room functions with device context
+  const joinQuickClashRoom = useCallback(() => {
+    if (isSocketReady()) {
+      emitWithDeviceContext('quickClash:join')
+    }
+  }, [isSocketReady, emitWithDeviceContext])
+
+  const joinTeamsRoom = useCallback(() => {
+    if (isSocketReady()) {
+      emitWithDeviceContext('quickClash:joinTeamsRoom')
+    }
+  }, [isSocketReady, emitWithDeviceContext])
+
+  const viewTeamBattles = useCallback(() => {
+    if (isSocketReady()) {
+      emitWithDeviceContext('quickClash:viewTeamBattles')
+    }
+  }, [isSocketReady, emitWithDeviceContext])
+
   return {
+    // State
     isListening,
     lastEvent,
+    deviceFingerprint,
+    deviceConflictDetected,
+    deviceConflictCount,
+    isSocketReady: isSocketReady(),
+
+    // Core functions
     initializeQuickClashSocket,
+    cleanupSocketListeners,
+
+    // Enhanced emit functions with device context
     emitChallengeCreated,
     emitChallengeAccepted,
     emitChallengeRejected,
     emitChallengeCompleted,
     emitAnalysisReady,
-    cleanupSocketListeners,
+
+    // Room management with device context
+    joinQuickClashRoom,
+    joinTeamsRoom,
+    viewTeamBattles,
+
+    // Generic emit with device context
+    emitWithDeviceContext,
   }
 }
 

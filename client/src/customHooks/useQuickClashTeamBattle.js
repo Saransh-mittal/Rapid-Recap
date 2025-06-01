@@ -21,90 +21,265 @@ import {
 } from '../redux/quickClashTeamBattleSlice'
 import { useSocket } from './useSocket'
 import axios from 'axios'
+import { fetchAppUpdates } from '../redux/appSlice'
 
 /**
- * Custom hook for team battle functionality
+ * Enhanced custom hook for team battle functionality with device fingerprinting
  */
 const useQuickClashTeamBattle = () => {
   const dispatch = useDispatch()
-  const { getSocket } = useSocket()
+  const {
+    getSocket,
+    emitWithDeviceContext,
+    addEventListener,
+    deviceFingerprint,
+    isSocketReady,
+  } = useSocket()
   const toast = useToast()
   const { t } = useTranslation('QuickClash')
   const navigate = useNavigate()
   const joinedTeamsRoom = useRef(false)
+  const eventCleanupFunctions = useRef([])
   const { user } = useSelector(state => state.auth)
 
   // Get state from Redux
   const teamBattleState = useSelector(state => state.quickClashTeamBattle)
 
-  // Setup socket listeners for team battles and matchmaking
+  // Setup socket listeners for team battles and matchmaking with device awareness
   const setupTeamBattleSocketListeners = useCallback(() => {
-    const socket = getSocket()
-    if (!socket) return
+    if (!isSocketReady()) {
+      console.warn('Socket not ready for team battle listeners setup')
+      return
+    }
 
     // Join the teams room first to receive team battle events
     if (!joinedTeamsRoom.current) {
-      socket.emit('quickClash:joinTeamsRoom')
+      emitWithDeviceContext('quickClash:joinTeamsRoom')
       joinedTeamsRoom.current = true
     }
 
     // Clean up any existing listeners first
     cleanupSocketListeners()
 
+    const cleanupFunctions = []
+
     // Battle ready notification
-    socket.on('quickClash:teamBattleReady', data => {
-      dispatch(setBattleReady(data))
-    })
+    const cleanupBattleReady = addEventListener(
+      'quickClash:teamBattleReady',
+      data => {
+        console.log('Team battle ready event received:', data)
+        dispatch(setBattleReady(data))
+      },
+    )
+    cleanupFunctions.push(cleanupBattleReady)
 
     // Battle completed notification
-    socket.on('quickClash:teamBattleCompleted', data => {
-      toast({
-        title: t('Battle Completed!'),
-        description: t('Your team battle has been completed.'),
-        status: 'info',
-        duration: 5000,
-        isClosable: true,
-      })
+    const cleanupBattleCompleted = addEventListener(
+      'quickClash:teamBattleCompleted',
+      data => {
+        toast({
+          title: t('Battle Completed!'),
+          description: t('Your team battle has been completed.'),
+          status: 'info',
+          duration: 5000,
+          isClosable: true,
+        })
 
-      // Refresh battles list
-      dispatch(fetchTeamBattles())
-    })
+        // Refresh battles list
+        dispatch(fetchTeamBattles())
+      },
+    )
+    cleanupFunctions.push(cleanupBattleCompleted)
 
     // Member category selection notification
-    socket.on('quickClash:teamMemberSelectedCategory', data => {
-      // If we're viewing this battle, refresh it
-      if (
-        teamBattleState.currentBattle &&
-        teamBattleState.currentBattle._id === data.battleId
-      ) {
-        dispatch(fetchTeamBattleDetails(data.battleId))
-      }
-    })
+    const cleanupMemberSelectedCategory = addEventListener(
+      'quickClash:teamMemberSelectedCategory',
+      data => {
+        // If we're viewing this battle, refresh it
+        if (
+          teamBattleState.currentBattle &&
+          teamBattleState.currentBattle._id === data.battleId
+        ) {
+          dispatch(fetchTeamBattleDetails(data.battleId))
+        }
+      },
+    )
+    cleanupFunctions.push(cleanupMemberSelectedCategory)
 
-    socket.on('quickClash:teamMemberDeselectedCategory', data => {
-      // If we're viewing this battle, refresh it
-      if (
-        teamBattleState.currentBattle &&
-        teamBattleState.currentBattle._id === data.battleId
-      ) {
-        dispatch(fetchTeamBattleDetails(data.battleId))
-      }
-    })
+    // Member category deselection notification
+    const cleanupMemberDeselectedCategory = addEventListener(
+      'quickClash:teamMemberDeselectedCategory',
+      data => {
+        // If we're viewing this battle, refresh it
+        if (
+          teamBattleState.currentBattle &&
+          teamBattleState.currentBattle._id === data.battleId
+        ) {
+          dispatch(fetchTeamBattleDetails(data.battleId))
+        }
+      },
+    )
+    cleanupFunctions.push(cleanupMemberDeselectedCategory)
+
+    // Team invitation received
+    const cleanupTeamInvitationReceived = addEventListener(
+      'quickClash:teamInvitationReceived',
+      data => {
+        // Show toast notification for team invitation
+        toast({
+          title: t('Team Invitation Received'),
+          description: t(
+            '{{inviterName}} has invited you to join their team "{{teamName}}". Check your inbox to accept or decline.',
+            {
+              inviterName: data.inviterName,
+              teamName: data.teamName,
+            },
+          ),
+          status: 'info',
+          duration: 7000,
+          isClosable: true,
+        })
+        dispatch(fetchAppUpdates())
+      },
+    )
+    cleanupFunctions.push(cleanupTeamInvitationReceived)
+
+    // Team invitation accepted
+    const cleanupTeamInvitationAccepted = addEventListener(
+      'quickClash:teamInvitationAccepted',
+      data => {
+        // User accepted an invitation, refresh teams list
+        if (data.userId === user?._id) {
+          return
+        } else {
+          toast({
+            title: t('A new member has joined!'),
+            description: `${data.userName} (@${data.userInGameName}) has joined the team`,
+            status: 'success',
+            duration: 5000,
+            isClosable: true,
+            position: 'top',
+          })
+        }
+      },
+    )
+    cleanupFunctions.push(cleanupTeamInvitationAccepted)
+
+    // Team invitation rejected
+    const cleanupTeamInvitationRejected = addEventListener(
+      'quickClash:teamInvitationRejected',
+      data => {
+        // User rejected an invitation, show notification
+        if (data.userId === user?._id) {
+          return
+        } else {
+          toast({
+            title: t('Invitation Declined'),
+            description: `${data.userName} (@${data.userInGameName}) has declined the invitation`,
+            status: 'warning',
+            duration: 5000,
+            isClosable: true,
+            position: 'top',
+          })
+        }
+      },
+    )
+    cleanupFunctions.push(cleanupTeamInvitationRejected)
+
+    // Team member joined
+    const cleanupTeamMemberJoined = addEventListener(
+      'quickClash:teamMemberJoined',
+      data => {
+        if (data.userId === user?._id) {
+          return
+        }
+        toast({
+          title: t('New Team Member'),
+          description: `${data.userName} (@${data.userInGameName}) has joined your team`,
+          status: 'info',
+          duration: 3000,
+          isClosable: true,
+        })
+      },
+    )
+    cleanupFunctions.push(cleanupTeamMemberJoined)
+
+    // Team member left
+    const cleanupTeamMemberLeft = addEventListener(
+      'quickClash:teamMemberLeft',
+      data => {
+        if (data.userId === user?._id) {
+          return
+        }
+        toast({
+          title: t('Team Member Left'),
+          description: `${data.userName} (@${data.userInGameName}) has left the team`,
+          status: 'warning',
+          duration: 3000,
+          isClosable: true,
+        })
+      },
+    )
+    cleanupFunctions.push(cleanupTeamMemberLeft)
+
+    // Team member removed
+    const cleanupTeamMemberRemoved = addEventListener(
+      'quickClash:teamMemberRemoved',
+      data => {
+        console.log('Team member removed:', data)
+        if (data.removedMemberId === user?._id) {
+          // If the user was removed from their own team, navigate to team selection
+          toast({
+            title: `You have been removed from the team ${data.teamName}`,
+            description: t('You can join another team or create your own.'),
+            status: 'error',
+            duration: 5000,
+            isClosable: true,
+            position: 'top',
+          })
+          return
+        }
+        toast({
+          title: t('Team Member Removed'),
+          description: `${data.removedMemberName} (@${data.removedMemberInGameName}) has been removed from the team`,
+          status: 'warning',
+          duration: 5000,
+          isClosable: true,
+          position: 'top',
+        })
+      },
+    )
+    cleanupFunctions.push(cleanupTeamMemberRemoved)
+
+    // Store cleanup functions
+    eventCleanupFunctions.current = cleanupFunctions
 
     return () => cleanupSocketListeners()
-  }, [dispatch, getSocket, toast, t, navigate, teamBattleState.currentBattle])
+  }, [
+    isSocketReady,
+    emitWithDeviceContext,
+    addEventListener,
+    dispatch,
+    toast,
+    t,
+    navigate,
+    teamBattleState.currentBattle,
+    user?._id,
+  ])
 
-  // Clean up socket listeners
+  // Clean up socket listeners with device awareness
   const cleanupSocketListeners = useCallback(() => {
-    const socket = getSocket()
-    if (!socket) return
+    // Clean up all registered event listeners
+    eventCleanupFunctions.current.forEach(cleanup => {
+      if (typeof cleanup === 'function') {
+        cleanup()
+      }
+    })
+    eventCleanupFunctions.current = []
 
-    socket.off('quickClash:teamBattleReady')
-    socket.off('quickClash:teamBattleCompleted')
-    socket.off('quickClash:teamMemberSelectedCategory')
-    socket.off('quickClash:teamBattleRefetch')
-    socket.off('quickClash:teamMemberDeselectedCategory')
-  }, [getSocket])
+    // Reset joined room flag
+    joinedTeamsRoom.current = false
+  }, [])
 
   // Setup socket listeners on mount
   useEffect(() => {
@@ -120,16 +295,15 @@ const useQuickClashTeamBattle = () => {
   // Fetch team battles with status filter
   const loadTeamBattles = useCallback(
     (status = 'active', page = 1, limit = 10) => {
-      // Signal to the server that we're viewing team battles
-      const socket = getSocket()
-      if (socket && !joinedTeamsRoom.current) {
-        socket.emit('quickClash:viewTeamBattles')
+      // Signal to the server that we're viewing team battles with device context
+      if (isSocketReady() && !joinedTeamsRoom.current) {
+        emitWithDeviceContext('quickClash:viewTeamBattles')
         joinedTeamsRoom.current = true
       }
 
       return dispatch(fetchTeamBattles({ status, page, limit }))
     },
-    [dispatch, getSocket],
+    [dispatch, isSocketReady, emitWithDeviceContext],
   )
 
   // Fetch more team battles (pagination)
@@ -153,15 +327,14 @@ const useQuickClashTeamBattle = () => {
   const getBattleDetails = useCallback(
     battleId => {
       // Ensure we're in the teams socket room when viewing battle details
-      const socket = getSocket()
-      if (socket && !joinedTeamsRoom.current) {
-        socket.emit('quickClash:viewTeamBattles')
+      if (isSocketReady() && !joinedTeamsRoom.current) {
+        emitWithDeviceContext('quickClash:viewTeamBattles')
         joinedTeamsRoom.current = true
       }
 
       return dispatch(fetchTeamBattleDetails(battleId))
     },
-    [dispatch, getSocket],
+    [dispatch, isSocketReady, emitWithDeviceContext],
   )
 
   const selectCategory = useCallback(
@@ -187,7 +360,7 @@ const useQuickClashTeamBattle = () => {
 
   const deselectCategory = useCallback(
     battleId => {
-      return dispatch(deselectBattleCategory({ battleId })) // Fixed: was deselectCategoryForUser
+      return dispatch(deselectBattleCategory({ battleId }))
         .unwrap()
         .then(result => {
           return result
@@ -218,7 +391,7 @@ const useQuickClashTeamBattle = () => {
             localStorage.setItem(
               `challenge_${sessionInfo.challengeId}`,
               JSON.stringify({
-                userId: user?._id, // You'll need to get user from Redux state
+                userId: user?._id,
                 battleId: battleId,
                 timestamp: Date.now(),
               }),
@@ -241,7 +414,7 @@ const useQuickClashTeamBattle = () => {
           throw error
         })
     },
-    [dispatch, navigate, toast, t, user?._id], // Add user._id to dependencies
+    [dispatch, navigate, toast, t, user?._id],
   )
 
   // Clear operation error
@@ -258,9 +431,8 @@ const useQuickClashTeamBattle = () => {
   const joinMatchmaking = useCallback(
     teamId => {
       // Ensure we're in the teams socket room
-      const socket = getSocket()
-      if (socket && !joinedTeamsRoom.current) {
-        socket.emit('quickClash:joinTeamsRoom')
+      if (isSocketReady() && !joinedTeamsRoom.current) {
+        emitWithDeviceContext('quickClash:joinTeamsRoom')
         joinedTeamsRoom.current = true
       }
 
@@ -312,7 +484,7 @@ const useQuickClashTeamBattle = () => {
           throw error
         })
     },
-    [dispatch, toast, t, getSocket],
+    [dispatch, toast, t, isSocketReady, emitWithDeviceContext],
   )
 
   // Leave team matchmaking
@@ -349,15 +521,14 @@ const useQuickClashTeamBattle = () => {
   const checkMatchmakingStatus = useCallback(
     teamId => {
       // Ensure we're in the teams socket room
-      const socket = getSocket()
-      if (socket && !joinedTeamsRoom.current) {
-        socket.emit('quickClash:joinTeamsRoom')
+      if (isSocketReady() && !joinedTeamsRoom.current) {
+        emitWithDeviceContext('quickClash:joinTeamsRoom')
         joinedTeamsRoom.current = true
       }
 
       return dispatch(getTeamMatchmakingStatus(teamId))
     },
-    [dispatch, getSocket],
+    [dispatch, isSocketReady, emitWithDeviceContext],
   )
 
   // Clear current battle
@@ -369,15 +540,14 @@ const useQuickClashTeamBattle = () => {
   const goToBattle = useCallback(
     battleId => {
       // Ensure we're in the teams socket room when navigating to a battle
-      const socket = getSocket()
-      if (socket && !joinedTeamsRoom.current) {
-        socket.emit('quickClash:viewTeamBattles')
+      if (isSocketReady() && !joinedTeamsRoom.current) {
+        emitWithDeviceContext('quickClash:viewTeamBattles')
         joinedTeamsRoom.current = true
       }
 
       navigate(`/quickclash/teamBattle/${battleId}`)
     },
-    [navigate, getSocket],
+    [navigate, isSocketReady, emitWithDeviceContext],
   )
 
   // Clear battle ready notification
@@ -419,6 +589,10 @@ const useQuickClashTeamBattle = () => {
     matchmakingStep: teamBattleState.matchmakingStep,
 
     battleReady: teamBattleState.battleReady,
+
+    // Device information
+    deviceFingerprint,
+    isSocketReady: isSocketReady(),
 
     // Actions
     loadTeamBattles,

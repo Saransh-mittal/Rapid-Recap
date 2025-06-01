@@ -4,6 +4,9 @@ const QuickClashTeam = require('../../model/quickClashSchemas/quickClashTeamSche
 const User = require('../../model/userSchema')
 const { DEFAULT_STARTING_TROPHIES } = require('./quickClashTrophyService')
 const globalEmitter = require('../../eventEmitter')
+const {
+  createTeamInvitationNotification,
+} = require('./quickClashTeamInvitationService')
 
 /**
  * Create a new team
@@ -121,7 +124,9 @@ const joinTeamByCode = async ({ teamCode, userId }) => {
       }
 
       // Check if user exists
-      const user = await User.findById(userId).session(session)
+      const user = await User.findById(userId)
+        .session(session)
+        .select('_id name inGameName ')
       if (!user) {
         throw new Error('User not found')
       }
@@ -143,80 +148,8 @@ const joinTeamByCode = async ({ teamCode, userId }) => {
         globalEmitter.emit('quickClash:teamMemberJoined', {
           team: team._id,
           user: userId,
-        })
-      }, 0)
-
-      return team
-    })
-  } finally {
-    session.endSession()
-  }
-}
-
-/**
- * Invite user to team
- * @param {Object} params - Parameters
- * @param {string} params.teamId - Team ID
- * @param {string} params.inviterId - Inviter user ID
- * @param {string} params.inviteeId - Invitee user ID
- * @returns {Promise<Object>} Updated team
- */
-const inviteToTeam = async ({ teamId, inviterId, inviteeId }) => {
-  const session = await mongoose.startSession()
-
-  try {
-    return await session.withTransaction(async () => {
-      // Find the team
-      const team = await QuickClashTeam.findById(teamId).session(session)
-      if (!team) {
-        throw new Error('Team not found')
-      }
-
-      // Verify inviter is a team member with appropriate permissions
-      const inviter = team.members.find(
-        member => member.user.toString() === inviterId.toString(),
-      )
-      if (!inviter || inviter.role !== 'leader') {
-        throw new Error('Not authorized to invite members')
-      }
-
-      // Check if team is full
-      if (team.members.length >= team.maxMembers) {
-        throw new Error('Team is full')
-      }
-
-      // Check if invitee is already in the team
-      const existingMember = team.members.find(
-        member => member.user.toString() === inviteeId.toString(),
-      )
-      if (existingMember) {
-        throw new Error('User is already a member of this team')
-      }
-
-      // Check if invitee exists
-      const invitee = await User.findById(inviteeId).session(session)
-      if (!invitee) {
-        throw new Error('Invitee not found')
-      }
-
-      // Add invitee to team as pending
-      team.members.push({
-        user: inviteeId,
-        role: 'member',
-        status: 'pending',
-      })
-
-      // Update last active timestamp
-      team.lastActive = new Date()
-
-      await team.save({ session })
-
-      // Emit event for notifications
-      setTimeout(() => {
-        globalEmitter.emit('quickClash:teamInviteSent', {
-          team: team._id,
-          inviter: inviterId,
-          invitee: inviteeId,
+          userName: user.name,
+          userInGameName: user.inGameName,
         })
       }, 0)
 
@@ -356,11 +289,17 @@ const leaveTeam = async ({ teamId, userId }) => {
 
       await team.save({ session })
 
+      const user = await User.findById(userId).select('_id name inGameName ')
+      if (!user) {
+        throw new Error('User not found')
+      }
       // Emit event
       setTimeout(() => {
         globalEmitter.emit('quickClash:teamMemberLeft', {
           team: team._id,
           user: userId,
+          userName: user.name,
+          userInGameName: user.inGameName,
         })
       }, 0)
 
@@ -547,17 +486,78 @@ const removeMember = async ({ teamId, leaderId, memberId }) => {
       team.lastActive = new Date()
 
       await team.save({ session })
-
+      const removedMember = await User.findById(memberId)
+        .session(session)
+        .select('_id name inGameName')
+      if (!removedMember) {
+        throw new Error('Removed member not found')
+      }
       // Emit event
       setTimeout(() => {
         globalEmitter.emit('quickClash:teamMemberRemoved', {
           team: team._id,
           leader: leaderId,
           removedMember: memberId,
+          teamName: team.name,
+          removedMemberName: removedMember.name,
+          removedMemberInGameName: removedMember.inGameName,
         })
       }, 0)
 
       return team
+    })
+  } finally {
+    session.endSession()
+  }
+}
+
+/**
+ * Invite user to team (creates notification instead of direct addition)
+ * @param {Object} params - Parameters
+ * @param {string} params.teamId - Team ID
+ * @param {string} params.inviterId - Inviter user ID
+ * @param {string} params.inviteeId - Invitee user ID
+ * @returns {Promise<Object>} Created invitation notification
+ */
+const inviteToTeam = async ({ teamId, inviterId, inviteeId }) => {
+  const session = await mongoose.startSession()
+
+  try {
+    return await session.withTransaction(async () => {
+      // Find the team
+      const team = await QuickClashTeam.findById(teamId).session(session)
+      if (!team) {
+        throw new Error('Team not found')
+      }
+
+      // Verify inviter is a team member with appropriate permissions
+      const inviter = team.members.find(
+        member => member.user.toString() === inviterId.toString(),
+      )
+      if (!inviter || inviter.role !== 'leader') {
+        throw new Error('Not authorized to invite members')
+      }
+
+      // Check if team is full
+      if (team.members.length >= team.maxMembers) {
+        throw new Error('Team is full')
+      }
+
+      // Check if invitee exists
+      const invitee = await User.findById(inviteeId).session(session)
+      if (!invitee) {
+        throw new Error('Invitee not found')
+      }
+
+      // Create invitation notification
+      const invitation = await createTeamInvitationNotification({
+        teamId,
+        inviterId,
+        inviteeId,
+        session,
+      })
+
+      return invitation
     })
   } finally {
     session.endSession()

@@ -32,7 +32,7 @@ const LazyDrawers = createPreloadableComponents(drawerComponents)
 const LazyModals = createPreloadableComponents(modalComponents)
 
 // Loading fallback component
-const ModalLoader = () => (
+export const ModalLoader = () => (
   <Flex
     position="fixed"
     top={0}

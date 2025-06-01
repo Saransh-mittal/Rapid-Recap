@@ -22,6 +22,9 @@ const {
   getTeamMatchmakingStatusDetailed,
   deselectCategoryForBattle,
   beginChallengeForBattle,
+  acceptTeamInvitationController,
+  rejectTeamInvitationController,
+  getPendingInvitationsController,
 } = require('../controllers/quickClashTeamController')
 
 const router = express.Router()
@@ -60,5 +63,15 @@ router.get(
   '/team/:teamId/matchmaking-status-detailed',
   getTeamMatchmakingStatusDetailed,
 )
+
+router.post(
+  '/team/invitation/:invitationId/accept',
+  acceptTeamInvitationController,
+)
+router.post(
+  '/team/invitation/:invitationId/reject',
+  rejectTeamInvitationController,
+)
+router.get('/team/invitations/pending', getPendingInvitationsController)
 
 module.exports = router

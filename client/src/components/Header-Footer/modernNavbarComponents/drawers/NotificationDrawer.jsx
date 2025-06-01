@@ -26,8 +26,10 @@ import {
   Icon,
   VStack,
   Spinner,
+  HStack,
 } from '@chakra-ui/react'
 import { DeleteIcon, BellIcon, TimeIcon } from '@chakra-ui/icons'
+import { Users } from 'lucide-react'
 import axios from 'axios'
 import { useDispatch, useSelector } from 'react-redux'
 import { setUpdates } from '../../../../redux/appSlice'
@@ -77,6 +79,12 @@ const NotificationItem = React.memo(
       )
     }, [update.mainText])
 
+    // Check if this is a team invitation
+    const isTeamInvitation = update.type === 'teamInvitation'
+    const invitationStatus = update.invitationData?.status
+    const isPendingInvitation =
+      isTeamInvitation && invitationStatus === 'pending'
+
     return (
       <Box
         w="full"
@@ -87,21 +95,40 @@ const NotificationItem = React.memo(
         onClick={handleClick}
         role="button"
         tabIndex={0}
+        borderLeft={isPendingInvitation ? '4px solid' : 'none'}
+        borderLeftColor={isPendingInvitation ? 'purple.400' : 'transparent'}
+        bg={isPendingInvitation ? 'rgba(128, 90, 213, 0.1)' : 'transparent'}
       >
         <Flex gap={4}>
           <Box flexShrink={0}>
-            <Image
-              src={Rapid_recap}
-              alt={t('notificationImage')}
-              boxSize="40px"
-              borderRadius="full"
-              border="2px solid"
-              borderColor="purple.400"
-              fallback={
-                <Icon as={BellIcon} boxSize="40px" color="purple.400" />
-              }
-              loading="lazy"
-            />
+            {isTeamInvitation ? (
+              <Box
+                display="flex"
+                alignItems="center"
+                justifyContent="center"
+                boxSize="40px"
+                borderRadius="full"
+                bg="purple.500"
+                border="2px solid"
+                borderColor="purple.400"
+                boxShadow="0 0 10px rgba(128, 90, 213, 0.4)"
+              >
+                <Icon as={Users} color="white" boxSize="20px" />
+              </Box>
+            ) : (
+              <Image
+                src={Rapid_recap}
+                alt={t('notificationImage')}
+                boxSize="40px"
+                borderRadius="full"
+                border="2px solid"
+                borderColor="purple.400"
+                fallback={
+                  <Icon as={BellIcon} boxSize="40px" color="purple.400" />
+                }
+                loading="lazy"
+              />
+            )}
           </Box>
 
           <Box flex={1}>
@@ -112,13 +139,38 @@ const NotificationItem = React.memo(
               >
                 {update.title}
               </Heading>
-              <Badge
-                colorScheme={update.read ? 'gray' : 'purple'}
-                variant="subtle"
-                fontSize="xs"
-              >
-                {update.read ? t('read') : t('new')}
-              </Badge>
+              <HStack spacing={2}>
+                {/* Team invitation status badge */}
+                {isTeamInvitation && (
+                  <Badge
+                    colorScheme={
+                      invitationStatus === 'pending'
+                        ? 'yellow'
+                        : invitationStatus === 'accepted'
+                        ? 'green'
+                        : 'red'
+                    }
+                    variant="solid"
+                    fontSize="xs"
+                    px={2}
+                    py={0.5}
+                    borderRadius="full"
+                  >
+                    {invitationStatus === 'pending'
+                      ? t('Pending')
+                      : invitationStatus === 'accepted'
+                      ? t('Accepted')
+                      : t('Rejected')}
+                  </Badge>
+                )}
+                <Badge
+                  colorScheme={update.read ? 'gray' : 'purple'}
+                  variant="subtle"
+                  fontSize="xs"
+                >
+                  {update.read ? t('read') : t('new')}
+                </Badge>
+              </HStack>
             </Flex>
 
             <Text
@@ -133,7 +185,9 @@ const NotificationItem = React.memo(
                 textOverflow: 'ellipsis',
               }}
             >
-              {truncatedText}
+              {isTeamInvitation && update.invitationData
+                ? `${update.invitationData.inviterName} invited you to join "${update.invitationData.teamName}"`
+                : truncatedText}
             </Text>
 
             <Flex justify="space-between" align="center">
