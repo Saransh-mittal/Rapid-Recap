@@ -30,7 +30,6 @@ import { motion } from 'framer-motion'
 import { useTranslation } from 'react-i18next'
 import {
   ArrowLeft,
-  Sparkles,
   Trophy,
   Clock,
   Brain,
@@ -57,7 +56,6 @@ const CategoryBreakdownSection = lazy(() =>
 const DetailedBonusExplanation = lazy(() =>
   import('./DetailedBonusExplanation'),
 )
-const ShareResultsModal = lazy(() => import('./ShareResultsModal'))
 
 // UPDATED: Import simplified feedback widget and additional components
 import SimplifiedEnhancedFeedbackWidget from './SimplifiedEnhancedFeedbackWidget'
@@ -291,11 +289,6 @@ const AnalysisContent = React.memo(
       overallFeedbackLoading,
     } = useFeedbackContext()
 
-    const {
-      isOpen: isShareOpen,
-      onOpen: openShare,
-      onClose: closeShare,
-    } = useDisclosure()
     const {
       isOpen: isFeedbackOpen,
       onOpen: openFeedback,
@@ -891,60 +884,25 @@ const AnalysisContent = React.memo(
                 )}
               </Box>
 
-              <Flex
-                justify="center"
-                align="center"
-                gap={config.componentPadding.base}
-                wrap="wrap"
-                direction={{ base: 'column', sm: 'row' }}
-                w="full"
+              {/* REMOVED SHARE BUTTON - Only show back button */}
+              <Button
+                leftIcon={<ArrowLeft size={16} />}
+                size={config.buttonSize}
+                onClick={goBack}
+                bg="gray.700"
+                color="whiteAlpha.900"
+                borderRadius="md"
+                _hover={{ bg: 'gray.600' }}
+                w={{ base: 'full', sm: 'auto' }}
+                minW={{ base: 'full', sm: '200px' }}
+                py={isMobile ? 2.5 : 2}
+                h="auto"
               >
-                <Button
-                  leftIcon={<ArrowLeft size={16} />}
-                  size={config.buttonSize}
-                  onClick={goBack}
-                  bg="gray.700"
-                  color="whiteAlpha.900"
-                  borderRadius="md"
-                  _hover={{ bg: 'gray.600' }}
-                  w={{ base: 'full', sm: 'auto' }}
-                  minW={{ base: 'full', sm: '140px' }}
-                  py={isMobile ? 2.5 : 2}
-                  h="auto"
-                >
-                  {t('Back to Battles')}
-                </Button>
-                <Button
-                  leftIcon={<Sparkles size={16} />}
-                  variant="outline"
-                  size={config.buttonSize}
-                  onClick={openShare}
-                  borderColor="purple.500"
-                  color="purple.300"
-                  borderRadius="md"
-                  _hover={{ bg: 'purple.500_with_alpha_0.1' }}
-                  w={{ base: 'full', sm: 'auto' }}
-                  minW={{ base: 'full', sm: '140px' }}
-                  py={isMobile ? 2.5 : 2}
-                  h="auto"
-                >
-                  {t('Share Analysis')}
-                </Button>
-              </Flex>
+                {t('Back to Battles')}
+              </Button>
             </VStack>
           </MotionBox>
         </VStack>
-
-        {isShareOpen && battle && (
-          <Suspense fallback={null}>
-            <ShareResultsModal
-              isOpen={isShareOpen}
-              onClose={closeShare}
-              battle={battle}
-              userTeam={userTeam}
-            />
-          </Suspense>
-        )}
 
         {/* UPDATED: Smart floating feedback button - only shown when appropriate */}
         {shouldShowFloatingButton && (

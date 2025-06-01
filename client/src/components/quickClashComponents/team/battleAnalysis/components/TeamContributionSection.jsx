@@ -1,7 +1,7 @@
 // components/quickClashComponents/team/battleAnalysis/components/TeamContributionSection.jsx
 import React, { useMemo, useState, useCallback, useEffect } from 'react'
 import { Box, Collapse, Grid, Center, Spinner } from '@chakra-ui/react'
-import { useAnimationControls } from 'framer-motion' // AnimatePresence not used here directly
+import { useAnimationControls } from 'framer-motion'
 import { useTranslation } from 'react-i18next'
 import {
   Crown as CrownIcon,
@@ -17,7 +17,7 @@ import TeamOverviewStats from './teamContributionSection/TeamOverviewStats'
 import TeamMemberList from './teamContributionSection/TeamMemberList'
 import BattleSummaryMetrics from './teamContributionSection/BattleSummaryMetrics'
 
-// Performance levels configuration
+// UPDATED: Performance levels configuration with proper grade system
 const PERFORMANCE_LEVELS = {
   legendary: {
     levelKey: 'Legendary',
@@ -25,7 +25,8 @@ const PERFORMANCE_LEVELS = {
     icon: CrownIcon,
     gradient: 'linear(135deg, #A855F7, #8B5CF6)',
     threshold: 100,
-    tier: 'S+',
+    tier: 'S+', // Grade
+    description: 'Outstanding performance - 100+ points',
   },
   excellent: {
     levelKey: 'Excellent',
@@ -33,7 +34,8 @@ const PERFORMANCE_LEVELS = {
     icon: TrophyIcon,
     gradient: 'linear(135deg, #22C55E, #10B981)',
     threshold: 75,
-    tier: 'S',
+    tier: 'S', // Grade
+    description: 'Excellent performance - 75+ points',
   },
   good: {
     levelKey: 'Good',
@@ -41,7 +43,8 @@ const PERFORMANCE_LEVELS = {
     icon: StarIcon,
     gradient: 'linear(135deg, #3B82F6, #2563EB)',
     threshold: 50,
-    tier: 'A',
+    tier: 'A', // Grade
+    description: 'Good performance - 50+ points',
   },
   average: {
     levelKey: 'Average',
@@ -49,7 +52,8 @@ const PERFORMANCE_LEVELS = {
     icon: TargetIcon,
     gradient: 'linear(135deg, #F59E0B, #D97706)',
     threshold: 40,
-    tier: 'B',
+    tier: 'B', // Grade
+    description: 'Average performance - 40+ points',
   },
   needs_improvement: {
     levelKey: 'Needs Improvement',
@@ -57,16 +61,21 @@ const PERFORMANCE_LEVELS = {
     icon: ArrowDownIcon,
     gradient: 'linear(135deg, #EF4444, #DC2626)',
     threshold: 0,
-    tier: 'C',
+    tier: 'C', // Grade
+    description: 'Needs improvement - Below 40 points',
   },
 }
 
-// Performance level calculator
+// UPDATED: Performance level calculator with enhanced logic
 const getMemberPerformanceLevel = (member, teamAvg, enhancedData) => {
+  // If enhanced data is available, use it
   if (enhancedData && member.enhancedPerformance) {
     return member.enhancedPerformance
   }
+
   const score = member.score || 0
+
+  // Determine performance level based on score thresholds
   if (score >= 100) return PERFORMANCE_LEVELS.legendary
   if (score >= 75) return PERFORMANCE_LEVELS.excellent
   if (score >= 50) return PERFORMANCE_LEVELS.good
@@ -149,7 +158,7 @@ const TeamContributionSection = React.memo(
         opponentTeamTotalScore,
       )
 
-      // Prepare members with MVP flags from mvpAwards for OptimizedMemberCard
+      // UPDATED: Prepare members with MVP flags and performance levels
       const augmentMembersWithMVP = (members, teamType) => {
         return members.map(member => {
           const memberId = member.user?._id
@@ -166,14 +175,24 @@ const TeamContributionSection = React.memo(
           ) {
             isTeamMVP = true
           }
-          // Assuming pivotal player can be from any team based on overall battle context
           if (mvpAwards.pivotalPlayer?.user?._id === memberId) {
             isPivotalPlayer = true
           }
-          // Add more specific recognitions if needed
-          // e.g., member.performanceRecognitions = mvpAwards.performanceRecognitions?.filter(r => r.user?._id === memberId)
 
-          return { ...member, isMatchMVP, isTeamMVP, isPivotalPlayer }
+          // Calculate performance level for this member
+          const performanceLevel = getMemberPerformanceLevel(
+            member,
+            userTeamStats.avgScore,
+            enhancedMemberPerformance,
+          )
+
+          return {
+            ...member,
+            isMatchMVP,
+            isTeamMVP,
+            isPivotalPlayer,
+            performanceLevel,
+          }
         })
       }
 
@@ -198,7 +217,7 @@ const TeamContributionSection = React.memo(
           battle[userTeam === 'teamA' ? 'teamB' : 'teamA']?.name ||
           (userTeam === 'teamA' ? t('Team B') : t('Team A')),
       }
-    }, [battle, userTeam, t, mvpAwards])
+    }, [battle, userTeam, t, mvpAwards, enhancedMemberPerformance])
 
     useEffect(() => {
       if (isExpanded) {
@@ -286,7 +305,7 @@ const TeamContributionSection = React.memo(
                   {...section}
                   userId={userId}
                   enhancedMemberPerformance={enhancedMemberPerformance}
-                  mvpAwards={mvpAwards} // Pass for potential future use or if card logic changes
+                  mvpAwards={mvpAwards}
                   selectedMember={selectedMember}
                   onMemberClick={handleMemberClick}
                   animationPhase={animationPhase}

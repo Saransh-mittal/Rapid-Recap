@@ -7,14 +7,13 @@ import {
   Text,
   Icon,
   Badge,
-  Button,
   HStack,
   VStack,
   Circle,
 } from '@chakra-ui/react'
 import { motion, useAnimationControls } from 'framer-motion'
 import { useTranslation } from 'react-i18next'
-import { Share2, Trophy, Swords, Shield, Crown, Star } from 'lucide-react'
+import { Trophy, Swords, Shield, Crown, Star } from 'lucide-react'
 import confetti from 'canvas-confetti'
 
 const MotionBox = motion(Box)
@@ -23,8 +22,9 @@ const MotionText = motion(Text)
 
 /**
  * Optimized Battle Result Banner with simplified animations for better performance
+ * User's team is always displayed on the left side
  */
-const BattleResultBanner = ({ battle, userTeam, onShare }) => {
+const BattleResultBanner = ({ battle, userTeam }) => {
   const { t } = useTranslation('QuickClash')
   const controls = useAnimationControls()
   const [showDetails, setShowDetails] = useState(false)
@@ -51,6 +51,40 @@ const BattleResultBanner = ({ battle, userTeam, onShare }) => {
 
   const isUserWinner = battle.winner === userTeam
   const isTie = battle.winner === 'tie'
+
+  // UPDATED: Create team data with user's team always on left
+  const teamDisplayData = useMemo(() => {
+    // User's team data (always displayed on left)
+    const userTeamData = {
+      team: userTeam,
+      score:
+        userTeam === 'teamA' ? battle.teamATotalScore : battle.teamBTotalScore,
+      name:
+        userTeam === 'teamA'
+          ? battle.teamA?.name || t('Team A')
+          : battle.teamB?.name || t('Team B'),
+      wins: userTeam === 'teamA' ? battle.teamAWins : battle.teamBWins,
+      isUserTeam: true,
+    }
+
+    // Opponent team data (always displayed on right)
+    const opponentTeam = userTeam === 'teamA' ? 'teamB' : 'teamA'
+    const opponentTeamData = {
+      team: opponentTeam,
+      score:
+        opponentTeam === 'teamA'
+          ? battle.teamATotalScore
+          : battle.teamBTotalScore,
+      name:
+        opponentTeam === 'teamA'
+          ? battle.teamA?.name || t('Team A')
+          : battle.teamB?.name || t('Team B'),
+      wins: opponentTeam === 'teamA' ? battle.teamAWins : battle.teamBWins,
+      isUserTeam: false,
+    }
+
+    return [userTeamData, opponentTeamData]
+  }, [battle, userTeam, t])
 
   const getResultConfig = () => {
     if (isUserWinner) {
@@ -236,18 +270,7 @@ const BattleResultBanner = ({ battle, userTeam, onShare }) => {
           transition={{ delay: 0.2, duration: 0.4 }} // Faster
           my={3} // Reduced margin
         >
-          {[
-            {
-              team: 'teamA',
-              score: battle.teamATotalScore,
-              name: battle.teamA?.name || t('Team A'),
-            },
-            {
-              team: 'teamB',
-              score: battle.teamBTotalScore,
-              name: battle.teamB?.name || t('Team B'),
-            },
-          ].map((item, index) => (
+          {teamDisplayData.map((item, index) => (
             <React.Fragment key={item.team}>
               {index === 1 && (
                 <VStack spacing={1} display={{ base: 'none', md: 'flex' }}>
@@ -271,7 +294,7 @@ const BattleResultBanner = ({ battle, userTeam, onShare }) => {
                     config.isMobile ? 'none' : 'blur(4px)' // Reduced blur
                   }
                 >
-                  {userTeam === item.team ? t('YOUR TEAM') : t('OPPONENT')}
+                  {item.isUserTeam ? t('YOUR TEAM') : t('OPPONENT')}
                 </Badge>
                 <Text fontSize="sm" fontWeight="semibold" noOfLines={1}>
                   {item.name}
@@ -304,7 +327,7 @@ const BattleResultBanner = ({ battle, userTeam, onShare }) => {
         </MotionFlex>
 
         <MotionFlex
-          justify="space-between"
+          justify="center" // UPDATED: Center the stats since we removed the share button
           align="center"
           initial={{ opacity: 0 }}
           animate={{ opacity: showDetails ? 1 : 0 }}
@@ -315,15 +338,13 @@ const BattleResultBanner = ({ battle, userTeam, onShare }) => {
           <HStack spacing={2} flexWrap="wrap">
             {[
               {
-                value:
-                  userTeam === 'teamA' ? battle.teamAWins : battle.teamBWins,
+                value: teamDisplayData[0].wins, // User team wins
                 label: t('W'),
                 icon: Star,
                 color: 'yellow.300',
               },
               {
-                value:
-                  userTeam === 'teamA' ? battle.teamBWins : battle.teamAWins,
+                value: teamDisplayData[1].wins, // Opponent team wins (shown as user's losses)
                 label: t('L'),
                 icon: Swords,
                 color: 'red.300',
@@ -357,26 +378,7 @@ const BattleResultBanner = ({ battle, userTeam, onShare }) => {
               </Badge>
             ))}
           </HStack>
-          <Button
-            leftIcon={<Share2 size={14} />}
-            bg="rgba(255,255,255,0.15)"
-            color="white"
-            backdropFilter={config.isMobile ? 'none' : 'blur(6px)'} // Reduced blur
-            border="1px solid rgba(255,255,255,0.25)"
-            borderRadius="lg"
-            px={4}
-            py={2}
-            fontSize="sm"
-            _hover={{
-              bg: 'rgba(255,255,255,0.25)',
-              transform: 'translateY(-1px)',
-            }}
-            _active={{ transform: 'translateY(0)' }}
-            transition="all 0.2s ease"
-            onClick={onShare}
-          >
-            {t('Share')}
-          </Button>
+          {/* REMOVED: Share button completely */}
         </MotionFlex>
       </Flex>
     </MotionBox>

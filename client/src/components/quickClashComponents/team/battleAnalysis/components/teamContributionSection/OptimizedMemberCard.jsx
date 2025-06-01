@@ -71,7 +71,6 @@ const OptimizedMemberCard = React.memo(
     userId,
     performance,
     teamTotalScore,
-    // mvpAwards, // This prop seems unused directly here if member already has mvp flags
     onMemberClick,
     isSelected,
     animationPhase,
@@ -105,31 +104,28 @@ const OptimizedMemberCard = React.memo(
     const isMVP = !!mvpStatus
 
     return (
-      <motion.div // Use motion.div for layout prop if needed, or just Box
+      <motion.div
         key={member.user._id}
-        // w="full" // Handled by GridItem in parent
-        initial={{ opacity: 0, y: 10, scale: 0.98 }} // Reduced animation
+        initial={{ opacity: 0, y: 10, scale: 0.98 }}
         animate={{
           opacity: animationPhase >= 1 ? 1 : 0,
           y: animationPhase >= 1 ? 0 : 10,
           scale: animationPhase >= 1 ? 1 : 0.98,
         }}
-        transition={{ delay: index * 0.05, duration: 0.3, ease: 'easeOut' }} // Faster
+        transition={{ delay: index * 0.05, duration: 0.3, ease: 'easeOut' }}
         whileHover={
           canClick && !isMobile ? { y: -2, transition: { duration: 0.2 } } : {}
-        } // Reduced hover effect
-        // cursor={canClick ? 'pointer' : 'default'} // Apply cursor to Box
-        // onClick={canClick ? () => onMemberClick(member.user._id) : undefined} // Apply onClick to Box
+        }
       >
         <Box
           bg={
             isSelf
-              ? 'rgba(139, 92, 246, 0.12)' // Slightly reduced opacity
+              ? 'rgba(139, 92, 246, 0.12)'
               : isMVP
-              ? `rgba(${getMVPBgColor(mvpStatus.config.color)},0.08)` // Reduced opacity
-              : 'rgba(255, 255, 255, 0.03)' // Reduced opacity
+              ? `rgba(${getMVPBgColor(mvpStatus.config.color)},0.08)`
+              : 'rgba(255, 255, 255, 0.03)'
           }
-          backdropFilter={isMobile ? 'none' : 'blur(8px)'} // Reduced blur, none on mobile
+          backdropFilter={isMobile ? 'none' : 'blur(8px)'}
           borderRadius="xl"
           border="2px solid"
           borderColor={
@@ -141,17 +137,17 @@ const OptimizedMemberCard = React.memo(
               ? `${performance.color}.400`
               : 'rgba(255, 255, 255, 0.1)'
           }
-          p={3} // Reduced padding
+          p={3}
           position="relative"
-          overflow="hidden" // Keep hidden to ensure rounded corners clip content
-          transition="all 0.2s ease-out" // Faster transition
+          overflow="hidden"
+          transition="all 0.2s ease-out"
           boxShadow={
             isMVP && !isMobile
-              ? `0 0 15px rgba(${getMVPBgColor(mvpStatus.config.color)},0.3)` // Reduced shadow
+              ? `0 0 15px rgba(${getMVPBgColor(mvpStatus.config.color)},0.3)`
               : isSelected && canClick && !isMobile
               ? `0 0 12px rgba(${getPerformanceBgColor(
                   performance.color,
-                )},0.25)` // Reduced shadow
+                )},0.25)`
               : 'sm'
           }
           cursor={canClick ? 'pointer' : 'default'}
@@ -162,18 +158,18 @@ const OptimizedMemberCard = React.memo(
           {isMVP && (
             <Badge
               position="absolute"
-              top={1} // Stays close to top of padded area
-              left={1} // Stays close to left of padded area
+              top={1}
+              left={1}
               bgGradient={`linear(to-r, ${mvpStatus.config.color}.600, ${mvpStatus.config.color}.700)`}
               color="white"
-              px={1.5} // Reduced padding
+              px={1.5}
               py={0.5}
               borderRadius="full"
               fontSize="2xs"
               fontWeight="bold"
               textTransform="uppercase"
-              zIndex={2} // Ensure it's above other static content within padding
-              boxShadow="0 2px 4px rgba(0,0,0,0.2)" // Reduced shadow
+              zIndex={2}
+              boxShadow="0 2px 4px rgba(0,0,0,0.2)"
             >
               <HStack spacing={0.5}>
                 <Icon as={mvpStatus.config.icon} boxSize={2} />
@@ -182,22 +178,22 @@ const OptimizedMemberCard = React.memo(
             </Badge>
           )}
 
-          {/* Performance Tier Badge */}
+          {/* Performance Grade Badge */}
           <Badge
             position="absolute"
-            top={isMVP ? 6 : 2} // Position adjusted if MVP badge is present
+            top={isMVP ? 6 : 2}
             right={2}
             bgGradient={performance.gradient}
             color="white"
-            px={1.5} // Reduced padding
-            py={0.5}
+            px={3}
+            py={1}
             borderRadius="full"
-            fontSize="2xs"
+            fontSize="xs"
             fontWeight="bold"
             textTransform="uppercase"
-            zIndex={2} // Ensure it's above other static content
+            zIndex={2}
           >
-            {performance.tier}
+            {t('GRADE')}: {performance.tier}
           </Badge>
 
           <VStack spacing={3} align="stretch" pt={isMVP ? 6 : 0}>
@@ -205,7 +201,7 @@ const OptimizedMemberCard = React.memo(
             <HStack spacing={2.5}>
               <Box position="relative">
                 <Avatar
-                  size="md" // Consistent size
+                  size="md"
                   name={member.user.name || member.user.inGameName}
                   src={member.user.pic}
                   border="2px solid"
@@ -216,7 +212,7 @@ const OptimizedMemberCard = React.memo(
                   }
                 />
                 <Circle
-                  size="16px" // Reduced size
+                  size="16px"
                   bg={
                     member.completed
                       ? 'green.400'
@@ -244,7 +240,7 @@ const OptimizedMemberCard = React.memo(
                 </Circle>
                 {isSelf && (
                   <Circle
-                    size="18px" // Reduced size
+                    size="18px"
                     bg="purple.500"
                     position="absolute"
                     top="-4px"
@@ -260,7 +256,7 @@ const OptimizedMemberCard = React.memo(
                 <Text
                   fontWeight="bold"
                   color="white"
-                  fontSize="sm" // Reduced size
+                  fontSize="sm"
                   noOfLines={1}
                   title={member.user.name || member.user.inGameName}
                 >
@@ -277,8 +273,6 @@ const OptimizedMemberCard = React.memo(
                       {t('YOU')}
                     </Badge>
                   )}
-                  {/* This small text badge for MVP type might be redundant if the larger banner is prominent enough */}
-                  {/* For now, keeping it as it was in the original */}
                   {isMVP && (
                     <Badge
                       colorScheme={mvpStatus.config.color}
@@ -295,39 +289,29 @@ const OptimizedMemberCard = React.memo(
                 </Text>
               </VStack>
             </HStack>
-            {/* Stats Section */}
+
+            {/* Stats Section - UPDATED: Added Grade below score */}
             <VStack spacing={2} align="stretch">
               <HStack justify="space-between">
                 <HStack spacing={1}>
                   <Icon
                     as={Trophy}
                     color={`${performance.color}.400`}
-                    boxSize={3.5} // Reduced size
+                    boxSize={3.5}
                   />
                   <Text color="whiteAlpha.800" fontSize="xs">
                     {t('Score')}
                   </Text>
                 </HStack>
-                <HStack spacing={1}>
-                  <Text
-                    fontSize="lg" // Reduced size
-                    fontWeight="bold"
-                    color={`${performance.color}.300`}
-                  >
-                    {member.score || 0}
-                  </Text>
-                  {performance.tier && (
-                    <Badge
-                      colorScheme={performance.color}
-                      variant="outline"
-                      fontSize="2xs"
-                      px={1}
-                    >
-                      {performance.tier}
-                    </Badge>
-                  )}
-                </HStack>
+                <Text
+                  fontSize="lg"
+                  fontWeight="bold"
+                  color={`${performance.color}.300`}
+                >
+                  {member.score || 0}
+                </Text>
               </HStack>
+
               <Box>
                 <HStack justify="space-between" mb={1}>
                   <Text fontSize="2xs" color="whiteAlpha.700">
@@ -354,6 +338,7 @@ const OptimizedMemberCard = React.memo(
                   sx={{ '& > div': { background: performance.gradient } }}
                 />
               </Box>
+
               {member.trophyChange !== undefined && (
                 <HStack justify="space-between">
                   <HStack spacing={1}>
@@ -372,14 +357,14 @@ const OptimizedMemberCard = React.memo(
                           ? 'red.400'
                           : 'yellow.400'
                       }
-                      boxSize={3} // Reduced size
+                      boxSize={3}
                     />
                     <Text color="whiteAlpha.800" fontSize="xs">
                       {t('Trophies')}
                     </Text>
                   </HStack>
                   <Text
-                    fontSize="sm" // Reduced size
+                    fontSize="sm"
                     fontWeight="bold"
                     color={
                       member.trophyChange > 0
@@ -395,29 +380,49 @@ const OptimizedMemberCard = React.memo(
                 </HStack>
               )}
             </VStack>
+
             {/* Expandable Details - simplified */}
             <AnimatePresence>
               {isSelected && canClick && (
-                <motion.div // use motion.div for layout prop
+                <motion.div
                   initial={{ opacity: 0, height: 0 }}
                   animate={{ opacity: 1, height: 'auto' }}
                   exit={{ opacity: 0, height: 0 }}
-                  transition={{ duration: 0.2 }} // Faster
-                  // layout // Add layout prop for smoother animation if needed
+                  transition={{ duration: 0.2 }}
                 >
                   <VStack
                     spacing={2}
-                    pt={2} // Reduced padding
+                    pt={2}
                     borderTop="1px dashed"
                     borderColor="whiteAlpha.200"
                   >
-                    <Text
-                      fontSize="2xs"
-                      color="whiteAlpha.600"
-                      textAlign="center"
+                    <Box
+                      w="full"
+                      p={2}
+                      bg={`rgba(${getPerformanceBgColor(
+                        performance.color,
+                      )},0.1)`}
+                      borderRadius="md"
+                      border="1px solid"
+                      borderColor={`${performance.color}.600`}
                     >
-                      {t('Detailed stats coming soon...')}
-                    </Text>
+                      <VStack spacing={1}>
+                        <Text
+                          fontSize="xs"
+                          color={`${performance.color}.300`}
+                          fontWeight="bold"
+                        >
+                          {t('Performance Level')}: {t(performance.levelKey)}
+                        </Text>
+                        <Text
+                          fontSize="2xs"
+                          color="whiteAlpha.700"
+                          textAlign="center"
+                        >
+                          {performance.description}
+                        </Text>
+                      </VStack>
+                    </Box>
                   </VStack>
                 </motion.div>
               )}
