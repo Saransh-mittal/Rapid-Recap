@@ -46,6 +46,7 @@ const ICON_MAP = {
 
 /**
  * Enhanced CustomTabs component for Quick Clash tabs with gamified styling
+ * Now supports sub-routes (e.g., #active/1v1, #active/4v4)
  * @param {Object} props - Component props
  * @param {React.ReactNode} props.children - Tab panels
  * @param {number} props.initialTabIndex - Initial active tab index
@@ -109,20 +110,29 @@ const CustomTabs = ({
     ? defaultTabs.slice(0, tabNames.length)
     : defaultTabs.slice(0, 2) // Default to just the first two tabs if no names provided
 
+  // Enhanced hash parsing that supports sub-routes
+  const getTabIndexFromHash = useCallback(hash => {
+    if (!hash) return 0
+
+    // Remove # symbol and split by /
+    const hashParts = hash.substring(1).split('/')
+    const mainRoute = hashParts[0]
+
+    // Find the corresponding tab index for main route
+    return HASH_TAB_MAP[mainRoute] !== undefined ? HASH_TAB_MAP[mainRoute] : 0
+  }, [])
+
   // Check URL hash on mount and when hash changes
   useEffect(() => {
     const syncTabWithHash = () => {
-      // Get current hash without the # symbol
-      const hash = window.location.hash.substring(1)
+      // Get current hash
+      const hash = window.location.hash
+      const newIndex = getTabIndexFromHash(hash)
 
-      // Find the corresponding tab index
-      if (hash && HASH_TAB_MAP[hash] !== undefined) {
-        const newIndex = HASH_TAB_MAP[hash]
-        if (newIndex !== tabIndex) {
-          setTabIndex(newIndex)
-          if (onChange) {
-            onChange(newIndex)
-          }
+      if (newIndex !== tabIndex) {
+        setTabIndex(newIndex)
+        if (onChange) {
+          onChange(newIndex)
         }
       }
     }
@@ -137,7 +147,7 @@ const CustomTabs = ({
     return () => {
       window.removeEventListener('hashchange', syncTabWithHash)
     }
-  }, [onChange, tabIndex])
+  }, [onChange, tabIndex, getTabIndexFromHash])
 
   // Handle tab change
   const handleTabChange = useCallback(
@@ -146,7 +156,21 @@ const CustomTabs = ({
 
       // Update URL hash without triggering a page reload
       const hash = TAB_HASH_MAP[index] || 'active'
-      window.history.pushState(null, '', `#${hash}`)
+
+      // For the active tab, preserve sub-routes or default to 1v1
+      if (hash === 'active') {
+        const currentHash = window.location.hash.substring(1)
+        if (currentHash.startsWith('active/')) {
+          // Keep existing sub-route
+          return // Don't change hash as it already has proper format
+        } else {
+          // Set default sub-route for active tab
+          window.history.pushState(null, '', `#${hash}/1v1`)
+        }
+      } else {
+        // For other tabs, just set the main route
+        window.history.pushState(null, '', `#${hash}`)
+      }
 
       if (onChange) {
         onChange(index)

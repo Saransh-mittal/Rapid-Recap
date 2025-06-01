@@ -71,6 +71,7 @@ import { useInView } from 'react-intersection-observer'
  * - Improved loading states and skeleton screens
  * - Enhanced visual design and animations
  * - Implements infinite scrolling for better performance
+ * - Hash-based navigation for direct linking to modes
  */
 const ActiveChallenges = () => {
   const { t } = useTranslation('QuickClash')
@@ -82,7 +83,7 @@ const ActiveChallenges = () => {
   const spacing = useBreakpointValue({ base: 4, md: 6 })
   const buttonSize = useBreakpointValue({ base: 'xs', md: 'sm' })
 
-  // Mode state (1v1 or 4v4)
+  // Mode state (1v1 or 4v4) - will be synced with URL hash
   const [mode, setMode] = useState('1v1')
 
   // Track initial data loads to prevent infinite loading cycles
@@ -143,6 +144,34 @@ const ActiveChallenges = () => {
   const [revengeLoading, setRevengeLoading] = useState(false)
   const [revengeProgress, setRevengeProgress] = useState(0)
   const progressTimerRef = useRef(null)
+
+  // Initialize mode from URL hash on component mount
+  useEffect(() => {
+    const initializeModeFromHash = () => {
+      const hash = window.location.hash.substring(1) // Remove # symbol
+
+      if (hash.startsWith('active/')) {
+        const subRoute = hash.split('/')[1]
+        if (subRoute === '1v1' || subRoute === '4v4') {
+          setMode(subRoute)
+        } else {
+          // Invalid sub-route, default to 1v1 and update hash
+          setMode('1v1')
+          window.history.replaceState(null, '', '#active/1v1')
+        }
+      } else if (hash === 'active') {
+        // No sub-route specified, default to 1v1 and update hash
+        setMode('1v1')
+        window.history.replaceState(null, '', '#active/1v1')
+      } else if (!hash) {
+        // No hash at all, set default
+        setMode('1v1')
+        window.history.replaceState(null, '', '#active/1v1')
+      }
+    }
+
+    initializeModeFromHash()
+  }, [])
 
   // Track when data has been loaded
   useEffect(() => {
@@ -235,6 +264,7 @@ const ActiveChallenges = () => {
   // Handle tab changes between 1v1 and 4v4
   const handleModeChange = useCallback(newMode => {
     setMode(newMode)
+    // Hash update is handled by FilterTabs component
   }, [])
 
   // Extract completed challenges for enhanced view
@@ -689,7 +719,7 @@ const ActiveChallenges = () => {
       data-testid="active-challenges"
     >
       <VStack align="stretch" spacing={spacing}>
-        {/* Mode Selection Tabs */}
+        {/* Mode Selection Tabs with Hash Navigation */}
         <FilterTabs selectedFilter={mode} onFilterChange={handleModeChange} />
 
         {/* Challenge Lists based on selected mode */}

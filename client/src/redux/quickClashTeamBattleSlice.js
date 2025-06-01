@@ -48,26 +48,6 @@ export const fetchTeamBattleDetails = createAsyncThunk(
   },
 )
 
-export const selectBattleCategory = createAsyncThunk(
-  'quickClashTeamBattle/selectBattleCategory',
-  async ({ battleId, category }, { rejectWithValue }) => {
-    try {
-      const response = await axios.post(
-        `/api/quickClash/team-battle/${battleId}/select-category`,
-        { category },
-      )
-      return {
-        battle: response.data.battle,
-        sessionInfo: response.data.sessionInfo,
-      }
-    } catch (error) {
-      return rejectWithValue(
-        error.response?.data?.message || 'Failed to select category',
-      )
-    }
-  },
-)
-
 export const joinTeamMatchmaking = createAsyncThunk(
   'quickClashGlobalMatchmaking/joinTeam',
   async ({ teamId, teamName }, { rejectWithValue }) => {
@@ -118,6 +98,63 @@ export const getTeamMatchmakingStatus = createAsyncThunk(
   },
 )
 
+export const selectBattleCategory = createAsyncThunk(
+  'quickClashTeamBattle/selectBattleCategory',
+  async ({ battleId, category }, { rejectWithValue }) => {
+    try {
+      const response = await axios.post(
+        `/api/quickClash/team-battle/${battleId}/select-category`,
+        { category },
+      )
+      return {
+        battle: response.data.battle,
+        category,
+      }
+    } catch (error) {
+      return rejectWithValue(
+        error.response?.data?.message || 'Failed to select category',
+      )
+    }
+  },
+)
+
+export const beginBattleChallenge = createAsyncThunk(
+  'quickClashTeamBattle/beginBattleChallenge',
+  async ({ battleId }, { rejectWithValue }) => {
+    try {
+      const response = await axios.post(
+        `/api/quickClash/team-battle/${battleId}/begin-challenge`,
+      )
+      return {
+        battle: response.data.battle,
+        sessionInfo: response.data.sessionInfo,
+      }
+    } catch (error) {
+      return rejectWithValue(
+        error.response?.data?.message || 'Failed to start challenge',
+      )
+    }
+  },
+)
+
+export const deselectBattleCategory = createAsyncThunk(
+  'quickClashTeamBattle/deselectBattleCategory',
+  async ({ battleId }, { rejectWithValue }) => {
+    try {
+      const response = await axios.post(
+        `/api/quickClash/team-battle/${battleId}/deselect-category`,
+      )
+      return {
+        battle: response.data.battle,
+      }
+    } catch (error) {
+      return rejectWithValue(
+        error.response?.data?.message || 'Failed to deselect category',
+      )
+    }
+  },
+)
+
 // Slice definition
 const initialState = {
   // Active team battles
@@ -141,7 +178,13 @@ const initialState = {
   battleDetailsLoading: false,
   battleDetailsError: null,
 
-  // Category selection
+  // Category operations loading states
+  categoryOperationLoading: false,
+  categoryOperationType: null, // 'selecting', 'deselecting', 'beginning'
+  categoryOperationError: null,
+  selectedCategoryForOperation: null,
+
+  // Keep existing states
   categorySelectionLoading: false,
   categorySelectionError: null,
   sessionInfo: null,
@@ -184,6 +227,15 @@ const quickClashTeamBattleSlice = createSlice({
     },
     setInMatchmaking: (state, action) => {
       state.inMatchmaking = action.payload
+    },
+    clearCategoryOperationError: state => {
+      state.categoryOperationError = null
+    },
+    resetCategoryOperationState: state => {
+      state.categoryOperationLoading = false
+      state.categoryOperationType = null
+      state.categoryOperationError = null
+      state.selectedCategoryForOperation = null
     },
   },
   extraReducers: builder => {
@@ -275,6 +327,23 @@ const quickClashTeamBattleSlice = createSlice({
         state.categorySelectionError = action.payload
       })
 
+      // Add after beginBattleChallenge cases
+      .addCase(deselectBattleCategory.pending, state => {
+        state.categoryOperationLoading = true
+        state.categoryOperationType = 'deselecting'
+        state.categoryOperationError = null
+      })
+      .addCase(deselectBattleCategory.fulfilled, (state, action) => {
+        state.currentBattle = action.payload.battle
+        state.categoryOperationLoading = false
+        state.categoryOperationType = null
+      })
+      .addCase(deselectBattleCategory.rejected, (state, action) => {
+        state.categoryOperationLoading = false
+        state.categoryOperationType = null
+        state.categoryOperationError = action.payload
+      })
+
       // Join team matchmaking
       .addCase(joinTeamMatchmaking.pending, state => {
         state.matchmakingLoading = true
@@ -330,6 +399,8 @@ export const {
   setBattleReady,
   clearBattleReady,
   setInMatchmaking,
+  clearCategoryOperationError,
+  resetCategoryOperationState,
 } = quickClashTeamBattleSlice.actions
 
 export default quickClashTeamBattleSlice.reducer

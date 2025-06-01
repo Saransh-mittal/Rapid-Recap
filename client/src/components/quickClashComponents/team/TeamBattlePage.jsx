@@ -11,9 +11,8 @@ import {
   useToast,
   useDisclosure,
 } from '@chakra-ui/react'
-import { motion } from 'framer-motion'
 import { useTranslation } from 'react-i18next'
-import { useNavigate, useParams } from 'react-router-dom'
+import { useNavigate, useParams, useLocation } from 'react-router-dom'
 import { useSelector } from 'react-redux'
 import { AlertTriangle, ArrowLeft } from 'lucide-react'
 import axios from 'axios'
@@ -31,41 +30,15 @@ import BattleResultsSection from './teamBattlePageComponents/BattleResultsSectio
 // Import QuizReportModal with React.lazy
 const QuizReportModal = React.lazy(() => import('../QuizReportModal'))
 
-const MotionBox = motion(Box)
-
-// Optimized animation variants for weaker devices
-const containerVariants = {
-  hidden: { opacity: 0 },
-  visible: {
-    opacity: 1,
-    transition: {
-      staggerChildren: 0.1,
-      delayChildren: 0.1,
-    },
-  },
-}
-
-const itemVariants = {
-  hidden: { opacity: 0, y: 20 },
-  visible: {
-    opacity: 1,
-    y: 0,
-    transition: {
-      type: 'tween',
-      duration: 0.4,
-      ease: 'easeOut',
-    },
-  },
-}
-
 /**
- * Optimized Team Battle Page Component with better performance and maintainability
+ * Team Battle Page Component - Animations Removed
  */
 const TeamBattlePage = React.memo(() => {
   const { t } = useTranslation('QuickClash')
   const toast = useToast()
   const navigate = useNavigate()
   const { battleId } = useParams()
+  const location = useLocation()
   const { user } = useSelector(state => state.auth)
   const { getSocket } = useSocket()
 
@@ -83,13 +56,22 @@ const TeamBattlePage = React.memo(() => {
     currentBattle,
     battleDetailsLoading,
     battleDetailsError,
+    // New loading states
+    categoryOperationLoading,
+    categoryOperationType,
+    categoryOperationError,
+    selectedCategoryForOperation,
+    // Legacy loading states (for backward compatibility)
     categorySelectionLoading,
     getBattleDetails,
     selectCategory,
+    deselectCategory,
+    beginChallenge,
+    clearOperationError,
+    resetOperationState,
     setupTeamBattleSocketListeners,
     cleanupSocketListeners,
   } = useQuickClashTeamBattle()
-
   // Local state
   const [selectedCategoryId, setSelectedCategoryId] = useState(null)
 
@@ -98,14 +80,14 @@ const TeamBattlePage = React.memo(() => {
     if (!currentBattle || !user) return null
 
     const isInTeamA = currentBattle.teamAMembers.some(
-      member => member.user._id === user._id,
+      member => member.user._id === user._id || member.user === user._id,
     )
     const isInTeamB = currentBattle.teamBMembers.some(
-      member => member.user._id === user._id,
+      member => member.user._id === user._id || member.user === user._id,
     )
 
     return isInTeamA ? 'teamA' : isInTeamB ? 'teamB' : null
-  }, [currentBattle, user])
+  }, [currentBattle, user?._id])
 
   // Memoized battle status calculation
   const battleStatus = useMemo(() => {
@@ -191,40 +173,51 @@ const TeamBattlePage = React.memo(() => {
     return cleanupSocketListeners
   }, [setupTeamBattleSocketListeners, cleanupSocketListeners])
 
-  // Memoized event handlers
+  // Memoized event handlers - Fixed navigation to go back to team battles
   const handleGoBack = useCallback(() => {
-    navigate('/quickclash')
+    navigate('/quickclash#active/4v4')
   }, [navigate])
 
   const handleCategorySelect = useCallback(
     category => {
-      if (!currentBattle || !category) return
+      if (!currentBattle) return
 
-      const challenge = currentBattle.challenges.find(
-        c => c.category === category,
-      )
-      if (!challenge) return
-
-      setSelectedCategoryId(challenge.challenge)
-
-      selectCategory(currentBattle._id, category)
-        .then(() => {
-          console.log('Category selected successfully')
-        })
-        .catch(error => {
-          console.error('Error selecting category:', error)
-          setSelectedCategoryId(null)
-          toast({
-            title: 'Error',
-            description: error.message || 'Failed to select category',
-            status: 'error',
-            duration: 3000,
-            isClosable: true,
-          })
-        })
+      selectCategory(currentBattle._id, category).catch(error => {
+        console.error('Error selecting category:', error)
+      })
     },
-    [currentBattle, selectCategory, toast],
+    [currentBattle, selectCategory],
   )
+
+  const handleCategoryDeselect = useCallback(() => {
+    if (!currentBattle) return
+
+    deselectCategory(currentBattle._id).catch(error => {
+      console.error('Error deselecting category:', error)
+    })
+  }, [currentBattle, deselectCategory])
+
+  const handleBeginChallenge = useCallback(() => {
+    if (!currentBattle) return
+
+    beginChallenge(currentBattle._id).catch(error => {
+      console.error('Error beginning challenge:', error)
+    })
+  }, [currentBattle, beginChallenge])
+
+  // Clear operation errors when component unmounts or battle changes
+  useEffect(() => {
+    return () => {
+      resetOperationState()
+    }
+  }, [resetOperationState])
+
+  // Clear errors when battle changes
+  useEffect(() => {
+    if (categoryOperationError) {
+      clearOperationError()
+    }
+  }, [currentBattle?._id, categoryOperationError, clearOperationError])
 
   const handleViewReport = useCallback(
     async challengeId => {
@@ -300,7 +293,7 @@ const TeamBattlePage = React.memo(() => {
             size="lg"
             onClick={handleGoBack}
           >
-            {t('Back to Challenges')}
+            {t('Back to Team Battles')}
           </Button>
         </VStack>
       </Center>
@@ -322,7 +315,7 @@ const TeamBattlePage = React.memo(() => {
             size="lg"
             onClick={handleGoBack}
           >
-            {t('Back to Challenges')}
+            {t('Back to Team Battles')}
           </Button>
         </VStack>
       </Center>
@@ -331,27 +324,15 @@ const TeamBattlePage = React.memo(() => {
 
   return (
     <Box minH="100vh" bg="gray.900" position="relative" overflow="hidden">
-      <MotionBox
-        variants={containerVariants}
-        initial="hidden"
-        animate="visible"
-        width="100%"
-        position="relative"
-        zIndex={1}
-      >
+      <Box width="100%" position="relative" zIndex={1}>
         {/* Header */}
-        <TeamBattleHeader
-          battle={currentBattle}
-          onGoBack={handleGoBack}
-          variants={itemVariants}
-        />
+        <TeamBattleHeader battle={currentBattle} onGoBack={handleGoBack} />
 
         {/* Teams Section */}
         <TeamsGrid
           currentBattle={currentBattle}
           userTeam={userTeam}
-          userId={user._id}
-          variants={itemVariants}
+          userId={user?._id}
         />
 
         {/* Categories Section */}
@@ -362,11 +343,18 @@ const TeamBattlePage = React.memo(() => {
             userTeam={userTeam}
             user={user}
             onSelectCategory={handleCategorySelect}
+            onDeselectCategory={handleCategoryDeselect}
+            onBeginChallenge={handleBeginChallenge}
             onViewReport={handleViewReport}
             reportModalLoading={reportModalLoading}
+            // New loading props
+            categoryOperationLoading={categoryOperationLoading}
+            categoryOperationType={categoryOperationType}
+            categoryOperationError={categoryOperationError}
+            selectedCategoryForOperation={selectedCategoryForOperation}
+            // Legacy props for backward compatibility
             categorySelectionLoading={categorySelectionLoading}
             selectedCategoryId={selectedCategoryId}
-            variants={itemVariants}
             completedChallenges={battleStatus.completedChallenges}
             totalChallenges={battleStatus.totalChallenges}
           />
@@ -377,12 +365,11 @@ const TeamBattlePage = React.memo(() => {
           <BattleResultsSection
             currentBattle={currentBattle}
             userTeam={userTeam}
-            variants={itemVariants}
           />
         )}
 
         {/* Bottom Actions */}
-        <MotionBox variants={itemVariants} textAlign="center" pt={8} pb={12}>
+        <Box textAlign="center" pt={8} pb={12}>
           <Button
             leftIcon={<ArrowLeft size={18} />}
             colorScheme="purple"
@@ -391,18 +378,13 @@ const TeamBattlePage = React.memo(() => {
             bg="rgba(128, 90, 213, 0.8)"
             _hover={{
               bg: 'rgba(128, 90, 213, 1)',
-              transform: 'translateY(-2px)',
-              boxShadow: '0 6px 20px rgba(128, 90, 213, 0.4)',
-            }}
-            _active={{
-              transform: 'translateY(0)',
             }}
             transition="all 0.2s"
           >
-            {t('Back to Challenges')}
+            {t('Back to Team Battles')}
           </Button>
-        </MotionBox>
-      </MotionBox>
+        </Box>
+      </Box>
 
       {/* Quiz Report Modal */}
       {isReportOpen && selectedSessionId && (

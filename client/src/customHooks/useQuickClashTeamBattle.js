@@ -14,8 +14,13 @@ import {
   clearCurrentBattle,
   setBattleReady,
   clearBattleReady,
+  deselectBattleCategory,
+  beginBattleChallenge,
+  clearCategoryOperationError,
+  resetCategoryOperationState,
 } from '../redux/quickClashTeamBattleSlice'
 import { useSocket } from './useSocket'
+import axios from 'axios'
 
 /**
  * Custom hook for team battle functionality
@@ -27,6 +32,7 @@ const useQuickClashTeamBattle = () => {
   const { t } = useTranslation('QuickClash')
   const navigate = useNavigate()
   const joinedTeamsRoom = useRef(false)
+  const { user } = useSelector(state => state.auth)
 
   // Get state from Redux
   const teamBattleState = useSelector(state => state.quickClashTeamBattle)
@@ -75,6 +81,16 @@ const useQuickClashTeamBattle = () => {
       }
     })
 
+    socket.on('quickClash:teamMemberDeselectedCategory', data => {
+      // If we're viewing this battle, refresh it
+      if (
+        teamBattleState.currentBattle &&
+        teamBattleState.currentBattle._id === data.battleId
+      ) {
+        dispatch(fetchTeamBattleDetails(data.battleId))
+      }
+    })
+
     return () => cleanupSocketListeners()
   }, [dispatch, getSocket, toast, t, navigate, teamBattleState.currentBattle])
 
@@ -87,6 +103,7 @@ const useQuickClashTeamBattle = () => {
     socket.off('quickClash:teamBattleCompleted')
     socket.off('quickClash:teamMemberSelectedCategory')
     socket.off('quickClash:teamBattleRefetch')
+    socket.off('quickClash:teamMemberDeselectedCategory')
   }, [getSocket])
 
   // Setup socket listeners on mount
@@ -147,20 +164,11 @@ const useQuickClashTeamBattle = () => {
     [dispatch, getSocket],
   )
 
-  // Select a category for battle
   const selectCategory = useCallback(
     (battleId, category) => {
       return dispatch(selectBattleCategory({ battleId, category }))
         .unwrap()
         .then(result => {
-          // Get the challenge ID for navigation
-          const sessionInfo = result.sessionInfo
-
-          if (sessionInfo && sessionInfo.challengeId) {
-            // Navigate to challenge session
-            navigate(`/quickclash/session/${sessionInfo.challengeId}`)
-          }
-
           return result
         })
         .catch(error => {
@@ -171,12 +179,80 @@ const useQuickClashTeamBattle = () => {
             duration: 3000,
             isClosable: true,
           })
-
           throw error
         })
     },
-    [dispatch, navigate, toast, t],
+    [dispatch, toast, t],
   )
+
+  const deselectCategory = useCallback(
+    battleId => {
+      return dispatch(deselectBattleCategory({ battleId })) // Fixed: was deselectCategoryForUser
+        .unwrap()
+        .then(result => {
+          return result
+        })
+        .catch(error => {
+          toast({
+            title: t('Error'),
+            description: error || t('Failed to deselect category'),
+            status: 'error',
+            duration: 3000,
+            isClosable: true,
+          })
+          throw error
+        })
+    },
+    [dispatch, toast, t],
+  )
+
+  const beginChallenge = useCallback(
+    battleId => {
+      return dispatch(beginBattleChallenge({ battleId }))
+        .unwrap()
+        .then(result => {
+          const sessionInfo = result.sessionInfo
+
+          if (sessionInfo && sessionInfo.challengeId) {
+            // Store the assignment in localStorage to prevent URL sharing
+            localStorage.setItem(
+              `challenge_${sessionInfo.challengeId}`,
+              JSON.stringify({
+                userId: user?._id, // You'll need to get user from Redux state
+                battleId: battleId,
+                timestamp: Date.now(),
+              }),
+            )
+
+            // Navigate to challenge session
+            navigate(`/quickclash/session/${sessionInfo.challengeId}`)
+          }
+
+          return result
+        })
+        .catch(error => {
+          toast({
+            title: t('Error'),
+            description: error || t('Failed to start challenge'),
+            status: 'error',
+            duration: 3000,
+            isClosable: true,
+          })
+          throw error
+        })
+    },
+    [dispatch, navigate, toast, t, user?._id], // Add user._id to dependencies
+  )
+
+  // Clear operation error
+  const clearOperationError = useCallback(() => {
+    dispatch(clearCategoryOperationError())
+  }, [dispatch])
+
+  // Reset operation state
+  const resetOperationState = useCallback(() => {
+    dispatch(resetCategoryOperationState())
+  }, [dispatch])
 
   // Join team matchmaking
   const joinMatchmaking = useCallback(
@@ -325,6 +401,13 @@ const useQuickClashTeamBattle = () => {
     battleDetailsLoading: teamBattleState.battleDetailsLoading,
     battleDetailsError: teamBattleState.battleDetailsError,
 
+    // Category operation loading states
+    categoryOperationLoading: teamBattleState.categoryOperationLoading,
+    categoryOperationType: teamBattleState.categoryOperationType,
+    categoryOperationError: teamBattleState.categoryOperationError,
+    selectedCategoryForOperation: teamBattleState.selectedCategoryForOperation,
+
+    // Legacy loading states (for backward compatibility)
     categorySelectionLoading: teamBattleState.categorySelectionLoading,
     categorySelectionError: teamBattleState.categorySelectionError,
     sessionInfo: teamBattleState.sessionInfo,
@@ -342,6 +425,10 @@ const useQuickClashTeamBattle = () => {
     loadMoreTeamBattles,
     getBattleDetails,
     selectCategory,
+    deselectCategory,
+    beginChallenge,
+    clearOperationError,
+    resetOperationState,
     joinMatchmaking,
     leaveMatchmaking,
     checkMatchmakingStatus,

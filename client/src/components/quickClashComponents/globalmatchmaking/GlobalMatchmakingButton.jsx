@@ -1,6 +1,6 @@
 // components/quickClashComponents/globalmatchmaking/GlobalMatchmakingButton.jsx
 import React, { useState, useCallback, useMemo } from 'react'
-import { Button, Icon, Tooltip } from '@chakra-ui/react'
+import { Button, Icon } from '@chakra-ui/react'
 import { motion } from 'framer-motion'
 import { useTranslation } from 'react-i18next'
 import { useSelector } from 'react-redux'

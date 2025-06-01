@@ -218,7 +218,7 @@ const startChallengeSession = asyncHandler(async (req, res) => {
   const userId = req.user._id
 
   try {
-    // Pass the explicit language if provided, otherwise user's preference will be used
+    // The validation is now handled in createSession service
     const session = await createSession({
       challengeId,
       userId,
@@ -232,6 +232,19 @@ const startChallengeSession = asyncHandler(async (req, res) => {
     })
   } catch (error) {
     console.error('Error starting challenge session:', error)
+
+    // Handle authorization errors specifically
+    if (
+      error.message.includes('not authorized') ||
+      error.message.includes('not assigned')
+    ) {
+      return res.status(403).json({
+        success: false,
+        message: error.message,
+        code: 'UNAUTHORIZED_CHALLENGE_ACCESS',
+      })
+    }
+
     res.status(500).json({
       success: false,
       message: error.message || 'Error starting challenge session',
@@ -242,9 +255,10 @@ const startChallengeSession = asyncHandler(async (req, res) => {
 // Start reading phase
 const startReadingPhase = asyncHandler(async (req, res) => {
   const { sessionId } = req.params
-
+  const userId = req.user._id
   const readingPhase = await startReading({
     sessionId,
+    userId,
   })
 
   res.status(200).json({

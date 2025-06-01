@@ -1,7 +1,19 @@
-import React, { memo } from 'react'
+import React, { memo, useEffect, useCallback } from 'react'
 import { HStack, Button, Icon, useBreakpointValue } from '@chakra-ui/react'
 import { Zap, Users } from 'lucide-react'
 import { useTranslation } from 'react-i18next'
+
+// Map mode names to URL hash suffixes
+const MODE_HASH_MAP = {
+  '1v1': '1v1',
+  '4v4': '4v4',
+}
+
+// Reverse map for looking up mode from hash
+const HASH_MODE_MAP = {
+  '1v1': '1v1',
+  '4v4': '4v4',
+}
 
 /**
  * Individual filter tab component
@@ -32,9 +44,10 @@ const FilterTab = memo(({ isSelected, label, icon, onClick }) => {
 FilterTab.displayName = 'FilterTab'
 
 /**
- * Filter tabs component for filtering between 1v1 and 4v4 challenges
+ * Filter tabs component for filtering between 1v1 and 4v4 challenges with hash navigation
  * - Performance optimized with memo
  * - Responsive design with useBreakpointValue
+ * - Hash-based navigation for direct linking to modes
  */
 const FilterTabs = memo(({ selectedFilter, onFilterChange }) => {
   const { t } = useTranslation('QuickClash')
@@ -43,6 +56,54 @@ const FilterTabs = memo(({ selectedFilter, onFilterChange }) => {
   const tabSpacing = useBreakpointValue({ base: 2, md: 3 })
   const containerPadding = useBreakpointValue({ base: 1, md: 2 })
   const maxWidth = useBreakpointValue({ base: '300px', md: '350px' })
+
+  // Check URL hash for initial mode and handle hash changes
+  useEffect(() => {
+    const syncModeWithHash = () => {
+      const hash = window.location.hash.substring(1) // Remove # symbol
+
+      // Check if we're on the active tab and there's a sub-route
+      if (hash.startsWith('active/')) {
+        const subRoute = hash.split('/')[1]
+        if (
+          subRoute &&
+          HASH_MODE_MAP[subRoute] &&
+          HASH_MODE_MAP[subRoute] !== selectedFilter
+        ) {
+          onFilterChange(HASH_MODE_MAP[subRoute])
+        }
+      } else if (hash === 'active') {
+        // If just on active tab without sub-route, default to 1v1
+        if (selectedFilter !== '1v1') {
+          onFilterChange('1v1')
+        }
+      }
+    }
+
+    // Initial sync on component mount
+    syncModeWithHash()
+
+    // Listen for hash changes
+    window.addEventListener('hashchange', syncModeWithHash)
+
+    // Cleanup
+    return () => {
+      window.removeEventListener('hashchange', syncModeWithHash)
+    }
+  }, [selectedFilter, onFilterChange])
+
+  // Handle mode change with hash update
+  const handleModeChange = useCallback(
+    mode => {
+      // Update URL hash to include mode sub-route
+      const newHash = `active/${MODE_HASH_MAP[mode]}`
+      window.history.pushState(null, '', `#${newHash}`)
+
+      // Call the original filter change handler
+      onFilterChange(mode)
+    },
+    [onFilterChange],
+  )
 
   return (
     <HStack
@@ -62,13 +123,13 @@ const FilterTabs = memo(({ selectedFilter, onFilterChange }) => {
         isSelected={selectedFilter === '1v1'}
         label={t('1v1')}
         icon={Zap}
-        onClick={() => onFilterChange('1v1')}
+        onClick={() => handleModeChange('1v1')}
       />
       <FilterTab
         isSelected={selectedFilter === '4v4'}
         label={t('4v4')}
         icon={Users}
-        onClick={() => onFilterChange('4v4')}
+        onClick={() => handleModeChange('4v4')}
       />
     </HStack>
   )

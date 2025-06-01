@@ -761,6 +761,33 @@ const setupQuickClashGlobalEvents = io => {
     },
   )
 
+  globalEmitter.on(
+    'quickClash:teamMemberDeselectedCategory',
+    ({ battleId, userId, category, team }) => {
+      if (!battleId || !userId || !category) {
+        console.error(
+          'Invalid data in quickClash:teamMemberDeselectedCategory event',
+        )
+        return
+      }
+
+      console.log(
+        `SOCKET: User ${userId} deselected category ${category} for team ${team} in battle ${battleId}`,
+      )
+
+      // Emit to all clients in the teams room
+      io.to('quickClash:teams').emit(
+        'quickClash:teamMemberDeselectedCategory',
+        {
+          battleId,
+          userId,
+          category,
+          team,
+        },
+      )
+    },
+  )
+
   globalEmitter.on('quickClash:matchmakingLocked', data => {
     if (!data.teamA || !data.teamB) {
       console.error('Invalid data in quickClash:matchmakingLocked event')

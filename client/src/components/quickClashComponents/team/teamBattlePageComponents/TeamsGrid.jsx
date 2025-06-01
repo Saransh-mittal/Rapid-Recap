@@ -1,18 +1,15 @@
 // components/quickClashComponents/team/teamBattlePageComponents/TeamsGrid.jsx
 import React, { memo, useMemo } from 'react'
 import { Box, VStack, useBreakpointValue } from '@chakra-ui/react'
-import { motion } from 'framer-motion'
 import { useTranslation } from 'react-i18next'
 
 import TeamCard from './teamsGrid/TeamCard'
 import VSSection from './teamsGrid/VSSection'
 
-const MotionFlex = motion(Box)
-
 /**
- * Optimized TeamsGrid Component with better performance and maintainability
+ * TeamsGrid Component (Animations Removed)
  */
-const TeamsGrid = memo(({ currentBattle, userTeam, userId, variants }) => {
+const TeamsGrid = memo(({ currentBattle, userTeam, userId }) => {
   const { t } = useTranslation('QuickClash')
 
   // Responsive values
@@ -98,16 +95,13 @@ const TeamsGrid = memo(({ currentBattle, userTeam, userId, variants }) => {
 
   return (
     <Box mx={containerPadding} mb={{ base: 4, md: 6 }} px={{ base: 1, md: 0 }}>
-      <MotionFlex
+      <Box
         display="flex"
         flexDirection="row"
         alignItems="stretch"
         justifyContent="space-between"
         gap={gapValue}
         width="100%"
-        initial={{ opacity: 0, y: 20 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ duration: 0.6 }}
       >
         {/* Left Team */}
         <VStack
@@ -143,7 +137,7 @@ const TeamsGrid = memo(({ currentBattle, userTeam, userId, variants }) => {
         >
           <TeamCard team={rightTeam} position="right" userId={userId} />
         </VStack>
-      </MotionFlex>
+      </Box>
     </Box>
   )
 })

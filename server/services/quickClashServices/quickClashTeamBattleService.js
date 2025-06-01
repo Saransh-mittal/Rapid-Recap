@@ -854,6 +854,361 @@ const createTeamBattle = makeRetryable(
 )
 
 /**
+ * Check if a user has already participated in any challenge in the team battle
+ * @param {Object} battle - Team battle object
+ * @param {string} userId - User ID to check
+ * @returns {Object} Participation status and details
+ */
+const checkUserParticipationStatus = (battle, userId) => {
+  if (!battle || !userId) {
+    return {
+      hasParticipated: false,
+      participatedCategory: null,
+      hasCompleted: false,
+    }
+  }
+
+  // Find user in team A or B
+  const teamAMember = battle.teamAMembers.find(
+    m => m.user.toString() === userId.toString(),
+  )
+  const teamBMember = battle.teamBMembers.find(
+    m => m.user.toString() === userId.toString(),
+  )
+
+  const userMember = teamAMember || teamBMember
+
+  if (!userMember) {
+    return {
+      hasParticipated: false,
+      participatedCategory: null,
+      hasCompleted: false,
+    }
+  }
+
+  return {
+    hasParticipated: userMember.participated || userMember.completed,
+    participatedCategory: userMember.category,
+    hasCompleted: userMember.completed,
+    isTeamA: !!teamAMember,
+  }
+}
+
+// Update selectCategoryForUser function (around line 720)
+const selectCategoryForUser = async ({ battleId, userId, category }) => {
+  const session = await mongoose.startSession()
+
+  try {
+    return await session.withTransaction(async () => {
+      // Find the team battle
+      const battle = await QuickClashTeamBattle.findById(battleId)
+        .populate({
+          path: 'challenges.challenge',
+          model: 'QUICK_CLASH_CHALLENGE',
+        })
+        .session(session)
+
+      if (!battle) {
+        throw new Error('Team battle not found')
+      }
+
+      // Check if battle is active
+      if (battle.status !== 'active') {
+        throw new Error('Team battle is not active')
+      }
+
+      // CRITICAL CHECK: Verify user hasn't already participated in any challenge
+      const participationStatus = checkUserParticipationStatus(battle, userId)
+
+      if (participationStatus.hasParticipated) {
+        if (participationStatus.hasCompleted) {
+          throw new Error(
+            'You have already completed a challenge in this battle',
+          )
+        } else {
+          throw new Error(
+            'You have already participated in a challenge and cannot select another category',
+          )
+        }
+      }
+
+      // Check if category exists in this battle
+      const challengeIndex = battle.challenges.findIndex(
+        c => c.category === category,
+      )
+
+      if (challengeIndex === -1) {
+        throw new Error('Category not found in this battle')
+      }
+
+      // Check if user is a member of either team
+      const isTeamAUser = battle.teamAMembers.some(
+        m => m.user.toString() === userId.toString(),
+      )
+      const isTeamBUser = battle.teamBMembers.some(
+        m => m.user.toString() === userId.toString(),
+      )
+
+      if (!isTeamAUser && !isTeamBUser) {
+        throw new Error('User is not a member of either team')
+      }
+
+      if (isTeamAUser) {
+        const memberIndex = battle.teamAMembers.findIndex(
+          m => m.user.toString() === userId.toString(),
+        )
+
+        // Check if another team member already STARTED this category (not just selected)
+        const categoryAlreadyStarted =
+          battle.challenges[challengeIndex].teamAPlayer !== null
+
+        if (categoryAlreadyStarted) {
+          throw new Error(
+            'This category has already been started by a teammate',
+          )
+        }
+
+        // Check if user already has a different category selected
+        if (
+          battle.teamAMembers[memberIndex].category &&
+          battle.teamAMembers[memberIndex].category !== category
+        ) {
+          throw new Error(
+            'You have already selected a different category. Please deselect it first.',
+          )
+        }
+
+        // Just mark the category as selected (don't assign to challenge yet)
+        battle.teamAMembers[memberIndex].category = category
+        battle.teamAMembers[memberIndex].challenge =
+          battle.challenges[challengeIndex].challenge._id
+        // Don't set participated or assign to challenge yet
+      } else {
+        const memberIndex = battle.teamBMembers.findIndex(
+          m => m.user.toString() === userId.toString(),
+        )
+
+        // Check if another team member already STARTED this category (not just selected)
+        const categoryAlreadyStarted =
+          battle.challenges[challengeIndex].teamBPlayer !== null
+
+        if (categoryAlreadyStarted) {
+          throw new Error(
+            'This category has already been started by a teammate',
+          )
+        }
+
+        // Check if user already has a different category selected
+        if (
+          battle.teamBMembers[memberIndex].category &&
+          battle.teamBMembers[memberIndex].category !== category
+        ) {
+          throw new Error(
+            'You have already selected a different category. Please deselect it first.',
+          )
+        }
+
+        // Just mark the category as selected (don't assign to challenge yet)
+        battle.teamBMembers[memberIndex].category = category
+        battle.teamBMembers[memberIndex].challenge =
+          battle.challenges[challengeIndex].challenge._id
+        // Don't set participated or assign to challenge yet
+      }
+
+      await battle.save({ session })
+
+      // Emit event for category selection (not start)
+      setTimeout(() => {
+        globalEmitter.emit('quickClash:teamMemberSelectedCategory', {
+          battleId: battle._id,
+          userId,
+          category,
+          team: isTeamAUser ? 'teamA' : 'teamB',
+          action: 'selected', // Indicate this is just selection
+        })
+      }, 0)
+
+      return battle
+    })
+  } catch (error) {
+    console.error('Error selecting category for user:', error)
+    throw error
+  } finally {
+    session.endSession()
+  }
+}
+
+// Update beginCategoryChallenge function (around line 850)
+const beginCategoryChallenge = async ({ battleId, userId }) => {
+  const session = await mongoose.startSession()
+
+  try {
+    return await session.withTransaction(async () => {
+      // Find the team battle
+      const battle = await QuickClashTeamBattle.findById(battleId)
+        .populate({
+          path: 'challenges.challenge',
+          model: 'QUICK_CLASH_CHALLENGE',
+        })
+        .session(session)
+
+      if (!battle) {
+        throw new Error('Team battle not found')
+      }
+
+      // Check if battle is active
+      if (battle.status !== 'active') {
+        throw new Error('Team battle is not active')
+      }
+
+      // CRITICAL CHECK: Verify user hasn't already participated in any challenge
+      const participationStatus = checkUserParticipationStatus(battle, userId)
+
+      if (participationStatus.hasParticipated) {
+        if (participationStatus.hasCompleted) {
+          throw new Error(
+            'You have already completed a challenge in this battle',
+          )
+        } else {
+          throw new Error(
+            'You have already participated in a challenge and cannot begin another',
+          )
+        }
+      }
+
+      // Find the user in team A or B
+      const isTeamAUser = battle.teamAMembers.some(
+        m => m.user.toString() === userId.toString(),
+      )
+      const isTeamBUser = battle.teamBMembers.some(
+        m => m.user.toString() === userId.toString(),
+      )
+
+      if (!isTeamAUser && !isTeamBUser) {
+        throw new Error('User is not a member of either team')
+      }
+
+      let category = null
+      let challengeIndex = -1
+
+      if (isTeamAUser) {
+        const memberIndex = battle.teamAMembers.findIndex(
+          m => m.user.toString() === userId.toString(),
+        )
+
+        category = battle.teamAMembers[memberIndex].category
+
+        if (!category) {
+          throw new Error(
+            'No category selected. Please select a category first.',
+          )
+        }
+
+        // Check if user has already started this challenge
+        if (battle.teamAMembers[memberIndex].participated) {
+          throw new Error('You have already started this challenge')
+        }
+
+        // Find the challenge for this category
+        challengeIndex = battle.challenges.findIndex(
+          c => c.category === category,
+        )
+
+        if (challengeIndex === -1) {
+          throw new Error('Challenge not found for selected category')
+        }
+
+        // Check if another teammate has already been assigned to this challenge
+        if (battle.challenges[challengeIndex].teamAPlayer !== null) {
+          throw new Error('Another teammate has already started this category')
+        }
+
+        // Assign the player to the challenge
+        battle.challenges[challengeIndex].teamAPlayer = userId
+
+        // Update the challenge document to assign challenger
+        await QuickClashChallenge.findByIdAndUpdate(
+          battle.challenges[challengeIndex].challenge._id,
+          { challenger: userId },
+          { session },
+        )
+      } else {
+        const memberIndex = battle.teamBMembers.findIndex(
+          m => m.user.toString() === userId.toString(),
+        )
+
+        category = battle.teamBMembers[memberIndex].category
+
+        if (!category) {
+          throw new Error(
+            'No category selected. Please select a category first.',
+          )
+        }
+
+        // Check if user has already started this challenge
+        if (battle.teamBMembers[memberIndex].participated) {
+          throw new Error('You have already started this challenge')
+        }
+
+        // Find the challenge for this category
+        challengeIndex = battle.challenges.findIndex(
+          c => c.category === category,
+        )
+
+        if (challengeIndex === -1) {
+          throw new Error('Challenge not found for selected category')
+        }
+
+        // Check if another teammate has already been assigned to this challenge
+        if (battle.challenges[challengeIndex].teamBPlayer !== null) {
+          throw new Error('Another teammate has already started this category')
+        }
+
+        // Assign the player to the challenge
+        battle.challenges[challengeIndex].teamBPlayer = userId
+
+        // Update the challenge document to assign opponent
+        await QuickClashChallenge.findByIdAndUpdate(
+          battle.challenges[challengeIndex].challenge._id,
+          { opponent: userId },
+          { session },
+        )
+      }
+
+      await battle.save({ session })
+
+      // Create session info for navigation
+      const challenge = battle.challenges[challengeIndex].challenge
+      const sessionInfo = {
+        challengeId: challenge._id,
+        category,
+        battleId: battle._id,
+      }
+
+      // Emit event for challenge beginning
+      setTimeout(() => {
+        globalEmitter.emit('quickClash:teamMemberBeganChallenge', {
+          battleId: battle._id,
+          userId,
+          category,
+          team: isTeamAUser ? 'teamA' : 'teamB',
+        })
+      }, 0)
+
+      return {
+        battle,
+        sessionInfo,
+      }
+    })
+  } catch (error) {
+    console.error('Error beginning challenge for user:', error)
+    throw error
+  } finally {
+    session.endSession()
+  }
+}
+
+/**
  * Calculate potential trophy exchange based on team average trophies
  * @param {number} teamATrophies - Team A average trophies
  * @param {number} teamBTrophies - Team B average trophies
@@ -890,25 +1245,94 @@ const calculateTeamAverageTrophies = team => {
 }
 
 /**
- * Select a category for a team member
+ * Mark a user as participated in a team battle when they actually start reading
+ * @param {Object} params - Parameters
+ * @param {string} params.challengeId - Challenge ID
+ * @param {string} params.userId - User ID
+ * @returns {Promise<Object>} Updated team battle
+ */
+const markUserAsParticipated = async ({ challengeId, userId }) => {
+  const session = await mongoose.startSession()
+
+  try {
+    return await session.withTransaction(async () => {
+      // Find the challenge to get the team battle ID
+      const challenge = await QuickClashChallenge.findById(challengeId)
+        .select('teamBattle')
+        .session(session)
+
+      if (!challenge || !challenge.teamBattle) {
+        // Not a team battle challenge, just return
+        return null
+      }
+
+      // Find the team battle
+      const battle = await QuickClashTeamBattle.findById(
+        challenge.teamBattle,
+      ).session(session)
+
+      if (!battle) {
+        throw new Error('Team battle not found')
+      }
+
+      // Find the user in team A or B and mark as participated
+      const teamAMemberIndex = battle.teamAMembers.findIndex(
+        m => m.user.toString() === userId.toString(),
+      )
+
+      const teamBMemberIndex = battle.teamBMembers.findIndex(
+        m => m.user.toString() === userId.toString(),
+      )
+
+      let updated = false
+
+      if (teamAMemberIndex !== -1) {
+        battle.teamAMembers[teamAMemberIndex].participated = true
+        updated = true
+      } else if (teamBMemberIndex !== -1) {
+        battle.teamBMembers[teamBMemberIndex].participated = true
+        updated = true
+      }
+
+      if (updated) {
+        await battle.save({ session })
+
+        // Emit event to notify that user started the challenge
+        setTimeout(() => {
+          globalEmitter.emit('quickClash:teamMemberStartedChallenge', {
+            battleId: battle._id,
+            userId,
+            team: teamAMemberIndex !== -1 ? 'teamA' : 'teamB',
+          })
+        }, 0)
+      }
+
+      return battle
+    })
+  } catch (error) {
+    console.error('Error marking user as participated:', error)
+    throw error
+  } finally {
+    session.endSession()
+  }
+}
+
+/**
+ * Deselect a category for a team member
  * @param {Object} params - Parameters
  * @param {string} params.battleId - Team battle ID
  * @param {string} params.userId - User ID
- * @param {string} params.category - Selected category
- * @returns {Promise<Object>} Updated battle with session info
+ * @returns {Promise<Object>} Updated battle
  */
-const selectCategoryForUser = async ({ battleId, userId, category }) => {
+const deselectCategoryForUser = async ({ battleId, userId }) => {
   const session = await mongoose.startSession()
 
   try {
     return await session.withTransaction(async () => {
       // Find the team battle
-      const battle = await QuickClashTeamBattle.findById(battleId)
-        .populate({
-          path: 'challenges.challenge',
-          model: 'QUICK_CLASH_CHALLENGE',
-        })
-        .session(session)
+      const battle = await QuickClashTeamBattle.findById(battleId).session(
+        session,
+      )
 
       if (!battle) {
         throw new Error('Team battle not found')
@@ -919,16 +1343,7 @@ const selectCategoryForUser = async ({ battleId, userId, category }) => {
         throw new Error('Team battle is not active')
       }
 
-      // Check if category exists in this battle
-      const challengeIndex = battle.challenges.findIndex(
-        c => c.category === category,
-      )
-
-      if (challengeIndex === -1) {
-        throw new Error('Category not found in this battle')
-      }
-
-      // Check if challenge already has a player for this user's team
+      // Find the user in team A or B
       const isTeamAUser = battle.teamAMembers.some(
         m => m.user.toString() === userId.toString(),
       )
@@ -940,115 +1355,153 @@ const selectCategoryForUser = async ({ battleId, userId, category }) => {
         throw new Error('User is not a member of either team')
       }
 
-      // Check if user already selected a category
+      let oldCategory = null
+
       if (isTeamAUser) {
         const memberIndex = battle.teamAMembers.findIndex(
           m => m.user.toString() === userId.toString(),
         )
 
-        if (battle.teamAMembers[memberIndex].category) {
-          throw new Error('You have already selected a category')
-        }
-
-        // Check if another team member already selected this category
-        const categoryAlreadySelected = battle.teamAMembers.some(
-          m =>
-            m.category === category && m.user.toString() !== userId.toString(),
-        )
-
-        if (categoryAlreadySelected) {
+        // Check if user has already started (participated in) their challenge
+        if (battle.teamAMembers[memberIndex].participated) {
           throw new Error(
-            'This category has already been selected by a teammate',
+            'Cannot deselect category after starting the challenge',
           )
         }
 
-        // Select the category for this user
-        battle.teamAMembers[memberIndex].category = category
-        battle.teamAMembers[memberIndex].challenge =
-          battle.challenges[challengeIndex].challenge._id
-        battle.teamAMembers[memberIndex].participated = true
+        oldCategory = battle.teamAMembers[memberIndex].category
 
-        // Update the challenge with this user as challenger
-        battle.challenges[challengeIndex].teamAPlayer = userId
-
-        // Update the challenge document
-        await QuickClashChallenge.findByIdAndUpdate(
-          battle.challenges[challengeIndex].challenge._id,
-          { challenger: userId },
-          { session },
-        )
+        // Clear the selection
+        battle.teamAMembers[memberIndex].category = null
+        battle.teamAMembers[memberIndex].challenge = null
       } else {
         const memberIndex = battle.teamBMembers.findIndex(
           m => m.user.toString() === userId.toString(),
         )
 
-        if (battle.teamBMembers[memberIndex].category) {
-          throw new Error('You have already selected a category')
-        }
-
-        // Check if another team member already selected this category
-        const categoryAlreadySelected = battle.teamBMembers.some(
-          m =>
-            m.category === category && m.user.toString() !== userId.toString(),
-        )
-
-        if (categoryAlreadySelected) {
+        // Check if user has already started (participated in) their challenge
+        if (battle.teamBMembers[memberIndex].participated) {
           throw new Error(
-            'This category has already been selected by a teammate',
+            'Cannot deselect category after starting the challenge',
           )
         }
 
-        // Select the category for this user
-        battle.teamBMembers[memberIndex].category = category
-        battle.teamBMembers[memberIndex].challenge =
-          battle.challenges[challengeIndex].challenge._id
-        battle.teamBMembers[memberIndex].participated = true
+        oldCategory = battle.teamBMembers[memberIndex].category
 
-        // Update the challenge with this user as opponent
-        battle.challenges[challengeIndex].teamBPlayer = userId
+        // Clear the selection
+        battle.teamBMembers[memberIndex].category = null
+        battle.teamBMembers[memberIndex].challenge = null
+      }
 
-        // Update the challenge document
-        await QuickClashChallenge.findByIdAndUpdate(
-          battle.challenges[challengeIndex].challenge._id,
-          { opponent: userId },
-          { session },
-        )
+      if (!oldCategory) {
+        throw new Error('No category selected to deselect')
       }
 
       await battle.save({ session })
 
-      // Find the challenge for the session
-      const challenge = battle.challenges.find(
-        c => c.category === category,
-      ).challenge
-
-      // Create a session for this user
-      const sessionInfo = {
-        challengeId: challenge._id,
-        category,
-        battleId: battle._id,
-      }
-
-      // Emit event
+      // Emit event for category deselection
       setTimeout(() => {
-        globalEmitter.emit('quickClash:teamMemberSelectedCategory', {
+        globalEmitter.emit('quickClash:teamMemberDeselectedCategory', {
           battleId: battle._id,
           userId,
-          category,
+          category: oldCategory,
           team: isTeamAUser ? 'teamA' : 'teamB',
         })
       }, 0)
 
-      return {
-        battle,
-        sessionInfo,
-      }
+      return battle
     })
   } catch (error) {
-    console.error('Error selecting category for user:', error)
+    console.error('Error deselecting category for user:', error)
     throw error
   } finally {
     session.endSession()
+  }
+}
+
+/**
+ * Validate that a user is properly assigned to a specific challenge in a team battle
+ * @param {Object} params - Parameters
+ * @param {string} params.teamBattleId - Team battle ID
+ * @param {string} params.challengeId - Challenge ID
+ * @param {string} params.userId - User ID to validate
+ * @param {mongoose.ClientSession} [params.session] - Optional mongoose session
+ * @returns {Promise<boolean>} Whether user is validly assigned
+ */
+const validateUserChallengeAssignment = async ({
+  teamBattleId,
+  challengeId,
+  userId,
+  session: providedSession,
+}) => {
+  const session = providedSession || (await mongoose.startSession())
+  let startedTransaction = false
+
+  try {
+    if (!providedSession) {
+      startedTransaction = true
+      await session.startTransaction()
+    }
+
+    // Get the team battle
+    const teamBattle = await QuickClashTeamBattle.findById(
+      teamBattleId,
+    ).session(session)
+
+    if (!teamBattle) {
+      return false
+    }
+
+    // Find the challenge in the team battle
+    const challengeIndex = teamBattle.challenges.findIndex(
+      c => c.challenge && c.challenge.toString() === challengeId.toString(),
+    )
+
+    if (challengeIndex === -1) {
+      return false
+    }
+
+    const battleChallenge = teamBattle.challenges[challengeIndex]
+
+    // Check if user is assigned as teamAPlayer or teamBPlayer for this challenge
+    const isTeamAPlayer =
+      battleChallenge.teamAPlayer &&
+      battleChallenge.teamAPlayer.toString() === userId.toString()
+    const isTeamBPlayer =
+      battleChallenge.teamBPlayer &&
+      battleChallenge.teamBPlayer.toString() === userId.toString()
+
+    if (!isTeamAPlayer && !isTeamBPlayer) {
+      return false
+    }
+
+    // Additional check: verify user is actually a member of the corresponding team
+    const isTeamAMember = teamBattle.teamAMembers.some(
+      m => m.user.toString() === userId.toString(),
+    )
+    const isTeamBMember = teamBattle.teamBMembers.some(
+      m => m.user.toString() === userId.toString(),
+    )
+
+    // User must be teamAPlayer AND teamAMember, OR teamBPlayer AND teamBMember
+    const validAssignment =
+      (isTeamAPlayer && isTeamAMember) || (isTeamBPlayer && isTeamBMember)
+
+    if (startedTransaction) {
+      await session.commitTransaction()
+    }
+
+    return validAssignment
+  } catch (error) {
+    if (startedTransaction) {
+      await session.abortTransaction()
+    }
+    console.error('Error validating user challenge assignment:', error)
+    return false
+  } finally {
+    if (!providedSession) {
+      session.endSession()
+    }
   }
 }
 
@@ -1481,7 +1934,12 @@ module.exports = {
   createTeamBattle,
   cleanupFailedBattleMatchmaking,
   selectCategoryForUser,
+  deselectCategoryForUser,
+  beginCategoryChallenge,
+  markUserAsParticipated,
   updateBattleWithQuizResults,
   getUserTeamBattles,
   getTeamBattleDetails,
+  validateUserChallengeAssignment,
+  checkUserParticipationStatus,
 }

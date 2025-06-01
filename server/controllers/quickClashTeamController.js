@@ -23,6 +23,8 @@ const {
   selectCategoryForUser,
   getUserTeamBattles,
   getTeamBattleDetails,
+  deselectCategoryForUser,
+  beginCategoryChallenge,
 } = require('../services/quickClashServices/quickClashTeamBattleService')
 const QuickClashTeam = require('../model/quickClashSchemas/quickClashTeamSchema')
 const QuickClashTeamMatchmaking = require('../model/quickClashSchemas/quickClashTeamMatchmakingSchema')
@@ -423,13 +425,65 @@ const selectCategoryForBattle = asyncHandler(async (req, res) => {
     res.status(200).json({
       success: true,
       message: 'Category selected successfully',
+      battle: result,
+    })
+  } catch (error) {
+    res.status(400).json({
+      success: false,
+      message: error.message || 'Failed to select category',
+    })
+  }
+})
+
+// Add these new controller functions after selectCategoryForBattle
+
+/**
+ * @desc    Deselect a category for a team battle
+ * @route   POST /api/quickClash/team-battle/:battleId/deselect-category
+ * @access  Private
+ */
+const deselectCategoryForBattle = asyncHandler(async (req, res) => {
+  const { battleId } = req.params
+  const userId = req.user._id
+
+  try {
+    const result = await deselectCategoryForUser({ battleId, userId })
+
+    res.status(200).json({
+      success: true,
+      message: 'Category deselected successfully',
+      battle: result,
+    })
+  } catch (error) {
+    res.status(400).json({
+      success: false,
+      message: error.message || 'Failed to deselect category',
+    })
+  }
+})
+
+/**
+ * @desc    Begin challenge for selected category
+ * @route   POST /api/quickClash/team-battle/:battleId/begin-challenge
+ * @access  Private
+ */
+const beginChallengeForBattle = asyncHandler(async (req, res) => {
+  const { battleId } = req.params
+  const userId = req.user._id
+
+  try {
+    const result = await beginCategoryChallenge({ battleId, userId })
+
+    res.status(200).json({
+      success: true,
+      message: 'Challenge started successfully',
       battle: result.battle,
       sessionInfo: result.sessionInfo,
     })
   } catch (error) {
     res.status(400).json({
       success: false,
-      message: error.message || 'Failed to select category',
+      message: error.message || 'Failed to start challenge',
     })
   }
 })
@@ -837,6 +891,8 @@ module.exports = {
   leaveTeamMatchmakingController,
   getTeamMatchmakingStatusController,
   selectCategoryForBattle,
+  deselectCategoryForBattle,
+  beginChallengeForBattle,
   getMyTeamBattles,
   getTeamBattle,
   getTeamMatchmakingInfo,
