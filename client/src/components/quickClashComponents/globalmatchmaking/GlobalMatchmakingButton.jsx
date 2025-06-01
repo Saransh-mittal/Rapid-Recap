@@ -56,10 +56,10 @@ const GlobalMatchmakingButton = React.memo(
       if (inMatchmaking) {
         return {
           colorScheme: 'green',
-          icon: Globe,
+          icon: Users,
 
           gradient: 'linear(to-r, green.500, teal.500)',
-          text: t('4v4 Matchmaking Active'),
+          text: t(' Active'),
           shouldPulse: true,
           animationType: 'spin',
         }
@@ -70,7 +70,7 @@ const GlobalMatchmakingButton = React.memo(
         icon: Users,
 
         gradient: 'linear(to-r, blue.500, purple.500)',
-        text: t('Join 4v4 Matchmaking'),
+        text: t(' SQUAD'),
         shouldPulse: false,
         animationType: 'none',
       }
@@ -107,7 +107,6 @@ const GlobalMatchmakingButton = React.memo(
       if (compact) {
         return (
           <MotionButton
-            aria-label={config.tooltip}
             colorScheme={config.colorScheme}
             onClick={handleOpenModal}
             isLoading={loading}
@@ -168,9 +167,7 @@ const GlobalMatchmakingButton = React.memo(
               >
                 <Icon as={Globe} />
               </MotionBox>
-            ) : (
-              <Icon as={Zap} />
-            )
+            ) : null
           }
           onClick={handleOpenModal}
           isLoading={loading}

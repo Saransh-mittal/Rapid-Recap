@@ -82,8 +82,10 @@ const TeamBattleHeader = ({ battle, onGoBack }) => {
           )}
         </Flex>
 
-        {/* Title and Subtitle Section - Aligned to start (left) */}
-        <VStack align="flex-start" spacing={1}>
+        {/* Title and Subtitle Section - Aligned to center */}
+        <VStack align="center" spacing={1}>
+          {' '}
+          {/* MODIFIED: align="center" */}
           <HStack spacing={3}>
             <Icon as={Users} boxSize={iconSize} color="purple.400" />
             <Heading
@@ -94,12 +96,11 @@ const TeamBattleHeader = ({ battle, onGoBack }) => {
               {t('4v4 Team Battle')}
             </Heading>
           </HStack>
-
           <Text
             color="whiteAlpha.700"
             fontSize={{ base: 'sm', md: 'md' }}
             fontWeight="medium"
-            pl={iconSize + 12} // Indent subtitle to align with text of heading
+            // pl={iconSize + 12} // REMOVED: Padding for left alignment no longer needed
           >
             {t('Challenge other teams in knowledge combat')}
           </Text>

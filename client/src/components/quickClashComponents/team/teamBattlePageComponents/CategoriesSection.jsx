@@ -315,9 +315,17 @@ const CategoriesSection = memo(
           />
 
           <Box position="relative" zIndex={1} p={sectionPadding}>
-            <VStack spacing={{ base: 4, sm: 6, md: 8 }} w="100%">
+            <VStack
+              spacing={{ base: 4, sm: 6, md: 8 }}
+              w="100%"
+              alignItems="center" // Ensures the Grid block is centered by default
+            >
               {/* Header Section */}
-              <VStack spacing={{ base: 1.5, sm: 2, md: 3 }} textAlign="center">
+              <VStack
+                spacing={{ base: 1.5, sm: 2, md: 3 }}
+                textAlign="center"
+                w="100%" // Ensures header content is centered within the full width
+              >
                 <Box>
                   <HStack spacing={3} justify="center" align="center">
                     <Icon
@@ -359,11 +367,12 @@ const CategoriesSection = memo(
 
               {/* Categories Grid */}
               <Grid
+                display="inline-grid" // Grid width fits its content
                 templateColumns={`repeat(${columns}, 1fr)`}
                 gap={gridSpacing}
-                w="100%"
-                maxW="6xl"
-                mx="auto"
+                maxW="6xl" // Constrains the max width of the grid
+                position="relative" // Added to allow offset
+                left={{ base: '2rem', sm: '3rem', md: '4rem', lg: '5rem' }} // Added: Nudges the grid to the right
               >
                 {enhancedChallenges.map((challenge, index) => (
                   <GridItem
@@ -396,7 +405,7 @@ const CategoriesSection = memo(
                       // Actions
                       onSelectCategory={onSelectCategory}
                       onDeselectCategory={onDeselectCategory}
-                      onBeginChallenge={handleBeginChallengeWithInstructions} // Changed this line
+                      onBeginChallenge={handleBeginChallengeWithInstructions}
                       onViewReport={onViewReport}
                       reportModalLoading={reportModalLoading}
                       // Legacy props for backward compatibility
@@ -409,7 +418,7 @@ const CategoriesSection = memo(
                 ))}
               </Grid>
 
-              {/* User Participation Warnings - UPDATED */}
+              {/* User Participation Warnings - These are already self-centering */}
               {userParticipationStatus.hasExited && (
                 <Box w="100%" maxW="md" mx="auto">
                   <Box

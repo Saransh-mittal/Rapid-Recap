@@ -1,10 +1,18 @@
 // components/quickClashComponents/QuickClashHeader.jsx
-import React, { memo, useEffect, useMemo } from 'react'
+import React, {
+  memo,
+  useEffect,
+  useMemo,
+  useState,
+  useCallback,
+  lazy,
+  Suspense,
+} from 'react'
 import {
   Box,
   Heading,
   Text,
-  Button,
+  Button, // Keep for desktop new challenge
   Flex,
   Icon,
   HStack,
@@ -14,8 +22,8 @@ import {
   Badge,
 } from '@chakra-ui/react'
 import { motion } from 'framer-motion'
-import { FiZap, FiHome } from 'react-icons/fi'
-import { Target, Bell } from 'lucide-react'
+import { FiZap, FiHome } from 'react-icons/fi' // FiZap for New Challenge & default 1v1
+import { Target, Zap as ZapIconLucide, Bell } from 'lucide-react' // Target for header, Zap for 1v1 icon
 import { useTranslation } from 'react-i18next'
 import { useNavigate } from 'react-router-dom'
 import { useDispatch, useSelector } from 'react-redux'
@@ -26,8 +34,13 @@ import TrophyDisplay from './user/TrophyDisplay'
 import { fetchUserTrophies } from '../../redux/quickClashSlice'
 import { setIsNotifDrawerOpen } from '../../redux/appSlice'
 
+import MatchmakingButton from './MatchmakingButton' // For 1v1
+import GlobalMatchmakingButton from './globalmatchmaking/GlobalMatchmakingButton' // For 4v4
+
+const TaskPopup = lazy(() => import('./dailyTasks/TaskPopup'))
+
 const MotionBox = motion(Box)
-const MotionButton = motion(Button)
+const MotionButton = motion(Button) // For desktop "New Challenge"
 const MotionFlex = motion(Flex)
 const MotionIconButton = motion(IconButton)
 
@@ -52,77 +65,57 @@ const QuickClashHeader = ({ onNewChallenge }) => {
     return unreadUpdates + friendRequests + notificationItems
   }, [updates, unreadFriendRequests, notification])
 
-  // Fetch trophy data when component mounts
+  const [showTaskPopup, setShowTaskPopup] = useState(false)
+
   useEffect(() => {
     dispatch(fetchUserTrophies())
   }, [dispatch])
 
-  const handleBackToHome = () => {
-    navigate('/home')
-  }
+  const handleBackToHome = () => navigate('/home')
+  const handleViewTasksClick = useCallback(() => setShowTaskPopup(true), [])
+  const handleCloseTaskPopup = useCallback(() => setShowTaskPopup(false), [])
+  const handleNavigateToTasksSection = useCallback(() => {
+    window.location.hash = 'tasks'
+  }, [])
 
   const handleInboxClick = () => {
     dispatch(setIsNotifDrawerOpen(true))
   }
 
-  // Animation variants
+  // Animation variants (assuming these are defined elsewhere or are simple)
   const containerVariants = {
     initial: { opacity: 0, y: -10 },
     animate: {
       opacity: 1,
       y: 0,
-      transition: {
-        duration: 0.3,
-        staggerChildren: 0.1,
-      },
+      transition: { duration: 0.3, staggerChildren: 0.1 },
     },
   }
-
   const itemVariants = {
     initial: { opacity: 0, y: -5 },
-    animate: {
-      opacity: 1,
-      y: 0,
-      transition: { duration: 0.3 },
-    },
+    animate: { opacity: 1, y: 0, transition: { duration: 0.3 } },
   }
-
   const buttonVariants = {
     initial: { opacity: 0, scale: 0.95 },
     animate: {
       opacity: 1,
       scale: 1,
-      transition: {
-        type: 'spring',
-        stiffness: 200,
-        damping: 10,
-        delay: 0.2,
-      },
+      transition: { type: 'spring', stiffness: 200, damping: 10, delay: 0.2 },
     },
     hover: {
       scale: 1.05,
       boxShadow: '0 0 15px rgba(128, 90, 213, 0.6)',
-      transition: {
-        type: 'spring',
-        stiffness: 300,
-        damping: 10,
-      },
+      transition: { type: 'spring', stiffness: 300, damping: 10 },
     },
     tap: { scale: 0.98 },
   }
-
   const homeButtonVariants = {
     hover: {
       scale: 1.1,
       boxShadow: '0 0 12px rgba(168, 130, 255, 0.6)',
-      transition: {
-        duration: 0.3,
-        type: 'spring',
-        stiffness: 200,
-      },
+      transition: { duration: 0.3, type: 'spring', stiffness: 200 },
     },
     tap: { scale: 0.9 },
-    // Add floating animation that's always active
     animate: {
       y: [0, -3, 0],
       transition: {
@@ -153,16 +146,18 @@ const QuickClashHeader = ({ onNewChallenge }) => {
       initial="initial"
       animate="animate"
       position="relative"
+      pb={{ base: 4, md: 0 }} // Add some padding at the bottom for mobile if content is long
     >
-      {/* Mobile Header: Fixed Home Button + Level Badge */}
+      {/* Mobile Fixed Header */}
       <MotionFlex
         position="fixed"
         top="16px"
         left="16px"
         right="16px"
-        zIndex={100}
+        zIndex={1000} // Ensure it's above other content
         display={{ base: 'flex', md: 'none' }}
         justifyContent="space-between"
+        alignItems="center"
         variants={itemVariants}
       >
         <Tooltip label={t('Back to Home')}>
@@ -181,22 +176,21 @@ const QuickClashHeader = ({ onNewChallenge }) => {
               color: 'white',
             }}
             aria-label={t('Back to Home')}
-            variants={homeButtonVariants}
-            initial="initial"
-            animate="animate"
+            variants={homeButtonVariants} // Re-using homeButtonVariants for consistency
+            initial="initial" // Needed if variants has initial
+            animate="animate" // Needed if variants has animate
             whileHover="hover"
             whileTap="tap"
           />
         </Tooltip>
-
-        {/* Mobile Level Badge and Trophy Display */}
         <HStack spacing={2}>
           <TrophyDisplay />
           <LevelBadge />
+          <TaskProgressIndicator onViewTasks={handleViewTasksClick} size="sm" />
         </HStack>
       </MotionFlex>
 
-      {/* Desktop Header - includes Home Button, Level Badge, Trophy Display & Task Progress */}
+      {/* Desktop Header */}
       <MotionFlex
         justify="space-between"
         align="center"
@@ -205,7 +199,7 @@ const QuickClashHeader = ({ onNewChallenge }) => {
         display={{ base: 'none', md: 'flex' }}
       >
         <MotionButton
-          as={motion.button}
+          as={motion.button} // Ensure framer-motion integration
           leftIcon={<FiHome size={18} />}
           onClick={handleBackToHome}
           variant="ghost"
@@ -226,12 +220,8 @@ const QuickClashHeader = ({ onNewChallenge }) => {
         >
           {t('Home')}
         </MotionButton>
-
         <HStack spacing={3}>
-          {/* Desktop Trophy Display */}
           <TrophyDisplay />
-
-          {/* Desktop Level Badge */}
           <LevelBadge />
 
           {/* Inbox Button - Desktop */}
@@ -280,9 +270,7 @@ const QuickClashHeader = ({ onNewChallenge }) => {
               </Badge>
             )}
           </Box>
-
-          {/* Daily Task Indicator */}
-          <TaskProgressIndicator size="sm" />
+          <TaskProgressIndicator onViewTasks={handleViewTasksClick} size="sm" />
         </HStack>
       </MotionFlex>
 
@@ -291,9 +279,9 @@ const QuickClashHeader = ({ onNewChallenge }) => {
         direction={{ base: 'column', md: 'row' }}
         justifyContent="space-between"
         alignItems={{ base: 'center', md: 'center' }}
-        mb={{ base: 6, md: 8 }}
-        gap={{ base: 0, md: 4 }}
-        mt={{ base: 10, md: 0 }} // Add top margin on mobile to account for fixed button
+        mb={{ base: 4, md: 8 }} // Adjusted margin bottom for mobile
+        gap={{ base: 3, md: 4 }} // Gap between title/desc and buttons on mobile
+        mt={{ base: '80px', md: 0 }} // Increased top margin for mobile to clear fixed header
       >
         {/* Title and Description */}
         <MotionBox
@@ -301,6 +289,7 @@ const QuickClashHeader = ({ onNewChallenge }) => {
           variants={itemVariants}
           textAlign={{ base: 'center', md: 'left' }}
           maxW={{ base: '100%', md: '60%' }}
+          // mb={{ base: 4, md: 0 }} // Margin bottom now handled by parent Flex gap
         >
           <Heading
             size={{ base: 'xl', md: '2xl' }}
@@ -321,30 +310,75 @@ const QuickClashHeader = ({ onNewChallenge }) => {
               {t('Quick Clash')}
             </Flex>
           </Heading>
-
-          <Text color="whiteAlpha.800" fontSize="md">
+          <Text color="whiteAlpha.800" fontSize={{ base: 'sm', md: 'md' }}>
             {t(
               'Challenge other players to rapid-fire reading and quiz battles, test your knowledge and rise up the ranks!',
             )}
           </Text>
         </MotionBox>
 
-        {/* Action Buttons Group */}
+        {/* START: Mobile Matchmaking Buttons */}
+        <HStack
+          display={{ base: 'flex', md: 'none' }}
+          spacing={{ base: 2, sm: 3 }}
+          // mt is handled by parent Flex gap
+          justifyContent="center"
+          w="100%"
+          px={{ base: 2, sm: 0 }} // Padding for the HStack container on smallest screens
+          variants={itemVariants}
+        >
+          {/* 1v1 Button - Uses MatchmakingButton with overrides */}
+          <Box flex={1} minWidth={0} display="flex" justifyContent="center">
+            <MatchmakingButton
+              buttonTextOverride="1v1"
+              iconOverride={ZapIconLucide} // From lucide-react
+              // bgGradientOverride will use the default purple-blue from MatchmakingButton
+            />
+          </Box>
+
+          {/* 4v4 Button - Uses GlobalMatchmakingButton */}
+          {/* We need to make GlobalMatchmakingButton adapt to a shorter text for mobile header */}
+          {/* One way is to pass a prop to GlobalMatchmakingButton to shorten its text, */}
+          {/* or style it to be more compact here. For now, let's assume it might be a bit long. */}
+          <Box flex={1} minWidth={0} display="flex" justifyContent="center">
+            {/*
+              The GlobalMatchmakingButton uses its own text based on its state.
+              To make it "4v4", we'd ideally modify GlobalMatchmakingButton to accept a text override
+              similar to MatchmakingButton, or have a specific "header" mode.
+              For now, we render it as is. Its `compact` prop is for icon-only.
+              The non-compact version will be used here.
+            */}
+            <GlobalMatchmakingButton />
+            {/* If GlobalMatchmakingButton needs to be styled as "4v4" specifically here,
+                and it doesn't support text override like MatchmakingButton, you might need
+                to wrap it or create a variant of it.
+                The image shows "Join 4v4 Matchmaking". If you want just "4v4",
+                GlobalMatchmakingButton needs a prop for that.
+
+                Let's assume GlobalMatchmakingButton by default shows "Join 4v4 Matchmaking"
+                when not in queue, which is fine for a full button.
+            */}
+          </Box>
+        </HStack>
+        {/* END: Mobile Matchmaking Buttons */}
+
+        {/* Desktop Action Buttons Group (New Challenge, Leaderboard) */}
         <HStack
           spacing={3}
           align="center"
           justify={{ base: 'center', md: 'flex-end' }}
-          mt={{ base: 4, md: 0 }}
+          // mt={{ base: 4, md: 0 }} // Removed as mobile buttons are in their own HStack
           w={{ base: '100%', md: 'auto' }}
+          display={{ base: 'none', md: 'flex' }} // IMPORTANT: Hide on mobile
+          variants={itemVariants}
         >
           <MotionButton
-            as={motion.button}
-            leftIcon={<FiZap />}
+            as={motion.button} // Ensure framer-motion integration
+            leftIcon={<FiZap />} // Original New Challenge icon
             bg="purple.600"
             _hover={{ bg: 'purple.700' }}
             onClick={onNewChallenge}
-            display={{ base: 'none', md: 'inline-flex' }}
-            size={{ base: 'md', md: 'lg' }}
+            size={{ base: 'md', md: 'lg' }} // Responsive size
             color="white"
             px={6}
             borderRadius="lg"
@@ -356,19 +390,22 @@ const QuickClashHeader = ({ onNewChallenge }) => {
           >
             {t('New Challenge')}
           </MotionButton>
-
-          {/* Leaderboard button */}
           <QuickClashLeaderboardButton showMobileVersion={isDesktop} />
-
-          {/* Mobile Daily Task Progress */}
-          <Box display={{ base: 'block', md: 'none' }}>
-            <TaskProgressIndicator size="sm" />
-          </Box>
         </HStack>
       </Flex>
+
+      {/* Task Popup */}
+      {showTaskPopup && (
+        <Suspense fallback={null}>
+          <TaskPopup
+            isOpen={showTaskPopup}
+            onClose={handleCloseTaskPopup}
+            onViewAllTasks={handleNavigateToTasksSection}
+          />
+        </Suspense>
+      )}
     </MotionBox>
   )
 }
 
-// Memoize the component to prevent unnecessary re-renders
 export default memo(QuickClashHeader)
