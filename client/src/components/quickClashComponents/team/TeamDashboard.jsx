@@ -55,6 +55,7 @@ import QuickClashBackground from '../QuickClashBackground'
 
 // Import custom hook for team operations
 import useQuickClashTeamBattle from '../../../customHooks/useQuickClashTeamBattle'
+import { useSocket } from '../../../customHooks/useSocket'
 
 // Animation variants
 const containerVariants = {
@@ -163,7 +164,6 @@ const StatusBadge = ({ status, size = 'md' }) => {
   )
 }
 
-// Simplified Team Card Component that matches the provided images
 const EnhancedTeamCard = ({
   team,
   index,
@@ -172,11 +172,11 @@ const EnhancedTeamCard = ({
   onLeave,
   onRemoveMember,
   onInvite,
-
   onCopyTeamCode,
 }) => {
   const { t } = useTranslation('QuickClash')
   const teamMembers = team.members || []
+  const isTeamFull = teamMembers.length >= team.maxMembers
 
   return (
     <MotionBox
@@ -192,7 +192,6 @@ const EnhancedTeamCard = ({
       width="100%" // Card takes full width of its grid cell
       maxWidth={{ base: '100%', md: '400px' }} // Max width for larger screens
       boxShadow="0 4px 10px rgba(0, 0, 0, 0.2)"
-      // Removed marginBottom={4} as SimpleGrid will handle spacing
     >
       {/* Team Header with name and trophy */}
       <Flex
@@ -238,8 +237,6 @@ const EnhancedTeamCard = ({
 
       {/* Status Badges Row */}
       <Flex px={4} py={2.5} gap={2} wrap="wrap">
-        {' '}
-        {/* Added wrap for badges */}
         {isLeader && (
           <Badge
             bg="purple.500"
@@ -256,51 +253,92 @@ const EnhancedTeamCard = ({
             {t('IN BATTLE')}
           </Badge>
         )}
-      </Flex>
-
-      {/* Team Code */}
-      <Flex
-        justify="space-between"
-        align="center"
-        px={4}
-        py={3}
-        borderBottomWidth="1px"
-        borderBottomColor="gray.700"
-      >
-        <HStack>
-          <Text fontSize="sm" color="gray.400">
-            {t('Team Code')}:
-          </Text>
-          <Text
-            fontSize="sm"
-            fontWeight="bold"
-            color="cyan.300"
-            letterSpacing="wider"
+        {isTeamFull && (
+          <Badge
+            bg="orange.500"
+            color="white"
+            px={3}
+            py={1}
+            borderRadius="full"
           >
-            {team.teamCode}
-          </Text>
-        </HStack>
-
-        <MotionIconButton
-          icon={<Copy size={16} />}
-          size="xs"
-          mr="auto"
-          colorScheme="blue"
-          variant="ghost"
-          // mr="auto" // Removed mr="auto" as it might conflict in flex
-          onClick={() => onCopyTeamCode(team.teamCode)}
-          aria-label={t('Copy Team Code')}
-          whileHover={{ scale: 1.1 }}
-          whileTap={{ scale: 0.9 }}
-          ml={2} // Added small margin for spacing
-        />
+            {t('FULL')}
+          </Badge>
+        )}
       </Flex>
+
+      {/* Team Code and Invite Section */}
+      <Box px={4} py={3} borderBottomWidth="1px" borderBottomColor="gray.700">
+        {/* Team Code Row */}
+        <Flex justify="space-between" align="center" mb={3}>
+          <HStack>
+            <Text fontSize="sm" color="gray.400">
+              {t('Team Code')}:
+            </Text>
+            <Text
+              fontSize="sm"
+              fontWeight="bold"
+              color="cyan.300"
+              letterSpacing="wider"
+            >
+              {team.teamCode}
+            </Text>
+          </HStack>
+
+          <MotionIconButton
+            icon={<Copy size={16} />}
+            size="xs"
+            colorScheme="blue"
+            variant="ghost"
+            onClick={() => onCopyTeamCode(team.teamCode)}
+            aria-label={t('Copy Team Code')}
+            whileHover={{ scale: 1.1 }}
+            whileTap={{ scale: 0.9 }}
+          />
+        </Flex>
+
+        {/* Invite Button - Only show for leaders */}
+        {isLeader && (
+          <MotionButton
+            leftIcon={<UserPlus size={16} />}
+            size="sm"
+            colorScheme="purple"
+            variant="outline"
+            onClick={onInvite}
+            isDisabled={isTeamFull || team.isInMatch}
+            width="100%"
+            borderColor="purple.400"
+            color="purple.300"
+            _hover={{
+              bg: 'purple.500',
+              color: 'white',
+              borderColor: 'purple.500',
+            }}
+            _disabled={{
+              opacity: 0.5,
+              cursor: 'not-allowed',
+              _hover: {
+                bg: 'transparent',
+                color: 'purple.300',
+                borderColor: 'purple.400',
+              },
+            }}
+            whileHover={!isTeamFull && !team.isInMatch ? { scale: 1.02 } : {}}
+            whileTap={!isTeamFull && !team.isInMatch ? { scale: 0.98 } : {}}
+          >
+            {isTeamFull
+              ? t('Team Full')
+              : team.isInMatch
+              ? t('In Battle')
+              : t('Invite Player')}
+          </MotionButton>
+        )}
+      </Box>
 
       {/* Members Section */}
       <Box px={4} py={3}>
         <Flex justify="space-between" align="center" mb={3}>
           <Text fontSize="sm" fontWeight="medium" color="gray.400">
-            {t('Members')} ({teamMembers.length}/4)
+            {t('Members')} ({teamMembers.length}/{team.maxMembers})
           </Text>
         </Flex>
 
@@ -336,8 +374,6 @@ const EnhancedTeamCard = ({
 
                 <Box>
                   <HStack spacing={1} mb={0.5}>
-                    {' '}
-                    {/* Adjusted mb */}
                     <Text
                       color={
                         member.user._id === userId ? 'purple.300' : 'white'
@@ -346,7 +382,7 @@ const EnhancedTeamCard = ({
                         member.user._id === userId ? 'bold' : 'medium'
                       }
                       fontSize="sm"
-                      noOfLines={1} // Ensure name doesn't wrap excessively
+                      noOfLines={1}
                     >
                       {member.user.name || member.user.inGameName}
                     </Text>
@@ -355,7 +391,7 @@ const EnhancedTeamCard = ({
                         colorScheme="purple"
                         variant="solid"
                         fontSize="2xs"
-                        ml={1} // Ensure spacing for YOU badge
+                        ml={1}
                       >
                         {t('YOU')}
                       </Badge>
@@ -385,7 +421,7 @@ const EnhancedTeamCard = ({
                   variant="ghost"
                   onClick={() => onRemoveMember(member.user._id)}
                   isDisabled={team.isInMatch}
-                  ml={2} // Ensure button doesn't touch member name
+                  ml={2}
                 >
                   {t('Remove')}
                 </Button>
@@ -393,6 +429,47 @@ const EnhancedTeamCard = ({
             </Flex>
           ))}
         </VStack>
+
+        {/* Empty slots indicator */}
+        {!isTeamFull && (
+          <Box mt={2}>
+            {Array.from({ length: team.maxMembers - teamMembers.length }).map(
+              (_, index) => (
+                <Flex
+                  key={`empty-${index}`}
+                  py={2.5}
+                  px={3}
+                  align="center"
+                  bg="rgba(45, 55, 72, 0.3)"
+                  borderRadius="md"
+                  borderWidth="1px"
+                  borderColor="gray.600"
+                  borderStyle="dashed"
+                  mb={1}
+                >
+                  <HStack spacing={3}>
+                    <Box
+                      width="32px"
+                      height="32px"
+                      borderRadius="full"
+                      bg="gray.600"
+                      display="flex"
+                      alignItems="center"
+                      justifyContent="center"
+                    >
+                      <Icon as={UserPlus} color="gray.400" boxSize={4} />
+                    </Box>
+                    <Text fontSize="sm" color="gray.500" fontStyle="italic">
+                      {isLeader
+                        ? t('Invite a player')
+                        : t('Waiting for player')}
+                    </Text>
+                  </HStack>
+                </Flex>
+              ),
+            )}
+          </Box>
+        )}
       </Box>
 
       {/* Team Footer */}
@@ -414,6 +491,16 @@ const EnhancedTeamCard = ({
         >
           {t('Leave')}
         </Button>
+
+        {/* Team Stats */}
+        <HStack spacing={2}>
+          <Text fontSize="xs" color="gray.500">
+            {t('Avg Trophies')}:
+          </Text>
+          <Text fontSize="xs" color="cyan.300" fontWeight="bold">
+            {team.avgTrophies || 0}
+          </Text>
+        </HStack>
       </Flex>
     </MotionBox>
   )
@@ -437,10 +524,9 @@ const TeamDashboard = () => {
   const [selectedTeam, setSelectedTeam] = useState(null)
   const [copySuccess, setCopySuccess] = useState(false)
   const [refreshing, setRefreshing] = useState(false)
-
+  const { getSocket } = useSocket()
   // Get team battle state and functions from custom hook
-  const { setupTeamBattleSocketListeners, cleanupSocketListeners } =
-    useQuickClashTeamBattle()
+  const { setupTeamBattleSocketListeners } = useQuickClashTeamBattle()
 
   // Disclosure hooks for modals
   const {
@@ -460,20 +546,6 @@ const TeamDashboard = () => {
     onOpen: openInviteModal,
     onClose: closeInviteModal,
   } = useDisclosure()
-
-  // Set up socket listeners on mount
-  useEffect(() => {
-    setupTeamBattleSocketListeners()
-
-    return () => {
-      cleanupSocketListeners()
-    }
-  }, [setupTeamBattleSocketListeners, cleanupSocketListeners])
-
-  // Fetch teams on component mount
-  useEffect(() => {
-    fetchTeams()
-  }, [])
 
   // Function to fetch user's teams
   const fetchTeams = useCallback(async () => {
@@ -497,6 +569,40 @@ const TeamDashboard = () => {
       setLoading(false)
     }
   }, [toast])
+
+  useEffect(() => {
+    setupTeamBattleSocketListeners()
+
+    // Set up additional socket listeners for team invitations
+    const socket = getSocket()
+    if (socket) {
+      // Listen for team invitation acceptance
+      socket.on('quickClash:teamInvitationAccepted', data => {
+        // User accepted an invitation, refresh teams list
+        fetchTeams()
+      })
+
+      // Listen for when someone accepts invitation to user's team
+      socket.on('quickClash:teamMemberJoined', data => {
+        fetchTeams()
+      })
+
+      socket.on('quickClash:teamMemberLeft', data => {
+        // User left a team, refresh teams list
+        fetchTeams()
+      })
+
+      socket.on('quickClash:teamMemberRemoved', data => {
+        // A member was removed from a team, refresh teams list
+        fetchTeams()
+      })
+    }
+  }, [setupTeamBattleSocketListeners, teams, user._id, fetchTeams, toast, t])
+
+  // Fetch teams on component mount
+  useEffect(() => {
+    fetchTeams()
+  }, [])
 
   // Function to refresh teams data
   const handleRefresh = async () => {
@@ -606,14 +712,6 @@ const TeamDashboard = () => {
       try {
         await axios.post(`/api/quickClash/team/${teamId}/remove`, {
           memberId,
-        })
-
-        toast({
-          title: 'Member Removed',
-          description: 'The member has been removed from the team',
-          status: 'info',
-          duration: 3000,
-          isClosable: true,
         })
 
         // Refresh team list

@@ -6,17 +6,17 @@ const {
 const QuickClashTeam = require('../model/quickClashSchemas/quickClashTeamSchema')
 
 /**
- * Improved socket connection tracking using Maps
- * - userSocketMap: Maps user IDs to a Set of their socket IDs
- * - socketUserMap: Maps socket IDs to their user ID for reverse lookup
- * - teamRoomMembers: Maps user IDs to a boolean indicating if they're in the teams room
+ * Enhanced socket connection tracking using device fingerprinting
+ * - userDeviceMap: Maps user IDs to a Map of their device fingerprints and socket sets
+ * - socketUserDeviceMap: Maps socket IDs to their user ID and device fingerprint
+ * - teamRoomMembers: Maps user device combinations to team room membership
  */
-const userSocketMap = new Map() // userId -> Set of socketIds
-const socketUserMap = new Map() // socketId -> userId
-const teamRoomMembers = new Map() // userId -> boolean (in teams room)
+const userDeviceMap = new Map() // userId -> Map(deviceFingerprint -> Set of socketIds)
+const socketUserDeviceMap = new Map() // socketId -> { userId, deviceFingerprint, connectedAt }
+const teamRoomMembers = new Map() // userId_deviceFingerprint -> boolean (in teams room)
 
 /**
- * Setup socket event handlers for Quick Clash feature
+ * Setup socket event handlers for Quick Clash feature with device fingerprinting
  * @param {Object} io - Socket.io instance
  * @param {Object} socket - Client socket connection
  * @param {Object} user - Authenticated user object
@@ -32,55 +32,65 @@ const setupQuickClashSocketHandlers = (io, socket, user) => {
   const socketId = socket.id
   const quickClashRoom = `quickClash:${userId}`
 
-  // Initialize user's socket set if not exists
-  if (!userSocketMap.has(userId)) {
-    userSocketMap.set(userId, new Set())
-  }
-
-  // Add this socket to user's set if not already there
-  if (!userSocketMap.get(userId).has(socketId)) {
-    userSocketMap.get(userId).add(socketId)
-    socketUserMap.set(socketId, userId)
-
-    // Join the user's Quick Clash room
-    socket.join(quickClashRoom)
-
-    // Log connection (only for new connections)
-    if (userSocketMap.get(userId).size === 1) {
-      console.log(
-        `User ${userId} joined QuickClash socket room (first connection)`,
-      )
-    } else {
-      console.log(
-        `User ${userId} added new connection to QuickClash room (total: ${
-          userSocketMap.get(userId).size
-        })`,
-      )
+  // Listen for device fingerprint from client
+  socket.on('quickClash:registerDevice', ({ deviceFingerprint }) => {
+    if (!deviceFingerprint) {
+      console.error('No device fingerprint provided for socket registration')
+      return
     }
-  }
+
+    registerSocketWithDevice(io, socket, userId, deviceFingerprint)
+  })
 
   // Handle socket disconnection
   socket.on('disconnect', () => {
-    cleanupSocketConnection(socketId, userId)
-    console.log(
-      `User ${userId} socket ${socketId} disconnected from QuickClash`,
-    )
+    cleanupSocketConnection(socketId)
+    console.log(`Socket ${socketId} disconnected from QuickClash`)
   })
 
   // Listen for explicit join requests
-  socket.on('quickClash:join', () => {
+  socket.on('quickClash:join', ({ deviceFingerprint }) => {
+    if (deviceFingerprint) {
+      registerSocketWithDevice(io, socket, userId, deviceFingerprint)
+    }
     console.log(`User ${userId} explicitly joined QuickClash socket channel`)
   })
 
   // Listen for explicit request to join the teams room
-  socket.on('quickClash:joinTeamsRoom', () => {
-    if (!teamRoomMembers.get(userId)) {
-      // Only join if not already in room
+  socket.on('quickClash:joinTeamsRoom', ({ deviceFingerprint }) => {
+    if (!deviceFingerprint) {
+      console.warn('No device fingerprint provided for teams room join')
+      return
+    }
+
+    const userDeviceKey = `${userId}_${deviceFingerprint}`
+
+    if (!teamRoomMembers.get(userDeviceKey)) {
       socket.join('quickClash:teams')
-      teamRoomMembers.set(userId, true)
-      console.log(`User ${userId} joined QuickClash teams room`)
+      teamRoomMembers.set(userDeviceKey, true)
+      console.log(
+        `User ${userId} (device: ${deviceFingerprint.substring(
+          0,
+          8,
+        )}...) joined QuickClash teams room`,
+      )
+
+      // DEBUG: Verify teams room joining
+      setTimeout(() => {
+        const teamsRoom = io.sockets.adapter.rooms.get('quickClash:teams')
+        console.log(
+          `DEBUG: quickClash:teams room now has ${
+            teamsRoom ? teamsRoom.size : 0
+          } sockets`,
+        )
+      }, 100)
     } else {
-      console.log(`User ${userId} already in QuickClash teams room`)
+      console.log(
+        `User ${userId} (device: ${deviceFingerprint.substring(
+          0,
+          8,
+        )}...) already in QuickClash teams room`,
+      )
     }
   })
 
@@ -97,86 +107,304 @@ const setupQuickClashSocketHandlers = (io, socket, user) => {
     console.log(
       `Socket event: User ${userId} requested to join global matchmaking`,
     )
-    // The actual joining is handled via API, this is just for tracking
   })
 
   socket.on('quickClash:leaveGlobalMatchmaking', () => {
     console.log(
       `Socket event: User ${userId} requested to leave global matchmaking`,
     )
-    // The actual leaving is handled via API, this is just for tracking
   })
 
   socket.on('quickClash:joinTeamMatchmaking', data => {
     const teamId = data?.teamId
+    const deviceFingerprint = data?.deviceFingerprint
+
     console.log(
       `Socket event: User ${userId} requested to join team matchmaking with team ${teamId}`,
     )
 
     // Automatically join the teams room when joining team matchmaking
-    if (!teamRoomMembers.get(userId)) {
-      socket.join('quickClash:teams')
-      teamRoomMembers.set(userId, true)
-      console.log(
-        `User ${userId} joined QuickClash teams room (via team matchmaking)`,
-      )
+    if (deviceFingerprint) {
+      const userDeviceKey = `${userId}_${deviceFingerprint}`
+
+      if (!teamRoomMembers.get(userDeviceKey)) {
+        socket.join('quickClash:teams')
+        teamRoomMembers.set(userDeviceKey, true)
+        console.log(
+          `User ${userId} (device: ${deviceFingerprint.substring(
+            0,
+            8,
+          )}...) joined QuickClash teams room (via team matchmaking)`,
+        )
+      }
     }
   })
 
   // Handle viewing team battles - also join the teams room
-  socket.on('quickClash:viewTeamBattles', () => {
-    if (!teamRoomMembers.get(userId)) {
+  socket.on('quickClash:viewTeamBattles', ({ deviceFingerprint }) => {
+    if (!deviceFingerprint) {
+      console.warn('No device fingerprint provided for team battles view')
+      return
+    }
+
+    const userDeviceKey = `${userId}_${deviceFingerprint}`
+
+    if (!teamRoomMembers.get(userDeviceKey)) {
       socket.join('quickClash:teams')
-      teamRoomMembers.set(userId, true)
+      teamRoomMembers.set(userDeviceKey, true)
       console.log(
-        `User ${userId} joined QuickClash teams room (via team battles view)`,
+        `User ${userId} (device: ${deviceFingerprint.substring(
+          0,
+          8,
+        )}...) joined QuickClash teams room (via team battles view)`,
       )
     }
+  })
+}
+
+/**
+ * Register a socket with its device fingerprint
+ * @param {Object} io - Socket.io instance
+ * @param {Object} socket - Socket instance
+ * @param {string} userId - User ID
+ * @param {string} deviceFingerprint - Device fingerprint
+ */
+const registerSocketWithDevice = (io, socket, userId, deviceFingerprint) => {
+  const socketId = socket.id
+  const quickClashRoom = `quickClash:${userId}`
+
+  // Initialize user's device map if not exists
+  if (!userDeviceMap.has(userId)) {
+    userDeviceMap.set(userId, new Map())
+  }
+
+  const userDevices = userDeviceMap.get(userId)
+
+  // Check if this device already has an active socket
+  if (userDevices.has(deviceFingerprint)) {
+    const existingSockets = userDevices.get(deviceFingerprint)
+
+    if (existingSockets.size > 0) {
+      // Close existing sockets for this device to maintain one per device
+      const socketsToClose = Array.from(existingSockets)
+      console.log(
+        `Closing ${
+          socketsToClose.length
+        } existing socket(s) for user ${userId} device ${deviceFingerprint.substring(
+          0,
+          8,
+        )}...`,
+      )
+
+      socketsToClose.forEach(existingSocketId => {
+        const existingSocket = io.sockets.sockets.get(existingSocketId)
+        if (existingSocket) {
+          existingSocket.emit('quickClash:deviceConflict', {
+            message: 'Another connection from this device has been established',
+            newSocketId: socketId,
+          })
+          existingSocket.disconnect(true)
+        }
+
+        // Clean up tracking
+        existingSockets.delete(existingSocketId)
+        socketUserDeviceMap.delete(existingSocketId)
+      })
+
+      // Clear the existing set but keep the device entry
+      existingSockets.clear()
+    }
+  }
+
+  // Ensure socket set exists for this device (create if not exists or recreate if cleared)
+  if (
+    !userDevices.has(deviceFingerprint) ||
+    !userDevices.get(deviceFingerprint)
+  ) {
+    userDevices.set(deviceFingerprint, new Set())
+  }
+
+  // Add new socket to device set
+  const deviceSockets = userDevices.get(deviceFingerprint)
+  if (deviceSockets) {
+    deviceSockets.add(socketId)
+  } else {
+    // Defensive programming - create new Set if somehow it's null/undefined
+    const newSet = new Set([socketId])
+    userDevices.set(deviceFingerprint, newSet)
+    console.warn(
+      `Had to recreate socket set for device ${deviceFingerprint.substring(
+        0,
+        8,
+      )}...`,
+    )
+  }
+
+  // Track socket metadata
+  socketUserDeviceMap.set(socketId, {
+    userId,
+    deviceFingerprint,
+    connectedAt: new Date(),
+  })
+
+  // Join the user's Quick Clash room
+  socket.join(quickClashRoom)
+
+  console.log(
+    `User ${userId} registered socket ${socketId} with device ${deviceFingerprint.substring(
+      0,
+      8,
+    )}... (unique connection established)`,
+  )
+
+  // Emit confirmation to client
+  socket.emit('quickClash:deviceRegistered', {
+    deviceFingerprint: deviceFingerprint.substring(0, 8) + '...',
+    socketId,
+    isUnique: true,
   })
 }
 
 /**
  * Clean up socket connection when a socket disconnects
  * @param {string} socketId - The ID of the disconnected socket
- * @param {string} userId - The ID of the user associated with the socket
  */
-const cleanupSocketConnection = (socketId, userId) => {
-  // Remove this socket ID from the user's set
-  if (userSocketMap.has(userId)) {
-    userSocketMap.get(userId).delete(socketId)
+const cleanupSocketConnection = socketId => {
+  const socketInfo = socketUserDeviceMap.get(socketId)
 
-    // If this was the user's last socket, clean up user entry
-    if (userSocketMap.get(userId).size === 0) {
-      userSocketMap.delete(userId)
-      teamRoomMembers.delete(userId)
-      console.log(
-        `User ${userId} completely disconnected from QuickClash (no active sockets)`,
-      )
+  if (!socketInfo) {
+    console.warn(`No tracking info found for disconnected socket ${socketId}`)
+    return
+  }
+
+  const { userId, deviceFingerprint } = socketInfo
+
+  // Remove socket from user's device map
+  if (userDeviceMap.has(userId)) {
+    const userDevices = userDeviceMap.get(userId)
+
+    if (userDevices.has(deviceFingerprint)) {
+      const deviceSockets = userDevices.get(deviceFingerprint)
+
+      if (deviceSockets) {
+        deviceSockets.delete(socketId)
+
+        // Only clean up device entry if no more sockets AND wait to avoid race conditions
+        if (deviceSockets.size === 0) {
+          // Use a small delay to avoid race condition with new connections
+          setTimeout(() => {
+            // Double-check that the Set is still empty and exists
+            const currentDeviceSockets = userDevices.get(deviceFingerprint)
+            if (currentDeviceSockets && currentDeviceSockets.size === 0) {
+              userDevices.delete(deviceFingerprint)
+
+              // Clean up team room membership for this device
+              const userDeviceKey = `${userId}_${deviceFingerprint}`
+              teamRoomMembers.delete(userDeviceKey)
+
+              console.log(
+                `Device ${deviceFingerprint.substring(
+                  0,
+                  8,
+                )}... for user ${userId} completely disconnected`,
+              )
+
+              // If user has no more devices connected, clean up user entry
+              if (userDevices.size === 0) {
+                userDeviceMap.delete(userId)
+                console.log(
+                  `User ${userId} completely disconnected from QuickClash (no active devices)`,
+                )
+              }
+            }
+          }, 200) // Increased delay to 200ms
+        }
+      }
     }
   }
 
-  // Remove from socket->user map
-  socketUserMap.delete(socketId)
+  // Remove from socket tracking map immediately
+  socketUserDeviceMap.delete(socketId)
 }
 
 /**
- * Utility to get all connected users for debugging
- * @returns {Array} Array of objects containing userId and their socket count
+ * Get connection statistics for debugging
+ * @returns {Object} Connection statistics
  */
-const getConnectedUserStats = () => {
-  const stats = []
-  for (const [userId, socketSet] of userSocketMap.entries()) {
-    stats.push({
-      userId,
-      socketCount: socketSet.size,
-      inTeamsRoom: teamRoomMembers.has(userId),
-    })
+const getConnectionStats = () => {
+  const stats = {
+    totalUsers: userDeviceMap.size,
+    totalDevices: 0,
+    totalSockets: socketUserDeviceMap.size,
+    userDeviceBreakdown: {},
+    teamRoomMembers: teamRoomMembers.size,
   }
+
+  // Calculate device and socket breakdown
+  for (const [userId, userDevices] of userDeviceMap.entries()) {
+    stats.totalDevices += userDevices.size
+
+    const userStats = {
+      devices: userDevices.size,
+      sockets: 0,
+      deviceDetails: {},
+    }
+
+    for (const [deviceFingerprint, socketSet] of userDevices.entries()) {
+      userStats.sockets += socketSet.size
+      userStats.deviceDetails[deviceFingerprint.substring(0, 8) + '...'] = {
+        sockets: socketSet.size,
+        socketsIds: Array.from(socketSet),
+      }
+    }
+
+    stats.userDeviceBreakdown[userId] = userStats
+  }
+
   return stats
 }
 
 /**
- * Setup global emitter event handlers for Quick Clash
+ * Get user's active devices
+ * @param {string} userId - User ID
+ * @returns {Array} Array of device fingerprints
+ */
+const getUserActiveDevices = userId => {
+  const userDevices = userDeviceMap.get(userId)
+  if (!userDevices) return []
+
+  return Array.from(userDevices.keys())
+}
+
+/**
+ * Check if user has active connection from specific device
+ * @param {string} userId - User ID
+ * @param {string} deviceFingerprint - Device fingerprint
+ * @returns {boolean} True if user has active connection from device
+ */
+const hasActiveDeviceConnection = (userId, deviceFingerprint) => {
+  const userDevices = userDeviceMap.get(userId)
+  if (!userDevices) return false
+
+  const deviceSockets = userDevices.get(deviceFingerprint)
+  return deviceSockets && deviceSockets.size > 0
+}
+
+/**
+ * Get socket IDs for a specific user device combination
+ * @param {string} userId - User ID
+ * @param {string} deviceFingerprint - Device fingerprint
+ * @returns {Set} Set of socket IDs
+ */
+const getUserDeviceSockets = (userId, deviceFingerprint) => {
+  const userDevices = userDeviceMap.get(userId)
+  if (!userDevices) return new Set()
+
+  return userDevices.get(deviceFingerprint) || new Set()
+}
+
+/**
+ * Setup global emitter event handlers for Quick Clash (unchanged from original)
  * @param {Object} io - Socket.io instance
  */
 const setupQuickClashGlobalEvents = io => {
@@ -589,12 +817,6 @@ const setupQuickClashGlobalEvents = io => {
       `SOCKET: Team ${data?.teamId} (${data?.teamName}) joined matchmaking with ${data?.avgTrophies} avg trophies`,
     )
 
-    // Emit to all clients in the teams room
-    // io.to('quickClash:teams').emit('quickClash:teamJoinedMatchmaking', {
-    //   teamId,
-    //   avgTrophies,
-    //   teamName,
-    // })
     notifyTeamMembers(data?.teamId, 'quickClash:teamJoinedMatchmaking', data)
   })
 
@@ -619,9 +841,6 @@ const setupQuickClashGlobalEvents = io => {
       return
     }
 
-    // Do NOT broadcast to all teams - this would be a serious mistake!
-    // Instead, we need to find all sockets for members of this specific team
-    // and notify only them
     notifyTeamMembers(data.teamId, 'quickClash:teamLeftMatchmaking', data)
   })
 
@@ -642,24 +861,6 @@ const setupQuickClashGlobalEvents = io => {
     // Only notify members of this specific team
     notifyTeamMembers(data.teamId, 'quickClash:teamReturnedToMatchmaking', data)
   })
-
-  // Listen for team battle created
-  globalEmitter.on(
-    'quickClash:teamBattleCreated',
-    ({ teamBattle, teamA, teamB, categories }) => {
-      console.log(
-        `SOCKET: Team battle created between teams ${teamA} and ${teamB}`,
-      )
-
-      // Emit to all clients in the teams room
-      io.to('quickClash:teams').emit('quickClash:teamBattleCreated', {
-        teamBattle,
-        teamA,
-        teamB,
-        categories,
-      })
-    },
-  )
 
   // Listen for team battle ready
   globalEmitter.on(
@@ -726,20 +927,230 @@ const setupQuickClashGlobalEvents = io => {
         `SOCKET: Team battle ${battleId} completed. Winner: ${winner}`,
       )
 
-      // Emit to all clients in the teams room
-      io.to('quickClash:teams').emit('quickClash:teamBattleCompleted', {
-        battleId,
-        winner,
-        teamA,
-        teamB,
+      // FIXED: Notify only the team members involved in this battle
+      if (teamA) {
+        notifyTeamMembers(teamA, 'quickClash:teamBattleCompleted', {
+          battleId,
+          winner,
+          teamA,
+          teamB,
+          isTeamA: true,
+        })
+      }
+
+      if (teamB) {
+        notifyTeamMembers(teamB, 'quickClash:teamBattleCompleted', {
+          battleId,
+          winner,
+          teamA,
+          teamB,
+          isTeamA: false,
+        })
+      }
+    },
+  )
+
+  // FIXED: Team invitation accepted event - notify only team members
+  globalEmitter.on(
+    'quickClash:teamInvitationAccepted',
+    ({ teamId, userId, inviterName, userName, userInGameName }) => {
+      if (!teamId || !userId) {
+        console.error('Invalid data in quickClash:teamInvitationAccepted event')
+        return
+      }
+
+      console.log(
+        `SOCKET: User ${userId} accepted team invitation for team ${teamId} from ${inviterName}`,
+      )
+
+      // FIXED: Only notify the specific team members, not all teams
+      notifyTeamMembers(teamId, 'quickClash:teamInvitationAccepted', {
+        teamId,
+        userId,
+        inviterName,
+        userName,
+        userInGameName,
       })
+
+      // Also notify the user who accepted the invitation directly
+      io.to(`quickClash:${userId}`).emit('quickClash:teamInvitationAccepted', {
+        teamId,
+        userId,
+        inviterName,
+        isCurrentUser: true,
+      })
+    },
+  )
+
+  // FIXED: Team invitation rejected event - notify only team members
+  globalEmitter.on(
+    'quickClash:teamInvitationRejected',
+    ({ teamId, userId, inviterName, userName, userInGameName }) => {
+      if (!teamId || !userId) {
+        console.error('Invalid data in quickClash:teamInvitationRejected event')
+        return
+      }
+
+      console.log(
+        `SOCKET: User ${userId} rejected team invitation for team ${teamId} from ${inviterName}`,
+      )
+
+      // FIXED: Only notify the specific team members, not all teams
+      notifyTeamMembers(teamId, 'quickClash:teamInvitationRejected', {
+        teamId,
+        userId,
+        inviterName,
+        userName,
+        userInGameName,
+      })
+
+      // Also notify the user who rejected the invitation directly
+      io.to(`quickClash:${userId}`).emit('quickClash:teamInvitationRejected', {
+        teamId,
+        userId,
+        inviterName,
+        isCurrentUser: true,
+      })
+    },
+  )
+
+  // FIXED: Team invitation received event - notify only the invitee
+  globalEmitter.on(
+    'quickClash:teamInvitationReceived',
+    ({ inviteeId, invitationId, teamName, inviterName }) => {
+      if (!inviteeId) {
+        console.error('Invalid data in quickClash:teamInvitationReceived event')
+        return
+      }
+
+      console.log(
+        `SOCKET: User ${inviteeId} received team invitation from ${inviterName} for team ${teamName}`,
+      )
+
+      // DEBUG: Check if user has active sockets
+      const userRoom = `quickClash:${inviteeId}`
+      const socketsInRoom = io.sockets.adapter.rooms.get(userRoom)
+      console.log(
+        `DEBUG: Room ${userRoom} has ${
+          socketsInRoom ? socketsInRoom.size : 0
+        } sockets`,
+      )
+
+      if (socketsInRoom && socketsInRoom.size > 0) {
+        console.log(
+          `DEBUG: Emitting teamInvitationReceived to ${socketsInRoom.size} socket(s)`,
+        )
+      } else {
+        console.log(
+          `DEBUG: No sockets in room ${userRoom} - user might not be connected`,
+        )
+      }
+
+      // FIXED: Only notify the specific invitee, not all teams
+      io.to(userRoom).emit('quickClash:teamInvitationReceived', {
+        invitationId,
+        teamName,
+        inviterName,
+      })
+
+      console.log(
+        `DEBUG: teamInvitationReceived event emitted to room ${userRoom}`,
+      )
+    },
+  )
+
+  // FIXED: Team member joined event - notify only team members
+  globalEmitter.on(
+    'quickClash:teamMemberJoined',
+    ({ team, user, userName, userInGameName }) => {
+      if (!team || !user) {
+        console.error('Invalid data in quickClash:teamMemberJoined event')
+        return
+      }
+
+      console.log(`SOCKET: User ${user} joined team ${team}`)
+
+      // FIXED: Only notify the specific team members, not all teams
+      notifyTeamMembers(team, 'quickClash:teamMemberJoined', {
+        teamId: team,
+        userId: user,
+        userName,
+        userInGameName,
+      })
+    },
+  )
+
+  // FIXED: Team member left event - notify only team members
+  globalEmitter.on(
+    'quickClash:teamMemberLeft',
+    ({ team, user, userName, userInGameName }) => {
+      if (!team || !user) {
+        console.error('Invalid data in quickClash:teamMemberLeft event')
+        return
+      }
+
+      console.log(`SOCKET: User ${user} left team ${team}`)
+
+      // FIXED: Only notify the specific team members, not all teams
+      notifyTeamMembers(team, 'quickClash:teamMemberLeft', {
+        teamId: team,
+        userId: user,
+        userName,
+        userInGameName,
+      })
+    },
+  )
+
+  // FIXED: Team member removed event - notify only team members
+  globalEmitter.on(
+    'quickClash:teamMemberRemoved',
+    ({
+      team,
+      leader,
+      removedMember,
+      teamName,
+      removedMemberName,
+      removedMemberInGameName,
+    }) => {
+      if (!team || !leader || !removedMember) {
+        console.error('Invalid data in quickClash:teamMemberRemoved event')
+        return
+      }
+
+      console.log(
+        `SOCKET: User ${removedMember} was removed from team ${team} by ${leader}`,
+      )
+
+      // FIXED: Only notify the specific team members, not all teams
+      notifyTeamMembers(team, 'quickClash:teamMemberRemoved', {
+        teamId: team,
+        leaderId: leader,
+        removedMemberId: removedMember,
+        teamName,
+        removedMemberName,
+        removedMemberInGameName,
+        isCurrentUser: false, // This will be set to true for the removed member
+        isLeader: leader === removedMember,
+      })
+
+      // Also notify the removed member directly
+      io.to(`quickClash:${removedMember}`).emit(
+        'quickClash:teamMemberRemoved',
+        {
+          teamId: team,
+          leaderId: leader,
+          removedMemberId: removedMember,
+          isCurrentUser: true,
+          teamName,
+        },
+      )
     },
   )
 
   // Listen for team member selected category
   globalEmitter.on(
     'quickClash:teamMemberSelectedCategory',
-    ({ battleId, userId, category, team }) => {
+    ({ battleId, userId, category, team, opponentTeam }) => {
       if (!battleId || !userId || !category) {
         console.error(
           'Invalid data in quickClash:teamMemberSelectedCategory event',
@@ -751,19 +1162,36 @@ const setupQuickClashGlobalEvents = io => {
         `SOCKET: User ${userId} selected category ${category} for team ${team} in battle ${battleId}`,
       )
 
-      // Emit to all clients in the teams room
-      io.to('quickClash:teams').emit('quickClash:teamMemberSelectedCategory', {
-        battleId,
-        userId,
-        category,
-        team,
-      })
+      // FIXED: Only notify members of both teams involved in this battle
+      if (team) {
+        notifyTeamMembers(team, 'quickClash:teamMemberSelectedCategory', {
+          battleId,
+          userId,
+          category,
+          team,
+          isOwnTeam: true,
+        })
+      }
+
+      if (opponentTeam) {
+        notifyTeamMembers(
+          opponentTeam,
+          'quickClash:teamMemberSelectedCategory',
+          {
+            battleId,
+            userId,
+            category,
+            team,
+            isOwnTeam: false,
+          },
+        )
+      }
     },
   )
 
   globalEmitter.on(
     'quickClash:teamMemberDeselectedCategory',
-    ({ battleId, userId, category, team }) => {
+    ({ battleId, userId, category, team, opponentTeam }) => {
       if (!battleId || !userId || !category) {
         console.error(
           'Invalid data in quickClash:teamMemberDeselectedCategory event',
@@ -775,16 +1203,30 @@ const setupQuickClashGlobalEvents = io => {
         `SOCKET: User ${userId} deselected category ${category} for team ${team} in battle ${battleId}`,
       )
 
-      // Emit to all clients in the teams room
-      io.to('quickClash:teams').emit(
-        'quickClash:teamMemberDeselectedCategory',
-        {
+      // FIXED: Only notify members of both teams involved in this battle
+      if (team) {
+        notifyTeamMembers(team, 'quickClash:teamMemberDeselectedCategory', {
           battleId,
           userId,
           category,
           team,
-        },
-      )
+          isOwnTeam: true,
+        })
+      }
+
+      if (opponentTeam) {
+        notifyTeamMembers(
+          opponentTeam,
+          'quickClash:teamMemberDeselectedCategory',
+          {
+            battleId,
+            userId,
+            category,
+            team,
+            isOwnTeam: false,
+          },
+        )
+      }
     },
   )
 
@@ -810,27 +1252,12 @@ const setupQuickClashGlobalEvents = io => {
           ? data.teamAName
           : data.teamBName
 
-        // Get the user's socket(s)
-        if (userSocketMap.has(userId)) {
-          const userSocketIds = userSocketMap.get(userId)
-          userSocketIds.forEach(socketId => {
-            const socket = io.sockets.sockets.get(socketId)
-            if (socket) {
-              socket.emit('quickClash:matchmakingLocked', {
-                status: data.status,
-                teamId: userTeamId,
-                teamName: teamName,
-              })
-            }
-          })
-        } else {
-          // Fallback: Try to use the room
-          io.to(`quickClash:${userId}`).emit('quickClash:matchmakingLocked', {
-            status: data.status,
-            teamId: userTeamId,
-            teamName: teamName,
-          })
-        }
+        // Get the user's socket(s) - use device-aware notification
+        notifyUserAllDevices(userId, 'quickClash:matchmakingLocked', {
+          status: data.status,
+          teamId: userTeamId,
+          teamName: teamName,
+        })
       })
     } else {
       // Fallback to team-based notification if no member IDs provided
@@ -873,25 +1300,11 @@ const setupQuickClashGlobalEvents = io => {
           ? data.teamA
           : data.teamB
 
-        // Get the user's socket(s)
-        if (userSocketMap.has(userId)) {
-          const userSocketIds = userSocketMap.get(userId)
-          userSocketIds.forEach(socketId => {
-            const socket = io.sockets.sockets.get(socketId)
-            if (socket) {
-              socket.emit('quickClash:matchmakingUnlocked', {
-                status: data.status,
-                teamId: userTeamId,
-              })
-            }
-          })
-        } else {
-          // Fallback: Try to use the room
-          io.to(`quickClash:${userId}`).emit('quickClash:matchmakingUnlocked', {
-            status: data.status,
-            teamId: userTeamId,
-          })
-        }
+        // Use device-aware notification
+        notifyUserAllDevices(userId, 'quickClash:matchmakingUnlocked', {
+          status: data.status,
+          teamId: userTeamId,
+        })
       })
     } else {
       // Fallback to team-based notification if no member IDs provided
@@ -937,28 +1350,11 @@ const setupQuickClashGlobalEvents = io => {
           ? data.teamB
           : data.teamA
 
-        // Get the user's socket(s)
-        if (userSocketMap.has(userId)) {
-          const userSocketIds = userSocketMap.get(userId)
-          userSocketIds.forEach(socketId => {
-            const socket = io.sockets.sockets.get(socketId)
-            if (socket) {
-              socket.emit('quickClash:battleCreationStarted', {
-                teamId: userTeamId,
-                opponentTeam: opponentTeamId,
-              })
-            }
-          })
-        } else {
-          // Fallback: Try to use the room
-          io.to(`quickClash:${userId}`).emit(
-            'quickClash:battleCreationStarted',
-            {
-              teamId: userTeamId,
-              opponentTeam: opponentTeamId,
-            },
-          )
-        }
+        // Use device-aware notification
+        notifyUserAllDevices(userId, 'quickClash:battleCreationStarted', {
+          teamId: userTeamId,
+          opponentTeam: opponentTeamId,
+        })
       })
     } else {
       // Fallback to team-based notification if no member IDs provided
@@ -1001,28 +1397,11 @@ const setupQuickClashGlobalEvents = io => {
           ? data.teamA
           : data.teamB
 
-        // Get the user's socket(s)
-        if (userSocketMap.has(userId)) {
-          const userSocketIds = userSocketMap.get(userId)
-          userSocketIds.forEach(socketId => {
-            const socket = io.sockets.sockets.get(socketId)
-            if (socket) {
-              socket.emit('quickClash:battleCreationFailed', {
-                teamId: userTeamId,
-                error: data.error,
-              })
-            }
-          })
-        } else {
-          // Fallback: Try to use the room
-          io.to(`quickClash:${userId}`).emit(
-            'quickClash:battleCreationFailed',
-            {
-              teamId: userTeamId,
-              error: data.error,
-            },
-          )
-        }
+        // Use device-aware notification
+        notifyUserAllDevices(userId, 'quickClash:battleCreationFailed', {
+          teamId: userTeamId,
+          error: data.error,
+        })
       })
     } else {
       // Fallback to team-based notification if no member IDs provided
@@ -1050,10 +1429,10 @@ const setupQuickClashGlobalEvents = io => {
       `SOCKET: Battle creation cleaned up for teams ${data.teamA} and ${data.teamB}`,
     )
 
-    // Send notification to all affected members
+    // Send notification to all affected members using device-aware notification
     if (data.memberIds && data.memberIds.length > 0) {
       data.memberIds.forEach(memberId => {
-        io.to(memberId).emit('quickClash:battleCreationCleanedUp', {
+        notifyUserAllDevices(memberId, 'quickClash:battleCreationCleanedUp', {
           message: data.message,
           teamA: data.teamA,
           teamB: data.teamB,
@@ -1073,16 +1452,22 @@ const setupQuickClashGlobalEvents = io => {
   })
 
   /**
-   * Helper function to notify all members of a specific team
+   * Enhanced helper function to notify all members of a specific team using device-aware notifications
    * @param {string} teamId - Team ID
    * @param {string} event - Event name
    * @param {Object} data - Event data
+   * @param {Array<string>} [excludeUserIds] - Optional array of user IDs to exclude from notification
    */
-  async function notifyTeamMembers(teamId, event, data) {
+  async function notifyTeamMembers(teamId, event, data, excludeUserIds = []) {
     try {
+      if (!teamId) {
+        console.error('notifyTeamMembers: teamId is required')
+        return
+      }
+
       // Fetch team members from the database
       const team = await QuickClashTeam.findById(teamId)
-        .select('members')
+        .select('members name')
         .lean()
 
       if (!team || !team.members || !Array.isArray(team.members)) {
@@ -1092,33 +1477,142 @@ const setupQuickClashGlobalEvents = io => {
         return
       }
 
-      // Send event to each team member
+      let notifiedCount = 0
+      const excludeSet = new Set(excludeUserIds.map(id => id.toString()))
+
+      // Send event to each team member (excluding any specified exclusions)
       team.members.forEach(member => {
         const userId = member.user.toString()
-        const userSocket = getUserSocket(userId)
-        if (userSocket) {
-          userSocket.emit(event, data)
+
+        // Skip if user is in exclude list
+        if (excludeSet.has(userId)) {
+          return
+        }
+
+        // Use device-aware notification
+        const notified = notifyUserAllDevices(userId, event, {
+          ...data,
+          teamName: team.name, // Include team name for context
+        })
+
+        if (notified) {
+          notifiedCount++
         }
       })
+
+      console.log(
+        `notifyTeamMembers: Sent ${event} to ${notifiedCount}/${team.members.length} members of team ${teamId} (${team.name})`,
+      )
     } catch (error) {
       console.error(`Error notifying team members for team ${teamId}:`, error)
     }
   }
 
-  // Helper function to get a user's socket (implement this if not already available)
-  function getUserSocket(userId) {
-    // This implementation depends on how you're tracking user sockets
-    // Example implementation:
-    const userSocketId = userSocketMap.get(userId)?.values().next().value
-    if (userSocketId) {
-      return io.sockets.sockets.get(userSocketId)
+  /**
+   * Enhanced helper function to notify a user across all their active devices
+   * @param {string} userId - User ID
+   * @param {string} event - Event name
+   * @param {Object} data - Event data
+   * @returns {boolean} True if notification was sent to at least one device
+   */
+  function notifyUserAllDevices(userId, event, data) {
+    const userDevices = userDeviceMap.get(userId)
+
+    if (!userDevices || userDevices.size === 0) {
+      console.warn(
+        `notifyUserAllDevices: No active devices found for user ${userId}`,
+      )
+      // Fallback: Try to use the user's room (less reliable but better than nothing)
+      io.to(`quickClash:${userId}`).emit(event, data)
+      return true
     }
+
+    let notifiedDevices = 0
+
+    // Send to all active devices
+    userDevices.forEach((socketSet, deviceFingerprint) => {
+      if (socketSet.size > 0) {
+        // Send to all sockets for this device (should be just one per device now)
+        socketSet.forEach(socketId => {
+          const socket = io.sockets.sockets.get(socketId)
+          if (socket) {
+            socket.emit(event, {
+              ...data,
+              deviceFingerprint: deviceFingerprint.substring(0, 8) + '...',
+            })
+          }
+        })
+        notifiedDevices++
+      }
+    })
+
+    if (notifiedDevices > 0) {
+      console.log(
+        `notifyUserAllDevices: Sent ${event} to ${notifiedDevices} device(s) for user ${userId}`,
+      )
+      return true
+    }
+
+    return false
+  }
+
+  /**
+   * Helper function to get a user's primary socket (first available socket)
+   * @param {string} userId - User ID
+   * @returns {Object|null} Socket object or null if not found
+   */
+  function getUserSocket(userId) {
+    const userDevices = userDeviceMap.get(userId)
+
+    if (!userDevices || userDevices.size === 0) {
+      return null
+    }
+
+    // Get first available socket from any device
+    for (const [deviceFingerprint, socketSet] of userDevices.entries()) {
+      if (socketSet.size > 0) {
+        const firstSocketId = socketSet.values().next().value
+        if (firstSocketId) {
+          return io.sockets.sockets.get(firstSocketId)
+        }
+      }
+    }
+
     return null
+  }
+
+  /**
+   * Helper function to notify specific users directly using device-aware notifications
+   * @param {Array<string>} userIds - Array of user IDs to notify
+   * @param {string} event - Event name
+   * @param {Object} data - Event data
+   */
+  function notifySpecificUsers(userIds, event, data) {
+    if (!Array.isArray(userIds)) {
+      console.error('notifySpecificUsers: userIds must be an array')
+      return
+    }
+
+    let notifiedCount = 0
+
+    userIds.forEach(userId => {
+      const notified = notifyUserAllDevices(userId, event, data)
+      if (notified) {
+        notifiedCount++
+      }
+    })
+
+    console.log(
+      `notifySpecificUsers: Sent ${event} to ${notifiedCount}/${userIds.length} users`,
+    )
   }
 }
 
 module.exports = {
   setupQuickClashSocketHandlers,
   setupQuickClashGlobalEvents,
-  getConnectedUserStats,
+  getConnectionStats,
+  getUserActiveDevices,
+  hasActiveDeviceConnection,
+  getUserDeviceSockets,
 }

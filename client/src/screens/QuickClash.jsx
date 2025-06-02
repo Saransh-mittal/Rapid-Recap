@@ -1,4 +1,4 @@
-// Updated screens/QuickClash.jsx to incorporate global matchmaking components
+// Updated screens/QuickClash.jsx to incorporate global matchmaking components and notification drawer
 import React, { useCallback, useState, useEffect } from 'react'
 import {
   Container,
@@ -16,7 +16,13 @@ import { lazy, Suspense } from 'react'
 import QuickClashHeader from '../components/quickClashComponents/QuickClashHeader'
 import CustomTabs from '../components/quickClashComponents/ui/CustomTabs'
 import NewChallengeModal from '../components/quickClashComponents/modals/NewChallengeModal'
-import { useSelector } from 'react-redux'
+import { useSelector, useDispatch } from 'react-redux'
+import {
+  fetchAppUpdates,
+  setIsNotifDrawerOpen,
+  setIsNotifModalOpen,
+  setSelectedNotificationId,
+} from '../redux/appSlice'
 
 // Entrance animation
 const QuickClashEntrance = lazy(() =>
@@ -63,9 +69,22 @@ const GlobalMatchmakingButton = lazy(() =>
   ),
 )
 
+// Notification Drawer component
+const NotificationDrawer = lazy(() =>
+  import(
+    '../components/Header-Footer/modernNavbarComponents/drawers/NotificationDrawer.jsx'
+  ),
+)
+const NotificationModal = lazy(() =>
+  import(
+    '../components/Header-Footer/modernNavbarComponents/modals/NotificationModal.jsx'
+  ),
+)
+
 // Import custom hook for global matchmaking
 import useQuickClashGlobalMatchmaking from '../customHooks/useQuickClashGlobalMatchmaking'
 import BattleCreationNotifications from '../components/quickClashComponents/BattleCreationNotifications.jsx'
+import { ModalLoader } from '../components/Header-Footer/modernNavbarComponents/NavbarModalManager.jsx'
 
 // Loading fallback
 const LoadingFallback = () => (
@@ -87,13 +106,20 @@ const MotionBox = motion(Box)
  * Supports URL hash-based navigation for tabs
  */
 const QuickClash = () => {
+  const dispatch = useDispatch()
   const { isOpen, onOpen, onClose } = useDisclosure()
   const [showEntrance, setShowEntrance] = useState(true)
   const [showTaskPopup, setShowTaskPopup] = useState(false)
   const [activeTabIndex, setActiveTabIndex] = useState(0)
+  const [isNotificationModalOpen, setIsNotificationModalOpen] = useState(false)
+  const [selectedNotification, setSelectedNotification] = useState(null)
+  const { isAuthenticated, loginCheckStatus } = useSelector(state => state.auth)
+  const { updatesLoading, isNotifModalOpen } = useSelector(state => state.app)
+
   const { justCompletedTaskId } = useSelector(
     state => state.quickClashDailyTasks,
   )
+  const { isNotifDrawerOpen } = useSelector(state => state.app)
   const taskJustCompleted = !!justCompletedTaskId
 
   // Show floating action menu only on mobile
@@ -153,6 +179,15 @@ const QuickClash = () => {
     }
   }, [taskJustCompleted, showDesktopTaskPopup])
 
+  const checkStreakAndFetchUpdates = useCallback(() => {
+    if (!updatesLoading && loginCheckStatus === 'fulfilled') {
+      dispatch(fetchAppUpdates())
+    }
+  }, [loginCheckStatus, isAuthenticated, dispatch])
+  useEffect(() => {
+    checkStreakAndFetchUpdates()
+  }, [loginCheckStatus, dispatch])
+
   // Use useCallback for event handlers
   const handleNewChallenge = useCallback(() => {
     onOpen()
@@ -184,6 +219,22 @@ const QuickClash = () => {
   const handleTabChange = useCallback(index => {
     setActiveTabIndex(index)
   }, [])
+
+  // Notification drawer handlers
+  const handleNotificationDrawerClose = useCallback(() => {
+    dispatch(setIsNotifDrawerOpen(false))
+  }, [dispatch])
+
+  const handleNotificationModalOpen = useCallback(notification => {
+    setSelectedNotification(notification)
+    setIsNotificationModalOpen(true)
+  }, [])
+
+  const handleNotificationModalClose = useCallback(() => {
+    setIsNotificationModalOpen(false)
+    setSelectedNotification(null)
+    dispatch(setSelectedNotificationId(null))
+  }, [dispatch])
 
   return (
     <>
@@ -300,6 +351,29 @@ const QuickClash = () => {
           <TaskCompletionHandler />
         </Suspense>
       </Container>
+
+      {/* Notification Drawer */}
+      {isNotifDrawerOpen && (
+        <Suspense fallback={null}>
+          <NotificationDrawer
+            setIsDrawerOpen={val => dispatch(setIsNotifDrawerOpen(val))}
+            setIsModalOpen={val => dispatch(setIsNotifModalOpen(val))}
+            setSelectedNotification={setSelectedNotification}
+            setIsHamburgerOpen={() => {}} // No hamburger menu in QuickClash
+          />
+        </Suspense>
+      )}
+
+      {isNotifModalOpen && (
+        <Suspense fallback={<ModalLoader />}>
+          <NotificationModal
+            selectedNotification={selectedNotification}
+            setIsModalOpen={val => dispatch(setIsNotifModalOpen(val))}
+            setIsDrawerOpen={val => dispatch(setIsNotifDrawerOpen(val))}
+          />
+        </Suspense>
+      )}
+
       <BattleCreationNotifications />
     </>
   )

@@ -31,6 +31,12 @@ const QuickClashTeamMatchmaking = require('../model/quickClashSchemas/quickClash
 const QuickClashGlobalMatchmaking = require('../model/quickClashSchemas/quickClashGlobalMatchmakingSchema')
 const QuickClashTeamBattle = require('../model/quickClashSchemas/quickClashTeamBattleSchema')
 
+const {
+  acceptTeamInvitation,
+  rejectTeamInvitation,
+  getUserPendingInvitations,
+} = require('../services/quickClashServices/quickClashTeamInvitationService')
+
 /**
  * @desc    Create a new team
  * @route   POST /api/quickClash/team
@@ -876,6 +882,78 @@ const getTeamMatchmakingStatusDetailed = asyncHandler(async (req, res) => {
   }
 })
 
+/**
+ * @desc    Accept a team invitation
+ * @route   POST /api/quickClash/team/invitation/:invitationId/accept
+ * @access  Private
+ */
+const acceptTeamInvitationController = asyncHandler(async (req, res) => {
+  const { invitationId } = req.params
+  const userId = req.user._id
+
+  try {
+    const team = await acceptTeamInvitation({ invitationId, userId })
+
+    res.status(200).json({
+      success: true,
+      message: 'Team invitation accepted successfully',
+      team,
+    })
+  } catch (error) {
+    res.status(400).json({
+      success: false,
+      message: error.message || 'Failed to accept team invitation',
+    })
+  }
+})
+
+/**
+ * @desc    Reject a team invitation
+ * @route   POST /api/quickClash/team/invitation/:invitationId/reject
+ * @access  Private
+ */
+const rejectTeamInvitationController = asyncHandler(async (req, res) => {
+  const { invitationId } = req.params
+  const userId = req.user._id
+
+  try {
+    await rejectTeamInvitation({ invitationId, userId })
+
+    res.status(200).json({
+      success: true,
+      message: 'Team invitation rejected successfully',
+    })
+  } catch (error) {
+    res.status(400).json({
+      success: false,
+      message: error.message || 'Failed to reject team invitation',
+    })
+  }
+})
+
+/**
+ * @desc    Get user's pending team invitations
+ * @route   GET /api/quickClash/team/invitations/pending
+ * @access  Private
+ */
+const getPendingInvitationsController = asyncHandler(async (req, res) => {
+  const userId = req.user._id
+
+  try {
+    const invitations = await getUserPendingInvitations({ userId })
+
+    res.status(200).json({
+      success: true,
+      invitations,
+    })
+  } catch (error) {
+    res.status(400).json({
+      success: false,
+      message: error.message || 'Failed to get pending invitations',
+    })
+  }
+})
+
 module.exports = {
   createNewTeam,
   getTeam,
@@ -897,4 +975,7 @@ module.exports = {
   getTeamBattle,
   getTeamMatchmakingInfo,
   getTeamMatchmakingStatusDetailed,
+  acceptTeamInvitationController,
+  rejectTeamInvitationController,
+  getPendingInvitationsController,
 }

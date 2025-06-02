@@ -16,14 +16,17 @@ import {
   useToast,
   Portal,
   Center,
+  Badge,
 } from '@chakra-ui/react'
 import { motion, AnimatePresence } from 'framer-motion'
 import { useTranslation } from 'react-i18next'
-import { Menu as MenuIcon, X, Sword } from 'lucide-react' // Removed Users
-// import { useSelector } from 'react-redux'; // Kept for potential future use, but not strictly needed now
+import { Menu as MenuIcon, X, Sword, Bell } from 'lucide-react' // Removed Users
+import { useSelector, useDispatch } from 'react-redux' // Kept for potential future use, but not strictly needed now
+import { setIsNotifDrawerOpen } from '../../redux/appSlice'
 
 // Import existing components to reuse
 import QuickClashLeaderboardButton from './leaderboard/QuickClashLeaderboardButton'
+import { useMemo } from 'react'
 // MatchmakingButton and GlobalMatchmakingButton are removed from here
 
 // const TaskPopup = lazy(() => import('./dailyTasks/TaskPopup')) // TaskPopup is no longer triggered from here
@@ -92,11 +95,60 @@ const FloatingActionMenu = ({
   onNewChallenge /* onFindMatch prop is no longer used here */,
 }) => {
   const { t } = useTranslation('QuickClash')
+  const dispatch = useDispatch()
   const { isOpen, onToggle, onClose } = useDisclosure()
   const [position, setPosition] = useState({ x: 0, y: 0 })
   const [isDragging, setIsDragging] = useState(false)
   const toast = useToast()
   const menuRef = useRef(null)
+
+  // Get task completion status and notification data from Redux
+  const {
+    justCompletedTaskId,
+    tasks,
+    updates,
+    unreadFriendRequests,
+    notification,
+  } = useSelector(
+    state => ({
+      justCompletedTaskId: state.quickClashDailyTasks.justCompletedTaskId,
+      tasks: state.quickClashDailyTasks.tasks,
+      updates: state.app.updates,
+      unreadFriendRequests: state.app.unreadFriendRequests,
+      notification: state.app.notification,
+    }),
+    (prev, next) => {
+      // Only re-render if these specific values changed
+      return (
+        prev.justCompletedTaskId === next.justCompletedTaskId &&
+        prev.tasks.length === next.tasks.length &&
+        prev.tasks.filter(t => !t.completed).length ===
+          next.tasks.filter(t => !t.completed).length &&
+        prev.updates?.length === next.updates?.length &&
+        prev.unreadFriendRequests === next.unreadFriendRequests &&
+        prev.notification?.length === next.notification?.length
+      )
+    },
+  )
+  const unreadUpdatesCount = useMemo(
+    () => updates?.filter(u => !u.read).length || 0,
+    [updates],
+  )
+  // Count pending tasks for the badge - memoize this calculation
+  const pendingTasks = useMemo(
+    () => tasks.filter(task => !task.completed).length,
+    [tasks],
+  )
+
+  // Calculate notification count - memoize this calculation
+  const notificationCount = useMemo(() => {
+    const unreadUpdates = updates?.filter(u => !u.read).length || 0
+    const friendRequests = unreadFriendRequests || 0
+    const notificationItems = Array.isArray(notification)
+      ? notification.length
+      : 0
+    return unreadUpdates + friendRequests + notificationItems
+  }, [updates, unreadFriendRequests, notification])
 
   // Load saved position on mount
   useEffect(() => {
@@ -154,6 +206,11 @@ const FloatingActionMenu = ({
     onClose()
   }, [onNewChallenge, onClose])
 
+  const handleInboxClick = useCallback(() => {
+    dispatch(setIsNotifDrawerOpen(true))
+    onClose()
+  }, [dispatch, onClose])
+
   return (
     <Portal>
       <MotionBox
@@ -199,6 +256,43 @@ const FloatingActionMenu = ({
           onDoubleClick={handleResetPosition}
           _active={{ transform: 'scale(0.95)' }}
         >
+          {/* Red Dot Notification Indicator - NEW */}
+          {unreadUpdatesCount > 0 && (
+            <MotionBox
+              position="absolute"
+              top="8px"
+              right="8px"
+              width="12px"
+              height="12px"
+              borderRadius="full"
+              bg="red.500"
+              border="2px solid white"
+              boxShadow="0 0 8px rgba(255, 0, 0, 0.6)"
+              zIndex={3}
+              initial={{ scale: 0 }}
+              animate={{
+                scale: 1,
+                boxShadow: [
+                  '0 0 8px rgba(255, 0, 0, 0.6)',
+                  '0 0 12px rgba(255, 0, 0, 0.8)',
+                  '0 0 8px rgba(255, 0, 0, 0.6)',
+                ],
+              }}
+              transition={{
+                scale: {
+                  type: 'spring',
+                  stiffness: 300,
+                  damping: 15,
+                },
+                boxShadow: {
+                  repeat: Infinity,
+                  duration: 2,
+                  ease: 'easeInOut',
+                },
+              }}
+            />
+          )}
+
           {!isOpen && (
             <Box
               position="absolute"
@@ -288,8 +382,53 @@ const FloatingActionMenu = ({
                 </MotionButton>
               </MotionBox>
 
-              {/* MatchmakingButton (1v1) - REMOVED */}
-              {/* GlobalMatchmakingButton (4v4) - REMOVED */}
+              {/* Inbox Button - New addition for notifications */}
+              <MotionBox
+                custom={3}
+                variants={menuItemVariants}
+                initial="hidden"
+                animate="visible"
+                exit="exit"
+                position="relative"
+              >
+                <MotionButton
+                  onClick={handleInboxClick}
+                  size="md"
+                  colorScheme="blue"
+                  borderRadius="full"
+                  width="48px"
+                  height="48px"
+                  bgGradient="linear(to-r, blue.500, cyan.500)"
+                  boxShadow="0 4px 10px rgba(0,0,0,0.25)"
+                  _hover={{ transform: 'translateY(-2px)' }}
+                  whileHover={{ scale: 1.05 }}
+                  whileTap={{ scale: 0.95 }}
+                  userSelect="none"
+                  position="relative"
+                >
+                  <Icon as={Bell} boxSize={5} />
+                  {notificationCount > 0 && (
+                    <Badge
+                      position="absolute"
+                      top="-2px"
+                      right="-2px"
+                      bg="red.500"
+                      color="white"
+                      borderRadius="full"
+                      fontSize="xs"
+                      minW="18px"
+                      h="18px"
+                      display="flex"
+                      alignItems="center"
+                      justifyContent="center"
+                      border="2px solid"
+                      borderColor="blue.500"
+                    >
+                      {notificationCount > 99 ? '99+' : notificationCount}
+                    </Badge>
+                  )}
+                </MotionButton>
+              </MotionBox>
 
               <MotionBox
                 custom={1} // Adjusted custom index

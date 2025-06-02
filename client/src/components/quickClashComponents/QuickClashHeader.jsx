@@ -2,6 +2,7 @@
 import React, {
   memo,
   useEffect,
+  useMemo,
   useState,
   useCallback,
   lazy,
@@ -18,18 +19,20 @@ import {
   useBreakpointValue,
   Tooltip,
   IconButton,
+  Badge,
 } from '@chakra-ui/react'
 import { motion } from 'framer-motion'
 import { FiZap, FiHome } from 'react-icons/fi' // FiZap for New Challenge & default 1v1
-import { Target, Zap as ZapIconLucide } from 'lucide-react' // Target for header, Zap for 1v1 icon
+import { Target, Zap as ZapIconLucide, Bell } from 'lucide-react' // Target for header, Zap for 1v1 icon
 import { useTranslation } from 'react-i18next'
 import { useNavigate } from 'react-router-dom'
-import { useDispatch } from 'react-redux'
+import { useDispatch, useSelector } from 'react-redux'
 import QuickClashLeaderboardButton from './leaderboard/QuickClashLeaderboardButton'
 import LevelBadge from './user/LevelBadge'
 import TaskProgressIndicator from './dailyTasks/TaskProgressIndicator'
 import TrophyDisplay from './user/TrophyDisplay'
 import { fetchUserTrophies } from '../../redux/quickClashSlice'
+import { setIsNotifDrawerOpen } from '../../redux/appSlice'
 
 import MatchmakingButton from './MatchmakingButton' // For 1v1
 import GlobalMatchmakingButton from './globalmatchmaking/GlobalMatchmakingButton' // For 4v4
@@ -47,6 +50,21 @@ const QuickClashHeader = ({ onNewChallenge }) => {
   const dispatch = useDispatch()
   const isDesktop = useBreakpointValue({ base: false, md: true })
 
+  // Get notification data from Redux
+  const { updates, unreadFriendRequests, notification } = useSelector(
+    state => state.app,
+  )
+
+  // Calculate notification count - memoized
+  const notificationCount = useMemo(() => {
+    const unreadUpdates = updates?.filter(u => !u.read).length || 0
+    const friendRequests = unreadFriendRequests || 0
+    const notificationItems = Array.isArray(notification)
+      ? notification.length
+      : 0
+    return unreadUpdates + friendRequests + notificationItems
+  }, [updates, unreadFriendRequests, notification])
+
   const [showTaskPopup, setShowTaskPopup] = useState(false)
 
   useEffect(() => {
@@ -59,6 +77,10 @@ const QuickClashHeader = ({ onNewChallenge }) => {
   const handleNavigateToTasksSection = useCallback(() => {
     window.location.hash = 'tasks'
   }, [])
+
+  const handleInboxClick = () => {
+    dispatch(setIsNotifDrawerOpen(true))
+  }
 
   // Animation variants (assuming these are defined elsewhere or are simple)
   const containerVariants = {
@@ -103,6 +125,19 @@ const QuickClashHeader = ({ onNewChallenge }) => {
         ease: 'easeInOut',
       },
     },
+  }
+
+  const inboxButtonVariants = {
+    hover: {
+      scale: 1.1,
+      boxShadow: '0 0 12px rgba(66, 153, 225, 0.6)',
+      transition: {
+        duration: 0.3,
+        type: 'spring',
+        stiffness: 200,
+      },
+    },
+    tap: { scale: 0.9 },
   }
 
   return (
@@ -188,6 +223,53 @@ const QuickClashHeader = ({ onNewChallenge }) => {
         <HStack spacing={3}>
           <TrophyDisplay />
           <LevelBadge />
+
+          {/* Inbox Button - Desktop */}
+          <Box position="relative">
+            <Tooltip label={t('Notifications')}>
+              <MotionIconButton
+                as={motion.button}
+                icon={<Bell size={20} />}
+                onClick={handleInboxClick}
+                variant="ghost"
+                colorScheme="blue"
+                color="whiteAlpha.900"
+                size="md"
+                borderRadius="full"
+                p={3}
+                _hover={{
+                  bg: 'rgba(66, 153, 225, 0.2)',
+                  color: 'blue.300',
+                  transform: 'translateY(-2px)',
+                }}
+                aria-label={t('Open Notifications')}
+                variants={inboxButtonVariants}
+                whileHover="hover"
+                whileTap="tap"
+              />
+            </Tooltip>
+            {notificationCount > 0 && (
+              <Badge
+                position="absolute"
+                top="-2px"
+                right="-2px"
+                bg="red.500"
+                color="white"
+                borderRadius="full"
+                fontSize="xs"
+                minW="18px"
+                h="18px"
+                display="flex"
+                alignItems="center"
+                justifyContent="center"
+                border="2px solid"
+                borderColor="blue.500"
+                zIndex={1}
+              >
+                {notificationCount > 99 ? '99+' : notificationCount}
+              </Badge>
+            )}
+          </Box>
           <TaskProgressIndicator onViewTasks={handleViewTasksClick} size="sm" />
         </HStack>
       </MotionFlex>
