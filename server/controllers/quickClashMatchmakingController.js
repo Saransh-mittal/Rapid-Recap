@@ -17,10 +17,16 @@ const joinMatchmakingRoom = asyncHandler(async (req, res) => {
   const userId = req.user._id
 
   try {
+    console.log(`[MM_CONTROLLER] User ${userId} joining 1v1 matchmaking`)
+
     // No categories needed, they'll be selected automatically in the backend
     const matchmakingEntry = await joinMatchmaking({
       userId,
     })
+
+    console.log(
+      `[MM_CONTROLLER] User ${userId} successfully joined 1v1 matchmaking`,
+    )
 
     res.status(200).json({
       success: true,
@@ -28,7 +34,10 @@ const joinMatchmakingRoom = asyncHandler(async (req, res) => {
       matchmaking: matchmakingEntry,
     })
   } catch (error) {
-    console.error('Error joining matchmaking:', error)
+    console.error(
+      `[MM_CONTROLLER] Error joining matchmaking for user ${userId}:`,
+      error,
+    )
     res.status(500).json({
       success: false,
       message: error.message || 'Failed to join matchmaking',
@@ -45,7 +54,15 @@ const leaveMatchmakingRoom = asyncHandler(async (req, res) => {
   const userId = req.user._id
 
   try {
+    console.log(`[MM_CONTROLLER] User ${userId} leaving 1v1 matchmaking`)
+
     const success = await leaveMatchmaking({ userId })
+
+    console.log(
+      `[MM_CONTROLLER] User ${userId} ${
+        success ? 'successfully left' : 'was not in'
+      } 1v1 matchmaking`,
+    )
 
     res.status(200).json({
       success,
@@ -54,7 +71,10 @@ const leaveMatchmakingRoom = asyncHandler(async (req, res) => {
         : 'User not in matchmaking',
     })
   } catch (error) {
-    console.error('Error leaving matchmaking:', error)
+    console.error(
+      `[MM_CONTROLLER] Error leaving matchmaking for user ${userId}:`,
+      error,
+    )
     res.status(500).json({
       success: false,
       message: error.message || 'Failed to leave matchmaking',
@@ -71,10 +91,18 @@ const getMatchmakingStatus = asyncHandler(async (req, res) => {
   const userId = req.user._id
 
   try {
+    console.log(`[MM_CONTROLLER] Getting matchmaking status for user ${userId}`)
+
     // Get user's current matchmaking entry if exists
     const matchmakingEntry = await QuickClashMatchmaking.findOne({
       user: userId,
     }).select('-__v')
+
+    console.log(
+      `[MM_CONTROLLER] User ${userId} matchmaking status: ${
+        matchmakingEntry ? 'in matchmaking' : 'not in matchmaking'
+      }`,
+    )
 
     res.status(200).json({
       success: true,
@@ -83,7 +111,10 @@ const getMatchmakingStatus = asyncHandler(async (req, res) => {
       matchmaking: matchmakingEntry,
     })
   } catch (error) {
-    console.error('Error getting matchmaking status:', error)
+    console.error(
+      `[MM_CONTROLLER] Error getting matchmaking status for user ${userId}:`,
+      error,
+    )
     res.status(500).json({
       success: false,
       message: error.message || 'Failed to get matchmaking status',
@@ -91,56 +122,12 @@ const getMatchmakingStatus = asyncHandler(async (req, res) => {
   }
 })
 
-// Socket event handlers for matchmaking
-const handleMatchmakingEvents = (io, socket) => {
-  // User joins matchmaking
-  socket.on('quickClash:joinMatchmaking', async () => {
-    try {
-      // Ensure socket is authenticated
-      if (!socket.user || !socket.user._id) {
-        socket.emit('quickClash:error', {
-          message: 'Authentication required',
-        })
-        return
-      }
-
-      const userId = socket.user._id.toString()
-
-      // Join matchmaking
-      await joinMatchmaking({
-        userId,
-      })
-
-      // Join matchmaking room for updates
-      socket.join(`quickClash:matchmaking`)
-
-      socket.emit('quickClash:joinedMatchmaking')
-    } catch (error) {
-      socket.emit('quickClash:error', {
-        message: error.message || 'Failed to join matchmaking',
-      })
-    }
-  })
-
-  // Cleanup on disconnect
-  socket.on('disconnect', async () => {
-    if (socket.user) {
-      try {
-        // Update status to offline
-        await updateMatchmakingStatus({
-          userId: socket.user._id.toString(),
-          status: 'offline',
-        })
-      } catch (error) {
-        console.error('Error handling disconnect for matchmaking:', error)
-      }
-    }
-  })
-}
+// NOTE: The handleMatchmakingEvents function has been removed and consolidated into
+// quickClashSocket.utils.js as part of the unified socket handling system.
+// All 1v1 matchmaking socket events are now handled in the setupQuickClashSocketHandlers function.
 
 module.exports = {
   joinMatchmakingRoom,
   leaveMatchmakingRoom,
   getMatchmakingStatus,
-  handleMatchmakingEvents,
 }

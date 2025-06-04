@@ -10,14 +10,12 @@ import {
   Flex,
   Text,
   Badge,
-  // Icon, // Icon from chakra-ui is not explicitly used for lucide-react icons in CategoryIcon
   HStack,
   Progress,
 } from '@chakra-ui/react'
 import { useParams, useNavigate, useBeforeUnload } from 'react-router-dom'
 import { useTranslation } from 'react-i18next'
 import { motion } from 'framer-motion'
-// import { Clock, AlertTriangle } from 'lucide-react'; // Not directly used in this file after changes
 import axios from 'axios'
 
 // Component imports
@@ -42,8 +40,6 @@ const QuickClashQuiz = lazy(() =>
   import('../components/quickClashComponents/QuickClashQuiz'),
 )
 
-// const MotionBadge = motion(Badge) // Not used in the final code
-
 const QuickClashSession = () => {
   const { t } = useTranslation('QuickClash')
   const { challengeId } = useParams()
@@ -55,7 +51,6 @@ const QuickClashSession = () => {
     setActiveChallenge,
     endSession,
     currentSession: session,
-    // sessionLoading, // Not directly used, loading state is managed locally
     sessionError: reduxSessionError,
   } = useQuickClash()
   const { emitChallengeCompleted } = useQuickClashSocket()
@@ -70,13 +65,9 @@ const QuickClashSession = () => {
   const [article, setArticle] = useState(null)
   const [timeLeft, setTimeLeft] = useState(120) // 2 minutes for reading
   const [quizTimeLeft, setQuizTimeLeft] = useState(50) // 50 seconds for quiz
-  // const [stopTimerOnQuizSubmit, setStopTimerOnQuizSubmit] = useState(false); // Prop for QuickClashQuiz but not used in this file
   const [score, setScore] = useState(0)
   const [phaseProgress, setPhaseProgress] = useState(0)
   const [completeReadingLoading, setCompleteReadingLoading] = useState(false)
-
-  // New state to track if quiz content is ready
-  // const [quizContentReady, setQuizContentReady] = useState(false); // Prop for QuickClashQuiz but not used in this file
 
   // Results modal control
   const {
@@ -92,12 +83,7 @@ const QuickClashSession = () => {
     onClose: closeConfirmDialog,
   } = useDisclosure()
 
-  // Quiz start time reference
-  // const quizStartTimeRef = useRef(null); // Not used
   const readingStartTimeRef = useRef(null)
-
-  // Flag to skip confirmation when intentionally navigating away
-  // const skipConfirmRef = useRef(false); // Not used
 
   const initSession = async () => {
     try {
@@ -309,20 +295,27 @@ const QuickClashSession = () => {
     }
   }, [phase, openConfirmDialog])
 
-  // Function for confirmed navigation
+  // Function for confirmed navigation with challenge refetch
   const confirmNavigation = () => {
-    // skipConfirmRef.current = true; // Not strictly needed if we always navigate
-    if (challenge?.fromTeamBattle)
-      navigate(`/quickclash/teamBattle/${challenge.teamBattle.toString()}`)
-    else navigate('/quickclash')
-  }
+    // Mark QuickClash for refresh when we return to it
+    if (typeof window.markQuickClashForRefresh === 'function') {
+      window.markQuickClashForRefresh()
+    }
 
-  // Format time display
-  // const formatTime = seconds => { // Not used in this file directly
-  //   const minutes = Math.floor(seconds / 60)
-  //   const remainingSeconds = seconds % 60
-  //   return `${minutes}:${remainingSeconds.toString().padStart(2, '0')}`
-  // }
+    // Navigate to appropriate screen
+    if (challenge?.fromTeamBattle) {
+      navigate(`/quickclash/teamBattle/${challenge.teamBattle.toString()}`)
+    } else {
+      navigate('/quickclash')
+
+      // Additional fallback: trigger immediate refresh if function is available
+      setTimeout(() => {
+        if (typeof window.refreshQuickClashChallenges === 'function') {
+          window.refreshQuickClashChallenges()
+        }
+      }, 100)
+    }
+  }
 
   // Get phase-specific information
   const getPhaseInfo = () => {

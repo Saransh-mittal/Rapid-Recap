@@ -28,16 +28,25 @@ import {
 import axios from 'axios'
 
 /**
- * Custom hook for managing the global matchmaking state with improved polling
+ * Custom hook for managing the global matchmaking state with improved device-aware socket integration
  */
 const useQuickClashGlobalMatchmaking = () => {
   const dispatch = useDispatch()
   const navigate = useNavigate()
   const toast = useToast()
   const { t } = useTranslation('QuickClash')
-  const { getSocket } = useSocket()
+  const {
+    getSocket,
+    emitWithDeviceContext,
+    addEventListener,
+    deviceFingerprint,
+    isSocketReady,
+  } = useSocket()
+
   const joinedTeamsRoom = useRef(false)
   const matchmakingStartTimeRef = useRef(null)
+  const eventCleanupFunctions = useRef([])
+  const { user } = useSelector(state => state.auth)
 
   const [localMatchmakingTime, setLocalMatchmakingTime] = useState(0)
 
@@ -57,73 +66,263 @@ const useQuickClashGlobalMatchmaking = () => {
       isComponentMountedRef.current = false
       if (timerRef.current) clearInterval(timerRef.current)
       if (pollingIntervalRef.current) clearInterval(pollingIntervalRef.current)
+      cleanupSocketListeners()
     }
   }, [])
 
-  useEffect(() => {
-    const socket = getSocket()
-    if (!socket) return
+  // Enhanced socket listeners setup with device awareness
+  const setupSocketListeners = useCallback(() => {
+    if (!isSocketReady()) {
+      console.warn('Socket not ready for global matchmaking listeners setup')
+      return
+    }
 
-    dispatch(setSocketConnected(true))
+    // Clean up any existing listeners first
+    cleanupSocketListeners()
 
+    const cleanupFunctions = []
+
+    // Join the teams room first to receive team battle events
     if (
       globalMatchmakingState.matchmakingType === 'team' &&
       !joinedTeamsRoom.current
     ) {
-      socket.emit('quickClash:joinTeamsRoom')
+      emitWithDeviceContext('quickClash:joinTeamsRoom')
       joinedTeamsRoom.current = true
     }
 
-    socket.on('quickClash:teamBattleReady', data => {
-      if (!isComponentMountedRef.current) return
-      console.log('Received teamBattleReady event:', data)
-      dispatch(setBattleReady(data))
-    })
+    dispatch(setSocketConnected(true))
 
-    socket.on('quickClash:battleCreationStarted', data => {
-      if (!isComponentMountedRef.current) return
-      console.log('Battle creation started:', data)
-      dispatch(setBattleCreationStatus('creating'))
-    })
+    // Battle ready notification
+    const cleanupBattleReady = addEventListener(
+      'quickClash:teamBattleReady',
+      data => {
+        if (!isComponentMountedRef.current) return
+        console.log('Received teamBattleReady event:', data)
+        dispatch(setBattleReady(data))
+      },
+    )
+    cleanupFunctions.push(cleanupBattleReady)
 
-    socket.on('quickClash:battleCreationFailed', data => {
-      if (!isComponentMountedRef.current) return
-      console.log('Battle creation failed:', data)
-      dispatch(setBattleCreationError(data.error || 'Battle creation failed'))
-      toast({
-        title: t('Battle Creation Failed'),
-        description: t('Something went wrong. Please try again.'),
-        status: 'error',
-        duration: 5000,
-        isClosable: true,
-      })
-    })
+    // Battle creation started
+    const cleanupBattleCreationStarted = addEventListener(
+      'quickClash:battleCreationStarted',
+      data => {
+        if (!isComponentMountedRef.current) return
+        console.log('Battle creation started:', data)
+        dispatch(setBattleCreationStatus('creating'))
+      },
+    )
+    cleanupFunctions.push(cleanupBattleCreationStarted)
 
-    socket.on('quickClash:matchmakingLocked', data => {
-      if (!isComponentMountedRef.current) return
-      console.log('Matchmaking locked:', data)
-      dispatch(setBattleCreationStatus('creating'))
+    // Battle creation failed
+    const cleanupBattleCreationFailed = addEventListener(
+      'quickClash:battleCreationFailed',
+      data => {
+        if (!isComponentMountedRef.current) return
+        console.log('Battle creation failed:', data)
+        dispatch(setBattleCreationError(data.error || 'Battle creation failed'))
+        toast({
+          title: t('Battle Creation Failed'),
+          description: t('Something went wrong. Please try again.'),
+          status: 'error',
+          duration: 5000,
+          isClosable: true,
+        })
+      },
+    )
+    cleanupFunctions.push(cleanupBattleCreationFailed)
+
+    // Matchmaking locked
+    const cleanupMatchmakingLocked = addEventListener(
+      'quickClash:matchmakingLocked',
+      data => {
+        if (!isComponentMountedRef.current) return
+        console.log('Matchmaking locked:', data)
+        dispatch(setBattleCreationStatus('creating'))
+      },
+    )
+    cleanupFunctions.push(cleanupMatchmakingLocked)
+
+    // Team invitation received
+    const cleanupTeamInvitationReceived = addEventListener(
+      'quickClash:teamInvitationReceived',
+      data => {
+        if (!isComponentMountedRef.current) return
+        toast({
+          title: t('Team Invitation Received'),
+          description: t(
+            '{{inviterName}} has invited you to join their team "{{teamName}}". Check your inbox to accept or decline.',
+            {
+              inviterName: data.inviterName,
+              teamName: data.teamName,
+            },
+          ),
+          status: 'info',
+          duration: 7000,
+          isClosable: true,
+        })
+      },
+    )
+    cleanupFunctions.push(cleanupTeamInvitationReceived)
+
+    // Team invitation accepted
+    const cleanupTeamInvitationAccepted = addEventListener(
+      'quickClash:teamInvitationAccepted',
+      data => {
+        if (!isComponentMountedRef.current) return
+        if (data.userId === user?._id) {
+          return
+        } else {
+          toast({
+            title: t('A new member has joined!'),
+            description: `${data.userName} (@${data.userInGameName}) has joined the team`,
+            status: 'success',
+            duration: 5000,
+            isClosable: true,
+            position: 'top',
+          })
+        }
+      },
+    )
+    cleanupFunctions.push(cleanupTeamInvitationAccepted)
+
+    // Team invitation rejected
+    const cleanupTeamInvitationRejected = addEventListener(
+      'quickClash:teamInvitationRejected',
+      data => {
+        if (!isComponentMountedRef.current) return
+        if (data.userId === user?._id) {
+          return
+        } else {
+          toast({
+            title: t('Invitation Declined'),
+            description: `${data.userName} (@${data.userInGameName}) has declined the invitation`,
+            status: 'warning',
+            duration: 5000,
+            isClosable: true,
+            position: 'top',
+          })
+        }
+      },
+    )
+    cleanupFunctions.push(cleanupTeamInvitationRejected)
+
+    // Team member joined
+    const cleanupTeamMemberJoined = addEventListener(
+      'quickClash:teamMemberJoined',
+      data => {
+        if (!isComponentMountedRef.current) return
+        if (data.userId === user?._id) {
+          return
+        }
+        toast({
+          title: t('New Team Member'),
+          description: `${data.userName} (@${data.userInGameName}) has joined your team`,
+          status: 'info',
+          duration: 3000,
+          isClosable: true,
+        })
+      },
+    )
+    cleanupFunctions.push(cleanupTeamMemberJoined)
+
+    // Team member left
+    const cleanupTeamMemberLeft = addEventListener(
+      'quickClash:teamMemberLeft',
+      data => {
+        if (!isComponentMountedRef.current) return
+        if (data.userId === user?._id) {
+          return
+        }
+        toast({
+          title: t('Team Member Left'),
+          description: `${data.userName} (@${data.userInGameName}) has left the team`,
+          status: 'warning',
+          duration: 3000,
+          isClosable: true,
+        })
+      },
+    )
+    cleanupFunctions.push(cleanupTeamMemberLeft)
+
+    // Team member removed
+    const cleanupTeamMemberRemoved = addEventListener(
+      'quickClash:teamMemberRemoved',
+      data => {
+        if (!isComponentMountedRef.current) return
+        console.log('Team member removed:', data)
+        if (data.removedMemberId === user?._id) {
+          toast({
+            title: `You have been removed from the team ${data.teamName}`,
+            description: t('You can join another team or create your own.'),
+            status: 'error',
+            duration: 5000,
+            isClosable: true,
+            position: 'top',
+          })
+          return
+        }
+        toast({
+          title: t('Team Member Removed'),
+          description: `${data.removedMemberName} (@${data.removedMemberInGameName}) has been removed from the team`,
+          status: 'warning',
+          duration: 5000,
+          isClosable: true,
+          position: 'top',
+        })
+      },
+    )
+    cleanupFunctions.push(cleanupTeamMemberRemoved)
+
+    // Store cleanup functions
+    eventCleanupFunctions.current = cleanupFunctions
+
+    return () => cleanupSocketListeners()
+  }, [
+    isSocketReady,
+    emitWithDeviceContext,
+    addEventListener,
+    dispatch,
+    toast,
+    t,
+    navigate,
+    globalMatchmakingState.matchmakingType,
+    user?._id,
+  ])
+
+  // Clean up socket listeners with device awareness
+  const cleanupSocketListeners = useCallback(() => {
+    // Clean up all registered event listeners
+    eventCleanupFunctions.current.forEach(cleanup => {
+      if (typeof cleanup === 'function') {
+        cleanup()
+      }
     })
+    eventCleanupFunctions.current = []
+
+    // Reset joined room flag
+    joinedTeamsRoom.current = false
+    dispatch(setSocketConnected(false))
+  }, [dispatch])
+
+  // Setup socket listeners when needed
+  useEffect(() => {
+    if (
+      globalMatchmakingState.inMatchmaking ||
+      globalMatchmakingState.matchmakingType === 'team'
+    ) {
+      setupSocketListeners()
+    }
 
     return () => {
-      if (socket) {
-        // Check if socket exists before trying to turn off listeners
-        dispatch(setSocketConnected(false))
-        socket.off('quickClash:teamBattleReady')
-        socket.off('quickClash:battleCreationStarted')
-        socket.off('quickClash:battleCreationFailed')
-        socket.off('quickClash:matchmakingLocked')
-        // Consider leaving teams room if applicable
-        // if (joinedTeamsRoom.current) socket.emit('quickClash:leaveTeamsRoom');
-      }
-      joinedTeamsRoom.current = false
+      cleanupSocketListeners()
     }
   }, [
-    dispatch,
-    getSocket, // getSocket should be stable
-    globalMatchmakingState.matchmakingType, // Only re-subscribe if matchmakingType changes (e.g., solo to team)
-    t,
-    toast,
+    setupSocketListeners,
+    cleanupSocketListeners,
+    globalMatchmakingState.inMatchmaking,
+    globalMatchmakingState.matchmakingType,
   ])
 
   useEffect(() => {
@@ -171,7 +370,6 @@ const useQuickClashGlobalMatchmaking = () => {
 
   const getDetailedMatchmakingStatusInternal = useCallback(
     async (teamId, type) => {
-      // Renamed to avoid conflict if exported, and memoized
       if (!isComponentMountedRef.current) return null
       try {
         const endpoint =
@@ -186,11 +384,10 @@ const useQuickClashGlobalMatchmaking = () => {
       }
     },
     [],
-  ) // Empty dependency array as it doesn't depend on hook's scope changing variables
+  )
 
   const pollMatchmakingStatus = useCallback(async () => {
     if (!isComponentMountedRef.current) return null
-    // Access current state from globalMatchmakingState (via useSelector) directly here
     const currentSelectedTeamId = globalMatchmakingState.selectedTeamId
     const currentMatchmakingType = globalMatchmakingState.matchmakingType
 
@@ -213,8 +410,6 @@ const useQuickClashGlobalMatchmaking = () => {
           )
           if (statusData.autoFormedTeam?._id)
             dispatch(setSelectedTeamId(statusData.autoFormedTeam._id))
-          // No need to dispatch updateMatchmakingState here if the individual setters are enough
-          // or if the main pollMatchmakingStatus call in the useEffect will handle it.
         }
       } else if (currentMatchmakingType === 'solo') {
         statusData = await getDetailedMatchmakingStatusInternal(null, 'solo')
@@ -268,13 +463,11 @@ const useQuickClashGlobalMatchmaking = () => {
                   teamB: statusData.teamB,
                 }),
               )
-              // No need to setShouldPoll(false) here, battleReady state change handles it
               if (pollingIntervalRef.current) {
                 clearInterval(pollingIntervalRef.current)
                 pollingIntervalRef.current = null
               }
             }
-            // Additional logic for UI updates based on statusData can be here or in component
           } catch (error) {
             console.error('Error in polling interval (hook):', error)
           }
@@ -302,28 +495,25 @@ const useQuickClashGlobalMatchmaking = () => {
   ])
 
   const checkCanLeaveMatchmaking = useCallback(async () => {
-    // ... (no change)
     try {
       const response = await axios.get('/api/quickClash/can-leave-matchmaking')
       return response.data.canLeave
     } catch (error) {
       console.error('Error checking if can leave matchmaking:', error)
-      return true // Allow leaving if check fails
+      return true
     }
   }, [])
 
   const checkMatchmakingStatus = useCallback(
     async passedTeamId => {
       if (!isComponentMountedRef.current) return null
-      // This function reads the latest globalMatchmakingState from the hook's scope when called.
-      // `dispatch` is stable.
       console.log('[HOOK] checkMatchmakingStatus called.')
       try {
         const globalStatus = await dispatch(
           getGlobalMatchmakingStatus(),
         ).unwrap()
         let inAnyMatchmaking = false
-        let statusDetailPayload = {} // Accumulate updates for a single dispatch if possible
+        let statusDetailPayload = {}
 
         if (globalStatus.inMatchmaking && globalStatus.matchmaking?.team) {
           const teamId = passedTeamId || globalStatus.matchmaking.team
@@ -349,7 +539,7 @@ const useQuickClashGlobalMatchmaking = () => {
                 originalTeam: originalTeam || null,
                 step:
                   teamResponse.data.step ||
-                  (teamResponse.data.battleReady ? 'battleReady' : 'searching'), // Get step from matchmaking-info
+                  (teamResponse.data.battleReady ? 'battleReady' : 'searching'),
                 battleReady: teamResponse.data.battleReady || null,
               }
             }
@@ -370,39 +560,30 @@ const useQuickClashGlobalMatchmaking = () => {
         }
 
         if (!inAnyMatchmaking) {
-          // Simplified: If getGlobalMatchmakingStatus says not in MM, we trust it for now.
-          // The more complex team iteration can be a fallback or separate logic if needed.
           if (globalMatchmakingState.inMatchmaking) {
-            // Compare with current Redux state
             dispatch(resetGlobalMatchmakingState())
           }
         } else if (Object.keys(statusDetailPayload).length > 0) {
-          // Dispatch a single update based on the gathered details
           dispatch(updateMatchmakingState(statusDetailPayload))
         }
 
-        setShouldPoll(inAnyMatchmaking && !statusDetailPayload.battleReady) // Poll if in MM and battle not ready
-        return statusDetailPayload // Return the effective status for callers
+        setShouldPoll(inAnyMatchmaking && !statusDetailPayload.battleReady)
+        return statusDetailPayload
       } catch (error) {
         console.error('Error in checkMatchmakingStatus:', error)
-        if (globalMatchmakingState.inMatchmaking) {
-          // Compare with current Redux state
-          // dispatch(resetGlobalMatchmakingState()); // Optionally reset on error
-        }
         setShouldPoll(false)
         return null
       }
     },
-    [dispatch],
-  ) // CRITICAL: Made this stable. It uses globalMatchmakingState from hook scope.
+    [dispatch, globalMatchmakingState.inMatchmaking],
+  )
 
   const joinSoloMatchmaking = useCallback(async () => {
-    // ... (logic is mostly fine, ensure it sets shouldPoll)
     try {
       matchmakingStartTimeRef.current = Date.now()
       setLocalMatchmakingTime(0)
       const result = await dispatch(joinGlobalMatchmaking()).unwrap()
-      setShouldPoll(true) // Enable polling
+      setShouldPoll(true)
       toast({
         title: t('Joined 4v4 Matchmaking'),
         description: t('Looking for team members and opponents...'),
@@ -412,20 +593,20 @@ const useQuickClashGlobalMatchmaking = () => {
       })
       return result
     } catch (error) {
-      /* ... error handling ... */ throw error
+      console.error('Error joining solo matchmaking:', error)
+      throw error
     }
   }, [dispatch, toast, t])
 
   const joinWithTeam = useCallback(
     async (teamId, teamName) => {
-      // ... (logic is mostly fine, ensure it sets shouldPoll)
       if (!teamId) {
-        /* ... */ return
+        throw new Error('Team ID is required')
       }
       try {
         matchmakingStartTimeRef.current = Date.now()
         setLocalMatchmakingTime(0)
-        // Fetch team name if not provided, or to ensure it's current
+
         let currentTeamName = teamName
         if (!currentTeamName) {
           try {
@@ -438,17 +619,18 @@ const useQuickClashGlobalMatchmaking = () => {
             console.error('Error fetching team name for join', e)
           }
         }
-        dispatch(setTeamName(currentTeamName || 'Team')) // Set in Redux
+        dispatch(setTeamName(currentTeamName || 'Team'))
 
-        const socket = getSocket()
-        if (socket && !joinedTeamsRoom.current) {
-          socket.emit('quickClash:joinTeamsRoom')
+        // Ensure we're in the teams socket room when joining team matchmaking
+        if (isSocketReady() && !joinedTeamsRoom.current) {
+          emitWithDeviceContext('quickClash:joinTeamsRoom')
           joinedTeamsRoom.current = true
         }
+
         const result = await dispatch(
           joinTeamMatchmaking({ teamId, teamName: currentTeamName }),
         ).unwrap()
-        setShouldPoll(true) // Enable polling
+        setShouldPoll(true)
         toast({
           title: t('Team Joined Matchmaking'),
           description: t('Looking for opponents...'),
@@ -458,22 +640,22 @@ const useQuickClashGlobalMatchmaking = () => {
         })
         return { ...result, teamName: currentTeamName }
       } catch (error) {
-        /* ... error handling ... */ throw error
+        console.error('Error joining with team:', error)
+        throw error
       }
     },
-    [dispatch, toast, t, getSocket],
+    [dispatch, toast, t, isSocketReady, emitWithDeviceContext],
   )
 
   const leaveMatchmaking = useCallback(async () => {
-    // ... (logic is mostly fine, ensure it sets shouldPoll to false)
     try {
       const canLeave = await checkCanLeaveMatchmaking()
       if (!canLeave) {
-        /* ... */ return
+        throw new Error('Cannot leave matchmaking at this time')
       }
       matchmakingStartTimeRef.current = null
       setLocalMatchmakingTime(0)
-      setShouldPoll(false) // Disable polling
+      setShouldPoll(false)
 
       if (
         globalMatchmakingState.matchmakingType === 'team' &&
@@ -485,7 +667,6 @@ const useQuickClashGlobalMatchmaking = () => {
       } else {
         await dispatch(leaveGlobalMatchmaking()).unwrap()
       }
-      // The thunk's fulfilled reducer should reset inMatchmaking, which stops polling via useEffect.
       toast({
         title: t('Left Matchmaking'),
         status: 'info',
@@ -493,7 +674,8 @@ const useQuickClashGlobalMatchmaking = () => {
         isClosable: true,
       })
     } catch (error) {
-      /* ... error handling ... */ throw error
+      console.error('Error leaving matchmaking:', error)
+      throw error
     }
   }, [
     dispatch,
@@ -507,24 +689,20 @@ const useQuickClashGlobalMatchmaking = () => {
   const selectTeam = useCallback(
     teamId => {
       dispatch(setSelectedTeamId(teamId))
-      if (teamId) {
-        const socket = getSocket()
-        if (socket && !joinedTeamsRoom.current) {
-          socket.emit('quickClash:joinTeamsRoom')
-          joinedTeamsRoom.current = true
-        }
+      if (teamId && isSocketReady() && !joinedTeamsRoom.current) {
+        emitWithDeviceContext('quickClash:joinTeamsRoom')
+        joinedTeamsRoom.current = true
       }
     },
-    [dispatch, getSocket],
+    [dispatch, isSocketReady, emitWithDeviceContext],
   )
 
   const enterBattle = useCallback(() => {
-    // ... (no change)
     if (globalMatchmakingState.battleReady?.battleId) {
       navigate(
         `/quickclash/teamBattle/${globalMatchmakingState.battleReady.battleId}`,
       )
-      dispatch(clearBattleReady()) // This should also set inMatchmaking to false, stopping polling.
+      dispatch(clearBattleReady())
     } else {
       console.warn('Enter battle called but no battleId found')
       toast({
@@ -557,6 +735,7 @@ const useQuickClashGlobalMatchmaking = () => {
   }, [])
 
   return {
+    // State
     inMatchmaking: globalMatchmakingState.inMatchmaking,
     matchmakingType: globalMatchmakingState.matchmakingType,
     selectedTeamId: globalMatchmakingState.selectedTeamId,
@@ -567,15 +746,20 @@ const useQuickClashGlobalMatchmaking = () => {
     battleReady: globalMatchmakingState.battleReady,
     loading: globalMatchmakingState.loading,
     error: globalMatchmakingState.error,
-    teamMembers: globalMatchmakingState.teamMembers, // Ensure this is in initialState & slice
+    teamMembers: globalMatchmakingState.teamMembers,
     socketConnected: globalMatchmakingState.socketConnected,
     battleCreationStatus: globalMatchmakingState.battleCreationStatus,
     battleCreationError: globalMatchmakingState.battleCreationError,
-    step: globalMatchmakingState.step, // Export step
+    step: globalMatchmakingState.step,
 
+    // Device information
+    deviceFingerprint,
+    isSocketReady: isSocketReady(),
+
+    // Actions
     clearBattleCreationError: () => dispatch(clearBattleCreationError()),
     checkCanLeaveMatchmaking,
-    pollMatchmakingStatus, // Export for direct polling if needed by UI
+    pollMatchmakingStatus,
     checkMatchmakingStatus,
     joinSoloMatchmaking,
     joinWithTeam,
@@ -583,11 +767,11 @@ const useQuickClashGlobalMatchmaking = () => {
     selectTeam,
     enterBattle,
     clearBattleReady: () => dispatch(clearBattleReady()),
-    enablePolling, // For modal to explicitly start polling
-    disablePolling, // For modal to explicitly stop polling
-
+    enablePolling,
+    disablePolling,
     formatMatchmakingTime,
-    // getSelectedTeamId, // Not strictly needed if selectedTeamId is exported directly
+    setupSocketListeners,
+    cleanupSocketListeners,
   }
 }
 

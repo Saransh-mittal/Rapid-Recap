@@ -18,6 +18,7 @@ import StatItem from './modernNavbarComponents/StatItem'
 import { IconButton } from './modernNavbarComponents/IconButton'
 import { findSocietyAndCircle } from '../../utils/helper.utils'
 import { useNavbar } from '../../contextAPI/NavbarContext'
+import { useSocketContext } from '../../contextAPI/SocketContext'
 import {
   fetchAppUpdates,
   fetchDailyStreak,
@@ -54,6 +55,7 @@ const ModernNavbar = ({ onNavbarLoad }) => {
   const [isMobile] = useMediaQuery('(max-width: 992px)')
   const { isMenuOpen, setIsMenuOpen } = useNavbar()
   const { activeChallenges } = useQuickClash()
+  const { markUIInteraction } = useSocketContext()
   const {
     isOpen: isOpenUserSearch,
     onOpen: onOpenUserSearch,
@@ -116,6 +118,13 @@ const ModernNavbar = ({ onNavbarLoad }) => {
     [navigate, setIsMenuOpen],
   )
 
+  // Enhanced hamburger menu handler with UI interaction marking
+  const handleHamburgerClick = useCallback(() => {
+    // Mark as UI interaction to prevent false device conflicts
+    markUIInteraction(true)
+    setIsMenuOpen(true)
+  }, [setIsMenuOpen, markUIInteraction])
+
   const handleLogout = useCallback(async () => {
     setIsLoggingOut(true)
     try {
@@ -169,14 +178,17 @@ const ModernNavbar = ({ onNavbarLoad }) => {
       dispatch(fetchDailyStreak())
     }
   }, [streakLoading, loginCheckStatus, isAuthenticated, dispatch])
+
   useEffect(() => {
     if (!isToken()) {
       handleLogout()
     }
   }, [isToken])
+
   useEffect(() => {
     checkStreakAndFetchUpdates()
   }, [loginCheckStatus, dispatch])
+
   useEffect(() => {
     if (updates?.length === 0) return
     let count = 0
@@ -188,11 +200,13 @@ const ModernNavbar = ({ onNavbarLoad }) => {
     })
     setNotifyCnt(count)
   }, [updates])
+
   useEffect(() => {
     if (updatesFetched) {
       onNavbarLoad()
     }
   }, [updatesFetched, onNavbarLoad])
+
   useEffect(() => {
     const handleScroll = () => {
       const scrollPosition = window.scrollY
@@ -259,12 +273,6 @@ const ModernNavbar = ({ onNavbarLoad }) => {
             icon={<Search size={20} />}
             onClick={() => onOpenUserSearch()}
           />
-          {/* <IconButton
-            icon={<MessageCircle size={20} />}
-            hasNotification={notification?.length > 0}
-            notificationCount={notification?.length}
-            onClick={() => navigate('/chats')}
-          /> */}
           <Box position={'relative'}>
             {notifyCont > 0 && (
               <Badge
@@ -396,7 +404,7 @@ const ModernNavbar = ({ onNavbarLoad }) => {
             )}
             <IconButton
               icon={<Menu size={24} />}
-              onClick={() => setIsMenuOpen(true)}
+              onClick={handleHamburgerClick}
               _hover={{ color: 'white' }}
             />
           </Box>

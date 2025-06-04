@@ -26,6 +26,7 @@ export const SocketProvider = ({ children }) => {
     lastDisconnectedAt: null,
   })
   const [lastConflictTime, setLastConflictTime] = useState(0)
+  const [isUIInteraction, setIsUIInteraction] = useState(false)
 
   const toast = useToast()
 
@@ -51,17 +52,23 @@ export const SocketProvider = ({ children }) => {
       },
     )
 
-    // Add listener for device conflicts
+    // Add listener for device conflicts with improved filtering
     const removeConflictListener = socketManager.addDeviceConflictListener(
       conflictData => {
         console.warn('Device conflict detected in SocketContext:', conflictData)
 
-        // Prevent duplicate notifications within 5 seconds
+        // Prevent duplicate notifications within 10 seconds (increased from 5)
         const now = Date.now()
-        if (now - lastConflictTime < 5000) {
+        if (now - lastConflictTime < 10000) {
           console.log(
             'Device conflict notification suppressed (too soon since last one)',
           )
+          return
+        }
+
+        // Don't show conflict if it's just a UI interaction
+        if (isUIInteraction) {
+          console.log('Device conflict suppressed - UI interaction in progress')
           return
         }
 
@@ -72,21 +79,25 @@ export const SocketProvider = ({ children }) => {
         // Check if this is actually a different device/session
         const currentFingerprint = socketManager.getCurrentDeviceFingerprint()
         if (currentFingerprint && conflictData.newSocketId) {
-          toast({
-            title: 'Multiple Sessions Detected',
-            description:
-              'Another tab or device is using your account. This session will be disconnected.',
-            status: 'warning',
-            duration: 8000,
-            isClosable: true,
-            position: 'top',
-          })
+          // Additional check: only show if the socket IDs are significantly different
+          const currentSocket = socketManager.getSocket()
+          if (currentSocket && currentSocket.id !== conflictData.newSocketId) {
+            toast({
+              title: 'Multiple Sessions Detected',
+              description:
+                'Another tab or device is using your account. This session will be disconnected.',
+              status: 'warning',
+              duration: 8000,
+              isClosable: true,
+              position: 'top',
+            })
+          }
         }
 
         // Reset conflict state after a delay
         setTimeout(() => {
           setDeviceConflictDetected(false)
-        }, 10000)
+        }, 15000) // Increased from 10 seconds
       },
     )
 
@@ -101,7 +112,7 @@ export const SocketProvider = ({ children }) => {
       removeConnectionListener()
       removeConflictListener()
     }
-  }, [toast])
+  }, [toast, isUIInteraction])
 
   // Helper function to emit events with device context
   const emitWithDeviceContext = useCallback((event, data = {}) => {
@@ -135,6 +146,18 @@ export const SocketProvider = ({ children }) => {
     })
   }, [])
 
+  // Function to mark UI interactions
+  const markUIInteraction = useCallback(isInteracting => {
+    setIsUIInteraction(isInteracting)
+
+    // Auto-reset after a delay
+    if (isInteracting) {
+      setTimeout(() => {
+        setIsUIInteraction(false)
+      }, 3000) // Reset after 3 seconds
+    }
+  }, [])
+
   // Provide enhanced interface to components
   const value = {
     // Core socket access
@@ -157,6 +180,7 @@ export const SocketProvider = ({ children }) => {
     joinRoom,
     getDebugInfo,
     forceDisconnect,
+    markUIInteraction,
 
     // Legacy wrapper functions for backward compatibility
     setSocket: newSocket => {
@@ -204,6 +228,7 @@ export const useDeviceAwareSocket = () => {
     emitWithDeviceContext,
     joinRoom,
     deviceConflictDetected,
+    markUIInteraction,
   } = context
 
   // Device-aware emit function
@@ -219,7 +244,7 @@ export const useDeviceAwareSocket = () => {
     [isConnected, emitWithDeviceContext],
   )
 
-  // Device-aware room joining
+  // Device-aware room joining with UI interaction marking
   const joinDeviceAwareRoom = useCallback(
     room => {
       if (!isConnected) {
@@ -227,9 +252,11 @@ export const useDeviceAwareSocket = () => {
         return false
       }
 
+      // Mark as UI interaction to prevent false conflict detection
+      markUIInteraction(true)
       return joinRoom(room)
     },
-    [isConnected, joinRoom],
+    [isConnected, joinRoom, markUIInteraction],
   )
 
   // Listen to events with automatic cleanup
@@ -281,6 +308,7 @@ export const useDeviceAwareSocket = () => {
     on,
     once,
     joinRoom: joinDeviceAwareRoom,
+    markUIInteraction,
     ...context,
   }
 }

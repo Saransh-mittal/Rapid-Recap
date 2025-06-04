@@ -48,6 +48,10 @@ function initializeSocket(server) {
         } (socket: ${socket.id})`,
       )
 
+      // Store user data on socket for authentication
+      socket.user = userData
+      socket.userId = userId
+
       // Check if this socket already completed setup (to prevent duplicate room joins)
       const existingMetadata = socketMetadata.get(socket.id)
       if (existingMetadata && existingMetadata.setupCompleted) {
@@ -72,20 +76,46 @@ function initializeSocket(server) {
         metadata.setupCompleted = true
       }
 
-      // Join user's room and initialize other features
+      // Join user's room AFTER device setup is complete
       socket.join(userId)
+      console.log(`[SETUP] Socket ${socket.id} joined room: ${userId}`)
 
-      // DEBUG: Verify room joining
-      console.log(`DEBUG: Socket ${socket.id} joined room quickClash:${userId}`)
-      const userRoom = `quickClash:${userId}`
+      // Verify room joining
       setTimeout(() => {
-        const socketsInRoom = io.sockets.adapter.rooms.get(userRoom)
+        const room = io.sockets.adapter.rooms.get(userId)
         console.log(
-          `DEBUG: Room ${userRoom} now has ${
-            socketsInRoom ? socketsInRoom.size : 0
-          } sockets`,
+          `DEBUG: Room ${userId} now has ${room ? room.size : 0} sockets`,
         )
+        if (!room || !room.has(socket.id)) {
+          console.error(
+            `[SETUP] ERROR: Socket ${socket.id} failed to join room ${userId}`,
+          )
+          // Force join again
+          socket.join(userId)
+        }
       }, 100)
+
+      // Join QuickClash room
+      const userRoom = `quickClash:${userId}`
+      socket.join(userRoom)
+      console.log(
+        `[SETUP] Socket ${socket.id} joined QuickClash room: ${userRoom}`,
+      )
+
+      // Verify QuickClash room joining
+      setTimeout(() => {
+        const room = io.sockets.adapter.rooms.get(userRoom)
+        console.log(
+          `DEBUG: Room ${userRoom} now has ${room ? room.size : 0} sockets`,
+        )
+        if (!room || !room.has(socket.id)) {
+          console.error(
+            `[SETUP] ERROR: Socket ${socket.id} failed to join QuickClash room ${userRoom}`,
+          )
+          // Force join again
+          socket.join(userRoom)
+        }
+      }, 150)
 
       socket.emit('connected')
       userOpenChats.set(userId, new Set())
@@ -95,12 +125,16 @@ function initializeSocket(server) {
       await User.findByIdAndUpdate(userId, { isOnline: true })
       socket.broadcast.emit('user online', userId)
 
-      // Setup Quick Clash handlers
+      // Setup Quick Clash handlers AFTER room joining and user data is stored
+      // This includes both team and 1v1 matchmaking handlers
       setupQuickClashSocketHandlers(io, socket, userData)
 
       console.log(
         `[SETUP] Setup completed for user ${userId} (socket: ${socket.id})`,
       )
+
+      // DEBUGGING: Log device tracking state after setup
+      logDeviceTrackingState(userId)
     })
 
     // Handle device registration (called before or after setup)
@@ -353,6 +387,10 @@ function initializeSocket(server) {
     const userId = userData._id
     const socketId = socket.id
 
+    console.log(
+      `[DEVICE_SETUP] Starting device-aware setup for user ${userId} socket ${socketId}`,
+    )
+
     // Update existing metadata or create new one
     let metadata = socketMetadata.get(socketId)
     if (metadata) {
@@ -373,6 +411,7 @@ function initializeSocket(server) {
     // Initialize user's device map if not exists
     if (!userDeviceConnections.has(userId)) {
       userDeviceConnections.set(userId, new Map())
+      console.log(`[DEVICE_SETUP] Initialized device map for user ${userId}`)
     }
 
     const userDevices = userDeviceConnections.get(userId)
@@ -433,17 +472,28 @@ function initializeSocket(server) {
     // Ensure socket set exists for this device (create if not exists or if cleared)
     if (!userDevices.has(deviceFingerprint)) {
       userDevices.set(deviceFingerprint, new Set())
+      console.log(
+        `[DEVICE_SETUP] Created new socket set for device ${deviceFingerprint.substring(
+          0,
+          8,
+        )}...`,
+      )
     }
 
     // Add new socket to device set
     userDevices.get(deviceFingerprint).add(socketId)
 
     console.log(
-      `User ${userId} connected with device ${deviceFingerprint.substring(
+      `[DEVICE_SETUP] User ${userId} connected with device ${deviceFingerprint.substring(
         0,
         8,
-      )}... (socket: ${socketId})`,
+      )}... (socket: ${socketId}) - Total devices: ${
+        userDevices.size
+      }, Sockets for this device: ${userDevices.get(deviceFingerprint).size}`,
     )
+
+    // DEBUGGING: Verify the socket was added properly
+    logDeviceTrackingState(userId)
   }
 
   /**
@@ -472,7 +522,7 @@ function initializeSocket(server) {
     const metadata = socketMetadata.get(socketId)
 
     if (!metadata) {
-      console.log(`Socket ${socketId} disconnected (no metadata found)`)
+      console.log(`No tracking info found for disconnected socket ${socketId}`)
       return
     }
 
@@ -494,6 +544,13 @@ function initializeSocket(server) {
         const deviceSockets = userDevices.get(deviceFingerprint)
         deviceSockets.delete(socketId)
 
+        console.log(
+          `[CLEANUP] Removed socket ${socketId} from device ${deviceFingerprint.substring(
+            0,
+            8,
+          )}... - Remaining sockets: ${deviceSockets.size}`,
+        )
+
         // Only clean up device entry if no more sockets AND not in a setup process
         // We check if the Set is empty and wait a brief moment to avoid race conditions
         if (deviceSockets.size === 0) {
@@ -514,6 +571,10 @@ function initializeSocket(server) {
                 userDeviceConnections.delete(userId)
                 console.log(
                   `User ${userId} completely disconnected (no active devices)`,
+                )
+              } else {
+                console.log(
+                  `User ${userId} still has ${userDevices.size} active device(s)`,
                 )
               }
             }
@@ -549,6 +610,157 @@ function initializeSocket(server) {
 
     // Handle socket disconnection cleanup
     handleSocketDisconnection(socketId)
+  }
+
+  /**
+   * Enhanced function to get user's active devices for notifications
+   */
+  function getUserActiveDevices(userId) {
+    const userDevices = userDeviceConnections.get(userId)
+    if (!userDevices || userDevices.size === 0) {
+      console.log(`[DEVICE_LOOKUP] No devices found for user ${userId}`)
+      return []
+    }
+
+    const activeDevices = []
+    for (const [deviceFingerprint, socketSet] of userDevices.entries()) {
+      if (socketSet.size > 0) {
+        // Verify sockets are actually connected
+        const connectedSockets = Array.from(socketSet).filter(socketId => {
+          const socket = io.sockets.sockets.get(socketId)
+          const isConnected = socket && socket.connected
+          if (!isConnected) {
+            console.log(
+              `[DEVICE_LOOKUP] Socket ${socketId} not connected, removing from device ${deviceFingerprint.substring(
+                0,
+                8,
+              )}...`,
+            )
+            socketSet.delete(socketId) // Clean up disconnected sockets
+            socketMetadata.delete(socketId)
+          }
+          return isConnected
+        })
+
+        if (connectedSockets.length > 0) {
+          activeDevices.push({
+            deviceFingerprint,
+            socketIds: connectedSockets,
+            socketCount: connectedSockets.length,
+          })
+          console.log(
+            `[DEVICE_LOOKUP] Found ${
+              connectedSockets.length
+            } active socket(s) for device ${deviceFingerprint.substring(
+              0,
+              8,
+            )}...`,
+          )
+        }
+      }
+    }
+
+    console.log(
+      `[DEVICE_LOOKUP] User ${userId} has ${
+        activeDevices.length
+      } active device(s) with total ${activeDevices.reduce(
+        (sum, dev) => sum + dev.socketCount,
+        0,
+      )} socket(s)`,
+    )
+    return activeDevices
+  }
+
+  /**
+   * Enhanced function to notify user across all devices
+   */
+  function notifyUserAllDevices(userId, event, data) {
+    console.log(
+      `[NOTIFY] Attempting to notify user ${userId} with event ${event}`,
+    )
+
+    const activeDevices = getUserActiveDevices(userId)
+
+    if (activeDevices.length === 0) {
+      console.log(`[NOTIFY] No active devices found for user ${userId}`)
+
+      // FALLBACK: Try room-based notification
+      const userRoom = `quickClash:${userId}`
+      const room = io.sockets.adapter.rooms.get(userRoom)
+      if (room && room.size > 0) {
+        console.log(
+          `[NOTIFY] Fallback: Using room ${userRoom} with ${room.size} socket(s)`,
+        )
+        io.to(userRoom).emit(event, data)
+        return true
+      }
+
+      return false
+    }
+
+    let notifiedSockets = 0
+
+    activeDevices.forEach(device => {
+      device.socketIds.forEach(socketId => {
+        const socket = io.sockets.sockets.get(socketId)
+        if (socket && socket.connected) {
+          console.log(
+            `[NOTIFY] Sending ${event} to socket ${socketId} for device ${device.deviceFingerprint.substring(
+              0,
+              8,
+            )}...`,
+          )
+          socket.emit(event, {
+            ...data,
+            deviceFingerprint: device.deviceFingerprint.substring(0, 8) + '...',
+          })
+          notifiedSockets++
+        } else {
+          console.log(
+            `[NOTIFY] Socket ${socketId} not available for notification`,
+          )
+        }
+      })
+    })
+
+    console.log(
+      `notifyUserAllDevices: Sent ${event} to ${notifiedSockets} socket(s) across ${activeDevices.length} device(s) for user ${userId}`,
+    )
+
+    return notifiedSockets > 0
+  }
+
+  /**
+   * Debug function to log device tracking state
+   */
+  function logDeviceTrackingState(userId) {
+    console.log(`[DEBUG_TRACKING] Device tracking state for user ${userId}:`)
+    const userDevices = userDeviceConnections.get(userId)
+    if (!userDevices) {
+      console.log(`[DEBUG_TRACKING] No device map found for user ${userId}`)
+      return
+    }
+
+    console.log(`[DEBUG_TRACKING] Total devices: ${userDevices.size}`)
+    for (const [deviceFingerprint, socketSet] of userDevices.entries()) {
+      console.log(
+        `[DEBUG_TRACKING] Device ${deviceFingerprint.substring(0, 8)}... has ${
+          socketSet.size
+        } socket(s):`,
+        Array.from(socketSet),
+      )
+
+      // Verify each socket
+      socketSet.forEach(socketId => {
+        const socket = io.sockets.sockets.get(socketId)
+        const metadata = socketMetadata.get(socketId)
+        console.log(
+          `[DEBUG_TRACKING]   Socket ${socketId}: connected=${
+            socket?.connected
+          }, metadata=${!!metadata}`,
+        )
+      })
+    }
   }
 
   /**
@@ -589,8 +801,11 @@ function initializeSocket(server) {
     return stats
   }
 
-  // Setup Quick Clash global events
-  setupQuickClashGlobalEvents(io)
+  // Setup Quick Clash global events with enhanced notification system
+  setupQuickClashGlobalEvents(io, {
+    notifyUserAllDevices,
+    getUserActiveDevices,
+  })
 
   // Bridge between custom emitter and Socket.IO
   globalEmitter.on('quiz_progress', ({ userId, progress }) => {
@@ -654,8 +869,10 @@ function initializeSocket(server) {
     }
   }, HEARTBEAT_CHECK_INTERVAL)
 
-  // Expose connection stats for monitoring
+  // Expose connection stats and utility functions for monitoring
   io.getConnectionStats = getConnectionStats
+  io.getUserActiveDevices = getUserActiveDevices
+  io.notifyUserAllDevices = notifyUserAllDevices
 
   exports.io = io
 }

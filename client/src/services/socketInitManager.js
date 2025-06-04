@@ -65,23 +65,40 @@ class SocketInitManager {
     // Return existing socket if already connected
     if (this._socket && this._socket.connected) {
       console.log('SocketManager: Using existing connected socket')
-      return this._socket
+      // Verify the socket is properly authenticated with the same user
+      const metadata = this._socket._userData
+      if (metadata && metadata._id === user._id) {
+        return this._socket
+      }
     }
 
-    // If connection is in progress, return the socket being connected
+    // If connection is in progress, wait for it to complete
     if (this._connecting && this._socket) {
-      console.log('SocketManager: Connection already in progress')
-      return this._socket
+      console.log('SocketManager: Connection already in progress, waiting...')
+      // Return a promise that resolves when connection completes
+      return new Promise(resolve => {
+        const checkConnection = () => {
+          if (!this._connecting) {
+            resolve(this._socket)
+          } else {
+            setTimeout(checkConnection, 100)
+          }
+        }
+        checkConnection()
+      })
     }
 
-    // Prevent rapid successive initialization attempts (increased to 2 seconds)
+    // Prevent rapid successive initialization attempts (increased to 3 seconds)
     const now = Date.now()
-    if (now - this._lastInitTime < 2000) {
+    if (now - this._lastInitTime < 3000) {
       console.log(
         'SocketManager: Initialization throttled (too soon since last attempt)',
       )
-      if (this._socket) {
+      if (this._socket && this._socket.connected) {
         return this._socket
+      } else {
+        // Wait a bit before allowing retry
+        await new Promise(resolve => setTimeout(resolve, 1000))
       }
     }
 

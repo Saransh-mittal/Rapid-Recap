@@ -12,22 +12,44 @@ const { getCategories } = require('../../data/categories')
 
 // Constants
 const MATCHMAKING_EXPIRY = 30 * 60 * 1000 // 30 minutes
+const TRANSACTION_TIMEOUT = 10000 // 10 seconds
 
 /**
- * Join the matchmaking room - now with automatic category selection and real user matching
+ * Join the matchmaking room - Enhanced with better error handling and timeouts
  * @param {Object} params - Parameters
  * @param {string} params.userId - User ID
  * @returns {Promise<Object>} The matchmaking entry or null if immediately matched
  */
 const joinMatchmaking = async ({ userId }) => {
+  console.log(
+    `[MATCHMAKING_SERVICE] User ${userId} attempting to join matchmaking`,
+  )
+
   // Generate two random categories
   const categories = getRandomCategories(2)
 
-  // await checkChallengeLimits({ userId })
   const session = await mongoose.startSession()
+  let transactionStarted = false
+
   try {
+    // Set transaction options with timeout
+    const transactionOptions = {
+      readConcern: { level: 'snapshot' },
+      writeConcern: { w: 'majority' },
+      maxTimeMS: TRANSACTION_TIMEOUT,
+    }
+
     return await session.withTransaction(async () => {
-      // If the user is not a bot, check for other real users to match with first
+      transactionStarted = true
+      console.log(
+        `[MATCHMAKING_SERVICE] Starting transaction for user ${userId}`,
+      )
+
+      // First, clean up any existing entries for this user to prevent duplicates
+      await QuickClashMatchmaking.deleteMany({ user: userId }).session(session)
+      console.log(
+        `[MATCHMAKING_SERVICE] Cleaned up existing entries for user ${userId}`,
+      )
 
       // Look for real users who are available (not bots)
       const matchmakingQuery = {
@@ -45,105 +67,182 @@ const joinMatchmaking = async ({ userId }) => {
         .session(session)
 
       if (potentialMatch) {
+        console.log(
+          `[MATCHMAKING_SERVICE] Found potential match: ${potentialMatch.user} for user ${userId}`,
+        )
+
         // We found a real user to match with!
         // Lock both users to prevent race conditions
-        await lockUserForChallenge({ userId: potentialMatch.user })
-        // Get user details for both users
-        const [joiningUser, matchedUser] = await Promise.all([
-          User.findById(userId)
-            .select('_id name inGameName quickClashTrophies pic')
-            .session(session),
-          User.findById(potentialMatch.user)
-            .select('_id name inGameName quickClashTrophies pic')
-            .session(session),
-        ])
-
-        // Generate temporary challenge ID
-        const tempChallengeId = new mongoose.Types.ObjectId().toString()
-
-        // Use the matched user's categories if available, otherwise use our random ones
-        const matchCategories = potentialMatch.preferredCategories || categories
-
-        // NEW: Notify users that a match has been found before starting challenge creation
-        globalEmitter.emit('quickClash:matchFound', {
-          challenger: joiningUser,
-          opponent: matchedUser,
-          tempChallengeId,
+        const lockResult = await lockUserForChallenge({
+          userId: potentialMatch.user,
+          session,
         })
 
-        // Start challenge creation in the background
-        const challengeResult = await createChallenge({
-          challengerId: userId,
-          opponentId: potentialMatch.user,
-          categories: matchCategories,
-          fromMatchMaking: true,
-        })
-        // Remove the matched user from matchmaking
-        await QuickClashMatchmaking.findOneAndDelete({
-          user: potentialMatch.user,
-        })
+        if (!lockResult) {
+          console.log(
+            `[MATCHMAKING_SERVICE] Failed to lock user ${potentialMatch.user}, continuing with matchmaking queue`,
+          )
+          // If we can't lock the potential match, just continue with regular matchmaking
+          // Don't throw an error, just fall through to create a matchmaking entry
+        } else {
+          // Get user details for both users
+          const [joiningUser, matchedUser] = await Promise.all([
+            User.findById(userId)
+              .select('_id name inGameName quickClashTrophies pic')
+              .session(session),
+            User.findById(potentialMatch.user)
+              .select('_id name inGameName quickClashTrophies pic')
+              .session(session),
+          ])
 
-        globalEmitter.emit('quickClash:matchReady', {
-          challengeId: challengeResult.challenge._id,
-          challengerData: joiningUser,
-          opponentData: matchedUser,
-          oldChallengeId: tempChallengeId,
-        })
-        // Notify users of successful challenge creation
-        notifyChallengerAboutCreation({
-          challenge: challengeResult.challenge,
-          challenger: joiningUser,
-          opponent: matchedUser,
-          success: true,
-        }).catch(error => {
-          console.error('Error notifying about challenge creation:', error)
-        })
+          // Generate temporary challenge ID
+          const tempChallengeId = new mongoose.Types.ObjectId().toString()
 
-        // Return null since this user doesn't need a matchmaking entry (matched immediately)
-        return null
+          // Use the matched user's categories if available, otherwise use our random ones
+          const matchCategories =
+            potentialMatch.preferredCategories || categories
+
+          console.log(
+            `[MATCHMAKING_SERVICE] Creating challenge between ${userId} and ${potentialMatch.user}`,
+          )
+
+          // Remove the matched user from matchmaking first (within transaction)
+          await QuickClashMatchmaking.findOneAndDelete({
+            user: potentialMatch.user,
+          }).session(session)
+
+          // Commit transaction before starting challenge creation
+          console.log(
+            `[MATCHMAKING_SERVICE] Transaction completed, starting challenge creation`,
+          )
+
+          // Start challenge creation outside of transaction (after commit)
+          setImmediate(async () => {
+            try {
+              // FIXED: Notify users that a match has been found (this is safe to emit early)
+              globalEmitter.emit('quickClash:matchFound', {
+                challenger: joiningUser,
+                opponent: matchedUser,
+                tempChallengeId,
+              })
+
+              // Start challenge creation
+              const challengeResult = await createChallenge({
+                challengerId: userId,
+                opponentId: potentialMatch.user,
+                categories: matchCategories,
+                fromMatchMaking: true,
+              })
+
+              console.log(
+                `[MATCHMAKING_SERVICE] Challenge created successfully: ${challengeResult.challenge._id}`,
+              )
+
+              // FIXED: Only emit matchReady AFTER challenge is successfully created and saved
+              globalEmitter.emit('quickClash:matchReady', {
+                challengeId: challengeResult.challenge._id,
+                challengerData: joiningUser,
+                opponentData: matchedUser,
+                oldChallengeId: tempChallengeId,
+              })
+
+              // Notify users of successful challenge creation
+              notifyChallengerAboutCreation({
+                challenge: challengeResult.challenge,
+                challenger: joiningUser,
+                opponent: matchedUser,
+                success: true,
+              }).catch(error => {
+                console.error(
+                  'Error notifying about challenge creation:',
+                  error,
+                )
+              })
+            } catch (error) {
+              console.error(
+                '[MATCHMAKING_SERVICE] Error in background challenge creation:',
+                error,
+              )
+
+              // FIXED: Only emit error events if challenge creation fails
+              globalEmitter.emit('quickClash:challengeCreationFailed', {
+                challengerId: userId,
+                opponentId: potentialMatch.user,
+                error: error.message,
+              })
+
+              // Also emit a more specific error for the frontend to handle
+              globalEmitter.emit('quickClash:matchCreationFailed', {
+                challengerId: userId,
+                opponentId: potentialMatch.user,
+                tempChallengeId,
+                error: error.message,
+              })
+            }
+          })
+
+          // Return null since this user doesn't need a matchmaking entry (matched immediately)
+          return null
+        }
       }
 
-      // Check if user is already in matchmaking
-      let matchmakingEntry = await QuickClashMatchmaking.findOne({
+      // No match found or couldn't lock potential match, create matchmaking entry
+      console.log(
+        `[MATCHMAKING_SERVICE] No match found for user ${userId}, creating matchmaking entry`,
+      )
+
+      // Create a new matchmaking entry
+      const matchmakingEntry = new QuickClashMatchmaking({
         user: userId,
-      }).session(session)
-
-      if (matchmakingEntry) {
-        // Update the existing entry
-        matchmakingEntry.status = 'available'
-        matchmakingEntry.preferredCategories = categories
-        matchmakingEntry.lastActive = new Date()
-        matchmakingEntry.expiresAt = new Date(Date.now() + MATCHMAKING_EXPIRY)
-        await matchmakingEntry.save({ session })
-      } else {
-        // Create a new entry
-        matchmakingEntry = new QuickClashMatchmaking({
-          user: userId,
-          preferredCategories: categories,
-          status: 'available',
-          expiresAt: new Date(Date.now() + MATCHMAKING_EXPIRY),
-        })
-        await matchmakingEntry.save({ session })
-      }
+        preferredCategories: categories,
+        status: 'available',
+        expiresAt: new Date(Date.now() + MATCHMAKING_EXPIRY),
+      })
+      await matchmakingEntry.save({ session })
 
       const userData = await User.findById(userId)
-        .select('_id name inGameName pic')
+        .select('_id name inGameName pic quickClashTrophies')
         .session(session)
 
-      // Emit event for real-time updates
-      globalEmitter.emit('quickClash:userJoinedMatchmaking', {
-        userId,
-        userData,
-        preferredCategories: categories,
+      console.log(
+        `[MATCHMAKING_SERVICE] User ${userId} (${userData.name}) joined matchmaking queue`,
+      )
+
+      // Emit event for real-time updates with proper user data (after transaction commits)
+      setImmediate(() => {
+        globalEmitter.emit('quickClash:userJoinedMatchmaking', {
+          userId,
+          userData,
+          preferredCategories: categories,
+          trophies: userData.quickClashTrophies || 1000,
+          userName: userData.name,
+        })
+
+        // Schedule a bot to respond after a random delay
+        scheduleRandomBotResponse(userId, categories)
       })
 
-      // Schedule a bot to respond after a random delay
-      scheduleRandomBotResponse(userId, categories)
-
       return matchmakingEntry
-    })
+    }, transactionOptions)
+  } catch (error) {
+    console.error(
+      `[MATCHMAKING_SERVICE] Error in joinMatchmaking for user ${userId}:`,
+      error,
+    )
+
+    // If transaction fails, make sure to emit an error event
+    if (transactionStarted) {
+      setImmediate(() => {
+        globalEmitter.emit('quickClash:matchmakingError', {
+          userId,
+          error: error.message,
+        })
+      })
+    }
+
+    throw error
   } finally {
-    session.endSession()
+    await session.endSession()
   }
 }
 
@@ -158,20 +257,22 @@ const scheduleRandomBotResponse = async (userId, categories) => {
     const botUser = await getRandomBotUser()
 
     if (!botUser) {
-      console.log('No bot users available for matchmaking response')
+      console.log(
+        '[MATCHMAKING_SERVICE] No bot users available for matchmaking response',
+      )
       return
     }
 
-    // Calculate a random delay between 0 and 30 minutes (in milliseconds)
-    const minDelay = 0
-    const maxDelay = 30 * 60 * 1000
+    // Calculate a random delay between 5 seconds and 5 minutes (for testing)
+    const minDelay = 5000 // 5 seconds
+    const maxDelay = 5 * 60 * 1000 // 5 minutes
     const randomDelay =
       Math.floor(Math.random() * (maxDelay - minDelay)) + minDelay
 
     console.log(
-      `Scheduling bot ${botUser._id} to respond to user ${userId} in ${
-        randomDelay / 1000
-      } seconds`,
+      `[MATCHMAKING_SERVICE] Scheduling bot ${
+        botUser._id
+      } to respond to user ${userId} in ${randomDelay / 1000} seconds`,
     )
 
     // Create a botResponseTimer object to allow cancellation
@@ -184,9 +285,15 @@ const scheduleRandomBotResponse = async (userId, categories) => {
         })
 
         if (!userEntry) {
-          console.log('User no longer in matchmaking, cancelling bot response')
+          console.log(
+            '[MATCHMAKING_SERVICE] User no longer in matchmaking, cancelling bot response',
+          )
           return
         }
+
+        console.log(
+          `[MATCHMAKING_SERVICE] Bot ${botUser._id} responding to user ${userId}`,
+        )
 
         // Lock both users for the challenge
         await lockUserForChallenge({ userId })
@@ -194,7 +301,7 @@ const scheduleRandomBotResponse = async (userId, categories) => {
 
         // Create a challenge between them
         console.log(
-          `Creating challenge between real user ${userId} and bot ${botUser._id}`,
+          `[MATCHMAKING_SERVICE] Creating challenge between real user ${userId} and bot ${botUser._id}`,
         )
 
         // Start creating the challenge in the background
@@ -210,56 +317,81 @@ const scheduleRandomBotResponse = async (userId, categories) => {
             .lean(),
         ])
 
-        // NEW: Notify users that a match has been found
+        // FIXED: Notify users that a match has been found (safe to emit early)
         globalEmitter.emit('quickClash:matchFound', {
           challenger: creatorData,
           opponent: accepterData,
           tempChallengeId: challengeId,
         })
 
-        // Create the challenge in the background
-        const challengeResult = await createChallenge({
-          challengerId: userId,
-          opponentId: botUser._id,
-          categories,
-          fromMatchMaking: true,
-        })
+        try {
+          // Create the challenge
+          const challengeResult = await createChallenge({
+            challengerId: userId,
+            opponentId: botUser._id,
+            categories,
+            fromMatchMaking: true,
+          })
 
-        // Emit event when challenge is actually created
-        globalEmitter.emit('quickClash:matchReady', {
-          challengeId: challengeResult.challenge._id,
-          challengerData: creatorData,
-          opponentData: accepterData,
-          oldChallengeId: challengeId, // Pass the old ID for reference
-        })
+          console.log(
+            `[MATCHMAKING_SERVICE] Bot challenge created successfully: ${challengeResult.challenge._id}`,
+          )
 
-        // Schedule the bot to complete the challenge later
-        await scheduleBotResponse({
-          challengeId: challengeResult.challenge._id,
-          botId: botUser._id,
-          delayMinutes: Math.floor(Math.random() * 25),
-        })
+          // FIXED: Only emit matchReady AFTER challenge is successfully created and saved
+          globalEmitter.emit('quickClash:matchReady', {
+            challengeId: challengeResult.challenge._id,
+            challengerData: creatorData,
+            opponentData: accepterData,
+            oldChallengeId: challengeId, // Pass the old ID for reference
+          })
 
-        // Clean up matchmaking entries
-        await QuickClashMatchmaking.deleteMany({
-          user: { $in: [userId, botUser._id] },
-        })
+          // Schedule the bot to complete the challenge later
+          await scheduleBotResponse({
+            challengeId: challengeResult.challenge._id,
+            botId: botUser._id,
+            delayMinutes: Math.floor(Math.random() * 25),
+          })
+
+          // Clean up matchmaking entries
+          await QuickClashMatchmaking.deleteMany({
+            user: { $in: [userId, botUser._id] },
+          })
+        } catch (challengeError) {
+          console.error(
+            '[MATCHMAKING_SERVICE] Error creating bot challenge:',
+            challengeError,
+          )
+
+          // FIXED: Only emit error events if challenge creation fails
+          globalEmitter.emit('quickClash:challengeCreationFailed', {
+            challengerId: userId,
+            opponentId: botUser._id,
+            error: challengeError.message,
+          })
+
+          globalEmitter.emit('quickClash:matchCreationFailed', {
+            challengerId: userId,
+            opponentId: botUser._id,
+            tempChallengeId: challengeId,
+            error: challengeError.message,
+          })
+        }
       } catch (error) {
-        console.error('Error in bot matchmaking response:', error)
+        console.error(
+          '[MATCHMAKING_SERVICE] Error in bot matchmaking response:',
+          error,
+        )
       }
     }, randomDelay)
 
     // Store the timer for potential cancellation
-    // Note: In a production app, you'd store this in a more persistent way
-    // such as Redis or a database to survive server restarts
     botResponseTimers[userId] = botResponseTimer
   } catch (error) {
-    console.error('Error scheduling bot response:', error)
+    console.error('[MATCHMAKING_SERVICE] Error scheduling bot response:', error)
   }
 }
 
 // In-memory store for bot response timers
-// NOTE: In production, you would use Redis or similar for persistence
 const botResponseTimers = {}
 
 /**
@@ -270,7 +402,9 @@ const cancelBotResponseTimer = userId => {
   if (botResponseTimers[userId]) {
     clearTimeout(botResponseTimers[userId])
     delete botResponseTimers[userId]
-    console.log(`Cancelled bot response timer for user ${userId}`)
+    console.log(
+      `[MATCHMAKING_SERVICE] Cancelled bot response timer for user ${userId}`,
+    )
   }
 }
 
@@ -295,7 +429,7 @@ const getRandomBotUser = async () => {
     const randomIndex = Math.floor(Math.random() * botUsers.length)
     return botUsers[randomIndex]
   } catch (error) {
-    console.error('Error getting random bot user:', error)
+    console.error('[MATCHMAKING_SERVICE] Error getting random bot user:', error)
     return null
   }
 }
@@ -308,6 +442,8 @@ const getRandomBotUser = async () => {
  */
 const leaveMatchmaking = async ({ userId }) => {
   try {
+    console.log(`[MATCHMAKING_SERVICE] User ${userId} leaving matchmaking`)
+
     const result = await QuickClashMatchmaking.findOneAndDelete({
       user: userId,
     })
@@ -315,11 +451,22 @@ const leaveMatchmaking = async ({ userId }) => {
     if (result) {
       // Cancel any pending bot response timer
       cancelBotResponseTimer(userId)
+
+      console.log(
+        `[MATCHMAKING_SERVICE] User ${userId} successfully left matchmaking`,
+      )
+
+      // Emit event for real-time updates
+      globalEmitter.emit('quickClash:userLeftMatchmaking', {
+        userId,
+      })
+    } else {
+      console.log(`[MATCHMAKING_SERVICE] User ${userId} was not in matchmaking`)
     }
 
     return !!result
   } catch (error) {
-    console.error('Error leaving matchmaking:', error)
+    console.error('[MATCHMAKING_SERVICE] Error leaving matchmaking:', error)
     throw error
   }
 }
@@ -349,7 +496,10 @@ const updateMatchmakingStatus = async ({ userId, status }) => {
 
     return entry
   } catch (error) {
-    console.error('Error updating matchmaking status:', error)
+    console.error(
+      '[MATCHMAKING_SERVICE] Error updating matchmaking status:',
+      error,
+    )
     throw error
   }
 }
@@ -365,7 +515,7 @@ const isBot = async ({ userId }) => {
     const user = await User.findById(userId).select('email')
     return user ? /^dummy\d+@mail\.com$/.test(user.email) : false
   } catch (error) {
-    console.error('Error checking if user is bot:', error)
+    console.error('[MATCHMAKING_SERVICE] Error checking if user is bot:', error)
     return false
   }
 }
@@ -385,43 +535,95 @@ const getRandomCategories = (count = 2) => {
 
 /**
  * Lock a user in matchmaking to prevent multiple accepts
+ * Enhanced with better error handling and session support
  * @param {Object} params - Parameters
  * @param {string} params.userId - User to lock
+ * @param {Object} [params.session] - MongoDB session for transaction
  * @returns {Promise<boolean>} Success status
  */
-const lockUserForChallenge = async ({ userId }) => {
+const lockUserForChallenge = async ({ userId, session }) => {
   try {
+    console.log(`[MATCHMAKING_SERVICE] Attempting to lock user ${userId}`)
+
     // Attempt to update the user's status to 'locked'
+    const query = {
+      user: userId,
+      status: 'available', // Only lock if currently available
+    }
+
+    const update = {
+      status: 'locked',
+      lastActive: new Date(),
+    }
+
+    const options = { new: true }
+    if (session) {
+      options.session = session
+    }
+
     const result = await QuickClashMatchmaking.findOneAndUpdate(
-      {
-        user: userId,
-        status: 'available', // Only lock if currently available
-      },
-      {
-        status: 'locked',
-        lastActive: new Date(),
-      },
-      { new: true },
+      query,
+      update,
+      options,
     )
 
     if (!result) {
+      console.log(
+        `[MATCHMAKING_SERVICE] Failed to lock user ${userId} - not available or doesn't exist`,
+      )
       return false // User was not available or doesn't exist
     }
+
+    console.log(`[MATCHMAKING_SERVICE] Successfully locked user ${userId}`)
 
     // Cancel any pending bot response timer
     cancelBotResponseTimer(userId)
 
     // Broadcast that this user is now locked/unavailable
-    globalEmitter.emit('quickClash:userLocked', {
-      userId,
+    setImmediate(() => {
+      globalEmitter.emit('quickClash:userLocked', {
+        userId,
+      })
     })
 
     return true
   } catch (error) {
-    console.error('Error locking user for challenge:', error)
+    console.error(
+      `[MATCHMAKING_SERVICE] Error locking user ${userId} for challenge:`,
+      error,
+    )
     return false
   }
 }
+
+/**
+ * Clean up expired matchmaking entries
+ * @returns {Promise<number>} Number of entries cleaned up
+ */
+const cleanupExpiredEntries = async () => {
+  try {
+    const result = await QuickClashMatchmaking.deleteMany({
+      expiresAt: { $lt: new Date() },
+    })
+
+    if (result.deletedCount > 0) {
+      console.log(
+        `[MATCHMAKING_SERVICE] Cleaned up ${result.deletedCount} expired matchmaking entries`,
+      )
+    }
+
+    return result.deletedCount
+  } catch (error) {
+    console.error(
+      '[MATCHMAKING_SERVICE] Error cleaning up expired entries:',
+      error,
+    )
+    return 0
+  }
+}
+
+// Run cleanup every 5 minutes
+setInterval(cleanupExpiredEntries, 5 * 60 * 1000)
 
 module.exports = {
   joinMatchmaking,
@@ -430,4 +632,5 @@ module.exports = {
   isBot,
   getRandomCategories,
   lockUserForChallenge,
+  cleanupExpiredEntries,
 }

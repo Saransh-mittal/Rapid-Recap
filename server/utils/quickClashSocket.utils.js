@@ -4,19 +4,339 @@ const {
   handleMatchmakingEvents,
 } = require('../controllers/quickClashMatchmakingController')
 const QuickClashTeam = require('../model/quickClashSchemas/quickClashTeamSchema')
+const { sendNotification } = require('../services/notificationService')
+const {
+  joinMatchmaking,
+  leaveMatchmaking,
+  updateMatchmakingStatus,
+} = require('../services/quickClashServices/quickClashMatchmakingService')
+const QuickClashMatchmaking = require('../model/quickClashSchemas/quickClashMatchmakingSchema')
 
 /**
- * Enhanced socket connection tracking using device fingerprinting
- * - userDeviceMap: Maps user IDs to a Map of their device fingerprints and socket sets
- * - socketUserDeviceMap: Maps socket IDs to their user ID and device fingerprint
- * - teamRoomMembers: Maps user device combinations to team room membership
+ * Team room membership tracking (separate from device tracking)
+ * Maps userId to team room membership status
  */
-const userDeviceMap = new Map() // userId -> Map(deviceFingerprint -> Set of socketIds)
-const socketUserDeviceMap = new Map() // socketId -> { userId, deviceFingerprint, connectedAt }
-const teamRoomMembers = new Map() // userId_deviceFingerprint -> boolean (in teams room)
+const teamRoomMembers = new Map() // userId -> boolean (in teams room)
 
 /**
- * Setup socket event handlers for Quick Clash feature with device fingerprinting
+ * 1v1 Matchmaking room membership tracking
+ * Maps userId to matchmaking room membership status
+ */
+const matchmakingRoomMembers = new Map() // userId -> boolean (in matchmaking room)
+
+/**
+ * Send push notification for offline users
+ * @param {Object} options - Notification options
+ */
+async function sendTeamRemovalPushNotification({
+  userId,
+  teamName,
+  removerName,
+}) {
+  try {
+    await sendNotification({
+      title: 'Removed from Team',
+      body: `You have been removed from team "${teamName}"`,
+      icon: '/images/rrlogo.webp',
+      url: '/quickclash',
+      userId: userId,
+      type: 'quickClash',
+      importance: 'important',
+    })
+    console.log(`[QC_PUSH] Push notification sent to offline user ${userId}`)
+  } catch (error) {
+    console.error(
+      `[QC_PUSH] Failed to send push notification to user ${userId}:`,
+      error,
+    )
+  }
+}
+
+/**
+ * Send push notification for team invitations
+ * @param {Object} options - Notification options
+ */
+async function sendTeamInvitationPushNotification({
+  userId,
+  teamName,
+  inviterName,
+}) {
+  try {
+    await sendNotification({
+      title: 'Team Invitation',
+      body: `${inviterName} invited you to join "${teamName}"`,
+      icon: '/images/rrlogo.webp',
+      url: '/quickclash',
+      userId: userId,
+      type: 'quickClash',
+      importance: 'important',
+    })
+    console.log(
+      `[QC_PUSH] Team invitation push notification sent to offline user ${userId}`,
+    )
+  } catch (error) {
+    console.error(
+      `[QC_PUSH] Failed to send team invitation push notification to user ${userId}:`,
+      error,
+    )
+  }
+}
+
+/**
+ * Send push notification for Quick Clash challenges
+ * @param {Object} options - Notification options
+ */
+async function sendQuickClashChallengePushNotification({
+  userId,
+  challengerName,
+  category,
+}) {
+  try {
+    await sendNotification({
+      title: 'Quick Clash Challenge',
+      body: `${challengerName} challenged you to a ${category} Quick Clash!`,
+      icon: '/images/rrlogo.webp',
+      url: '/quickclash',
+      userId: userId,
+      type: 'quickClash',
+      importance: 'important',
+    })
+    console.log(
+      `[QC_PUSH] Challenge push notification sent to offline user ${userId}`,
+    )
+  } catch (error) {
+    console.error(
+      `[QC_PUSH] Failed to send challenge push notification to user ${userId}:`,
+      error,
+    )
+  }
+}
+
+/**
+ * Handle 1v1 matchmaking socket events with device awareness
+ * @param {Object} io - Socket.io instance
+ * @param {Object} socket - Client socket connection
+ */
+const handle1v1MatchmakingEvents = (io, socket) => {
+  // User joins 1v1 matchmaking - FIXED: Handle undefined data
+  socket.on('quickClash:joinMatchmaking', async (data = {}) => {
+    try {
+      // Ensure socket is authenticated
+      if (!socket.user || !socket.user._id) {
+        socket.emit('quickClash:error', {
+          message: 'Authentication required',
+        })
+        return
+      }
+
+      const userId = socket.user._id.toString()
+      const { deviceFingerprint } = data
+
+      console.log(
+        `[QC_1V1] Socket event: User ${userId} joining 1v1 matchmaking${
+          deviceFingerprint
+            ? ` with device ${deviceFingerprint.substring(0, 8)}...`
+            : ''
+        }`,
+      )
+
+      // Join 1v1 matchmaking
+      await joinMatchmaking({
+        userId,
+      })
+
+      // Join matchmaking room for updates with device context
+      socket.join(`quickClash:matchmaking`)
+      socket.join(`quickClash:matchmaking:${userId}`)
+      matchmakingRoomMembers.set(userId, true)
+      console.log(`[QC_1V1] User ${userId} joined 1v1 matchmaking room`)
+
+      // Emit confirmation with device context
+      socket.emit('quickClash:joinedMatchmaking', {
+        userId,
+        status: 'joined',
+        deviceFingerprint: deviceFingerprint
+          ? deviceFingerprint.substring(0, 8) + '...'
+          : null,
+      })
+
+      console.log(
+        `[QC_1V1] 1v1 matchmaking join confirmation sent to user ${userId}`,
+      )
+    } catch (error) {
+      console.error(`[QC_1V1] Error in joinMatchmaking socket event:`, error)
+      socket.emit('quickClash:error', {
+        message: error.message || 'Failed to join matchmaking',
+      })
+    }
+  })
+
+  // User leaves 1v1 matchmaking - FIXED: Handle undefined data
+  socket.on('quickClash:leaveMatchmaking', async (data = {}) => {
+    try {
+      if (!socket.user || !socket.user._id) {
+        socket.emit('quickClash:error', {
+          message: 'Authentication required',
+        })
+        return
+      }
+
+      const userId = socket.user._id.toString()
+      const { deviceFingerprint } = data
+
+      console.log(
+        `[QC_1V1] Socket event: User ${userId} leaving 1v1 matchmaking${
+          deviceFingerprint
+            ? ` with device ${deviceFingerprint.substring(0, 8)}...`
+            : ''
+        }`,
+      )
+
+      // Leave 1v1 matchmaking
+      await leaveMatchmaking({ userId })
+
+      // Leave matchmaking room
+      socket.leave(`quickClash:matchmaking`)
+      socket.leave(`quickClash:matchmaking:${userId}`)
+      matchmakingRoomMembers.delete(userId)
+      console.log(`[QC_1V1] User ${userId} left 1v1 matchmaking room`)
+
+      // Emit confirmation
+      socket.emit('quickClash:leftMatchmaking', {
+        userId,
+        status: 'left',
+        deviceFingerprint: deviceFingerprint
+          ? deviceFingerprint.substring(0, 8) + '...'
+          : null,
+      })
+
+      console.log(
+        `[QC_1V1] 1v1 matchmaking leave confirmation sent to user ${userId}`,
+      )
+    } catch (error) {
+      console.error(`[QC_1V1] Error in leaveMatchmaking socket event:`, error)
+      socket.emit('quickClash:error', {
+        message: error.message || 'Failed to leave matchmaking',
+      })
+    }
+  })
+
+  // Enhanced join matchmaking room - FIXED: Handle undefined data
+  socket.on('quickClash:joinMatchmakingRoom', async (data = {}) => {
+    try {
+      if (!socket.user || !socket.user._id) {
+        socket.emit('quickClash:error', {
+          message: 'Authentication required',
+        })
+        return
+      }
+
+      const userId = socket.user._id.toString()
+      const { deviceFingerprint } = data
+
+      console.log(
+        `[QC_1V1] Socket event: User ${userId} joining 1v1 matchmaking room${
+          deviceFingerprint
+            ? ` with device ${deviceFingerprint.substring(0, 8)}...`
+            : ''
+        }`,
+      )
+
+      // Join the general quickClash matchmaking room
+      socket.join('quickClash:matchmaking')
+
+      // Also join user-specific matchmaking room
+      socket.join(`quickClash:matchmaking:${userId}`)
+      matchmakingRoomMembers.set(userId, true)
+
+      console.log(`[QC_1V1] User ${userId} joined 1v1 matchmaking rooms`)
+
+      // Emit confirmation
+      socket.emit('quickClash:matchmakingRoomJoined', {
+        userId,
+        rooms: ['quickClash:matchmaking', `quickClash:matchmaking:${userId}`],
+        deviceFingerprint: deviceFingerprint
+          ? deviceFingerprint.substring(0, 8) + '...'
+          : null,
+      })
+    } catch (error) {
+      console.error(
+        `[QC_1V1] Error in joinMatchmakingRoom socket event:`,
+        error,
+      )
+      socket.emit('quickClash:error', {
+        message: error.message || 'Failed to join matchmaking room',
+      })
+    }
+  })
+
+  // Enhanced disconnect handling for 1v1 matchmaking
+  socket.on('disconnect', async () => {
+    if (socket.user && socket.user._id) {
+      try {
+        const userId = socket.user._id.toString()
+        console.log(`[QC_1V1] Socket disconnected for user ${userId}`)
+
+        // Update status to offline
+        await updateMatchmakingStatus({
+          userId,
+          status: 'offline',
+        })
+
+        // Clean up room membership
+        matchmakingRoomMembers.delete(userId)
+
+        console.log(
+          `[QC_1V1] Updated 1v1 matchmaking status to offline for user ${userId}`,
+        )
+      } catch (error) {
+        console.error(
+          '[QC_1V1] Error handling disconnect for 1v1 matchmaking:',
+          error,
+        )
+      }
+    }
+  })
+
+  // Enhanced reconnect handling for 1v1 matchmaking
+  socket.on('reconnect', async () => {
+    if (socket.user && socket.user._id) {
+      try {
+        const userId = socket.user._id.toString()
+        console.log(`[QC_1V1] Socket reconnected for user ${userId}`)
+
+        // Update status to online
+        await updateMatchmakingStatus({
+          userId,
+          status: 'online',
+        })
+
+        // Re-join matchmaking room if user was in matchmaking
+        const matchmakingEntry = await QuickClashMatchmaking.findOne({
+          user: userId,
+        })
+
+        if (matchmakingEntry) {
+          socket.join('quickClash:matchmaking')
+          socket.join(`quickClash:matchmaking:${userId}`)
+          matchmakingRoomMembers.set(userId, true)
+          console.log(
+            `[QC_1V1] Re-joined 1v1 matchmaking rooms for user ${userId}`,
+          )
+        }
+      } catch (error) {
+        console.error(
+          '[QC_1V1] Error handling reconnect for 1v1 matchmaking:',
+          error,
+        )
+      }
+    }
+  })
+}
+
+/**
+ * Setup socket event handlers for Quick Clash feature
+ * Uses the main socket.js device tracking system instead of maintaining separate tracking
  * @param {Object} io - Socket.io instance
  * @param {Object} socket - Client socket connection
  * @param {Object} user - Authenticated user object
@@ -32,47 +352,70 @@ const setupQuickClashSocketHandlers = (io, socket, user) => {
   const socketId = socket.id
   const quickClashRoom = `quickClash:${userId}`
 
-  // Listen for device fingerprint from client
+  console.log(
+    `[QC_SETUP] Setting up QuickClash handlers for user ${userId} socket ${socketId}`,
+  )
+
+  // Listen for device fingerprint from client (but don't track separately)
   socket.on('quickClash:registerDevice', ({ deviceFingerprint }) => {
     if (!deviceFingerprint) {
-      console.error('No device fingerprint provided for socket registration')
+      console.error(
+        'No device fingerprint provided for QuickClash socket registration',
+      )
       return
     }
 
-    registerSocketWithDevice(io, socket, userId, deviceFingerprint)
+    console.log(
+      `[QC_DEVICE] QuickClash device registered for user ${userId} device ${deviceFingerprint.substring(
+        0,
+        8,
+      )}...`,
+    )
+
+    // Emit confirmation (device tracking is handled by main socket.js)
+    socket.emit('quickClash:deviceRegistered', {
+      deviceFingerprint: deviceFingerprint.substring(0, 8) + '...',
+      socketId,
+      isUnique: true,
+    })
   })
 
   // Handle socket disconnection
   socket.on('disconnect', () => {
-    cleanupSocketConnection(socketId)
-    console.log(`Socket ${socketId} disconnected from QuickClash`)
+    // Clean up team room membership
+    teamRoomMembers.delete(userId)
+    // Clean up 1v1 matchmaking room membership
+    matchmakingRoomMembers.delete(userId)
+    console.log(
+      `[QC_DISCONNECT] Socket ${socketId} disconnected from QuickClash for user ${userId}`,
+    )
   })
 
   // Listen for explicit join requests
-  socket.on('quickClash:join', ({ deviceFingerprint }) => {
-    if (deviceFingerprint) {
-      registerSocketWithDevice(io, socket, userId, deviceFingerprint)
-    }
-    console.log(`User ${userId} explicitly joined QuickClash socket channel`)
+  socket.on('quickClash:join', (data = {}) => {
+    const { deviceFingerprint } = data
+    console.log(
+      `[QC_JOIN] User ${userId} explicitly joined QuickClash socket channel${
+        deviceFingerprint
+          ? ` with device ${deviceFingerprint.substring(0, 8)}...`
+          : ''
+      }`,
+    )
   })
 
-  // Listen for explicit request to join the teams room
-  socket.on('quickClash:joinTeamsRoom', ({ deviceFingerprint }) => {
-    if (!deviceFingerprint) {
-      console.warn('No device fingerprint provided for teams room join')
-      return
-    }
+  // FIXED: Listen for explicit request to join the teams room with proper undefined handling
+  socket.on('quickClash:joinTeamsRoom', (data = {}) => {
+    const { deviceFingerprint } = data
 
-    const userDeviceKey = `${userId}_${deviceFingerprint}`
-
-    if (!teamRoomMembers.get(userDeviceKey)) {
+    if (!teamRoomMembers.get(userId)) {
       socket.join('quickClash:teams')
-      teamRoomMembers.set(userDeviceKey, true)
+      teamRoomMembers.set(userId, true)
       console.log(
-        `User ${userId} (device: ${deviceFingerprint.substring(
-          0,
-          8,
-        )}...) joined QuickClash teams room`,
+        `[QC_TEAMS] User ${userId} joined QuickClash teams room${
+          deviceFingerprint
+            ? ` with device ${deviceFingerprint.substring(0, 8)}...`
+            : ''
+        }`,
       )
 
       // DEBUG: Verify teams room joining
@@ -85,329 +428,143 @@ const setupQuickClashSocketHandlers = (io, socket, user) => {
         )
       }, 100)
     } else {
-      console.log(
-        `User ${userId} (device: ${deviceFingerprint.substring(
-          0,
-          8,
-        )}...) already in QuickClash teams room`,
-      )
+      console.log(`[QC_TEAMS] User ${userId} already in QuickClash teams room`)
     }
   })
 
   socket.on('join', room => {
     socket.join(room)
-    console.log(`User ${userId} joined room: ${room}`)
+    console.log(`[QC_ROOM] User ${userId} joined room: ${room}`)
   })
 
-  // Set up matchmaking event handlers
-  handleMatchmakingEvents(io, socket)
+  // Set up 1v1 matchmaking event handlers
+  handle1v1MatchmakingEvents(io, socket)
 
   // Add listeners for team matchmaking
   socket.on('quickClash:joinGlobalMatchmaking', data => {
     console.log(
-      `Socket event: User ${userId} requested to join global matchmaking`,
+      `[QC_MM] Socket event: User ${userId} requested to join global matchmaking`,
     )
   })
 
   socket.on('quickClash:leaveGlobalMatchmaking', () => {
     console.log(
-      `Socket event: User ${userId} requested to leave global matchmaking`,
+      `[QC_MM] Socket event: User ${userId} requested to leave global matchmaking`,
     )
   })
 
-  socket.on('quickClash:joinTeamMatchmaking', data => {
-    const teamId = data?.teamId
-    const deviceFingerprint = data?.deviceFingerprint
+  // FIXED: Handle team matchmaking join with proper undefined handling
+  socket.on('quickClash:joinTeamMatchmaking', (data = {}) => {
+    const { teamId, deviceFingerprint } = data
 
     console.log(
-      `Socket event: User ${userId} requested to join team matchmaking with team ${teamId}`,
+      `[QC_MM] Socket event: User ${userId} requested to join team matchmaking with team ${teamId}${
+        deviceFingerprint
+          ? ` with device ${deviceFingerprint.substring(0, 8)}...`
+          : ''
+      }`,
     )
 
     // Automatically join the teams room when joining team matchmaking
-    if (deviceFingerprint) {
-      const userDeviceKey = `${userId}_${deviceFingerprint}`
-
-      if (!teamRoomMembers.get(userDeviceKey)) {
-        socket.join('quickClash:teams')
-        teamRoomMembers.set(userDeviceKey, true)
-        console.log(
-          `User ${userId} (device: ${deviceFingerprint.substring(
-            0,
-            8,
-          )}...) joined QuickClash teams room (via team matchmaking)`,
-        )
-      }
+    if (!teamRoomMembers.get(userId)) {
+      socket.join('quickClash:teams')
+      teamRoomMembers.set(userId, true)
+      console.log(
+        `[QC_TEAMS] User ${userId} joined QuickClash teams room (via team matchmaking)`,
+      )
     }
   })
 
-  // Handle viewing team battles - also join the teams room
-  socket.on('quickClash:viewTeamBattles', ({ deviceFingerprint }) => {
-    if (!deviceFingerprint) {
-      console.warn('No device fingerprint provided for team battles view')
+  // FIXED: Handle viewing team battles with proper undefined handling
+  socket.on('quickClash:viewTeamBattles', (data = {}) => {
+    const { deviceFingerprint } = data
+
+    if (!teamRoomMembers.get(userId)) {
+      socket.join('quickClash:teams')
+      teamRoomMembers.set(userId, true)
+      console.log(
+        `[QC_TEAMS] User ${userId} joined QuickClash teams room (via team battles view)${
+          deviceFingerprint
+            ? ` with device ${deviceFingerprint.substring(0, 8)}...`
+            : ''
+        }`,
+      )
+    }
+  })
+}
+
+/**
+ * Setup global emitter event handlers for Quick Clash
+ * Enhanced to use the unified device tracking system
+ * @param {Object} io - Socket.io instance
+ * @param {Object} utils - Utility functions from main socket.js
+ */
+const setupQuickClashGlobalEvents = (io, utils = {}) => {
+  const { notifyUserAllDevices, getUserActiveDevices } = utils
+
+  // Helper function to notify user with fallback
+  const notifyUser = (userId, event, data) => {
+    if (notifyUserAllDevices) {
+      return notifyUserAllDevices(userId, event, data)
+    } else {
+      // Fallback to room-based notification
+      const userRoom = `quickClash:${userId}`
+      io.to(userRoom).emit(event, data)
+      console.log(`[QC_NOTIFY] Fallback notification sent to room ${userRoom}`)
+      return true
+    }
+  }
+
+  // ==========================================
+  // 1V1 MATCHMAKING AND CHALLENGE EVENTS
+  // ==========================================
+
+  // Listen for user joined 1v1 matchmaking
+  globalEmitter.on(
+    'quickClash:userJoinedMatchmaking',
+    ({ userId, userData, preferredCategories }) => {
+      if (!userId) {
+        console.error(
+          'Invalid userId in quickClash:userJoinedMatchmaking event',
+        )
+        return
+      }
+
+      console.log(
+        `[QC_1V1] SOCKET: User ${userId} (${userData?.name}) joined 1v1 matchmaking`,
+      )
+
+      // Emit to the user's room to confirm joining
+      const success = notifyUser(userId, 'quickClash:joinedMatchmaking', {
+        userId,
+        preferredCategories,
+        status: 'joined',
+      })
+      console.log(
+        `[QC_1V1] Joined 1v1 matchmaking notification sent to ${userId}: ${success}`,
+      )
+    },
+  )
+
+  // Listen for user left 1v1 matchmaking
+  globalEmitter.on('quickClash:userLeftMatchmaking', ({ userId }) => {
+    if (!userId) {
+      console.error('Invalid userId in quickClash:userLeftMatchmaking event')
       return
     }
 
-    const userDeviceKey = `${userId}_${deviceFingerprint}`
+    console.log(`[QC_1V1] SOCKET: User ${userId} left 1v1 matchmaking`)
 
-    if (!teamRoomMembers.get(userDeviceKey)) {
-      socket.join('quickClash:teams')
-      teamRoomMembers.set(userDeviceKey, true)
-      console.log(
-        `User ${userId} (device: ${deviceFingerprint.substring(
-          0,
-          8,
-        )}...) joined QuickClash teams room (via team battles view)`,
-      )
-    }
-  })
-}
-
-/**
- * Register a socket with its device fingerprint
- * @param {Object} io - Socket.io instance
- * @param {Object} socket - Socket instance
- * @param {string} userId - User ID
- * @param {string} deviceFingerprint - Device fingerprint
- */
-const registerSocketWithDevice = (io, socket, userId, deviceFingerprint) => {
-  const socketId = socket.id
-  const quickClashRoom = `quickClash:${userId}`
-
-  // Initialize user's device map if not exists
-  if (!userDeviceMap.has(userId)) {
-    userDeviceMap.set(userId, new Map())
-  }
-
-  const userDevices = userDeviceMap.get(userId)
-
-  // Check if this device already has an active socket
-  if (userDevices.has(deviceFingerprint)) {
-    const existingSockets = userDevices.get(deviceFingerprint)
-
-    if (existingSockets.size > 0) {
-      // Close existing sockets for this device to maintain one per device
-      const socketsToClose = Array.from(existingSockets)
-      console.log(
-        `Closing ${
-          socketsToClose.length
-        } existing socket(s) for user ${userId} device ${deviceFingerprint.substring(
-          0,
-          8,
-        )}...`,
-      )
-
-      socketsToClose.forEach(existingSocketId => {
-        const existingSocket = io.sockets.sockets.get(existingSocketId)
-        if (existingSocket) {
-          existingSocket.emit('quickClash:deviceConflict', {
-            message: 'Another connection from this device has been established',
-            newSocketId: socketId,
-          })
-          existingSocket.disconnect(true)
-        }
-
-        // Clean up tracking
-        existingSockets.delete(existingSocketId)
-        socketUserDeviceMap.delete(existingSocketId)
-      })
-
-      // Clear the existing set but keep the device entry
-      existingSockets.clear()
-    }
-  }
-
-  // Ensure socket set exists for this device (create if not exists or recreate if cleared)
-  if (
-    !userDevices.has(deviceFingerprint) ||
-    !userDevices.get(deviceFingerprint)
-  ) {
-    userDevices.set(deviceFingerprint, new Set())
-  }
-
-  // Add new socket to device set
-  const deviceSockets = userDevices.get(deviceFingerprint)
-  if (deviceSockets) {
-    deviceSockets.add(socketId)
-  } else {
-    // Defensive programming - create new Set if somehow it's null/undefined
-    const newSet = new Set([socketId])
-    userDevices.set(deviceFingerprint, newSet)
-    console.warn(
-      `Had to recreate socket set for device ${deviceFingerprint.substring(
-        0,
-        8,
-      )}...`,
+    // Emit to the user's room to confirm leaving
+    const success = notifyUser(userId, 'quickClash:leftMatchmaking', {
+      userId,
+      status: 'left',
+    })
+    console.log(
+      `[QC_1V1] Left 1v1 matchmaking notification sent to ${userId}: ${success}`,
     )
-  }
-
-  // Track socket metadata
-  socketUserDeviceMap.set(socketId, {
-    userId,
-    deviceFingerprint,
-    connectedAt: new Date(),
   })
 
-  // Join the user's Quick Clash room
-  socket.join(quickClashRoom)
-
-  console.log(
-    `User ${userId} registered socket ${socketId} with device ${deviceFingerprint.substring(
-      0,
-      8,
-    )}... (unique connection established)`,
-  )
-
-  // Emit confirmation to client
-  socket.emit('quickClash:deviceRegistered', {
-    deviceFingerprint: deviceFingerprint.substring(0, 8) + '...',
-    socketId,
-    isUnique: true,
-  })
-}
-
-/**
- * Clean up socket connection when a socket disconnects
- * @param {string} socketId - The ID of the disconnected socket
- */
-const cleanupSocketConnection = socketId => {
-  const socketInfo = socketUserDeviceMap.get(socketId)
-
-  if (!socketInfo) {
-    console.warn(`No tracking info found for disconnected socket ${socketId}`)
-    return
-  }
-
-  const { userId, deviceFingerprint } = socketInfo
-
-  // Remove socket from user's device map
-  if (userDeviceMap.has(userId)) {
-    const userDevices = userDeviceMap.get(userId)
-
-    if (userDevices.has(deviceFingerprint)) {
-      const deviceSockets = userDevices.get(deviceFingerprint)
-
-      if (deviceSockets) {
-        deviceSockets.delete(socketId)
-
-        // Only clean up device entry if no more sockets AND wait to avoid race conditions
-        if (deviceSockets.size === 0) {
-          // Use a small delay to avoid race condition with new connections
-          setTimeout(() => {
-            // Double-check that the Set is still empty and exists
-            const currentDeviceSockets = userDevices.get(deviceFingerprint)
-            if (currentDeviceSockets && currentDeviceSockets.size === 0) {
-              userDevices.delete(deviceFingerprint)
-
-              // Clean up team room membership for this device
-              const userDeviceKey = `${userId}_${deviceFingerprint}`
-              teamRoomMembers.delete(userDeviceKey)
-
-              console.log(
-                `Device ${deviceFingerprint.substring(
-                  0,
-                  8,
-                )}... for user ${userId} completely disconnected`,
-              )
-
-              // If user has no more devices connected, clean up user entry
-              if (userDevices.size === 0) {
-                userDeviceMap.delete(userId)
-                console.log(
-                  `User ${userId} completely disconnected from QuickClash (no active devices)`,
-                )
-              }
-            }
-          }, 200) // Increased delay to 200ms
-        }
-      }
-    }
-  }
-
-  // Remove from socket tracking map immediately
-  socketUserDeviceMap.delete(socketId)
-}
-
-/**
- * Get connection statistics for debugging
- * @returns {Object} Connection statistics
- */
-const getConnectionStats = () => {
-  const stats = {
-    totalUsers: userDeviceMap.size,
-    totalDevices: 0,
-    totalSockets: socketUserDeviceMap.size,
-    userDeviceBreakdown: {},
-    teamRoomMembers: teamRoomMembers.size,
-  }
-
-  // Calculate device and socket breakdown
-  for (const [userId, userDevices] of userDeviceMap.entries()) {
-    stats.totalDevices += userDevices.size
-
-    const userStats = {
-      devices: userDevices.size,
-      sockets: 0,
-      deviceDetails: {},
-    }
-
-    for (const [deviceFingerprint, socketSet] of userDevices.entries()) {
-      userStats.sockets += socketSet.size
-      userStats.deviceDetails[deviceFingerprint.substring(0, 8) + '...'] = {
-        sockets: socketSet.size,
-        socketsIds: Array.from(socketSet),
-      }
-    }
-
-    stats.userDeviceBreakdown[userId] = userStats
-  }
-
-  return stats
-}
-
-/**
- * Get user's active devices
- * @param {string} userId - User ID
- * @returns {Array} Array of device fingerprints
- */
-const getUserActiveDevices = userId => {
-  const userDevices = userDeviceMap.get(userId)
-  if (!userDevices) return []
-
-  return Array.from(userDevices.keys())
-}
-
-/**
- * Check if user has active connection from specific device
- * @param {string} userId - User ID
- * @param {string} deviceFingerprint - Device fingerprint
- * @returns {boolean} True if user has active connection from device
- */
-const hasActiveDeviceConnection = (userId, deviceFingerprint) => {
-  const userDevices = userDeviceMap.get(userId)
-  if (!userDevices) return false
-
-  const deviceSockets = userDevices.get(deviceFingerprint)
-  return deviceSockets && deviceSockets.size > 0
-}
-
-/**
- * Get socket IDs for a specific user device combination
- * @param {string} userId - User ID
- * @param {string} deviceFingerprint - Device fingerprint
- * @returns {Set} Set of socket IDs
- */
-const getUserDeviceSockets = (userId, deviceFingerprint) => {
-  const userDevices = userDeviceMap.get(userId)
-  if (!userDevices) return new Set()
-
-  return userDevices.get(deviceFingerprint) || new Set()
-}
-
-/**
- * Setup global emitter event handlers for Quick Clash (unchanged from original)
- * @param {Object} io - Socket.io instance
- */
-const setupQuickClashGlobalEvents = io => {
   // Listen for challenge created event from controller
   globalEmitter.on(
     'quickClash:challengeCreated',
@@ -421,12 +578,25 @@ const setupQuickClashGlobalEvents = io => {
 
       // Add a small delay to avoid race conditions
       setTimeout(() => {
-        // Emit to opponent's room
-        const opponentRoom = `quickClash:${opponent._id}`
-        io.to(opponentRoom).emit('quickClash:newChallenge', {
+        const success = notifyUser(opponent._id, 'quickClash:newChallenge', {
           challenge,
           challenger,
         })
+        console.log(
+          `[QC_EVENT] Challenge created notification sent to ${opponent._id}: ${success}`,
+        )
+
+        // If opponent is offline, send push notification
+        if (!success) {
+          console.log(
+            `[QC_EVENT] Opponent ${opponent._id} offline, sending push notification`,
+          )
+          sendQuickClashChallengePushNotification({
+            userId: opponent._id,
+            challengerName: challenger.name || challenger.inGameName,
+            category: challenge.category,
+          })
+        }
       }, 100)
     },
   )
@@ -440,13 +610,15 @@ const setupQuickClashGlobalEvents = io => {
         return
       }
 
-      // Emit to the user's room with a small delay to avoid race conditions
+      // Emit to the user with a small delay to avoid race conditions
       setTimeout(() => {
-        const userRoom = `quickClash:${userId}`
-        io.to(userRoom).emit('quickClash:challengeProgress', {
+        const success = notifyUser(userId, 'quickClash:challengeProgress', {
           step,
           progress,
         })
+        console.log(
+          `[QC_EVENT] Challenge progress sent to ${userId}: ${success}`,
+        )
       }, 50)
     },
   )
@@ -463,15 +635,221 @@ const setupQuickClashGlobalEvents = io => {
 
       // Add a small delay to avoid race conditions
       setTimeout(() => {
-        // Emit to challenger's room
-        const challengerRoom = `quickClash:${challenger._id}`
-        io.to(challengerRoom).emit('quickClash:challengerNotified', {
-          challenge,
-          opponent,
-          success,
-          errorMessage,
-        })
+        const notifySuccess = notifyUser(
+          challenger._id,
+          'quickClash:challengerNotified',
+          {
+            challenge,
+            opponent,
+            success,
+            errorMessage,
+          },
+        )
+        console.log(
+          `[QC_EVENT] Challenger notified sent to ${challenger._id}: ${notifySuccess}`,
+        )
       }, 100)
+    },
+  )
+
+  // New events for 1v1 matchmaking
+  globalEmitter.on(
+    'quickClash:userJoinedMatchmaking',
+    ({ userId, trophies, userName }) => {
+      if (!userId) {
+        console.error(
+          'Invalid userId in quickClash:userJoinedMatchmaking event',
+        )
+        return
+      }
+
+      console.log(
+        `[QC_1V1] SOCKET: User ${userId} (${userName}) joined 1v1 matchmaking with ${trophies} trophies`,
+      )
+
+      // Emit to the user's room to confirm joining
+      const success = notifyUser(userId, 'quickClash:joinedMatchmaking', {
+        userId,
+        trophies,
+        status: 'joined',
+      })
+      console.log(
+        `[QC_1V1] Joined 1v1 matchmaking notification sent to ${userId}: ${success}`,
+      )
+    },
+  )
+
+  // New event for 1v1 match preparation notification
+  globalEmitter.on(
+    'quickClash:matchFound',
+    ({ challenger, opponent, tempChallengeId }) => {
+      // Send match found notification to both users
+      if (challenger && challenger._id) {
+        const challengerSuccess = notifyUser(
+          challenger._id,
+          'quickClash:matchFound',
+          {
+            opponent: {
+              name: opponent.name,
+              inGameName: opponent.inGameName,
+              pic: opponent.pic,
+              _id: opponent._id,
+              quickClashTrophies: opponent.quickClashTrophies,
+            },
+            tempChallengeId,
+            isChallenger: true,
+          },
+        )
+        console.log(
+          `[QC_EVENT] Match found sent to challenger ${challenger._id}: ${challengerSuccess}`,
+        )
+      }
+
+      if (opponent && opponent._id) {
+        const opponentSuccess = notifyUser(
+          opponent._id,
+          'quickClash:matchFound',
+          {
+            opponent: {
+              name: challenger.name,
+              inGameName: challenger.inGameName,
+              pic: challenger.pic,
+              _id: challenger._id,
+              quickClashTrophies: challenger.quickClashTrophies,
+            },
+            tempChallengeId,
+            isChallenger: false,
+          },
+        )
+        console.log(
+          `[QC_EVENT] Match found sent to opponent ${opponent._id}: ${opponentSuccess}`,
+        )
+      }
+    },
+  )
+
+  globalEmitter.on('quickClash:challengeRaceCondition', ({ accepterId }) => {
+    // Notify user who tried to accept a challenge that was already taken
+    const success = notifyUser(accepterId, 'quickClash:acceptFailed', {
+      message: 'This user is no longer available for challenges',
+    })
+    console.log(
+      `[QC_EVENT] Challenge race condition sent to ${accepterId}: ${success}`,
+    )
+  })
+
+  globalEmitter.on(
+    'quickClash:matchReady',
+    ({ challengeId, challengerData, opponentData, oldChallengeId }) => {
+      // Send the real challenge ID to both users
+      const challengerSuccess = notifyUser(
+        challengerData._id,
+        'quickClash:matchChallengeReady',
+        {
+          challengeId,
+          oldChallengeId, // Include the temp ID so client can match it
+        },
+      )
+      console.log(
+        `[QC_EVENT] Match challenge ready sent to challenger ${challengerData._id}: ${challengerSuccess}`,
+      )
+
+      const opponentSuccess = notifyUser(
+        opponentData._id,
+        'quickClash:matchChallengeReady',
+        {
+          challengeId,
+          oldChallengeId, // Include the temp ID so client can match it
+        },
+      )
+      console.log(
+        `[QC_EVENT] Match challenge ready sent to opponent ${opponentData._id}: ${opponentSuccess}`,
+      )
+    },
+  )
+
+  globalEmitter.on(
+    'quickClash:matchCreationFailed',
+    ({ challengerId, opponentId, tempChallengeId, error }) => {
+      if (!challengerId || !opponentId) {
+        console.error(
+          'Invalid user IDs in quickClash:matchCreationFailed event',
+        )
+        return
+      }
+
+      console.log(
+        `[QC_EVENT] Match creation failed between ${challengerId} and ${opponentId}: ${error}`,
+      )
+
+      // Notify both users about the failure
+      const challengerSuccess = notifyUser(
+        challengerId,
+        'quickClash:matchCreationFailed',
+        {
+          error,
+          tempChallengeId,
+          opponentId,
+        },
+      )
+      console.log(
+        `[QC_EVENT] Match creation failed notification sent to challenger ${challengerId}: ${challengerSuccess}`,
+      )
+
+      const opponentSuccess = notifyUser(
+        opponentId,
+        'quickClash:matchCreationFailed',
+        {
+          error,
+          tempChallengeId,
+          challengerId,
+        },
+      )
+      console.log(
+        `[QC_EVENT] Match creation failed notification sent to opponent ${opponentId}: ${opponentSuccess}`,
+      )
+    },
+  )
+
+  // NEW: Enhanced error handling for general challenge creation failures
+  globalEmitter.on(
+    'quickClash:challengeCreationFailed',
+    ({ challengerId, opponentId, error }) => {
+      if (!challengerId || !opponentId) {
+        console.error(
+          'Invalid user IDs in quickClash:challengeCreationFailed event',
+        )
+        return
+      }
+
+      console.log(
+        `[QC_EVENT] Challenge creation failed between ${challengerId} and ${opponentId}: ${error}`,
+      )
+
+      // Notify both users about the failure
+      const challengerSuccess = notifyUser(
+        challengerId,
+        'quickClash:challengeCreationFailed',
+        {
+          error,
+          opponentId,
+        },
+      )
+      console.log(
+        `[QC_EVENT] Challenge creation failed notification sent to challenger ${challengerId}: ${challengerSuccess}`,
+      )
+
+      const opponentSuccess = notifyUser(
+        opponentId,
+        'quickClash:challengeCreationFailed',
+        {
+          error,
+          challengerId,
+        },
+      )
+      console.log(
+        `[QC_EVENT] Challenge creation failed notification sent to opponent ${opponentId}: ${opponentSuccess}`,
+      )
     },
   )
 
@@ -488,13 +866,18 @@ const setupQuickClashGlobalEvents = io => {
 
       // Add a small delay to avoid race conditions
       setTimeout(() => {
-        // Emit to challenger's room
-        const challengerRoom = `quickClash:${challenger._id}`
-        io.to(challengerRoom).emit('quickClash:challengeAccepted', {
-          challengeId,
-          category,
-          opponent,
-        })
+        const success = notifyUser(
+          challenger._id,
+          'quickClash:challengeAccepted',
+          {
+            challengeId,
+            category,
+            opponent,
+          },
+        )
+        console.log(
+          `[QC_EVENT] Challenge accepted sent to ${challenger._id}: ${success}`,
+        )
       }, 100)
     },
   )
@@ -512,13 +895,18 @@ const setupQuickClashGlobalEvents = io => {
 
       // Add a small delay to avoid race conditions
       setTimeout(() => {
-        // Emit to challenger's room
-        const challengerRoom = `quickClash:${challenger._id}`
-        io.to(challengerRoom).emit('quickClash:challengeRejected', {
-          challengeId,
-          category,
-          opponent,
-        })
+        const success = notifyUser(
+          challenger._id,
+          'quickClash:challengeRejected',
+          {
+            challengeId,
+            category,
+            opponent,
+          },
+        )
+        console.log(
+          `[QC_EVENT] Challenge rejected sent to ${challenger._id}: ${success}`,
+        )
       }, 100)
     },
   )
@@ -540,12 +928,20 @@ const setupQuickClashGlobalEvents = io => {
       if (teamBattleParticipantIds && teamBattleParticipantIds.length > 0) {
         setTimeout(() => {
           // make a new socket event for team battle refetch
+          let notifiedCount = 0
           for (let id of teamBattleParticipantIds) {
-            const userRoom = `quickClash:${id.toString()}`
-            io.to(userRoom).emit('quickClash:teamBattleRefetch', {
-              battleId: challenge.teamBattle.toString(),
-            })
+            const success = notifyUser(
+              id.toString(),
+              'quickClash:teamBattleRefetch',
+              {
+                battleId: challenge.teamBattle.toString(),
+              },
+            )
+            if (success) notifiedCount++
           }
+          console.log(
+            `[QC_EVENT] Team battle refetch sent to ${notifiedCount}/${teamBattleParticipantIds.length} participants`,
+          )
         }, 300)
       } else {
         if (!challenge || !challenge.challenger || !challenge.opponent) {
@@ -602,20 +998,24 @@ const setupQuickClashGlobalEvents = io => {
 
         // Add a small delay to avoid race conditions
         setTimeout(() => {
-          // Emit to challenger's room with challenger-specific data
-          const challengerRoom = `quickClash:${challenge.challenger._id.toString()}`
-          io.to(challengerRoom).emit(
+          const challengerSuccess = notifyUser(
+            challenge.challenger._id.toString(),
             'quickClash:challengeCompletedByBothPlayers',
             challengerData,
+          )
+          console.log(
+            `[QC_EVENT] Challenge completed sent to challenger ${challenge.challenger._id}: ${challengerSuccess}`,
           )
         }, 100)
 
         setTimeout(() => {
-          // Emit to opponent's room with opponent-specific data
-          const opponentRoom = `quickClash:${challenge.opponent._id.toString()}`
-          io.to(opponentRoom).emit(
+          const opponentSuccess = notifyUser(
+            challenge.opponent._id.toString(),
             'quickClash:challengeCompletedByBothPlayers',
             opponentData,
+          )
+          console.log(
+            `[QC_EVENT] Challenge completed sent to opponent ${challenge.opponent._id}: ${opponentSuccess}`,
           )
         }, 200)
       }
@@ -635,12 +1035,20 @@ const setupQuickClashGlobalEvents = io => {
       if (teamBattleParticipantIds && teamBattleParticipantIds.length > 0) {
         setTimeout(() => {
           // make a new socket event for team battle refetch
+          let notifiedCount = 0
           for (let id of teamBattleParticipantIds) {
-            const userRoom = `quickClash:${id.toString()}`
-            io.to(userRoom).emit('quickClash:teamBattleRefetch', {
-              battleId: challenge.teamBattle.toString(),
-            })
+            const success = notifyUser(
+              id.toString(),
+              'quickClash:teamBattleRefetch',
+              {
+                battleId: challenge.teamBattle.toString(),
+              },
+            )
+            if (success) notifiedCount++
           }
+          console.log(
+            `[QC_EVENT] Team battle refetch sent to ${notifiedCount}/${teamBattleParticipantIds.length} participants`,
+          )
         }, 300)
       } else {
         if (!challenge || !challenge.challenger || !challenge.opponent) {
@@ -658,12 +1066,17 @@ const setupQuickClashGlobalEvents = io => {
 
         // Add a small delay to avoid race conditions
         setTimeout(() => {
-          // Emit to recipient's room
-          const recipientRoom = `quickClash:${recipientId}`
-          io.to(recipientRoom).emit('quickClash:challengeCompleted', {
-            challengeId: challenge._id,
-            completedByUserId,
-          })
+          const success = notifyUser(
+            recipientId,
+            'quickClash:challengeCompleted',
+            {
+              challengeId: challenge._id,
+              completedByUserId,
+            },
+          )
+          console.log(
+            `[QC_EVENT] Challenge completed sent to ${recipientId}: ${success}`,
+          )
         }, 100)
       }
     },
@@ -678,93 +1091,113 @@ const setupQuickClashGlobalEvents = io => {
 
     // Add a small delay to avoid race conditions
     setTimeout(() => {
-      // Emit to user's room
-      const userRoom = `quickClash:${userId}`
-      io.to(userRoom).emit('quickClash:analysisReady', {
+      const success = notifyUser(userId, 'quickClash:analysisReady', {
         challengeId,
       })
+      console.log(`[QC_EVENT] Analysis ready sent to ${userId}: ${success}`)
     }, 100)
   })
-
-  // New events for matchmaking
-  globalEmitter.on(
-    'quickClash:userJoinedMatchmaking',
-    ({ userId, userData, preferredCategories }) => {
-      io.to('quickClash:matchmaking').emit('quickClash:userJoined', {
-        userId,
-        user: userData, // Make sure this doesn't have a way to identify bots
-        preferredCategories,
-      })
-    },
-  )
-
-  // New event for match preparation notification
-  globalEmitter.on(
-    'quickClash:matchFound',
-    ({ challenger, opponent, tempChallengeId }) => {
-      // Send match found notification to both users
-      if (challenger && challenger._id) {
-        io.to(`quickClash:${challenger._id}`).emit('quickClash:matchFound', {
-          opponent: {
-            name: opponent.name,
-            inGameName: opponent.inGameName,
-            pic: opponent.pic,
-            _id: opponent._id,
-            quickClashTrophies: opponent.quickClashTrophies,
-          },
-          tempChallengeId,
-          isChallenger: true,
-        })
-      }
-
-      if (opponent && opponent._id) {
-        io.to(`quickClash:${opponent._id}`).emit('quickClash:matchFound', {
-          opponent: {
-            name: challenger.name,
-            inGameName: challenger.inGameName,
-            pic: challenger.pic,
-            _id: challenger._id,
-            quickClashTrophies: challenger.quickClashTrophies,
-          },
-          tempChallengeId,
-          isChallenger: false,
-        })
-      }
-    },
-  )
-
-  globalEmitter.on('quickClash:challengeRaceCondition', ({ accepterId }) => {
-    // Notify user who tried to accept a challenge that was already taken
-    io.to(`quickClash:${accepterId}`).emit('quickClash:acceptFailed', {
-      message: 'This user is no longer available for challenges',
-    })
-  })
-
-  globalEmitter.on(
-    'quickClash:matchReady',
-    ({ challengeId, challengerData, opponentData, oldChallengeId }) => {
-      // Send the real challenge ID to both users
-      io.to(`quickClash:${challengerData._id}`).emit(
-        'quickClash:matchChallengeReady',
-        {
-          challengeId,
-          oldChallengeId, // Include the temp ID so client can match it
-        },
-      )
-
-      io.to(`quickClash:${opponentData._id}`).emit(
-        'quickClash:matchChallengeReady',
-        {
-          challengeId,
-          oldChallengeId, // Include the temp ID so client can match it
-        },
-      )
-    },
-  )
 
   // ==========================================
   // TEAM MATCHMAKING SOCKET EVENT HANDLERS
   // ==========================================
+
+  // Enhanced helper function to notify all members of a specific team
+  // Also sends push notifications to offline members
+  async function notifyTeamMembers(teamId, event, data, excludeUserIds = []) {
+    try {
+      if (!teamId) {
+        console.error('notifyTeamMembers: teamId is required')
+        return
+      }
+
+      // Fetch team members from the database
+      const team = await QuickClashTeam.findById(teamId)
+        .select('members name')
+        .lean()
+
+      if (!team || !team.members || !Array.isArray(team.members)) {
+        console.error(
+          `Cannot notify team members: Team ${teamId} not found or has no members`,
+        )
+        return
+      }
+
+      let notifiedCount = 0
+      let offlineCount = 0
+      const excludeSet = new Set(excludeUserIds.map(id => id.toString()))
+
+      // Send event to each team member (excluding any specified exclusions)
+      for (const member of team.members) {
+        const userId = member.user.toString()
+
+        // Skip if user is in exclude list
+        if (excludeSet.has(userId)) {
+          continue
+        }
+
+        // Use enhanced notification system
+        const success = notifyUser(userId, event, {
+          ...data,
+          teamName: team.name, // Include team name for context
+        })
+
+        if (success) {
+          notifiedCount++
+        } else {
+          offlineCount++
+          // Send push notification for certain events to offline users
+          if (event === 'quickClash:teamMemberJoined') {
+            try {
+              await sendNotification({
+                title: 'Team Member Joined',
+                body: `${data.userName} joined your team "${team.name}"`,
+                icon: '/images/rrlogo.webp',
+                url: '/quickclash',
+                userId: userId,
+                type: 'quickClash',
+                importance: 'normal',
+              })
+              console.log(
+                `[QC_PUSH] Team member joined push notification sent to offline user ${userId}`,
+              )
+            } catch (error) {
+              console.error(
+                `[QC_PUSH] Failed to send team member joined push notification:`,
+                error,
+              )
+            }
+          } else if (event === 'quickClash:teamMemberLeft') {
+            try {
+              await sendNotification({
+                title: 'Team Member Left',
+                body: `${data.userName} left your team "${team.name}"`,
+                icon: '/images/rrlogo.webp',
+                url: '/quickclash',
+                userId: userId,
+                type: 'quickClash',
+                importance: 'normal',
+              })
+              console.log(
+                `[QC_PUSH] Team member left push notification sent to offline user ${userId}`,
+              )
+            } catch (error) {
+              console.error(
+                `[QC_PUSH] Failed to send team member left push notification:`,
+                error,
+              )
+            }
+          }
+        }
+      }
+
+      console.log(
+        `[QC_TEAM] notifyTeamMembers: Sent ${event} to ${notifiedCount}/${team.members.length} members of team ${teamId} (${team.name}). ${offlineCount} offline members.`,
+      )
+    } catch (error) {
+      console.error(`Error notifying team members for team ${teamId}:`, error)
+    }
+  }
 
   // Listen for user joined global matchmaking
   globalEmitter.on(
@@ -778,15 +1211,17 @@ const setupQuickClashGlobalEvents = io => {
       }
 
       console.log(
-        `SOCKET: User ${userId} (${userName}) joined global matchmaking with ${trophies} trophies`,
+        `[QC_MM] SOCKET: User ${userId} (${userName}) joined global matchmaking with ${trophies} trophies`,
       )
 
       // Emit to the user's room to confirm joining
-      const userRoom = `quickClash:${userId}`
-      io.to(userRoom).emit('quickClash:joinedGlobalMatchmaking', {
+      const success = notifyUser(userId, 'quickClash:joinedGlobalMatchmaking', {
         userId,
         trophies,
       })
+      console.log(
+        `[QC_MM] Joined global matchmaking notification sent to ${userId}: ${success}`,
+      )
     },
   )
 
@@ -797,13 +1232,15 @@ const setupQuickClashGlobalEvents = io => {
       return
     }
 
-    console.log(`SOCKET: User ${userId} left global matchmaking`)
+    console.log(`[QC_MM] SOCKET: User ${userId} left global matchmaking`)
 
     // Emit to the user's room to confirm leaving
-    const userRoom = `quickClash:${userId}`
-    io.to(userRoom).emit('quickClash:leftGlobalMatchmaking', {
+    const success = notifyUser(userId, 'quickClash:leftGlobalMatchmaking', {
       userId,
     })
+    console.log(
+      `[QC_MM] Left global matchmaking notification sent to ${userId}: ${success}`,
+    )
   })
 
   // Listen for team joined matchmaking
@@ -814,7 +1251,7 @@ const setupQuickClashGlobalEvents = io => {
     }
 
     console.log(
-      `SOCKET: Team ${data?.teamId} (${data?.teamName}) joined matchmaking with ${data?.avgTrophies} avg trophies`,
+      `[QC_MM] SOCKET: Team ${data?.teamId} (${data?.teamName}) joined matchmaking with ${data?.avgTrophies} avg trophies`,
     )
 
     notifyTeamMembers(data?.teamId, 'quickClash:teamJoinedMatchmaking', data)
@@ -827,17 +1264,21 @@ const setupQuickClashGlobalEvents = io => {
     }
 
     console.log(
-      `SOCKET: Team ${data.teamId} left matchmaking` +
+      `[QC_MM] SOCKET: Team ${data.teamId} left matchmaking` +
         (data.reason ? ` (Reason: ${data.reason})` : '') +
         (data.initiator ? ` (Initiated by: ${data.initiator})` : ''),
     )
 
     // If there's a specific userId target, send directly to that user ONLY
     if (data.userId) {
-      const userSocket = getUserSocket(data.userId)
-      if (userSocket) {
-        userSocket.emit('quickClash:teamLeftMatchmaking', data)
-      }
+      const success = notifyUser(
+        data.userId,
+        'quickClash:teamLeftMatchmaking',
+        data,
+      )
+      console.log(
+        `[QC_MM] Team left matchmaking notification sent to specific user ${data.userId}: ${success}`,
+      )
       return
     }
 
@@ -854,7 +1295,7 @@ const setupQuickClashGlobalEvents = io => {
     }
 
     console.log(
-      `SOCKET: Team ${data.teamId} returned to matchmaking` +
+      `[QC_MM] SOCKET: Team ${data.teamId} returned to matchmaking` +
         (data.reason ? ` (Reason: ${data.reason})` : ''),
     )
 
@@ -876,7 +1317,7 @@ const setupQuickClashGlobalEvents = io => {
       userId,
     }) => {
       console.log(
-        `SOCKET: Team battle ${battleId} ready between teams ${
+        `[QC_BATTLE] SOCKET: Team battle ${battleId} ready between teams ${
           teamA || 'auto-formed'
         } and ${teamB || 'auto-formed'}`,
       )
@@ -884,21 +1325,26 @@ const setupQuickClashGlobalEvents = io => {
       // If there's a specific userId, send to just that user (this happens for solo players)
       if (userId) {
         console.log(
-          `SOCKET: Sending battle ready notification to solo player ${userId}`,
+          `[QC_BATTLE] SOCKET: Sending battle ready notification to solo player ${userId}`,
         )
-        io.to(`quickClash:${userId}`).emit('quickClash:teamBattleReady', {
+        const success = notifyUser(userId, 'quickClash:teamBattleReady', {
           battleId,
           teamId: teamId || teamA,
           teamA,
           teamB,
           isSoloPlayer: true,
         })
+        console.log(
+          `[QC_BATTLE] Team battle ready sent to solo player ${userId}: ${success}`,
+        )
         return
       }
 
       // For regular teams, use notifyTeamMembers to send to all team members
       if (teamA) {
-        console.log(`SOCKET: Notifying Team A members about battle ready`)
+        console.log(
+          `[QC_BATTLE] SOCKET: Notifying Team A members about battle ready`,
+        )
         notifyTeamMembers(teamA, 'quickClash:teamBattleReady', {
           battleId,
           teamId: teamA,
@@ -908,7 +1354,9 @@ const setupQuickClashGlobalEvents = io => {
       }
 
       if (teamB) {
-        console.log(`SOCKET: Notifying Team B members about battle ready`)
+        console.log(
+          `[QC_BATTLE] SOCKET: Notifying Team B members about battle ready`,
+        )
         notifyTeamMembers(teamB, 'quickClash:teamBattleReady', {
           battleId,
           teamId: teamB,
@@ -924,7 +1372,7 @@ const setupQuickClashGlobalEvents = io => {
     'quickClash:teamBattleCompleted',
     ({ battleId, winner, teamA, teamB }) => {
       console.log(
-        `SOCKET: Team battle ${battleId} completed. Winner: ${winner}`,
+        `[QC_BATTLE] SOCKET: Team battle ${battleId} completed. Winner: ${winner}`,
       )
 
       // FIXED: Notify only the team members involved in this battle
@@ -960,25 +1408,33 @@ const setupQuickClashGlobalEvents = io => {
       }
 
       console.log(
-        `SOCKET: User ${userId} accepted team invitation for team ${teamId} from ${inviterName}`,
+        `[QC_TEAM] SOCKET: User ${userId} accepted team invitation for team ${teamId} from ${inviterName}`,
       )
 
-      // FIXED: Only notify the specific team members, not all teams
-      notifyTeamMembers(teamId, 'quickClash:teamInvitationAccepted', {
+      // FIXED: Only notify the specific team members, EXCLUDING the user who accepted to prevent duplicates
+      notifyTeamMembers(
         teamId,
-        userId,
-        inviterName,
-        userName,
-        userInGameName,
-      })
+        'quickClash:teamInvitationAccepted',
+        {
+          teamId,
+          userId,
+          inviterName,
+          userName,
+          userInGameName,
+        },
+        [userId],
+      ) // Exclude the user who accepted
 
-      // Also notify the user who accepted the invitation directly
-      io.to(`quickClash:${userId}`).emit('quickClash:teamInvitationAccepted', {
+      // Notify the user who accepted the invitation separately
+      const success = notifyUser(userId, 'quickClash:teamInvitationAccepted', {
         teamId,
         userId,
         inviterName,
         isCurrentUser: true,
       })
+      console.log(
+        `[QC_TEAM] Team invitation accepted notification sent to user ${userId}: ${success}`,
+      )
     },
   )
 
@@ -992,25 +1448,33 @@ const setupQuickClashGlobalEvents = io => {
       }
 
       console.log(
-        `SOCKET: User ${userId} rejected team invitation for team ${teamId} from ${inviterName}`,
+        `[QC_TEAM] SOCKET: User ${userId} rejected team invitation for team ${teamId} from ${inviterName}`,
       )
 
-      // FIXED: Only notify the specific team members, not all teams
-      notifyTeamMembers(teamId, 'quickClash:teamInvitationRejected', {
+      // FIXED: Only notify the specific team members, EXCLUDING the user who rejected to prevent duplicates
+      notifyTeamMembers(
         teamId,
-        userId,
-        inviterName,
-        userName,
-        userInGameName,
-      })
+        'quickClash:teamInvitationRejected',
+        {
+          teamId,
+          userId,
+          inviterName,
+          userName,
+          userInGameName,
+        },
+        [userId],
+      ) // Exclude the user who rejected
 
-      // Also notify the user who rejected the invitation directly
-      io.to(`quickClash:${userId}`).emit('quickClash:teamInvitationRejected', {
+      // Notify the user who rejected the invitation separately
+      const success = notifyUser(userId, 'quickClash:teamInvitationRejected', {
         teamId,
         userId,
         inviterName,
         isCurrentUser: true,
       })
+      console.log(
+        `[QC_TEAM] Team invitation rejected notification sent to user ${userId}: ${success}`,
+      )
     },
   )
 
@@ -1024,38 +1488,34 @@ const setupQuickClashGlobalEvents = io => {
       }
 
       console.log(
-        `SOCKET: User ${inviteeId} received team invitation from ${inviterName} for team ${teamName}`,
+        `[QC_TEAM] SOCKET: User ${inviteeId} received team invitation from ${inviterName} for team ${teamName}`,
       )
-
-      // DEBUG: Check if user has active sockets
-      const userRoom = `quickClash:${inviteeId}`
-      const socketsInRoom = io.sockets.adapter.rooms.get(userRoom)
-      console.log(
-        `DEBUG: Room ${userRoom} has ${
-          socketsInRoom ? socketsInRoom.size : 0
-        } sockets`,
-      )
-
-      if (socketsInRoom && socketsInRoom.size > 0) {
-        console.log(
-          `DEBUG: Emitting teamInvitationReceived to ${socketsInRoom.size} socket(s)`,
-        )
-      } else {
-        console.log(
-          `DEBUG: No sockets in room ${userRoom} - user might not be connected`,
-        )
-      }
 
       // FIXED: Only notify the specific invitee, not all teams
-      io.to(userRoom).emit('quickClash:teamInvitationReceived', {
-        invitationId,
-        teamName,
-        inviterName,
-      })
-
-      console.log(
-        `DEBUG: teamInvitationReceived event emitted to room ${userRoom}`,
+      const success = notifyUser(
+        inviteeId,
+        'quickClash:teamInvitationReceived',
+        {
+          invitationId,
+          teamName,
+          inviterName,
+        },
       )
+      console.log(
+        `[QC_TEAM] Team invitation received notification sent to ${inviteeId}: ${success}`,
+      )
+
+      // If invitee is offline, send push notification
+      if (!success) {
+        console.log(
+          `[QC_TEAM] Invitee ${inviteeId} offline, sending push notification`,
+        )
+        sendTeamInvitationPushNotification({
+          userId: inviteeId,
+          teamName,
+          inviterName,
+        })
+      }
     },
   )
 
@@ -1068,7 +1528,7 @@ const setupQuickClashGlobalEvents = io => {
         return
       }
 
-      console.log(`SOCKET: User ${user} joined team ${team}`)
+      console.log(`[QC_TEAM] SOCKET: User ${user} joined team ${team}`)
 
       // FIXED: Only notify the specific team members, not all teams
       notifyTeamMembers(team, 'quickClash:teamMemberJoined', {
@@ -1089,7 +1549,7 @@ const setupQuickClashGlobalEvents = io => {
         return
       }
 
-      console.log(`SOCKET: User ${user} left team ${team}`)
+      console.log(`[QC_TEAM] SOCKET: User ${user} left team ${team}`)
 
       // FIXED: Only notify the specific team members, not all teams
       notifyTeamMembers(team, 'quickClash:teamMemberLeft', {
@@ -1118,23 +1578,29 @@ const setupQuickClashGlobalEvents = io => {
       }
 
       console.log(
-        `SOCKET: User ${removedMember} was removed from team ${team} by ${leader}`,
+        `[QC_TEAM] SOCKET: User ${removedMember} was removed from team ${team} by ${leader}`,
       )
 
-      // FIXED: Only notify the specific team members, not all teams
-      notifyTeamMembers(team, 'quickClash:teamMemberRemoved', {
-        teamId: team,
-        leaderId: leader,
-        removedMemberId: removedMember,
-        teamName,
-        removedMemberName,
-        removedMemberInGameName,
-        isCurrentUser: false, // This will be set to true for the removed member
-        isLeader: leader === removedMember,
-      })
+      // FIXED: Notify team members EXCLUDING the removed member to prevent duplicates
+      notifyTeamMembers(
+        team,
+        'quickClash:teamMemberRemoved',
+        {
+          teamId: team,
+          leaderId: leader,
+          removedMemberId: removedMember,
+          teamName,
+          removedMemberName,
+          removedMemberInGameName,
+          isCurrentUser: false,
+          isLeader: leader === removedMember,
+        },
+        [removedMember],
+      ) // Exclude the removed member from team notifications
 
-      // Also notify the removed member directly
-      io.to(`quickClash:${removedMember}`).emit(
+      // Notify the removed member separately with different data
+      const success = notifyUser(
+        removedMember,
         'quickClash:teamMemberRemoved',
         {
           teamId: team,
@@ -1142,8 +1608,26 @@ const setupQuickClashGlobalEvents = io => {
           removedMemberId: removedMember,
           isCurrentUser: true,
           teamName,
+          removedMemberName,
+          removedMemberInGameName,
         },
       )
+      console.log(
+        `[QC_TEAM] Team member removed notification sent to ${removedMember}: ${success}`,
+      )
+
+      // If removed user is offline, send push notification
+      if (!success) {
+        console.log(
+          `[QC_TEAM] User ${removedMember} offline, sending push notification`,
+        )
+        // TODO: Add push notification service call here
+        sendTeamRemovalPushNotification({
+          userId: removedMember,
+          teamName,
+          removerName: removedMemberName,
+        })
+      }
     },
   )
 
@@ -1159,7 +1643,7 @@ const setupQuickClashGlobalEvents = io => {
       }
 
       console.log(
-        `SOCKET: User ${userId} selected category ${category} for team ${team} in battle ${battleId}`,
+        `[QC_BATTLE] SOCKET: User ${userId} selected category ${category} for team ${team} in battle ${battleId}`,
       )
 
       // FIXED: Only notify members of both teams involved in this battle
@@ -1200,7 +1684,7 @@ const setupQuickClashGlobalEvents = io => {
       }
 
       console.log(
-        `SOCKET: User ${userId} deselected category ${category} for team ${team} in battle ${battleId}`,
+        `[QC_BATTLE] SOCKET: User ${userId} deselected category ${category} for team ${team} in battle ${battleId}`,
       )
 
       // FIXED: Only notify members of both teams involved in this battle
@@ -1230,6 +1714,7 @@ const setupQuickClashGlobalEvents = io => {
     },
   )
 
+  // Enhanced matchmaking lock/unlock events with better member notification
   globalEmitter.on('quickClash:matchmakingLocked', data => {
     if (!data.teamA || !data.teamB) {
       console.error('Invalid data in quickClash:matchmakingLocked event')
@@ -1237,12 +1722,13 @@ const setupQuickClashGlobalEvents = io => {
     }
 
     console.log(
-      `SOCKET: Teams ${data.teamA} and ${data.teamB} locked in matchmaking`,
+      `[QC_MM] SOCKET: Teams ${data.teamA} and ${data.teamB} locked in matchmaking`,
     )
 
     // If we have member IDs, use direct notification
     if (data.allMembers && data.allMembers.length > 0) {
       // Notify all members directly
+      let notifiedCount = 0
       data.allMembers.forEach(userId => {
         // Get the team id this user belongs to
         const userTeamId = data.teamAMembers.includes(userId)
@@ -1252,13 +1738,17 @@ const setupQuickClashGlobalEvents = io => {
           ? data.teamAName
           : data.teamBName
 
-        // Get the user's socket(s) - use device-aware notification
-        notifyUserAllDevices(userId, 'quickClash:matchmakingLocked', {
+        // Use enhanced notification system
+        const success = notifyUser(userId, 'quickClash:matchmakingLocked', {
           status: data.status,
           teamId: userTeamId,
           teamName: teamName,
         })
+        if (success) notifiedCount++
       })
+      console.log(
+        `[QC_MM] Matchmaking locked notification sent to ${notifiedCount}/${data.allMembers.length} members`,
+      )
     } else {
       // Fallback to team-based notification if no member IDs provided
       try {
@@ -1288,24 +1778,29 @@ const setupQuickClashGlobalEvents = io => {
     }
 
     console.log(
-      `SOCKET: Teams ${data.teamA} and ${data.teamB} unlocked from matchmaking`,
+      `[QC_MM] SOCKET: Teams ${data.teamA} and ${data.teamB} unlocked from matchmaking`,
     )
 
     // If we have member IDs, use direct notification
     if (data.allMembers && data.allMembers.length > 0) {
       // Notify all members directly
+      let notifiedCount = 0
       data.allMembers.forEach(userId => {
         // Get the team id this user belongs to
         const userTeamId = data.teamAMembers.includes(userId)
           ? data.teamA
           : data.teamB
 
-        // Use device-aware notification
-        notifyUserAllDevices(userId, 'quickClash:matchmakingUnlocked', {
+        // Use enhanced notification system
+        const success = notifyUser(userId, 'quickClash:matchmakingUnlocked', {
           status: data.status,
           teamId: userTeamId,
         })
+        if (success) notifiedCount++
       })
+      console.log(
+        `[QC_MM] Matchmaking unlocked notification sent to ${notifiedCount}/${data.allMembers.length} members`,
+      )
     } else {
       // Fallback to team-based notification if no member IDs provided
       try {
@@ -1335,12 +1830,13 @@ const setupQuickClashGlobalEvents = io => {
     }
 
     console.log(
-      `SOCKET: Battle creation started for teams ${data.teamA} and ${data.teamB}`,
+      `[QC_BATTLE] SOCKET: Battle creation started for teams ${data.teamA} and ${data.teamB}`,
     )
 
     // If we have member IDs, use direct notification
     if (data.allMembers && data.allMembers.length > 0) {
       // Notify all members directly
+      let notifiedCount = 0
       data.allMembers.forEach(userId => {
         // Get the team id this user belongs to
         const userTeamId = data.teamAMembers.includes(userId)
@@ -1350,12 +1846,16 @@ const setupQuickClashGlobalEvents = io => {
           ? data.teamB
           : data.teamA
 
-        // Use device-aware notification
-        notifyUserAllDevices(userId, 'quickClash:battleCreationStarted', {
+        // Use enhanced notification system
+        const success = notifyUser(userId, 'quickClash:battleCreationStarted', {
           teamId: userTeamId,
           opponentTeam: opponentTeamId,
         })
+        if (success) notifiedCount++
       })
+      console.log(
+        `[QC_BATTLE] Battle creation started notification sent to ${notifiedCount}/${data.allMembers.length} members`,
+      )
     } else {
       // Fallback to team-based notification if no member IDs provided
       try {
@@ -1385,24 +1885,29 @@ const setupQuickClashGlobalEvents = io => {
     }
 
     console.log(
-      `SOCKET: Battle creation failed for teams ${data.teamA} and ${data.teamB}`,
+      `[QC_BATTLE] SOCKET: Battle creation failed for teams ${data.teamA} and ${data.teamB}`,
     )
 
     // If we have member IDs, use direct notification
     if (data.allMembers && data.allMembers.length > 0) {
       // Notify all members directly
+      let notifiedCount = 0
       data.allMembers.forEach(userId => {
         // Get the team id this user belongs to
         const userTeamId = data.teamAMembers.includes(userId)
           ? data.teamA
           : data.teamB
 
-        // Use device-aware notification
-        notifyUserAllDevices(userId, 'quickClash:battleCreationFailed', {
+        // Use enhanced notification system
+        const success = notifyUser(userId, 'quickClash:battleCreationFailed', {
           teamId: userTeamId,
           error: data.error,
         })
+        if (success) notifiedCount++
       })
+      console.log(
+        `[QC_BATTLE] Battle creation failed notification sent to ${notifiedCount}/${data.allMembers.length} members`,
+      )
     } else {
       // Fallback to team-based notification if no member IDs provided
       try {
@@ -1426,18 +1931,27 @@ const setupQuickClashGlobalEvents = io => {
 
   globalEmitter.on('quickClash:battleCreationCleanedUp', data => {
     console.log(
-      `SOCKET: Battle creation cleaned up for teams ${data.teamA} and ${data.teamB}`,
+      `[QC_BATTLE] SOCKET: Battle creation cleaned up for teams ${data.teamA} and ${data.teamB}`,
     )
 
-    // Send notification to all affected members using device-aware notification
+    // Send notification to all affected members using enhanced notification system
     if (data.memberIds && data.memberIds.length > 0) {
+      let notifiedCount = 0
       data.memberIds.forEach(memberId => {
-        notifyUserAllDevices(memberId, 'quickClash:battleCreationCleanedUp', {
-          message: data.message,
-          teamA: data.teamA,
-          teamB: data.teamB,
-        })
+        const success = notifyUser(
+          memberId,
+          'quickClash:battleCreationCleanedUp',
+          {
+            message: data.message,
+            teamA: data.teamA,
+            teamB: data.teamB,
+          },
+        )
+        if (success) notifiedCount++
       })
+      console.log(
+        `[QC_BATTLE] Battle creation cleanup notification sent to ${notifiedCount}/${data.memberIds.length} members`,
+      )
     }
 
     // Also send to the battle creation room if it exists
@@ -1450,169 +1964,44 @@ const setupQuickClashGlobalEvents = io => {
       })
     }
   })
+}
 
-  /**
-   * Enhanced helper function to notify all members of a specific team using device-aware notifications
-   * @param {string} teamId - Team ID
-   * @param {string} event - Event name
-   * @param {Object} data - Event data
-   * @param {Array<string>} [excludeUserIds] - Optional array of user IDs to exclude from notification
-   */
-  async function notifyTeamMembers(teamId, event, data, excludeUserIds = []) {
-    try {
-      if (!teamId) {
-        console.error('notifyTeamMembers: teamId is required')
-        return
-      }
-
-      // Fetch team members from the database
-      const team = await QuickClashTeam.findById(teamId)
-        .select('members name')
-        .lean()
-
-      if (!team || !team.members || !Array.isArray(team.members)) {
-        console.error(
-          `Cannot notify team members: Team ${teamId} not found or has no members`,
-        )
-        return
-      }
-
-      let notifiedCount = 0
-      const excludeSet = new Set(excludeUserIds.map(id => id.toString()))
-
-      // Send event to each team member (excluding any specified exclusions)
-      team.members.forEach(member => {
-        const userId = member.user.toString()
-
-        // Skip if user is in exclude list
-        if (excludeSet.has(userId)) {
-          return
-        }
-
-        // Use device-aware notification
-        const notified = notifyUserAllDevices(userId, event, {
-          ...data,
-          teamName: team.name, // Include team name for context
-        })
-
-        if (notified) {
-          notifiedCount++
-        }
-      })
-
-      console.log(
-        `notifyTeamMembers: Sent ${event} to ${notifiedCount}/${team.members.length} members of team ${teamId} (${team.name})`,
-      )
-    } catch (error) {
-      console.error(`Error notifying team members for team ${teamId}:`, error)
-    }
+/**
+ * Get connection statistics for debugging (includes both team and 1v1 matchmaking)
+ * @returns {Object} Connection statistics
+ */
+const getConnectionStats = () => {
+  return {
+    teamRoomMembers: teamRoomMembers.size,
+    teamRoomMemberList: Array.from(teamRoomMembers.keys()),
+    matchmakingRoomMembers: matchmakingRoomMembers.size,
+    matchmakingRoomMemberList: Array.from(matchmakingRoomMembers.keys()),
   }
+}
 
-  /**
-   * Enhanced helper function to notify a user across all their active devices
-   * @param {string} userId - User ID
-   * @param {string} event - Event name
-   * @param {Object} data - Event data
-   * @returns {boolean} True if notification was sent to at least one device
-   */
-  function notifyUserAllDevices(userId, event, data) {
-    const userDevices = userDeviceMap.get(userId)
+/**
+ * Check if user is in teams room
+ * @param {string} userId - User ID
+ * @returns {boolean} True if user is in teams room
+ */
+const isUserInTeamsRoom = userId => {
+  return teamRoomMembers.get(userId) === true
+}
 
-    if (!userDevices || userDevices.size === 0) {
-      console.warn(
-        `notifyUserAllDevices: No active devices found for user ${userId}`,
-      )
-      // Fallback: Try to use the user's room (less reliable but better than nothing)
-      io.to(`quickClash:${userId}`).emit(event, data)
-      return true
-    }
-
-    let notifiedDevices = 0
-
-    // Send to all active devices
-    userDevices.forEach((socketSet, deviceFingerprint) => {
-      if (socketSet.size > 0) {
-        // Send to all sockets for this device (should be just one per device now)
-        socketSet.forEach(socketId => {
-          const socket = io.sockets.sockets.get(socketId)
-          if (socket) {
-            socket.emit(event, {
-              ...data,
-              deviceFingerprint: deviceFingerprint.substring(0, 8) + '...',
-            })
-          }
-        })
-        notifiedDevices++
-      }
-    })
-
-    if (notifiedDevices > 0) {
-      console.log(
-        `notifyUserAllDevices: Sent ${event} to ${notifiedDevices} device(s) for user ${userId}`,
-      )
-      return true
-    }
-
-    return false
-  }
-
-  /**
-   * Helper function to get a user's primary socket (first available socket)
-   * @param {string} userId - User ID
-   * @returns {Object|null} Socket object or null if not found
-   */
-  function getUserSocket(userId) {
-    const userDevices = userDeviceMap.get(userId)
-
-    if (!userDevices || userDevices.size === 0) {
-      return null
-    }
-
-    // Get first available socket from any device
-    for (const [deviceFingerprint, socketSet] of userDevices.entries()) {
-      if (socketSet.size > 0) {
-        const firstSocketId = socketSet.values().next().value
-        if (firstSocketId) {
-          return io.sockets.sockets.get(firstSocketId)
-        }
-      }
-    }
-
-    return null
-  }
-
-  /**
-   * Helper function to notify specific users directly using device-aware notifications
-   * @param {Array<string>} userIds - Array of user IDs to notify
-   * @param {string} event - Event name
-   * @param {Object} data - Event data
-   */
-  function notifySpecificUsers(userIds, event, data) {
-    if (!Array.isArray(userIds)) {
-      console.error('notifySpecificUsers: userIds must be an array')
-      return
-    }
-
-    let notifiedCount = 0
-
-    userIds.forEach(userId => {
-      const notified = notifyUserAllDevices(userId, event, data)
-      if (notified) {
-        notifiedCount++
-      }
-    })
-
-    console.log(
-      `notifySpecificUsers: Sent ${event} to ${notifiedCount}/${userIds.length} users`,
-    )
-  }
+/**
+ * Check if user is in 1v1 matchmaking room
+ * @param {string} userId - User ID
+ * @returns {boolean} True if user is in 1v1 matchmaking room
+ */
+const isUserInMatchmakingRoom = userId => {
+  return matchmakingRoomMembers.get(userId) === true
 }
 
 module.exports = {
   setupQuickClashSocketHandlers,
   setupQuickClashGlobalEvents,
+  handle1v1MatchmakingEvents,
   getConnectionStats,
-  getUserActiveDevices,
-  hasActiveDeviceConnection,
-  getUserDeviceSockets,
+  isUserInTeamsRoom,
+  isUserInMatchmakingRoom,
 }

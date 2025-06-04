@@ -150,6 +150,7 @@ const App = () => {
     dispatch(setIsNotifInboxModalOpen(false))
     dispatch(setSelectedNotificationId(null))
   }, [dispatch])
+
   useEffect(() => {
     if (selectedNotificationId) {
       dispatch(setIsNotifInboxModalOpen(true))
@@ -241,28 +242,13 @@ const App = () => {
       cleanupSocketListeners()
     }
   }, [])
+
   const handlePromptClose = () => {
     setShowPWAPrompt(false)
   }
 
   useEffect(() => {
     const token = isToken()
-
-    // Handle non-authenticated state
-    // if (!token && !location.pathname.includes('/article')) {
-    //   dispatch(
-    //     addNoteMessageIfAllowed({
-    //       title: t('Start using Rapid Recap'),
-    //       duration: 15000,
-    //       width: '350px',
-    //       actions: [
-    //         { text: t('Sign-In'), actionType: 'SIGN_IN' },
-    //         { text: t('Sign-In As Guest'), actionType: 'GUEST' },
-    //       ],
-    //       isMileStone: true,
-    //     }),
-    //   )
-    // }
 
     // Enhanced Service Worker handling
     if ('serviceWorker' in navigator) {
@@ -406,20 +392,11 @@ const App = () => {
     return () => window.removeEventListener('hashchange', handleHashChange)
   }, [loginCheckStatus, isAuthenticated])
 
+  // Removed duplicate QuickClash socket polling logic - it's now handled in useQuickClashSocket hook
   useEffect(() => {
-    let intervalToJoinQuickClashSocket
-    if (isAuthenticated) {
-      // setInterval to to poll initializeQuickClashSocket untill isListening is true and then clear the interval
-      intervalToJoinQuickClashSocket = setInterval(() => {
-        if (!isListening) {
-          initializeQuickClashSocket()
-        } else {
-          clearInterval(intervalToJoinQuickClashSocket)
-        }
-      }, 1000)
-    }
-    return () => {
-      clearInterval(intervalToJoinQuickClashSocket)
+    if (isAuthenticated && !isListening) {
+      // Only initialize if not already listening
+      initializeQuickClashSocket()
     }
   }, [isAuthenticated, isListening, initializeQuickClashSocket])
 
@@ -477,18 +454,6 @@ const App = () => {
     if (user && user.inGameName)
       tournamentRewardsClaim({ user, dispatch, t: rewardsTranslation })
   }, [user])
-
-  // useEffect(() => {
-  //   ReactGA.set({
-  //     'User Logged In': isLoggedIn ? t('Logged In') : t('Logged Out'), // Added translation
-  //     'User InGameName': getUserInGameName ? getUserInGameName : t('anonymous'), // Added translation
-  //   })
-  //   ReactGA.send({
-  //     hitType: 'pageview',
-  //     page: location.pathname + location.search,
-  //     title: document.title,
-  //   })
-  // }, [location, getUserInGameName, isLoggedIn])
 
   useUserCache()
 
