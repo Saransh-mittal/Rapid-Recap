@@ -11,7 +11,6 @@ import {
   VStack,
   useBreakpointValue,
   useDisclosure,
-  Container,
 } from '@chakra-ui/react'
 import { useTranslation } from 'react-i18next'
 import { AlertTriangle, Zap, Target } from 'lucide-react'
@@ -55,12 +54,15 @@ const CategoriesSection = memo(
     const [pendingChallengeAction, setPendingChallengeAction] =
       React.useState(null)
 
-    // Responsive values - UPDATED for better mobile experience
+    // Responsive values - FIXED: Columns should never exceed actual number of categories
     const sectionPadding = useBreakpointValue({ base: 3, sm: 4, md: 6, lg: 8 })
-    const columns = useBreakpointValue({ base: 2, sm: 2, md: 3, lg: 4, xl: 5 })
-    const gridSpacing = useBreakpointValue({ base: 2, sm: 3, md: 4, lg: 5 })
-    const headerSize = useBreakpointValue({ base: 'lg', sm: 'xl', md: '2xl' })
-    const containerMaxW = useBreakpointValue({ base: 'full', md: '6xl' })
+    const maxColumns = useBreakpointValue({
+      base: 2,
+      sm: 2,
+      md: 3,
+      lg: 4,
+      xl: 5,
+    })
 
     // Memoized user participation status - UPDATED LOGIC
     const userParticipationStatus = useMemo(() => {
@@ -108,55 +110,6 @@ const CategoriesSection = memo(
         hasSelected: hasSelected,
         selectedCategory: selectedCategory,
       }
-    }, [currentBattle, userTeam, user])
-
-    // Update hasUserParticipated to use the new logic
-    const hasUserParticipated = userParticipationStatus.hasParticipated
-    const hasUserSelected = userParticipationStatus.hasSelected
-    const userSelectedCategory = userParticipationStatus.selectedCategory
-
-    // Memoized user completed categories
-    const userCompletedCategories = useMemo(() => {
-      if (!currentBattle || !userTeam || !user) return []
-      const teamMembers =
-        userTeam === 'teamA'
-          ? currentBattle.teamAMembers
-          : currentBattle.teamBMembers
-      const userMember = teamMembers.find(m => m.user._id === user._id)
-      return userMember?.completed && userMember.category
-        ? [userMember.category]
-        : []
-    }, [currentBattle, userTeam, user])
-
-    // Memoized user's selected category and participation status
-    const userChallengeStatus = useMemo(() => {
-      if (!currentBattle || !userTeam || !user) return null
-      const teamMembers =
-        userTeam === 'teamA'
-          ? currentBattle.teamAMembers
-          : currentBattle.teamBMembers
-      const userMember = teamMembers.find(m => m.user._id === user._id)
-
-      if (!userMember) return null
-
-      return {
-        selectedCategory: userMember.category,
-        hasParticipated: userMember.participated,
-        hasCompleted: userMember.completed,
-      }
-    }, [currentBattle, userTeam, user])
-
-    // Memoized teammates selected categories
-    const teammatesSelectedCategories = useMemo(() => {
-      if (!currentBattle || !userTeam || !user) return []
-      const teamMembers = (
-        userTeam === 'teamA'
-          ? currentBattle.teamAMembers
-          : currentBattle.teamBMembers
-      ).filter(m => m.user._id !== user._id)
-      return teamMembers
-        .filter(m => m.category && !m.completed)
-        .map(m => m.category)
     }, [currentBattle, userTeam, user])
 
     // Memoized enhanced category cards data with loading states and participation logic
@@ -296,6 +249,71 @@ const CategoriesSection = memo(
       selectedCategoryForOperation,
       userParticipationStatus,
     ])
+    // Ensure we never have more columns than categories
+    const columns = Math.min(maxColumns, enhancedChallenges.length)
+    const gridSpacing = useBreakpointValue({
+      base: 2,
+      sm: 3,
+      md: 4,
+      lg: 5,
+      xl: 6,
+    })
+    const headerSize = useBreakpointValue({ base: 'lg', sm: 'xl', md: '2xl' })
+    const containerMaxW = useBreakpointValue({
+      base: 'full',
+      md: '6xl',
+      lg: '7xl',
+      xl: '8xl',
+    })
+
+    // Update hasUserParticipated to use the new logic
+    const hasUserParticipated = userParticipationStatus.hasParticipated
+    const hasUserSelected = userParticipationStatus.hasSelected
+    const userSelectedCategory = userParticipationStatus.selectedCategory
+
+    // Memoized user completed categories
+    const userCompletedCategories = useMemo(() => {
+      if (!currentBattle || !userTeam || !user) return []
+      const teamMembers =
+        userTeam === 'teamA'
+          ? currentBattle.teamAMembers
+          : currentBattle.teamBMembers
+      const userMember = teamMembers.find(m => m.user._id === user._id)
+      return userMember?.completed && userMember.category
+        ? [userMember.category]
+        : []
+    }, [currentBattle, userTeam, user])
+
+    // Memoized user's selected category and participation status
+    const userChallengeStatus = useMemo(() => {
+      if (!currentBattle || !userTeam || !user) return null
+      const teamMembers =
+        userTeam === 'teamA'
+          ? currentBattle.teamAMembers
+          : currentBattle.teamBMembers
+      const userMember = teamMembers.find(m => m.user._id === user._id)
+
+      if (!userMember) return null
+
+      return {
+        selectedCategory: userMember.category,
+        hasParticipated: userMember.participated,
+        hasCompleted: userMember.completed,
+      }
+    }, [currentBattle, userTeam, user])
+
+    // Memoized teammates selected categories
+    const teammatesSelectedCategories = useMemo(() => {
+      if (!currentBattle || !userTeam || !user) return []
+      const teamMembers = (
+        userTeam === 'teamA'
+          ? currentBattle.teamAMembers
+          : currentBattle.teamBMembers
+      ).filter(m => m.user._id !== user._id)
+      return teamMembers
+        .filter(m => m.category && !m.completed)
+        .map(m => m.category)
+    }, [currentBattle, userTeam, user])
 
     // Handle begin challenge with instructions modal
     const handleBeginChallengeWithInstructions = React.useCallback(() => {
@@ -395,11 +413,12 @@ const CategoriesSection = memo(
                 </Box>
               </VStack>
 
-              {/* UPDATED: Categories Grid Container - Better mobile centering */}
-              <Container
-                maxW={containerMaxW}
-                centerContent
-                px={{ base: 1, sm: 2, md: 4 }}
+              {/* FIXED: Categories Grid Container - Perfect centering for all screen sizes */}
+              <Box
+                w="100%"
+                display="flex"
+                justifyContent="center"
+                px={{ base: 2, sm: 2, md: 0 }} // Remove desktop padding that causes left shift
               >
                 <Grid
                   templateColumns={`repeat(${columns}, 1fr)`}
@@ -461,7 +480,7 @@ const CategoriesSection = memo(
                     </GridItem>
                   ))}
                 </Grid>
-              </Container>
+              </Box>
 
               {/* User Participation Warnings */}
               {userParticipationStatus.hasExited && (
