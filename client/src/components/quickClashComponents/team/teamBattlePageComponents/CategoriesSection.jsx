@@ -11,6 +11,7 @@ import {
   VStack,
   useBreakpointValue,
   useDisclosure,
+  Container,
 } from '@chakra-ui/react'
 import { useTranslation } from 'react-i18next'
 import { AlertTriangle, Zap, Target } from 'lucide-react'
@@ -19,7 +20,7 @@ import CategoryCard from './categoriesSection/CategoryCard'
 import QuickClashInstructionsModal from '../../QuickClashInstructionsModal'
 
 /**
- * Categories Section Component with Loading States, Instructions Modal, and Participation Logic
+ * Categories Section Component with Enhanced Loading States and Selection Logic
  */
 const CategoriesSection = memo(
   ({
@@ -54,11 +55,12 @@ const CategoriesSection = memo(
     const [pendingChallengeAction, setPendingChallengeAction] =
       React.useState(null)
 
-    // Responsive values
-    const sectionPadding = useBreakpointValue({ base: 4, sm: 5, md: 6, lg: 8 })
+    // Responsive values - UPDATED for better mobile experience
+    const sectionPadding = useBreakpointValue({ base: 3, sm: 4, md: 6, lg: 8 })
     const columns = useBreakpointValue({ base: 2, sm: 2, md: 3, lg: 4, xl: 5 })
-    const gridSpacing = useBreakpointValue({ base: 3, sm: 4, md: 5, lg: 6 })
+    const gridSpacing = useBreakpointValue({ base: 2, sm: 3, md: 4, lg: 5 })
     const headerSize = useBreakpointValue({ base: 'lg', sm: 'xl', md: '2xl' })
+    const containerMaxW = useBreakpointValue({ base: 'full', md: '6xl' })
 
     // Memoized user participation status - UPDATED LOGIC
     const userParticipationStatus = useMemo(() => {
@@ -68,6 +70,8 @@ const CategoriesSection = memo(
           participatedCategory: null,
           hasCompleted: false,
           hasExited: false,
+          hasSelected: false,
+          selectedCategory: null,
         }
       }
 
@@ -84,22 +88,32 @@ const CategoriesSection = memo(
           participatedCategory: null,
           hasCompleted: false,
           hasExited: false,
+          hasSelected: false,
+          selectedCategory: null,
         }
       }
 
       // Check if user has participated but not completed (exited)
       const hasExited = userMember.participated && !userMember.completed
 
+      // Check if user has selected a category (even if not started)
+      const hasSelected = !!userMember.category
+      const selectedCategory = userMember.category
+
       return {
         hasParticipated: userMember.participated || userMember.completed,
         participatedCategory: userMember.category,
         hasCompleted: userMember.completed,
         hasExited: hasExited,
+        hasSelected: hasSelected,
+        selectedCategory: selectedCategory,
       }
     }, [currentBattle, userTeam, user])
 
     // Update hasUserParticipated to use the new logic
     const hasUserParticipated = userParticipationStatus.hasParticipated
+    const hasUserSelected = userParticipationStatus.hasSelected
+    const userSelectedCategory = userParticipationStatus.selectedCategory
 
     // Memoized user completed categories
     const userCompletedCategories = useMemo(() => {
@@ -189,6 +203,11 @@ const CategoriesSection = memo(
         const isThisTheParticipatedCategory =
           challenge.category === userParticipationStatus.participatedCategory
 
+        // NEW: Check if user has selected ANY category (prevents selecting multiple)
+        const userHasSelectedAnyCategory = userParticipationStatus.hasSelected
+        const isThisTheSelectedCategory =
+          challenge.category === userParticipationStatus.selectedCategory
+
         // FIXED: Determine states based on THIS SPECIFIC category only
         const isCompleted = hasUserCompletedThisCategory // Only true if THIS category is completed
         const isInProgress =
@@ -211,18 +230,25 @@ const CategoriesSection = memo(
           !isUserAssigned &&
           !hasUserParticipatedInThisCategory
 
-        // UPDATED AVAILABILITY LOGIC
+        // UPDATED AVAILABILITY LOGIC - Enhanced to handle selection state
         const isAvailable =
           !isSelectedByUser &&
           !isSelectedByTeammate &&
           !isAssignedToPlayer &&
           !hasUserParticipatedInThisCategory &&
           !userHasParticipatedInAnyChallenge && // User hasn't participated in any challenge
-          !userHasExitedAnyChallenge // User hasn't exited any challenge
+          !userHasExitedAnyChallenge && // User hasn't exited any challenge
+          !userHasSelectedAnyCategory // NEW: User hasn't selected any category yet
 
-        // FIXED: Lock logic - only lock if user exited ANY challenge AND this is NOT the participated category
+        // UPDATED: Lock logic - lock if user has selected another category OR exited any challenge
+        const isLockedDueToSelection =
+          userHasSelectedAnyCategory && !isThisTheSelectedCategory
+
         const isLockedDueToExit =
           userHasExitedAnyChallenge && !isThisTheParticipatedCategory
+
+        // Combined lock state
+        const isLocked = isLockedDueToSelection || isLockedDueToExit
 
         // Loading states for this specific category
         const isThisCategoryLoading =
@@ -253,9 +279,12 @@ const CategoriesSection = memo(
           isLoading: isThisCategoryLoading,
           loadingType,
           isDisabled: shouldDisableButtons,
-          // Lock state due to user having exited another challenge
+          // Enhanced lock states
           isLockedDueToExit,
+          isLockedDueToSelection, // NEW: Lock due to selecting another category
+          isLocked, // Combined lock state
           isThisTheParticipatedCategory,
+          isThisTheSelectedCategory, // NEW: Is this the category user selected
         }
       })
     }, [
@@ -294,8 +323,9 @@ const CategoriesSection = memo(
 
     return (
       <>
+        {/* UPDATED: Better container structure for mobile responsiveness */}
         <Box
-          mx={{ base: 3, sm: 4, md: 6, lg: 8 }}
+          mx={{ base: 2, sm: 3, md: 6, lg: 8 }}
           mb={{ base: 6, sm: 8, md: 10 }}
           position="relative"
           overflow="hidden"
@@ -308,7 +338,7 @@ const CategoriesSection = memo(
             bottom={0}
             bg="rgba(15, 23, 42, 0.95)"
             backdropFilter="blur(20px)"
-            borderRadius="2xl"
+            borderRadius={{ base: 'xl', md: '2xl' }}
             border="1px solid"
             borderColor="rgba(71, 85, 105, 0.3)"
             boxShadow="0 25px 50px rgba(0, 0, 0, 0.25)"
@@ -318,13 +348,13 @@ const CategoriesSection = memo(
             <VStack
               spacing={{ base: 4, sm: 6, md: 8 }}
               w="100%"
-              alignItems="center" // Ensures the Grid block is centered by default
+              alignItems="center"
             >
               {/* Header Section */}
               <VStack
                 spacing={{ base: 1.5, sm: 2, md: 3 }}
                 textAlign="center"
-                w="100%" // Ensures header content is centered within the full width
+                w="100%"
               >
                 <Box>
                   <HStack spacing={3} justify="center" align="center">
@@ -365,60 +395,75 @@ const CategoriesSection = memo(
                 </Box>
               </VStack>
 
-              {/* Categories Grid */}
-              <Grid
-                display="inline-grid" // Grid width fits its content
-                templateColumns={`repeat(${columns}, 1fr)`}
-                gap={gridSpacing}
-                maxW="6xl" // Constrains the max width of the grid
-                position="relative" // Added to allow offset
-                left={{ base: '2rem', sm: '3rem', md: '4rem', lg: '5rem' }} // Added: Nudges the grid to the right
+              {/* UPDATED: Categories Grid Container - Better mobile centering */}
+              <Container
+                maxW={containerMaxW}
+                centerContent
+                px={{ base: 1, sm: 2, md: 4 }}
               >
-                {enhancedChallenges.map((challenge, index) => (
-                  <GridItem
-                    key={`${challenge.category}-${index}-${
-                      challenge.challenge?._id || `fallback-${index}`
-                    }`}
-                  >
-                    <CategoryCard
-                      challenge={challenge}
-                      isAvailable={challenge.isAvailable}
-                      isCompleted={challenge.isCompleted}
-                      isInProgress={challenge.isInProgress}
-                      isStartedButExited={challenge.isStartedButExited}
-                      isSelectedButNotStarted={
-                        challenge.isSelectedButNotStarted
-                      }
-                      isSelectedByTeammate={challenge.isSelectedByTeammate}
-                      isUserAssigned={challenge.isUserAssigned}
-                      userScore={challenge.userScore}
-                      opponentScore={challenge.opponentScore}
-                      // Loading states
-                      isLoading={challenge.isLoading}
-                      loadingType={challenge.loadingType}
-                      isDisabled={challenge.isDisabled}
-                      // NEW: Lock states
-                      isLockedDueToExit={challenge.isLockedDueToExit}
-                      isThisTheParticipatedCategory={
-                        challenge.isThisTheParticipatedCategory
-                      }
-                      // Actions
-                      onSelectCategory={onSelectCategory}
-                      onDeselectCategory={onDeselectCategory}
-                      onBeginChallenge={handleBeginChallengeWithInstructions}
-                      onViewReport={onViewReport}
-                      reportModalLoading={reportModalLoading}
-                      // Legacy props for backward compatibility
-                      categorySelectionLoading={categorySelectionLoading}
-                      selectedCategoryId={selectedCategoryId}
-                      userTeam={userTeam}
-                      user={user}
-                    />
-                  </GridItem>
-                ))}
-              </Grid>
+                <Grid
+                  templateColumns={`repeat(${columns}, 1fr)`}
+                  gap={gridSpacing}
+                  w="100%"
+                  maxW="100%"
+                  justifyItems="center"
+                  alignItems="start"
+                >
+                  {enhancedChallenges.map((challenge, index) => (
+                    <GridItem
+                      key={`${challenge.category}-${index}-${
+                        challenge.challenge?._id || `fallback-${index}`
+                      }`}
+                      w="100%"
+                      maxW={{ base: '140px', sm: '160px', md: '180px' }}
+                    >
+                      <CategoryCard
+                        challenge={challenge}
+                        isAvailable={challenge.isAvailable}
+                        isCompleted={challenge.isCompleted}
+                        isInProgress={challenge.isInProgress}
+                        isStartedButExited={challenge.isStartedButExited}
+                        isSelectedButNotStarted={
+                          challenge.isSelectedButNotStarted
+                        }
+                        isSelectedByTeammate={challenge.isSelectedByTeammate}
+                        isUserAssigned={challenge.isUserAssigned}
+                        userScore={challenge.userScore}
+                        opponentScore={challenge.opponentScore}
+                        // Loading states
+                        isLoading={challenge.isLoading}
+                        loadingType={challenge.loadingType}
+                        isDisabled={challenge.isDisabled}
+                        // Enhanced lock states
+                        isLockedDueToExit={challenge.isLockedDueToExit}
+                        isLockedDueToSelection={
+                          challenge.isLockedDueToSelection
+                        }
+                        isLocked={challenge.isLocked}
+                        isThisTheParticipatedCategory={
+                          challenge.isThisTheParticipatedCategory
+                        }
+                        isThisTheSelectedCategory={
+                          challenge.isThisTheSelectedCategory
+                        }
+                        // Actions
+                        onSelectCategory={onSelectCategory}
+                        onDeselectCategory={onDeselectCategory}
+                        onBeginChallenge={handleBeginChallengeWithInstructions}
+                        onViewReport={onViewReport}
+                        reportModalLoading={reportModalLoading}
+                        // Legacy props for backward compatibility
+                        categorySelectionLoading={categorySelectionLoading}
+                        selectedCategoryId={selectedCategoryId}
+                        userTeam={userTeam}
+                        user={user}
+                      />
+                    </GridItem>
+                  ))}
+                </Grid>
+              </Container>
 
-              {/* User Participation Warnings - These are already self-centering */}
+              {/* User Participation Warnings */}
               {userParticipationStatus.hasExited && (
                 <Box w="100%" maxW="md" mx="auto">
                   <Box
@@ -461,6 +506,58 @@ const CategoriesSection = memo(
                   </Box>
                 </Box>
               )}
+
+              {/* NEW: Warning when user has selected a category */}
+              {userParticipationStatus.hasSelected &&
+                !userParticipationStatus.hasParticipated && (
+                  <Box w="100%" maxW="md" mx="auto">
+                    <Box
+                      bg="rgba(59, 130, 246, 0.1)"
+                      backdropFilter="blur(10px)"
+                      borderRadius="xl"
+                      p={{ base: 4, sm: 5 }}
+                      border="1px solid"
+                      borderColor="rgba(59, 130, 246, 0.3)"
+                      boxShadow="0 10px 30px rgba(59, 130, 246, 0.1)"
+                    >
+                      <HStack spacing={3} align="flex-start">
+                        <Icon
+                          as={Target}
+                          color="#3B82F6"
+                          boxSize={{ base: 5, sm: 6 }}
+                          flexShrink={0}
+                          mt={0.5}
+                        />
+                        <VStack alignItems="flex-start" spacing={1} flex={1}>
+                          <Text
+                            color="#3B82F6"
+                            fontWeight="bold"
+                            fontSize={{ base: 'sm', sm: 'md' }}
+                          >
+                            {t('Category Selected: {{category}}', {
+                              category:
+                                userParticipationStatus.selectedCategory,
+                            })}
+                          </Text>
+                          <Text
+                            color="blue.200"
+                            fontSize={{ base: 'xs', sm: 'sm' }}
+                            lineHeight="1.5"
+                            opacity={0.9}
+                          >
+                            {t(
+                              'You have selected the {{category}} category. Other categories are now locked until you change your selection or begin your challenge.',
+                              {
+                                category:
+                                  userParticipationStatus.selectedCategory,
+                              },
+                            )}
+                          </Text>
+                        </VStack>
+                      </HStack>
+                    </Box>
+                  </Box>
+                )}
 
               {hasUserParticipated &&
                 !userParticipationStatus.hasExited &&

@@ -1016,20 +1016,40 @@ const selectCategoryForUser = async ({ battleId, userId, category }) => {
         // Don't set participated or assign to challenge yet
       }
 
+      // Save the battle first
       await battle.save({ session })
 
-      // Emit event for category selection (not start)
+      // IMPORTANT: Fetch the updated battle with populated fields to ensure consistency
+      const updatedBattle = await QuickClashTeamBattle.findById(battleId)
+        .populate('teamA', 'name avgTrophies formationInfo')
+        .populate('teamB', 'name avgTrophies formationInfo')
+        .populate(
+          'teamAMembers.user',
+          '_id name inGameName pic quickClashTrophies',
+        )
+        .populate(
+          'teamBMembers.user',
+          '_id name inGameName pic quickClashTrophies',
+        )
+        .populate({
+          path: 'challenges.challenge',
+          select: 'category article status expiresAt',
+        })
+        .session(session)
+
+      // Emit socket event after database is updated
       setTimeout(() => {
         globalEmitter.emit('quickClash:teamMemberSelectedCategory', {
-          battleId: battle._id,
+          battleId: updatedBattle._id,
           userId,
           category,
-          team: isTeamAUser ? 'teamA' : 'teamB',
+          team: isTeamAUser ? updatedBattle.teamA : updatedBattle.teamB,
+          opponentTeam: isTeamAUser ? updatedBattle.teamB : updatedBattle.teamA,
           action: 'selected', // Indicate this is just selection
         })
       }, 0)
 
-      return battle
+      return updatedBattle
     })
   } catch (error) {
     console.error('Error selecting category for user:', error)
@@ -1178,26 +1198,45 @@ const beginCategoryChallenge = async ({ battleId, userId }) => {
 
       await battle.save({ session })
 
+      // IMPORTANT: Fetch the updated battle with populated fields to ensure consistency
+      const updatedBattle = await QuickClashTeamBattle.findById(battleId)
+        .populate('teamA', 'name avgTrophies formationInfo')
+        .populate('teamB', 'name avgTrophies formationInfo')
+        .populate(
+          'teamAMembers.user',
+          '_id name inGameName pic quickClashTrophies',
+        )
+        .populate(
+          'teamBMembers.user',
+          '_id name inGameName pic quickClashTrophies',
+        )
+        .populate({
+          path: 'challenges.challenge',
+          select: 'category article status expiresAt',
+        })
+        .session(session)
+
       // Create session info for navigation
-      const challenge = battle.challenges[challengeIndex].challenge
+      const challenge = updatedBattle.challenges[challengeIndex].challenge
       const sessionInfo = {
         challengeId: challenge._id,
         category,
-        battleId: battle._id,
+        battleId: updatedBattle._id,
       }
 
-      // Emit event for challenge beginning
+      // Emit socket event after database is updated
       setTimeout(() => {
         globalEmitter.emit('quickClash:teamMemberBeganChallenge', {
-          battleId: battle._id,
+          battleId: updatedBattle._id,
           userId,
           category,
-          team: isTeamAUser ? 'teamA' : 'teamB',
+          team: isTeamAUser ? updatedBattle.teamA : updatedBattle.teamB,
+          opponentTeam: isTeamAUser ? updatedBattle.teamB : updatedBattle.teamA,
         })
       }, 0)
 
       return {
-        battle,
+        battle: updatedBattle,
         sessionInfo,
       }
     })
@@ -1303,7 +1342,8 @@ const markUserAsParticipated = async ({ challengeId, userId }) => {
           globalEmitter.emit('quickClash:teamMemberStartedChallenge', {
             battleId: battle._id,
             userId,
-            team: teamAMemberIndex !== -1 ? 'teamA' : 'teamB',
+            team: teamAMemberIndex !== -1 ? battle.teamA : battle.teamB,
+            opponentTeam: teamAMemberIndex !== -1 ? battle.teamB : battle.teamA,
           })
         }, 0)
       }
@@ -1400,17 +1440,36 @@ const deselectCategoryForUser = async ({ battleId, userId }) => {
 
       await battle.save({ session })
 
-      // Emit event for category deselection
+      // IMPORTANT: Fetch the updated battle with populated fields to ensure consistency
+      const updatedBattle = await QuickClashTeamBattle.findById(battleId)
+        .populate('teamA', 'name avgTrophies formationInfo')
+        .populate('teamB', 'name avgTrophies formationInfo')
+        .populate(
+          'teamAMembers.user',
+          '_id name inGameName pic quickClashTrophies',
+        )
+        .populate(
+          'teamBMembers.user',
+          '_id name inGameName pic quickClashTrophies',
+        )
+        .populate({
+          path: 'challenges.challenge',
+          select: 'category article status expiresAt',
+        })
+        .session(session)
+
+      // Emit socket event after database is updated
       setTimeout(() => {
         globalEmitter.emit('quickClash:teamMemberDeselectedCategory', {
-          battleId: battle._id,
+          battleId: updatedBattle._id,
           userId,
           category: oldCategory,
-          team: isTeamAUser ? 'teamA' : 'teamB',
+          team: isTeamAUser ? updatedBattle.teamA : updatedBattle.teamB,
+          opponentTeam: isTeamAUser ? updatedBattle.teamB : updatedBattle.teamA,
         })
       }, 0)
 
-      return battle
+      return updatedBattle
     })
   } catch (error) {
     console.error('Error deselecting category for user:', error)
