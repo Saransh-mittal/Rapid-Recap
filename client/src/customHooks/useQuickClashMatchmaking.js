@@ -131,7 +131,7 @@ const useQuickClashMatchmaking = () => {
     // Set connected status
     dispatch(setSocketConnected(true))
 
-    // FIXED: Enhanced match found listener with deduplication
+    // FIXED: Enhanced match found listener with deduplication and proper data structure
     const cleanupMatchFound = addEventListener(
       'quickClash:matchFound',
       data => {
@@ -147,10 +147,15 @@ const useQuickClashMatchmaking = () => {
 
         console.log('[MM_HOOK] Match found event received:', data)
 
-        // IMMEDIATELY set match preparation state
-        dispatch(setPreparingChallenge(data))
-        dispatch(setPreparationProgress(5))
-        dispatch(setPreparationStep('matchFound'))
+        // FIXED: Ensure proper data structure with opponent information
+        const properPreparationData = {
+          opponent: data?.opponent,
+          tempChallengeId: data.tempChallengeId,
+          isChallenger: data.isChallenger,
+        }
+
+        // IMMEDIATELY set match preparation state with proper data structure
+        dispatch(setPreparingChallenge(properPreparationData))
 
         // Show notification
         toast({
@@ -167,7 +172,7 @@ const useQuickClashMatchmaking = () => {
             id: uuidv4(),
             messageType: 'quickClash',
             eventType: 'matchFound',
-            data: data,
+            data: properPreparationData,
             duration: 5000,
             width: '350px',
           }),
@@ -176,7 +181,7 @@ const useQuickClashMatchmaking = () => {
     )
     cleanupFunctions.push(cleanupMatchFound)
 
-    // FIXED: Enhanced challenge progress listener with better progress mapping
+    // FIXED: Enhanced challenge progress listener with better progress mapping and data preservation
     const cleanupChallengeProgress = addEventListener(
       'quickClash:challengeProgress',
       data => {
@@ -184,34 +189,34 @@ const useQuickClashMatchmaking = () => {
 
         console.log('[MM_HOOK] Challenge progress received:', data)
 
-        // Ensure we have preparation state when receiving progress
+        // FIXED: Only set preparation state if we don't have it AND preserve existing opponent data
         if (!preparingChallenge && data.progress > 0) {
-          console.log('[MM_HOOK] Setting preparation state from progress event')
-          dispatch(
-            setPreparingChallenge({
-              // Minimal preparation data if we don't have it
-              opponent: { name: 'Opponent', inGameName: 'Player' },
-            }),
+          console.log(
+            '[MM_HOOK] Setting minimal preparation state from progress event',
           )
-        }
-
-        if (data.progress !== undefined) {
+          // Don't override with minimal data, just set a flag that we're preparing
           dispatch(setPreparationProgress(data.progress))
-        }
-
-        if (data.step) {
-          dispatch(setPreparationStep(data.step))
-
-          // Auto-progress based on step
-          const stepProgressMap = {
-            matchFound: 5,
-            contentLoading: 25,
-            generatingQuiz: 70,
-            challengeReady: 100,
+          dispatch(setPreparationStep(data.step || 'contentLoading'))
+        } else {
+          // Update progress without changing the opponent data
+          if (data.progress !== undefined) {
+            dispatch(setPreparationProgress(data.progress))
           }
 
-          if (stepProgressMap[data.step]) {
-            dispatch(setPreparationProgress(stepProgressMap[data.step]))
+          if (data.step) {
+            dispatch(setPreparationStep(data.step))
+
+            // Auto-progress based on step
+            const stepProgressMap = {
+              matchFound: 5,
+              contentLoading: 25,
+              generatingQuiz: 70,
+              challengeReady: 100,
+            }
+
+            if (stepProgressMap[data.step]) {
+              dispatch(setPreparationProgress(stepProgressMap[data.step]))
+            }
           }
         }
       },

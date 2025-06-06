@@ -71,9 +71,21 @@ const MatchmakingButton = forwardRef(({ compact = false }, ref) => {
   const [joinRequestTimeout, setJoinRequestTimeout] = useState(null)
   const [isRequestPending, setIsRequestPending] = useState(false)
 
+  // NEW: Local state to store opponent data to prevent null issues
+  const [storedOpponentData, setStoredOpponentData] = useState(null)
+  const [storedChallengeId, setStoredChallengeId] = useState(null)
+
+  // NEW: User dismissal tracking
+  const [userDismissedSearch, setUserDismissedSearch] = useState(false)
+  const [userDismissedPreparation, setUserDismissedPreparation] =
+    useState(false)
+  const [lastPreparationId, setLastPreparationId] = useState(null)
+
   // Refs for cleanup
   const joinTimeoutRef = useRef(null)
   const componentMounted = useRef(true)
+  const userJustClosedSearchModal = useRef(false)
+  const userJustClosedPreparationModal = useRef(false)
 
   // Get matchmaking state from hook
   const {
@@ -100,11 +112,49 @@ const MatchmakingButton = forwardRef(({ compact = false }, ref) => {
   useEffect(() => {
     return () => {
       componentMounted.current = false
+      userJustClosedSearchModal.current = false
+      userJustClosedPreparationModal.current = false
       if (joinTimeoutRef.current) {
         clearTimeout(joinTimeoutRef.current)
       }
     }
   }, [])
+
+  // NEW: Store opponent data when available to prevent null issues
+  useEffect(() => {
+    if (preparingChallenge?.opponent) {
+      console.log(
+        '[MM_BUTTON] Storing opponent data:',
+        preparingChallenge.opponent,
+      )
+      setStoredOpponentData(preparingChallenge.opponent)
+    }
+  }, [preparingChallenge?.opponent])
+
+  // NEW: Store challenge ID when available
+  useEffect(() => {
+    if (challengeReady?.challengeId) {
+      console.log(
+        '[MM_BUTTON] Storing challenge ID:',
+        challengeReady.challengeId,
+      )
+      setStoredChallengeId(challengeReady.challengeId)
+    }
+  }, [challengeReady?.challengeId])
+
+  // NEW: Clear stored data when matchmaking flow completely ends
+  useEffect(() => {
+    if (
+      !inMatchmaking &&
+      !preparingChallenge &&
+      !challengeReady &&
+      preparationProgress === 0
+    ) {
+      console.log('[MM_BUTTON] Clearing stored opponent data - flow ended')
+      setStoredOpponentData(null)
+      setStoredChallengeId(null)
+    }
+  }, [inMatchmaking, preparingChallenge, challengeReady, preparationProgress])
 
   // Debug logging
   useEffect(() => {
@@ -120,6 +170,17 @@ const MatchmakingButton = forwardRef(({ compact = false }, ref) => {
       isSocketReady,
       matchmakingLoading,
       isRequestPending,
+      userDismissedSearch,
+      userDismissedPreparation,
+      lastPreparationId,
+      matchmakingTime,
+      matchmakingStartTime: matchmakingStartTime
+        ? new Date(matchmakingStartTime).toLocaleTimeString()
+        : null,
+      userJustClosedSearch: userJustClosedSearchModal.current,
+      userJustClosedPreparation: userJustClosedPreparationModal.current,
+      storedOpponentData: !!storedOpponentData,
+      storedChallengeId: !!storedChallengeId,
     })
   }, [
     inMatchmaking,
@@ -133,6 +194,13 @@ const MatchmakingButton = forwardRef(({ compact = false }, ref) => {
     isSocketReady,
     matchmakingLoading,
     isRequestPending,
+    userDismissedSearch,
+    userDismissedPreparation,
+    lastPreparationId,
+    matchmakingTime,
+    matchmakingStartTime,
+    storedOpponentData,
+    storedChallengeId,
   ])
 
   // Expose method to parent components
@@ -147,24 +215,71 @@ const MatchmakingButton = forwardRef(({ compact = false }, ref) => {
     }
   }, [checkMatchmakingStatus, isSocketReady])
 
-  // Handle matchmaking timer
+  // FIXED: Enhanced matchmaking timer with better persistence
   useEffect(() => {
     let interval
-    if (inMatchmaking && matchmakingStartTime) {
+
+    // Start timer when in matchmaking OR when we have a start time (for persistence)
+    // Keep timer running through entire flow: matchmaking → preparing → ready
+    if (
+      (inMatchmaking || preparingChallenge || challengeReady) &&
+      matchmakingStartTime
+    ) {
+      // Calculate initial elapsed time immediately
+      const initialElapsed = Math.floor(
+        (Date.now() - matchmakingStartTime) / 1000,
+      )
+      setMatchmakingTime(initialElapsed)
+
       interval = setInterval(() => {
         if (!componentMounted.current) return
         const elapsed = Math.floor((Date.now() - matchmakingStartTime) / 1000)
         setMatchmakingTime(elapsed)
       }, 1000)
-    } else if (!inMatchmaking) {
+
+      console.log(
+        '[MM_BUTTON] Timer started, initial time:',
+        initialElapsed,
+        'seconds',
+      )
+    } else if (!inMatchmaking && !preparingChallenge && !challengeReady) {
+      // Only reset timer when completely out of matchmaking flow
       setMatchmakingTime(0)
       setMatchmakingStartTime(null)
+      console.log('[MM_BUTTON] Timer reset - no active matchmaking')
     }
 
     return () => {
-      if (interval) clearInterval(interval)
+      if (interval) {
+        clearInterval(interval)
+        console.log('[MM_BUTTON] Timer interval cleared')
+      }
+    }
+  }, [inMatchmaking, preparingChallenge, challengeReady, matchmakingStartTime])
+
+  // Initialize start time when matchmaking begins
+  useEffect(() => {
+    if (inMatchmaking && !matchmakingStartTime) {
+      const now = Date.now()
+      setMatchmakingStartTime(now)
+      setMatchmakingTime(0) // Reset timer display immediately
+      console.log('[MM_BUTTON] Matchmaking start time set:', new Date(now))
     }
   }, [inMatchmaking, matchmakingStartTime])
+
+  // Failsafe: Ensure timer starts even if Redux state loads after component mount
+  useEffect(() => {
+    // If we're in matchmaking but don't have a start time, set it
+    if (inMatchmaking && !matchmakingStartTime && !isRequestPending) {
+      const now = Date.now()
+      setMatchmakingStartTime(now)
+      setMatchmakingTime(0) // Reset timer display immediately
+      console.log(
+        '[MM_BUTTON] Failsafe: Setting missing start time:',
+        new Date(now),
+      )
+    }
+  }, [inMatchmaking, matchmakingStartTime, isRequestPending])
 
   // Handle request timeout
   useEffect(() => {
@@ -206,23 +321,108 @@ const MatchmakingButton = forwardRef(({ compact = false }, ref) => {
     }
   }, [matchmakingLoading, isRequestPending])
 
-  // FIXED: Better state transition logic
+  // NEW: Reset dismissal states when starting new processes
   useEffect(() => {
-    console.log('[MM_BUTTON] Evaluating state transitions...')
+    // Reset search dismissal when starting new matchmaking
+    if (inMatchmaking && userDismissedSearch) {
+      console.log(
+        '[MM_BUTTON] New matchmaking started, resetting search dismissal',
+      )
+      setUserDismissedSearch(false)
+    }
+  }, [inMatchmaking, userDismissedSearch])
 
-    // Rule 1: If in matchmaking (searching) and no match found yet
-    if (inMatchmaking && !preparingChallenge && !challengeReady) {
-      console.log('[MM_BUTTON] Opening search modal')
-      setSearchModalOpen(true)
-      setPreparationModalOpen(false)
+  // NEW: Reset preparation dismissal for new matches
+  useEffect(() => {
+    if (preparingChallenge || challengeReady) {
+      // Create a unique ID for this preparation session
+      const newPreparationId =
+        preparingChallenge?.opponent?.name ||
+        challengeReady?.challengeId ||
+        Date.now().toString()
+
+      // If this is a new preparation session, reset dismissal
+      if (lastPreparationId !== newPreparationId) {
+        console.log(
+          '[MM_BUTTON] New preparation detected, resetting dismissal',
+          {
+            old: lastPreparationId,
+            new: newPreparationId,
+          },
+        )
+        setLastPreparationId(newPreparationId)
+        setUserDismissedPreparation(false)
+      }
+    }
+  }, [preparingChallenge, challengeReady, lastPreparationId])
+
+  // FIXED: Enhanced state transition logic with better preparation data handling
+  useEffect(() => {
+    console.log('[MM_BUTTON] Evaluating state transitions...', {
+      inMatchmaking,
+      preparingChallenge: !!preparingChallenge,
+      challengeReady: !!challengeReady,
+      preparationProgress,
+      storedOpponentData: !!storedOpponentData,
+      userDismissedSearch,
+      userDismissedPreparation,
+      searchModalOpen,
+      preparationModalOpen,
+      userJustClosedSearch: userJustClosedSearchModal.current,
+      userJustClosedPreparation: userJustClosedPreparationModal.current,
+    })
+
+    // Don't override user actions immediately
+    if (
+      userJustClosedSearchModal.current ||
+      userJustClosedPreparationModal.current
+    ) {
+      console.log(
+        '[MM_BUTTON] Skipping state transition - user just closed modal',
+      )
       return
     }
 
-    // Rule 2: If match found (preparing challenge) or challenge ready
-    if (preparingChallenge || challengeReady || preparationProgress > 0) {
-      console.log('[MM_BUTTON] Opening preparation modal')
+    // Rule 1: If in matchmaking (searching) and no match found yet
+    if (
+      inMatchmaking &&
+      !preparingChallenge &&
+      !challengeReady &&
+      preparationProgress === 0
+    ) {
+      // Only open search modal if user hasn't dismissed it AND it's not already open
+      if (!userDismissedSearch && !searchModalOpen) {
+        console.log('[MM_BUTTON] Opening search modal (not dismissed)')
+        setSearchModalOpen(true)
+        setPreparationModalOpen(false)
+      }
+      return
+    }
+
+    // Rule 2: If match found (preparing challenge) or challenge ready OR we have progress > 0
+    // FIXED: Also check if we have stored opponent data or progress indicating preparation
+    if (
+      preparingChallenge ||
+      challengeReady ||
+      preparationProgress > 0 ||
+      storedOpponentData
+    ) {
+      // Close search modal first
       setSearchModalOpen(false)
-      setPreparationModalOpen(true)
+
+      // FIXED: If challenge is ready and user dismissed modal, don't reopen it
+      if (challengeReady && userDismissedPreparation) {
+        console.log(
+          '[MM_BUTTON] Challenge ready but user dismissed - not reopening modal',
+        )
+        return
+      }
+
+      // Only open preparation modal if user hasn't dismissed it AND it's not already open
+      if (!userDismissedPreparation && !preparationModalOpen) {
+        console.log('[MM_BUTTON] Opening preparation modal (not dismissed)')
+        setPreparationModalOpen(true)
+      }
       return
     }
 
@@ -231,20 +431,40 @@ const MatchmakingButton = forwardRef(({ compact = false }, ref) => {
       !inMatchmaking &&
       !preparingChallenge &&
       !challengeReady &&
-      preparationProgress === 0
+      preparationProgress === 0 &&
+      !storedOpponentData
     ) {
-      console.log('[MM_BUTTON] Closing all modals')
+      console.log('[MM_BUTTON] Closing all modals - no active states')
       setSearchModalOpen(false)
       setPreparationModalOpen(false)
+      // Reset dismissal states when everything is clear
+      setUserDismissedSearch(false)
+      setUserDismissedPreparation(false)
+      setLastPreparationId(null)
+      // Reset ref flags
+      userJustClosedSearchModal.current = false
+      userJustClosedPreparationModal.current = false
       return
     }
-  }, [inMatchmaking, preparingChallenge, challengeReady, preparationProgress])
+  }, [
+    inMatchmaking,
+    preparingChallenge,
+    challengeReady,
+    preparationProgress,
+    storedOpponentData,
+    // Removed userDismissedSearch and userDismissedPreparation from dependencies
+    // to prevent state conflicts
+  ])
 
   // Handle errors
   useEffect(() => {
     if (matchmakingError) {
       console.error('[MM_BUTTON] Matchmaking error:', matchmakingError)
       setIsRequestPending(false)
+
+      // Reset timer on error
+      setMatchmakingStartTime(null)
+      setMatchmakingTime(0)
 
       toast({
         title: t('Matchmaking Error'),
@@ -260,6 +480,42 @@ const MatchmakingButton = forwardRef(({ compact = false }, ref) => {
       }, 100)
     }
   }, [matchmakingError, toast, t, clearMatchmakingError])
+
+  // Separate enforcement for user dismissal (but don't override explicit user actions)
+  useEffect(() => {
+    // Only enforce dismissal if user isn't actively interacting
+    if (
+      userJustClosedSearchModal.current ||
+      userJustClosedPreparationModal.current
+    ) {
+      return // Don't enforce during user actions
+    }
+
+    // Enforce search modal dismissal after a delay
+    if (userDismissedSearch && searchModalOpen) {
+      const timeoutId = setTimeout(() => {
+        console.log('[MM_BUTTON] Enforcing search modal dismissal (delayed)')
+        setSearchModalOpen(false)
+      }, 200)
+      return () => clearTimeout(timeoutId)
+    }
+
+    // Enforce preparation modal dismissal after a delay
+    if (userDismissedPreparation && preparationModalOpen) {
+      const timeoutId = setTimeout(() => {
+        console.log(
+          '[MM_BUTTON] Enforcing preparation modal dismissal (delayed)',
+        )
+        setPreparationModalOpen(false)
+      }, 200)
+      return () => clearTimeout(timeoutId)
+    }
+  }, [
+    userDismissedSearch,
+    searchModalOpen,
+    userDismissedPreparation,
+    preparationModalOpen,
+  ])
 
   // Join matchmaking handler with timeout protection
   const handleJoinMatchmaking = useCallback(async () => {
@@ -283,7 +539,23 @@ const MatchmakingButton = forwardRef(({ compact = false }, ref) => {
 
       console.log('[MM_BUTTON] Starting matchmaking process')
       setIsRequestPending(true)
-      setMatchmakingStartTime(Date.now())
+
+      // Force reset timer state before starting
+      setMatchmakingStartTime(null)
+      setMatchmakingTime(0)
+
+      // Reset dismissal states when starting new matchmaking
+      setUserDismissedSearch(false)
+      setUserDismissedPreparation(false)
+
+      // Reset ref flags
+      userJustClosedSearchModal.current = false
+      userJustClosedPreparationModal.current = false
+
+      // Clear any previous preparation session
+      setLastPreparationId(null)
+      setStoredOpponentData(null)
+      setStoredChallengeId(null)
 
       await joinMatchmaking()
 
@@ -304,7 +576,9 @@ const MatchmakingButton = forwardRef(({ compact = false }, ref) => {
 
       console.error('[MM_BUTTON] Failed to join matchmaking:', error)
       setIsRequestPending(false)
+      // Force reset timer on error
       setMatchmakingStartTime(null)
+      setMatchmakingTime(0)
 
       toast({
         title: t('Failed to Join'),
@@ -320,14 +594,31 @@ const MatchmakingButton = forwardRef(({ compact = false }, ref) => {
   const handleLeaveMatchmaking = useCallback(async () => {
     try {
       console.log('[MM_BUTTON] Leaving matchmaking')
+
+      // Clear timer states BEFORE leaving matchmaking
+      setMatchmakingStartTime(null)
+      setMatchmakingTime(0)
+
       await leaveMatchmaking()
 
       if (!componentMounted.current) return
 
       setSearchModalOpen(false)
       setPreparationModalOpen(false)
-      setMatchmakingStartTime(null)
       setIsRequestPending(false)
+
+      // Reset dismissal states when leaving
+      setUserDismissedSearch(false)
+      setUserDismissedPreparation(false)
+      setLastPreparationId(null)
+
+      // Clear stored data
+      setStoredOpponentData(null)
+      setStoredChallengeId(null)
+
+      // Reset ref flags
+      userJustClosedSearchModal.current = false
+      userJustClosedPreparationModal.current = false
 
       console.log('[MM_BUTTON] Successfully left matchmaking')
       toast({
@@ -351,291 +642,214 @@ const MatchmakingButton = forwardRef(({ compact = false }, ref) => {
     }
   }, [leaveMatchmaking, toast, t])
 
+  // Handle explicit modal reopening by user action
+  const handleOpenSearchModal = useCallback(() => {
+    console.log('[MM_BUTTON] User explicitly opened search modal')
+    // Reset dismissal flags when user explicitly reopens
+    setUserDismissedSearch(false)
+    userJustClosedSearchModal.current = false
+    setSearchModalOpen(true)
+  }, [])
+
+  const handleOpenPreparationModal = useCallback(() => {
+    console.log('[MM_BUTTON] User explicitly opened preparation modal')
+    // Reset dismissal flags when user explicitly reopens
+    setUserDismissedPreparation(false)
+    userJustClosedPreparationModal.current = false
+    setPreparationModalOpen(true)
+  }, [])
+
   // Navigate to challenge
   const handlePlayNow = useCallback(() => {
-    if (challengeReady?.challengeId) {
-      console.log(
-        `[MM_BUTTON] Navigating to challenge: ${challengeReady.challengeId}`,
-      )
-      navigateToChallenge(challengeReady.challengeId)
+    const challengeId = challengeReady?.challengeId || storedChallengeId
+    if (challengeId) {
+      console.log(`[MM_BUTTON] Navigating to challenge: ${challengeId}`)
+      navigateToChallenge(challengeId)
       setPreparationModalOpen(false)
-    }
-  }, [challengeReady, navigateToChallenge])
 
-  // Close modals without affecting state
+      // Reset all timer and dismissal states after navigation
+      setMatchmakingStartTime(null)
+      setMatchmakingTime(0)
+      setUserDismissedPreparation(false)
+      setLastPreparationId(null)
+
+      // Clear stored data
+      setStoredOpponentData(null)
+      setStoredChallengeId(null)
+
+      // Reset ref flags
+      userJustClosedSearchModal.current = false
+      userJustClosedPreparationModal.current = false
+    }
+  }, [challengeReady, storedChallengeId, navigateToChallenge])
+
+  // UPDATED: Close handlers with user dismissal tracking
   const handleCloseSearchModal = useCallback(() => {
-    setSearchModalOpen(false)
-    // Don't leave matchmaking, just close modal
-  }, [])
+    console.log('[MM_BUTTON] User manually closed search modal - BEFORE:', {
+      searchModalOpen,
+      userDismissedSearch,
+      inMatchmaking,
+    })
+
+    // Set flag to prevent immediate reopening
+    userJustClosedSearchModal.current = true
+
+    setUserDismissedSearch(true) // Mark as user dismissed FIRST
+    setSearchModalOpen(false) // Then close the modal
+
+    // Reset the flag after a brief delay
+    setTimeout(() => {
+      userJustClosedSearchModal.current = false
+    }, 500)
+
+    console.log(
+      '[MM_BUTTON] User manually closed search modal - AFTER setting states',
+    )
+  }, [searchModalOpen, userDismissedSearch, inMatchmaking])
 
   const handleClosePreparationModal = useCallback(() => {
-    setPreparationModalOpen(false)
-    // Don't clear state, just close modal
-  }, [])
+    console.log('[MM_BUTTON] User manually closed preparation modal', {
+      challengeReady: !!challengeReady,
+      preparingChallenge: !!preparingChallenge,
+      preparationProgress,
+    })
 
-  // Format time display
-  const formatTime = seconds => {
+    // Set flag to prevent immediate reopening
+    userJustClosedPreparationModal.current = true
+
+    setUserDismissedPreparation(true) // Mark as user dismissed FIRST
+    setPreparationModalOpen(false) // Then close the modal
+
+    // Reset the flag after a brief delay
+    setTimeout(() => {
+      userJustClosedPreparationModal.current = false
+    }, 500)
+  }, [challengeReady, preparingChallenge, preparationProgress])
+
+  // Separate useEffect to handle user dismissal actions with debounced enforcement
+  useEffect(() => {
+    // Debounce the enforcement to prevent immediate conflicts with state transitions
+    const timeoutId = setTimeout(() => {
+      // If user dismissed search modal, ensure it stays closed
+      if (userDismissedSearch && searchModalOpen) {
+        console.log('[MM_BUTTON] Enforcing search modal dismissal (debounced)')
+        setSearchModalOpen(false)
+      }
+
+      // If user dismissed preparation modal, ensure it stays closed
+      if (userDismissedPreparation && preparationModalOpen) {
+        console.log(
+          '[MM_BUTTON] Enforcing preparation modal dismissal (debounced)',
+        )
+        setPreparationModalOpen(false)
+      }
+    }, 100) // 100ms debounce
+
+    return () => clearTimeout(timeoutId)
+  }, [
+    userDismissedSearch,
+    searchModalOpen,
+    userDismissedPreparation,
+    preparationModalOpen,
+  ])
+
+  // Memoized format time function to prevent recreating on every render
+  const formatTime = useCallback(seconds => {
     const mins = Math.floor(seconds / 60)
     const secs = seconds % 60
     return `${mins}:${secs.toString().padStart(2, '0')}`
-  }
+  }, [])
 
-  // Determine current state for button rendering
+  // FIXED: Determine current state for button rendering with better data handling
   const getCurrentState = () => {
-    if (challengeReady) return 'ready'
-    if (preparingChallenge || preparationProgress > 0) return 'preparing'
+    // FIXED: If challenge is ready but user dismissed the modal, return to idle state
+    if ((challengeReady || storedChallengeId) && userDismissedPreparation) {
+      console.log(
+        '[MM_BUTTON] Challenge ready but user dismissed modal - returning to idle state',
+      )
+      return 'idle'
+    }
+
+    // If we're preparing a challenge (match found but not ready yet) OR have preparation progress
+    if (
+      (preparingChallenge || storedOpponentData || preparationProgress > 0) &&
+      !challengeReady &&
+      !storedChallengeId
+    ) {
+      return 'preparing'
+    }
+
+    // If challenge is ready and modal not dismissed, show preparing state
+    if ((challengeReady || storedChallengeId) && !userDismissedPreparation) {
+      return 'preparing'
+    }
+
+    // If actively searching for match
     if (inMatchmaking || isRequestPending) return 'searching'
+
+    // Default idle state
     return 'idle'
   }
 
   const currentState = getCurrentState()
   const isLoading = matchmakingLoading || isRequestPending
 
-  // Searching Modal Component
-  const SearchingModal = () => (
-    <Modal
-      isOpen={searchModalOpen}
-      onClose={handleCloseSearchModal}
-      isCentered
-      size="lg"
-      closeOnOverlayClick={false}
-    >
-      <ModalOverlay bg="rgba(0, 0, 0, 0.8)" backdropFilter="blur(10px)" />
-      <ModalContent
-        bg="rgba(26, 21, 39, 0.95)"
-        borderWidth="1px"
-        borderColor="blue.400"
-        borderRadius="xl"
-        boxShadow="0 0 20px rgba(66, 153, 225, 0.4)"
-      >
-        <ModalHeader color="white" display="flex" alignItems="center" gap={2}>
-          <Icon as={Users} color="blue.400" />
-          {t('Finding Opponents')}
-          {socketConnected && (
-            <Badge colorScheme="green" size="sm" ml={2}>
-              {t('Connected')}
-            </Badge>
-          )}
-          {!socketConnected && (
-            <Badge colorScheme="orange" size="sm" ml={2}>
-              <Icon as={AlertTriangle} boxSize={3} mr={1} />
-              {t('Reconnecting')}
-            </Badge>
-          )}
-        </ModalHeader>
-        <ModalCloseButton color="white" />
+  // Debug current state for troubleshooting
+  useEffect(() => {
+    console.log('[MM_BUTTON] Current button state:', {
+      currentState,
+      challengeReady: !!challengeReady,
+      preparingChallenge: !!preparingChallenge,
+      userDismissedPreparation,
+      preparationProgress,
+      inMatchmaking,
+      isRequestPending,
+      storedOpponentData: !!storedOpponentData,
+      storedChallengeId: !!storedChallengeId,
+    })
+  }, [
+    currentState,
+    challengeReady,
+    preparingChallenge,
+    userDismissedPreparation,
+    preparationProgress,
+    inMatchmaking,
+    isRequestPending,
+    storedOpponentData,
+    storedChallengeId,
+  ])
 
-        <ModalBody py={6}>
-          <VStack spacing={6} align="center">
-            {/* Animated Spinner */}
-            <MotionFlex
-              justify="center"
-              align="center"
-              w="120px"
-              h="120px"
-              borderRadius="full"
-              bg="rgba(66, 153, 225, 0.1)"
-              border="2px solid"
-              borderColor="blue.400"
-              position="relative"
-              animate={{
-                scale: [1, 1.05, 1],
-              }}
-              transition={{
-                duration: 2,
-                repeat: Infinity,
-                repeatType: 'reverse',
-              }}
-            >
-              <Spinner
-                size="xl"
-                thickness="4px"
-                speed="0.8s"
-                color="blue.400"
-              />
-              <MotionFlex
-                position="absolute"
-                justify="center"
-                align="center"
-                animate={{ rotate: 360 }}
-                transition={{ duration: 30, repeat: Infinity, ease: 'linear' }}
-              >
-                {Array.from({ length: 8 }).map((_, i) => (
-                  <Box
-                    key={i}
-                    position="absolute"
-                    w="6px"
-                    h="6px"
-                    borderRadius="full"
-                    bg="blue.400"
-                    transform={`rotate(${i * 45}deg) translateY(-50px)`}
-                    opacity={0.6 + (i % 2) * 0.4}
-                  />
-                ))}
-              </MotionFlex>
-            </MotionFlex>
+  // FIXED: Create preparation data object with fallbacks
+  const getPreparationData = useCallback(() => {
+    // If we have preparingChallenge, use it
+    if (preparingChallenge) {
+      return preparingChallenge
+    }
 
-            {/* Status Text */}
-            <VStack spacing={2} align="center">
-              <Text color="white" fontSize="xl" fontWeight="bold">
-                {isRequestPending
-                  ? t('Joining Queue...')
-                  : t('Searching for Opponents')}
-              </Text>
-              <Text color="whiteAlpha.700" fontSize="md" textAlign="center">
-                {isRequestPending
-                  ? t('Please wait while we add you to the queue...')
-                  : t('Finding the perfect match for your skill level...')}
-              </Text>
-            </VStack>
+    // If we have stored opponent data, create a data object
+    if (storedOpponentData) {
+      return {
+        opponent: storedOpponentData,
+        tempChallengeId: null,
+        isChallenger: true, // Default fallback
+      }
+    }
 
-            <Divider borderColor="whiteAlpha.300" />
-
-            {/* Stats */}
-            <HStack spacing={8} justify="center">
-              <VStack spacing={1}>
-                <Text color="whiteAlpha.600" fontSize="sm">
-                  {t('Time in Queue')}
-                </Text>
-                <HStack
-                  p={2}
-                  borderRadius="md"
-                  bg="whiteAlpha.100"
-                  border="1px solid"
-                  borderColor="whiteAlpha.200"
-                >
-                  <Icon as={Clock} color="blue.300" boxSize={4} />
-                  <Text color="white" fontWeight="bold" fontFamily="mono">
-                    {formatTime(matchmakingTime)}
-                  </Text>
-                </HStack>
-              </VStack>
-
-              <VStack spacing={1}>
-                <Text color="whiteAlpha.600" fontSize="sm">
-                  {t('Status')}
-                </Text>
-                <MotionBadge
-                  colorScheme={isRequestPending ? 'orange' : 'blue'}
-                  px={3}
-                  py={1}
-                  animate={{
-                    opacity: [0.7, 1, 0.7],
-                  }}
-                  transition={{
-                    duration: 2,
-                    repeat: Infinity,
-                    repeatType: 'reverse',
-                  }}
-                >
-                  {isRequestPending ? t('Joining...') : t('Searching')}
-                </MotionBadge>
-              </VStack>
-            </HStack>
-
-            {/* Connection Status */}
-            <Box w="100%" pt={2}>
-              <HStack justify="center" spacing={2}>
-                <Box
-                  w="8px"
-                  h="8px"
-                  borderRadius="full"
-                  bg={socketConnected ? 'green.400' : 'orange.400'}
-                />
-                <Text color="whiteAlpha.600" fontSize="xs">
-                  {socketConnected ? t('Connected') : t('Reconnecting...')}
-                </Text>
-                {deviceFingerprint && (
-                  <>
-                    <Text color="whiteAlpha.400" fontSize="xs">
-                      •
-                    </Text>
-                    <Text color="whiteAlpha.400" fontSize="xs">
-                      {deviceFingerprint}
-                    </Text>
-                  </>
-                )}
-              </HStack>
-            </Box>
-
-            {/* Info Text */}
-            <Box w="100%" pt={2}>
-              <Text color="whiteAlpha.600" fontSize="sm" textAlign="center">
-                {t(
-                  "You can close this modal and continue browsing. We'll notify you when a match is found.",
-                )}
-              </Text>
-            </Box>
-          </VStack>
-        </ModalBody>
-
-        <ModalFooter>
-          <Button
-            colorScheme="red"
-            variant="outline"
-            onClick={handleLeaveMatchmaking}
-            leftIcon={<Icon as={X} />}
-            _hover={{ bg: 'red.900' }}
-            isLoading={isLoading}
-            isDisabled={isRequestPending}
-          >
-            {isRequestPending ? t('Please Wait') : t('Leave Queue')}
-          </Button>
-        </ModalFooter>
-      </ModalContent>
-    </Modal>
-  )
+    // Return null if no data available
+    return null
+  }, [preparingChallenge, storedOpponentData])
 
   // Render button based on current state
   const renderButton = () => {
     if (compact) {
       // Compact version for floating menu
       switch (currentState) {
-        case 'ready':
-          return (
-            <Tooltip label={t('Challenge Ready!')}>
-              <MotionButton
-                colorScheme="green"
-                onClick={handlePlayNow}
-                borderRadius="full"
-                bgGradient="linear(to-r, green.500, teal.500)"
-                boxShadow="0 4px 10px rgba(0,0,0,0.25)"
-                animate={{
-                  boxShadow: [
-                    '0 0 0px rgba(72, 187, 120, 0.4)',
-                    '0 0 20px rgba(72, 187, 120, 0.7)',
-                    '0 0 0px rgba(72, 187, 120, 0.4)',
-                  ],
-                }}
-                transition={{
-                  duration: 1.5,
-                  repeat: Infinity,
-                  repeatType: 'reverse',
-                }}
-                whileHover={{ scale: 1.05 }}
-                whileTap={{ scale: 0.95 }}
-                p={2}
-              >
-                <motion.div
-                  animate={{ scale: [1, 1.2, 1] }}
-                  transition={{
-                    duration: 0.8,
-                    repeat: Infinity,
-                    repeatType: 'reverse',
-                  }}
-                >
-                  <Icon as={CheckCircle} boxSize={4} color="white" />
-                </motion.div>
-              </MotionButton>
-            </Tooltip>
-          )
-
         case 'preparing':
           return (
             <Tooltip label={t('Match Found!')}>
               <MotionButton
                 colorScheme="green"
-                onClick={() => setPreparationModalOpen(true)}
+                onClick={handleOpenPreparationModal}
                 borderRadius="full"
                 bgGradient="linear(to-r, green.500, teal.500)"
                 boxShadow="0 4px 10px rgba(0,0,0,0.25)"
@@ -670,7 +884,7 @@ const MatchmakingButton = forwardRef(({ compact = false }, ref) => {
             <Tooltip label={t('Searching for match...')}>
               <MotionButton
                 colorScheme="blue"
-                onClick={() => setSearchModalOpen(true)}
+                onClick={handleOpenSearchModal}
                 borderRadius="full"
                 bgGradient="linear(to-r, blue.500, purple.500)"
                 boxShadow="0 4px 10px rgba(0,0,0,0.25)"
@@ -720,45 +934,13 @@ const MatchmakingButton = forwardRef(({ compact = false }, ref) => {
 
     // Full-size version
     switch (currentState) {
-      case 'ready':
-        return (
-          <MotionButton
-            colorScheme="green"
-            size="lg"
-            leftIcon={<Icon as={CheckCircle} />}
-            onClick={handlePlayNow}
-            borderRadius="full"
-            px={8}
-            py={6}
-            mb={4}
-            bgGradient="linear(to-r, green.500, teal.500)"
-            boxShadow="0 4px 20px rgba(72, 187, 120, 0.5)"
-            animate={{
-              boxShadow: [
-                '0 0 0px rgba(72, 187, 120, 0.4)',
-                '0 0 25px rgba(72, 187, 120, 0.8)',
-                '0 0 0px rgba(72, 187, 120, 0.4)',
-              ],
-            }}
-            transition={{
-              duration: 1.5,
-              repeat: Infinity,
-              repeatType: 'reverse',
-            }}
-            whileHover={{ scale: 1.05 }}
-            whileTap={{ scale: 0.98 }}
-          >
-            {t('Play Now!')}
-          </MotionButton>
-        )
-
       case 'preparing':
         return (
           <MotionButton
             colorScheme="green"
             size="lg"
             leftIcon={<Icon as={Activity} />}
-            onClick={() => setPreparationModalOpen(true)}
+            onClick={handleOpenPreparationModal}
             borderRadius="full"
             px={8}
             py={6}
@@ -790,7 +972,7 @@ const MatchmakingButton = forwardRef(({ compact = false }, ref) => {
             colorScheme="blue"
             size="lg"
             leftIcon={<Spinner size="sm" />}
-            onClick={() => setSearchModalOpen(true)}
+            onClick={handleOpenSearchModal}
             borderRadius="full"
             px={8}
             py={6}
@@ -855,15 +1037,226 @@ const MatchmakingButton = forwardRef(({ compact = false }, ref) => {
     <>
       {renderButton()}
 
-      {/* Searching Modal */}
-      <SearchingModal />
+      {/* Searching Modal - Rendered directly */}
+      {searchModalOpen && (
+        <Modal
+          key="searching-modal"
+          isOpen={searchModalOpen}
+          onClose={handleCloseSearchModal}
+          isCentered
+          size="lg"
+          closeOnOverlayClick={false}
+        >
+          <ModalOverlay bg="rgba(0, 0, 0, 0.8)" backdropFilter="blur(10px)" />
+          <ModalContent
+            bg="rgba(26, 21, 39, 0.95)"
+            borderWidth="1px"
+            borderColor="blue.400"
+            borderRadius="xl"
+            boxShadow="0 0 20px rgba(66, 153, 225, 0.4)"
+          >
+            <ModalHeader
+              color="white"
+              display="flex"
+              alignItems="center"
+              gap={2}
+            >
+              <Icon as={Users} color="blue.400" />
+              {t('Finding Opponents')}
+              {socketConnected && (
+                <Badge colorScheme="green" size="sm" ml={2}>
+                  {t('Connected')}
+                </Badge>
+              )}
+              {!socketConnected && (
+                <Badge colorScheme="orange" size="sm" ml={2}>
+                  <Icon as={AlertTriangle} boxSize={3} mr={1} />
+                  {t('Reconnecting')}
+                </Badge>
+              )}
+            </ModalHeader>
+            <ModalCloseButton color="white" />
 
-      {/* Match Preparation Modal */}
+            <ModalBody py={6}>
+              <VStack spacing={6} align="center">
+                {/* Animated Spinner */}
+                <MotionFlex
+                  justify="center"
+                  align="center"
+                  w="120px"
+                  h="120px"
+                  borderRadius="full"
+                  bg="rgba(66, 153, 225, 0.1)"
+                  border="2px solid"
+                  borderColor="blue.400"
+                  position="relative"
+                  animate={{
+                    scale: [1, 1.05, 1],
+                  }}
+                  transition={{
+                    duration: 2,
+                    repeat: Infinity,
+                    repeatType: 'reverse',
+                  }}
+                >
+                  <Spinner
+                    size="xl"
+                    thickness="4px"
+                    speed="0.8s"
+                    color="blue.400"
+                  />
+                  <MotionFlex
+                    position="absolute"
+                    justify="center"
+                    align="center"
+                    animate={{ rotate: 360 }}
+                    transition={{
+                      duration: 30,
+                      repeat: Infinity,
+                      ease: 'linear',
+                    }}
+                  >
+                    {Array.from({ length: 8 }).map((_, i) => (
+                      <Box
+                        key={i}
+                        position="absolute"
+                        w="6px"
+                        h="6px"
+                        borderRadius="full"
+                        bg="blue.400"
+                        transform={`rotate(${i * 45}deg) translateY(-50px)`}
+                        opacity={0.6 + (i % 2) * 0.4}
+                      />
+                    ))}
+                  </MotionFlex>
+                </MotionFlex>
+
+                {/* Status Text */}
+                <VStack spacing={2} align="center">
+                  <Text color="white" fontSize="xl" fontWeight="bold">
+                    {isRequestPending
+                      ? t('Joining Queue...')
+                      : t('Searching for Opponents')}
+                  </Text>
+                  <Text color="whiteAlpha.700" fontSize="md" textAlign="center">
+                    {isRequestPending
+                      ? t('Please wait while we add you to the queue...')
+                      : t('Finding the perfect match for your skill level...')}
+                  </Text>
+                </VStack>
+
+                <Divider borderColor="whiteAlpha.300" />
+
+                {/* Stats */}
+                <HStack spacing={8} justify="center">
+                  <VStack spacing={1}>
+                    <Text color="whiteAlpha.600" fontSize="sm">
+                      {t('Time in Queue')}
+                    </Text>
+                    <HStack
+                      p={2}
+                      borderRadius="md"
+                      bg="whiteAlpha.100"
+                      border="1px solid"
+                      borderColor="whiteAlpha.200"
+                    >
+                      <Icon as={Clock} color="blue.300" boxSize={4} />
+                      <Text color="white" fontWeight="bold" fontFamily="mono">
+                        {formatTime(matchmakingTime)}
+                      </Text>
+                    </HStack>
+                    {/* Debug info - remove in production */}
+                    {process.env.NODE_ENV === 'development' && (
+                      <Text color="whiteAlpha.500" fontSize="xs">
+                        Start:{' '}
+                        {matchmakingStartTime
+                          ? new Date(matchmakingStartTime).toLocaleTimeString()
+                          : 'Not set'}
+                      </Text>
+                    )}
+                  </VStack>
+
+                  <VStack spacing={1}>
+                    <Text color="whiteAlpha.600" fontSize="sm">
+                      {t('Status')}
+                    </Text>
+                    <MotionBadge
+                      colorScheme={isRequestPending ? 'orange' : 'blue'}
+                      px={3}
+                      py={1}
+                      animate={{
+                        opacity: [0.7, 1, 0.7],
+                      }}
+                      transition={{
+                        duration: 2,
+                        repeat: Infinity,
+                        repeatType: 'reverse',
+                      }}
+                    >
+                      {isRequestPending ? t('Joining...') : t('Searching')}
+                    </MotionBadge>
+                  </VStack>
+                </HStack>
+
+                {/* Connection Status */}
+                <Box w="100%" pt={2}>
+                  <HStack justify="center" spacing={2}>
+                    <Box
+                      w="8px"
+                      h="8px"
+                      borderRadius="full"
+                      bg={socketConnected ? 'green.400' : 'orange.400'}
+                    />
+                    <Text color="whiteAlpha.600" fontSize="xs">
+                      {socketConnected ? t('Connected') : t('Reconnecting...')}
+                    </Text>
+                    {deviceFingerprint && (
+                      <>
+                        <Text color="whiteAlpha.400" fontSize="xs">
+                          •
+                        </Text>
+                        <Text color="whiteAlpha.400" fontSize="xs">
+                          {deviceFingerprint}
+                        </Text>
+                      </>
+                    )}
+                  </HStack>
+                </Box>
+
+                {/* Info Text */}
+                <Box w="100%" pt={2}>
+                  <Text color="whiteAlpha.600" fontSize="sm" textAlign="center">
+                    {t(
+                      "You can close this modal and continue browsing. We'll notify you when a match is found.",
+                    )}
+                  </Text>
+                </Box>
+              </VStack>
+            </ModalBody>
+
+            <ModalFooter>
+              <Button
+                colorScheme="red"
+                variant="outline"
+                onClick={handleLeaveMatchmaking}
+                leftIcon={<Icon as={X} />}
+                _hover={{ bg: 'red.900' }}
+                isLoading={isLoading}
+                isDisabled={isRequestPending}
+              >
+                {isRequestPending ? t('Please Wait') : t('Leave Queue')}
+              </Button>
+            </ModalFooter>
+          </ModalContent>
+        </Modal>
+      )}
+
+      {/* FIXED: Match Preparation Modal with proper data handling */}
       <MatchPreparationModal
         isOpen={preparationModalOpen}
         onClose={handleClosePreparationModal}
-        preparingData={preparingChallenge}
-        challengeId={challengeReady?.challengeId}
+        preparingData={getPreparationData()}
+        challengeId={challengeReady?.challengeId || storedChallengeId}
         onPlayNow={handlePlayNow}
         progress={preparationProgress}
         step={preparationStep}

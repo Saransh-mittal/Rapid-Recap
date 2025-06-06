@@ -246,6 +246,25 @@ const quickClashGlobalMatchmakingSlice = createSlice({
         }
       }
     },
+
+    handleBattleCreationCleanup: (state, action) => {
+      // Reset matchmaking state when battle creation fails completely
+      state.inMatchmaking = false
+      state.matchmakingType = null
+      state.battleCreationStatus = 'failed'
+      state.battleCreationError =
+        action.payload.message || 'Battle creation failed. Please try again.'
+      state.step = null
+      state.battleReady = null
+      // Keep selectedTeamId so user can retry with same team
+    },
+    clearBattleCreationState: state => {
+      state.battleCreationStatus = null
+      state.battleCreationError = null
+      state.inMatchmaking = false
+      state.step = null
+      state.battleReady = null
+    },
   },
   extraReducers: builder => {
     builder
@@ -373,6 +392,8 @@ export const {
   setBattleCreationStatus,
   setBattleCreationError,
   clearBattleCreationError,
+  handleBattleCreationCleanup,
+  clearBattleCreationState,
 } = quickClashGlobalMatchmakingSlice.actions
 
 export default quickClashGlobalMatchmakingSlice.reducer

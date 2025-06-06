@@ -27,6 +27,8 @@ import {
   resetGlobalMatchmakingState,
   setBattleReady,
   clearBattleCreationError,
+  handleBattleCreationCleanup,
+  clearBattleCreationState,
 } from '../../../redux/quickClashGlobalMatchmakingSlice'
 
 // Import sub-components
@@ -79,6 +81,8 @@ const GlobalMatchmakingModal = React.memo(
       formatMatchmakingTime,
       clearBattleCreationError: clearError,
       checkCanLeaveMatchmaking,
+      retryAfterFailure,
+      clearBattleCreationState: clearCreationState,
     } = useQuickClashGlobalMatchmaking()
 
     // Fetch user's teams
@@ -256,12 +260,48 @@ const GlobalMatchmakingModal = React.memo(
         }
       }
 
+      const handleBattleCreationCleanup = data => {
+        console.log('Battle creation cleanup received in modal:', data)
+
+        dispatch(
+          handleBattleCreationCleanup({
+            message:
+              data.message ||
+              'Battle creation failed after multiple attempts. Please try joining matchmaking again.',
+          }),
+        )
+
+        toast({
+          title: t('Battle Creation Failed'),
+          description: t(
+            'There was an issue creating your battle. Please try joining matchmaking again.',
+          ),
+          status: 'error',
+          duration: 7000,
+          isClosable: true,
+          position: 'top',
+        })
+
+        setStatusUpdates(prev => [
+          {
+            id: Date.now(),
+            message: t('Battle creation failed. You can try again.'),
+            time: Math.floor((Date.now() - mountTimeRef.current) / 1000),
+          },
+          ...prev.slice(0, 2),
+        ])
+      }
+
       socket.on('quickClash:teamLeftMatchmaking', handleTeamLeftMatchmaking)
       socket.on(
         'quickClash:teamReturnedToMatchmaking',
         handleTeamReturnedToMatchmaking,
       )
       socket.on('quickClash:teamJoinedMatchmaking', handleTeamJoinedMatchmaking)
+      socket.on(
+        'quickClash:battleCreationCleanedUp',
+        handleBattleCreationCleanup,
+      )
 
       return () => {
         socket.off('quickClash:teamLeftMatchmaking', handleTeamLeftMatchmaking)
@@ -273,6 +313,10 @@ const GlobalMatchmakingModal = React.memo(
           'quickClash:teamJoinedMatchmaking',
           handleTeamJoinedMatchmaking,
         )
+        socket.off(
+          'quickClash:battleCreationCleanedUp',
+          handleBattleCreationCleanup,
+        )
       }
     }, [
       getSocket,
@@ -283,6 +327,7 @@ const GlobalMatchmakingModal = React.memo(
       checkMatchmakingStatus,
       fetchMyTeams,
       t,
+      toast,
     ])
 
     // Handle joining matchmaking
@@ -343,7 +388,7 @@ const GlobalMatchmakingModal = React.memo(
           ...prev.slice(0, 2),
         ])
       }
-    }, [selectedTeamId, joinWithTeam, joinSoloMatchmaking, t])
+    }, [selectedTeamId, joinWithTeam, joinSoloMatchmaking, t, toast])
 
     // Handle leaving matchmaking
     const handleLeaveMatchmaking = useCallback(async () => {
@@ -367,13 +412,48 @@ const GlobalMatchmakingModal = React.memo(
       }
     }, [checkCanLeaveMatchmaking, leaveMatchmaking, onClose, toast, t])
 
+    // Handle retry after failure
+    const handleRetryAfterFailure = useCallback(async () => {
+      try {
+        if (retryAfterFailure) {
+          await retryAfterFailure()
+        } else {
+          // Fallback if retryAfterFailure is not available
+          dispatch(clearBattleCreationState())
+        }
+
+        setStatusUpdates([])
+        mountTimeRef.current = Date.now()
+
+        toast({
+          title: t('Ready to Try Again'),
+          description: t('You can now join matchmaking again.'),
+          status: 'info',
+          duration: 3000,
+          isClosable: true,
+        })
+      } catch (error) {
+        console.error('Error during retry:', error)
+        toast({
+          title: t('Error'),
+          description: t('Please close and try again.'),
+          status: 'error',
+          duration: 3000,
+          isClosable: true,
+        })
+      }
+    }, [retryAfterFailure, dispatch, toast, t])
+
     // Handle modal close
     const handleClose = useCallback(() => {
       if (battleReady) {
         clearBattleReady()
       }
+      if (battleCreationStatus === 'failed') {
+        dispatch(clearBattleCreationState())
+      }
       onClose()
-    }, [battleReady, clearBattleReady, onClose])
+    }, [battleReady, battleCreationStatus, clearBattleReady, dispatch, onClose])
 
     // Get modal styling based on state
     const getModalStyles = () => {
@@ -387,6 +467,9 @@ const GlobalMatchmakingModal = React.memo(
       } else if (inMatchmaking) {
         borderColor = 'blue.500'
         glowColor = '66, 153, 225, 0.5'
+      } else if (battleCreationStatus === 'failed') {
+        borderColor = 'red.500'
+        glowColor = '229, 62, 62, 0.5'
       }
 
       return {
@@ -409,10 +492,20 @@ const GlobalMatchmakingModal = React.memo(
           >
             <HStack>
               <Icon
-                as={battleReady ? Zap : inMatchmaking ? Activity : Users}
+                as={
+                  battleReady
+                    ? Zap
+                    : battleCreationStatus === 'failed'
+                    ? X
+                    : inMatchmaking
+                    ? Activity
+                    : Users
+                }
                 color={
                   battleReady
                     ? 'green.400'
+                    : battleCreationStatus === 'failed'
+                    ? 'red.400'
                     : inMatchmaking
                     ? 'blue.400'
                     : 'blue.400'
@@ -422,13 +515,22 @@ const GlobalMatchmakingModal = React.memo(
               <Text>
                 {battleReady
                   ? t('Battle Ready!')
+                  : battleCreationStatus === 'failed'
+                  ? t('Battle Creation Failed')
                   : inMatchmaking
                   ? t('4v4 Matchmaking Active')
                   : t('Join 4v4 Matchmaking')}
               </Text>
-              {inMatchmaking && !battleReady && (
-                <Badge colorScheme="blue" ml={2}>
-                  {t('Finding Battle')}
+              {inMatchmaking &&
+                !battleReady &&
+                battleCreationStatus !== 'failed' && (
+                  <Badge colorScheme="blue" ml={2}>
+                    {t('Finding Battle')}
+                  </Badge>
+                )}
+              {battleCreationStatus === 'failed' && (
+                <Badge colorScheme="red" ml={2}>
+                  {t('Error')}
                 </Badge>
               )}
             </HStack>
@@ -456,14 +558,16 @@ const GlobalMatchmakingModal = React.memo(
             formatMatchmakingTime={formatMatchmakingTime}
           />
 
-          {!inMatchmaking && !battleReady && (
-            <TeamSelectionPanel
-              myTeams={myTeams}
-              loadingTeams={loadingTeams}
-              selectedTeamId={selectedTeamId}
-              onSelectTeam={selectTeam}
-            />
-          )}
+          {!inMatchmaking &&
+            !battleReady &&
+            battleCreationStatus !== 'failed' && (
+              <TeamSelectionPanel
+                myTeams={myTeams}
+                loadingTeams={loadingTeams}
+                selectedTeamId={selectedTeamId}
+                onSelectTeam={selectTeam}
+              />
+            )}
         </ModalBody>
 
         <ModalFooter borderTopWidth="1px" borderColor="whiteAlpha.200">
@@ -481,10 +585,7 @@ const GlobalMatchmakingModal = React.memo(
               <Button
                 variant="ghost"
                 mr={3}
-                onClick={() => {
-                  clearError()
-                  handleClose()
-                }}
+                onClick={handleClose}
                 color="whiteAlpha.800"
                 _hover={{ bg: 'whiteAlpha.100' }}
               >
@@ -492,11 +593,12 @@ const GlobalMatchmakingModal = React.memo(
               </Button>
               <Button
                 colorScheme="blue"
-                onClick={() => {
-                  clearError()
-                  handleJoinMatchmaking()
-                }}
+                onClick={handleRetryAfterFailure}
                 leftIcon={<Icon as={RefreshCw} />}
+                _hover={{
+                  bgGradient: 'linear(to-r, blue.400, purple.400)',
+                  transform: 'translateY(-1px)',
+                }}
               >
                 {t('Try Again')}
               </Button>
@@ -515,6 +617,7 @@ const GlobalMatchmakingModal = React.memo(
                 bgGradient: 'linear(to-r, green.400, teal.400)',
                 transform: 'translateY(-2px)',
               }}
+              transition="all 0.2s"
             >
               {t('Enter Battle')}
             </Button>
@@ -527,6 +630,8 @@ const GlobalMatchmakingModal = React.memo(
               loadingText={t('Leaving...')}
               leftIcon={<Icon as={X} />}
               _hover={{ bg: 'rgba(229, 62, 62, 0.1)' }}
+              borderColor="red.500"
+              color="red.300"
             >
               {t('Leave Queue')}
             </Button>
@@ -547,6 +652,12 @@ const GlobalMatchmakingModal = React.memo(
                 isLoading={loading}
                 loadingText={t('Joining...')}
                 leftIcon={<Icon as={selectedTeamId ? Users : Users} />}
+                bgGradient="linear(to-r, blue.500, purple.500)"
+                _hover={{
+                  bgGradient: 'linear(to-r, blue.400, purple.400)',
+                  transform: 'translateY(-1px)',
+                }}
+                transition="all 0.2s"
               >
                 {selectedTeamId ? t('Join with Team') : t('Join Individually')}
               </Button>

@@ -11,7 +11,7 @@ import {
   getGlobalMatchmakingStatus,
   joinTeamMatchmaking,
   leaveTeamMatchmaking,
-  getTeamMatchmakingStatus, // This was missing from imports in your provided slice but used in thunks
+  getTeamMatchmakingStatus,
   setBattleReady,
   clearBattleReady,
   setSelectedTeamId,
@@ -24,8 +24,14 @@ import {
   setBattleCreationError,
   setBattleCreationStatus,
   clearBattleCreationError,
+  clearBattleCreationState,
+  handleBattleCreationCleanup, // Add this import
 } from '../redux/quickClashGlobalMatchmakingSlice'
 import axios from 'axios'
+import {
+  fetchTeamBattles,
+  setInMatchmaking,
+} from '../redux/quickClashTeamBattleSlice'
 
 /**
  * Custom hook for managing the global matchmaking state with improved device-aware socket integration
@@ -100,6 +106,7 @@ const useQuickClashGlobalMatchmaking = () => {
         if (!isComponentMountedRef.current) return
         console.log('Received teamBattleReady event:', data)
         dispatch(setBattleReady(data))
+        dispatch(fetchTeamBattles())
       },
     )
     cleanupFunctions.push(cleanupBattleReady)
@@ -132,6 +139,42 @@ const useQuickClashGlobalMatchmaking = () => {
       },
     )
     cleanupFunctions.push(cleanupBattleCreationFailed)
+
+    // NEW: Battle creation cleanup - Reset matchmaking state
+    const cleanupBattleCreationCleanedUp = addEventListener(
+      'quickClash:battleCreationCleanedUp',
+      data => {
+        if (!isComponentMountedRef.current) return
+        console.log('Battle creation cleaned up:', data)
+
+        // Reset matchmaking state
+        dispatch(setInMatchmaking(false))
+        dispatch(setBattleCreationStatus('failed'))
+        dispatch(
+          setBattleCreationError(
+            'Battle creation failed. Please try joining matchmaking again.',
+          ),
+        )
+
+        // Reset timers
+        matchmakingStartTimeRef.current = null
+        setLocalMatchmakingTime(0)
+        setShouldPoll(false)
+
+        // Show user-friendly error message
+        toast({
+          title: t('Battle Creation Failed'),
+          description: t(
+            'There was an issue creating your battle. Please try joining matchmaking again.',
+          ),
+          status: 'error',
+          duration: 6000,
+          isClosable: true,
+          position: 'top',
+        })
+      },
+    )
+    cleanupFunctions.push(cleanupBattleCreationCleanedUp)
 
     // Matchmaking locked
     const cleanupMatchmakingLocked = addEventListener(
@@ -274,6 +317,35 @@ const useQuickClashGlobalMatchmaking = () => {
       },
     )
     cleanupFunctions.push(cleanupTeamMemberRemoved)
+
+    // Battle creation cleanup (complete failure after retries)
+    const cleanupBattleCreationCleanup = addEventListener(
+      'quickClash:battleCreationCleanedUp',
+      data => {
+        if (!isComponentMountedRef.current) return
+        console.log('Battle creation completely failed and cleaned up:', data)
+
+        dispatch(
+          handleBattleCreationCleanup({
+            message:
+              data.message ||
+              'Battle creation failed after multiple attempts. Please try joining matchmaking again.',
+          }),
+        )
+
+        toast({
+          title: t('Battle Creation Failed'),
+          description: t(
+            'There was an issue creating your battle. Please try joining matchmaking again.',
+          ),
+          status: 'error',
+          duration: 6000,
+          isClosable: true,
+          position: 'top',
+        })
+      },
+    )
+    cleanupFunctions.push(cleanupBattleCreationCleanup)
 
     // Store cleanup functions
     eventCleanupFunctions.current = cleanupFunctions
@@ -425,6 +497,25 @@ const useQuickClashGlobalMatchmaking = () => {
     globalMatchmakingState.matchmakingType,
     getDetailedMatchmakingStatusInternal,
   ])
+
+  // Add this new action to the returned object around line 400
+  const retryAfterFailure = useCallback(async () => {
+    try {
+      dispatch(clearBattleCreationState())
+      // Reset any error states and allow user to try again
+      setShouldPoll(false)
+
+      toast({
+        title: t('Ready to Try Again'),
+        description: t('You can now join matchmaking again.'),
+        status: 'info',
+        duration: 3000,
+        isClosable: true,
+      })
+    } catch (error) {
+      console.error('Error resetting after failure:', error)
+    }
+  }, [dispatch, toast, t])
 
   useEffect(() => {
     if (
@@ -766,6 +857,8 @@ const useQuickClashGlobalMatchmaking = () => {
     leaveMatchmaking,
     selectTeam,
     enterBattle,
+    retryAfterFailure,
+    clearBattleCreationState: () => dispatch(clearBattleCreationState()),
     clearBattleReady: () => dispatch(clearBattleReady()),
     enablePolling,
     disablePolling,

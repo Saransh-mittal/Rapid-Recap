@@ -23,7 +23,7 @@ import {
 } from '@chakra-ui/react'
 import { motion } from 'framer-motion'
 import { FiZap, FiHome } from 'react-icons/fi' // FiZap for New Challenge & default 1v1
-import { Target, Zap as ZapIconLucide, Bell } from 'lucide-react' // Target for header, Zap for 1v1 icon
+import { Target, Zap as ZapIconLucide, Bell, User } from 'lucide-react' // Target for header, Zap for 1v1 icon
 import { useTranslation } from 'react-i18next'
 import { useNavigate } from 'react-router-dom'
 import { useDispatch, useSelector } from 'react-redux'
@@ -49,6 +49,7 @@ const QuickClashHeader = ({ onNewChallenge }) => {
   const navigate = useNavigate()
   const dispatch = useDispatch()
   const isDesktop = useBreakpointValue({ base: false, md: true })
+  const { user } = useSelector(state => state.auth)
 
   // Get notification data from Redux
   const { updates, unreadFriendRequests, notification } = useSelector(
@@ -72,6 +73,11 @@ const QuickClashHeader = ({ onNewChallenge }) => {
   }, [dispatch])
 
   const handleBackToHome = () => navigate('/home')
+  const handleProfileClick = () => {
+    navigate(`/profile/${user?.inGameName}`, {
+      state: { showQuickClash: true },
+    })
+  }
   const handleViewTasksClick = useCallback(() => setShowTaskPopup(true), [])
   const handleCloseTaskPopup = useCallback(() => setShowTaskPopup(false), [])
   const handleNavigateToTasksSection = useCallback(() => {
@@ -183,6 +189,7 @@ const QuickClashHeader = ({ onNewChallenge }) => {
             whileTap="tap"
           />
         </Tooltip>
+
         <HStack spacing={2}>
           <TrophyDisplay />
           <LevelBadge />
@@ -198,28 +205,54 @@ const QuickClashHeader = ({ onNewChallenge }) => {
         variants={itemVariants}
         display={{ base: 'none', md: 'flex' }}
       >
-        <MotionButton
-          as={motion.button} // Ensure framer-motion integration
-          leftIcon={<FiHome size={18} />}
-          onClick={handleBackToHome}
-          variant="ghost"
-          colorScheme="purple"
-          color="whiteAlpha.900"
-          size="md"
-          borderRadius="full"
-          p={3}
-          _hover={{
-            bg: 'rgba(128, 90, 213, 0.2)',
-            color: 'purple.300',
-            transform: 'translateY(-2px)',
-          }}
-          aria-label={t('Back to Home')}
-          variants={homeButtonVariants}
-          whileHover="hover"
-          whileTap="tap"
-        >
-          {t('Home')}
-        </MotionButton>
+        <MotionFlex gap={3} align="center">
+          <MotionButton
+            as={motion.button} // Ensure framer-motion integration
+            leftIcon={<FiHome size={18} />}
+            onClick={handleBackToHome}
+            variant="ghost"
+            colorScheme="purple"
+            color="whiteAlpha.900"
+            size="md"
+            borderRadius="full"
+            p={3}
+            _hover={{
+              bg: 'rgba(128, 90, 213, 0.2)',
+              color: 'purple.300',
+              transform: 'translateY(-2px)',
+            }}
+            aria-label={t('Back to Home')}
+            variants={homeButtonVariants}
+            whileHover="hover"
+            whileTap="tap"
+          >
+            {t('Home')}
+          </MotionButton>
+
+          <MotionButton
+            as={motion.button}
+            leftIcon={<User size={20} />}
+            onClick={handleProfileClick}
+            variant="ghost"
+            colorScheme="purple"
+            color="whiteAlpha.900"
+            size="md"
+            borderRadius="full"
+            p={3}
+            _hover={{
+              bg: 'rgba(128, 90, 213, 0.2)',
+              color: 'purple.300',
+              transform: 'translateY(-2px)',
+            }}
+            aria-label={t('Open Quick Clash Profile')}
+            variants={homeButtonVariants}
+            whileHover="hover"
+            whileTap="tap"
+          >
+            {t('Profile')}
+          </MotionButton>
+        </MotionFlex>
+
         <HStack spacing={3}>
           <TrophyDisplay />
           <LevelBadge />

@@ -2008,6 +2008,20 @@ const processTeamMatchmaking = async providedSession => {
 
           if (teamBattle) {
             // Progress update
+            globalEmitter.emit('quickClash:teamBattleReady', {
+              battleId: teamBattle._id.toString(),
+              teamA: team._id.toString(),
+              teamB: matchedTeam._id.toString(),
+              teamAMembers: team.members.map(m => ({
+                userId: m.user._id.toString(),
+                name: m.user.name || m.user.inGameName,
+              })),
+              teamBMembers: matchedTeam.members.map(m => ({
+                userId: m.user._id.toString(),
+                name: m.user.name || m.user.inGameName,
+              })),
+              categories: battleCategories,
+            })
 
             // Remove both teams from matchmaking
             await Promise.all([

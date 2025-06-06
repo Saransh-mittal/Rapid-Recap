@@ -422,13 +422,66 @@ const MatchPreparationModal = ({
   const currentStepIndex = getCurrentStep()
   const currentStepConfig = stepsConfig[currentStepIndex]
 
-  // Get opponent info
-  const opponent = preparingData?.opponent || {
-    name: 'Opponent',
-    inGameName: 'Player',
-    pic: '',
-    quickClashTrophies: 1000,
-  }
+  // FIXED: Enhanced opponent info extraction with better fallbacks
+  const getOpponentInfo = useCallback(() => {
+    console.log('[MODAL] Getting opponent info:', {
+      preparingData,
+      hasOpponent: !!preparingData?.opponent,
+      opponentName: preparingData?.opponent?.name,
+      isChallenger: preparingData?.isChallenger,
+    })
+
+    // If we have direct opponent data from preparingData, use it
+    if (preparingData?.opponent) {
+      return preparingData.opponent
+    }
+
+    // FIXED: Check if we have any user data in preparingData that we can use
+    if (preparingData && typeof preparingData === 'object') {
+      // If preparingData has user info that's not the current user, use it as opponent
+      if (preparingData.name && preparingData.name !== user?.name) {
+        return {
+          name: preparingData.name,
+          inGameName: preparingData.inGameName || preparingData.name,
+          pic: preparingData.pic || '',
+          quickClashTrophies: preparingData.quickClashTrophies || 1000,
+        }
+      }
+
+      // Check other possible fields
+      if (preparingData.userName && preparingData.userName !== user?.name) {
+        return {
+          name: preparingData.userName,
+          inGameName: preparingData.userInGameName || preparingData.userName,
+          pic: preparingData.userPic || '',
+          quickClashTrophies: preparingData.userTrophies || 1000,
+        }
+      }
+    }
+
+    // ENHANCEMENT: Try to get opponent info from Redux state if available
+    // This could be extended to check for recent matchmaking data
+
+    // Final fallback to default opponent
+    console.log('[MODAL] Using fallback opponent data')
+    return {
+      name: 'Opponent',
+      inGameName: 'Player',
+      pic: '',
+      quickClashTrophies: 1000,
+    }
+  }, [preparingData, user])
+
+  const opponent = getOpponentInfo()
+
+  // Debug logging for opponent resolution
+  useEffect(() => {
+    console.log('[MODAL] Opponent resolution:', {
+      preparingData,
+      resolvedOpponent: opponent,
+      isUsingFallback: opponent?.name === 'Opponent',
+    })
+  }, [preparingData, opponent])
 
   // Handle play now
   const handlePlayNow = useCallback(() => {
@@ -638,7 +691,7 @@ const MatchPreparationModal = ({
                 <VStack spacing={3}>
                   <Text
                     color="whiteAlpha.700"
-                    fontSize="sm"
+                    fontSize="xs"
                     fontWeight="medium"
                   >
                     {user?.inGameName}
@@ -669,7 +722,7 @@ const MatchPreparationModal = ({
                       border="2px solid white"
                     />
                   </MotionAvatar>
-                  <Text color="white" fontWeight="bold" fontSize="lg">
+                  <Text color="white" fontWeight="bold" fontSize="sm">
                     {user?.name}
                   </Text>
                   <PremiumTrophyBadge
@@ -686,15 +739,15 @@ const MatchPreparationModal = ({
                 <VStack spacing={3}>
                   <Text
                     color="whiteAlpha.700"
-                    fontSize="sm"
+                    fontSize="xs"
                     fontWeight="medium"
                   >
-                    {opponent.inGameName}
+                    {opponent?.inGameName}
                   </Text>
                   <MotionAvatar
                     size={avatarSize}
-                    name={opponent.name}
-                    src={opponent.pic}
+                    name={opponent?.name}
+                    src={opponent?.pic}
                     bg="blue.500"
                     border="3px solid"
                     borderColor="blue.300"
@@ -717,11 +770,11 @@ const MatchPreparationModal = ({
                       border="2px solid white"
                     />
                   </MotionAvatar>
-                  <Text color="white" fontWeight="bold" fontSize="lg">
-                    {opponent.name}
+                  <Text color="white" fontWeight="bold" fontSize="sm">
+                    {opponent?.name}
                   </Text>
                   <PremiumTrophyBadge
-                    trophyCount={opponent.quickClashTrophies || 1000}
+                    trophyCount={opponent?.quickClashTrophies || 1000}
                     size={trophySize}
                   />
                 </VStack>

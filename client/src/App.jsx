@@ -578,7 +578,10 @@ const App = () => {
       <NavbarProvider>
         {showNavbar &&
           ((!(summary && isVisible) &&
-            !location.pathname.startsWith('/quickclash') &&
+            !(
+              location.pathname.startsWith('/quickclash') ||
+              location.pathname.startsWith('/profile')
+            ) &&
             location.pathname != '/') ||
             (!location.pathname.startsWith('/quickclash') && !isLoggedIn)) && (
             <Suspense fallback={null}>

@@ -69,9 +69,34 @@ const useQuickClashTeamBattle = () => {
       data => {
         console.log('Team battle ready event received:', data)
         dispatch(setBattleReady(data))
+        dispatch(fetchTeamBattles())
       },
     )
     cleanupFunctions.push(cleanupBattleReady)
+
+    // Battle creation cleanup notification
+    const cleanupBattleCreationCleanup = addEventListener(
+      'quickClash:battleCreationCleanedUp',
+      data => {
+        console.log('Team battle creation cleanup received:', data)
+
+        // Show user-friendly error message
+        toast({
+          title: t('Battle Creation Failed'),
+          description: t(
+            'There was an issue creating your team battle. You can try joining matchmaking again.',
+          ),
+          status: 'error',
+          duration: 7000,
+          isClosable: true,
+          position: 'top',
+        })
+
+        // Refresh teams and battles to ensure clean state
+        dispatch(fetchTeamBattles())
+      },
+    )
+    cleanupFunctions.push(cleanupBattleCreationCleanup)
 
     // Battle completed notification
     const cleanupBattleCompleted = addEventListener(

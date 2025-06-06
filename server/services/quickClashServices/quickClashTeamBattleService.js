@@ -164,6 +164,7 @@ const createTeamBattle = makeRetryable(
       // Combined list of all involved members
       const allMemberIds = [...teamAMemberIds, ...teamBMemberIds]
       // Emit event to notify users that battle creation started with all member IDs
+      await new Promise(resolve => setTimeout(resolve, 2000)) // Simulate some processing delay
       setTimeout(() => {
         globalEmitter.emit('quickClash:battleCreationStarted', {
           teamA: teamAId,

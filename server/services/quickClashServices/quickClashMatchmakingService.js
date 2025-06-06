@@ -119,6 +119,7 @@ const joinMatchmaking = async ({ userId }) => {
           // Start challenge creation outside of transaction (after commit)
           setImmediate(async () => {
             try {
+              await new Promise(resolve => setTimeout(resolve, 2000)) // Simulate some processing delay
               // FIXED: Notify users that a match has been found (this is safe to emit early)
               globalEmitter.emit('quickClash:matchFound', {
                 challenger: joiningUser,

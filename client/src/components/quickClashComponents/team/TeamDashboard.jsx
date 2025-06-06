@@ -51,8 +51,6 @@ import JoinTeamModal from './JoinTeamModal'
 import EmptyTeamState from './EmptyTeamState'
 import InviteUserModal from './InviteUserModal'
 
-import QuickClashBackground from '../QuickClashBackground'
-
 // Import custom hook for team operations
 import useQuickClashTeamBattle from '../../../customHooks/useQuickClashTeamBattle'
 import { useSocket } from '../../../customHooks/useSocket'

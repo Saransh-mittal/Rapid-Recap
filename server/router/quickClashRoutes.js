@@ -43,6 +43,13 @@ const analysisRoutes = require('./quickClashAnalysisRoutes')
 
 const router = express.Router()
 const dailyTaskRoutes = require('./quickClashDailyTaskRoutes')
+const {
+  getCurrentUserProfile,
+  getUserProfile,
+  getUserAchievements,
+  getUserRecentMatches,
+  getUserStatistics,
+} = require('../controllers/quickClashProfileController')
 
 // All routes need authentication
 router.use(Authenticate)
@@ -107,5 +114,12 @@ router.get(
   '/trophies/exchange/:opponentId',
   calculatePotentialTrophyExchangeController,
 )
+
+// Profile routes
+router.get('/profile', getCurrentUserProfile)
+router.get('/profile/:userId', getUserProfile)
+router.get('/profile/:userId/achievements', getUserAchievements)
+router.get('/profile/:userId/matches', getUserRecentMatches)
+router.get('/profile/:userId/statistics', getUserStatistics)
 
 module.exports = router

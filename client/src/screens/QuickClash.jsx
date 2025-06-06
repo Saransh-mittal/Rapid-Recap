@@ -58,9 +58,6 @@ const FloatingActionMenu = lazy(() =>
 const TeamDashboard = lazy(() =>
   import('../components/quickClashComponents/team/TeamDashboard'),
 )
-const TeamBattlePage = lazy(() =>
-  import('../components/quickClashComponents/team/TeamBattlePage'),
-)
 
 // New Global Matchmaking components
 const GlobalMatchmakingButton = lazy(() =>
@@ -258,11 +255,6 @@ const QuickClash = () => {
       >
         {/* Header Section */}
         <QuickClashHeader onNewChallenge={handleNewChallenge} />
-
-        {/* Stats Section - Lazy loaded */}
-        <Suspense fallback={<LoadingFallback />}>
-          <StatsCard />
-        </Suspense>
 
         {/* Matchmaking Buttons at the top center - desktop only */}
         {showCenterMatchButton && (
