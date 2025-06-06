@@ -3,7 +3,7 @@ node_modules
 
 # Environment variables
 config.env
-
+intern_config.env
 # Python virtual environment
 venv
 

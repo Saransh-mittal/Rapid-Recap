@@ -41,8 +41,9 @@ const BattleReadyDisplay = React.memo(
       <VStack spacing={4} align="center" w="100%">
         {/* Central Animated Element */}
         <MotionFlex
-          justify="center"
-          align="center"
+          display="flex" // Explicitly set display to flex for centering
+          justifyContent="center" // Centers content horizontally
+          alignItems="center" // Centers content vertically
           w="120px"
           h="120px"
           borderRadius="full"
