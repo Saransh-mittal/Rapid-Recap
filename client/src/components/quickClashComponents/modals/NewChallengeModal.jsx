@@ -29,7 +29,7 @@ import {
 
 // Import hooks
 import useQuickClash from '../../../customHooks/useQuickClash'
-import useQuickClashSocket from '../../../customHooks/useQuickClashSocket'
+
 import useDailyTasks from '../../../customHooks/useDailyTasks'
 import { setChallengeCreating } from '../../../redux/quickClashSlice'
 
@@ -39,7 +39,7 @@ const NewChallengeModal = ({ isOpen, onClose, preSelectedUser = null }) => {
   const dispatch = useDispatch()
 
   const { createChallenge, challengeCreating: isSubmitting } = useQuickClash()
-  const { emitChallengeCreated } = useQuickClashSocket()
+
   const { trackFriendChallenge } = useDailyTasks()
 
   // State management
@@ -156,14 +156,6 @@ const NewChallengeModal = ({ isOpen, onClose, preSelectedUser = null }) => {
 
       // If creation was successful, emit socket event
       if (challenge) {
-        emitChallengeCreated({
-          opponentId: selectedUser._id,
-          categories: selectedCategories,
-          challenge: {
-            _id: challenge._id,
-            category: challenge.category,
-          },
-        })
         trackFriendChallenge()
       }
 
@@ -182,7 +174,7 @@ const NewChallengeModal = ({ isOpen, onClose, preSelectedUser = null }) => {
     toast,
     t,
     createChallenge,
-    emitChallengeCreated,
+
     trackFriendChallenge,
     manuallyClosed,
     isOpen,

@@ -1,4 +1,4 @@
-// Updated screens/QuickClash.jsx to incorporate global matchmaking components and notification drawer
+// Updated screens/QuickClash.jsx
 import React, { useCallback, useState, useEffect } from 'react'
 import {
   Container,
@@ -35,9 +35,6 @@ const TaskCompletionHandler = React.lazy(() =>
 )
 
 // Lazy loaded components for better performance
-const StatsCard = lazy(() =>
-  import('../components/quickClashComponents/stats/StatsCard'),
-)
 const ActiveChallenges = lazy(() =>
   import('../components/quickClashComponents/ActiveChallenges'),
 )

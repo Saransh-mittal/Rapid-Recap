@@ -57,7 +57,6 @@ const RevengeConfirmationDialog = React.lazy(() =>
 
 // Custom hooks
 import useQuickClash from '../../customHooks/useQuickClash'
-import useQuickClashSocket from '../../customHooks/useQuickClashSocket'
 import useQuickClashTeamBattle from '../../customHooks/useQuickClashTeamBattle'
 import { useInView } from 'react-intersection-observer'
 
@@ -98,7 +97,6 @@ const ActiveChallenges = () => {
     resetActiveChallengesState,
   } = useQuickClash()
 
-  const { emitChallengeAccepted, emitChallengeRejected } = useQuickClashSocket()
   const { user } = useSelector(state => state.auth)
   const userId = user?._id
   const [selectedSession, setSelectedSession] = useState(null)
@@ -400,20 +398,8 @@ const ActiveChallenges = () => {
     try {
       if (type === 'accept') {
         const ch = await handleAcceptChallenge(id)
-        if (ch)
-          emitChallengeAccepted({
-            challengerId: ch.challenger._id,
-            challengeId: ch._id,
-            category: ch.category,
-          })
       } else if (type === 'decline') {
         const ch = await handleRejectChallenge(id)
-        if (ch)
-          emitChallengeRejected({
-            challengerId: ch.challenger._id,
-            challengeId: ch._id,
-            category: ch.category,
-          })
       }
     } catch (err) {
       /* ... */

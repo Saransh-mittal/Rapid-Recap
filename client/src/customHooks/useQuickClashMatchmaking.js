@@ -239,15 +239,6 @@ const useQuickClashMatchmaking = () => {
         // Refresh active challenges list
         dispatch(fetchActiveChallenges())
 
-        // Show success notification
-        toast({
-          title: t('Challenge Ready!'),
-          description: t('Your challenge is ready to play!'),
-          status: 'success',
-          duration: 5000,
-          isClosable: true,
-        })
-
         // Add interactive note message
         dispatch(
           addNoteMessageIfAllowed({

@@ -22,14 +22,15 @@ import axios from 'axios'
 import QuickClashError from '../components/quickClashComponents/QuickClashError'
 import ResultsModal from '../components/quickClashComponents/ResultsModal'
 import ConfirmationDialog from '../components/quickClashComponents/ConfirmationDialog'
-import { useSelector } from 'react-redux'
+import { useDispatch, useSelector } from 'react-redux'
 import useQuickClash from '../customHooks/useQuickClash'
-import useQuickClashSocket from '../customHooks/useQuickClashSocket'
+
 import useDailyTasks from '../customHooks/useDailyTasks'
 
 // Category Icon and Utils
 import { getCategoryInfo } from '../components/quickClashComponents/team/teamBattlePageComponents/categoriesSection/categoryUtils'
 import CategoryIcon from '../components/quickClashComponents/team/teamBattlePageComponents/categoriesSection/CategoryIcon'
+import { fetchActiveChallenges } from '../redux/quickClashSlice'
 
 // Lazy-loaded components
 const ReadingPhase = lazy(() =>
@@ -53,7 +54,9 @@ const QuickClashSession = () => {
     currentSession: session,
     sessionError: reduxSessionError,
   } = useQuickClash()
-  const { emitChallengeCompleted } = useQuickClashSocket()
+
+  // Remove emitChallengeCompleted from the destructured imports since we're not using it
+
   const { trackChallengeCompletion } = useDailyTasks()
   const params = useParams()
 
@@ -68,7 +71,7 @@ const QuickClashSession = () => {
   const [score, setScore] = useState(0)
   const [phaseProgress, setPhaseProgress] = useState(0)
   const [completeReadingLoading, setCompleteReadingLoading] = useState(false)
-
+  const dispatch = useDispatch()
   // Results modal control
   const {
     isOpen: isResultsOpen,
@@ -241,15 +244,9 @@ const QuickClashSession = () => {
     setScore(result.RQM_score)
     setPhase('completed')
     openResults()
-
-    // If challenge exists, emit completion event
-    if (challenge && challenge.opponent) {
-      emitChallengeCompleted({
-        opponentId: challenge.opponent._id,
-        challengeId: challenge._id,
-        score: result.RQM_score,
-      })
-    }
+    dispatch(fetchActiveChallenges())
+    // REMOVED: Redundant socket emit - HTTP API already handles this
+    // The quiz submission HTTP API call already handles completion logic via globalEmitter
 
     trackChallengeCompletion({
       score: result.RQM_score,
