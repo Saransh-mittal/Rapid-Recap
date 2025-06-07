@@ -114,6 +114,7 @@ const FlippableChallengeItem = memo(
       isDefeat,
       showFlipButton,
       showPlayerStatus,
+      bothAttempted,
     } = useMemo(() => {
       if (!challenge || !userId) {
         return {
@@ -127,6 +128,7 @@ const FlippableChallengeItem = memo(
           isDefeat: false,
           showFlipButton: false,
           showPlayerStatus: false,
+          bothAttempted: false,
         }
       }
 
@@ -177,6 +179,55 @@ const FlippableChallengeItem = memo(
         isDefeat,
         showFlipButton,
         showPlayerStatus,
+        bothAttempted,
+      }
+    }, [challenge, userId])
+
+    // NEW: Memoize player data to ensure user is always on top
+    const { userPlayer, opponentPlayer } = useMemo(() => {
+      if (!challenge || !userId) {
+        return { userPlayer: null, opponentPlayer: null }
+      }
+
+      const isUserTheChallenger = challenge.challenger._id === userId
+
+      const uPlayer = isUserTheChallenger
+        ? challenge.challenger
+        : challenge.opponent
+      const oPlayer = isUserTheChallenger
+        ? challenge.opponent
+        : challenge.challenger
+
+      const uPlayerScore = isUserTheChallenger
+        ? challenge.challengerScore
+        : challenge.opponentScore
+      const oPlayerScore = isUserTheChallenger
+        ? challenge.opponentScore
+        : challenge.challengerScore
+
+      const uPlayerAttempted = isUserTheChallenger
+        ? challenge.challengerAttempted
+        : challenge.opponentAttempted
+      const oPlayerAttempted = isUserTheChallenger
+        ? challenge.opponentAttempted
+        : challenge.challengerAttempted
+
+      const uPlayerTrophies = uPlayer?.quickClashTrophies
+      const oPlayerTrophies = oPlayer?.quickClashTrophies
+
+      return {
+        userPlayer: {
+          player: uPlayer,
+          score: uPlayerScore,
+          attempted: uPlayerAttempted,
+          trophies: uPlayerTrophies,
+        },
+        opponentPlayer: {
+          player: oPlayer,
+          score: oPlayerScore,
+          attempted: oPlayerAttempted,
+          trophies: oPlayerTrophies,
+        },
       }
     }, [challenge, userId])
 
@@ -489,14 +540,15 @@ const FlippableChallengeItem = memo(
             {/* Card Body */}
             <Box p={padding}>
               {/* Player Status Section */}
-              {showPlayerStatus && (
+              {showPlayerStatus && userPlayer && opponentPlayer && (
                 <VStack spacing={spacing} align="stretch" mb={2}>
                   <PlayerStatus
-                    player={challenge.challenger}
-                    score={challenge.challengerScore}
-                    attempted={challenge.challengerAttempted}
-                    isUser={isChallenger}
-                    trophies={challenge.challenger.quickClashTrophies}
+                    player={userPlayer.player}
+                    score={userPlayer.score}
+                    attempted={userPlayer.attempted}
+                    isUser={true}
+                    trophies={userPlayer.trophies}
+                    isChallengeOver={bothAttempted}
                   />
 
                   {/* VS Line with Trophy Display */}
@@ -531,11 +583,12 @@ const FlippableChallengeItem = memo(
                   />
 
                   <PlayerStatus
-                    player={challenge.opponent}
-                    score={challenge.opponentScore}
-                    attempted={challenge.opponentAttempted}
-                    isUser={!isChallenger}
-                    trophies={challenge.opponent.quickClashTrophies}
+                    player={opponentPlayer.player}
+                    score={opponentPlayer.score}
+                    attempted={opponentPlayer.attempted}
+                    isUser={false}
+                    trophies={opponentPlayer.trophies}
+                    isChallengeOver={bothAttempted}
                   />
                 </VStack>
               )}

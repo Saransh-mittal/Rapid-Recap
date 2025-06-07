@@ -19,6 +19,7 @@ const PlayerStatus = ({
   isUser,
   trophies,
   trophyChange,
+  isChallengeOver, // New prop to indicate if both players have completed
 }) => {
   const { t } = useTranslation('QuickClash')
   const bgGradient = isUser
@@ -57,6 +58,11 @@ const PlayerStatus = ({
           },
         }
       : {}
+
+  // The badge should only be displayed if the user has not attempted,
+  // or if they have attempted but the challenge is not fully over yet.
+  // It is hidden once both players have completed the challenge.
+  const shouldShowStatusBadge = !attempted || !isChallengeOver
 
   return (
     <MotionBox
@@ -115,14 +121,18 @@ const PlayerStatus = ({
           </HStack>
 
           <Flex justifyContent="space-between" align="center">
-            <Badge
-              colorScheme={attempted ? 'green' : 'yellow'}
-              fontSize="xs"
-              variant={attempted ? 'solid' : 'outline'}
-              borderRadius="full"
-            >
-              {attempted ? t('Completed') : t('Pending')}
-            </Badge>
+            <Box>
+              {shouldShowStatusBadge && (
+                <Badge
+                  colorScheme={attempted ? 'green' : 'yellow'}
+                  fontSize="xs"
+                  variant={attempted ? 'solid' : 'outline'}
+                  borderRadius="full"
+                >
+                  {attempted ? t('Completed') : t('Pending')}
+                </Badge>
+              )}
+            </Box>
 
             {/* Trophy display with change indicator */}
             {trophies !== undefined && (
