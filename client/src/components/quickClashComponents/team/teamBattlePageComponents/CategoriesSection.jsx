@@ -19,12 +19,11 @@ import CategoryCard from './categoriesSection/CategoryCard'
 import QuickClashInstructionsModal from '../../QuickClashInstructionsModal'
 
 /**
- * Categories Section Component with Enhanced Loading States and Selection Logic
+ * Categories Section Component with Enhanced Loading States and Fixed Priority Logic
  */
 const CategoriesSection = memo(
   ({
     currentBattle,
-    uncompletedCategories,
     userTeam,
     user,
     onSelectCategory,
@@ -35,7 +34,6 @@ const CategoriesSection = memo(
     // New loading props
     categoryOperationLoading,
     categoryOperationType,
-    categoryOperationError,
     selectedCategoryForOperation,
     // Legacy props for backward compatibility
     categorySelectionLoading,
@@ -54,7 +52,7 @@ const CategoriesSection = memo(
     const [pendingChallengeAction, setPendingChallengeAction] =
       React.useState(null)
 
-    // Responsive values - FIXED: Columns should never exceed actual number of categories
+    // Responsive values
     const sectionPadding = useBreakpointValue({ base: 3, sm: 4, md: 6, lg: 8 })
     const maxColumns = useBreakpointValue({
       base: 2,
@@ -64,7 +62,7 @@ const CategoriesSection = memo(
       xl: 5,
     })
 
-    // Memoized user participation status - UPDATED LOGIC
+    // Memoized user participation status
     const userParticipationStatus = useMemo(() => {
       if (!currentBattle || !userTeam || !user) {
         return {
@@ -134,7 +132,7 @@ const CategoriesSection = memo(
             : currentBattle.teamBMembers
         const userMember = teamMembers.find(m => m.user._id === user._id)
 
-        // CRITICAL FIX: Only check completion for THIS specific category
+        // Check completion for THIS specific category
         const isSelectedByUser = userMember?.category === challenge.category
         const hasUserParticipatedInThisCategory =
           isUserAssigned && userMember?.participated
@@ -142,27 +140,59 @@ const CategoriesSection = memo(
           isUserAssigned && userMember?.completed
 
         // Check if selected by teammate (not assigned to player yet, but selected)
-        const isSelectedByTeammate = teamMembers.some(
+        const teammateWhoSelected = teamMembers.find(
           m =>
             m.user._id !== user._id &&
             m.category === challenge.category &&
             !isAssignedToPlayer,
         )
 
-        // CRITICAL UPDATE: Check if user has participated in ANY challenge
+        const isSelectedByTeammate = !!teammateWhoSelected
+
+        // Get teammate who is assigned to this challenge
+        const teammateWhoIsAssigned = teamMembers.find(
+          m => m.user._id !== user._id && m.user._id === challenge[playerField],
+        )
+
+        // Check if teammate completed this challenge
+        const teammateWhoCompleted = teamMembers.find(
+          m =>
+            m.user._id !== user._id &&
+            m.category === challenge.category &&
+            m.completed,
+        )
+
+        // Get teammate info for display
+        const teammateInfo =
+          teammateWhoSelected || teammateWhoIsAssigned || teammateWhoCompleted
+        const teammateName =
+          teammateInfo?.user?.name || teammateInfo?.user?.inGameName || null
+        const teammateInGameName = teammateInfo?.user?.inGameName || null
+        const teammateHasParticipated = teammateInfo?.participated || false
+        const teammateHasCompleted = teammateInfo?.completed || false
+
+        // Check if teammate completed this specific challenge
+        const isCompletedByTeammate =
+          !!teammateWhoCompleted &&
+          teammateWhoCompleted.completed &&
+          !isUserAssigned &&
+          !hasUserCompletedThisCategory &&
+          !hasUserParticipatedInThisCategory
+
+        // Check if user has participated in ANY challenge
         const userHasParticipatedInAnyChallenge =
           userParticipationStatus.hasParticipated
         const userHasExitedAnyChallenge = userParticipationStatus.hasExited
         const isThisTheParticipatedCategory =
           challenge.category === userParticipationStatus.participatedCategory
 
-        // NEW: Check if user has selected ANY category (prevents selecting multiple)
+        // Check if user has selected ANY category (prevents selecting multiple)
         const userHasSelectedAnyCategory = userParticipationStatus.hasSelected
         const isThisTheSelectedCategory =
           challenge.category === userParticipationStatus.selectedCategory
 
-        // FIXED: Determine states based on THIS SPECIFIC category only
-        const isCompleted = hasUserCompletedThisCategory // Only true if THIS category is completed
+        // Determine states based on THIS SPECIFIC category only
+        const isCompleted = hasUserCompletedThisCategory
         const isInProgress =
           isUserAssigned &&
           hasUserParticipatedInThisCategory &&
@@ -172,28 +202,23 @@ const CategoriesSection = memo(
           hasUserParticipatedInThisCategory &&
           !hasUserCompletedThisCategory
 
-        // FIXED: Check if user participated in this specific category but didn't complete it
-        const userExitedThisSpecificCategory =
-          isThisTheParticipatedCategory &&
-          userParticipationStatus.hasParticipated &&
-          !userParticipationStatus.hasCompleted
-
         const isSelectedButNotStarted =
           isSelectedByUser &&
           !isUserAssigned &&
           !hasUserParticipatedInThisCategory
 
-        // UPDATED AVAILABILITY LOGIC - Enhanced to handle selection state
+        // Availability logic
         const isAvailable =
           !isSelectedByUser &&
           !isSelectedByTeammate &&
           !isAssignedToPlayer &&
           !hasUserParticipatedInThisCategory &&
-          !userHasParticipatedInAnyChallenge && // User hasn't participated in any challenge
-          !userHasExitedAnyChallenge && // User hasn't exited any challenge
-          !userHasSelectedAnyCategory // NEW: User hasn't selected any category yet
+          !userHasParticipatedInAnyChallenge &&
+          !userHasExitedAnyChallenge &&
+          !userHasSelectedAnyCategory &&
+          !isCompletedByTeammate
 
-        // UPDATED: Lock logic - lock if user has selected another category OR exited any challenge
+        // Lock logic
         const isLockedDueToSelection =
           userHasSelectedAnyCategory && !isThisTheSelectedCategory
 
@@ -234,10 +259,32 @@ const CategoriesSection = memo(
           isDisabled: shouldDisableButtons,
           // Enhanced lock states
           isLockedDueToExit,
-          isLockedDueToSelection, // NEW: Lock due to selecting another category
-          isLocked, // Combined lock state
+          isLockedDueToSelection,
+          isLocked,
           isThisTheParticipatedCategory,
-          isThisTheSelectedCategory, // NEW: Is this the category user selected
+          isThisTheSelectedCategory,
+          // Teammate completion state
+          isCompletedByTeammate,
+          // Teammate information
+          teammateInfo: {
+            name: teammateName,
+            inGameName: teammateInGameName,
+            hasParticipated: teammateHasParticipated,
+            hasCompleted: teammateHasCompleted,
+            isSelected: !!teammateWhoSelected,
+            isAssigned: !!teammateWhoIsAssigned,
+            // Add teammate scores when completed
+            teammateScore: teammateWhoCompleted
+              ? userTeam === 'teamA'
+                ? challenge.teamAScore
+                : challenge.teamBScore
+              : null,
+            opponentScore: teammateWhoCompleted
+              ? userTeam === 'teamA'
+                ? challenge.teamBScore
+                : challenge.teamAScore
+              : null,
+          },
         }
       })
     }, [
@@ -249,6 +296,7 @@ const CategoriesSection = memo(
       selectedCategoryForOperation,
       userParticipationStatus,
     ])
+
     // Ensure we never have more columns than categories
     const columns = Math.min(maxColumns, enhancedChallenges.length)
     const gridSpacing = useBreakpointValue({
@@ -259,17 +307,6 @@ const CategoriesSection = memo(
       xl: 6,
     })
     const headerSize = useBreakpointValue({ base: 'lg', sm: 'xl', md: '2xl' })
-    const containerMaxW = useBreakpointValue({
-      base: 'full',
-      md: '6xl',
-      lg: '7xl',
-      xl: '8xl',
-    })
-
-    // Update hasUserParticipated to use the new logic
-    const hasUserParticipated = userParticipationStatus.hasParticipated
-    const hasUserSelected = userParticipationStatus.hasSelected
-    const userSelectedCategory = userParticipationStatus.selectedCategory
 
     // Memoized user completed categories
     const userCompletedCategories = useMemo(() => {
@@ -282,37 +319,6 @@ const CategoriesSection = memo(
       return userMember?.completed && userMember.category
         ? [userMember.category]
         : []
-    }, [currentBattle, userTeam, user])
-
-    // Memoized user's selected category and participation status
-    const userChallengeStatus = useMemo(() => {
-      if (!currentBattle || !userTeam || !user) return null
-      const teamMembers =
-        userTeam === 'teamA'
-          ? currentBattle.teamAMembers
-          : currentBattle.teamBMembers
-      const userMember = teamMembers.find(m => m.user._id === user._id)
-
-      if (!userMember) return null
-
-      return {
-        selectedCategory: userMember.category,
-        hasParticipated: userMember.participated,
-        hasCompleted: userMember.completed,
-      }
-    }, [currentBattle, userTeam, user])
-
-    // Memoized teammates selected categories
-    const teammatesSelectedCategories = useMemo(() => {
-      if (!currentBattle || !userTeam || !user) return []
-      const teamMembers = (
-        userTeam === 'teamA'
-          ? currentBattle.teamAMembers
-          : currentBattle.teamBMembers
-      ).filter(m => m.user._id !== user._id)
-      return teamMembers
-        .filter(m => m.category && !m.completed)
-        .map(m => m.category)
     }, [currentBattle, userTeam, user])
 
     // Handle begin challenge with instructions modal
@@ -341,7 +347,6 @@ const CategoriesSection = memo(
 
     return (
       <>
-        {/* UPDATED: Better container structure for mobile responsiveness */}
         <Box
           mx={{ base: 2, sm: 3, md: 6, lg: 8 }}
           mb={{ base: 6, sm: 8, md: 10 }}
@@ -413,12 +418,12 @@ const CategoriesSection = memo(
                 </Box>
               </VStack>
 
-              {/* FIXED: Categories Grid Container - Perfect centering for all screen sizes */}
+              {/* Categories Grid Container */}
               <Box
                 w="100%"
                 display="flex"
                 justifyContent="center"
-                px={{ base: 2, sm: 2, md: 0 }} // Remove desktop padding that causes left shift
+                px={{ base: 2, sm: 2, md: 0 }}
               >
                 <Grid
                   templateColumns={`repeat(${columns}, 1fr)`}
@@ -465,6 +470,10 @@ const CategoriesSection = memo(
                         isThisTheSelectedCategory={
                           challenge.isThisTheSelectedCategory
                         }
+                        // Teammate completion state
+                        isCompletedByTeammate={challenge.isCompletedByTeammate}
+                        // Teammate info
+                        teammateInfo={challenge.teammateInfo}
                         // Actions
                         onSelectCategory={onSelectCategory}
                         onDeselectCategory={onDeselectCategory}
@@ -526,7 +535,7 @@ const CategoriesSection = memo(
                 </Box>
               )}
 
-              {/* NEW: Warning when user has selected a category */}
+              {/* Warning when user has selected a category */}
               {userParticipationStatus.hasSelected &&
                 !userParticipationStatus.hasParticipated && (
                   <Box w="100%" maxW="md" mx="auto">
@@ -578,7 +587,7 @@ const CategoriesSection = memo(
                   </Box>
                 )}
 
-              {hasUserParticipated &&
+              {userParticipationStatus.hasParticipated &&
                 !userParticipationStatus.hasExited &&
                 !userCompletedCategories.length && (
                   <Box w="100%" maxW="md" mx="auto">

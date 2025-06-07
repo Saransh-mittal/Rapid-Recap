@@ -29,7 +29,7 @@ import CategoryStatusBadge from './CategoryStatusBadge'
 import { getCategoryInfo } from './categoryUtils'
 
 /**
- * Individual Category Card Component with Enhanced Loading States and Selection Logic
+ * Individual Category Card Component with Enhanced Loading States and Fixed Priority Logic
  */
 const CategoryCard = memo(
   ({
@@ -49,10 +49,14 @@ const CategoryCard = memo(
     isDisabled,
     // Enhanced lock states
     isLockedDueToExit,
-    isLockedDueToSelection, // NEW PROP
-    isLocked, // Combined lock state
+    isLockedDueToSelection,
+    isLocked,
     isThisTheParticipatedCategory,
-    isThisTheSelectedCategory, // NEW PROP
+    isThisTheSelectedCategory,
+    // Teammate completion state
+    isCompletedByTeammate,
+    // Teammate information
+    teammateInfo,
     // Actions
     onSelectCategory,
     onDeselectCategory,
@@ -67,13 +71,12 @@ const CategoryCard = memo(
   }) => {
     const { t } = useTranslation('QuickClash')
 
-    // UPDATED: Better responsive values for mobile devices
+    // Responsive values
     const cardPadding = useBreakpointValue({ base: 2, sm: 3, md: 4 })
     const cardHeight = useBreakpointValue({
       base: '180px',
-      sm: '200px',
-      md: '220px',
-      lg: '240px',
+      sm: '210px',
+      md: '240px',
     })
     const buttonSize = useBreakpointValue({ base: 'xs', sm: 'sm', md: 'md' })
     const smallButtonFontSize = useBreakpointValue({
@@ -113,64 +116,98 @@ const CategoryCard = memo(
       }
     }, [isLoading, loadingType, isDisabled])
 
-    // Memoized card styling based on state - UPDATED
-    const cardStyling = useMemo(() => {
-      let cardBg = 'rgba(15, 23, 42, 0.9)'
-      let borderColorValue = 'rgba(71, 85, 105, 0.3)'
-      let shadowColor = 'rgba(0, 0, 0, 0.1)'
+    // Determine the primary state with proper priority ordering
+    const primaryState = useMemo(() => {
+      // Priority 1: User's own completion/participation states (highest priority)
+      if (isCompleted) return 'userCompleted'
+      if (isStartedButExited) return 'userExited'
+      if (isInProgress) return 'userInProgress'
+      if (isSelectedButNotStarted) return 'userSelectedNotStarted'
 
-      if (isCompleted) {
-        borderColorValue = '#10B981'
-        shadowColor = 'rgba(16, 185, 129, 0.3)'
-      } else if (isStartedButExited) {
-        borderColorValue = '#EF4444'
-        shadowColor = 'rgba(239, 68, 68, 0.3)'
-      } else if (isInProgress) {
-        borderColorValue = '#F59E0B'
-        shadowColor = 'rgba(245, 158, 11, 0.3)'
-      } else if (isSelectedButNotStarted) {
-        borderColorValue = '#3B82F6'
-        shadowColor = 'rgba(59, 130, 246, 0.3)'
-      } else if (isAvailable) {
-        borderColorValue = categoryInfo.primaryColor
-        shadowColor = `${categoryInfo.primaryColor}40`
-      } else if (isSelectedByTeammate) {
-        borderColorValue = '#8B5CF6'
-        shadowColor = 'rgba(139, 92, 246, 0.3)'
-      } else if (isLockedDueToSelection) {
-        // NEW: Locked due to selection state styling
-        borderColorValue = '#F59E0B'
-        shadowColor = 'rgba(245, 158, 11, 0.2)'
-        cardBg = 'rgba(15, 23, 42, 0.7)' // Slightly dimmed
-      } else if (isLockedDueToExit) {
-        // Locked due to exit state styling
-        borderColorValue = '#6B7280'
-        shadowColor = 'rgba(107, 114, 128, 0.3)'
-        cardBg = 'rgba(15, 23, 42, 0.6)' // More dimmed
-      }
+      // Priority 2: Teammate states (medium-high priority)
+      if (isCompletedByTeammate) return 'teammateCompleted'
+      if (isSelectedByTeammate) return 'teammateSelected'
 
-      // Dim the card if disabled or locked
-      if (isDisabled || isLocked) {
-        cardBg = 'rgba(15, 23, 42, 0.6)'
-        shadowColor = 'rgba(0, 0, 0, 0.1)'
-      }
+      // Priority 3: Lock states due to user actions (medium priority)
+      if (isLockedDueToExit) return 'lockedDueToExit'
+      if (isLockedDueToSelection) return 'lockedDueToSelection'
 
-      return { cardBg, borderColorValue, shadowColor }
+      // Priority 4: Available state (lowest priority)
+      if (isAvailable) return 'available'
+
+      // Default: unavailable
+      return 'unavailable'
     }, [
       isCompleted,
       isStartedButExited,
       isInProgress,
       isSelectedButNotStarted,
-      isAvailable,
+      isCompletedByTeammate,
       isSelectedByTeammate,
       isLockedDueToExit,
-      isLockedDueToSelection, // NEW
-      isDisabled,
-      isLocked,
-      categoryInfo.primaryColor,
+      isLockedDueToSelection,
+      isAvailable,
     ])
 
-    // Event handlers - UPDATED
+    // Memoized card styling based on primary state
+    const cardStyling = useMemo(() => {
+      let cardBg = 'rgba(15, 23, 42, 0.9)'
+      let borderColorValue = 'rgba(71, 85, 105, 0.3)'
+      let shadowColor = 'rgba(0, 0, 0, 0.1)'
+
+      switch (primaryState) {
+        case 'userCompleted':
+          borderColorValue = '#10B981'
+          shadowColor = 'rgba(16, 185, 129, 0.3)'
+          break
+        case 'userExited':
+          borderColorValue = '#EF4444'
+          shadowColor = 'rgba(239, 68, 68, 0.3)'
+          break
+        case 'userInProgress':
+          borderColorValue = '#F59E0B'
+          shadowColor = 'rgba(245, 158, 11, 0.3)'
+          break
+        case 'userSelectedNotStarted':
+          borderColorValue = '#3B82F6'
+          shadowColor = 'rgba(59, 130, 246, 0.3)'
+          break
+        case 'teammateCompleted':
+        case 'teammateSelected':
+          borderColorValue = '#8B5CF6'
+          shadowColor = 'rgba(139, 92, 246, 0.3)'
+          break
+        case 'lockedDueToSelection':
+          borderColorValue = '#F59E0B'
+          shadowColor = 'rgba(245, 158, 11, 0.2)'
+          cardBg = 'rgba(15, 23, 42, 0.7)'
+          break
+        case 'lockedDueToExit':
+          borderColorValue = '#6B7280'
+          shadowColor = 'rgba(107, 114, 128, 0.3)'
+          cardBg = 'rgba(15, 23, 42, 0.6)'
+          break
+        case 'available':
+          borderColorValue = categoryInfo.primaryColor
+          shadowColor = `${categoryInfo.primaryColor}40`
+          break
+        default:
+          borderColorValue = 'rgba(71, 85, 105, 0.3)'
+          shadowColor = 'rgba(0, 0, 0, 0.1)'
+          cardBg = 'rgba(15, 23, 42, 0.6)'
+          break
+      }
+
+      // Dim the card if disabled or locked, BUT NOT if teammate completed
+      if ((isDisabled || isLocked) && primaryState !== 'teammateCompleted') {
+        cardBg = 'rgba(15, 23, 42, 0.6)'
+        shadowColor = 'rgba(0, 0, 0, 0.1)'
+      }
+
+      return { cardBg, borderColorValue, shadowColor }
+    }, [primaryState, isDisabled, isLocked, categoryInfo.primaryColor])
+
+    // Event handlers
     const handleSelectCategory = e => {
       e.stopPropagation()
       if (!loadingStates.isAnyLoading && isAvailable && !isLocked) {
@@ -234,12 +271,21 @@ const CategoryCard = memo(
             ? 'pointer'
             : 'default'
         }
-        opacity={isDisabled || isLocked ? 0.6 : 1}
+        opacity={
+          (isDisabled || isLocked) && primaryState !== 'teammateCompleted'
+            ? 0.6
+            : 1
+        }
         _hover={
           isAvailable && !loadingStates.isAnyLoading && !isLocked
             ? {
                 boxShadow: `0 8px 25px ${cardStyling.shadowColor}`,
                 transform: 'translateY(-2px)',
+              }
+            : primaryState === 'teammateCompleted'
+            ? {
+                boxShadow: `0 8px 25px ${cardStyling.shadowColor}`,
+                transform: 'translateY(-1px)',
               }
             : {}
         }
@@ -303,12 +349,16 @@ const CategoryCard = memo(
           right={{ base: '6px', sm: '8px' }}
           boxSize={battleIconSize}
           color={categoryInfo.primaryColor}
-          opacity={isDisabled || isLocked ? 0.3 : 0.4}
+          opacity={
+            (isDisabled || isLocked) && primaryState !== 'teammateCompleted'
+              ? 0.3
+              : 0.4
+          }
           zIndex={1}
         />
 
-        {/* Status Icons - UPDATED with responsive sizes */}
-        {isCompleted && (
+        {/* Status Icons - based on primaryState */}
+        {primaryState === 'userCompleted' && (
           <Icon
             as={CheckCircle}
             position="absolute"
@@ -321,7 +371,20 @@ const CategoryCard = memo(
           />
         )}
 
-        {isStartedButExited && (
+        {primaryState === 'teammateCompleted' && (
+          <Icon
+            as={CheckCircle}
+            position="absolute"
+            top={{ base: '6px', sm: '8px' }}
+            left={{ base: '6px', sm: '8px' }}
+            boxSize={statusIconSize}
+            color="#8B5CF6"
+            opacity={0.9}
+            zIndex={1}
+          />
+        )}
+
+        {primaryState === 'userExited' && (
           <Tooltip
             label={t('Challenge cannot be continued once exited')}
             placement="top"
@@ -347,7 +410,7 @@ const CategoryCard = memo(
           </Tooltip>
         )}
 
-        {isInProgress && (
+        {primaryState === 'userInProgress' && (
           <Icon
             as={Zap}
             position="absolute"
@@ -360,7 +423,7 @@ const CategoryCard = memo(
           />
         )}
 
-        {isSelectedButNotStarted && (
+        {primaryState === 'userSelectedNotStarted' && (
           <Icon
             as={CheckCircle}
             position="absolute"
@@ -373,8 +436,7 @@ const CategoryCard = memo(
           />
         )}
 
-        {/* NEW: Locked due to selection icon */}
-        {isLockedDueToSelection && (
+        {primaryState === 'lockedDueToSelection' && (
           <Tooltip
             label={t(
               'You have already selected another category. Please deselect it first to choose this one.',
@@ -402,8 +464,7 @@ const CategoryCard = memo(
           </Tooltip>
         )}
 
-        {/* Locked due to exit icon */}
-        {isLockedDueToExit && !isLockedDueToSelection && (
+        {primaryState === 'lockedDueToExit' && (
           <Tooltip
             label={t(
               'You cannot select this category because you have already participated in another challenge',
@@ -433,295 +494,352 @@ const CategoryCard = memo(
 
         {/* Main Content */}
         <VStack
-          spacing={{ base: 1, sm: 1.5 }}
+          spacing={{ base: 0.5, sm: 1 }}
           alignItems="center"
           flex={1}
           position="relative"
           zIndex={2}
           justify="space-between"
-          py={{ base: 1, sm: 1.5 }}
+          py={{ base: 0.5, sm: 1 }}
+          minH="0"
         >
-          {/* Content based on state */}
-          {isCompleted ? (
-            <CompletedCategoryContent
-              categoryInfo={categoryInfo}
-              challenge={challenge}
-              userScore={userScore}
-              opponentScore={opponentScore}
-              t={t}
-            />
-          ) : isStartedButExited ? (
-            <ExitedChallengeContent
-              categoryInfo={categoryInfo}
-              challenge={challenge}
-              t={t}
-            />
-          ) : isLockedDueToSelection ? (
-            <LockedDueToSelectionContent
-              categoryInfo={categoryInfo}
-              challenge={challenge}
-              t={t}
-            />
-          ) : isLockedDueToExit ? (
-            <LockedCategoryContent
-              categoryInfo={categoryInfo}
-              challenge={challenge}
-              t={t}
-            />
-          ) : (
-            <ActiveCategoryContent
-              categoryInfo={categoryInfo}
-              challenge={challenge}
-              isInProgress={isInProgress}
-              isSelectedButNotStarted={isSelectedButNotStarted}
-              isSelectedByTeammate={isSelectedByTeammate}
-              isAvailable={isAvailable}
-              t={t}
-            />
-          )}
+          {/* Content based on primary state */}
+          {(() => {
+            switch (primaryState) {
+              case 'userCompleted':
+                return (
+                  <CompletedCategoryContent
+                    categoryInfo={categoryInfo}
+                    challenge={challenge}
+                    userScore={userScore}
+                    opponentScore={opponentScore}
+                    teammateInfo={teammateInfo}
+                    t={t}
+                  />
+                )
+              case 'userExited':
+                return (
+                  <ExitedChallengeContent
+                    categoryInfo={categoryInfo}
+                    challenge={challenge}
+                    t={t}
+                  />
+                )
+              case 'teammateCompleted':
+                return (
+                  <CompletedByTeammateContent
+                    categoryInfo={categoryInfo}
+                    challenge={challenge}
+                    teammateInfo={teammateInfo}
+                    t={t}
+                  />
+                )
+              case 'lockedDueToSelection':
+                return (
+                  <LockedDueToSelectionContent
+                    categoryInfo={categoryInfo}
+                    challenge={challenge}
+                    t={t}
+                  />
+                )
+              case 'lockedDueToExit':
+                return (
+                  <LockedCategoryContent
+                    categoryInfo={categoryInfo}
+                    challenge={challenge}
+                    t={t}
+                  />
+                )
+              default:
+                // All other states (userInProgress, userSelectedNotStarted, teammateSelected, available, unavailable)
+                return (
+                  <ActiveCategoryContent
+                    categoryInfo={categoryInfo}
+                    challenge={challenge}
+                    isInProgress={isInProgress}
+                    isSelectedButNotStarted={isSelectedButNotStarted}
+                    isSelectedByTeammate={isSelectedByTeammate}
+                    isAvailable={isAvailable}
+                    isLockedDueToExit={isLockedDueToExit}
+                    isLockedDueToSelection={isLockedDueToSelection}
+                    isLocked={isLocked}
+                    isCompletedByTeammate={isCompletedByTeammate}
+                    teammateInfo={teammateInfo}
+                    t={t}
+                  />
+                )
+            }
+          })()}
 
-          {/* Action Buttons - UPDATED with better mobile sizing */}
-          <Box w="100%">
-            {isCompleted ? (
-              <Button
-                size={buttonSize}
-                variant="outline"
-                borderColor="#10B981"
-                color="#10B981"
-                bg="rgba(16, 185, 129, 0.08)"
-                _hover={{
-                  bg: 'rgba(16, 185, 129, 0.15)',
-                }}
-                leftIcon={<Icon as={FileText} boxSize={iconBoxSize} />}
-                width="100%"
-                onClick={handleViewReport}
-                isLoading={reportModalLoading}
-                loadingText={t('Loading...')}
-                borderRadius="lg"
-                fontSize={smallButtonFontSize}
-                fontWeight="semibold"
-                isDisabled={loadingStates.isAnyLoading}
-                minH={{ base: '28px', sm: '32px', md: '36px' }}
-              >
-                {t('View Report')}
-              </Button>
-            ) : isStartedButExited ? (
-              <Tooltip
-                label={t(
-                  'Once you exit a challenge, you cannot continue it. This prevents unfair advantages in team battles.',
-                )}
-                placement="top"
-                bg="red.600"
-                color="white"
-                fontSize="xs"
-                p={3}
-                borderRadius="md"
-                maxW="200px"
-                textAlign="center"
-              >
-                <Button
-                  size={buttonSize}
-                  variant="outline"
-                  borderColor="#EF4444"
-                  color="#EF4444"
-                  bg="rgba(239, 68, 68, 0.08)"
-                  cursor="not-allowed"
-                  leftIcon={<Icon as={XCircle} boxSize={iconBoxSize} />}
-                  width="100%"
-                  borderRadius="lg"
-                  fontSize={smallButtonFontSize}
-                  fontWeight="semibold"
-                  _hover={{
-                    bg: 'rgba(239, 68, 68, 0.08)',
-                  }}
-                  isDisabled
-                  minH={{ base: '28px', sm: '32px', md: '36px' }}
-                >
-                  {t('Cannot Continue')}
-                </Button>
-              </Tooltip>
-            ) : isLockedDueToSelection ? (
-              <Tooltip
-                label={t(
-                  'You have already selected another category. Please deselect it first to choose this one.',
-                )}
-                placement="top"
-                bg="orange.600"
-                color="white"
-                fontSize="xs"
-                p={3}
-                borderRadius="md"
-                maxW="200px"
-                textAlign="center"
-              >
-                <Button
-                  size={buttonSize}
-                  variant="outline"
-                  borderColor="#F59E0B"
-                  color="#F59E0B"
-                  bg="rgba(245, 158, 11, 0.08)"
-                  cursor="not-allowed"
-                  leftIcon={<Icon as={Lock} boxSize={iconBoxSize} />}
-                  width="100%"
-                  borderRadius="lg"
-                  fontSize={smallButtonFontSize}
-                  fontWeight="semibold"
-                  _hover={{
-                    bg: 'rgba(245, 158, 11, 0.08)',
-                  }}
-                  isDisabled
-                  minH={{ base: '28px', sm: '32px', md: '36px' }}
-                >
-                  {t('Change Selection')}
-                </Button>
-              </Tooltip>
-            ) : isLockedDueToExit ? (
-              <Tooltip
-                label={t(
-                  'You cannot select this category because you have already participated in another challenge in this battle.',
-                )}
-                placement="top"
-                bg="gray.600"
-                color="white"
-                fontSize="xs"
-                p={3}
-                borderRadius="md"
-                maxW="200px"
-                textAlign="center"
-              >
-                <Button
-                  size={buttonSize}
-                  variant="outline"
-                  borderColor="#6B7280"
-                  color="#6B7280"
-                  bg="rgba(107, 114, 128, 0.08)"
-                  cursor="not-allowed"
-                  leftIcon={<Icon as={X} boxSize={iconBoxSize} />}
-                  width="100%"
-                  borderRadius="lg"
-                  fontSize={smallButtonFontSize}
-                  fontWeight="semibold"
-                  _hover={{
-                    bg: 'rgba(107, 114, 128, 0.08)',
-                  }}
-                  isDisabled
-                  minH={{ base: '28px', sm: '32px', md: '36px' }}
-                >
-                  {t('Locked')}
-                </Button>
-              </Tooltip>
-            ) : isInProgress ? (
-              <Button
-                size={buttonSize}
-                variant="outline"
-                borderColor="#F59E0B"
-                color="#F59E0B"
-                bg="rgba(245, 158, 11, 0.08)"
-                cursor="not-allowed"
-                leftIcon={<Icon as={Zap} boxSize={iconBoxSize} />}
-                width="100%"
-                borderRadius="lg"
-                fontSize={smallButtonFontSize}
-                fontWeight="semibold"
-                isDisabled
-                minH={{ base: '28px', sm: '32px', md: '36px' }}
-              >
-                {t('In Progress')}
-              </Button>
-            ) : isSelectedButNotStarted ? (
-              <VStack spacing={{ base: 1, sm: 2 }} w="100%">
-                <Button
-                  size={buttonSize}
-                  bg={`linear-gradient(135deg, ${categoryInfo.primaryColor}, ${categoryInfo.secondaryColor})`}
-                  color="white"
-                  leftIcon={
-                    loadingStates.isBeginningThis ? (
-                      <Spinner size="xs" />
-                    ) : (
-                      <Icon as={Play} boxSize={iconBoxSize} />
-                    )
-                  }
-                  width="100%"
-                  onClick={handleBeginChallenge}
-                  isLoading={loadingStates.isBeginningThis}
-                  loadingText={t('Starting...')}
-                  borderRadius="lg"
-                  fontSize={smallButtonFontSize}
-                  fontWeight="bold"
-                  boxShadow={`0 4px 15px ${categoryInfo.primaryColor}40`}
-                  _hover={{
-                    filter:
-                      loadingStates.isAnyLoading || isLocked
-                        ? 'none'
-                        : 'brightness(110%)',
-                  }}
-                  isDisabled={loadingStates.isAnyLoading || isLocked}
-                  minH={{ base: '28px', sm: '32px', md: '36px' }}
-                >
-                  {t('Begin Challenge')}
-                </Button>
-                <Button
-                  size="xs"
-                  variant="ghost"
-                  color="gray.400"
-                  leftIcon={
-                    loadingStates.isDeselectingThis ? (
-                      <Spinner size="xs" />
-                    ) : (
-                      <Icon as={RotateCcw} boxSize="8px" />
-                    )
-                  }
-                  onClick={handleDeselectCategory}
-                  fontSize={{ base: '8px', sm: '9px' }}
-                  _hover={{
-                    color:
-                      loadingStates.isAnyLoading || isLocked
-                        ? 'gray.400'
-                        : 'white',
-                    bg:
-                      loadingStates.isAnyLoading || isLocked
-                        ? 'transparent'
-                        : 'rgba(255, 255, 255, 0.1)',
-                  }}
-                  isLoading={loadingStates.isDeselectingThis}
-                  loadingText={t('Deselecting...')}
-                  isDisabled={loadingStates.isAnyLoading || isLocked}
-                  minH={{ base: '20px', sm: '24px' }}
-                >
-                  {t('Change Selection')}
-                </Button>
-              </VStack>
-            ) : isAvailable && !isLocked ? (
-              <Button
-                size={buttonSize}
-                bg={`linear-gradient(135deg, ${categoryInfo.primaryColor}, ${categoryInfo.secondaryColor})`}
-                color="white"
-                leftIcon={
-                  loadingStates.isSelectingThis ? (
-                    <Spinner size="xs" />
-                  ) : (
-                    <Icon as={Play} boxSize={iconBoxSize} />
+          {/* Action Buttons - based on primary state */}
+          <Box w="100%" mt={{ base: 1, sm: 2 }}>
+            {(() => {
+              switch (primaryState) {
+                case 'userCompleted':
+                  return (
+                    <Button
+                      size={buttonSize}
+                      variant="outline"
+                      borderColor="#10B981"
+                      color="#10B981"
+                      bg="rgba(16, 185, 129, 0.08)"
+                      _hover={{
+                        bg: 'rgba(16, 185, 129, 0.15)',
+                      }}
+                      leftIcon={<Icon as={FileText} boxSize={iconBoxSize} />}
+                      width="100%"
+                      onClick={handleViewReport}
+                      isLoading={reportModalLoading}
+                      loadingText={t('Loading...')}
+                      borderRadius="lg"
+                      fontSize={smallButtonFontSize}
+                      fontWeight="semibold"
+                      isDisabled={loadingStates.isAnyLoading}
+                      minH={{ base: '28px', sm: '32px', md: '36px' }}
+                    >
+                      {t('View Report')}
+                    </Button>
                   )
-                }
-                width="100%"
-                onClick={handleSelectCategory}
-                isLoading={loadingStates.isSelectingThis}
-                loadingText={t('Selecting...')}
-                borderRadius="lg"
-                fontSize={smallButtonFontSize}
-                fontWeight="bold"
-                boxShadow={`0 4px 15px ${categoryInfo.primaryColor}40`}
-                _hover={{
-                  filter: loadingStates.isAnyLoading
-                    ? 'none'
-                    : 'brightness(110%)',
-                }}
-                isDisabled={loadingStates.isAnyLoading}
-                minH={{ base: '28px', sm: '32px', md: '36px' }}
-              >
-                {t('Select Category')}
-              </Button>
-            ) : null}
+
+                case 'userExited':
+                  return (
+                    <Tooltip
+                      label={t(
+                        'Once you exit a challenge, you cannot continue it. This prevents unfair advantages in team battles.',
+                      )}
+                      placement="top"
+                      bg="red.600"
+                      color="white"
+                      fontSize="xs"
+                      p={3}
+                      borderRadius="md"
+                      maxW="200px"
+                      textAlign="center"
+                    >
+                      <Button
+                        size={buttonSize}
+                        variant="outline"
+                        borderColor="#EF4444"
+                        color="#EF4444"
+                        bg="rgba(239, 68, 68, 0.08)"
+                        cursor="not-allowed"
+                        leftIcon={<Icon as={XCircle} boxSize={iconBoxSize} />}
+                        width="100%"
+                        borderRadius="lg"
+                        fontSize={smallButtonFontSize}
+                        fontWeight="semibold"
+                        _hover={{
+                          bg: 'rgba(239, 68, 68, 0.08)',
+                        }}
+                        isDisabled
+                        minH={{ base: '28px', sm: '32px', md: '36px' }}
+                      >
+                        {t('Cannot Continue')}
+                      </Button>
+                    </Tooltip>
+                  )
+
+                case 'lockedDueToSelection':
+                  return (
+                    <Tooltip
+                      label={t(
+                        'You have already selected another category. Please deselect it first to choose this one.',
+                      )}
+                      placement="top"
+                      bg="orange.600"
+                      color="white"
+                      fontSize="xs"
+                      p={3}
+                      borderRadius="md"
+                      maxW="200px"
+                      textAlign="center"
+                    >
+                      <Button
+                        size={buttonSize}
+                        variant="outline"
+                        borderColor="#F59E0B"
+                        color="#F59E0B"
+                        bg="rgba(245, 158, 11, 0.08)"
+                        cursor="not-allowed"
+                        leftIcon={<Icon as={Lock} boxSize={iconBoxSize} />}
+                        width="100%"
+                        borderRadius="lg"
+                        fontSize={smallButtonFontSize}
+                        fontWeight="semibold"
+                        _hover={{
+                          bg: 'rgba(245, 158, 11, 0.08)',
+                        }}
+                        isDisabled
+                        minH={{ base: '28px', sm: '32px', md: '36px' }}
+                      >
+                        {t('Change Selection')}
+                      </Button>
+                    </Tooltip>
+                  )
+
+                case 'lockedDueToExit':
+                  return (
+                    <Tooltip
+                      label={t(
+                        'You cannot select this category because you have already participated in another challenge in this battle.',
+                      )}
+                      placement="top"
+                      bg="gray.600"
+                      color="white"
+                      fontSize="xs"
+                      p={3}
+                      borderRadius="md"
+                      maxW="200px"
+                      textAlign="center"
+                    >
+                      <Button
+                        size={buttonSize}
+                        variant="outline"
+                        borderColor="#6B7280"
+                        color="#6B7280"
+                        bg="rgba(107, 114, 128, 0.08)"
+                        cursor="not-allowed"
+                        leftIcon={<Icon as={X} boxSize={iconBoxSize} />}
+                        width="100%"
+                        borderRadius="lg"
+                        fontSize={smallButtonFontSize}
+                        fontWeight="semibold"
+                        _hover={{
+                          bg: 'rgba(107, 114, 128, 0.08)',
+                        }}
+                        isDisabled
+                        minH={{ base: '28px', sm: '32px', md: '36px' }}
+                      >
+                        {t('Locked')}
+                      </Button>
+                    </Tooltip>
+                  )
+
+                case 'userInProgress':
+                  return (
+                    <Button
+                      size={buttonSize}
+                      variant="outline"
+                      borderColor="#F59E0B"
+                      color="#F59E0B"
+                      bg="rgba(245, 158, 11, 0.08)"
+                      cursor="not-allowed"
+                      leftIcon={<Icon as={Zap} boxSize={iconBoxSize} />}
+                      width="100%"
+                      borderRadius="lg"
+                      fontSize={smallButtonFontSize}
+                      fontWeight="semibold"
+                      isDisabled
+                      minH={{ base: '28px', sm: '32px', md: '36px' }}
+                    >
+                      {t('In Progress')}
+                    </Button>
+                  )
+
+                case 'userSelectedNotStarted':
+                  return (
+                    <VStack spacing={{ base: 0.5, sm: 1 }} w="100%">
+                      <Button
+                        size={buttonSize}
+                        bg={`linear-gradient(135deg, ${categoryInfo.primaryColor}, ${categoryInfo.secondaryColor})`}
+                        color="white"
+                        leftIcon={
+                          loadingStates.isBeginningThis ? (
+                            <Spinner size="xs" />
+                          ) : (
+                            <Icon as={Play} boxSize={iconBoxSize} />
+                          )
+                        }
+                        width="100%"
+                        onClick={handleBeginChallenge}
+                        isLoading={loadingStates.isBeginningThis}
+                        loadingText={t('Starting...')}
+                        borderRadius="lg"
+                        fontSize={smallButtonFontSize}
+                        fontWeight="bold"
+                        boxShadow={`0 4px 15px ${categoryInfo.primaryColor}40`}
+                        _hover={{
+                          filter:
+                            loadingStates.isAnyLoading || isLocked
+                              ? 'none'
+                              : 'brightness(110%)',
+                        }}
+                        isDisabled={loadingStates.isAnyLoading || isLocked}
+                        minH={{ base: '28px', sm: '32px', md: '36px' }}
+                      >
+                        {t('Begin Challenge')}
+                      </Button>
+                      <Button
+                        size="xs"
+                        variant="ghost"
+                        color="gray.400"
+                        leftIcon={
+                          loadingStates.isDeselectingThis ? (
+                            <Spinner size="xs" />
+                          ) : (
+                            <Icon as={RotateCcw} boxSize="8px" />
+                          )
+                        }
+                        onClick={handleDeselectCategory}
+                        fontSize={{ base: '8px', sm: '9px' }}
+                        _hover={{
+                          color:
+                            loadingStates.isAnyLoading || isLocked
+                              ? 'gray.400'
+                              : 'white',
+                          bg:
+                            loadingStates.isAnyLoading || isLocked
+                              ? 'transparent'
+                              : 'rgba(255, 255, 255, 0.1)',
+                        }}
+                        isLoading={loadingStates.isDeselectingThis}
+                        loadingText={t('Deselecting...')}
+                        isDisabled={loadingStates.isAnyLoading || isLocked}
+                        minH={{ base: '20px', sm: '24px' }}
+                      >
+                        {t('Change Selection')}
+                      </Button>
+                    </VStack>
+                  )
+
+                case 'available':
+                  return (
+                    <Button
+                      size={buttonSize}
+                      bg={`linear-gradient(135deg, ${categoryInfo.primaryColor}, ${categoryInfo.secondaryColor})`}
+                      color="white"
+                      leftIcon={
+                        loadingStates.isSelectingThis ? (
+                          <Spinner size="xs" />
+                        ) : (
+                          <Icon as={Play} boxSize={iconBoxSize} />
+                        )
+                      }
+                      width="100%"
+                      onClick={handleSelectCategory}
+                      isLoading={loadingStates.isSelectingThis}
+                      loadingText={t('Selecting...')}
+                      borderRadius="lg"
+                      fontSize={smallButtonFontSize}
+                      fontWeight="bold"
+                      boxShadow={`0 4px 15px ${categoryInfo.primaryColor}40`}
+                      _hover={{
+                        filter: loadingStates.isAnyLoading
+                          ? 'none'
+                          : 'brightness(110%)',
+                      }}
+                      isDisabled={loadingStates.isAnyLoading}
+                      minH={{ base: '28px', sm: '32px', md: '36px' }}
+                    >
+                      {t('Select Category')}
+                    </Button>
+                  )
+
+                default:
+                  // For teammateSelected and unavailable states
+                  return null
+              }
+            })()}
           </Box>
         </VStack>
       </Box>
@@ -730,22 +848,23 @@ const CategoryCard = memo(
 )
 
 /**
- * Completed Category Content Layout
+ * Completed Category Content Layout with Teammate Info
  */
 const CompletedCategoryContent = memo(
-  ({ categoryInfo, challenge, userScore, opponentScore, t }) => (
+  ({ categoryInfo, challenge, userScore, opponentScore, teammateInfo, t }) => (
     <VStack
       w="full"
       spacing={{ base: 1, sm: 1.5 }}
-      alignItems="flex-start"
-      mt={{ base: 1, sm: 1.5 }}
+      alignItems="center"
+      justify="space-between"
+      flex={1}
+      py={{ base: 0.5, sm: 1 }}
     >
-      {/* Icon and Category Name - centered */}
       <VStack
         spacing={{ base: 0.5, sm: 1 }}
         alignItems="center"
-        w="full"
-        alignSelf="center"
+        flex={1}
+        justify="center"
       >
         <CategoryIcon categoryInfo={categoryInfo} />
         <Text
@@ -759,9 +878,30 @@ const CompletedCategoryContent = memo(
         >
           {challenge.category}
         </Text>
+
+        {teammateInfo?.name && teammateInfo?.hasCompleted && (
+          <Text
+            fontSize={{ base: '10px', sm: '12px', md: '13px' }}
+            color="#6EE7B7"
+            fontWeight="medium"
+            textAlign="center"
+            opacity={0.8}
+            maxW="100px"
+            overflow="hidden"
+            textOverflow="ellipsis"
+            whiteSpace="nowrap"
+            mt={{ base: 0.5, sm: 1 }}
+            bg="rgba(16, 185, 129, 0.1)"
+            px={1.5}
+            py={0.5}
+            borderRadius="sm"
+            border="1px solid rgba(16, 185, 129, 0.2)"
+          >
+            {teammateInfo.inGameName || teammateInfo.name}
+          </Text>
+        )}
       </VStack>
 
-      {/* Score Display */}
       <Box
         w="full"
         bg="rgba(15, 23, 42, 0.4)"
@@ -770,6 +910,7 @@ const CompletedCategoryContent = memo(
         border="1px solid"
         borderColor="rgba(16, 185, 129, 0.15)"
         backdropFilter="blur(3px)"
+        mt="auto"
       >
         <HStack
           spacing={1}
@@ -837,9 +978,14 @@ const ExitedChallengeContent = memo(({ categoryInfo, challenge, t }) => (
     alignItems="center"
     justify="center"
     flex={1}
+    py={{ base: 0.5, sm: 1 }}
   >
-    {/* Icon and Category Name */}
-    <VStack spacing={{ base: 1, sm: 1.5 }} alignItems="center">
+    <VStack
+      spacing={{ base: 0.5, sm: 1 }}
+      alignItems="center"
+      flex={1}
+      justify="center"
+    >
       <CategoryIcon categoryInfo={categoryInfo} />
       <Text
         fontSize={{ base: '2xs', sm: 'xs' }}
@@ -854,20 +1000,20 @@ const ExitedChallengeContent = memo(({ categoryInfo, challenge, t }) => (
       </Text>
     </VStack>
 
-    {/* Warning Message */}
     <Box
       bg="rgba(239, 68, 68, 0.1)"
       borderRadius="md"
-      p={{ base: 1.5, sm: 2 }}
+      p={{ base: 1, sm: 1.5 }}
       border="1px solid"
       borderColor="rgba(239, 68, 68, 0.3)"
       w="full"
+      mt="auto"
     >
-      <VStack spacing={1} align="center">
+      <VStack spacing={0.5} align="center">
         <Icon as={AlertTriangle} color="#EF4444" boxSize={3} />
         <Text
           color="#EF4444"
-          fontSize={{ base: '8px', sm: '9px' }}
+          fontSize={{ base: '7px', sm: '8px' }}
           fontWeight="medium"
           textAlign="center"
           lineHeight="1.3"
@@ -876,7 +1022,7 @@ const ExitedChallengeContent = memo(({ categoryInfo, challenge, t }) => (
         </Text>
         <Text
           color="red.200"
-          fontSize={{ base: '7px', sm: '8px' }}
+          fontSize={{ base: '6px', sm: '7px' }}
           textAlign="center"
           lineHeight="1.2"
           opacity={0.8}
@@ -889,18 +1035,150 @@ const ExitedChallengeContent = memo(({ categoryInfo, challenge, t }) => (
 ))
 
 /**
- * NEW: Locked Due to Selection Category Content Layout
+ * Completed by Teammate Content Layout
+ */
+const CompletedByTeammateContent = memo(
+  ({ categoryInfo, challenge, teammateInfo, t }) => (
+    <VStack
+      w="full"
+      spacing={{ base: 1, sm: 1.5 }}
+      alignItems="center"
+      justify="space-between"
+      flex={1}
+      py={{ base: 0.5, sm: 1 }}
+    >
+      <VStack
+        spacing={{ base: 0.5, sm: 1 }}
+        alignItems="center"
+        flex={1}
+        justify="center"
+      >
+        <CategoryIcon categoryInfo={categoryInfo} />
+        <Text
+          fontSize={{ base: '2xs', sm: 'xs' }}
+          fontWeight="bold"
+          color="white"
+          textAlign="center"
+          lineHeight="1.2"
+          textTransform="capitalize"
+          letterSpacing="0.5px"
+        >
+          {challenge.category}
+        </Text>
+
+        {teammateInfo?.name && (
+          <Text
+            fontSize={{ base: '10px', sm: '12px', md: '13px' }}
+            color="#A78BFA"
+            fontWeight="medium"
+            textAlign="center"
+            opacity={0.9}
+            maxW="100px"
+            overflow="hidden"
+            textOverflow="ellipsis"
+            whiteSpace="nowrap"
+            mt={{ base: 0.5, sm: 1 }}
+            bg="rgba(139, 92, 246, 0.15)"
+            px={1.5}
+            py={0.5}
+            borderRadius="sm"
+            border="1px solid rgba(139, 92, 246, 0.25)"
+          >
+            {teammateInfo.inGameName || teammateInfo.name}
+          </Text>
+        )}
+      </VStack>
+
+      <Box
+        w="full"
+        bg="rgba(15, 23, 42, 0.4)"
+        borderRadius="md"
+        p={{ base: 1, sm: 1.5 }}
+        border="1px solid"
+        borderColor="rgba(139, 92, 246, 0.15)"
+        backdropFilter="blur(3px)"
+        mt="auto"
+      >
+        <HStack
+          spacing={1}
+          alignItems="center"
+          justifyContent="center"
+          w="full"
+        >
+          <Text
+            color="gray.300"
+            fontWeight="medium"
+            fontSize={{ base: '9px', sm: '10px', md: '11px' }}
+            letterSpacing="0.3px"
+          >
+            RQM:
+          </Text>
+          <HStack spacing={0.5} alignItems="center">
+            <Text
+              color="#8B5CF6"
+              fontWeight="bold"
+              fontSize={{ base: '10px', sm: '11px', md: '12px' }}
+              bg="rgba(139, 92, 246, 0.1)"
+              px={1}
+              py={0.5}
+              borderRadius="sm"
+              minW="18px"
+              textAlign="center"
+            >
+              {teammateInfo?.teammateScore !== undefined &&
+              teammateInfo?.teammateScore !== null
+                ? teammateInfo.teammateScore
+                : '-'}
+            </Text>
+            <Text
+              color="gray.400"
+              fontSize={{ base: '8px', sm: '9px', md: '10px' }}
+              fontWeight="medium"
+              mx={0.5}
+            >
+              VS
+            </Text>
+            <Text
+              color="#EF4444"
+              fontWeight="bold"
+              fontSize={{ base: '10px', sm: '11px', md: '12px' }}
+              bg="rgba(239, 68, 68, 0.1)"
+              px={1}
+              py={0.5}
+              borderRadius="sm"
+              minW="18px"
+              textAlign="center"
+            >
+              {teammateInfo?.opponentScore !== undefined &&
+              teammateInfo?.opponentScore !== null
+                ? teammateInfo.opponentScore
+                : '-'}
+            </Text>
+          </HStack>
+        </HStack>
+      </Box>
+    </VStack>
+  ),
+)
+
+/**
+ * Locked Due To Selection Content Layout
  */
 const LockedDueToSelectionContent = memo(({ categoryInfo, challenge, t }) => (
   <VStack
     w="full"
-    spacing={{ base: 2, sm: 2.5 }}
+    spacing={{ base: 1.5, sm: 2 }}
     alignItems="center"
     justify="center"
     flex={1}
+    py={{ base: 0.5, sm: 1 }}
   >
-    {/* Icon and Category Name */}
-    <VStack spacing={{ base: 1, sm: 1.5 }} alignItems="center">
+    <VStack
+      spacing={{ base: 0.5, sm: 1 }}
+      alignItems="center"
+      flex={1}
+      justify="center"
+    >
       <CategoryIcon categoryInfo={categoryInfo} />
       <Text
         fontSize={{ base: '2xs', sm: 'xs' }}
@@ -916,20 +1194,20 @@ const LockedDueToSelectionContent = memo(({ categoryInfo, challenge, t }) => (
       </Text>
     </VStack>
 
-    {/* Locked Message */}
     <Box
       bg="rgba(245, 158, 11, 0.1)"
       borderRadius="md"
-      p={{ base: 1.5, sm: 2 }}
+      p={{ base: 1, sm: 1.5 }}
       border="1px solid"
       borderColor="rgba(245, 158, 11, 0.3)"
       w="full"
+      mt="auto"
     >
-      <VStack spacing={1} align="center">
+      <VStack spacing={0.5} align="center">
         <Icon as={Lock} color="#F59E0B" boxSize={3} />
         <Text
           color="#F59E0B"
-          fontSize={{ base: '8px', sm: '9px' }}
+          fontSize={{ base: '7px', sm: '8px' }}
           fontWeight="medium"
           textAlign="center"
           lineHeight="1.3"
@@ -938,7 +1216,7 @@ const LockedDueToSelectionContent = memo(({ categoryInfo, challenge, t }) => (
         </Text>
         <Text
           color="orange.200"
-          fontSize={{ base: '7px', sm: '8px' }}
+          fontSize={{ base: '6px', sm: '7px' }}
           textAlign="center"
           lineHeight="1.2"
           opacity={0.8}
@@ -956,13 +1234,18 @@ const LockedDueToSelectionContent = memo(({ categoryInfo, challenge, t }) => (
 const LockedCategoryContent = memo(({ categoryInfo, challenge, t }) => (
   <VStack
     w="full"
-    spacing={{ base: 2, sm: 2.5 }}
+    spacing={{ base: 1.5, sm: 2 }}
     alignItems="center"
     justify="center"
     flex={1}
+    py={{ base: 0.5, sm: 1 }}
   >
-    {/* Icon and Category Name */}
-    <VStack spacing={{ base: 1, sm: 1.5 }} alignItems="center">
+    <VStack
+      spacing={{ base: 0.5, sm: 1 }}
+      alignItems="center"
+      flex={1}
+      justify="center"
+    >
       <CategoryIcon categoryInfo={categoryInfo} />
       <Text
         fontSize={{ base: '2xs', sm: 'xs' }}
@@ -978,20 +1261,20 @@ const LockedCategoryContent = memo(({ categoryInfo, challenge, t }) => (
       </Text>
     </VStack>
 
-    {/* Locked Message */}
     <Box
       bg="rgba(107, 114, 128, 0.1)"
       borderRadius="md"
-      p={{ base: 1.5, sm: 2 }}
+      p={{ base: 1, sm: 1.5 }}
       border="1px solid"
       borderColor="rgba(107, 114, 128, 0.3)"
       w="full"
+      mt="auto"
     >
-      <VStack spacing={1} align="center">
+      <VStack spacing={0.5} align="center">
         <Icon as={X} color="#6B7280" boxSize={3} />
         <Text
           color="#6B7280"
-          fontSize={{ base: '8px', sm: '9px' }}
+          fontSize={{ base: '7px', sm: '8px' }}
           fontWeight="medium"
           textAlign="center"
           lineHeight="1.3"
@@ -1000,7 +1283,7 @@ const LockedCategoryContent = memo(({ categoryInfo, challenge, t }) => (
         </Text>
         <Text
           color="gray.400"
-          fontSize={{ base: '7px', sm: '8px' }}
+          fontSize={{ base: '6px', sm: '7px' }}
           textAlign="center"
           lineHeight="1.2"
           opacity={0.8}
@@ -1013,7 +1296,7 @@ const LockedCategoryContent = memo(({ categoryInfo, challenge, t }) => (
 ))
 
 /**
- * Active Category Content Layout
+ * Active Category Content Layout with Teammate Info
  */
 const ActiveCategoryContent = memo(
   ({
@@ -1023,17 +1306,27 @@ const ActiveCategoryContent = memo(
     isSelectedButNotStarted,
     isSelectedByTeammate,
     isAvailable,
+    isLockedDueToExit,
+    isLockedDueToSelection,
+    isLocked,
+    isCompletedByTeammate,
+    teammateInfo,
     t,
   }) => (
     <VStack
       w="full"
-      spacing={{ base: 2, sm: 2.5 }}
+      spacing={{ base: 1, sm: 1.5 }}
       alignItems="center"
-      justify="center"
+      justify="space-between"
       flex={1}
+      py={{ base: 0.5, sm: 1 }}
     >
-      {/* Icon and Category Name */}
-      <VStack spacing={{ base: 1, sm: 1.5 }} alignItems="center">
+      <VStack
+        spacing={{ base: 0.5, sm: 1 }}
+        alignItems="center"
+        flex={1}
+        justify="center"
+      >
         <CategoryIcon categoryInfo={categoryInfo} />
         <Text
           fontSize={{ base: '2xs', sm: 'xs' }}
@@ -1046,15 +1339,43 @@ const ActiveCategoryContent = memo(
         >
           {challenge.category}
         </Text>
+
+        {teammateInfo?.name &&
+          (isSelectedByTeammate ||
+            (isInProgress && teammateInfo.isAssigned)) && (
+            <Text
+              fontSize={{ base: '10px', sm: '12px', md: '13px' }}
+              color="#A78BFA"
+              fontWeight="medium"
+              textAlign="center"
+              opacity={0.8}
+              maxW="100px"
+              overflow="hidden"
+              textOverflow="ellipsis"
+              whiteSpace="nowrap"
+              mt={{ base: 0.5, sm: 1 }}
+              bg="rgba(139, 92, 246, 0.1)"
+              px={1.5}
+              py={0.5}
+              borderRadius="sm"
+              border="1px solid rgba(139, 92, 246, 0.2)"
+            >
+              {teammateInfo.inGameName || teammateInfo.name}
+            </Text>
+          )}
       </VStack>
 
-      {/* Status Badge */}
-      <Box textAlign="center">
+      <Box textAlign="center" w="70%" mt="auto">
         <CategoryStatusBadge
           isInProgress={isInProgress}
           isSelectedButNotStarted={isSelectedButNotStarted}
           isSelectedByTeammate={isSelectedByTeammate}
           isAvailable={isAvailable}
+          isLockedDueToExit={isLockedDueToExit}
+          isLockedDueToSelection={isLockedDueToSelection}
+          isLocked={isLocked}
+          isCompletedByTeammate={isCompletedByTeammate}
+          teammateInfo={teammateInfo}
           t={t}
         />
       </Box>
@@ -1064,6 +1385,7 @@ const ActiveCategoryContent = memo(
 
 // Add display names
 CompletedCategoryContent.displayName = 'CompletedCategoryContent'
+CompletedByTeammateContent.displayName = 'CompletedByTeammateContent'
 ExitedChallengeContent.displayName = 'ExitedChallengeContent'
 LockedDueToSelectionContent.displayName = 'LockedDueToSelectionContent'
 LockedCategoryContent.displayName = 'LockedCategoryContent'
