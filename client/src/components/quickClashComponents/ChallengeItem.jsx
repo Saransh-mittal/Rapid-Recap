@@ -34,6 +34,7 @@ import ResultBanner from './ui/ResultBanner'
 import VSLine from './VSLine'
 // Import the enhanced trophy displays
 import EnhancedPotentialTrophyDisplay from './ui/EnhancedPotentialTrophyDisplay'
+import CompactTrophyStakeDisplay from './ui/CompactTrophyStakeDisplay'
 
 const MotionBox = motion(Box)
 const MotionButton = motion(Button)
@@ -224,16 +225,28 @@ const ChallengeItem = ({
   }
 
   const getTrophyPotential = () => {
-    // For active or pending challenges, return potential gain
+    // For active or pending challenges, return potential gain and loss
     if (challenge?.status === 'active' || challenge?.status === 'pending') {
-      if (!challenge?.trophyPotential) return 0
+      if (!challenge?.trophyPotential) return { gain: 0, loss: 0 }
 
-      return isChallenger
-        ? challenge?.trophyPotential.challenger?.potentialGain
-        : challenge?.trophyPotential.opponent.potentialGain
+      const userPotential = isChallenger
+        ? challenge?.trophyPotential.challenger
+        : challenge?.trophyPotential.opponent
+
+      const opponentPotential = isChallenger
+        ? challenge?.trophyPotential.opponent
+        : challenge?.trophyPotential.challenger
+
+      return {
+        gain: userPotential?.potentialGain || 0,
+        loss: Math.min(
+          opponentPotential?.potentialGain || 0,
+          Math.max(0, (userPotential?.currentTrophies || 1000) - 100),
+        ),
+      }
     }
 
-    return 0
+    return { gain: 0, loss: 0 }
   }
 
   // Get trophy change
@@ -331,10 +344,10 @@ const ChallengeItem = ({
               <HStack spacing={2}>
                 {/* Show potential trophy gain with enhanced component */}
                 {challenge?.trophyPotential && (
-                  <EnhancedPotentialTrophyDisplay
-                    potentialGain={getTrophyPotential()}
+                  <CompactTrophyStakeDisplay
+                    potentialGain={getTrophyPotential().gain}
+                    potentialLoss={getTrophyPotential().loss}
                     size="sm"
-                    compact={true}
                   />
                 )}
                 <CategoryTag />
@@ -473,10 +486,10 @@ const ChallengeItem = ({
               ) : challenge?.status === 'active' && !myAttempted ? (
                 <Flex align="center" gap={2}>
                   {/* Show potential trophy gain with enhanced component */}
-                  <EnhancedPotentialTrophyDisplay
-                    potentialGain={getTrophyPotential()}
+                  <CompactTrophyStakeDisplay
+                    potentialGain={getTrophyPotential().gain}
+                    potentialLoss={getTrophyPotential().loss}
                     size="sm"
-                    compact={true}
                   />
 
                   <Button

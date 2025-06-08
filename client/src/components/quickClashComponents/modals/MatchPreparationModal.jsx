@@ -44,6 +44,7 @@ import {
   clearMatchmakingAfterModalClose,
   resetMatchmakingState,
 } from '../../../redux/quickClashMatchmakingSlice'
+import MatchTrophyPotentialDisplay from '../ui/MatchTrophyPotentialDisplay'
 
 const MotionBox = motion(Box)
 const MotionAvatar = motion(Avatar)
@@ -51,6 +52,29 @@ const MotionIcon = motion(Icon)
 const MotionBadge = motion(Badge)
 const MotionButton = motion(Button)
 const MotionIconButton = motion(IconButton)
+
+// Helper function to calculate trophy potential
+const calculateTrophyPotential = (playerTrophies, opponentTrophies) => {
+  const BASE_TROPHIES = 30
+  const TROPHY_K_FACTOR = 0.8
+
+  // Calculate potential gain
+  const potentialGain = Math.max(
+    5,
+    Math.round(
+      BASE_TROPHIES *
+        (1 + (TROPHY_K_FACTOR * (opponentTrophies - playerTrophies)) / 500),
+    ),
+  )
+
+  // Calculate potential loss (ensure it doesn't go below 100 total trophies)
+  const potentialLoss = Math.min(
+    potentialGain,
+    Math.max(0, playerTrophies - 100),
+  )
+
+  return { potentialGain, potentialLoss }
+}
 
 // Optimized keyframes - reduced complexity for performance
 const shineAnimation = keyframes`
@@ -70,68 +94,6 @@ const subtleFloat = keyframes`
   50% { transform: translateY(-2px); }
   100% { transform: translateY(0px); }
 `
-
-// Optimized Trophy Badge Component
-const OptimizedTrophyBadge = memo(
-  ({ trophyCount, size = 'md', isHighlighted = false }) => {
-    const sizes = {
-      sm: { height: '28px', fontSize: 'xs', iconSize: 4, px: 2.5 },
-      md: { height: '32px', fontSize: 'sm', iconSize: 5, px: 3 },
-      lg: { height: '36px', fontSize: 'md', iconSize: 5, px: 3.5 },
-    }
-    const sizeProps = sizes[size]
-
-    return (
-      <Flex
-        alignItems="center"
-        height={sizeProps.height}
-        px={sizeProps.px}
-        py={1}
-        borderRadius="full"
-        position="relative"
-        overflow="hidden"
-        bg={isHighlighted ? 'yellow.500' : 'yellow.600'}
-        border="1px solid"
-        borderColor={isHighlighted ? 'yellow.300' : 'yellow.500'}
-        boxShadow={
-          isHighlighted
-            ? '0 2px 8px rgba(255, 215, 0, 0.3)'
-            : '0 2px 6px rgba(0, 0, 0, 0.2)'
-        }
-        animation={isHighlighted ? `${gentleGlow} 3s infinite` : 'none'}
-      >
-        {/* Simplified shine effect */}
-        <Box
-          position="absolute"
-          top="0"
-          left="-100%"
-          width="30%"
-          height="100%"
-          bgGradient="linear(90deg, rgba(255,255,255,0) 0%, rgba(255,255,255,0.6) 50%, rgba(255,255,255,0) 100%)"
-          animation={`${shineAnimation} 4s infinite`}
-          zIndex={1}
-        />
-
-        <Icon
-          as={Trophy}
-          boxSize={sizeProps.iconSize}
-          color="white"
-          mr={2}
-          zIndex={2}
-        />
-
-        <Text
-          color="white"
-          fontWeight="bold"
-          fontSize={sizeProps.fontSize}
-          zIndex={2}
-        >
-          {trophyCount}
-        </Text>
-      </Flex>
-    )
-  },
-)
 
 // Optimized VS Badge Component
 const OptimizedVSBadge = memo(({ size = 'md', isActive = false }) => {
@@ -400,6 +362,32 @@ const MatchPreparationModal = ({
 
   const opponent = getOpponentInfo()
 
+  // Calculate trophy potential for both players
+  const userTrophies = user?.quickClashTrophies || 1000
+  const opponentTrophies = opponent?.quickClashTrophies || 1000
+
+  // Calculate what each player would gain if they win
+  const userWinGain = calculateTrophyPotential(
+    userTrophies,
+    opponentTrophies,
+  ).potentialGain
+  const opponentWinGain = calculateTrophyPotential(
+    opponentTrophies,
+    userTrophies,
+  ).potentialGain
+
+  // User's potential: gain userWinGain if win, lose opponentWinGain if lose
+  // Opponent's potential: gain opponentWinGain if win, lose userWinGain if lose
+  const userTrophyPotential = {
+    potentialGain: userWinGain,
+    potentialLoss: Math.min(opponentWinGain, Math.max(0, userTrophies - 100)),
+  }
+
+  const opponentTrophyPotential = {
+    potentialGain: opponentWinGain,
+    potentialLoss: Math.min(userWinGain, Math.max(0, opponentTrophies - 100)),
+  }
+
   return (
     <Modal
       isOpen={isOpen}
@@ -598,11 +586,6 @@ const MatchPreparationModal = ({
                   >
                     {user?.name}
                   </Text>
-                  <OptimizedTrophyBadge
-                    trophyCount={user?.quickClashTrophies || 1000}
-                    isHighlighted={true}
-                    size={trophySize}
-                  />
                 </VStack>
 
                 {/* VS Badge - Properly centered */}
@@ -648,12 +631,21 @@ const MatchPreparationModal = ({
                   >
                     {opponent?.name}
                   </Text>
-                  <OptimizedTrophyBadge
-                    trophyCount={opponent?.quickClashTrophies || 1000}
-                    size={trophySize}
-                  />
                 </VStack>
               </Flex>
+            </Box>
+
+            {/* Trophy Potential Display - Centered between players and progress */}
+            <Box w="100%" px={2}>
+              <MatchTrophyPotentialDisplay
+                userTrophies={userTrophies}
+                opponentTrophies={opponentTrophies}
+                userWinGain={userTrophyPotential.potentialGain}
+                userLoss={userTrophyPotential.potentialLoss}
+                opponentWinGain={opponentTrophyPotential.potentialGain}
+                opponentLoss={opponentTrophyPotential.potentialLoss}
+                size={trophySize}
+              />
             </Box>
 
             <Divider borderColor="whiteAlpha.300" />
@@ -805,7 +797,6 @@ const MatchPreparationModal = ({
 }
 
 // Add display names for debugging
-OptimizedTrophyBadge.displayName = 'OptimizedTrophyBadge'
 OptimizedVSBadge.displayName = 'OptimizedVSBadge'
 MatchPreparationModal.displayName = 'MatchPreparationModal'
 
