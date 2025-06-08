@@ -1,16 +1,26 @@
-// Update to components/quickClashComponents/ui/PlayerStatus.jsx
+// components/quickClashComponents/ui/PlayerStatus.jsx
 import React from 'react'
-import { Box, HStack, Text, Badge, Avatar, Flex, Icon } from '@chakra-ui/react'
+import {
+  Box,
+  HStack,
+  Text,
+  Badge,
+  Avatar,
+  Flex,
+  Icon,
+  VStack,
+} from '@chakra-ui/react'
 import { motion } from 'framer-motion'
 import { useTranslation } from 'react-i18next'
 import ScoreDisplay from './ScoreDisplay'
-import { Trophy, ChevronUp, ChevronDown } from 'lucide-react'
+import EnhancedTrophyChangeDisplay from './EnhancedTrophyChangeDisplay'
+import { Trophy } from 'lucide-react'
 
 const MotionBox = motion(Box)
 const MotionText = motion(Text)
 
 /**
- * Displays a player's status in a Quick Clash challenge
+ * Displays a player's status in a Quick Clash challenge with trophy change display
  */
 const PlayerStatus = ({
   player,
@@ -19,6 +29,9 @@ const PlayerStatus = ({
   isUser,
   trophies,
   trophyChange,
+  showTrophyAnimation = false,
+  protectionApplied = false,
+  isTie = false,
 }) => {
   const { t } = useTranslation('QuickClash')
   const bgGradient = isUser
@@ -39,24 +52,6 @@ const PlayerStatus = ({
         },
       }
     : {}
-
-  // Trophy change animation
-  const trophyAnimation =
-    trophyChange !== undefined
-      ? {
-          initial: { scale: 1, opacity: 0 },
-          animate: {
-            scale: [1, 1.1, 1],
-            opacity: 1,
-            transition: {
-              duration: 1,
-              delay: 0.5,
-              repeat: 3,
-              repeatType: 'reverse',
-            },
-          },
-        }
-      : {}
 
   return (
     <MotionBox
@@ -84,108 +79,85 @@ const PlayerStatus = ({
         />
       )}
 
-      <HStack spacing={3} position="relative" zIndex={1}>
-        <Avatar
-          name={player?.name}
-          src={player?.pic}
-          size="sm"
-          bg={isUser ? 'purple.400' : 'gray.500'}
-          borderWidth={2}
-          borderColor={isUser ? 'purple.200' : 'transparent'}
-        />
+      {/* Main layout */}
+      <Flex
+        position="relative"
+        zIndex={1}
+        align="center"
+        justify="space-between"
+        direction="row"
+      >
+        {/* Left section: Avatar and player info */}
+        <HStack spacing={3} flex={1}>
+          <Avatar
+            name={player?.name}
+            src={player?.pic}
+            size="sm"
+            bg={isUser ? 'purple.400' : 'gray.500'}
+            borderWidth={2}
+            borderColor={isUser ? 'purple.200' : 'transparent'}
+          />
 
-        <Box flex={1}>
-          <HStack justifyContent="space-between" mb={1}>
-            <Text
-              fontSize="sm"
-              fontWeight="bold"
-              color="white"
-              noOfLines={1}
-              maxW="150px"
-            >
-              {player?.inGameName || player?.name}
+          <VStack spacing={1} align="flex-start" flex={1}>
+            <HStack spacing={1} align="center">
+              <Text
+                fontSize="sm"
+                fontWeight="bold"
+                color="white"
+                noOfLines={1}
+                maxW="120px"
+              >
+                {player?.inGameName || player?.name}
+              </Text>
               {isUser && (
-                <Badge size="sm" ml={1} colorScheme="purple" variant="solid">
+                <Badge size="sm" colorScheme="purple" variant="solid">
                   {t('You')}
                 </Badge>
               )}
-            </Text>
+            </HStack>
 
-            {attempted && <ScoreDisplay score={score} size="sm" />}
-          </HStack>
-
-          <Flex justifyContent="space-between" align="center">
-            <Badge
-              colorScheme={attempted ? 'green' : 'yellow'}
-              fontSize="xs"
-              variant={attempted ? 'solid' : 'outline'}
-              borderRadius="full"
-            >
-              {attempted ? t('Completed') : t('Pending')}
-            </Badge>
-
-            {/* Trophy display with change indicator */}
-            {trophies !== undefined && (
-              <HStack spacing={1}>
-                <MotionBox
-                  bg="rgba(255, 215, 0, 0.1)"
-                  borderRadius="full"
-                  px={2}
-                  py={0.5}
-                  borderWidth="1px"
-                  borderColor="rgba(255, 215, 0, 0.3)"
-                  display="flex"
-                  alignItems="center"
-                  {...(trophyChange !== undefined && trophyAnimation)}
-                >
-                  <Icon as={Trophy} color="yellow.400" boxSize={3} mr={1} />
-                  <Text color="white" fontWeight="semibold" fontSize="xs">
-                    {trophies}
-                  </Text>
-
-                  {/* Trophy change indicator */}
-                  {trophyChange !== undefined && trophyChange !== 0 && (
-                    <Flex
-                      ml={1}
-                      align="center"
-                      justify="center"
-                      bg={
-                        trophyChange > 0
-                          ? 'rgba(72, 187, 120, 0.3)'
-                          : 'rgba(245, 101, 101, 0.3)'
-                      }
-                      borderRadius="full"
-                      w="18px"
-                      h="18px"
-                    >
-                      {trophyChange > 0 ? (
-                        <Icon as={ChevronUp} color="green.400" boxSize="12px" />
-                      ) : (
-                        <Icon as={ChevronDown} color="red.400" boxSize="12px" />
-                      )}
-                    </Flex>
-                  )}
-                </MotionBox>
-              </HStack>
+            {/* Trophy change display - positioned below the name for current user */}
+            {isUser && trophyChange !== undefined && (
+              <Box mt={1}>
+                <EnhancedTrophyChangeDisplay
+                  trophyChange={trophyChange}
+                  showAnimation={showTrophyAnimation}
+                  size="sm"
+                  protectionApplied={protectionApplied}
+                  isTie={isTie}
+                />
+              </Box>
             )}
-          </Flex>
 
-          {/* Show trophy change text */}
-          {trophyChange !== undefined && trophyChange !== 0 && (
-            <MotionText
-              fontSize="2xs"
-              fontWeight="medium"
-              color={trophyChange > 0 ? 'green.400' : 'red.400'}
-              textAlign="right"
-              mt={0.5}
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1, transition: { delay: 0.8 } }}
-            >
-              {trophyChange > 0 ? `+${trophyChange}` : trophyChange}
-            </MotionText>
-          )}
-        </Box>
-      </HStack>
+            {/* Trophy display */}
+            {trophies !== undefined && (
+              <MotionBox
+                bg="rgba(255, 215, 0, 0.1)"
+                borderRadius="full"
+                px={2}
+                py={0.5}
+                borderWidth="1px"
+                borderColor="rgba(255, 215, 0, 0.3)"
+                display="flex"
+                alignItems="center"
+                mt={isUser && trophyChange !== undefined ? 1 : 0}
+              >
+                <Icon as={Trophy} color="yellow.400" boxSize={3} mr={1} />
+                <Text color="white" fontWeight="semibold" fontSize="xs">
+                  {trophies}
+                </Text>
+              </MotionBox>
+            )}
+          </VStack>
+        </HStack>
+
+        {/* Right section: Score display */}
+        {attempted && (
+          <Flex align="center" justify="center">
+            <ScoreDisplay score={score} size="sm" />
+          </Flex>
+        )}
+      </Flex>
     </MotionBox>
   )
 }

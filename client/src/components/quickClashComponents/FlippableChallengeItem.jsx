@@ -386,33 +386,6 @@ const FlippableChallengeItem = memo(
       )
     }, [getCategoryStyle, challenge])
 
-    // Create the Analysis Button component for VSLine
-    const AnalysisButton = useMemo(
-      () => (
-        <Button
-          size="xs"
-          colorScheme="purple"
-          bg="rgba(128, 90, 213, 0.8)"
-          leftIcon={<Icon as={BarChart} boxSize={3} />}
-          onClick={handleFlip}
-          borderRadius="full"
-          px={3}
-          height="24px"
-          minW="auto"
-          fontWeight="bold"
-          fontSize="xs"
-          boxShadow="0 0 6px rgba(128, 90, 213, 0.4)"
-          _hover={{
-            bg: 'rgba(128, 90, 213, 0.9)',
-            boxShadow: '0 0 8px rgba(128, 90, 213, 0.6)',
-          }}
-        >
-          {t('Analysis')}
-        </Button>
-      ),
-      [handleFlip, t],
-    )
-
     // If no challenge data, show skeleton
     if (!challenge) {
       return <FlippableChallengeItemSkeleton />
@@ -471,18 +444,6 @@ const FlippableChallengeItem = memo(
                   isChallenger={isChallenger}
                   expiresAt={challenge.expiresAt}
                 />
-
-                {showFlipButton && (
-                  <IconButton
-                    icon={<BarChart size={16} />}
-                    aria-label={t('View Analysis')}
-                    size="sm"
-                    variant="ghost"
-                    colorScheme="blue"
-                    onClick={handleFlip}
-                    title={t('View Analysis')}
-                  />
-                )}
               </Flex>
             )}
 
@@ -491,51 +452,67 @@ const FlippableChallengeItem = memo(
               {/* Player Status Section */}
               {showPlayerStatus && (
                 <VStack spacing={spacing} align="stretch" mb={2}>
+                  {/* Always show logged-in user first */}
                   <PlayerStatus
-                    player={challenge.challenger}
-                    score={challenge.challengerScore}
-                    attempted={challenge.challengerAttempted}
-                    isUser={isChallenger}
-                    trophies={challenge.challenger.quickClashTrophies}
-                  />
-
-                  {/* VS Line with Trophy Display */}
-                  <VSLine
+                    player={
+                      isChallenger ? challenge.challenger : challenge.opponent
+                    }
+                    score={
+                      isChallenger
+                        ? challenge.challengerScore
+                        : challenge.opponentScore
+                    }
+                    attempted={
+                      isChallenger
+                        ? challenge.challengerAttempted
+                        : challenge.opponentAttempted
+                    }
+                    isUser={true}
+                    trophies={
+                      isChallenger
+                        ? challenge.challenger.quickClashTrophies
+                        : challenge.opponent.quickClashTrophies
+                    }
                     trophyChange={getTrophyChange()}
                     showTrophyAnimation={showTrophyAnimation}
-                    category={
-                      challenge.status === 'active' ? challenge.category : null
-                    }
-                    categoryColorScheme={getCategoryStyle()}
-                    isActiveChallenge={challenge.status === 'active'}
-                    showAnalysisButton={showFlipButton}
-                    AnalysisButton={AnalysisButton}
-                    onAnalysisClick={handleFlip}
-                    myAttempted={myAttempted}
                     protectionApplied={
-                      isDefeat &&
                       challenge.trophyUpdates?.protectionApplied &&
                       (isChallenger
                         ? challenge.trophyUpdates.protectionApplied.challenger
                         : challenge.trophyUpdates.protectionApplied.opponent)
                     }
-                    protectionType={
-                      isDefeat &&
-                      challenge.trophyUpdates?.protectionApplied &&
-                      (isChallenger
-                        ? challenge.trophyUpdates.protectionApplied
-                            .challenger_type
-                        : challenge.trophyUpdates.protectionApplied
-                            .opponent_type)
-                    }
+                    isTie={isTie}
                   />
 
+                  {/* VS Line */}
+                  <VSLine
+                    category={
+                      challenge.status === 'active' ? challenge.category : null
+                    }
+                    categoryColorScheme={getCategoryStyle()}
+                    isActiveChallenge={challenge.status === 'active'}
+                    myAttempted={myAttempted}
+                  />
+
+                  {/* Always show opponent second */}
                   <PlayerStatus
-                    player={challenge.opponent}
-                    score={challenge.opponentScore}
-                    attempted={challenge.opponentAttempted}
-                    isUser={!isChallenger}
-                    trophies={challenge.opponent.quickClashTrophies}
+                    player={opponent}
+                    score={
+                      isChallenger
+                        ? challenge.opponentScore
+                        : challenge.challengerScore
+                    }
+                    attempted={
+                      isChallenger
+                        ? challenge.opponentAttempted
+                        : challenge.challengerAttempted
+                    }
+                    isUser={false}
+                    trophies={opponent.quickClashTrophies}
+                    trophyChange={undefined} // Only show trophy change for logged-in user
+                    showTrophyAnimation={false} // Only animate for logged-in user
+                    protectionApplied={false} // Only show protection for logged-in user
+                    isTie={false} // Only relevant for logged-in user
                   />
                 </VStack>
               )}

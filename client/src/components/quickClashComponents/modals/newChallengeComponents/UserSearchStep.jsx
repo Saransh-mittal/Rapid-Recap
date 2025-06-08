@@ -284,7 +284,7 @@ const UserSearchStep = ({
         </FormLabel>
         <InputGroup>
           <Input
-            placeholder={t('Search by name or inGameName')}
+            placeholder={t('Name or InGameName')}
             value={searchTerm}
             onChange={e => setSearchTerm(e.target.value)}
             bg="whiteAlpha.100"
