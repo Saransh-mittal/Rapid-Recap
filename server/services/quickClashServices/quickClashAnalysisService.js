@@ -199,7 +199,8 @@ const getUserChallengeStats = async ({ userId, session }) => {
     let completedCount = 0
 
     for (const challenge of completedChallenges) {
-      const isChallenger = challenge.challenger.toString() === userId.toString()
+      const isChallenger =
+        challenge?.challenger?.toString() === userId.toString()
       const userScore = isChallenger
         ? challenge.challengerScore
         : challenge.opponentScore
@@ -1670,6 +1671,7 @@ const createEngagementContentWithTrends = (
  * @returns {Promise<Object>} The generated analysis document with translation if needed
  */
 const generateChallengeAnalysisWithTranslation = async ({
+  userId,
   challengeId,
   session,
   preferredLanguage = 'en',
@@ -1703,8 +1705,22 @@ const generateChallengeAnalysisWithTranslation = async ({
         analysis = await translateAnalysisToHindi({ analysisId: analysis._id })
       }
     }
-
-    return analysis
+    return {
+      _id: analysis._id,
+      battleMetrics: analysis.battleMetrics,
+      userAnalysis:
+        analysis?.challenger?.userId?.toString() === userId.toString()
+          ? analysis.challenger
+          : analysis.opponent,
+      opponentAnalysis:
+        analysis?.challenger?.userId?.toString() === userId.toString()
+          ? analysis.opponent
+          : analysis.challenger,
+      engagement: analysis.engagement,
+      isWinner:
+        analysis.engagement.winner &&
+        analysis.engagement.winner.toString() === userId.toString(),
+    }
   } catch (error) {
     console.error(
       'Error generating challenge analysis with translation:',
@@ -1734,6 +1750,7 @@ const getUserChallengeAnalysisLocalized = async ({ challengeId, userId }) => {
       // Generate analysis if it doesn't exist, passing the language preference
       return await generateChallengeAnalysisWithTranslation({
         challengeId,
+        userId,
         preferredLanguage,
       })
     }

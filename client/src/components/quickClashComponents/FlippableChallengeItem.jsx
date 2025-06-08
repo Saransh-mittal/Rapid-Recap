@@ -140,12 +140,8 @@ const FlippableChallengeItem = memo(
         ? challenge.challengerScore
         : challenge.opponentScore
 
-      const bothAttempted =
-        challenge.challengerAttempted && challenge.opponentAttempted
-
       const isWinner =
         challenge.status === 'completed' &&
-        bothAttempted &&
         ((isChallenger &&
           challenge.challengerScore > challenge.opponentScore) ||
           (!isChallenger &&
@@ -153,14 +149,12 @@ const FlippableChallengeItem = memo(
 
       const isTie =
         challenge.status === 'completed' &&
-        bothAttempted &&
         challenge.challengerScore === challenge.opponentScore
 
-      const isDefeat =
-        challenge.status === 'completed' && bothAttempted && !isWinner && !isTie
+      const isDefeat = challenge.status === 'completed' && !isWinner && !isTie
 
       // Only show flip button for completed challenges where both players completed
-      const showFlipButton = challenge.status === 'completed' && bothAttempted
+      const showFlipButton = challenge.status === 'completed'
 
       // Determine if we should show player status section
       const showPlayerStatus =
@@ -518,99 +512,98 @@ const FlippableChallengeItem = memo(
               )}
 
               {/* Actions */}
-              {!isExpired && (
-                <Flex
-                  justify="center"
-                  mt={3}
-                  p={2}
-                  bg="whiteAlpha.50"
-                  borderRadius="md"
-                >
-                  {myAttempted ? (
-                    <HStack spacing={3}>
-                      <Button
-                        size={buttonSize}
-                        colorScheme="purple"
-                        variant="outline"
-                        leftIcon={<FileText size={14} />}
-                        onClick={handleViewReport}
-                        fontWeight="medium"
-                        _hover={{
-                          bg: 'purple.700',
-                          borderColor: 'purple.400',
-                        }}
-                      >
-                        {t('View Report')}
-                      </Button>
 
-                      {showFlipButton && (
-                        <Button
-                          size={buttonSize}
-                          colorScheme="blue"
-                          variant="outline"
-                          leftIcon={<BarChart size={14} />}
-                          onClick={handleFlip}
-                          fontWeight="medium"
-                        >
-                          {t('Analysis')}
-                        </Button>
-                      )}
-                    </HStack>
-                  ) : challenge.status === 'pending' && !isChallenger ? (
-                    <HStack spacing={3}>
-                      <Button
-                        size={buttonSize}
-                        colorScheme="green"
-                        onClick={handleAccept}
-                        leftIcon={<Check size={14} />}
-                        fontWeight="medium"
-                        boxShadow="0 0 6px rgba(72, 187, 120, 0.3)"
-                        _hover={{
-                          boxShadow: '0 0 8px rgba(72, 187, 120, 0.5)',
-                        }}
-                      >
-                        {t('Accept')}
-                      </Button>
-                      <Button
-                        size={buttonSize}
-                        variant="outline"
-                        colorScheme="red"
-                        onClick={handleDecline}
-                        leftIcon={<X size={14} />}
-                        fontWeight="medium"
-                      >
-                        {t('Decline')}
-                      </Button>
-                    </HStack>
-                  ) : challenge.status === 'active' && !myAttempted ? (
-                    <Flex align="center" gap={spacing}>
-                      {/* Show enhanced trophy display */}
-                      <EnhancedPotentialTrophyDisplay
-                        potentialGain={getTrophyPotential()}
-                        size={fontSize}
-                        compact={true}
-                      />
+              <Flex
+                justify="center"
+                mt={3}
+                p={2}
+                bg="whiteAlpha.50"
+                borderRadius="md"
+              >
+                {myAttempted ? (
+                  <HStack spacing={3}>
+                    <Button
+                      size={buttonSize}
+                      colorScheme="purple"
+                      variant="outline"
+                      leftIcon={<FileText size={14} />}
+                      onClick={handleViewReport}
+                      fontWeight="medium"
+                      _hover={{
+                        bg: 'purple.700',
+                        borderColor: 'purple.400',
+                      }}
+                    >
+                      {t('View Report')}
+                    </Button>
 
+                    {showFlipButton && (
                       <Button
                         size={buttonSize}
-                        colorScheme="green"
-                        onClick={handleStart}
-                        leftIcon={<PlayCircle size={14} />}
-                        fontWeight="bold"
-                        px={4}
-                        boxShadow="0 0 8px rgba(72, 187, 120, 0.3)"
-                        _hover={{
-                          boxShadow: '0 0 12px rgba(72, 187, 120, 0.5)',
-                          transform: 'translateY(-1px)',
-                        }}
-                        _active={{ transform: 'translateY(0)' }}
+                        colorScheme="blue"
+                        variant="outline"
+                        leftIcon={<BarChart size={14} />}
+                        onClick={handleFlip}
+                        fontWeight="medium"
                       >
-                        {t('Start')}
+                        {t('Analysis')}
                       </Button>
-                    </Flex>
-                  ) : null}
-                </Flex>
-              )}
+                    )}
+                  </HStack>
+                ) : challenge.status === 'pending' && !isChallenger ? (
+                  <HStack spacing={3}>
+                    <Button
+                      size={buttonSize}
+                      colorScheme="green"
+                      onClick={handleAccept}
+                      leftIcon={<Check size={14} />}
+                      fontWeight="medium"
+                      boxShadow="0 0 6px rgba(72, 187, 120, 0.3)"
+                      _hover={{
+                        boxShadow: '0 0 8px rgba(72, 187, 120, 0.5)',
+                      }}
+                    >
+                      {t('Accept')}
+                    </Button>
+                    <Button
+                      size={buttonSize}
+                      variant="outline"
+                      colorScheme="red"
+                      onClick={handleDecline}
+                      leftIcon={<X size={14} />}
+                      fontWeight="medium"
+                    >
+                      {t('Decline')}
+                    </Button>
+                  </HStack>
+                ) : challenge.status === 'active' && !myAttempted ? (
+                  <Flex align="center" gap={spacing}>
+                    {/* Show enhanced trophy display */}
+                    <EnhancedPotentialTrophyDisplay
+                      potentialGain={getTrophyPotential()}
+                      size={fontSize}
+                      compact={true}
+                    />
+
+                    <Button
+                      size={buttonSize}
+                      colorScheme="green"
+                      onClick={handleStart}
+                      leftIcon={<PlayCircle size={14} />}
+                      fontWeight="bold"
+                      px={4}
+                      boxShadow="0 0 8px rgba(72, 187, 120, 0.3)"
+                      _hover={{
+                        boxShadow: '0 0 12px rgba(72, 187, 120, 0.5)',
+                        transform: 'translateY(-1px)',
+                      }}
+                      _active={{ transform: 'translateY(0)' }}
+                    >
+                      {t('Start')}
+                    </Button>
+                  </Flex>
+                ) : null}
+              </Flex>
             </Box>
 
             {/* Result Banner */}
