@@ -362,7 +362,7 @@ const QuickClashHeader = ({ onNewChallenge }) => {
           {/* 1v1 Button - Uses MatchmakingButton with overrides */}
           <Box flex={1} minWidth={0} display="flex" justifyContent="center">
             <MatchmakingButton
-              buttonTextOverride="1v1"
+              buttonTextOverride="SOLO"
               iconOverride={ZapIconLucide} // From lucide-react
               // bgGradientOverride will use the default purple-blue from MatchmakingButton
             />

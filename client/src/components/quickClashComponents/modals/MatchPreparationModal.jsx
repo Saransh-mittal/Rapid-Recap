@@ -21,6 +21,8 @@ import {
   Button,
   useToast,
   useBreakpointValue,
+  IconButton,
+  Tooltip,
 } from '@chakra-ui/react'
 import { keyframes } from '@emotion/react'
 import { motion, AnimatePresence } from 'framer-motion'
@@ -29,22 +31,26 @@ import {
   Sword,
   Shield,
   CheckCircle,
-  Users,
-  Book,
-  Braces,
   Trophy,
-  Crown,
   Zap,
   PlayCircle,
   Loader,
+  Minimize2,
+  X,
 } from 'lucide-react'
-import { useSelector } from 'react-redux'
+import { useSelector, useDispatch } from 'react-redux'
+import {
+  clearMatchmakingAfterChallengeReady,
+  clearMatchmakingAfterModalClose,
+  resetMatchmakingState,
+} from '../../../redux/quickClashMatchmakingSlice'
 
 const MotionBox = motion(Box)
 const MotionAvatar = motion(Avatar)
 const MotionIcon = motion(Icon)
 const MotionBadge = motion(Badge)
 const MotionButton = motion(Button)
+const MotionIconButton = motion(IconButton)
 
 // Optimized keyframes - reduced complexity for performance
 const shineAnimation = keyframes`
@@ -107,7 +113,7 @@ const OptimizedTrophyBadge = memo(
         />
 
         <Icon
-          as={isHighlighted ? Trophy : Trophy}
+          as={Trophy}
           boxSize={sizeProps.iconSize}
           color="white"
           mr={2}
@@ -170,7 +176,7 @@ const OptimizedVSBadge = memo(({ size = 'md', isActive = false }) => {
 })
 
 /**
- * Optimized modal for match preparation with better performance and alignment
+ * Enhanced modal for match preparation with minimize/close support
  */
 const MatchPreparationModal = ({
   isOpen,
@@ -182,6 +188,7 @@ const MatchPreparationModal = ({
   step = null,
 }) => {
   const { t } = useTranslation('QuickClash')
+  const dispatch = useDispatch()
   const toast = useToast()
   const { user } = useSelector(state => state.auth)
 
@@ -221,19 +228,12 @@ const MatchPreparationModal = ({
     }
   }, [progress, currentProgress])
 
-  // Handle completion state
+  // ENHANCED: Handle completion state WITHOUT automatic cleanup
   useEffect(() => {
     if (currentProgress >= 100 && challengeId && !isComplete) {
       setIsComplete(true)
 
       if (!hasShownCompletionToast.current) {
-        toast({
-          title: t('Challenge Ready!'),
-          description: t('Your quick clash challenge is ready to play!'),
-          status: 'success',
-          duration: 3000,
-          isClosable: true,
-        })
         hasShownCompletionToast.current = true
       }
 
@@ -241,12 +241,20 @@ const MatchPreparationModal = ({
       setTimeout(() => {
         setShowPlayButton(true)
       }, 800)
+
+      // NOTE: Removed automatic cleanup - modal stays open for user action
+      // Cleanup only happens when user clicks Play Now, Minimize, or Close
     }
   }, [currentProgress, challengeId, isComplete, toast, t])
 
-  // Reset state when modal closes
+  // ENHANCED: Reset state when modal closes (minimize preserves, close clears)
   useEffect(() => {
     if (!isOpen) {
+      console.log(
+        '[MATCH_PREP_MODAL] Modal closed - resetting local states only',
+      )
+
+      // Reset local state only (Redux state cleared by close handler if needed)
       setCurrentProgress(0)
       setIsComplete(false)
       setShowPlayButton(false)
@@ -254,12 +262,53 @@ const MatchPreparationModal = ({
     }
   }, [isOpen])
 
+  // ENHANCED: Handle minimize action (always available)
+  const handleMinimize = useCallback(() => {
+    console.log('[MATCH_PREP_MODAL] User minimized modal')
+
+    // Don't clear states - just close modal and let button handle reopening
+    if (onClose) {
+      onClose('minimize')
+    }
+  }, [onClose])
+
+  // ENHANCED: Handle close action (only available when challenge is ready)
+  const handleCompleteClose = useCallback(() => {
+    console.log('[MATCH_PREP_MODAL] User completely closed modal when ready')
+
+    // Clear matchmaking states for complete close
+    dispatch(clearMatchmakingAfterModalClose())
+
+    // Then call the original onClose
+    if (onClose) {
+      onClose('close')
+    }
+  }, [onClose, dispatch])
+
+  // REMOVED: Close option - users can only minimize or play now
+
+  // ENHANCED: Handle play now with comprehensive cleanup (close available when ready)
+  const handlePlayNow = useCallback(() => {
+    console.log(
+      '[MATCH_PREP_MODAL] Handling play now - clearing all matchmaking states',
+    )
+
+    // Clear all matchmaking states before navigating
+    dispatch(clearMatchmakingAfterChallengeReady())
+
+    // Small delay to ensure state is cleared before navigation
+    setTimeout(() => {
+      if (onPlayNow && challengeId) {
+        onPlayNow()
+      }
+    }, 100)
+  }, [onPlayNow, challengeId, dispatch])
+
   // Optimized step configuration
   const stepsConfig = [
     {
       id: 'matchFound',
       title: t('Match Found'),
-      icon: Users,
       description: t('Found your opponent!'),
       color: 'green.500',
       progressMin: 0,
@@ -268,7 +317,6 @@ const MatchPreparationModal = ({
     {
       id: 'contentLoading',
       title: t('Loading Content'),
-      icon: Book,
       description: t('Preparing quiz content...'),
       color: 'blue.500',
       progressMin: 20,
@@ -277,7 +325,6 @@ const MatchPreparationModal = ({
     {
       id: 'generatingQuiz',
       title: t('Generating Questions'),
-      icon: Braces,
       description: t('Creating your challenge...'),
       color: 'purple.500',
       progressMin: 60,
@@ -286,7 +333,6 @@ const MatchPreparationModal = ({
     {
       id: 'challengeReady',
       title: t('Challenge Ready'),
-      icon: CheckCircle,
       description: t('Ready to play!'),
       color: 'teal.500',
       progressMin: 95,
@@ -354,18 +400,12 @@ const MatchPreparationModal = ({
 
   const opponent = getOpponentInfo()
 
-  // Handle play now
-  const handlePlayNow = useCallback(() => {
-    if (onPlayNow && challengeId) {
-      onPlayNow()
-    }
-  }, [onPlayNow, challengeId])
-
   return (
     <Modal
       isOpen={isOpen}
-      onClose={onClose}
+      onClose={showPlayButton ? handleCompleteClose : handleMinimize} // Close available only when ready
       closeOnOverlayClick={false}
+      closeOnEsc={showPlayButton} // ESC only works when close is available
       size={modalSize}
       motionPreset="slideInBottom"
     >
@@ -401,43 +441,7 @@ const MatchPreparationModal = ({
           pointerEvents="none"
         />
 
-        {/* Reduced particle count for performance */}
-        {Array.from({ length: 8 }).map((_, index) => (
-          <MotionBox
-            key={`particle-${index}`}
-            position="absolute"
-            width="4px"
-            height="4px"
-            borderRadius="full"
-            bg={
-              isComplete
-                ? index % 2
-                  ? 'green.400'
-                  : 'teal.400'
-                : index % 2
-                ? 'purple.400'
-                : 'blue.400'
-            }
-            opacity={0.6}
-            initial={{
-              top: `${Math.random() * 100}%`,
-              left: `${Math.random() * 100}%`,
-            }}
-            animate={{
-              top: [`${Math.random() * 100}%`, `${Math.random() * 100}%`],
-              left: [`${Math.random() * 100}%`, `${Math.random() * 100}%`],
-              opacity: [0.3, 0.6, 0.3],
-            }}
-            transition={{
-              duration: 6 + Math.random() * 4,
-              repeat: Infinity,
-              repeatType: 'loop',
-            }}
-            zIndex={1}
-          />
-        ))}
-
-        {/* Header */}
+        {/* Header with enhanced controls */}
         <ModalHeader
           color="white"
           textAlign="center"
@@ -445,7 +449,7 @@ const MatchPreparationModal = ({
           position="relative"
           zIndex={2}
         >
-          <VStack spacing={3}>
+          <VStack spacing={3} mt={5}>
             <HStack spacing={3} justify="center" align="center">
               <MotionIcon
                 as={isComplete ? CheckCircle : Sword}
@@ -488,13 +492,54 @@ const MatchPreparationModal = ({
               />
             </HStack>
           </VStack>
-        </ModalHeader>
 
-        <ModalCloseButton color="white" zIndex={10} />
+          {/* ENHANCED: Header buttons - only close when Play Now is available */}
+          <HStack position="absolute" top={4} right={-4} spacing={2}>
+            {showPlayButton ? (
+              // Only close button when challenge is ready
+
+              <MotionIconButton
+                icon={<X size={16} />}
+                aria-label={t('Close')}
+                size="sm"
+                variant="ghost"
+                color="whiteAlpha.700"
+                _hover={{
+                  color: 'white',
+                  bg: 'whiteAlpha.200',
+                }}
+                onClick={handleCompleteClose}
+                whileHover={{ scale: 1.1 }}
+                whileTap={{ scale: 0.9 }}
+                initial={{ opacity: 0, scale: 0.8 }}
+                animate={{ opacity: 1, scale: 1 }}
+                transition={{ type: 'spring', stiffness: 200, delay: 0.2 }}
+              />
+            ) : (
+              // Only minimize button during preparation
+
+              <MotionIconButton
+                icon={<Minimize2 size={16} />}
+                aria-label={t('Minimize')}
+                size="sm"
+                variant="ghost"
+                color="whiteAlpha.700"
+                _hover={{
+                  color: 'white',
+                  bg: 'whiteAlpha.200',
+                }}
+                onClick={handleMinimize}
+                whileHover={{ scale: 1.1 }}
+                whileTap={{ scale: 0.9 }}
+              />
+            )}
+          </HStack>
+        </ModalHeader>
 
         <ModalBody
           py={contentPadding}
           px={{ base: 4, md: 6 }}
+          pt={{ base: 6, md: 8 }} // ENHANCED: More top padding for header button clearance
           position="relative"
           zIndex={2}
         >
@@ -686,11 +731,6 @@ const MatchPreparationModal = ({
 
               {/* Current Step Indicator - Centered */}
               <HStack justify="center" spacing={3} w="100%" pt={2}>
-                <Icon
-                  as={currentStepConfig.icon}
-                  color={currentStepConfig.color}
-                  boxSize={5}
-                />
                 {!isComplete && (
                   <MotionIcon
                     as={Loader}
@@ -741,16 +781,18 @@ const MatchPreparationModal = ({
                 {t('Play Now!')}
               </MotionButton>
             ) : (
+              // Only minimize button during preparation (no close option in footer)
               <MotionButton
                 key="minimize-button"
                 variant="ghost"
-                onClick={onClose}
+                onClick={handleMinimize}
                 initial={{ opacity: 0 }}
                 animate={{ opacity: 1 }}
                 exit={{ opacity: 0 }}
                 color="whiteAlpha.800"
                 _hover={{ bg: 'whiteAlpha.100' }}
                 size="md"
+                leftIcon={<Minimize2 size={16} />}
               >
                 {t('Minimize')}
               </MotionButton>

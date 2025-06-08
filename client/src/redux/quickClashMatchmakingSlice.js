@@ -191,6 +191,43 @@ const quickClashMatchmakingSlice = createSlice({
       state.challengeReady = null
     },
 
+    // ENHANCED: Complete matchmaking reset - for when challenge is ready, modal closes, or play now
+    resetMatchmakingState: () => {
+      console.log(
+        '[MATCHMAKING_SLICE] Resetting all matchmaking state to initial values',
+      )
+      return { ...initialState }
+    },
+
+    // ENHANCED: Selective cleanup for when challenge completes
+    clearMatchmakingAfterChallengeReady: state => {
+      console.log(
+        '[MATCHMAKING_SLICE] Clearing matchmaking state after challenge ready',
+      )
+      // Clear all preparation and matchmaking states but keep socket connection
+      const socketState = state.socketConnected
+      Object.assign(state, {
+        ...initialState,
+        socketConnected: socketState, // Preserve socket connection
+      })
+    },
+
+    // ENHANCED: Clear states when modal is closed/minimized
+    clearMatchmakingAfterModalClose: state => {
+      console.log(
+        '[MATCHMAKING_SLICE] Clearing matchmaking state after modal close',
+      )
+      // Clear preparation states but keep socket connection
+      state.preparingChallenge = null
+      state.preparationProgress = 0
+      state.preparationStep = null
+      state.challengeReady = null
+      state.challengeCreationData = null
+      state.challengeCreationError = null
+      state.showPreparationModal = false
+      state.showSearchModal = false
+    },
+
     // UI state management
     setShowSearchModal: (state, action) => {
       state.showSearchModal = action.payload
@@ -199,9 +236,6 @@ const quickClashMatchmakingSlice = createSlice({
     setShowPreparationModal: (state, action) => {
       state.showPreparationModal = action.payload
     },
-
-    // Complete reset
-    resetMatchmakingState: () => initialState,
 
     // Batch state updates for efficiency
     updateMatchmakingState: (state, action) => {
@@ -237,22 +271,20 @@ const quickClashMatchmakingSlice = createSlice({
         state.inMatchmaking = false
       })
 
-      // Leave matchmaking
+      // Leave matchmaking - ENHANCED cleanup
       .addCase(leaveMatchmaking.pending, state => {
         state.matchmakingLoading = true
       })
       .addCase(leaveMatchmaking.fulfilled, state => {
-        state.inMatchmaking = false
-        state.matchmakingEntry = null
-        state.matchmakingLoading = false
-        state.matchmakingError = null
-
-        // Clear all related states
-        state.preparingChallenge = null
-        state.challengeReady = null
-        state.preparationProgress = 0
-        state.preparationStep = null
-        state.challengeCreationData = null
+        console.log(
+          '[MATCHMAKING_SLICE] Leave matchmaking fulfilled - resetting state',
+        )
+        // Complete reset when leaving matchmaking
+        const socketState = state.socketConnected
+        Object.assign(state, {
+          ...initialState,
+          socketConnected: socketState, // Preserve socket connection
+        })
       })
       .addCase(leaveMatchmaking.rejected, (state, action) => {
         state.matchmakingLoading = false
@@ -301,16 +333,18 @@ export const {
   setMatchmakingError,
   clearMatchmakingError,
 
-  // State cleanup
+  // State cleanup - ENHANCED
   clearChallengeStates,
   clearPreparationState,
+  resetMatchmakingState,
+  clearMatchmakingAfterChallengeReady,
+  clearMatchmakingAfterModalClose,
 
   // UI state
   setShowSearchModal,
   setShowPreparationModal,
 
   // Utility actions
-  resetMatchmakingState,
   updateMatchmakingState,
 } = quickClashMatchmakingSlice.actions
 

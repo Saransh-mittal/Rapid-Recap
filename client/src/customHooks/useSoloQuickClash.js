@@ -174,14 +174,6 @@ const useSoloQuickClash = () => {
               width: '350px',
             }),
           )
-
-          currentToast({
-            title: currentT('Challenge Sent!'),
-            description: currentT('Your challenge has been sent successfully'),
-            status: 'success',
-            duration: 3000,
-            isClosable: true,
-          })
         } else {
           // Add to note message queue for failure notification
           currentDispatch(

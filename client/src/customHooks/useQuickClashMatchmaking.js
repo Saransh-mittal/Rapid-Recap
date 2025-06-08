@@ -18,16 +18,16 @@ import {
   clearChallengeError,
   clearMatchmakingError,
   clearPreparationState,
+  clearMatchmakingAfterChallengeReady,
+  clearMatchmakingAfterModalClose,
+  resetMatchmakingState,
   setMatchmakingError,
 } from '../redux/quickClashMatchmakingSlice'
 import { useSocket } from './useSocket'
 import { fetchActiveChallenges } from '../redux/quickClashSlice'
-import { addNoteMessageIfAllowed } from '../redux/appSlice'
-import { v4 as uuidv4 } from 'uuid'
 
 /**
- * Enhanced custom hook for Quick Clash matchmaking with consolidated socket event handling
- * Works with the consolidated socket handlers in quickClashSocket.utils.js
+ * Enhanced custom hook for Quick Clash matchmaking with comprehensive state cleanup
  * @returns {Object} Matchmaking state and functions
  */
 const useQuickClashMatchmaking = () => {
@@ -82,6 +82,9 @@ const useQuickClashMatchmaking = () => {
     }
   }, [])
 
+  // NOTE: Removed automatic cleanup when reaching 100% - let user decide when to proceed
+  // Cleanup only happens based on explicit user actions (minimize, close, play now)
+
   // Debug logging for state changes
   useEffect(() => {
     console.log('[MM_HOOK] State update:', {
@@ -131,7 +134,7 @@ const useQuickClashMatchmaking = () => {
     // Set connected status
     dispatch(setSocketConnected(true))
 
-    // FIXED: Enhanced match found listener with deduplication and proper data structure
+    // ENHANCED: Match found listener with comprehensive data handling
     const cleanupMatchFound = addEventListener(
       'quickClash:matchFound',
       data => {
@@ -147,7 +150,7 @@ const useQuickClashMatchmaking = () => {
 
         console.log('[MM_HOOK] Match found event received:', data)
 
-        // FIXED: Ensure proper data structure with opponent information
+        // Ensure proper data structure with opponent information
         const properPreparationData = {
           opponent: data?.opponent,
           tempChallengeId: data.tempChallengeId,
@@ -156,32 +159,11 @@ const useQuickClashMatchmaking = () => {
 
         // IMMEDIATELY set match preparation state with proper data structure
         dispatch(setPreparingChallenge(properPreparationData))
-
-        // Show notification
-        toast({
-          title: t('Match Found!'),
-          description: t('Opponent found! Preparing challenge...'),
-          status: 'success',
-          duration: 3000,
-          isClosable: true,
-        })
-
-        // Add note message
-        dispatch(
-          addNoteMessageIfAllowed({
-            id: uuidv4(),
-            messageType: 'quickClash',
-            eventType: 'matchFound',
-            data: properPreparationData,
-            duration: 5000,
-            width: '350px',
-          }),
-        )
       },
     )
     cleanupFunctions.push(cleanupMatchFound)
 
-    // FIXED: Enhanced challenge progress listener with better progress mapping and data preservation
+    // ENHANCED: Challenge progress listener with better progress mapping
     const cleanupChallengeProgress = addEventListener(
       'quickClash:challengeProgress',
       data => {
@@ -189,12 +171,11 @@ const useQuickClashMatchmaking = () => {
 
         console.log('[MM_HOOK] Challenge progress received:', data)
 
-        // FIXED: Only set preparation state if we don't have it AND preserve existing opponent data
+        // Only set preparation state if we don't have it AND preserve existing opponent data
         if (!preparingChallenge && data.progress > 0) {
           console.log(
             '[MM_HOOK] Setting minimal preparation state from progress event',
           )
-          // Don't override with minimal data, just set a flag that we're preparing
           dispatch(setPreparationProgress(data.progress))
           dispatch(setPreparationStep(data.step || 'contentLoading'))
         } else {
@@ -223,7 +204,7 @@ const useQuickClashMatchmaking = () => {
     )
     cleanupFunctions.push(cleanupChallengeProgress)
 
-    // FIXED: Enhanced challenge ready listener
+    // ENHANCED: Challenge ready listener with NO automatic cleanup
     const cleanupChallengeReady = addEventListener(
       'quickClash:matchChallengeReady',
       data => {
@@ -239,31 +220,12 @@ const useQuickClashMatchmaking = () => {
         // Refresh active challenges list
         dispatch(fetchActiveChallenges())
 
-        // Add interactive note message
-        dispatch(
-          addNoteMessageIfAllowed({
-            id: uuidv4(),
-            messageType: 'quickClash',
-            eventType: 'challengeReady',
-            data: {
-              challengeId: data.challengeId,
-            },
-            duration: 10000,
-            width: '350px',
-            actions: [
-              {
-                text: t('Play Now'),
-                actionType: 'NAVIGATE',
-                route: `/quickclash/session/${data.challengeId}`,
-              },
-            ],
-          }),
-        )
+        // NOTE: No automatic cleanup here - let user decide when to proceed
       },
     )
     cleanupFunctions.push(cleanupChallengeReady)
 
-    // NEW: Enhanced match creation failed listener
+    // ENHANCED: Match creation failed listener with comprehensive cleanup
     const cleanupMatchCreationFailed = addEventListener(
       'quickClash:matchCreationFailed',
       data => {
@@ -271,13 +233,8 @@ const useQuickClashMatchmaking = () => {
 
         console.error('[MM_HOOK] Match creation failed event received:', data)
 
-        // Clear preparation state
-        dispatch(clearPreparationState())
-
-        // Set error state
-        dispatch(
-          setMatchmakingError(data.error || 'Failed to create challenge'),
-        )
+        // Clear all preparation and matchmaking state
+        dispatch(resetMatchmakingState())
 
         // Show error notification
         toast({
@@ -289,33 +246,19 @@ const useQuickClashMatchmaking = () => {
           duration: 5000,
           isClosable: true,
         })
-
-        // Add error note message
-        dispatch(
-          addNoteMessageIfAllowed({
-            id: uuidv4(),
-            messageType: 'system',
-            eventType: 'error',
-            data: {
-              message: t('Challenge creation failed'),
-              error: data.error,
-            },
-            duration: 8000,
-            width: '350px',
-          }),
-        )
       },
     )
     cleanupFunctions.push(cleanupMatchCreationFailed)
 
-    // Listen for joined matchmaking confirmation
+    // ENHANCED: Joined matchmaking confirmation
     const cleanupJoinedMatchmaking = addEventListener(
       'quickClash:joinedMatchmaking',
       data => {
         if (!isComponentMountedRef.current) return
         console.log('[MM_HOOK] Joined matchmaking confirmation received:', data)
 
-        // Ensure we're marked as in matchmaking
+        // Clear any previous states and ensure we're marked as in matchmaking
+        dispatch(clearPreparationState())
         if (!inMatchmaking) {
           dispatch(setInMatchmaking(true))
         }
@@ -323,16 +266,15 @@ const useQuickClashMatchmaking = () => {
     )
     cleanupFunctions.push(cleanupJoinedMatchmaking)
 
-    // Listen for left matchmaking confirmation
+    // ENHANCED: Left matchmaking confirmation with full cleanup
     const cleanupLeftMatchmaking = addEventListener(
       'quickClash:leftMatchmaking',
       data => {
         if (!isComponentMountedRef.current) return
         console.log('[MM_HOOK] Left matchmaking confirmation received:', data)
 
-        // Clear all matchmaking state
-        dispatch(setInMatchmaking(false))
-        dispatch(clearPreparationState())
+        // Complete state reset when leaving matchmaking
+        dispatch(resetMatchmakingState())
       },
     )
     cleanupFunctions.push(cleanupLeftMatchmaking)
@@ -354,7 +296,7 @@ const useQuickClashMatchmaking = () => {
     })
     cleanupFunctions.push(cleanupError)
 
-    // Enhanced reconnection handling
+    // ENHANCED: Reconnection handling with state preservation
     const cleanupReconnect = addEventListener('reconnect', () => {
       if (!isComponentMountedRef.current) return
 
@@ -380,7 +322,7 @@ const useQuickClashMatchmaking = () => {
     })
     cleanupFunctions.push(cleanupReconnect)
 
-    // Enhanced disconnect handling
+    // ENHANCED: Disconnect handling with state cleanup
     const cleanupDisconnect = addEventListener('disconnect', () => {
       if (!isComponentMountedRef.current) return
 
@@ -509,12 +451,12 @@ const useQuickClashMatchmaking = () => {
     }
   }, [challengeCreationError, toast, t, dispatch])
 
-  // Enhanced function to join matchmaking
+  // ENHANCED: Function to join matchmaking with comprehensive cleanup
   const handleJoinMatchmaking = useCallback(() => {
-    // Clear any previous errors
+    // Clear any previous errors and states
     dispatch(clearMatchmakingError())
     dispatch(clearChallengeError())
-    dispatch(clearPreparationState())
+    dispatch(resetMatchmakingState()) // Full reset before joining
 
     console.log('[MM_HOOK] Attempting to join matchmaking')
 
@@ -540,7 +482,7 @@ const useQuickClashMatchmaking = () => {
       })
   }, [dispatch, isSocketReady, emitWithDeviceContext])
 
-  // Enhanced function to leave matchmaking
+  // ENHANCED: Function to leave matchmaking with comprehensive cleanup
   const handleLeaveMatchmaking = useCallback(() => {
     console.log('[MM_HOOK] Attempting to leave matchmaking')
 
@@ -555,10 +497,10 @@ const useQuickClashMatchmaking = () => {
           console.log('[MM_HOOK] Emitted leaveMatchmaking socket event')
         }
 
-        // Clear all preparation states
-        dispatch(clearPreparationState())
+        // Complete reset after leaving
+        dispatch(resetMatchmakingState())
 
-        // Reset room joined flag
+        // Reset refs
         matchmakingRoomJoined.current = false
 
         return result
@@ -569,19 +511,37 @@ const useQuickClashMatchmaking = () => {
       })
   }, [dispatch, isSocketReady, emitWithDeviceContext])
 
-  // Navigation helper
+  // ENHANCED: Navigation helper with state cleanup
   const navigateToChallenge = useCallback(
     challengeId => {
       if (challengeId) {
         console.log(`[MM_HOOK] Navigating to challenge: ${challengeId}`)
-        navigate(`/quickclash/session/${challengeId}`)
 
-        // Clear preparation state after navigation
-        dispatch(clearPreparationState())
+        // Clear all matchmaking states before navigation
+        dispatch(clearMatchmakingAfterChallengeReady())
+
+        // Navigate to challenge
+        navigate(`/quickclash/session/${challengeId}`)
       }
     },
     [navigate, dispatch],
   )
+
+  // ENHANCED: Manual cleanup functions
+  const clearAllMatchmakingStates = useCallback(() => {
+    console.log('[MM_HOOK] Manual cleanup of all matchmaking states')
+    dispatch(resetMatchmakingState())
+  }, [dispatch])
+
+  const clearMatchmakingAfterChallenge = useCallback(() => {
+    console.log('[MM_HOOK] Manual cleanup after challenge ready')
+    dispatch(clearMatchmakingAfterChallengeReady())
+  }, [dispatch])
+
+  const clearMatchmakingAfterModal = useCallback(() => {
+    console.log('[MM_HOOK] Manual cleanup after modal close')
+    dispatch(clearMatchmakingAfterModalClose())
+  }, [dispatch])
 
   return {
     // Core state
@@ -617,10 +577,13 @@ const useQuickClashMatchmaking = () => {
     checkMatchmakingStatus,
     navigateToChallenge,
 
-    // State management
+    // ENHANCED: State management with cleanup options (close available when ready)
     clearChallengeError: () => dispatch(clearChallengeError()),
     clearMatchmakingError: () => dispatch(clearMatchmakingError()),
     clearPreparationState: () => dispatch(clearPreparationState()),
+    clearAllMatchmakingStates,
+    clearMatchmakingAfterChallenge,
+    clearMatchmakingAfterModal,
 
     // Socket management
     setupSocketListeners,
