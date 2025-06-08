@@ -288,6 +288,7 @@ const completeReadingPhase = asyncHandler(async (req, res) => {
 const submitQuizAnswers = asyncHandler(async (req, res) => {
   const { sessionId } = req.params
   const { responses } = req.body
+  const userId = req.user._id
 
   try {
     const result = await submitQuizAnswersService({
@@ -337,6 +338,7 @@ const submitQuizAnswers = asyncHandler(async (req, res) => {
       if (challenge.challengerAttempted && challenge.opponentAttempted) {
         // Start analysis generation in the background
         initiateBackgroundAnalysis({
+          userId,
           challengeId: session.challenge.toString(),
         })
       }
@@ -525,6 +527,7 @@ const generateAnalysis = asyncHandler(async (req, res) => {
 
     // Generate the analysis with translation support
     const analysis = await generateChallengeAnalysisWithTranslation({
+      userId,
       challengeId,
     })
 

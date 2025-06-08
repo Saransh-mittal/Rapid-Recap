@@ -70,7 +70,11 @@ const notifyUsers = async ({ challengeId }) => {
  * @param {boolean} [params.force=false] - Force analysis generation even if it exists
  * @returns {Promise<{started: boolean, reason: string}>} Status object
  */
-const initiateBackgroundAnalysis = async ({ challengeId, force = false }) => {
+const initiateBackgroundAnalysis = async ({
+  challengeId,
+  force = false,
+  userId,
+}) => {
   try {
     console.log(
       `Checking if analysis should be started for challenge ${challengeId}`,
@@ -91,6 +95,7 @@ const initiateBackgroundAnalysis = async ({ challengeId, force = false }) => {
     // Start the analysis generation process without awaiting its completion
     generateChallengeAnalysisWithTranslation({
       challengeId,
+      userId,
     })
       .then(async analysis => {
         console.log(

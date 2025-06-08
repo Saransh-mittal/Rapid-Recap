@@ -96,6 +96,7 @@ import useQuickClash from './customHooks/useQuickClash.js'
 import NotificationReminderModal from './components/miscellaneous/NotificationReminderModal.jsx'
 import useDailyTasks from './customHooks/useDailyTasks.js'
 import { fetchSpecialCategories } from './services/specialCategoryService.js'
+import useSoloQuickClash from './customHooks/useSoloQuickClash.js'
 
 const App = () => {
   // ReactGA.initialize('G-ES5VQ8NW7Z')
@@ -118,8 +119,14 @@ const App = () => {
     isLoading: isLoadingRewardsModal,
   } = useRewardsModal()
   const { getSocket } = useSocket()
-  const { isListening, initializeQuickClashSocket, cleanupSocketListeners } =
-    useQuickClashSocket()
+  const {
+    isListening,
+    initializeQuickClashSocket,
+    cleanupSocketListeners,
+    isSocketReady,
+  } = useQuickClashSocket()
+  const { cleanupSocketListeners: cleanupSoloSocketListeners } =
+    useSoloQuickClash()
   const { loadActiveChallenges } = useQuickClash()
   const {
     isRegisterOpen,
@@ -240,6 +247,7 @@ const App = () => {
         sessionStorage.removeItem('app_session_id')
       }
       cleanupSocketListeners()
+      cleanupSoloSocketListeners()
     }
   }, [])
 
@@ -394,11 +402,11 @@ const App = () => {
 
   // Removed duplicate QuickClash socket polling logic - it's now handled in useQuickClashSocket hook
   useEffect(() => {
-    if (isAuthenticated && !isListening) {
+    if (isAuthenticated && !isListening && isSocketReady) {
       // Only initialize if not already listening
       initializeQuickClashSocket()
     }
-  }, [isAuthenticated, isListening, initializeQuickClashSocket])
+  }, [isAuthenticated, isListening, isSocketReady])
 
   useEffect(() => {
     let timer

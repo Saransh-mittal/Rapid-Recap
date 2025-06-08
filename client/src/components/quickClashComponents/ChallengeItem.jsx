@@ -346,18 +346,40 @@ const ChallengeItem = ({
           {showPlayerStatus && userPlayer && opponentPlayer && (
             <>
               <VStack spacing={2} align="stretch" mb={2}>
+                {/* Always show logged-in user first */}
                 <PlayerStatus
-                  player={userPlayer.player}
-                  score={userPlayer.score}
-                  attempted={userPlayer.attempted}
+                  player={
+                    isChallenger ? challenge?.challenger : challenge?.opponent
+                  }
+                  score={
+                    isChallenger
+                      ? challenge?.challengerScore
+                      : challenge?.opponentScore
+                  }
+                  attempted={
+                    isChallenger
+                      ? challenge?.challengerAttempted
+                      : challenge?.opponentAttempted
+                  }
                   isUser={true}
-                  trophies={userPlayer.trophies}
-                  isChallengeOver={bothAttempted}
+                  trophies={
+                    isChallenger
+                      ? challenge?.challenger?.quickClashTrophies
+                      : challenge?.opponent?.quickClashTrophies
+                  }
+                  trophyChange={getTrophyChange()}
+                  showTrophyAnimation={false}
+                  protectionApplied={
+                    challenge?.trophyUpdates?.protectionApplied &&
+                    (isChallenger
+                      ? challenge?.trophyUpdates.protectionApplied.challenger
+                      : challenge?.trophyUpdates.protectionApplied.opponent)
+                  }
+                  isTie={isTie}
                 />
 
-                {/* VS Line with Trophy Change Display */}
+                {/* VS Line */}
                 <VSLine
-                  trophyChange={getTrophyChange()}
                   category={
                     challenge?.status === 'active' ? challenge?.category : null
                   }
@@ -366,13 +388,25 @@ const ChallengeItem = ({
                   myAttempted={myAttempted}
                 />
 
+                {/* Always show opponent second */}
                 <PlayerStatus
-                  player={opponentPlayer.player}
-                  score={opponentPlayer.score}
-                  attempted={opponentPlayer.attempted}
+                  player={opponent}
+                  score={
+                    isChallenger
+                      ? challenge?.opponentScore
+                      : challenge?.challengerScore
+                  }
+                  attempted={
+                    isChallenger
+                      ? challenge?.opponentAttempted
+                      : challenge?.challengerAttempted
+                  }
                   isUser={false}
-                  trophies={opponentPlayer.trophies}
-                  isChallengeOver={bothAttempted}
+                  trophies={opponent?.quickClashTrophies}
+                  trophyChange={undefined} // Only show trophy change for logged-in user
+                  showTrophyAnimation={false}
+                  protectionApplied={false} // Only show protection for logged-in user
+                  isTie={false} // Only relevant for logged-in user
                 />
               </VStack>
             </>

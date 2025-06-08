@@ -7,10 +7,10 @@ import {
   Progress,
   useBreakpointValue,
 } from '@chakra-ui/react'
-import { Clock, Star, Sparkles, CheckCircle, Zap, X, Lock } from 'lucide-react'
+import { Star, Sparkles, CheckCircle, Zap, X, Lock } from 'lucide-react'
 
 /**
- * Category Status Badge Component with Enhanced Lock States (Mobile Responsive)
+ * Category Status Badge Component with Fixed Priority Logic (Mobile Responsive)
  */
 const CategoryStatusBadge = memo(
   ({
@@ -18,12 +18,12 @@ const CategoryStatusBadge = memo(
     isSelectedButNotStarted,
     isSelectedByTeammate,
     isAvailable,
-    isLockedDueToExit, // NEW PROP
-    isLockedDueToSelection, // NEW PROP
-    isLocked, // Combined lock state
+    isLockedDueToExit,
+    isLockedDueToSelection,
+    isCompletedByTeammate,
     t,
   }) => {
-    // UPDATED: Better responsive font sizes for all devices
+    // Responsive font sizes
     const badgeFontSize = useBreakpointValue({
       base: '8px',
       sm: '9px',
@@ -68,61 +68,7 @@ const CategoryStatusBadge = memo(
       md: 'sm',
     })
 
-    // NEW: Locked due to selection state - highest priority after participation states
-    if (isLockedDueToSelection) {
-      return (
-        <Badge
-          bg="rgba(245, 158, 11, 0.8)"
-          color="orange.100"
-          px={badgePaddingX}
-          py={badgePaddingY}
-          borderRadius="lg"
-          fontSize={badgeFontSize}
-          fontWeight="bold"
-          display="flex"
-          alignItems="center"
-          border="1px solid"
-          borderColor="rgba(245, 158, 11, 0.5)"
-          boxShadow="0 2px 8px rgba(245, 158, 11, 0.2)"
-          maxW="100%"
-          overflow="hidden"
-          textOverflow="ellipsis"
-          whiteSpace="nowrap"
-        >
-          <Icon as={Lock} boxSize={iconSize} mr={1} flexShrink={0} />
-          {t('Another Selected')}
-        </Badge>
-      )
-    }
-
-    // NEW: Locked due to exit state
-    if (isLockedDueToExit) {
-      return (
-        <Badge
-          bg="rgba(107, 114, 128, 0.8)"
-          color="gray.300"
-          px={badgePaddingX}
-          py={badgePaddingY}
-          borderRadius="lg"
-          fontSize={badgeFontSize}
-          fontWeight="bold"
-          display="flex"
-          alignItems="center"
-          border="1px solid"
-          borderColor="rgba(107, 114, 128, 0.5)"
-          boxShadow="0 2px 8px rgba(107, 114, 128, 0.2)"
-          maxW="100%"
-          overflow="hidden"
-          textOverflow="ellipsis"
-          whiteSpace="nowrap"
-        >
-          <Icon as={X} boxSize={iconSize} mr={1} flexShrink={0} />
-          {t('Locked')}
-        </Badge>
-      )
-    }
-
-    // In Progress - User has started the challenge
+    // Priority 1: User's own states (highest priority)
     if (isInProgress) {
       return (
         <VStack spacing={{ base: 1, sm: 1.5 }}>
@@ -136,6 +82,7 @@ const CategoryStatusBadge = memo(
             fontWeight="bold"
             display="flex"
             alignItems="center"
+            justifyContent="center"
             boxShadow="0 4px 15px rgba(245, 158, 11, 0.3)"
             maxW="100%"
             overflow="hidden"
@@ -157,7 +104,6 @@ const CategoryStatusBadge = memo(
       )
     }
 
-    // Selected but not started - User selected this category but hasn't begun the challenge
     if (isSelectedButNotStarted) {
       return (
         <VStack spacing={{ base: 1, sm: 1.5 }}>
@@ -171,6 +117,7 @@ const CategoryStatusBadge = memo(
             fontWeight="bold"
             display="flex"
             alignItems="center"
+            justifyContent="center"
             boxShadow="0 4px 15px rgba(59, 130, 246, 0.3)"
             maxW="100%"
             overflow="hidden"
@@ -192,7 +139,32 @@ const CategoryStatusBadge = memo(
       )
     }
 
-    // Selected by teammate
+    // Priority 2: Teammate states (medium-high priority)
+    if (isCompletedByTeammate) {
+      return (
+        <Badge
+          bg="linear-gradient(135deg, #8B5CF6, #7C3AED)"
+          color="white"
+          px={badgePaddingX}
+          py={badgePaddingY}
+          borderRadius="lg"
+          fontSize={badgeFontSize}
+          fontWeight="bold"
+          display="flex"
+          alignItems="center"
+          justifyContent="center"
+          boxShadow="0 4px 15px rgba(139, 92, 246, 0.3)"
+          maxW="100%"
+          overflow="hidden"
+          textOverflow="ellipsis"
+          whiteSpace="nowrap"
+        >
+          <Icon as={CheckCircle} boxSize={iconSize} mr={1} flexShrink={0} />
+          {t('Completed')}
+        </Badge>
+      )
+    }
+
     if (isSelectedByTeammate) {
       return (
         <Badge
@@ -205,6 +177,7 @@ const CategoryStatusBadge = memo(
           fontWeight="bold"
           display="flex"
           alignItems="center"
+          justifyContent="center"
           boxShadow="0 4px 15px rgba(139, 92, 246, 0.3)"
           maxW="100%"
           overflow="hidden"
@@ -217,50 +190,106 @@ const CategoryStatusBadge = memo(
       )
     }
 
-    // Not available/locked (but not due to specific reasons above)
-    if (!isAvailable) {
+    // Priority 3: Lock states (medium priority)
+    if (isLockedDueToExit) {
       return (
         <Badge
-          bg="rgba(71, 85, 105, 0.8)"
-          color="slate.300"
+          bg="rgba(107, 114, 128, 0.8)"
+          color="gray.300"
           px={badgePaddingX}
           py={badgePaddingY}
           borderRadius="lg"
           fontSize={badgeFontSize}
-          fontWeight="500"
-          backdropFilter="blur(5px)"
+          fontWeight="bold"
+          display="flex"
+          alignItems="center"
+          justifyContent="center"
+          border="1px solid"
+          borderColor="rgba(107, 114, 128, 0.5)"
+          boxShadow="0 2px 8px rgba(107, 114, 128, 0.2)"
           maxW="100%"
           overflow="hidden"
           textOverflow="ellipsis"
           whiteSpace="nowrap"
         >
+          <Icon as={X} boxSize={iconSize} mr={1} flexShrink={0} />
           {t('Locked')}
         </Badge>
       )
     }
 
-    // Available state
+    if (isLockedDueToSelection) {
+      return (
+        <Badge
+          bg="rgba(245, 158, 11, 0.8)"
+          color="orange.100"
+          px={badgePaddingX}
+          py={badgePaddingY}
+          borderRadius="lg"
+          fontSize={badgeFontSize}
+          fontWeight="bold"
+          display="flex"
+          alignItems="center"
+          justifyContent="center"
+          border="1px solid"
+          borderColor="rgba(245, 158, 11, 0.5)"
+          boxShadow="0 2px 8px rgba(245, 158, 11, 0.2)"
+          maxW="100%"
+          overflow="hidden"
+          textOverflow="ellipsis"
+          whiteSpace="nowrap"
+        >
+          <Icon as={Lock} boxSize={iconSize} mr={1} flexShrink={0} />
+          {t('Another Selected')}
+        </Badge>
+      )
+    }
+
+    // Priority 4: Available state (lowest priority)
+    if (isAvailable) {
+      return (
+        <Badge
+          bg="rgba(59, 130, 246, 0.2)"
+          color="#3B82F6"
+          px={badgePaddingX}
+          py={badgePaddingY}
+          borderRadius="full"
+          fontSize={badgeFontSize}
+          fontWeight="bold"
+          display="flex"
+          alignItems="center"
+          justifyContent="center"
+          border="2px solid"
+          borderColor="rgba(59, 130, 246, 0.6)"
+          boxShadow="0 0 20px rgba(59, 130, 246, 0.3)"
+          maxW="100%"
+          overflow="hidden"
+          textOverflow="ellipsis"
+          whiteSpace="nowrap"
+        >
+          <Icon as={Sparkles} boxSize={iconSize} mr={1} flexShrink={0} />
+          {t('Ready')}
+        </Badge>
+      )
+    }
+
+    // Default: Not available/locked (general fallback)
     return (
       <Badge
-        bg="rgba(59, 130, 246, 0.2)"
-        color="#3B82F6"
+        bg="rgba(71, 85, 105, 0.8)"
+        color="slate.300"
         px={badgePaddingX}
         py={badgePaddingY}
-        borderRadius="full"
+        borderRadius="lg"
         fontSize={badgeFontSize}
-        fontWeight="bold"
-        display="flex"
-        alignItems="center"
-        border="2px solid"
-        borderColor="rgba(59, 130, 246, 0.6)"
-        boxShadow="0 0 20px rgba(59, 130, 246, 0.3)"
+        fontWeight="500"
+        backdropFilter="blur(5px)"
         maxW="100%"
         overflow="hidden"
         textOverflow="ellipsis"
         whiteSpace="nowrap"
       >
-        <Icon as={Sparkles} boxSize={iconSize} mr={1} flexShrink={0} />
-        {t('Ready')}
+        {t('Locked')}
       </Badge>
     )
   },

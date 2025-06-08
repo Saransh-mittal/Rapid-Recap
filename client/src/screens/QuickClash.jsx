@@ -1,4 +1,4 @@
-// Updated screens/QuickClash.jsx to incorporate global matchmaking components and notification drawer
+// Updated screens/QuickClash.jsx
 import React, { useCallback, useState, useEffect } from 'react'
 import {
   Container,
@@ -35,9 +35,6 @@ const TaskCompletionHandler = React.lazy(() =>
 )
 
 // Lazy loaded components for better performance
-const StatsCard = lazy(() =>
-  import('../components/quickClashComponents/stats/StatsCard'),
-)
 const ActiveChallenges = lazy(() =>
   import('../components/quickClashComponents/ActiveChallenges'),
 )
@@ -245,13 +242,13 @@ const QuickClash = () => {
         className="quick-clash-container"
         maxW="container.xl"
         px={2}
-        py={8}
+        py={4}
         style={{
           visibility: showEntrance ? 'hidden' : 'visible',
           opacity: showEntrance ? 0 : 1,
           transition: 'opacity 0.3s ease-in-out',
         }}
-        pb={{ base: '100px', md: '20px' }} // Add padding at bottom on mobile for floating action menu
+        pb={'20px'} // Add padding at bottom on mobile for floating action menu
       >
         {/* Header Section */}
         <QuickClashHeader onNewChallenge={handleNewChallenge} />

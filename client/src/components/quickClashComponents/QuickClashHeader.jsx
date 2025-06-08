@@ -152,7 +152,6 @@ const QuickClashHeader = ({ onNewChallenge }) => {
       initial="initial"
       animate="animate"
       position="relative"
-      pb={{ base: 4, md: 0 }} // Add some padding at the bottom for mobile if content is long
     >
       {/* Mobile Fixed Header */}
       <MotionFlex

@@ -18,17 +18,105 @@ const {
 const userDeviceConnections = new Map() // userId -> Map(deviceFingerprint -> Set(socketIds))
 const socketMetadata = new Map() // socketId -> { userId, deviceFingerprint, connectedAt }
 
+// Helper function to get allowed origins for CORS
+function getAllowedOrigins() {
+  const origins = []
+
+  if (process.env.NODE_ENV === 'production') {
+    origins.push('https://rapidrecap.ai')
+  } else {
+    // Development origins
+    origins.push('http://localhost:5173')
+    origins.push('http://localhost:3001')
+    origins.push('http://127.0.0.1:5173')
+    origins.push('http://127.0.0.1:3001')
+
+    // Add local network access - get local IP
+    const os = require('os')
+    const networkInterfaces = os.networkInterfaces()
+
+    Object.keys(networkInterfaces).forEach(interfaceName => {
+      networkInterfaces[interfaceName].forEach(interface => {
+        if (interface.family === 'IPv4' && !interface.internal) {
+          origins.push(`http://${interface.address}:5173`)
+          origins.push(`http://${interface.address}:3001`)
+          console.log(
+            `[SOCKET] Added network origin: http://${interface.address}:5173`,
+          )
+        }
+      })
+    })
+
+    // Custom development origins from environment variable
+    if (process.env.DEV_ALLOWED_ORIGINS) {
+      const customOrigins = process.env.DEV_ALLOWED_ORIGINS.split(',')
+      origins.push(...customOrigins)
+      console.log(`[SOCKET] Added custom origins:`, customOrigins)
+    }
+  }
+
+  console.log(`[SOCKET] Allowed CORS origins:`, origins)
+  return origins
+}
+
 function initializeSocket(server) {
+  const allowedOrigins = getAllowedOrigins()
+
   const io = require('socket.io')(server, {
     pingTimeout: 60000,
     cors: {
-      origin: 'http://localhost:5173', // change at the time of production
-      // credentials: true,
+      origin: (origin, callback) => {
+        // Allow requests with no origin (mobile apps, curl, etc.)
+        if (!origin) return callback(null, true)
+
+        // Check if origin is in allowed list
+        if (allowedOrigins.includes(origin)) {
+          return callback(null, true)
+        }
+
+        // In development, be more permissive for local network
+        if (process.env.NODE_ENV !== 'production') {
+          // Allow any localhost or 127.0.0.1 with different ports
+          if (
+            origin.match(
+              /^https?:\/\/(localhost|127\.0\.0\.1|192\.168\.\d+\.\d+|10\.\d+\.\d+\.\d+|172\.(1[6-9]|2\d|3[0-1])\.\d+\.\d+):\d+$/,
+            )
+          ) {
+            console.log(`[SOCKET] Allowing development origin: ${origin}`)
+            return callback(null, true)
+          }
+        }
+
+        console.warn(`[SOCKET] Blocked origin: ${origin}`)
+        callback(new Error('Not allowed by CORS'))
+      },
+      credentials: true,
+      methods: ['GET', 'POST'],
     },
   })
 
+  // Log server network information
+  if (process.env.NODE_ENV !== 'production') {
+    const os = require('os')
+    const networkInterfaces = os.networkInterfaces()
+
+    console.log('\n[SOCKET] Server accessible on:')
+    console.log('- http://localhost:3000 (local only)')
+
+    Object.keys(networkInterfaces).forEach(interfaceName => {
+      networkInterfaces[interfaceName].forEach(interface => {
+        if (interface.family === 'IPv4' && !interface.internal) {
+          console.log(`- http://${interface.address}:3000 (network access)`)
+        }
+      })
+    })
+    console.log('')
+  }
+
   io.on('connection', socket => {
-    console.log(`New socket connection: ${socket.id}`)
+    console.log(
+      `New socket connection: ${socket.id} from ${socket.handshake.address}`,
+    )
 
     // Enhanced setup with device fingerprinting
     socket.on('setup', async userData => {
@@ -45,7 +133,7 @@ function initializeSocket(server) {
           deviceFingerprint
             ? ` with device ${deviceFingerprint.substring(0, 8)}...`
             : ' without device fingerprint'
-        } (socket: ${socket.id})`,
+        } (socket: ${socket.id}) from ${socket.handshake.address}`,
       )
 
       // Store user data on socket for authentication
@@ -130,7 +218,7 @@ function initializeSocket(server) {
       setupQuickClashSocketHandlers(io, socket, userData)
 
       console.log(
-        `[SETUP] Setup completed for user ${userId} (socket: ${socket.id})`,
+        `[SETUP] Setup completed for user ${userId} (socket: ${socket.id}) from ${socket.handshake.address}`,
       )
 
       // DEBUGGING: Log device tracking state after setup
@@ -147,7 +235,9 @@ function initializeSocket(server) {
       console.log(
         `[DEVICE_REG] Socket ${
           socket.id
-        } registering device: ${deviceFingerprint.substring(0, 8)}...`,
+        } registering device: ${deviceFingerprint.substring(0, 8)}... from ${
+          socket.handshake.address
+        }`,
       )
 
       // Check if socket already has device fingerprint registered
@@ -176,6 +266,7 @@ function initializeSocket(server) {
           deviceFingerprint,
           connectedAt: new Date(),
           setupCompleted: false, // Important: setup not completed yet
+          clientAddress: socket.handshake.address,
         })
       }
 
@@ -404,6 +495,7 @@ function initializeSocket(server) {
         deviceFingerprint,
         connectedAt: new Date(),
         setupCompleted: false,
+        clientAddress: socket.handshake.address,
       }
       socketMetadata.set(socketId, metadata)
     }
@@ -487,9 +579,11 @@ function initializeSocket(server) {
       `[DEVICE_SETUP] User ${userId} connected with device ${deviceFingerprint.substring(
         0,
         8,
-      )}... (socket: ${socketId}) - Total devices: ${
-        userDevices.size
-      }, Sockets for this device: ${userDevices.get(deviceFingerprint).size}`,
+      )}... (socket: ${socketId}) from ${
+        socket.handshake.address
+      } - Total devices: ${userDevices.size}, Sockets for this device: ${
+        userDevices.get(deviceFingerprint).size
+      }`,
     )
 
     // DEBUGGING: Verify the socket was added properly
@@ -504,7 +598,7 @@ function initializeSocket(server) {
     const socketId = socket.id
 
     console.log(
-      `User ${userId} connected without device fingerprinting (legacy mode)`,
+      `User ${userId} connected without device fingerprinting (legacy mode) from ${socket.handshake.address}`,
     )
 
     // Store basic metadata
@@ -512,6 +606,7 @@ function initializeSocket(server) {
       userId,
       deviceFingerprint: null,
       connectedAt: new Date(),
+      clientAddress: socket.handshake.address,
     })
   }
 
@@ -526,14 +621,14 @@ function initializeSocket(server) {
       return
     }
 
-    const { userId, deviceFingerprint } = metadata
+    const { userId, deviceFingerprint, clientAddress } = metadata
 
     console.log(
       `Socket ${socketId} disconnected for user ${userId}${
         deviceFingerprint
           ? ` device ${deviceFingerprint.substring(0, 8)}...`
           : ' (legacy)'
-      }`,
+      } from ${clientAddress}`,
     )
 
     // Clean up device-aware tracking
@@ -757,7 +852,7 @@ function initializeSocket(server) {
         console.log(
           `[DEBUG_TRACKING]   Socket ${socketId}: connected=${
             socket?.connected
-          }, metadata=${!!metadata}`,
+          }, metadata=${!!metadata}, address=${metadata?.clientAddress}`,
         )
       })
     }
