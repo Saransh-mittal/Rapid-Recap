@@ -69,6 +69,9 @@ const ChallengeItem = ({
     ? challenge?.challengerAttempted
     : challenge?.opponentAttempted
 
+  const bothAttempted =
+    challenge?.challengerAttempted && challenge?.opponentAttempted
+
   const isExpired = new Date(challenge?.expiresAt) < new Date()
   const myScore = isChallenger
     ? challenge?.challengerScore
@@ -77,23 +80,65 @@ const ChallengeItem = ({
 
   const isWinner =
     challenge?.status === 'completed' &&
-    challenge?.challengerAttempted &&
-    challenge?.opponentAttempted &&
+    bothAttempted &&
     ((isChallenger && challenge?.challengerScore > challenge?.opponentScore) ||
       (!isChallenger && challenge?.opponentScore > challenge?.challengerScore))
 
   const isTie =
     challenge?.status === 'completed' &&
-    challenge?.challengerAttempted &&
-    challenge?.opponentAttempted &&
+    bothAttempted &&
     challenge?.challengerScore === challenge?.opponentScore
 
   const isDefeat =
-    challenge?.status === 'completed' &&
-    challenge?.challengerAttempted &&
-    challenge?.opponentAttempted &&
-    !isWinner &&
-    !isTie
+    challenge?.status === 'completed' && bothAttempted && !isWinner && !isTie
+
+  // NEW: Memoize player data to ensure user is always on top
+  const { userPlayer, opponentPlayer } = useMemo(() => {
+    if (!challenge || !userId) {
+      return { userPlayer: null, opponentPlayer: null }
+    }
+
+    const isUserTheChallenger = challenge.challenger._id === userId
+
+    const uPlayer = isUserTheChallenger
+      ? challenge.challenger
+      : challenge.opponent
+    const oPlayer = isUserTheChallenger
+      ? challenge.opponent
+      : challenge.challenger
+
+    const uPlayerScore = isUserTheChallenger
+      ? challenge.challengerScore
+      : challenge.opponentScore
+    const oPlayerScore = isUserTheChallenger
+      ? challenge.opponentScore
+      : challenge.challengerScore
+
+    const uPlayerAttempted = isUserTheChallenger
+      ? challenge.challengerAttempted
+      : challenge.opponentAttempted
+    const oPlayerAttempted = isUserTheChallenger
+      ? challenge.opponentAttempted
+      : challenge.challengerAttempted
+
+    const uPlayerTrophies = uPlayer?.quickClashTrophies
+    const oPlayerTrophies = oPlayer?.quickClashTrophies
+
+    return {
+      userPlayer: {
+        player: uPlayer,
+        score: uPlayerScore,
+        attempted: uPlayerAttempted,
+        trophies: uPlayerTrophies,
+      },
+      opponentPlayer: {
+        player: oPlayer,
+        score: oPlayerScore,
+        attempted: oPlayerAttempted,
+        trophies: oPlayerTrophies,
+      },
+    }
+  }, [challenge, userId])
 
   // Challenge Item animation
   const animations = {
@@ -298,7 +343,7 @@ const ChallengeItem = ({
           )}
 
           {/* Player Status Section for active or completed challenges */}
-          {showPlayerStatus && (
+          {showPlayerStatus && userPlayer && opponentPlayer && (
             <>
               <VStack spacing={2} align="stretch" mb={2}>
                 {/* Always show logged-in user first */}
@@ -460,34 +505,32 @@ const ChallengeItem = ({
         </Box>
 
         {/* Result Banner - Without trophy display */}
-        {challenge?.status === 'completed' &&
-          challenge?.challengerAttempted &&
-          challenge?.opponentAttempted && (
-            <ResultBanner
-              isWinner={isWinner}
-              isTie={isTie}
-              isDefeat={isDefeat}
-              expiresAt={challenge?.expiresAt}
-              category={challenge?.category}
-              onRevenge={isDefeat ? () => onRevenge(opponent, challenge) : null}
-              revengeStatus={challenge?.revengeStatus}
-              revengeLoading={revengeLoading}
-              protectionApplied={
-                isDefeat &&
-                challenge?.trophyUpdates?.protectionApplied &&
-                (isChallenger
-                  ? challenge?.trophyUpdates.protectionApplied.challenger
-                  : challenge?.trophyUpdates.protectionApplied.opponent)
-              }
-              protectionType={
-                isDefeat &&
-                challenge?.trophyUpdates?.protectionApplied &&
-                (isChallenger
-                  ? challenge?.trophyUpdates.protectionApplied.challenger_type
-                  : challenge?.trophyUpdates.protectionApplied.opponent_type)
-              }
-            />
-          )}
+        {challenge?.status === 'completed' && bothAttempted && (
+          <ResultBanner
+            isWinner={isWinner}
+            isTie={isTie}
+            isDefeat={isDefeat}
+            expiresAt={challenge?.expiresAt}
+            category={challenge?.category}
+            onRevenge={isDefeat ? () => onRevenge(opponent, challenge) : null}
+            revengeStatus={challenge?.revengeStatus}
+            revengeLoading={revengeLoading}
+            protectionApplied={
+              isDefeat &&
+              challenge?.trophyUpdates?.protectionApplied &&
+              (isChallenger
+                ? challenge?.trophyUpdates.protectionApplied.challenger
+                : challenge?.trophyUpdates.protectionApplied.opponent)
+            }
+            protectionType={
+              isDefeat &&
+              challenge?.trophyUpdates?.protectionApplied &&
+              (isChallenger
+                ? challenge?.trophyUpdates.protectionApplied.challenger_type
+                : challenge?.trophyUpdates.protectionApplied.opponent_type)
+            }
+          />
+        )}
       </Box>
     </MotionBox>
   )

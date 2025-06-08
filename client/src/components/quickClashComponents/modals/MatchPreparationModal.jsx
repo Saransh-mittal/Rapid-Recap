@@ -107,7 +107,7 @@ const OptimizedTrophyBadge = memo(
         />
 
         <Icon
-          as={isHighlighted ? Crown : Trophy}
+          as={isHighlighted ? Trophy : Trophy}
           boxSize={sizeProps.iconSize}
           color="white"
           mr={2}

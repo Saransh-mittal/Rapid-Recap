@@ -174,6 +174,54 @@ const FlippableChallengeItem = memo(
       }
     }, [challenge, userId])
 
+    // NEW: Memoize player data to ensure user is always on top
+    const { userPlayer, opponentPlayer } = useMemo(() => {
+      if (!challenge || !userId) {
+        return { userPlayer: null, opponentPlayer: null }
+      }
+
+      const isUserTheChallenger = challenge.challenger._id === userId
+
+      const uPlayer = isUserTheChallenger
+        ? challenge.challenger
+        : challenge.opponent
+      const oPlayer = isUserTheChallenger
+        ? challenge.opponent
+        : challenge.challenger
+
+      const uPlayerScore = isUserTheChallenger
+        ? challenge.challengerScore
+        : challenge.opponentScore
+      const oPlayerScore = isUserTheChallenger
+        ? challenge.opponentScore
+        : challenge.challengerScore
+
+      const uPlayerAttempted = isUserTheChallenger
+        ? challenge.challengerAttempted
+        : challenge.opponentAttempted
+      const oPlayerAttempted = isUserTheChallenger
+        ? challenge.opponentAttempted
+        : challenge.challengerAttempted
+
+      const uPlayerTrophies = uPlayer?.quickClashTrophies
+      const oPlayerTrophies = oPlayer?.quickClashTrophies
+
+      return {
+        userPlayer: {
+          player: uPlayer,
+          score: uPlayerScore,
+          attempted: uPlayerAttempted,
+          trophies: uPlayerTrophies,
+        },
+        opponentPlayer: {
+          player: oPlayer,
+          score: oPlayerScore,
+          attempted: oPlayerAttempted,
+          trophies: oPlayerTrophies,
+        },
+      }
+    }, [challenge, userId])
+
     // Analysis data
     const analysis = useMemo(
       () => challengeAnalyses[challenge?._id],
@@ -444,7 +492,7 @@ const FlippableChallengeItem = memo(
             {/* Card Body */}
             <Box p={padding}>
               {/* Player Status Section */}
-              {showPlayerStatus && (
+              {showPlayerStatus && userPlayer && opponentPlayer && (
                 <VStack spacing={spacing} align="stretch" mb={2}>
                   {/* Always show logged-in user first */}
                   <PlayerStatus
