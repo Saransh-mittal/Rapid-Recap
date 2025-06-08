@@ -106,7 +106,7 @@ const AnalysisCardLoading = () => {
 
         return newProgress
       })
-    }, 300) // Every 120ms for smooth animation
+    }, 300) // Every 300ms for smooth animation
 
     return () => {
       if (intervalRef.current) {

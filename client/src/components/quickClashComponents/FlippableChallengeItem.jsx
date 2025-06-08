@@ -114,7 +114,6 @@ const FlippableChallengeItem = memo(
       isDefeat,
       showFlipButton,
       showPlayerStatus,
-      bothAttempted,
     } = useMemo(() => {
       if (!challenge || !userId) {
         return {
@@ -128,7 +127,6 @@ const FlippableChallengeItem = memo(
           isDefeat: false,
           showFlipButton: false,
           showPlayerStatus: false,
-          bothAttempted: false,
         }
       }
 
@@ -173,7 +171,6 @@ const FlippableChallengeItem = memo(
         isDefeat,
         showFlipButton,
         showPlayerStatus,
-        bothAttempted,
       }
     }, [challenge, userId])
 

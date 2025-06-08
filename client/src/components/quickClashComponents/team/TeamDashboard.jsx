@@ -202,7 +202,7 @@ const EnhancedTeamCard = ({
       >
         {/* Team Name with attractive styling */}
         <HStack spacing={3}>
-          <Icon as={User} color="gray.300" boxSize={5} />
+          <Icon as={Users} color="gray.300" boxSize={5} />
           <Text
             fontSize="xl"
             fontWeight="bold"
@@ -251,17 +251,6 @@ const EnhancedTeamCard = ({
             {t('IN BATTLE')}
           </Badge>
         )}
-        {isTeamFull && (
-          <Badge
-            bg="orange.500"
-            color="white"
-            px={3}
-            py={1}
-            borderRadius="full"
-          >
-            {t('FULL')}
-          </Badge>
-        )}
       </Flex>
 
       {/* Team Code and Invite Section */}
@@ -297,7 +286,6 @@ const EnhancedTeamCard = ({
         {/* Invite Button - Only show for leaders */}
         {isLeader && (
           <MotionButton
-            leftIcon={<UserPlus size={16} />}
             size="sm"
             colorScheme="purple"
             variant="outline"

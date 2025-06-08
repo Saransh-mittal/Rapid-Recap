@@ -12,18 +12,16 @@ import {
   FormControl,
   FormLabel,
   Input,
-  Switch,
   FormHelperText,
   VStack,
   Text,
   Icon,
   HStack,
   Divider,
-  useColorModeValue,
 } from '@chakra-ui/react'
 import { motion } from 'framer-motion'
 import { useTranslation } from 'react-i18next'
-import { Users, Clock, Star, Shield } from 'lucide-react'
+import { Users, Shield } from 'lucide-react'
 
 const MotionModalContent = motion(ModalContent)
 
@@ -35,7 +33,6 @@ const CreateTeamModal = ({ isOpen, onClose, onCreate }) => {
 
   // Form state
   const [name, setName] = useState('')
-  const [isPersistent, setIsPersistent] = useState(true)
   const [loading, setLoading] = useState(false)
 
   // Modal animation
@@ -74,11 +71,10 @@ const CreateTeamModal = ({ isOpen, onClose, onCreate }) => {
     setLoading(true)
 
     try {
-      await onCreate({ name, isPersistent })
+      await onCreate({ name })
 
       // Reset form
       setName('')
-      setIsPersistent(true)
     } catch (error) {
       console.error('Error creating team:', error)
     } finally {
@@ -89,7 +85,6 @@ const CreateTeamModal = ({ isOpen, onClose, onCreate }) => {
   // Handle close
   const handleClose = () => {
     setName('')
-    setIsPersistent(true)
     onClose()
   }
 
@@ -118,7 +113,7 @@ const CreateTeamModal = ({ isOpen, onClose, onCreate }) => {
 
         <ModalBody pb={6}>
           <form onSubmit={handleSubmit} id="create-team-form">
-            <VStack spacing={4} align="stretch">
+            <VStack spacing={6} align="stretch">
               <FormControl isRequired>
                 <FormLabel color="whiteAlpha.900">{t('Team Name')}</FormLabel>
                 <Input
@@ -136,25 +131,6 @@ const CreateTeamModal = ({ isOpen, onClose, onCreate }) => {
                 />
                 <FormHelperText color="whiteAlpha.600">
                   {t('Choose a name for your team')}
-                </FormHelperText>
-              </FormControl>
-
-              <FormControl>
-                <FormLabel color="whiteAlpha.900">
-                  {t('Persistent Team')}
-                </FormLabel>
-                <HStack>
-                  <Switch
-                    colorScheme="purple"
-                    isChecked={isPersistent}
-                    onChange={e => setIsPersistent(e.target.checked)}
-                  />
-                  <Text color="whiteAlpha.800" fontSize="sm">
-                    {isPersistent ? t('Yes') : t('No')}
-                  </Text>
-                </HStack>
-                <FormHelperText color="whiteAlpha.600">
-                  {t('Persistent teams remain after battles are completed')}
                 </FormHelperText>
               </FormControl>
 
