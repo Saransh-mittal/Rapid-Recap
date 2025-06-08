@@ -7,25 +7,11 @@ import {
   Icon,
 } from '@chakra-ui/react'
 import { motion } from 'framer-motion'
-import { Trophy, Star, Gift } from 'lucide-react'
+import { Gift } from 'lucide-react'
 import { useSelector } from 'react-redux'
 import { useTranslation } from 'react-i18next'
-import { keyframes } from '@emotion/react'
 
 const MotionBox = motion(Box)
-
-// Keyframes for the glowing effect
-const glowPulse = keyframes`
-  0% { box-shadow: 0 0 8px #F7D147, 0 0 4px #F7D147; }
-  50% { box-shadow: 0 0 16px #F7D147, 0 0 8px #F7D147; }
-  100% { box-shadow: 0 0 8px #F7D147, 0 0 4px #F7D147; }
-`
-
-// Keyframes for the star rotation
-const rotateStar = keyframes`
-  0% { transform: rotate(0deg); }
-  100% { transform: rotate(360deg); }
-`
 
 /**
  * A gamified task progress indicator that matches the Quick Clash UI
@@ -58,7 +44,6 @@ const TaskProgressIndicator = ({ onViewTasks, size = 'md' }) => {
       badge: '18px',
       badgeFont: '10px',
       badgeOffset: '-5px',
-      starSize: '10px',
     },
     md: {
       container: '48px',
@@ -68,7 +53,6 @@ const TaskProgressIndicator = ({ onViewTasks, size = 'md' }) => {
       badge: '22px',
       badgeFont: '12px',
       badgeOffset: '-8px',
-      starSize: '12px',
     },
     lg: {
       container: '56px',
@@ -78,7 +62,6 @@ const TaskProgressIndicator = ({ onViewTasks, size = 'md' }) => {
       badge: '24px',
       badgeFont: '14px',
       badgeOffset: '-8px',
-      starSize: '14px',
     },
   }
 
@@ -94,8 +77,8 @@ const TaskProgressIndicator = ({ onViewTasks, size = 'md' }) => {
     )
   }
 
-  // The icon to display - Trophy for completed, Gift otherwise
-  const ProgressIcon = isComplete ? Trophy : Gift
+  // Always use Gift icon regardless of completion status
+  const ProgressIcon = Gift
 
   return (
     <MotionBox
@@ -126,70 +109,7 @@ const TaskProgressIndicator = ({ onViewTasks, size = 'md' }) => {
       _hover={{
         boxShadow: '0 6px 16px rgba(0, 0, 0, 0.5)',
       }}
-      // Border glow effect for complete tasks
-      css={
-        isComplete
-          ? {
-              '&::after': {
-                content: '""',
-                position: 'absolute',
-                top: '-2px',
-                left: '-2px',
-                right: '-2px',
-                bottom: '-2px',
-                borderRadius: 'full',
-                border: '2px solid #F7D147',
-                animation: `${glowPulse} 2s infinite ease-in-out`,
-              },
-            }
-          : {}
-      }
     >
-      {/* Decorative stars when complete */}
-      {isComplete && (
-        <>
-          <Box
-            position="absolute"
-            top="0"
-            right="5%"
-            boxSize={currentSize.starSize}
-            color="#F7D147"
-            as={motion.div}
-            animate={{
-              y: [0, -4, 0],
-              opacity: [0.6, 1, 0.6],
-            }}
-            transition={{
-              duration: 2,
-              repeat: Infinity,
-              repeatType: 'reverse',
-            }}
-          >
-            <Icon as={Star} boxSize="100%" />
-          </Box>
-          <Box
-            position="absolute"
-            bottom="10%"
-            left="0"
-            boxSize={currentSize.starSize}
-            color="#F7D147"
-            as={motion.div}
-            animate={{
-              y: [0, 3, 0],
-              opacity: [0.6, 1, 0.6],
-            }}
-            transition={{
-              duration: 1.7,
-              repeat: Infinity,
-              repeatType: 'reverse',
-              delay: 0.5,
-            }}
-          >
-            <Icon as={Star} boxSize="100%" />
-          </Box>
-        </>
-      )}
-
       {/* Inner container with subtle gradient background */}
       <Box
         position="relative"
@@ -217,23 +137,6 @@ const TaskProgressIndicator = ({ onViewTasks, size = 'md' }) => {
                 as={ProgressIcon}
                 color={isComplete ? '#F7D147' : '#9F7AFA'}
                 boxSize={currentSize.icon}
-                filter={
-                  isComplete
-                    ? 'drop-shadow(0 0 4px rgba(247, 209, 71, 0.6))'
-                    : 'none'
-                }
-                animate={
-                  isComplete
-                    ? {
-                        scale: [1, 1.1, 1],
-                      }
-                    : {}
-                }
-                transition={{
-                  duration: 2,
-                  repeat: Infinity,
-                  repeatType: 'reverse',
-                }}
               />
 
               {/* Badge for unclaimed rewards */}
