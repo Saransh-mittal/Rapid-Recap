@@ -368,14 +368,6 @@ const MatchmakingButton = forwardRef(
 
         console.log('[MM_BUTTON] Successfully joined matchmaking')
         setIsRequestPending(false)
-
-        toast({
-          title: t('Joined Matchmaking'),
-          description: t('Searching for opponents...'),
-          status: 'info',
-          duration: 2000,
-          isClosable: true,
-        })
       } catch (error) {
         if (!componentMounted.current) return
 

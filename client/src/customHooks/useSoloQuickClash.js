@@ -306,17 +306,6 @@ const useSoloQuickClash = () => {
           }),
         )
 
-        // Show toast notification
-        currentToast({
-          title: currentT('Your Turn!'),
-          description: currentT(
-            'Your opponent has completed their challenge. Your turn now!',
-          ),
-          status: 'info',
-          duration: 5000,
-          isClosable: true,
-        })
-
         // Refresh active challenges list
         currentDispatch(fetchActiveChallenges())
       },
