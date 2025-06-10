@@ -1874,6 +1874,43 @@ const setupQuickClashGlobalEvents = (io, utils = {}) => {
     },
   )
 
+  globalEmitter.on(
+    'quickClash:teamBattleQuizCompleted',
+    ({ battleId, userId, score, challengeId, allTeamMembers }) => {
+      if (!battleId || !userId || !allTeamMembers) {
+        console.error(
+          'Invalid data in quickClash:teamBattleQuizCompleted event',
+        )
+        return
+      }
+
+      console.log(
+        `[QC_BATTLE] SOCKET: User ${userId} completed quiz for battle ${battleId} with score ${score}`,
+      )
+
+      // Notify all team members (both teams) about the quiz completion
+      let notifiedCount = 0
+      allTeamMembers.forEach(memberId => {
+        const success = notifyUser(
+          memberId,
+          'quickClash:teamBattleQuizCompleted',
+          {
+            battleId,
+            userId,
+            score,
+            challengeId,
+            completedByCurrentUser: memberId === userId.toString(),
+          },
+        )
+        if (success) notifiedCount++
+      })
+
+      console.log(
+        `[QC_BATTLE] Team battle quiz completion notification sent to ${notifiedCount}/${allTeamMembers.length} members`,
+      )
+    },
+  )
+
   // Listen for team member selected category
   globalEmitter.on(
     'quickClash:teamMemberSelectedCategory',

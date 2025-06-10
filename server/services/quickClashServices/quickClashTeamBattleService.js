@@ -1801,6 +1801,19 @@ const updateBattleWithQuizResults = async ({
             teamB: battle.teamB,
           })
         }, 0)
+      } else {
+        setTimeout(() => {
+          globalEmitter.emit('quickClash:teamBattleQuizCompleted', {
+            battleId: battle._id,
+            userId: userId,
+            score: score,
+            challengeId: challengeId,
+            allTeamMembers: [
+              ...battle.teamAMembers.map(member => member.user.toString()),
+              ...battle.teamBMembers.map(member => member.user.toString()),
+            ],
+          })
+        }, 100)
       }
 
       await battle.save({ session })
