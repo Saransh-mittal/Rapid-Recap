@@ -285,7 +285,7 @@ const OptimizedMemberCard = React.memo(
                   )}
                 </HStack>
                 <Text fontSize="2xs" color="whiteAlpha.600" noOfLines={1}>
-                  {t('Category')}: {member.category || t('N/A')}
+                  {t('Category')}: {member.category.toUpperCase() || t('N/A')}
                 </Text>
               </VStack>
             </HStack>

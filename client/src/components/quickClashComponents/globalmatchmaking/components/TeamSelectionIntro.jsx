@@ -1,5 +1,5 @@
 // components/quickClashComponents/globalmatchmaking/components/TeamSelectionIntro.jsx
-import React from 'react'
+import React, { useMemo } from 'react'
 import { VStack, Text, Box, HStack, Icon } from '@chakra-ui/react'
 import { motion } from 'framer-motion'
 import { useTranslation } from 'react-i18next'
@@ -7,27 +7,38 @@ import { Users, Shield } from 'lucide-react'
 
 const MotionBox = motion(Box)
 
+// --- Optimization: Define constant animation objects outside the component ---
+const iconAnimation = {
+  scale: [1, 1.05, 1],
+  rotate: [0, 2, 0, -2, 0],
+}
+const iconTransition = {
+  duration: 3,
+  repeat: Infinity,
+  repeatType: 'loop',
+}
+
 /**
  * Introduction screen shown when not in matchmaking
  */
 const TeamSelectionIntro = React.memo(() => {
   const { t } = useTranslation('QuickClash')
 
+  // --- Optimization: Memoize the steps array ---
+  const steps = useMemo(
+    () => [
+      t('We find 3 other players or complete your team to 4 members'),
+      t('We match your team with another team of similar skill'),
+      t('Each player battles in one of four different categories'),
+      t("Win trophies based on your team's performance!"),
+    ],
+    [t],
+  )
+
   return (
     <VStack spacing={6} align="stretch">
-      {/* Header */}
       <VStack spacing={2} align="center">
-        <MotionBox
-          animate={{
-            scale: [1, 1.05, 1],
-            rotate: [0, 2, 0, -2, 0],
-          }}
-          transition={{
-            duration: 3,
-            repeat: Infinity,
-            repeatType: 'loop',
-          }}
-        >
+        <MotionBox animate={iconAnimation} transition={iconTransition}>
           <Icon as={Users} boxSize={12} color="blue.400" />
         </MotionBox>
         <Text color="white" fontSize="xl" fontWeight="bold">
@@ -40,7 +51,6 @@ const TeamSelectionIntro = React.memo(() => {
         </Text>
       </VStack>
 
-      {/* How it works */}
       <Box bg="rgba(255, 255, 255, 0.05)" p={4} borderRadius="md">
         <HStack mb={2}>
           <Icon as={Shield} color="blue.400" boxSize={5} />
@@ -49,12 +59,7 @@ const TeamSelectionIntro = React.memo(() => {
           </Text>
         </HStack>
         <VStack spacing={2} align="start">
-          {[
-            t('We find 3 other players or complete your team to 4 members'),
-            t('We match your team with another team of similar skill'),
-            t('Each player battles in one of four different categories'),
-            t("Win trophies based on your team's performance!"),
-          ].map((step, index) => (
+          {steps.map((step, index) => (
             <HStack key={index} align="start">
               <Box
                 w="20px"
@@ -83,5 +88,4 @@ const TeamSelectionIntro = React.memo(() => {
 })
 
 TeamSelectionIntro.displayName = 'TeamSelectionIntro'
-
 export default TeamSelectionIntro

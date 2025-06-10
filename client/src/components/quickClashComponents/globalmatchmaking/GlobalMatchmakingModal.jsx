@@ -1,5 +1,5 @@
 // components/quickClashComponents/globalmatchmaking/GlobalMatchmakingModal.jsx
-import React, { useState, useEffect, useCallback, useRef } from 'react'
+import React, { useState, useEffect, useCallback, useRef, useMemo } from 'react'
 import {
   Modal,
   ModalOverlay,
@@ -25,8 +25,7 @@ import useQuickClashGlobalMatchmaking from '../../../customHooks/useQuickClashGl
 import {
   resetGlobalMatchmakingState,
   setBattleReady,
-  clearBattleCreationError,
-  handleBattleCreationCleanup,
+  handleBattleCreationCleanup as handleBattleCreationCleanupAction,
   clearBattleCreationState,
   addStatusUpdate,
   clearStatusUpdates,
@@ -49,15 +48,12 @@ const GlobalMatchmakingModal = React.memo(
     const toast = useToast()
     const dispatch = useDispatch()
 
-    // Local state
     const [myTeams, setMyTeams] = useState([])
     const [loadingTeams, setLoadingTeams] = useState(false)
 
-    // Refs for cleanup and timing
     const pollingIntervalRef = useRef(null)
     const mountTimeRef = useRef(Date.now())
 
-    // Get matchmaking state and actions
     const {
       inMatchmaking,
       matchmakingType,
@@ -84,10 +80,8 @@ const GlobalMatchmakingModal = React.memo(
       enterBattle,
       clearBattleReady,
       formatMatchmakingTime,
-      clearBattleCreationError: clearError,
       checkCanLeaveMatchmaking,
       retryAfterFailure,
-      clearBattleCreationState: clearCreationState,
     } = useQuickClashGlobalMatchmaking()
 
     // Handle toast notifications from Redux
@@ -116,20 +110,27 @@ const GlobalMatchmakingModal = React.memo(
 
     // Fetch user's teams
     const fetchMyTeams = useCallback(async () => {
+      if (!user?._id) return
       try {
         setLoadingTeams(true)
         const response = await axios.get('/api/quickClash/teams')
         setMyTeams(response.data?.teams || [])
       } catch (error) {
         console.error('Error fetching teams:', error)
+        toast({
+          title: t('Error Fetching Teams'),
+          description: error.message,
+          status: 'error',
+          duration: 3000,
+          isClosable: true,
+        })
       } finally {
         setLoadingTeams(false)
       }
-    }, [])
+    }, [user?._id, t, toast])
 
-    // Initialize data on mount/open
     useEffect(() => {
-      if (isOpen && user?._id) {
+      if (isOpen) {
         mountTimeRef.current = Date.now()
         dispatch(clearStatusUpdates())
         checkMatchmakingStatus()
@@ -137,7 +138,6 @@ const GlobalMatchmakingModal = React.memo(
       }
     }, [isOpen, user, checkMatchmakingStatus, fetchMyTeams, dispatch])
 
-    // Setup HTTP polling when in matchmaking
     useEffect(() => {
       if (inMatchmaking && isOpen) {
         const startPolling = () => {
@@ -231,7 +231,7 @@ const GlobalMatchmakingModal = React.memo(
           }, 15000)
         }
 
-        startPolling()
+        pollingIntervalRef.current = setInterval(pollMatchmakingStatus, 15000)
         return () => {
           if (pollingIntervalRef.current) {
             clearInterval(pollingIntervalRef.current)
@@ -241,7 +241,6 @@ const GlobalMatchmakingModal = React.memo(
       }
     }, [inMatchmaking, isOpen, pollMatchmakingStatus, t, dispatch])
 
-    // Handle joining matchmaking
     const handleJoinMatchmaking = useCallback(async () => {
       try {
         mountTimeRef.current = Date.now()
@@ -253,20 +252,7 @@ const GlobalMatchmakingModal = React.memo(
         )
 
         if (selectedTeamId) {
-          try {
-            const teamResponse = await axios.get(
-              `/api/quickClash/team/${selectedTeamId}`,
-            )
-            if (teamResponse.data?.team) {
-              const teamName = teamResponse.data.team.name || 'Team'
-              await joinWithTeam(selectedTeamId, teamName)
-            } else {
-              await joinWithTeam(selectedTeamId)
-            }
-          } catch (teamError) {
-            console.error('Error fetching team details:', teamError)
-            await joinWithTeam(selectedTeamId)
-          }
+          await joinWithTeam(selectedTeamId)
         } else {
           await joinSoloMatchmaking()
         }
@@ -296,20 +282,19 @@ const GlobalMatchmakingModal = React.memo(
       }
     }, [selectedTeamId, joinWithTeam, joinSoloMatchmaking, t, toast, dispatch])
 
-    // Handle leaving matchmaking
     const handleLeaveMatchmaking = useCallback(async () => {
+      const canLeave = await checkCanLeaveMatchmaking()
+      if (!canLeave) {
+        toast({
+          title: t('Cannot Leave'),
+          description: t('Your battle is being created. Please wait.'),
+          status: 'warning',
+          duration: 3000,
+          isClosable: true,
+        })
+        return
+      }
       try {
-        const canLeave = await checkCanLeaveMatchmaking()
-        if (!canLeave) {
-          toast({
-            title: t('Cannot Leave'),
-            description: t('Your battle is being created. Please wait.'),
-            status: 'warning',
-            duration: 3000,
-            isClosable: true,
-          })
-          return
-        }
         await leaveMatchmaking()
         dispatch(clearStatusUpdates())
         onClose()
@@ -357,19 +342,14 @@ const GlobalMatchmakingModal = React.memo(
       }
     }, [retryAfterFailure, dispatch, toast, t])
 
-    // Handle modal close
     const handleClose = useCallback(() => {
-      if (battleReady) {
-        clearBattleReady()
-      }
-      if (battleCreationStatus === 'failed') {
+      if (battleReady) clearBattleReady()
+      if (battleCreationStatus === 'failed')
         dispatch(clearBattleCreationState())
-      }
       onClose()
     }, [battleReady, battleCreationStatus, clearBattleReady, dispatch, onClose])
 
-    // Get modal styling based on state
-    const getModalStyles = () => {
+    const modalStyles = useMemo(() => {
       const bgColor = 'rgba(26, 21, 39, 0.95)'
       let borderColor = 'purple.600'
       let glowColor = '128, 90, 213, 0.4'
@@ -384,17 +364,13 @@ const GlobalMatchmakingModal = React.memo(
         borderColor = 'red.500'
         glowColor = '229, 62, 62, 0.5'
       }
-
       return {
         bg: bgColor,
         borderColor,
         boxShadow: `0 0 20px rgba(${glowColor})`,
       }
-    }
+    }, [battleReady, inMatchmaking, battleCreationStatus])
 
-    const modalStyles = getModalStyles()
-
-    // Render modal content or embedded content
     const content = (
       <>
         {!isEmbedded && (
@@ -419,8 +395,6 @@ const GlobalMatchmakingModal = React.memo(
                     ? 'green.400'
                     : battleCreationStatus === 'failed'
                     ? 'red.400'
-                    : inMatchmaking
-                    ? 'blue.400'
                     : 'blue.400'
                 }
                 boxSize={5}
@@ -449,14 +423,12 @@ const GlobalMatchmakingModal = React.memo(
             </HStack>
           </ModalHeader>
         )}
-
         {!isEmbedded && (
           <ModalCloseButton
             color="white"
             isDisabled={battleCreationStatus === 'creating'}
           />
         )}
-
         <ModalBody py={6} px={{ base: 4, md: 6 }}>
           <MatchmakingStatusDisplay
             inMatchmaking={inMatchmaking}
@@ -470,7 +442,6 @@ const GlobalMatchmakingModal = React.memo(
             statusUpdates={statusUpdates}
             formatMatchmakingTime={formatMatchmakingTime}
           />
-
           {!inMatchmaking &&
             !battleReady &&
             battleCreationStatus !== 'failed' && (
@@ -482,7 +453,6 @@ const GlobalMatchmakingModal = React.memo(
               />
             )}
         </ModalBody>
-
         <ModalFooter borderTopWidth="1px" borderColor="whiteAlpha.200">
           {battleCreationStatus === 'creating' ? (
             <Text
@@ -564,7 +534,7 @@ const GlobalMatchmakingModal = React.memo(
                 onClick={handleJoinMatchmaking}
                 isLoading={loading}
                 loadingText={t('Joining...')}
-                leftIcon={<Icon as={selectedTeamId ? Users : Users} />}
+                leftIcon={<Icon as={Users} />}
                 bgGradient="linear(to-r, blue.500, purple.500)"
                 _hover={{
                   bgGradient: 'linear(to-r, blue.400, purple.400)',
@@ -580,9 +550,7 @@ const GlobalMatchmakingModal = React.memo(
       </>
     )
 
-    if (isEmbedded) {
-      return content
-    }
+    if (isEmbedded) return content
 
     return (
       <Modal

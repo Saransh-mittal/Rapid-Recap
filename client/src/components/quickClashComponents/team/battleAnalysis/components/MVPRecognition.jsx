@@ -324,7 +324,7 @@ const MVPRecognition = ({ mvpAwards, userTeam, isExpanded, onToggle }) => {
                   fontWeight="medium"
                   noOfLines={1}
                 >
-                  {award.category || 'N/A'}
+                  {award.category.toUpperCase() || 'N/A'}
                 </Text>
               </HStack>
               {award.difference && (

@@ -21,7 +21,6 @@ import {
   Trophy,
   Swords,
   Shield,
-  Clock,
   ArrowRight,
   Target,
   Zap,
@@ -32,154 +31,111 @@ const MotionBox = motion(Box)
 
 /**
  * Simple and minimalistic TeamBattleItem with high design standards
- * User's team always appears on the left side
+ * For completed battles, it now only displays "Ended".
  */
 const TeamBattleItem = memo(({ battle, index, onEnter, onViewAnalysis }) => {
   const { t } = useTranslation('QuickClash')
   const { user } = useSelector(state => state.auth)
 
-  // Responsive values with granular breakpoints
+  // Responsive values
   const avatarSize = useBreakpointValue({ base: 'sm', md: 'md', lg: 'md' })
   const fontSize = useBreakpointValue({ base: 'sm', md: 'md' })
   const padding = useBreakpointValue({ base: 3, md: 4 })
   const buttonSize = useBreakpointValue({ base: 'xs', md: 'sm' })
-  // Progressive avatar display: +3 (xs) -> +2 (sm) -> +1 (md) -> all (lg+)
-  const avatarMax = useBreakpointValue({
-    base: 2, // Shows 1 + "+3" on very small screens
-    md: 1,
-    lg: 4, // Shows all 4 on large screens
-  })
+  const avatarMax = useBreakpointValue({ base: 2, md: 1, lg: 4 })
 
-  // Memoized calculations with team arrangement logic
-  const {
-    userTeam,
-    battleOutcome,
-    completionPercentage,
-    timeInfo,
-    leftTeam,
-    rightTeam,
-  } = useMemo(() => {
-    if (!battle || !user)
-      return {
-        userTeam: null,
-        battleOutcome: { label: 'ACTIVE', color: 'green', icon: Zap },
-        completionPercentage: 0,
-        timeInfo: { label: '', timeText: '', color: 'gray.500' },
-        leftTeam: null,
-        rightTeam: null,
+  // Memoized calculations with final time logic
+  const { battleOutcome, completionPercentage, timeInfo, leftTeam, rightTeam } =
+    useMemo(() => {
+      if (!battle || !user) {
+        return {
+          battleOutcome: { label: 'ACTIVE', color: 'green', icon: Zap },
+          completionPercentage: 0,
+          timeInfo: { label: '', timeText: null },
+          leftTeam: null,
+          rightTeam: null,
+        }
       }
 
-    // User team calculation
-    const isInTeamA = battle.teamAMembers?.some(
-      member => member.user._id === user._id,
-    )
-    const isInTeamB = battle.teamBMembers?.some(
-      member => member.user._id === user._id,
-    )
-    const userTeam = isInTeamA ? 'teamA' : isInTeamB ? 'teamB' : null
+      // User team calculation
+      const isInTeamA = battle.teamAMembers?.some(
+        member => member.user._id === user._id,
+      )
+      const userTeam = isInTeamA ? 'teamA' : 'teamB'
 
-    // Team arrangement - user's team always on left
-    let leftTeam, rightTeam
+      // Team arrangement
+      const teams = {
+        teamA: {
+          data: battle.teamA,
+          members: battle.teamAMembers,
+          wins: battle.teamAWins,
+          type: 'teamA',
+        },
+        teamB: {
+          data: battle.teamB,
+          members: battle.teamBMembers,
+          wins: battle.teamBWins,
+          type: 'teamB',
+        },
+      }
+      const leftTeam = teams[userTeam]
+      const rightTeam = teams[userTeam === 'teamA' ? 'teamB' : 'teamA']
 
-    if (userTeam === 'teamA') {
-      // User is in Team A, show Team A on left
-      leftTeam = {
-        data: battle.teamA,
-        members: battle.teamAMembers,
-        wins: battle.teamAWins,
-        type: 'teamA',
-        isUserTeam: true,
-      }
-      rightTeam = {
-        data: battle.teamB,
-        members: battle.teamBMembers,
-        wins: battle.teamBWins,
-        type: 'teamB',
-        isUserTeam: false,
-      }
-    } else if (userTeam === 'teamB') {
-      // User is in Team B, show Team B on left
-      leftTeam = {
-        data: battle.teamB,
-        members: battle.teamBMembers,
-        wins: battle.teamBWins,
-        type: 'teamB',
-        isUserTeam: true,
-      }
-      rightTeam = {
-        data: battle.teamA,
-        members: battle.teamAMembers,
-        wins: battle.teamAWins,
-        type: 'teamA',
-        isUserTeam: false,
-      }
-    } else {
-      // User is not in either team (spectator), default to Team A left, Team B right
-      leftTeam = {
-        data: battle.teamA,
-        members: battle.teamAMembers,
-        wins: battle.teamAWins,
-        type: 'teamA',
-        isUserTeam: false,
-      }
-      rightTeam = {
-        data: battle.teamB,
-        members: battle.teamBMembers,
-        wins: battle.teamBWins,
-        type: 'teamB',
-        isUserTeam: false,
-      }
-    }
-
-    // Battle outcome - using green for active instead of blue
-    let battleOutcome = { label: 'ACTIVE', color: 'green', icon: Zap }
-
-    if (battle.status === 'completed') {
-      if (battle.winner === 'tie') {
-        battleOutcome = { label: 'DRAW', color: 'yellow', icon: Shield }
-      } else if (battle.winner === userTeam) {
-        battleOutcome = { label: 'VICTORY', color: 'purple', icon: Trophy }
+      // Battle outcome
+      let battleOutcome
+      if (battle.status === 'completed') {
+        if (battle.winner === 'tie') {
+          battleOutcome = { label: 'DRAW', color: 'yellow', icon: Shield }
+        } else if (battle.winner === userTeam) {
+          battleOutcome = { label: 'VICTORY', color: 'purple', icon: Trophy }
+        } else {
+          battleOutcome = { label: 'DEFEAT', color: 'red', icon: Swords }
+        }
       } else {
-        battleOutcome = { label: 'DEFEAT', color: 'red', icon: Swords }
+        battleOutcome = { label: 'ACTIVE', color: 'green', icon: Zap }
       }
-    } else if (battle.status === 'expired') {
-      battleOutcome = { label: 'EXPIRED', color: 'gray', icon: Clock }
-    }
 
-    // Completion calculation
-    const totalChallenges = battle.challenges?.length || 0
-    const completedChallenges =
-      battle.challenges?.filter(
-        challenge => challenge.teamACompleted && challenge.teamBCompleted,
-      ).length || 0
-    const completionPercentage =
-      totalChallenges > 0
-        ? Math.round((completedChallenges / totalChallenges) * 100)
-        : 0
+      // Completion percentage
+      const totalChallenges = battle.challenges?.length || 0
+      const completedChallenges =
+        battle.challenges?.filter(
+          challenge => challenge.teamACompleted && challenge.teamBCompleted,
+        ).length || 0
+      const completionPercentage =
+        totalChallenges > 0
+          ? Math.round((completedChallenges / totalChallenges) * 100)
+          : 0
 
-    // Time info
-    let timeInfo = { label: '', timeText: '', color: 'gray.500' }
-    if (battle.expiresAt) {
-      const now = new Date()
-      const expiresAt = new Date(battle.expiresAt)
-      const isExpired = now > expiresAt
+      // *** UPDATED TIME INFO LOGIC ***
+      let timeInfo = { label: '', timeText: null, color: 'gray.500' }
+      const isBattleOver = battle.status !== 'active'
 
-      timeInfo = {
-        label: isExpired ? t('Ended') : t('Expires'),
-        timeText: formatDistanceToNow(expiresAt, { addSuffix: true }),
-        color: isExpired ? 'gray.500' : 'blue.400',
+      if (isBattleOver) {
+        // If the battle is over, just show the "Ended" label.
+        timeInfo = {
+          label: t('Ended'),
+          timeText: null, // Set timeText to null so it's not displayed
+          color: 'gray.500',
+        }
+      } else if (battle.expiresAt) {
+        // If the battle is still active, show the expiry time.
+        timeInfo = {
+          label: t('Expires'),
+          timeText: formatDistanceToNow(new Date(battle.expiresAt), {
+            addSuffix: true,
+          }),
+          color: 'blue.400',
+        }
       }
-    }
 
-    return {
-      userTeam,
-      battleOutcome,
-      completionPercentage,
-      timeInfo,
-      leftTeam,
-      rightTeam,
-    }
-  }, [battle, user, t])
+      return {
+        battleOutcome,
+        completionPercentage,
+        timeInfo,
+        leftTeam,
+        rightTeam,
+      }
+    }, [battle, user, t])
 
   // Simple entrance animation
   const cardVariants = {
@@ -245,9 +201,8 @@ const TeamBattleItem = memo(({ battle, index, onEnter, onViewAnalysis }) => {
             fontWeight="bold"
           >
             <Icon as={battleOutcome.icon} boxSize={3} />
-            {battleOutcome.label}
+            {t(battleOutcome.label)}
           </Badge>
-
           <Badge
             bg="rgba(0, 0, 0, 0.3)"
             color="white"
@@ -282,9 +237,9 @@ const TeamBattleItem = memo(({ battle, index, onEnter, onViewAnalysis }) => {
           />
         </Box>
 
-        {/* Teams Section - User's team always on left */}
+        {/* Teams Section */}
         <Flex px={padding} py={4} justify="space-between" align="center">
-          {/* Left Team (User's team or Team A if spectator) */}
+          {/* Left Team (User's team) */}
           <VStack spacing={2} align="center" flex="1" minWidth="0">
             <Text
               fontSize={fontSize}
@@ -301,7 +256,6 @@ const TeamBattleItem = memo(({ battle, index, onEnter, onViewAnalysis }) => {
               size={avatarSize}
               max={avatarMax}
               spacing="-1"
-              // Custom styling for the excess avatar (+X indicator)
               css={{
                 '& > .chakra-avatar__excess': {
                   backgroundColor: 'rgba(255, 255, 255, 0.1)',
@@ -310,8 +264,6 @@ const TeamBattleItem = memo(({ battle, index, onEnter, onViewAnalysis }) => {
                   color: 'white',
                   fontSize: 'xs',
                   fontWeight: 'bold',
-                  backdropFilter: 'blur(10px)',
-                  boxShadow: '0 2px 8px rgba(0, 0, 0, 0.3)',
                 },
               }}
             >
@@ -322,13 +274,7 @@ const TeamBattleItem = memo(({ battle, index, onEnter, onViewAnalysis }) => {
                   src={member.user.pic}
                   borderWidth="2px"
                   borderColor={
-                    member.user._id === user?._id
-                      ? 'purple.400'
-                      : leftTeam.isUserTeam
-                      ? 'blue.400'
-                      : leftTeam.type === 'teamA'
-                      ? 'blue.400'
-                      : 'red.400'
+                    member.user._id === user?._id ? 'purple.400' : 'blue.400'
                   }
                 />
               ))}
@@ -336,13 +282,7 @@ const TeamBattleItem = memo(({ battle, index, onEnter, onViewAnalysis }) => {
             <Text
               fontSize="xl"
               fontWeight="black"
-              color={
-                leftTeam.isUserTeam
-                  ? 'blue.400'
-                  : leftTeam.type === 'teamA'
-                  ? 'blue.400'
-                  : 'red.400'
-              }
+              color="blue.400"
               lineHeight="1"
             >
               {leftTeam.wins || 0}
@@ -359,7 +299,6 @@ const TeamBattleItem = memo(({ battle, index, onEnter, onViewAnalysis }) => {
             >
               VS
             </Text>
-
             <VStack spacing={1}>
               {battle.status === 'completed' && (
                 <Button
@@ -377,17 +316,15 @@ const TeamBattleItem = memo(({ battle, index, onEnter, onViewAnalysis }) => {
                   {t('Analysis')}
                 </Button>
               )}
-
               {battle.status === 'active' && (
                 <Button
                   size={buttonSize}
-                  colorScheme={battle.status === 'active' ? 'green' : 'gray'}
+                  colorScheme="green"
                   rightIcon={<ArrowRight size={12} />}
                   onClick={e => {
                     e.stopPropagation()
                     onEnter?.(battle._id)
                   }}
-                  isDisabled={battle.status !== 'active'}
                   fontSize="xs"
                   minWidth="80px"
                   borderRadius="md"
@@ -398,7 +335,7 @@ const TeamBattleItem = memo(({ battle, index, onEnter, onViewAnalysis }) => {
             </VStack>
           </VStack>
 
-          {/* Right Team (Opponent team or Team B if spectator) */}
+          {/* Right Team (Opponent team) */}
           <VStack spacing={2} align="center" flex="1" minWidth="0">
             <Text
               fontSize={fontSize}
@@ -415,7 +352,6 @@ const TeamBattleItem = memo(({ battle, index, onEnter, onViewAnalysis }) => {
               size={avatarSize}
               max={avatarMax}
               spacing="-1"
-              // Custom styling for the excess avatar (+X indicator)
               css={{
                 '& > .chakra-avatar__excess': {
                   backgroundColor: 'rgba(255, 255, 255, 0.1)',
@@ -424,8 +360,6 @@ const TeamBattleItem = memo(({ battle, index, onEnter, onViewAnalysis }) => {
                   color: 'white',
                   fontSize: 'xs',
                   fontWeight: 'bold',
-                  backdropFilter: 'blur(10px)',
-                  boxShadow: '0 2px 8px rgba(0, 0, 0, 0.3)',
                 },
               }}
             >
@@ -435,20 +369,14 @@ const TeamBattleItem = memo(({ battle, index, onEnter, onViewAnalysis }) => {
                   name={member.user.name || member.user.inGameName}
                   src={member.user.pic}
                   borderWidth="2px"
-                  borderColor={
-                    member.user._id === user?._id
-                      ? 'purple.400'
-                      : rightTeam.type === 'teamA'
-                      ? 'blue.400'
-                      : 'red.400'
-                  }
+                  borderColor="red.400"
                 />
               ))}
             </AvatarGroup>
             <Text
               fontSize="xl"
               fontWeight="black"
-              color={rightTeam.type === 'teamA' ? 'blue.400' : 'red.400'}
+              color="red.400"
               lineHeight="1"
             >
               {rightTeam.wins || 0}
@@ -457,7 +385,7 @@ const TeamBattleItem = memo(({ battle, index, onEnter, onViewAnalysis }) => {
         </Flex>
 
         {/* Footer - Time Info */}
-        {timeInfo.timeText && (
+        {timeInfo.label && (
           <Box
             px={padding}
             py={2}
@@ -471,9 +399,11 @@ const TeamBattleItem = memo(({ battle, index, onEnter, onViewAnalysis }) => {
               fontSize="xs"
               color={timeInfo.color}
             >
-              <Icon as={Clock} boxSize={3} />
+              {/* *** UPDATED TEXT RENDERING LOGIC *** */}
               <Text>
-                {timeInfo.label}: {timeInfo.timeText}
+                {timeInfo.timeText
+                  ? `${timeInfo.label}: ${timeInfo.timeText}`
+                  : timeInfo.label}
               </Text>
             </HStack>
           </Box>

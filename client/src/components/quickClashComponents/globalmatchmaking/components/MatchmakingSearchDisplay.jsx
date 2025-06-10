@@ -1,5 +1,5 @@
 // components/quickClashComponents/globalmatchmaking/components/MatchmakingSearchDisplay.jsx
-import React from 'react'
+import React, { useMemo } from 'react'
 import {
   VStack,
   Text,
@@ -10,16 +10,28 @@ import {
   Badge,
   Tooltip,
 } from '@chakra-ui/react'
-import { motion, AnimatePresence } from 'framer-motion'
+import { motion } from 'framer-motion'
 import { useTranslation } from 'react-i18next'
 import { Globe, Clock, User, UserPlus, Users, Info } from 'lucide-react'
 
-// Import status updates panel
 import StatusUpdatesPanel from './StatusUpdatesPanel'
 
 const MotionFlex = motion(Box)
 const MotionBadge = motion(Badge)
 const MotionBox = motion(Box)
+
+// --- Optimization: Define constant animation objects outside the component ---
+const globeAnimation = { rotate: 360 }
+const globeTransition = { duration: 3, repeat: Infinity, ease: 'linear' }
+const flexAnimation = { scale: [1, 1.05, 1] }
+const flexTransition = { duration: 2, repeat: Infinity, repeatType: 'reverse' }
+const badgeAnimation = { y: [0, -2, 0] }
+const statusBadgeAnimation = { opacity: [0.7, 1, 0.7] }
+const badgeTransition = { duration: 2, repeat: Infinity, repeatType: 'reverse' }
+
+// --- Optimization: Move helper function outside component for stable reference ---
+const iconMap = { User, UserPlus, Users, Info }
+const getIconComponent = iconName => iconMap[iconName] || Users
 
 /**
  * Display component for when user is actively searching for a match
@@ -34,23 +46,13 @@ const MatchmakingSearchDisplay = React.memo(
     formatMatchmakingTime,
   }) => {
     const { t } = useTranslation('QuickClash')
-
-    // Get icon component from string name
-    const getIconComponent = iconName => {
-      const iconMap = {
-        User,
-        UserPlus,
-        Users,
-        Info,
-      }
-      return iconMap[iconName] || Users
-    }
-
-    const IconComponent = getIconComponent(badgeInfo.icon)
+    const IconComponent = useMemo(
+      () => getIconComponent(badgeInfo.icon),
+      [badgeInfo.icon],
+    )
 
     return (
       <VStack spacing={6} align="center">
-        {/* Animated Matchmaking Status */}
         <MotionFlex
           display={'flex'}
           justifyContent="center"
@@ -62,24 +64,14 @@ const MatchmakingSearchDisplay = React.memo(
           border="2px solid"
           borderColor="blue.400"
           position="relative"
-          animate={{
-            scale: [1, 1.05, 1],
-          }}
-          transition={{
-            duration: 2,
-            repeat: Infinity,
-            repeatType: 'reverse',
-          }}
+          animate={flexAnimation}
+          transition={flexTransition}
         >
-          <MotionBox
-            animate={{ rotate: 360 }}
-            transition={{ duration: 3, repeat: Infinity, ease: 'linear' }}
-          >
+          <MotionBox animate={globeAnimation} transition={globeTransition}>
             <Icon as={Globe} color="blue.400" boxSize={16} />
           </MotionBox>
         </MotionFlex>
 
-        {/* Matchmaking Type Badge */}
         <Tooltip label={badgeInfo.tooltip} hasArrow placement="top">
           <MotionBadge
             colorScheme={badgeInfo.color}
@@ -89,14 +81,8 @@ const MatchmakingSearchDisplay = React.memo(
             fontSize="sm"
             display="flex"
             alignItems="center"
-            animate={{
-              y: [0, -2, 0],
-            }}
-            transition={{
-              duration: 2,
-              repeat: Infinity,
-              repeatType: 'reverse',
-            }}
+            animate={badgeAnimation}
+            transition={badgeTransition}
           >
             <Icon as={IconComponent} mr={2} boxSize={4} />
             {badgeInfo.text}
@@ -106,7 +92,6 @@ const MatchmakingSearchDisplay = React.memo(
           </MotionBadge>
         </Tooltip>
 
-        {/* Auto-team formation info */}
         {joinType === 'sourceTeam' && originalTeam && (
           <Box
             bg="rgba(121, 80, 242, 0.1)"
@@ -154,7 +139,6 @@ const MatchmakingSearchDisplay = React.memo(
           </Box>
         )}
 
-        {/* Main Status */}
         <VStack spacing={3} align="center">
           <Text color="white" fontSize="2xl" fontWeight="bold">
             {t('Finding Your 4v4 Battle')}
@@ -171,7 +155,6 @@ const MatchmakingSearchDisplay = React.memo(
 
         <Divider borderColor="whiteAlpha.300" w="80%" />
 
-        {/* Time and Status Display */}
         <HStack spacing={8} justify="center">
           <VStack spacing={1}>
             <Text color="whiteAlpha.600" fontSize="sm">
@@ -190,7 +173,6 @@ const MatchmakingSearchDisplay = React.memo(
               </Text>
             </HStack>
           </VStack>
-
           <VStack spacing={1}>
             <Text color="whiteAlpha.600" fontSize="sm">
               {t('Status')}
@@ -199,24 +181,16 @@ const MatchmakingSearchDisplay = React.memo(
               colorScheme="blue"
               px={3}
               py={1}
-              animate={{
-                opacity: [0.7, 1, 0.7],
-              }}
-              transition={{
-                duration: 2,
-                repeat: Infinity,
-                repeatType: 'reverse',
-              }}
+              animate={statusBadgeAnimation}
+              transition={badgeTransition}
             >
               {t('Searching')}
             </MotionBadge>
           </VStack>
         </HStack>
 
-        {/* Status Updates Panel */}
         <StatusUpdatesPanel statusUpdates={statusUpdates} />
 
-        {/* Info */}
         <Box w="100%" pt={4}>
           <Text
             color="whiteAlpha.600"
@@ -235,5 +209,4 @@ const MatchmakingSearchDisplay = React.memo(
 )
 
 MatchmakingSearchDisplay.displayName = 'MatchmakingSearchDisplay'
-
 export default MatchmakingSearchDisplay
