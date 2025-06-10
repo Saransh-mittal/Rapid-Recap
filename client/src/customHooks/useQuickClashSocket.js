@@ -747,6 +747,64 @@ const useQuickClashSocket = () => {
     )
     cleanupFunctions.push(cleanupTeamBattleCompleted)
 
+    // customHooks/useQuickClashSocket.js
+    // MODIFICATION: Add this new event listener in setupAllSocketListeners function
+    // Add this code after the existing team battle events (around line 710, after cleanupTeamBattleCompleted)
+
+    // Team battle quiz completed - refresh battle details
+    const cleanupTeamBattleQuizCompleted = addEventListener(
+      'quickClash:teamBattleQuizCompleted',
+      data => {
+        if (!isComponentMountedRef.current) return
+        logSocketEvent('team_battle_quiz_completed', data)
+
+        // FIXED: Get current team battle state from store instead of stale closure
+        const currentState = getCurrentState()
+        const currentTeamBattleState = currentState.teamBattleState
+
+        // If this battle is currently being viewed, refresh the battle details
+        if (
+          currentTeamBattleState.currentBattle &&
+          currentTeamBattleState.currentBattle._id === data.battleId
+        ) {
+          console.log(
+            '[QC_SOCKET] Refreshing battle details after quiz completion:',
+            data.battleId,
+          )
+          dispatch(fetchTeamBattleDetails(data.battleId))
+        } else {
+          console.log(
+            '[QC_SOCKET] Quiz completed in different battle, not refreshing current view',
+          )
+        }
+
+        // Show notification if someone else completed the quiz
+        if (!data.completedByCurrentUser) {
+          const currentUserId = currentState.authState.user?._id
+
+          // Only show toast if the current user is part of this battle
+          if (
+            data.allTeamMembers &&
+            data.allTeamMembers.includes(currentUserId)
+          ) {
+            toast({
+              title: t('Quiz Completed'),
+              description: t(
+                'A team member has completed their quiz in the battle.',
+              ),
+              status: 'info',
+              duration: 3000,
+              isClosable: true,
+            })
+          }
+        }
+
+        // Refresh team battles list to update any status changes
+        dispatch(fetchTeamBattles({ status: 'active' }))
+      },
+    )
+    cleanupFunctions.push(cleanupTeamBattleQuizCompleted)
+
     // FIXED: Team member category selection - using current state
     const cleanupMemberSelectedCategory = addEventListener(
       'quickClash:teamMemberSelectedCategory',
