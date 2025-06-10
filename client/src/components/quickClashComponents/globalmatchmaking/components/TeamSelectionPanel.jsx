@@ -1,5 +1,5 @@
 // components/quickClashComponents/globalmatchmaking/components/TeamSelectionPanel.jsx
-import React from 'react'
+import React, { useCallback } from 'react'
 import {
   Box,
   Text,
@@ -15,6 +15,57 @@ import { useTranslation } from 'react-i18next'
 import { Users, User } from 'lucide-react'
 
 const MotionBox = motion(Box)
+const motionBoxProps = {
+  whileHover: { scale: 1.02 },
+  whileTap: { scale: 0.98 },
+  transition: { duration: 0.2 },
+  cursor: 'pointer',
+  p: 3,
+  borderRadius: 'md',
+  borderWidth: '1px',
+}
+
+// --- Optimization: Co-located memoized component for list items ---
+const SelectionOption = React.memo(({ option, isSelected, onSelectTeam }) => {
+  const { t } = useTranslation('QuickClash')
+
+  const handleSelect = useCallback(() => {
+    onSelectTeam(option.id)
+  }, [onSelectTeam, option.id])
+
+  return (
+    <MotionBox
+      {...motionBoxProps}
+      bg={isSelected ? 'rgba(128, 90, 213, 0.2)' : 'rgba(26, 32, 44, 0.6)'}
+      borderColor={isSelected ? 'purple.500' : 'whiteAlpha.200'}
+      onClick={handleSelect}
+    >
+      <HStack justify="space-between">
+        <HStack>
+          <Icon
+            as={option.isSolo ? User : Users}
+            color="purple.400"
+            boxSize={5}
+          />
+          <Text
+            color="white"
+            fontWeight={isSelected ? 'bold' : 'normal'}
+            noOfLines={1}
+          >
+            {option.name}
+          </Text>
+        </HStack>
+        <Badge
+          colorScheme={option.isSolo ? 'green' : 'blue'}
+          minW="fit-content"
+        >
+          {option.isSolo ? t('Solo') : option.badgeContent}
+        </Badge>
+      </HStack>
+    </MotionBox>
+  )
+})
+SelectionOption.displayName = 'SelectionOption'
 
 /**
  * Panel for selecting teams before joining matchmaking
@@ -36,43 +87,7 @@ const TeamSelectionPanel = React.memo(
       )
     }
 
-    if (!myTeams || myTeams.length === 0) {
-      return (
-        <Box>
-          <Text color="whiteAlpha.900" fontWeight="bold" mb={3}>
-            {t('Choose Your Entry')}
-          </Text>
-          <VStack spacing={2} align="stretch">
-            <MotionBox
-              p={3}
-              borderRadius="md"
-              bg="rgba(128, 90, 213, 0.2)"
-              borderWidth="1px"
-              borderColor="purple.500"
-              cursor="pointer"
-              onClick={() => onSelectTeam(null)}
-              whileHover={{ scale: 1.02 }}
-              whileTap={{ scale: 0.98 }}
-              transition={{ duration: 0.2 }}
-            >
-              <HStack justify="space-between">
-                <HStack>
-                  <Icon as={User} color="purple.400" boxSize={5} />
-                  <Text color="white" fontWeight="bold">
-                    {t('Join Individually')}
-                  </Text>
-                </HStack>
-                <Badge colorScheme="green">{t('Solo')}</Badge>
-              </HStack>
-            </MotionBox>
-
-            <Box textAlign="center" py={4}>
-              <Text color="whiteAlpha.700">{t('You have no teams')}</Text>
-            </Box>
-          </VStack>
-        </Box>
-      )
-    }
+    const soloOption = { id: null, name: t('Join Individually'), isSolo: true }
 
     return (
       <Box>
@@ -80,75 +95,31 @@ const TeamSelectionPanel = React.memo(
           {t('Choose Your Entry')}
         </Text>
         <VStack spacing={2} align="stretch" maxH="200px" overflowY="auto">
-          {/* Solo option */}
-          <MotionBox
-            p={3}
-            borderRadius="md"
-            bg={
-              !selectedTeamId
-                ? 'rgba(128, 90, 213, 0.2)'
-                : 'rgba(26, 32, 44, 0.6)'
-            }
-            borderWidth="1px"
-            borderColor={!selectedTeamId ? 'purple.500' : 'whiteAlpha.200'}
-            cursor="pointer"
-            onClick={() => onSelectTeam(null)}
-            whileHover={{ scale: 1.02 }}
-            whileTap={{ scale: 0.98 }}
-            transition={{ duration: 0.2 }}
-          >
-            <HStack justify="space-between">
-              <HStack>
-                <Icon as={User} color="purple.400" boxSize={5} />
-                <Text
-                  color="white"
-                  fontWeight={!selectedTeamId ? 'bold' : 'normal'}
-                >
-                  {t('Join Individually')}
-                </Text>
-              </HStack>
-              <Badge colorScheme="green">{t('Solo')}</Badge>
-            </HStack>
-          </MotionBox>
+          <SelectionOption
+            option={soloOption}
+            isSelected={!selectedTeamId}
+            onSelectTeam={onSelectTeam}
+          />
 
-          {/* Team options */}
-          {myTeams.map(team => (
-            <MotionBox
-              key={team._id}
-              p={3}
-              borderRadius="md"
-              bg={
-                selectedTeamId === team._id
-                  ? 'rgba(128, 90, 213, 0.2)'
-                  : 'rgba(26, 32, 44, 0.6)'
-              }
-              borderWidth="1px"
-              borderColor={
-                selectedTeamId === team._id ? 'purple.500' : 'whiteAlpha.200'
-              }
-              cursor="pointer"
-              onClick={() => onSelectTeam(team._id)}
-              whileHover={{ scale: 1.02 }}
-              whileTap={{ scale: 0.98 }}
-              transition={{ duration: 0.2 }}
-            >
-              <HStack justify="space-between">
-                <HStack>
-                  <Icon as={Users} color="purple.400" boxSize={5} />
-                  <Text
-                    color="white"
-                    fontWeight={selectedTeamId === team._id ? 'bold' : 'normal'}
-                    noOfLines={1}
-                  >
-                    {team.name}
-                  </Text>
-                </HStack>
-                <Badge colorScheme="blue" minW="fit-content">
-                  {team.members.length}/4
-                </Badge>
-              </HStack>
-            </MotionBox>
-          ))}
+          {myTeams && myTeams.length > 0 ? (
+            myTeams.map(team => (
+              <SelectionOption
+                key={team._id}
+                option={{
+                  id: team._id,
+                  name: team.name,
+                  isSolo: false,
+                  badgeContent: `${team.members.length}/4`,
+                }}
+                isSelected={selectedTeamId === team._id}
+                onSelectTeam={onSelectTeam}
+              />
+            ))
+          ) : (
+            <Box textAlign="center" py={4}>
+              <Text color="whiteAlpha.700">{t('You have no teams')}</Text>
+            </Box>
+          )}
         </VStack>
       </Box>
     )
@@ -156,5 +127,4 @@ const TeamSelectionPanel = React.memo(
 )
 
 TeamSelectionPanel.displayName = 'TeamSelectionPanel'
-
 export default TeamSelectionPanel

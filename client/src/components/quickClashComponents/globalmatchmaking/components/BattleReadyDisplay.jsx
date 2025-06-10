@@ -1,5 +1,5 @@
 // components/quickClashComponents/globalmatchmaking/components/BattleReadyDisplay.jsx
-import React from 'react'
+import React, { useMemo } from 'react'
 import {
   VStack,
   Text,
@@ -17,57 +17,56 @@ import { Zap, Users, User, UserPlus, Info } from 'lucide-react'
 const MotionFlex = motion(Box)
 const MotionBadge = motion(Badge)
 
+// --- Optimization: Define constant animation objects outside the component ---
+const flexAnimation = {
+  scale: [1, 1.02, 1],
+  boxShadow: [
+    '0 0 8px rgba(72, 187, 120, 0.5)',
+    '0 0 25px rgba(72, 187, 120, 0.9)',
+    '0 0 8px rgba(72, 187, 120, 0.5)',
+  ],
+}
+const flexTransition = {
+  duration: 1.8,
+  repeat: Infinity,
+  repeatType: 'reverse',
+}
+const badgeAnimation = { y: [0, -3, 0] }
+const badgeTransition = { duration: 2, repeat: Infinity, repeatType: 'reverse' }
+
+// --- Optimization: Move helper function outside component for stable reference ---
+const iconMap = { User, UserPlus, Users, Info }
+const getIconComponent = iconName => iconMap[iconName] || Users
+
 /**
  * Display component for when battle is ready
  */
 const BattleReadyDisplay = React.memo(
   ({ battleReady, matchmakingTime, badgeInfo, formatMatchmakingTime }) => {
     const { t } = useTranslation('QuickClash')
-
-    // Get icon component from string name
-    const getIconComponent = iconName => {
-      const iconMap = {
-        User,
-        UserPlus,
-        Users,
-        Info,
-      }
-      return iconMap[iconName] || Users
-    }
-
-    const IconComponent = getIconComponent(badgeInfo.icon)
+    const IconComponent = useMemo(
+      () => getIconComponent(badgeInfo.icon),
+      [badgeInfo.icon],
+    )
 
     return (
       <VStack spacing={4} align="center" w="100%">
-        {/* Central Animated Element */}
         <MotionFlex
-          display="flex" // Explicitly set display to flex for centering
-          justifyContent="center" // Centers content horizontally
-          alignItems="center" // Centers content vertically
+          display="flex"
+          justifyContent="center"
+          alignItems="center"
           w="120px"
           h="120px"
           borderRadius="full"
           bg="rgba(20, 25, 35, 0.6)"
           border="2px solid"
           borderColor="green.400"
-          animate={{
-            scale: [1, 1.02, 1],
-            boxShadow: [
-              '0 0 8px rgba(72, 187, 120, 0.5)',
-              '0 0 25px rgba(72, 187, 120, 0.9)',
-              '0 0 8px rgba(72, 187, 120, 0.5)',
-            ],
-          }}
-          transition={{
-            duration: 1.8,
-            repeat: Infinity,
-            repeatType: 'reverse',
-          }}
+          animate={flexAnimation}
+          transition={flexTransition}
         >
           <Icon as={Zap} color="green.300" boxSize={16} />
         </MotionFlex>
 
-        {/* Battle Ready Status Text */}
         <VStack spacing={1} align="center" mt={2}>
           <Text
             color="green.300"
@@ -87,7 +86,6 @@ const BattleReadyDisplay = React.memo(
           </Text>
         </VStack>
 
-        {/* Matchmaking Type Badge */}
         <Tooltip label={badgeInfo.tooltip} hasArrow placement="top">
           <MotionBadge
             colorScheme={badgeInfo.color}
@@ -97,21 +95,14 @@ const BattleReadyDisplay = React.memo(
             fontSize="md"
             display="flex"
             alignItems="center"
-            animate={{
-              y: [0, -3, 0],
-            }}
-            transition={{
-              duration: 2,
-              repeat: Infinity,
-              repeatType: 'reverse',
-            }}
+            animate={badgeAnimation}
+            transition={badgeTransition}
           >
             <Icon as={IconComponent} mr={2} boxSize={5} />
             {badgeInfo.text}
           </MotionBadge>
         </Tooltip>
 
-        {/* Battle Information Box */}
         {battleReady && (
           <Box
             w={{ base: '95%', md: '90%' }}
@@ -178,7 +169,6 @@ const BattleReadyDisplay = React.memo(
           </Box>
         )}
 
-        {/* Instructions Text */}
         <Box w="100%" textAlign="center" pt={3} pb={1}>
           <Text color="whiteAlpha.600" fontSize="xs">
             {t(
@@ -192,5 +182,4 @@ const BattleReadyDisplay = React.memo(
 )
 
 BattleReadyDisplay.displayName = 'BattleReadyDisplay'
-
 export default BattleReadyDisplay

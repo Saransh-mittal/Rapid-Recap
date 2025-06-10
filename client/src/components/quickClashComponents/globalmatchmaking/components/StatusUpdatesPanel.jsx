@@ -6,6 +6,14 @@ import { useTranslation } from 'react-i18next'
 
 const MotionBox = motion(Box)
 
+// --- Optimization: Define constant animation objects outside the component ---
+const itemAnimation = {
+  initial: { opacity: 0, y: 10 },
+  animate: { opacity: 1, y: 0 },
+  exit: { opacity: 0, y: -10 },
+  transition: { duration: 0.3 },
+}
+
 /**
  * Panel that displays recent status updates during matchmaking
  */
@@ -29,15 +37,9 @@ const StatusUpdatesPanel = React.memo(({ statusUpdates }) => {
         {t('Recent Updates')}
       </Text>
       <VStack spacing={1} align="stretch" maxH="100px" overflowY="auto">
-        <AnimatePresence>
+        <AnimatePresence initial={false}>
           {statusUpdates.map(update => (
-            <MotionBox
-              key={update.id}
-              initial={{ opacity: 0, y: 10 }}
-              animate={{ opacity: 1, y: 0 }}
-              exit={{ opacity: 0, y: -10 }}
-              transition={{ duration: 0.3 }}
-            >
+            <MotionBox key={update.id} {...itemAnimation}>
               <HStack justify="space-between">
                 <Text
                   color="whiteAlpha.900"
@@ -66,5 +68,4 @@ const StatusUpdatesPanel = React.memo(({ statusUpdates }) => {
 })
 
 StatusUpdatesPanel.displayName = 'StatusUpdatesPanel'
-
 export default StatusUpdatesPanel

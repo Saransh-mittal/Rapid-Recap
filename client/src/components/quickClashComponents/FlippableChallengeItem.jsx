@@ -560,7 +560,6 @@ const FlippableChallengeItem = memo(
               )}
 
               {/* Actions */}
-
               <Flex
                 justify="center"
                 mt={3}
@@ -570,29 +569,59 @@ const FlippableChallengeItem = memo(
               >
                 {myAttempted ? (
                   <HStack spacing={3}>
+                    {/* ENHANCED "View Report" Button */}
                     <Button
                       size={buttonSize}
-                      colorScheme="purple"
-                      variant="outline"
                       leftIcon={<FileText size={14} />}
                       onClick={handleViewReport}
-                      fontWeight="medium"
+                      bg="transparent"
+                      color="purple.300"
+                      borderColor="purple.400"
+                      borderWidth="1px"
+                      fontWeight="bold"
+                      boxShadow="0px 0px 8px rgba(147, 51, 234, 0.3), inset 0px 0px 4px rgba(147, 51, 234, 0.2)"
+                      transition="all 0.3s ease"
                       _hover={{
-                        bg: 'purple.700',
-                        borderColor: 'purple.400',
+                        bg: 'rgba(147, 51, 234, 0.15)',
+                        color: 'white',
+                        borderColor: 'purple.300',
+                        transform: 'scale(1.05)',
+                        boxShadow:
+                          '0px 0px 16px rgba(147, 51, 234, 0.5), inset 0px 0px 6px rgba(147, 51, 234, 0.3)',
+                      }}
+                      _active={{
+                        transform: 'scale(1.0)',
+                        bg: 'rgba(147, 51, 234, 0.25)',
                       }}
                     >
                       {t('View Report')}
                     </Button>
 
+                    {/* ENHANCED "Analysis" Button */}
                     {showFlipButton && (
                       <Button
                         size={buttonSize}
-                        colorScheme="blue"
-                        variant="outline"
                         leftIcon={<BarChart size={14} />}
                         onClick={handleFlip}
-                        fontWeight="medium"
+                        bg="transparent"
+                        color="blue.300"
+                        borderColor="blue.400"
+                        borderWidth="1px"
+                        fontWeight="bold"
+                        boxShadow="0px 0px 8px rgba(59, 130, 246, 0.3), inset 0px 0px 4px rgba(59, 130, 246, 0.2)"
+                        transition="all 0.3s ease"
+                        _hover={{
+                          bg: 'rgba(59, 130, 246, 0.15)',
+                          color: 'white',
+                          borderColor: 'blue.300',
+                          transform: 'scale(1.05)',
+                          boxShadow:
+                            '0px 0px 16px rgba(59, 130, 246, 0.5), inset 0px 0px 6px rgba(59, 130, 246, 0.3)',
+                        }}
+                        _active={{
+                          transform: 'scale(1.0)',
+                          bg: 'rgba(59, 130, 246, 0.25)',
+                        }}
                       >
                         {t('Analysis')}
                       </Button>

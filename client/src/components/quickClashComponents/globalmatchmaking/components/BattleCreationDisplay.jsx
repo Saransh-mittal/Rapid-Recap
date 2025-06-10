@@ -7,6 +7,24 @@ import { Loader, AlertTriangle, Users, FileText, Zap } from 'lucide-react'
 
 const MotionFlex = motion(Box)
 
+// --- Optimization: Define constant animation objects outside the component ---
+const creatingAnimation = {
+  scale: [1, 1.05, 1],
+  rotate: [0, 360],
+}
+const creatingTransition = {
+  scale: { duration: 2, repeat: Infinity, repeatType: 'reverse' },
+  rotate: { duration: 3, repeat: Infinity, ease: 'linear' },
+}
+const failedAnimation = {
+  scale: [1, 1.05, 1],
+}
+const failedTransition = {
+  duration: 2,
+  repeat: Infinity,
+  repeatType: 'reverse',
+}
+
 /**
  * Display component for battle creation states (creating/failed)
  */
@@ -26,22 +44,8 @@ const BattleCreationDisplay = React.memo(({ status, error }) => {
           border="2px solid"
           borderColor="purple.400"
           position="relative"
-          animate={{
-            scale: [1, 1.05, 1],
-            rotate: [0, 360],
-          }}
-          transition={{
-            scale: {
-              duration: 2,
-              repeat: Infinity,
-              repeatType: 'reverse',
-            },
-            rotate: {
-              duration: 3,
-              repeat: Infinity,
-              ease: 'linear',
-            },
-          }}
+          animate={creatingAnimation}
+          transition={creatingTransition}
         >
           <Icon as={Loader} color="purple.400" boxSize={12} />
         </MotionFlex>
@@ -133,14 +137,8 @@ const BattleCreationDisplay = React.memo(({ status, error }) => {
           bg="rgba(245, 101, 101, 0.1)"
           border="2px solid"
           borderColor="red.400"
-          animate={{
-            scale: [1, 1.05, 1],
-          }}
-          transition={{
-            duration: 2,
-            repeat: Infinity,
-            repeatType: 'reverse',
-          }}
+          animate={failedAnimation}
+          transition={failedTransition}
         >
           <Icon as={AlertTriangle} color="red.400" boxSize={12} />
         </MotionFlex>
@@ -179,5 +177,4 @@ const BattleCreationDisplay = React.memo(({ status, error }) => {
 })
 
 BattleCreationDisplay.displayName = 'BattleCreationDisplay'
-
 export default BattleCreationDisplay

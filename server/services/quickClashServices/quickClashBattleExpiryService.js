@@ -4,8 +4,8 @@ const QuickClashBattleExpiryEvent = require('../../model/quickClashSchemas/quick
 const QuickClashTeamBattle = require('../../model/quickClashSchemas/quickClashTeamBattleSchema')
 
 const { makeRetryable } = require('../../utils/retryUtils')
-const { calculateFinalTrophies } = require('../../utils/quickClashTeamUtils')
-const { updateTeamMatchStatus } = require('./quickClashTeamService')
+// REFACTOR: Import the centralized battle completion logic
+const { _completeAndFinalizeBattle } = require('./quickClashTeamBattleService')
 
 /**
  * Create a battle expiry event when team battle is created
@@ -128,8 +128,8 @@ const processExpiredBattle = makeRetryable(
 
         console.log(`[BattleExpiry] Completing expired battle ${battle._id}`)
 
-        // Complete the battle using existing logic
-        await completeBattleOnExpiry({ battle, session })
+        // REFACTOR: Use the centralized completion logic from the battle service
+        await _completeAndFinalizeBattle({ battle, session })
 
         // Mark event as completed
         await QuickClashBattleExpiryEvent.findByIdAndUpdate(
@@ -171,123 +171,6 @@ const processExpiredBattle = makeRetryable(
     },
   },
 )
-
-/**
- * Complete a battle when it expires (extracted from updateBattleWithQuizResults logic)
- * @param {Object} params
- * @param {Object} params.battle - Battle document
- * @param {mongoose.ClientSession} params.session - Database session
- */
-const completeBattleOnExpiry = async ({ battle, session }) => {
-  // Mark battle as completed
-  battle.status = 'completed'
-
-  // Calculate final results based on completed challenges
-  let teamAWins = 0
-  let teamBWins = 0
-  let ties = 0
-
-  battle.challenges.forEach(challenge => {
-    // CORRECTED LOGIC: Handle cases where only one team completed the challenge
-    if (challenge.teamACompleted && challenge.teamBCompleted) {
-      // Both teams completed - compare scores
-      if (challenge.teamAScore > challenge.teamBScore) {
-        teamAWins++
-        challenge.winner = 'teamA' // Ensure winner is set
-      } else if (challenge.teamBScore > challenge.teamAScore) {
-        teamBWins++
-        challenge.winner = 'teamB' // Ensure winner is set
-      } else {
-        ties++
-        challenge.winner = 'tie' // Ensure winner is set
-      }
-    } else if (challenge.teamACompleted && !challenge.teamBCompleted) {
-      // Only team A completed - they win
-      teamAWins++
-      challenge.winner = 'teamA' // Ensure winner is set
-    } else if (!challenge.teamACompleted && challenge.teamBCompleted) {
-      // Only team B completed - they win
-      teamBWins++
-      challenge.winner = 'teamB' // Ensure winner is set
-    } else {
-      // Neither team completed - count as tie
-      ties++
-      challenge.winner = 'tie' // Ensure winner is set
-    }
-  })
-
-  battle.teamAWins = teamAWins
-  battle.teamBWins = teamBWins
-  battle.ties = ties
-
-  // Determine overall winner
-  if (teamAWins > teamBWins) {
-    battle.winner = 'teamA'
-  } else if (teamBWins > teamAWins) {
-    battle.winner = 'teamB'
-  } else {
-    // Use total scores as first tiebreaker
-    battle.teamATotalScore = battle.teamAMembers.reduce(
-      (sum, member) => sum + member.score,
-      0,
-    )
-    battle.teamBTotalScore = battle.teamBMembers.reduce(
-      (sum, member) => sum + member.score,
-      0,
-    )
-
-    if (battle.teamATotalScore > battle.teamBTotalScore) {
-      battle.winner = 'teamA'
-    } else if (battle.teamBTotalScore > battle.teamATotalScore) {
-      battle.winner = 'teamB'
-    } else {
-      // Use highest individual RQM score as second tiebreaker
-      const teamAHighestScore = Math.max(
-        ...battle.teamAMembers.map(m => m.score || 0),
-        0, // Default to 0 if no scores
-      )
-      const teamBHighestScore = Math.max(
-        ...battle.teamBMembers.map(m => m.score || 0),
-        0, // Default to 0 if no scores
-      )
-
-      if (teamAHighestScore > teamBHighestScore) {
-        battle.winner = 'teamA'
-      } else if (teamBHighestScore > teamAHighestScore) {
-        battle.winner = 'teamB'
-      } else {
-        battle.winner = 'tie'
-      }
-    }
-  }
-
-  console.log(
-    `[BattleExpiry] Battle ${battle._id} - Team A: ${teamAWins} wins, Team B: ${teamBWins} wins, Ties: ${ties}`,
-  )
-  console.log(`[BattleExpiry] Final result: ${battle.winner}`)
-
-  // Calculate final trophies (reuse existing logic)
-  await calculateFinalTrophies(battle, session)
-
-  if (battle.teamA) {
-    await updateTeamMatchStatus({
-      teamId: battle.teamA,
-      isInMatch: false,
-      session,
-    })
-  }
-
-  if (battle.teamB) {
-    await updateTeamMatchStatus({
-      teamId: battle.teamB,
-      isInMatch: false,
-      session,
-    })
-  }
-
-  // Save the completed battle
-  await battle.save({ session })
-}
 
 /**
  * Process all pending expiry events
