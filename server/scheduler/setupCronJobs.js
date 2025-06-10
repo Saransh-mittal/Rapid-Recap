@@ -38,9 +38,9 @@ const quickClashSchedules = require('./quickClashScheduleConfig')
 // })
 
 // Setup Quick Clash schedules
-quickClashSchedules.forEach(schedule => {
-  cron.schedule(schedule.cronPattern, schedule.task)
-  console.log(`Scheduled ${schedule.name} task`)
-})
+// quickClashSchedules.forEach(schedule => {
+//   cron.schedule(schedule.cronPattern, schedule.task)
+//   console.log(`Scheduled ${schedule.name} task`)
+// })
 
 console.log('All cron jobs have been set up.')

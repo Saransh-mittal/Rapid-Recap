@@ -631,15 +631,6 @@ const leaveTeamMatchmaking = async ({ teamId, userId = null }) => {
               }
             }
           }
-
-          // Emit event for system tracking
-          globalEmitter.emit('quickClash:teamLeftMatchmaking', {
-            teamId: teamId.toString(),
-            teamName: team?.name,
-            reason: userId ? 'memberLeft' : 'user_initiated',
-            initiator: userId,
-            timestamp: new Date(),
-          })
         }
 
         return true

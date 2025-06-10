@@ -14,15 +14,64 @@ const QuickClashMatchmaking = require('../model/quickClashSchemas/quickClashMatc
 
 /**
  * Team room membership tracking (separate from device tracking)
- * Maps userId to team room membership status
+ * Maps userId to team room membership status with timestamp
  */
-const teamRoomMembers = new Map() // userId -> boolean (in teams room)
+const teamRoomMembers = new Map() // userId -> { joined: boolean, timestamp: number }
 
 /**
  * 1v1 Matchmaking room membership tracking
- * Maps userId to matchmaking room membership status
+ * Maps userId to matchmaking room membership status with timestamp
  */
-const matchmakingRoomMembers = new Map() // userId -> boolean (in matchmaking room)
+const matchmakingRoomMembers = new Map() // userId -> { joined: boolean, timestamp: number }
+
+/**
+ * Room operation debouncing to prevent rapid duplicate operations
+ */
+const roomOperationDebounce = new Map() // userId -> { operation: string, timestamp: number }
+
+/**
+ * Helper function to check if a room operation should be debounced
+ */
+const shouldDebounceRoomOperation = (userId, operation) => {
+  const key = `${userId}_${operation}`
+  const now = Date.now()
+  const lastOperation = roomOperationDebounce.get(key)
+
+  if (lastOperation && now - lastOperation < 1000) {
+    // 1 second debounce
+    return true
+  }
+
+  roomOperationDebounce.set(key, now)
+  return false
+}
+
+/**
+ * Enhanced room membership management with debouncing
+ */
+const setRoomMembership = (userId, roomType, joined) => {
+  const now = Date.now()
+  const membershipMap =
+    roomType === 'team' ? teamRoomMembers : matchmakingRoomMembers
+
+  if (joined) {
+    membershipMap.set(userId, { joined: true, timestamp: now })
+    console.log(`[QC_ROOM] User ${userId} joined ${roomType} room at ${now}`)
+  } else {
+    membershipMap.delete(userId)
+    console.log(`[QC_ROOM] User ${userId} left ${roomType} room`)
+  }
+}
+
+/**
+ * Check if user is in a specific room
+ */
+const isUserInRoom = (userId, roomType) => {
+  const membershipMap =
+    roomType === 'team' ? teamRoomMembers : matchmakingRoomMembers
+  const membership = membershipMap.get(userId)
+  return membership?.joined === true
+}
 
 /**
  * Send push notification for offline users
@@ -113,12 +162,12 @@ async function sendQuickClashChallengePushNotification({
 }
 
 /**
- * Handle 1v1 matchmaking socket events with device awareness
+ * Handle 1v1 matchmaking socket events with device awareness and debouncing
  * @param {Object} io - Socket.io instance
  * @param {Object} socket - Client socket connection
  */
 const handle1v1MatchmakingEvents = (io, socket) => {
-  // User joins 1v1 matchmaking - FIXED: Handle undefined data
+  // User joins 1v1 matchmaking - FIXED: Handle undefined data with debouncing
   socket.on('quickClash:joinMatchmaking', async (data = {}) => {
     try {
       // Ensure socket is authenticated
@@ -131,6 +180,12 @@ const handle1v1MatchmakingEvents = (io, socket) => {
 
       const userId = socket.user._id.toString()
       const { deviceFingerprint } = data
+
+      // OPTIMIZATION: Debounce room operations
+      if (shouldDebounceRoomOperation(userId, 'joinMatchmaking')) {
+        console.log(`[QC_1V1] Debounced join matchmaking for user ${userId}`)
+        return
+      }
 
       console.log(
         `[QC_1V1] Socket event: User ${userId} joining 1v1 matchmaking${
@@ -145,11 +200,15 @@ const handle1v1MatchmakingEvents = (io, socket) => {
         userId,
       })
 
-      // Join matchmaking room for updates with device context
-      socket.join(`quickClash:matchmaking`)
-      socket.join(`quickClash:matchmaking:${userId}`)
-      matchmakingRoomMembers.set(userId, true)
-      console.log(`[QC_1V1] User ${userId} joined 1v1 matchmaking room`)
+      // OPTIMIZED: Only join rooms if not already joined
+      if (!isUserInRoom(userId, 'matchmaking')) {
+        socket.join(`quickClash:matchmaking`)
+        socket.join(`quickClash:matchmaking:${userId}`)
+        setRoomMembership(userId, 'matchmaking', true)
+        console.log(`[QC_1V1] User ${userId} joined 1v1 matchmaking room`)
+      } else {
+        console.log(`[QC_1V1] User ${userId} already in 1v1 matchmaking room`)
+      }
 
       // Emit confirmation with device context
       socket.emit('quickClash:joinedMatchmaking', {
@@ -171,7 +230,7 @@ const handle1v1MatchmakingEvents = (io, socket) => {
     }
   })
 
-  // User leaves 1v1 matchmaking - FIXED: Handle undefined data
+  // User leaves 1v1 matchmaking - FIXED: Handle undefined data with debouncing
   socket.on('quickClash:leaveMatchmaking', async (data = {}) => {
     try {
       if (!socket.user || !socket.user._id) {
@@ -183,6 +242,12 @@ const handle1v1MatchmakingEvents = (io, socket) => {
 
       const userId = socket.user._id.toString()
       const { deviceFingerprint } = data
+
+      // OPTIMIZATION: Debounce room operations
+      if (shouldDebounceRoomOperation(userId, 'leaveMatchmaking')) {
+        console.log(`[QC_1V1] Debounced leave matchmaking for user ${userId}`)
+        return
+      }
 
       console.log(
         `[QC_1V1] Socket event: User ${userId} leaving 1v1 matchmaking${
@@ -198,7 +263,7 @@ const handle1v1MatchmakingEvents = (io, socket) => {
       // Leave matchmaking room
       socket.leave(`quickClash:matchmaking`)
       socket.leave(`quickClash:matchmaking:${userId}`)
-      matchmakingRoomMembers.delete(userId)
+      setRoomMembership(userId, 'matchmaking', false)
       console.log(`[QC_1V1] User ${userId} left 1v1 matchmaking room`)
 
       // Emit confirmation
@@ -221,7 +286,7 @@ const handle1v1MatchmakingEvents = (io, socket) => {
     }
   })
 
-  // Enhanced join matchmaking room - FIXED: Handle undefined data
+  // Enhanced join matchmaking room - FIXED: Handle undefined data with debouncing
   socket.on('quickClash:joinMatchmakingRoom', async (data = {}) => {
     try {
       if (!socket.user || !socket.user._id) {
@@ -234,6 +299,14 @@ const handle1v1MatchmakingEvents = (io, socket) => {
       const userId = socket.user._id.toString()
       const { deviceFingerprint } = data
 
+      // OPTIMIZATION: Debounce room operations
+      if (shouldDebounceRoomOperation(userId, 'joinMatchmakingRoom')) {
+        console.log(
+          `[QC_1V1] Debounced join matchmaking room for user ${userId}`,
+        )
+        return
+      }
+
       console.log(
         `[QC_1V1] Socket event: User ${userId} joining 1v1 matchmaking room${
           deviceFingerprint
@@ -242,23 +315,37 @@ const handle1v1MatchmakingEvents = (io, socket) => {
         }`,
       )
 
-      // Join the general quickClash matchmaking room
-      socket.join('quickClash:matchmaking')
+      // OPTIMIZED: Only join if not already in the room
+      if (!isUserInRoom(userId, 'matchmaking')) {
+        // Join the general quickClash matchmaking room
+        socket.join('quickClash:matchmaking')
 
-      // Also join user-specific matchmaking room
-      socket.join(`quickClash:matchmaking:${userId}`)
-      matchmakingRoomMembers.set(userId, true)
+        // Also join user-specific matchmaking room
+        socket.join(`quickClash:matchmaking:${userId}`)
+        setRoomMembership(userId, 'matchmaking', true)
 
-      console.log(`[QC_1V1] User ${userId} joined 1v1 matchmaking rooms`)
+        console.log(`[QC_1V1] User ${userId} joined 1v1 matchmaking rooms`)
 
-      // Emit confirmation
-      socket.emit('quickClash:matchmakingRoomJoined', {
-        userId,
-        rooms: ['quickClash:matchmaking', `quickClash:matchmaking:${userId}`],
-        deviceFingerprint: deviceFingerprint
-          ? deviceFingerprint.substring(0, 8) + '...'
-          : null,
-      })
+        // Emit confirmation
+        socket.emit('quickClash:matchmakingRoomJoined', {
+          userId,
+          rooms: ['quickClash:matchmaking', `quickClash:matchmaking:${userId}`],
+          deviceFingerprint: deviceFingerprint
+            ? deviceFingerprint.substring(0, 8) + '...'
+            : null,
+        })
+      } else {
+        console.log(`[QC_1V1] User ${userId} already in 1v1 matchmaking rooms`)
+        // Still emit confirmation for client state consistency
+        socket.emit('quickClash:matchmakingRoomJoined', {
+          userId,
+          rooms: ['quickClash:matchmaking', `quickClash:matchmaking:${userId}`],
+          deviceFingerprint: deviceFingerprint
+            ? deviceFingerprint.substring(0, 8) + '...'
+            : null,
+          alreadyJoined: true,
+        })
+      }
     } catch (error) {
       console.error(
         `[QC_1V1] Error in joinMatchmakingRoom socket event:`,
@@ -284,7 +371,7 @@ const handle1v1MatchmakingEvents = (io, socket) => {
         })
 
         // Clean up room membership
-        matchmakingRoomMembers.delete(userId)
+        setRoomMembership(userId, 'matchmaking', false)
 
         console.log(
           `[QC_1V1] Updated 1v1 matchmaking status to offline for user ${userId}`,
@@ -316,10 +403,10 @@ const handle1v1MatchmakingEvents = (io, socket) => {
           user: userId,
         })
 
-        if (matchmakingEntry) {
+        if (matchmakingEntry && !isUserInRoom(userId, 'matchmaking')) {
           socket.join('quickClash:matchmaking')
           socket.join(`quickClash:matchmaking:${userId}`)
-          matchmakingRoomMembers.set(userId, true)
+          setRoomMembership(userId, 'matchmaking', true)
           console.log(
             `[QC_1V1] Re-joined 1v1 matchmaking rooms for user ${userId}`,
           )
@@ -335,7 +422,7 @@ const handle1v1MatchmakingEvents = (io, socket) => {
 }
 
 /**
- * Setup socket event handlers for Quick Clash feature
+ * Setup socket event handlers for Quick Clash feature with enhanced room management
  * Uses the main socket.js device tracking system instead of maintaining separate tracking
  * @param {Object} io - Socket.io instance
  * @param {Object} socket - Client socket connection
@@ -380,12 +467,12 @@ const setupQuickClashSocketHandlers = (io, socket, user) => {
     })
   })
 
-  // Handle socket disconnection
+  // Handle socket disconnection with enhanced cleanup
   socket.on('disconnect', () => {
-    // Clean up team room membership
-    teamRoomMembers.delete(userId)
-    // Clean up 1v1 matchmaking room membership
-    matchmakingRoomMembers.delete(userId)
+    // Clean up room memberships
+    setRoomMembership(userId, 'team', false)
+    setRoomMembership(userId, 'matchmaking', false)
+
     console.log(
       `[QC_DISCONNECT] Socket ${socketId} disconnected from QuickClash for user ${userId}`,
     )
@@ -403,13 +490,19 @@ const setupQuickClashSocketHandlers = (io, socket, user) => {
     )
   })
 
-  // FIXED: Listen for explicit request to join the teams room with proper undefined handling
+  // OPTIMIZED: Listen for explicit request to join the teams room with debouncing
   socket.on('quickClash:joinTeamsRoom', (data = {}) => {
     const { deviceFingerprint } = data
 
-    if (!teamRoomMembers.get(userId)) {
+    // OPTIMIZATION: Debounce room operations
+    if (shouldDebounceRoomOperation(userId, 'joinTeamsRoom')) {
+      console.log(`[QC_TEAMS] Debounced join teams room for user ${userId}`)
+      return
+    }
+
+    if (!isUserInRoom(userId, 'team')) {
       socket.join('quickClash:teams')
-      teamRoomMembers.set(userId, true)
+      setRoomMembership(userId, 'team', true)
       console.log(
         `[QC_TEAMS] User ${userId} joined QuickClash teams room${
           deviceFingerprint
@@ -453,9 +546,15 @@ const setupQuickClashSocketHandlers = (io, socket, user) => {
     )
   })
 
-  // FIXED: Handle team matchmaking join with proper undefined handling
+  // OPTIMIZED: Handle team matchmaking join with debouncing
   socket.on('quickClash:joinTeamMatchmaking', (data = {}) => {
     const { teamId, deviceFingerprint } = data
+
+    // OPTIMIZATION: Debounce room operations
+    if (shouldDebounceRoomOperation(userId, 'joinTeamMatchmaking')) {
+      console.log(`[QC_MM] Debounced join team matchmaking for user ${userId}`)
+      return
+    }
 
     console.log(
       `[QC_MM] Socket event: User ${userId} requested to join team matchmaking with team ${teamId}${
@@ -465,29 +564,43 @@ const setupQuickClashSocketHandlers = (io, socket, user) => {
       }`,
     )
 
-    // Automatically join the teams room when joining team matchmaking
-    if (!teamRoomMembers.get(userId)) {
+    // OPTIMIZED: Only join the teams room when needed and not already joined
+    if (!isUserInRoom(userId, 'team')) {
       socket.join('quickClash:teams')
-      teamRoomMembers.set(userId, true)
+      setRoomMembership(userId, 'team', true)
       console.log(
         `[QC_TEAMS] User ${userId} joined QuickClash teams room (via team matchmaking)`,
+      )
+    } else {
+      console.log(
+        `[QC_TEAMS] User ${userId} already in QuickClash teams room (team matchmaking)`,
       )
     }
   })
 
-  // FIXED: Handle viewing team battles with proper undefined handling
+  // OPTIMIZED: Handle viewing team battles with debouncing
   socket.on('quickClash:viewTeamBattles', (data = {}) => {
     const { deviceFingerprint } = data
 
-    if (!teamRoomMembers.get(userId)) {
+    // OPTIMIZATION: Debounce room operations
+    if (shouldDebounceRoomOperation(userId, 'viewTeamBattles')) {
+      console.log(`[QC_TEAMS] Debounced view team battles for user ${userId}`)
+      return
+    }
+
+    if (!isUserInRoom(userId, 'team')) {
       socket.join('quickClash:teams')
-      teamRoomMembers.set(userId, true)
+      setRoomMembership(userId, 'team', true)
       console.log(
         `[QC_TEAMS] User ${userId} joined QuickClash teams room (via team battles view)${
           deviceFingerprint
             ? ` with device ${deviceFingerprint.substring(0, 8)}...`
             : ''
         }`,
+      )
+    } else {
+      console.log(
+        `[QC_TEAMS] User ${userId} already in QuickClash teams room (team battles)`,
       )
     }
   })
@@ -501,18 +614,103 @@ const setupQuickClashSocketHandlers = (io, socket, user) => {
  */
 const setupQuickClashGlobalEvents = (io, utils = {}) => {
   const { notifyUserAllDevices, getUserActiveDevices } = utils
-
-  // Helper function to notify user with fallback
+  /**
+   * Enhanced helper function to notify user with better debugging and fallback handling
+   * @param {string} userId - User ID to notify
+   * @param {string} event - Event name
+   * @param {Object} data - Event data
+   * @returns {boolean} True if notification was sent successfully
+   */
   const notifyUser = (userId, event, data) => {
-    if (notifyUserAllDevices) {
-      return notifyUserAllDevices(userId, event, data)
-    } else {
-      // Fallback to room-based notification
-      const userRoom = `quickClash:${userId}`
-      io.to(userRoom).emit(event, data)
-      console.log(`[QC_NOTIFY] Fallback notification sent to room ${userRoom}`)
-      return true
+    if (!userId) {
+      console.error(`[NOTIFY] Invalid userId provided for event ${event}`)
+      return false
     }
+
+    console.log(
+      `[NOTIFY] Attempting to notify user ${userId} with event ${event}`,
+    )
+    console.log(
+      `[NOTIFY] notifyUserAllDevices function available: ${!!notifyUserAllDevices}`,
+    )
+    console.log(`[NOTIFY] io object available: ${!!io}`)
+
+    // Try enhanced device-aware notification first
+    if (notifyUserAllDevices && typeof notifyUserAllDevices === 'function') {
+      console.log(
+        `[NOTIFY] Trying device-aware notification for user ${userId}`,
+      )
+      try {
+        const success = notifyUserAllDevices(userId, event, data)
+        console.log(
+          `[NOTIFY] Device-aware notification result for user ${userId}: ${success}`,
+        )
+        if (success) {
+          return true
+        }
+      } catch (error) {
+        console.error(
+          `[NOTIFY] Error in device-aware notification for user ${userId}:`,
+          error,
+        )
+      }
+
+      console.log(
+        `[NOTIFY] Device-aware notification failed for user ${userId}, trying room-based fallback`,
+      )
+    } else {
+      console.log(
+        `[NOTIFY] No notifyUserAllDevices function available, using room-based notification`,
+      )
+    }
+
+    // Enhanced fallback to room-based notification
+    if (!io || !io.sockets || !io.sockets.adapter) {
+      console.error(`[NOTIFY] Socket.io not properly initialized`)
+      return false
+    }
+
+    // Try QuickClash room first
+    const userRoom = `quickClash:${userId}`
+    const room = io.sockets.adapter.rooms.get(userRoom)
+
+    if (room && room.size > 0) {
+      console.log(
+        `[NOTIFY] Fallback: Using room ${userRoom} with ${room.size} socket(s)`,
+      )
+      try {
+        io.to(userRoom).emit(event, data)
+        return true
+      } catch (error) {
+        console.error(`[NOTIFY] Error emitting to room ${userRoom}:`, error)
+      }
+    } else {
+      console.log(`[NOTIFY] QuickClash room ${userRoom} not found or empty`)
+    }
+
+    // Try the basic user room as well
+    const basicUserRoom = userId
+    const basicRoom = io.sockets.adapter.rooms.get(basicUserRoom)
+
+    if (basicRoom && basicRoom.size > 0) {
+      console.log(
+        `[NOTIFY] Fallback: Using basic room ${basicUserRoom} with ${basicRoom.size} socket(s)`,
+      )
+      try {
+        io.to(basicUserRoom).emit(event, data)
+        return true
+      } catch (error) {
+        console.error(
+          `[NOTIFY] Error emitting to basic room ${basicUserRoom}:`,
+          error,
+        )
+      }
+    } else {
+      console.log(`[NOTIFY] Basic room ${basicUserRoom} not found or empty`)
+    }
+
+    console.log(`[NOTIFY] All notification methods failed for user ${userId}`)
+    return false
   }
 
   // ==========================================
@@ -1271,17 +1469,62 @@ const setupQuickClashGlobalEvents = (io, utils = {}) => {
 
     // If there's a specific userId target, send directly to that user ONLY
     if (data.userId) {
-      const success = notifyUser(
-        data.userId,
-        'quickClash:teamLeftMatchmaking',
-        data,
+      console.log(
+        `[QC_MM] Sending team left matchmaking notification to specific user ${data.userId}`,
       )
+
+      // Use the enhanced device-aware notification first
+      let success = false
+      if (notifyUserAllDevices) {
+        success = notifyUserAllDevices(
+          data.userId,
+          'quickClash:teamLeftMatchmaking',
+          data,
+        )
+        console.log(
+          `[QC_MM] Device-aware notification result for user ${data.userId}: ${success}`,
+        )
+      }
+
+      // If device-aware notification failed, try room-based fallback
+      if (!success) {
+        console.log(
+          `[QC_MM] Device-aware notification failed for user ${data.userId}, trying room-based fallback`,
+        )
+
+        // Try QuickClash room first
+        const quickClashRoom = `quickClash:${data.userId}`
+        const qcRoom = io.sockets.adapter.rooms.get(quickClashRoom)
+
+        if (qcRoom && qcRoom.size > 0) {
+          console.log(
+            `[QC_MM] Fallback: Using QuickClash room ${quickClashRoom} with ${qcRoom.size} socket(s)`,
+          )
+          io.to(quickClashRoom).emit('quickClash:teamLeftMatchmaking', data)
+          success = true
+        } else {
+          // Try basic user room
+          const basicRoom = io.sockets.adapter.rooms.get(data.userId)
+          if (basicRoom && basicRoom.size > 0) {
+            console.log(
+              `[QC_MM] Fallback: Using basic room ${data.userId} with ${basicRoom.size} socket(s)`,
+            )
+            io.to(data.userId).emit('quickClash:teamLeftMatchmaking', data)
+            success = true
+          }
+        }
+      }
+
       console.log(
         `[QC_MM] Team left matchmaking notification sent to specific user ${data.userId}: ${success}`,
       )
       return
     }
 
+    // For team-wide notifications, use the standard team notification
+    console.log(
+      `[QC_MM] Sending team left matchmaking notification to all members of team ${data.teamId}`,
+    )
     notifyTeamMembers(data.teamId, 'quickClash:teamLeftMatchmaking', data)
   })
 
@@ -1976,6 +2219,7 @@ const getConnectionStats = () => {
     teamRoomMemberList: Array.from(teamRoomMembers.keys()),
     matchmakingRoomMembers: matchmakingRoomMembers.size,
     matchmakingRoomMemberList: Array.from(matchmakingRoomMembers.keys()),
+    roomOperationDebounceSize: roomOperationDebounce.size,
   }
 }
 
@@ -1985,7 +2229,7 @@ const getConnectionStats = () => {
  * @returns {boolean} True if user is in teams room
  */
 const isUserInTeamsRoom = userId => {
-  return teamRoomMembers.get(userId) === true
+  return isUserInRoom(userId, 'team')
 }
 
 /**
@@ -1994,7 +2238,7 @@ const isUserInTeamsRoom = userId => {
  * @returns {boolean} True if user is in 1v1 matchmaking room
  */
 const isUserInMatchmakingRoom = userId => {
-  return matchmakingRoomMembers.get(userId) === true
+  return isUserInRoom(userId, 'matchmaking')
 }
 
 module.exports = {

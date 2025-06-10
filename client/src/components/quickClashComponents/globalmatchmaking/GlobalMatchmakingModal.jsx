@@ -22,13 +22,17 @@ import axios from 'axios'
 
 // Import custom hook and actions
 import useQuickClashGlobalMatchmaking from '../../../customHooks/useQuickClashGlobalMatchmaking'
-import { useSocket } from '../../../customHooks/useSocket'
 import {
   resetGlobalMatchmakingState,
   setBattleReady,
   clearBattleCreationError,
   handleBattleCreationCleanup,
   clearBattleCreationState,
+  addStatusUpdate,
+  clearStatusUpdates,
+  setShouldRefetchTeams,
+  setToastNotification,
+  clearToastNotification,
 } from '../../../redux/quickClashGlobalMatchmakingSlice'
 
 // Import sub-components
@@ -44,12 +48,10 @@ const GlobalMatchmakingModal = React.memo(
     const { user } = useSelector(state => state.auth)
     const toast = useToast()
     const dispatch = useDispatch()
-    const { getSocket } = useSocket()
 
     // Local state
     const [myTeams, setMyTeams] = useState([])
     const [loadingTeams, setLoadingTeams] = useState(false)
-    const [statusUpdates, setStatusUpdates] = useState([])
 
     // Refs for cleanup and timing
     const pollingIntervalRef = useRef(null)
@@ -68,6 +70,9 @@ const GlobalMatchmakingModal = React.memo(
       matchmakingTime,
       battleCreationStatus,
       battleCreationError,
+      statusUpdates, // Now from Redux
+      shouldRefetchTeams, // Now from Redux
+      showToast, // Now from Redux
 
       // Actions
       checkMatchmakingStatus,
@@ -84,6 +89,30 @@ const GlobalMatchmakingModal = React.memo(
       retryAfterFailure,
       clearBattleCreationState: clearCreationState,
     } = useQuickClashGlobalMatchmaking()
+
+    // Handle toast notifications from Redux
+    useEffect(() => {
+      if (showToast) {
+        toast({
+          title: t(showToast.title),
+          description: t(showToast.description),
+          status: showToast.type,
+          duration: 3000,
+          isClosable: true,
+        })
+
+        // Clear the toast notification
+        dispatch(clearToastNotification())
+      }
+    }, [showToast, toast, t, dispatch])
+
+    // Handle team refetching from Redux
+    useEffect(() => {
+      if (shouldRefetchTeams) {
+        fetchMyTeams()
+        dispatch(setShouldRefetchTeams(false))
+      }
+    }, [shouldRefetchTeams, dispatch])
 
     // Fetch user's teams
     const fetchMyTeams = useCallback(async () => {
@@ -102,11 +131,11 @@ const GlobalMatchmakingModal = React.memo(
     useEffect(() => {
       if (isOpen && user?._id) {
         mountTimeRef.current = Date.now()
-        setStatusUpdates([])
+        dispatch(clearStatusUpdates())
         checkMatchmakingStatus()
         fetchMyTeams()
       }
-    }, [isOpen, user, checkMatchmakingStatus, fetchMyTeams])
+    }, [isOpen, user, checkMatchmakingStatus, fetchMyTeams, dispatch])
 
     // Setup HTTP polling when in matchmaking
     useEffect(() => {
@@ -133,16 +162,14 @@ const GlobalMatchmakingModal = React.memo(
                 const timeElapsed = Math.floor(
                   (Date.now() - mountTimeRef.current) / 1000,
                 )
-                setStatusUpdates(prev => [
-                  {
-                    id: Date.now(),
+                dispatch(
+                  addStatusUpdate({
                     message: t(
                       'Battle is ready! You can now enter the battle.',
                     ),
                     time: timeElapsed,
-                  },
-                  ...prev.slice(0, 2),
-                ])
+                  }),
+                )
                 return
               }
 
@@ -183,27 +210,23 @@ const GlobalMatchmakingModal = React.memo(
               const timeElapsed = Math.floor(
                 (Date.now() - mountTimeRef.current) / 1000,
               )
-              setStatusUpdates(prev => [
-                {
-                  id: Date.now(),
+              dispatch(
+                addStatusUpdate({
                   message: updateMessage,
                   time: timeElapsed,
-                },
-                ...prev.slice(0, 2),
-              ])
+                }),
+              )
             } catch (error) {
               console.error('Error polling matchmaking status:', error)
               const timeElapsed = Math.floor(
                 (Date.now() - mountTimeRef.current) / 1000,
               )
-              setStatusUpdates(prev => [
-                {
-                  id: Date.now(),
+              dispatch(
+                addStatusUpdate({
                   message: t('Connection issue, retrying...'),
                   time: timeElapsed,
-                },
-                ...prev.slice(0, 2),
-              ])
+                }),
+              )
             }
           }, 15000)
         }
@@ -218,129 +241,16 @@ const GlobalMatchmakingModal = React.memo(
       }
     }, [inMatchmaking, isOpen, pollMatchmakingStatus, t, dispatch])
 
-    // Socket listeners for team events
-    useEffect(() => {
-      const socket = getSocket()
-      if (!socket) return
-
-      const handleTeamLeftMatchmaking = data => {
-        if (inMatchmaking) {
-          dispatch(resetGlobalMatchmakingState())
-          setStatusUpdates([])
-          mountTimeRef.current = Date.now()
-        }
-      }
-
-      const handleTeamReturnedToMatchmaking = data => {
-        if (user?._id) {
-          checkMatchmakingStatus()
-          fetchMyTeams()
-          setStatusUpdates(prev => [
-            {
-              id: Date.now(),
-              message: t('Team returned to matchmaking'),
-              time: Math.floor((Date.now() - mountTimeRef.current) / 1000),
-            },
-            ...prev.slice(0, 2),
-          ])
-        }
-      }
-
-      const handleTeamJoinedMatchmaking = data => {
-        if (user?._id) {
-          fetchMyTeams()
-          setStatusUpdates(prev => [
-            {
-              id: Date.now(),
-              message: t('Team joined matchmaking successfully'),
-              time: Math.floor((Date.now() - mountTimeRef.current) / 1000),
-            },
-            ...prev.slice(0, 2),
-          ])
-        }
-      }
-
-      const handleBattleCreationCleanup = data => {
-        console.log('Battle creation cleanup received in modal:', data)
-
-        dispatch(
-          handleBattleCreationCleanup({
-            message:
-              data.message ||
-              'Battle creation failed after multiple attempts. Please try joining matchmaking again.',
-          }),
-        )
-
-        toast({
-          title: t('Battle Creation Failed'),
-          description: t(
-            'There was an issue creating your battle. Please try joining matchmaking again.',
-          ),
-          status: 'error',
-          duration: 7000,
-          isClosable: true,
-          position: 'top',
-        })
-
-        setStatusUpdates(prev => [
-          {
-            id: Date.now(),
-            message: t('Battle creation failed. You can try again.'),
-            time: Math.floor((Date.now() - mountTimeRef.current) / 1000),
-          },
-          ...prev.slice(0, 2),
-        ])
-      }
-
-      socket.on('quickClash:teamLeftMatchmaking', handleTeamLeftMatchmaking)
-      socket.on(
-        'quickClash:teamReturnedToMatchmaking',
-        handleTeamReturnedToMatchmaking,
-      )
-      socket.on('quickClash:teamJoinedMatchmaking', handleTeamJoinedMatchmaking)
-      socket.on(
-        'quickClash:battleCreationCleanedUp',
-        handleBattleCreationCleanup,
-      )
-
-      return () => {
-        socket.off('quickClash:teamLeftMatchmaking', handleTeamLeftMatchmaking)
-        socket.off(
-          'quickClash:teamReturnedToMatchmaking',
-          handleTeamReturnedToMatchmaking,
-        )
-        socket.off(
-          'quickClash:teamJoinedMatchmaking',
-          handleTeamJoinedMatchmaking,
-        )
-        socket.off(
-          'quickClash:battleCreationCleanedUp',
-          handleBattleCreationCleanup,
-        )
-      }
-    }, [
-      getSocket,
-      inMatchmaking,
-      dispatch,
-      selectedTeamId,
-      user?._id,
-      checkMatchmakingStatus,
-      fetchMyTeams,
-      t,
-      toast,
-    ])
-
     // Handle joining matchmaking
     const handleJoinMatchmaking = useCallback(async () => {
       try {
         mountTimeRef.current = Date.now()
-        setStatusUpdates([
-          {
-            id: Date.now(),
+        dispatch(
+          addStatusUpdate({
             message: t('Joining matchmaking...'),
             time: 0,
-          },
-        ])
+          }),
+        )
 
         if (selectedTeamId) {
           try {
@@ -361,14 +271,12 @@ const GlobalMatchmakingModal = React.memo(
           await joinSoloMatchmaking()
         }
 
-        setStatusUpdates(prev => [
-          {
-            id: Date.now(),
+        dispatch(
+          addStatusUpdate({
             message: t('Successfully joined matchmaking'),
             time: Math.floor((Date.now() - mountTimeRef.current) / 1000),
-          },
-          ...prev.slice(0, 2),
-        ])
+          }),
+        )
       } catch (error) {
         toast({
           title: t('Error Joining Matchmaking'),
@@ -379,16 +287,14 @@ const GlobalMatchmakingModal = React.memo(
           isClosable: true,
         })
         console.error('Error joining matchmaking:', error)
-        setStatusUpdates(prev => [
-          {
-            id: Date.now(),
+        dispatch(
+          addStatusUpdate({
             message: t('Failed to join matchmaking'),
             time: Math.floor((Date.now() - mountTimeRef.current) / 1000),
-          },
-          ...prev.slice(0, 2),
-        ])
+          }),
+        )
       }
-    }, [selectedTeamId, joinWithTeam, joinSoloMatchmaking, t, toast])
+    }, [selectedTeamId, joinWithTeam, joinSoloMatchmaking, t, toast, dispatch])
 
     // Handle leaving matchmaking
     const handleLeaveMatchmaking = useCallback(async () => {
@@ -405,12 +311,19 @@ const GlobalMatchmakingModal = React.memo(
           return
         }
         await leaveMatchmaking()
-        setStatusUpdates([])
+        dispatch(clearStatusUpdates())
         onClose()
       } catch (error) {
         console.error('Error leaving matchmaking:', error)
       }
-    }, [checkCanLeaveMatchmaking, leaveMatchmaking, onClose, toast, t])
+    }, [
+      checkCanLeaveMatchmaking,
+      leaveMatchmaking,
+      onClose,
+      toast,
+      t,
+      dispatch,
+    ])
 
     // Handle retry after failure
     const handleRetryAfterFailure = useCallback(async () => {
@@ -422,7 +335,7 @@ const GlobalMatchmakingModal = React.memo(
           dispatch(clearBattleCreationState())
         }
 
-        setStatusUpdates([])
+        dispatch(clearStatusUpdates())
         mountTimeRef.current = Date.now()
 
         toast({
