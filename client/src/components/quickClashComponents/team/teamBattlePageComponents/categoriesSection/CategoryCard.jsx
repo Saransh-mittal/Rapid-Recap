@@ -22,14 +22,16 @@ import {
   Zap,
   X,
   Lock,
+  Minus,
 } from 'lucide-react'
 
 import CategoryIcon from './CategoryIcon'
 import CategoryStatusBadge from './CategoryStatusBadge'
 import { getCategoryInfo } from './categoryUtils'
+import { getChallengeScoresDisplay } from '../utils/scoreDisplayUtils'
 
 /**
- * Individual Category Card Component with Enhanced Loading States and Fixed Priority Logic
+ * Individual Category Card Component with Enhanced Loading States and Fixed Score Display
  */
 const CategoryCard = memo(
   ({
@@ -105,6 +107,17 @@ const CategoryCard = memo(
       () => getCategoryInfo(challenge.category),
       [challenge.category],
     )
+
+    // Memoized score display information
+    const scoresDisplay = useMemo(() => {
+      if (!userTeam) return null
+
+      return getChallengeScoresDisplay({
+        challenge,
+        userTeam,
+        displayType: 'text',
+      })
+    }, [challenge, userTeam])
 
     // Memoized loading states
     const loadingStates = useMemo(() => {
@@ -511,8 +524,7 @@ const CategoryCard = memo(
                   <CompletedCategoryContent
                     categoryInfo={categoryInfo}
                     challenge={challenge}
-                    userScore={userScore}
-                    opponentScore={opponentScore}
+                    scoresDisplay={scoresDisplay}
                     teammateInfo={teammateInfo}
                     t={t}
                   />
@@ -531,6 +543,7 @@ const CategoryCard = memo(
                     categoryInfo={categoryInfo}
                     challenge={challenge}
                     teammateInfo={teammateInfo}
+                    scoresDisplay={scoresDisplay}
                     t={t}
                   />
                 )
@@ -848,10 +861,53 @@ const CategoryCard = memo(
 )
 
 /**
- * Completed Category Content Layout with Teammate Info
+ * Enhanced Score Display Component
+ */
+const ScoreDisplayBox = memo(({ scoreInfo, label, t }) => (
+  <Tooltip
+    label={scoreInfo.tooltip}
+    placement="top"
+    bg="gray.600"
+    color="white"
+    fontSize="xs"
+    p={2}
+    borderRadius="md"
+  >
+    <Box
+      bg={scoreInfo.bgColor}
+      px={1}
+      py={0.5}
+      borderRadius="sm"
+      minW="18px"
+      textAlign="center"
+      display="flex"
+      alignItems="center"
+      justifyContent="center"
+    >
+      {scoreInfo.isNotAttempted ? (
+        <Icon
+          as={Minus}
+          boxSize={{ base: '8px', sm: '9px', md: '10px' }}
+          color={scoreInfo.color}
+        />
+      ) : (
+        <Text
+          color={scoreInfo.color}
+          fontWeight="bold"
+          fontSize={{ base: '10px', sm: '11px', md: '12px' }}
+        >
+          {scoreInfo.displayValue}
+        </Text>
+      )}
+    </Box>
+  </Tooltip>
+))
+
+/**
+ * Completed Category Content Layout with Enhanced Score Display
  */
 const CompletedCategoryContent = memo(
-  ({ categoryInfo, challenge, userScore, opponentScore, teammateInfo, t }) => (
+  ({ categoryInfo, challenge, scoresDisplay, teammateInfo, t }) => (
     <VStack
       w="full"
       spacing={{ base: 1, sm: 1.5 }}
@@ -902,68 +958,54 @@ const CompletedCategoryContent = memo(
         )}
       </VStack>
 
-      <Box
-        w="full"
-        bg="rgba(15, 23, 42, 0.4)"
-        borderRadius="md"
-        p={{ base: 1, sm: 1.5 }}
-        border="1px solid"
-        borderColor="rgba(16, 185, 129, 0.15)"
-        backdropFilter="blur(3px)"
-        mt="auto"
-      >
-        <HStack
-          spacing={1}
-          alignItems="center"
-          justifyContent="center"
+      {scoresDisplay && (
+        <Box
           w="full"
+          bg="rgba(15, 23, 42, 0.4)"
+          borderRadius="md"
+          p={{ base: 1, sm: 1.5 }}
+          border="1px solid"
+          borderColor="rgba(16, 185, 129, 0.15)"
+          backdropFilter="blur(3px)"
+          mt="auto"
         >
-          <Text
-            color="gray.300"
-            fontWeight="medium"
-            fontSize={{ base: '9px', sm: '10px', md: '11px' }}
-            letterSpacing="0.3px"
+          <HStack
+            spacing={1}
+            alignItems="center"
+            justifyContent="center"
+            w="full"
           >
-            RQM:
-          </Text>
-          <HStack spacing={0.5} alignItems="center">
             <Text
-              color="#10B981"
-              fontWeight="bold"
-              fontSize={{ base: '10px', sm: '11px', md: '12px' }}
-              bg="rgba(16, 185, 129, 0.1)"
-              px={1}
-              py={0.5}
-              borderRadius="sm"
-              minW="18px"
-              textAlign="center"
-            >
-              {userScore !== undefined ? userScore : '-'}
-            </Text>
-            <Text
-              color="gray.400"
-              fontSize={{ base: '8px', sm: '9px', md: '10px' }}
+              color="gray.300"
               fontWeight="medium"
-              mx={0.5}
+              fontSize={{ base: '9px', sm: '10px', md: '11px' }}
+              letterSpacing="0.3px"
             >
-              VS
+              RQM:
             </Text>
-            <Text
-              color="#EF4444"
-              fontWeight="bold"
-              fontSize={{ base: '10px', sm: '11px', md: '12px' }}
-              bg="rgba(239, 68, 68, 0.1)"
-              px={1}
-              py={0.5}
-              borderRadius="sm"
-              minW="18px"
-              textAlign="center"
-            >
-              {opponentScore !== undefined ? opponentScore : '-'}
-            </Text>
+            <HStack spacing={0.5} alignItems="center">
+              <ScoreDisplayBox
+                scoreInfo={scoresDisplay.user}
+                label="You"
+                t={t}
+              />
+              <Text
+                color="gray.400"
+                fontSize={{ base: '8px', sm: '9px', md: '10px' }}
+                fontWeight="medium"
+                mx={0.5}
+              >
+                VS
+              </Text>
+              <ScoreDisplayBox
+                scoreInfo={scoresDisplay.opponent}
+                label="Opponent"
+                t={t}
+              />
+            </HStack>
           </HStack>
-        </HStack>
-      </Box>
+        </Box>
+      )}
     </VStack>
   ),
 )
@@ -1035,10 +1077,10 @@ const ExitedChallengeContent = memo(({ categoryInfo, challenge, t }) => (
 ))
 
 /**
- * Completed by Teammate Content Layout
+ * Completed by Teammate Content Layout with Enhanced Score Display
  */
 const CompletedByTeammateContent = memo(
-  ({ categoryInfo, challenge, teammateInfo, t }) => (
+  ({ categoryInfo, challenge, teammateInfo, scoresDisplay, t }) => (
     <VStack
       w="full"
       spacing={{ base: 1, sm: 1.5 }}
@@ -1089,74 +1131,54 @@ const CompletedByTeammateContent = memo(
         )}
       </VStack>
 
-      <Box
-        w="full"
-        bg="rgba(15, 23, 42, 0.4)"
-        borderRadius="md"
-        p={{ base: 1, sm: 1.5 }}
-        border="1px solid"
-        borderColor="rgba(139, 92, 246, 0.15)"
-        backdropFilter="blur(3px)"
-        mt="auto"
-      >
-        <HStack
-          spacing={1}
-          alignItems="center"
-          justifyContent="center"
+      {scoresDisplay && (
+        <Box
           w="full"
+          bg="rgba(15, 23, 42, 0.4)"
+          borderRadius="md"
+          p={{ base: 1, sm: 1.5 }}
+          border="1px solid"
+          borderColor="rgba(139, 92, 246, 0.15)"
+          backdropFilter="blur(3px)"
+          mt="auto"
         >
-          <Text
-            color="gray.300"
-            fontWeight="medium"
-            fontSize={{ base: '9px', sm: '10px', md: '11px' }}
-            letterSpacing="0.3px"
+          <HStack
+            spacing={1}
+            alignItems="center"
+            justifyContent="center"
+            w="full"
           >
-            RQM:
-          </Text>
-          <HStack spacing={0.5} alignItems="center">
             <Text
-              color="#8B5CF6"
-              fontWeight="bold"
-              fontSize={{ base: '10px', sm: '11px', md: '12px' }}
-              bg="rgba(139, 92, 246, 0.1)"
-              px={1}
-              py={0.5}
-              borderRadius="sm"
-              minW="18px"
-              textAlign="center"
-            >
-              {teammateInfo?.teammateScore !== undefined &&
-              teammateInfo?.teammateScore !== null
-                ? teammateInfo.teammateScore
-                : '-'}
-            </Text>
-            <Text
-              color="gray.400"
-              fontSize={{ base: '8px', sm: '9px', md: '10px' }}
+              color="gray.300"
               fontWeight="medium"
-              mx={0.5}
+              fontSize={{ base: '9px', sm: '10px', md: '11px' }}
+              letterSpacing="0.3px"
             >
-              VS
+              RQM:
             </Text>
-            <Text
-              color="#EF4444"
-              fontWeight="bold"
-              fontSize={{ base: '10px', sm: '11px', md: '12px' }}
-              bg="rgba(239, 68, 68, 0.1)"
-              px={1}
-              py={0.5}
-              borderRadius="sm"
-              minW="18px"
-              textAlign="center"
-            >
-              {teammateInfo?.opponentScore !== undefined &&
-              teammateInfo?.opponentScore !== null
-                ? teammateInfo.opponentScore
-                : '-'}
-            </Text>
+            <HStack spacing={0.5} alignItems="center">
+              <ScoreDisplayBox
+                scoreInfo={scoresDisplay.user}
+                label="Teammate"
+                t={t}
+              />
+              <Text
+                color="gray.400"
+                fontSize={{ base: '8px', sm: '9px', md: '10px' }}
+                fontWeight="medium"
+                mx={0.5}
+              >
+                VS
+              </Text>
+              <ScoreDisplayBox
+                scoreInfo={scoresDisplay.opponent}
+                label="Opponent"
+                t={t}
+              />
+            </HStack>
           </HStack>
-        </HStack>
-      </Box>
+        </Box>
+      )}
     </VStack>
   ),
 )
@@ -1384,6 +1406,7 @@ const ActiveCategoryContent = memo(
 )
 
 // Add display names
+ScoreDisplayBox.displayName = 'ScoreDisplayBox'
 CompletedCategoryContent.displayName = 'CompletedCategoryContent'
 CompletedByTeammateContent.displayName = 'CompletedByTeammateContent'
 ExitedChallengeContent.displayName = 'ExitedChallengeContent'
