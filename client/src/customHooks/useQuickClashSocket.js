@@ -1,7 +1,7 @@
 // customHooks/useQuickClashSocket.js
 import { useCallback, useEffect, useRef } from 'react'
 import { useSocket } from './useSocket'
-import { useDispatch, useSelector } from 'react-redux'
+import { useDispatch, useSelector, useStore } from 'react-redux'
 import { useToast } from '@chakra-ui/react'
 import { useTranslation } from 'react-i18next'
 import { useNavigate } from 'react-router-dom'
@@ -71,6 +71,7 @@ import {
 /**
  * Single, centralized Quick Clash socket manager
  * Handles ALL Quick Clash socket events in one place with one connection
+ * FIXED: Resolves stale state closure issues by accessing current state properly
  */
 const useQuickClashSocket = () => {
   const {
@@ -83,6 +84,7 @@ const useQuickClashSocket = () => {
   } = useSocket()
 
   const dispatch = useDispatch()
+  const store = useStore() // ADD: Get store to access current state
   const navigate = useNavigate()
   const toast = useToast()
   const { t } = useTranslation('QuickClash')
@@ -95,13 +97,20 @@ const useQuickClashSocket = () => {
   // Redux state selectors
   const socketState = useSelector(state => state.quickClashSocket)
   const { user } = useSelector(state => state.auth)
-  const matchmakingState = useSelector(state => state.quickClashMatchmaking)
-  const globalMatchmakingState = useSelector(
-    state => state.quickClashGlobalMatchmaking,
-  )
-  const teamBattleState = useSelector(state => state.quickClashTeamBattle)
 
   const userId = user?._id
+
+  // ADD: Helper function to get current state from store
+  const getCurrentState = useCallback(() => {
+    const state = store.getState()
+    return {
+      matchmakingState: state.quickClashMatchmaking,
+      globalMatchmakingState: state.quickClashGlobalMatchmaking,
+      teamBattleState: state.quickClashTeamBattle,
+      authState: state.auth,
+      appState: state.app,
+    }
+  }, [store])
 
   // Component lifecycle
   useEffect(() => {
@@ -146,15 +155,16 @@ const useQuickClashSocket = () => {
    */
   const logSocketEvent = useCallback(
     (eventName, data) => {
+      const currentState = getCurrentState()
       dispatch(
         addSocketEvent({
           eventName,
           data,
-          userId,
+          userId: currentState.authState.user?._id,
         }),
       )
     },
-    [dispatch, userId],
+    [dispatch, getCurrentState],
   )
 
   /**
@@ -199,6 +209,7 @@ const useQuickClashSocket = () => {
 
   /**
    * Setup all Quick Clash socket listeners in one place
+   * FIXED: Uses getCurrentState() to avoid stale closure issues
    */
   const setupAllSocketListeners = useCallback(() => {
     if (!isSocketReady()) {
@@ -421,8 +432,12 @@ const useQuickClashSocket = () => {
         if (!isComponentMountedRef.current) return
         logSocketEvent('challenge_completed_both', data)
 
+        // FIXED: Get current userId from store instead of stale closure
+        const currentState = getCurrentState()
+        const currentUserId = currentState.authState.user?._id
+
         // Only show notification if this user didn't just complete it
-        if (data.completedByUserId != userId) {
+        if (data.completedByUserId != currentUserId) {
           dispatch(
             addNoteMessageIfAllowed({
               id: uuidv4(),
@@ -544,7 +559,11 @@ const useQuickClashSocket = () => {
         if (!isComponentMountedRef.current) return
         logSocketEvent('challenge_progress', data)
 
-        if (!matchmakingState.preparingChallenge && data.progress > 0) {
+        // FIXED: Get current matchmaking state from store
+        const currentState = getCurrentState()
+        const currentMatchmakingState = currentState.matchmakingState
+
+        if (!currentMatchmakingState.preparingChallenge && data.progress > 0) {
           dispatch(setPreparationProgress(data.progress))
           dispatch(setPreparationStep(data.step || 'contentLoading'))
         } else {
@@ -615,7 +634,11 @@ const useQuickClashSocket = () => {
         if (!isComponentMountedRef.current) return
         logSocketEvent('joined_matchmaking', data)
 
-        if (!matchmakingState.inMatchmaking) {
+        // FIXED: Get current matchmaking state from store
+        const currentState = getCurrentState()
+        const currentMatchmakingState = currentState.matchmakingState
+
+        if (!currentMatchmakingState.inMatchmaking) {
           dispatch(setInMatchmaking(true))
         }
       },
@@ -724,34 +747,69 @@ const useQuickClashSocket = () => {
     )
     cleanupFunctions.push(cleanupTeamBattleCompleted)
 
-    // Team member category selection
+    // FIXED: Team member category selection - using current state
     const cleanupMemberSelectedCategory = addEventListener(
       'quickClash:teamMemberSelectedCategory',
       data => {
         if (!isComponentMountedRef.current) return
         logSocketEvent('member_selected_category', data)
 
+        // FIXED: Get current team battle state from store instead of stale closure
+        const currentState = getCurrentState()
+        const currentTeamBattleState = currentState.teamBattleState
+
+        console.log(
+          '[QC_SOCKET] Current team battle state:',
+          currentTeamBattleState,
+        )
+
         if (
-          teamBattleState.currentBattle &&
-          teamBattleState.currentBattle._id === data.battleId
+          currentTeamBattleState.currentBattle &&
+          currentTeamBattleState.currentBattle._id === data.battleId
         ) {
+          console.log(
+            '[QC_SOCKET] Fetching updated battle details for:',
+            data.battleId,
+          )
           dispatch(fetchTeamBattleDetails(data.battleId))
+        } else {
+          console.log(
+            '[QC_SOCKET] No matching current battle found for category selection',
+          )
         }
       },
     )
     cleanupFunctions.push(cleanupMemberSelectedCategory)
 
+    // FIXED: Team member category deselection - using current state
     const cleanupMemberDeselectedCategory = addEventListener(
       'quickClash:teamMemberDeselectedCategory',
       data => {
         if (!isComponentMountedRef.current) return
         logSocketEvent('member_deselected_category', data)
 
+        // FIXED: Get current team battle state from store instead of stale closure
+        const currentState = getCurrentState()
+        const currentTeamBattleState = currentState.teamBattleState
+
+        console.log(
+          '[QC_SOCKET] Current team battle state:',
+          currentTeamBattleState,
+        )
+
         if (
-          teamBattleState.currentBattle &&
-          teamBattleState.currentBattle._id === data.battleId
+          currentTeamBattleState.currentBattle &&
+          currentTeamBattleState.currentBattle._id === data.battleId
         ) {
+          console.log(
+            '[QC_SOCKET] Fetching updated battle details for:',
+            data.battleId,
+          )
           dispatch(fetchTeamBattleDetails(data.battleId))
+        } else {
+          console.log(
+            '[QC_SOCKET] No matching current battle found for category deselection',
+          )
         }
       },
     )
@@ -794,7 +852,11 @@ const useQuickClashSocket = () => {
         if (!isComponentMountedRef.current) return
         logSocketEvent('team_invitation_accepted', data)
 
-        if (data.userId !== userId) {
+        // FIXED: Get current userId from store instead of stale closure
+        const currentState = getCurrentState()
+        const currentUserId = currentState.authState.user?._id
+
+        if (data.userId !== currentUserId) {
           toast({
             title: t('A new member has joined!'),
             description: `${data.userName} (@${data.userInGameName}) has joined the team`,
@@ -815,7 +877,11 @@ const useQuickClashSocket = () => {
         if (!isComponentMountedRef.current) return
         logSocketEvent('team_invitation_rejected', data)
 
-        if (data.userId !== userId) {
+        // FIXED: Get current userId from store instead of stale closure
+        const currentState = getCurrentState()
+        const currentUserId = currentState.authState.user?._id
+
+        if (data.userId !== currentUserId) {
           toast({
             title: t('Invitation Declined'),
             description: `${data.userName} (@${data.userInGameName}) has declined the invitation`,
@@ -836,7 +902,11 @@ const useQuickClashSocket = () => {
         if (!isComponentMountedRef.current) return
         logSocketEvent('team_member_joined', data)
 
-        if (data.userId !== userId) {
+        // FIXED: Get current userId from store instead of stale closure
+        const currentState = getCurrentState()
+        const currentUserId = currentState.authState.user?._id
+
+        if (data.userId !== currentUserId) {
           toast({
             title: t('New Team Member'),
             description: `${data.userName} (@${data.userInGameName}) has joined your team`,
@@ -856,7 +926,11 @@ const useQuickClashSocket = () => {
         if (!isComponentMountedRef.current) return
         logSocketEvent('team_member_left', data)
 
-        if (data.userId !== userId) {
+        // FIXED: Get current userId from store instead of stale closure
+        const currentState = getCurrentState()
+        const currentUserId = currentState.authState.user?._id
+
+        if (data.userId !== currentUserId) {
           toast({
             title: t('Team Member Left'),
             description: `${data.userName} (@${data.userInGameName}) has left the team`,
@@ -876,7 +950,11 @@ const useQuickClashSocket = () => {
         if (!isComponentMountedRef.current) return
         logSocketEvent('team_member_removed', data)
 
-        if (data.removedMemberId === userId) {
+        // FIXED: Get current userId from store instead of stale closure
+        const currentState = getCurrentState()
+        const currentUserId = currentState.authState.user?._id
+
+        if (data.removedMemberId === currentUserId) {
           toast({
             title: `You have been removed from the team ${data.teamName}`,
             description: t('You can join another team or create your own.'),
@@ -923,7 +1001,11 @@ const useQuickClashSocket = () => {
         if (!isComponentMountedRef.current) return
         logSocketEvent('team_returned_to_matchmaking', data)
 
-        if (user?._id) {
+        // FIXED: Get current user from store instead of stale closure
+        const currentState = getCurrentState()
+        const currentUser = currentState.authState.user
+
+        if (currentUser?._id) {
           // Dispatch Redux action to handle state update
           dispatch(
             handleTeamReturnedToMatchmaking({
@@ -949,7 +1031,11 @@ const useQuickClashSocket = () => {
         if (!isComponentMountedRef.current) return
         logSocketEvent('team_joined_matchmaking', data)
 
-        if (user?._id) {
+        // FIXED: Get current user from store instead of stale closure
+        const currentState = getCurrentState()
+        const currentUser = currentState.authState.user
+
+        if (currentUser?._id) {
           // Dispatch Redux action to handle state update
           dispatch(
             handleTeamJoinedMatchmaking({
@@ -1067,11 +1153,8 @@ const useQuickClashSocket = () => {
     toast,
     t,
     navigate,
-    userId,
-    matchmakingState.preparingChallenge,
-    teamBattleState.currentBattle,
+    getCurrentState, // ADDED: Include getCurrentState in dependencies
     cleanupSocketListeners,
-    user,
   ])
 
   /**
