@@ -110,7 +110,7 @@ const initialState = {
   inMatchmaking: false,
   matchmakingType: null, // 'solo' or 'team'
   selectedTeamId: null,
-  teamName: null, // Add this to store the team name
+  teamName: null,
   step: null,
   matchmakingTime: 0,
 
@@ -132,13 +132,25 @@ const initialState = {
 
   joinType: null, // 'regular', 'solo', or 'sourceTeam'
   originalTeam: null, // Source team details if user was part of a source team
+
+  // Status updates for UI (moved from local state)
+  statusUpdates: [],
+  shouldRefetchTeams: false,
+
+  // UI notification state
+  showToast: null, // { type: 'success'|'error'|'info'|'warning', title: string, description: string }
+
+  // Status check triggers
+  shouldCheckStatus: false, // Flag to trigger status check in hook
 }
 
 const quickClashGlobalMatchmakingSlice = createSlice({
   name: 'quickClashGlobalMatchmaking',
   initialState,
   reducers: {
-    resetGlobalMatchmakingState: () => initialState,
+    resetGlobalMatchmakingState: (state, action) => {
+      return { ...initialState, socketConnected: state.socketConnected }
+    },
     setMatchmakingStep: (state, action) => {
       state.step = action.payload
     },
@@ -198,7 +210,11 @@ const quickClashGlobalMatchmakingSlice = createSlice({
       state.inMatchmaking = false
     },
 
-    // Add these actions to the reducers in quickClashGlobalMatchmakingSlice.js
+    // User/team related actions
+    setSelectedTeamId: (state, action) => {
+      state.selectedTeamId = action.payload
+    },
+
     setJoinType: (state, action) => {
       state.joinType = action.payload
     },
@@ -207,10 +223,6 @@ const quickClashGlobalMatchmakingSlice = createSlice({
       state.originalTeam = action.payload
     },
 
-    // User/team related actions
-    setSelectedTeamId: (state, action) => {
-      state.selectedTeamId = action.payload
-    },
     setTeamMembers: (state, action) => {
       state.teamMembers = action.payload
     },
@@ -218,6 +230,42 @@ const quickClashGlobalMatchmakingSlice = createSlice({
     // Socket connection
     setSocketConnected: (state, action) => {
       state.socketConnected = action.payload
+    },
+
+    // Status updates management
+    addStatusUpdate: (state, action) => {
+      const { message, time } = action.payload
+      state.statusUpdates = [
+        {
+          id: Date.now(),
+          message,
+          time: time || 0,
+        },
+        ...state.statusUpdates.slice(0, 2), // Keep only 3 updates
+      ]
+    },
+
+    clearStatusUpdates: state => {
+      state.statusUpdates = []
+    },
+
+    // Team refetch flag
+    setShouldRefetchTeams: (state, action) => {
+      state.shouldRefetchTeams = action.payload
+    },
+
+    // Status check triggers
+    setShouldCheckStatus: (state, action) => {
+      state.shouldCheckStatus = action.payload
+    },
+
+    // Toast notification management
+    setToastNotification: (state, action) => {
+      state.showToast = action.payload
+    },
+
+    clearToastNotification: state => {
+      state.showToast = null
     },
 
     // Manual state updates (for socket events)
@@ -247,17 +295,90 @@ const quickClashGlobalMatchmakingSlice = createSlice({
       }
     },
 
+    // Socket event handlers
+    handleTeamLeftMatchmaking: (state, action) => {
+      // Reset matchmaking state
+      state.inMatchmaking = false
+      state.matchmakingType = null
+      state.step = null
+      state.matchmakingTime = 0
+      state.battleReady = null
+      state.statusUpdates = []
+    },
+
+    handleTeamReturnedToMatchmaking: (state, action) => {
+      const { startTime } = action.payload || {}
+      state.shouldRefetchTeams = true
+
+      // Add status update
+      const currentTime = startTime
+        ? Math.floor((Date.now() - startTime) / 1000)
+        : 0
+      state.statusUpdates = [
+        {
+          id: Date.now(),
+          message: 'Team returned to matchmaking',
+          time: currentTime,
+        },
+        ...state.statusUpdates.slice(0, 2),
+      ]
+    },
+
+    handleTeamJoinedMatchmaking: (state, action) => {
+      const { startTime } = action.payload || {}
+      state.shouldRefetchTeams = true
+      state.shouldCheckStatus = true // Trigger status check
+
+      // Add status update
+      const currentTime = startTime
+        ? Math.floor((Date.now() - startTime) / 1000)
+        : 0
+      state.statusUpdates = [
+        {
+          id: Date.now(),
+          message: 'Team joined matchmaking successfully',
+          time: currentTime,
+        },
+        ...state.statusUpdates.slice(0, 2),
+      ]
+    },
+
     handleBattleCreationCleanup: (state, action) => {
+      const { message, startTime } = action.payload
+
       // Reset matchmaking state when battle creation fails completely
       state.inMatchmaking = false
       state.matchmakingType = null
       state.battleCreationStatus = 'failed'
       state.battleCreationError =
-        action.payload.message || 'Battle creation failed. Please try again.'
+        message || 'Battle creation failed. Please try again.'
       state.step = null
       state.battleReady = null
+
+      // Set toast notification
+      state.showToast = {
+        type: 'error',
+        title: 'Battle Creation Failed',
+        description:
+          'There was an issue creating your battle. Please try joining matchmaking again.',
+      }
+
+      // Add status update
+      const currentTime = startTime
+        ? Math.floor((Date.now() - startTime) / 1000)
+        : 0
+      state.statusUpdates = [
+        {
+          id: Date.now(),
+          message: 'Battle creation failed. You can try again.',
+          time: currentTime,
+        },
+        ...state.statusUpdates.slice(0, 2),
+      ]
+
       // Keep selectedTeamId so user can retry with same team
     },
+
     clearBattleCreationState: state => {
       state.battleCreationStatus = null
       state.battleCreationError = null
@@ -394,6 +515,15 @@ export const {
   clearBattleCreationError,
   handleBattleCreationCleanup,
   clearBattleCreationState,
+  addStatusUpdate,
+  clearStatusUpdates,
+  setShouldRefetchTeams,
+  setShouldCheckStatus,
+  setToastNotification,
+  clearToastNotification,
+  handleTeamLeftMatchmaking,
+  handleTeamReturnedToMatchmaking,
+  handleTeamJoinedMatchmaking,
 } = quickClashGlobalMatchmakingSlice.actions
 
 export default quickClashGlobalMatchmakingSlice.reducer

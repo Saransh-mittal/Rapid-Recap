@@ -1,5 +1,5 @@
 // components/quickClashComponents/ui/CustomTabs.jsx
-import React, { useState, useCallback, useEffect } from 'react'
+import React, { useState, useCallback, useEffect, useMemo, useRef } from 'react'
 import {
   Box,
   Tabs,
@@ -44,15 +44,138 @@ const ICON_MAP = {
   Users: Users,
 }
 
+// Optimized animation variants - balanced for all devices
+const createIconAnimationVariants = type => {
+  switch (type) {
+    case 'rotate':
+      return { rotate: [0, 15, -15, 0], transition: { duration: 0.4 } }
+    case 'bounce':
+      return { y: [0, -3, 0], transition: { duration: 0.4 } }
+    case 'scale':
+      return { scale: [1, 1.1, 1], transition: { duration: 0.4 } }
+    default:
+      return {}
+  }
+}
+
+// Memoized sparkle component
+const SparkleEffect = React.memo(({ delay = 0 }) => {
+  return (
+    <MotionBox
+      position="absolute"
+      animate={{
+        opacity: [0, 1, 0],
+        scale: [0.5, 1.2, 0.5],
+        rotate: [0, 90, 0],
+      }}
+      transition={{
+        duration: 2,
+        repeat: Infinity,
+        repeatType: 'reverse',
+        delay,
+      }}
+    >
+      <Icon as={Zap} color="white" opacity={0.8} boxSize={3} />
+    </MotionBox>
+  )
+})
+
+// Memoized background glow component
+const BackgroundGlow = React.memo(() => {
+  return (
+    <MotionBox
+      position="absolute"
+      top="0"
+      left="0"
+      right="0"
+      bottom="0"
+      bgGradient="radial(circle at top right, rgba(128, 90, 213, 0.15), transparent 70%)"
+      animate={{
+        opacity: [0.5, 0.8, 0.5],
+      }}
+      transition={{
+        duration: 4,
+        repeat: Infinity,
+        repeatType: 'reverse',
+      }}
+      zIndex="0"
+    />
+  )
+})
+
+// Memoized active indicator component
+const ActiveIndicator = React.memo(({ color, theme }) => {
+  const sparklePositions = useMemo(
+    () => [
+      { top: '10%', right: '10%', delay: 0 },
+      { bottom: '15%', left: '15%', delay: 0.5 },
+    ],
+    [],
+  )
+
+  return (
+    <MotionBox
+      position="absolute"
+      top={0}
+      left={0}
+      right={0}
+      bottom={0}
+      borderRadius="lg"
+      bgGradient={`linear(to-r, ${color.replace('400', '600')}, ${color})`}
+      layoutId="tab-indicator"
+      initial={false}
+      transition={{
+        type: 'tween',
+        duration: 0.2,
+      }}
+      boxShadow={`0 0 15px ${theme.colors[color.split('.')[0]][500]}`}
+      zIndex="-1"
+    >
+      {sparklePositions.map((pos, idx) => (
+        <SparkleEffect
+          key={idx}
+          delay={pos.delay}
+          style={{
+            position: 'absolute',
+            ...pos,
+          }}
+        />
+      ))}
+    </MotionBox>
+  )
+})
+
+// Optimized tab badge component
+const TabBadge = React.memo(({ count }) => {
+  if (count <= 0) return null
+
+  return (
+    <MotionBadge
+      position="absolute"
+      top="-8px"
+      right="-8px"
+      colorScheme="red"
+      borderRadius="full"
+      fontSize="xs"
+      initial={{ scale: 0 }}
+      animate={{
+        scale: [0.8, 1.2, 1],
+        transition: {
+          duration: 0.4,
+          repeat: 3,
+          repeatType: 'reverse',
+          repeatDelay: 5,
+        },
+      }}
+    >
+      {count}
+    </MotionBadge>
+  )
+})
+
 /**
  * Enhanced CustomTabs component for Quick Clash tabs with gamified styling
- * Now supports sub-routes (e.g., #active/1v1, #active/4v4)
- * @param {Object} props - Component props
- * @param {React.ReactNode} props.children - Tab panels
- * @param {number} props.initialTabIndex - Initial active tab index
- * @param {Function} props.onChange - Callback when tab changes
- * @param {Array} props.tabNames - Optional custom tab names
- * @param {Array} props.tabIcons - Optional icon names for tabs
+ * Now supports sub-routes (e.g., #active/1v1, #active/4v4) and optimized performance
  */
 const CustomTabs = ({
   children,
@@ -63,69 +186,71 @@ const CustomTabs = ({
 }) => {
   const { t } = useTranslation('QuickClash')
   const [tabIndex, setTabIndex] = useState(initialTabIndex)
-  const isMobile = useBreakpointValue({ base: true, md: false })
   const theme = useTheme()
+  const hashChangeTimeoutRef = useRef()
 
-  // Get daily tasks progress
-  const { tasks } = useSelector(state => state.quickClashDailyTasks)
-  const pendingTasks = tasks.filter(task => !task.completed)
+  // Fixed: Call useBreakpointValue at the top level
+  const isMobile = useBreakpointValue({ base: true, md: false })
 
-  // Tab data with icons, labels and colors
-  const defaultTabs = [
-    {
-      label: tabNames?.[0] || t('Challenges'),
-      icon: tabIcons[0] ? ICON_MAP[tabIcons[0]] : Swords,
-      ariaLabel: 'active challenges tab',
-      color: 'purple.400',
-      hoverColor: 'purple.300',
-      activeGradient: 'linear(to-r, purple.600, purple.400)',
-      iconAnimation: { rotate: [0, 15, -15, 0], transition: { duration: 0.5 } },
-      hash: 'active',
-    },
-    {
-      label: tabNames?.[1] || t('Tasks'),
-      icon: tabIcons[1] ? ICON_MAP[tabIcons[1]] : Calendar,
-      ariaLabel: 'Daily Tasks tab',
-      color: 'yellow.400',
-      hoverColor: 'yellow.300',
-      activeGradient: 'linear(to-r, yellow.600, yellow.400)',
-      iconAnimation: { y: [0, -3, 0], transition: { duration: 0.5 } },
-      hash: 'tasks',
-    },
-    // New tab for Teams
-    {
-      label: tabNames?.[2] || t('Teams'),
-      icon: tabIcons[2] ? ICON_MAP[tabIcons[2]] : Users,
-      ariaLabel: 'Teams tab',
-      color: 'blue.400',
-      hoverColor: 'blue.300',
-      activeGradient: 'linear(to-r, blue.600, blue.400)',
-      iconAnimation: { scale: [1, 1.1, 1], transition: { duration: 0.5 } },
-      hash: 'teams',
-    },
-  ]
+  // Get daily tasks progress with memoization
+  const pendingTasksCount = useSelector(
+    state =>
+      state.quickClashDailyTasks.tasks.filter(task => !task.completed).length,
+    (prev, next) => prev === next,
+  )
 
-  // Only use tabs that have names provided
-  const tabs = tabNames
-    ? defaultTabs.slice(0, tabNames.length)
-    : defaultTabs.slice(0, 2) // Default to just the first two tabs if no names provided
+  // Memoized tab data
+  const tabs = useMemo(() => {
+    const defaultTabs = [
+      {
+        label: tabNames?.[0] || t('Challenges'),
+        icon: tabIcons[0] ? ICON_MAP[tabIcons[0]] : Swords,
+        ariaLabel: 'active challenges tab',
+        color: 'purple.400',
+        hoverColor: 'purple.300',
+        activeGradient: 'linear(to-r, purple.600, purple.400)',
+        iconAnimation: createIconAnimationVariants('rotate'),
+        hash: 'active',
+      },
+      {
+        label: tabNames?.[1] || t('Tasks'),
+        icon: tabIcons[1] ? ICON_MAP[tabIcons[1]] : Calendar,
+        ariaLabel: 'Daily Tasks tab',
+        color: 'yellow.400',
+        hoverColor: 'yellow.300',
+        activeGradient: 'linear(to-r, yellow.600, yellow.400)',
+        iconAnimation: createIconAnimationVariants('bounce'),
+        hash: 'tasks',
+      },
+      {
+        label: tabNames?.[2] || t('Teams'),
+        icon: tabIcons[2] ? ICON_MAP[tabIcons[2]] : Users,
+        ariaLabel: 'Teams tab',
+        color: 'blue.400',
+        hoverColor: 'blue.300',
+        activeGradient: 'linear(to-r, blue.600, blue.400)',
+        iconAnimation: createIconAnimationVariants('scale'),
+        hash: 'teams',
+      },
+    ]
 
-  // Enhanced hash parsing that supports sub-routes
+    return tabNames
+      ? defaultTabs.slice(0, tabNames.length)
+      : defaultTabs.slice(0, 2)
+  }, [tabNames, tabIcons, t])
+
+  // Enhanced hash parsing with debouncing
   const getTabIndexFromHash = useCallback(hash => {
     if (!hash) return 0
-
-    // Remove # symbol and split by /
     const hashParts = hash.substring(1).split('/')
     const mainRoute = hashParts[0]
-
-    // Find the corresponding tab index for main route
     return HASH_TAB_MAP[mainRoute] !== undefined ? HASH_TAB_MAP[mainRoute] : 0
   }, [])
 
-  // Check URL hash on mount and when hash changes
-  useEffect(() => {
-    const syncTabWithHash = () => {
-      // Get current hash
+  // Debounced hash sync
+  const syncTabWithHash = useCallback(() => {
+    clearTimeout(hashChangeTimeoutRef.current)
+    hashChangeTimeoutRef.current = setTimeout(() => {
       const hash = window.location.hash
       const newIndex = getTabIndexFromHash(hash)
 
@@ -135,8 +260,11 @@ const CustomTabs = ({
           onChange(newIndex)
         }
       }
-    }
+    }, 50) // Debounce for 50ms
+  }, [getTabIndexFromHash, tabIndex, onChange])
 
+  // Check URL hash on mount and when hash changes
+  useEffect(() => {
     // Initial sync on component mount
     syncTabWithHash()
 
@@ -146,10 +274,11 @@ const CustomTabs = ({
     // Cleanup
     return () => {
       window.removeEventListener('hashchange', syncTabWithHash)
+      clearTimeout(hashChangeTimeoutRef.current)
     }
-  }, [onChange, tabIndex, getTabIndexFromHash])
+  }, [syncTabWithHash])
 
-  // Handle tab change
+  // Optimized tab change handler
   const handleTabChange = useCallback(
     index => {
       setTabIndex(index)
@@ -179,6 +308,38 @@ const CustomTabs = ({
     [onChange],
   )
 
+  // Memoized container styles - now using isMobile directly
+  const tabListStyles = useMemo(
+    () => ({
+      bg: 'rgba(20, 15, 35, 0.7)',
+      borderRadius: 'xl',
+      p: 1.5,
+      mb: 5,
+      display: 'flex',
+      justifyContent: 'space-between',
+      boxShadow: '0 4px 20px rgba(0, 0, 0, 0.25)',
+      borderWidth: '1px',
+      borderColor: 'whiteAlpha.100',
+      overflow: 'hidden',
+      position: 'relative',
+    }),
+    [],
+  )
+
+  const tabStyles = useMemo(
+    () => ({
+      flex: 1,
+      py: isMobile ? 3 : 2.5,
+      px: 3,
+      borderRadius: 'lg',
+      position: 'relative',
+      _hover: { color: 'white' },
+      transition: 'all 0.2s',
+      zIndex: '1',
+    }),
+    [isMobile],
+  )
+
   return (
     <Tabs
       index={tabIndex}
@@ -187,51 +348,16 @@ const CustomTabs = ({
       colorScheme="purple"
       isLazy
     >
-      <TabList
-        bg="rgba(20, 15, 35, 0.7)"
-        borderRadius="xl"
-        p={1.5}
-        mb={5}
-        display="flex"
-        justifyContent="space-between"
-        boxShadow="0 4px 20px rgba(0, 0, 0, 0.25)"
-        borderWidth="1px"
-        borderColor="whiteAlpha.100"
-        overflow="hidden"
-        position="relative"
-      >
-        {/* Animated background glow effect */}
-        <MotionBox
-          position="absolute"
-          top="0"
-          left="0"
-          right="0"
-          bottom="0"
-          bgGradient="radial(circle at top right, rgba(128, 90, 213, 0.15), transparent 70%)"
-          animate={{
-            opacity: [0.5, 0.8, 0.5],
-          }}
-          transition={{
-            duration: 4,
-            repeat: Infinity,
-            repeatType: 'reverse',
-          }}
-          zIndex="0"
-        />
+      <TabList {...tabListStyles}>
+        {/* Background glow effect */}
+        <BackgroundGlow />
 
         {tabs.map((tab, idx) => (
           <Tab
             key={idx}
-            flex={1}
-            py={isMobile ? 3 : 2.5}
-            px={3}
-            borderRadius="lg"
-            position="relative"
+            {...tabStyles}
             color={tabIndex === idx ? 'white' : 'whiteAlpha.700'}
-            _hover={{ color: 'white' }}
             aria-label={tab.ariaLabel}
-            transition="all 0.2s"
-            zIndex="1"
           >
             <MotionFlex
               direction={isMobile ? 'column' : 'row'}
@@ -240,10 +366,13 @@ const CustomTabs = ({
               gap={isMobile ? 1.5 : 2}
               animate={tabIndex === idx ? 'active' : 'inactive'}
               variants={{
-                active: { scale: 1.05 },
+                active: { scale: 1.03 },
                 inactive: { scale: 1 },
               }}
-              transition={{ type: 'spring', stiffness: 300, damping: 20 }}
+              transition={{
+                type: 'tween',
+                duration: 0.2,
+              }}
               position="relative"
             >
               <MotionBox
@@ -268,27 +397,8 @@ const CustomTabs = ({
               </Text>
 
               {/* Badge for Daily Tasks */}
-              {tab.label === t('Tasks') && pendingTasks.length > 0 && (
-                <MotionBadge
-                  position="absolute"
-                  top="-8px"
-                  right="-8px"
-                  colorScheme="red"
-                  borderRadius="full"
-                  fontSize="xs"
-                  initial={{ scale: 0 }}
-                  animate={{
-                    scale: [0.8, 1.2, 1],
-                    transition: {
-                      duration: 0.5,
-                      repeat: 3,
-                      repeatType: 'reverse',
-                      repeatDelay: 5,
-                    },
-                  }}
-                >
-                  {pendingTasks.length}
-                </MotionBadge>
+              {tab.label === t('Tasks') && (
+                <TabBadge count={pendingTasksCount} />
               )}
 
               {/* Active indicator dot - shows for active tab only */}
@@ -304,73 +414,17 @@ const CustomTabs = ({
                   bgColor="white"
                   initial={{ opacity: 0, scale: 0 }}
                   animate={{ opacity: 1, scale: 1 }}
-                  transition={{ delay: 0.2 }}
+                  transition={{
+                    delay: 0.1,
+                    duration: 0.2,
+                  }}
                 />
               )}
             </MotionFlex>
 
             {/* Active tab indicator */}
             {tabIndex === idx && (
-              <MotionBox
-                position="absolute"
-                top={0}
-                left={0}
-                right={0}
-                bottom={0}
-                borderRadius="lg"
-                bgGradient={tab.activeGradient}
-                layoutId="tab-indicator"
-                initial={false}
-                transition={{
-                  type: 'spring',
-                  damping: 25,
-                  stiffness: 300,
-                  mass: 1,
-                }}
-                boxShadow={`0 0 15px ${
-                  theme.colors[tab.color.split('.')[0]][500]
-                }`}
-                zIndex="-1"
-              >
-                {/* Animated sparkle effects */}
-                <MotionBox
-                  position="absolute"
-                  top="10%"
-                  right="10%"
-                  animate={{
-                    opacity: [0, 1, 0],
-                    scale: [0.5, 1.2, 0.5],
-                    rotate: [0, 90, 0],
-                  }}
-                  transition={{
-                    duration: 2,
-                    repeat: Infinity,
-                    repeatType: 'reverse',
-                    delay: Math.random(),
-                  }}
-                >
-                  <Icon as={Zap} color="white" opacity={0.8} boxSize={3} />
-                </MotionBox>
-
-                <MotionBox
-                  position="absolute"
-                  bottom="15%"
-                  left="15%"
-                  animate={{
-                    opacity: [0, 1, 0],
-                    scale: [0.5, 1.2, 0.5],
-                    rotate: [0, -90, 0],
-                  }}
-                  transition={{
-                    duration: 2.5,
-                    repeat: Infinity,
-                    repeatType: 'reverse',
-                    delay: Math.random() * 0.5,
-                  }}
-                >
-                  <Icon as={Zap} color="white" opacity={0.8} boxSize={3} />
-                </MotionBox>
-              </MotionBox>
+              <ActiveIndicator color={tab.color} theme={theme} />
             )}
           </Tab>
         ))}
@@ -380,12 +434,15 @@ const CustomTabs = ({
         {React.Children.map(children, (child, idx) => (
           <MotionBox
             key={idx}
-            initial={{ opacity: 0, y: 10 }}
+            initial={{ opacity: 0, y: 8 }}
             animate={{
               opacity: tabIndex === idx ? 1 : 0,
-              y: tabIndex === idx ? 0 : 10,
+              y: tabIndex === idx ? 0 : 8,
             }}
-            transition={{ duration: 0.3 }}
+            transition={{
+              duration: 0.2,
+              ease: 'easeOut',
+            }}
             display={tabIndex === idx ? 'block' : 'none'}
           >
             {child}
@@ -396,4 +453,4 @@ const CustomTabs = ({
   )
 }
 
-export default CustomTabs
+export default React.memo(CustomTabs)

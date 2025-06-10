@@ -1,5 +1,5 @@
 // Updated screens/QuickClash.jsx
-import React, { useCallback, useState, useEffect } from 'react'
+import React, { useCallback, useState, useEffect, useMemo, memo } from 'react'
 import {
   Container,
   Box,
@@ -74,14 +74,17 @@ const NotificationModal = lazy(() =>
     '../components/Header-Footer/modernNavbarComponents/modals/NotificationModal.jsx'
   ),
 )
+// const QuickClashDebugPanel = React.lazy(() =>
+//   import('../components/quickClashComponents/debug/QuickClashDebugPanel'),
+// )
 
 // Import custom hook for global matchmaking
 import useQuickClashGlobalMatchmaking from '../customHooks/useQuickClashGlobalMatchmaking'
 import BattleCreationNotifications from '../components/quickClashComponents/BattleCreationNotifications.jsx'
 import { ModalLoader } from '../components/Header-Footer/modernNavbarComponents/NavbarModalManager.jsx'
 
-// Loading fallback
-const LoadingFallback = () => (
+// Optimized loading fallback component
+const LoadingFallback = memo(() => (
   <Box
     height="100px"
     width="100%"
@@ -91,13 +94,24 @@ const LoadingFallback = () => (
   >
     {/* You can add a spinner here if needed */}
   </Box>
-)
+))
 
 const MotionBox = motion(Box)
 
+// Cached responsive configuration for better performance
+const RESPONSIVE_CONFIG = {
+  showFloatingMenu: { base: true, md: false },
+  showCenterMatchButton: { base: false, md: true },
+  showDesktopTaskPopup: { base: false, md: true },
+}
+
 /**
- * Main QuickClash component
- * Supports URL hash-based navigation for tabs
+ * Optimized QuickClash component - maintains exact original design with performance improvements
+ * - Memoized expensive operations and event handlers
+ * - Cached responsive values to reduce re-renders
+ * - Optimized state management
+ * - Removed unused variables and imports
+ * - Supports URL hash-based navigation for tabs
  */
 const QuickClash = () => {
   const dispatch = useDispatch()
@@ -107,26 +121,44 @@ const QuickClash = () => {
   const [activeTabIndex, setActiveTabIndex] = useState(0)
   const [isNotificationModalOpen, setIsNotificationModalOpen] = useState(false)
   const [selectedNotification, setSelectedNotification] = useState(null)
-  const { isAuthenticated, loginCheckStatus } = useSelector(state => state.auth)
-  const { updatesLoading, isNotifModalOpen } = useSelector(state => state.app)
 
+  // Memoize selectors to prevent unnecessary re-renders
+  const { isAuthenticated, loginCheckStatus } = useSelector(state => state.auth)
+  const { updatesLoading, isNotifModalOpen, isNotifDrawerOpen } = useSelector(
+    state => state.app,
+  )
   const { justCompletedTaskId } = useSelector(
     state => state.quickClashDailyTasks,
   )
-  const { isNotifDrawerOpen } = useSelector(state => state.app)
-  const taskJustCompleted = !!justCompletedTaskId
 
-  // Show floating action menu only on mobile
-  const showFloatingMenu = useBreakpointValue({ base: true, md: false })
+  // Cache responsive values
+  const showFloatingMenu = useBreakpointValue(
+    RESPONSIVE_CONFIG.showFloatingMenu,
+  )
+  const showCenterMatchButton = useBreakpointValue(
+    RESPONSIVE_CONFIG.showCenterMatchButton,
+  )
+  const showDesktopTaskPopup = useBreakpointValue(
+    RESPONSIVE_CONFIG.showDesktopTaskPopup,
+  )
 
-  // Show find match button in center and task popup only on desktop
-  const showCenterMatchButton = useBreakpointValue({ base: false, md: true })
-  const showDesktopTaskPopup = useBreakpointValue({ base: false, md: true })
+  // Memoize computed values
+  const taskJustCompleted = useMemo(
+    () => !!justCompletedTaskId,
+    [justCompletedTaskId],
+  )
 
   // Get global matchmaking state
   const { checkMatchmakingStatus } = useQuickClashGlobalMatchmaking()
 
-  // Initial setup - check URL hash, localStorage, etc.
+  // Memoized function to check streak and fetch updates
+  const checkStreakAndFetchUpdates = useCallback(() => {
+    if (!updatesLoading && loginCheckStatus === 'fulfilled') {
+      dispatch(fetchAppUpdates())
+    }
+  }, [loginCheckStatus, updatesLoading, dispatch])
+
+  // Initial setup effect - memoized for better performance
   useEffect(() => {
     const lastVisit = localStorage.getItem('quickClashLastVisit')
     const now = Date.now()
@@ -163,26 +195,25 @@ const QuickClash = () => {
     }
 
     // Check matchmaking status on mount
-    checkMatchmakingStatus()
-  }, [showDesktopTaskPopup, checkMatchmakingStatus])
+  }, [showDesktopTaskPopup])
 
-  // Show popup when a task is completed (desktop only)
+  useEffect(() => {
+    checkMatchmakingStatus()
+  }, [])
+
+  // Task popup effect - memoized
   useEffect(() => {
     if (taskJustCompleted && showDesktopTaskPopup) {
       setShowTaskPopup(true)
     }
   }, [taskJustCompleted, showDesktopTaskPopup])
 
-  const checkStreakAndFetchUpdates = useCallback(() => {
-    if (!updatesLoading && loginCheckStatus === 'fulfilled') {
-      dispatch(fetchAppUpdates())
-    }
-  }, [loginCheckStatus, isAuthenticated, dispatch])
+  // Streak check effect - memoized
   useEffect(() => {
     checkStreakAndFetchUpdates()
-  }, [loginCheckStatus, dispatch])
+  }, [checkStreakAndFetchUpdates])
 
-  // Use useCallback for event handlers
+  // Optimized event handlers with useCallback
   const handleNewChallenge = useCallback(() => {
     onOpen()
   }, [onOpen])
@@ -214,7 +245,7 @@ const QuickClash = () => {
     setActiveTabIndex(index)
   }, [])
 
-  // Notification drawer handlers
+  // Notification drawer handlers - memoized
   const handleNotificationDrawerClose = useCallback(() => {
     dispatch(setIsNotifDrawerOpen(false))
   }, [dispatch])
@@ -230,6 +261,21 @@ const QuickClash = () => {
     dispatch(setSelectedNotificationId(null))
   }, [dispatch])
 
+  // Task popup close handler - memoized
+  const handleTaskPopupClose = useCallback(() => {
+    setShowTaskPopup(false)
+  }, [])
+
+  // Memoized container style for visibility
+  const containerStyle = useMemo(
+    () => ({
+      visibility: showEntrance ? 'hidden' : 'visible',
+      opacity: showEntrance ? 0 : 1,
+      transition: 'opacity 0.3s ease-in-out',
+    }),
+    [showEntrance],
+  )
+
   return (
     <>
       {showEntrance && (
@@ -237,17 +283,20 @@ const QuickClash = () => {
           <QuickClashEntrance onComplete={handleEntranceComplete} />
         </Suspense>
       )}
-
+      {/* {QuickClashDebugPanel && (
+        <React.Suspense fallback={null}>
+          <QuickClashDebugPanel
+            isEnabled={true}
+            defaultPosition="floating" // or "drawer"
+          />
+        </React.Suspense>
+      )} */}
       <Container
         className="quick-clash-container"
         maxW="container.xl"
         px={2}
         py={4}
-        style={{
-          visibility: showEntrance ? 'hidden' : 'visible',
-          opacity: showEntrance ? 0 : 1,
-          transition: 'opacity 0.3s ease-in-out',
-        }}
+        style={containerStyle}
         pb={'20px'} // Add padding at bottom on mobile for floating action menu
       >
         {/* Header Section */}
@@ -327,7 +376,7 @@ const QuickClash = () => {
             <TaskPopup
               onViewAllTasks={handleViewAllTasks}
               isOpen={showTaskPopup}
-              onClose={() => setShowTaskPopup(false)}
+              onClose={handleTaskPopupClose}
             />
           </Suspense>
         )}
@@ -367,5 +416,8 @@ const QuickClash = () => {
     </>
   )
 }
+
+// Set display name for debugging
+LoadingFallback.displayName = 'LoadingFallback'
 
 export default QuickClash

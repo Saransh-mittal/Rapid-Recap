@@ -19,6 +19,7 @@ import quickClashTeamBattleReducer from './quickClashTeamBattleSlice'
 import quickClashGlobalMatchmakingReducer from './quickClashGlobalMatchmakingSlice'
 import quickClashAnalysisReducer from './quickClashAnalysisSlice'
 import quickClashProfileReducer from './quickClashProfileSlice'
+import quickClashSocketReducer from './quickClashSocketSlice'
 
 export const store = configureStore({
   reducer: {
@@ -42,5 +43,6 @@ export const store = configureStore({
     quickClashGlobalMatchmaking: quickClashGlobalMatchmakingReducer,
     quickClashAnalysis: quickClashAnalysisReducer,
     quickClashProfile: quickClashProfileReducer,
+    quickClashSocket: quickClashSocketReducer,
   },
 })

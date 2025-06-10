@@ -327,7 +327,7 @@ const QuickClashQuiz = ({
       </Suspense>
 
       {/* Navigation controls */}
-      <Flex justify="space-between" mt={8}>
+      <Flex width={'100%'}>
         {currentQuestionIndex < questions.length - 1 ? (
           <Button
             onClick={handleNext}
@@ -335,6 +335,7 @@ const QuickClashQuiz = ({
             rightIcon={<ArrowRight size={16} />}
             isDisabled={!userAnswers[currentQuestionIndex]}
             size="md"
+            ml={'auto'}
           >
             {t('Next')}
           </Button>
@@ -348,6 +349,7 @@ const QuickClashQuiz = ({
             whileHover={{ scale: 1.05 }}
             whileTap={{ scale: 0.95 }}
             size="md"
+            ml={'auto'}
           >
             {t('Submit Answers')}
           </MotionButton>

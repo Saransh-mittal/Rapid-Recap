@@ -96,7 +96,6 @@ import useQuickClash from './customHooks/useQuickClash.js'
 import NotificationReminderModal from './components/miscellaneous/NotificationReminderModal.jsx'
 import useDailyTasks from './customHooks/useDailyTasks.js'
 import { fetchSpecialCategories } from './services/specialCategoryService.js'
-import useSoloQuickClash from './customHooks/useSoloQuickClash.js'
 
 const App = () => {
   // ReactGA.initialize('G-ES5VQ8NW7Z')
@@ -120,13 +119,16 @@ const App = () => {
   } = useRewardsModal()
   const { getSocket } = useSocket()
   const {
-    isListening,
+    isConnected: quickClashSocketConnected,
+    isListening: quickClashSocketListening,
+    isInitialized: quickClashSocketInitialized,
+    rooms: quickClashRooms,
     initializeQuickClashSocket,
     cleanupSocketListeners,
+    getConnectionStatus,
     isSocketReady,
   } = useQuickClashSocket()
-  const { cleanupSocketListeners: cleanupSoloSocketListeners } =
-    useSoloQuickClash()
+
   const { loadActiveChallenges } = useQuickClash()
   const {
     isRegisterOpen,
@@ -247,7 +249,6 @@ const App = () => {
         sessionStorage.removeItem('app_session_id')
       }
       cleanupSocketListeners()
-      cleanupSoloSocketListeners()
     }
   }, [])
 
@@ -400,13 +401,13 @@ const App = () => {
     return () => window.removeEventListener('hashchange', handleHashChange)
   }, [loginCheckStatus, isAuthenticated])
 
-  // Removed duplicate QuickClash socket polling logic - it's now handled in useQuickClashSocket hook
   useEffect(() => {
-    if (isAuthenticated && !isListening && isSocketReady) {
-      // Only initialize if not already listening
+    // Only initialize if user is authenticated, socket is ready, and not already initialized
+    if (isAuthenticated && isSocketReady && !quickClashSocketInitialized) {
+      console.log('[APP] Initializing Quick Clash socket (single connection)')
       initializeQuickClashSocket()
     }
-  }, [isAuthenticated, isListening, isSocketReady])
+  }, [isAuthenticated, isSocketReady, quickClashSocketInitialized]) // FIXED: Stable dependencies
 
   useEffect(() => {
     let timer

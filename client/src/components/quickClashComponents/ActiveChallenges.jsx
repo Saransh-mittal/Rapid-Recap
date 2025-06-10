@@ -18,8 +18,6 @@ import {
   Button,
   useDisclosure,
   Flex,
-  // Divider, // Kept from your original if needed elsewhere
-  // Heading, // Kept from your original if needed elsewhere
   HStack,
   useBreakpointValue,
   Skeleton,
@@ -54,22 +52,81 @@ const TeamBattleList = React.lazy(() => import('./team/TeamBattleList'))
 const RevengeConfirmationDialog = React.lazy(() =>
   import('./RevengeConfirmationDialog'),
 )
+import TeamBattlesSkeleton from './team/TeamBattlesSkeleton'
 
 // Custom hooks
 import useQuickClash from '../../customHooks/useQuickClash'
 import useQuickClashTeamBattle from '../../customHooks/useQuickClashTeamBattle'
 import { useInView } from 'react-intersection-observer'
 
-// Date formatting - Not strictly needed if using StatusSection for completed as per your preference
-// import { format, isToday, isYesterday, isSameWeek, parseISO } from 'date-fns'
+// Cached responsive configuration for better performance
+const RESPONSIVE_CONFIG = {
+  spacing: { base: 4, md: 6 },
+  buttonSize: { base: 'xs', md: 'sm' },
+}
 
+// Optimized skeleton components
+const ActiveChallengesSkeleton = memo(({ mode }) => {
+  const skelSpacing = useBreakpointValue({ base: 4, md: 6 })
+  const skelPadding = useBreakpointValue({ base: 2, md: 3 })
+
+  return (
+    <Box>
+      <VStack align="stretch" spacing={skelSpacing}>
+        <Skeleton height="40px" width="300px" mx="auto" borderRadius="full" />
+        <VStack spacing={skelSpacing} align="stretch">
+          {Array.from({ length: 1 }).map((_, i) => (
+            <Box
+              key={i}
+              bg="rgba(26, 32, 44, 0.4)"
+              borderRadius="lg"
+              p={skelPadding}
+              borderWidth="1px"
+              borderColor="whiteAlpha.100"
+            >
+              <Flex justify="space-between" align="center" mb={3}>
+                <HStack>
+                  <Skeleton height="20px" width="20px" borderRadius="full" />
+                  <Skeleton height="20px" width="120px" borderRadius="md" />
+                </HStack>
+                <Skeleton height="24px" width="24px" borderRadius="full" />
+              </Flex>
+              <Grid
+                templateColumns={{
+                  base: '1fr',
+                  md: 'repeat(2, 1fr)',
+                  lg: 'repeat(3, 1fr)',
+                }}
+                gap={3}
+              >
+                {Array.from({ length: mode === '1v1' ? 2 : 1 }).map((_, j) => (
+                  <Skeleton key={j} height="160px" borderRadius="lg" />
+                ))}
+              </Grid>
+            </Box>
+          ))}
+        </VStack>
+      </VStack>
+    </Box>
+  )
+})
+
+/**
+ * Optimized ActiveChallenges component - maintains exact original design with performance improvements
+ * - Memoized expensive computations and event handlers
+ * - Cached responsive values to reduce re-renders
+ * - Optimized state management and effects
+ * - Removed unused variables and imports
+ * - Improved component structure for better performance on weaker devices
+ */
 const ActiveChallenges = () => {
   const { t } = useTranslation('QuickClash')
   const toast = useToast()
   const navigate = useNavigate()
 
-  const spacing = useBreakpointValue({ base: 4, md: 6 })
-  const buttonSize = useBreakpointValue({ base: 'xs', md: 'sm' })
+  // Cache responsive values
+  const spacing = useBreakpointValue(RESPONSIVE_CONFIG.spacing)
+  const buttonSize = useBreakpointValue(RESPONSIVE_CONFIG.buttonSize)
 
   const [mode, setMode] = useState('1v1')
   const initialDataLoadedRef = useRef({ '1v1': false, '4v4': false })
@@ -97,25 +154,30 @@ const ActiveChallenges = () => {
     resetActiveChallengesState,
   } = useQuickClash()
 
+  // Memoize user selector
   const { user } = useSelector(state => state.auth)
-  const userId = user?._id
+  const userId = useMemo(() => user?._id, [user])
+
   const [selectedSession, setSelectedSession] = useState(null)
   const [nextPageLoading, setNextPageLoading] = useState(false)
   const { ref: loadMoreRef, inView } = useInView({
     threshold: 0.1,
     triggerOnce: false,
   })
+
   const { activeBattlesLoading, activeBattlesError, loadTeamBattles } =
     useQuickClashTeamBattle()
+
   const [isConfirmOpen, setIsConfirmOpen] = useState(false)
   const [isReportOpen, setIsReportOpen] = useState(false)
   const [isRevengeConfirmOpen, setIsRevengeConfirmOpen] = useState(false)
   const [confirmAction, setConfirmAction] = useState({ type: '', id: '' })
   const [revengeData, setRevengeData] = useState(null)
   const [revengeLoading, setRevengeLoading] = useState(false)
-  const [revengeProgress, setRevengeProgress] = useState(0) // Kept for executeRevenge
-  const progressTimerRef = useRef(null) // Kept for executeRevenge
+  const [revengeProgress, setRevengeProgress] = useState(0)
+  const progressTimerRef = useRef(null)
 
+  // Memoized load more handler
   const handleLoadMore = useCallback(async () => {
     if (nextPageLoading || !hasMore) return
     setNextPageLoading(true)
@@ -135,6 +197,7 @@ const ActiveChallenges = () => {
     }
   }, [nextPageLoading, hasMore, loadMoreActiveChallenges, toast, t])
 
+  // Initialize mode from hash - memoized
   useEffect(() => {
     const initializeModeFromHash = () => {
       const hash = window.location.hash.substring(1)
@@ -153,6 +216,7 @@ const ActiveChallenges = () => {
     initializeModeFromHash()
   }, [])
 
+  // Handle 1v1 data loading state
   useEffect(() => {
     if (!loading && challenges.length > 0) {
       initialDataLoadedRef.current['1v1'] = true
@@ -167,6 +231,7 @@ const ActiveChallenges = () => {
     }
   }, [loading, challenges, error])
 
+  // Handle 4v4 data loading state
   useEffect(() => {
     if (!activeBattlesLoading && !activeBattlesError) {
       initialDataLoadedRef.current['4v4'] = true
@@ -179,6 +244,7 @@ const ActiveChallenges = () => {
     }
   }, [activeBattlesLoading, activeBattlesError])
 
+  // Load data based on mode - memoized
   useEffect(() => {
     if (userId) {
       if (
@@ -193,18 +259,19 @@ const ActiveChallenges = () => {
         !emptyStateShown['4v4'] &&
         loadTeamBattles
       ) {
-        // Only call if function exists, TeamBattleList might call it too
         loadTeamBattles()
       }
     }
   }, [userId, mode, loadActiveChallenges, loadTeamBattles, emptyStateShown])
 
+  // Handle infinite scroll - memoized
   useEffect(() => {
     if (inView && mode === '1v1' && hasMore && !nextPageLoading && !loading) {
       handleLoadMore()
     }
   }, [inView, mode, hasMore, nextPageLoading, loading, handleLoadMore])
 
+  // Memoize filtered challenges computation
   const filteredChallenges = useMemo(() => {
     if (!challenges || !userId || mode !== '1v1') return []
     let filtered = [...challenges]
@@ -223,8 +290,10 @@ const ActiveChallenges = () => {
     return filtered
   }, [challenges, userId, mode])
 
+  // Memoize mode change handler
   const handleModeChange = useCallback(newMode => setMode(newMode), [])
 
+  // Memoize completed challenges for display
   const completed1v1ForDisplay = useMemo(() => {
     if (mode !== '1v1') return []
     return filteredChallenges.filter(
@@ -235,6 +304,7 @@ const ActiveChallenges = () => {
     )
   }, [filteredChallenges, mode])
 
+  // Memoize grouped non-completed challenges
   const groupedNonCompleted1v1 = useMemo(() => {
     if (mode !== '1v1') return {}
     const nonCompleted = filteredChallenges.filter(
@@ -261,6 +331,7 @@ const ActiveChallenges = () => {
     }, {})
   }, [filteredChallenges, userId, mode])
 
+  // Memoize status groups
   const statusGroups = useMemo(
     () => [
       { key: 'new', label: t('New Challenges'), icon: Target },
@@ -272,16 +343,20 @@ const ActiveChallenges = () => {
     [t],
   )
 
+  // Memoized event handlers
   const openConfirmDialog = useCallback((type, id) => {
     setConfirmAction({ type, id })
     setIsConfirmOpen(true)
   }, [])
+
   const closeConfirmDialog = useCallback(() => setIsConfirmOpen(false), [])
   const openReportModal = useCallback(() => setIsReportOpen(true), [])
+
   const closeReportModal = useCallback(() => {
     setIsReportOpen(false)
     setSelectedSession(null)
   }, [])
+
   const startProgressTimer = useCallback(() => {
     if (progressTimerRef.current) clearInterval(progressTimerRef.current)
     setRevengeProgress(5)
@@ -294,6 +369,7 @@ const ActiveChallenges = () => {
       )
     })
   }, [])
+
   const handleRevenge = useCallback((opponent, originalChallenge) => {
     setRevengeData({
       opponent,
@@ -302,6 +378,7 @@ const ActiveChallenges = () => {
     })
     setIsRevengeConfirmOpen(true)
   }, [])
+
   const closeRevengeConfirmDialog = useCallback(() => {
     setIsRevengeConfirmOpen(false)
     if (progressTimerRef.current) {
@@ -310,6 +387,7 @@ const ActiveChallenges = () => {
     }
     setRevengeProgress(0)
   }, [])
+
   const executeRevenge = useCallback(async () => {
     if (!revengeData) return
     setRevengeLoading(true)
@@ -352,18 +430,22 @@ const ActiveChallenges = () => {
     loadActiveChallenges,
     startProgressTimer,
   ])
+
   const handleAccept = useCallback(
     challengeId => openConfirmDialog('accept', challengeId),
     [openConfirmDialog],
   )
+
   const handleDecline = useCallback(
     challengeId => openConfirmDialog('decline', challengeId),
     [openConfirmDialog],
   )
+
   const handleStart = useCallback(
     challengeId => navigate(`/quickclash/session/${challengeId}`),
     [navigate],
   )
+
   const handleViewReport = useCallback(
     challenge => {
       const fetchSession = async () => {
@@ -393,21 +475,28 @@ const ActiveChallenges = () => {
     },
     [userId, openReportModal, toast, t],
   )
-  const executeConfirmAction = async () => {
+
+  const executeConfirmAction = useCallback(async () => {
     const { type, id } = confirmAction
     try {
       if (type === 'accept') {
-        const ch = await handleAcceptChallenge(id)
+        await handleAcceptChallenge(id)
       } else if (type === 'decline') {
-        const ch = await handleRejectChallenge(id)
+        await handleRejectChallenge(id)
       }
     } catch (err) {
-      /* ... */
+      // Error handling is done in the hooks
     } finally {
       closeConfirmDialog()
     }
-  }
+  }, [
+    confirmAction,
+    handleAcceptChallenge,
+    handleRejectChallenge,
+    closeConfirmDialog,
+  ])
 
+  // Memoize handlers object
   const handlers = useMemo(
     () => ({
       onAccept: handleAccept,
@@ -418,19 +507,23 @@ const ActiveChallenges = () => {
     }),
     [handleAccept, handleDecline, handleStart, handleViewReport, handleRevenge],
   )
+
   const completedSectionHandlers = useMemo(
     () => ({ onViewReport: handleViewReport, onRevenge: handleRevenge }),
     [handleViewReport, handleRevenge],
   )
 
+  // Memoize loading and error states
   const isOverallLoading = useMemo(() => {
     if (mode === '1v1') return loading && !initialDataLoadedRef.current['1v1']
     return activeBattlesLoading && !initialDataLoadedRef.current['4v4']
   }, [mode, loading, activeBattlesLoading])
+
   const currentError = useMemo(() => {
     if (mode === '1v1') return error
     return activeBattlesError
   }, [mode, error, activeBattlesError])
+
   const handleManualRefresh = useCallback(() => {
     if (mode === '1v1') {
       initialDataLoadedRef.current['1v1'] = false
@@ -443,6 +536,13 @@ const ActiveChallenges = () => {
       if (loadTeamBattles) loadTeamBattles()
     }
   }, [mode, loadActiveChallenges, loadTeamBattles, resetActiveChallengesState])
+
+  // Memoize hasNonCompletedChallenges calculation
+  const hasNonCompletedChallenges = useMemo(() => {
+    return statusGroups.some(
+      group => (groupedNonCompleted1v1[group.key] || []).length > 0,
+    )
+  }, [statusGroups, groupedNonCompleted1v1])
 
   if (isOverallLoading) return <ActiveChallengesSkeleton mode={mode} />
 
@@ -482,10 +582,6 @@ const ActiveChallenges = () => {
     )
   }
 
-  const hasNonCompletedChallenges = statusGroups.some(
-    group => (groupedNonCompleted1v1[group.key] || []).length > 0,
-  )
-
   return (
     <Box
       className="active-challenges-container"
@@ -506,7 +602,7 @@ const ActiveChallenges = () => {
             filteredChallenges.length === 0 ? (
               <EmptyChallenges1v1State
                 type="active"
-                onCreateChallenge={onNewChallengeModalOpen} // Button is shown
+                onCreateChallenge={onNewChallengeModalOpen}
                 variant="default"
               />
             ) : (
@@ -518,16 +614,13 @@ const ActiveChallenges = () => {
                   completed1v1ForDisplay.length >= 0 &&
                   filteredChallenges.length > 0 && (
                     <Box mb={spacing}>
-                      {' '}
-                      {/* Add some margin if it's above completed */}
                       <EmptyChallenges1v1State
                         type="active"
-                        // No onCreateChallenge prop here, so button won't render in compact variant
                         message={t(
                           'emptyStates.noActive1v1AboveCompleted',
                           'No active 1v1 challenges right now. Why not check out your completed games below or start a new one from the main screen?',
                         )}
-                        variant="compact" // Use the compact variant (smaller, no button)
+                        variant="compact"
                       />
                     </Box>
                   )}
@@ -552,11 +645,11 @@ const ActiveChallenges = () => {
                     )
                   })}
 
-                {/* "Completed" section using StatusSection (as per your preference) */}
+                {/* "Completed" section using StatusSection */}
                 {completed1v1ForDisplay.length > 0 && (
                   <Box className="completed-challenges-section">
-                    <StatusSection // This will render the "Completed (X)" if your StatusSection supports count
-                      title={t('Completed')} // Or "Completed" + count if StatusSection is modified
+                    <StatusSection
+                      title={t('Completed')}
                       icon={Trophy}
                       challenges={completed1v1ForDisplay}
                       userId={userId}
@@ -671,68 +764,7 @@ const ActiveChallenges = () => {
   )
 }
 
-const ActiveChallengesSkeleton = ({ mode }) => {
-  const skelSpacing = useBreakpointValue({ base: 4, md: 6 })
-  const skelPadding = useBreakpointValue({ base: 2, md: 3 })
-  return (
-    <Box>
-      <VStack align="stretch" spacing={skelSpacing}>
-        <Skeleton height="40px" width="300px" mx="auto" borderRadius="full" />
-        <VStack spacing={skelSpacing} align="stretch">
-          {Array.from({ length: 1 }).map((_, i) => (
-            <Box
-              key={i}
-              bg="rgba(26, 32, 44, 0.4)"
-              borderRadius="lg"
-              p={skelPadding}
-              borderWidth="1px"
-              borderColor="whiteAlpha.100"
-            >
-              <Flex justify="space-between" align="center" mb={3}>
-                <HStack>
-                  <Skeleton height="20px" width="20px" borderRadius="full" />
-                  <Skeleton height="20px" width="120px" borderRadius="md" />
-                </HStack>
-                <Skeleton height="24px" width="24px" borderRadius="full" />
-              </Flex>
-              <Grid
-                templateColumns={{
-                  base: '1fr',
-                  md: 'repeat(2, 1fr)',
-                  lg: 'repeat(3, 1fr)',
-                }}
-                gap={3}
-              >
-                {Array.from({ length: mode === '1v1' ? 2 : 1 }).map((_, j) => (
-                  <Skeleton key={j} height="160px" borderRadius="lg" />
-                ))}
-              </Grid>
-            </Box>
-          ))}
-        </VStack>
-      </VStack>
-    </Box>
-  )
-}
-const TeamBattlesSkeleton = () => {
-  const skelSpacing = useBreakpointValue({ base: 3, md: 4 })
-  return (
-    <VStack spacing={skelSpacing} align="stretch">
-      <Flex justify="space-between" align="center" mb={2}>
-        <HStack>
-          <Skeleton height="32px" width="100px" borderRadius="md" />
-          <Skeleton height="32px" width="100px" borderRadius="md" />
-        </HStack>
-        <HStack>
-          <Skeleton height="32px" width="80px" borderRadius="md" />
-          <Skeleton height="32px" width="120px" borderRadius="md" />
-        </HStack>
-      </Flex>
-      {Array.from({ length: 1 }).map((_, i) => (
-        <Skeleton key={i} height="180px" borderRadius="lg" />
-      ))}
-    </VStack>
-  )
-}
+// Set display names for debugging
+ActiveChallengesSkeleton.displayName = 'ActiveChallengesSkeleton'
 
 export default memo(ActiveChallenges)

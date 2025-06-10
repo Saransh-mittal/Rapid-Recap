@@ -16,7 +16,11 @@ export const addNoteMessageIfAllowed = createAsyncThunk(
 
     if (
       !needsOnboarding &&
-      !window.location.pathname.startsWith('/quickclash/session')
+      !window.location.pathname.startsWith('/quickclash/session') &&
+      !(
+        messageData?.messageType === 'tournament' &&
+        window.location.pathname.startsWith('/quickclash')
+      )
     ) {
       dispatch(addNoteMessage(messageData))
     }
