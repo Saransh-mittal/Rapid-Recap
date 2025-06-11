@@ -81,7 +81,7 @@ const BattleResultsBanner = ({ analysis, userIsWinner, isTie, userId }) => {
             ? 'linear-gradient(to right, rgba(72, 187, 120, 0.25), rgba(72, 187, 120, 0.1))'
             : isTie
             ? 'linear-gradient(to right, rgba(90, 103, 216, 0.25), rgba(90, 103, 216, 0.1))'
-            : 'linear-gradient(to right, rgba(160, 174, 192, 0.25), rgba(160, 174, 192, 0.1))'
+            : 'linear-gradient(to right, rgba(194, 26, 17, 0.25), rgba(235, 98, 80, 0.1))'
         }
         borderRadius="lg"
         p={3}
