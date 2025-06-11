@@ -1566,7 +1566,7 @@ const validateUserChallengeAssignment = async ({
 }
 
 /**
- * Update team battle with quiz results
+ * Update team battle with quiz results - WITH RETRY LOGIC
  * @param {Object} params - Parameters
  * @param {string} params.battleId - Team battle ID
  * @param {string} params.challengeId - Challenge ID
@@ -1574,259 +1574,342 @@ const validateUserChallengeAssignment = async ({
  * @param {number} params.score - User's score
  * @returns {Promise<Object>} Updated team battle
  */
-const updateBattleWithQuizResults = async ({
-  battleId,
-  challengeId,
-  userId,
-  score,
-}) => {
-  const session = await mongoose.startSession()
+const updateBattleWithQuizResults = makeRetryable(
+  async ({ battleId, challengeId, userId, score }) => {
+    const session = await mongoose.startSession()
 
-  try {
-    return await session.withTransaction(async () => {
-      // Find the team battle
-      const battle = await QuickClashTeamBattle.findById(battleId).session(
-        session,
-      )
+    try {
+      return await session.withTransaction(async () => {
+        console.log(
+          `[updateBattleWithQuizResults] Processing quiz results - Battle: ${battleId}, Challenge: ${challengeId}, User: ${userId}, Score: ${score}`,
+        )
 
-      if (!battle) {
-        throw new Error('Team battle not found')
-      }
+        // Find the team battle
+        const battle = await QuickClashTeamBattle.findById(battleId).session(
+          session,
+        )
 
-      // Find the challenge
-      const challengeIndex = battle.challenges.findIndex(
-        c => c.challenge && c.challenge.toString() === challengeId.toString(),
-      )
+        if (!battle) {
+          throw new Error('Team battle not found')
+        }
 
-      if (challengeIndex === -1) {
-        throw new Error('Challenge not found in this battle')
-      }
+        // Find the challenge
+        const challengeIndex = battle.challenges.findIndex(
+          c => c.challenge && c.challenge.toString() === challengeId.toString(),
+        )
 
-      // Find if user is in team A or B
-      const isTeamAUser = battle.teamAMembers.some(
-        m => m.user.toString() === userId.toString(),
-      )
-      const isTeamBUser = battle.teamBMembers.some(
-        m => m.user.toString() === userId.toString(),
-      )
+        if (challengeIndex === -1) {
+          throw new Error('Challenge not found in this battle')
+        }
 
-      if (!isTeamAUser && !isTeamBUser) {
-        throw new Error('User is not a member of either team')
-      }
-
-      // Update the member and challenge data
-      if (isTeamAUser) {
-        // Update team A member
-        const memberIndex = battle.teamAMembers.findIndex(
+        // Find if user is in team A or B
+        const isTeamAUser = battle.teamAMembers.some(
+          m => m.user.toString() === userId.toString(),
+        )
+        const isTeamBUser = battle.teamBMembers.some(
           m => m.user.toString() === userId.toString(),
         )
 
-        if (memberIndex !== -1) {
-          battle.teamAMembers[memberIndex].completed = true
-          battle.teamAMembers[memberIndex].score = score
+        if (!isTeamAUser && !isTeamBUser) {
+          throw new Error('User is not a member of either team')
         }
 
-        // Update challenge
-        battle.challenges[challengeIndex].teamAScore = score
-        battle.challenges[challengeIndex].teamACompleted = true
-      } else {
-        // Update team B member
-        const memberIndex = battle.teamBMembers.findIndex(
-          m => m.user.toString() === userId.toString(),
-        )
+        // Update the member and challenge data
+        if (isTeamAUser) {
+          // Update team A member
+          const memberIndex = battle.teamAMembers.findIndex(
+            m => m.user.toString() === userId.toString(),
+          )
 
-        if (memberIndex !== -1) {
-          battle.teamBMembers[memberIndex].completed = true
-          battle.teamBMembers[memberIndex].score = score
-        }
+          if (memberIndex !== -1) {
+            battle.teamAMembers[memberIndex].completed = true
+            battle.teamAMembers[memberIndex].score = score
+          }
 
-        // Update challenge
-        battle.challenges[challengeIndex].teamBScore = score
-        battle.challenges[challengeIndex].teamBCompleted = true
-      }
-
-      // If both teams completed this challenge, determine the winner
-      if (
-        battle.challenges[challengeIndex].teamACompleted &&
-        battle.challenges[challengeIndex].teamBCompleted
-      ) {
-        const teamAScore = battle.challenges[challengeIndex].teamAScore
-        const teamBScore = battle.challenges[challengeIndex].teamBScore
-
-        if (teamAScore > teamBScore) {
-          battle.challenges[challengeIndex].winner = 'teamA'
-          battle.teamAWins += 1
-        } else if (teamBScore > teamAScore) {
-          battle.challenges[challengeIndex].winner = 'teamB'
-          battle.teamBWins += 1
+          // Update challenge
+          battle.challenges[challengeIndex].teamAScore = score
+          battle.challenges[challengeIndex].teamACompleted = true
         } else {
-          battle.challenges[challengeIndex].winner = 'tie'
-          battle.ties += 1
+          // Update team B member
+          const memberIndex = battle.teamBMembers.findIndex(
+            m => m.user.toString() === userId.toString(),
+          )
+
+          if (memberIndex !== -1) {
+            battle.teamBMembers[memberIndex].completed = true
+            battle.teamBMembers[memberIndex].score = score
+          }
+
+          // Update challenge
+          battle.challenges[challengeIndex].teamBScore = score
+          battle.challenges[challengeIndex].teamBCompleted = true
         }
-      }
 
-      // Update total scores
-      battle.teamATotalScore = battle.teamAMembers.reduce(
-        (sum, member) => sum + member.score,
-        0,
-      )
+        // If both teams completed this challenge, determine the winner
+        if (
+          battle.challenges[challengeIndex].teamACompleted &&
+          battle.challenges[challengeIndex].teamBCompleted
+        ) {
+          const teamAScore = battle.challenges[challengeIndex].teamAScore
+          const teamBScore = battle.challenges[challengeIndex].teamBScore
 
-      battle.teamBTotalScore = battle.teamBMembers.reduce(
-        (sum, member) => sum + member.score,
-        0,
-      )
+          if (teamAScore > teamBScore) {
+            battle.challenges[challengeIndex].winner = 'teamA'
+            battle.teamAWins += 1
+          } else if (teamBScore > teamAScore) {
+            battle.challenges[challengeIndex].winner = 'teamB'
+            battle.teamBWins += 1
+          } else {
+            battle.challenges[challengeIndex].winner = 'tie'
+            battle.ties += 1
+          }
+        }
 
-      // Check if battle is completed (all challenges have a winner or time expired)
-      const allChallengesCompleted = battle.challenges.every(
-        c => c.teamACompleted && c.teamBCompleted,
-      )
+        // Update total scores
+        battle.teamATotalScore = battle.teamAMembers.reduce(
+          (sum, member) => sum + member.score,
+          0,
+        )
 
-      // Calculate remaining time
-      const now = new Date()
-      const timeRemaining = battle.expiresAt - now
+        battle.teamBTotalScore = battle.teamBMembers.reduce(
+          (sum, member) => sum + member.score,
+          0,
+        )
 
-      // Mark as completed if:
-      // 1. All challenges are completed, OR
-      // 2. Time expired AND at least one team has completed one challenge
-      const shouldComplete =
-        allChallengesCompleted ||
-        (timeRemaining <= 0 &&
-          (battle.challenges.some(c => c.teamACompleted) ||
-            battle.challenges.some(c => c.teamBCompleted)))
+        // Check if battle is completed (all challenges have a winner or time expired)
+        const allChallengesCompleted = battle.challenges.every(
+          c => c.teamACompleted && c.teamBCompleted,
+        )
 
-      if (shouldComplete) {
-        battle.status = 'completed'
+        // Calculate remaining time
+        const now = new Date()
+        const timeRemaining = battle.expiresAt - now
 
-        // UPDATED: Count wins for challenges with only one team completed
-        let teamAWins = 0
-        let teamBWins = 0
-        let ties = 0
+        // Mark as completed if:
+        // 1. All challenges are completed, OR
+        // 2. Time expired AND at least one team has completed one challenge
+        const shouldComplete =
+          allChallengesCompleted ||
+          (timeRemaining <= 0 &&
+            (battle.challenges.some(c => c.teamACompleted) ||
+              battle.challenges.some(c => c.teamBCompleted)))
 
-        // Recalculate wins/losses for all challenges using corrected logic
-        battle.challenges.forEach(challenge => {
-          if (challenge.teamACompleted && challenge.teamBCompleted) {
-            // Both teams completed - compare scores
-            if (challenge.teamAScore > challenge.teamBScore) {
+        if (shouldComplete) {
+          battle.status = 'completed'
+
+          // UPDATED: Count wins for challenges with only one team completed
+          let teamAWins = 0
+          let teamBWins = 0
+          let ties = 0
+
+          // Recalculate wins/losses for all challenges using corrected logic
+          battle.challenges.forEach(challenge => {
+            if (challenge.teamACompleted && challenge.teamBCompleted) {
+              // Both teams completed - compare scores
+              if (challenge.teamAScore > challenge.teamBScore) {
+                teamAWins++
+                challenge.winner = 'teamA'
+              } else if (challenge.teamBScore > challenge.teamAScore) {
+                teamBWins++
+                challenge.winner = 'teamB'
+              } else {
+                ties++
+                challenge.winner = 'tie'
+              }
+            } else if (challenge.teamACompleted && !challenge.teamBCompleted) {
+              // Only team A completed - they win
               teamAWins++
               challenge.winner = 'teamA'
-            } else if (challenge.teamBScore > challenge.teamAScore) {
+            } else if (!challenge.teamACompleted && challenge.teamBCompleted) {
+              // Only team B completed - they win
               teamBWins++
               challenge.winner = 'teamB'
             } else {
+              // Neither team completed - count as tie
               ties++
               challenge.winner = 'tie'
             }
-          } else if (challenge.teamACompleted && !challenge.teamBCompleted) {
-            // Only team A completed - they win
-            teamAWins++
-            challenge.winner = 'teamA'
-          } else if (!challenge.teamACompleted && challenge.teamBCompleted) {
-            // Only team B completed - they win
-            teamBWins++
-            challenge.winner = 'teamB'
-          } else {
-            // Neither team completed - count as tie
-            ties++
-            challenge.winner = 'tie'
-          }
-        })
+          })
 
-        // Update the counters in battle
-        battle.teamAWins = teamAWins
-        battle.teamBWins = teamBWins
-        battle.ties = ties
+          // Update the counters in battle
+          battle.teamAWins = teamAWins
+          battle.teamBWins = teamBWins
+          battle.ties = ties
 
-        // Determine overall winner
-        if (teamAWins > teamBWins) {
-          battle.winner = 'teamA'
-        } else if (teamBWins > teamAWins) {
-          battle.winner = 'teamB'
-        } else if (battle.teamATotalScore > battle.teamBTotalScore) {
-          // Tiebreaker 1: Higher total RQM score
-          battle.winner = 'teamA'
-        } else if (battle.teamBTotalScore > battle.teamATotalScore) {
-          battle.winner = 'teamB'
-        } else {
-          // Tiebreaker 2: Highest individual RQM score
-          const teamAHighestScore = Math.max(
-            ...battle.teamAMembers.map(m => m.score || 0),
-            0, // Default to 0 if no scores
-          )
-          const teamBHighestScore = Math.max(
-            ...battle.teamBMembers.map(m => m.score || 0),
-            0, // Default to 0 if no scores
-          )
-
-          if (teamAHighestScore > teamBHighestScore) {
+          // Determine overall winner
+          if (teamAWins > teamBWins) {
             battle.winner = 'teamA'
-          } else if (teamBHighestScore > teamAHighestScore) {
+          } else if (teamBWins > teamAWins) {
+            battle.winner = 'teamB'
+          } else if (battle.teamATotalScore > battle.teamBTotalScore) {
+            // Tiebreaker 1: Higher total RQM score
+            battle.winner = 'teamA'
+          } else if (battle.teamBTotalScore > battle.teamATotalScore) {
             battle.winner = 'teamB'
           } else {
-            battle.winner = 'tie'
+            // Tiebreaker 2: Highest individual RQM score
+            const teamAHighestScore = Math.max(
+              ...battle.teamAMembers.map(m => m.score || 0),
+              0, // Default to 0 if no scores
+            )
+            const teamBHighestScore = Math.max(
+              ...battle.teamBMembers.map(m => m.score || 0),
+              0, // Default to 0 if no scores
+            )
+
+            if (teamAHighestScore > teamBHighestScore) {
+              battle.winner = 'teamA'
+            } else if (teamBHighestScore > teamAHighestScore) {
+              battle.winner = 'teamB'
+            } else {
+              battle.winner = 'tie'
+            }
           }
+
+          // Calculate and apply trophy bonuses
+          const didTeamAWinAll = battle.teamAWins === battle.challenges.length
+
+          // Mark bonus flags
+          battle.allMatchesWon = didTeamAWinAll
+
+          // Calculate final trophies
+          await calculateFinalTrophies(battle, session)
+
+          // Mark teams as no longer in match
+          if (battle.teamA) {
+            await updateTeamMatchStatus({
+              teamId: battle.teamA,
+              isInMatch: false,
+              session,
+            })
+          }
+
+          if (battle.teamB) {
+            await updateTeamMatchStatus({
+              teamId: battle.teamB,
+              isInMatch: false,
+              session,
+            })
+          }
+
+          console.log(
+            `[updateBattleWithQuizResults] Battle completed - Winner: ${battle.winner}`,
+          )
+
+          // Emit event after all processing
+          setTimeout(() => {
+            globalEmitter.emit('quickClash:teamBattleCompleted', {
+              battleId: battle._id,
+              winner: battle.winner,
+              teamA: battle.teamA,
+              teamB: battle.teamB,
+            })
+          }, 0)
+        } else {
+          console.log(
+            `[updateBattleWithQuizResults] Quiz completed but battle continues`,
+          )
+
+          setTimeout(() => {
+            globalEmitter.emit('quickClash:teamBattleQuizCompleted', {
+              battleId: battle._id,
+              userId: userId,
+              score: score,
+              challengeId: challengeId,
+              allTeamMembers: [
+                ...battle.teamAMembers.map(member => member.user.toString()),
+                ...battle.teamBMembers.map(member => member.user.toString()),
+              ],
+            })
+          }, 100)
         }
 
-        // Calculate and apply trophy bonuses
-        const didTeamAWinAll = battle.teamAWins === battle.challenges.length
+        await battle.save({ session })
 
-        // Mark bonus flags
-        battle.allMatchesWon = didTeamAWinAll
+        console.log(
+          `[updateBattleWithQuizResults] Successfully updated battle with quiz results`,
+        )
+        return battle
+      })
+    } catch (error) {
+      console.error('Error updating battle with quiz results:', error)
+      throw error
+    } finally {
+      session.endSession()
+    }
+  },
+  {
+    maxRetries: 3,
+    operationName: 'UpdateBattleWithQuizResults',
+    initialDelay: 1000,
+    maxDelay: 5000,
+    onRetry: (error, attempt) => {
+      console.warn(
+        `[updateBattleWithQuizResults] Retry attempt ${attempt}/3 after error: ${error.message}`,
+      )
+    },
+    onAllRetriesFailed: async (
+      error,
+      { battleId, challengeId, userId, score },
+    ) => {
+      console.error(
+        `[updateBattleWithQuizResults] All retries failed for battle ${battleId}, challenge ${challengeId}, user ${userId}`,
+      )
 
-        // Calculate final trophies
-        await calculateFinalTrophies(battle, session)
+      // Log the failed update for manual recovery if needed
+      console.error(`[updateBattleWithQuizResults] Failed update data:`, {
+        battleId,
+        challengeId,
+        userId,
+        score,
+        timestamp: new Date().toISOString(),
+        finalError: error.message,
+      })
 
-        // Mark teams as no longer in match
-        if (battle.teamA) {
-          await updateTeamMatchStatus({
-            teamId: battle.teamA,
-            isInMatch: false,
-            session,
-          })
-        }
-
-        if (battle.teamB) {
-          await updateTeamMatchStatus({
-            teamId: battle.teamB,
-            isInMatch: false,
-            session,
-          })
-        }
-
-        // Emit event after all processing
+      // Try to emit a failure notification to users
+      try {
         setTimeout(() => {
-          globalEmitter.emit('quickClash:teamBattleCompleted', {
-            battleId: battle._id,
-            winner: battle.winner,
-            teamA: battle.teamA,
-            teamB: battle.teamB,
+          globalEmitter.emit('quickClash:teamBattleUpdateFailed', {
+            battleId,
+            userId,
+            challengeId,
+            error: 'Quiz results could not be saved after multiple attempts',
           })
         }, 0)
-      } else {
-        setTimeout(() => {
-          globalEmitter.emit('quickClash:teamBattleQuizCompleted', {
-            battleId: battle._id,
-            userId: userId,
-            score: score,
-            challengeId: challengeId,
-            allTeamMembers: [
-              ...battle.teamAMembers.map(member => member.user.toString()),
-              ...battle.teamBMembers.map(member => member.user.toString()),
-            ],
-          })
-        }, 100)
+      } catch (emitError) {
+        console.error(
+          `[updateBattleWithQuizResults] Failed to emit error notification:`,
+          emitError,
+        )
       }
 
-      await battle.save({ session })
+      // Create a more user-friendly error message
+      const finalError = new Error(
+        'Your quiz results could not be saved after multiple attempts. Please contact support to ensure your progress is recorded.',
+      )
+      finalError.isRetryExhausted = true
+      finalError.originalError = error
+      finalError.battleId = battleId
+      finalError.challengeId = challengeId
+      finalError.userId = userId
+      throw finalError
+    },
+    // Custom retry condition
+    isRetryable: error => {
+      // Don't retry validation errors
+      if (
+        error.message.includes('Team battle not found') ||
+        error.message.includes('Challenge not found in this battle') ||
+        error.message.includes('User is not a member of either team')
+      ) {
+        return false
+      }
 
-      return battle
-    })
-  } catch (error) {
-    console.error('Error updating battle with quiz results:', error)
-    throw error
-  } finally {
-    session.endSession()
-  }
-}
+      // Use default retry logic for other errors (database errors, network issues, etc.)
+      return true
+    },
+  },
+)
 
 /**
  * Get user's active team battles

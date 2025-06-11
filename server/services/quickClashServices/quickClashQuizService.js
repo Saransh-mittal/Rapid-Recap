@@ -4,6 +4,7 @@ const QuickClashSession = require('../../model/quickClashSchemas/quickClashSessi
 const QuickClashQuiz = require('../../model/quickClashSchemas/quickClashQuizSchema')
 const { calculateRQMScore } = require('../../utils/quiz.utils')
 const { updateChallengeScore } = require('./quickClashChallengeService')
+const { makeRetryable } = require('../../utils/retryUtils') // ADD THIS IMPORT
 
 /**
  * Get quiz questions for a session
@@ -172,194 +173,249 @@ const getQuizQuestions = async ({ sessionId }) => {
 }
 
 /**
- * Submit quiz answers and calculate score
+ * Submit quiz answers and calculate score - WITH RETRY LOGIC
  * @param {Object} params - Parameters
  * @param {string} params.sessionId - Session ID
  * @param {Array} params.responses - User responses
  * @param {mongoose.ClientSession} [params.session] - Optional Mongoose session
  * @returns {Promise<Object>} Quiz submission result
  */
-const submitQuizAnswersService = async ({
-  sessionId,
-  responses,
-  session: mongoSession,
-}) => {
-  const session = mongoSession || (await mongoose.startSession())
-  let startedTransaction = false
+const submitQuizAnswersService = makeRetryable(
+  async ({ sessionId, responses, session: mongoSession }) => {
+    const session = mongoSession || (await mongoose.startSession())
+    let startedTransaction = false
 
-  try {
-    if (!mongoSession) {
-      await session.startTransaction()
-      startedTransaction = true
-    }
-
-    const quizSession = await QuickClashSession.findById(sessionId)
-      .populate('quiz')
-      .session(session)
-
-    if (!quizSession) {
-      console.error(
-        `[submitQuizAnswersService] Quiz session not found for ID: ${sessionId}`,
-      )
-      throw new Error('Quiz session not found')
-    }
-
-    if (quizSession.phase !== 'quiz') {
-      console.error(
-        `[submitQuizAnswersService] Invalid session phase: ${quizSession.phase}`,
-      )
-      throw new Error(`Invalid session phase: ${quizSession.phase}`)
-    }
-
-    // CRITICAL: Only process the questions that were actually shown to the user
-    const selectedQuestionIds =
-      quizSession.quizAttempt.selectedQuestionIds || []
-    if (!selectedQuestionIds.length) {
-      throw new Error('No selected questions found for this session')
-    }
-
-    // Filter responses to only include selected questions
-    const filteredResponses = responses.filter(response =>
-      selectedQuestionIds.includes(response.questionId.toString()),
-    )
-
-    // Validate responses against the correct answers from the quiz
-    const validatedResponses = filteredResponses.map(response => {
-      const question = quizSession.quiz.questions.find(
-        q => q._id.toString() === response.questionId.toString(),
-      )
-
-      if (!question) {
-        console.error(
-          `[submitQuizAnswersService] Question not found: ${response.questionId}`,
-        )
-        throw new Error(`Question not found: ${response.questionId}`)
+    try {
+      if (!mongoSession) {
+        await session.startTransaction()
+        startedTransaction = true
       }
 
-      // Check answer against the answer key, considering shuffled options
-      const mapping =
-        quizSession.quizAttempt.answerMappings?.[response.questionId.toString()]
-
-      // If there's a mapping and the answer matches the new answer, it's correct
-      // This handles the option shuffling we did when sending questions
-      const isCorrect = mapping
-        ? response.answer === mapping.newAnswer
-        : response.answer === question.answer
-
-      return {
-        questionId: response.questionId,
-        userAnswer: response.answer,
-        isCorrect,
-        timeSpent: response.timeSpent || 0,
-      }
-    })
-
-    // Calculate time taken
-    const now = new Date()
-    const quizTimeSpent =
-      validatedResponses.reduce(
-        (total, response) => total + response.timeSpent,
-        0,
-      ) ||
-      (quizSession.quizAttempt.startTime
-        ? Math.floor((now - quizSession.quizAttempt.startTime) / 1000)
-        : 0)
-
-    // Get only the selected questions for RQM calculation
-    const selectedQuestions = quizSession.quiz.questions.filter(question =>
-      selectedQuestionIds.includes(question._id.toString()),
-    )
-
-    // Calculate RQM score using the same function as regular quizzes
-    // IMPORTANT: Only pass the selected questions and their responses
-    const rqmResult = calculateRQMScore(
-      validatedResponses,
-      selectedQuestions,
-      quizTimeSpent,
-      null, // No boosts in QuickClash
-    )
-
-    const RQM_score = rqmResult.RQM_score
-    const baseRQM_score = rqmResult.baseRQM_score || RQM_score
-
-    // Update session
-    quizSession.quizAttempt.responses = validatedResponses
-    quizSession.quizAttempt.timeSpent = quizTimeSpent
-    quizSession.quizAttempt.completed = true
-    quizSession.quizAttempt.endTime = now
-    quizSession.phase = 'completed'
-    quizSession.score = {
-      RQM_score,
-      baseRQM_score,
-      total: RQM_score,
-    }
-
-    await quizSession.save({ session })
-
-    // Update challenge score along with attempted status, regardless of score value
-    await updateChallengeScore({
-      challengeId: quizSession.challenge,
-      userId: quizSession.user,
-      score: RQM_score,
-      session,
-    })
-
-    if (startedTransaction) {
-      await session.commitTransaction()
-    }
-
-    // Calculate accuracy score as a string (e.g., "3/5")
-    const correctCount = validatedResponses.filter(r => r.isCorrect).length
-    const totalCount = validatedResponses.length
-    const scoreString = `${correctCount}/${totalCount}`
-
-    // Calculate difficulty level based on the quiz's overall difficulty
-    const difficulty =
-      quizSession.quiz.overallDifficulty < 0.5
-        ? 'easy'
-        : quizSession.quiz.overallDifficulty >= 0.5 &&
-          quizSession.quiz.overallDifficulty < 0.7
-        ? 'medium'
-        : 'hard'
-
-    const result = {
-      message: 'Attempt saved successfully',
-      RQM_score,
-      nonBoostedRQM: RQM_score, // Same as RQM_score since no boosts in QuickClash
-      baseRQM_score,
-      boost: 1, // No boosts applied
-      isBoosted: false,
-      quizDifficulty: difficulty,
-      timeTaken: quizTimeSpent,
-      score: scoreString,
-      pastRQMs: [], // No past RQMs in QuickClash context
-      xpAwarded: 5, // Basic XP for completion
-      quinBoostUtilized: false,
-      messageForTournamentEligibility: '',
-      userEligibleForTournament: false,
-      performanceBonus: 1,
-      timeDilationBoosted: false,
-      pauseRealTimeIQ: true, // Don't affect real-time IQ in QuickClash
-      completed: true,
-      responses: validatedResponses,
-    }
-
-    return result
-  } catch (error) {
-    console.error(`[submitQuizAnswersService] Error: ${error.message}`, error)
-    if (startedTransaction) {
       console.log(
-        `[submitQuizAnswersService] Aborting transaction due to error`,
+        `[submitQuizAnswersService] Processing quiz submission for session: ${sessionId}`,
       )
-      await session.abortTransaction()
+
+      const quizSession = await QuickClashSession.findById(sessionId)
+        .populate('quiz')
+        .session(session)
+
+      if (!quizSession) {
+        console.error(
+          `[submitQuizAnswersService] Quiz session not found for ID: ${sessionId}`,
+        )
+        throw new Error('Quiz session not found')
+      }
+
+      if (quizSession.phase !== 'quiz') {
+        console.error(
+          `[submitQuizAnswersService] Invalid session phase: ${quizSession.phase}`,
+        )
+        throw new Error(`Invalid session phase: ${quizSession.phase}`)
+      }
+
+      // CRITICAL: Only process the questions that were actually shown to the user
+      const selectedQuestionIds =
+        quizSession.quizAttempt.selectedQuestionIds || []
+      if (!selectedQuestionIds.length) {
+        throw new Error('No selected questions found for this session')
+      }
+
+      // Filter responses to only include selected questions
+      const filteredResponses = responses.filter(response =>
+        selectedQuestionIds.includes(response.questionId.toString()),
+      )
+
+      // Validate responses against the correct answers from the quiz
+      const validatedResponses = filteredResponses.map(response => {
+        const question = quizSession.quiz.questions.find(
+          q => q._id.toString() === response.questionId.toString(),
+        )
+
+        if (!question) {
+          console.error(
+            `[submitQuizAnswersService] Question not found: ${response.questionId}`,
+          )
+          throw new Error(`Question not found: ${response.questionId}`)
+        }
+
+        // Check answer against the answer key, considering shuffled options
+        const mapping =
+          quizSession.quizAttempt.answerMappings?.[
+            response.questionId.toString()
+          ]
+
+        // If there's a mapping and the answer matches the new answer, it's correct
+        // This handles the option shuffling we did when sending questions
+        const isCorrect = mapping
+          ? response.answer === mapping.newAnswer
+          : response.answer === question.answer
+
+        return {
+          questionId: response.questionId,
+          userAnswer: response.answer,
+          isCorrect,
+          timeSpent: response.timeSpent || 0,
+        }
+      })
+
+      // Calculate time taken
+      const now = new Date()
+      const quizTimeSpent =
+        validatedResponses.reduce(
+          (total, response) => total + response.timeSpent,
+          0,
+        ) ||
+        (quizSession.quizAttempt.startTime
+          ? Math.floor((now - quizSession.quizAttempt.startTime) / 1000)
+          : 0)
+
+      // Get only the selected questions for RQM calculation
+      const selectedQuestions = quizSession.quiz.questions.filter(question =>
+        selectedQuestionIds.includes(question._id.toString()),
+      )
+
+      // Calculate RQM score using the same function as regular quizzes
+      // IMPORTANT: Only pass the selected questions and their responses
+      const rqmResult = calculateRQMScore(
+        validatedResponses,
+        selectedQuestions,
+        quizTimeSpent,
+        null, // No boosts in QuickClash
+      )
+
+      const RQM_score = rqmResult.RQM_score
+      const baseRQM_score = rqmResult.baseRQM_score || RQM_score
+
+      // Update session
+      quizSession.quizAttempt.responses = validatedResponses
+      quizSession.quizAttempt.timeSpent = quizTimeSpent
+      quizSession.quizAttempt.completed = true
+      quizSession.quizAttempt.endTime = now
+      quizSession.phase = 'completed'
+      quizSession.score = {
+        RQM_score,
+        baseRQM_score,
+        total: RQM_score,
+      }
+
+      await quizSession.save({ session })
+
+      // Update challenge score along with attempted status, regardless of score value
+      await updateChallengeScore({
+        challengeId: quizSession.challenge,
+        userId: quizSession.user,
+        score: RQM_score,
+        session,
+      })
+
+      if (startedTransaction) {
+        await session.commitTransaction()
+      }
+
+      console.log(
+        `[submitQuizAnswersService] Successfully processed quiz submission for session: ${sessionId}`,
+      )
+
+      // Calculate accuracy score as a string (e.g., "3/5")
+      const correctCount = validatedResponses.filter(r => r.isCorrect).length
+      const totalCount = validatedResponses.length
+      const scoreString = `${correctCount}/${totalCount}`
+
+      // Calculate difficulty level based on the quiz's overall difficulty
+      const difficulty =
+        quizSession.quiz.overallDifficulty < 0.5
+          ? 'easy'
+          : quizSession.quiz.overallDifficulty >= 0.5 &&
+            quizSession.quiz.overallDifficulty < 0.7
+          ? 'medium'
+          : 'hard'
+
+      const result = {
+        message: 'Attempt saved successfully',
+        RQM_score,
+        nonBoostedRQM: RQM_score, // Same as RQM_score since no boosts in QuickClash
+        baseRQM_score,
+        boost: 1, // No boosts applied
+        isBoosted: false,
+        quizDifficulty: difficulty,
+        timeTaken: quizTimeSpent,
+        score: scoreString,
+        pastRQMs: [], // No past RQMs in QuickClash context
+        xpAwarded: 5, // Basic XP for completion
+        quinBoostUtilized: false,
+        messageForTournamentEligibility: '',
+        userEligibleForTournament: false,
+        performanceBonus: 1,
+        timeDilationBoosted: false,
+        pauseRealTimeIQ: true, // Don't affect real-time IQ in QuickClash
+        completed: true,
+        responses: validatedResponses,
+      }
+
+      return result
+    } catch (error) {
+      console.error(`[submitQuizAnswersService] Error: ${error.message}`, error)
+      if (startedTransaction) {
+        console.log(
+          `[submitQuizAnswersService] Aborting transaction due to error`,
+        )
+        await session.abortTransaction()
+      }
+      throw error
+    } finally {
+      if (!mongoSession && startedTransaction) {
+        session.endSession()
+      }
     }
-    throw error
-  } finally {
-    if (!mongoSession && startedTransaction) {
-      session.endSession()
-    }
-  }
-}
+  },
+  {
+    maxRetries: 3,
+    operationName: 'SubmitQuizAnswers',
+    initialDelay: 1000,
+    maxDelay: 5000,
+    onRetry: (error, attempt) => {
+      console.warn(
+        `[submitQuizAnswersService] Retry attempt ${attempt}/3 after error: ${error.message}`,
+      )
+    },
+    onAllRetriesFailed: async (error, { sessionId, responses }) => {
+      console.error(
+        `[submitQuizAnswersService] All retries failed for session ${sessionId}`,
+      )
+
+      // Log the failed submission for manual recovery if needed
+      console.error(`[submitQuizAnswersService] Failed submission data:`, {
+        sessionId,
+        responseCount: responses?.length || 0,
+        timestamp: new Date().toISOString(),
+        finalError: error.message,
+      })
+
+      // Create a more user-friendly error message
+      const finalError = new Error(
+        'Quiz submission failed after multiple attempts. Please try again or contact support if the issue persists.',
+      )
+      finalError.isRetryExhausted = true
+      finalError.originalError = error
+      finalError.sessionId = sessionId
+      throw finalError
+    },
+    // Custom retry condition
+    isRetryable: error => {
+      // Don't retry validation errors
+      if (
+        error.message.includes('Quiz session not found') ||
+        error.message.includes('Invalid session phase') ||
+        error.message.includes('Question not found')
+      ) {
+        return false
+      }
+
+      // Use default retry logic for other errors
+      return true
+    },
+  },
+)
 
 /**
  * Get detailed quiz report for a completed session

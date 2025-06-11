@@ -1,5 +1,11 @@
-// components/quickClashComponents/ReadingPhase.jsx
-import React, { useState, useEffect, useRef } from 'react'
+import React, {
+  useState,
+  useEffect,
+  useRef,
+  useCallback,
+  useMemo,
+  memo,
+} from 'react'
 import {
   Box,
   Heading,
@@ -25,6 +31,8 @@ import {
   Clock,
 } from 'lucide-react'
 import MainArticleContent from '../articleComponents/MainArticleContent'
+
+// Image imports
 import world from '/images/quickclash/world_quickclash.webp'
 import politics from '/images/quickclash/politics_quickclash.webp'
 import tech from '/images/quickclash/technology_quickclash.webp'
@@ -46,40 +54,39 @@ const MotionButton = motion(Button)
 const MotionBadge = motion(Badge)
 const MotionText = motion(Text)
 
-// Function to get the appropriate image based on category
-const getCategoryImage = category => {
-  if (!category) return null
-
-  const categoryLower = category.toLowerCase()
-
-  const categoryImageMap = {
-    world: world,
-    politics: politics,
-    technology: tech,
-    science: science,
-    health: health,
-    business: business,
-    sports: sports,
-    entertainment: entertainment,
-    education: education,
-    lifestyle: lifestyle,
-    environment: environment,
-    food: food,
-    tourism: tourism,
-    crime: crime,
-  }
-
-  return categoryImageMap[categoryLower] || special
+// Memoized category image mapping
+const CATEGORY_IMAGE_MAP = {
+  world: world,
+  politics: politics,
+  technology: tech,
+  science: science,
+  health: health,
+  business: business,
+  sports: sports,
+  entertainment: entertainment,
+  education: education,
+  lifestyle: lifestyle,
+  environment: environment,
+  food: food,
+  tourism: tourism,
+  crime: crime,
 }
 
-// Format time display as MM:SS
+// Memoized category image getter
+const getCategoryImage = category => {
+  if (!category) return null
+  const categoryLower = category.toLowerCase()
+  return CATEGORY_IMAGE_MAP[categoryLower] || special
+}
+
+// ORIGINAL FORMAT TIME FUNCTION - PRESERVED
 const formatTime = seconds => {
   const minutes = Math.floor(seconds / 60)
   const remainingSeconds = seconds % 60
   return `${minutes}:${remainingSeconds.toString().padStart(2, '0')}`
 }
 
-// Get button styling based on time remaining and scroll status
+// ORIGINAL BUTTON STYLES FUNCTION - PRESERVED
 const getButtonStyles = (timeLeft, hasScrolledToBottom) => {
   // Base styles that apply in all cases
   const baseStyles = {
@@ -157,6 +164,463 @@ const getButtonStyles = (timeLeft, hasScrolledToBottom) => {
   }
 }
 
+// Memoized timer component - ORIGINAL LOGIC PRESERVED
+const FloatingTimer = memo(({ timeLeft, getTimerGradient }) => {
+  return (
+    <MotionBox
+      position="fixed"
+      top="10px"
+      right="20px"
+      zIndex={100}
+      initial={{ opacity: 0, y: -10 }}
+      animate={{ opacity: 1, y: 0 }}
+      transition={{ duration: 0.3 }}
+    >
+      {/* Pulsing Background Effect */}
+      {timeLeft <= 30 && (
+        <MotionBox
+          position="absolute"
+          top="-2px"
+          left="-2px"
+          right="-2px"
+          bottom="-2px"
+          borderRadius="full"
+          bg={
+            timeLeft <= 10
+              ? 'rgba(254, 78, 78, 0.2)'
+              : 'rgba(254, 178, 78, 0.2)'
+          }
+          initial={{ scale: 1 }}
+          animate={{
+            scale: [1, 1.4, 1],
+            opacity: [0.6, 0.2, 0.6],
+            transition: {
+              duration: timeLeft <= 10 ? 0.8 : 1.2,
+              repeat: Infinity,
+              repeatType: 'reverse',
+            },
+          }}
+        />
+      )}
+
+      <MotionBadge
+        p={3}
+        borderRadius="full"
+        display="flex"
+        alignItems="center"
+        gap={2}
+        boxShadow={
+          timeLeft <= 10
+            ? '0 0 15px rgba(255, 59, 48, 0.5)'
+            : timeLeft <= 30
+            ? '0 0 10px rgba(255, 149, 0, 0.4)'
+            : '0 4px 10px rgba(0, 0, 0, 0.3)'
+        }
+        bg={getTimerGradient()}
+        color="white"
+        fontWeight="bold"
+        initial={{ scale: 1 }}
+        animate={
+          timeLeft <= 10
+            ? {
+                scale: [1, 1.08, 1],
+                transition: {
+                  duration: 0.5,
+                  repeat: Infinity,
+                  repeatType: 'reverse',
+                },
+              }
+            : timeLeft <= 30
+            ? {
+                scale: [1, 1.04, 1],
+                transition: {
+                  duration: 1,
+                  repeat: Infinity,
+                  repeatType: 'reverse',
+                },
+              }
+            : {}
+        }
+      >
+        <Icon as={Clock} className={timeLeft <= 10 ? 'ticker-icon' : ''} />
+        <Text fontWeight="bold">{formatTime(timeLeft)}</Text>
+
+        {/* Additional indicator for critical time */}
+        {timeLeft <= 10 && (
+          <Box
+            as="span"
+            w="8px"
+            h="8px"
+            borderRadius="full"
+            bg="red.100"
+            ml="1"
+            className="blinker"
+          />
+        )}
+
+        <style jsx>{`
+          .ticker-icon {
+            animation: tick 0.5s linear infinite;
+          }
+          @keyframes tick {
+            0% {
+              transform: scale(1);
+            }
+            50% {
+              transform: scale(1.2);
+            }
+            100% {
+              transform: scale(1);
+            }
+          }
+          .blinker {
+            animation: blink 0.7s ease-in-out infinite;
+          }
+          @keyframes blink {
+            0% {
+              opacity: 0.2;
+            }
+            50% {
+              opacity: 1;
+            }
+            100% {
+              opacity: 0.2;
+            }
+          }
+        `}</style>
+      </MotionBadge>
+    </MotionBox>
+  )
+})
+FloatingTimer.displayName = 'FloatingTimer'
+
+// Memoized progress indicator
+const ProgressIndicator = memo(
+  ({ scrollPercentage, hasScrolledToBottom, t }) => {
+    return (
+      <>
+        <Tooltip
+          label={
+            hasScrolledToBottom
+              ? t('Article fully read!')
+              : `${Math.round(scrollPercentage)}% ${t('read')}`
+          }
+          placement="top"
+        >
+          <Box w="100%" position="relative">
+            <Box
+              w="100%"
+              h="4px"
+              bg="whiteAlpha.200"
+              borderRadius="full"
+              overflow="hidden"
+            >
+              <Box
+                h="100%"
+                w={`${scrollPercentage}%`}
+                bg={hasScrolledToBottom ? 'green.400' : 'purple.400'}
+                borderRadius="full"
+                transition="width 0.2s, background-color 0.3s"
+              />
+            </Box>
+          </Box>
+        </Tooltip>
+
+        <Text
+          fontSize="sm"
+          color={hasScrolledToBottom ? 'green.300' : 'whiteAlpha.600'}
+        >
+          {hasScrolledToBottom
+            ? t('Article fully read!')
+            : `${Math.round(scrollPercentage)}% ${t('read')}`}
+        </Text>
+      </>
+    )
+  },
+)
+ProgressIndicator.displayName = 'ProgressIndicator'
+
+// Memoized complete button with all its complex styling - ORIGINAL LOGIC PRESERVED
+const CompleteButton = memo(
+  ({
+    timeLeft,
+    hasScrolledToBottom,
+    onComplete,
+    completeReadingLoading,
+    getButtonStyles,
+    t,
+  }) => {
+    return (
+      <Box position="relative" w="100%" maxW="400px" mx="auto">
+        {/* Circular progress indicator */}
+        {hasScrolledToBottom && (
+          <MotionBox
+            position="absolute"
+            top="-5px"
+            left="-5px"
+            right="-5px"
+            bottom="-5px"
+            borderRadius="lg"
+            border="2px solid"
+            borderColor={
+              timeLeft <= 10
+                ? 'red.400'
+                : timeLeft <= 30
+                ? 'orange.400'
+                : 'green.400'
+            }
+            opacity={0.7}
+            initial={{ opacity: 0, scale: 0.9 }}
+            animate={{
+              opacity: [0.4, 0.9, 0.4],
+              scale: [0.99, 1.01, 0.99],
+              transition: {
+                duration: timeLeft <= 10 ? 0.8 : timeLeft <= 30 ? 1.5 : 3,
+                repeat: Infinity,
+                repeatType: 'reverse',
+              },
+            }}
+            pointerEvents="none"
+          />
+        )}
+
+        {/* Timer circles that appear when time is running low */}
+        {hasScrolledToBottom && timeLeft <= 30 && (
+          <>
+            <MotionBox
+              position="absolute"
+              top="50%"
+              left="0"
+              width="12px"
+              height="12px"
+              ml="-6px"
+              mt="-6px"
+              borderRadius="full"
+              bg={timeLeft <= 10 ? 'red.400' : 'orange.400'}
+              initial={{ opacity: 0 }}
+              animate={{
+                opacity: [1, 0.4, 1],
+                scale: [0.8, 1.2, 0.8],
+                transition: {
+                  duration: 1,
+                  repeat: Infinity,
+                  repeatType: 'loop',
+                },
+              }}
+            />
+            <MotionBox
+              position="absolute"
+              top="50%"
+              right="0"
+              width="12px"
+              height="12px"
+              mr="-6px"
+              mt="-6px"
+              borderRadius="full"
+              bg={timeLeft <= 10 ? 'red.400' : 'orange.400'}
+              initial={{ opacity: 0 }}
+              animate={{
+                opacity: [1, 0.4, 1],
+                scale: [0.8, 1.2, 0.8],
+                transition: {
+                  duration: 1,
+                  repeat: Infinity,
+                  repeatType: 'loop',
+                  delay: 0.5,
+                },
+              }}
+            />
+          </>
+        )}
+
+        {/* Main Button with dynamic styling */}
+        <MotionButton
+          disabled={!hasScrolledToBottom}
+          size="lg"
+          leftIcon={
+            timeLeft <= 10 ? <Clock className="pulse-icon" /> : <CheckCircle2 />
+          }
+          onClick={onComplete}
+          isLoading={completeReadingLoading}
+          loadingText={t('Completing...')}
+          initial={{ scale: 1 }}
+          whileHover={{ scale: 1.05, y: -2 }}
+          whileTap={{ scale: 0.95 }}
+          animate={
+            timeLeft <= 10
+              ? {
+                  scale: [1, 1.05, 1],
+                  boxShadow: [
+                    '0 0 10px rgba(255, 59, 48, 0.4)',
+                    '0 0 20px rgba(255, 59, 48, 0.7)',
+                    '0 0 10px rgba(255, 59, 48, 0.4)',
+                  ],
+                  transition: {
+                    duration: 0.6,
+                    repeat: Infinity,
+                    repeatType: 'reverse',
+                  },
+                }
+              : timeLeft <= 30
+              ? {
+                  y: [0, -2, 0],
+                  transition: {
+                    duration: 1.5,
+                    repeat: Infinity,
+                    repeatType: 'reverse',
+                  },
+                }
+              : {}
+          }
+          {...getButtonStyles(timeLeft, hasScrolledToBottom)}
+          position="relative"
+          overflow="hidden"
+        >
+          {/* Dynamic countdown indicator */}
+          {hasScrolledToBottom && timeLeft <= 30 && (
+            <Box
+              position="absolute"
+              top="0"
+              left="0"
+              height="100%"
+              bg="whiteAlpha.200"
+              width={`${(timeLeft / 120) * 100}%`}
+              transition="width 1s linear"
+              zIndex={0}
+            />
+          )}
+
+          {/* Button text with time countdown for low time */}
+          <HStack
+            position="relative"
+            zIndex={1}
+            spacing={timeLeft <= 30 ? 3 : 2}
+          >
+            {timeLeft <= 10 ? (
+              <MotionText
+                fontWeight="bold"
+                animate={{
+                  scale: [1, 1.1, 1],
+                  transition: {
+                    duration: 0.5,
+                    repeat: Infinity,
+                    repeatType: 'reverse',
+                  },
+                }}
+              >
+                {t('Complete Now!')} ({timeLeft}s)
+              </MotionText>
+            ) : timeLeft <= 30 ? (
+              <Text fontWeight="bold">
+                {t('Complete Reading')} ({timeLeft}s)
+              </Text>
+            ) : hasScrolledToBottom ? (
+              <Text fontWeight="bold">{t('Complete Reading')}</Text>
+            ) : (
+              <Text fontWeight="bold">{t('Continue Reading')}</Text>
+            )}
+          </HStack>
+
+          {/* Animated particles for urgent countdown (only when time is critical) */}
+          {hasScrolledToBottom && timeLeft <= 10 && (
+            <>
+              <Box
+                position="absolute"
+                top="50%"
+                left="15%"
+                width="5px"
+                height="5px"
+                borderRadius="full"
+                bg="red.200"
+                animation="particle1 2s infinite"
+              />
+              <Box
+                position="absolute"
+                top="20%"
+                right="30%"
+                width="3px"
+                height="3px"
+                borderRadius="full"
+                bg="orange.200"
+                animation="particle2 1.5s infinite"
+              />
+              <style jsx>{`
+                @keyframes particle1 {
+                  0% {
+                    transform: translate(0, 0);
+                    opacity: 0;
+                  }
+                  50% {
+                    opacity: 1;
+                  }
+                  100% {
+                    transform: translate(-15px, -15px);
+                    opacity: 0;
+                  }
+                }
+                @keyframes particle2 {
+                  0% {
+                    transform: translate(0, 0);
+                    opacity: 0;
+                  }
+                  50% {
+                    opacity: 1;
+                  }
+                  100% {
+                    transform: translate(10px, -20px);
+                    opacity: 0;
+                  }
+                }
+                .pulse-icon {
+                  animation: pulse-icon 1s infinite;
+                }
+                @keyframes pulse-icon {
+                  0% {
+                    transform: scale(1);
+                  }
+                  50% {
+                    transform: scale(1.2);
+                  }
+                  100% {
+                    transform: scale(1);
+                  }
+                }
+              `}</style>
+            </>
+          )}
+        </MotionButton>
+
+        {/* Button glow effect when time is critical */}
+        {hasScrolledToBottom && timeLeft <= 10 && (
+          <MotionBox
+            position="absolute"
+            top="0"
+            left="0"
+            right="0"
+            bottom="0"
+            pointerEvents="none"
+            bg="transparent"
+            borderRadius="lg"
+            animate={{
+              boxShadow: [
+                '0 0 20px 5px rgba(255, 86, 48, 0.2)',
+                '0 0 30px 10px rgba(255, 86, 48, 0.4)',
+                '0 0 20px 5px rgba(255, 86, 48, 0.2)',
+              ],
+              transition: {
+                duration: 0.8,
+                repeat: Infinity,
+                repeatType: 'reverse',
+              },
+            }}
+          />
+        )}
+      </Box>
+    )
+  },
+)
+CompleteButton.displayName = 'CompleteButton'
+
 const ReadingPhase = ({
   article,
   timeLeft,
@@ -172,7 +636,7 @@ const ReadingPhase = ({
   const [showHint, setShowHint] = useState(false)
   const maxWidth = useBreakpointValue({ base: '100%', md: '800px' })
 
-  // Get color values for gradient effects
+  // Get color values for gradient effects (memoized)
   const [red400, orange400, yellow400, green400, blue400, purple400] = useToken(
     'colors',
     [
@@ -185,15 +649,8 @@ const ReadingPhase = ({
     ],
   )
 
-  // Determine timer color based on remaining time
-  const getTimerColorScheme = () => {
-    if (timeLeft <= 10) return 'red'
-    if (timeLeft <= 30) return 'orange'
-    return 'blue'
-  }
-
-  // Get gradient background for the timer based on remaining time
-  const getTimerGradient = () => {
+  // ORIGINAL TIMER GRADIENT FUNCTION - PRESERVED
+  const getTimerGradient = useCallback(() => {
     if (timeLeft <= 10) {
       return `linear-gradient(90deg, ${red400}, ${orange400})`
     } else if (timeLeft <= 30) {
@@ -203,12 +660,12 @@ const ReadingPhase = ({
     } else {
       return `linear-gradient(90deg, ${blue400}, ${purple400})`
     }
-  }
+  }, [timeLeft, red400, orange400, yellow400, green400, blue400, purple400])
 
-  // Get the appropriate image for the category
-  const categoryImage = getCategoryImage(category)
+  // Memoized category image
+  const categoryImage = useMemo(() => getCategoryImage(category), [category])
 
-  // Calculate scroll percentage based on window scroll position
+  // ORIGINAL SCROLL HANDLING LOGIC - PRESERVED
   useEffect(() => {
     const handleScroll = () => {
       if (!articleRef.current) return
@@ -237,7 +694,7 @@ const ReadingPhase = ({
     return () => window.removeEventListener('scroll', handleScroll)
   }, [])
 
-  // Show a hint after 30 seconds if user hasn't scrolled much
+  // ORIGINAL HINT LOGIC - PRESERVED
   useEffect(() => {
     const hintTimer = setTimeout(() => {
       if (scrollPercentage < 30 && !hasScrolledToBottom) {
@@ -255,130 +712,8 @@ const ReadingPhase = ({
       transition={{ duration: 0.3 }}
       w="100%"
     >
-      {/* Floating Timer - Always visible with dynamic styling */}
-      <MotionBox
-        position="fixed"
-        top="10px"
-        right="20px"
-        zIndex={100}
-        initial={{ opacity: 0, y: -10 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ duration: 0.3 }}
-      >
-        {/* Pulsing Background Effect */}
-        {timeLeft <= 30 && (
-          <MotionBox
-            position="absolute"
-            top="-2px"
-            left="-2px"
-            right="-2px"
-            bottom="-2px"
-            borderRadius="full"
-            bg={
-              timeLeft <= 10
-                ? 'rgba(254, 78, 78, 0.2)'
-                : 'rgba(254, 178, 78, 0.2)'
-            }
-            initial={{ scale: 1 }}
-            animate={{
-              scale: [1, 1.4, 1],
-              opacity: [0.6, 0.2, 0.6],
-              transition: {
-                duration: timeLeft <= 10 ? 0.8 : 1.2,
-                repeat: Infinity,
-                repeatType: 'reverse',
-              },
-            }}
-          />
-        )}
-
-        <MotionBadge
-          p={3}
-          borderRadius="full"
-          display="flex"
-          alignItems="center"
-          gap={2}
-          boxShadow={
-            timeLeft <= 10
-              ? '0 0 15px rgba(255, 59, 48, 0.5)'
-              : timeLeft <= 30
-              ? '0 0 10px rgba(255, 149, 0, 0.4)'
-              : '0 4px 10px rgba(0, 0, 0, 0.3)'
-          }
-          bg={getTimerGradient()}
-          color="white"
-          fontWeight="bold"
-          initial={{ scale: 1 }}
-          animate={
-            timeLeft <= 10
-              ? {
-                  scale: [1, 1.08, 1],
-                  transition: {
-                    duration: 0.5,
-                    repeat: Infinity,
-                    repeatType: 'reverse',
-                  },
-                }
-              : timeLeft <= 30
-              ? {
-                  scale: [1, 1.04, 1],
-                  transition: {
-                    duration: 1,
-                    repeat: Infinity,
-                    repeatType: 'reverse',
-                  },
-                }
-              : {}
-          }
-        >
-          <Icon as={Clock} className={timeLeft <= 10 ? 'ticker-icon' : ''} />
-          <Text fontWeight="bold">{formatTime(timeLeft)}</Text>
-
-          {/* Additional indicator for critical time */}
-          {timeLeft <= 10 && (
-            <Box
-              as="span"
-              w="8px"
-              h="8px"
-              borderRadius="full"
-              bg="red.100"
-              ml="1"
-              className="blinker"
-            />
-          )}
-
-          <style jsx>{`
-            .ticker-icon {
-              animation: tick 0.5s linear infinite;
-            }
-            @keyframes tick {
-              0% {
-                transform: scale(1);
-              }
-              50% {
-                transform: scale(1.2);
-              }
-              100% {
-                transform: scale(1);
-              }
-            }
-            .blinker {
-              animation: blink 0.7s ease-in-out infinite;
-            }
-            @keyframes blink {
-              0% {
-                opacity: 0.2;
-              }
-              50% {
-                opacity: 1;
-              }
-              100% {
-                opacity: 0.2;
-              }
-            }
-          `}</style>
-        </MotionBadge>
-      </MotionBox>
+      {/* Floating Timer */}
+      <FloatingTimer timeLeft={timeLeft} getTimerGradient={getTimerGradient} />
 
       <VStack spacing={4} align="stretch">
         {/* Reading tips and info */}
@@ -487,313 +822,22 @@ const ReadingPhase = ({
         >
           <Container maxW="container.lg">
             <VStack spacing={3} align="center">
-              {/* Progress bar with tooltip */}
-              <Tooltip
-                label={
-                  hasScrolledToBottom
-                    ? t('Article fully read!')
-                    : `${Math.round(scrollPercentage)}% ${t('read')}`
-                }
-                placement="top"
-              >
-                <Box w="100%" position="relative">
-                  <Box
-                    w="100%"
-                    h="4px"
-                    bg="whiteAlpha.200"
-                    borderRadius="full"
-                    overflow="hidden"
-                  >
-                    <Box
-                      h="100%"
-                      w={`${scrollPercentage}%`}
-                      bg={hasScrolledToBottom ? 'green.400' : 'purple.400'}
-                      borderRadius="full"
-                      transition="width 0.2s, background-color 0.3s"
-                    />
-                  </Box>
-                </Box>
-              </Tooltip>
+              {/* Progress indicator */}
+              <ProgressIndicator
+                scrollPercentage={scrollPercentage}
+                hasScrolledToBottom={hasScrolledToBottom}
+                t={t}
+              />
 
-              <Text
-                fontSize="sm"
-                color={hasScrolledToBottom ? 'green.300' : 'whiteAlpha.600'}
-              >
-                {hasScrolledToBottom
-                  ? t('Article fully read!')
-                  : `${Math.round(scrollPercentage)}% ${t('read')}`}
-              </Text>
-
-              <Box position="relative" w="100%" maxW="400px" mx="auto">
-                {/* Circular progress indicator */}
-                {hasScrolledToBottom && (
-                  <MotionBox
-                    position="absolute"
-                    top="-5px"
-                    left="-5px"
-                    right="-5px"
-                    bottom="-5px"
-                    borderRadius="lg"
-                    border="2px solid"
-                    borderColor={
-                      timeLeft <= 10
-                        ? 'red.400'
-                        : timeLeft <= 30
-                        ? 'orange.400'
-                        : 'green.400'
-                    }
-                    opacity={0.7}
-                    initial={{ opacity: 0, scale: 0.9 }}
-                    animate={{
-                      opacity: [0.4, 0.9, 0.4],
-                      scale: [0.99, 1.01, 0.99],
-                      transition: {
-                        duration:
-                          timeLeft <= 10 ? 0.8 : timeLeft <= 30 ? 1.5 : 3,
-                        repeat: Infinity,
-                        repeatType: 'reverse',
-                      },
-                    }}
-                    pointerEvents="none"
-                  />
-                )}
-
-                {/* Timer circles that appear when time is running low */}
-                {hasScrolledToBottom && timeLeft <= 30 && (
-                  <>
-                    <MotionBox
-                      position="absolute"
-                      top="50%"
-                      left="0"
-                      width="12px"
-                      height="12px"
-                      ml="-6px"
-                      mt="-6px"
-                      borderRadius="full"
-                      bg={timeLeft <= 10 ? 'red.400' : 'orange.400'}
-                      initial={{ opacity: 0 }}
-                      animate={{
-                        opacity: [1, 0.4, 1],
-                        scale: [0.8, 1.2, 0.8],
-                        transition: {
-                          duration: 1,
-                          repeat: Infinity,
-                          repeatType: 'loop',
-                        },
-                      }}
-                    />
-                    <MotionBox
-                      position="absolute"
-                      top="50%"
-                      right="0"
-                      width="12px"
-                      height="12px"
-                      mr="-6px"
-                      mt="-6px"
-                      borderRadius="full"
-                      bg={timeLeft <= 10 ? 'red.400' : 'orange.400'}
-                      initial={{ opacity: 0 }}
-                      animate={{
-                        opacity: [1, 0.4, 1],
-                        scale: [0.8, 1.2, 0.8],
-                        transition: {
-                          duration: 1,
-                          repeat: Infinity,
-                          repeatType: 'loop',
-                          delay: 0.5,
-                        },
-                      }}
-                    />
-                  </>
-                )}
-
-                {/* Main Button with dynamic styling */}
-                <MotionButton
-                  disabled={!hasScrolledToBottom}
-                  size="lg"
-                  leftIcon={
-                    timeLeft <= 10 ? (
-                      <Clock className="pulse-icon" />
-                    ) : (
-                      <CheckCircle2 />
-                    )
-                  }
-                  onClick={onComplete}
-                  isLoading={completeReadingLoading}
-                  loadingText={t('Completing...')}
-                  initial={{ scale: 1 }}
-                  whileHover={{ scale: 1.05, y: -2 }}
-                  whileTap={{ scale: 0.95 }}
-                  animate={
-                    timeLeft <= 10
-                      ? {
-                          scale: [1, 1.05, 1],
-                          boxShadow: [
-                            '0 0 10px rgba(255, 59, 48, 0.4)',
-                            '0 0 20px rgba(255, 59, 48, 0.7)',
-                            '0 0 10px rgba(255, 59, 48, 0.4)',
-                          ],
-                          transition: {
-                            duration: 0.6,
-                            repeat: Infinity,
-                            repeatType: 'reverse',
-                          },
-                        }
-                      : timeLeft <= 30
-                      ? {
-                          y: [0, -2, 0],
-                          transition: {
-                            duration: 1.5,
-                            repeat: Infinity,
-                            repeatType: 'reverse',
-                          },
-                        }
-                      : {}
-                  }
-                  {...getButtonStyles(timeLeft, hasScrolledToBottom)}
-                  position="relative"
-                  overflow="hidden"
-                >
-                  {/* Dynamic countdown indicator */}
-                  {hasScrolledToBottom && timeLeft <= 30 && (
-                    <Box
-                      position="absolute"
-                      top="0"
-                      left="0"
-                      height="100%"
-                      bg="whiteAlpha.200"
-                      width={`${(timeLeft / 120) * 100}%`}
-                      transition="width 1s linear"
-                      zIndex={0}
-                    />
-                  )}
-
-                  {/* Button text with time countdown for low time */}
-                  <HStack
-                    position="relative"
-                    zIndex={1}
-                    spacing={timeLeft <= 30 ? 3 : 2}
-                  >
-                    {timeLeft <= 10 ? (
-                      <MotionText
-                        fontWeight="bold"
-                        animate={{
-                          scale: [1, 1.1, 1],
-                          transition: {
-                            duration: 0.5,
-                            repeat: Infinity,
-                            repeatType: 'reverse',
-                          },
-                        }}
-                      >
-                        {t('Complete Now!')} ({timeLeft}s)
-                      </MotionText>
-                    ) : timeLeft <= 30 ? (
-                      <Text fontWeight="bold">
-                        {t('Complete Reading')} ({timeLeft}s)
-                      </Text>
-                    ) : hasScrolledToBottom ? (
-                      <Text fontWeight="bold">{t('Complete Reading')}</Text>
-                    ) : (
-                      <Text fontWeight="bold">{t('Continue Reading')}</Text>
-                    )}
-                  </HStack>
-
-                  {/* Animated particles for urgent countdown (only when time is critical) */}
-                  {hasScrolledToBottom && timeLeft <= 10 && (
-                    <>
-                      <Box
-                        position="absolute"
-                        top="50%"
-                        left="15%"
-                        width="5px"
-                        height="5px"
-                        borderRadius="full"
-                        bg="red.200"
-                        animation="particle1 2s infinite"
-                      />
-                      <Box
-                        position="absolute"
-                        top="20%"
-                        right="30%"
-                        width="3px"
-                        height="3px"
-                        borderRadius="full"
-                        bg="orange.200"
-                        animation="particle2 1.5s infinite"
-                      />
-                      <style jsx>{`
-                        @keyframes particle1 {
-                          0% {
-                            transform: translate(0, 0);
-                            opacity: 0;
-                          }
-                          50% {
-                            opacity: 1;
-                          }
-                          100% {
-                            transform: translate(-15px, -15px);
-                            opacity: 0;
-                          }
-                        }
-                        @keyframes particle2 {
-                          0% {
-                            transform: translate(0, 0);
-                            opacity: 0;
-                          }
-                          50% {
-                            opacity: 1;
-                          }
-                          100% {
-                            transform: translate(10px, -20px);
-                            opacity: 0;
-                          }
-                        }
-                        .pulse-icon {
-                          animation: pulse-icon 1s infinite;
-                        }
-                        @keyframes pulse-icon {
-                          0% {
-                            transform: scale(1);
-                          }
-                          50% {
-                            transform: scale(1.2);
-                          }
-                          100% {
-                            transform: scale(1);
-                          }
-                        }
-                      `}</style>
-                    </>
-                  )}
-                </MotionButton>
-
-                {/* Button glow effect when time is critical */}
-                {hasScrolledToBottom && timeLeft <= 10 && (
-                  <MotionBox
-                    position="absolute"
-                    top="0"
-                    left="0"
-                    right="0"
-                    bottom="0"
-                    pointerEvents="none"
-                    bg="transparent"
-                    borderRadius="lg"
-                    animate={{
-                      boxShadow: [
-                        '0 0 20px 5px rgba(255, 86, 48, 0.2)',
-                        '0 0 30px 10px rgba(255, 86, 48, 0.4)',
-                        '0 0 20px 5px rgba(255, 86, 48, 0.2)',
-                      ],
-                      transition: {
-                        duration: 0.8,
-                        repeat: Infinity,
-                        repeatType: 'reverse',
-                      },
-                    }}
-                  />
-                )}
-              </Box>
+              {/* Complete button */}
+              <CompleteButton
+                timeLeft={timeLeft}
+                hasScrolledToBottom={hasScrolledToBottom}
+                onComplete={onComplete}
+                completeReadingLoading={completeReadingLoading}
+                getButtonStyles={getButtonStyles}
+                t={t}
+              />
 
               {!hasScrolledToBottom && timeLeft > 10 && (
                 <Text fontSize="sm" color="whiteAlpha.600" textAlign="center">
@@ -813,4 +857,4 @@ const ReadingPhase = ({
   )
 }
 
-export default ReadingPhase
+export default memo(ReadingPhase)

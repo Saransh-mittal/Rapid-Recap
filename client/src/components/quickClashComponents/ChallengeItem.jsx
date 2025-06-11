@@ -20,6 +20,7 @@ import StatusBadge from './ui/StatusBadge'
 import PlayerStatus from './ui/PlayerStatus'
 import VSLine from './VSLine'
 import EnhancedPotentialTrophyDisplay from './ui/EnhancedPotentialTrophyDisplay'
+import CompactTrophyStakeDisplay from './ui/CompactTrophyStakeDisplay'
 
 /**
  * Optimized ChallengeItem - maintains exact original design with performance improvements
@@ -185,7 +186,7 @@ const ChallengeItem = memo(
     }, [challenge, isChallenger])
 
     // Keep original potential trophy calculation
-    const getTrophyPotential = useCallback(() => {
+    const getTrophyPotentialGain = useCallback(() => {
       if (!challenge) return 0
 
       if (challenge.status === 'active' || challenge.status === 'pending') {
@@ -196,6 +197,17 @@ const ChallengeItem = memo(
           : challenge.trophyPotential.opponent?.potentialGain
       }
 
+      return 0
+    }, [challenge, isChallenger])
+
+    const getTrophyPotentialLoss = useCallback(() => {
+      if (!challenge) return 0
+      if (challenge.status === 'active' || challenge.status === 'pending') {
+        if (!challenge.trophyPotential) return 0
+        return isChallenger
+          ? challenge.trophyPotential.challenger?.potentialLoss
+          : challenge.trophyPotential.opponent?.potentialLoss
+      }
       return 0
     }, [challenge, isChallenger])
 
@@ -487,8 +499,9 @@ const ChallengeItem = memo(
               </HStack>
             ) : challenge.status === 'active' && !myAttempted ? (
               <Flex align="center" gap={spacing}>
-                <EnhancedPotentialTrophyDisplay
-                  potentialGain={getTrophyPotential()}
+                <CompactTrophyStakeDisplay
+                  potentialGain={getTrophyPotentialGain()}
+                  potentialLoss={getTrophyPotentialLoss()}
                   size={fontSize}
                   compact={true}
                 />

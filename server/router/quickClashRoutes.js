@@ -24,6 +24,7 @@ const {
   getUserTrophiesController,
   getUserTrophyHistoryController,
   calculatePotentialTrophyExchangeController,
+  getUserCombinedTrophyHistoryController,
 } = require('../controllers/quickClashController')
 const {
   joinMatchmakingRoom,
@@ -114,6 +115,8 @@ router.get(
   '/trophies/exchange/:opponentId',
   calculatePotentialTrophyExchangeController,
 )
+// Add this route with other trophy routes
+router.get('/trophies/history/combined', getUserCombinedTrophyHistoryController)
 
 // Profile routes
 router.get('/profile', getCurrentUserProfile)

@@ -18,7 +18,7 @@ const {
 } = require('../services/quickClashServices/quickClashMVPService')
 
 /**
- * @desc    Get team battle analysis with personalization
+ * @desc    Get team battle analysis with enhanced MVP recognition
  * @route   GET /api/quickClash/analysis/battle/:battleId
  * @access  Private
  */
@@ -128,15 +128,47 @@ const getTeamBattleAnalysis = asyncHandler(async (req, res) => {
       user: userId,
     })
 
-    // Calculate MVP awards and enhanced recognitions
-    const mvpAwards = calculateMVPAwards(
-      battle,
-      isTeamAMember ? 'teamA' : 'teamB',
-    )
+    // Enhanced MVP awards calculation with correct criteria
+    const userTeam = isTeamAMember ? 'teamA' : 'teamB'
+    const mvpAwards = calculateMVPAwards(battle, userTeam)
+
+    // Add debug logging for MVP calculation in development
+    if (process.env.NODE_ENV === 'development') {
+      console.log(`MVP Awards for battle ${battleId}, user team ${userTeam}:`, {
+        matchMVP: mvpAwards.matchMVP
+          ? {
+              name: mvpAwards.matchMVP.user.name,
+              team: mvpAwards.matchMVP.team,
+              score: mvpAwards.matchMVP.score,
+              category: mvpAwards.matchMVP.category,
+              wonCategory: mvpAwards.matchMVP.wonCategory,
+            }
+          : 'None',
+        teamMVP: mvpAwards.teamMVP
+          ? {
+              name: mvpAwards.teamMVP.user.name,
+              team: mvpAwards.teamMVP.team,
+              score: mvpAwards.teamMVP.score,
+              category: mvpAwards.teamMVP.category,
+              wonCategory: mvpAwards.teamMVP.wonCategory,
+            }
+          : 'None',
+        pivotalPlayer: mvpAwards.pivotalPlayer
+          ? {
+              name: mvpAwards.pivotalPlayer.user.name,
+              team: mvpAwards.pivotalPlayer.team,
+              category: mvpAwards.pivotalPlayer.category,
+              difference: mvpAwards.pivotalPlayer.difference,
+            }
+          : 'None',
+        performanceRecognitions: mvpAwards.performanceRecognitions.length,
+      })
+    }
 
     const userMemberData = (
       isTeamAMember ? battle.teamAMembers : battle.teamBMembers
     ).find(member => member.user._id.toString() === userId.toString())
+
     const simplifiedTrophyData = getSimplifiedTrophyData(battle, userMemberData)
 
     const enhanceTeamMembers = members => {
@@ -157,6 +189,11 @@ const getTeamBattleAnalysis = asyncHandler(async (req, res) => {
           isPivotalPlayer:
             mvpAwards.pivotalPlayer?.user._id.toString() ===
             memberObj.user._id.toString(),
+          // Add category win status
+          wonCategory:
+            mvpAwards.performanceRecognitions?.find(
+              p => p.user._id.toString() === memberObj.user._id.toString(),
+            )?.wonCategory || false,
         }
       })
     }
@@ -172,7 +209,7 @@ const getTeamBattleAnalysis = asyncHandler(async (req, res) => {
       success: true,
       analysis: {
         battle: enhancedBattle,
-        userTeam: isTeamAMember ? 'teamA' : 'teamB',
+        userTeam,
         trophyHistory,
         battleRecap,
         followUpQuestions,

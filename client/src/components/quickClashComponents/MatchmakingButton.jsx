@@ -1,4 +1,4 @@
-// components/quickClashComponents/MatchmakingButton.jsx
+// components/quickClashComponents/MatchmakingButton.jsx - REDESIGNED WITH CONSISTENT SIZING
 import React, {
   useEffect,
   useState,
@@ -6,6 +6,8 @@ import React, {
   forwardRef,
   useImperativeHandle,
   useRef,
+  useMemo,
+  memo,
 } from 'react'
 import {
   Button,
@@ -41,340 +43,351 @@ import {
   CheckCircle,
   AlertTriangle,
   PlayCircle,
+  Sword,
 } from 'lucide-react'
 import useQuickClashMatchmaking from '../../customHooks/useQuickClashMatchmaking'
-import { useNavigate } from 'react-router-dom'
-import { keyframes } from '@emotion/react'
 import MatchPreparationModal from './modals/MatchPreparationModal'
 
 const MotionButton = motion(Button)
 const MotionFlex = motion(Flex)
 const MotionBadge = motion(Badge)
-const MotionBox = motion(Box)
 
-// Pulsing animation for active matchmaking
-const pulsing = keyframes`
-  0% { box-shadow: 0 0 0 0 rgba(92, 219, 149, 0.7); }
-  70% { box-shadow: 0 0 0 10px rgba(92, 219, 149, 0); }
-  100% { box-shadow: 0 0 0 0 rgba(92, 219, 149, 0); }
-`
+// Enhanced button states with better visual design
+const BUTTON_STATES = {
+  idle: {
+    text: 'SOLO',
+    icon: Sword,
+    colorScheme: 'purple',
+    gradient: 'linear(135deg, #667eea 0%, #764ba2 100%)',
+    shadowColor: 'rgba(102, 126, 234, 0.4)',
+    hoverShadowColor: 'rgba(102, 126, 234, 0.6)',
+  },
+  searching: {
+    text: 'Searching...',
+    icon: Users,
+    colorScheme: 'blue',
+    gradient: 'linear(135deg, #667eea 0%, #764ba2 100%)',
+    shadowColor: 'rgba(66, 153, 225, 0.4)',
+    hoverShadowColor: 'rgba(66, 153, 225, 0.6)',
+  },
+  preparing: {
+    text: 'Preparing...',
+    icon: Globe,
+    colorScheme: 'orange',
+    gradient: 'linear(135deg, #f093fb 0%, #f5576c 100%)',
+    shadowColor: 'rgba(245, 87, 108, 0.4)',
+    hoverShadowColor: 'rgba(245, 87, 108, 0.6)',
+  },
+  ready: {
+    text: 'Challenge Ready!',
+    icon: PlayCircle,
+    colorScheme: 'green',
+    gradient: 'linear(135deg, #4facfe 0%, #00f2fe 100%)',
+    shadowColor: 'rgba(72, 187, 120, 0.4)',
+    hoverShadowColor: 'rgba(72, 187, 120, 0.6)',
+  },
+}
 
-const MatchmakingButton = forwardRef(
-  (
-    { compact = false, buttonTextOverride, iconOverride, bgGradientOverride },
-    ref,
-  ) => {
-    const { t } = useTranslation('QuickClash')
-    const toast = useToast()
-    const navigate = useNavigate()
+// Memoized Timer Component
+const Timer = memo(({ seconds }) => {
+  const formatTime = useCallback(secs => {
+    const mins = Math.floor(secs / 60)
+    const remainingSecs = secs % 60
+    return `${mins}:${remainingSecs.toString().padStart(2, '0')}`
+  }, [])
 
-    // Local state for UI control
-    const [searchModalOpen, setSearchModalOpen] = useState(false)
-    const [preparationModalOpen, setPreparationModalOpen] = useState(false)
-    const [matchmakingTime, setMatchmakingTime] = useState(0)
-    const [matchmakingStartTime, setMatchmakingStartTime] = useState(null)
-    const [isRequestPending, setIsRequestPending] = useState(false)
+  return (
+    <HStack
+      p={2}
+      borderRadius="md"
+      bg="whiteAlpha.100"
+      border="1px solid"
+      borderColor="whiteAlpha.200"
+    >
+      <Icon as={Clock} color="blue.300" boxSize={4} />
+      <Text color="white" fontWeight="bold" fontFamily="mono">
+        {formatTime(seconds)}
+      </Text>
+    </HStack>
+  )
+})
 
-    // ENHANCED: State to track modal minimization vs complete closure
-    const [isPreparationMinimized, setIsPreparationMinimized] = useState(false)
-    const [isSearchMinimized, setIsSearchMinimized] = useState(false)
+const MatchmakingButton = forwardRef((props, ref) => {
+  const {
+    // NEW: Fixed sizing props for consistency
+    buttonSize = { base: 'md', md: 'lg' },
+    buttonWidth = { base: '100%', md: '240px' }, // Fixed width on desktop
+    buttonHeight = { base: '48px', md: '56px' }, // Fixed height
+    buttonMinWidth = { base: '140px', md: '240px' },
+    // Text and icon override props
+    buttonTextOverride,
+    iconOverride,
+    bgGradientOverride,
+    shadowColorOverride,
+    // Compact mode for header
+    compact = false,
+    ...otherProps
+  } = props
 
-    // User dismissal tracking - simplified and aligned with modal
-    const [userDismissedSearch, setUserDismissedSearch] = useState(false)
+  const { t } = useTranslation('QuickClash')
+  const toast = useToast()
 
-    // Refs for cleanup and component lifecycle
-    const joinTimeoutRef = useRef(null)
-    const componentMounted = useRef(true)
-    const lastPrepModalCloseReason = useRef(null) // 'minimize' | 'close' | null
+  // Unified state management
+  const [state, setState] = useState({
+    searchModalOpen: false,
+    preparationModalOpen: false,
+    isPreparationMinimized: false,
+    isSearchMinimized: false,
+    userDismissedSearch: false,
+    matchmakingTime: 0,
+    matchmakingStartTime: null,
+    isRequestPending: false,
+  })
 
-    // Get matchmaking state from hook with enhanced cleanup functions
-    const {
-      inMatchmaking,
-      matchmakingLoading,
-      matchmakingError,
-      preparingChallenge,
-      challengeReady,
-      preparationProgress,
-      preparationStep,
-      socketConnected,
-      deviceFingerprint,
-      isSocketReady,
+  // Refs
+  const componentMounted = useRef(true)
+  const timerIntervalRef = useRef(null)
+  const lastPrepModalCloseReason = useRef(null)
 
-      joinMatchmaking,
-      leaveMatchmaking,
-      checkMatchmakingStatus,
-      clearChallengeError,
-      clearMatchmakingError,
-      navigateToChallenge,
+  // Get matchmaking state from hook
+  const {
+    inMatchmaking,
+    matchmakingLoading,
+    matchmakingError,
+    preparingChallenge,
+    challengeReady,
+    preparationProgress,
+    preparationStep,
+    socketConnected,
+    isSocketReady,
+    joinMatchmaking,
+    leaveMatchmaking,
+    checkMatchmakingStatus,
+    clearMatchmakingError,
+    navigateToChallenge,
+  } = useQuickClashMatchmaking()
 
-      // ENHANCED: Use cleanup functions (close option available when ready)
-      clearMatchmakingAfterModal,
-      clearAllMatchmakingStates,
-    } = useQuickClashMatchmaking()
-
-    // Cleanup on unmount
-    useEffect(() => {
-      return () => {
-        componentMounted.current = false
-        if (joinTimeoutRef.current) {
-          clearTimeout(joinTimeoutRef.current)
-        }
+  // Cleanup on unmount
+  useEffect(() => {
+    return () => {
+      componentMounted.current = false
+      if (timerIntervalRef.current) {
+        clearInterval(timerIntervalRef.current)
       }
-    }, [])
+    }
+  }, [])
 
-    // Expose method to parent components
-    useImperativeHandle(ref, () => ({
-      handleJoinMatchmaking,
-    }))
+  // Expose method to parent components
+  useImperativeHandle(ref, () => ({ handleJoinMatchmaking }), [])
 
-    // Initialize and check status
-    useEffect(() => {
-      if (isSocketReady) {
-        checkMatchmakingStatus()
-      }
-    }, [checkMatchmakingStatus, isSocketReady])
+  // Determine current button state
+  const currentState = useMemo(() => {
+    if (challengeReady && state.isPreparationMinimized) return 'ready'
+    if (
+      (preparingChallenge || challengeReady || preparationProgress > 0) &&
+      !state.isPreparationMinimized
+    )
+      return 'preparing'
+    if (
+      (preparingChallenge || challengeReady || preparationProgress > 0) &&
+      state.isPreparationMinimized
+    )
+      return 'ready'
+    if ((inMatchmaking || state.isRequestPending) && !state.isSearchMinimized)
+      return 'searching'
+    if ((inMatchmaking || state.isRequestPending) && state.isSearchMinimized)
+      return 'searching'
+    return 'idle'
+  }, [
+    challengeReady,
+    preparingChallenge,
+    preparationProgress,
+    inMatchmaking,
+    state.isPreparationMinimized,
+    state.isSearchMinimized,
+    state.isRequestPending,
+  ])
 
-    // ENHANCED: Matchmaking timer with better persistence across the entire flow
-    useEffect(() => {
-      let interval
+  // Batch state updates
+  const updateState = useCallback(updates => {
+    if (componentMounted.current) {
+      setState(prev => ({ ...prev, ...updates }))
+    }
+  }, [])
 
-      // Keep timer running through entire flow: matchmaking → preparing → ready
+  // Timer management
+  useEffect(() => {
+    const shouldRunTimer =
+      (inMatchmaking ||
+        preparingChallenge ||
+        challengeReady ||
+        preparationProgress > 0) &&
+      state.matchmakingStartTime
+
+    if (shouldRunTimer && !timerIntervalRef.current) {
+      const initialElapsed = Math.floor(
+        (Date.now() - state.matchmakingStartTime) / 1000,
+      )
+      updateState({ matchmakingTime: initialElapsed })
+
+      timerIntervalRef.current = setInterval(() => {
+        if (!componentMounted.current) return
+        const elapsed = Math.floor(
+          (Date.now() - state.matchmakingStartTime) / 1000,
+        )
+        updateState({ matchmakingTime: elapsed })
+      }, 1000)
+    } else if (!shouldRunTimer && timerIntervalRef.current) {
+      clearInterval(timerIntervalRef.current)
+      timerIntervalRef.current = null
+
       if (
-        (inMatchmaking ||
-          preparingChallenge ||
-          challengeReady ||
-          preparationProgress > 0) &&
-        matchmakingStartTime
-      ) {
-        // Calculate initial elapsed time immediately
-        const initialElapsed = Math.floor(
-          (Date.now() - matchmakingStartTime) / 1000,
-        )
-        setMatchmakingTime(initialElapsed)
-
-        interval = setInterval(() => {
-          if (!componentMounted.current) return
-          const elapsed = Math.floor((Date.now() - matchmakingStartTime) / 1000)
-          setMatchmakingTime(elapsed)
-        }, 1000)
-
-        console.log(
-          '[MM_BUTTON] Timer running, elapsed:',
-          initialElapsed,
-          'seconds',
-        )
-      } else if (
         !inMatchmaking &&
         !preparingChallenge &&
         !challengeReady &&
         preparationProgress === 0
       ) {
-        // Only reset timer when completely out of matchmaking flow
-        setMatchmakingTime(0)
-        setMatchmakingStartTime(null)
-        console.log('[MM_BUTTON] Timer reset - matchmaking flow ended')
+        updateState({ matchmakingTime: 0, matchmakingStartTime: null })
       }
+    }
 
-      return () => {
-        if (interval) {
-          clearInterval(interval)
-        }
+    return () => {
+      if (timerIntervalRef.current) {
+        clearInterval(timerIntervalRef.current)
+        timerIntervalRef.current = null
       }
-    }, [
-      inMatchmaking,
-      preparingChallenge,
-      challengeReady,
-      preparationProgress,
-      matchmakingStartTime,
-    ])
+    }
+  }, [
+    inMatchmaking,
+    preparingChallenge,
+    challengeReady,
+    preparationProgress,
+    state.matchmakingStartTime,
+    updateState,
+  ])
 
-    // Initialize start time when matchmaking begins
-    useEffect(() => {
-      if (inMatchmaking && !matchmakingStartTime) {
-        const now = Date.now()
-        setMatchmakingStartTime(now)
-        setMatchmakingTime(0)
-        console.log('[MM_BUTTON] Matchmaking start time set:', new Date(now))
+  // Initialize start time when matchmaking begins
+  useEffect(() => {
+    if (inMatchmaking && !state.matchmakingStartTime) {
+      const now = Date.now()
+      updateState({ matchmakingStartTime: now, matchmakingTime: 0 })
+    }
+  }, [inMatchmaking, state.matchmakingStartTime, updateState])
+
+  // Modal state management
+  useEffect(() => {
+    // Rule 1: Handle search modal for active matchmaking
+    if (
+      inMatchmaking &&
+      !preparingChallenge &&
+      !challengeReady &&
+      preparationProgress === 0
+    ) {
+      if (!state.userDismissedSearch && !state.isSearchMinimized) {
+        updateState({ searchModalOpen: true, preparationModalOpen: false })
+      } else if (state.isSearchMinimized) {
+        updateState({ searchModalOpen: false })
       }
-    }, [inMatchmaking, matchmakingStartTime])
+      return
+    }
 
-    // Handle request timeout
-    useEffect(() => {
-      if (isRequestPending && !joinTimeoutRef.current) {
-        joinTimeoutRef.current = setTimeout(() => {
-          if (!componentMounted.current) return
+    // Rule 2: Handle preparation modal for match found or in progress
+    if (preparingChallenge || challengeReady || preparationProgress > 0) {
+      updateState({
+        searchModalOpen: false,
+        isSearchMinimized: false,
+        userDismissedSearch: false,
+        preparationModalOpen: !state.isPreparationMinimized,
+      })
+      return
+    }
 
-          console.error('[MM_BUTTON] Join request timed out')
-          setIsRequestPending(false)
+    // Rule 3: No active matchmaking - reset states
+    if (
+      !inMatchmaking &&
+      !preparingChallenge &&
+      !challengeReady &&
+      preparationProgress === 0
+    ) {
+      updateState({
+        searchModalOpen: false,
+        preparationModalOpen: false,
+        isSearchMinimized: false,
+        isPreparationMinimized: false,
+        userDismissedSearch: false,
+      })
+      lastPrepModalCloseReason.current = null
+    }
+  }, [
+    inMatchmaking,
+    preparingChallenge,
+    challengeReady,
+    preparationProgress,
+    state.isPreparationMinimized,
+    state.isSearchMinimized,
+    state.userDismissedSearch,
+    updateState,
+  ])
 
-          toast({
-            title: t('Request Timeout'),
-            description: t(
-              'The matchmaking request took too long. Please try again.',
-            ),
-            status: 'error',
-            duration: 5000,
-            isClosable: true,
-          })
-        }, 15000)
-      } else if (!isRequestPending && joinTimeoutRef.current) {
-        clearTimeout(joinTimeoutRef.current)
-        joinTimeoutRef.current = null
-      }
-
-      return () => {
-        if (joinTimeoutRef.current) {
-          clearTimeout(joinTimeoutRef.current)
-          joinTimeoutRef.current = null
-        }
-      }
-    }, [isRequestPending, toast, t])
-
-    // Clear request pending when loading changes
-    useEffect(() => {
-      if (!matchmakingLoading && isRequestPending) {
-        setIsRequestPending(false)
-      }
-    }, [matchmakingLoading, isRequestPending])
-
-    // ENHANCED: Smart modal state management aligned with MatchPreparationModal
-    useEffect(() => {
-      console.log('[MM_BUTTON] Evaluating modal states...', {
-        inMatchmaking,
-        preparingChallenge: !!preparingChallenge,
-        challengeReady: !!challengeReady,
-        preparationProgress,
-        isPreparationMinimized,
-        isSearchMinimized,
-        userDismissedSearch,
-        lastCloseReason: lastPrepModalCloseReason.current,
+  // Handle errors
+  useEffect(() => {
+    if (matchmakingError) {
+      updateState({
+        isRequestPending: false,
+        matchmakingStartTime: null,
+        matchmakingTime: 0,
       })
 
-      // Rule 1: Handle search modal for active matchmaking
-      if (
-        inMatchmaking &&
-        !preparingChallenge &&
-        !challengeReady &&
-        preparationProgress === 0
-      ) {
-        if (!userDismissedSearch && !isSearchMinimized) {
-          setSearchModalOpen(true)
-          setPreparationModalOpen(false)
-        } else if (isSearchMinimized) {
-          setSearchModalOpen(false)
-        }
-        return
-      }
+      toast({
+        title: t('Matchmaking Error'),
+        description: matchmakingError,
+        status: 'error',
+        duration: 5000,
+        isClosable: true,
+      })
 
-      // Rule 2: Handle preparation modal for match found or in progress
-      if (preparingChallenge || challengeReady || preparationProgress > 0) {
-        // Close search modal
-        setSearchModalOpen(false)
-        setIsSearchMinimized(false)
-        setUserDismissedSearch(false)
+      setTimeout(clearMatchmakingError, 100)
+    }
+  }, [matchmakingError, toast, t, clearMatchmakingError, updateState])
 
-        // Only open preparation modal if not minimized (close available when ready)
-        if (!isPreparationMinimized) {
-          setPreparationModalOpen(true)
-        }
-        return
-      }
+  // Action handlers
+  const handleJoinMatchmaking = useCallback(async () => {
+    if (state.isRequestPending) return
 
-      // Rule 3: No active matchmaking - close all modals and reset states
-      // Note: Preparation modal can be closed when ready, minimized otherwise
-      if (
-        !inMatchmaking &&
-        !preparingChallenge &&
-        !challengeReady &&
-        preparationProgress === 0
-      ) {
-        console.log('[MM_BUTTON] No active states - resetting all modal states')
-        setSearchModalOpen(false)
-        setPreparationModalOpen(false)
-        setIsSearchMinimized(false)
-        setIsPreparationMinimized(false)
-        setUserDismissedSearch(false)
-        lastPrepModalCloseReason.current = null
-      }
-    }, [
-      inMatchmaking,
-      preparingChallenge,
-      challengeReady,
-      preparationProgress,
-      isPreparationMinimized,
-      isSearchMinimized,
-      userDismissedSearch,
-    ])
-
-    // Handle errors
-    useEffect(() => {
-      if (matchmakingError) {
-        console.error('[MM_BUTTON] Matchmaking error:', matchmakingError)
-        setIsRequestPending(false)
-
-        // Reset timer on error
-        setMatchmakingStartTime(null)
-        setMatchmakingTime(0)
-
+    try {
+      if (!isSocketReady) {
         toast({
-          title: t('Matchmaking Error'),
-          description: matchmakingError,
-          status: 'error',
-          duration: 5000,
+          title: t('Connection Error'),
+          description: t('Please wait for connection to be established'),
+          status: 'warning',
+          duration: 3000,
           isClosable: true,
         })
-
-        // Clear the error after showing it
-        setTimeout(() => {
-          clearMatchmakingError()
-        }, 100)
-      }
-    }, [matchmakingError, toast, t, clearMatchmakingError])
-
-    // ENHANCED: Join matchmaking handler with proper state reset
-    const handleJoinMatchmaking = useCallback(async () => {
-      if (isRequestPending) {
-        console.warn('[MM_BUTTON] Request already pending, ignoring')
         return
       }
 
-      try {
-        if (!isSocketReady) {
-          console.warn('[MM_BUTTON] Socket not ready for matchmaking')
-          toast({
-            title: t('Connection Error'),
-            description: t('Please wait for connection to be established'),
-            status: 'warning',
-            duration: 3000,
-            isClosable: true,
-          })
-          return
-        }
+      updateState({
+        isRequestPending: true,
+        matchmakingStartTime: null,
+        matchmakingTime: 0,
+        userDismissedSearch: false,
+        isSearchMinimized: false,
+        isPreparationMinimized: false,
+      })
+      lastPrepModalCloseReason.current = null
 
-        console.log('[MM_BUTTON] Starting new matchmaking process')
-        setIsRequestPending(true)
+      await joinMatchmaking()
 
-        // ENHANCED: Complete state reset before starting
-        setMatchmakingStartTime(null)
-        setMatchmakingTime(0)
-        setUserDismissedSearch(false)
-        setIsSearchMinimized(false)
-        setIsPreparationMinimized(false)
-        lastPrepModalCloseReason.current = null
-
-        await joinMatchmaking()
-
-        if (!componentMounted.current) return
-
-        console.log('[MM_BUTTON] Successfully joined matchmaking')
-        setIsRequestPending(false)
-      } catch (error) {
-        if (!componentMounted.current) return
-
-        console.error('[MM_BUTTON] Failed to join matchmaking:', error)
-        setIsRequestPending(false)
-        setMatchmakingStartTime(null)
-        setMatchmakingTime(0)
+      if (componentMounted.current) {
+        updateState({ isRequestPending: false })
+      }
+    } catch (error) {
+      if (componentMounted.current) {
+        updateState({
+          isRequestPending: false,
+          matchmakingStartTime: null,
+          matchmakingTime: 0,
+        })
 
         toast({
           title: t('Failed to Join'),
@@ -384,31 +397,32 @@ const MatchmakingButton = forwardRef(
           isClosable: true,
         })
       }
-    }, [joinMatchmaking, isSocketReady, toast, t, isRequestPending])
+    }
+  }, [
+    state.isRequestPending,
+    isSocketReady,
+    joinMatchmaking,
+    toast,
+    t,
+    updateState,
+  ])
 
-    // ENHANCED: Leave matchmaking handler with comprehensive cleanup
-    const handleLeaveMatchmaking = useCallback(async () => {
-      try {
-        console.log('[MM_BUTTON] Leaving matchmaking')
+  const handleLeaveMatchmaking = useCallback(async () => {
+    try {
+      updateState({ matchmakingStartTime: null, matchmakingTime: 0 })
+      await leaveMatchmaking()
 
-        // Clear timer states BEFORE leaving matchmaking
-        setMatchmakingStartTime(null)
-        setMatchmakingTime(0)
-
-        await leaveMatchmaking()
-
-        if (!componentMounted.current) return
-
-        // Reset all local states
-        setSearchModalOpen(false)
-        setPreparationModalOpen(false)
-        setIsRequestPending(false)
-        setUserDismissedSearch(false)
-        setIsSearchMinimized(false)
-        setIsPreparationMinimized(false)
+      if (componentMounted.current) {
+        updateState({
+          searchModalOpen: false,
+          preparationModalOpen: false,
+          userDismissedSearch: false,
+          isSearchMinimized: false,
+          isPreparationMinimized: false,
+          isRequestPending: false,
+        })
         lastPrepModalCloseReason.current = null
 
-        console.log('[MM_BUTTON] Successfully left matchmaking')
         toast({
           title: t('Left Matchmaking'),
           description: t('You have left the queue'),
@@ -416,10 +430,9 @@ const MatchmakingButton = forwardRef(
           duration: 2000,
           isClosable: true,
         })
-      } catch (error) {
-        if (!componentMounted.current) return
-
-        console.error('[MM_BUTTON] Failed to leave matchmaking:', error)
+      }
+    } catch (error) {
+      if (componentMounted.current) {
         toast({
           title: t('Error'),
           description: error.message || t('Could not leave matchmaking'),
@@ -428,521 +441,403 @@ const MatchmakingButton = forwardRef(
           isClosable: true,
         })
       }
-    }, [leaveMatchmaking, toast, t])
-
-    // ENHANCED: Modal handlers with minimize vs close distinction
-    const handleOpenSearchModal = useCallback(() => {
-      console.log('[MM_BUTTON] User explicitly opened search modal')
-      setUserDismissedSearch(false)
-      setIsSearchMinimized(false)
-      setSearchModalOpen(true)
-    }, [])
-
-    const handleOpenPreparationModal = useCallback(() => {
-      console.log('[MM_BUTTON] User explicitly opened preparation modal')
-      setIsPreparationMinimized(false)
-      setPreparationModalOpen(true)
-    }, [])
-
-    // ENHANCED: Handle search modal close (always treat as minimize for active matchmaking)
-    const handleCloseSearchModal = useCallback(() => {
-      console.log('[MM_BUTTON] Search modal closed - minimizing')
-      setIsSearchMinimized(true)
-      setSearchModalOpen(false)
-
-      // Only mark as dismissed if not actively matchmaking
-      if (!inMatchmaking) {
-        setUserDismissedSearch(true)
-      }
-    }, [inMatchmaking])
-
-    // ENHANCED: Handle preparation modal close/minimize (close only available when ready)
-    const handlePreparationModalClose = useCallback((reason = 'minimize') => {
-      console.log('[MM_BUTTON] Preparation modal action:', reason)
-
-      lastPrepModalCloseReason.current = reason
-      setPreparationModalOpen(false)
-
-      if (reason === 'minimize') {
-        // User minimized - keep state for reopening
-        setIsPreparationMinimized(true)
-        console.log(
-          '[MM_BUTTON] Modal minimized - preserving state for reopening',
-        )
-      } else if (reason === 'close') {
-        // User closed completely (only available when ready) - clear state
-        setIsPreparationMinimized(false)
-        console.log(
-          '[MM_BUTTON] Modal closed completely - state cleared by modal',
-        )
-      }
-    }, [])
-
-    // ENHANCED: Navigate to challenge with proper cleanup (close available when ready)
-    const handlePlayNow = useCallback(() => {
-      const challengeId = challengeReady?.challengeId
-      if (challengeId) {
-        console.log(`[MM_BUTTON] Navigating to challenge: ${challengeId}`)
-
-        // Clear modal state and navigate (modal will handle its own cleanup)
-        setPreparationModalOpen(false)
-        setIsPreparationMinimized(false)
-        setMatchmakingStartTime(null)
-        setMatchmakingTime(0)
-        lastPrepModalCloseReason.current = 'navigate'
-
-        navigateToChallenge(challengeId)
-      }
-    }, [challengeReady, navigateToChallenge])
-
-    // ENHANCED: Determine current button state (close available when ready)
-    const getCurrentState = () => {
-      // If challenge is ready and modal is just minimized, show as ready
-      if (challengeReady && isPreparationMinimized) {
-        return 'ready'
-      }
-
-      // If preparing or challenge ready and modal not minimized, show as preparing
-      if (
-        (preparingChallenge || challengeReady || preparationProgress > 0) &&
-        !isPreparationMinimized
-      ) {
-        return 'preparing' // Modal should be open
-      }
-
-      // If preparing or challenge ready and modal is minimized, show as ready to reopen
-      if (
-        (preparingChallenge || challengeReady || preparationProgress > 0) &&
-        isPreparationMinimized
-      ) {
-        return 'ready'
-      }
-
-      // If actively searching for match and modal not minimized
-      if ((inMatchmaking || isRequestPending) && !isSearchMinimized) {
-        return 'searching' // Modal should be open
-      }
-
-      // If searching and modal is minimized, show as ready to reopen
-      if ((inMatchmaking || isRequestPending) && isSearchMinimized) {
-        return 'searching_minimized'
-      }
-
-      // Default idle state
-      return 'idle'
     }
+  }, [leaveMatchmaking, toast, t, updateState])
 
-    const currentState = getCurrentState()
-    const isLoading = matchmakingLoading || isRequestPending
-
-    // Format time helper
-    const formatTime = useCallback(seconds => {
-      const mins = Math.floor(seconds / 60)
-      const secs = seconds % 60
-      return `${mins}:${secs.toString().padStart(2, '0')}`
-    }, [])
-
-    // ENHANCED: Button click handler based on current state
-    const handleButtonClick = useCallback(() => {
-      switch (currentState) {
-        case 'ready':
-          // Reopen preparation modal at current progress
-          handleOpenPreparationModal()
-          break
-        case 'searching_minimized':
-          // Reopen search modal
-          handleOpenSearchModal()
-          break
-        case 'preparing':
-          // Already handled by modal state
-          break
-        case 'searching':
-          // Already handled by modal state
-          break
-        case 'idle':
-        default:
-          // Start new matchmaking
-          handleJoinMatchmaking()
-          break
-      }
-    }, [
-      currentState,
-      handleOpenPreparationModal,
-      handleOpenSearchModal,
-      handleJoinMatchmaking,
-    ])
-
-    // Render button based on current state
-    const renderButton = () => {
-      // Use overrides if provided (for customization like in header)
-      const buttonText =
-        buttonTextOverride ||
-        (() => {
-          switch (currentState) {
-            case 'ready':
-              return challengeReady ? t('Challenge Ready!') : t('Match Found!')
-            case 'searching_minimized':
-              return t('Searching...')
-            case 'preparing':
-              return t('Preparing...')
-            case 'searching':
-              return isRequestPending ? t('Joining...') : t('Searching...')
-            case 'idle':
-            default:
-              return t('SOLO')
-          }
-        })()
-
-      const buttonIcon =
-        iconOverride ||
-        (() => {
-          switch (currentState) {
-            case 'ready':
-              return challengeReady ? PlayCircle : Activity
-            case 'searching_minimized':
-            case 'searching':
-              return Users
-            case 'preparing':
-              return Globe
-            case 'idle':
-            default:
-              return Shield
-          }
-        })()
-
-      const buttonGradient =
-        bgGradientOverride ||
-        (() => {
-          switch (currentState) {
-            case 'ready':
-              return 'linear(to-r, green.500, teal.500)'
-            case 'searching_minimized':
-            case 'searching':
-              return 'linear(to-r, blue.500, purple.500)'
-            case 'preparing':
-              return 'linear(to-r, orange.500, yellow.500)'
-            case 'idle':
-            default:
-              return 'linear(to-r, purple.600, blue.600)'
-          }
-        })()
-
-      const buttonColorScheme = (() => {
-        switch (currentState) {
-          case 'ready':
-            return 'green'
-          case 'searching_minimized':
-          case 'searching':
-            return 'blue'
-          case 'preparing':
-            return 'orange'
-          case 'idle':
-          default:
-            return 'purple'
+  // Modal handlers
+  const modalHandlers = useMemo(
+    () => ({
+      openSearchModal: () => {
+        updateState({
+          userDismissedSearch: false,
+          isSearchMinimized: false,
+          searchModalOpen: true,
+        })
+      },
+      openPreparationModal: () => {
+        updateState({
+          isPreparationMinimized: false,
+          preparationModalOpen: true,
+        })
+      },
+      closeSearchModal: () => {
+        updateState({
+          isSearchMinimized: true,
+          searchModalOpen: false,
+          userDismissedSearch: !inMatchmaking,
+        })
+      },
+      handlePreparationModalClose: (reason = 'minimize') => {
+        lastPrepModalCloseReason.current = reason
+        updateState({
+          preparationModalOpen: false,
+          isPreparationMinimized: reason === 'minimize',
+        })
+      },
+      handlePlayNow: () => {
+        const challengeId = challengeReady?.challengeId
+        if (challengeId) {
+          updateState({
+            preparationModalOpen: false,
+            isPreparationMinimized: false,
+            matchmakingStartTime: null,
+            matchmakingTime: 0,
+          })
+          lastPrepModalCloseReason.current = 'navigate'
+          navigateToChallenge(challengeId)
         }
-      })()
+      },
+    }),
+    [updateState, inMatchmaking, challengeReady, navigateToChallenge],
+  )
 
-      if (compact) {
-        // Compact version for floating menu
-        return (
-          <Tooltip
-            label={typeof buttonText === 'function' ? buttonText() : buttonText}
-          >
-            <MotionButton
-              colorScheme={buttonColorScheme}
-              onClick={handleButtonClick}
-              borderRadius="full"
-              bgGradient={
-                typeof buttonGradient === 'function'
-                  ? buttonGradient()
-                  : buttonGradient
-              }
-              boxShadow="0 4px 10px rgba(0,0,0,0.25)"
-              animate={{
-                boxShadow:
-                  currentState === 'ready'
-                    ? [
-                        '0 0 0px rgba(72, 187, 120, 0.4)',
-                        '0 0 20px rgba(72, 187, 120, 0.7)',
-                        '0 0 0px rgba(72, 187, 120, 0.4)',
-                      ]
-                    : currentState.includes('searching')
-                    ? [
-                        '0 0 0px rgba(66, 153, 225, 0.4)',
-                        '0 0 20px rgba(66, 153, 225, 0.7)',
-                        '0 0 0px rgba(66, 153, 225, 0.4)',
-                      ]
-                    : undefined,
-              }}
-              transition={{
-                duration: 1.5,
-                repeat: Infinity,
-                repeatType: 'reverse',
-              }}
-              whileHover={{ scale: 1.05 }}
-              whileTap={{ scale: 0.95 }}
-              p={2}
-              isDisabled={!isSocketReady || isRequestPending}
-            >
-              {currentState.includes('searching') &&
-              !currentState.includes('minimized') ? (
-                <Spinner size="sm" color="white" />
-              ) : (
-                <Icon
-                  as={
-                    typeof buttonIcon === 'function' ? buttonIcon() : buttonIcon
-                  }
-                  boxSize={4}
-                  color="white"
-                />
-              )}
-            </MotionButton>
-          </Tooltip>
-        )
-      }
+  // Button click handler
+  const handleButtonClick = useCallback(() => {
+    switch (currentState) {
+      case 'ready':
+        modalHandlers.openPreparationModal()
+        break
+      case 'searching':
+        if (state.isSearchMinimized) {
+          modalHandlers.openSearchModal()
+        }
+        break
+      case 'preparing':
+        break
+      case 'idle':
+      default:
+        handleJoinMatchmaking()
+        break
+    }
+  }, [
+    currentState,
+    modalHandlers,
+    handleJoinMatchmaking,
+    state.isSearchMinimized,
+  ])
 
-      // Full-size version
-      return (
-        <MotionButton
-          colorScheme={buttonColorScheme}
-          size="lg"
-          leftIcon={
-            currentState.includes('searching') &&
-            !currentState.includes('minimized') ? (
-              <Spinner size="sm" />
-            ) : (
-              <Icon
-                as={
-                  typeof buttonIcon === 'function' ? buttonIcon() : buttonIcon
-                }
-              />
-            )
-          }
-          onClick={handleButtonClick}
-          isLoading={isLoading && currentState === 'idle'}
-          loadingText={isRequestPending ? t('Joining...') : t('Loading...')}
-          borderRadius="full"
-          px={8}
-          py={currentState === 'idle' ? 7 : 6}
-          mb={4}
-          bgGradient={
-            typeof buttonGradient === 'function'
-              ? buttonGradient()
-              : buttonGradient
-          }
-          boxShadow={`0 4px 20px rgba(124, 58, 237, 0.5)`}
-          whileHover={{
-            scale: 1.05,
-            boxShadow: '0 8px 30px rgba(124, 58, 237, 0.7)',
-          }}
-          whileTap={{ scale: 0.98 }}
-          transition={{ duration: 0.3 }}
-          animate={{
-            boxShadow:
-              currentState === 'ready'
-                ? [
-                    '0 4px 20px rgba(72, 187, 120, 0.5)',
-                    '0 8px 30px rgba(72, 187, 120, 0.8)',
-                    '0 4px 20px rgba(72, 187, 120, 0.5)',
-                  ]
-                : currentState.includes('searching')
-                ? [
-                    '0 4px 20px rgba(66, 153, 225, 0.5)',
-                    '0 8px 30px rgba(66, 153, 225, 0.8)',
-                    '0 4px 20px rgba(66, 153, 225, 0.5)',
-                  ]
-                : undefined,
-          }}
-          isDisabled={
-            !isSocketReady || (isRequestPending && currentState === 'idle')
-          }
-        >
-          {typeof buttonText === 'function' ? buttonText() : buttonText}
-        </MotionButton>
-      )
+  // Button configuration
+  const buttonConfig = useMemo(() => {
+    const config = BUTTON_STATES[currentState]
+    const isLoading = matchmakingLoading || state.isRequestPending
+
+    let buttonText = config.text
+    if (buttonTextOverride && currentState === 'idle') {
+      buttonText = buttonTextOverride
+    } else if (currentState === 'ready') {
+      buttonText = challengeReady ? t('Challenge Ready!') : t('Match Found!')
+    } else if (currentState === 'searching') {
+      buttonText = state.isRequestPending ? t('Joining...') : t('Searching...')
+    } else {
+      buttonText = t(config.text)
     }
 
-    return (
-      <>
-        {renderButton()}
+    return {
+      text: buttonText,
+      icon: iconOverride || config.icon,
+      gradient: bgGradientOverride || config.gradient,
+      shadowColor: shadowColorOverride || config.shadowColor,
+      hoverShadowColor: shadowColorOverride || config.hoverShadowColor,
+      colorScheme: config.colorScheme,
+      isLoading,
+      isDisabled:
+        !isSocketReady || (state.isRequestPending && currentState === 'idle'),
+    }
+  }, [
+    currentState,
+    challengeReady,
+    state.isRequestPending,
+    matchmakingLoading,
+    isSocketReady,
+    buttonTextOverride,
+    iconOverride,
+    bgGradientOverride,
+    shadowColorOverride,
+    t,
+  ])
 
-        {/* Searching Modal */}
-        {searchModalOpen && (
-          <Modal
-            key="searching-modal"
-            isOpen={searchModalOpen}
-            onClose={handleCloseSearchModal}
-            isCentered
-            size="lg"
-            closeOnOverlayClick={false}
-          >
-            <ModalOverlay bg="rgba(0, 0, 0, 0.8)" backdropFilter="blur(10px)" />
-            <ModalContent
-              bg="rgba(26, 21, 39, 0.95)"
-              borderWidth="1px"
-              borderColor="blue.400"
-              borderRadius="xl"
-              boxShadow="0 0 20px rgba(66, 153, 225, 0.4)"
-            >
-              <ModalHeader
-                color="white"
-                display="flex"
-                alignItems="center"
-                gap={2}
+  // Enhanced button animations
+  const buttonAnimation = useMemo(() => {
+    const baseAnimation = {
+      scale: 1,
+      rotate: 0,
+    }
+
+    if (currentState === 'ready') {
+      return {
+        ...baseAnimation,
+        boxShadow: [
+          `0 8px 32px ${buttonConfig.shadowColor}`,
+          `0 12px 48px ${buttonConfig.hoverShadowColor}`,
+          `0 8px 32px ${buttonConfig.shadowColor}`,
+        ],
+        scale: [1, 1.02, 1],
+      }
+    }
+    if (currentState === 'searching') {
+      return {
+        ...baseAnimation,
+        boxShadow: [
+          `0 8px 32px ${buttonConfig.shadowColor}`,
+          `0 12px 48px ${buttonConfig.hoverShadowColor}`,
+          `0 8px 32px ${buttonConfig.shadowColor}`,
+        ],
+      }
+    }
+    return baseAnimation
+  }, [currentState, buttonConfig.shadowColor, buttonConfig.hoverShadowColor])
+
+  // Initialize on mount
+  useEffect(() => {
+    if (isSocketReady) {
+      checkMatchmakingStatus()
+    }
+  }, [checkMatchmakingStatus, isSocketReady])
+
+  return (
+    <>
+      {/* Enhanced Button with Fixed Sizing */}
+      <MotionButton
+        size={buttonSize}
+        leftIcon={
+          currentState === 'searching' && !state.isSearchMinimized ? (
+            <Spinner size="sm" />
+          ) : (
+            <Icon as={buttonConfig.icon} boxSize={5} />
+          )
+        }
+        rightIcon={
+          currentState === 'searching' &&
+          state.matchmakingTime > 0 &&
+          !compact ? (
+            <Text fontSize="xs" fontFamily="mono">
+              {Math.floor(state.matchmakingTime / 60)}:
+              {(state.matchmakingTime % 60).toString().padStart(2, '0')}
+            </Text>
+          ) : null
+        }
+        onClick={handleButtonClick}
+        isLoading={buttonConfig.isLoading && currentState === 'idle'}
+        loadingText={state.isRequestPending ? t('Joining...') : t('Loading...')}
+        borderRadius="full"
+        mb={compact ? 0 : 4}
+        bgGradient={buttonConfig.gradient}
+        boxShadow={`0 8px 32px ${buttonConfig.shadowColor}`}
+        border="2px solid"
+        borderColor="whiteAlpha.200"
+        color="white"
+        fontWeight="bold"
+        fontSize={{ base: 'sm', md: 'md' }}
+        textShadow="0 2px 4px rgba(0,0,0,0.3)"
+        position="relative"
+        overflow="hidden"
+        _hover={{
+          transform: 'translateY(-2px)',
+          boxShadow: `0 12px 48px ${buttonConfig.hoverShadowColor}`,
+          borderColor: 'whiteAlpha.400',
+        }}
+        _active={{
+          transform: 'translateY(0px)',
+          boxShadow: `0 6px 24px ${buttonConfig.shadowColor}`,
+        }}
+        _disabled={{
+          opacity: 0.6,
+          cursor: 'not-allowed',
+          transform: 'none',
+        }}
+        // Fixed sizing props
+        w={buttonWidth}
+        h={buttonHeight}
+        minW={buttonMinWidth}
+        // Enhanced animations
+        animate={buttonAnimation}
+        transition={{
+          duration: 0.3,
+          ease: 'easeInOut',
+          boxShadow: {
+            duration: 2,
+            repeat:
+              currentState === 'ready' || currentState === 'searching'
+                ? Infinity
+                : 0,
+            repeatType: 'reverse',
+          },
+          scale: {
+            duration: 1.5,
+            repeat: currentState === 'ready' ? Infinity : 0,
+            repeatType: 'reverse',
+          },
+        }}
+        whileHover={{
+          scale: buttonConfig.isDisabled ? 1 : 1.05,
+          transition: { duration: 0.2 },
+        }}
+        whileTap={{
+          scale: buttonConfig.isDisabled ? 1 : 0.98,
+          transition: { duration: 0.1 },
+        }}
+        isDisabled={buttonConfig.isDisabled}
+        {...otherProps}
+        // Glassmorphism effect
+        _before={{
+          content: '""',
+          position: 'absolute',
+          top: 0,
+          left: 0,
+          right: 0,
+          bottom: 0,
+          background:
+            'linear-gradient(135deg, rgba(255,255,255,0.1) 0%, rgba(255,255,255,0.05) 100%)',
+          borderRadius: 'full',
+          pointerEvents: 'none',
+        }}
+      >
+        {buttonConfig.text}
+      </MotionButton>
+
+      {/* Search Modal */}
+      <Modal
+        isOpen={state.searchModalOpen}
+        onClose={modalHandlers.closeSearchModal}
+        size="lg"
+        closeOnOverlayClick={false}
+      >
+        <ModalOverlay bg="rgba(0, 0, 0, 0.8)" backdropFilter="blur(10px)" />
+        <ModalContent
+          bg="rgba(26, 21, 39, 0.95)"
+          borderWidth="1px"
+          borderColor="blue.400"
+          borderRadius="xl"
+          boxShadow="0 0 20px rgba(66, 153, 225, 0.4)"
+        >
+          <ModalHeader color="white" display="flex" alignItems="center" gap={2}>
+            <Icon as={Users} color="blue.400" />
+            {t('Finding Opponents')}
+            {socketConnected && (
+              <Badge colorScheme="green" size="sm" ml={2}>
+                {t('Connected')}
+              </Badge>
+            )}
+            {!socketConnected && (
+              <Badge colorScheme="orange" size="sm" ml={2}>
+                <Icon as={AlertTriangle} boxSize={3} mr={1} />
+                {t('Reconnecting')}
+              </Badge>
+            )}
+          </ModalHeader>
+          <ModalCloseButton color="white" />
+
+          <ModalBody py={6}>
+            <VStack spacing={6} align="center">
+              <MotionFlex
+                justify="center"
+                align="center"
+                w="120px"
+                h="120px"
+                borderRadius="full"
+                bg="rgba(66, 153, 225, 0.1)"
+                border="2px solid"
+                borderColor="blue.400"
+                position="relative"
+                animate={{ scale: [1, 1.05, 1] }}
+                transition={{
+                  duration: 2,
+                  repeat: Infinity,
+                  repeatType: 'reverse',
+                }}
               >
-                <Icon as={Users} color="blue.400" />
-                {t('Finding Opponents')}
-                {socketConnected && (
-                  <Badge colorScheme="green" size="sm" ml={2}>
-                    {t('Connected')}
-                  </Badge>
-                )}
-                {!socketConnected && (
-                  <Badge colorScheme="orange" size="sm" ml={2}>
-                    <Icon as={AlertTriangle} boxSize={3} mr={1} />
-                    {t('Reconnecting')}
-                  </Badge>
-                )}
-              </ModalHeader>
-              <ModalCloseButton color="white" />
+                <Spinner
+                  size="xl"
+                  thickness="4px"
+                  speed="0.8s"
+                  color="blue.400"
+                />
+              </MotionFlex>
 
-              <ModalBody py={6}>
-                <VStack spacing={6} align="center">
-                  {/* Animated Spinner */}
-                  <MotionFlex
-                    justify="center"
-                    align="center"
-                    w="120px"
-                    h="120px"
-                    borderRadius="full"
-                    bg="rgba(66, 153, 225, 0.1)"
-                    border="2px solid"
-                    borderColor="blue.400"
-                    position="relative"
-                    animate={{ scale: [1, 1.05, 1] }}
+              <VStack spacing={2} align="center">
+                <Text color="white" fontSize="xl" fontWeight="bold">
+                  {state.isRequestPending
+                    ? t('Joining Queue...')
+                    : t('Searching for Opponents')}
+                </Text>
+                <Text color="whiteAlpha.700" fontSize="md" textAlign="center">
+                  {state.isRequestPending
+                    ? t('Please wait while we add you to the queue...')
+                    : t('Finding the perfect match for your skill level...')}
+                </Text>
+              </VStack>
+
+              <Divider borderColor="whiteAlpha.300" />
+
+              <HStack spacing={8} justify="center">
+                <VStack spacing={1}>
+                  <Text color="whiteAlpha.600" fontSize="sm">
+                    {t('Time in Queue')}
+                  </Text>
+                  <Timer seconds={state.matchmakingTime} />
+                </VStack>
+
+                <VStack spacing={1}>
+                  <Text color="whiteAlpha.600" fontSize="sm">
+                    {t('Status')}
+                  </Text>
+                  <MotionBadge
+                    colorScheme={state.isRequestPending ? 'orange' : 'blue'}
+                    px={3}
+                    py={1}
+                    animate={{ opacity: [0.7, 1, 0.7] }}
                     transition={{
                       duration: 2,
                       repeat: Infinity,
                       repeatType: 'reverse',
                     }}
                   >
-                    <Spinner
-                      size="xl"
-                      thickness="4px"
-                      speed="0.8s"
-                      color="blue.400"
-                    />
-                  </MotionFlex>
-
-                  {/* Status Text */}
-                  <VStack spacing={2} align="center">
-                    <Text color="white" fontSize="xl" fontWeight="bold">
-                      {isRequestPending
-                        ? t('Joining Queue...')
-                        : t('Searching for Opponents')}
-                    </Text>
-                    <Text
-                      color="whiteAlpha.700"
-                      fontSize="md"
-                      textAlign="center"
-                    >
-                      {isRequestPending
-                        ? t('Please wait while we add you to the queue...')
-                        : t(
-                            'Finding the perfect match for your skill level...',
-                          )}
-                    </Text>
-                  </VStack>
-
-                  <Divider borderColor="whiteAlpha.300" />
-
-                  {/* Stats */}
-                  <HStack spacing={8} justify="center">
-                    <VStack spacing={1}>
-                      <Text color="whiteAlpha.600" fontSize="sm">
-                        {t('Time in Queue')}
-                      </Text>
-                      <HStack
-                        p={2}
-                        borderRadius="md"
-                        bg="whiteAlpha.100"
-                        border="1px solid"
-                        borderColor="whiteAlpha.200"
-                      >
-                        <Icon as={Clock} color="blue.300" boxSize={4} />
-                        <Text color="white" fontWeight="bold" fontFamily="mono">
-                          {formatTime(matchmakingTime)}
-                        </Text>
-                      </HStack>
-                    </VStack>
-
-                    <VStack spacing={1}>
-                      <Text color="whiteAlpha.600" fontSize="sm">
-                        {t('Status')}
-                      </Text>
-                      <MotionBadge
-                        colorScheme={isRequestPending ? 'orange' : 'blue'}
-                        px={3}
-                        py={1}
-                        animate={{ opacity: [0.7, 1, 0.7] }}
-                        transition={{
-                          duration: 2,
-                          repeat: Infinity,
-                          repeatType: 'reverse',
-                        }}
-                      >
-                        {isRequestPending ? t('Joining...') : t('Searching')}
-                      </MotionBadge>
-                    </VStack>
-                  </HStack>
-
-                  {/* Info Text */}
-                  <Box w="100%" pt={2}>
-                    <Text
-                      color="whiteAlpha.600"
-                      fontSize="sm"
-                      textAlign="center"
-                    >
-                      {t(
-                        "You can minimize this and continue browsing. We'll notify you when a match is found.",
-                      )}
-                    </Text>
-                  </Box>
+                    {state.isRequestPending ? t('Joining...') : t('Searching')}
+                  </MotionBadge>
                 </VStack>
-              </ModalBody>
+              </HStack>
 
-              <ModalFooter>
-                <Button
-                  colorScheme="red"
-                  variant="outline"
-                  onClick={handleLeaveMatchmaking}
-                  leftIcon={<Icon as={X} />}
-                  _hover={{ bg: 'red.900' }}
-                  isLoading={isLoading}
-                  isDisabled={isRequestPending}
-                >
-                  {isRequestPending ? t('Please Wait') : t('Leave Queue')}
-                </Button>
-              </ModalFooter>
-            </ModalContent>
-          </Modal>
-        )}
+              <Box w="100%" pt={2}>
+                <Text color="whiteAlpha.600" fontSize="sm" textAlign="center">
+                  {t(
+                    "You can minimize this and continue browsing. We'll notify you when a match is found.",
+                  )}
+                </Text>
+              </Box>
+            </VStack>
+          </ModalBody>
 
-        {/* ENHANCED: Match Preparation Modal with minimize/close distinction */}
-        <MatchPreparationModal
-          isOpen={preparationModalOpen}
-          onClose={handlePreparationModalClose}
-          preparingData={preparingChallenge}
-          challengeId={challengeReady?.challengeId}
-          onPlayNow={handlePlayNow}
-          progress={preparationProgress}
-          step={preparationStep}
-        />
-      </>
-    )
-  },
-)
+          <ModalFooter>
+            <Button
+              colorScheme="red"
+              variant="outline"
+              onClick={handleLeaveMatchmaking}
+              leftIcon={<Icon as={X} />}
+              _hover={{ bg: 'red.900' }}
+              isLoading={buttonConfig.isLoading}
+              isDisabled={state.isRequestPending}
+            >
+              {state.isRequestPending ? t('Please Wait') : t('Leave Queue')}
+            </Button>
+          </ModalFooter>
+        </ModalContent>
+      </Modal>
 
+      {/* Match Preparation Modal */}
+      <MatchPreparationModal
+        isOpen={state.preparationModalOpen}
+        onClose={modalHandlers.handlePreparationModalClose}
+        preparingData={preparingChallenge}
+        challengeId={challengeReady?.challengeId}
+        onPlayNow={modalHandlers.handlePlayNow}
+        progress={preparationProgress}
+        step={preparationStep}
+      />
+    </>
+  )
+})
+
+Timer.displayName = 'Timer'
 MatchmakingButton.displayName = 'MatchmakingButton'
 
 export default MatchmakingButton

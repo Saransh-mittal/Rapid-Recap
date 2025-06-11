@@ -47,7 +47,9 @@ const {
   calculatePotentialTrophyExchange,
   getUserTrophyHistory,
   getUserTrophies,
+  getUserCombinedTrophyHistory,
 } = require('../services/quickClashServices/quickClashTrophyService')
+
 const {
   updateBattleWithQuizResults,
 } = require('../services/quickClashServices/quickClashTeamBattleService')
@@ -291,6 +293,10 @@ const submitQuizAnswers = asyncHandler(async (req, res) => {
   const userId = req.user._id
 
   try {
+    console.log(
+      `[submitQuizAnswers] Processing quiz submission for session: ${sessionId}`,
+    )
+
     const result = await submitQuizAnswersService({
       sessionId,
       responses,
@@ -320,17 +326,57 @@ const submitQuizAnswers = asyncHandler(async (req, res) => {
     if (challenge.fromTeamBattle && challenge.teamBattle) {
       // Update the team battle with the quiz results
       try {
-        const userId = req.user._id
+        console.log(
+          `[submitQuizAnswers] Updating team battle with quiz results`,
+        )
+
         await updateBattleWithQuizResults({
           battleId: challenge.teamBattle,
           challengeId: challenge._id,
           userId: userId,
           score: result.RQM_score,
         })
-      } catch (error) {
-        console.error('Error updating team battle with quiz results:', error)
-        // We don't want to fail the quiz submission if this update fails
-        // Just log the error and continue
+
+        console.log(`[submitQuizAnswers] Team battle updated successfully`)
+      } catch (teamBattleError) {
+        console.error(
+          'Error updating team battle with quiz results:',
+          teamBattleError,
+        )
+
+        // Check if this is a retry-exhausted error
+        if (teamBattleError.isRetryExhausted) {
+          // Log for monitoring but don't fail the quiz submission
+          console.error(
+            `[submitQuizAnswers] Team battle update failed after all retries:`,
+            {
+              battleId: challenge.teamBattle,
+              challengeId: challenge._id,
+              userId: userId,
+              error:
+                teamBattleError.originalError?.message ||
+                teamBattleError.message,
+            },
+          )
+
+          // Return success for quiz but indicate team battle update failed
+          return res.status(200).json({
+            success: true,
+            message:
+              'Quiz completed successfully, but team battle results may be delayed. Please check your battle status.',
+            challengeId: session.challenge.toString(),
+            warning:
+              'Team battle update is being processed. Results will appear shortly.',
+            ...result,
+          })
+        } else {
+          // For non-retry errors, we don't want to fail the quiz submission
+          // Just log the error and continue
+          console.error(
+            `[submitQuizAnswers] Team battle update error (non-retry):`,
+            teamBattleError,
+          )
+        }
       }
     } else {
       // Regular challenge completion logic
@@ -352,6 +398,30 @@ const submitQuizAnswers = asyncHandler(async (req, res) => {
     })
   } catch (error) {
     console.error('Error submitting quiz answers:', error)
+
+    // Handle retry-exhausted errors specially
+    if (error.isRetryExhausted) {
+      console.error(
+        `[submitQuizAnswers] Quiz submission failed after all retries:`,
+        {
+          sessionId: error.sessionId || sessionId,
+          userId: userId,
+          error: error.originalError?.message || error.message,
+        },
+      )
+
+      return res.status(500).json({
+        success: false,
+        message:
+          error.message ||
+          'Quiz submission failed after multiple attempts. Please try again.',
+        code: 'RETRY_EXHAUSTED',
+        retryable: true, // Client can retry the entire request
+        sessionId: sessionId,
+      })
+    }
+
+    // Handle other errors normally
     res.status(500).json({
       success: false,
       message: error.message || 'Error submitting quiz answers',
@@ -776,6 +846,36 @@ const getUserTrophiesController = asyncHandler(async (req, res) => {
 })
 
 /**
+ * @desc    Get a user's combined trophy history (both individual and team battles)
+ * @route   GET /api/quickClash/trophies/history/combined
+ * @access  Private
+ */
+const getUserCombinedTrophyHistoryController = asyncHandler(
+  async (req, res) => {
+    const userId = req.user._id
+    const { limit = 10 } = req.query
+
+    try {
+      const history = await getUserCombinedTrophyHistory({
+        userId,
+        limit: parseInt(limit),
+      })
+
+      res.status(200).json({
+        success: true,
+        history,
+      })
+    } catch (error) {
+      console.error('Error getting combined trophy history:', error)
+      res.status(500).json({
+        success: false,
+        message: error.message || 'Failed to get combined trophy history',
+      })
+    }
+  },
+)
+
+/**
  * @desc    Get a user's trophy history
  * @route   GET /api/quickClash/trophies/history
  * @access  Private
@@ -856,4 +956,5 @@ module.exports = {
   getUserTrophiesController,
   getUserTrophyHistoryController,
   calculatePotentialTrophyExchangeController,
+  getUserCombinedTrophyHistoryController,
 }

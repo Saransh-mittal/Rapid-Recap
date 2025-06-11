@@ -2,6 +2,7 @@
 
 /**
  * Service for calculating MVP awards and enhanced battle recognition
+ * Updated with correct MVP criteria
  */
 
 /**
@@ -23,42 +24,115 @@ const calculateMVPAwards = (battle, userTeam) => {
       winnerTeam === 'teamA' ? battle.teamBMembers : battle.teamAMembers
     const allMembers = [...battle.teamAMembers, ...battle.teamBMembers]
 
-    // 1. Match MVP - Highest RQM in match from winner team
-    if (winnerTeam && winnerTeam !== 'tie' && winnerTeamMembers.length > 0) {
-      const matchMVP = winnerTeamMembers.reduce((highest, member) => {
-        const memberScore = member.score || 0
-        const highestScore = highest?.score || 0
-        return memberScore > highestScore ? member : highest
-      }, null)
+    // Helper function to check if a player won their category
+    const didPlayerWinCategory = (playerId, teamKey) => {
+      if (!battle.challenges || !playerId) return false
 
-      if (matchMVP && matchMVP.score > 0) {
-        awards.matchMVP = {
-          user: matchMVP.user,
-          score: matchMVP.score,
-          category: matchMVP.category,
-          team: winnerTeam,
-          title: 'Match MVP',
-          description: `Highest scorer in the winning team with ${matchMVP.score} points`,
+      // Find the challenge where this player participated
+      const playerChallenge = battle.challenges.find(challenge => {
+        if (teamKey === 'teamA') {
+          return (
+            challenge.teamAPlayer &&
+            challenge.teamAPlayer.toString() === playerId.toString()
+          )
+        } else {
+          return (
+            challenge.teamBPlayer &&
+            challenge.teamBPlayer.toString() === playerId.toString()
+          )
+        }
+      })
+
+      // Check if this player's team won their specific challenge
+      return playerChallenge && playerChallenge.winner === teamKey
+    }
+
+    // Helper function to get player's category
+    const getPlayerCategory = (playerId, teamKey) => {
+      if (!battle.challenges || !playerId) return null
+
+      const playerChallenge = battle.challenges.find(challenge => {
+        if (teamKey === 'teamA') {
+          return (
+            challenge.teamAPlayer &&
+            challenge.teamAPlayer.toString() === playerId.toString()
+          )
+        } else {
+          return (
+            challenge.teamBPlayer &&
+            challenge.teamBPlayer.toString() === playerId.toString()
+          )
+        }
+      })
+
+      return playerChallenge ? playerChallenge.category : null
+    }
+
+    // 1. Match MVP - Winner team, won their category, highest RQM in team
+    if (winnerTeam && winnerTeam !== 'tie' && winnerTeamMembers.length > 0) {
+      // Filter members who won their individual categories
+      const categoryWinners = winnerTeamMembers.filter(member => {
+        return didPlayerWinCategory(member.user._id || member.user, winnerTeam)
+      })
+
+      if (categoryWinners.length > 0) {
+        // Find the highest scorer among category winners
+        const matchMVP = categoryWinners.reduce((highest, member) => {
+          const memberScore = member.score || 0
+          const highestScore = highest?.score || 0
+          return memberScore > highestScore ? member : highest
+        }, null)
+
+        if (matchMVP && matchMVP.score > 0) {
+          awards.matchMVP = {
+            user: matchMVP.user,
+            score: matchMVP.score,
+            category: getPlayerCategory(
+              matchMVP.user._id || matchMVP.user,
+              winnerTeam,
+            ),
+            team: winnerTeam,
+            title: 'Match MVP',
+            description: `Highest scorer in the winning team who won their category with ${matchMVP.score} points`,
+            wonCategory: true,
+          }
         }
       }
     }
 
-    // 2. Team MVP - Loser team's highest scorer
+    // 2. Team MVP - Loser team, won their category, highest RQM in team
     if (winnerTeam && winnerTeam !== 'tie' && loserTeamMembers.length > 0) {
-      const teamMVP = loserTeamMembers.reduce((highest, member) => {
-        const memberScore = member.score || 0
-        const highestScore = highest?.score || 0
-        return memberScore > highestScore ? member : highest
-      }, null)
+      const loserTeamKey = winnerTeam === 'teamA' ? 'teamB' : 'teamA'
 
-      if (teamMVP && teamMVP.score > 0) {
-        awards.teamMVP = {
-          user: teamMVP.user,
-          score: teamMVP.score,
-          category: teamMVP.category,
-          team: winnerTeam === 'teamA' ? 'teamB' : 'teamA',
-          title: 'Team MVP',
-          description: `Top performer in the losing team with ${teamMVP.score} points`,
+      // Filter members who won their individual categories
+      const categoryWinners = loserTeamMembers.filter(member => {
+        return didPlayerWinCategory(
+          member.user._id || member.user,
+          loserTeamKey,
+        )
+      })
+
+      if (categoryWinners.length > 0) {
+        // Find the highest scorer among category winners
+        const teamMVP = categoryWinners.reduce((highest, member) => {
+          const memberScore = member.score || 0
+          const highestScore = highest?.score || 0
+          return memberScore > highestScore ? member : highest
+        }, null)
+
+        if (teamMVP && teamMVP.score > 0) {
+          awards.teamMVP = {
+            user: teamMVP.user,
+            score: teamMVP.score,
+            category: getPlayerCategory(
+              teamMVP.user._id || teamMVP.user,
+              loserTeamKey,
+            ),
+            team: loserTeamKey,
+            title: 'Team MVP',
+            description: `Top performer in the losing team who won their category with ${teamMVP.score} points`,
+            wonCategory: true,
+          }
         }
       }
     }
@@ -68,11 +142,13 @@ const calculateMVPAwards = (battle, userTeam) => {
       let maxDifference = 0
       let pivotalChallenge = null
 
-      battle.challenges.forEach(challenge => {
+      battle.challenges.forEach((challenge, index) => {
         if (
           challenge.winner === winnerTeam &&
-          challenge.teamAScore &&
-          challenge.teamBScore
+          challenge.teamAScore !== undefined &&
+          challenge.teamBScore !== undefined &&
+          challenge.teamAScore !== null &&
+          challenge.teamBScore !== null
         ) {
           const difference = Math.abs(
             challenge.teamAScore - challenge.teamBScore,
@@ -90,28 +166,40 @@ const calculateMVPAwards = (battle, userTeam) => {
           winnerTeam === 'teamA'
             ? pivotalChallenge.teamAPlayer
             : pivotalChallenge.teamBPlayer
-        const winnerMember = winnerTeamMembers.find(
-          m => m.user._id.toString() === winnerPlayerId?.toString(),
-        )
 
-        if (winnerMember) {
-          awards.pivotalPlayer = {
-            user: winnerMember.user,
-            score: winnerMember.score,
-            category: pivotalChallenge.category,
-            team: winnerTeam,
-            difference: maxDifference,
-            title: 'Pivotal Player',
-            description: `Made the crucial difference in ${pivotalChallenge.category} with a ${maxDifference}-point margin`,
+        if (winnerPlayerId) {
+          const winnerMember = winnerTeamMembers.find(
+            m =>
+              (m.user._id || m.user).toString() === winnerPlayerId.toString(),
+          )
+
+          if (winnerMember) {
+            awards.pivotalPlayer = {
+              user: winnerMember.user,
+              score: winnerMember.score,
+              category: pivotalChallenge.category,
+              team: winnerTeam,
+              difference: maxDifference,
+              title: 'Pivotal Player',
+              description: `Made the crucial difference in ${pivotalChallenge.category} with a ${maxDifference}-point margin`,
+              challengeWinner: true,
+            }
           }
         }
       }
     }
 
-    // 4. Performance Recognitions based on RQM scores
+    // 4. Performance Recognitions based on RQM scores (unchanged)
     allMembers.forEach(member => {
       const score = member.score || 0
       let recognition = null
+      const memberTeam = battle.teamAMembers.includes(member)
+        ? 'teamA'
+        : 'teamB'
+      const wonCategory = didPlayerWinCategory(
+        member.user._id || member.user,
+        memberTeam,
+      )
 
       if (score >= 100) {
         recognition = {
@@ -151,12 +239,46 @@ const calculateMVPAwards = (battle, userTeam) => {
         awards.performanceRecognitions.push({
           user: member.user,
           score: member.score,
-          category: member.category,
-          team: battle.teamAMembers.includes(member) ? 'teamA' : 'teamB',
+          category: getPlayerCategory(
+            member.user._id || member.user,
+            memberTeam,
+          ),
+          team: memberTeam,
+          wonCategory,
           ...recognition,
         })
       }
     })
+
+    // Add debug information in development
+    if (process.env.NODE_ENV === 'development') {
+      console.log('MVP Awards Calculation:', {
+        winnerTeam,
+        matchMVP: awards.matchMVP
+          ? {
+              name: awards.matchMVP.user.name,
+              score: awards.matchMVP.score,
+              category: awards.matchMVP.category,
+              wonCategory: awards.matchMVP.wonCategory,
+            }
+          : null,
+        teamMVP: awards.teamMVP
+          ? {
+              name: awards.teamMVP.user.name,
+              score: awards.teamMVP.score,
+              category: awards.teamMVP.category,
+              wonCategory: awards.teamMVP.wonCategory,
+            }
+          : null,
+        pivotalPlayer: awards.pivotalPlayer
+          ? {
+              name: awards.pivotalPlayer.user.name,
+              category: awards.pivotalPlayer.category,
+              difference: awards.pivotalPlayer.difference,
+            }
+          : null,
+      })
+    }
 
     return awards
   } catch (error) {
@@ -229,7 +351,7 @@ const getSimplifiedTrophyData = (battle, userMemberData) => {
       activeBonuses: [],
       finalAmount: 0,
       perPlayerAmount: 0,
-      showBaseAmount: false, // Hide base amount
+      showBaseAmount: false,
     }
   }
 

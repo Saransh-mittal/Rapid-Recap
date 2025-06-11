@@ -199,7 +199,7 @@ const QuickClash = () => {
 
   useEffect(() => {
     checkMatchmakingStatus()
-  }, [])
+  }, [loginCheckStatus, updatesLoading])
 
   // Task popup effect - memoized
   useEffect(() => {
@@ -211,7 +211,7 @@ const QuickClash = () => {
   // Streak check effect - memoized
   useEffect(() => {
     checkStreakAndFetchUpdates()
-  }, [checkStreakAndFetchUpdates])
+  }, [])
 
   // Optimized event handlers with useCallback
   const handleNewChallenge = useCallback(() => {

@@ -15,12 +15,21 @@ import {
   Box,
   Tooltip,
   Spinner,
+  Badge,
 } from '@chakra-ui/react'
 import { motion, useAnimation } from 'framer-motion'
-import { Trophy, TrendingUp, TrendingDown, BarChart } from 'lucide-react'
+import {
+  Trophy,
+  TrendingUp,
+  TrendingDown,
+  BarChart,
+  Zap,
+  Users,
+  Shield,
+} from 'lucide-react'
 import { useTranslation } from 'react-i18next'
 import { useSelector, useDispatch } from 'react-redux'
-import { fetchTrophyHistory } from '../../../redux/quickClashSlice'
+import { fetchCombinedTrophyHistory } from '../../../redux/quickClashSlice'
 import TrophyAnimation from '../animations/TrophyAnimation'
 
 const MotionFlex = motion(Flex)
@@ -29,7 +38,7 @@ const MotionText = motion(Text)
 
 /**
  * Premium trophy display component showing user's current trophy count
- * with animation and history popup
+ * with animation and combined history popup (both 1v1 and 4v4 modes)
  */
 const TrophyDisplay = () => {
   const { t } = useTranslation('QuickClash')
@@ -41,8 +50,8 @@ const TrophyDisplay = () => {
   const {
     userTrophies,
     userTrophiesLoading,
-    trophyHistory,
-    trophyHistoryLoading,
+    combinedTrophyHistory,
+    combinedTrophyHistoryLoading,
   } = useSelector(state => state.quickClash)
 
   // Previous trophy count to detect changes
@@ -64,9 +73,54 @@ const TrophyDisplay = () => {
     prevTrophiesRef.current = userTrophies
   }, [userTrophies, trophyControls])
 
-  // Fetch trophy history when popover opens
+  // Fetch combined trophy history when popover opens
   const handlePopoverOpen = () => {
-    dispatch(fetchTrophyHistory({ limit: 5 }))
+    dispatch(fetchCombinedTrophyHistory({ limit: 8 }))
+  }
+
+  // Get appropriate icon based on battle mode and result
+  const getBattleModeIcon = entry => {
+    if (entry.type === 'team') {
+      return Users // Team battles use Users icon
+    }
+
+    // Individual battles use result-based icons
+    if (entry.result === 'win') return TrendingUp
+    if (entry.result === 'loss') return TrendingDown
+    return Trophy
+  }
+
+  // Get appropriate color based on result
+  const getResultColor = entry => {
+    if (entry.result === 'win') return 'green.400'
+    if (entry.result === 'loss') return 'red.400'
+    return 'yellow.400'
+  }
+
+  // Format opponent name based on battle type
+  const getOpponentDisplayName = entry => {
+    if (entry.type === 'team') {
+      return entry.opponent?.name || t('Unknown Team')
+    }
+    return entry.opponent?.inGameName || entry.opponent?.name || t('Unknown')
+  }
+
+  // Get battle description based on type and result
+  const getBattleDescription = entry => {
+    const opponentName = getOpponentDisplayName(entry)
+
+    if (entry.type === 'team') {
+      if (entry.result === 'win')
+        return `${t('Team Victory vs')} ${opponentName}`
+      if (entry.result === 'loss')
+        return `${t('Team Defeat vs')} ${opponentName}`
+      return `${t('Team Tie vs')} ${opponentName}`
+    }
+
+    // Individual battles
+    if (entry.result === 'win') return `${t('Victory vs')} ${opponentName}`
+    if (entry.result === 'loss') return `${t('Defeat vs')} ${opponentName}`
+    return `${t('Tie vs')} ${opponentName}`
   }
 
   // Show loading spinner if data is loading
@@ -163,7 +217,7 @@ const TrophyDisplay = () => {
         backdropFilter="blur(16px)"
         borderColor="rgba(255, 215, 0, 0.4)"
         boxShadow="0 8px 32px rgba(0, 0, 0, 0.4), 0 0 15px rgba(255, 215, 0, 0.3)"
-        width="340px"
+        width="380px"
         height="auto"
         p={0}
         overflow="hidden"
@@ -242,18 +296,22 @@ const TrophyDisplay = () => {
               <Text color="white" fontSize="sm" fontWeight="bold">
                 {t('Recent Trophy Changes')}
               </Text>
-              <Icon as={BarChart} color="whiteAlpha.600" boxSize={4} />
+              <HStack spacing={1}>
+                <Icon as={Zap} color="purple.400" boxSize={3} />
+                <Icon as={Users} color="blue.400" boxSize={3} />
+                <Icon as={BarChart} color="whiteAlpha.600" boxSize={4} />
+              </HStack>
             </HStack>
 
-            {trophyHistoryLoading ? (
+            {combinedTrophyHistoryLoading ? (
               <Flex justify="center" py={4}>
                 <Spinner size="sm" color="yellow.400" />
               </Flex>
-            ) : trophyHistory && trophyHistory.length > 0 ? (
+            ) : combinedTrophyHistory && combinedTrophyHistory.length > 0 ? (
               <VStack spacing={2} align="stretch">
-                {trophyHistory.slice(0, 5).map((entry, index) => (
+                {combinedTrophyHistory.slice(0, 6).map((entry, index) => (
                   <Flex
-                    key={index}
+                    key={entry._id}
                     justify="space-between"
                     align="center"
                     p={2}
@@ -261,36 +319,73 @@ const TrophyDisplay = () => {
                     bg={
                       index % 2 === 0 ? 'rgba(30, 30, 45, 0.6)' : 'transparent'
                     }
+                    position="relative"
                   >
-                    <HStack>
+                    <HStack spacing={2} flex={1}>
+                      {/* Battle mode badge */}
+                      <Badge
+                        colorScheme={entry.type === 'team' ? 'blue' : 'purple'}
+                        fontSize="2xs"
+                        px={1}
+                        py={0.5}
+                        borderRadius="sm"
+                      >
+                        {entry.mode}
+                      </Badge>
+
+                      {/* Result icon */}
                       <Icon
-                        as={
-                          entry.result === 'win'
-                            ? TrendingUp
-                            : entry.result === 'loss'
-                            ? TrendingDown
-                            : Trophy
-                        }
-                        color={
-                          entry.result === 'win'
-                            ? 'green.400'
-                            : entry.result === 'loss'
-                            ? 'red.400'
-                            : 'yellow.400'
-                        }
+                        as={getBattleModeIcon(entry)}
+                        color={getResultColor(entry)}
                         boxSize={4}
                       />
-                      <Text color="whiteAlpha.800" fontSize="xs">
-                        {entry.result === 'win'
-                          ? t('Victory vs')
-                          : entry.result === 'loss'
-                          ? t('Defeat vs')
-                          : t('Tie vs')}{' '}
-                        {entry.opponent?.inGameName ||
-                          entry.opponent?.name ||
-                          t('Unknown')}
-                      </Text>
+
+                      {/* Battle description */}
+                      <VStack spacing={0} align="start" flex={1}>
+                        <Text
+                          color="whiteAlpha.800"
+                          fontSize="xs"
+                          lineHeight="1.2"
+                        >
+                          {getBattleDescription(entry)}
+                        </Text>
+
+                        {/* Additional info for team battles */}
+                        {entry.type === 'team' && (
+                          <HStack spacing={1}>
+                            {entry.bonusesApplied?.strongerTeam && (
+                              <Tooltip label={t('Stronger Team Bonus')}>
+                                <Icon
+                                  as={TrendingUp}
+                                  color="green.400"
+                                  boxSize={2}
+                                />
+                              </Tooltip>
+                            )}
+                            {entry.bonusesApplied?.allWins && (
+                              <Tooltip label={t('All Wins Bonus')}>
+                                <Icon
+                                  as={Trophy}
+                                  color="yellow.400"
+                                  boxSize={2}
+                                />
+                              </Tooltip>
+                            )}
+                            {entry.protectionUsed && (
+                              <Tooltip label={t('Protection Applied')}>
+                                <Icon
+                                  as={Shield}
+                                  color="blue.400"
+                                  boxSize={2}
+                                />
+                              </Tooltip>
+                            )}
+                          </HStack>
+                        )}
+                      </VStack>
                     </HStack>
+
+                    {/* Trophy change */}
                     <Text
                       color={
                         entry.trophiesChange > 0
@@ -301,6 +396,8 @@ const TrophyDisplay = () => {
                       }
                       fontWeight="bold"
                       fontSize="xs"
+                      minW="40px"
+                      textAlign="right"
                     >
                       {entry.trophiesChange > 0 ? '+' : ''}
                       {entry.trophiesChange}
@@ -349,7 +446,9 @@ const TrophyDisplay = () => {
                 {t('Earn More Trophies')}
               </Text>
               <Text color="whiteAlpha.600" fontSize="2xs">
-                {t('Win challenges to climb the Quick Clash leaderboard!')}
+                {t(
+                  'Win challenges in both 1v1 and 4v4 modes to climb the leaderboard!',
+                )}
               </Text>
             </VStack>
           </HStack>

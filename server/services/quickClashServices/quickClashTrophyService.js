@@ -3,6 +3,7 @@ const mongoose = require('mongoose')
 const User = require('../../model/userSchema')
 const QuickClashTrophyHistory = require('../../model/quickClashSchemas/quickClashTrophyHistorySchema')
 const QuickClashChallenge = require('../../model/quickClashSchemas/quickClashChallengeSchema')
+const QuickClashTeamTrophyHistory = require('../../model/quickClashSchemas/quickClashTeamTrophyHistorySchema')
 
 // Constants for trophy calculation
 const BASE_TROPHIES = 30
@@ -529,11 +530,89 @@ const calculatePotentialTrophyExchange = async ({ userId, opponentId }) => {
   }
 }
 
+/**
+ * Get combined trophy history for a user (both individual and team battles)
+ * @param {Object} params - Parameters
+ * @param {string} params.userId - User ID
+ * @param {number} [params.limit=10] - Number of entries to fetch
+ * @returns {Promise<Array>} Combined trophy history entries
+ */
+const getUserCombinedTrophyHistory = async ({ userId, limit = 10 }) => {
+  try {
+    // Fetch individual trophy history
+    const individualHistory = await QuickClashTrophyHistory.find({
+      user: userId,
+    })
+      .sort({ createdAt: -1 })
+      .limit(limit * 2) // Fetch more to ensure we have enough after combining
+      .populate('opponent', 'name inGameName pic')
+      .populate('challenge', 'category status')
+      .lean()
+
+    // Fetch team trophy history
+    const teamHistory = await QuickClashTeamTrophyHistory.find({ user: userId })
+      .sort({ createdAt: -1 })
+      .limit(limit * 2) // Fetch more to ensure we have enough after combining
+      .populate('opponentTeam', 'name')
+      .populate('team', 'name')
+      .populate('teamBattle', 'teamA teamB')
+      .lean()
+
+    // Transform individual history to common format
+    const transformedIndividualHistory = individualHistory.map(entry => ({
+      _id: entry._id,
+      type: 'individual', // 1v1 mode
+      trophiesChange: entry.trophiesChange,
+      trophiesAfter: entry.trophiesAfter,
+      result: entry.result,
+      opponent: entry.opponent,
+      category: entry.challenge?.category || 'Unknown',
+      mode: '1v1',
+      createdAt: entry.createdAt,
+      protectionUsed: entry.protectionUsed,
+    }))
+
+    // Transform team history to common format
+    const transformedTeamHistory = teamHistory.map(entry => ({
+      _id: entry._id,
+      type: 'team', // 4v4 mode
+      trophiesChange: entry.trophiesChange,
+      trophiesAfter: entry.trophiesAfter,
+      result: entry.result,
+      opponent: {
+        name: entry.opponentTeam?.name || 'Unknown Team',
+        inGameName: entry.opponentTeam?.name || 'Unknown Team',
+        pic: null, // Teams don't have profile pics
+      },
+      category: 'Team Battle',
+      mode: '4v4',
+      createdAt: entry.createdAt,
+      userParticipated: entry.userParticipated,
+      userCompleted: entry.userCompleted,
+      userScore: entry.userScore,
+      bonusesApplied: entry.bonusesApplied,
+    }))
+
+    // Combine and sort by creation date
+    const combinedHistory = [
+      ...transformedIndividualHistory,
+      ...transformedTeamHistory,
+    ].sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt))
+
+    // Return limited results
+    return combinedHistory.slice(0, limit)
+  } catch (error) {
+    console.error('Error getting combined trophy history:', error)
+    throw error
+  }
+}
+
 module.exports = {
   getUserTrophies,
   calculateTrophiesToExchange,
   updateTrophiesAfterChallenge,
   getUserTrophyHistory,
   calculatePotentialTrophyExchange,
+  getUserCombinedTrophyHistory,
   DEFAULT_STARTING_TROPHIES,
 }

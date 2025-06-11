@@ -5,6 +5,8 @@ import React, {
   lazy,
   Suspense,
   useRef,
+  useMemo,
+  memo,
 } from 'react'
 import {
   Box,
@@ -37,6 +39,103 @@ const QuizTimer = lazy(() => import('./QuizTimer'))
 
 const MotionButton = motion(Button)
 
+// Memoized question navigation component
+const QuestionNavigation = memo(
+  ({ questions, currentQuestionIndex, userAnswers, onQuestionSelect, t }) => {
+    return (
+      <>
+        <HStack justify="center" wrap="wrap" gap={2} mt={6} mb={2}>
+          {questions.map((_, index) => (
+            <Box
+              key={index}
+              w="36px"
+              h="36px"
+              borderRadius="md"
+              bg={userAnswers[index] ? 'purple.500' : 'whiteAlpha.200'}
+              display="flex"
+              alignItems="center"
+              justifyContent="center"
+              cursor={index === currentQuestionIndex ? 'default' : 'pointer'}
+              border={
+                currentQuestionIndex === index ? '2px solid white' : 'none'
+              }
+              transition="all 0.2s"
+              onClick={() => onQuestionSelect(index)}
+            >
+              <Text fontSize="sm" color="white">
+                {index + 1}
+              </Text>
+            </Box>
+          ))}
+        </HStack>
+        <Text fontSize="xs" color="whiteAlpha.600" textAlign="center" mb={4}>
+          {t('Click on numbers to navigate between questions')}
+        </Text>
+      </>
+    )
+  },
+)
+QuestionNavigation.displayName = 'QuestionNavigation'
+
+// Memoized navigation controls
+const NavigationControls = memo(
+  ({
+    currentQuestionIndex,
+    totalQuestions,
+    userAnswers,
+    onNext,
+    onSubmit,
+    submitLoading,
+    t,
+  }) => {
+    const isLastQuestion = currentQuestionIndex === totalQuestions - 1
+    const hasAnswer = userAnswers[currentQuestionIndex]
+
+    return (
+      <Flex width={'100%'}>
+        {!isLastQuestion ? (
+          <Button
+            onClick={onNext}
+            colorScheme="blue"
+            rightIcon={<ArrowRight size={16} />}
+            isDisabled={!hasAnswer}
+            size="md"
+            ml={'auto'}
+          >
+            {t('Next')}
+          </Button>
+        ) : (
+          <MotionButton
+            onClick={onSubmit}
+            colorScheme="green"
+            rightIcon={<CheckCircle size={16} />}
+            isLoading={submitLoading}
+            isDisabled={!hasAnswer}
+            whileHover={{ scale: 1.05 }}
+            whileTap={{ scale: 0.95 }}
+            size="md"
+            ml={'auto'}
+          >
+            {t('Submit Answers')}
+          </MotionButton>
+        )}
+      </Flex>
+    )
+  },
+)
+NavigationControls.displayName = 'NavigationControls'
+
+// Memoized loading fallback
+const LoadingFallback = memo(() => (
+  <Center height="60vh">
+    <VStack spacing={4}>
+      <Spinner size="xl" color="purple.500" thickness="4px" />
+      <Text color="white">{t('Loading questions...')}</Text>
+    </VStack>
+  </Center>
+))
+LoadingFallback.displayName = 'LoadingFallback'
+
 const QuickClashQuiz = ({
   sessionId,
   onComplete,
@@ -49,6 +148,7 @@ const QuickClashQuiz = ({
   const navigate = useNavigate()
   const toast = useToast()
 
+  // ORIGINAL STATE STRUCTURE - PRESERVED
   const [loading, setLoading] = useState(true)
   const [questions, setQuestions] = useState([])
   const [currentQuestionIndex, setCurrentQuestionIndex] = useState(0)
@@ -60,15 +160,14 @@ const QuickClashQuiz = ({
   const [result, setResult] = useState(null)
   const [showConfirmModal, setShowConfirmModal] = useState(false)
 
-  // New state to track if quiz is ready to start
+  // ORIGINAL STATE - PRESERVED
   const [quizReady, setQuizReady] = useState(false)
-  // New state for internal timer tracking
   const [remainingTime, setRemainingTime] = useState(50)
 
   // New ref to track if a question switch is in progress
   const switchingQuestionRef = useRef(false)
 
-  // Fetch questions
+  // ORIGINAL FETCH QUESTIONS LOGIC - PRESERVED
   useEffect(() => {
     const fetchQuestions = async () => {
       try {
@@ -107,7 +206,7 @@ const QuickClashQuiz = ({
     fetchQuestions()
   }, [sessionId, toast, navigate, t])
 
-  // Initialize empty answers and start timer for first question
+  // ORIGINAL ANSWER INITIALIZATION LOGIC - PRESERVED
   useEffect(() => {
     if (questions.length > 0) {
       const initialAnswers = {}
@@ -124,12 +223,12 @@ const QuickClashQuiz = ({
     }
   }, [questions])
 
-  // Handle timer expiration
+  // ORIGINAL TIMER EXPIRATION LOGIC - PRESERVED
   const handleTimeUp = useCallback(() => {
     handleSubmit()
   }, [])
 
-  // Sync timer with parent component
+  // ORIGINAL TIMER TICK LOGIC - PRESERVED
   const handleTimerTick = useCallback(
     newTimeLeft => {
       setQuizTimeLeft(newTimeLeft)
@@ -137,7 +236,7 @@ const QuickClashQuiz = ({
     [setQuizTimeLeft],
   )
 
-  // Submit quiz
+  // ORIGINAL SUBMIT LOGIC - PRESERVED
   const handleSubmit = useCallback(async () => {
     if (submitLoading || submitted) return // Prevent double submissions
 
@@ -207,7 +306,7 @@ const QuickClashQuiz = ({
     onComplete,
   ])
 
-  // Handle navigation between questions
+  // ORIGINAL NAVIGATION LOGIC - PRESERVED
   const handleNext = useCallback(() => {
     if (
       currentQuestionIndex < questions.length - 1 &&
@@ -250,7 +349,7 @@ const QuickClashQuiz = ({
     }
   }, [currentQuestionIndex, questions.length])
 
-  // Handle answer selection
+  // ORIGINAL ANSWER HANDLING LOGIC - PRESERVED
   const handleAnswer = useCallback(
     answer => {
       if (switchingQuestionRef.current) return
@@ -264,10 +363,47 @@ const QuickClashQuiz = ({
     [currentQuestionIndex],
   )
 
+  // ORIGINAL QUESTION SELECTION LOGIC - PRESERVED
+  const handleQuestionSelect = useCallback(
+    index => {
+      if (index !== currentQuestionIndex) {
+        // Save time for current question
+        setTimeSpent(prev => {
+          const now = Date.now()
+          const questionData = prev[currentQuestionIndex] || {}
+          const startTimeForQuestion = questionData.startTime || now
+
+          return {
+            ...prev,
+            [currentQuestionIndex]: {
+              startTime: startTimeForQuestion,
+              timeSpent: Math.floor((now - startTimeForQuestion) / 1000),
+            },
+            [index]: {
+              startTime: now,
+              timeSpent: 0,
+            },
+          }
+        })
+
+        setCurrentQuestionIndex(index)
+      }
+    },
+    [currentQuestionIndex],
+  )
+
   const confirmSubmit = () => {
     setShowConfirmModal(false)
     handleSubmit()
   }
+
+  // Memoized quiz session for QuizInterface - MOVED TO TOP TO AVOID HOOKS ORDER ISSUES
+  const quizSession = useMemo(
+    () => ({
+      questions: questions,
+    }),
+    [questions],
+  )
 
   if (loading) {
     return (
@@ -322,92 +458,31 @@ const QuickClashQuiz = ({
           totalQuestions={questions.length}
           handleAnswer={handleAnswer}
           userAnswers={userAnswers}
-          quizSession={{ questions }}
+          quizSession={quizSession}
         />
       </Suspense>
 
       {/* Navigation controls */}
-      <Flex width={'100%'}>
-        {currentQuestionIndex < questions.length - 1 ? (
-          <Button
-            onClick={handleNext}
-            colorScheme="blue"
-            rightIcon={<ArrowRight size={16} />}
-            isDisabled={!userAnswers[currentQuestionIndex]}
-            size="md"
-            ml={'auto'}
-          >
-            {t('Next')}
-          </Button>
-        ) : (
-          <MotionButton
-            onClick={handleSubmit}
-            colorScheme="green"
-            rightIcon={<CheckCircle size={16} />}
-            isLoading={submitLoading}
-            isDisabled={!userAnswers[currentQuestionIndex]}
-            whileHover={{ scale: 1.05 }}
-            whileTap={{ scale: 0.95 }}
-            size="md"
-            ml={'auto'}
-          >
-            {t('Submit Answers')}
-          </MotionButton>
-        )}
-      </Flex>
+      <NavigationControls
+        currentQuestionIndex={currentQuestionIndex}
+        totalQuestions={questions.length}
+        userAnswers={userAnswers}
+        onNext={handleNext}
+        onSubmit={handleSubmit}
+        submitLoading={submitLoading}
+        t={t}
+      />
 
-      <HStack justify="center" wrap="wrap" gap={2} mt={6} mb={2}>
-        {questions.map((_, index) => (
-          <Box
-            key={index}
-            w="36px"
-            h="36px"
-            borderRadius="md"
-            bg={userAnswers[index] ? 'purple.500' : 'whiteAlpha.200'}
-            display="flex"
-            alignItems="center"
-            justifyContent="center"
-            cursor={index === currentQuestionIndex ? 'default' : 'pointer'}
-            border={currentQuestionIndex === index ? '2px solid white' : 'none'}
-            transition="all 0.2s"
-            onClick={() => {
-              if (index !== currentQuestionIndex) {
-                // Save time for current question
-                setTimeSpent(prev => {
-                  const now = Date.now()
-                  const questionData = prev[currentQuestionIndex] || {}
-                  const startTimeForQuestion = questionData.startTime || now
+      {/* Question navigation */}
+      <QuestionNavigation
+        questions={questions}
+        currentQuestionIndex={currentQuestionIndex}
+        userAnswers={userAnswers}
+        onQuestionSelect={handleQuestionSelect}
+        t={t}
+      />
 
-                  return {
-                    ...prev,
-                    [currentQuestionIndex]: {
-                      startTime: startTimeForQuestion,
-                      timeSpent: Math.floor(
-                        (now - startTimeForQuestion) / 1000,
-                      ),
-                    },
-                    [index]: {
-                      startTime: now,
-                      timeSpent: 0,
-                    },
-                  }
-                })
-
-                setCurrentQuestionIndex(index)
-              }
-            }}
-          >
-            <Text fontSize="sm" color="white">
-              {index + 1}
-            </Text>
-          </Box>
-        ))}
-      </HStack>
-
-      <Text fontSize="xs" color="whiteAlpha.600" textAlign="center" mb={4}>
-        {t('Click on numbers to navigate between questions')}
-      </Text>
-
+      {/* Confirmation Modal */}
       {showConfirmModal && (
         <Suspense fallback={null}>
           <ConfirmationModal
@@ -424,4 +499,4 @@ const QuickClashQuiz = ({
   )
 }
 
-export default QuickClashQuiz
+export default memo(QuickClashQuiz)

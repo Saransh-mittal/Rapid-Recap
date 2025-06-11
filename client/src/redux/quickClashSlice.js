@@ -161,6 +161,26 @@ export const fetchUserTrophies = createAsyncThunk(
   },
 )
 
+export const fetchCombinedTrophyHistory = createAsyncThunk(
+  'quickClash/fetchCombinedTrophyHistory',
+  async ({ limit = 10 } = {}, { rejectWithValue }) => {
+    try {
+      const response = await axios.get(
+        '/api/quickClash/trophies/history/combined',
+        {
+          params: { limit },
+        },
+      )
+      return response.data.history || []
+    } catch (error) {
+      return rejectWithValue(
+        error.response?.data?.message ||
+          'Failed to fetch combined trophy history',
+      )
+    }
+  },
+)
+
 // Add new async thunk for fetching trophy history
 export const fetchTrophyHistory = createAsyncThunk(
   'quickClash/fetchTrophyHistory',
@@ -231,6 +251,10 @@ const initialState = {
   trophyHistory: [],
   trophyHistoryLoading: false,
   trophyHistoryError: null,
+
+  combinedTrophyHistory: [],
+  combinedTrophyHistoryLoading: false,
+  combinedTrophyHistoryError: null,
 
   potentialTrophyExchange: null,
   trophyExchangeLoading: false,
@@ -373,6 +397,19 @@ const quickClashSlice = createSlice({
       .addCase(fetchTrophyHistory.rejected, (state, action) => {
         state.trophyHistoryLoading = false
         state.trophyHistoryError = action.payload
+      })
+
+      .addCase(fetchCombinedTrophyHistory.pending, state => {
+        state.combinedTrophyHistoryLoading = true
+        state.combinedTrophyHistoryError = null
+      })
+      .addCase(fetchCombinedTrophyHistory.fulfilled, (state, action) => {
+        state.combinedTrophyHistory = action.payload
+        state.combinedTrophyHistoryLoading = false
+      })
+      .addCase(fetchCombinedTrophyHistory.rejected, (state, action) => {
+        state.combinedTrophyHistoryLoading = false
+        state.combinedTrophyHistoryError = action.payload
       })
 
       // Fetch user stats
