@@ -1,19 +1,20 @@
-import React from 'react'
+import React, { useMemo } from 'react'
 import { Box, Text, Icon, VStack, Button } from '@chakra-ui/react'
 import { AlertOctagon, AlertCircle } from 'lucide-react'
 import { motion } from 'framer-motion'
 import { useTranslation } from 'react-i18next'
 
+// These motion components are defined outside so they are not recreated on every render.
 const MotionBox = motion(Box)
 const MotionButton = motion(Button)
 
 /**
- * Utility to check if an error is retryable based on its message
+ * Utility to check if an error is retryable based on its message.
+ * This function is pure and outside the component, which is good practice.
  */
 export const isRetryableError = errorMessage => {
   if (!errorMessage) return false
 
-  // List of error substrings that indicate a non-retryable error
   const nonRetryableErrors = [
     'did not complete the challenge',
     'not completed',
@@ -23,45 +24,83 @@ export const isRetryableError = errorMessage => {
     'incomplete challenge',
   ]
 
-  // Check if any non-retryable error substring exists in the message
   return !nonRetryableErrors.some(substring =>
     errorMessage.toLowerCase().includes(substring.toLowerCase()),
   )
 }
 
 /**
- * Displays an error state when analysis fetching fails
+ * Displays an error state when analysis fetching fails.
+ *
+ * Wrapped in React.memo to prevent re-renders if props haven't changed.
  */
-const AnalysisErrorCard = ({ error, onRetry }) => {
+const AnalysisErrorCard = React.memo(({ error, onRetry }) => {
   const { t } = useTranslation('QuickClash')
 
-  // Determine if the error is retryable
-  const canRetry = isRetryableError(error)
+  // useMemo caches the result of isRetryableError.
+  // It will only re-calculate when the `error` prop changes.
+  const canRetry = useMemo(() => isRetryableError(error), [error])
 
-  // Create a more user-friendly message if needed
-  const friendlyErrorMessage = error || t('Failed to load analysis')
+  // useMemo caches the friendly error message.
+  // It will only be re-created if `error` or `t` function changes.
+  const friendlyErrorMessage = useMemo(
+    () => error || t('Failed to load analysis'),
+    [error, t],
+  )
+
+  // Memoize values that depend on `canRetry` to avoid re-computing them on every render
+  // and to pass stable props to the child components.
+  const themeColor = canRetry ? 'red' : 'orange'
+  const borderColor = `${themeColor}.500`
+  const iconColor = `${themeColor}.400`
+  const ErrorIcon = canRetry ? AlertOctagon : AlertCircle
+
+  const boxShadow = useMemo(
+    () =>
+      `0 4px 16px rgba(0, 0, 0, 0.2), 0 0 0 1px ${
+        canRetry ? 'rgba(245, 101, 101, 0.1)' : 'rgba(251, 146, 60, 0.1)'
+      }`,
+    [canRetry],
+  )
+
+  const bgGradient = useMemo(
+    () =>
+      `radial(circle at top right, ${
+        canRetry ? 'rgba(245, 101, 101, 0.1)' : 'rgba(251, 146, 60, 0.1)'
+      }, transparent 70%)`,
+    [canRetry],
+  )
+
+  // Static objects for framer-motion props don't need memoization as they
+  // are constant, but it's good practice if they were dynamic.
+  const motionBoxAnimation = {
+    initial: { opacity: 0 },
+    animate: { opacity: 1 },
+    transition: { duration: 0.3 },
+  }
+
+  const motionButtonAnimation = {
+    whileHover: { scale: 1.05 },
+    whileTap: { scale: 0.95 },
+  }
 
   return (
     <MotionBox
-      width={'100%'}
+      width="100%"
       p={3}
       height={{ base: '100%', md: '225px' }}
       borderRadius="lg"
       bg="rgba(26, 21, 39, 0.7)"
       borderWidth="1.5px"
-      borderColor={canRetry ? 'red.500' : 'orange.500'}
-      boxShadow={`0 4px 16px rgba(0, 0, 0, 0.2), 0 0 0 1px ${
-        canRetry ? 'rgba(245, 101, 101, 0.1)' : 'rgba(251, 146, 60, 0.1)'
-      }`}
-      initial={{ opacity: 0 }}
-      animate={{ opacity: 1 }}
-      transition={{ duration: 0.3 }}
+      borderColor={borderColor}
+      boxShadow={boxShadow}
       display="flex"
       flexDirection="column"
       justifyContent="center"
       alignItems="center"
       position="relative"
       overflow="hidden"
+      {...motionBoxAnimation}
     >
       {/* Background error effect */}
       <Box
@@ -70,18 +109,12 @@ const AnalysisErrorCard = ({ error, onRetry }) => {
         left="0"
         right="0"
         bottom="0"
-        bgGradient={`radial(circle at top right, ${
-          canRetry ? 'rgba(245, 101, 101, 0.1)' : 'rgba(251, 146, 60, 0.1)'
-        }, transparent 70%)`}
+        bgGradient={bgGradient}
         zIndex="0"
       />
 
       <VStack spacing={3} position="relative" zIndex="1" textAlign="center">
-        <Icon
-          as={canRetry ? AlertOctagon : AlertCircle}
-          color={canRetry ? 'red.400' : 'orange.400'}
-          boxSize={8}
-        />
+        <Icon as={ErrorIcon} color={iconColor} boxSize={8} />
 
         <Text color="whiteAlpha.900" fontWeight="semibold">
           {canRetry ? t('Analysis Error') : t('Analysis Unavailable')}
@@ -97,9 +130,8 @@ const AnalysisErrorCard = ({ error, onRetry }) => {
             size="sm"
             colorScheme="red"
             variant="outline"
-            onClick={onRetry}
-            whileHover={{ scale: 1.05 }}
-            whileTap={{ scale: 0.95 }}
+            onClick={onRetry} // `onRetry` should be wrapped in useCallback in the parent component
+            {...motionButtonAnimation}
           >
             {t('Try Again')}
           </MotionButton>
@@ -107,6 +139,6 @@ const AnalysisErrorCard = ({ error, onRetry }) => {
       </VStack>
     </MotionBox>
   )
-}
+})
 
 export default AnalysisErrorCard
