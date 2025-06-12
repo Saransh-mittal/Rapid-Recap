@@ -457,7 +457,7 @@ export default function Profile() {
             >
               <Flex
                 flexDirection={{ base: 'column', md: 'row' }}
-                marginTop="80px" // Increased to accommodate navigation buttons
+                marginTop="35px" // Increased to accommodate navigation buttons
                 marginInline={{ base: '2%', xl: '6.5%' }}
                 alignItems={{ base: 'center', md: 'normal' }}
                 justifyContent={{ base: 'center', md: 'center', lg: 'normal' }}

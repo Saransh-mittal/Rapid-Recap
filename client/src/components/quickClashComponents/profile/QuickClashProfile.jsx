@@ -686,7 +686,7 @@ const QuickClashProfile = ({ userId: propUserId }) => {
 
             {/* Sleek Quick Stats */}
             <MotionBox variants={itemVariants}>
-              <SimpleGrid columns={{ base: 2, md: 4 }} spacing={2}>
+              <SimpleGrid columns={{ base: 2, md: 3 }} spacing={2}>
                 <SlimQuickStatCard
                   icon={Target}
                   iconColor="#3B82F6"
@@ -705,12 +705,12 @@ const QuickClashProfile = ({ userId: propUserId }) => {
                   label="Current Streak"
                   value={profile.streaks.current}
                 />
-                <SlimQuickStatCard
+                {/* <SlimQuickStatCard
                   icon={Award}
                   iconColor="#9333EA"
                   label="Achievements"
                   value={profile.achievements.length}
-                />
+                /> */}
               </SimpleGrid>
             </MotionBox>
 
@@ -922,7 +922,7 @@ const QuickClashProfile = ({ userId: propUserId }) => {
             {/* Compact Two-Column Layout */}
             <SimpleGrid columns={{ base: 1, xl: 2 }} spacing={2}>
               {/* Achievements */}
-              <MotionBox variants={itemVariants}>
+              {/* <MotionBox variants={itemVariants}>
                 <CompactSection
                   icon={Award}
                   iconColor="#FFD700"
@@ -948,8 +948,29 @@ const QuickClashProfile = ({ userId: propUserId }) => {
                     )}
                   </VStack>
                 </CompactSection>
-              </MotionBox>
-
+              </MotionBox> */}
+              {/* Compact Favorite Categories */}
+              {profile.favoriteCategories.length > 0 && (
+                <MotionBox variants={itemVariants}>
+                  <CompactSection
+                    icon={Star}
+                    iconColor="#FFD700"
+                    title="Favorite Categories"
+                    badge="Knowledge Domains"
+                    badgeColor="#FFD700"
+                    isExpanded={expandedSections.categories}
+                    onToggle={() => toggleSection('categories')}
+                  >
+                    <Wrap spacing={1.5}>
+                      {profile.favoriteCategories.map((cat, index) => (
+                        <WrapItem key={cat.category}>
+                          <CompactCategoryCard category={cat} />
+                        </WrapItem>
+                      ))}
+                    </Wrap>
+                  </CompactSection>
+                </MotionBox>
+              )}
               {/* Streaks & Activity Column */}
               <VStack spacing={2}>
                 {/* Compact Streaks */}
@@ -1008,62 +1029,36 @@ const QuickClashProfile = ({ userId: propUserId }) => {
                     )}
                   </CompactSection>
                 </MotionBox>
-
-                {/* Compact Recent Activity */}
-                <MotionBox variants={itemVariants} w="100%">
-                  <CompactSection
-                    icon={Activity}
-                    iconColor="#6366F1"
-                    title="Recent Activity"
-                    badge="Battle Log"
-                    badgeColor="#6366F1"
-                    isExpanded={expandedSections.activity}
-                    onToggle={() => toggleSection('activity')}
-                  >
-                    <VStack spacing={1.5} maxH="160px" overflowY="auto">
-                      {profile.recentActivity
-                        .slice(0, 5)
-                        .map((activity, index) => (
-                          <CompactActivityCard
-                            key={activity.id}
-                            activity={activity}
-                          />
-                        ))}
-                      {profile.recentActivity.length === 0 && (
-                        <EmptyState
-                          emoji="📊"
-                          title="No recent activity"
-                          subtitle="Start battling to see activity!"
-                        />
-                      )}
-                    </VStack>
-                  </CompactSection>
-                </MotionBox>
               </VStack>
             </SimpleGrid>
-
-            {/* Compact Favorite Categories */}
-            {profile.favoriteCategories.length > 0 && (
-              <MotionBox variants={itemVariants}>
-                <CompactSection
-                  icon={Star}
-                  iconColor="#FFD700"
-                  title="Favorite Categories"
-                  badge="Knowledge Domains"
-                  badgeColor="#FFD700"
-                  isExpanded={expandedSections.categories}
-                  onToggle={() => toggleSection('categories')}
-                >
-                  <Wrap spacing={1.5}>
-                    {profile.favoriteCategories.map((cat, index) => (
-                      <WrapItem key={cat.category}>
-                        <CompactCategoryCard category={cat} />
-                      </WrapItem>
-                    ))}
-                  </Wrap>
-                </CompactSection>
-              </MotionBox>
-            )}
+            {/* Compact Recent Activity */}
+            <MotionBox variants={itemVariants} w="100%">
+              <CompactSection
+                icon={Activity}
+                iconColor="#6366F1"
+                title="Recent Activity"
+                badge="Battle Log"
+                badgeColor="#6366F1"
+                isExpanded={expandedSections.activity}
+                onToggle={() => toggleSection('activity')}
+              >
+                <VStack spacing={1.5} maxH="160px" overflowY="auto">
+                  {profile.recentActivity.slice(0, 5).map((activity, index) => (
+                    <CompactActivityCard
+                      key={activity.id}
+                      activity={activity}
+                    />
+                  ))}
+                  {profile.recentActivity.length === 0 && (
+                    <EmptyState
+                      emoji="📊"
+                      title="No recent activity"
+                      subtitle="Start battling to see activity!"
+                    />
+                  )}
+                </VStack>
+              </CompactSection>
+            </MotionBox>
           </VStack>
         </MotionBox>
       </Container>
@@ -1199,7 +1194,7 @@ const AILearningFocusCard = ({ focusAreas }) => {
       <Wrap spacing={1}>
         {focusAreas.map((area, index) => (
           <WrapItem key={index}>
-            <Badge
+            <Text
               bg="rgba(16, 185, 129, 0.1)"
               color="#10B981"
               px={2}
@@ -1209,7 +1204,7 @@ const AILearningFocusCard = ({ focusAreas }) => {
               fontWeight="medium"
             >
               {area}
-            </Badge>
+            </Text>
           </WrapItem>
         ))}
       </Wrap>

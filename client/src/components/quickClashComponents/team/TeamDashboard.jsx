@@ -624,16 +624,64 @@ const TeamDashboard = () => {
   )
 
   const copyTeamCode = useCallback(
-    code => {
-      navigator.clipboard.writeText(code)
-      toast({
-        title: 'Copied!',
-        description: 'Team code copied to clipboard',
-        status: 'success',
-        duration: 2000,
-        isClosable: true,
-        position: 'top-right',
-      })
+    async code => {
+      try {
+        // Check if modern clipboard API is available
+        if (navigator.clipboard && window.isSecureContext) {
+          await navigator.clipboard.writeText(code)
+          toast({
+            title: 'Copied!',
+            description: 'Team code copied to clipboard',
+            status: 'success',
+            duration: 2000,
+            isClosable: true,
+            position: 'top-right',
+          })
+        } else {
+          // Fallback for older browsers or non-secure contexts
+          const textArea = document.createElement('textarea')
+          textArea.value = code
+          textArea.style.position = 'fixed'
+          textArea.style.left = '-999999px'
+          textArea.style.top = '-999999px'
+          document.body.appendChild(textArea)
+          textArea.focus()
+          textArea.select()
+
+          try {
+            const result = document.execCommand('copy')
+            document.body.removeChild(textArea)
+
+            if (result) {
+              toast({
+                title: 'Copied!',
+                description: 'Team code copied to clipboard',
+                status: 'success',
+                duration: 2000,
+                isClosable: true,
+                position: 'top-right',
+              })
+            } else {
+              throw new Error('Copy command failed')
+            }
+          } catch (err) {
+            document.body.removeChild(textArea)
+            throw err
+          }
+        }
+      } catch (error) {
+        console.error('Failed to copy team code:', error)
+
+        // Show fallback modal or toast with the code
+        toast({
+          title: 'Copy Failed',
+          description: `Please copy manually: ${code}`,
+          status: 'warning',
+          duration: 5000,
+          isClosable: true,
+          position: 'top-right',
+        })
+      }
     },
     [toast],
   )

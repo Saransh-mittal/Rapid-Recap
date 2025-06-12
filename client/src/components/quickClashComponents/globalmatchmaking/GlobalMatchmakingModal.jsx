@@ -423,12 +423,7 @@ const GlobalMatchmakingModal = React.memo(
             </HStack>
           </ModalHeader>
         )}
-        {!isEmbedded && (
-          <ModalCloseButton
-            color="white"
-            isDisabled={battleCreationStatus === 'creating'}
-          />
-        )}
+        {!isEmbedded && <ModalCloseButton color="white" />}
         <ModalBody py={6} px={{ base: 4, md: 6 }}>
           <MatchmakingStatusDisplay
             inMatchmaking={inMatchmaking}

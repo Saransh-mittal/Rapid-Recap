@@ -742,7 +742,29 @@ const useQuickClashSocket = () => {
           isClosable: true,
         })
 
-        dispatch(fetchTeamBattles())
+        // FIXED: Get current team battle state from store instead of stale closure
+        const currentState = getCurrentState()
+        const currentTeamBattleState = currentState.teamBattleState
+
+        console.log(
+          '[QC_SOCKET] Current team battle state:',
+          currentTeamBattleState,
+        )
+
+        if (
+          currentTeamBattleState.currentBattle &&
+          currentTeamBattleState.currentBattle._id === data.battleId
+        ) {
+          console.log(
+            '[QC_SOCKET] Fetching updated battle details for:',
+            data.battleId,
+          )
+          dispatch(fetchTeamBattleDetails(data.battleId))
+        } else {
+          console.log(
+            '[QC_SOCKET] No matching current battle found for category selection',
+          )
+        }
       },
     )
     cleanupFunctions.push(cleanupTeamBattleCompleted)

@@ -248,7 +248,7 @@ const useQuickClashAnalysis = () => {
         exitAction: 'navigate_back',
       })
     }
-
+    window.scrollTo(0, 0)
     navigate('/quickclash')
   }, [navigate])
 
