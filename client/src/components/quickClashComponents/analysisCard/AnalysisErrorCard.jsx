@@ -3,7 +3,7 @@ import { Box, Text, Icon, VStack, Button } from '@chakra-ui/react'
 import { AlertOctagon, AlertCircle } from 'lucide-react'
 import { motion } from 'framer-motion'
 import { useTranslation } from 'react-i18next'
-
+//
 // These motion components are defined outside so they are not recreated on every render.
 const MotionBox = motion(Box)
 const MotionButton = motion(Button)
