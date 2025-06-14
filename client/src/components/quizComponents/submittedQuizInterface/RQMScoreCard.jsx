@@ -11,14 +11,14 @@ const MotionBox = motion(Box)
 // Memoized score calculations to prevent recalculation on re-renders
 const useScoreCalculations = quizData => {
   return useMemo(() => {
-    const baseScore = quizData.baseRQM || quizData.finalRQM
-    const withPerformance = quizData.performanceBonus
-      ? parseInt((baseScore * quizData.performanceBonus).toFixed(0))
+    const baseScore = quizData?.baseRQM || quizData?.finalRQM
+    const withPerformance = quizData?.performanceBonus
+      ? parseInt((baseScore * quizData?.performanceBonus).toFixed(0))
       : baseScore
-    const finalScore = quizData.finalRQM
+    const finalScore = quizData?.finalRQM
 
     return { baseScore, withPerformance, finalScore }
-  }, [quizData.baseRQM, quizData.finalRQM, quizData.performanceBonus])
+  }, [quizData?.baseRQM, quizData?.finalRQM, quizData?.performanceBonus])
 }
 
 // Memoized label calculations
@@ -27,23 +27,23 @@ const useScoreLabels = (baseScore, withPerformance, quizData, t) => {
     const performanceLabel =
       baseScore < withPerformance
         ? t('performanceBonus', {
-            bonus: ((parseFloat(quizData.performanceBonus) - 1) * 100).toFixed(
+            bonus: ((parseFloat(quizData?.performanceBonus) - 1) * 100).toFixed(
               0,
             ),
           })
         : null
 
-    const boostLabel = quizData.isBoost
-      ? t('quizBoost', { boost: ((quizData.boost - 1) * 100).toFixed(0) })
+    const boostLabel = quizData?.isBoost
+      ? t('quizBoost', { boost: ((quizData?.boost - 1) * 100).toFixed(0) })
       : null
 
     return { performanceLabel, boostLabel }
   }, [
     baseScore,
     withPerformance,
-    quizData.performanceBonus,
-    quizData.isBoost,
-    quizData.boost,
+    quizData?.performanceBonus,
+    quizData?.isBoost,
+    quizData?.boost,
     t,
   ])
 }

@@ -13,11 +13,15 @@ export const initializeTokenRefresh = () => {
     async error => {
       const originalRequest = error.config
 
+      const hasAuthState =
+        !!localStorage.getItem('token') ||
+        document.cookie.includes('refresh_token')
       // If the error is 401 and indicates token expiration and we haven't tried refreshing yet
       if (
         error.response?.status === 401 &&
         error.response?.data?.tokenExpired &&
-        !originalRequest._retry
+        !originalRequest._retry &&
+        hasAuthState
       ) {
         originalRequest._retry = true
 
@@ -33,12 +37,14 @@ export const initializeTokenRefresh = () => {
           return axios(originalRequest)
         } catch (refreshError) {
           // If refresh fails, log the user out
-          store.dispatch(logoutAuth())
-          store.dispatch(setLoginCheckStatus('fulfilled'))
+          if (hasAuthState) {
+            store.dispatch(logoutAuth())
+            // Clear any local storage
+            localStorage.removeItem('token')
+            localStorage.removeItem('role')
+          }
 
-          // Clear any local storage
-          localStorage.removeItem('token')
-          localStorage.removeItem('role')
+          store.dispatch(setLoginCheckStatus('fulfilled'))
 
           return Promise.reject(refreshError)
         }
