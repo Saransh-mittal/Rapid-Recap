@@ -74,7 +74,6 @@ export const rewardsSlice = createSlice({
         state.isDisplaying = true
       } else {
         state.isDisplaying = false
-        window.location.reload()
       }
     },
 

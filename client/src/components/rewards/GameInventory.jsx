@@ -206,7 +206,12 @@ const AbilityCard = ({ item, isActive, onClick, variants }) => {
           >
             {ABILITY_ICONS[item.type] || <Package size={24} />}
           </Flex>
-          <Text fontSize="sm" fontWeight="bold" textAlign="center">
+          <Text
+            fontSize="sm"
+            fontWeight="bold"
+            textAlign="center"
+            textTransform={'capitalize'}
+          >
             {item.name}
           </Text>
           {item.multiplier && item.multiplier > 1 && (

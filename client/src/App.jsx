@@ -377,12 +377,31 @@ const App = () => {
         !isAuthenticated &&
         loginCheckStatus === 'fulfilled'
       ) {
-        if (window.location.hash.split('?')?.[1]?.split('=')?.[0] === 'ref') {
+        // Handle referral code
+        if (
+          window.location.hash
+            .split('?')?.[1]
+            ?.split('&')?.[0]
+            ?.split('=')?.[0] === 'ref'
+        ) {
           localStorage.setItem(
             'ref',
-            window.location.hash.split('?')?.[1]?.split('=')?.[1],
+            window.location.hash
+              .split('?')?.[1]
+              ?.split('&')?.[0]
+              ?.split('=')?.[1],
           )
         }
+
+        // Handle early adopter code
+        const searchParams = new URLSearchParams(
+          window.location.hash.split('?')[1],
+        )
+        const eocParam = searchParams.get('EOC')
+        if (eocParam) {
+          localStorage.setItem('EOC', eocParam)
+        }
+
         dispatch(setIsSigninOpen(true))
       }
       if (

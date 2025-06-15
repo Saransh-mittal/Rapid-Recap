@@ -98,8 +98,47 @@ const saveQuizAttempt = async (
     })
     .session(session)
 
+  const userAbsoluteTotalQuizAttempts = await QuizAttempt.countDocuments({
+    user: userId,
+  }).session(session)
+
   if (
-    (!user.quizAttempts || user.quizAttempts.length === 0) &&
+    (!userAbsoluteTotalQuizAttempts || userAbsoluteTotalQuizAttempts === 0) &&
+    user.isEarlyAdopter
+  ) {
+    await createQuizBoostAbility({
+      userId: user._id,
+      session,
+      quantity: 3,
+      multiplier: 1.5,
+    })
+    await createCategoryBoost({
+      userId: user._id,
+      category: 'Category',
+      multiplier: 1.5,
+      duration: 5 * 24 * 60, // 5 days
+      expiresAt: moment().add(1, 'month').toDate(),
+      isClaimed: false,
+      isActive: false,
+      description: `Increases RQM score by 1.5x for your chozen category as you are an Early Adopter`,
+      isBadgePowerUp: false,
+      session,
+    })
+    await createCategoryRadar({
+      userId: user._id,
+      category: 'category',
+      duration: 5 * 24 * 60, // 5 days
+      expiresAt: moment().add(1, 'month').toDate(),
+      isClaimed: false,
+      isActive: false,
+      description: `You can view difficulty of each articles for your chozen category as you are an Early Adopter`,
+      isBadgePowerUp: false,
+      session,
+    })
+  }
+
+  if (
+    (!userAbsoluteTotalQuizAttempts || userAbsoluteTotalQuizAttempts === 0) &&
     user.referredBy
   ) {
     const referrer = await User.findById(user.referredBy).session(session)
@@ -110,12 +149,13 @@ const saveQuizAttempt = async (
     )
 
     if (referralIndex !== -1) {
-      await createQuizBoostAbility({
-        userId: user._id,
-        session,
-        quantity: 2,
-        multiplier: 1.5,
-      })
+      if (!user.isEarlyAdopter)
+        await createQuizBoostAbility({
+          userId: user._id,
+          session,
+          quantity: 2,
+          multiplier: 1.5,
+        })
       referrer.referrals[referralIndex].status = 'complete'
       await referrer.save({ session })
 
@@ -167,7 +207,7 @@ const saveQuizAttempt = async (
         })
       }
     }
-  } else if (user.referredBy && user.quizAttempts.length === 4) {
+  } else if (user.referredBy && userAbsoluteTotalQuizAttempts === 4) {
     const referrer = await User.findById(user.referredBy).session(session)
 
     // Find the referral and update its status
@@ -175,18 +215,19 @@ const saveQuizAttempt = async (
       referral => referral.user.toString() === user._id.toString(),
     )
     if (referralIndex !== -1) {
-      await createCategoryBoost({
-        userId: user._id,
-        category: 'category',
-        multiplier: 1.5,
-        duration: 2 * 24 * 60, // 2 days
-        expiresAt: moment().add(1, 'month').toDate(),
-        isClaimed: false,
-        isActive: false,
-        description: `Increases RQM score by 1.5x for your chozen category as you were referred and completed 5 quizzes`,
-        isBadgePowerUp: false,
-        session,
-      })
+      if (!user.isEarlyAdopter)
+        await createCategoryBoost({
+          userId: user._id,
+          category: 'category',
+          multiplier: 1.5,
+          duration: 2 * 24 * 60, // 2 days
+          expiresAt: moment().add(1, 'month').toDate(),
+          isClaimed: false,
+          isActive: false,
+          description: `Increases RQM score by 1.5x for your chozen category as you were referred and completed 5 quizzes`,
+          isBadgePowerUp: false,
+          session,
+        })
     }
   }
 

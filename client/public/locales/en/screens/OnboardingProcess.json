@@ -62,6 +62,9 @@
     "processing": "Processing",
     "steps": {
       "language": "Choose your preferred language",
+      "earlyAdopter": "Early Adopter Verification",
+      "tutorialChoice": "Tutorial Choice",
+      "referral": "Referral Code Entry",
       "welcome": "Begin your journey",
       "categories": "Discover your interests",
       "articleSelection": "Find your perfect read",
@@ -70,5 +73,39 @@
       "articleReading": "Immerse yourself",
       "leaderboard": "View your rankings"
     }
+  },
+  "earlyAdopter": {
+    "title": "Early Adopter Access",
+    "subtitle": "Join our exclusive early adopter program",
+    "enterCode": "Enter Early Adopter Code",
+    "codePholder": "EOC-XXXXXXXX",
+    "benefits": {
+      "title": "Exclusive Benefits",
+      "exclusiveAccess": "Exclusive Early Access",
+      "prioritySupport": "Priority Support",
+      "specialBadge": "Special Badge",
+      "betaTesting": "Beta Testing",
+      "directFeedback": "Direct Feedback Channel"
+    },
+    "success": {
+      "title": "🎉 Hurray! You're an Early Adopter! 🎉",
+      "description": "Welcome to the exclusive early adopter community!"
+    },
+    "buttons": {
+      "activate": "Activate Early Adopter Status",
+      "skip": "Skip This Step",
+      "invalidCode": "Invalid Code"
+    }
+  },
+  "tutorialChoice": {
+    "title": "Ready to Learn?",
+    "subtitle": "Would you like a quick tutorial on how to read articles and take quizzes?",
+    "benefitsTitle": "Tutorial Includes",
+    "benefit1": "How to effectively read articles",
+    "benefit2": "Understanding the quiz format",
+    "benefit3": "Tips for better scores",
+    "takeTutorial": "Yes, Take Tutorial",
+    "skipTutorial": "Skip Tutorial",
+    "helperText": "You can always access help guides later from the settings menu"
   }
 }
