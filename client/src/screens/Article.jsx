@@ -600,7 +600,9 @@ const Article = () => {
                 importantSentences={importantSentences}
               />
             )}
-            <GameInventoryButton page={'ARTICLE'} />
+            {isAuthenticated && loginCheckStatus === 'fulfilled' && (
+              <GameInventoryButton page={'ARTICLE'} />
+            )}
             <Sidebar
               category={article?.category}
               setShouldScrollToTop={setShouldScrollToTop}
