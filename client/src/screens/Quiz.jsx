@@ -281,58 +281,58 @@ const Quiz = () => {
           )
         }
       }
-      setTimeout(() => {
-        if (
-          currentTournament.status === 'registration' &&
-          !isRegistered &&
-          user.role !== 'guest'
-        ) {
-          if (!userEligibleForTournament) {
-            dispatchRedux(
-              addNoteMessage({
-                title: 'Keep Going!',
-                messageType: 'tournament',
-                tournamentStatus: 'locked',
-                tournamentName:
-                  '#' +
-                  String(
-                    String(currentTournament?.tournamentNumber).padStart(
-                      3,
-                      '0',
-                    ),
-                  ),
-                tournamentEndTime: currentTournament?.registrationEndDate,
-                messageForTournamentEligibility: messageForTournament,
-                userStreak: user.streak,
-                requiredStreak: 2,
-                duration: 10000,
-                width: '300px',
-              }),
-            )
-          } else {
-            dispatchRedux(
-              addNoteMessage({
-                title: 'Tournament Time!',
-                duration: 10000,
-                width: '300px',
-                messageType: 'tournament',
-                tournamentStatus: 'registration',
-                tournamentName:
-                  '#' +
-                  String(
-                    String(currentTournament?.tournamentNumber).padStart(
-                      3,
-                      '0',
-                    ),
-                  ),
-                tournamentEndTime: currentTournament?.registrationEndDate,
-                userStreak: user?.streak,
-                requiredStreak: 2,
-              }),
-            )
-          }
-        }
-      }, 10000)
+      // setTimeout(() => {
+      //   if (
+      //     currentTournament.status === 'registration' &&
+      //     !isRegistered &&
+      //     user.role !== 'guest'
+      //   ) {
+      //     if (!userEligibleForTournament) {
+      //       dispatchRedux(
+      //         addNoteMessage({
+      //           title: 'Keep Going!',
+      //           messageType: 'tournament',
+      //           tournamentStatus: 'locked',
+      //           tournamentName:
+      //             '#' +
+      //             String(
+      //               String(currentTournament?.tournamentNumber).padStart(
+      //                 3,
+      //                 '0',
+      //               ),
+      //             ),
+      //           tournamentEndTime: currentTournament?.registrationEndDate,
+      //           messageForTournamentEligibility: messageForTournament,
+      //           userStreak: user.streak,
+      //           requiredStreak: 2,
+      //           duration: 10000,
+      //           width: '300px',
+      //         }),
+      //       )
+      //     } else {
+      //       dispatchRedux(
+      //         addNoteMessage({
+      //           title: 'Tournament Time!',
+      //           duration: 10000,
+      //           width: '300px',
+      //           messageType: 'tournament',
+      //           tournamentStatus: 'registration',
+      //           tournamentName:
+      //             '#' +
+      //             String(
+      //               String(currentTournament?.tournamentNumber).padStart(
+      //                 3,
+      //                 '0',
+      //               ),
+      //             ),
+      //           tournamentEndTime: currentTournament?.registrationEndDate,
+      //           userStreak: user?.streak,
+      //           requiredStreak: 2,
+      //         }),
+      //       )
+      //     }
+      //   }
+      // }, 10000)
       setTimeout(() => dailyStreakCheckerAndUpdater(dispatchRedux), 14000)
     } catch (error) {
       console.log(error)

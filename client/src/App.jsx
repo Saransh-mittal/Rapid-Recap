@@ -72,10 +72,10 @@ import {
   isSubscribedChecker,
 } from './redux/notificationSlice.js'
 import TournamentQuiz from './components/tournamentComponents/tournamentQuiz/TournamentQuiz.jsx'
-import {
-  checkTournamentRegistration,
-  getTopLeaderboard,
-} from './redux/tournamentSlice.js'
+// import {
+//   // checkTournamentRegistration,
+//   getTopLeaderboard,
+// } from './redux/tournamentSlice.js'
 import LoadingScreen from './screens/LoadingScreen.jsx'
 import { setIsLoading, setTaskProgress } from './redux/loadingProgressSlice.js'
 import { NavbarProvider } from './contextAPI/NavbarContext.jsx'
@@ -94,7 +94,6 @@ import { fetchInventory } from './redux/inventorySlice.js'
 import useQuickClashSocket from './customHooks/useQuickClashSocket.js'
 import useQuickClash from './customHooks/useQuickClash.js'
 import NotificationReminderModal from './components/miscellaneous/NotificationReminderModal.jsx'
-import useDailyTasks from './customHooks/useDailyTasks.js'
 import { fetchSpecialCategories } from './services/specialCategoryService.js'
 
 const App = () => {
@@ -355,17 +354,17 @@ const App = () => {
     }
   }, [dispatch, isToken]) // Added t to dependencies for translations
 
-  useEffect(() => {
-    if (tournamentId && status === 'ongoing') {
-      dispatch(getTopLeaderboard({ tournamentId, t }))
-    }
-  }, [tournamentId, status])
+  // useEffect(() => {
+  //   if (tournamentId && status === 'ongoing') {
+  //     dispatch(getTopLeaderboard({ tournamentId, t }))
+  //   }
+  // }, [tournamentId, status])
 
-  useEffect(() => {
-    if (loginCheckStatus === 'fulfilled') {
-      dispatch(checkTournamentRegistration(tournamentSliceTranslation))
-    }
-  }, [loginCheckStatus])
+  // useEffect(() => {
+  //   if (loginCheckStatus === 'fulfilled') {
+  //     dispatch(checkTournamentRegistration(tournamentSliceTranslation))
+  //   }
+  // }, [loginCheckStatus])
 
   useEffect(() => {
     if (loginCheckStatus === 'fulfilled' && isAuthenticated) {

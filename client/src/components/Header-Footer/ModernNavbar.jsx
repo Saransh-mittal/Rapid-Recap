@@ -103,7 +103,7 @@ const ModernNavbar = ({ onNavbarLoad }) => {
   const navItems = useMemo(
     () => [
       { label: t('home'), path: '/home' },
-      { label: t('tournament'), path: '/tournament' },
+      // { label: t('tournament'), path: '/tournament' },
       { label: t('leaderboard'), path: '/leaderboard' },
       { label: t('hallOfChampions'), path: '/hall-of-champions' },
     ],

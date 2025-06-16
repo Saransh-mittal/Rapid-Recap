@@ -125,7 +125,7 @@ const AppRoutes = ({ isToken, needsOnboarding, setIsGuestLoggedin }) => {
             <Route path="/profile" element={<Profile />} />
             <Route path="/contact" element={<ContactLayout />} />
             <Route path="/leaderboard" element={<Leaderboard />} />
-            <Route path="/tournament" element={<TournamentWrapper />} />
+            {/* <Route path="/tournament" element={<TournamentWrapper />} /> */}
 
             <Route
               path="/dashboard"
