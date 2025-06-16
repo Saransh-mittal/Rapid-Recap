@@ -634,4 +634,5 @@ module.exports = {
   getRandomCategories,
   lockUserForChallenge,
   cleanupExpiredEntries,
+  getRandomBotUser,
 }
