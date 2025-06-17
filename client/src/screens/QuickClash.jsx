@@ -1,4 +1,4 @@
-// screens/QuickClash.jsx - FINAL FIXED VERSION - Single Modal Manager
+// screens/QuickClash.jsx - UPDATED WITH AUTHORIZATION CHECK
 import React, { useCallback, useState, useEffect, useMemo, memo } from 'react'
 import {
   Container,
@@ -8,9 +8,11 @@ import {
   Center,
   useBreakpointValue,
   HStack,
+  useToast,
 } from '@chakra-ui/react'
 import { motion } from 'framer-motion'
 import { lazy, Suspense } from 'react'
+import axios from 'axios'
 
 // Regular imports
 import QuickClashHeader from '../components/quickClashComponents/QuickClashHeader'
@@ -32,6 +34,11 @@ const TaskCompletionHandler = React.lazy(() =>
   import(
     '../components/quickClashComponents/dailyTasks/TaskCompletionHandler.jsx'
   ),
+)
+
+// Coming Soon Component
+const QuickClashComingSoon = lazy(() =>
+  import('../components/quickClashComponents/QuickClashComingSoon'),
 )
 
 // Lazy loaded components for better performance
@@ -107,20 +114,25 @@ const RESPONSIVE_CONFIG = {
 }
 
 /**
- * FINAL FIXED QuickClash component - Single modal manager approach
- * Mobile: Simple buttons in header, no modal manager
- * Desktop: Full modal manager in center
+ * UPDATED QuickClash component with authorization check
+ * Shows coming soon screen for unauthorized users
+ * Shows full QuickClash interface for authorized users
  */
 const QuickClash = () => {
   const dispatch = useDispatch()
+  const toast = useToast()
   const { isOpen, onOpen, onClose } = useDisclosure()
   const [showEntrance, setShowEntrance] = useState(true)
   const [showTaskPopup, setShowTaskPopup] = useState(false)
   const [activeTabIndex, setActiveTabIndex] = useState(0)
   const [selectedNotification, setSelectedNotification] = useState(null)
 
+  // NEW: Authorization state
+  const [isAuthorized, setIsAuthorized] = useState(null) // null = checking, true = authorized, false = not authorized
+  const [comingSoonData, setComingSoonData] = useState(null)
+
   // Memoize selectors to prevent unnecessary re-renders
-  const { loginCheckStatus } = useSelector(state => state.auth)
+  const { loginCheckStatus, user } = useSelector(state => state.auth)
   const { updatesLoading, isNotifModalOpen, isNotifDrawerOpen } = useSelector(
     state => state.app,
   )
@@ -146,15 +158,56 @@ const QuickClash = () => {
   // Get global matchmaking state
   const { checkMatchmakingStatus } = useQuickClashGlobalMatchmaking()
 
+  // NEW: Check authorization status
+  const checkAuthorization = useCallback(async () => {
+    try {
+      // Make a test API call to check authorization
+      const response = await axios.get('/api/quickClash/stats')
+
+      // If the call succeeds, user is authorized
+      setIsAuthorized(true)
+    } catch (error) {
+      if (
+        error.response?.status === 403 &&
+        error.response?.data?.isComingSoon
+      ) {
+        // User is not authorized, show coming soon
+        setIsAuthorized(false)
+        setComingSoonData(error.response.data.comingSoonData)
+      } else {
+        // Other errors - show error toast but don't block access
+        toast({
+          title: 'Connection Error',
+          description: 'Unable to verify access. Please try again.',
+          status: 'error',
+          duration: 3000,
+          isClosable: true,
+        })
+        // Assume authorized to avoid blocking legitimate users
+        setIsAuthorized(true)
+      }
+    }
+  }, [toast])
+
+  // Check authorization when component mounts and user is available
+  useEffect(() => {
+    if (user && loginCheckStatus === 'fulfilled') {
+      checkAuthorization()
+    }
+  }, [user, loginCheckStatus, checkAuthorization])
+
   // Memoized function to check streak and fetch updates
   const checkStreakAndFetchUpdates = useCallback(() => {
-    if (!updatesLoading && loginCheckStatus === 'fulfilled') {
+    if (!updatesLoading && loginCheckStatus === 'fulfilled' && isAuthorized) {
       dispatch(fetchAppUpdates())
     }
-  }, [loginCheckStatus, updatesLoading, dispatch])
+  }, [loginCheckStatus, updatesLoading, dispatch, isAuthorized])
 
   // Initial setup effect - memoized for better performance
   useEffect(() => {
+    // Only run setup if user is authorized
+    if (isAuthorized !== true) return
+
     const lastVisit = localStorage.getItem('quickClashLastVisit')
     const now = Date.now()
 
@@ -188,23 +241,27 @@ const QuickClash = () => {
       }, 2000)
       return () => clearTimeout(timer)
     }
-  }, [showDesktopTaskPopup])
+  }, [showDesktopTaskPopup, isAuthorized])
 
   useEffect(() => {
-    checkMatchmakingStatus()
-  }, [loginCheckStatus, updatesLoading])
+    if (isAuthorized) {
+      checkMatchmakingStatus()
+    }
+  }, [loginCheckStatus, updatesLoading, isAuthorized])
 
   // Task popup effect - memoized
   useEffect(() => {
-    if (taskJustCompleted && showDesktopTaskPopup) {
+    if (taskJustCompleted && showDesktopTaskPopup && isAuthorized) {
       setShowTaskPopup(true)
     }
-  }, [taskJustCompleted, showDesktopTaskPopup])
+  }, [taskJustCompleted, showDesktopTaskPopup, isAuthorized])
 
   // Streak check effect - memoized
   useEffect(() => {
-    checkStreakAndFetchUpdates()
-  }, [])
+    if (isAuthorized) {
+      checkStreakAndFetchUpdates()
+    }
+  }, [isAuthorized])
 
   // Optimized event handlers with useCallback
   const handleNewChallenge = useCallback(() => {
@@ -242,6 +299,21 @@ const QuickClash = () => {
     [showEntrance],
   )
 
+  // Show loading while checking authorization
+  if (isAuthorized === null) {
+    return <LoadingFallback />
+  }
+
+  // Show coming soon screen for unauthorized users
+  if (isAuthorized === false) {
+    return (
+      <Suspense fallback={<LoadingFallback />}>
+        <QuickClashComingSoon comingSoonData={comingSoonData} />
+      </Suspense>
+    )
+  }
+
+  // Show normal QuickClash interface for authorized users
   return (
     <>
       {showEntrance && (
