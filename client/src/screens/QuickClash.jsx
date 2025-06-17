@@ -1,4 +1,4 @@
-// Updated screens/QuickClash.jsx
+// screens/QuickClash.jsx - FINAL FIXED VERSION - Single Modal Manager
 import React, { useCallback, useState, useEffect, useMemo, memo } from 'react'
 import {
   Container,
@@ -44,8 +44,12 @@ const DailyTasksDashboard = lazy(() =>
 const TaskPopup = lazy(() =>
   import('../components/quickClashComponents/dailyTasks/TaskPopup'),
 )
-const MatchmakingButton = lazy(() =>
-  import('../components/quickClashComponents/MatchmakingButton'),
+
+// FIXED: Only import the modal manager (which includes button)
+const MatchmakingModalManager = lazy(() =>
+  import(
+    '../components/quickClashComponents/matchmaking/MatchmakingModalManager'
+  ),
 )
 const FloatingActionMenu = lazy(() =>
   import('../components/quickClashComponents/FloatingActionMenu'),
@@ -74,9 +78,6 @@ const NotificationModal = lazy(() =>
     '../components/Header-Footer/modernNavbarComponents/modals/NotificationModal.jsx'
   ),
 )
-// const QuickClashDebugPanel = React.lazy(() =>
-//   import('../components/quickClashComponents/debug/QuickClashDebugPanel'),
-// )
 
 // Import custom hook for global matchmaking
 import useQuickClashGlobalMatchmaking from '../customHooks/useQuickClashGlobalMatchmaking'
@@ -106,12 +107,9 @@ const RESPONSIVE_CONFIG = {
 }
 
 /**
- * Optimized QuickClash component - maintains exact original design with performance improvements
- * - Memoized expensive operations and event handlers
- * - Cached responsive values to reduce re-renders
- * - Optimized state management
- * - Removed unused variables and imports
- * - Supports URL hash-based navigation for tabs
+ * FINAL FIXED QuickClash component - Single modal manager approach
+ * Mobile: Simple buttons in header, no modal manager
+ * Desktop: Full modal manager in center
  */
 const QuickClash = () => {
   const dispatch = useDispatch()
@@ -119,11 +117,10 @@ const QuickClash = () => {
   const [showEntrance, setShowEntrance] = useState(true)
   const [showTaskPopup, setShowTaskPopup] = useState(false)
   const [activeTabIndex, setActiveTabIndex] = useState(0)
-  const [isNotificationModalOpen, setIsNotificationModalOpen] = useState(false)
   const [selectedNotification, setSelectedNotification] = useState(null)
 
   // Memoize selectors to prevent unnecessary re-renders
-  const { isAuthenticated, loginCheckStatus } = useSelector(state => state.auth)
+  const { loginCheckStatus } = useSelector(state => state.auth)
   const { updatesLoading, isNotifModalOpen, isNotifDrawerOpen } = useSelector(
     state => state.app,
   )
@@ -135,9 +132,7 @@ const QuickClash = () => {
   const showFloatingMenu = useBreakpointValue(
     RESPONSIVE_CONFIG.showFloatingMenu,
   )
-  const showCenterMatchButton = useBreakpointValue(
-    RESPONSIVE_CONFIG.showCenterMatchButton,
-  )
+
   const showDesktopTaskPopup = useBreakpointValue(
     RESPONSIVE_CONFIG.showDesktopTaskPopup,
   )
@@ -193,8 +188,6 @@ const QuickClash = () => {
       }, 2000)
       return () => clearTimeout(timer)
     }
-
-    // Check matchmaking status on mount
   }, [showDesktopTaskPopup])
 
   useEffect(() => {
@@ -218,17 +211,6 @@ const QuickClash = () => {
     onOpen()
   }, [onOpen])
 
-  const handleFindMatch = useCallback(() => {
-    // This would trigger the matchmaking flow
-    // For now, just show the matchmaking modal like the MatchmakingButton does
-    if (
-      window.matchmakingButtonRef &&
-      window.matchmakingButtonRef.handleJoinMatchmaking
-    ) {
-      window.matchmakingButtonRef.handleJoinMatchmaking()
-    }
-  }, [])
-
   const handleEntranceComplete = useCallback(() => {
     setShowEntrance(false)
   }, [])
@@ -244,22 +226,6 @@ const QuickClash = () => {
   const handleTabChange = useCallback(index => {
     setActiveTabIndex(index)
   }, [])
-
-  // Notification drawer handlers - memoized
-  const handleNotificationDrawerClose = useCallback(() => {
-    dispatch(setIsNotifDrawerOpen(false))
-  }, [dispatch])
-
-  const handleNotificationModalOpen = useCallback(notification => {
-    setSelectedNotification(notification)
-    setIsNotificationModalOpen(true)
-  }, [])
-
-  const handleNotificationModalClose = useCallback(() => {
-    setIsNotificationModalOpen(false)
-    setSelectedNotification(null)
-    dispatch(setSelectedNotificationId(null))
-  }, [dispatch])
 
   // Task popup close handler - memoized
   const handleTaskPopupClose = useCallback(() => {
@@ -283,14 +249,7 @@ const QuickClash = () => {
           <QuickClashEntrance onComplete={handleEntranceComplete} />
         </Suspense>
       )}
-      {/* {QuickClashDebugPanel && (
-        <React.Suspense fallback={null}>
-          <QuickClashDebugPanel
-            isEnabled={true}
-            defaultPosition="floating" // or "drawer"
-          />
-        </React.Suspense>
-      )} */}
+
       <Container
         className="quick-clash-container"
         maxW="container.xl"
@@ -299,22 +258,29 @@ const QuickClash = () => {
         style={containerStyle}
         pb={'20px'} // Add padding at bottom on mobile for floating action menu
       >
-        {/* Header Section */}
+        {/* Header Section - NO modal management, simple buttons only */}
         <QuickClashHeader onNewChallenge={handleNewChallenge} />
 
-        {/* Matchmaking Buttons at the top center - desktop only */}
-        {showCenterMatchButton && (
-          <Center my={5}>
-            <Suspense fallback={<LoadingFallback />}>
-              <HStack spacing={4}>
-                <MatchmakingButton
-                  ref={el => (window.matchmakingButtonRef = el)}
-                />
-                <GlobalMatchmakingButton />
-              </HStack>
-            </Suspense>
-          </Center>
-        )}
+        {/* FIXED: Desktop Center Buttons - SINGLE MatchmakingModalManager only here */}
+
+        <Center my={5}>
+          <Suspense fallback={<LoadingFallback />}>
+            <HStack
+              spacing={4}
+              w={{ base: '100%', md: 'auto' }}
+              justifyContent="center"
+            >
+              {/* FIXED: Full MatchmakingModalManager - only one in the entire app */}
+              <MatchmakingModalManager
+                buttonTextOverride="SOLO"
+                buttonWidth={{ base: '100%', md: '240px' }}
+                buttonHeight={{ base: '48px', md: '56px' }}
+                buttonMinWidth={{ base: '140px', md: '240px' }}
+              />
+              <GlobalMatchmakingButton />
+            </HStack>
+          </Suspense>
+        </Center>
 
         {/* Tabs Section */}
         <MotionBox
@@ -360,13 +326,10 @@ const QuickClash = () => {
           </Box>
         </MotionBox>
 
-        {/* Floating Action Menu for mobile - Using the enhanced version with integrated task popup */}
+        {/* Mobile Floating Action Menu */}
         {showFloatingMenu && (
           <Suspense fallback={null}>
-            <FloatingActionMenu
-              onNewChallenge={handleNewChallenge}
-              onFindMatch={handleFindMatch}
-            />
+            <FloatingActionMenu onNewChallenge={handleNewChallenge} />
           </Suspense>
         )}
 

@@ -389,13 +389,6 @@ const joinGlobalMatchmaking = async ({ userId }) => {
       // Add to pending solo players state
       teamFormationState.pendingSoloPlayers.add(userId.toString())
 
-      // Emit event for real-time updates
-      globalEmitter.emit('quickClash:userJoinedMatchmaking', {
-        userId,
-        trophies: user.quickClashTrophies || 1000,
-        userName: user.name || user.inGameName,
-      })
-
       // Try to find a match right away (async)
       setTimeout(() => {
         processGlobalMatchmaking().catch(err => {

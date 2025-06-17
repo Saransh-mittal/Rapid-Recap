@@ -6,7 +6,6 @@ const QuickClashChallenge = require('../../model/quickClashSchemas/quickClashCha
 const User = require('../../model/userSchema')
 const { updateChallengeScore } = require('./quickClashChallengeService')
 const { notifyChallengeCompleted } = require('./quickClashNotificationService')
-const { getRandomBotUser } = require('./quickClashMatchmakingService')
 const QuickClashGlobalMatchmaking = require('../../model/quickClashSchemas/quickClashGlobalMatchmakingSchema')
 const QuickClashTeamMatchmaking = require('../../model/quickClashSchemas/quickClashTeamMatchmakingSchema')
 const QuickClashTeamBattle = require('../../model/quickClashSchemas/quickClashTeamBattleSchema')
@@ -15,7 +14,9 @@ const {
   selectCategoryForUser,
   beginCategoryChallenge,
   updateBattleWithQuizResults,
+  markUserAsParticipated,
 } = require('./quickClashTeamBattleService')
+const { getRandomBotUser } = require('../../utils/quickClashUtils')
 
 /**
  * Initiate full bot challenge process - create session, complete reading and quiz
@@ -54,6 +55,7 @@ const initiateBotChallenge = async ({ challengeId, botId, options = {} }) => {
 
     // 3. Simulate reading phase
     await simulateBotReadingPhase({
+      userId: botId,
       sessionId: botSession._id,
       readingTime,
       session,
@@ -171,7 +173,12 @@ const createBotSession = async ({ challengeId, botId, session }) => {
  * @param {mongoose.ClientSession} params.session - Mongoose session
  * @returns {Promise<Object>} Updated session
  */
-const simulateBotReadingPhase = async ({ sessionId, readingTime, session }) => {
+const simulateBotReadingPhase = async ({
+  userId,
+  sessionId,
+  readingTime,
+  session,
+}) => {
   try {
     const botSession = await QuickClashSession.findById(sessionId).session(
       session,
@@ -184,6 +191,13 @@ const simulateBotReadingPhase = async ({ sessionId, readingTime, session }) => {
     // Calculate start and end times to simulate realistic reading
     const now = new Date()
     const startTime = new Date(now.getTime() - readingTime * 1000)
+
+    if (botSession.challenge) {
+      await markUserAsParticipated({
+        challengeId: botSession.challenge,
+        userId: userId,
+      })
+    }
 
     // Update reading properties
     botSession.reading = {
@@ -797,7 +811,7 @@ const selectCategoryForBot = async ({ battleId, botId }) => {
     })
 
     // Wait a bit before beginning the challenge (1-10 seconds)
-    const challengeBeginDelay = Math.floor(Math.random() * 90 + 1) * 1000
+    const challengeBeginDelay = Math.floor(Math.random() * 10 + 1) * 1000
 
     setTimeout(() => {
       beginBotChallenge({ battleId, botId }).catch(err => {
@@ -898,6 +912,7 @@ const initiateBotTeamChallenge = async ({
         // Simulate reading phase (reuse existing function)
         const readingTime = Math.floor(Math.random() * 60 + 30) // 30-90 seconds
         await simulateBotReadingPhase({
+          userId: botId,
           sessionId: botSession._id,
           readingTime,
           session,
@@ -948,342 +963,6 @@ const initiateBotTeamChallenge = async ({
   }
 }
 
-/**
- * Recover stuck bots in team battles - main fallback function
- * This runs periodically to catch bots that missed their monitoring intervals
- * @returns {Promise<void>}
- */
-const recoverStuckBots = async () => {
-  try {
-    console.log('[BOT_FALLBACK] Starting bot recovery check')
-
-    // Find all active team battles
-    const activeBattles = await QuickClashTeamBattle.find({
-      status: 'active',
-      createdAt: { $gte: new Date(Date.now() - 12 * 60 * 60 * 1000) }, // Only battles created in last 2 hours
-    }).populate('teamAMembers.user teamBMembers.user')
-
-    if (!activeBattles.length) {
-      console.log('[BOT_FALLBACK] No active team battles found')
-      return
-    }
-
-    console.log(
-      `[BOT_FALLBACK] Checking ${activeBattles.length} active team battles`,
-    )
-
-    // Process each battle
-    for (const battle of activeBattles) {
-      await recoverBotsInBattle(battle)
-    }
-
-    console.log('[BOT_FALLBACK] Bot recovery check completed')
-  } catch (error) {
-    console.error('[BOT_FALLBACK] Error in recoverStuckBots:', error)
-  }
-}
-
-/**
- * Recover bots in a specific team battle
- * @param {Object} battle - Team battle document
- * @returns {Promise<void>}
- */
-const recoverBotsInBattle = async battle => {
-  try {
-    const battleAge = Date.now() - new Date(battle.createdAt).getTime()
-    const battleAgeMinutes = Math.floor(battleAge / (1000 * 60))
-
-    console.log(
-      `[BOT_FALLBACK] Checking battle ${battle._id} (age: ${battleAgeMinutes} minutes, status: ${battle.status})`,
-    )
-
-    // Skip battles that are not active (completed, expired, etc.)
-    if (battle.status !== 'active') {
-      console.log(`[BOT_FALLBACK] Skipping non-active battle ${battle._id}`)
-      return
-    }
-
-    // Only process battles that are at least 2 minutes old (give initial flow time to work)
-    if (battleAgeMinutes < 2) {
-      console.log(
-        `[BOT_FALLBACK] Skipping young battle ${battle._id} (${battleAgeMinutes} minutes old)`,
-      )
-      return
-    }
-
-    let totalBots = 0
-    let completedBots = 0
-    let botsNeedingRecovery = 0
-
-    // Check team A members
-    for (const member of battle.teamAMembers) {
-      const userId = member.user._id || member.user
-      const isBot = await isBotUser(userId)
-
-      if (isBot) {
-        totalBots++
-        if (member.completed) {
-          completedBots++
-        } else {
-          botsNeedingRecovery++
-          await recoverBotMember({
-            battleId: battle._id,
-            botId: userId,
-            member,
-            battle,
-            battleAgeMinutes,
-          })
-        }
-      }
-    }
-
-    // Check team B members
-    for (const member of battle.teamBMembers) {
-      const userId = member.user._id || member.user
-      const isBot = await isBotUser(userId)
-
-      if (isBot) {
-        totalBots++
-        if (member.completed) {
-          completedBots++
-        } else {
-          botsNeedingRecovery++
-          await recoverBotMember({
-            battleId: battle._id,
-            botId: userId,
-            member,
-            battle,
-            battleAgeMinutes,
-          })
-        }
-      }
-    }
-
-    console.log(
-      `[BOT_FALLBACK] Battle ${battle._id} summary - Total bots: ${totalBots}, Completed: ${completedBots}, Needing recovery: ${botsNeedingRecovery}`,
-    )
-  } catch (error) {
-    console.error(
-      `[BOT_FALLBACK] Error recovering bots in battle ${battle._id}:`,
-      error,
-    )
-  }
-}
-
-/**
- * Recover a specific bot member based on their current state
- * @param {Object} params - Parameters
- * @param {string} params.battleId - Battle ID
- * @param {string} params.botId - Bot ID
- * @param {Object} params.member - Member data from battle
- * @param {Object} params.battle - Full battle object
- * @param {number} params.battleAgeMinutes - Age of battle in minutes
- * @returns {Promise<void>}
- */
-const recoverBotMember = async ({
-  battleId,
-  botId,
-  member,
-  battle,
-  battleAgeMinutes,
-}) => {
-  try {
-    // Determine bot's current state
-    const hasSelectedCategory = member.category !== null
-    const hasParticipated = member.participated
-    const hasCompleted = member.completed
-
-    console.log(
-      `[BOT_FALLBACK] Bot ${botId} state - Category: ${
-        hasSelectedCategory ? member.category : 'none'
-      }, Participated: ${hasParticipated}, Completed: ${hasCompleted}`,
-    )
-
-    // IMPORTANT: If bot has already completed, no recovery needed
-    if (hasCompleted) {
-      console.log(
-        `[BOT_FALLBACK] Bot ${botId} already completed - no recovery needed`,
-      )
-      return
-    }
-
-    // For any incomplete bot after 5 minutes, just restart the entire participation process
-    // This is much simpler and reuses the existing tested logic!
-    if (battleAgeMinutes >= 5) {
-      console.log(
-        `[BOT_FALLBACK] Restarting participation process for stuck bot ${botId}`,
-      )
-
-      // Add some randomness to avoid all bots acting at the same time
-      const delay = Math.floor(Math.random() * 30 + 5) * 1000 // 5-35 seconds
-
-      setTimeout(() => {
-        handleBotTeamBattleParticipation({ battleId, botId }).catch(err => {
-          console.error(
-            `[BOT_FALLBACK] Error restarting participation for ${botId}:`,
-            err,
-          )
-        })
-      }, delay)
-
-      return
-    }
-
-    // For really old battles (15+ minutes), force complete any remaining bots
-    if (battleAgeMinutes >= 15) {
-      console.log(
-        `[BOT_FALLBACK] Force completing bot ${botId} after 15 minutes`,
-      )
-
-      await forceCompleteBotChallenge({
-        battleId,
-        botId,
-        member,
-        battle,
-      })
-    }
-  } catch (error) {
-    console.error(`[BOT_FALLBACK] Error recovering bot member ${botId}:`, error)
-  }
-}
-
-/**
- * Complete a stuck bot challenge by finding existing session or creating result
- * @param {Object} params - Parameters
- * @param {string} params.challengeId - Challenge ID
- * @param {string} params.botId - Bot ID
- * @param {string} params.battleId - Battle ID
- * @returns {Promise<void>}
- */
-const completeStuckBotChallenge = async ({ challengeId, botId, battleId }) => {
-  try {
-    console.log(
-      `[BOT_FALLBACK] Attempting to complete stuck challenge ${challengeId} for bot ${botId}`,
-    )
-
-    // Check if there's already a session for this bot and challenge
-    const existingSession = await QuickClashSession.findOne({
-      challenge: challengeId,
-      user: botId,
-    })
-
-    if (existingSession) {
-      if (existingSession.phase === 'completed') {
-        console.log(
-          `[BOT_FALLBACK] Bot ${botId} challenge already completed, updating battle`,
-        )
-
-        // Just update the battle with existing score
-        await updateBattleWithQuizResults({
-          battleId,
-          challengeId,
-          userId: botId,
-          score: existingSession.score?.RQM_score || 0,
-        })
-      } else {
-        console.log(
-          `[BOT_FALLBACK] Completing existing session for bot ${botId}`,
-        )
-
-        // Complete the existing session
-        const skillLevel = Math.random() * 0.4 + 0.4 // 0.4 to 0.8
-
-        // If session is in reading phase, complete reading first
-        if (existingSession.phase === 'reading') {
-          await simulateBotReadingPhase({
-            sessionId: existingSession._id,
-            readingTime: 60,
-            session: null,
-          })
-        }
-
-        // Complete the quiz
-        if (
-          existingSession.phase === 'quiz' ||
-          existingSession.phase === 'reading'
-        ) {
-          const completedSession = await simulateBotQuizAnswers({
-            sessionId: existingSession._id,
-            botSkill: skillLevel,
-            session: null,
-          })
-
-          await updateBattleWithQuizResults({
-            battleId,
-            challengeId,
-            userId: botId,
-            score: completedSession.score.RQM_score,
-          })
-        }
-      }
-    } else {
-      console.log(
-        `[BOT_FALLBACK] No session found, starting fresh challenge for bot ${botId}`,
-      )
-
-      // Start a fresh challenge completion
-      const skillLevel = Math.random() * 0.4 + 0.4 // 0.4 to 0.8
-
-      await initiateBotTeamChallenge({
-        challengeId,
-        botId,
-        battleId,
-        skillLevel,
-      })
-    }
-  } catch (error) {
-    console.error(`[BOT_FALLBACK] Error completing stuck bot challenge:`, error)
-  }
-}
-
-/**
- * Force complete a bot challenge when all else fails
- * @param {Object} params - Parameters
- * @param {string} params.battleId - Battle ID
- * @param {string} params.botId - Bot ID
- * @param {Object} params.member - Member data
- * @param {Object} params.battle - Battle object
- * @returns {Promise<void>}
- */
-const forceCompleteBotChallenge = async ({
-  battleId,
-  botId,
-  member,
-  battle,
-}) => {
-  try {
-    console.log(`[BOT_FALLBACK] Force completing bot ${botId} challenge`)
-
-    // Generate a random score based on bot skill
-    const randomScore = Math.floor(Math.random() * 80 + 20) // 20-100 points
-
-    // Find the challenge
-    const challenge = battle.challenges.find(
-      c => c.category === member.category,
-    )
-
-    if (challenge && challenge.challenge) {
-      // Directly update the battle with the score
-      await updateBattleWithQuizResults({
-        battleId,
-        challengeId: challenge.challenge,
-        userId: botId,
-        score: randomScore,
-      })
-
-      console.log(
-        `[BOT_FALLBACK] Force completed bot ${botId} with score ${randomScore}`,
-      )
-    } else {
-      console.log(
-        `[BOT_FALLBACK] No challenge found for bot ${botId} to force complete`,
-      )
-    }
-  } catch (error) {
-    console.error(`[BOT_FALLBACK] Error force completing bot challenge:`, error)
-  }
-}
-
 module.exports = {
   initiateBotChallenge,
   createBotSession,
@@ -1297,10 +976,4 @@ module.exports = {
   handleBotTeamBattleParticipation,
   selectCategoryForBot,
   initiateBotTeamChallenge,
-
-  // New fallback exports
-  recoverStuckBots,
-  recoverBotsInBattle,
-  completeStuckBotChallenge,
-  forceCompleteBotChallenge,
 }

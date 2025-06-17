@@ -34,9 +34,6 @@ import TrophyDisplay from './user/TrophyDisplay'
 import { fetchUserTrophies } from '../../redux/quickClashSlice'
 import { setIsNotifDrawerOpen } from '../../redux/appSlice'
 
-import MatchmakingButton from './MatchmakingButton' // For 1v1
-import GlobalMatchmakingButton from './globalmatchmaking/GlobalMatchmakingButton' // For 4v4
-
 const TaskPopup = lazy(() => import('./dailyTasks/TaskPopup'))
 
 const MotionBox = motion(Box)
@@ -348,51 +345,6 @@ const QuickClashHeader = ({ onNewChallenge }) => {
             )}
           </Text>
         </MotionBox>
-
-        {/* START: Mobile Matchmaking Buttons */}
-        <HStack
-          display={{ base: 'flex', md: 'none' }}
-          spacing={{ base: 2, sm: 3 }}
-          // mt is handled by parent Flex gap
-          justifyContent="center"
-          w="100%"
-          px={{ base: 2, sm: 0 }} // Padding for the HStack container on smallest screens
-          variants={itemVariants}
-        >
-          {/* 1v1 Button - Uses MatchmakingButton with overrides */}
-          <Box flex={1} minWidth={0} display="flex" justifyContent="center">
-            <MatchmakingButton
-              buttonTextOverride="SOLO"
-              iconOverride={ZapIconLucide} // From lucide-react
-              // bgGradientOverride will use the default purple-blue from MatchmakingButton
-            />
-          </Box>
-
-          {/* 4v4 Button - Uses GlobalMatchmakingButton */}
-          {/* We need to make GlobalMatchmakingButton adapt to a shorter text for mobile header */}
-          {/* One way is to pass a prop to GlobalMatchmakingButton to shorten its text, */}
-          {/* or style it to be more compact here. For now, let's assume it might be a bit long. */}
-          <Box flex={1} minWidth={0} display="flex" justifyContent="center">
-            {/*
-              The GlobalMatchmakingButton uses its own text based on its state.
-              To make it "4v4", we'd ideally modify GlobalMatchmakingButton to accept a text override
-              similar to MatchmakingButton, or have a specific "header" mode.
-              For now, we render it as is. Its `compact` prop is for icon-only.
-              The non-compact version will be used here.
-            */}
-            <GlobalMatchmakingButton />
-            {/* If GlobalMatchmakingButton needs to be styled as "4v4" specifically here,
-                and it doesn't support text override like MatchmakingButton, you might need
-                to wrap it or create a variant of it.
-                The image shows "Join 4v4 Matchmaking". If you want just "4v4",
-                GlobalMatchmakingButton needs a prop for that.
-
-                Let's assume GlobalMatchmakingButton by default shows "Join 4v4 Matchmaking"
-                when not in queue, which is fine for a full button.
-            */}
-          </Box>
-        </HStack>
-        {/* END: Mobile Matchmaking Buttons */}
 
         {/* Desktop Action Buttons Group (New Challenge, Leaderboard) */}
         <HStack
