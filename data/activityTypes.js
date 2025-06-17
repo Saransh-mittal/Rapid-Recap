@@ -17,6 +17,13 @@ const activityTypes = {
   TOURNAMENT_REGISTRATION: { type: 'Tournament registration', xp: 5 },
   TOURNAMENT_QUIZ: { type: 'Tournament participation', xp: 10 },
   TOURNAMENT_WIN: { type: 'Tournament win', xp: 50 },
+  EARLY_ADOPTER_JOINED: {
+    type: 'EARLY_ADOPTER_JOINED',
+    description: 'User joined as early adopter',
+    xp: 100,
+    icon: '👑',
+    color: '#FFD700',
+  },
 }
 
 const getXpForActivity = ({

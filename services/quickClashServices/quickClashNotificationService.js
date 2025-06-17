@@ -4,6 +4,7 @@ const ApplicationUpdates = require('../../model/applicationUpdatesSchema')
 const User = require('../../model/userSchema')
 const globalEmitter = require('../../eventEmitter')
 const QuickClashOutcomeTracker = require('../../utils/quickClashOutcomeTracker')
+const QuickClashTeamBattle = require('../../model/quickClashSchemas/quickClashTeamBattleSchema')
 
 /**
  * Send notification when a new challenge is created
@@ -232,97 +233,112 @@ const notifyChallengeCompleted = async ({ challenge, completedByUserId }) => {
         User.findById(challenge.opponent),
       ])
 
+      // Update challenge with user details for socket emission
+      challenge.challenger = challenger
+      challenge.opponent = opponent
+
       const challengerWon = challenge.challengerScore > challenge.opponentScore
       const isTie = challenge.challengerScore === challenge.opponentScore
 
-      // Create application update for challenger
-      const challengerUpdate = new ApplicationUpdates({
-        title: challengerWon
-          ? 'Victory in Quick Clash!'
-          : isTie
-          ? 'Quick Clash Ended in a Tie!'
-          : 'Quick Clash Defeat',
-        mainText: isTie
-          ? `Your battle with ${
-              opponent.inGameName || opponent.name
-            } ended in a tie with both scoring ${
-              challenge.challengerScore
-            } points!`
-          : `Final score: ${challenger.inGameName || challenger.name} (${
-              challenge.challengerScore
-            }) vs ${opponent.inGameName || opponent.name} (${
-              challenge.opponentScore
-            })`,
-        userId: challenger._id,
-        type: 'applicationUpdate',
-      })
-
-      // Create application update for opponent
-      const opponentUpdate = new ApplicationUpdates({
-        title: !challengerWon
-          ? 'Victory in Quick Clash!'
-          : isTie
-          ? 'Quick Clash Ended in a Tie!'
-          : 'Quick Clash Defeat',
-        mainText: isTie
-          ? `Your battle with ${
-              challenger.inGameName || challenger.name
-            } ended in a tie with both scoring ${
-              challenge.opponentScore
-            } points!`
-          : `Final score: ${opponent.inGameName || opponent.name} (${
-              challenge.opponentScore
-            }) vs ${challenger.inGameName || challenger.name} (${
-              challenge.challengerScore
-            })`,
-        userId: opponent._id,
-        type: 'applicationUpdate',
-      })
-
-      // Save both updates
-      await Promise.all([challengerUpdate.save(), opponentUpdate.save()])
-
-      // Send push notifications - This is IMPORTANT as it contains match results
-      await Promise.all([
-        sendNotification({
+      let teamBattleParticipantIds = []
+      if (challenge?.fromTeamBattle) {
+        const battle = await QuickClashTeamBattle.findById(
+          challenge.teamBattle.toString(),
+        )
+        // get all the participant ids
+        const teamAMembers = battle.teamAMembers.map(member => member.user)
+        const teamBMembers = battle.teamBMembers.map(member => member.user)
+        teamBattleParticipantIds = [...teamAMembers, ...teamBMembers]
+      } else {
+        // Create application update for challenger
+        const challengerUpdate = new ApplicationUpdates({
           title: challengerWon
             ? 'Victory in Quick Clash!'
             : isTie
-            ? 'Quick Clash Tie!'
-            : 'Quick Clash Result',
-          body: isTie
+            ? 'Quick Clash Ended in a Tie!'
+            : 'Quick Clash Defeat',
+          mainText: isTie
             ? `Your battle with ${
                 opponent.inGameName || opponent.name
-              } ended in a tie!`
-            : `Final score: You (${challenge.challengerScore}) vs ${
-                opponent.inGameName || opponent.name
-              } (${challenge.opponentScore})`,
-          url: '/quickclash',
+              } ended in a tie with both scoring ${
+                challenge.challengerScore
+              } points!`
+            : `Final score: ${challenger.inGameName || challenger.name} (${
+                challenge.challengerScore
+              }) vs ${opponent.inGameName || opponent.name} (${
+                challenge.opponentScore
+              })`,
           userId: challenger._id,
-          messageId: challengerUpdate._id.toString(),
-          type: 'quickClash',
-          importance: 'important', // Results are always important
-        }),
-        sendNotification({
+          type: 'applicationUpdate',
+        })
+
+        // Create application update for opponent
+        const opponentUpdate = new ApplicationUpdates({
           title: !challengerWon
             ? 'Victory in Quick Clash!'
             : isTie
-            ? 'Quick Clash Tie!'
-            : 'Quick Clash Result',
-          body: isTie
+            ? 'Quick Clash Ended in a Tie!'
+            : 'Quick Clash Defeat',
+          mainText: isTie
             ? `Your battle with ${
                 challenger.inGameName || challenger.name
-              } ended in a tie!`
-            : `Final score: You (${challenge.opponentScore}) vs ${
-                challenger.inGameName || challenger.name
-              } (${challenge.challengerScore})`,
-          url: '/quickclash',
+              } ended in a tie with both scoring ${
+                challenge.opponentScore
+              } points!`
+            : `Final score: ${opponent.inGameName || opponent.name} (${
+                challenge.opponentScore
+              }) vs ${challenger.inGameName || challenger.name} (${
+                challenge.challengerScore
+              })`,
           userId: opponent._id,
-          messageId: opponentUpdate._id.toString(),
-          type: 'quickClash',
-          importance: 'important', // Results are always important
-        }),
-      ])
+          type: 'applicationUpdate',
+        })
+
+        // Save both updates
+        await Promise.all([challengerUpdate.save(), opponentUpdate.save()])
+
+        // Send push notifications - This is IMPORTANT as it contains match results
+        await Promise.all([
+          sendNotification({
+            title: challengerWon
+              ? 'Victory in Quick Clash!'
+              : isTie
+              ? 'Quick Clash Tie!'
+              : 'Quick Clash Result',
+            body: isTie
+              ? `Your battle with ${
+                  opponent.inGameName || opponent.name
+                } ended in a tie!`
+              : `Final score: You (${challenge.challengerScore}) vs ${
+                  opponent.inGameName || opponent.name
+                } (${challenge.opponentScore})`,
+            url: '/quickclash',
+            userId: challenger._id,
+            messageId: challengerUpdate._id.toString(),
+            type: 'quickClash',
+            importance: 'important', // Results are always important
+          }),
+          sendNotification({
+            title: !challengerWon
+              ? 'Victory in Quick Clash!'
+              : isTie
+              ? 'Quick Clash Tie!'
+              : 'Quick Clash Result',
+            body: isTie
+              ? `Your battle with ${
+                  challenger.inGameName || challenger.name
+                } ended in a tie!`
+              : `Final score: You (${challenge.opponentScore}) vs ${
+                  challenger.inGameName || challenger.name
+                } (${challenge.challengerScore})`,
+            url: '/quickclash',
+            userId: opponent._id,
+            messageId: opponentUpdate._id.toString(),
+            type: 'quickClash',
+            importance: 'important', // Results are always important
+          }),
+        ])
+      }
 
       let trackWinnerOutcomeResult
       try {
@@ -335,65 +351,77 @@ const notifyChallengeCompleted = async ({ challenge, completedByUserId }) => {
 
       globalEmitter.emit('quickClash:challengeCompletedByBothPlayers', {
         challenge,
+        teamBattleParticipantIds,
         trackWinnerOutcomeResult,
         completedByUserId,
       })
     } else {
       // Only one player has completed - notify the other player
-      const isChallenger =
-        completedByUserId.toString() === challenge.challenger._id.toString()
-      const otherPlayerId = isChallenger
-        ? challenge.opponent._id
-        : challenge.challenger._id
-
       // Calculate how long since the challenge was created
       const createdAt = new Date(challenge.createdAt).getTime()
       const now = new Date().getTime()
       const timeSinceCreation = now - createdAt
+      let teamBattleParticipantIds = []
+      if (challenge?.fromTeamBattle) {
+        const battle = await QuickClashTeamBattle.findById(
+          challenge.teamBattle.toString(),
+        )
+        // get all the participant ids
+        const teamAMembers = battle.teamAMembers.map(member => member.user)
+        const teamBMembers = battle.teamBMembers.map(member => member.user)
+        teamBattleParticipantIds = [...teamAMembers, ...teamBMembers]
+      } else {
+        const isChallenger =
+          completedByUserId.toString() === challenge.challenger._id.toString()
+        const otherPlayerId = isChallenger
+          ? challenge.opponent._id
+          : challenge.challenger._id
 
-      // If it's been a while, this becomes an important notification
-      const isImportant = timeSinceCreation > 12 * 3600000 // 12 hours
+        // If it's been a while, this becomes an important notification
+        const isImportant = timeSinceCreation > 12 * 3600000 // 12 hours
 
-      // Get user information for both players
-      const [completedPlayer, otherPlayer] = await Promise.all([
-        isChallenger
-          ? User.findById(challenge.challenger._id).select('name inGameName')
-          : User.findById(challenge.opponent._id).select('name inGameName'),
-        isChallenger
-          ? User.findById(challenge.opponent._id).select('name inGameName')
-          : User.findById(challenge.challenger._id).select('name inGameName'),
-      ])
+        // Get user information for both players
+        const [completedPlayer, otherPlayer] = await Promise.all([
+          isChallenger
+            ? User.findById(challenge.challenger._id).select('name inGameName')
+            : User.findById(challenge.opponent._id).select('name inGameName'),
+          isChallenger
+            ? User.findById(challenge.opponent._id).select('name inGameName')
+            : User.findById(challenge.challenger._id).select('name inGameName'),
+        ])
 
-      // Create application update
-      const appUpdate = new ApplicationUpdates({
-        title: 'Your Turn in Quick Clash!',
-        mainText: `${
-          completedPlayer.inGameName || completedPlayer.name
-        } has completed their part of the Quick Clash challenge in the ${
-          challenge.category
-        } category. It's your turn now!`,
-        userId: otherPlayerId,
-        type: 'applicationUpdate',
-      })
+        // Create application update
+        const appUpdate = new ApplicationUpdates({
+          title: 'Your Turn in Quick Clash!',
+          mainText: `${
+            completedPlayer.inGameName || completedPlayer.name
+          } has completed their part of the Quick Clash challenge in the ${
+            challenge.category
+          } category. It's your turn now!`,
+          userId: otherPlayerId,
+          type: 'applicationUpdate',
+        })
 
-      await appUpdate.save()
+        await appUpdate.save()
 
-      // Send push notification
-      await sendNotification({
-        title: 'Your Turn in Quick Clash!',
-        body: `${
-          completedPlayer.inGameName || completedPlayer.name
-        } has completed their challenge. Your turn now!`,
-        url: `/quickclash`,
-        userId: otherPlayerId,
-        messageId: appUpdate._id.toString(),
-        type: 'quickClash',
-        importance: isImportant ? 'important' : 'normal', // Important if it's been waiting a while
-      })
+        // Send push notification
+        await sendNotification({
+          title: 'Your Turn in Quick Clash!',
+          body: `${
+            completedPlayer.inGameName || completedPlayer.name
+          } has completed their challenge. Your turn now!`,
+          url: `/quickclash`,
+          userId: otherPlayerId,
+          messageId: appUpdate._id.toString(),
+          type: 'quickClash',
+          importance: isImportant ? 'important' : 'normal', // Important if it's been waiting a while
+        })
+      }
 
       // Emit event for socket notification
       globalEmitter.emit('quickClash:challengeCompleted', {
         challenge,
+        teamBattleParticipantIds,
         completedByUserId,
         waitTime: timeSinceCreation,
       })

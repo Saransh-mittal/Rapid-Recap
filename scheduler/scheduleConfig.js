@@ -7,23 +7,23 @@ const sendStreakBrokenMails = require('./tasks/mailsForStreakBroken')
 const sendStreakReminder = require('./tasks/mailsForStreakReminder')
 const calculateUserIQScores = require('./tasks/userIQScoreScheduler')
 const incFakeQuizAttempts = require('./tasks/incFakeQuizAttempts')
-const deleteExpiredGuestAccountsTask = require('./tasks/deleteExpiredGuestAccounts')
-const sendGuestAccountExpiryNotifs = require('./tasks/guestAccountExpiryNotifs')
-const {
-  startRegistration,
-  inRegisterationPeriod,
-  lastDayOfRegisterationPeriod,
-  endRegistration,
-  startTournament,
-  day1EndOfTournament,
-  day2OfTournament,
-  endTournament,
-} = require('./tasks/tournamentManagement')
-const { runTournamentServiceTask } = require('./tasks/runTournamentService')
-const {
-  registerDummyUsers,
-  simulateBotQuizParticipation,
-} = require('./tasks/dummyUserTournamentTasks')
+// const deleteExpiredGuestAccountsTask = require('./tasks/deleteExpiredGuestAccounts')
+// const sendGuestAccountExpiryNotifs = require('./tasks/guestAccountExpiryNotifs')
+// const {
+//   startRegistration,
+//   inRegisterationPeriod,
+//   lastDayOfRegisterationPeriod,
+//   endRegistration,
+//   startTournament,
+//   day1EndOfTournament,
+//   day2OfTournament,
+//   endTournament,
+// } = require('./tasks/tournamentManagement')
+// const { runTournamentServiceTask } = require('./tasks/runTournamentService')
+// const {
+//   registerDummyUsers,
+//   simulateBotQuizParticipation,
+// } = require('./tasks/dummyUserTournamentTasks')
 const { convertISTtoUTCCron } = require('../utils/miscellaneous.utils')
 const forceReloadAll = require('./tasks/forceReload')
 const fetchSpecialCategoryArticles = require('./tasks/fetchSpecialCategoryArticles')
@@ -42,12 +42,12 @@ const createSchedule = (name, time, task) => {
   }
 }
 
-const tournamentDays = {
-  startRegistration: 1, // Monday
-  endRegistration: 5, // Friday
-  startTournament: 6, // Saturday
-  endTournament: 0, // Sunday
-}
+// const tournamentDays = {
+//   startRegistration: 1, // Monday
+//   endRegistration: 5, // Friday
+//   startTournament: 6, // Saturday
+//   endTournament: 0, // Sunday
+// }
 const isCalculating = { value: false }
 let schedules = [
   // createSchedule('newSeasonReset', '00:00', resetNewSeasonModal),
@@ -62,11 +62,11 @@ let schedules = [
     sendRecommendedNewsNotification,
   ),
   createSchedule('incFakeQuizAttempts', '21:00', incFakeQuizAttempts),
-  createSchedule(
-    'deleteExpiredGuestAccountsTask',
-    '21:30',
-    deleteExpiredGuestAccountsTask,
-  ),
+  // createSchedule(
+  //   'deleteExpiredGuestAccountsTask',
+  //   '21:30',
+  //   deleteExpiredGuestAccountsTask,
+  // ),
   createSchedule(
     'fetchSpecialCategoryArticles',
     '08:00',
@@ -84,7 +84,7 @@ let schedules = [
   createSchedule('extractNews3', '15:00', () => extractNews('in')),
   createSchedule('extractNews4', '23:00', () => {
     extractNews('in')
-    runTournamentServiceTask()
+    // runTournamentServiceTask()
   }),
   createSchedule('updateRecommendations', '01:00', updateDailyRecommendations),
   createSchedule('streakBrokenMails', '03:30', sendStreakBrokenMails),
@@ -151,111 +151,111 @@ let schedules = [
     sendRecommendedNewsNotification,
   ),
   createSchedule('streakReminder3', '22:00', () => sendStreakReminder(2)),
-  createSchedule(
-    'guestAccountExpiryNotifs1',
-    '08:00',
-    sendGuestAccountExpiryNotifs,
-  ),
-  createSchedule(
-    'guestAccountExpiryNotifs2',
-    '09:00',
-    sendGuestAccountExpiryNotifs,
-  ),
-  createSchedule(
-    'guestAccountExpiryNotifs3',
-    '11:00',
-    sendGuestAccountExpiryNotifs,
-  ),
-  createSchedule(
-    'guestAccountExpiryNotifs4',
-    '12:00',
-    sendGuestAccountExpiryNotifs,
-  ),
-  createSchedule(
-    'guestAccountExpiryNotifs5',
-    '14:00',
-    sendGuestAccountExpiryNotifs,
-  ),
-  createSchedule(
-    'guestAccountExpiryNotifs6',
-    '15:00',
-    sendGuestAccountExpiryNotifs,
-  ),
-  createSchedule(
-    'guestAccountExpiryNotifs7',
-    '17:00',
-    sendGuestAccountExpiryNotifs,
-  ),
-  createSchedule(
-    'guestAccountExpiryNotifs8',
-    '19:00',
-    sendGuestAccountExpiryNotifs,
-  ),
-  createSchedule(
-    'guestAccountExpiryNotifs9',
-    '20:00',
-    sendGuestAccountExpiryNotifs,
-  ),
+  // createSchedule(
+  //   'guestAccountExpiryNotifs1',
+  //   '08:00',
+  //   sendGuestAccountExpiryNotifs,
+  // ),
+  // createSchedule(
+  //   'guestAccountExpiryNotifs2',
+  //   '09:00',
+  //   sendGuestAccountExpiryNotifs,
+  // ),
+  // createSchedule(
+  //   'guestAccountExpiryNotifs3',
+  //   '11:00',
+  //   sendGuestAccountExpiryNotifs,
+  // ),
+  // createSchedule(
+  //   'guestAccountExpiryNotifs4',
+  //   '12:00',
+  //   sendGuestAccountExpiryNotifs,
+  // ),
+  // createSchedule(
+  //   'guestAccountExpiryNotifs5',
+  //   '14:00',
+  //   sendGuestAccountExpiryNotifs,
+  // ),
+  // createSchedule(
+  //   'guestAccountExpiryNotifs6',
+  //   '15:00',
+  //   sendGuestAccountExpiryNotifs,
+  // ),
+  // createSchedule(
+  //   'guestAccountExpiryNotifs7',
+  //   '17:00',
+  //   sendGuestAccountExpiryNotifs,
+  // ),
+  // createSchedule(
+  //   'guestAccountExpiryNotifs8',
+  //   '19:00',
+  //   sendGuestAccountExpiryNotifs,
+  // ),
+  // createSchedule(
+  //   'guestAccountExpiryNotifs9',
+  //   '20:00',
+  //   sendGuestAccountExpiryNotifs,
+  // ),
   // New tournament management schedules
-  createSchedule('startRegistrationTournament', '02:00', startRegistration),
-  createSchedule('endRegistrationTournament', '23:00', endRegistration),
-  createSchedule('startTournament', '00:00', startTournament),
-  createSchedule('endTournament', '23:59', endTournament),
-  {
-    name: 'inRegistrationPeriod',
-    cronPattern: convertISTtoUTCCron(11, 0, '2,3,4,5'), // At 11:00 AM on Tuesday, Wednesday, Thursday, and Friday
-    task: inRegisterationPeriod,
-  },
-  {
-    name: 'registerDummyUsers',
-    cronPattern: convertISTtoUTCCron(12, 0, '1,2,3,4,5'), // At 12:00 PM on Monday, Tuesday, Wednesday, Thursday, and Friday
-    task: registerDummyUsers,
-  },
-  {
-    name: 'botQuizParticipationSaturday',
-    cronPattern: convertISTtoUTCCron(10, 0, '6'), // At 10:00 AM on Saturday
-    task: simulateBotQuizParticipation,
-  },
-  {
-    name: 'botQuizParticipationSaturday',
-    cronPattern: convertISTtoUTCCron(14, 0, '6'), // At 2:00 PM on Saturday
-    task: simulateBotQuizParticipation,
-  },
-  {
-    name: 'botQuizParticipationSaturday',
-    cronPattern: convertISTtoUTCCron(18, 0, '6'), // At 6:00 PM on Saturday
-    task: simulateBotQuizParticipation,
-  },
-  {
-    name: 'botQuizParticipationSunday',
-    cronPattern: convertISTtoUTCCron(11, 0, '0'), // At 11:00 AM on Sunday
-    task: simulateBotQuizParticipation,
-  },
-  {
-    name: 'botQuizParticipationSunday',
-    cronPattern: convertISTtoUTCCron(15, 0, '0'), // At 3:00 PM on Sunday
-    task: simulateBotQuizParticipation,
-  },
-  {
-    name: 'botQuizParticipationSunday',
-    cronPattern: convertISTtoUTCCron(19, 0, '0'), // At 7:00 PM on Sunday
-    task: simulateBotQuizParticipation,
-  },
-  {
-    name: 'lastDayOfRegistrationPeriod',
-    cronPattern: convertISTtoUTCCron(20, 0, '5'), // At 8:00 PM on Friday
-    task: lastDayOfRegisterationPeriod,
-  },
-  {
-    name: 'day1EndOfTournament',
-    cronPattern: convertISTtoUTCCron(22, 0, '6'), // At 10:00 PM on Saturday
-    task: day1EndOfTournament,
-  },
-  {
-    name: 'day2OfTournament',
-    cronPattern: convertISTtoUTCCron(11, 0, '0'), // At 11:00 AM on Sunday
-    task: day2OfTournament,
-  },
+  // createSchedule('startRegistrationTournament', '02:00', startRegistration),
+  // createSchedule('endRegistrationTournament', '23:00', endRegistration),
+  // createSchedule('startTournament', '00:00', startTournament),
+  // createSchedule('endTournament', '23:59', endTournament),
+  // {
+  //   name: 'inRegistrationPeriod',
+  //   cronPattern: convertISTtoUTCCron(11, 0, '2,3,4,5'), // At 11:00 AM on Tuesday, Wednesday, Thursday, and Friday
+  //   task: inRegisterationPeriod,
+  // },
+  // {
+  //   name: 'registerDummyUsers',
+  //   cronPattern: convertISTtoUTCCron(12, 0, '1,2,3,4,5'), // At 12:00 PM on Monday, Tuesday, Wednesday, Thursday, and Friday
+  //   task: registerDummyUsers,
+  // },
+  // {
+  //   name: 'botQuizParticipationSaturday',
+  //   cronPattern: convertISTtoUTCCron(10, 0, '6'), // At 10:00 AM on Saturday
+  //   task: simulateBotQuizParticipation,
+  // },
+  // {
+  //   name: 'botQuizParticipationSaturday',
+  //   cronPattern: convertISTtoUTCCron(14, 0, '6'), // At 2:00 PM on Saturday
+  //   task: simulateBotQuizParticipation,
+  // },
+  // {
+  //   name: 'botQuizParticipationSaturday',
+  //   cronPattern: convertISTtoUTCCron(18, 0, '6'), // At 6:00 PM on Saturday
+  //   task: simulateBotQuizParticipation,
+  // },
+  // {
+  //   name: 'botQuizParticipationSunday',
+  //   cronPattern: convertISTtoUTCCron(11, 0, '0'), // At 11:00 AM on Sunday
+  //   task: simulateBotQuizParticipation,
+  // },
+  // {
+  //   name: 'botQuizParticipationSunday',
+  //   cronPattern: convertISTtoUTCCron(15, 0, '0'), // At 3:00 PM on Sunday
+  //   task: simulateBotQuizParticipation,
+  // },
+  // {
+  //   name: 'botQuizParticipationSunday',
+  //   cronPattern: convertISTtoUTCCron(19, 0, '0'), // At 7:00 PM on Sunday
+  //   task: simulateBotQuizParticipation,
+  // },
+  // {
+  //   name: 'lastDayOfRegistrationPeriod',
+  //   cronPattern: convertISTtoUTCCron(20, 0, '5'), // At 8:00 PM on Friday
+  //   task: lastDayOfRegisterationPeriod,
+  // },
+  // {
+  //   name: 'day1EndOfTournament',
+  //   cronPattern: convertISTtoUTCCron(22, 0, '6'), // At 10:00 PM on Saturday
+  //   task: day1EndOfTournament,
+  // },
+  // {
+  //   name: 'day2OfTournament',
+  //   cronPattern: convertISTtoUTCCron(11, 0, '0'), // At 11:00 AM on Sunday
+  //   task: day2OfTournament,
+  // },
 ]
 
 // Convert times to cron patterns and add them to each schedule
@@ -269,18 +269,18 @@ schedules.forEach(schedule => {
   const timeUTC = timeIST.clone().tz('UTC')
 
   let dayOfWeek = '*'
-  if (schedule.name.includes('Tournament')) {
-    for (const [event, day] of Object.entries(tournamentDays)) {
-      if (schedule.name.includes(event)) {
-        // Set the day in IST
-        timeIST.day(day)
-        // Convert to UTC after setting the day
-        const updatedTimeUTC = timeIST.clone().tz('UTC')
-        dayOfWeek = updatedTimeUTC.day()
-        break
-      }
-    }
-  }
+  // if (schedule.name.includes('Tournament')) {
+  //   for (const [event, day] of Object.entries(tournamentDays)) {
+  //     if (schedule.name.includes(event)) {
+  //       // Set the day in IST
+  //       timeIST.day(day)
+  //       // Convert to UTC after setting the day
+  //       const updatedTimeUTC = timeIST.clone().tz('UTC')
+  //       dayOfWeek = updatedTimeUTC.day()
+  //       break
+  //     }
+  //   }
+  // }
 
   // Generate cron pattern using UTC time
   schedule.cronPattern = `${timeUTC.minute()} ${timeUTC.hour()} * * ${dayOfWeek}`

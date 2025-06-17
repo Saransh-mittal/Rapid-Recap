@@ -31,6 +31,12 @@ const {
   createPlaceholderHighlight,
 } = require('../../utils/quickClashHighlightIntegration.utils')
 const Article = require('../../model/articleSchema')
+const {
+  updateTrophiesAfterChallenge,
+  DEFAULT_STARTING_TROPHIES,
+  calculateTrophiesToExchange,
+} = require('./quickClashTrophyService')
+const globalEmitter = require('../../eventEmitter')
 
 const CHALLENGE_EXPIRY = 24 * 60 * 60 * 1000 // 24 hours
 
@@ -58,6 +64,27 @@ const checkChallengeLimits = async ({ userId, session }) => {
   }
 }
 
+// Helper to emit progress updates to both users for 1v1 matchmaking
+const emitProgressUpdate = (challengerId, opponentId, step, progress) => {
+  console.log(
+    `[CHALLENGE_SERVICE] Emitting progress: ${step} - ${progress}% to users ${challengerId} and ${opponentId}`,
+  )
+
+  // Emit progress event for challenger
+  globalEmitter.emit('quickClash:challengeProgress', {
+    userId: challengerId,
+    step,
+    progress,
+  })
+
+  // Emit progress event for opponent
+  globalEmitter.emit('quickClash:challengeProgress', {
+    userId: opponentId,
+    step,
+    progress,
+  })
+}
+
 /**
  * Create a new QuickClash challenge using a single article
  * @param {Object} params - Parameters
@@ -77,6 +104,15 @@ const createChallenge = async ({
     throw new Error('Cannot challenge yourself')
   }
 
+  console.log(
+    `[CHALLENGE_SERVICE] Creating challenge: ${challengerId} vs ${opponentId}, fromMatchmaking: ${fromMatchMaking}`,
+  )
+
+  // First progress update - Starting challenge creation
+  if (fromMatchMaking) {
+    emitProgressUpdate(challengerId, opponentId, 'matchFound', 5)
+  }
+
   // Check limits
   // await checkChallengeLimits({ userId: challengerId })
 
@@ -86,8 +122,18 @@ const createChallenge = async ({
       Math.floor(Math.random() * categories.length)
     ].toLocaleLowerCase()
 
+  // Progress update - Content selection
+  if (fromMatchMaking) {
+    emitProgressUpdate(challengerId, opponentId, 'contentLoading', 15)
+  }
+
   // Get a single article instead of multiple
   const article = await getSourceArticle({ category })
+
+  // Progress update - Content loaded
+  if (fromMatchMaking) {
+    emitProgressUpdate(challengerId, opponentId, 'contentLoading', 30)
+  }
 
   // Check if Hindi translation exists
   const hasHindiTranslation = !!(
@@ -112,9 +158,19 @@ const createChallenge = async ({
     sourceArticles: [article._id],
   }
 
+  // Progress update - Content preparation
+  if (fromMatchMaking) {
+    emitProgressUpdate(challengerId, opponentId, 'contentLoading', 45)
+  }
+
   // Generate Hindi translation if it doesn't exist
   if (!hasHindiTranslation) {
     console.log(`Generating Hindi translation for article ${article._id}`)
+
+    // Progress update - Translation starting
+    if (fromMatchMaking) {
+      emitProgressUpdate(challengerId, opponentId, 'contentLoading', 50)
+    }
 
     const hindiTranslation = await generateHindiTranslation({
       title: article.title,
@@ -124,6 +180,11 @@ const createChallenge = async ({
     // Update article data with the new translation
     articleData.title.hindi = hindiTranslation.title
     articleData.content.hindi = hindiTranslation.content
+
+    // Progress update - Translation completed
+    if (fromMatchMaking) {
+      emitProgressUpdate(challengerId, opponentId, 'contentLoading', 60)
+    }
 
     // Optionally update the original article for future use
     try {
@@ -143,6 +204,11 @@ const createChallenge = async ({
       )
       // Continue with the challenge creation even if saving to article fails
     }
+  } else {
+    // Progress update - No translation needed
+    if (fromMatchMaking) {
+      emitProgressUpdate(challengerId, opponentId, 'contentLoading', 60)
+    }
   }
 
   const session = await mongoose.startSession()
@@ -150,6 +216,46 @@ const createChallenge = async ({
   try {
     return await session.withTransaction(
       async () => {
+        // Progress update - Starting transaction
+        if (fromMatchMaking) {
+          emitProgressUpdate(challengerId, opponentId, 'contentLoading', 65)
+        }
+
+        const [challenger, opponent] = await Promise.all([
+          User.findById(challengerId)
+            .select('_id inGameName name pic quickClashTrophies')
+            .session(session),
+          User.findById(opponentId)
+            .select('_id inGameName name pic quickClashTrophies')
+            .session(session),
+        ])
+
+        // Get trophy counts with fallbacks to default
+        const challengerTrophies =
+          challenger.quickClashTrophies || DEFAULT_STARTING_TROPHIES
+        const opponentTrophies =
+          opponent.quickClashTrophies || DEFAULT_STARTING_TROPHIES
+
+        // Calculate potential trophy exchanges for both players
+        const challengerGain = calculateTrophiesToExchange({
+          playerTrophies: challengerTrophies,
+          opponentTrophies,
+        })
+
+        const opponentGain = calculateTrophiesToExchange({
+          playerTrophies: opponentTrophies,
+          opponentTrophies: challengerTrophies,
+        })
+
+        // Ensure losses don't go below minimum (players always keep at least 100 trophies)
+        const challengerLoss = Math.min(opponentGain, challengerTrophies - 100)
+        const opponentLoss = Math.min(challengerGain, opponentTrophies - 100)
+
+        // Progress update - Setting up challenge
+        if (fromMatchMaking) {
+          emitProgressUpdate(challengerId, opponentId, 'generatingQuiz', 70)
+        }
+
         // Create challenge
         const challenge = new QuickClashChallenge({
           challenger: challengerId,
@@ -159,10 +265,27 @@ const createChallenge = async ({
           fromMatchmaking: fromMatchMaking || false,
           article: articleData,
           expiresAt: new Date(Date.now() + CHALLENGE_EXPIRY),
+          trophyPotential: {
+            challenger: {
+              currentTrophies: challengerTrophies,
+              potentialGain: challengerGain,
+              potentialLoss: challengerLoss,
+            },
+            opponent: {
+              currentTrophies: opponentTrophies,
+              potentialGain: opponentGain,
+              potentialLoss: opponentLoss,
+            },
+          },
         })
 
         if (fromMatchMaking) challenge.status = 'active'
         await challenge.save({ session })
+
+        // Progress update - Challenge created, generating questions
+        if (fromMatchMaking) {
+          emitProgressUpdate(challengerId, opponentId, 'generatingQuiz', 75)
+        }
 
         // Generate English quiz in transaction
         const englishQuiz = await generateQuickClashQuiz({
@@ -174,6 +297,11 @@ const createChallenge = async ({
           session,
         })
 
+        // Progress update - English quiz generated
+        if (fromMatchMaking) {
+          emitProgressUpdate(challengerId, opponentId, 'generatingQuiz', 85)
+        }
+
         // Create a placeholder for the Hindi quiz
         const hindiQuiz = new QuickClashQuiz({
           challenge: challenge._id,
@@ -184,6 +312,11 @@ const createChallenge = async ({
         })
 
         await hindiQuiz.save({ session })
+
+        // Progress update - Preparing highlights
+        if (fromMatchMaking) {
+          emitProgressUpdate(challengerId, opponentId, 'generatingQuiz', 90)
+        }
 
         // Look for existing article highlights for English
         let englishHighlight = await ArticleHighlight.findOne({
@@ -231,15 +364,10 @@ const createChallenge = async ({
           })
         }
 
-        // Populate challenger and opponent info
-        const [challenger, opponent] = await Promise.all([
-          User.findById(challengerId)
-            .select('_id inGameName name')
-            .session(session),
-          User.findById(opponentId)
-            .select('_id inGameName name')
-            .session(session),
-        ])
+        // Progress update - Almost done
+        if (fromMatchMaking) {
+          emitProgressUpdate(challengerId, opponentId, 'generatingQuiz', 95)
+        }
 
         challenge.challenger = challenger
         challenge.opponent = opponent
@@ -265,6 +393,11 @@ const createChallenge = async ({
           },
         }
 
+        // Final progress update - Challenge ready!
+        if (fromMatchMaking) {
+          emitProgressUpdate(challengerId, opponentId, 'challengeReady', 100)
+        }
+
         // Schedule quiz translation with our Hindi content
         setTimeout(() => {
           translateQuizBackground({
@@ -278,6 +411,9 @@ const createChallenge = async ({
           })
         }, 1000)
 
+        console.log(
+          `[CHALLENGE_SERVICE] Challenge created successfully: ${challenge._id}`,
+        )
         return result
       },
       {
@@ -293,6 +429,10 @@ const createChallenge = async ({
 
 const postChallengeCreation = async (challengeId, notifyData) => {
   try {
+    console.log(
+      `[CHALLENGE_SERVICE] Post challenge creation for: ${challengeId}`,
+    )
+
     // Schedule both English and Hindi highlight generation outside of the transaction
     // Don't await these - let them run in the background
     scheduleHighlightGeneration({ challengeId, lang: 'en' }).catch(err =>
@@ -312,6 +452,10 @@ const postChallengeCreation = async (challengeId, notifyData) => {
       const challenge = await QuickClashChallenge.findById(challengeId)
 
       if (challenge && challenge.fromMatchmaking) {
+        console.log(
+          `[CHALLENGE_SERVICE] Sending matchmaking success notification for challenge: ${challengeId}`,
+        )
+
         // For matchmaking, send different notifications
         notifyMatchmakingSuccess({
           challenge: notifyData.challenge,
@@ -324,6 +468,10 @@ const postChallengeCreation = async (challengeId, notifyData) => {
           )
         })
       } else {
+        console.log(
+          `[CHALLENGE_SERVICE] Sending regular challenge creation notification for challenge: ${challengeId}`,
+        )
+
         // For normal challenges, send the regular challenge creation notification
         notifyChallengeCreated({
           challenge: notifyData.challenge,
@@ -372,7 +520,9 @@ const acceptChallenge = async ({ challengeId, userId }) => {
 
       return challenge
     })
+
     setTimeout(() => {
+      console.log(`[CHALLENGE_SERVICE] Challenge accepted: ${result._id}`)
       notifyChallengeAccepted({
         challenge: {
           _id: result._id,
@@ -425,6 +575,7 @@ const rejectChallenge = async ({ challengeId, userId }) => {
       // Use setTimeout to ensure this runs after the transaction is completed
       // and doesn't block the response
       setTimeout(() => {
+        console.log(`[CHALLENGE_SERVICE] Challenge rejected: ${result._id}`)
         notifyChallengeRejected({
           challenge: {
             _id: result._id,
@@ -486,7 +637,10 @@ const getUserChallenges = async ({
 
   let query = {
     $and: [
-      { $or: [{ challenger: userId }, { opponent: userId }] },
+      {
+        $or: [{ challenger: userId }, { opponent: userId }],
+        fromTeamBattle: false,
+      },
       {
         $or: [
           { status: 'completed' },
@@ -567,10 +721,10 @@ const updateChallengeScore = async ({
       challenge.challengerAttempted && challenge.opponentAttempted
 
     // Update appropriate score and attempted status based on user role
-    if (challenge.challenger._id.equals(userId)) {
+    if (challenge?.challenger?._id.equals(userId)) {
       challenge.challengerScore = score
       challenge.challengerAttempted = true // Mark as attempted regardless of score
-    } else if (challenge.opponent._id.equals(userId)) {
+    } else if (challenge?.opponent?._id.equals(userId)) {
       challenge.opponentScore = score
       challenge.opponentAttempted = true // Mark as attempted regardless of score
     } else {
@@ -594,6 +748,25 @@ const updateChallengeScore = async ({
 
       // Mark for notification after transaction
       shouldNotify = true
+
+      // Calculate and update trophies
+      if (!challenge.fromTeamBattle) {
+        try {
+          const trophyUpdates = await updateTrophiesAfterChallenge({
+            challengeId: challenge._id,
+            winnerId: challenge.winner || null,
+            challengerId: challenge.challenger._id,
+            opponentId: challenge.opponent._id,
+            session, // Pass the current session
+          })
+
+          // Store trophy updates in the challenge for UI display
+          challenge.trophyUpdates = trophyUpdates
+        } catch (trophyError) {
+          console.error('Error updating trophies:', trophyError)
+          // Continue with challenge completion even if trophy update fails
+        }
+      }
     } else if (
       !isNowComplete &&
       (challenge.challengerAttempted || challenge.opponentAttempted)
@@ -615,6 +788,9 @@ const updateChallengeScore = async ({
       // Use setTimeout to ensure this runs after the transaction is completed
       // and doesn't block the response
       setTimeout(() => {
+        console.log(
+          `[CHALLENGE_SERVICE] Challenge score updated, notifying completion: ${challengeId}`,
+        )
         notifyChallengeCompleted({
           challenge: result,
           completedByUserId: userId,

@@ -2,7 +2,7 @@
 
 const OpenAI = require('openai')
 
-const MODEL_NAME = 'gpt-4o-mini'
+const MODEL_NAME = 'gpt-4.1-nano-2025-04-14'
 
 const makeGPTRequest = async ({
   messages,

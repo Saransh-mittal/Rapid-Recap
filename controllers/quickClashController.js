@@ -43,6 +43,16 @@ const User = require('../model/userSchema')
 const {
   getLeaderboard,
 } = require('../services/quickClashServices/quickClashLeaderboardService')
+const {
+  calculatePotentialTrophyExchange,
+  getUserTrophyHistory,
+  getUserTrophies,
+  getUserCombinedTrophyHistory,
+} = require('../services/quickClashServices/quickClashTrophyService')
+
+const {
+  updateBattleWithQuizResults,
+} = require('../services/quickClashServices/quickClashTeamBattleService')
 
 // Create a new challenge
 const createNewChallenge = asyncHandler(async (req, res) => {
@@ -210,7 +220,7 @@ const startChallengeSession = asyncHandler(async (req, res) => {
   const userId = req.user._id
 
   try {
-    // Pass the explicit language if provided, otherwise user's preference will be used
+    // The validation is now handled in createSession service
     const session = await createSession({
       challengeId,
       userId,
@@ -224,6 +234,19 @@ const startChallengeSession = asyncHandler(async (req, res) => {
     })
   } catch (error) {
     console.error('Error starting challenge session:', error)
+
+    // Handle authorization errors specifically
+    if (
+      error.message.includes('not authorized') ||
+      error.message.includes('not assigned')
+    ) {
+      return res.status(403).json({
+        success: false,
+        message: error.message,
+        code: 'UNAUTHORIZED_CHALLENGE_ACCESS',
+      })
+    }
+
     res.status(500).json({
       success: false,
       message: error.message || 'Error starting challenge session',
@@ -234,9 +257,10 @@ const startChallengeSession = asyncHandler(async (req, res) => {
 // Start reading phase
 const startReadingPhase = asyncHandler(async (req, res) => {
   const { sessionId } = req.params
-
+  const userId = req.user._id
   const readingPhase = await startReading({
     sessionId,
+    userId,
   })
 
   res.status(200).json({
@@ -263,12 +287,16 @@ const completeReadingPhase = asyncHandler(async (req, res) => {
   })
 })
 
-// Submit quiz answers
 const submitQuizAnswers = asyncHandler(async (req, res) => {
   const { sessionId } = req.params
   const { responses } = req.body
+  const userId = req.user._id
 
   try {
+    console.log(
+      `[submitQuizAnswers] Processing quiz submission for session: ${sessionId}`,
+    )
+
     const result = await submitQuizAnswersService({
       sessionId,
       responses,
@@ -279,21 +307,87 @@ const submitQuizAnswers = asyncHandler(async (req, res) => {
       .select('challenge')
       .lean()
 
-    // Get the challenge to check if it's now completed
+    if (!session) {
+      throw new Error('Session not found')
+    }
+
+    // Get the challenge to check if it's from a team battle
     const challenge = await QuickClashChallenge.findById(session.challenge)
-      .select('challengerAttempted opponentAttempted status')
+      .select(
+        'challengerAttempted opponentAttempted status fromTeamBattle teamBattle',
+      )
       .lean()
 
-    // If both users have submitted their quizzes, the challenge is completed
-    if (
-      challenge &&
-      challenge.challengerAttempted &&
-      challenge.opponentAttempted
-    ) {
-      // Start analysis generation in the background
-      initiateBackgroundAnalysis({
-        challengeId: session.challenge.toString(),
-      })
+    if (!challenge) {
+      throw new Error('Challenge not found')
+    }
+
+    // Check if the challenge is from a team battle
+    if (challenge.fromTeamBattle && challenge.teamBattle) {
+      // Update the team battle with the quiz results
+      try {
+        console.log(
+          `[submitQuizAnswers] Updating team battle with quiz results`,
+        )
+
+        await updateBattleWithQuizResults({
+          battleId: challenge.teamBattle,
+          challengeId: challenge._id,
+          userId: userId,
+          score: result.RQM_score,
+        })
+
+        console.log(`[submitQuizAnswers] Team battle updated successfully`)
+      } catch (teamBattleError) {
+        console.error(
+          'Error updating team battle with quiz results:',
+          teamBattleError,
+        )
+
+        // Check if this is a retry-exhausted error
+        if (teamBattleError.isRetryExhausted) {
+          // Log for monitoring but don't fail the quiz submission
+          console.error(
+            `[submitQuizAnswers] Team battle update failed after all retries:`,
+            {
+              battleId: challenge.teamBattle,
+              challengeId: challenge._id,
+              userId: userId,
+              error:
+                teamBattleError.originalError?.message ||
+                teamBattleError.message,
+            },
+          )
+
+          // Return success for quiz but indicate team battle update failed
+          return res.status(200).json({
+            success: true,
+            message:
+              'Quiz completed successfully, but team battle results may be delayed. Please check your battle status.',
+            challengeId: session.challenge.toString(),
+            warning:
+              'Team battle update is being processed. Results will appear shortly.',
+            ...result,
+          })
+        } else {
+          // For non-retry errors, we don't want to fail the quiz submission
+          // Just log the error and continue
+          console.error(
+            `[submitQuizAnswers] Team battle update error (non-retry):`,
+            teamBattleError,
+          )
+        }
+      }
+    } else {
+      // Regular challenge completion logic
+      // If both users have submitted their quizzes, the challenge is completed
+      if (challenge.challengerAttempted && challenge.opponentAttempted) {
+        // Start analysis generation in the background
+        initiateBackgroundAnalysis({
+          userId,
+          challengeId: session.challenge.toString(),
+        })
+      }
     }
 
     res.status(200).json({
@@ -304,6 +398,30 @@ const submitQuizAnswers = asyncHandler(async (req, res) => {
     })
   } catch (error) {
     console.error('Error submitting quiz answers:', error)
+
+    // Handle retry-exhausted errors specially
+    if (error.isRetryExhausted) {
+      console.error(
+        `[submitQuizAnswers] Quiz submission failed after all retries:`,
+        {
+          sessionId: error.sessionId || sessionId,
+          userId: userId,
+          error: error.originalError?.message || error.message,
+        },
+      )
+
+      return res.status(500).json({
+        success: false,
+        message:
+          error.message ||
+          'Quiz submission failed after multiple attempts. Please try again.',
+        code: 'RETRY_EXHAUSTED',
+        retryable: true, // Client can retry the entire request
+        sessionId: sessionId,
+      })
+    }
+
+    // Handle other errors normally
     res.status(500).json({
       success: false,
       message: error.message || 'Error submitting quiz answers',
@@ -351,6 +469,7 @@ const getCompletedChallenges = asyncHandler(async (req, res) => {
     const query = {
       $or: [{ challenger: userId }, { opponent: userId }],
       status: 'completed',
+      fromTeamBattle: false,
     }
 
     const challenges = await QuickClashChallenge.find(query)
@@ -445,7 +564,7 @@ const getSessionIdFromChallenge = asyncHandler(async (req, res) => {
 const generateAnalysis = asyncHandler(async (req, res) => {
   const { challengeId } = req.params
   const userId = req.user._id
-
+  console.log('Generating analysis for challenge:', challengeId)
   try {
     // Check if user is part of the challenge
     const challenge = await QuickClashChallenge.findById(challengeId)
@@ -478,6 +597,7 @@ const generateAnalysis = asyncHandler(async (req, res) => {
 
     // Generate the analysis with translation support
     const analysis = await generateChallengeAnalysisWithTranslation({
+      userId,
       challengeId,
     })
 
@@ -701,6 +821,118 @@ const markChallengeRevenge = asyncHandler(async (req, res) => {
   }
 })
 
+/**
+ * @desc    Get a user's current trophy count
+ * @route   GET /api/quickClash/trophies
+ * @access  Private
+ */
+const getUserTrophiesController = asyncHandler(async (req, res) => {
+  const userId = req.user._id
+
+  try {
+    const trophies = await getUserTrophies({ userId })
+
+    res.status(200).json({
+      success: true,
+      trophies,
+    })
+  } catch (error) {
+    console.error('Error getting user trophies:', error)
+    res.status(500).json({
+      success: false,
+      message: error.message || 'Failed to get trophies',
+    })
+  }
+})
+
+/**
+ * @desc    Get a user's combined trophy history (both individual and team battles)
+ * @route   GET /api/quickClash/trophies/history/combined
+ * @access  Private
+ */
+const getUserCombinedTrophyHistoryController = asyncHandler(
+  async (req, res) => {
+    const userId = req.user._id
+    const { limit = 10 } = req.query
+
+    try {
+      const history = await getUserCombinedTrophyHistory({
+        userId,
+        limit: parseInt(limit),
+      })
+
+      res.status(200).json({
+        success: true,
+        history,
+      })
+    } catch (error) {
+      console.error('Error getting combined trophy history:', error)
+      res.status(500).json({
+        success: false,
+        message: error.message || 'Failed to get combined trophy history',
+      })
+    }
+  },
+)
+
+/**
+ * @desc    Get a user's trophy history
+ * @route   GET /api/quickClash/trophies/history
+ * @access  Private
+ */
+const getUserTrophyHistoryController = asyncHandler(async (req, res) => {
+  const userId = req.user._id
+  const { limit = 10 } = req.query
+
+  try {
+    const history = await getUserTrophyHistory({
+      userId,
+      limit: parseInt(limit),
+    })
+
+    res.status(200).json({
+      success: true,
+      history,
+    })
+  } catch (error) {
+    console.error('Error getting trophy history:', error)
+    res.status(500).json({
+      success: false,
+      message: error.message || 'Failed to get trophy history',
+    })
+  }
+})
+
+/**
+ * @desc    Calculate potential trophy exchange for a match
+ * @route   GET /api/quickClash/trophies/exchange/:opponentId
+ * @access  Private
+ */
+const calculatePotentialTrophyExchangeController = asyncHandler(
+  async (req, res) => {
+    const userId = req.user._id
+    const { opponentId } = req.params
+
+    try {
+      const exchange = await calculatePotentialTrophyExchange({
+        userId,
+        opponentId,
+      })
+
+      res.status(200).json({
+        success: true,
+        ...exchange,
+      })
+    } catch (error) {
+      console.error('Error calculating potential trophy exchange:', error)
+      res.status(500).json({
+        success: false,
+        message: error.message || 'Failed to calculate trophy exchange',
+      })
+    }
+  },
+)
+
 module.exports = {
   createNewChallenge,
   handleAcceptChallenge,
@@ -721,4 +953,8 @@ module.exports = {
   getAnalysisStatus,
   getQuickClashLeaderboard,
   markChallengeRevenge,
+  getUserTrophiesController,
+  getUserTrophyHistoryController,
+  calculatePotentialTrophyExchangeController,
+  getUserCombinedTrophyHistoryController,
 }

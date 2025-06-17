@@ -17,12 +17,31 @@ const quickClashAnalysisSchema = new mongoose.Schema({
     category: String,
     difficulty: String, // easy, medium, hard
     engagementScore: Number, // 0-100 scale
+    questionDifficultyDistribution: Object,
+    // Added trophy exchange information
+    trophyExchange: {
+      isTie: Boolean,
+      protectionApplied: {
+        challengerProtected: Boolean,
+        challengerProtectionType: String,
+        opponentProtected: Boolean,
+        opponentProtectionType: String,
+      },
+    },
   },
   // Challenger analysis
   challenger: {
     userId: {
       type: mongoose.Schema.Types.ObjectId,
       ref: 'USER',
+    },
+    // Trophy data from challenge
+    trophyData: {
+      previousTrophies: Number,
+      newTrophies: Number,
+      change: Number,
+      protectionApplied: Boolean,
+      protectionType: String,
     },
     performance: {
       readingTime: Number, // in seconds
@@ -31,6 +50,7 @@ const quickClashAnalysisSchema = new mongoose.Schema({
       quizSpeed: Number, // average seconds per question
       quizSpeedTrend: String, // "consistent", "improving", "declining"
       finalScore: Number,
+      trophyAnalysis: String, // Added analysis of trophy performance
     },
     analysis: {
       strengths: [String],
@@ -53,12 +73,26 @@ const quickClashAnalysisSchema = new mongoose.Schema({
       topicSuggestions: [String],
       nextSteps: [String],
     },
+    // Trophy insights
+    trophyInsights: {
+      currentLevel: String,
+      progressTrend: String,
+      nextMilestone: String,
+    },
   },
   // Opponent analysis (same structure as challenger)
   opponent: {
     userId: {
       type: mongoose.Schema.Types.ObjectId,
       ref: 'USER',
+    },
+    // Trophy data from challenge
+    trophyData: {
+      previousTrophies: Number,
+      newTrophies: Number,
+      change: Number,
+      protectionApplied: Boolean,
+      protectionType: String,
     },
     performance: {
       readingTime: Number,
@@ -67,6 +101,7 @@ const quickClashAnalysisSchema = new mongoose.Schema({
       quizSpeed: Number,
       quizSpeedTrend: String,
       finalScore: Number,
+      trophyAnalysis: String, // Added analysis of trophy performance
     },
     analysis: {
       strengths: [String],
@@ -89,6 +124,12 @@ const quickClashAnalysisSchema = new mongoose.Schema({
       topicSuggestions: [String],
       nextSteps: [String],
     },
+    // Trophy insights
+    trophyInsights: {
+      currentLevel: String,
+      progressTrend: String,
+      nextMilestone: String,
+    },
   },
   // Engagement content
   engagement: {
@@ -99,12 +140,15 @@ const quickClashAnalysisSchema = new mongoose.Schema({
     victoryMeme: String,
     competitiveTaunt: String,
     wittyAnalysis: String,
+    difficultySpecificComment: String,
+    trophyComment: String, // Added trophy-specific commentary
     topicSuggestions: [String],
     interestMetrics: {
       victorMemeInterest: Number, // Percentage 0-100
       competitiveTauntPreference: Number, // Percentage 0-100
       wittyAnalysisPreference: Number, // Percentage 0-100
       topicSuggestionsInterest: Number, // Percentage 0-100
+      trophyCommentInterest: Number, // Interest in trophy commentary
     },
   },
   // Hindi translation of the analysis
@@ -112,6 +156,7 @@ const quickClashAnalysisSchema = new mongoose.Schema({
     challenger: {
       performance: {
         difficultyInsight: String,
+        trophyAnalysis: String, // Added Hindi trophy analysis
       },
       analysis: {
         strengths: [String],
@@ -122,11 +167,18 @@ const quickClashAnalysisSchema = new mongoose.Schema({
         focusAreas: [String],
         topicSuggestions: [String],
         nextSteps: [String],
+      },
+      trophyInsights: {
+        // Added Hindi trophy insights
+        currentLevel: String,
+        progressTrend: String,
+        nextMilestone: String,
       },
     },
     opponent: {
       performance: {
         difficultyInsight: String,
+        trophyAnalysis: String, // Added Hindi trophy analysis
       },
       analysis: {
         strengths: [String],
@@ -137,12 +189,19 @@ const quickClashAnalysisSchema = new mongoose.Schema({
         focusAreas: [String],
         topicSuggestions: [String],
         nextSteps: [String],
+      },
+      trophyInsights: {
+        // Added Hindi trophy insights
+        currentLevel: String,
+        progressTrend: String,
+        nextMilestone: String,
       },
     },
     engagement: {
       victoryMeme: String,
       competitiveTaunt: String,
       wittyAnalysis: String,
+      trophyComment: String, // Added Hindi trophy commentary
       topicSuggestions: [String],
     },
   },

@@ -7,6 +7,7 @@ const mongoose = require('mongoose')
 const OpenAI = require('openai')
 const User = require('../../model/userSchema')
 const { translateAnalysisToHindi } = require('./quickClashTranslationService')
+const QuickClashTrophyHistory = require('../../model/quickClashSchemas/quickClashTrophyHistorySchema')
 
 /**
  * Generate AI analysis for a completed challenge
@@ -198,7 +199,8 @@ const getUserChallengeStats = async ({ userId, session }) => {
     let completedCount = 0
 
     for (const challenge of completedChallenges) {
-      const isChallenger = challenge.challenger.toString() === userId.toString()
+      const isChallenger =
+        challenge?.challenger?.toString() === userId.toString()
       const userScore = isChallenger
         ? challenge.challengerScore
         : challenge.opponentScore
@@ -285,7 +287,51 @@ const getUserChallengeStats = async ({ userId, session }) => {
 }
 
 /**
- * Generate AI analysis for the challenge with enhanced question-level data
+ * Calculate enhanced trophy trend based on history and current change
+ * @param {number} currentChange - Current trophy change in this challenge
+ * @param {Array} trophyHistory - Array of trophy history entries
+ * @returns {string} Descriptive trend status
+ */
+const calculateEnhancedTrophyTrend = (currentChange, trophyHistory) => {
+  // If no history available, use current change only
+  if (!trophyHistory || trophyHistory.length === 0) {
+    return currentChange > 0
+      ? 'Rising'
+      : currentChange < 0
+      ? 'Declining'
+      : 'Stable'
+  }
+
+  // Calculate net change over recent history (up to 5 entries)
+  const recentHistory = trophyHistory.slice(0, 5)
+  const netChange = recentHistory.reduce(
+    (sum, entry) => sum + entry.trophiesChange,
+    0,
+  )
+
+  // Count positive and negative changes
+  const positiveChanges = recentHistory.filter(
+    entry => entry.trophiesChange > 0,
+  ).length
+  const negativeChanges = recentHistory.filter(
+    entry => entry.trophiesChange < 0,
+  ).length
+
+  // Determine consistency
+  const isConsistent =
+    (positiveChanges > 0 && negativeChanges === 0) ||
+    (negativeChanges > 0 && positiveChanges === 0)
+
+  // Calculate trend direction and strength
+  if (netChange > 20) return 'Strongly Rising'
+  if (netChange > 0) return isConsistent ? 'Rising' : 'Gradually Rising'
+  if (netChange < -20) return 'Strongly Declining'
+  if (netChange < 0) return isConsistent ? 'Declining' : 'Gradually Declining'
+  return 'Stable'
+}
+
+/**
+ * Generate AI analysis for a completed challenge
  * @param {Object} params - Parameters
  * @param {Object} params.challenge - Challenge document
  * @param {Object} params.challengerSession - Challenger's session
@@ -303,6 +349,18 @@ const generateAIAnalysis = async ({
   opponentStats,
   winnerId,
 }) => {
+  // Fetch trophy history for both players (limited to recent matches)
+  const [challengerTrophyHistory, opponentTrophyHistory] = await Promise.all([
+    QuickClashTrophyHistory.find({ user: challenge.challenger._id })
+      .sort({ createdAt: -1 })
+      .limit(10)
+      .lean(),
+    QuickClashTrophyHistory.find({ user: challenge.opponent._id })
+      .sort({ createdAt: -1 })
+      .limit(10)
+      .lean(),
+  ])
+
   // First, compile the data needed for analysis
   const challengerData = {
     userId: challenge.challenger._id,
@@ -317,6 +375,25 @@ const generateAIAnalysis = async ({
     totalQuestions: (challengerSession.quizAttempt.responses || []).length,
     // Add detailed quiz response information
     detailedResponses: await getEnhancedResponseDetails(challengerSession),
+    // Add trophy data
+    trophyData: challenge.trophyUpdates
+      ? {
+          previousTrophies: challenge.trophyUpdates.challenger.previousTrophies,
+          newTrophies: challenge.trophyUpdates.challenger.newTrophies,
+          change: challenge.trophyUpdates.challenger.change,
+          protectionApplied:
+            challenge.trophyUpdates.protectionApplied?.challenger || false,
+          protectionType:
+            challenge.trophyUpdates.protectionApplied?.challenger_type || null,
+          // Add enhanced trend calculation
+          enhancedTrend: calculateEnhancedTrophyTrend(
+            challenge.trophyUpdates.challenger.change,
+            challengerTrophyHistory,
+          ),
+        }
+      : null,
+    // Add trophy history data for AI to analyze
+    trophyHistory: challengerTrophyHistory,
   }
 
   const opponentData = {
@@ -332,6 +409,25 @@ const generateAIAnalysis = async ({
     totalQuestions: (opponentSession.quizAttempt.responses || []).length,
     // Add detailed quiz response information
     detailedResponses: await getEnhancedResponseDetails(opponentSession),
+    // Add trophy data
+    trophyData: challenge.trophyUpdates
+      ? {
+          previousTrophies: challenge.trophyUpdates.opponent.previousTrophies,
+          newTrophies: challenge.trophyUpdates.opponent.newTrophies,
+          change: challenge.trophyUpdates.opponent.change,
+          protectionApplied:
+            challenge.trophyUpdates.protectionApplied?.opponent || false,
+          protectionType:
+            challenge.trophyUpdates.protectionApplied?.opponent_type || null,
+          // Add enhanced trend calculation
+          enhancedTrend: calculateEnhancedTrophyTrend(
+            challenge.trophyUpdates.opponent.change,
+            opponentTrophyHistory,
+          ),
+        }
+      : null,
+    // Add trophy history data for AI to analyze
+    trophyHistory: opponentTrophyHistory,
   }
 
   // When calculating engagement score, adjust formula to account for the time constraints
@@ -353,10 +449,10 @@ const generateAIAnalysis = async ({
     return Math.min(100, baseScore + scoreDifferencePoints + scoreValuePoints)
   }
 
-  // 2. Calculate engagement score with new formula
+  // Calculate engagement score with new formula
   const engagementScore = calculateEngagementScore()
 
-  // 3. Determine difficulty level based on scores and time spent
+  // Determine difficulty level based on scores and time spent
   let difficulty = 'medium'
   const avgScore = (challengerData.score + opponentData.score) / 2
   if (avgScore < 60) {
@@ -403,6 +499,10 @@ const generateAIAnalysis = async ({
       ),
       // Add time analysis by question difficulty
       timeByDifficulty: getTimeByDifficulty(challengerData.detailedResponses),
+      // Add trophy data
+      trophyData: challengerData.trophyData,
+      // Add trophy history array
+      trophyHistory: challengerData.trophyHistory,
     }
 
     const opponentProfile = {
@@ -435,6 +535,10 @@ const generateAIAnalysis = async ({
       ),
       // Add time analysis by question difficulty
       timeByDifficulty: getTimeByDifficulty(opponentData.detailedResponses),
+      // Add trophy data
+      trophyData: opponentData.trophyData,
+      // Add trophy history array
+      trophyHistory: opponentData.trophyHistory,
     }
 
     const winnerUsername = winnerId
@@ -446,6 +550,21 @@ const generateAIAnalysis = async ({
     const isTie =
       !winnerId && challengerData.score > 0 && opponentData.score > 0
 
+    // Determine if any player had trophy protection
+    const protectionInfo =
+      challenge.trophyUpdates && challenge.trophyUpdates.protectionApplied
+        ? {
+            challengerProtected:
+              challenge.trophyUpdates.protectionApplied.challenger,
+            challengerProtectionType:
+              challenge.trophyUpdates.protectionApplied.challenger_type,
+            opponentProtected:
+              challenge.trophyUpdates.protectionApplied.opponent,
+            opponentProtectionType:
+              challenge.trophyUpdates.protectionApplied.opponent_type,
+          }
+        : null
+
     // Compile the prompt for OpenAI
     const prompt = {
       category: challenge.category,
@@ -454,6 +573,13 @@ const generateAIAnalysis = async ({
         difficulty: difficulty,
         winner: winnerUsername,
         isTie: isTie,
+        // Add trophy exchange information
+        trophyExchange: challenge.trophyUpdates
+          ? {
+              isTie: challenge.trophyUpdates.isTie,
+              protectionApplied: protectionInfo,
+            }
+          : null,
       },
       challenger: challengerProfile,
       opponent: opponentProfile,
@@ -510,8 +636,6 @@ const generateAIAnalysis = async ({
     // Generate the opponent metrics
     const opponentMetrics = createFactualMetrics(opponentProfile)
 
-    // Now let's update the prompts to be explicit about which difficulty levels were present
-
     // Generate the challenger analysis with constraints awareness and pre-filled metrics
     const challengerResponse = await openai.chat.completions.create({
       model: 'gpt-4o-mini',
@@ -528,6 +652,14 @@ IMPORTANT SYSTEM CONSTRAINTS:
 3. There is a strict 2-minute time limit for reading the article.
 4. Questions are randomly selected from a larger pool, so users may not see any questions of a particular difficulty level in a given challenge.
 
+TROPHY SYSTEM INFORMATION:
+The system uses trophies as a competitive ranking mechanism. Users gain or lose trophies based on wins and losses.
+1. Trophy protection may be applied for losing players in certain situations:
+   - Streak Protection: Protects trophies after a losing streak is broken
+   - Activity Protection: Protects newer players from losing too many trophies early on
+2. Trophy exchange represents skill level and achievement in the system
+3. Users with higher trophy counts are typically more experienced or skilled
+
 Your analysis should be compassionate and account for these system constraints. Never suggest that a user "should have attempted more/better/different questions" as this is not under their control. Instead, focus on their performance with what they were randomly given.
 
 CRITICAL: If a user did not receive any questions of a particular difficulty level, DO NOT mention this as an area for growth or improvement. It's a system limitation, not a user performance issue.
@@ -543,6 +675,7 @@ IMPORTANT FACTS TO CONSIDER:
 - Users have no control over question difficulty selection
 - Time constraints are very strict (50 seconds for 5 questions)
 - Reading time is capped at 2 minutes
+- Trophy exchange reflects skill level and competitive progress
 
 DIFFICULTY LEVELS PRESENT IN THIS QUIZ:
 - Easy questions: ${challengerMetrics.difficultyPresence.easy ? 'YES' : 'NO'}
@@ -580,9 +713,60 @@ ${
     : '- No hard questions were assigned in this quiz'
 }
 
+${
+  challengerProfile.trophyData
+    ? `TROPHY INFORMATION:
+- Previous trophy count: ${challengerProfile.trophyData.previousTrophies}
+- New trophy count: ${challengerProfile.trophyData.newTrophies}
+- Trophy change: ${challengerProfile.trophyData.change}
+- Enhanced trend: ${challengerProfile.trophyData.enhancedTrend}
+- Trophy protection applied: ${
+        challengerProfile.trophyData.protectionApplied ? 'YES' : 'NO'
+      }
+${
+  challengerProfile.trophyData.protectionApplied
+    ? `- Protection type: ${challengerProfile.trophyData.protectionType}`
+    : ''
+}`
+    : '- Trophy data not available for this challenge'
+}
+
+${
+  challengerProfile.trophyHistory && challengerProfile.trophyHistory.length > 0
+    ? `TROPHY HISTORY INFORMATION:
+- Recent trophy changes: ${challengerProfile.trophyHistory
+        .slice(0, 5)
+        .map(h => h.trophiesChange)
+        .join(', ')}
+- Enhanced trend analysis: ${
+        challengerProfile.trophyData?.enhancedTrend || 'No data'
+      }
+- Consistency: ${
+        challengerProfile.trophyHistory.filter(h => h.trophiesChange > 0)
+          .length > 0 &&
+        challengerProfile.trophyHistory.filter(h => h.trophiesChange < 0)
+          .length === 0
+          ? 'Consistently gaining trophies'
+          : challengerProfile.trophyHistory.filter(h => h.trophiesChange < 0)
+              .length > 0 &&
+            challengerProfile.trophyHistory.filter(h => h.trophiesChange > 0)
+              .length === 0
+          ? 'Consistently losing trophies'
+          : 'Mixed trophy results'
+      }`
+    : '- No trophy history available'
+}
+
 Your job is to provide qualitative analysis and insights based on these metrics and the detailed question-level data. Focus on identifying patterns, providing actionable recommendations, and creating a personalized learning path.
 
 VERY IMPORTANT: Only analyze performance for question difficulties that were present in the quiz. Do not mention missing difficulty levels as an area for improvement or growth.
+
+TROPHY ANALYSIS GUIDELINES:
+- If the player won and gained trophies, emphasize their achievement and progress
+- If the player lost but had protection, explain what the protection means and how it helped them
+- For new players (typically lower trophy counts), provide more encouragement and basic tips
+- For experienced players (higher trophy counts), provide more advanced strategic advice
+- When analyzing trophy trends, use the enhanced trend data (Strongly Rising, Rising, etc.) to give context
 
 KNOWLEDGE PATTERN METRICS SCORING GUIDELINES (All metrics should be scored 0-100):
 
@@ -617,7 +801,8 @@ The output must be a valid JSON object with the following structure:
 {
   "performance": {
     "quizSpeedTrend": "improving" | "declining" | "consistent",
-    "difficultyInsight": string
+    "difficultyInsight": string,
+    "trophyAnalysis": string  // Add insight about trophy performance
   },
   "analysis": {
     "strengths": string[],
@@ -633,6 +818,12 @@ The output must be a valid JSON object with the following structure:
     "focusAreas": string[],
     "topicSuggestions": string[],
     "nextSteps": string[]
+  },
+  "trophyInsights": {  // Add trophy-specific insights with enhanced trend data
+    "currentLevel": string,
+    "progressTrend": string,
+    "progressTrendContext": string, // Add context about the trend
+    "nextMilestone": string
   }
 }
 
@@ -657,6 +848,14 @@ IMPORTANT SYSTEM CONSTRAINTS:
 3. There is a strict 2-minute time limit for reading the article.
 4. Questions are randomly selected from a larger pool, so users may not see any questions of a particular difficulty level in a given challenge.
 
+TROPHY SYSTEM INFORMATION:
+The system uses trophies as a competitive ranking mechanism. Users gain or lose trophies based on wins and losses.
+1. Trophy protection may be applied for losing players in certain situations:
+   - Streak Protection: Protects trophies after a losing streak is broken
+   - Activity Protection: Protects newer players from losing too many trophies early on
+2. Trophy exchange represents skill level and achievement in the system
+3. Users with higher trophy counts are typically more experienced or skilled
+
 Your analysis should be compassionate and account for these system constraints. Never suggest that a user "should have attempted more/better/different questions" as this is not under their control. Instead, focus on their performance with what they were randomly given.
 
 CRITICAL: If a user did not receive any questions of a particular difficulty level, DO NOT mention this as an area for growth or improvement. It's a system limitation, not a user performance issue.
@@ -672,6 +871,7 @@ IMPORTANT FACTS TO CONSIDER:
 - Users have no control over question difficulty selection
 - Time constraints are very strict (50 seconds for 5 questions)
 - Reading time is capped at 2 minutes
+- Trophy exchange reflects skill level and competitive progress
 
 DIFFICULTY LEVELS PRESENT IN THIS QUIZ:
 - Easy questions: ${opponentMetrics.difficultyPresence.easy ? 'YES' : 'NO'}
@@ -707,9 +907,60 @@ ${
     : '- No hard questions were assigned in this quiz'
 }
 
+${
+  opponentProfile.trophyData
+    ? `TROPHY INFORMATION:
+- Previous trophy count: ${opponentProfile.trophyData.previousTrophies}
+- New trophy count: ${opponentProfile.trophyData.newTrophies}
+- Trophy change: ${opponentProfile.trophyData.change}
+- Enhanced trend: ${opponentProfile.trophyData.enhancedTrend}
+- Trophy protection applied: ${
+        opponentProfile.trophyData.protectionApplied ? 'YES' : 'NO'
+      }
+${
+  opponentProfile.trophyData.protectionApplied
+    ? `- Protection type: ${opponentProfile.trophyData.protectionType}`
+    : ''
+}`
+    : '- Trophy data not available for this challenge'
+}
+
+${
+  opponentProfile.trophyHistory && opponentProfile.trophyHistory.length > 0
+    ? `TROPHY HISTORY INFORMATION:
+- Recent trophy changes: ${opponentProfile.trophyHistory
+        .slice(0, 5)
+        .map(h => h.trophiesChange)
+        .join(', ')}
+- Enhanced trend analysis: ${
+        opponentProfile.trophyData?.enhancedTrend || 'No data'
+      }
+- Consistency: ${
+        opponentProfile.trophyHistory.filter(h => h.trophiesChange > 0).length >
+          0 &&
+        opponentProfile.trophyHistory.filter(h => h.trophiesChange < 0)
+          .length === 0
+          ? 'Consistently gaining trophies'
+          : opponentProfile.trophyHistory.filter(h => h.trophiesChange < 0)
+              .length > 0 &&
+            opponentProfile.trophyHistory.filter(h => h.trophiesChange > 0)
+              .length === 0
+          ? 'Consistently losing trophies'
+          : 'Mixed trophy results'
+      }`
+    : '- No trophy history available'
+}
+
 Your job is to provide qualitative analysis and insights based on these metrics and the detailed question-level data. Focus on identifying patterns, providing actionable recommendations, and creating a personalized learning path.
 
 VERY IMPORTANT: Only analyze performance for question difficulties that were present in the quiz. Do not mention missing difficulty levels as an area for improvement or growth.
+
+TROPHY ANALYSIS GUIDELINES:
+- If the player won and gained trophies, emphasize their achievement and progress
+- If the player lost but had protection, explain what the protection means and how it helped them
+- For new players (typically lower trophy counts), provide more encouragement and basic tips
+- For experienced players (higher trophy counts), provide more advanced strategic advice
+- When analyzing trophy trends, use the enhanced trend data (Strongly Rising, Rising, etc.) to give context
 
 KNOWLEDGE PATTERN METRICS SCORING GUIDELINES (All metrics should be scored 0-100):
 
@@ -744,7 +995,8 @@ The output must be a valid JSON object with the following structure:
 {
   "performance": {
     "quizSpeedTrend": "improving" | "declining" | "consistent",
-    "difficultyInsight": string
+    "difficultyInsight": string,
+    "trophyAnalysis": string  // Add insight about trophy performance
   },
   "analysis": {
     "strengths": string[],
@@ -760,6 +1012,12 @@ The output must be a valid JSON object with the following structure:
     "focusAreas": string[],
     "topicSuggestions": string[],
     "nextSteps": string[]
+  },
+  "trophyInsights": {  // Add trophy-specific insights with enhanced trend data
+    "currentLevel": string,
+    "progressTrend": string,
+    "progressTrendContext": string, // Add context about the trend
+    "nextMilestone": string
   }
 }
 
@@ -768,57 +1026,15 @@ Here are the battle details: ${JSON.stringify(prompt, null, 2)}`,
       ],
     })
 
-    // When merging the metrics with the AI's analysis, also handle the question performance differently
-    const createAnalysis = (metrics, qualitativeAnalysis) => {
-      // Create a proper questionTypePerformance object with only the difficulties that were present
-      const questionTypePerformance = {}
-
-      if (metrics.difficultyPresence.easy) {
-        questionTypePerformance.easyQuestions =
-          metrics.questionTypePerformance.easyQuestions
-      }
-
-      if (metrics.difficultyPresence.medium) {
-        questionTypePerformance.mediumQuestions =
-          metrics.questionTypePerformance.mediumQuestions
-      }
-
-      if (metrics.difficultyPresence.hard) {
-        questionTypePerformance.hardQuestions =
-          metrics.questionTypePerformance.hardQuestions
-      }
-
-      return {
-        performance: {
-          ...metrics.performance,
-          quizSpeedTrend: qualitativeAnalysis.performance.quizSpeedTrend,
-          difficultyInsight: qualitativeAnalysis.performance.difficultyInsight,
-        },
-        analysis: {
-          ...qualitativeAnalysis.analysis,
-          knowledgePatterns: {
-            ...qualitativeAnalysis.analysis.knowledgePatterns,
-            questionTypePerformance,
-          },
-        },
-        learningPath: qualitativeAnalysis.learningPath,
-        // Include which difficulties were present for transparency
-        difficultyLevelsPresent: metrics.difficultyPresence,
-      }
-    }
-
     // Use our new function to create the analyses
-    const challengerAnalysis = createAnalysis(
-      challengerMetrics,
-      JSON.parse(challengerResponse.choices[0].message.content),
+    const challengerAnalysis = JSON.parse(
+      challengerResponse.choices[0].message.content,
+    )
+    const opponentAnalysis = JSON.parse(
+      opponentResponse.choices[0].message.content,
     )
 
-    const opponentAnalysis = createAnalysis(
-      opponentMetrics,
-      JSON.parse(opponentResponse.choices[0].message.content),
-    )
-
-    // Generate the engagement content (this remains AI-generated)
+    // Generate the engagement content with trophy mentions (this remains AI-generated)
     const engagementResponse = await openai.chat.completions.create({
       model: 'gpt-4o-mini',
       temperature: 0.9, // Higher temperature for more creative outputs
@@ -826,28 +1042,33 @@ Here are the battle details: ${JSON.stringify(prompt, null, 2)}`,
       messages: [
         {
           role: 'system',
-          content: `You are a witty, engaging AI host for educational battles. You'll create fun, motivational, and engaging content to wrap up a quiz battle between two users. Be creative and entertaining while still being educational and positive. Reference specific performance details from the battle.`,
+          content: `You are a witty, engaging AI host for educational battles. You'll create fun, motivational, and engaging content to wrap up a quiz battle between two users. Be creative and entertaining while still being educational and positive. Reference specific performance details and trophy exchanges from the battle.`,
         },
         {
           role: 'user',
-          content: `Create engaging, fun content to wrap up this knowledge battle. Be witty, motivational, and interesting. Use the detailed question-level data to personalize your commentary. victoryMeme should be text only no links anywhere.
+          content: `Create engaging, fun content to wrap up this knowledge battle. Be witty, motivational, and interesting. Use the detailed question-level data and trophy exchanges to personalize your commentary. victoryMeme should be text only no links anywhere.
 
-      The output must be a valid JSON object with the following structure:
-      {
-        "victoryMeme": string,
-        "competitiveTaunt": string,
-        "wittyAnalysis": string,
-        "difficultySpecificComment": string,
-        "topicSuggestions": string[],
-        "interestMetrics": {
-          "victorMemeInterest": number,
-          "competitiveTauntPreference": number,
-          "wittyAnalysisPreference": number,
-          "topicSuggestionsInterest": number
-        }
-      }
+The battle includes trophy exchanges and enhanced trophy trends - reference this in your analysis. If a player had protection applied, mention this in a positive way. Use the enhanced trend data (Strongly Rising, Rising, etc.) to create more context-aware commentary.
 
-      Here are the battle details: ${JSON.stringify(prompt, null, 2)}`,
+The output must be a valid JSON object with the following structure:
+{
+  "victoryMeme": string,
+  "competitiveTaunt": string,
+  "wittyAnalysis": string,
+  "difficultySpecificComment": string,
+  "trophyComment": string,  // Add a comment about the trophy exchange
+  "trophyTrendInsight": string, // Add insight about trophy trends over time
+  "topicSuggestions": string[],
+  "interestMetrics": {
+    "victorMemeInterest": number,
+    "competitiveTauntPreference": number,
+    "wittyAnalysisPreference": number,
+    "topicSuggestionsInterest": number,
+    "trophyCommentInterest": number  // Add interest metric for trophy comments
+  }
+}
+
+Here are the battle details: ${JSON.stringify(prompt, null, 2)}`,
         },
       ],
     })
@@ -864,14 +1085,216 @@ Here are the battle details: ${JSON.stringify(prompt, null, 2)}`,
           ...challengerData.detailedResponses,
           ...opponentData.detailedResponses,
         ]),
+        // Add trophy data to battle metrics
+        trophyExchange: challenge.trophyUpdates
+          ? {
+              isTie: challenge.trophyUpdates.isTie,
+              protectionApplied: protectionInfo,
+            }
+          : null,
       },
       challenger: {
         statistics: challengerData.stats,
-        ...challengerAnalysis,
+        trophyData: challengerData.trophyData,
+
+        // IMPORTANT: Directly include all performance metrics here instead of spreading
+        // the AI analysis object which might be missing these fields
+        performance: {
+          readingTime: challengerData.readingTime,
+          readingSpeedPercentile:
+            challengerProfile.readingSpeedPercentile ||
+            Math.max(
+              0,
+              Math.min(100, 100 - (challengerData.readingTime / 120) * 100),
+            ),
+          quizSpeed:
+            challengerData.quizTimeSpent /
+            Math.max(1, challengerData.totalQuestions),
+          quizSpeedTrend:
+            challengerAnalysis.performance?.quizSpeedTrend || 'consistent',
+          finalScore: challengerData.score,
+          hiddenWordTime: 0,
+          difficultyInsight:
+            challengerAnalysis.performance?.difficultyInsight ||
+            'You handled questions at varying difficulty levels.',
+          trophyAnalysis:
+            challengerAnalysis.performance?.trophyAnalysis ||
+            (challengerData.trophyData
+              ? `Your trophy trend is ${
+                  challengerData.trophyData.enhancedTrend
+                }. ${
+                  challengerData.trophyData.change > 0
+                    ? `You gained ${challengerData.trophyData.change} trophies from this victory!`
+                    : challengerData.trophyData.change < 0
+                    ? `You lost ${Math.abs(
+                        challengerData.trophyData.change,
+                      )} trophies in this battle.`
+                    : 'Your trophy count remained unchanged.'
+                }`
+              : 'No trophy data available for this challenge.'),
+        },
+
+        // Include the rest of the analysis data
+        analysis: challengerAnalysis.analysis || {
+          strengths: [
+            'Good performance on factual questions',
+            'Quick reading comprehension',
+          ],
+          weaknesses: ['Areas for improvement in technical terminology'],
+          knowledgePatterns: {
+            factualRecall: 70,
+            technicalTerms: 60,
+            strategicAnalysis: 65,
+          },
+          recommendations: [
+            'Practice more in this category',
+            'Focus on technical terms',
+          ],
+        },
+        learningPath: challengerAnalysis.learningPath || {
+          focusAreas: ['Technical vocabulary', 'Quick comprehension'],
+          topicSuggestions: [
+            `More about ${challenge.category}`,
+            'Related concepts',
+          ],
+          nextSteps: [
+            'Challenge yourself with more quizzes',
+            'Review technical terms',
+          ],
+        },
+        trophyInsights: challengerAnalysis.trophyInsights || {
+          currentLevel: challengerData.trophyData
+            ? challengerData.trophyData.newTrophies > 1500
+              ? 'Advanced'
+              : challengerData.trophyData.newTrophies > 1000
+              ? 'Intermediate'
+              : 'Beginner'
+            : 'Beginner',
+          progressTrend: challengerData.trophyData
+            ? challengerData.trophyData.enhancedTrend ||
+              (challengerData.trophyData.change > 0
+                ? 'Rising'
+                : challengerData.trophyData.change < 0
+                ? 'Declining'
+                : 'Stable')
+            : 'Stable',
+          progressTrendContext: challengerData.trophyData
+            ? challengerData.trophyHistory &&
+              challengerData.trophyHistory.length > 0
+              ? `Based on your recent ${
+                  challengerData.trophyHistory.length
+                } matches, your trophy count is ${challengerData.trophyData.enhancedTrend.toLowerCase()}.`
+              : 'This is based on your current match performance only.'
+            : 'No trophy history available to analyze trends.',
+          nextMilestone: challengerData.trophyData
+            ? challengerData.trophyData.newTrophies < 1000
+              ? 'Reach 1000 trophies'
+              : challengerData.trophyData.newTrophies < 1500
+              ? 'Reach 1500 trophies'
+              : 'Reach 2000 trophies'
+            : 'Reach 1000 trophies',
+        },
       },
       opponent: {
         statistics: opponentData.stats,
-        ...opponentAnalysis,
+        trophyData: opponentData.trophyData,
+
+        // IMPORTANT: Directly include all performance metrics for opponent too
+        performance: {
+          readingTime: opponentData.readingTime,
+          readingSpeedPercentile:
+            opponentProfile.readingSpeedPercentile ||
+            Math.max(
+              0,
+              Math.min(100, 100 - (opponentData.readingTime / 120) * 100),
+            ),
+          quizSpeed:
+            opponentData.quizTimeSpent /
+            Math.max(1, opponentData.totalQuestions),
+          quizSpeedTrend:
+            opponentAnalysis.performance?.quizSpeedTrend || 'consistent',
+          finalScore: opponentData.score,
+          hiddenWordTime: 0,
+          difficultyInsight:
+            opponentAnalysis.performance?.difficultyInsight ||
+            'Your opponent handled questions at varying difficulty levels.',
+          trophyAnalysis:
+            opponentAnalysis.performance?.trophyAnalysis ||
+            (opponentData.trophyData
+              ? `Your opponent's trophy trend is ${
+                  opponentData.trophyData.enhancedTrend
+                }. ${
+                  opponentData.trophyData.change > 0
+                    ? `They gained ${opponentData.trophyData.change} trophies from this victory!`
+                    : opponentData.trophyData.change < 0
+                    ? `They lost ${Math.abs(
+                        opponentData.trophyData.change,
+                      )} trophies in this battle.`
+                    : 'Their trophy count remained unchanged.'
+                }`
+              : 'No trophy data available for this challenge.'),
+        },
+
+        // Include the rest of the opponent analysis data
+        analysis: opponentAnalysis.analysis || {
+          strengths: [
+            'Good performance on factual questions',
+            'Quick reading comprehension',
+          ],
+          weaknesses: ['Areas for improvement in technical terminology'],
+          knowledgePatterns: {
+            factualRecall: 65,
+            technicalTerms: 60,
+            strategicAnalysis: 70,
+          },
+          recommendations: [
+            'Practice more in this category',
+            'Focus on technical terms',
+          ],
+        },
+        learningPath: opponentAnalysis.learningPath || {
+          focusAreas: ['Technical vocabulary', 'Quick comprehension'],
+          topicSuggestions: [
+            `More about ${challenge.category}`,
+            'Related concepts',
+          ],
+          nextSteps: [
+            'Challenge yourself with more quizzes',
+            'Review technical terms',
+          ],
+        },
+        trophyInsights: opponentAnalysis.trophyInsights || {
+          currentLevel: opponentData.trophyData
+            ? opponentData.trophyData.newTrophies > 1500
+              ? 'Advanced'
+              : opponentData.trophyData.newTrophies > 1000
+              ? 'Intermediate'
+              : 'Beginner'
+            : 'Beginner',
+          progressTrend: opponentData.trophyData
+            ? opponentData.trophyData.enhancedTrend ||
+              (opponentData.trophyData.change > 0
+                ? 'Rising'
+                : opponentData.trophyData.change < 0
+                ? 'Declining'
+                : 'Stable')
+            : 'Stable',
+          progressTrendContext: opponentData.trophyData
+            ? opponentData.trophyHistory &&
+              opponentData.trophyHistory.length > 0
+              ? `Based on their recent ${
+                  opponentData.trophyHistory.length
+                } matches, their trophy count is ${opponentData.trophyData.enhancedTrend.toLowerCase()}.`
+              : 'This is based on their current match performance only.'
+            : 'No trophy history available to analyze trends.',
+          nextMilestone: opponentData.trophyData
+            ? opponentData.trophyData.newTrophies < 1000
+              ? 'Reach 1000 trophies'
+              : opponentData.trophyData.newTrophies < 1500
+              ? 'Reach 1500 trophies'
+              : 'Reach 2000 trophies'
+            : 'Reach 1000 trophies',
+        },
       },
       engagement: {
         winner: winnerId,
@@ -895,22 +1318,349 @@ Here are the battle details: ${JSON.stringify(prompt, null, 2)}`,
           ...challengerData.detailedResponses,
           ...opponentData.detailedResponses,
         ]),
+        // Add trophy data to battle metrics
+        trophyExchange: challenge.trophyUpdates
+          ? {
+              isTie: challenge.trophyUpdates.isTie,
+              protectionApplied: challenge.trophyUpdates.protectionApplied,
+            }
+          : null,
       },
-      challenger: createUserAnalysis(challengerData, opponentData),
-      opponent: createUserAnalysis(opponentData, challengerData),
-      engagement: createEngagementContent(
-        challengerData,
-        opponentData,
-        winnerId,
-        challenge.category,
-      ),
+      challenger: {
+        ...createUserAnalysisWithTrophyTrend(
+          challengerData,
+          opponentData,
+          challenge.trophyUpdates?.challenger,
+          challengerTrophyHistory,
+        ),
+        statistics: challengerData.stats,
+        trophyData: challengerData.trophyData,
+      },
+      opponent: {
+        ...createUserAnalysisWithTrophyTrend(
+          opponentData,
+          challengerData,
+          challenge.trophyUpdates?.opponent,
+          opponentTrophyHistory,
+        ),
+        statistics: opponentData.stats,
+        trophyData: opponentData.trophyData,
+      },
+      engagement: {
+        ...createEngagementContentWithTrends(
+          challengerData,
+          opponentData,
+          winnerId,
+          challenge.category,
+          challenge.trophyUpdates,
+          challengerTrophyHistory,
+          opponentTrophyHistory,
+        ),
+        winner: winnerId,
+      },
     }
 
     return analysisResult
   }
 }
 
-// services/quickClashServices/quickClashAnalysisService.js - Improved translation handling
+/**
+ * Create a simulated user analysis with trophy trend data as fallback when OpenAI isn't available
+ * @param {Object} userData - User data
+ * @param {Object} opponentData - Opponent's data for comparison
+ * @param {Object} trophyData - Trophy update data
+ * @param {Array} trophyHistory - Trophy history data
+ * @returns {Object} Simulated analysis
+ */
+const createUserAnalysisWithTrophyTrend = (
+  userData,
+  opponentData,
+  trophyData,
+  trophyHistory = [],
+) => {
+  // Calculate accuracy
+  const accuracy =
+    userData.totalQuestions > 0
+      ? (userData.correctAnswers / userData.totalQuestions) * 100
+      : 0
+
+  // Determine speed rating based on average time per question
+  const avgTimePerQuestion =
+    userData.totalQuestions > 0
+      ? userData.quizTimeSpent / userData.totalQuestions
+      : 0
+
+  let speedRating = 'consistent'
+  if (avgTimePerQuestion < 5) {
+    speedRating = 'improving'
+  } else if (avgTimePerQuestion > 15) {
+    speedRating = 'declining'
+  }
+
+  // Generate randomized but sensible knowledge pattern scores
+  const factualRecall = Math.min(
+    100,
+    Math.max(0, accuracy + (Math.random() * 20 - 10)),
+  )
+  const technicalTerms = Math.min(
+    100,
+    Math.max(0, factualRecall - 10 + Math.random() * 20),
+  )
+  const strategicAnalysis = Math.min(
+    100,
+    Math.max(
+      0,
+      (factualRecall + technicalTerms) / 2 + (Math.random() * 20 - 10),
+    ),
+  )
+
+  // Get enhanced trophy trend if available
+  const enhancedTrend =
+    userData.trophyData?.enhancedTrend ||
+    (trophyHistory.length > 0
+      ? calculateEnhancedTrophyTrend(
+          userData.trophyData?.change || 0,
+          trophyHistory,
+        )
+      : userData.trophyData?.change > 0
+      ? 'Rising'
+      : userData.trophyData?.change < 0
+      ? 'Declining'
+      : 'Stable')
+
+  // Create trophy context based on history
+  const trophyTrendContext =
+    trophyHistory.length > 0
+      ? `Based on ${
+          trophyHistory.length
+        } recent matches, showing a ${enhancedTrend.toLowerCase()} pattern.`
+      : 'Based on current match only.'
+
+  return {
+    performance: {
+      readingTime: userData.readingTime,
+      readingSpeedPercentile: Math.random() * 100,
+      quizSpeed: avgTimePerQuestion,
+      quizSpeedTrend: speedRating,
+      finalScore: userData.score,
+      trophyAnalysis: userData.trophyData
+        ? `Trophy trend is ${enhancedTrend}. ${
+            userData.trophyData.change > 0
+              ? `Gained ${userData.trophyData.change} trophies in this victory!`
+              : userData.trophyData.change < 0
+              ? `Lost ${Math.abs(
+                  userData.trophyData.change,
+                )} trophies in this battle.`
+              : 'Trophy count unchanged.'
+          } ${
+            userData.trophyData.protectionApplied
+              ? `Protected by ${userData.trophyData.protectionType} protection.`
+              : ''
+          }`
+        : 'No trophy data available.',
+    },
+    analysis: {
+      strengths: [
+        'Shows good comprehension of main concepts',
+        'Answers questions efficiently',
+        'Strong in factual recall',
+      ],
+      weaknesses: [
+        'May need more time on complex questions',
+        'Could improve speed-accuracy balance',
+        'Might benefit from broader knowledge in this category',
+      ],
+      knowledgePatterns: {
+        factualRecall: factualRecall,
+        technicalTerms: technicalTerms,
+        strategicAnalysis: strategicAnalysis,
+      },
+      recommendations: [
+        'Practice more quizzes in this category',
+        'Focus on understanding technical terms',
+        'Work on improving reading comprehension',
+      ],
+    },
+    learningPath: {
+      focusAreas: [
+        'Technical vocabulary',
+        'Quick comprehension',
+        'Strategic thinking',
+      ],
+      topicSuggestions: [
+        'Fundamentals of ' + userData.stats.bestCategory,
+        'Advanced concepts in ' + userData.stats.bestCategory,
+        'Related topics to expand knowledge breadth',
+      ],
+      nextSteps: [
+        'Challenge yourself with harder quizzes',
+        'Review technical terms in this subject area',
+        'Practice timed reading exercises',
+      ],
+    },
+    trophyInsights: {
+      currentLevel: userData.trophyData
+        ? userData.trophyData.newTrophies > 1500
+          ? 'Advanced'
+          : userData.trophyData.newTrophies > 1000
+          ? 'Intermediate'
+          : 'Beginner'
+        : 'Beginner',
+      progressTrend: enhancedTrend,
+      progressTrendContext: trophyTrendContext,
+      nextMilestone: userData.trophyData
+        ? userData.trophyData.newTrophies < 1000
+          ? 'Reach 1000 trophies'
+          : userData.trophyData.newTrophies < 1500
+          ? 'Reach 1500 trophies'
+          : 'Reach 2000 trophies'
+        : 'Reach 1000 trophies',
+    },
+  }
+}
+
+/**
+ * Create simulated engagement content with trophy trends as fallback when OpenAI isn't available
+ * @param {Object} challengerData - Challenger data
+ * @param {Object} opponentData - Opponent data
+ * @param {string|null} winnerId - ID of the winner (null for ties)
+ * @param {string} category - Challenge category
+ * @param {Object} trophyUpdates - Trophy update data
+ * @param {Array} challengerHistory - Challenger's trophy history
+ * @param {Array} opponentHistory - Opponent's trophy history
+ * @returns {Object} Simulated engagement content
+ */
+const createEngagementContentWithTrends = (
+  challengerData,
+  opponentData,
+  winnerId,
+  category,
+  trophyUpdates,
+  challengerHistory = [],
+  opponentHistory = [],
+) => {
+  // Determine if it's a tie
+  const isTie = !winnerId && challengerData.score > 0 && opponentData.score > 0
+
+  // Setup different engagement content based on outcome
+  let victoryMeme,
+    competitiveTaunt,
+    wittyAnalysis,
+    trophyComment,
+    trophyTrendInsight
+
+  if (isTie) {
+    victoryMeme = "It's a tie! Two minds thinking alike!"
+    competitiveTaunt =
+      'You two are evenly matched! Ready for a rematch to break the tie?'
+    wittyAnalysis =
+      'What are the odds? You both showed equal knowledge prowess. Great minds think alike!'
+    trophyComment = 'No trophies exchanged in this perfectly balanced match!'
+    trophyTrendInsight = 'Both players maintain their current trophy rankings.'
+  } else if (winnerId) {
+    const winner =
+      winnerId.toString() === challengerData.userId.toString()
+        ? challengerData
+        : opponentData
+    const loser =
+      winnerId.toString() === challengerData.userId.toString()
+        ? opponentData
+        : challengerData
+
+    const winnerHistory =
+      winnerId.toString() === challengerData.userId.toString()
+        ? challengerHistory
+        : opponentHistory
+
+    const loserHistory =
+      winnerId.toString() === challengerData.userId.toString()
+        ? opponentHistory
+        : challengerHistory
+
+    const winnerTrend =
+      winner.trophyData?.enhancedTrend ||
+      (winnerHistory.length > 0
+        ? calculateEnhancedTrophyTrend(
+            winner.trophyData?.change || 0,
+            winnerHistory,
+          )
+        : 'Rising')
+
+    const loserTrend =
+      loser.trophyData?.enhancedTrend ||
+      (loserHistory.length > 0
+        ? calculateEnhancedTrophyTrend(
+            loser.trophyData?.change || 0,
+            loserHistory,
+          )
+        : 'Declining')
+
+    victoryMeme = `${winner.username} takes the crown! Knowledge victory achieved!`
+    competitiveTaunt = `${loser.username}, ready for a rematch? Knowledge is power, and practice makes perfect!`
+    wittyAnalysis = `${winner.username} showed impressive recall speed and accuracy. Every champion was once a contender that refused to give up!`
+
+    trophyComment = trophyUpdates
+      ? `${winner.username} gained ${Math.abs(
+          winner.trophyData?.change || 0,
+        )} trophies!${
+          loser.trophyData?.protectionApplied
+            ? ` ${loser.username} had ${loser.trophyData.protectionType} protection activated, preserving their trophy count!`
+            : ` ${loser.username} lost ${Math.abs(
+                loser.trophyData?.change || 0,
+              )} trophies.`
+        }`
+      : 'Trophy exchange data not available.'
+
+    trophyTrendInsight = `${
+      winner.username
+    }'s trophy count is ${winnerTrend.toLowerCase()}${
+      winnerHistory.length > 0
+        ? ` based on their last ${Math.min(5, winnerHistory.length)} matches.`
+        : '.'
+    } ${loser.username}'s trophy count is ${loserTrend.toLowerCase()}${
+      loserHistory.length > 0
+        ? ` based on their last ${Math.min(5, loserHistory.length)} matches.`
+        : '.'
+    }`
+  } else {
+    victoryMeme = 'Challenge incomplete! The knowledge quest awaits completion!'
+    competitiveTaunt =
+      'Finish what you started! Knowledge awaits the determined mind.'
+    wittyAnalysis =
+      'We have an unfinished battle! Remember, the quest for knowledge is a marathon, not a sprint.'
+    trophyComment = 'Trophies await the conclusion of this challenge!'
+    trophyTrendInsight =
+      'Complete the challenge to see trophy progression trends.'
+  }
+
+  return {
+    victoryMeme: victoryMeme,
+    competitiveTaunt: competitiveTaunt,
+    wittyAnalysis: wittyAnalysis,
+    difficultySpecificComment: `This match featured questions in the ${category} category at ${
+      challengerData.score > 120 || opponentData.score > 120
+        ? 'a high'
+        : challengerData.score < 60 && opponentData.score < 60
+        ? 'a challenging'
+        : 'a moderate'
+    } difficulty level.`,
+    trophyComment: trophyComment,
+    trophyTrendInsight: trophyTrendInsight,
+    topicSuggestions: [
+      `More about ${category}`,
+      `Advanced topics in ${category}`,
+      `Historical perspectives on ${category}`,
+      `Practical applications of ${category}`,
+    ],
+    interestMetrics: {
+      victorMemeInterest: Math.random() * 100,
+      competitiveTauntPreference: Math.random() * 100,
+      wittyAnalysisPreference: Math.random() * 100,
+      topicSuggestionsInterest: Math.random() * 100,
+      trophyCommentInterest: Math.random() * 100,
+    },
+  }
+}
 
 /**
  * Generate AI analysis for a completed challenge with translation support
@@ -921,6 +1671,7 @@ Here are the battle details: ${JSON.stringify(prompt, null, 2)}`,
  * @returns {Promise<Object>} The generated analysis document with translation if needed
  */
 const generateChallengeAnalysisWithTranslation = async ({
+  userId,
   challengeId,
   session,
   preferredLanguage = 'en',
@@ -954,8 +1705,22 @@ const generateChallengeAnalysisWithTranslation = async ({
         analysis = await translateAnalysisToHindi({ analysisId: analysis._id })
       }
     }
-
-    return analysis
+    return {
+      _id: analysis._id,
+      battleMetrics: analysis.battleMetrics,
+      userAnalysis:
+        analysis?.challenger?.userId?.toString() === userId.toString()
+          ? analysis.challenger
+          : analysis.opponent,
+      opponentAnalysis:
+        analysis?.challenger?.userId?.toString() === userId.toString()
+          ? analysis.opponent
+          : analysis.challenger,
+      engagement: analysis.engagement,
+      isWinner:
+        analysis.engagement.winner &&
+        analysis.engagement.winner.toString() === userId.toString(),
+    }
   } catch (error) {
     console.error(
       'Error generating challenge analysis with translation:',
@@ -985,6 +1750,7 @@ const getUserChallengeAnalysisLocalized = async ({ challengeId, userId }) => {
       // Generate analysis if it doesn't exist, passing the language preference
       return await generateChallengeAnalysisWithTranslation({
         challengeId,
+        userId,
         preferredLanguage,
       })
     }
@@ -1360,165 +2126,6 @@ const getQuestionDifficultyDistribution = allResponses => {
   }
 
   return distribution
-}
-
-/**
- * Create a simulated user analysis as fallback when OpenAI isn't available
- * @param {Object} userData - User data
- * @param {Object} opponentData - Opponent's data for comparison
- * @returns {Object} Simulated analysis
- */
-const createUserAnalysis = (userData, opponentData) => {
-  // Calculate accuracy
-  const accuracy =
-    userData.totalQuestions > 0
-      ? (userData.correctAnswers / userData.totalQuestions) * 100
-      : 0
-
-  // Determine speed rating based on average time per question
-  const avgTimePerQuestion =
-    userData.totalQuestions > 0
-      ? userData.quizTimeSpent / userData.totalQuestions
-      : 0
-
-  let speedRating = 'consistent'
-  if (avgTimePerQuestion < 5) {
-    speedRating = 'improving'
-  } else if (avgTimePerQuestion > 15) {
-    speedRating = 'declining'
-  }
-
-  // Generate randomized but sensible knowledge pattern scores
-  const factualRecall = Math.min(
-    100,
-    Math.max(0, accuracy + (Math.random() * 20 - 10)),
-  )
-  const technicalTerms = Math.min(
-    100,
-    Math.max(0, factualRecall - 10 + Math.random() * 20),
-  )
-  const strategicAnalysis = Math.min(
-    100,
-    Math.max(
-      0,
-      (factualRecall + technicalTerms) / 2 + (Math.random() * 20 - 10),
-    ),
-  )
-
-  return {
-    performance: {
-      readingTime: userData.readingTime,
-      readingSpeedPercentile: Math.random() * 100,
-      quizSpeed: avgTimePerQuestion,
-      quizSpeedTrend: speedRating,
-      finalScore: userData.score,
-    },
-    analysis: {
-      strengths: [
-        'Shows good comprehension of main concepts',
-        'Answers questions efficiently',
-        'Strong in factual recall',
-      ],
-      weaknesses: [
-        'May need more time on complex questions',
-        'Could improve speed-accuracy balance',
-        'Might benefit from broader knowledge in this category',
-      ],
-      knowledgePatterns: {
-        factualRecall: factualRecall,
-        technicalTerms: technicalTerms,
-        strategicAnalysis: strategicAnalysis,
-      },
-      recommendations: [
-        'Practice more quizzes in this category',
-        'Focus on understanding technical terms',
-        'Work on improving reading comprehension',
-      ],
-    },
-    learningPath: {
-      focusAreas: [
-        'Technical vocabulary',
-        'Quick comprehension',
-        'Strategic thinking',
-      ],
-      topicSuggestions: [
-        'Fundamentals of ' + userData.stats.bestCategory,
-        'Advanced concepts in ' + userData.stats.bestCategory,
-        'Related topics to expand knowledge breadth',
-      ],
-      nextSteps: [
-        'Challenge yourself with harder quizzes',
-        'Review technical terms in this subject area',
-        'Practice timed reading exercises',
-      ],
-    },
-  }
-}
-
-/**
- * Create simulated engagement content as fallback when OpenAI isn't available
- * @param {Object} challengerData - Challenger data
- * @param {Object} opponentData - Opponent data
- * @param {string|null} winnerId - ID of the winner (null for ties)
- * @param {string} category - Challenge category
- * @returns {Object} Simulated engagement content
- */
-const createEngagementContent = (
-  challengerData,
-  opponentData,
-  winnerId,
-  category,
-) => {
-  // Determine if it's a tie
-  const isTie = !winnerId && challengerData.score > 0 && opponentData.score > 0
-
-  // Setup different engagement content based on outcome
-  let victoryMeme, competitiveTaunt, wittyAnalysis
-
-  if (isTie) {
-    victoryMeme = "It's a tie! Two minds thinking alike!"
-    competitiveTaunt =
-      'You two are evenly matched! Ready for a rematch to break the tie?'
-    wittyAnalysis =
-      'What are the odds? You both showed equal knowledge prowess. Great minds think alike!'
-  } else if (winnerId) {
-    const winner =
-      winnerId.toString() === challengerData.userId.toString()
-        ? challengerData
-        : opponentData
-    const loser =
-      winnerId.toString() === challengerData.userId.toString()
-        ? opponentData
-        : challengerData
-
-    victoryMeme = `${winner.username} takes the crown! Knowledge victory achieved!`
-    competitiveTaunt = `${loser.username}, ready for a rematch? Knowledge is power, and practice makes perfect!`
-    wittyAnalysis = `${winner.username} showed impressive recall speed and accuracy. Every champion was once a contender that refused to give up!`
-  } else {
-    victoryMeme = 'Challenge incomplete! The knowledge quest awaits completion!'
-    competitiveTaunt =
-      'Finish what you started! Knowledge awaits the determined mind.'
-    wittyAnalysis =
-      'We have an unfinished battle! Remember, the quest for knowledge is a marathon, not a sprint.'
-  }
-
-  return {
-    victoryMeme: victoryMeme,
-    competitiveTaunt: competitiveTaunt,
-    wittyAnalysis: wittyAnalysis,
-    topicSuggestions: [
-      `More about ${category}`,
-      `Advanced topics in ${category}`,
-      `Historical perspectives on ${category}`,
-      `Practical applications of ${category}`,
-    ],
-    interestMetrics: {
-      victorMemeInterest: Math.random() * 100,
-      competitiveTauntPreference: Math.random() * 100,
-      wittyAnalysisPreference: Math.random() * 100,
-      topicSuggestionsInterest: Math.random() * 100,
-    },
-  }
 }
 
 /**

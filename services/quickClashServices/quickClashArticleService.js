@@ -2,6 +2,7 @@
 const { makeGPTRequest } = require('../../utils/openai')
 const Article = require('../../model/articleSchema')
 const SpecialCategory = require('../../model/specialCategorySchema')
+const OpenAI = require('openai')
 
 // /**
 //  * Get 5 random source articles from the last 7 days for a given category
@@ -210,7 +211,7 @@ const getSourceArticle = async ({ category, session }) => {
     console.log(`Getting article for regular category: ${category}`)
     query = {
       category,
-      dateTime: { $gte: sevenDaysAgo.toISOString() },
+      // dateTime: { $gte: sevenDaysAgo.toISOString() },
     }
   }
 

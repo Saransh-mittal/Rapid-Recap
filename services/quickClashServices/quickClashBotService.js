@@ -6,6 +6,17 @@ const QuickClashChallenge = require('../../model/quickClashSchemas/quickClashCha
 const User = require('../../model/userSchema')
 const { updateChallengeScore } = require('./quickClashChallengeService')
 const { notifyChallengeCompleted } = require('./quickClashNotificationService')
+const QuickClashGlobalMatchmaking = require('../../model/quickClashSchemas/quickClashGlobalMatchmakingSchema')
+const QuickClashTeamMatchmaking = require('../../model/quickClashSchemas/quickClashTeamMatchmakingSchema')
+const QuickClashTeamBattle = require('../../model/quickClashSchemas/quickClashTeamBattleSchema')
+const { joinGlobalMatchmaking } = require('./quickClashTeamMatchmakingService')
+const {
+  selectCategoryForUser,
+  beginCategoryChallenge,
+  updateBattleWithQuizResults,
+  markUserAsParticipated,
+} = require('./quickClashTeamBattleService')
+const { getRandomBotUser } = require('../../utils/quickClashUtils')
 
 /**
  * Initiate full bot challenge process - create session, complete reading and quiz
@@ -44,6 +55,7 @@ const initiateBotChallenge = async ({ challengeId, botId, options = {} }) => {
 
     // 3. Simulate reading phase
     await simulateBotReadingPhase({
+      userId: botId,
       sessionId: botSession._id,
       readingTime,
       session,
@@ -161,7 +173,12 @@ const createBotSession = async ({ challengeId, botId, session }) => {
  * @param {mongoose.ClientSession} params.session - Mongoose session
  * @returns {Promise<Object>} Updated session
  */
-const simulateBotReadingPhase = async ({ sessionId, readingTime, session }) => {
+const simulateBotReadingPhase = async ({
+  userId,
+  sessionId,
+  readingTime,
+  session,
+}) => {
   try {
     const botSession = await QuickClashSession.findById(sessionId).session(
       session,
@@ -174,6 +191,13 @@ const simulateBotReadingPhase = async ({ sessionId, readingTime, session }) => {
     // Calculate start and end times to simulate realistic reading
     const now = new Date()
     const startTime = new Date(now.getTime() - readingTime * 1000)
+
+    if (botSession.challenge) {
+      await markUserAsParticipated({
+        challengeId: botSession.challenge,
+        userId: userId,
+      })
+    }
 
     // Update reading properties
     botSession.reading = {
@@ -470,10 +494,486 @@ const getRandomSubset = (array, size) => {
   return shuffled.slice(0, size)
 }
 
+// Constants for bot management
+const MAX_BOTS_IN_MATCHMAKING = 12 // Maximum bots to have in matchmaking at once
+const BOT_SKILL_RANGES = {
+  easy: { min: 0.3, max: 0.5 },
+  medium: { min: 0.5, max: 0.7 },
+  hard: { min: 0.7, max: 0.9 },
+}
+
+/**
+ * Check if a user is a bot (has dummy email)
+ * @param {string} userId - User ID to check
+ * @returns {Promise<boolean>} Whether the user is a bot
+ */
+const isBotUser = async userId => {
+  try {
+    const user = await User.findById(userId).select('email').lean()
+    return user && /^dummy\d+@mail\.com$/.test(user.email)
+  } catch (error) {
+    console.error('Error checking if user is bot:', error)
+    return false
+  }
+}
+
+/**
+ * Add bots to global matchmaking if real players are present
+ * This is called by the cron job every 25 seconds
+ * @returns {Promise<void>}
+ */
+const addBotsToMatchmaking = async () => {
+  try {
+    console.log(
+      '[BOT_MATCHMAKING] Checking if bots should be added to matchmaking',
+    )
+
+    // Get all users currently in global matchmaking
+    const globalMatchmakingUsers = await QuickClashGlobalMatchmaking.find({
+      status: { $in: ['available', 'processing'] },
+    })
+      .select('user')
+      .lean()
+
+    if (!globalMatchmakingUsers.length) {
+      console.log('[BOT_MATCHMAKING] No users in global matchmaking')
+    }
+
+    // Check which ones are real players (not bots)
+    let realPlayersInGlobal = 0
+    let currentBots = 0
+
+    for (const entry of globalMatchmakingUsers) {
+      const isBot = await isBotUser(entry.user)
+      if (isBot) {
+        currentBots++
+      } else {
+        realPlayersInGlobal++
+      }
+    }
+
+    // Check if there are real players in team matchmaking
+    const teamMatchmakingEntries = await QuickClashTeamMatchmaking.find({
+      status: 'available',
+    })
+      .populate('team', 'members')
+      .lean()
+
+    let realPlayersInTeams = 0
+    for (const entry of teamMatchmakingEntries) {
+      if (entry.team && entry.team.members) {
+        for (const member of entry.team.members) {
+          const isBot = await isBotUser(member.user)
+          if (!isBot) {
+            realPlayersInTeams++
+            break // Count team once if it has any real player
+          }
+        }
+      }
+    }
+
+    console.log(
+      `[BOT_MATCHMAKING] Real players - Global: ${realPlayersInGlobal}, Teams: ${realPlayersInTeams}`,
+    )
+    console.log(
+      `[BOT_MATCHMAKING] Current bots in global matchmaking: ${currentBots}`,
+    )
+
+    // Only add bots if there are real players somewhere in matchmaking
+    if (realPlayersInGlobal === 0 && realPlayersInTeams === 0) {
+      console.log(
+        '[BOT_MATCHMAKING] No real players in matchmaking, skipping bot addition',
+      )
+      return
+    }
+
+    // Don't add more bots if we already have enough
+    if (currentBots >= MAX_BOTS_IN_MATCHMAKING) {
+      console.log('[BOT_MATCHMAKING] Maximum bot limit reached, skipping')
+      return
+    }
+
+    // Calculate how many bots to add (up to 2, but don't exceed max)
+    const botsToAdd = Math.min(2, MAX_BOTS_IN_MATCHMAKING - currentBots)
+
+    console.log(`[BOT_MATCHMAKING] Adding ${botsToAdd} bots to matchmaking`)
+
+    // Add bots
+    const addBotPromises = []
+    for (let i = 0; i < botsToAdd; i++) {
+      addBotPromises.push(addSingleBotToMatchmaking())
+    }
+
+    const results = await Promise.allSettled(addBotPromises)
+    const successful = results.filter(r => r.status === 'fulfilled').length
+
+    console.log(
+      `[BOT_MATCHMAKING] Successfully added ${successful}/${botsToAdd} bots to matchmaking`,
+    )
+  } catch (error) {
+    console.error('[BOT_MATCHMAKING] Error adding bots to matchmaking:', error)
+  }
+}
+
+/**
+ * Add a single bot to global matchmaking
+ * @returns {Promise<void>}
+ */
+const addSingleBotToMatchmaking = async () => {
+  try {
+    // Get a random bot user from database
+    const botUser = await getRandomBotUser()
+
+    if (!botUser) {
+      console.log('[BOT_MATCHMAKING] No bot users available in database')
+      return
+    }
+
+    // Check if this bot is already in matchmaking (safety check)
+    const existingEntry = await QuickClashGlobalMatchmaking.findOne({
+      user: botUser._id,
+    })
+
+    if (existingEntry) {
+      console.log(`[BOT_MATCHMAKING] Bot ${botUser._id} already in matchmaking`)
+      return
+    }
+
+    // Add bot to global matchmaking
+    await joinGlobalMatchmaking({ userId: botUser._id })
+
+    console.log(
+      `[BOT_MATCHMAKING] Added bot ${botUser._id} to global matchmaking`,
+    )
+
+    // Listen for when this bot gets into a team battle
+    setTimeout(() => {
+      monitorBotForTeamBattle({ botId: botUser._id }).catch(err => {
+        console.error(
+          `Error monitoring bot ${botUser._id} for team battles:`,
+          err,
+        )
+      })
+    }, 1000)
+  } catch (error) {
+    console.error(
+      '[BOT_MATCHMAKING] Error adding single bot to matchmaking:',
+      error,
+    )
+  }
+}
+
+/**
+ * Monitor a bot for team battle participation
+ * @param {Object} params - Parameters
+ * @param {string} params.botId - Bot ID to monitor
+ * @returns {Promise<void>}
+ */
+const monitorBotForTeamBattle = async ({ botId }) => {
+  try {
+    // Check periodically if the bot is in a team battle
+    const checkInterval = setInterval(async () => {
+      try {
+        // Find if bot is in any active team battle
+        const activeBattle = await QuickClashTeamBattle.findOne({
+          $or: [{ 'teamAMembers.user': botId }, { 'teamBMembers.user': botId }],
+          status: 'active',
+        })
+
+        if (activeBattle) {
+          console.log(
+            `[BOT_TEAM_BATTLE] Bot ${botId} found in team battle ${activeBattle._id}`,
+          )
+
+          // Clear the interval
+          clearInterval(checkInterval)
+
+          // Start bot team battle participation
+          await handleBotTeamBattleParticipation({
+            battleId: activeBattle._id,
+            botId,
+          })
+        }
+      } catch (error) {
+        console.error(`Error checking bot ${botId} for team battles:`, error)
+      }
+    }, 5000) // Check every 5 seconds
+
+    // Stop monitoring after 10 minutes (battle should be created by then)
+    setTimeout(() => {
+      clearInterval(checkInterval)
+      console.log(`[BOT_TEAM_BATTLE] Stopped monitoring bot ${botId} (timeout)`)
+    }, 10 * 60 * 1000)
+  } catch (error) {
+    console.error(`Error setting up monitoring for bot ${botId}:`, error)
+  }
+}
+
+/**
+ * Handle bot participation in team battle
+ * @param {Object} params - Parameters
+ * @param {string} params.battleId - Team battle ID
+ * @param {string} params.botId - Bot ID
+ * @returns {Promise<void>}
+ */
+const handleBotTeamBattleParticipation = async ({ battleId, botId }) => {
+  try {
+    console.log(
+      `[BOT_TEAM_BATTLE] Starting participation for bot ${botId} in battle ${battleId}`,
+    )
+
+    // Wait a random delay before selecting category (1-30 seconds)
+    const categorySelectionDelay = Math.floor(Math.random() * 30 + 1) * 1000
+
+    setTimeout(() => {
+      selectCategoryForBot({ battleId, botId }).catch(err => {
+        console.error(`Error in bot category selection for ${botId}:`, err)
+      })
+    }, categorySelectionDelay)
+  } catch (error) {
+    console.error(`Error handling bot team battle participation:`, error)
+  }
+}
+
+/**
+ * Select a category for bot in team battle
+ * @param {Object} params - Parameters
+ * @param {string} params.battleId - Team battle ID
+ * @param {string} params.botId - Bot ID
+ * @returns {Promise<void>}
+ */
+const selectCategoryForBot = async ({ battleId, botId }) => {
+  try {
+    console.log(
+      `[BOT_TEAM_BATTLE] Bot ${botId} selecting category for battle ${battleId}`,
+    )
+
+    // Get current battle state
+    const battle = await QuickClashTeamBattle.findById(battleId).populate(
+      'teamAMembers.user teamBMembers.user',
+    )
+
+    if (!battle || battle.status !== 'active') {
+      console.log(
+        `[BOT_TEAM_BATTLE] Battle ${battleId} not active, skipping category selection`,
+      )
+      return
+    }
+
+    // Find which team the bot is on
+    const isTeamABot = battle.teamAMembers.some(
+      m => (m.user._id?.toString() || m.user.toString()) === botId.toString(),
+    )
+    const isTeamBBot = battle.teamBMembers.some(
+      m => (m.user._id?.toString() || m.user.toString()) === botId.toString(),
+    )
+
+    if (!isTeamABot && !isTeamBBot) {
+      console.log(
+        `[BOT_TEAM_BATTLE] Bot ${botId} not found in battle ${battleId}`,
+      )
+      return
+    }
+
+    // Find available categories (not yet started by team members)
+    const availableCategories = battle.challenges
+      .filter(challenge => {
+        if (isTeamABot) {
+          return !challenge.teamAPlayer // No team A player assigned
+        } else {
+          return !challenge.teamBPlayer // No team B player assigned
+        }
+      })
+      .map(challenge => challenge.category)
+
+    if (availableCategories.length === 0) {
+      console.log(
+        `[BOT_TEAM_BATTLE] No available categories for bot ${botId} in battle ${battleId}`,
+      )
+      return
+    }
+
+    // Select a random available category
+    const selectedCategory =
+      availableCategories[
+        Math.floor(Math.random() * availableCategories.length)
+      ]
+
+    console.log(
+      `[BOT_TEAM_BATTLE] Bot ${botId} selected category: ${selectedCategory}`,
+    )
+
+    // Select the category
+    await selectCategoryForUser({
+      battleId,
+      userId: botId,
+      category: selectedCategory,
+    })
+
+    // Wait a bit before beginning the challenge (1-10 seconds)
+    const challengeBeginDelay = Math.floor(Math.random() * 10 + 1) * 1000
+
+    setTimeout(() => {
+      beginBotChallenge({ battleId, botId }).catch(err => {
+        console.error(`Error beginning bot challenge for ${botId}:`, err)
+      })
+    }, challengeBeginDelay)
+  } catch (error) {
+    console.error(`Error selecting category for bot ${botId}:`, error)
+  }
+}
+
+/**
+ * Begin challenge for bot
+ * @param {Object} params - Parameters
+ * @param {string} params.battleId - Team battle ID
+ * @param {string} params.botId - Bot ID
+ * @returns {Promise<void>}
+ */
+const beginBotChallenge = async ({ battleId, botId }) => {
+  try {
+    console.log(
+      `[BOT_TEAM_BATTLE] Bot ${botId} beginning challenge for battle ${battleId}`,
+    )
+
+    // Begin the category challenge
+    const result = await beginCategoryChallenge({
+      battleId,
+      userId: botId,
+    })
+
+    if (!result || !result.sessionInfo) {
+      console.log(
+        `[BOT_TEAM_BATTLE] Failed to begin challenge for bot ${botId}`,
+      )
+      return
+    }
+
+    const { challengeId } = result.sessionInfo
+
+    // Generate random skill level for this bot challenge
+    const skillLevels = ['easy', 'medium', 'hard']
+    const randomSkillLevel =
+      skillLevels[Math.floor(Math.random() * skillLevels.length)]
+    const skillRange = BOT_SKILL_RANGES[randomSkillLevel]
+    const skillValue =
+      Math.random() * (skillRange.max - skillRange.min) + skillRange.min
+
+    // Wait a bit before completing the challenge (30-120 seconds)
+    const challengeCompletionDelay = Math.floor(Math.random() * 90 + 30) * 1000
+
+    setTimeout(() => {
+      initiateBotTeamChallenge({
+        challengeId,
+        botId,
+        battleId,
+        skillLevel: skillValue,
+      }).catch(err => {
+        console.error(`Error completing bot team challenge for ${botId}:`, err)
+      })
+    }, challengeCompletionDelay)
+  } catch (error) {
+    console.error(`Error beginning bot challenge:`, error)
+  }
+}
+
+/**
+ * Complete bot team challenge (reuses 1v1 logic)
+ * @param {Object} params - Parameters
+ * @param {string} params.challengeId - Challenge ID
+ * @param {string} params.botId - Bot ID
+ * @param {string} params.battleId - Team battle ID
+ * @param {number} [params.skillLevel=0.6] - Bot skill level
+ * @returns {Promise<void>}
+ */
+const initiateBotTeamChallenge = async ({
+  challengeId,
+  botId,
+  battleId,
+  skillLevel = 0.6,
+}) => {
+  try {
+    console.log(
+      `[BOT_TEAM_BATTLE] Bot ${botId} completing challenge ${challengeId}`,
+    )
+
+    // Reuse the existing bot challenge logic but adapt for team battle
+    const session = await mongoose.startSession()
+
+    try {
+      await session.withTransaction(async () => {
+        // Create session for bot (reuse existing function)
+        const botSession = await createBotSession({
+          challengeId,
+          botId,
+          session,
+        })
+
+        // Simulate reading phase (reuse existing function)
+        const readingTime = Math.floor(Math.random() * 60 + 30) // 30-90 seconds
+        await simulateBotReadingPhase({
+          userId: botId,
+          sessionId: botSession._id,
+          readingTime,
+          session,
+        })
+
+        // Simulate quiz answers (reuse existing function)
+        const completedSession = await simulateBotQuizAnswers({
+          sessionId: botSession._id,
+          botSkill: skillLevel,
+          session,
+        })
+
+        console.log(
+          `[BOT_TEAM_BATTLE] Bot ${botId} completed team challenge with score: ${completedSession.score.RQM_score}`,
+        )
+
+        // Update team battle with quiz results (outside of this transaction)
+        return completedSession
+      })
+
+      // Update team battle with quiz results after the session transaction
+      const completedSession = await QuickClashSession.findOne({
+        challenge: challengeId,
+        user: botId,
+        phase: 'completed',
+      }).select('score')
+
+      if (completedSession) {
+        await updateBattleWithQuizResults({
+          battleId,
+          challengeId,
+          userId: botId,
+          score: completedSession.score.RQM_score,
+        })
+
+        console.log(
+          `[BOT_TEAM_BATTLE] Updated team battle ${battleId} with bot ${botId} score: ${completedSession.score.RQM_score}`,
+        )
+      }
+    } catch (error) {
+      console.error(`Error in bot team challenge:`, error)
+      throw error
+    } finally {
+      session.endSession()
+    }
+  } catch (error) {
+    console.error(`Error completing bot team challenge:`, error)
+  }
+}
+
 module.exports = {
   initiateBotChallenge,
   createBotSession,
   simulateBotReadingPhase,
   simulateBotQuizAnswers,
   scheduleBotResponse,
+
+  // New team battle exports
+  addBotsToMatchmaking,
+  isBotUser,
+  handleBotTeamBattleParticipation,
+  selectCategoryForBot,
+  initiateBotTeamChallenge,
 }

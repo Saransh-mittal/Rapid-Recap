@@ -2050,6 +2050,7 @@ const getOnboardingProgress = asyncHandler(async (req, res) => {
     }
 
     res.status(200).json({
+      tutorialChoice: user.tutorialChoice,
       step: user.onboardingStep,
       language: user.userLanguage,
       categories: user.preferredCategories
@@ -2403,6 +2404,94 @@ const getUserAchievements = asyncHandler(async (req, res) => {
   })
 })
 
+// @desc   Verify early adopter code
+// @route  GET /api/user/verify-early-adopter
+// @access Private
+const verifyEarlyAdopterCode = asyncHandler(async (req, res) => {
+  const { eocCode } = req.query
+
+  try {
+    // List of valid early adopter codes
+    const validEOCCodes = ['RRCORE', 'RR2025']
+
+    if (!eocCode || !validEOCCodes.includes(eocCode.toUpperCase())) {
+      return res.status(400).json({
+        error: 'Invalid early adopter code',
+        isValid: false,
+      })
+    }
+
+    res.status(200).json({
+      isValid: true,
+      message: 'Valid early adopter code',
+      benefits: [
+        'Exclusive early access to new features',
+        'Priority customer support',
+        'Special early adopter badge',
+        'Beta testing opportunities',
+        'Direct feedback channel to developers',
+      ],
+    })
+  } catch (error) {
+    console.error('Error verifying early adopter code:', error)
+    res.status(500).json({ error: 'Internal server error' })
+  }
+})
+
+// @desc   Apply early adopter code
+// @route  POST /api/user/apply-early-adopter
+// @access Private
+const applyEarlyAdopterCode = asyncHandler(async (req, res) => {
+  const { eocCode } = req.body
+  const userId = req.user._id
+
+  try {
+    const user = await User.findById(userId)
+
+    if (!user) {
+      return res.status(404).json({ error: 'User not found' })
+    }
+
+    if (user.isEarlyAdopter) {
+      return res.status(400).json({ error: 'You are already an early adopter' })
+    }
+
+    // Validate early adopter code
+    const validEOCCodes = ['RRCORE', 'RR2025']
+
+    if (!eocCode || !validEOCCodes.includes(eocCode.toUpperCase())) {
+      return res.status(400).json({ error: 'Invalid early adopter code' })
+    }
+
+    // Apply early adopter status
+    user.earlyAdopterCode = eocCode.toUpperCase()
+    user.isEarlyAdopter = true
+    user.earlyAdopterVerifiedAt = new Date()
+
+    await user.save()
+
+    // Log activity without retry mechanism to avoid conflicts
+    try {
+      await logActivity({
+        userInGameName: user.inGameName,
+        type: 'EARLY_ADOPTER_JOINED',
+        date: new Date(),
+      })
+    } catch (activityError) {
+      // Log the error but don't fail the main operation
+      console.error('Failed to log early adopter activity:', activityError)
+    }
+
+    res.status(200).json({
+      message: 'Early adopter status activated successfully!',
+      isEarlyAdopter: true,
+    })
+  } catch (error) {
+    console.error('Error applying early adopter code:', error)
+    res.status(400).json({ error: error.message })
+  }
+})
+
 module.exports = {
   registerUser,
   loginUser,
@@ -2451,4 +2540,6 @@ module.exports = {
   updateBadgeCategory,
   checkRewardsModalStatus,
   getUserAchievements,
+  verifyEarlyAdopterCode,
+  applyEarlyAdopterCode,
 }

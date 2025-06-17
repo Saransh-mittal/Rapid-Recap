@@ -444,6 +444,41 @@ const userSchema = new mongoose.Schema(
         },
       },
     ],
+    quickClashTrophies: {
+      type: Number,
+      default: 1000, // Default starting trophies
+    },
+    quickClashStats: {
+      currentWinStreak: {
+        type: Number,
+        default: 0,
+      },
+      streakProtectionAvailable: {
+        type: Boolean,
+        default: false,
+      },
+      peakTrophies: {
+        type: Number,
+        default: 1000, // Same as starting trophies
+      },
+      // We'll use createdAt for the 2-week activity protection period
+    },
+    earlyAdopterCode: {
+      type: String,
+      default: null,
+    },
+    isEarlyAdopter: {
+      type: Boolean,
+      default: false,
+    },
+    earlyAdopterVerifiedAt: {
+      type: Date,
+      default: null,
+    },
+    tutorialChoice: {
+      type: Boolean,
+      default: null,
+    },
   },
   { collection: 'Users' },
 )

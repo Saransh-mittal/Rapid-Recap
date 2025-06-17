@@ -8,9 +8,10 @@ const {
 const { updateChallengeScore } = require('./quickClashChallengeService')
 const mongoose = require('mongoose')
 const User = require('../../model/userSchema')
+const { markUserAsParticipated } = require('./quickClashTeamBattleService')
 
 const READING_TIME_LIMIT = 120 // 2 minutes in seconds
-const SESSION_EXPIRY = 24 * 60 * 60 * 1000 // 24 hours
+const SESSION_EXPIRY = 5 * 60 * 1000 // 5 minutes
 
 /**
  * Create a new session for a challenge with language support
@@ -43,6 +44,38 @@ const createSession = async ({ challengeId, userId, language }) => {
 
       if (!challenge) {
         throw new Error('Challenge not found')
+      }
+
+      // Check if user is the assigned challenger or opponent
+      const isChallenger =
+        challenge.challenger &&
+        challenge.challenger.toString() === userId.toString()
+      const isOpponent =
+        challenge.opponent &&
+        challenge.opponent.toString() === userId.toString()
+
+      if (!isChallenger && !isOpponent) {
+        throw new Error('You are not authorized to take this challenge')
+      }
+
+      if (challenge.fromTeamBattle && challenge.teamBattle) {
+        // Import the team battle service function
+        const {
+          validateUserChallengeAssignment,
+        } = require('./quickClashTeamBattleService')
+
+        const isValidAssignment = await validateUserChallengeAssignment({
+          teamBattleId: challenge.teamBattle,
+          challengeId: challengeId,
+          userId: userId,
+          session,
+        })
+
+        if (!isValidAssignment) {
+          throw new Error(
+            'You are not assigned to this challenge in the team battle',
+          )
+        }
       }
 
       // Determine the preferred language
@@ -97,7 +130,7 @@ const createSession = async ({ challengeId, userId, language }) => {
   }
 }
 
-const startReading = async ({ sessionId }) => {
+const startReading = async ({ sessionId, userId }) => {
   const session = await mongoose.startSession()
   try {
     return await session.withTransaction(async () => {
@@ -114,6 +147,12 @@ const startReading = async ({ sessionId }) => {
       quizSession.reading.endTime = new Date(
         now.getTime() + READING_TIME_LIMIT * 1000,
       )
+      if (quizSession.challenge) {
+        await markUserAsParticipated({
+          challengeId: quizSession.challenge,
+          userId: userId,
+        })
+      }
       await quizSession.save({ session })
 
       return {

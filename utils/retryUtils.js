@@ -1,4 +1,4 @@
-// src/utils/retryUtils.js
+// utils/retryUtils.js - Updated version with onAllRetriesFailed support
 
 /**
  * Default configuration for retry mechanism
@@ -56,6 +56,7 @@ const defaultIsRetryableError = error => {
  * @param {Object} options - Configuration options
  * @param {Function} options.isRetryable - Custom function to determine if error is retryable
  * @param {Function} options.onRetry - Callback function executed before each retry
+ * @param {Function} options.onAllRetriesFailed - Callback function executed when all retries fail
  * @param {string} options.operationName - Name of operation for logging
  * @returns {Promise<any>}
  */
@@ -84,6 +85,22 @@ const withRetry = async (operation, options = {}) => {
           `${operationName}: All retry attempts failed after ${attempt} tries:`,
           error,
         )
+
+        // Execute onAllRetriesFailed callback if provided
+        if (options.onAllRetriesFailed) {
+          try {
+            await options.onAllRetriesFailed(
+              error,
+              config.operationParams || {},
+            )
+          } catch (callbackError) {
+            console.error(
+              `${operationName}: Error in onAllRetriesFailed callback:`,
+              callbackError,
+            )
+          }
+        }
+
         throw new Error(
           `${operationName} failed after ${attempt} retry attempts. Last error: ${error.message}`,
         )
@@ -122,7 +139,13 @@ const withRetry = async (operation, options = {}) => {
  * @returns {Function} - Retryable version of the function
  */
 const makeRetryable = (fn, options = {}) => {
-  return (...args) => withRetry(() => fn(...args), options)
+  return (...args) => {
+    // Store function arguments for potential use in callbacks
+    const operationParams =
+      args.length === 1 && typeof args[0] === 'object' ? args[0] : {}
+
+    return withRetry(() => fn(...args), { ...options, operationParams })
+  }
 }
 
 module.exports = {
