@@ -1,4 +1,4 @@
-// components/quickClashComponents/MatchmakingButton.jsx - FIXED MODAL INTERACTION
+// components/quickClashComponents/MatchmakingButton.jsx - FIXED DOUBLE JOIN ISSUE
 import React, {
   useMemo,
   forwardRef,
@@ -46,8 +46,8 @@ const BUTTON_STATES = {
 }
 
 /**
- * FIXED matchmaking button component with proper modal interaction
- * Handles button states and click events correctly
+ * FIXED matchmaking button component - removed duplicate joinMatchmaking call
+ * Now only calls the parent's onJoinMatchmaking callback
  */
 const MatchmakingButton = forwardRef((props, ref) => {
   const {
@@ -87,7 +87,6 @@ const MatchmakingButton = forwardRef((props, ref) => {
     challengeReady,
     preparationProgress,
     isSocketReady,
-    joinMatchmaking,
   } = useQuickClashMatchmaking()
 
   // Determine current visual state
@@ -123,8 +122,8 @@ const MatchmakingButton = forwardRef((props, ref) => {
     matchmakingLoading,
   ])
 
-  // Handle join matchmaking action
-  const handleJoinMatchmaking = useCallback(async () => {
+  // FIXED: Removed duplicate join matchmaking logic - now just validates and calls parent
+  const handleJoinMatchmaking = useCallback(() => {
     if (!isSocketReady) {
       toast({
         title: t('Connection Error'),
@@ -136,20 +135,9 @@ const MatchmakingButton = forwardRef((props, ref) => {
       return
     }
 
-    try {
-      await joinMatchmaking()
-      // Let parent handle modal opening via onJoinMatchmaking callback
-      onJoinMatchmaking?.()
-    } catch (error) {
-      toast({
-        title: t('Failed to Join'),
-        description: error.message || t('Could not join matchmaking'),
-        status: 'error',
-        duration: 5000,
-        isClosable: true,
-      })
-    }
-  }, [isSocketReady, joinMatchmaking, onJoinMatchmaking, toast, t])
+    // FIXED: Just call the parent's handler - don't call joinMatchmaking directly
+    onJoinMatchmaking?.()
+  }, [isSocketReady, onJoinMatchmaking, toast, t])
 
   // FIXED: Enhanced click handler with better logic
   const handleClick = useCallback(() => {

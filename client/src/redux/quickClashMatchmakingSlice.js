@@ -7,6 +7,7 @@ export const joinMatchmaking = createAsyncThunk(
   'quickClashMatchmaking/join',
   async (_, { rejectWithValue }) => {
     try {
+      console.log('[MATCHMAKING_SLICE] Joining matchmaking...')
       const response = await axios.post('/api/quickClash/matchmaking/join')
       return response.data.matchmaking
     } catch (error) {
