@@ -32,6 +32,14 @@ const {
 } = require('../../utils/quickClashTeamUtils')
 const { makeRetryable } = require('../../utils/retryUtils')
 const { createBattleExpiryEvent } = require('./quickClashBattleExpiryService')
+const {
+  withScopedLock,
+  cleanupBattleMutexes,
+} = require('../../utils/scopedMutex.utils')
+const {
+  trackAllBotsInBattle,
+  stopTrackingAllBotsInBattle,
+} = require('./quickClashBotHealthService')
 
 // Constants
 const TEAM_BATTLE_EXPIRY = 24 * 60 * 60 * 1000 // 24 hours same as regular challenges
@@ -43,9 +51,14 @@ const TROPHY_K_FACTOR = 0.8 // From trophy formula
  * @param {Object} params - Parameters
  * @param {string} params.teamAId - Team A ID
  * @param {string} params.teamBId - Team B ID
+ * @param {string} [params.battleId] - Battle ID (if available)
  * @returns {Promise<void>}
  */
-const cleanupFailedBattleMatchmaking = async ({ teamAId, teamBId }) => {
+const cleanupFailedBattleMatchmaking = async ({
+  teamAId,
+  teamBId,
+  battleId = null,
+}) => {
   console.log(`[TeamBattle] Starting cleanup for failed battle creation`)
 
   try {
@@ -82,6 +95,29 @@ const cleanupFailedBattleMatchmaking = async ({ teamAId, teamBId }) => {
       ),
     ])
 
+    // Clean up any mutexes that might have been created
+    if (battleId) {
+      console.log(
+        `[TeamBattle] Cleaning up mutexes for failed battle ${battleId}`,
+      )
+      try {
+        const cleanedMutexes = cleanupBattleMutexes(battleId)
+        console.log(
+          `[TeamBattle] Cleaned up ${cleanedMutexes} mutexes for failed battle`,
+        )
+      } catch (mutexCleanupError) {
+        console.error(
+          `[TeamBattle] Error during mutex cleanup:`,
+          mutexCleanupError,
+        )
+        // Don't throw - cleanup errors shouldn't fail the main cleanup
+      }
+    } else {
+      console.log(`[TeamBattle] No battleId provided, skipping mutex cleanup`)
+      // Note: In cases where battle creation fails very early, there might not be
+      // any mutexes created yet, so this is expected behavior
+    }
+
     console.log(`[TeamBattle] Cleanup completed successfully`)
 
     // Emit event to notify users about the cleanup
@@ -96,6 +132,22 @@ const cleanupFailedBattleMatchmaking = async ({ teamAId, teamBId }) => {
     }, 0)
   } catch (cleanupError) {
     console.error(`[TeamBattle] Error during cleanup:`, cleanupError)
+
+    // Clean up mutexes even if other cleanup failed (best effort)
+    if (battleId) {
+      try {
+        const cleanedMutexes = cleanupBattleMutexes(battleId)
+        console.log(
+          `[TeamBattle] Emergency mutex cleanup: ${cleanedMutexes} mutexes cleaned`,
+        )
+      } catch (emergencyCleanupError) {
+        console.error(
+          `[TeamBattle] Emergency mutex cleanup also failed:`,
+          emergencyCleanupError,
+        )
+      }
+    }
+
     // Even if cleanup fails, we should still notify users
     setTimeout(() => {
       globalEmitter.emit('quickClash:battleCreationCleanedUp', {
@@ -694,8 +746,37 @@ const createTeamBattle = makeRetryable(
           console.log(`[TeamBattle] Transaction committed successfully`)
         }
 
+        // ======= PROGRESS: BATTLE READY, STARTING BOT TRACKING (97%) =======
+        console.log(
+          `[TeamBattle] PHASE 11: Battle ready, starting bot tracking (97%)`,
+        )
+
+        // NOW start bot tracking after battle is fully created and committed
+        try {
+          console.log(
+            `[TeamBattle] Starting bot tracking for completed battle ${teamBattle._id}`,
+          )
+
+          await trackAllBotsInBattle({
+            battleId: teamBattle._id.toString(),
+            teamAMembers: teamA.members,
+            teamBMembers: teamB.members,
+          })
+
+          console.log(
+            `[TeamBattle] ✅ Bot health tracking successfully initialized for battle ${teamBattle._id}`,
+          )
+        } catch (trackingError) {
+          console.error(
+            `[TeamBattle] ⚠️ Failed to initialize bot tracking for battle ${teamBattle._id}:`,
+            trackingError,
+          )
+          // Battle is created successfully, tracking failure doesn't affect battle
+          // Health check will eventually pick up any bots that need recovery
+        }
+
         // ======= PROGRESS: BATTLE READY (100%) =======
-        console.log(`[TeamBattle] PHASE 11: Battle ready (100%)`)
+        console.log(`[TeamBattle] PHASE 12: Battle ready (100%)`)
 
         // Schedule translations (outside transaction)
         translationData.forEach(
@@ -854,11 +935,98 @@ const createTeamBattle = makeRetryable(
   },
 )
 
+/**
+ * Select a category for a user in a team battle with scoped locking
+ * @param {Object} params - Parameters
+ * @param {string} params.battleId - Team battle ID
+ * @param {string} params.userId - User ID
+ * @param {string} params.category - Category to select
+ * @returns {Promise<Object>} Updated battle
+ */
 const selectCategoryForUser = async ({ battleId, userId, category }) => {
   console.log(
-    `[CATEGORY_SELECT] User ${userId} selecting category ${category} for battle ${battleId}`,
+    `[CATEGORY_SELECT] User ${userId} requesting to select category ${category} for battle ${battleId}`,
   )
 
+  // STEP 1: Pre-lock validation - determine team membership
+  let teamId = null
+  let isTeamAUser = false
+  let isTeamBUser = false
+
+  try {
+    // Get battle data to determine team membership (read-only operation)
+    const battle = await QuickClashTeamBattle.findById(battleId).lean()
+
+    if (!battle) {
+      throw new Error('Team battle not found')
+    }
+
+    if (battle.status !== 'active') {
+      throw new Error('Team battle is not active')
+    }
+
+    // Determine team membership
+    isTeamAUser = battle.teamAMembers.some(
+      m => m.user.toString() === userId.toString(),
+    )
+    isTeamBUser = battle.teamBMembers.some(
+      m => m.user.toString() === userId.toString(),
+    )
+
+    if (!isTeamAUser && !isTeamBUser) {
+      throw new Error('User is not a member of either team')
+    }
+
+    // Set team ID for locking
+    teamId = isTeamAUser ? 'teamA' : 'teamB'
+
+    console.log(
+      `[CATEGORY_SELECT] User ${userId} belongs to ${teamId} in battle ${battleId}`,
+    )
+  } catch (error) {
+    console.error(`[CATEGORY_SELECT] Pre-lock validation failed:`, error)
+    throw error
+  }
+
+  // STEP 2: Execute category selection with scoped lock
+  return await withScopedLock({
+    battleId,
+    teamId,
+    userId,
+    operation: `selectCategory:${category}`,
+    fn: async () => {
+      // This is the critical section that's now protected by the scoped mutex
+      return await performCategorySelection({
+        battleId,
+        userId,
+        category,
+        teamId,
+        isTeamAUser,
+        isTeamBUser,
+      })
+    },
+  })
+}
+
+/**
+ * Internal function to perform the actual category selection (protected by mutex)
+ * @param {Object} params - Parameters
+ * @param {string} params.battleId - Battle ID
+ * @param {string} params.userId - User ID
+ * @param {string} params.category - Category to select
+ * @param {string} params.teamId - Team ID (teamA or teamB)
+ * @param {boolean} params.isTeamAUser - Whether user is in team A
+ * @param {boolean} params.isTeamBUser - Whether user is in team B
+ * @returns {Promise<Object>} Updated battle
+ */
+const performCategorySelection = async ({
+  battleId,
+  userId,
+  category,
+  teamId,
+  isTeamAUser,
+  isTeamBUser,
+}) => {
   const session = await mongoose.startSession()
   let attempts = 0
   const maxAttempts = 3
@@ -871,10 +1039,10 @@ const selectCategoryForUser = async ({ battleId, userId, category }) => {
         return await session.withTransaction(
           async () => {
             console.log(
-              `[CATEGORY_SELECT] Attempt ${attempts}/${maxAttempts} for user ${userId}, category ${category}`,
+              `[CATEGORY_SELECT] [LOCKED] Attempt ${attempts}/${maxAttempts} for user ${userId}, category ${category}`,
             )
 
-            // STEP 1: Get current battle state
+            // STEP 1: Get current battle state (fresh read under lock)
             const battle = await QuickClashTeamBattle.findById(
               battleId,
             ).session(session)
@@ -895,22 +1063,19 @@ const selectCategoryForUser = async ({ battleId, userId, category }) => {
               throw new Error('Category not found in this battle')
             }
 
-            // STEP 3: Determine team membership
-            const teamAMemberIndex = battle.teamAMembers.findIndex(
-              m => m.user.toString() === userId.toString(),
-            )
-            const teamBMemberIndex = battle.teamBMembers.findIndex(
-              m => m.user.toString() === userId.toString(),
-            )
+            // STEP 3: Get member info based on pre-determined team membership
+            const memberIndex = isTeamAUser
+              ? battle.teamAMembers.findIndex(
+                  m => m.user.toString() === userId.toString(),
+                )
+              : battle.teamBMembers.findIndex(
+                  m => m.user.toString() === userId.toString(),
+                )
 
-            if (teamAMemberIndex === -1 && teamBMemberIndex === -1) {
-              throw new Error('User is not a member of either team')
+            if (memberIndex === -1) {
+              throw new Error('User not found in expected team')
             }
 
-            const isTeamAUser = teamAMemberIndex !== -1
-            const memberIndex = isTeamAUser
-              ? teamAMemberIndex
-              : teamBMemberIndex
             const member = isTeamAUser
               ? battle.teamAMembers[memberIndex]
               : battle.teamBMembers[memberIndex]
@@ -925,7 +1090,7 @@ const selectCategoryForUser = async ({ battleId, userId, category }) => {
             // STEP 5: Check if user already has this category selected
             if (member.category === category) {
               console.log(
-                `[CATEGORY_SELECT] User ${userId} already has category ${category} selected`,
+                `[CATEGORY_SELECT] [LOCKED] User ${userId} already has category ${category} selected`,
               )
               // Return current battle state if already selected
               return await QuickClashTeamBattle.findById(battleId)
@@ -953,7 +1118,23 @@ const selectCategoryForUser = async ({ battleId, userId, category }) => {
               )
             }
 
-            // STEP 7: THE CRITICAL ATOMIC OPERATION (FIXED - No writeConcern in transaction)
+            // STEP 7: Check if any teammate has already selected this category
+            const teamMembers = isTeamAUser
+              ? battle.teamAMembers
+              : battle.teamBMembers
+            const categoryAlreadySelected = teamMembers.some(
+              (teamMember, index) =>
+                index !== memberIndex && // Don't check against self
+                teamMember.category === category,
+            )
+
+            if (categoryAlreadySelected) {
+              throw new Error(
+                `Category "${category}" has already been selected by another teammate.`,
+              )
+            }
+
+            // STEP 8: THE ENHANCED ATOMIC OPERATION (now protected by mutex)
             const atomicQuery = {
               _id: battleId,
               status: 'active',
@@ -968,6 +1149,10 @@ const selectCategoryForUser = async ({ battleId, userId, category }) => {
               [`${
                 isTeamAUser ? 'teamAMembers' : 'teamBMembers'
               }.${memberIndex}.completed`]: false,
+              // Ensure no other team member has this category selected
+              [`${isTeamAUser ? 'teamAMembers' : 'teamBMembers'}.category`]: {
+                $ne: category,
+              },
             }
 
             const atomicUpdate = {
@@ -983,35 +1168,33 @@ const selectCategoryForUser = async ({ battleId, userId, category }) => {
             }
 
             console.log(
-              `[CATEGORY_SELECT] Executing atomic update for user ${userId}, category ${category}`,
+              `[CATEGORY_SELECT] [LOCKED] Executing atomic update for user ${userId}, category ${category}`,
             )
 
-            // FIXED: Removed writeConcern from individual operation
             const result = await QuickClashTeamBattle.findOneAndUpdate(
               atomicQuery,
               atomicUpdate,
               {
                 new: true,
                 session,
-                // Removed writeConcern and readConcern - transaction handles this
               },
             )
 
             if (!result) {
-              // This means the atomic condition failed - someone else got it first
+              // This means the atomic condition failed
               console.log(
-                `[CATEGORY_SELECT] Atomic operation failed for user ${userId}, category ${category} - category likely taken`,
+                `[CATEGORY_SELECT] [LOCKED] Atomic operation failed for user ${userId}, category ${category}`,
               )
               throw new Error(
-                `Category "${category}" is no longer available. Another player may have selected it.`,
+                `Category "${category}" is no longer available or conditions changed.`,
               )
             }
 
             console.log(
-              `[CATEGORY_SELECT] SUCCESS! User ${userId} secured category ${category}`,
+              `[CATEGORY_SELECT] [LOCKED] SUCCESS! User ${userId} secured category ${category}`,
             )
 
-            // STEP 8: Return populated result
+            // STEP 9: Return populated result
             const populatedBattle = await QuickClashTeamBattle.findById(
               battleId,
             )
@@ -1031,7 +1214,7 @@ const selectCategoryForUser = async ({ battleId, userId, category }) => {
               })
               .session(session)
 
-            // STEP 9: Emit success event
+            // STEP 10: Emit success event
             setTimeout(() => {
               globalEmitter.emit('quickClash:teamMemberSelectedCategory', {
                 battleId: populatedBattle._id,
@@ -1050,24 +1233,24 @@ const selectCategoryForUser = async ({ battleId, userId, category }) => {
             return populatedBattle
           },
           {
-            // FIXED: Set transaction-level options properly
             readConcern: { level: 'majority' },
-            writeConcern: { w: 'majority' }, // Transaction-level writeConcern
+            writeConcern: { w: 'majority' },
             maxCommitTimeMS: 5000,
           },
         )
       } catch (error) {
         console.log(
-          `[CATEGORY_SELECT] Attempt ${attempts} failed for user ${userId}:`,
+          `[CATEGORY_SELECT] [LOCKED] Attempt ${attempts} failed for user ${userId}:`,
           error.message,
         )
 
         // Check if this is a retryable error
         const isRetryable =
           error.message.includes('no longer available') ||
+          error.message.includes('conditions changed') ||
           error.message.includes('TransientTransactionError') ||
           error.message.includes('WriteConflict') ||
-          error.message.includes('writeConcern') || // Handle writeConcern errors
+          error.message.includes('writeConcern') ||
           (error.name &&
             (error.name.includes('Mongo') ||
               error.name.includes('Transaction')))
@@ -1079,7 +1262,8 @@ const selectCategoryForUser = async ({ battleId, userId, category }) => {
             error.message.includes('already participated') ||
             error.message.includes('already selected') ||
             error.message.includes('not found') ||
-            error.message.includes('not active')
+            error.message.includes('not active') ||
+            error.message.includes('already been selected by another teammate')
           ) {
             throw error
           }
@@ -1094,15 +1278,8 @@ const selectCategoryForUser = async ({ battleId, userId, category }) => {
           throw error
         }
 
-        // Exponential backoff with jitter for retries
-        const baseDelay = Math.min(500 * Math.pow(2, attempts - 1), 2000) // Max 2 seconds
-        const jitter = Math.random() * 200 // 0-200ms jitter
-        const delay = baseDelay + jitter
-
-        console.log(
-          `[CATEGORY_SELECT] Retrying in ${delay}ms for user ${userId}`,
-        )
-        await new Promise(resolve => setTimeout(resolve, delay))
+        // Small delay before retry (no need for exponential backoff since we're under mutex)
+        await new Promise(resolve => setTimeout(resolve, 100))
       }
     }
 
@@ -1887,6 +2064,11 @@ const updateBattleWithQuizResults = makeRetryable(
             `[updateBattleWithQuizResults] Battle completed - Winner: ${battle.winner}`,
           )
 
+          // Clean up bot health tracking for this completed battle
+          setTimeout(() => {
+            stopTrackingAllBotsInBattle(battle._id.toString())
+          }, 5000) // Wait 5 seconds to ensure all final operations complete
+
           // Emit event after all processing
           setTimeout(() => {
             globalEmitter.emit('quickClash:teamBattleCompleted', {
@@ -1895,6 +2077,19 @@ const updateBattleWithQuizResults = makeRetryable(
               teamA: battle.teamA,
               teamB: battle.teamB,
             })
+
+            // Clean up mutex resources for completed battle
+            try {
+              const cleanedMutexes = cleanupBattleMutexes(battle._id.toString())
+              console.log(
+                `[BATTLE_CLEANUP] Cleaned up ${cleanedMutexes} mutexes for completed battle ${battle._id}`,
+              )
+            } catch (error) {
+              console.error(
+                `[BATTLE_CLEANUP] Error cleaning up mutexes for battle ${battle._id}:`,
+                error,
+              )
+            }
           }, 0)
         } else {
           console.log(
