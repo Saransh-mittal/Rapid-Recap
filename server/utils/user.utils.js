@@ -855,6 +855,21 @@ const retryableOnboardingUpdate = makeRetryable(executeOnboardingUpdate, {
   },
 })
 
+/**
+ * Check if a user is a bot (has dummy email)
+ * @param {string} userId - User ID to check
+ * @returns {Promise<boolean>} Whether the user is a bot
+ */
+const isBotUser = async userId => {
+  try {
+    const user = await User.findById(userId).select('email').lean()
+    return user && /^dummy\d+@mail\.com$/.test(user.email)
+  } catch (error) {
+    console.error('Error checking if user is bot:', error)
+    return false
+  }
+}
+
 module.exports = {
   calculateTopPercent,
   calculateLabelsAndData,
@@ -874,4 +889,5 @@ module.exports = {
   formatPreferredCategories,
   calculateLoginStreak,
   retryableOnboardingUpdate,
+  isBotUser,
 }
