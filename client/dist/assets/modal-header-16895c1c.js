@@ -1,0 +1,1 @@
+import{f as n,Q as f,r as m,g as u,R as x,d as h,j as M,e as i}from"./index-98713a4a.js";const p=n((s,a)=>{const{className:r,...t}=s,{headerId:d,setHeaderMounted:e}=f();m.useEffect(()=>(e(!0),()=>e(!1)),[e]);const o=u("chakra-modal__header",r),c=x(),l=h({flex:0,...c.header});return M.jsx(i.header,{ref:a,className:o,id:d,...t,__css:l})});p.displayName="ModalHeader";export{p as M};

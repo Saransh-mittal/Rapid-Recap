@@ -315,6 +315,10 @@ require('./scripts/script_prepare_article_data')()
 const generateSitemap = require('./generate-sitemap')
 generateSitemap()
 const generateGoogleNewsSitemap = require('./google-sitemap-generator')
+const {
+  notFoundHandler,
+  globalErrorHandler,
+} = require('./middleware/globalErrorHandlerMiddleware')
 generateGoogleNewsSitemap()
 //
 // Load scheduler
@@ -360,6 +364,9 @@ async function initializeServer() {
     apiRouter.use('/quickClash', quickClashRoutes)
     apiRouter.use('/special-categories', publicSpecialCategoryRoutes)
     app.use('/api', apiRouter)
+
+    app.use(notFoundHandler) // Handle 404s
+    app.use(globalErrorHandler) // Handle all errors
 
     // SSR Middleware for non-API routes
     app.use((req, res, next) => {
