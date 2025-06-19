@@ -39,6 +39,12 @@ const {
   validateCsrfToken,
 } = require('./middleware/csrfMiddleware')
 const connect_s4a = require('connect-s4a')
+// MODIFY: Import global error handlers
+const {
+  notFoundHandler,
+  globalErrorHandler,
+  handleSSRFailure,
+} = require('./middleware/globalErrorHandlerMiddleware')
 // const fs = require('fs')
 
 const app = express()
@@ -315,19 +321,16 @@ require('./scripts/script_prepare_article_data')()
 const generateSitemap = require('./generate-sitemap')
 generateSitemap()
 const generateGoogleNewsSitemap = require('./google-sitemap-generator')
-const {
-  notFoundHandler,
-  globalErrorHandler,
-} = require('./middleware/globalErrorHandlerMiddleware')
 generateGoogleNewsSitemap()
 //
 // Load scheduler
 require('./scheduler/setupCronJobs')
 // require('./scripts/analyzeArticleRelations')
+
 // Setup routes and SSR
 async function initializeServer() {
   try {
-    // Static files setup
+    // MODIFY: Static files setup - MUST come before API routes
     app.use(
       express.static(path.join(__dirname, 'client/dist'), {
         index: false,
@@ -337,10 +340,7 @@ async function initializeServer() {
       }),
     )
 
-    // Initialize SSR middleware
-    const ssrMiddleware = await createSSRMiddleware(app)
-
-    // API Routes
+    // MODIFY: API Routes setup
     const apiRouter = express.Router()
     app.use(configureSession())
     app.use(generateCsrfToken)
@@ -365,18 +365,41 @@ async function initializeServer() {
     apiRouter.use('/special-categories', publicSpecialCategoryRoutes)
     app.use('/api', apiRouter)
 
-    app.use(notFoundHandler) // Handle 404s
-    app.use(globalErrorHandler) // Handle all errors
+    // MODIFY: Initialize SSR middleware AFTER API routes
+    const ssrMiddleware = await createSSRMiddleware(app)
 
-    // SSR Middleware for non-API routes
+    // MODIFY: SSR Middleware for ALL non-API routes (this handles /, /favicon.ico, etc.)
     app.use((req, res, next) => {
+      // Skip API routes
       if (req.path.startsWith('/api/')) {
         return next()
       }
+
+      // Let SSR handle all other routes
       return ssrMiddleware(req, res, next)
     })
 
-    // Error handling middleware
+    // MODIFY: Error handling middleware - ONLY after SSR
+    // This catches routes that SSR couldn't handle AND API errors
+    app.use((req, res, next) => {
+      // Only trigger 404 for API routes that don't exist
+      // SSR should have handled all non-API routes by now
+      if (req.path.startsWith('/api/')) {
+        return notFoundHandler(req, res, next)
+      }
+
+      // If we reach here for non-API routes, it means SSR failed
+      // Let the SSR failure handler deal with it
+      next()
+    })
+
+    // MODIFY: Handle SSR failures specifically
+    app.use(handleSSRFailure)
+
+    // MODIFY: Global error handler - handles all errors including SSR failures
+    app.use(globalErrorHandler)
+
+    // MODIFY: Keep the original errorHandler as fallback (but it should rarely be reached now)
     app.use(errorHandler)
 
     // Connect to database and start server
