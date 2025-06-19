@@ -1,4 +1,6 @@
 // controllers/quickClashTeamController.js
+// MODIFY: Add enhanced error handling for write conflicts in team operations
+
 const asyncHandler = require('express-async-handler')
 const {
   createTeam,
@@ -37,6 +39,66 @@ const {
   getUserPendingInvitations,
 } = require('../services/quickClashServices/quickClashTeamInvitationService')
 
+// ADD: Helper function to handle write conflict errors
+const handleWriteConflictError = (error, operation) => {
+  console.log(`Write conflict in ${operation}:`, error.message)
+
+  if (error.isRetryExhausted) {
+    return {
+      success: false,
+      message: `Unable to ${operation.toLowerCase()} right now. Please try again in a moment.`,
+      code: 'OPERATION_BUSY',
+      reason: `The system is busy processing multiple requests. Please wait a moment and try again.`,
+      retryAfter: 3,
+    }
+  }
+
+  if (
+    error.codeName === 'WriteConflict' ||
+    error.message.includes('Write conflict') ||
+    error.message.includes('yielding is disabled')
+  ) {
+    return {
+      success: false,
+      message: `Unable to ${operation.toLowerCase()} right now. Please try again.`,
+      code: 'OPERATION_CONFLICT',
+      reason: `Multiple ${operation.toLowerCase()} operations are happening simultaneously. Please try again in a moment.`,
+      retryAfter: 2,
+    }
+  }
+
+  if (
+    error.message.includes('TransientTransactionError') ||
+    error.message.includes('transaction')
+  ) {
+    return {
+      success: false,
+      message: `Unable to ${operation.toLowerCase()}. Please try again.`,
+      code: 'TRANSACTION_ERROR',
+      reason: `A temporary database issue occurred. Please try again in a moment.`,
+      retryAfter: 2,
+    }
+  }
+
+  if (
+    error.name === 'MongoNetworkError' ||
+    error.name === 'MongoTimeoutError' ||
+    error.message.includes('network') ||
+    error.message.includes('timeout')
+  ) {
+    return {
+      success: false,
+      message: 'Connection issue. Please check your internet and try again.',
+      code: 'NETWORK_ERROR',
+      reason:
+        'Unable to connect to the service. Please check your internet connection.',
+      retryAfter: 5,
+    }
+  }
+
+  return null // Not a write conflict error
+}
+
 /**
  * @desc    Create a new team
  * @route   POST /api/quickClash/team
@@ -55,6 +117,14 @@ const createNewTeam = asyncHandler(async (req, res) => {
       team,
     })
   } catch (error) {
+    console.log('Error creating team:', error.message)
+
+    // Handle write conflicts
+    const conflictResponse = handleWriteConflictError(error, 'create team')
+    if (conflictResponse) {
+      return res.status(503).json(conflictResponse)
+    }
+
     res.status(400).json({
       success: false,
       message: error.message || 'Failed to create team',
@@ -126,6 +196,14 @@ const joinTeam = asyncHandler(async (req, res) => {
       team,
     })
   } catch (error) {
+    console.log('Error joining team:', error.message)
+
+    // Handle write conflicts
+    const conflictResponse = handleWriteConflictError(error, 'join team')
+    if (conflictResponse) {
+      return res.status(503).json(conflictResponse)
+    }
+
     res.status(400).json({
       success: false,
       message: error.message || 'Failed to join team',
@@ -152,6 +230,14 @@ const inviteUserToTeam = asyncHandler(async (req, res) => {
       team,
     })
   } catch (error) {
+    console.log('Error inviting to team:', error.message)
+
+    // Handle write conflicts
+    const conflictResponse = handleWriteConflictError(error, 'send invitation')
+    if (conflictResponse) {
+      return res.status(503).json(conflictResponse)
+    }
+
     res.status(400).json({
       success: false,
       message: error.message || 'Failed to send invitation',
@@ -185,6 +271,17 @@ const respondToTeamInvitation = asyncHandler(async (req, res) => {
       })
     }
   } catch (error) {
+    console.log('Error responding to team invitation:', error.message)
+
+    // Handle write conflicts
+    const conflictResponse = handleWriteConflictError(
+      error,
+      'respond to invitation',
+    )
+    if (conflictResponse) {
+      return res.status(503).json(conflictResponse)
+    }
+
     res.status(400).json({
       success: false,
       message: error.message || 'Failed to respond to invitation',
@@ -210,6 +307,14 @@ const leaveTeamController = asyncHandler(async (req, res) => {
       team,
     })
   } catch (error) {
+    console.log('Error leaving team:', error.message)
+
+    // Handle write conflicts
+    const conflictResponse = handleWriteConflictError(error, 'leave team')
+    if (conflictResponse) {
+      return res.status(503).json(conflictResponse)
+    }
+
     res.status(400).json({
       success: false,
       message: error.message || 'Failed to leave team',
@@ -236,6 +341,14 @@ const updateTeamMemberStatus = asyncHandler(async (req, res) => {
       team,
     })
   } catch (error) {
+    console.log('Error updating team member status:', error.message)
+
+    // Handle write conflicts
+    const conflictResponse = handleWriteConflictError(error, 'update status')
+    if (conflictResponse) {
+      return res.status(503).json(conflictResponse)
+    }
+
     res.status(400).json({
       success: false,
       message: error.message || 'Failed to update status',
@@ -285,6 +398,14 @@ const removeMemberFromTeam = asyncHandler(async (req, res) => {
       team,
     })
   } catch (error) {
+    console.log('Error removing team member:', error.message)
+
+    // Handle write conflicts
+    const conflictResponse = handleWriteConflictError(error, 'remove member')
+    if (conflictResponse) {
+      return res.status(503).json(conflictResponse)
+    }
+
     res.status(400).json({
       success: false,
       message: error.message || 'Failed to remove member',
@@ -335,6 +456,30 @@ const joinTeamMatchmakingController = asyncHandler(async (req, res) => {
       matchmaking,
     })
   } catch (error) {
+    console.log('Error joining team matchmaking:', error.message)
+
+    // Handle retry exhausted errors from team matchmaking
+    if (error.isRetryExhausted) {
+      return res.status(503).json({
+        success: false,
+        message:
+          'Team matchmaking is currently busy. Please try again in a moment.',
+        code: 'TEAM_MATCHMAKING_BUSY',
+        reason:
+          'The team matchmaking system is experiencing high load. Please wait a moment and try again.',
+        retryAfter: 3,
+      })
+    }
+
+    // Handle write conflicts
+    const conflictResponse = handleWriteConflictError(
+      error,
+      'join team matchmaking',
+    )
+    if (conflictResponse) {
+      return res.status(503).json(conflictResponse)
+    }
+
     // Check if the error is related to users already being in matchmaking
     if (
       error.message.includes('already in matchmaking') ||
@@ -385,6 +530,17 @@ const leaveTeamMatchmakingController = asyncHandler(async (req, res) => {
         : 'Team not in matchmaking',
     })
   } catch (error) {
+    console.log('Error leaving team matchmaking:', error.message)
+
+    // Handle write conflicts
+    const conflictResponse = handleWriteConflictError(
+      error,
+      'leave team matchmaking',
+    )
+    if (conflictResponse) {
+      return res.status(503).json(conflictResponse)
+    }
+
     res.status(400).json({
       success: false,
       message: error.message || 'Failed to leave team matchmaking',
@@ -408,6 +564,23 @@ const getTeamMatchmakingStatusController = asyncHandler(async (req, res) => {
       ...status,
     })
   } catch (error) {
+    console.log('Error getting team matchmaking status:', error.message)
+
+    // For status checks, handle gracefully
+    if (
+      error.name === 'MongoNetworkError' ||
+      error.name === 'MongoTimeoutError' ||
+      error.codeName === 'WriteConflict'
+    ) {
+      return res.status(200).json({
+        success: true,
+        inMatchmaking: false,
+        status: null,
+        matchmaking: null,
+        note: 'Status check temporarily unavailable',
+      })
+    }
+
     res.status(400).json({
       success: false,
       message: error.message || 'Failed to get team matchmaking status',
@@ -434,14 +607,31 @@ const selectCategoryForBattle = asyncHandler(async (req, res) => {
       battle: result,
     })
   } catch (error) {
+    console.log('Error selecting category for battle:', error.message)
+
+    // Handle write conflicts and retry exhausted errors
+    if (error.isRetryExhausted) {
+      return res.status(503).json({
+        success: false,
+        message: 'Unable to select category right now. Please try again.',
+        code: 'CATEGORY_SELECTION_BUSY',
+        reason:
+          'Multiple players are selecting categories simultaneously. Please try again in a moment.',
+        retryAfter: 2,
+      })
+    }
+
+    const conflictResponse = handleWriteConflictError(error, 'select category')
+    if (conflictResponse) {
+      return res.status(503).json(conflictResponse)
+    }
+
     res.status(400).json({
       success: false,
       message: error.message || 'Failed to select category',
     })
   }
 })
-
-// Add these new controller functions after selectCategoryForBattle
 
 /**
  * @desc    Deselect a category for a team battle
@@ -461,6 +651,26 @@ const deselectCategoryForBattle = asyncHandler(async (req, res) => {
       battle: result,
     })
   } catch (error) {
+    console.log('Error deselecting category for battle:', error.message)
+
+    // Handle write conflicts
+    const conflictResponse = handleWriteConflictError(
+      error,
+      'deselect category',
+    )
+    if (conflictResponse) {
+      return res.status(503).json(conflictResponse)
+    }
+
+    // Handle "No category selected to deselect" as a non-error case
+    if (error.message.includes('No category selected to deselect')) {
+      return res.status(200).json({
+        success: true,
+        message: 'No category was selected',
+        note: 'Category deselection not needed',
+      })
+    }
+
     res.status(400).json({
       success: false,
       message: error.message || 'Failed to deselect category',
@@ -487,6 +697,14 @@ const beginChallengeForBattle = asyncHandler(async (req, res) => {
       sessionInfo: result.sessionInfo,
     })
   } catch (error) {
+    console.log('Error beginning challenge for battle:', error.message)
+
+    // Handle write conflicts
+    const conflictResponse = handleWriteConflictError(error, 'begin challenge')
+    if (conflictResponse) {
+      return res.status(503).json(conflictResponse)
+    }
+
     res.status(400).json({
       success: false,
       message: error.message || 'Failed to start challenge',
@@ -651,6 +869,22 @@ const getTeamMatchmakingInfo = asyncHandler(async (req, res) => {
       originalTeam: originalTeam,
     })
   } catch (error) {
+    console.log('Error getting team matchmaking info:', error.message)
+
+    // Handle database errors gracefully
+    if (
+      error.name === 'MongoNetworkError' ||
+      error.name === 'MongoTimeoutError' ||
+      error.codeName === 'WriteConflict'
+    ) {
+      return res.status(503).json({
+        success: false,
+        message: 'Unable to get team info right now. Please try again.',
+        code: 'SERVICE_UNAVAILABLE',
+        retryAfter: 3,
+      })
+    }
+
     res.status(400).json({
       success: false,
       message: error.message || 'Failed to get team matchmaking info',
@@ -875,6 +1109,22 @@ const getTeamMatchmakingStatusDetailed = asyncHandler(async (req, res) => {
     })
   } catch (error) {
     console.error('Error getting detailed team matchmaking status:', error)
+
+    // Handle database errors gracefully for detailed status
+    if (
+      error.name === 'MongoNetworkError' ||
+      error.name === 'MongoTimeoutError' ||
+      error.codeName === 'WriteConflict'
+    ) {
+      return res.json({
+        success: true,
+        inMatchmaking: false,
+        status: 'status_unavailable',
+        message: 'Status temporarily unavailable. Please try again.',
+        retryAfter: 3,
+      })
+    }
+
     res.status(500).json({
       success: false,
       message: 'Failed to get matchmaking status',
@@ -900,6 +1150,17 @@ const acceptTeamInvitationController = asyncHandler(async (req, res) => {
       team,
     })
   } catch (error) {
+    console.log('Error accepting team invitation:', error.message)
+
+    // Handle write conflicts
+    const conflictResponse = handleWriteConflictError(
+      error,
+      'accept invitation',
+    )
+    if (conflictResponse) {
+      return res.status(503).json(conflictResponse)
+    }
+
     res.status(400).json({
       success: false,
       message: error.message || 'Failed to accept team invitation',
@@ -924,6 +1185,17 @@ const rejectTeamInvitationController = asyncHandler(async (req, res) => {
       message: 'Team invitation rejected successfully',
     })
   } catch (error) {
+    console.log('Error rejecting team invitation:', error.message)
+
+    // Handle write conflicts
+    const conflictResponse = handleWriteConflictError(
+      error,
+      'reject invitation',
+    )
+    if (conflictResponse) {
+      return res.status(503).json(conflictResponse)
+    }
+
     res.status(400).json({
       success: false,
       message: error.message || 'Failed to reject team invitation',
