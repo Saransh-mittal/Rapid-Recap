@@ -1,5 +1,5 @@
 // middleware/globalErrorHandlerMiddleware.js
-// NEW FILE: Global error handling middleware for write conflicts and database errors
+// MODIFY: Updated version that works better with SSR
 
 /**
  * Global error handler middleware that catches unhandled database errors
@@ -170,16 +170,71 @@ const asyncErrorHandler = fn => {
 }
 
 /**
- * 404 handler for routes that don't exist
+ * MODIFIED: 404 handler that only handles API routes
+ * Non-API routes should be handled by SSR
  */
 const notFoundHandler = (req, res, next) => {
-  const error = new Error(`Route ${req.originalUrl} not found`)
-  error.statusCode = 404
+  // Only handle 404s for API routes
+  if (req.path.startsWith('/api/')) {
+    const error = new Error(`API route ${req.originalUrl} not found`)
+    error.statusCode = 404
+    return next(error)
+  }
+
+  // For non-API routes, this should not be reached if SSR is working properly
+  // But if it is reached, it means SSR failed to handle the route
+  console.warn(`SSR failed to handle route: ${req.originalUrl}`)
+
+  // Try to serve a fallback or let the error handler deal with it
+  const error = new Error(`Route ${req.originalUrl} could not be rendered`)
+  error.statusCode = 500
+  error.isSSRFailure = true
   next(error)
+}
+
+/**
+ * NEW: Special handler for SSR failures
+ */
+const handleSSRFailure = (err, req, res, next) => {
+  if (err.isSSRFailure) {
+    console.error('SSR Failure:', err.message)
+
+    // Try to serve a basic fallback HTML for non-API routes
+    if (!req.path.startsWith('/api/')) {
+      return res.status(500).send(`
+        <!DOCTYPE html>
+        <html>
+        <head>
+          <title>Rapid Recap - Loading...</title>
+          <meta charset="utf-8">
+          <meta name="viewport" content="width=device-width, initial-scale=1">
+        </head>
+        <body>
+          <div id="root">
+            <div style="display: flex; justify-content: center; align-items: center; height: 100vh; font-family: Arial, sans-serif;">
+              <div style="text-align: center;">
+                <h2>Loading Rapid Recap...</h2>
+                <p>If this page doesn't load, please refresh or try again later.</p>
+                <script>
+                  // Try to reload the page after a short delay
+                  setTimeout(() => window.location.reload(), 3000);
+                </script>
+              </div>
+            </div>
+          </div>
+        </body>
+        </html>
+      `)
+    }
+  }
+
+  // Pass to global error handler
+  next(err)
 }
 
 module.exports = {
   globalErrorHandler,
   asyncErrorHandler,
   notFoundHandler,
+  handleSSRFailure,
 }
