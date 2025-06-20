@@ -85,10 +85,10 @@ const ModernNavbar = ({ onNavbarLoad }) => {
     (activeChallenges &&
       activeChallenges.filter(
         challenge =>
-          (challenge.challenger._id === user?._id &&
-            !challenge.challengerAttempted) ||
-          (challenge.opponent._id === user?._id &&
-            !challenge.opponentAttempted),
+          (challenge?.challenger?._id === user?._id &&
+            !challenge?.challengerAttempted) ||
+          (challenge?.opponent?._id === user?._id &&
+            !challenge?.opponentAttempted),
       ).length > 0) ||
     unreadFriendRequests > 0 ||
     (Array.isArray(notification) && notification.length > 0) ||
@@ -103,7 +103,7 @@ const ModernNavbar = ({ onNavbarLoad }) => {
   const navItems = useMemo(
     () => [
       { label: t('home'), path: '/home' },
-      { label: t('tournament'), path: '/tournament' },
+      // { label: t('tournament'), path: '/tournament' },
       { label: t('leaderboard'), path: '/leaderboard' },
       { label: t('hallOfChampions'), path: '/hall-of-champions' },
     ],

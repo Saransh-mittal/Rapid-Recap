@@ -6,24 +6,15 @@ import {
   Skeleton,
   Button,
   HStack,
-  Text,
   useBreakpointValue,
   Icon,
   VStack,
   Container,
   IconButton,
-  Tooltip,
 } from '@chakra-ui/react'
 import { motion, AnimatePresence } from 'framer-motion'
 import { useSwipeable } from 'react-swipeable'
-import {
-  ChevronLeft,
-  ChevronRight,
-  User,
-  Target,
-  Home,
-  ArrowLeft,
-} from 'lucide-react'
+import { User, Target, Home, ArrowLeft } from 'lucide-react'
 import { useProfile } from '../customHooks/useProfile'
 import { ProfileMetadata } from '../components/profileComponents/ProfileMetadata'
 import { LeftProfileSection } from '../components/profileComponents/LeftProfileSection'
@@ -266,55 +257,51 @@ export default function Profile() {
         animate={{ opacity: 1, y: 0 }}
         transition={{ delay: 0.2 }}
       >
-        <Tooltip label="Go Back" hasArrow>
-          <MotionIconButton
-            as={motion.button}
-            icon={<ArrowLeft size={18} />}
-            onClick={handleBack}
-            colorScheme="purple"
-            bg="rgba(128, 90, 213, 0.2)"
-            color="white"
-            size="md"
-            borderRadius="full"
-            boxShadow="0 0 10px rgba(0,0,0,0.3)"
-            _hover={{
-              bg: 'rgba(128, 90, 213, 0.4)',
-              color: 'white',
-            }}
-            aria-label="Go Back"
-            variants={navButtonVariants}
-            whileHover="hover"
-            whileTap="tap"
-            backdropFilter="blur(10px)"
-            border="1px solid"
-            borderColor="rgba(255, 255, 255, 0.1)"
-          />
-        </Tooltip>
+        <MotionIconButton
+          as={motion.button}
+          icon={<ArrowLeft size={18} />}
+          onClick={handleBack}
+          colorScheme="purple"
+          bg="rgba(128, 90, 213, 0.2)"
+          color="white"
+          size="md"
+          borderRadius="full"
+          boxShadow="0 0 10px rgba(0,0,0,0.3)"
+          _hover={{
+            bg: 'rgba(128, 90, 213, 0.4)',
+            color: 'white',
+          }}
+          aria-label="Go Back"
+          variants={navButtonVariants}
+          whileHover="hover"
+          whileTap="tap"
+          backdropFilter="blur(10px)"
+          border="1px solid"
+          borderColor="rgba(255, 255, 255, 0.1)"
+        />
 
-        <Tooltip label="Home" hasArrow>
-          <MotionIconButton
-            as={motion.button}
-            icon={<Home size={18} />}
-            onClick={handleHome}
-            colorScheme="purple"
-            bg="rgba(128, 90, 213, 0.2)"
-            color="white"
-            size="md"
-            borderRadius="full"
-            boxShadow="0 0 10px rgba(0,0,0,0.3)"
-            _hover={{
-              bg: 'rgba(128, 90, 213, 0.4)',
-              color: 'white',
-            }}
-            aria-label="Home"
-            variants={navButtonVariants}
-            whileHover="hover"
-            whileTap="tap"
-            backdropFilter="blur(10px)"
-            border="1px solid"
-            borderColor="rgba(255, 255, 255, 0.1)"
-          />
-        </Tooltip>
+        <MotionIconButton
+          as={motion.button}
+          icon={<Home size={18} />}
+          onClick={handleHome}
+          colorScheme="purple"
+          bg="rgba(128, 90, 213, 0.2)"
+          color="white"
+          size="md"
+          borderRadius="full"
+          boxShadow="0 0 10px rgba(0,0,0,0.3)"
+          _hover={{
+            bg: 'rgba(128, 90, 213, 0.4)',
+            color: 'white',
+          }}
+          aria-label="Home"
+          variants={navButtonVariants}
+          whileHover="hover"
+          whileTap="tap"
+          backdropFilter="blur(10px)"
+          border="1px solid"
+          borderColor="rgba(255, 255, 255, 0.1)"
+        />
       </MotionFlex>
 
       {/* Top Navigation Dots - Mobile */}

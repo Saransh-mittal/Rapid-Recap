@@ -167,6 +167,11 @@
       "title": "New Challenge Alert!",
       "subtitle": "Test your knowledge, earn points, and climb the rankings!",
       "buttonText": "Start Now"
+    },
+    "completion": {
+      "title": "Congratulations!",
+      "subtitle": "You’ve reached the end of the article!",
+      "buttonText": "Login to Continue"
     }
   },
   "premiumValue": {

@@ -1,5 +1,6 @@
 export const onBoardingArticlePlaceholder = `{
   "article": {
+  "onBoardingArticleCategory": "environment",
     "dateTime": "2023-05-15T10:00:00Z",
     "author": "Rapid Recap Team",
     "hindiAuthor": "रैपिड रीकैप टीम",

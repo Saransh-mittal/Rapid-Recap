@@ -1,4 +1,4 @@
-// Updated screens/QuickClash.jsx
+// screens/QuickClash.jsx - UPDATED WITH AUTHORIZATION CHECK
 import React, { useCallback, useState, useEffect, useMemo, memo } from 'react'
 import {
   Container,
@@ -8,9 +8,11 @@ import {
   Center,
   useBreakpointValue,
   HStack,
+  useToast,
 } from '@chakra-ui/react'
 import { motion } from 'framer-motion'
 import { lazy, Suspense } from 'react'
+import axios from 'axios'
 
 // Regular imports
 import QuickClashHeader from '../components/quickClashComponents/QuickClashHeader'
@@ -34,6 +36,11 @@ const TaskCompletionHandler = React.lazy(() =>
   ),
 )
 
+// Coming Soon Component
+const QuickClashComingSoon = lazy(() =>
+  import('../components/quickClashComponents/QuickClashComingSoon'),
+)
+
 // Lazy loaded components for better performance
 const ActiveChallenges = lazy(() =>
   import('../components/quickClashComponents/ActiveChallenges'),
@@ -44,8 +51,12 @@ const DailyTasksDashboard = lazy(() =>
 const TaskPopup = lazy(() =>
   import('../components/quickClashComponents/dailyTasks/TaskPopup'),
 )
-const MatchmakingButton = lazy(() =>
-  import('../components/quickClashComponents/MatchmakingButton'),
+
+// FIXED: Only import the modal manager (which includes button)
+const MatchmakingModalManager = lazy(() =>
+  import(
+    '../components/quickClashComponents/matchmaking/MatchmakingModalManager'
+  ),
 )
 const FloatingActionMenu = lazy(() =>
   import('../components/quickClashComponents/FloatingActionMenu'),
@@ -74,9 +85,6 @@ const NotificationModal = lazy(() =>
     '../components/Header-Footer/modernNavbarComponents/modals/NotificationModal.jsx'
   ),
 )
-// const QuickClashDebugPanel = React.lazy(() =>
-//   import('../components/quickClashComponents/debug/QuickClashDebugPanel'),
-// )
 
 // Import custom hook for global matchmaking
 import useQuickClashGlobalMatchmaking from '../customHooks/useQuickClashGlobalMatchmaking'
@@ -106,24 +114,25 @@ const RESPONSIVE_CONFIG = {
 }
 
 /**
- * Optimized QuickClash component - maintains exact original design with performance improvements
- * - Memoized expensive operations and event handlers
- * - Cached responsive values to reduce re-renders
- * - Optimized state management
- * - Removed unused variables and imports
- * - Supports URL hash-based navigation for tabs
+ * UPDATED QuickClash component with authorization check
+ * Shows coming soon screen for unauthorized users
+ * Shows full QuickClash interface for authorized users
  */
 const QuickClash = () => {
   const dispatch = useDispatch()
+  const toast = useToast()
   const { isOpen, onOpen, onClose } = useDisclosure()
   const [showEntrance, setShowEntrance] = useState(true)
   const [showTaskPopup, setShowTaskPopup] = useState(false)
   const [activeTabIndex, setActiveTabIndex] = useState(0)
-  const [isNotificationModalOpen, setIsNotificationModalOpen] = useState(false)
   const [selectedNotification, setSelectedNotification] = useState(null)
 
+  // NEW: Authorization state
+  const [isAuthorized, setIsAuthorized] = useState(null) // null = checking, true = authorized, false = not authorized
+  const [comingSoonData, setComingSoonData] = useState(null)
+
   // Memoize selectors to prevent unnecessary re-renders
-  const { isAuthenticated, loginCheckStatus } = useSelector(state => state.auth)
+  const { loginCheckStatus, user } = useSelector(state => state.auth)
   const { updatesLoading, isNotifModalOpen, isNotifDrawerOpen } = useSelector(
     state => state.app,
   )
@@ -135,9 +144,7 @@ const QuickClash = () => {
   const showFloatingMenu = useBreakpointValue(
     RESPONSIVE_CONFIG.showFloatingMenu,
   )
-  const showCenterMatchButton = useBreakpointValue(
-    RESPONSIVE_CONFIG.showCenterMatchButton,
-  )
+
   const showDesktopTaskPopup = useBreakpointValue(
     RESPONSIVE_CONFIG.showDesktopTaskPopup,
   )
@@ -151,15 +158,56 @@ const QuickClash = () => {
   // Get global matchmaking state
   const { checkMatchmakingStatus } = useQuickClashGlobalMatchmaking()
 
+  // NEW: Check authorization status
+  const checkAuthorization = useCallback(async () => {
+    try {
+      // Make a test API call to check authorization
+      const response = await axios.get('/api/quickClash/stats')
+
+      // If the call succeeds, user is authorized
+      setIsAuthorized(true)
+    } catch (error) {
+      if (
+        error.response?.status === 403 &&
+        error.response?.data?.isComingSoon
+      ) {
+        // User is not authorized, show coming soon
+        setIsAuthorized(false)
+        setComingSoonData(error.response.data.comingSoonData)
+      } else {
+        // Other errors - show error toast but don't block access
+        toast({
+          title: 'Connection Error',
+          description: 'Unable to verify access. Please try again.',
+          status: 'error',
+          duration: 3000,
+          isClosable: true,
+        })
+        // Assume authorized to avoid blocking legitimate users
+        setIsAuthorized(true)
+      }
+    }
+  }, [toast])
+
+  // Check authorization when component mounts and user is available
+  useEffect(() => {
+    if (user && loginCheckStatus === 'fulfilled') {
+      checkAuthorization()
+    }
+  }, [user, loginCheckStatus, checkAuthorization])
+
   // Memoized function to check streak and fetch updates
   const checkStreakAndFetchUpdates = useCallback(() => {
-    if (!updatesLoading && loginCheckStatus === 'fulfilled') {
+    if (!updatesLoading && loginCheckStatus === 'fulfilled' && isAuthorized) {
       dispatch(fetchAppUpdates())
     }
-  }, [loginCheckStatus, updatesLoading, dispatch])
+  }, [loginCheckStatus, updatesLoading, dispatch, isAuthorized])
 
   // Initial setup effect - memoized for better performance
   useEffect(() => {
+    // Only run setup if user is authorized
+    if (isAuthorized !== true) return
+
     const lastVisit = localStorage.getItem('quickClashLastVisit')
     const now = Date.now()
 
@@ -193,41 +241,32 @@ const QuickClash = () => {
       }, 2000)
       return () => clearTimeout(timer)
     }
-
-    // Check matchmaking status on mount
-  }, [showDesktopTaskPopup])
+  }, [showDesktopTaskPopup, isAuthorized])
 
   useEffect(() => {
-    checkMatchmakingStatus()
-  }, [loginCheckStatus, updatesLoading])
+    if (isAuthorized) {
+      checkMatchmakingStatus()
+    }
+  }, [loginCheckStatus, updatesLoading, isAuthorized])
 
   // Task popup effect - memoized
   useEffect(() => {
-    if (taskJustCompleted && showDesktopTaskPopup) {
+    if (taskJustCompleted && showDesktopTaskPopup && isAuthorized) {
       setShowTaskPopup(true)
     }
-  }, [taskJustCompleted, showDesktopTaskPopup])
+  }, [taskJustCompleted, showDesktopTaskPopup, isAuthorized])
 
   // Streak check effect - memoized
   useEffect(() => {
-    checkStreakAndFetchUpdates()
-  }, [])
+    if (isAuthorized) {
+      checkStreakAndFetchUpdates()
+    }
+  }, [isAuthorized])
 
   // Optimized event handlers with useCallback
   const handleNewChallenge = useCallback(() => {
     onOpen()
   }, [onOpen])
-
-  const handleFindMatch = useCallback(() => {
-    // This would trigger the matchmaking flow
-    // For now, just show the matchmaking modal like the MatchmakingButton does
-    if (
-      window.matchmakingButtonRef &&
-      window.matchmakingButtonRef.handleJoinMatchmaking
-    ) {
-      window.matchmakingButtonRef.handleJoinMatchmaking()
-    }
-  }, [])
 
   const handleEntranceComplete = useCallback(() => {
     setShowEntrance(false)
@@ -245,22 +284,6 @@ const QuickClash = () => {
     setActiveTabIndex(index)
   }, [])
 
-  // Notification drawer handlers - memoized
-  const handleNotificationDrawerClose = useCallback(() => {
-    dispatch(setIsNotifDrawerOpen(false))
-  }, [dispatch])
-
-  const handleNotificationModalOpen = useCallback(notification => {
-    setSelectedNotification(notification)
-    setIsNotificationModalOpen(true)
-  }, [])
-
-  const handleNotificationModalClose = useCallback(() => {
-    setIsNotificationModalOpen(false)
-    setSelectedNotification(null)
-    dispatch(setSelectedNotificationId(null))
-  }, [dispatch])
-
   // Task popup close handler - memoized
   const handleTaskPopupClose = useCallback(() => {
     setShowTaskPopup(false)
@@ -276,6 +299,21 @@ const QuickClash = () => {
     [showEntrance],
   )
 
+  // Show loading while checking authorization
+  if (isAuthorized === null) {
+    return <LoadingFallback />
+  }
+
+  // Show coming soon screen for unauthorized users
+  if (isAuthorized === false) {
+    return (
+      <Suspense fallback={<LoadingFallback />}>
+        <QuickClashComingSoon comingSoonData={comingSoonData} />
+      </Suspense>
+    )
+  }
+
+  // Show normal QuickClash interface for authorized users
   return (
     <>
       {showEntrance && (
@@ -283,14 +321,7 @@ const QuickClash = () => {
           <QuickClashEntrance onComplete={handleEntranceComplete} />
         </Suspense>
       )}
-      {/* {QuickClashDebugPanel && (
-        <React.Suspense fallback={null}>
-          <QuickClashDebugPanel
-            isEnabled={true}
-            defaultPosition="floating" // or "drawer"
-          />
-        </React.Suspense>
-      )} */}
+
       <Container
         className="quick-clash-container"
         maxW="container.xl"
@@ -299,22 +330,29 @@ const QuickClash = () => {
         style={containerStyle}
         pb={'20px'} // Add padding at bottom on mobile for floating action menu
       >
-        {/* Header Section */}
+        {/* Header Section - NO modal management, simple buttons only */}
         <QuickClashHeader onNewChallenge={handleNewChallenge} />
 
-        {/* Matchmaking Buttons at the top center - desktop only */}
-        {showCenterMatchButton && (
-          <Center my={5}>
-            <Suspense fallback={<LoadingFallback />}>
-              <HStack spacing={4}>
-                <MatchmakingButton
-                  ref={el => (window.matchmakingButtonRef = el)}
-                />
-                <GlobalMatchmakingButton />
-              </HStack>
-            </Suspense>
-          </Center>
-        )}
+        {/* FIXED: Desktop Center Buttons - SINGLE MatchmakingModalManager only here */}
+
+        <Center my={5}>
+          <Suspense fallback={<LoadingFallback />}>
+            <HStack
+              spacing={4}
+              w={{ base: '100%', md: 'auto' }}
+              justifyContent="center"
+            >
+              {/* FIXED: Full MatchmakingModalManager - only one in the entire app */}
+              <MatchmakingModalManager
+                buttonTextOverride="SOLO"
+                buttonWidth={{ base: '100%', md: '240px' }}
+                buttonHeight={{ base: '48px', md: '56px' }}
+                buttonMinWidth={{ base: '140px', md: '240px' }}
+              />
+              <GlobalMatchmakingButton />
+            </HStack>
+          </Suspense>
+        </Center>
 
         {/* Tabs Section */}
         <MotionBox
@@ -360,13 +398,10 @@ const QuickClash = () => {
           </Box>
         </MotionBox>
 
-        {/* Floating Action Menu for mobile - Using the enhanced version with integrated task popup */}
+        {/* Mobile Floating Action Menu */}
         {showFloatingMenu && (
           <Suspense fallback={null}>
-            <FloatingActionMenu
-              onNewChallenge={handleNewChallenge}
-              onFindMatch={handleFindMatch}
-            />
+            <FloatingActionMenu onNewChallenge={handleNewChallenge} />
           </Suspense>
         )}
 

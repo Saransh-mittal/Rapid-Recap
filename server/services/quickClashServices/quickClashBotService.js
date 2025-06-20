@@ -6,6 +6,16 @@ const QuickClashChallenge = require('../../model/quickClashSchemas/quickClashCha
 const User = require('../../model/userSchema')
 const { updateChallengeScore } = require('./quickClashChallengeService')
 const { notifyChallengeCompleted } = require('./quickClashNotificationService')
+const QuickClashGlobalMatchmaking = require('../../model/quickClashSchemas/quickClashGlobalMatchmakingSchema')
+const QuickClashTeamMatchmaking = require('../../model/quickClashSchemas/quickClashTeamMatchmakingSchema')
+const QuickClashTeamBattle = require('../../model/quickClashSchemas/quickClashTeamBattleSchema')
+const { joinGlobalMatchmaking } = require('./quickClashTeamMatchmakingService')
+const {
+  updateBattleWithQuizResults,
+  markUserAsParticipated,
+} = require('./quickClashTeamBattleService')
+const { getRandomBotUser } = require('../../utils/quickClashUtils')
+const { isBotUser } = require('../../utils/user.utils')
 
 /**
  * Initiate full bot challenge process - create session, complete reading and quiz
@@ -44,6 +54,7 @@ const initiateBotChallenge = async ({ challengeId, botId, options = {} }) => {
 
     // 3. Simulate reading phase
     await simulateBotReadingPhase({
+      userId: botId,
       sessionId: botSession._id,
       readingTime,
       session,
@@ -161,7 +172,12 @@ const createBotSession = async ({ challengeId, botId, session }) => {
  * @param {mongoose.ClientSession} params.session - Mongoose session
  * @returns {Promise<Object>} Updated session
  */
-const simulateBotReadingPhase = async ({ sessionId, readingTime, session }) => {
+const simulateBotReadingPhase = async ({
+  userId,
+  sessionId,
+  readingTime,
+  session,
+}) => {
   try {
     const botSession = await QuickClashSession.findById(sessionId).session(
       session,
@@ -174,6 +190,13 @@ const simulateBotReadingPhase = async ({ sessionId, readingTime, session }) => {
     // Calculate start and end times to simulate realistic reading
     const now = new Date()
     const startTime = new Date(now.getTime() - readingTime * 1000)
+
+    if (botSession.challenge) {
+      await markUserAsParticipated({
+        challengeId: botSession.challenge,
+        userId: userId,
+      })
+    }
 
     // Update reading properties
     botSession.reading = {
@@ -470,10 +493,157 @@ const getRandomSubset = (array, size) => {
   return shuffled.slice(0, size)
 }
 
+// Constants for bot management
+const MAX_BOTS_IN_MATCHMAKING = 12 // Maximum bots to have in matchmaking at once
+const BOT_SKILL_RANGES = {
+  easy: { min: 0.3, max: 0.5 },
+  medium: { min: 0.5, max: 0.7 },
+  hard: { min: 0.7, max: 0.9 },
+}
+
+/**
+ * Add bots to global matchmaking if real players are present
+ * This is called by the cron job every 25 seconds
+ * @returns {Promise<void>}
+ */
+const addBotsToMatchmaking = async () => {
+  try {
+    console.log(
+      '[BOT_MATCHMAKING] Checking if bots should be added to matchmaking',
+    )
+
+    // Get all users currently in global matchmaking
+    const globalMatchmakingUsers = await QuickClashGlobalMatchmaking.find({
+      status: { $in: ['available', 'processing'] },
+    })
+      .select('user')
+      .lean()
+
+    if (!globalMatchmakingUsers.length) {
+      console.log('[BOT_MATCHMAKING] No users in global matchmaking')
+    }
+
+    // Check which ones are real players (not bots)
+    let realPlayersInGlobal = 0
+    let currentBots = 0
+
+    for (const entry of globalMatchmakingUsers) {
+      const isBot = await isBotUser(entry.user)
+      if (isBot) {
+        currentBots++
+      } else {
+        realPlayersInGlobal++
+      }
+    }
+
+    // Check if there are real players in team matchmaking
+    const teamMatchmakingEntries = await QuickClashTeamMatchmaking.find({
+      status: 'available',
+    })
+      .populate('team', 'members')
+      .lean()
+
+    let realPlayersInTeams = 0
+    for (const entry of teamMatchmakingEntries) {
+      if (entry.team && entry.team.members) {
+        for (const member of entry.team.members) {
+          const isBot = await isBotUser(member.user)
+          if (!isBot) {
+            realPlayersInTeams++
+            break // Count team once if it has any real player
+          }
+        }
+      }
+    }
+
+    console.log(
+      `[BOT_MATCHMAKING] Real players - Global: ${realPlayersInGlobal}, Teams: ${realPlayersInTeams}`,
+    )
+    console.log(
+      `[BOT_MATCHMAKING] Current bots in global matchmaking: ${currentBots}`,
+    )
+
+    // Only add bots if there are real players somewhere in matchmaking
+    if (realPlayersInGlobal === 0 && realPlayersInTeams === 0) {
+      console.log(
+        '[BOT_MATCHMAKING] No real players in matchmaking, skipping bot addition',
+      )
+      return
+    }
+
+    // Don't add more bots if we already have enough
+    if (currentBots >= MAX_BOTS_IN_MATCHMAKING) {
+      console.log('[BOT_MATCHMAKING] Maximum bot limit reached, skipping')
+      return
+    }
+
+    // Calculate how many bots to add (up to 2, but don't exceed max)
+    const botsToAdd = Math.min(2, MAX_BOTS_IN_MATCHMAKING - currentBots)
+
+    console.log(`[BOT_MATCHMAKING] Adding ${botsToAdd} bots to matchmaking`)
+
+    // Add bots
+    const addBotPromises = []
+    for (let i = 0; i < botsToAdd; i++) {
+      addBotPromises.push(addSingleBotToMatchmaking())
+    }
+
+    const results = await Promise.allSettled(addBotPromises)
+    const successful = results.filter(r => r.status === 'fulfilled').length
+
+    console.log(
+      `[BOT_MATCHMAKING] Successfully added ${successful}/${botsToAdd} bots to matchmaking`,
+    )
+  } catch (error) {
+    console.error('[BOT_MATCHMAKING] Error adding bots to matchmaking:', error)
+  }
+}
+
+/**
+ * Add a single bot to global matchmaking
+ * @returns {Promise<void>}
+ */
+const addSingleBotToMatchmaking = async () => {
+  try {
+    // Get a random bot user from database
+    const botUser = await getRandomBotUser()
+
+    if (!botUser) {
+      console.log('[BOT_MATCHMAKING] No bot users available in database')
+      return
+    }
+
+    // Check if this bot is already in matchmaking (safety check)
+    const existingEntry = await QuickClashGlobalMatchmaking.findOne({
+      user: botUser._id,
+    })
+
+    if (existingEntry) {
+      console.log(`[BOT_MATCHMAKING] Bot ${botUser._id} already in matchmaking`)
+      return
+    }
+
+    // Add bot to global matchmaking
+    await joinGlobalMatchmaking({ userId: botUser._id })
+
+    console.log(
+      `[BOT_MATCHMAKING] Added bot ${botUser._id} to global matchmaking`,
+    )
+  } catch (error) {
+    console.error(
+      '[BOT_MATCHMAKING] Error adding single bot to matchmaking:',
+      error,
+    )
+  }
+}
+
 module.exports = {
   initiateBotChallenge,
   createBotSession,
   simulateBotReadingPhase,
   simulateBotQuizAnswers,
   scheduleBotResponse,
+
+  // New team battle exports
+  addBotsToMatchmaking,
 }

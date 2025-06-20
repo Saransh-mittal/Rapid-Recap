@@ -19,7 +19,7 @@ export const fetchInventory = createAsyncThunk(
       )
       if (response.data.unclaimedAbilities.length > 0) {
         response.data.unclaimedAbilities.forEach(ability => {
-          if (ability.type === 'BOOST' && ability.name != 'QuinBoost') {
+          if (ability.type === 'BOOST' && ability.name !== 'QuinBoost') {
             dispatch(
               addReward({
                 _id: ability._id,

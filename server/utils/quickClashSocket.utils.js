@@ -627,24 +627,24 @@ const setupQuickClashGlobalEvents = (io, utils = {}) => {
       return false
     }
 
-    console.log(
-      `[NOTIFY] Attempting to notify user ${userId} with event ${event}`,
-    )
-    console.log(
-      `[NOTIFY] notifyUserAllDevices function available: ${!!notifyUserAllDevices}`,
-    )
-    console.log(`[NOTIFY] io object available: ${!!io}`)
+    // console.log(
+    //   `[NOTIFY] Attempting to notify user ${userId} with event ${event}`,
+    // )
+    // console.log(
+    //   `[NOTIFY] notifyUserAllDevices function available: ${!!notifyUserAllDevices}`,
+    // )
+    // console.log(`[NOTIFY] io object available: ${!!io}`)
 
     // Try enhanced device-aware notification first
     if (notifyUserAllDevices && typeof notifyUserAllDevices === 'function') {
-      console.log(
-        `[NOTIFY] Trying device-aware notification for user ${userId}`,
-      )
+      // console.log(
+      //   `[NOTIFY] Trying device-aware notification for user ${userId}`,
+      // )
       try {
         const success = notifyUserAllDevices(userId, event, data)
-        console.log(
-          `[NOTIFY] Device-aware notification result for user ${userId}: ${success}`,
-        )
+        // console.log(
+        //   `[NOTIFY] Device-aware notification result for user ${userId}: ${success}`,
+        // )
         if (success) {
           return true
         }
@@ -655,13 +655,13 @@ const setupQuickClashGlobalEvents = (io, utils = {}) => {
         )
       }
 
-      console.log(
-        `[NOTIFY] Device-aware notification failed for user ${userId}, trying room-based fallback`,
-      )
+      // console.log(
+      //   `[NOTIFY] Device-aware notification failed for user ${userId}, trying room-based fallback`,
+      // )
     } else {
-      console.log(
-        `[NOTIFY] No notifyUserAllDevices function available, using room-based notification`,
-      )
+      // console.log(
+      //   `[NOTIFY] No notifyUserAllDevices function available, using room-based notification`,
+      // )
     }
 
     // Enhanced fallback to room-based notification
@@ -675,9 +675,9 @@ const setupQuickClashGlobalEvents = (io, utils = {}) => {
     const room = io.sockets.adapter.rooms.get(userRoom)
 
     if (room && room.size > 0) {
-      console.log(
-        `[NOTIFY] Fallback: Using room ${userRoom} with ${room.size} socket(s)`,
-      )
+      // console.log(
+      //   `[NOTIFY] Fallback: Using room ${userRoom} with ${room.size} socket(s)`,
+      // )
       try {
         io.to(userRoom).emit(event, data)
         return true
@@ -685,7 +685,7 @@ const setupQuickClashGlobalEvents = (io, utils = {}) => {
         console.error(`[NOTIFY] Error emitting to room ${userRoom}:`, error)
       }
     } else {
-      console.log(`[NOTIFY] QuickClash room ${userRoom} not found or empty`)
+      // console.log(`[NOTIFY] QuickClash room ${userRoom} not found or empty`)
     }
 
     // Try the basic user room as well
@@ -693,9 +693,9 @@ const setupQuickClashGlobalEvents = (io, utils = {}) => {
     const basicRoom = io.sockets.adapter.rooms.get(basicUserRoom)
 
     if (basicRoom && basicRoom.size > 0) {
-      console.log(
-        `[NOTIFY] Fallback: Using basic room ${basicUserRoom} with ${basicRoom.size} socket(s)`,
-      )
+      // console.log(
+      //   `[NOTIFY] Fallback: Using basic room ${basicUserRoom} with ${basicRoom.size} socket(s)`,
+      // )
       try {
         io.to(basicUserRoom).emit(event, data)
         return true
@@ -706,10 +706,10 @@ const setupQuickClashGlobalEvents = (io, utils = {}) => {
         )
       }
     } else {
-      console.log(`[NOTIFY] Basic room ${basicUserRoom} not found or empty`)
+      // console.log(`[NOTIFY] Basic room ${basicUserRoom} not found or empty`)
     }
 
-    console.log(`[NOTIFY] All notification methods failed for user ${userId}`)
+    // console.log(`[NOTIFY] All notification methods failed for user ${userId}`)
     return false
   }
 
@@ -1389,9 +1389,9 @@ const setupQuickClashGlobalEvents = (io, utils = {}) => {
         }
       }
 
-      console.log(
-        `[QC_TEAM] notifyTeamMembers: Sent ${event} to ${notifiedCount}/${team.members.length} members of team ${teamId} (${team.name}). ${offlineCount} offline members.`,
-      )
+      // console.log(
+      //   `[QC_TEAM] notifyTeamMembers: Sent ${event} to ${notifiedCount}/${team.members.length} members of team ${teamId} (${team.name}). ${offlineCount} offline members.`,
+      // )
     } catch (error) {
       console.error(`Error notifying team members for team ${teamId}:`, error)
     }

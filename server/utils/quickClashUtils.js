@@ -4,6 +4,7 @@ const OpenAI = require('openai')
 const { calculateArticleDifficulty } = require('./article.utils')
 const QuickClashQuiz = require('../model/quickClashSchemas/quickClashQuizSchema')
 const QuickClashChallenge = require('../model/quickClashSchemas/quickClashChallengeSchema')
+const User = require('../model/userSchema')
 
 // Calculate time remaining in reading phase
 const getReadingTimeRemaining = (startTime, timeLimit) => {
@@ -912,6 +913,32 @@ const getHindiPrompt = (title, author, mainText) => `
   ]
 }`
 
+/**
+ * Get a random bot user from the database
+ * @returns {Promise<Object|null>} A random bot user or null if none found
+ */
+const getRandomBotUser = async () => {
+  try {
+    // Find users with emails matching the dummy pattern
+    const botUsers = await User.find({
+      email: { $regex: /^dummy\d+@mail\.com$/ },
+    })
+      .select('_id')
+      .lean()
+
+    if (!botUsers || botUsers.length === 0) {
+      return null
+    }
+
+    // Select a random bot
+    const randomIndex = Math.floor(Math.random() * botUsers.length)
+    return botUsers[randomIndex]
+  } catch (error) {
+    console.error('[MATCHMAKING_SERVICE] Error getting random bot user:', error)
+    return null
+  }
+}
+
 module.exports = {
   getReadingTimeRemaining,
   validateQuizResponses,
@@ -922,4 +949,5 @@ module.exports = {
   translateQuizToHindi,
   generateQuickClashQuiz,
   translateQuizBackground,
+  getRandomBotUser,
 }

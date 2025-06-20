@@ -1,4 +1,6 @@
 // services/quickClashServices/quickClashTeamMatchmakingService.js
+// MODIFY: Add retry logic to matchmaking operations and improve error handling
+
 const mongoose = require('mongoose')
 const QuickClashTeamMatchmaking = require('../../model/quickClashSchemas/quickClashTeamMatchmakingSchema')
 const QuickClashTeam = require('../../model/quickClashSchemas/quickClashTeamSchema')
@@ -8,6 +10,7 @@ const globalEmitter = require('../../eventEmitter')
 const { getCategories } = require('../../data/categories')
 const { createTeamBattle } = require('./quickClashTeamBattleService')
 const { updateTeamMatchStatus } = require('./quickClashTeamService')
+const { makeRetryable } = require('../../utils/retryUtils') // ADD: Import retry utility
 
 // Constants
 const MATCHMAKING_EXPIRY = 30 * 60 * 1000 // 30 minutes
@@ -162,7 +165,9 @@ const joinTeamMatchmaking = async ({
         formationInfo: team.formationInfo,
         timestamp: new Date(),
       })
-      await performMatchmaking(session)
+
+      // MODIFY: Use retryable matchmaking process
+      await performMatchmakingWithRetry(session)
     } else {
       // Emit event for real-time updates
       globalEmitter.emit('quickClash:teamJoinedMatchmaking', {
@@ -389,16 +394,9 @@ const joinGlobalMatchmaking = async ({ userId }) => {
       // Add to pending solo players state
       teamFormationState.pendingSoloPlayers.add(userId.toString())
 
-      // Emit event for real-time updates
-      globalEmitter.emit('quickClash:userJoinedMatchmaking', {
-        userId,
-        trophies: user.quickClashTrophies || 1000,
-        userName: user.name || user.inGameName,
-      })
-
-      // Try to find a match right away (async)
+      // Try to find a match right away (async) - MODIFY: Use retryable process
       setTimeout(() => {
-        processGlobalMatchmaking().catch(err => {
+        processGlobalMatchmakingWithRetry().catch(err => {
           console.error('Error processing global matchmaking:', err)
         })
       }, 100)
@@ -409,6 +407,110 @@ const joinGlobalMatchmaking = async ({ userId }) => {
     session.endSession()
   }
 }
+
+// ADD: Create retryable version of performMatchmaking
+const performMatchmakingWithRetry = makeRetryable(
+  async providedSession => {
+    return await performMatchmaking(providedSession)
+  },
+  {
+    maxRetries: 3,
+    operationName: 'PerformMatchmaking',
+    initialDelay: 500,
+    maxDelay: 2000,
+    onRetry: (error, attempt) => {
+      console.log(
+        `[MATCHMAKING] Retry attempt ${attempt}/3 for matchmaking after error: ${error.message}`,
+      )
+    },
+    onAllRetriesFailed: async (error, params) => {
+      console.error(
+        `[MATCHMAKING] All retries failed for matchmaking operation`,
+      )
+
+      // Clean up any partial state if needed
+      try {
+        // Reset processing flag to allow future attempts
+        teamFormationState.isCurrentlyProcessing = false
+      } catch (cleanupError) {
+        console.error(`[MATCHMAKING] Error during cleanup:`, cleanupError)
+      }
+
+      // Create a more user-friendly error message
+      const finalError = new Error(
+        'Matchmaking is temporarily busy. Please try again in a moment.',
+      )
+      finalError.isRetryExhausted = true
+      finalError.originalError = error
+      throw finalError
+    },
+    // Custom retry condition - only retry on write conflicts and network issues
+    isRetryable: error => {
+      // Retry on write conflicts
+      if (error.codeName === 'WriteConflict') return true
+      if (error.message.includes('Write conflict')) return true
+
+      // Retry on transient transaction errors
+      if (error.errorLabels?.includes('TransientTransactionError')) return true
+
+      // Retry on network errors
+      if (error.name === 'MongoNetworkError') return true
+      if (error.name === 'MongoTimeoutError') return true
+
+      // Don't retry on validation errors
+      if (error.message.includes('not found')) return false
+      if (error.message.includes('already in matchmaking')) return false
+
+      return false
+    },
+  },
+)
+
+// ADD: Create retryable version of processGlobalMatchmaking
+const processGlobalMatchmakingWithRetry = makeRetryable(
+  async () => {
+    return await processGlobalMatchmaking()
+  },
+  {
+    maxRetries: 3,
+    operationName: 'ProcessGlobalMatchmaking',
+    initialDelay: 500,
+    maxDelay: 2000,
+    onRetry: (error, attempt) => {
+      console.log(
+        `[GLOBAL_MATCHMAKING] Retry attempt ${attempt}/3 after error: ${error.message}`,
+      )
+    },
+    onAllRetriesFailed: async (error, params) => {
+      console.error(
+        `[GLOBAL_MATCHMAKING] All retries failed for global matchmaking`,
+      )
+
+      // Reset processing flag
+      teamFormationState.isCurrentlyProcessing = false
+
+      const finalError = new Error(
+        'Matchmaking is temporarily busy. Please try again in a moment.',
+      )
+      finalError.isRetryExhausted = true
+      finalError.originalError = error
+      throw finalError
+    },
+    isRetryable: error => {
+      // Same retry logic as performMatchmaking
+      if (error.codeName === 'WriteConflict') return true
+      if (error.message.includes('Write conflict')) return true
+      if (error.errorLabels?.includes('TransientTransactionError')) return true
+      if (error.name === 'MongoNetworkError') return true
+      if (error.name === 'MongoTimeoutError') return true
+
+      return false
+    },
+  },
+)
+
+// CONTINUE WITH REST OF THE EXISTING FUNCTIONS...
+// [Rest of the existing code remains the same - leaveTeamMatchmaking, leaveGlobalMatchmaking, etc.]
 
 /**
  * Leave team matchmaking queue

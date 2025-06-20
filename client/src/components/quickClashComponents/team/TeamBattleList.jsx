@@ -459,6 +459,7 @@ const TeamBattleList = memo(() => {
   const handleViewBattleAnalysis = useCallback(
     battleId => {
       navigate(`/quickclash/analysis/${battleId}`)
+      scrollTo(0, 0)
     },
     [navigate],
   )

@@ -40,6 +40,10 @@ const {
 const {
   trackAnalysisInteraction,
 } = require('./middleware/feedbackTrackingMiddleware')
+const {
+  globalErrorHandler,
+  notFoundHandler,
+} = require('./middleware/globalErrorHandlerMiddleware')
 
 const app = express()
 // CORS configuration - only needed in development
@@ -203,12 +207,15 @@ authRouter.use('/recommendation', recommendationRoutes)
 authRouter.use('/chat', chatsRoutes)
 authRouter.use('/message', messageRoutes)
 authRouter.use('/friends', friendsRoutes)
-authRouter.use('/tournament', tournamentRoutes)
+// authRouter.use('/tournament', tournamentRoutes)
 authRouter.use('/leaderboard', leaderboardRoutes)
 authRouter.use('/abilities', abilityRoutes)
 authRouter.use('/quickClash', quickClashRoutes)
 authRouter.use('/special-categories', publicSpecialCategoryRoutes)
 app.use('/api', authRouter)
+
+app.use(notFoundHandler) // Handle 404s
+app.use(globalErrorHandler) // Handle all errors
 
 initBotTracking()
 async function initializeApp() {

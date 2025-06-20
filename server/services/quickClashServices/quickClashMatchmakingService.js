@@ -9,6 +9,7 @@ const {
 } = require('./quickClashNotificationService')
 const { scheduleBotResponse } = require('./quickClashBotService')
 const { getCategories } = require('../../data/categories')
+const { getRandomBotUser } = require('../../utils/quickClashUtils')
 
 // Constants
 const MATCHMAKING_EXPIRY = 30 * 60 * 1000 // 30 minutes
@@ -406,32 +407,6 @@ const cancelBotResponseTimer = userId => {
     console.log(
       `[MATCHMAKING_SERVICE] Cancelled bot response timer for user ${userId}`,
     )
-  }
-}
-
-/**
- * Get a random bot user from the database
- * @returns {Promise<Object|null>} A random bot user or null if none found
- */
-const getRandomBotUser = async () => {
-  try {
-    // Find users with emails matching the dummy pattern
-    const botUsers = await User.find({
-      email: { $regex: /^dummy\d+@mail\.com$/ },
-    })
-      .select('_id')
-      .lean()
-
-    if (!botUsers || botUsers.length === 0) {
-      return null
-    }
-
-    // Select a random bot
-    const randomIndex = Math.floor(Math.random() * botUsers.length)
-    return botUsers[randomIndex]
-  } catch (error) {
-    console.error('[MATCHMAKING_SERVICE] Error getting random bot user:', error)
-    return null
   }
 }
 

@@ -372,7 +372,9 @@ const Home = () => {
       </React.Suspense>
 
       {/* Game Inventory Button */}
-      <GameInventoryButton page={'HOME'} />
+      {isAuthenticated && loginCheckStatus === 'fulfilled' && (
+        <GameInventoryButton page={'HOME'} />
+      )}
     </Box>
   )
 }
