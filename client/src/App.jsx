@@ -95,6 +95,9 @@ import useQuickClashSocket from './customHooks/useQuickClashSocket.js'
 import useQuickClash from './customHooks/useQuickClash.js'
 import NotificationReminderModal from './components/miscellaneous/NotificationReminderModal.jsx'
 import { fetchSpecialCategories } from './services/specialCategoryService.js'
+const ConnectionStatusIndicator = React.lazy(() =>
+  import('./components/connection/ConnectionStatusIndicator.jsx'),
+)
 
 const App = () => {
   // ReactGA.initialize('G-ES5VQ8NW7Z')
@@ -652,6 +655,10 @@ const App = () => {
         <RewardDisplay />
       </Suspense>
       <NotificationReminderModal />
+
+      <Suspense fallback={null}>
+        <ConnectionStatusIndicator />
+      </Suspense>
     </MaintenanceHandler>
   )
 }
