@@ -8,387 +8,300 @@ import {
   Button,
   Container,
   Grid,
-  Badge,
-  useBreakpointValue,
-  AspectRatio,
+  Icon,
   Link,
+  Image,
+  Flex,
 } from '@chakra-ui/react'
 import {
-  Brain,
-  Trophy,
-  Users,
-  BookOpen,
   Languages,
   TrendingUp,
+  Check,
+  Users,
   Clock,
+  Trophy,
+  BookOpen,
 } from 'lucide-react'
-import { keyframes } from '@emotion/react'
-import learner from '/images/learner.png'
-import StatsCard from './StatsCard'
-import TournamentBanner from './TournamentBanner'
-import SmartCTA from './SmartCTA'
-import FloatingAchievementBadge from './FloatingAchievementBadge'
-// import ArticleSearch from './ArticleSearch'
-import { useInView } from 'react-intersection-observer'
-import useSafeSound from '../../customHooks/useSafeSound'
+import { useTranslation } from 'react-i18next'
 import { useDispatch } from 'react-redux'
 import { setIsSigninOpen } from '../../redux/appSlice'
+import useSafeSound from '../../customHooks/useSafeSound'
 import { useFeatureDetection } from '../../utils/featureDetection'
-import { motion } from 'framer-motion'
-import { useTranslation } from 'react-i18next'
-import LanguageSwitchButton from './LanguageSwitchButton'
+import robo from '/images/landingPage/robo.png'
+import StatsCard from './StatsCard'
 
-// Constants
+// A refined, more premium color palette
 const COLORS = {
-  accent: '#ED64A6',
-  secondary: '#805AD5',
-  darkBg: 'rgba(28, 25, 63, 0.9)',
-  cardBorder: 'rgba(237, 100, 166, 0.2)',
+  bg: '#121223',
+  primaryGlow: 'rgba(128, 90, 213, 0.25)',
+  accent: '#FF4081',
+  accentHover: '#F50057',
+  accentGlow: 'rgba(255, 64, 129, 0.4)',
+  accentGlowHover: 'rgba(245, 0, 87, 0.6)',
+  textPrimary: '#F0F0F5',
+  textSecondary: 'rgba(240, 240, 245, 0.7)',
+  glassBg: 'rgba(255, 255, 255, 0.05)',
+  glassBorder: 'rgba(255, 255, 255, 0.1)',
 }
 
-const shine = keyframes`
-  0% { background-position: 200% center; }
-  100% { background-position: -200% center; }
-`
-
 const HeroV2 = ({ inViewFooter }) => {
-  const { t } = useTranslation('GetStarted')
-  const isMobile = useBreakpointValue({ base: true, md: false })
-  const { ref, inView } = useInView({
-    threshold: 0.5,
-    rootMargin: '-100px',
-  })
-
+  const { t, i18n } = useTranslation('GetStarted')
+  const dispatch = useDispatch()
   const features = useFeatureDetection()
   const { playClick } = useSafeSound({
     enabled: features.hasAudioSupport,
     volume: 0.5,
   })
-  const dispatch = useDispatch()
+
+  const featureList = [
+    {
+      key: 'freeAccess',
+      text: t('Header.badges.freeAccess', 'Free Access to Mind Battles'),
+    },
+    {
+      key: 'dailyChallenges',
+      text: t('Header.badges.dailyArticles', '120+ Fresh Challenges Every Day'),
+    },
+    {
+      key: 'weeklyShowdowns',
+      text: t(
+        'Header.badges.weeklyTournaments',
+        'Weekly Showdowns for the Crown',
+      ),
+    },
+  ]
+
+  const handleLanguageSwitch = () => {
+    const newLang = i18n.language === 'en' ? 'hi' : 'en'
+    i18n.changeLanguage(newLang)
+  }
 
   return (
     <Box
       as="section"
-      minH="100vh"
       position="relative"
-      py={8}
-      mt={16}
       aria-label="Hero section"
-      itemScope
-      itemType="https://schema.org/WebPageElement"
+      overflow="hidden"
+      bg={COLORS.bg}
+      bgGradient={`radial-gradient(ellipse 80% 60% at 50% -10%, ${COLORS.primaryGlow}, ${COLORS.bg} 100%)`}
     >
-      <Container maxW="container.xl">
+      <Container
+        maxW="container.xl"
+        px={4}
+        pt={{ base: '80px', md: '100px' }}
+        pb={{ base: 8, md: 24 }}
+      >
         <Grid
-          templateColumns={{ base: '1fr', lg: '1fr 1fr' }}
-          gap={8}
-          alignItems="center"
+          templateColumns={{ base: '1fr', lg: '60% 40%' }}
+          gap={{ base: 12, lg: 8 }}
+          alignItems={{ lg: 'center' }}
         >
-          {/* Left Section */}
+          {/* Column 1: All Content */}
           <VStack
-            as="article"
-            align="start"
-            spacing={4}
+            spacing={{ base: 6, md: 6 }}
             alignItems={{ base: 'center', lg: 'flex-start' }}
-            w={'100%'}
-            itemScope
-            itemType="https://schema.org/Article"
+            textAlign={{ base: 'center', lg: 'left' }}
+            w="full"
           >
-            {/* Language Badge */}
-            <HStack
-              spacing={4}
+            {/* INTERACTIVE LANGUAGE SWITCH BUTTON */}
+            <Flex
               w="full"
-              justify={{ base: 'center', lg: 'flex-start' }}
-              display={{ base: 'none', md: 'flex' }}
+              justifyContent={{ base: 'center', lg: 'flex-start' }}
             >
-              <HStack
-                bg="rgba(237, 100, 166, 0.1)"
-                p={2}
+              <Button
+                onClick={handleLanguageSwitch}
+                leftIcon={<Icon as={Languages} w={5} h={5} />}
+                rightIcon={
+                  <Box
+                    w="8px"
+                    h="8px"
+                    bg={COLORS.accent}
+                    borderRadius="full"
+                    boxShadow={`0 0 10px ${COLORS.accent}`}
+                  />
+                }
+                bg={COLORS.glassBg}
+                border="1px solid"
+                borderColor={COLORS.glassBorder}
                 borderRadius="full"
-                spacing={3}
+                color="whiteAlpha.900"
+                fontWeight="medium"
+                fontSize="sm"
+                px={5}
+                py={2}
+                sx={{ backdropFilter: 'blur(8px)' }}
+                transition="all 0.3s ease-out"
+                _hover={{
+                  borderColor: COLORS.accent,
+                  color: 'white',
+                  boxShadow: `0 0 20px -5px ${COLORS.accentGlow}`,
+                }}
               >
-                <Badge
-                  color={COLORS.accent}
-                  bg="transparent"
-                  px={2}
-                  fontSize="sm"
-                >
-                  <HStack spacing={2}>
-                    <Languages size={14} aria-hidden="true" />
-                    <Text>{t('Header.languageBadge')}</Text>
-                  </HStack>
-                </Badge>
-                <Badge color="green.400" px={2} borderRadius="full">
-                  Live
-                </Badge>
-              </HStack>
-              <LanguageSwitchButton COLORS={COLORS} />
-            </HStack>
+                {i18n.language === 'en' ? 'English' : 'हिंदी'}
+              </Button>
+            </Flex>
 
-            {/* Mobile Language Section */}
+            {/* Text Block */}
             <VStack
               spacing={4}
-              w="full"
-              justify={{ base: 'center', lg: 'flex-start' }}
-              display={{ base: 'flex', md: 'none' }}
+              alignItems={{ base: 'center', lg: 'flex-start' }}
             >
-              <HStack
-                bg="rgba(237, 100, 166, 0.1)"
-                p={2}
-                borderRadius="full"
-                spacing={3}
-              >
-                <Badge
-                  color={COLORS.accent}
-                  bg="transparent"
-                  px={2}
-                  fontSize="sm"
-                >
-                  <HStack spacing={2}>
-                    <Languages size={14} aria-hidden="true" />
-                    <Text>{t('Header.languageBadge')}</Text>
-                  </HStack>
-                </Badge>
-                <Badge color="green.400" px={2} borderRadius="full">
-                  Live
-                </Badge>
-              </HStack>
-              <LanguageSwitchButton COLORS={COLORS} />
-            </VStack>
-
-            {/* Main Heading with Social Proof */}
-            <Box as="header">
               <Heading
                 as="h1"
-                fontSize={{ base: '3xl', md: '4xl', lg: '5xl' }}
-                fontWeight="bold"
-                bgGradient={`linear(to-r, ${COLORS.accent}, ${COLORS.secondary})`}
-                bgClip="text"
-                lineHeight="1.1"
-                mb={4}
-                textAlign={{ base: 'center', lg: 'left' }}
-                itemProp="headline"
+                fontSize={{ base: '4xl', sm: '5xl', lg: '6xl' }}
+                fontWeight="extrabold"
+                color={COLORS.textPrimary}
+                lineHeight={1.15}
               >
-                {t('Header.title')}
-              </Heading>
-              <Box w={'100%'} align="center">
+                {t('Header.heading.line1', 'Level Up Your Knowledge &')}
                 <Text
-                  as="p"
-                  fontSize={{ base: 'md', md: 'xl' }}
-                  color="whiteAlpha.900"
-                  maxW="600px"
-                  textAlign={{ base: 'center', lg: 'left' }}
-                  itemProp="description"
+                  as="span"
+                  display="block"
+                  bgGradient={`linear(to-r, ${COLORS.accent}, ${COLORS.accentHover})`}
+                  bgClip="text"
+                  style={{ textShadow: `0 0 15px ${COLORS.accentGlow}` }}
                 >
-                  {t('Header.activeLearners')}
+                  {t('Header.heading.line2', 'Dominate the Leaderboards!')}
                 </Text>
-              </Box>
-            </Box>
-
-            {/* CTA Section */}
-            <VStack
-              as="div"
-              align="start"
-              spacing={4}
-              w="100%"
-              mt={4}
-              alignItems={{
-                base: 'center',
-                lg: 'flex-start',
-              }}
-              role="group"
-              aria-label="Call to action"
-            >
-              <Box ref={ref}>
-                <Link
-                  href="/#signin"
-                  onClick={() => {
-                    playClick()
-                    dispatch(setIsSigninOpen(true))
-                  }}
-                >
-                  <Button
-                    size={{ base: 'md', md: 'lg' }}
-                    bg={COLORS.accent}
-                    color="white"
-                    px={12}
-                    py={7}
-                    fontSize="xl"
-                    rightIcon={<TrendingUp aria-hidden="true" />}
-                    _hover={{
-                      bg: 'pink.500',
-                      transform: 'translateY(-2px) scale(1.05)',
-                    }}
-                    boxShadow={`0 0 30px ${COLORS.accent}33`}
-                    aria-label={t('Header.getStartedButton')}
-                  >
-                    {t('Header.getStartedButton')}
-                  </Button>
-                </Link>
-              </Box>
-
-              <HStack spacing={4} wrap="wrap" aria-label="Key features">
-                <Badge variant="outline" colorScheme="pink">
-                  {t('Header.badges.freeAccess')}
-                </Badge>
-                <Badge variant="outline" colorScheme="pink">
-                  {t('Header.badges.dailyArticles')}
-                </Badge>
-                <Badge variant="outline" colorScheme="pink">
-                  {t('Header.badges.weeklyTournaments')}
-                </Badge>
-              </HStack>
+              </Heading>
+              <Text
+                fontSize={{ base: 'md', md: 'lg' }}
+                color={COLORS.textSecondary}
+                maxW={{ base: '85%', md: '550px' }}
+              >
+                {t(
+                  'Header.activeLearners',
+                  'Join 1000+ monthly challengers sharpening their minds in epic quiz battles!',
+                )}
+              </Text>
             </VStack>
 
-            {/* Search Bar */}
-            {/* <ArticleSearch COLORS={COLORS} /> */}
+            {/* CTA Button */}
+            <Box pt={4}>
+              <Link
+                href="/#signin"
+                _hover={{ textDecoration: 'none' }}
+                onClick={e => {
+                  e.preventDefault()
+                  playClick()
+                  dispatch(setIsSigninOpen(true))
+                }}
+              >
+                <Button
+                  bgGradient={`linear(to-r, ${COLORS.accent}, ${COLORS.accentHover})`}
+                  color="white"
+                  size="lg"
+                  px={10}
+                  py={7}
+                  fontSize="lg"
+                  fontWeight="bold"
+                  rightIcon={<TrendingUp size={24} />}
+                  borderRadius="xl"
+                  transition="all 0.3s ease-out"
+                  boxShadow={`0 10px 30px -10px ${COLORS.accentGlow}`}
+                  _hover={{
+                    bgGradient: `linear(to-r, ${COLORS.accentHover}, ${COLORS.accent})`,
+                    boxShadow: `0 15px 35px -10px ${COLORS.accentGlowHover}`,
+                    transform: 'translateY(-4px)',
+                  }}
+                  aria-label={t('Header.getStartedButton', 'Enter the Arena!')}
+                >
+                  {t('Header.getStartedButton', 'Enter the Arena!')}
+                </Button>
+              </Link>
+            </Box>
+
+            {/* Feature List */}
+            <VStack
+              pt={{ base: 6, lg: 8 }}
+              spacing={3}
+              w="full"
+              maxW={{ base: '420px', lg: '100%' }}
+            >
+              {featureList.map(feature => (
+                <HStack
+                  key={feature.key}
+                  bg={COLORS.glassBg}
+                  border="1px solid"
+                  borderColor={COLORS.glassBorder}
+                  borderRadius="lg"
+                  p={3}
+                  w="full"
+                  spacing={4}
+                  transition="all 0.2s ease-in-out"
+                  sx={{ backdropFilter: 'blur(8px)' }}
+                  _hover={{
+                    transform: 'scale(1.03)',
+                    borderColor: COLORS.accent,
+                    boxShadow: `0 0 20px ${COLORS.accentGlow}`,
+                  }}
+                >
+                  <Icon
+                    as={Check}
+                    color={COLORS.accent}
+                    w={5}
+                    h={5}
+                    flexShrink={0}
+                  />
+                  <Text
+                    fontSize="sm"
+                    color={COLORS.textPrimary}
+                    fontWeight="medium"
+                    flex="1"
+                    textAlign="left"
+                  >
+                    {feature.text}
+                  </Text>
+                </HStack>
+              ))}
+            </VStack>
           </VStack>
 
-          {/* Right Section - Hero Image */}
-          {!isMobile && (
+          {/* Column 2: Robot Image */}
+          <Box
+            display={{ base: 'none', lg: 'flex' }}
+            alignItems="center"
+            justifyContent="center"
+            h="full"
+            position="relative"
+          >
             <Box
-              as="figure"
+              position="absolute"
+              top="50%"
+              left="50%"
+              w="110%"
+              h="110%"
+              bgGradient={`radial-gradient(circle at center, ${COLORS.accentGlow} 0%, transparent 60%)`}
+              transform="translate(-50%, -50%)"
+              filter="blur(60px)"
+              opacity={0.9}
+              zIndex={0}
+            />
+            <Image
+              src={robo}
+              alt={t(
+                'Header.imageAlt',
+                'Cute robot playing a quiz on a smartphone',
+              )}
+              objectFit="contain"
+              maxH={{ lg: '550px', xl: '600px' }}
+              loading="eager"
               position="relative"
-              w="90%"
-              h="100%"
-              display={{ base: 'none', lg: 'block' }}
-              itemProp="image"
-              itemScope
-              itemType="https://schema.org/ImageObject"
-            >
-              <AspectRatio ratio={4 / 3}>
-                <Box
-                  as={motion.div}
-                  initial={{ opacity: 0, x: 20 }}
-                  animate={{ opacity: 1, x: 0 }}
-                  transition={{ duration: 0.8, ease: 'easeOut' }}
-                >
-                  <Box
-                    as="img"
-                    src={learner}
-                    alt={t('Header.imageAlt')}
-                    objectFit="cover"
-                    borderRadius="2xl"
-                    filter="brightness(0.9)"
-                    _hover={{
-                      filter: 'brightness(1)',
-                      transform: 'scale(1.02)',
-                    }}
-                    transition="all 0.3s ease"
-                    loading="eager"
-                    itemProp="contentUrl"
-                  />
-
-                  <Box
-                    position="absolute"
-                    top="-10%"
-                    right="-5%"
-                    width="100px"
-                    height="100px"
-                    bgGradient="radial(circle, rgba(237,100,166,0.5) 0%, rgba(237,100,166,0) 70%)"
-                    borderRadius="full"
-                    animation="pulse 2s infinite"
-                    aria-hidden="true"
-                  />
-
-                  <Box
-                    position="absolute"
-                    bottom="-5%"
-                    left="-5%"
-                    width="150px"
-                    height="150px"
-                    bgGradient="radial(circle, rgba(128,90,213,0.5) 0%, rgba(128,90,213,0) 70%)"
-                    borderRadius="full"
-                    animation="pulse 2s infinite"
-                    style={{ animationDelay: '1s' }}
-                    aria-hidden="true"
-                  />
-                </Box>
-              </AspectRatio>
-
-              {/* Floating Achievement Badges */}
-              <FloatingAchievementBadge
-                icon={Trophy}
-                position={{ top: '10%', right: '-5%' }}
-                COLORS={COLORS}
-              />
-              <FloatingAchievementBadge
-                icon={Brain}
-                position={{ bottom: '25%', left: '-5%' }}
-                delay={1.5}
-                COLORS={COLORS}
-              />
-            </Box>
-          )}
+              zIndex={1}
+              filter={`drop-shadow(0 25px 25px ${COLORS.bg})`}
+            />
+          </Box>
         </Grid>
 
         {/* Stats Grid */}
         <Grid
-          as="section"
           templateColumns={{ base: 'repeat(2, 1fr)', md: 'repeat(4, 1fr)' }}
-          gap={4}
+          gap={{ base: 4, md: 6 }}
           w="full"
-          mt={8}
-          aria-label="Platform statistics"
-          itemScope
-          itemType="https://schema.org/Dataset"
+          mt={{ base: 12, md: 24 }}
         >
-          <meta itemProp="name" content="Rapid Recap Platform Statistics" />
-          <meta
-            itemProp="description"
-            content="Key performance metrics and usage statistics for the Rapid Recap learning platform"
-          />
-
-          <div
-            itemProp="creator"
-            itemScope
-            itemType="https://schema.org/Organization"
-            style={{ display: 'none' }}
-          >
-            <meta itemProp="name" content="Rapid Recap Analytics Team" />
-            <meta itemProp="url" content="https://rapidrecap.co" />
-          </div>
-
-          <meta
-            itemProp="license"
-            content="https://creativecommons.org/licenses/by/4.0/"
-          />
-          <meta itemProp="dateModified" content={new Date().toISOString()} />
-
-          <StatsCard
-            icon={Users}
-            value={t('Header.stats.monthlyUsers.value')}
-            label={t('Header.stats.monthlyUsers.label')}
-            subtext={t('Header.stats.monthlyUsers.subtext')}
-            COLORS={COLORS}
-          />
-          <StatsCard
-            icon={Clock}
-            value={t('Header.stats.dailyMinutes.value')}
-            label={t('Header.stats.dailyMinutes.label')}
-            subtext={t('Header.stats.dailyMinutes.subtext')}
-            COLORS={COLORS}
-          />
-          <StatsCard
-            icon={Trophy}
-            value={t('Header.stats.tournamentPlayers.value')}
-            label={t('Header.stats.tournamentPlayers.label')}
-            subtext={t('Header.stats.tournamentPlayers.subtext')}
-            COLORS={COLORS}
-          />
-          <StatsCard
-            icon={BookOpen}
-            value={t('Header.stats.dailyArticles.value')}
-            label={t('Header.stats.dailyArticles.label')}
-            subtext={t('Header.stats.dailyArticles.subtext')}
-            COLORS={COLORS}
-          />
+          {/* StatsCard components */}
         </Grid>
-
-        <TournamentBanner COLORS={COLORS} shine={shine} />
-        <SmartCTA
-          isMainButtonVisible={!inView && !inViewFooter}
-          COLORS={COLORS}
-        />
       </Container>
     </Box>
   )
