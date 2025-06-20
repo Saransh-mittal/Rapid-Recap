@@ -30,9 +30,9 @@
       }
     },
     "badges": {
-      "freeAccess": "✓ Free Access to Mind Battles",
-      "dailyArticles": "✓ 120+ Fresh Challenges Every Day",
-      "weeklyTournaments": "✓ Weekly Showdowns for the Crown"
+      "freeAccess": " Free Access to Mind Battles",
+      "dailyArticles": " 120+ Fresh Challenges Every Day",
+      "weeklyTournaments": " Weekly Showdowns for the Crown"
     }
   },
   "BenefitsMap": {
@@ -196,7 +196,11 @@
     "title": "Quick Clash",
     "subtitle": "Competitive knowledge battles where you challenge others to quiz showdowns!",
     "howItWorks": "How It Works",
-    "startButton": "Start a Quick Clash",
+    "newBadge": "New",
+    "tabs": {
+      "oneVone": "1v1 Quick Clash",
+      "fourVfour": "4v4 Team Battle"
+    },
     "steps": {
       "challenge": "Challenge friends or find opponents through matchmaking",
       "read": "Read an article for 2 minutes",
@@ -220,6 +224,29 @@
       "history": {
         "title": "Challenge History",
         "description": "Track your performance with detailed match history and leaderboards"
+      }
+    },
+    "teamBattle": {
+      "title": "Unleash Team Power in 4v4 Clash",
+      "subtitle": "Assemble your squad for a 24-hour strategic showdown. Collaborate, conquer, and claim victory together!",
+      "joinButton": "Assemble Your Squad",
+      "features": {
+        "squadUp": {
+          "title": "Flexible Squads",
+          "description": "Go solo or team up with 1, 2, or 3 friends. We'll find teammates to complete your squad of 4."
+        },
+        "categoryChoice": {
+          "title": "Choose Your Battleground",
+          "description": "The system provides 4 diverse knowledge categories to both teams—choose wisely to outsmart your opponents."
+        },
+        "dailyShowdown": {
+          "title": "24-Hour Showdown",
+          "description": "The battle lasts a full day, giving your team ample time to coordinate and dominate the leaderboard."
+        },
+        "teamVictory": {
+          "title": "Collective Victory",
+          "description": "Your team's combined score determines the winner. True collaboration leads to epic rewards."
+        }
       }
     }
   }
