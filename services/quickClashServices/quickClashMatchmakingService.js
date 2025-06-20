@@ -265,9 +265,9 @@ const scheduleRandomBotResponse = async (userId, categories) => {
       return
     }
 
-    // Calculate a random delay between 5 seconds and 5 minutes (for testing)
-    const minDelay = 5000 // 5 seconds
-    const maxDelay = 5 * 60 * 1000 // 5 minutes
+    // Calculate a random delay between 1 seconds and 20 seconds (for testing)
+    const minDelay = 1000 // 1 seconds
+    const maxDelay = 20 * 1000 // 20 seconds
     const randomDelay =
       Math.floor(Math.random() * (maxDelay - minDelay)) + minDelay
 
@@ -351,7 +351,7 @@ const scheduleRandomBotResponse = async (userId, categories) => {
           await scheduleBotResponse({
             challengeId: challengeResult.challenge._id,
             botId: botUser._id,
-            delayMinutes: Math.floor(Math.random() * 25),
+            delayMinutes: Math.floor(Math.random() * 5),
           })
 
           // Clean up matchmaking entries

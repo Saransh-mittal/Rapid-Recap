@@ -28,7 +28,7 @@ const quickClashSchedules = [
   },
   {
     name: 'bot-matchmaking-management',
-    cronPattern: '*/25 * * * * *', // Every 25 seconds (note the extra * for seconds)
+    cronPattern: '*/5 * * * * *', // Every 5 seconds (note the extra * for seconds)
     task: manageBotMatchmaking,
   },
   // Run 6 times a day to process expired challenges
