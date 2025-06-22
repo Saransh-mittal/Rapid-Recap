@@ -60,7 +60,7 @@ router.use(Authenticate)
 
 // IMPORTANT: Apply QuickClash authorization to ALL routes
 // This middleware will return a 403 with coming soon data for unauthorized users
-router.use(checkQuickClashAuthorization)
+// router.use(checkQuickClashAuthorization)
 
 // Mount daily task routes
 router.use('/dailyTasks', dailyTaskRoutes)
