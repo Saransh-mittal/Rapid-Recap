@@ -22,6 +22,7 @@ import { LockIcon } from '@chakra-ui/icons'
 import { useDispatch, useSelector } from 'react-redux'
 
 import RelatedArticlesToggle from './RelatedArticlesToggle'
+import GameHubButton from './GameHubButton' // NEW: Import GameHub button
 import axios from 'axios'
 import { formatDate } from '../../utils/helper.utils'
 import slugify from 'slugify'
@@ -39,6 +40,7 @@ import TakeQuizButton from './TakeQuizButton'
 import TotalUserAttempted from './TotalUserAttempted'
 import QuizStatisticsSkeleton from './loaders/QuizStatisticsSkeleton'
 import ArticleListSkeleton from './loaders/ArticleListSkeleton'
+
 //SSR image
 const Alt_img = '/images/rr.webp'
 const fallback_news_image = '/images/fallback_news_image.webp'
@@ -81,7 +83,6 @@ const Sidebar = ({
   const [pageRelated, setPageRelated] = useState(1)
   const [loading, setLoading] = useState(false)
   const [latestNews, setLatestNews] = useState([])
-  // const [loadingArticles, setLoadingArticles] = useState({})
   const navigate = useNavigate()
   const dispatchRedux = useDispatch()
 
@@ -344,6 +345,7 @@ const Sidebar = ({
           articleId={id}
           percentile={percentile}
           RQM_score={RQM_score}
+          gameData={givenQuiz} // Pass the full game data object
         />
       ) : onGoingQuiz ? (
         <Heading size="md" margin={'5px'} mb={5} height={'100px'} color={'red'}>
@@ -363,9 +365,12 @@ const Sidebar = ({
             justifyContent={'center'}
             alignItems={'center'}
           >
-            <TakeQuizButton
+            {/* NEW: Use GameHub button instead of TakeQuizButton */}
+            <GameHubButton
               onClick={handleQuizButtonClick}
               category={category}
+              articleId={id}
+              disabled={notLoggedIn}
             />
           </Box>
           {notLoggedIn && (

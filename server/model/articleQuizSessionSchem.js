@@ -1,3 +1,5 @@
+// Replace the content in model/articleQuizSessionSchem.js
+
 const mongoose = require('mongoose')
 
 const optionSchema = new mongoose.Schema(
@@ -9,6 +11,7 @@ const optionSchema = new mongoose.Schema(
   },
   { _id: true },
 )
+
 const articleQuizSessionSchema = new mongoose.Schema({
   user: {
     type: mongoose.Schema.Types.ObjectId,
@@ -24,8 +27,25 @@ const articleQuizSessionSchema = new mongoose.Schema({
     type: mongoose.Schema.Types.ObjectId,
     ref: 'QUIZ',
   },
+  // Game hub related fields
+  gameData: {
+    type: mongoose.Schema.Types.ObjectId,
+    ref: 'GAME_DATA',
+  },
+  gameType: {
+    type: String,
+    enum: ['normal_quiz', 'true_false', 'word_weaver', 'connections'],
+    default: 'normal_quiz',
+  },
+
+  // Flexible questions schema that adapts to different game types
   questions: [
     {
+      // Common fields
+      questionId: mongoose.Schema.Types.ObjectId,
+      difficulty: Number,
+
+      // Normal quiz fields
       question: String,
       options: {
         a: { type: optionSchema },
@@ -33,19 +53,56 @@ const articleQuizSessionSchema = new mongoose.Schema({
         c: { type: optionSchema },
         d: { type: optionSchema },
       },
-      answer: String,
+      answer: String, // For normal quiz and word weaver
       explanation: String,
-      difficulty: Number,
-      questionId: mongoose.Schema.Types.ObjectId,
+
+      // True/False fields
+      text: String, // Statement text
+      correct: Boolean, // True/false answer
+
+      // Word Weaver fields
+      context: String,
+      blank: String,
+
+      // Connections fields
+      concepts: [String],
+      validConnections: [
+        {
+          from: String,
+          to: String,
+          reasoning: String,
+        },
+      ],
     },
   ],
+
+  // Flexible responses schema for different game types
   responses: [
     {
       questionId: mongoose.Schema.Types.ObjectId,
-      userAnswer: String,
+
+      // Normal quiz & True/False
+      userAnswer: mongoose.Schema.Types.Mixed, // Can be string or boolean
       isCorrect: Boolean,
+
+      // Word Weaver
+      userWord: String,
+      skipped: {
+        type: Boolean,
+        default: false,
+      },
+
+      // Connections
+      connections: [
+        {
+          from: String,
+          to: String,
+          isValid: Boolean,
+        },
+      ],
     },
   ],
+
   startTime: {
     type: Date,
   },
@@ -75,7 +132,11 @@ const articleQuizSessionSchema = new mongoose.Schema({
   },
 })
 
-articleQuizSessionSchema.index({ user: 1, article: 1 }, { unique: true })
+// Updated index to include gameType for better performance
+articleQuizSessionSchema.index(
+  { user: 1, article: 1, gameType: 1 },
+  { unique: true },
+)
 
 const ArticleQuizSession = mongoose.model(
   'ARTICLE_QUIZ_SESSION',

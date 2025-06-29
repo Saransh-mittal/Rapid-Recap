@@ -1,3 +1,4 @@
+// services/enhancedQuizAttemptService.js
 const { scheduleQuizEmails } = require('./emailService')
 const { logActivity } = require('../utils/activity.utils')
 const { activityTypes } = require('../data/activityTypes')
@@ -8,14 +9,19 @@ const {
 const {
   fetchTodaysPastRQMs,
   sendMailsForQuizRemainingToReviveStreak,
-  calculateRQMScore,
   calcUserPercentile,
 } = require('../utils/quiz.utils')
+const {
+  saveEnhancedQuizAttempt,
+  calculateEnhancedRQM,
+  GAME_CONFIGS,
+} = require('../utils/enhancedQuiz.utils')
 const configService = require('../configService')
 const { checkTournamentEligibility } = require('../utils/tournament.utils')
 const User = require('../model/userSchema')
 const Article = require('../model/articleSchema')
 const QuizAttempt = require('../model/quizAttemptSchema')
+const ArticleQuizSession = require('../model/articleQuizSessionSchem')
 const QuinBoost = require('../model/quinBoostSchema')
 const { calculateRealTimeIQ } = require('./iqCalculationService')
 const { streakSurgeTemplate } = require('../data/inboxNotificationsTemplates')
@@ -68,7 +74,7 @@ const hasStreakSurgeNotificationToday = async user => {
   return user.todaysQuizCnt > 0
 }
 
-const saveQuizAttempt = async (
+const saveEnhancedQuizAttemptWithStats = async (
   userId,
   articleId,
   userResponses,
@@ -78,6 +84,7 @@ const saveQuizAttempt = async (
   quizSession,
   session,
   emitProgress,
+  gameType = 'normal_quiz',
 ) => {
   if (!userId || !articleId || !userResponses || !questions) {
     throw new Error('Please provide all the details')
@@ -102,6 +109,7 @@ const saveQuizAttempt = async (
     user: userId,
   }).session(session)
 
+  // Handle early adopter and referral bonuses (same as original)
   if (
     (!userAbsoluteTotalQuizAttempts || userAbsoluteTotalQuizAttempts === 0) &&
     user.isEarlyAdopter
@@ -120,7 +128,7 @@ const saveQuizAttempt = async (
       expiresAt: moment().add(1, 'month').toDate(),
       isClaimed: false,
       isActive: false,
-      description: `Increases RQM score by 1.5x for your chozen category as you are an Early Adopter`,
+      description: `Increases RQM score by 1.5x for your chosen category as you are an Early Adopter`,
       isBadgePowerUp: false,
       session,
     })
@@ -131,12 +139,13 @@ const saveQuizAttempt = async (
       expiresAt: moment().add(1, 'month').toDate(),
       isClaimed: false,
       isActive: false,
-      description: `You can view difficulty of each articles for your chozen category as you are an Early Adopter`,
+      description: `You can view difficulty of each articles for your chosen category as you are an Early Adopter`,
       isBadgePowerUp: false,
       session,
     })
   }
 
+  // Handle referral bonuses (same logic as original)
   if (
     (!userAbsoluteTotalQuizAttempts || userAbsoluteTotalQuizAttempts === 0) &&
     user.referredBy
@@ -177,7 +186,7 @@ const saveQuizAttempt = async (
           expiresAt: moment().add(1, 'month').toDate(),
           isClaimed: false,
           isActive: false,
-          description: `Increases RQM score by 1.5x for your chozen category as you referred 3 friends`,
+          description: `Increases RQM score by 1.5x for your chosen category as you referred 3 friends`,
           isBadgePowerUp: false,
           session,
         })
@@ -190,7 +199,7 @@ const saveQuizAttempt = async (
           expiresAt: moment().add(1, 'month').toDate(),
           isClaimed: false,
           isActive: false,
-          description: `Increases RQM score by 1.5x for your chozen category as you referred 5 friends`,
+          description: `Increases RQM score by 1.5x for your chosen category as you referred 5 friends`,
           isBadgePowerUp: false,
           session,
         })
@@ -201,7 +210,7 @@ const saveQuizAttempt = async (
           expiresAt: moment().add(1, 'month').toDate(),
           isClaimed: false,
           isActive: false,
-          description: `You can view difficulty of each articles for your chozen category as you referred 5 friends`,
+          description: `You can view difficulty of each articles for your chosen category as you referred 5 friends`,
           isBadgePowerUp: false,
           session,
         })
@@ -224,7 +233,7 @@ const saveQuizAttempt = async (
           expiresAt: moment().add(1, 'month').toDate(),
           isClaimed: false,
           isActive: false,
-          description: `Increases RQM score by 1.5x for your chozen category as you were referred and completed 5 quizzes`,
+          description: `Increases RQM score by 1.5x for your chosen category as you were referred and completed 5 quizzes`,
           isBadgePowerUp: false,
           session,
         })
@@ -245,11 +254,11 @@ const saveQuizAttempt = async (
   const existingAttempt = await QuizAttempt.findOne({
     user: userId,
     article: articleId,
-    quiz: sessionId,
+    articleQuizSession: sessionId,
   }).session(session)
 
   if (existingAttempt) {
-    throw new Error('User has already attempted the quiz for the article.')
+    throw new Error('User has already attempted this quiz session.')
   }
 
   // Check active ability boosts
@@ -264,21 +273,59 @@ const saveQuizAttempt = async (
         (ability.expiresAt > new Date() || ability.expiresAt === null),
     ) || null
 
-  let {
-    baseRQM_score,
-    RQM_score,
-    score,
-    expectedTime,
-    performanceBonus,
-    timeDilationBoosted,
-    timeDilatedTimeTaken,
-  } = calculateRQMScore(userResponses, questions, timeTaken, activeTimeDilation)
+  // Calculate enhanced RQM using the new system
+  let correctCount = 0
+  let totalItems = questions.length
 
-  if (timeDilationBoosted) {
+  // Calculate accuracy based on game type
+  switch (gameType) {
+    case 'normal_quiz':
+    case 'true_false':
+      correctCount = userResponses.filter(response => response.isCorrect).length
+      break
+    case 'word_weaver':
+      correctCount = userResponses.filter(response => response.isCorrect).length
+      break
+    case 'connections':
+      correctCount = userResponses.reduce((count, response) => {
+        return (
+          count +
+          (response.connections?.filter(conn => conn.isValid).length || 0)
+        )
+      }, 0)
+      totalItems = userResponses.reduce((total, response) => {
+        return total + (response.connections?.length || 0)
+      }, 0)
+      break
+  }
+
+  const accuracy = totalItems > 0 ? correctCount / totalItems : 0
+  const avgDifficulty =
+    questions.reduce((sum, q) => sum + (q.difficulty || 0.5), 0) /
+    questions.length
+
+  const performance = {
+    accuracy,
+    difficulty: avgDifficulty,
+    correctCount,
+    totalItems,
+  }
+
+  // Calculate enhanced RQM
+  const rqmResult = calculateEnhancedRQM(
+    gameType,
+    performance,
+    timeTaken,
+    totalItems,
+    activeTimeDilation,
+  )
+
+  if (activeTimeDilation && activeTimeDilation.isActive) {
     activeTimeDilation.isActive = false
     activeTimeDilation.isUsed = true
     await inventory.save({ session })
   }
+
   let streakRevived = false
   if (user.revivalPeriodEnd && user.todaysQuizCnt >= 5) {
     user.streak = user.streakBeforeBreak + 1
@@ -289,7 +336,7 @@ const saveQuizAttempt = async (
   }
 
   let quinBoostUtilized = false
-  const nonBoostedRQM = RQM_score
+  const nonBoostedRQM = rqmResult.rqmScore
 
   let totalBoostMultiplier = 1
   if (inventory) {
@@ -342,7 +389,8 @@ const saveQuizAttempt = async (
     const effects = calculateTotalEffect(activeAbilities, 'BOOST')
     totalBoostMultiplier = effects?.multiplier
 
-    RQM_score = Math.ceil(RQM_score * totalBoostMultiplier)
+    const finalRQMScore = Math.ceil(rqmResult.rqmScore * totalBoostMultiplier)
+
     if (activeQuinBoost) {
       activeQuinBoost.isActive = false
       activeQuinBoost.isUsed = true
@@ -377,68 +425,81 @@ const saveQuizAttempt = async (
       }
       await inventory.save({ session })
     }
+
+    rqmResult.rqmScore = finalRQMScore
   }
 
   emitProgress('calculateRQM', 100)
   emitProgress('saveAttempt', 50)
-  const articleDifficulty = quizSession.overAllDifficulty[user.userLanguage]
+
+  const articleDifficulty =
+    quizSession.overAllDifficulty?.[user.userLanguage] || avgDifficulty
   const boost = totalBoostMultiplier
   const isBoosted = totalBoostMultiplier > 1
 
-  // Create and save the quiz attempt
+  // Create and save the enhanced quiz attempt
   const newQuizAttempt = new QuizAttempt({
     user: userId,
     article: articleId,
-    quiz: sessionId,
+    articleQuizSession: sessionId,
+    gameData: quizSession.gameData,
+    gameType: gameType,
     responses: userResponses,
-    RQM_score,
-    baseRQM_score,
+    performance: performance,
+    RQM_score: rqmResult.rqmScore,
+    baseRQM_score: nonBoostedRQM,
     articleDifficulty,
     timeTaken,
-    expectedTime,
+    expectedTime: GAME_CONFIGS[gameType]?.timeLimit || 50,
+    timeFactor: rqmResult.timeFactor,
+    performanceBonus: rqmResult.performanceBonus,
     boost,
     isBoosted,
-    timeDilatedTimeTaken,
-    additionalTime: activeTimeDilation
-      ? activeTimeDilation?.abilityId?.additionalTime || 0
-      : 0,
-    timeDilationBoosted,
+    timeDilatedTimeTaken: activeTimeDilation ? timeTaken : null,
+    additionalTime: activeTimeDilation?.abilityId?.additionalTime || 0,
+    timeDilationBoosted: !!activeTimeDilation,
     season: parseInt(configService.getCurrentSeason(), 10),
     month: moment().month() + 1,
     year: moment().year(),
   })
+
   await newQuizAttempt.save({ session })
-  quizSession.RQM_score = {
-    [user.userLanguage]: RQM_score,
-  }
-  quizSession.timeTaken = {
-    [user.userLanguage]: timeTaken,
-  }
+
+  // Update quiz session scores
+  if (!quizSession.RQM_score) quizSession.RQM_score = {}
+  if (!quizSession.timeTaken) quizSession.timeTaken = {}
+
+  quizSession.RQM_score[user.userLanguage] = rqmResult.rqmScore
+  quizSession.timeTaken[user.userLanguage] = timeTaken
   await quizSession.save({ session })
+
   article.quizAttemptCnt++
   await article.save({ session })
 
   emitProgress('saveAttempt', 100)
   emitProgress('updateStats', 25)
+
   const currentDate = new Date()
   currentDate.setUTCHours(0, 0, 0, 0)
   const todayAttemptsCount = await QuizAttempt.countDocuments({
     user: userId,
     createdAt: { $gte: currentDate },
   }).session(session)
+
   if (todayAttemptsCount % 5 === 0 && todayAttemptsCount > 0)
     await handleQuinBoostEarned({ user, session })
+
   const lastQuizAttempt = user.quizAttempts[user.quizAttempts.length - 1]
   await updateUserStats({
     user,
-    RQM_score,
+    RQM_score: rqmResult.rqmScore,
     articleDifficulty,
     todayAttemptsCount,
     session,
     newQuizAttempt,
   })
 
-  if (RQM_score >= 40) {
+  if (rqmResult.rqmScore >= 40) {
     await checkAndAwardTimeDilation({
       userId,
       session,
@@ -446,6 +507,7 @@ const saveQuizAttempt = async (
   }
 
   emitProgress('updateStats', 50)
+
   let resultOfIQCalc = {}
   if (!user.pauseRealTimeIQ) {
     const userPercentile = await calcUserPercentile({
@@ -474,7 +536,13 @@ const saveQuizAttempt = async (
       originalIncrement,
       boostedIncrement,
       additionalScore,
-    } = await calculateRealTimeIQ(userId, newUserScore, RQM_score, session)
+    } = await calculateRealTimeIQ(
+      userId,
+      newUserScore,
+      rqmResult.rqmScore,
+      session,
+    )
+
     newQuizAttempt.globalMeanUserScore = globalMeanUserScore
     newQuizAttempt.globalStandardDeviation = globalStandardDeviation
     newQuizAttempt.prevIQScore = prevIQScore
@@ -501,8 +569,14 @@ const saveQuizAttempt = async (
 
   emitProgress('updateStats', 100)
   emitProgress('checkTournament', 50)
+
   const { messageForTournamentEligibility, userEligibleForTournament } =
-    await checkTournamentEligibility(user, RQM_score, lastQuizAttempt, session)
+    await checkTournamentEligibility(
+      user,
+      rqmResult.rqmScore,
+      lastQuizAttempt,
+      session,
+    )
 
   const xpAwarded = await logActivity({
     userInGameName: user.inGameName,
@@ -521,6 +595,7 @@ const saveQuizAttempt = async (
 
   emitProgress('checkTournament', 100)
   emitProgress('finalizeAttempt', 50)
+
   const quizzesToday = await currDayStreakCalulator(user._id)
 
   if (quizzesToday < 6) {
@@ -529,8 +604,6 @@ const saveQuizAttempt = async (
       6 - quizzesToday,
     )
   }
-
-  // await scheduleQuizEmails(user, quizzesToday)
 
   const pastRQMs = await fetchTodaysPastRQMs({ userId, session })
 
@@ -541,14 +614,15 @@ const saveQuizAttempt = async (
       ? 'medium'
       : 'hard'
 
-  const scoreString = `${score * questions.length}/${questions.length}`
+  const scoreString = `${correctCount}/${totalItems}`
 
   emitProgress('finalizeAttempt', 90)
+
   return {
-    message: 'Attempt saved successfully',
-    RQM_score,
+    message: 'Enhanced quiz attempt saved successfully',
+    RQM_score: rqmResult.rqmScore,
     nonBoostedRQM,
-    baseRQM_score,
+    baseRQM_score: nonBoostedRQM,
     boost,
     isBoosted,
     quizDifficulty: articleDifficultyLevel,
@@ -559,12 +633,18 @@ const saveQuizAttempt = async (
     quinBoostUtilized,
     messageForTournamentEligibility,
     userEligibleForTournament,
-    performanceBonus,
-    timeDilationBoosted,
+    performanceBonus: rqmResult.performanceBonus,
+    timeDilationBoosted: !!activeTimeDilation,
     streakRevived,
     pauseRealTimeIQ: user.pauseRealTimeIQ,
+    gameType,
+    performance,
+    timeFactor: rqmResult.timeFactor,
     ...resultOfIQCalc,
   }
 }
 
-module.exports = { saveQuizAttempt }
+module.exports = {
+  saveEnhancedQuizAttemptWithStats,
+  handleQuinBoostEarned,
+}

@@ -23,6 +23,14 @@ const HallOfChampions = lazy(() => import('../screens/HallOfChampions'))
 const QuickClash = lazy(() => import('../screens/QuickClash'))
 const QuickClashSession = lazy(() => import('../screens/QuickClashSession'))
 
+// NEW: GameHub components
+const IntegratedGameHub = lazy(() =>
+  import('../components/gameHub/IntegratedGameHub'),
+)
+const EnhancedGameInterface = lazy(() =>
+  import('../components/gameHub/EnhancedGameInterface'),
+)
+
 const OnboardingProcess = lazy(() => import('../screens/OnboardingProcess'))
 const DemotionSummary = lazy(() => import('../screens/DemotionSummary'))
 const PrivacyPolicy = lazy(() => import('../screens/PrivacyPolicy'))
@@ -96,6 +104,25 @@ const AppRoutes = ({ isToken, needsOnboarding, setIsGuestLoggedin }) => {
                 isToken ? <QuickClashSession /> : <Navigate to="/" replace />
               }
             />
+
+            {/* NEW: GameHub routes */}
+            <Route
+              path="/gamehub/:articleId"
+              element={
+                isToken ? <IntegratedGameHub /> : <Navigate to="/" replace />
+              }
+            />
+            <Route
+              path="/gamehub/:articleId/:gameType"
+              element={
+                isToken ? (
+                  <EnhancedGameInterface />
+                ) : (
+                  <Navigate to="/" replace />
+                )
+              }
+            />
+
             <Route path="/manual" element={<RuleBook />} />
             <Route path="/manual/:pageId" element={<RuleBook />} />
             {/* <Route path="/get-started" element={<GetStarted />} /> */}
