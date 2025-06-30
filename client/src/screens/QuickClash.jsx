@@ -13,6 +13,7 @@ import {
 import { motion } from 'framer-motion'
 import { lazy, Suspense } from 'react'
 import axios from 'axios'
+import { useTranslation } from 'react-i18next' // Added for translations
 
 // Regular imports
 import QuickClashHeader from '../components/quickClashComponents/QuickClashHeader'
@@ -119,6 +120,7 @@ const RESPONSIVE_CONFIG = {
  * Shows full QuickClash interface for authorized users
  */
 const QuickClash = () => {
+  const { t } = useTranslation('QuickClash') // Added for translations
   const dispatch = useDispatch()
   const toast = useToast()
   const { isOpen, onOpen, onClose } = useDisclosure()
@@ -177,8 +179,8 @@ const QuickClash = () => {
       } else {
         // Other errors - show error toast but don't block access
         toast({
-          title: 'Connection Error',
-          description: 'Unable to verify access. Please try again.',
+          title: t('Connection Error'),
+          description: t('Unable to verify access. Please try again.'),
           status: 'error',
           duration: 3000,
           isClosable: true,
@@ -187,7 +189,7 @@ const QuickClash = () => {
         setIsAuthorized(true)
       }
     }
-  }, [toast])
+  }, [toast, t])
 
   // Check authorization when component mounts and user is available
   useEffect(() => {
@@ -344,7 +346,7 @@ const QuickClash = () => {
             >
               {/* FIXED: Full MatchmakingModalManager - only one in the entire app */}
               <MatchmakingModalManager
-                buttonTextOverride="SOLO"
+                buttonTextOverride={t('SOLO')}
                 buttonWidth={{ base: '100%', md: '240px' }}
                 buttonHeight={{ base: '48px', md: '56px' }}
                 buttonMinWidth={{ base: '140px', md: '240px' }}
@@ -372,7 +374,7 @@ const QuickClash = () => {
               <CustomTabs
                 initialTabIndex={activeTabIndex}
                 onChange={handleTabChange}
-                tabNames={['Active', 'Daily Tasks', 'Teams']}
+                tabNames={[t('Active'), t('Daily Tasks'), t('Teams')]}
                 tabIcons={['Swords', 'Calendar', 'Users']}
               >
                 <TabPanel px={0}>

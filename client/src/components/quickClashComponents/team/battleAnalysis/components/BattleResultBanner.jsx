@@ -95,7 +95,7 @@ const BattleResultBanner = ({ battle, userTeam }) => {
         icon: Crown,
         primaryGradient: 'linear(45deg, green.500, green.700)',
         accentColor: 'green.400',
-        glowColor: 'rgba(16, 185, 129, 0.3)',
+        glowColor: 'rgba(16, 49, 38, 0.3)',
       }
     } else if (isTie) {
       return {
