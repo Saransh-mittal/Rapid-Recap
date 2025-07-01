@@ -1,8 +1,9 @@
-// controllers/gameHub.js
+// controllers/gameHub.js - UPDATED: Remove context handling from word_weaver
 const GameData = require('../model/gameDataSchema')
 const Article = require('../model/articleSchema')
 const QuizAttempt = require('../model/quizAttemptSchema')
 const ArticleQuizSession = require('../model/articleQuizSessionSchem')
+const asyncHandler = require('express-async-handler')
 const {
   generateEnhancedGameData,
   processGameDataWithDifficulties,
@@ -14,7 +15,7 @@ const globalEmitter = require('../eventEmitter')
 // @desc   Get game data for an article
 // @route  GET /api/gamehub/data/:articleId/:language
 // @access Private
-const getGameData = async (req, res) => {
+const getGameData = asyncHandler(async (req, res) => {
   const { articleId, language } = req.params
   const userId = req.user._id
 
@@ -111,12 +112,12 @@ const getGameData = async (req, res) => {
       error: error.message || 'Something went wrong! Please try again',
     })
   }
-}
+})
 
 // @desc   Start a game session with SECURE data (no answers sent to frontend)
 // @route  POST /api/gamehub/session/start/:sessionId
 // @access Private
-const startGameSession = async (req, res) => {
+const startGameSession = asyncHandler(async (req, res) => {
   const { sessionId } = req.params
   const { onBoarding = false } = req.query
   const userId = req.user._id
@@ -202,7 +203,7 @@ const startGameSession = async (req, res) => {
         break
 
       case 'word_weaver':
-        // FIXED: Generate shuffled letters with CORRECT word length calculation
+        // UPDATED: Generate shuffled letters WITHOUT context handling
         resultGameSession.questions = gameSession.questions.map((q, index) => {
           let shuffledLetters = []
           let wordLength = 6 // default fallback
@@ -212,10 +213,10 @@ const startGameSession = async (req, res) => {
             const cleanWord = q.answer.replace(/\s+/g, '').toUpperCase()
             const wordLetters = cleanWord.split('')
 
-            // FIXED: Calculate correct word length
+            // Calculate correct word length
             wordLength = cleanWord.length
 
-            // UPDATED: Add extra letters based on word length
+            // Add extra letters based on word length
             const extraLetters = [
               'K',
               'V',
@@ -236,15 +237,6 @@ const startGameSession = async (req, res) => {
 
             const selectedExtraLetters = []
             let extraCount = 0
-
-            // Determine extra letters count based on word length
-            if (wordLength <= 6) {
-              extraCount = Math.min(2, availableExtraLetters.length) // 2 extra letters for words ≤ 6
-            } else if (wordLength === 7) {
-              extraCount = Math.min(1, availableExtraLetters.length) // 1 extra letter for 7-letter words
-            } else {
-              extraCount = 0 // No extra letters for words ≥ 8 letters
-            }
 
             // Add the determined number of extra letters
             for (let i = 0; i < extraCount; i++) {
@@ -274,12 +266,7 @@ const startGameSession = async (req, res) => {
                 extraLetters: selectedExtraLetters,
                 shuffledLetters: shuffledLetters,
                 totalCount: shuffledLetters.length,
-                rule:
-                  wordLength <= 6
-                    ? 'Add 2 extra'
-                    : wordLength === 7
-                    ? 'Add 1 extra'
-                    : 'No extra letters',
+                rule: 'No extra letters',
               },
             )
           } else {
@@ -309,13 +296,6 @@ const startGameSession = async (req, res) => {
 
             // Apply same logic for fallback
             let fallbackExtraCount = 0
-            if (wordLength <= 6) {
-              fallbackExtraCount = 2
-            } else if (wordLength === 7) {
-              fallbackExtraCount = 1
-            } else {
-              fallbackExtraCount = 0
-            }
 
             shuffledLetters = fallbackLetters
               .slice(0, Math.max(wordLength, wordLength + fallbackExtraCount))
@@ -323,10 +303,10 @@ const startGameSession = async (req, res) => {
           }
 
           return {
-            context: q.context,
+            // UPDATED: Remove context field
             blank: q.blank,
             shuffledLetters: shuffledLetters, // Freshly generated letters with new logic
-            wordLength: wordLength, // FIXED: correct word length
+            wordLength: wordLength, // Correct word length
             questionId: q.questionId,
             _id: q._id,
             difficulty: q.difficulty,
@@ -370,6 +350,8 @@ const startGameSession = async (req, res) => {
           delete safeQuestion.correct
           delete safeQuestion.explanation
           delete safeQuestion.validConnections
+          // UPDATED: Remove context field
+          delete safeQuestion.context
 
           // Clean options if they exist
           if (safeQuestion.options) {
@@ -422,12 +404,12 @@ const startGameSession = async (req, res) => {
       details: error.message,
     })
   }
-}
+})
 
 // @desc   Create a new game session with proper timer setup
 // @route  POST /api/gamehub/session/create
 // @access Private
-const createGameSession = async (req, res) => {
+const createGameSession = asyncHandler(async (req, res) => {
   const { articleId, gameType, language } = req.body
   const userId = req.user._id
 
@@ -510,18 +492,18 @@ const createGameSession = async (req, res) => {
         break
 
       case 'word_weaver':
-        // SIMPLIFIED: Just store the basic question data with CORRECT word length calculation
+        // UPDATED: Remove context handling, just store basic question data
         questions = gameData.word_weaver.questions.slice(0, 5).map(q => {
-          // FIXED: Calculate correct word length from the actual answer
+          // Calculate correct word length from the actual answer
           const correctWordLength = q.answer
             ? q.answer.replace(/\s+/g, '').length
             : 6
 
           return {
-            context: q.context,
+            // UPDATED: Remove context field
             blank: q.blank,
             answer: q.answer, // Keep answer for validation (not sent to frontend)
-            wordLength: correctWordLength, // FIXED: use correct word length
+            wordLength: correctWordLength, // Use correct word length
             difficulty: q.difficulty,
             questionId: q._id,
           }
@@ -577,12 +559,12 @@ const createGameSession = async (req, res) => {
       details: error.message,
     })
   }
-}
+})
 
 // @desc   Submit game attempt with SECURE answer validation
 // @route  POST /api/gamehub/attempt
 // @access Private
-const submitGameAttempt = async (req, res) => {
+const submitGameAttempt = asyncHandler(async (req, res) => {
   const { sessionId, userResponses, timeTaken } = req.body
   const userId = req.user._id
 
@@ -655,7 +637,7 @@ const submitGameAttempt = async (req, res) => {
           if (typeof response === 'string') {
             userWord = response
           } else if (typeof response === 'object' && response !== null) {
-            // FIXED: Handle nested structure: response.answer.answer
+            // Handle nested structure: response.answer.answer
             if (
               response.answer &&
               typeof response.answer === 'object' &&
@@ -727,6 +709,121 @@ const submitGameAttempt = async (req, res) => {
         break
 
       case 'connections':
+        // Validate connection count limit (maximum 4 connections)
+        if (!Array.isArray(userResponses)) {
+          throw new Error('Invalid connections data format')
+        }
+
+        // Enforce maximum 4 connections limit
+        const MAX_CONNECTIONS = 4
+        if (userResponses.length > MAX_CONNECTIONS) {
+          throw new Error(
+            `Too many connections submitted. Maximum allowed: ${MAX_CONNECTIONS}, received: ${userResponses.length}`,
+          )
+        }
+
+        // Validate that all connections have required fields
+        const invalidConnections = userResponses.filter(
+          conn => !conn.from || !conn.to || conn.from === conn.to,
+        )
+
+        if (invalidConnections.length > 0) {
+          throw new Error(
+            'Invalid connection data: connections must have different "from" and "to" values',
+          )
+        }
+
+        // Check for duplicate connections (same pair in different order)
+        const normalizedConnections = userResponses.map(conn => {
+          // Sort to normalize connection pairs (A->B same as B->A)
+          const sorted = [conn.from, conn.to].sort()
+          return { from: sorted[0], to: sorted[1], original: conn }
+        })
+
+        const uniqueConnections = new Set()
+        const duplicateConnections = []
+
+        normalizedConnections.forEach(({ from, to, original }) => {
+          const connectionKey = `${from}-${to}`
+          if (uniqueConnections.has(connectionKey)) {
+            duplicateConnections.push(original)
+          } else {
+            uniqueConnections.add(connectionKey)
+          }
+        })
+
+        if (duplicateConnections.length > 0) {
+          throw new Error(
+            'Duplicate connections detected. Each connection can only be made once.',
+          )
+        }
+
+        // Validate that each node appears in at most one connection (Node Locking for 8 nodes)
+        const usedNodes = new Set()
+        const nodeConflicts = []
+
+        userResponses.forEach((conn, index) => {
+          // Check if either node is already used
+          if (usedNodes.has(conn.from)) {
+            nodeConflicts.push({
+              connection: index + 1,
+              node: conn.from,
+              type: 'from',
+            })
+          }
+          if (usedNodes.has(conn.to)) {
+            nodeConflicts.push({
+              connection: index + 1,
+              node: conn.to,
+              type: 'to',
+            })
+          }
+
+          // Add nodes to used set
+          usedNodes.add(conn.from)
+          usedNodes.add(conn.to)
+        })
+
+        if (nodeConflicts.length > 0) {
+          const conflictDetails = nodeConflicts
+            .map(
+              conflict =>
+                `"${conflict.node}" in connection ${conflict.connection}`,
+            )
+            .join(', ')
+
+          throw new Error(
+            `Node reuse detected: Each node can only be used in one connection. ` +
+              `Conflicts found: ${conflictDetails}. Please ensure each node appears only once.`,
+          )
+        }
+
+        // Additional validation - with 8 nodes and max 4 connections, exactly 8 nodes should be used
+        const expectedNodesUsed = Math.min(userResponses.length * 2, 8)
+        const actualNodesUsed = usedNodes.size
+
+        if (actualNodesUsed !== expectedNodesUsed) {
+          console.warn('Unexpected node usage:', {
+            expected: expectedNodesUsed,
+            actual: actualNodesUsed,
+            connections: userResponses.length,
+            usedNodes: Array.from(usedNodes),
+          })
+        }
+
+        // Validate nodes exist in the game's concept list (8 concepts)
+        const validConcepts = new Set(gameSession.questions[0].concepts || [])
+        const invalidNodes = Array.from(usedNodes).filter(
+          node => !validConcepts.has(node),
+        )
+
+        if (invalidNodes.length > 0) {
+          throw new Error(
+            `Invalid nodes detected: ${invalidNodes.join(', ')}. ` +
+              `Nodes must be from the provided concept list.`,
+          )
+        }
+
         // SECURE: Validate connections on backend using stored validConnections
         processedResponses = [
           {
@@ -740,6 +837,15 @@ const submitGameAttempt = async (req, res) => {
                   (vc.from === connection.from && vc.to === connection.to) ||
                   (vc.from === connection.to && vc.to === connection.from),
               )
+
+              console.log('Connection validation:', {
+                from: connection.from,
+                to: connection.to,
+                isValid,
+                totalValidConnections:
+                  gameSession.questions[0].validConnections.length,
+              })
+
               return {
                 from: connection.from,
                 to: connection.to,
@@ -748,6 +854,22 @@ const submitGameAttempt = async (req, res) => {
             }),
           },
         ]
+
+        // Enhanced validation summary for debugging
+        const validConnectionCount = processedResponses[0].connections.filter(
+          conn => conn.isValid,
+        ).length
+        console.log('Enhanced connections validation summary:', {
+          submittedCount: userResponses.length,
+          maxAllowed: MAX_CONNECTIONS,
+          validCount: validConnectionCount,
+          uniqueNodesUsed: actualNodesUsed,
+          expectedNodesUsed: expectedNodesUsed,
+          nodeUtilizationRate: ((actualNodesUsed / 8) * 100).toFixed(1) + '%',
+          allConnections: processedResponses[0].connections,
+          usedNodes: Array.from(usedNodes).sort(),
+        })
+
         break
 
       default:
@@ -803,12 +925,12 @@ const submitGameAttempt = async (req, res) => {
       details: error.message,
     })
   }
-}
+})
 
 // @desc   Get game summary/report
 // @route  GET /api/gamehub/summary/:sessionId
 // @access Private
-const getGameSummary = async (req, res) => {
+const getGameSummary = asyncHandler(async (req, res) => {
   const { sessionId } = req.params
   const userId = req.user._id
 
@@ -861,10 +983,11 @@ const getGameSummary = async (req, res) => {
         break
 
       case 'word_weaver':
+        // UPDATED: Remove context from summary
         summary.questions = gameSession.questions.map((question, index) => {
           const response = gameSession.responses[index]
           return {
-            context: question.context,
+            // UPDATED: Remove context field
             blank: question.blank,
             correctAnswer: question.answer,
             userAnswer: response?.userWord,
@@ -889,12 +1012,12 @@ const getGameSummary = async (req, res) => {
     console.error('Error getting game summary:', error)
     res.status(400).json({ error: 'Something went wrong' })
   }
-}
+})
 
 // @desc   Import custom game data
 // @route  POST /api/gamehub/import
 // @access Private
-const importGameData = async (req, res) => {
+const importGameData = asyncHandler(async (req, res) => {
   const { gameData } = req.body
   const userId = req.user._id
 
@@ -942,12 +1065,12 @@ const importGameData = async (req, res) => {
       .status(400)
       .json({ error: error.message || 'Failed to import game data' })
   }
-}
+})
 
 // @desc   Export game data
 // @route  GET /api/gamehub/export/:articleId
 // @access Private
-const exportGameData = async (req, res) => {
+const exportGameData = asyncHandler(async (req, res) => {
   const { articleId } = req.params
   const { language = 'en' } = req.query
 
@@ -978,12 +1101,12 @@ const exportGameData = async (req, res) => {
     console.error('Error exporting game data:', error)
     res.status(400).json({ error: 'Failed to export game data' })
   }
-}
+})
 
 // @desc   Check if user has completed any game for an article
 // @route  GET /api/gamehub/completion/:articleId/:userId
 // @access Private
-const checkGameCompletion = async (req, res) => {
+const checkGameCompletion = asyncHandler(async (req, res) => {
   const { userId, articleId } = req.params
 
   try {
@@ -1048,7 +1171,7 @@ const checkGameCompletion = async (req, res) => {
       details: error.message,
     })
   }
-}
+})
 
 module.exports = {
   getGameData,

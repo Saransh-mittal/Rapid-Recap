@@ -1,20 +1,18 @@
-// utils/enhancedQuiz.utils.js
+// utils/enhancedQuiz.utils.js - UPDATED: Remove context and add proper validation
 const OpenAI = require('openai')
 const GameData = require('../model/gameDataSchema')
 const QuizAttempt = require('../model/quizAttemptSchema')
 const { calculateArticleDifficulty } = require('./article.utils')
 
-// RQM Calculation Constants
-const BASELINE_TIME_PER_QUESTION = 10
-const ALL_CORRECT_BONUS = 1.2
-const ONE_WRONG_BONUS = 1.1
-const BASE_TIME_WINDOW = 50
-
-// Game configurations
+// UPDATED: Game-specific configurations (unchanged)
 const GAME_CONFIGS = {
   normal_quiz: {
     timeLimit: 50,
     itemCount: 5,
+    BASELINE_TIME_PER_QUESTION: 15,
+    ALL_CORRECT_BONUS: 1.2,
+    ONE_WRONG_BONUS: 1.1,
+    BASE_TIME_WINDOW: 50,
     difficultyMultiplier: 1.0,
     timeMultiplier: 1.0,
     skillComplexity: 1.0,
@@ -23,6 +21,10 @@ const GAME_CONFIGS = {
   true_false: {
     timeLimit: 35,
     itemCount: 7,
+    BASELINE_TIME_PER_QUESTION: 7,
+    ALL_CORRECT_BONUS: 1.15,
+    ONE_WRONG_BONUS: 1.05,
+    BASE_TIME_WINDOW: 35,
     difficultyMultiplier: 0.85,
     timeMultiplier: 1.4,
     skillComplexity: 0.8,
@@ -31,22 +33,30 @@ const GAME_CONFIGS = {
   word_weaver: {
     timeLimit: 100,
     itemCount: 5,
+    BASELINE_TIME_PER_QUESTION: 25,
+    ALL_CORRECT_BONUS: 1.25,
+    ONE_WRONG_BONUS: 1.15,
+    BASE_TIME_WINDOW: 100,
     difficultyMultiplier: 1.1,
     timeMultiplier: 0.9,
-    skillComplexity: 1.05,
-    cognitiveLoad: 1.05,
+    skillComplexity: 1.15,
+    cognitiveLoad: 1.15,
   },
   connections: {
-    timeLimit: 80,
-    itemCount: 4,
+    timeLimit: 100,
+    itemCount: 8,
+    BASELINE_TIME_PER_QUESTION: 30,
+    ALL_CORRECT_BONUS: 1.3,
+    ONE_WRONG_BONUS: 1.2,
+    BASE_TIME_WINDOW: 100,
     difficultyMultiplier: 1.2,
     timeMultiplier: 0.8,
-    skillComplexity: 1.25,
-    cognitiveLoad: 1.3,
+    skillComplexity: 1.15,
+    cognitiveLoad: 1.2,
   },
 }
 
-// Automatic Difficulty Calculation Functions
+// Existing calculation functions (unchanged)
 const calculateQuestionDifficulty = (question, options) => {
   let difficultyScore = 0.3 // Base difficulty
 
@@ -207,7 +217,8 @@ const calculateTrueFalseDifficulty = statement => {
   return Math.min(0.99, Math.max(0.01, Math.round(difficultyScore * 100) / 100))
 }
 
-const calculateWordWeaverDifficulty = (context, answer) => {
+// UPDATED: Word Weaver difficulty calculation without context parameter
+const calculateWordWeaverDifficulty = (blank, answer) => {
   let difficultyScore = 0.4 // Base difficulty (word puzzles are inherently challenging)
 
   // Answer word length (longer words are harder)
@@ -217,11 +228,11 @@ const calculateWordWeaverDifficulty = (context, answer) => {
   else if (answerLength > 6) difficultyScore += 0.15
   else if (answerLength > 4) difficultyScore += 0.1
 
-  // Context complexity
-  const contextLength = context.split(' ').length
-  if (contextLength > 25) difficultyScore += 0.1
-  else if (contextLength > 20) difficultyScore += 0.08
-  else if (contextLength > 15) difficultyScore += 0.05
+  // UPDATED: Blank sentence complexity (instead of context)
+  const blankLength = blank.split(' ').length
+  if (blankLength > 25) difficultyScore += 0.1
+  else if (blankLength > 20) difficultyScore += 0.08
+  else if (blankLength > 15) difficultyScore += 0.05
 
   // Word complexity based on length - longer words are typically more complex
   if (answer.length > 12) difficultyScore += 0.15
@@ -249,7 +260,45 @@ const calculateWordWeaverDifficulty = (context, answer) => {
   return Math.min(0.99, Math.max(0.01, Math.round(difficultyScore * 100) / 100))
 }
 
-// Enhanced RQM Calculation
+// Existing calculation functions (unchanged)
+const calculateExpectedTime = (questions, gameType) => {
+  const config = GAME_CONFIGS[gameType]
+  if (!config) throw new Error(`Invalid game type: ${gameType}`)
+
+  const totalDifficultyFactor = questions.reduce(
+    (sum, question) => sum + parseFloat(question.difficulty || 0.5),
+    0,
+  )
+  const avgDifficulty = totalDifficultyFactor / questions.length
+
+  return Math.round(
+    config.BASELINE_TIME_PER_QUESTION * questions.length * avgDifficulty,
+  )
+}
+
+const calculateApparentTimeTaken = (
+  timeTaken,
+  activeTimeDilation,
+  gameType,
+) => {
+  const config = GAME_CONFIGS[gameType]
+  if (!config) throw new Error(`Invalid game type: ${gameType}`)
+
+  let adjustedTime = timeTaken
+
+  // Apply time dilation if active
+  if (activeTimeDilation) {
+    adjustedTime =
+      (timeTaken * config.BASE_TIME_WINDOW) /
+      (config.BASE_TIME_WINDOW + (activeTimeDilation?.additionalTime || 30))
+  }
+
+  // Anti-cheat for very fast times
+  return adjustedTime <= 10 && !activeTimeDilation
+    ? Math.ceil((adjustedTime * adjustedTime) / 2 - 10 * adjustedTime + 60)
+    : adjustedTime
+}
+
 const calculateEnhancedRQM = (
   gameType,
   performance,
@@ -258,15 +307,17 @@ const calculateEnhancedRQM = (
   activeTimeDilation,
 ) => {
   const config = GAME_CONFIGS[gameType]
-  const expectedTime = config.timeLimit
+  if (!config) throw new Error(`Invalid game type: ${gameType}`)
 
-  // Calculate apparent time (anti-cheat for very fast times)
-  const apparentTimeTaken =
-    timeTaken <= 10
-      ? Math.ceil((timeTaken * timeTaken) / 2 - 10 * timeTaken + 60)
-      : timeTaken
+  const apparentTimeTaken = calculateApparentTimeTaken(
+    timeTaken,
+    activeTimeDilation,
+    gameType,
+  )
 
-  // Time factor calculation
+  const expectedTime = config.BASELINE_TIME_PER_QUESTION * totalItems
+
+  // Time factor calculation with game-specific multiplier
   const timeFactor =
     Math.min(expectedTime / apparentTimeTaken, 2) * config.timeMultiplier
 
@@ -276,11 +327,10 @@ const calculateEnhancedRQM = (
   adjustedScore *= config.difficultyMultiplier
   adjustedScore *= config.skillComplexity
 
-  // Performance bonuses
   if (performance.correctCount === totalItems) {
-    adjustedScore *= ALL_CORRECT_BONUS
+    adjustedScore *= config.ALL_CORRECT_BONUS
   } else if (performance.correctCount === totalItems - 1) {
-    adjustedScore *= ONE_WRONG_BONUS
+    adjustedScore *= config.ONE_WRONG_BONUS
   }
 
   // Final RQM calculation
@@ -293,13 +343,14 @@ const calculateEnhancedRQM = (
     timeFactor: parseFloat(timeFactor.toFixed(2)),
     performanceBonus:
       performance.correctCount === totalItems
-        ? ALL_CORRECT_BONUS
+        ? config.ALL_CORRECT_BONUS
         : performance.correctCount === totalItems - 1
-        ? ONE_WRONG_BONUS
+        ? config.ONE_WRONG_BONUS
         : 1.0,
   }
 }
 
+// UPDATED: Enhanced game data generation with removed context and proper validation
 const generateEnhancedGameData = async ({
   title,
   author,
@@ -324,6 +375,7 @@ const generateEnhancedGameData = async ({
     let result
     let response
 
+    // UPDATED: Prompt without context requirement and with proper fill-in-blank validation
     const prompt = `Title: ${title}
 Author: ${author}
 MainText: ${mainText}
@@ -356,19 +408,42 @@ Generate comprehensive game data for multiple quiz types based on this article. 
   "word_weaver": {
     "questions": [
       {
-        "context": "Brief context from article",
-        "blank": "Exact sentence from article with one word replaced by blank: The _______ was significant.",
+        "blank": "Complete sentence from article with EXACTLY ONE word replaced by _____: The _____ was significant in the development.",
         "answer": "SINGLEWORD"
       }
     ]
   },
   "connections": {
-    "concepts": ["Concept1", "Concept2", "Concept3", "Concept4", "Concept5", "Concept6"],
+    "concepts": ["Concept1", "Concept2", "Concept3", "Concept4", "Concept5", "Concept6", "Concept7", "Concept8"],
+    "overallDifficulty": 0.65,
     "validConnections": [
       {
         "from": "Concept1",
         "to": "Concept2",
-        "reasoning": "How they connect"
+        "reasoning": "DETAILED reasoning explaining how these concepts connect based on article content.",
+        "difficulty": 0.45,
+        "connectionType": "category_example"
+      },
+      {
+        "from": "Concept3",
+        "to": "Concept4",
+        "reasoning": "COMPREHENSIVE explanation of the connection with specific article references.",
+        "difficulty": 0.72,
+        "connectionType": "cause_effect"
+      },
+      {
+        "from": "Concept5",
+        "to": "Concept6",
+        "reasoning": "THOROUGH reasoning that demonstrates deep understanding of relationship.",
+        "difficulty": 0.58,
+        "connectionType": "functional"
+      },
+      {
+        "from": "Concept7",
+        "to": "Concept8",
+        "reasoning": "DETAILED analysis of the relationship with article-specific context.",
+        "difficulty": 0.81,
+        "connectionType": "opposing"
       }
     ]
   }
@@ -378,41 +453,63 @@ Requirements:
 - Normal quiz: 5 questions with 4 options each
 - True/False: 7 statements
 - Word Weaver: 5 fill-in-the-blank questions with SINGLE WORD answers only
-- Connections: 6 concepts with 4-5 valid connections
-- All content must be derived from the article
-- Provide explanations for normal quiz and true/false
+- Connections: EXACTLY 8 concepts with EXACTLY 4 valid connections forming perfect pairs
 
-CRITICAL WORD WEAVER REQUIREMENTS:
+CRITICAL WORD WEAVER REQUIREMENTS - NO CONTEXT NEEDED:
 - MUST pick exact sentences/statements from the provided article text
-- Replace only ONE significant word from the exact sentence with a blank (_______)
+- Replace only ONE significant word from the exact sentence with _____ (exactly 5 underscores)
 - The removed word must be a single word (no spaces, no phrases)
 - Word length should be 4-12 letters
 - Use the exact sentence structure from the article
-- Context should be 1-2 sentences before the blank sentence from the article
-- The blank sentence should flow naturally from the context
-- Choose sentences that contain important keywords, concepts, or facts
+- The sentence must be complete and self-explanatory without additional context
+- Choose sentences that are clear and meaningful on their own
 - Prioritize sentences with nouns, verbs, or adjectives that are central to the article's meaning
-- Example format:
-  * Context: "Previous sentence from article for background."
-  * Blank: "The exact sentence from article with _______ replaced."
-  * Answer: "REPLACEDWORD"
+- Each blank sentence must contain EXACTLY ONE _____ placeholder
+- The sentence should make grammatical sense with the blank
+- Choose important keywords, concepts, or facts from the article
+
+WORD WEAVER VALIDATION REQUIREMENTS:
+- Each "blank" field must contain exactly one _____ (5 underscores)
+- The sentence must be grammatically correct
+- The sentence must be at least 10 words long
+- The answer must be a single word (4-8 characters, no spaces)
+- The sentence should be self-contained and understandable
+
+CRITICAL NORMAL QUIZ REQUIREMENTS:
+- Questions must test comprehension of article content
+- Include variety: factual, analytical, and inferential questions
+- Options should be plausible but clearly distinguishable
+- Explanations should reference specific article content
+
+CRITICAL TRUE/FALSE REQUIREMENTS:
+- Statements must be directly verifiable from article content
+- Mix obviously true, obviously false, and subtly misleading statements
+- Avoid absolute terms unless specifically stated in article
+- Include both factual and conceptual statements
+
+CRITICAL CONNECTION REQUIREMENTS:
+- MUST provide exactly 8 distinct, important concepts from the article
+- Create EXACTLY 4 connections that pair up all 8 concepts
+- Each concept appears in EXACTLY ONE connection (no reuse)
+- Each connection must represent a meaningful relationship from the article
 
 - Ensure variety in question types and difficulty
-- Word Weaver answers must be single words only (no spaces, no phrases)
-- Word Weaver blanks should clearly indicate one word is needed`
+- All content must be derived directly from the provided article text
+- Provide clear explanations that reference article content
+- Word Weaver answers must be single words only (no spaces, no phrases)`
 
     emitProgress && emitProgress(40)
 
     while (attempts-- > 0) {
       try {
         result = await openai.chat.completions.create({
-          model: 'gpt-4o-mini',
+          model: 'gpt-4.1-nano-2025-04-14',
           response_format: { type: 'json_object' },
           messages: [
             {
               role: 'system',
               content:
-                'You are an educational game generator. Create comprehensive quiz content based on articles. For Word Weaver, ensure all answers are single words only.',
+                'You are an educational game generator. Create comprehensive quiz content based on articles. For Word Weaver, create fill-in-the-blank sentences without context - each sentence must be self-contained and meaningful.',
             },
             {
               role: 'user',
@@ -425,36 +522,128 @@ CRITICAL WORD WEAVER REQUIREMENTS:
         responseText = responseText.replace(/```json|```/g, '').trim()
         response = JSON.parse(responseText)
 
-        // Validate and clean Word Weaver answers to ensure single words
+        // UPDATED: Enhanced Word Weaver validation without context
         if (response.word_weaver?.questions) {
           response.word_weaver.questions = response.word_weaver.questions
             .map(q => {
-              let cleanAnswer = q.answer.replace(/\s+/g, '').toUpperCase()
-              // Ensure it's a single word and reasonable length
-              if (cleanAnswer.length < 3 || cleanAnswer.length > 15) {
-                // Skip invalid answers - they'll be filtered out later
+              // Validate blank format
+              if (!q.blank || typeof q.blank !== 'string') {
+                console.warn('Invalid blank format, skipping question')
                 return null
               }
+
+              // Check for exactly one _____ placeholder
+              const blankCount = (q.blank.match(/_____/g) || []).length
+              if (blankCount !== 1) {
+                console.warn(
+                  `Invalid blank count (${blankCount}), must have exactly one _____ placeholder, skipping question`,
+                )
+                return null
+              }
+
+              // Check minimum sentence length
+              if (q.blank.split(' ').length < 10) {
+                console.warn('Blank sentence too short, skipping question')
+                return null
+              }
+
+              // Validate answer
+              let cleanAnswer = q.answer.replace(/\s+/g, '').toUpperCase()
+              if (cleanAnswer.length < 3 || cleanAnswer.length > 15) {
+                console.warn('Invalid answer length, skipping question')
+                return null
+              }
+
               return {
-                ...q,
+                blank: q.blank,
                 answer: cleanAnswer,
               }
             })
             .filter(Boolean) // Remove null entries
         }
 
-        // Validate response structure
+        // Enhanced validation with proper Word Weaver checks
         if (
           response &&
           response.normal_quiz?.questions?.length >= 3 &&
           response.true_false?.statements?.length >= 5 &&
-          response.word_weaver?.questions?.length >= 3 &&
-          response.connections?.concepts?.length >= 4
+          response.word_weaver?.questions?.length >= 3 && // Must have valid questions after filtering
+          response.connections?.concepts?.length === 8 &&
+          response.connections?.validConnections?.length === 4
         ) {
+          // Additional validation for connections game (existing code)
+          const concepts = response.connections.concepts
+          const connections = response.connections.validConnections
+
+          const uniqueConcepts = new Set(concepts)
+          if (uniqueConcepts.size !== 8) {
+            throw new Error('Connections must have exactly 8 unique concepts')
+          }
+
+          const usedConcepts = new Set()
+          const invalidConnections = []
+
+          connections.forEach((conn, index) => {
+            if (!concepts.includes(conn.from) || !concepts.includes(conn.to)) {
+              invalidConnections.push(
+                `Connection ${index + 1}: Uses invalid concept`,
+              )
+            }
+
+            if (usedConcepts.has(conn.from)) {
+              invalidConnections.push(
+                `Connection ${index + 1}: "${conn.from}" already used`,
+              )
+            }
+            if (usedConcepts.has(conn.to)) {
+              invalidConnections.push(
+                `Connection ${index + 1}: "${conn.to}" already used`,
+              )
+            }
+
+            if (conn.from === conn.to) {
+              invalidConnections.push(
+                `Connection ${index + 1}: Self-connection not allowed`,
+              )
+            }
+
+            usedConcepts.add(conn.from)
+            usedConcepts.add(conn.to)
+          })
+
+          if (usedConcepts.size !== 8) {
+            invalidConnections.push(
+              `Only ${usedConcepts.size} of 8 concepts used in connections`,
+            )
+          }
+
+          const unusedConcepts = concepts.filter(
+            concept => !usedConcepts.has(concept),
+          )
+          if (unusedConcepts.length > 0) {
+            invalidConnections.push(
+              `Unused concepts: ${unusedConcepts.join(', ')}`,
+            )
+          }
+
+          if (invalidConnections.length > 0) {
+            console.error('Invalid connections structure:', invalidConnections)
+            throw new Error(
+              `Invalid connections: ${invalidConnections.join('; ')}`,
+            )
+          }
+
+          console.log('✓ Connections validation passed:', {
+            conceptCount: concepts.length,
+            connectionCount: connections.length,
+            allConceptsUsed: usedConcepts.size === 8,
+            perfectPairs: connections.length === 4,
+          })
+
           // Process and add automatic difficulty calculations
           const processedData = processGameDataWithDifficulties(response)
 
-          // FIXED: Add shuffled letters for Word Weaver questions
+          // Add word length for Word Weaver questions
           if (processedData.word_weaver?.questions) {
             processedData.word_weaver.questions =
               processedData.word_weaver.questions.map(q => {
@@ -483,17 +672,73 @@ CRITICAL WORD WEAVER REQUIREMENTS:
           emitProgress && emitProgress(80)
 
           console.log(
-            'Game data saved with word weaver questions:',
+            'Game data saved with word weaver questions (no context):',
             newGameData.word_weaver?.questions?.map(q => ({
+              blank: q.blank.substring(0, 50) + '...',
               answer: q.answer,
-              shuffledLettersCount: q.shuffledLetters?.length,
               wordLength: q.wordLength,
+              hasExactlyOneBlank: (q.blank.match(/_____/g) || []).length === 1,
             })),
           )
 
           return newGameData
         } else {
-          throw new Error('Invalid response format')
+          // Enhanced error message for debugging
+          const issues = []
+          if (
+            !response.normal_quiz?.questions?.length ||
+            response.normal_quiz.questions.length < 3
+          ) {
+            issues.push(
+              `Normal quiz: ${
+                response.normal_quiz?.questions?.length || 0
+              }/3+ questions`,
+            )
+          }
+          if (
+            !response.true_false?.statements?.length ||
+            response.true_false.statements.length < 5
+          ) {
+            issues.push(
+              `True/False: ${
+                response.true_false?.statements?.length || 0
+              }/5+ statements`,
+            )
+          }
+          if (
+            !response.word_weaver?.questions?.length ||
+            response.word_weaver.questions.length < 3
+          ) {
+            issues.push(
+              `Word Weaver: ${
+                response.word_weaver?.questions?.length || 0
+              }/3+ questions (after validation)`,
+            )
+          }
+          if (
+            !response.connections?.concepts?.length ||
+            response.connections.concepts.length !== 8
+          ) {
+            issues.push(
+              `Connections concepts: ${
+                response.connections?.concepts?.length || 0
+              }/8 (must be exactly 8)`,
+            )
+          }
+          if (
+            !response.connections?.validConnections?.length ||
+            response.connections.validConnections.length !== 4
+          ) {
+            issues.push(
+              `Connections pairs: ${
+                response.connections?.validConnections?.length || 0
+              }/4 (must be exactly 4)`,
+            )
+          }
+
+          throw new Error(
+            `Invalid response format. Issues: ${issues.join(', ')}`,
+          )
         }
       } catch (err) {
         console.error('Error during OpenAI API call:', err.message)
@@ -506,7 +751,7 @@ CRITICAL WORD WEAVER REQUIREMENTS:
   }
 }
 
-// Process game data and add automatic difficulty calculations
+// UPDATED: Process game data and add automatic difficulty calculations (without context)
 const processGameDataWithDifficulties = rawGameData => {
   const processedData = { ...rawGameData }
 
@@ -528,19 +773,19 @@ const processGameDataWithDifficulties = rawGameData => {
       }))
   }
 
-  // Process word weaver questions
+  // UPDATED: Process word weaver questions without context
   if (processedData.word_weaver?.questions) {
     processedData.word_weaver.questions =
       processedData.word_weaver.questions.map(q => ({
         ...q,
-        difficulty: calculateWordWeaverDifficulty(q.context, q.answer),
+        difficulty: calculateWordWeaverDifficulty(q.blank, q.answer),
       }))
   }
 
   return processedData
 }
 
-// Save enhanced quiz attempt
+// UPDATED: Save enhanced quiz attempt (remove context handling)
 const saveEnhancedQuizAttempt = async ({
   userId,
   articleId,
@@ -554,6 +799,9 @@ const saveEnhancedQuizAttempt = async ({
   session,
 }) => {
   try {
+    const config = GAME_CONFIGS[gameType]
+    if (!config) throw new Error(`Invalid game type: ${gameType}`)
+
     // Calculate performance metrics
     let correctCount = 0
     let totalItems = questions.length
@@ -598,7 +846,6 @@ const saveEnhancedQuizAttempt = async ({
       totalItems,
     }
 
-    // Calculate enhanced RQM
     const rqmResult = calculateEnhancedRQM(
       gameType,
       performance,
@@ -606,6 +853,8 @@ const saveEnhancedQuizAttempt = async ({
       totalItems,
       activeTimeDilation,
     )
+
+    const expectedTime = calculateExpectedTime(questions, gameType)
 
     // Create enhanced quiz attempt
     const enhancedAttempt = new QuizAttempt({
@@ -620,7 +869,7 @@ const saveEnhancedQuizAttempt = async ({
       baseRQM_score: rqmResult.rqmScore,
       articleDifficulty: avgDifficulty,
       timeTaken,
-      expectedTime: GAME_CONFIGS[gameType].timeLimit,
+      expectedTime: expectedTime,
       timeFactor: rqmResult.timeFactor,
       performanceBonus: rqmResult.performanceBonus,
       timeDilationBoosted: !!activeTimeDilation,

@@ -299,10 +299,123 @@ const saveEnhancedQuizAttemptWithStats = async (
       break
   }
 
-  const accuracy = totalItems > 0 ? correctCount / totalItems : 0
-  const avgDifficulty =
-    questions.reduce((sum, q) => sum + (q.difficulty || 0.5), 0) /
-    questions.length
+  const accuracy = await (async () => {
+    if (gameType === 'connections') {
+      // ENHANCED: Calculate weighted accuracy using AI-generated connection difficulties
+      const gameSession = await ArticleQuizSession.findById(sessionId)
+        .populate('gameData')
+        .session(session)
+
+      const validConnections =
+        gameSession?.gameData?.connections?.validConnections || []
+
+      if (validConnections.length === 0) {
+        // Fallback to standard accuracy if no difficulty data available
+        return totalItems > 0 ? correctCount / totalItems : 0
+      }
+
+      let weightedCorrectness = 0
+      let totalWeight = validConnections.length
+
+      // Calculate earned weight from user's correct connections
+      userResponses.forEach(response => {
+        if (response.connections && Array.isArray(response.connections)) {
+          response.connections.forEach(userConnection => {
+            if (userConnection.isValid) {
+              // Find the corresponding valid connection to get its AI-generated difficulty
+              const matchingValidConnection = validConnections.find(
+                vc =>
+                  (vc.from === userConnection.from &&
+                    vc.to === userConnection.to) ||
+                  (vc.from === userConnection.to &&
+                    vc.to === userConnection.from),
+              )
+
+              if (matchingValidConnection) {
+                const difficulty = matchingValidConnection.difficulty || 0.5
+
+                weightedCorrectness += difficulty
+
+                console.log('Weighted connection scored:', {
+                  from: userConnection.from,
+                  to: userConnection.to,
+                  aiDifficulty: difficulty,
+                  type: matchingValidConnection.connectionType || 'conceptual',
+                })
+              }
+            }
+          })
+        }
+      })
+
+      // Calculate weighted accuracy
+      const weightedAccuracy =
+        totalWeight > 0 ? weightedCorrectness / totalWeight : 0
+
+      console.log('Connections weighted accuracy calculation:', {
+        standardAccuracy: totalItems > 0 ? correctCount / totalItems : 0,
+        weightedAccuracy: weightedAccuracy,
+        weightedCorrectness: weightedCorrectness.toFixed(2),
+        totalWeight: totalWeight.toFixed(2),
+        connectionsAnalyzed: validConnections.length,
+      })
+
+      return weightedAccuracy
+    } else {
+      // Standard difficulty-weighted accuracy for other game types
+      return (
+        userResponses.reduce((acc, res, index) => {
+          if (res.isCorrect) {
+            return acc + parseFloat(questions[index].difficulty)
+          }
+          return acc
+        }, 0) / questions.length
+      )
+    }
+  })()
+
+  const avgDifficulty = await (async () => {
+    if (gameType === 'connections') {
+      // For connections, calculate average from individual connection difficulties
+      const gameSession = await ArticleQuizSession.findById(sessionId)
+        .populate('gameData')
+        .session(session)
+
+      const validConnections =
+        gameSession?.gameData?.connections?.validConnections || []
+
+      if (validConnections.length === 0) {
+        // Fallback to overall difficulty or default
+        return gameSession?.gameData?.connections?.overallDifficulty || 0.5
+      }
+
+      // Calculate average from individual AI-generated connection difficulties
+      const totalDifficulty = validConnections.reduce((sum, vc) => {
+        return sum + (vc.difficulty || 0.5)
+      }, 0)
+
+      const avgConnectionDifficulty = totalDifficulty / validConnections.length
+
+      console.log('Connections average difficulty calculation:', {
+        connectionsCount: validConnections.length,
+        individualDifficulties: validConnections.map(
+          vc => vc.difficulty || 0.5,
+        ),
+        calculatedAverage: avgConnectionDifficulty,
+        overallDifficultyFromAI:
+          gameSession?.gameData?.connections?.overallDifficulty,
+        using: 'Individual connection difficulties',
+      })
+
+      return avgConnectionDifficulty
+    } else {
+      // Standard calculation for other game types
+      return (
+        questions.reduce((sum, q) => sum + (q.difficulty || 0.5), 0) /
+        questions.length
+      )
+    }
+  })()
 
   const performance = {
     accuracy,
@@ -310,7 +423,7 @@ const saveEnhancedQuizAttemptWithStats = async (
     correctCount,
     totalItems,
   }
-
+  console.log(performance)
   // Calculate enhanced RQM
   const rqmResult = calculateEnhancedRQM(
     gameType,

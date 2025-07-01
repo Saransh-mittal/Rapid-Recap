@@ -1,20 +1,11 @@
-// components/gameHub/gameInterfaces/TrueFalseInterface.jsx - Updated with manual navigation
+// components/gameHub/gameInterfaces/TrueFalseInterface.jsx - Optimized Minimalistic Version
 import React from 'react'
-import {
-  VStack,
-  HStack,
-  Text,
-  Button,
-  Progress,
-  Box,
-  Badge,
-} from '@chakra-ui/react'
-import { motion } from 'framer-motion'
-import { CheckCircle, XCircle, HelpCircle } from 'lucide-react'
+import { VStack, HStack, Text, Button, Box, Badge } from '@chakra-ui/react'
+import { motion, AnimatePresence } from 'framer-motion'
+import { CheckCircle, XCircle, Target } from 'lucide-react'
 import { useTranslation } from 'react-i18next'
 
 const MotionBox = motion(Box)
-const MotionButton = motion(Button)
 
 const TrueFalseInterface = ({
   question,
@@ -34,9 +25,9 @@ const TrueFalseInterface = ({
   }
 
   const getDifficultyColor = difficulty => {
-    if (difficulty < 0.3) return 'green'
-    if (difficulty < 0.6) return 'yellow'
-    return 'red'
+    if (difficulty < 0.3) return '#10B981'
+    if (difficulty < 0.6) return '#F59E0B'
+    return '#EF4444'
   }
 
   const getDifficultyLabel = difficulty => {
@@ -45,186 +36,198 @@ const TrueFalseInterface = ({
     return 'Hard'
   }
 
-  const getSelectedIcon = () => {
-    if (selectedAnswer === true) return <CheckCircle size={20} />
-    if (selectedAnswer === false) return <XCircle size={20} />
-    return <HelpCircle size={20} />
-  }
-
-  const getSelectedText = () => {
-    if (selectedAnswer === true) return 'Selected: TRUE'
-    if (selectedAnswer === false) return 'Selected: FALSE'
-    return 'No answer selected'
-  }
-
-  const getSelectedColor = () => {
-    if (selectedAnswer === true) return 'green.400'
-    if (selectedAnswer === false) return 'red.400'
-    return 'gray.500'
-  }
-
   return (
     <MotionBox
       initial={{ opacity: 0, y: 20 }}
       animate={{ opacity: 1, y: 0 }}
       exit={{ opacity: 0, y: -20 }}
+      transition={{ duration: 0.3 }}
       w="100%"
     >
-      <VStack spacing={8} align="center">
-        <Box textAlign="center" w="100%">
-          <HStack justify="center" spacing={4} mb={4}>
-            <Badge colorScheme="purple" fontSize="md" px={3} py={1}>
-              Statement {questionIndex + 1}
-            </Badge>
-            {difficulty && (
-              <Badge
-                colorScheme={getDifficultyColor(difficulty)}
-                fontSize="sm"
-                px={2}
-                py={1}
-              >
-                {getDifficultyLabel(difficulty)} ({Math.round(difficulty * 100)}
-                %)
-              </Badge>
-            )}
-          </HStack>
-        </Box>
-
-        {/* Statement Display */}
-        <Box
-          bg="gray.800"
-          p={6}
-          borderRadius="xl"
-          border="1px solid"
-          borderColor="gray.700"
-          maxW="600px"
-          w="100%"
-          position="relative"
-        >
-          <Text fontSize="xl" color="white" textAlign="center" lineHeight="1.6">
-            {statement}
-          </Text>
-
-          {/* Statement indicator */}
-          <Box
-            position="absolute"
-            top="-12px"
-            left="50%"
-            transform="translateX(-50%)"
-            bg="purple.600"
-            px={3}
+      <VStack spacing={4} align="center">
+        {/* Compact Header */}
+        <HStack justify="space-between" w="100%" wrap="wrap">
+          <Badge
+            bg="rgba(139, 92, 246, 0.1)"
+            color="purple.400"
+            px={2}
             py={1}
             borderRadius="full"
             fontSize="xs"
-            fontWeight="bold"
-            color="white"
           >
-            STATEMENT
-          </Box>
-        </Box>
+            Statement {questionIndex + 1}/{totalQuestions}
+          </Badge>
 
-        {/* Answer Selection */}
-        <VStack spacing={4} w="100%">
-          <Text
-            fontSize="lg"
-            color="white"
-            fontWeight="semibold"
-            textAlign="center"
-          >
-            Is this statement TRUE or FALSE?
-          </Text>
-
-          <HStack spacing={8} justify="center">
-            <MotionButton
-              onClick={() => handleAnswerSelect(false)}
-              size="xl"
-              colorScheme="red"
-              variant={selectedAnswer === false ? 'solid' : 'outline'}
-              leftIcon={<XCircle size={24} />}
-              px={8}
-              py={6}
-              fontSize="lg"
-              fontWeight="bold"
-              borderRadius="xl"
-              border="2px solid"
-              borderColor={selectedAnswer === false ? 'red.400' : 'red.600'}
-              bg={selectedAnswer === false ? 'red.600' : 'transparent'}
-              _hover={{
-                transform: 'scale(1.05)',
-                boxShadow: '0 8px 25px rgba(239, 68, 68, 0.4)',
-                bg: selectedAnswer === false ? 'red.700' : 'red.900',
-              }}
-              _active={{
-                transform: 'scale(0.95)',
-              }}
-              transition="all 0.2s"
-              whileHover={{ scale: 1.05 }}
-              whileTap={{ scale: 0.95 }}
+          {difficulty && (
+            <Badge
+              bg={`${getDifficultyColor(difficulty)}20`}
+              color={getDifficultyColor(difficulty)}
+              px={2}
+              py={1}
+              borderRadius="full"
+              fontSize="xs"
             >
-              FALSE
-            </MotionButton>
-
-            <MotionButton
-              onClick={() => handleAnswerSelect(true)}
-              size="xl"
-              colorScheme="green"
-              variant={selectedAnswer === true ? 'solid' : 'outline'}
-              leftIcon={<CheckCircle size={24} />}
-              px={8}
-              py={6}
-              fontSize="lg"
-              fontWeight="bold"
-              borderRadius="xl"
-              border="2px solid"
-              borderColor={selectedAnswer === true ? 'green.400' : 'green.600'}
-              bg={selectedAnswer === true ? 'green.600' : 'transparent'}
-              _hover={{
-                transform: 'scale(1.05)',
-                boxShadow: '0 8px 25px rgba(34, 197, 94, 0.4)',
-                bg: selectedAnswer === true ? 'green.700' : 'green.900',
-              }}
-              _active={{
-                transform: 'scale(0.95)',
-              }}
-              transition="all 0.2s"
-              whileHover={{ scale: 1.05 }}
-              whileTap={{ scale: 0.95 }}
-            >
-              TRUE
-            </MotionButton>
-          </HStack>
-        </VStack>
-
-        {/* Selection Status */}
-        <Box textAlign="center">
-          <HStack justify="center" spacing={2} color={getSelectedColor()}>
-            {getSelectedIcon()}
-            <Text fontWeight="semibold" fontSize="md">
-              {getSelectedText()}
-            </Text>
-          </HStack>
-          {selectedAnswer !== undefined && selectedAnswer !== null && (
-            <Text fontSize="sm" color="gray.400" mt={2}>
-              You can change your answer before proceeding
-            </Text>
+              {getDifficultyLabel(difficulty)}
+            </Badge>
           )}
+        </HStack>
+
+        {/* Statement Display */}
+        <Box
+          bg="rgba(255, 255, 255, 0.05)"
+          border="1px solid rgba(139, 92, 246, 0.3)"
+          borderRadius="xl"
+          p={4}
+          w="100%"
+          maxW="600px"
+        >
+          <Text
+            fontSize={{ base: 'md', md: 'lg' }}
+            color="white"
+            textAlign="center"
+            lineHeight="1.6"
+            fontWeight="500"
+          >
+            {statement}
+          </Text>
         </Box>
 
-        {/* Instructions */}
-        <Box
-          bg="blue.900"
-          p={4}
-          borderRadius="lg"
-          border="1px solid"
-          borderColor="blue.700"
-          maxW="500px"
+        {/* Question Prompt */}
+        <Text
+          fontSize="md"
+          color="gray.300"
+          fontWeight="600"
           textAlign="center"
         >
-          <Text fontSize="sm" color="blue.200" lineHeight="1.5">
-            📖 Read the statement carefully and determine if it's true or false
-            based on the article content. Look out for absolute terms like
-            "always" or "never" which often indicate false statements.
-          </Text>
+          Is this statement TRUE or FALSE?
+        </Text>
+
+        {/* Answer Buttons */}
+        <HStack spacing={6} justify="center">
+          {/* FALSE Button */}
+          <MotionBox whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }}>
+            <Button
+              onClick={() => handleAnswerSelect(false)}
+              w="120px"
+              h="80px"
+              bg={
+                selectedAnswer === false
+                  ? 'rgba(239, 68, 68, 0.2)'
+                  : 'rgba(255, 255, 255, 0.05)'
+              }
+              border="2px solid"
+              borderColor={
+                selectedAnswer === false ? '#EF4444' : 'rgba(239, 68, 68, 0.3)'
+              }
+              borderRadius="xl"
+              _hover={{
+                borderColor: '#DC2626',
+              }}
+              transition="all 0.2s"
+            >
+              <VStack spacing={2}>
+                <Box
+                  bg="linear-gradient(45deg, #EF4444, #DC2626)"
+                  borderRadius="lg"
+                  p={2}
+                >
+                  <XCircle size={20} color="white" />
+                </Box>
+                <Text fontSize="md" fontWeight="bold" color="white">
+                  FALSE
+                </Text>
+                {selectedAnswer === false && (
+                  <Badge
+                    bg="rgba(239, 68, 68, 0.9)"
+                    color="white"
+                    fontSize="2xs"
+                  >
+                    SELECTED
+                  </Badge>
+                )}
+              </VStack>
+            </Button>
+          </MotionBox>
+
+          {/* TRUE Button */}
+          <MotionBox whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }}>
+            <Button
+              onClick={() => handleAnswerSelect(true)}
+              w="120px"
+              h="80px"
+              bg={
+                selectedAnswer === true
+                  ? 'rgba(16, 185, 129, 0.2)'
+                  : 'rgba(255, 255, 255, 0.05)'
+              }
+              border="2px solid"
+              borderColor={
+                selectedAnswer === true ? '#10B981' : 'rgba(16, 185, 129, 0.3)'
+              }
+              borderRadius="xl"
+              _hover={{
+                borderColor: '#059669',
+              }}
+              transition="all 0.2s"
+            >
+              <VStack spacing={2}>
+                <Box
+                  bg="linear-gradient(45deg, #10B981, #059669)"
+                  borderRadius="lg"
+                  p={2}
+                >
+                  <CheckCircle size={20} color="white" />
+                </Box>
+                <Text fontSize="md" fontWeight="bold" color="white">
+                  TRUE
+                </Text>
+                {selectedAnswer === true && (
+                  <Badge
+                    bg="rgba(16, 185, 129, 0.9)"
+                    color="white"
+                    fontSize="2xs"
+                  >
+                    SELECTED
+                  </Badge>
+                )}
+              </VStack>
+            </Button>
+          </MotionBox>
+        </HStack>
+
+        {/* Selection Status */}
+        <Box
+          bg="rgba(255, 255, 255, 0.05)"
+          border="1px solid rgba(255, 255, 255, 0.1)"
+          borderRadius="lg"
+          p={3}
+          w="100%"
+          maxW="400px"
+          textAlign="center"
+        >
+          {selectedAnswer !== undefined && selectedAnswer !== null ? (
+            <HStack justify="center" spacing={2}>
+              {selectedAnswer ? (
+                <CheckCircle size={16} color="#10B981" />
+              ) : (
+                <XCircle size={16} color="#EF4444" />
+              )}
+              <Text
+                fontWeight="600"
+                fontSize="sm"
+                color={selectedAnswer ? '#10B981' : '#EF4444'}
+              >
+                {selectedAnswer ? 'TRUE' : 'FALSE'} selected
+              </Text>
+            </HStack>
+          ) : (
+            <HStack justify="center" spacing={2}>
+              <Target size={16} color="#6B7280" />
+              <Text color="gray.400" fontSize="sm">
+                Make your choice
+              </Text>
+            </HStack>
+          )}
         </Box>
       </VStack>
     </MotionBox>

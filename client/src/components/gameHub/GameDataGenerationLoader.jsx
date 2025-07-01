@@ -1,21 +1,13 @@
+// components/gameHub/GameDataGenerationLoader.jsx - Optimized Minimal Version
 import React, { useState, useEffect } from 'react'
-import {
-  Box,
-  VStack,
-  HStack,
-  Text,
-  Progress,
-  Grid,
-  GridItem,
-} from '@chakra-ui/react'
+import { Box, VStack, HStack, Text, Progress, Grid } from '@chakra-ui/react'
 import { motion } from 'framer-motion'
 import {
   Brain,
-  Sparkles,
   FileText,
   FlipHorizontal2,
+  Sparkles,
   Link2,
-  Zap,
   CheckCircle,
   Loader,
 } from 'lucide-react'
@@ -34,22 +26,30 @@ const GameDataGenerationLoader = ({
   const [startTime, setStartTime] = useState(null)
 
   const gameTypes = [
-    { icon: FileText, name: 'Quiz', color: '#3B82F6', delay: 0 },
-    { icon: FlipHorizontal2, name: 'True/False', color: '#8B5CF6', delay: 0.2 },
-    { icon: Sparkles, name: 'Word Weaver', color: '#10B981', delay: 0.4 },
-    { icon: Link2, name: 'Connections', color: '#F59E0B', delay: 0.6 },
+    { icon: FileText, name: 'Quiz', color: '#3B82F6', emoji: '🧠' },
+    { icon: FlipHorizontal2, name: 'T/F', color: '#8B5CF6', emoji: '⚡' },
+    { icon: Sparkles, name: 'Words', color: '#10B981', emoji: '🔤' },
+    { icon: Link2, name: 'Connect', color: '#F59E0B', emoji: '🔗' },
   ]
 
   const processingSteps = [
-    { step: 15, message: 'Analyzing content', icon: Brain },
-    { step: 35, message: 'Generating questions', icon: FileText },
-    { step: 55, message: 'Creating puzzles', icon: Sparkles },
-    { step: 75, message: 'Building connections', icon: Link2 },
-    { step: 90, message: 'Processing difficulties', icon: Zap },
-    { step: 100, message: 'Finalizing', icon: CheckCircle },
+    { step: 25, message: 'Analyzing content', icon: Brain, color: '#3B82F6' },
+    {
+      step: 50,
+      message: 'Crafting questions',
+      icon: FileText,
+      color: '#8B5CF6',
+    },
+    { step: 75, message: 'Building puzzles', icon: Sparkles, color: '#10B981' },
+    {
+      step: 100,
+      message: 'Finalizing games',
+      icon: CheckCircle,
+      color: '#10B981',
+    },
   ]
 
-  // Initialize start time when component mounts or generation starts
+  // Initialize start time
   useEffect(() => {
     if (isGenerating && !startTime) {
       setStartTime(Date.now())
@@ -64,13 +64,8 @@ const GameDataGenerationLoader = ({
       const elapsed = Date.now() - startTime
       const progressPercentage = Math.min((elapsed / duration) * 100, 100)
 
-      // Add some realistic variance to the progress
-      const variance = Math.sin(elapsed / 1000) * 2
-      const adjustedProgress = Math.min(progressPercentage + variance, 100)
+      setDisplayedProgress(progressPercentage)
 
-      setDisplayedProgress(adjustedProgress)
-
-      // Complete generation when progress reaches 100%
       if (progressPercentage >= 100) {
         setIsGenerating(false)
         setDisplayedProgress(100)
@@ -82,10 +77,10 @@ const GameDataGenerationLoader = ({
     return () => clearInterval(progressTimer)
   }, [isGenerating, startTime, duration, onComplete])
 
-  // Update current step based on progress
+  // Update current step
   useEffect(() => {
     for (let i = processingSteps.length - 1; i >= 0; i--) {
-      if (displayedProgress >= processingSteps[i].step - 5) {
+      if (displayedProgress >= processingSteps[i].step - 10) {
         setCurrentStep(i)
         break
       }
@@ -100,324 +95,280 @@ const GameDataGenerationLoader = ({
       minH="100vh"
       bg="gray.900"
       color="white"
-      position="relative"
-      overflow="hidden"
       display="flex"
       alignItems="center"
       justifyContent="center"
+      position="relative"
+      px={4}
     >
-      {/* Subtle background gradient */}
+      {/* Background Effect */}
       <Box
         position="absolute"
         inset={0}
-        bgGradient="radial(circle at 50% 30%, rgba(139, 92, 246, 0.15), transparent 50%)"
+        bgGradient="radial(circle at 30% 20%, rgba(59, 130, 246, 0.1), transparent 50%),
+                   radial(circle at 70% 80%, rgba(139, 92, 246, 0.08), transparent 50%)"
         opacity={0.6}
       />
 
-      {/* Floating particles */}
-      <Box position="absolute" inset={0} pointerEvents="none">
-        {Array.from({ length: 8 }).map((_, i) => (
+      {/* Main Content */}
+      <Box position="relative" zIndex={1} w="100%" maxW="500px">
+        <VStack spacing={8}>
+          {/* Hero Section */}
           <MotionBox
-            key={i}
-            position="absolute"
-            width="2px"
-            height="2px"
-            bg="purple.400"
-            borderRadius="full"
-            left={`${20 + Math.random() * 60}%`}
-            top={`${20 + Math.random() * 60}%`}
-            animate={{
-              y: [0, -20, 0],
-              opacity: [0.3, 0.7, 0.3],
-            }}
-            transition={{
-              duration: 4 + Math.random() * 2,
-              repeat: Infinity,
-              delay: Math.random() * 2,
-              ease: 'easeInOut',
-            }}
-          />
-        ))}
-      </Box>
-
-      {/* Main content */}
-      <VStack
-        spacing={8}
-        maxW="500px"
-        w="100%"
-        px={6}
-        position="relative"
-        zIndex={1}
-      >
-        {/* Header Section */}
-        <VStack spacing={6} textAlign="center">
-          {/* Brain icon with subtle pulse */}
-          <MotionBox
-            animate={{
-              scale: [1, 1.05, 1],
-            }}
-            transition={{
-              duration: 3,
-              repeat: Infinity,
-              ease: 'easeInOut',
-            }}
+            initial={{ opacity: 0, scale: 0.8 }}
+            animate={{ opacity: 1, scale: 1 }}
+            transition={{ duration: 0.6 }}
           >
-            <Text
-              fontSize="6xl"
-              filter="drop-shadow(0 0 15px rgba(139, 92, 246, 0.4))"
-            >
-              🧠
-            </Text>
-          </MotionBox>
-
-          {/* Title */}
-          <VStack spacing={3}>
-            <Text
-              fontSize={{ base: '2xl', md: '3xl' }}
-              fontWeight="600"
-              letterSpacing="tight"
-              bgGradient="linear(to-r, blue.300, purple.300, pink.300)"
-              bgClip="text"
-            >
-              Generating Game Data
-            </Text>
-
-            <Text
-              fontSize="md"
-              color="gray.400"
-              fontWeight="400"
-              maxW="350px"
-              lineHeight="1.5"
-            >
-              Creating personalized learning experiences
-            </Text>
-
-            {/* Article title */}
-            <Box
-              px={4}
-              py={2}
-              bg="gray.800"
-              border="1px solid"
-              borderColor="gray.700"
-              borderRadius="lg"
-              maxW="300px"
-            >
-              <Text fontSize="sm" color="gray.300" noOfLines={1}>
-                📄 {articleTitle}
-              </Text>
-            </Box>
-          </VStack>
-        </VStack>
-
-        {/* Progress Section */}
-        <VStack spacing={6} w="100%">
-          {/* Main progress display */}
-          <VStack spacing={4} w="100%">
-            <HStack justify="space-between" w="100%">
-              <Text fontSize="sm" color="gray.500" fontWeight="500">
-                Progress
-              </Text>
-              <Text fontSize="sm" color="purple.300" fontWeight="600">
-                {Math.round(displayedProgress)}%
-              </Text>
-            </HStack>
-
-            {/* Sleek progress bar */}
-            <Box w="100%" position="relative">
-              <Progress
-                value={displayedProgress}
-                size="sm"
-                borderRadius="full"
-                bg="gray.800"
-                colorScheme="purple"
-                hasStripe={false}
-                isAnimated={false}
-              />
-              {/* Subtle glow effect */}
+            <VStack spacing={4} textAlign="center">
+              {/* Main Icon */}
               <MotionBox
-                position="absolute"
-                top={0}
-                left={0}
-                height="100%"
-                width={`${displayedProgress}%`}
-                borderRadius="full"
-                boxShadow="0 0 10px rgba(139, 92, 246, 0.4)"
-                bg="purple.400"
-                transition={{ duration: 0.3 }}
-              />
-            </Box>
-          </VStack>
-
-          {/* Current step indicator */}
-          <MotionBox
-            key={currentStepData.message}
-            initial={{ opacity: 0, y: 10 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.5 }}
-          >
-            <HStack spacing={3} justify="center">
-              <MotionBox
-                animate={{ rotate: 360 }}
-                transition={{ duration: 2, repeat: Infinity, ease: 'linear' }}
+                animate={{
+                  rotate: [0, 360],
+                  scale: [1, 1.1, 1],
+                }}
+                transition={{
+                  rotate: { duration: 4, repeat: Infinity, ease: 'linear' },
+                  scale: { duration: 2, repeat: Infinity, ease: 'easeInOut' },
+                }}
+                fontSize="6xl"
               >
-                <StepIcon size={18} color="#A855F7" />
+                🧠
               </MotionBox>
-              <Text fontSize="md" color="gray.300" fontWeight="500">
-                {currentStepData.message}
-              </Text>
-            </HStack>
+
+              {/* Title */}
+              <VStack spacing={2}>
+                <Text
+                  fontSize={{ base: '2xl', md: '3xl' }}
+                  fontWeight="bold"
+                  bgGradient="linear(45deg, #667eea, #764ba2)"
+                  bgClip="text"
+                >
+                  Crafting Your Games
+                </Text>
+                <Text fontSize="sm" color="gray.400" maxW="300px">
+                  AI is analyzing your content and building personalized
+                  challenges
+                </Text>
+              </VStack>
+
+              {/* Article Title */}
+              <Box
+                bg="rgba(255, 255, 255, 0.05)"
+                border="1px solid rgba(255, 255, 255, 0.1)"
+                borderRadius="xl"
+                px={4}
+                py={2}
+                maxW="350px"
+              >
+                <HStack spacing={2} justify="center">
+                  <FileText size={16} color="#8B5CF6" />
+                  <Text fontSize="sm" color="gray.300" noOfLines={1}>
+                    {articleTitle}
+                  </Text>
+                </HStack>
+              </Box>
+            </VStack>
           </MotionBox>
 
-          {/* Game types grid */}
-          <Grid templateColumns="repeat(2, 1fr)" gap={3} w="100%" maxW="280px">
-            {gameTypes.map((game, index) => {
-              const GameIcon = game.icon
-              const isCompleted = displayedProgress > (index + 1) * 20
-              const isActive =
-                displayedProgress > index * 20 &&
-                displayedProgress <= (index + 1) * 20
+          {/* Progress Section */}
+          <MotionBox
+            initial={{ opacity: 0, y: 30 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.6, delay: 0.3 }}
+            w="100%"
+          >
+            <VStack spacing={6}>
+              {/* Progress Display */}
+              <VStack spacing={3} w="100%">
+                <HStack justify="space-between" w="100%">
+                  <Text fontSize="sm" color="gray.400">
+                    Progress
+                  </Text>
+                  <Text fontSize="xl" color="purple.400" fontWeight="bold">
+                    {Math.round(displayedProgress)}%
+                  </Text>
+                </HStack>
 
-              return (
-                <GridItem key={index}>
+                <Box w="100%" position="relative">
+                  <Progress
+                    value={displayedProgress}
+                    size="lg"
+                    borderRadius="full"
+                    bg="rgba(255, 255, 255, 0.1)"
+                    colorScheme="purple"
+                  />
+                </Box>
+              </VStack>
+
+              {/* Current Step */}
+              <Box
+                bg="rgba(255, 255, 255, 0.05)"
+                border="1px solid rgba(255, 255, 255, 0.1)"
+                borderRadius="xl"
+                p={4}
+                w="100%"
+                textAlign="center"
+              >
+                <HStack spacing={3} justify="center">
                   <MotionBox
-                    initial={{ opacity: 0, scale: 0.9 }}
-                    animate={{
-                      opacity: 1,
-                      scale: 1,
-                    }}
+                    animate={{ rotate: 360 }}
                     transition={{
-                      delay: game.delay,
-                      duration: 0.5,
-                      ease: 'easeOut',
+                      duration: 2,
+                      repeat: Infinity,
+                      ease: 'linear',
                     }}
                   >
-                    <Box
-                      p={3}
-                      bg={isActive ? 'gray.700' : 'gray.800'}
-                      border="1px solid"
-                      borderColor={
-                        isActive
-                          ? game.color
-                          : isCompleted
-                          ? 'gray.600'
-                          : 'gray.700'
-                      }
-                      borderRadius="lg"
-                      position="relative"
-                      overflow="hidden"
-                      opacity={isCompleted ? 0.8 : isActive ? 1 : 0.6}
-                      transition="all 0.3s ease"
-                    >
-                      {/* Subtle background effect for active state */}
-                      {isActive && (
-                        <MotionBox
-                          position="absolute"
-                          inset={0}
-                          bg={game.color}
-                          opacity={0.05}
-                          animate={{
-                            opacity: [0.05, 0.1, 0.05],
-                          }}
-                          transition={{
-                            duration: 2,
-                            repeat: Infinity,
-                            ease: 'easeInOut',
-                          }}
-                        />
-                      )}
-
-                      <VStack spacing={2} position="relative">
-                        <MotionBox
-                          animate={
-                            isActive
-                              ? {
-                                  scale: [1, 1.1, 1],
-                                }
-                              : {}
-                          }
-                          transition={
-                            isActive
-                              ? {
-                                  duration: 2,
-                                  repeat: Infinity,
-                                  ease: 'easeInOut',
-                                }
-                              : {}
-                          }
-                        >
-                          <GameIcon size={20} color={game.color} />
-                        </MotionBox>
-                        <Text
-                          fontSize="xs"
-                          color="gray.300"
-                          fontWeight="500"
-                          textAlign="center"
-                        >
-                          {game.name}
-                        </Text>
-
-                        {/* Status indicator */}
-                        <Box>
-                          {isCompleted ? (
-                            <CheckCircle size={12} color="#10B981" />
-                          ) : isActive ? (
-                            <MotionBox
-                              animate={{ rotate: 360 }}
-                              transition={{
-                                duration: 1,
-                                repeat: Infinity,
-                                ease: 'linear',
-                              }}
-                            >
-                              <Loader size={12} color={game.color} />
-                            </MotionBox>
-                          ) : (
-                            <Box width="12px" height="12px" />
-                          )}
-                        </Box>
-                      </VStack>
+                    <Box bg={currentStepData.color} borderRadius="lg" p={2}>
+                      <StepIcon size={20} color="white" />
                     </Box>
                   </MotionBox>
-                </GridItem>
-              )
-            })}
-          </Grid>
-        </VStack>
+                  <VStack spacing={0} align="start">
+                    <Text fontSize="md" color="white" fontWeight="bold">
+                      {currentStepData.message}
+                    </Text>
+                    <Text fontSize="xs" color="gray.400">
+                      Building your experience...
+                    </Text>
+                  </VStack>
+                </HStack>
+              </Box>
 
-        {/* Bottom info */}
-        <VStack spacing={3}>
-          {/* AI badge */}
-          <Box
-            px={4}
-            py={2}
-            bg="gray.800"
-            border="1px solid"
-            borderColor="gray.700"
-            borderRadius="full"
+              {/* Games Grid */}
+              <Grid templateColumns="repeat(2, 1fr)" gap={3} w="100%">
+                {gameTypes.map((game, index) => {
+                  const GameIcon = game.icon
+                  const isCompleted = displayedProgress > (index + 1) * 25
+                  const isActive =
+                    displayedProgress > index * 25 &&
+                    displayedProgress <= (index + 1) * 25
+
+                  return (
+                    <MotionBox
+                      key={index}
+                      initial={{ opacity: 0, scale: 0.8 }}
+                      animate={{ opacity: 1, scale: 1 }}
+                      transition={{ delay: index * 0.1, duration: 0.4 }}
+                    >
+                      <Box
+                        bg={
+                          isActive
+                            ? 'rgba(255, 255, 255, 0.1)'
+                            : 'rgba(255, 255, 255, 0.05)'
+                        }
+                        border="1px solid"
+                        borderColor={
+                          isActive
+                            ? game.color
+                            : isCompleted
+                            ? 'rgba(16, 185, 129, 0.5)'
+                            : 'rgba(255, 255, 255, 0.1)'
+                        }
+                        borderRadius="xl"
+                        p={3}
+                        textAlign="center"
+                        opacity={isCompleted ? 1 : isActive ? 1 : 0.6}
+                        transition="all 0.3s"
+                      >
+                        <VStack spacing={2}>
+                          <Box bg={game.color} borderRadius="lg" p={2}>
+                            <GameIcon size={20} color="white" />
+                          </Box>
+                          <VStack spacing={1}>
+                            <HStack spacing={1}>
+                              <Text fontSize="xs">{game.emoji}</Text>
+                              <Text
+                                fontSize="sm"
+                                fontWeight="bold"
+                                color="white"
+                              >
+                                {game.name}
+                              </Text>
+                            </HStack>
+                            <Box>
+                              {isCompleted ? (
+                                <HStack spacing={1} justify="center">
+                                  <CheckCircle size={12} color="#10B981" />
+                                  <Text
+                                    fontSize="xs"
+                                    color="emerald.400"
+                                    fontWeight="bold"
+                                  >
+                                    READY
+                                  </Text>
+                                </HStack>
+                              ) : isActive ? (
+                                <HStack spacing={1} justify="center">
+                                  <MotionBox
+                                    animate={{ rotate: 360 }}
+                                    transition={{
+                                      duration: 1,
+                                      repeat: Infinity,
+                                      ease: 'linear',
+                                    }}
+                                  >
+                                    <Loader size={12} color={game.color} />
+                                  </MotionBox>
+                                  <Text
+                                    fontSize="xs"
+                                    color={game.color}
+                                    fontWeight="bold"
+                                  >
+                                    BUILDING
+                                  </Text>
+                                </HStack>
+                              ) : (
+                                <Text
+                                  fontSize="xs"
+                                  color="gray.500"
+                                  fontWeight="bold"
+                                >
+                                  PENDING
+                                </Text>
+                              )}
+                            </Box>
+                          </VStack>
+                        </VStack>
+                      </Box>
+                    </MotionBox>
+                  )
+                })}
+              </Grid>
+            </VStack>
+          </MotionBox>
+
+          {/* Bottom Info */}
+          <MotionBox
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            transition={{ duration: 0.6, delay: 0.6 }}
+            textAlign="center"
           >
-            <HStack spacing={2}>
-              <MotionBox
-                animate={{ rotate: [0, 360] }}
-                transition={{ duration: 8, repeat: Infinity, ease: 'linear' }}
+            <VStack spacing={2}>
+              <Box
+                bg="rgba(255, 215, 0, 0.1)"
+                border="1px solid rgba(255, 215, 0, 0.3)"
+                borderRadius="full"
+                px={4}
+                py={2}
               >
-                <Sparkles size={14} color="#F59E0B" />
-              </MotionBox>
-              <Text fontSize="xs" color="gray.400" fontWeight="500">
-                AI-Powered Generation
+                <HStack spacing={2}>
+                  <Text fontSize="xs" color="yellow.300" fontWeight="bold">
+                    🚀 AI-POWERED GENERATION
+                  </Text>
+                </HStack>
+              </Box>
+              <Text fontSize="xs" color="gray.500">
+                {displayedProgress < 100
+                  ? `⏱️ ${Math.ceil(
+                      (duration - (Date.now() - (startTime || Date.now()))) /
+                        1000,
+                    )}s remaining`
+                  : '🎉 Complete! Launching your games...'}
               </Text>
-            </HStack>
-          </Box>
-
-          {/* Time estimate */}
-          <Text fontSize="xs" color="gray.500" textAlign="center">
-            {displayedProgress < 100
-              ? `Estimated time: ${Math.ceil(
-                  (duration - (Date.now() - (startTime || Date.now()))) / 1000,
-                )}s remaining`
-              : 'Generation complete!'}
-          </Text>
+            </VStack>
+          </MotionBox>
         </VStack>
-      </VStack>
+      </Box>
     </Box>
   )
 }

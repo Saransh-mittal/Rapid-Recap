@@ -1,4 +1,4 @@
-// Replace the content in model/articleQuizSessionSchem.js
+// model/articleQuizSessionSchem.js - Updated without context for word weaver
 
 const mongoose = require('mongoose')
 
@@ -60,9 +60,9 @@ const articleQuizSessionSchema = new mongoose.Schema({
       text: String, // Statement text
       correct: Boolean, // True/false answer
 
-      // Word Weaver fields
-      context: String,
-      blank: String,
+      // Word Weaver fields - UPDATED: Removed context
+      // REMOVED: context: String,
+      blank: String, // Must contain fill-in-the-blank with _____
 
       // Connections fields
       concepts: [String],

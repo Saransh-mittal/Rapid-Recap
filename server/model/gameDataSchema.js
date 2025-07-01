@@ -1,6 +1,4 @@
-// model/gameDataSchema.js - Updated Word Weaver section
-// Replace the word_weaver section in the existing schema with this:
-
+// model/gameDataSchema.js - Updated Word Weaver section without context
 const mongoose = require('mongoose')
 
 const gameDataSchema = new mongoose.Schema({
@@ -81,6 +79,7 @@ const gameDataSchema = new mongoose.Schema({
     ],
   },
 
+  // UPDATED: Word Weaver without context field
   word_weaver: {
     questions: [
       {
@@ -88,13 +87,24 @@ const gameDataSchema = new mongoose.Schema({
           type: mongoose.Schema.Types.ObjectId,
           default: () => new mongoose.Types.ObjectId(),
         },
-        context: {
-          type: String,
-          required: true,
-        },
+        // REMOVED: context field
         blank: {
           type: String,
           required: true,
+          validate: {
+            validator: function (v) {
+              // Validate that the blank contains proper fill-in-the-blank format
+              return (
+                v &&
+                typeof v === 'string' &&
+                v.includes('_____') && // Must contain blank placeholder
+                v.trim().length >= 10 && // Reasonable sentence length
+                v.split('_____').length === 2 // Must have exactly one blank
+              )
+            },
+            message:
+              'Blank must be a proper fill-in-the-blank sentence with exactly one _____ placeholder',
+          },
         },
         answer: {
           type: String,
@@ -160,8 +170,36 @@ const gameDataSchema = new mongoose.Schema({
           type: String,
           required: true,
         },
+        difficulty: {
+          type: Number,
+          required: true,
+          min: 0.01,
+          max: 0.99,
+          default: 0.5,
+        },
+        connectionType: {
+          type: String,
+          enum: [
+            'cause_effect',
+            'category_example',
+            'sequential',
+            'opposing',
+            'functional',
+            'geographic',
+            'temporal',
+            'conceptual',
+            'definitional',
+          ],
+          default: 'conceptual',
+        },
       },
     ],
+    overallDifficulty: {
+      type: Number,
+      min: 0.01,
+      max: 0.99,
+      default: 0.5,
+    },
   },
 
   language: {

@@ -1,4 +1,4 @@
-// components/gameHub/EnhancedGameInterface.jsx - Fixed dynamic timer warnings
+// components/gameHub/EnhancedGameInterface.jsx - Optimized Minimalistic Version - NO PREVIOUS NAV FOR QUIZ & T/F
 import React, { useState, useEffect, useCallback, useMemo, useRef } from 'react'
 import { useParams, useNavigate } from 'react-router-dom'
 import { useSelector, useDispatch } from 'react-redux'
@@ -12,30 +12,25 @@ import {
   useToast,
   CircularProgress,
   CircularProgressLabel,
-  Grid,
-  Flex,
   Badge,
-  Alert,
-  AlertIcon,
+  Container,
+  Flex,
 } from '@chakra-ui/react'
 import { motion, AnimatePresence } from 'framer-motion'
 import {
   ChevronLeft,
-  ChevronRight,
   Clock,
   CheckCircle,
-  XCircle,
-  RotateCcw,
-  Timer,
   Send,
   ArrowLeft,
   ArrowRight,
+  Target,
 } from 'lucide-react'
 import { useTranslation } from 'react-i18next'
 import i18n from 'i18next'
 
 // Import timer utilities
-import { getGameTypeTimerConfig } from '../../utils/timerUtils'
+import { getGameTypeTimerConfig, getTimerColor } from '../../utils/timerUtils'
 
 // Import custom hooks
 import {
@@ -62,90 +57,177 @@ import GameResultsModal from './GameResultsModal'
 
 const MotionBox = motion(Box)
 
-// Enhanced Timer Component with better styling and warnings
-const EnhancedTimer = ({ timeLeft, totalTime, gameType, onTimeUp }) => {
-  const getColor = () => {
-    const percentage = (timeLeft / totalTime) * 100
-    if (percentage > 50) return 'green.400'
-    if (percentage > 25) return 'yellow.400'
-    return 'red.400'
-  }
+// Game type configurations
+const gameTypeConfigs = {
+  normal_quiz: {
+    title: 'Knowledge Quest',
+    color: '#3B82F6',
+    emoji: '🧠',
+  },
+  true_false: {
+    title: 'Truth Detector',
+    color: '#8B5CF6',
+    emoji: '⚡',
+  },
+  word_weaver: {
+    title: 'Word Architect',
+    color: '#10B981',
+    emoji: '🔤',
+  },
+  connections: {
+    title: 'Mind Mapper',
+    color: '#F59E0B',
+    emoji: '🔗',
+  },
+}
 
-  const getWarningState = () => {
-    const percentage = (timeLeft / totalTime) * 100
-    if (percentage <= 10) return 'critical'
-    if (percentage <= 25) return 'warning'
+// Compact Timer Component - Config-synced visual and audio warnings
+const CompactTimer = ({ timeLeft, totalTime, gameType, onTimeUp }) => {
+  const config = gameTypeConfigs[gameType] || gameTypeConfigs.normal_quiz
+  const toast = useToast()
+
+  // Use timer utilities and game-specific config
+  const timerColor = getTimerColor(timeLeft, totalTime)
+  const gameTimerConfig = getGameTypeTimerConfig(gameType)
+
+  // CONFIG-BASED warning states (not percentage-based)
+  const getConfigWarningState = () => {
+    if (timeLeft <= gameTimerConfig.criticalAt) return 'critical'
+    if (timeLeft <= gameTimerConfig.warningAt) return 'warning'
     return 'normal'
   }
 
-  const warningState = getWarningState()
+  const configWarningState = getConfigWarningState()
 
-  return (
-    <VStack spacing={2} align="center">
-      <MotionBox
-        animate={
-          warningState === 'critical'
-            ? { scale: [1, 1.1, 1], opacity: [1, 0.8, 1] }
-            : {}
-        }
-        transition={{
-          duration: 1,
-          repeat: warningState === 'critical' ? Infinity : 0,
-        }}
-      >
-        <CircularProgress
-          value={(timeLeft / totalTime) * 100}
-          color={getColor()}
-          size="80px"
-          thickness="8px"
-          trackColor="gray.700"
-        >
-          <CircularProgressLabel fontSize="lg" fontWeight="bold" color="white">
-            {timeLeft}s
-          </CircularProgressLabel>
-        </CircularProgress>
-      </MotionBox>
-      <Text fontSize="xs" color="gray.400" textAlign="center">
-        {totalTime}s total
-      </Text>
-    </VStack>
-  )
-}
+  // Refs to track if warnings have been shown
+  const warningShownRef = useRef(false)
+  const criticalShownRef = useRef(false)
+  const previousTimeRef = useRef(timeLeft)
 
-// Timer Warning Component - now uses dynamic warning times
-const TimerWarning = ({ timeLeft, totalTime, gameType }) => {
-  const timerConfig = getGameTypeTimerConfig(gameType)
-  const percentage = (timeLeft / totalTime) * 100
+  // Reset warning states when timer resets or game starts
+  useEffect(() => {
+    if (timeLeft >= totalTime * 0.9) {
+      warningShownRef.current = false
+      criticalShownRef.current = false
+    }
+  }, [timeLeft, totalTime])
 
-  // Use game-specific warning thresholds
-  if (timeLeft > timerConfig.warningAt) return null
+  // Show toast warnings using config values
+  useEffect(() => {
+    const previousTime = previousTimeRef.current
+    previousTimeRef.current = timeLeft
+
+    // Only show warnings when time is decreasing (not when timer resets)
+    if (timeLeft >= previousTime) return
+
+    // Critical warning based on config criticalAt value
+    if (
+      timeLeft <= gameTimerConfig.criticalAt &&
+      !criticalShownRef.current &&
+      timeLeft > 0
+    ) {
+      criticalShownRef.current = true
+      toast({
+        title: '🚨 CRITICAL TIME!',
+        description: `Only ${timeLeft} seconds left!`,
+        status: 'error',
+        duration: 4000,
+        isClosable: true,
+        position: 'top',
+      })
+    }
+    // Warning based on config warningAt value (but not if critical already shown)
+    else if (
+      timeLeft <= gameTimerConfig.warningAt &&
+      !warningShownRef.current &&
+      !criticalShownRef.current &&
+      timeLeft > 0
+    ) {
+      warningShownRef.current = true
+      toast({
+        title: '⏰ Time Running Low!',
+        description: `${timeLeft} seconds remaining - speed up!`,
+        status: 'warning',
+        duration: 3000,
+        isClosable: true,
+        position: 'top',
+      })
+    }
+  }, [timeLeft, totalTime, gameTimerConfig, toast])
 
   return (
     <MotionBox
-      initial={{ opacity: 0, y: -20 }}
-      animate={{ opacity: 1, y: 0 }}
-      exit={{ opacity: 0, y: -20 }}
+      // SYNCED: Pulsing animation starts at criticalAt seconds
+      animate={configWarningState === 'critical' ? { scale: [1, 1.08, 1] } : {}}
+      transition={{
+        duration: 0.6,
+        repeat: configWarningState === 'critical' ? Infinity : 0,
+      }}
     >
-      <Alert
-        status={timeLeft <= timerConfig.criticalAt ? 'error' : 'warning'}
-        borderRadius="lg"
-        mb={4}
-        bg={timeLeft <= timerConfig.criticalAt ? 'red.900' : 'yellow.900'}
-        color="white"
-      >
-        <AlertIcon />
-        {timeLeft <= timerConfig.criticalAt ? (
-          <Text fontWeight="bold">⚠️ Only {timeLeft} seconds left!</Text>
-        ) : (
-          <Text>⏰ Time is running out - {timeLeft} seconds remaining</Text>
-        )}
-      </Alert>
+      <HStack spacing={3}>
+        {/* SINGLE timer display - only in circular progress */}
+        <CircularProgress
+          value={(timeLeft / totalTime) * 100}
+          color={timerColor}
+          size="60px"
+          thickness="6px"
+          trackColor="rgba(255, 255, 255, 0.1)"
+        >
+          <CircularProgressLabel>
+            <VStack spacing={0}>
+              <Text
+                fontSize="xl"
+                fontWeight="bold"
+                color="white"
+                lineHeight="1"
+              >
+                {timeLeft}
+              </Text>
+              <Text fontSize="2xs" color="gray.400" lineHeight="1">
+                sec
+              </Text>
+            </VStack>
+          </CircularProgressLabel>
+        </CircularProgress>
+
+        {/* SYNCED: Badge appears at warningAt seconds */}
+        <VStack spacing={1} align="start">
+          {configWarningState !== 'normal' && (
+            <MotionBox
+              initial={{ opacity: 0, scale: 0.8 }}
+              animate={{
+                opacity: 1,
+                scale: configWarningState === 'critical' ? [1, 1.1, 1] : 1,
+              }}
+              transition={{
+                opacity: { duration: 0.3 },
+                scale: {
+                  duration: 0.5,
+                  repeat: configWarningState === 'critical' ? Infinity : 0,
+                  ease: 'easeInOut',
+                },
+              }}
+            >
+              <Badge
+                colorScheme={
+                  configWarningState === 'critical' ? 'red' : 'yellow'
+                }
+                size="sm"
+                fontSize="2xs"
+                variant="solid"
+              >
+                {configWarningState === 'critical' ? 'URGENT!' : 'HURRY!'}
+              </Badge>
+            </MotionBox>
+          )}
+        </VStack>
+      </HStack>
     </MotionBox>
   )
 }
 
-// Navigation Controls Component
-const NavigationControls = ({
+// Compact Navigation Controls - Updated to hide Previous for Quiz & T/F
+const CompactNavigationControls = ({
   currentQuestionIndex,
   totalQuestions,
   gameType,
@@ -157,75 +239,146 @@ const NavigationControls = ({
   canSubmit,
   isSubmitting,
 }) => {
-  const { t } = useTranslation()
-
+  const config = gameTypeConfigs[gameType] || gameTypeConfigs.normal_quiz
   const isFirstQuestion = currentQuestionIndex === 0
   const isLastQuestion = currentQuestionIndex === totalQuestions - 1
   const isSingleQuestion = gameType === 'connections' || totalQuestions === 1
 
-  return (
-    <HStack justify="space-between" w="100%" pt={6}>
-      {/* Previous Button */}
-      <Button
-        leftIcon={<ArrowLeft size={16} />}
-        onClick={onPrevious}
-        isDisabled={isFirstQuestion || isSingleQuestion || isSubmitting}
-        variant="outline"
-        colorScheme="gray"
-        size="md"
-      >
-        Previous
-      </Button>
+  // UPDATED: Hide previous navigation for quiz, true/false, and connections games
+  const showPreviousButton = gameType === 'word_weaver'
 
-      {/* Question Indicator */}
-      <VStack spacing={1}>
-        <Text fontSize="sm" color="gray.400">
-          Question {currentQuestionIndex + 1} of {totalQuestions}
-        </Text>
+  return (
+    <Box
+      bg="rgba(255, 255, 255, 0.05)"
+      backdropFilter="blur(10px)"
+      border="1px solid rgba(255, 255, 255, 0.1)"
+      borderRadius="xl"
+      p={4}
+    >
+      <VStack spacing={3}>
+        {/* Progress */}
+        <HStack justify="space-between" w="100%">
+          <Text fontSize="xs" color="gray.400">
+            Question {currentQuestionIndex + 1} of {totalQuestions}
+          </Text>
+          {hasAnswer && (
+            <HStack spacing={1}>
+              <CheckCircle size={12} color={config.color} />
+              <Text fontSize="xs" color={config.color}>
+                Answered
+              </Text>
+            </HStack>
+          )}
+        </HStack>
+
         <Progress
           value={((currentQuestionIndex + 1) / totalQuestions) * 100}
-          width="200px"
           size="sm"
-          colorScheme="purple"
           borderRadius="full"
+          bg="rgba(255, 255, 255, 0.1)"
+          colorScheme="blue"
+          w="100%"
         />
-      </VStack>
 
-      {/* Next/Submit Button */}
-      {isLastQuestion || isSingleQuestion ? (
-        <Button
-          rightIcon={<Send size={16} />}
-          onClick={onSubmit}
-          isDisabled={!canSubmit}
-          isLoading={isSubmitting}
-          loadingText="Submitting..."
-          colorScheme="green"
-          size="md"
-          _hover={{
-            transform: canSubmit ? 'scale(1.05)' : 'none',
-            boxShadow: canSubmit ? '0 8px 25px rgba(34, 197, 94, 0.4)' : 'none',
-          }}
-        >
-          Submit Game
-        </Button>
-      ) : (
-        <Button
-          rightIcon={<ArrowRight size={16} />}
-          onClick={onNext}
-          isDisabled={!canNavigateNext}
-          colorScheme="purple"
-          size="md"
-          _hover={{
-            transform: canNavigateNext ? 'scale(1.05)' : 'none',
-            boxShadow: canNavigateNext
-              ? '0 8px 25px rgba(139, 92, 246, 0.4)'
-              : 'none',
-          }}
-        >
-          Next Question
-        </Button>
-      )}
-    </HStack>
+        {/* FIXED: Buttons - Updated layout to prevent overflow and ensure proper visibility */}
+        <VStack spacing={3} w="100%">
+          {/* Main Action Button */}
+          {isLastQuestion || isSingleQuestion ? (
+            <Button
+              rightIcon={<Send size={14} />}
+              onClick={onSubmit}
+              isDisabled={!canSubmit}
+              isLoading={isSubmitting}
+              size="sm"
+              bgGradient={`linear(45deg, ${config.color}, ${config.color}dd)`}
+              color="white"
+              borderRadius="full"
+              fontSize="xs"
+              w="100%"
+              _hover={{
+                bgGradient: `linear(45deg, ${config.color}dd, ${config.color}bb)`,
+              }}
+              _disabled={{
+                opacity: 0.6,
+                cursor: 'not-allowed',
+              }}
+            >
+              Submit
+            </Button>
+          ) : (
+            <Button
+              rightIcon={<ArrowRight size={14} />}
+              onClick={onNext}
+              isDisabled={!canNavigateNext}
+              size="sm"
+              bgGradient={`linear(45deg, ${config.color}, ${config.color}dd)`}
+              color="white"
+              borderRadius="full"
+              fontSize="xs"
+              w="100%"
+              _hover={{
+                bgGradient: `linear(45deg, ${config.color}dd, ${config.color}bb)`,
+              }}
+              _disabled={{
+                opacity: 0.6,
+                cursor: 'not-allowed',
+              }}
+            >
+              Next
+            </Button>
+          )}
+          {/* Previous Button Row - Only for word_weaver */}
+          {showPreviousButton && (
+            <Button
+              leftIcon={<ArrowLeft size={14} />}
+              onClick={onPrevious}
+              isDisabled={isFirstQuestion || isSingleQuestion || isSubmitting}
+              color={'white'}
+              variant="outline"
+              size="sm"
+              borderRadius="full"
+              borderColor="rgba(255, 255, 255, 0.2)"
+              fontSize="xs"
+              w="100%"
+              _hover={{
+                borderColor: 'rgba(255, 255, 255, 0.4)',
+                bg: 'rgba(255, 255, 255, 0.05)',
+              }}
+              _disabled={{
+                opacity: 0.5,
+                cursor: 'not-allowed',
+              }}
+            >
+              Previous
+            </Button>
+          )}
+        </VStack>
+
+        {/* UPDATED: Add info text for no-previous-nav games */}
+        {!showPreviousButton && !isSingleQuestion && (
+          <Text
+            fontSize="xs"
+            color="gray.500"
+            textAlign="center"
+            fontStyle="italic"
+          >
+            💡 No going back - choose wisely!
+          </Text>
+        )}
+
+        {/* UPDATED: Special message for connections */}
+        {gameType === 'connections' && (
+          <Text
+            fontSize="xs"
+            color="gray.500"
+            textAlign="center"
+            fontStyle="italic"
+          >
+            🔗 Build your network and submit when ready!
+          </Text>
+        )}
+      </VStack>
+    </Box>
   )
 }
 
@@ -237,6 +390,8 @@ const EnhancedGameInterface = () => {
   const toast = useToast()
   const { t } = useTranslation()
   const timerRef = useRef(null)
+
+  const config = gameTypeConfigs[gameType] || gameTypeConfigs.normal_quiz
 
   // Redux state
   const { user } = useSelector(state => state.auth)
@@ -265,8 +420,6 @@ const EnhancedGameInterface = () => {
   const [results, setResults] = useState(null)
   const [currentAnswers, setCurrentAnswers] = useState([])
   const [gameStarted, setGameStarted] = useState(false)
-  const [warningShown, setWarningShown] = useState(false)
-  const [criticalWarningShown, setCriticalWarningShown] = useState(false)
 
   // Get timer configuration for current game type
   const timerConfig = useMemo(
@@ -286,21 +439,10 @@ const EnhancedGameInterface = () => {
   // Set up timer when game session is ready
   useEffect(() => {
     if (gameSession && sessionStatus === 'playing') {
-      const timer = gameSession.timer || timerConfig.timeLimit // Use config fallback
+      const timer = gameSession.timer || timerConfig.timeLimit
       setTotalTime(timer)
       setTimeLeft(timer)
       setGameStarted(true)
-      // Reset warning states for new game
-      setWarningShown(false)
-      setCriticalWarningShown(false)
-
-      console.log('Timer initialized:', {
-        timer,
-        gameType,
-        sessionStatus,
-        warningAt: timerConfig.warningAt,
-        criticalAt: timerConfig.criticalAt,
-      })
     }
   }, [gameSession, sessionStatus, gameType, timerConfig])
 
@@ -308,14 +450,14 @@ const EnhancedGameInterface = () => {
   useEffect(() => {
     if (gameSession && currentAnswers.length === 0) {
       if (gameType === 'connections') {
-        setCurrentAnswers([]) // Connections will be handled specially
+        setCurrentAnswers([])
       } else {
         setCurrentAnswers(new Array(gameSession.questions.length).fill(null))
       }
     }
   }, [gameSession, gameType, currentAnswers.length])
 
-  // Timer countdown effect with dynamic warnings
+  // Timer countdown effect - Simplified without warning logic
   useEffect(() => {
     if (!gameStarted || sessionStatus !== 'playing' || timeLeft <= 0) {
       return
@@ -325,33 +467,6 @@ const EnhancedGameInterface = () => {
       setTimeLeft(prevTime => {
         const newTime = prevTime - 1
 
-        // FIXED: Use game-specific warning time instead of hardcoded 30
-        if (newTime === timerConfig.warningAt && !warningShown) {
-          setWarningShown(true)
-          toast({
-            title: '⏰ Time Warning',
-            description: `${timerConfig.warningAt} seconds remaining!`,
-            status: 'warning',
-            duration: 3000,
-            isClosable: true,
-            position: 'top',
-          })
-        }
-
-        // FIXED: Use game-specific critical time instead of hardcoded 10
-        if (newTime === timerConfig.criticalAt && !criticalWarningShown) {
-          setCriticalWarningShown(true)
-          toast({
-            title: '🚨 Critical Time Warning',
-            description: `Only ${timerConfig.criticalAt} seconds left!`,
-            status: 'error',
-            duration: 3000,
-            isClosable: true,
-            position: 'top',
-          })
-        }
-
-        // Auto-submit when time runs out
         if (newTime <= 0) {
           handleTimeUp()
           return 0
@@ -366,14 +481,7 @@ const EnhancedGameInterface = () => {
         clearInterval(timerRef.current)
       }
     }
-  }, [
-    gameStarted,
-    sessionStatus,
-    timeLeft,
-    warningShown,
-    criticalWarningShown,
-    timerConfig,
-  ])
+  }, [gameStarted, sessionStatus, timeLeft])
 
   // Handle time up - auto submit current answers
   const handleTimeUp = useCallback(() => {
@@ -381,28 +489,23 @@ const EnhancedGameInterface = () => {
       clearInterval(timerRef.current)
     }
 
-    console.log('Time up! Auto-submitting answers:', currentAnswers)
-
     toast({
-      title: "⏰ Time's Up!",
+      title: "Time's Up!",
       description: 'Your answers have been automatically submitted.',
       status: 'info',
-      duration: 5000,
+      duration: 3000,
       isClosable: true,
-      position: 'top',
     })
 
-    // Auto-submit with current answers
     submitGameAttempt(currentAnswers)
   }, [currentAnswers])
 
-  // Handle answer selection (NO AUTO-NAVIGATION)
+  // Handle answer selection
   const handleAnswer = useCallback(
     (answer, isCorrect = null) => {
       const newAnswers = [...currentAnswers]
 
       if (gameType === 'connections') {
-        // For connections, store the connections array
         setCurrentAnswers(answer)
         dispatch(setSelectedAnswers(answer))
       } else if (gameType === 'word_weaver') {
@@ -418,12 +521,13 @@ const EnhancedGameInterface = () => {
     [currentAnswers, currentQuestionIndex, gameType, dispatch],
   )
 
-  // Navigation handlers
+  // UPDATED: Navigation handlers - restrict previous for quiz and true/false
   const handlePrevious = useCallback(() => {
-    if (currentQuestionIndex > 0) {
+    // UPDATED: Only allow previous navigation for word_weaver
+    if (gameType === 'word_weaver' && currentQuestionIndex > 0) {
       dispatch(setCurrentQuestionIndex(currentQuestionIndex - 1))
     }
-  }, [currentQuestionIndex, dispatch])
+  }, [currentQuestionIndex, gameType, dispatch])
 
   const handleNext = useCallback(() => {
     if (currentQuestionIndex < gameSession.questions.length - 1) {
@@ -435,7 +539,6 @@ const EnhancedGameInterface = () => {
   const submitGameAttempt = useCallback(
     async (answers = currentAnswers) => {
       try {
-        // Clear timer to prevent double submission
         if (timerRef.current) {
           clearInterval(timerRef.current)
         }
@@ -445,18 +548,10 @@ const EnhancedGameInterface = () => {
 
         const timeTaken = totalTime - timeLeft
 
-        console.log('Submitting game:', {
-          sessionId,
-          answers,
-          timeTaken,
-          totalTime,
-          timeLeft,
-        })
-
         const result = await submitGame({
           sessionId,
           userResponses: answers,
-          timeTaken: Math.max(timeTaken, 0), // Ensure positive time
+          timeTaken: Math.max(timeTaken, 0),
         })
 
         setResults(result)
@@ -486,7 +581,6 @@ const EnhancedGameInterface = () => {
 
   // Handle back to menu
   const handleBackToMenu = useCallback(() => {
-    // Clear timer when leaving
     if (timerRef.current) {
       clearInterval(timerRef.current)
     }
@@ -507,7 +601,6 @@ const EnhancedGameInterface = () => {
 
     if (!currentQuestion) return null
 
-    // Data safety transformation to ensure compatibility
     if (gameType === 'normal_quiz' && currentQuestion.options) {
       const safeOptions = {}
       Object.entries(currentQuestion.options).forEach(([key, value]) => {
@@ -565,7 +658,6 @@ const EnhancedGameInterface = () => {
       )
     }
 
-    // For other games, check if current question is answered
     return hasCurrentAnswer
   }, [gameType, currentAnswers, hasCurrentAnswer])
 
@@ -580,7 +672,7 @@ const EnhancedGameInterface = () => {
       totalQuestions: gameSession.questions.length,
       onAnswer: handleAnswer,
       selectedAnswer: currentAnswers[currentQuestionIndex],
-      isSubmitted: false, // Since we're using manual navigation
+      isSubmitted: false,
     }
 
     switch (gameType) {
@@ -594,7 +686,7 @@ const EnhancedGameInterface = () => {
         return (
           <WordWeaverInterface
             {...sharedProps}
-            allQuestions={gameSession.questions} // Pass all questions for context
+            allQuestions={gameSession.questions}
           />
         )
 
@@ -633,8 +725,10 @@ const EnhancedGameInterface = () => {
         justifyContent="center"
       >
         <VStack spacing={4}>
-          <Box fontSize="6xl">🎮</Box>
-          <Text fontSize="xl">Loading Game...</Text>
+          <Text fontSize="4xl">{config.emoji}</Text>
+          <Text fontSize="lg" fontWeight="bold">
+            Loading {config.title}...
+          </Text>
         </VStack>
       </Box>
     )
@@ -652,9 +746,13 @@ const EnhancedGameInterface = () => {
         justifyContent="center"
       >
         <VStack spacing={4}>
-          <Box fontSize="6xl">❌</Box>
-          <Text fontSize="xl">Failed to load game</Text>
-          <Button onClick={() => window.location.reload()}>Try Again</Button>
+          <Text fontSize="4xl">❌</Text>
+          <Text fontSize="lg" fontWeight="bold">
+            Failed to load game
+          </Text>
+          <Button onClick={() => window.location.reload()} colorScheme="red">
+            Try Again
+          </Button>
         </VStack>
       </Box>
     )
@@ -662,72 +760,66 @@ const EnhancedGameInterface = () => {
 
   return (
     <Box minH="100vh" bg="gray.900" color="white">
-      {/* Header */}
-      <Flex
-        justify="space-between"
-        align="center"
-        p={6}
-        borderBottom="1px solid"
-        borderColor="gray.700"
+      {/* Compact Header */}
+      <Box
+        bg="rgba(0, 0, 0, 0.8)"
+        backdropFilter="blur(10px)"
+        borderBottom="1px solid rgba(255, 255, 255, 0.1)"
         position="sticky"
         top={0}
-        zIndex={10}
-        bg="gray.900"
+        zIndex={100}
       >
-        <Button
-          leftIcon={<ChevronLeft />}
-          onClick={handleBackToMenu}
-          variant="ghost"
-          color="gray.400"
-          _hover={{ color: 'white', bg: 'gray.800' }}
-        >
-          Back to Menu
-        </Button>
+        <Container maxW="6xl">
+          <Flex justify="space-between" align="center" py={3}>
+            <Button
+              leftIcon={<ChevronLeft size={16} />}
+              onClick={handleBackToMenu}
+              variant="ghost"
+              size="sm"
+              color="gray.300"
+              fontSize="xs"
+            >
+              Back
+            </Button>
 
-        <VStack spacing={1}>
-          <Badge colorScheme="purple" fontSize="md" px={3} py={1}>
-            {gameType.replace('_', ' ').toUpperCase()}
-          </Badge>
-        </VStack>
+            <HStack spacing={2}>
+              <Text fontSize="sm">{config.emoji}</Text>
+              <Text fontSize="sm" fontWeight="bold" color={config.color}>
+                {config.title}
+              </Text>
+            </HStack>
 
-        {/* Enhanced Timer Display with game-specific warnings */}
-        {gameStarted && sessionStatus === 'playing' && totalTime > 0 && (
-          <EnhancedTimer
-            timeLeft={timeLeft}
-            totalTime={totalTime}
-            gameType={gameType}
-            onTimeUp={handleTimeUp}
-          />
-        )}
-      </Flex>
+            {gameStarted && sessionStatus === 'playing' && totalTime > 0 && (
+              <CompactTimer
+                timeLeft={timeLeft}
+                totalTime={totalTime}
+                gameType={gameType}
+                onTimeUp={handleTimeUp}
+              />
+            )}
+          </Flex>
+        </Container>
+      </Box>
 
-      {/* Game Content */}
-      <Box p={8} maxW="800px" mx="auto">
-        {/* Timer Warning - now uses dynamic warning times */}
-        <AnimatePresence>
-          {gameStarted && sessionStatus === 'playing' && (
-            <TimerWarning
-              timeLeft={timeLeft}
-              totalTime={totalTime}
-              gameType={gameType}
-            />
-          )}
-        </AnimatePresence>
-
+      {/* Game Content - Optimized for no scroll */}
+      <Container maxW="4xl" py={4}>
         <AnimatePresence mode="wait">
           {sessionStatus === 'playing' && gameStarted && (
             <MotionBox
               key={`${currentQuestionIndex}-${gameType}`}
-              initial={{ opacity: 0, x: 20 }}
-              animate={{ opacity: 1, x: 0 }}
-              exit={{ opacity: 0, x: -20 }}
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
               transition={{ duration: 0.3 }}
             >
-              <VStack spacing={6}>
-                {renderGameInterface()}
+              <VStack spacing={4} minH="calc(100vh - 120px)">
+                {/* Game Interface */}
+                <Box flex={1} w="100%">
+                  {renderGameInterface()}
+                </Box>
 
-                {/* Navigation Controls */}
-                <NavigationControls
+                {/* Compact Navigation */}
+                <CompactNavigationControls
                   currentQuestionIndex={currentQuestionIndex}
                   totalQuestions={gameSession?.questions?.length || 1}
                   gameType={gameType}
@@ -747,53 +839,31 @@ const EnhancedGameInterface = () => {
             <MotionBox
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
-              exit={{ opacity: 0 }}
+              transition={{ duration: 0.3 }}
             >
-              <VStack spacing={4} py={20}>
-                <Box fontSize="6xl">⏳</Box>
-                <Text fontSize="xl">Calculating your score...</Text>
-                <Text fontSize="sm" color="gray.400">
-                  Time taken: {Math.max(totalTime - timeLeft, 0)} seconds
-                </Text>
+              <VStack spacing={6} py={20}>
+                <Text fontSize="4xl">⏳</Text>
+                <VStack spacing={2}>
+                  <Text fontSize="xl" fontWeight="bold">
+                    Calculating Score...
+                  </Text>
+                  <Text fontSize="sm" color="gray.400">
+                    Time: {Math.max(totalTime - timeLeft, 0)}s
+                  </Text>
+                </VStack>
                 <Progress
                   value={submissionProgress}
-                  width="300px"
-                  colorScheme="purple"
+                  size="md"
                   borderRadius="full"
-                  size="lg"
+                  bg="rgba(255, 255, 255, 0.1)"
+                  colorScheme="purple"
+                  w="300px"
                 />
               </VStack>
             </MotionBox>
           )}
         </AnimatePresence>
-
-        {/* Debug Info (remove in production) */}
-        {/* {process.env.NODE_ENV === 'development' && (
-          <Box
-            position="fixed"
-            bottom={4}
-            right={4}
-            bg="gray.800"
-            p={2}
-            borderRadius="md"
-            fontSize="xs"
-            color="gray.400"
-          >
-            <Text>
-              Debug: Timer {timeLeft}/{totalTime}
-            </Text>
-            <Text>Game: {gameType}</Text>
-            <Text>Warning at: {timerConfig.warningAt}s</Text>
-            <Text>Critical at: {timerConfig.criticalAt}s</Text>
-            <Text>Warning shown: {warningShown ? 'Yes' : 'No'}</Text>
-            <Text>Critical shown: {criticalWarningShown ? 'Yes' : 'No'}</Text>
-            <Text>Status: {sessionStatus}</Text>
-            <Text>Started: {gameStarted ? 'Yes' : 'No'}</Text>
-            <Text>Has Answer: {hasCurrentAnswer ? 'Yes' : 'No'}</Text>
-            <Text>Can Submit: {canSubmit ? 'Yes' : 'No'}</Text>
-          </Box>
-        )} */}
-      </Box>
+      </Container>
 
       {/* Results Modal */}
       <GameResultsModal

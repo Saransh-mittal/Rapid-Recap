@@ -1,4 +1,4 @@
-// components/gameHub/IntegratedGameHub.jsx - Updated with proper loading states
+// components/gameHub/IntegratedGameHub.jsx - Premium Optimized Version
 import React, { useState, useEffect } from 'react'
 import {
   ChevronLeft,
@@ -11,7 +11,10 @@ import {
   Star,
   Trophy,
   CheckCircle,
-  RotateCcw,
+  Zap,
+  Crown,
+  Gem,
+  Target,
 } from 'lucide-react'
 import {
   Box,
@@ -23,6 +26,9 @@ import {
   useToast,
   Badge,
   Icon,
+  Grid,
+  GridItem,
+  Container,
 } from '@chakra-ui/react'
 import { motion, AnimatePresence } from 'framer-motion'
 import { useParams, useNavigate } from 'react-router-dom'
@@ -44,20 +50,62 @@ const gameTypeIcons = {
 }
 
 const gameTypeNames = {
-  normal_quiz: 'Normal Quiz',
-  true_false: 'True/False',
-  word_weaver: 'Word Weaver',
-  connections: 'Connections',
+  normal_quiz: 'Knowledge Quest',
+  true_false: 'Truth Detector',
+  word_weaver: 'Word Architect',
+  connections: 'Mind Mapper',
 }
 
 const gameTypeColors = {
-  normal_quiz: 'blue',
-  true_false: 'purple',
-  word_weaver: 'green',
-  connections: 'violet',
+  normal_quiz: {
+    primary: '#3B82F6',
+    gradient: 'linear(135deg, #667eea 0%, #764ba2 100%)',
+    shadow: 'rgba(59, 130, 246, 0.4)',
+  },
+  true_false: {
+    primary: '#8B5CF6',
+    gradient: 'linear(135deg, #a8edea 0%, #fed6e3 100%)',
+    shadow: 'rgba(139, 92, 246, 0.4)',
+  },
+  word_weaver: {
+    primary: '#10B981',
+    gradient: 'linear(135deg, #d299c2 0%, #fef9d7 100%)',
+    shadow: 'rgba(16, 185, 129, 0.4)',
+  },
+  connections: {
+    primary: '#8B5CF6',
+    gradient: 'linear(135deg, #ffecd2 0%, #fcb69f 100%)',
+    shadow: 'rgba(139, 92, 246, 0.4)',
+  },
 }
 
-// Games Completed Component
+// Minimalist Background Component
+const PremiumBackground = () => {
+  return (
+    <Box
+      position="absolute"
+      top={0}
+      left={0}
+      right={0}
+      bottom={0}
+      overflow="hidden"
+      zIndex={0}
+    >
+      {/* Subtle gradient overlay */}
+      <Box
+        position="absolute"
+        top={0}
+        left={0}
+        right={0}
+        bottom={0}
+        bgGradient="radial(circle at 30% 20%, rgba(59, 130, 246, 0.05), transparent 70%),
+                   radial(circle at 70% 80%, rgba(139, 92, 246, 0.03), transparent 70%)"
+      />
+    </Box>
+  )
+}
+
+// Premium Games Completed Component - Optimized
 const GamesCompletedView = ({
   completionData,
   gameData,
@@ -67,426 +115,576 @@ const GamesCompletedView = ({
   const { t } = useTranslation()
 
   return (
-    <Box minH="100vh" bg="gray.900" color="white" p={8}>
-      <VStack spacing={8}>
-        <Box textAlign="center">
-          <Text fontSize="4xl" fontWeight="bold" mb={4} color="green.400">
-            🎉 Games Completed!
-          </Text>
-          <Text fontSize="xl" color="gray.300">
-            You've successfully completed games for this article
-          </Text>
-          <Text fontSize="sm" color="gray.500" mt={2}>
-            Your performance has been recorded and contributes to your overall
-            progress
-          </Text>
-        </Box>
+    <Box minH="100vh" bg="gray.900" color="white" position="relative">
+      <PremiumBackground />
 
-        <Box
-          bg="gray.800"
-          p={6}
-          borderRadius="2xl"
-          border="1px solid"
-          borderColor="gray.700"
-          maxW="500px"
-          w="100%"
-        >
-          <VStack spacing={4}>
-            <HStack spacing={4} align="center">
-              <Icon as={Trophy} boxSize={8} color="yellow.400" />
-              <VStack spacing={0} align="start">
-                <Text fontSize="2xl" fontWeight="bold" color="yellow.400">
-                  {completionData.bestScore}
-                </Text>
-                <Text fontSize="sm" color="gray.400">
-                  Best RQM Score
-                </Text>
-              </VStack>
-            </HStack>
+      <Container maxW="4xl" py={8} position="relative" zIndex={1}>
+        <VStack spacing={6}>
+          {/* Compact Hero Section */}
+          <MotionBox
+            initial={{ opacity: 0, y: 30 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.6 }}
+            textAlign="center"
+          >
+            <Text fontSize="4xl" mb={4}>
+              🏆
+            </Text>
 
-            <Box w="100%">
-              <Text fontSize="sm" color="gray.400" mb={2} textAlign="center">
-                Games Completed:
-              </Text>
-              <HStack justify="center" spacing={2} flexWrap="wrap">
+            <Text
+              fontSize={{ base: '2xl', md: '4xl' }}
+              fontWeight="900"
+              bgGradient="linear(45deg, #FFD700, #FFA500)"
+              bgClip="text"
+              mb={3}
+              letterSpacing="tight"
+            >
+              Mission Accomplished!
+            </Text>
+
+            <Text fontSize="lg" color="gray.300" maxW="500px" lineHeight="1.6">
+              You've mastered all interactive challenges for this article.
+            </Text>
+          </MotionBox>
+
+          {/* Compact Stats Card */}
+          <MotionBox
+            initial={{ opacity: 0, scale: 0.9 }}
+            animate={{ opacity: 1, scale: 1 }}
+            transition={{ duration: 0.6, delay: 0.2 }}
+            bg="rgba(255, 255, 255, 0.05)"
+            backdropFilter="blur(20px)"
+            border="1px solid"
+            borderColor="rgba(255, 255, 255, 0.1)"
+            borderRadius="2xl"
+            p={6}
+            maxW="500px"
+            w="100%"
+            boxShadow="0 20px 40px -12px rgba(0, 0, 0, 0.4)"
+          >
+            <VStack spacing={4}>
+              {/* Best Score */}
+              <HStack spacing={3} align="center">
+                <Crown size={32} color="#FFD700" />
+                <VStack spacing={0} align="center">
+                  <Text
+                    fontSize="3xl"
+                    fontWeight="900"
+                    bgGradient="linear(45deg, #FFD700, #FFA500)"
+                    bgClip="text"
+                  >
+                    {completionData.bestScore}
+                  </Text>
+                  <Text fontSize="sm" color="gray.400" fontWeight="600">
+                    BEST RQM SCORE
+                  </Text>
+                </VStack>
+              </HStack>
+
+              {/* Compact Games Grid */}
+              <Grid templateColumns="repeat(2, 1fr)" gap={3} w="100%">
                 {completionData.gamesPlayed.map(gameType => {
                   const IconComponent = gameTypeIcons[gameType]
-                  const color = gameTypeColors[gameType]
+                  const colors = gameTypeColors[gameType]
                   const isBest = gameType === completionData.bestGameType
 
                   return (
-                    <Badge
+                    <Box
                       key={gameType}
-                      colorScheme={color}
-                      variant={isBest ? 'solid' : 'outline'}
-                      px={3}
-                      py={1}
-                      borderRadius="full"
-                      fontSize="sm"
+                      bg={
+                        isBest
+                          ? 'rgba(255, 215, 0, 0.1)'
+                          : 'rgba(255, 255, 255, 0.05)'
+                      }
+                      border="1px solid"
+                      borderColor={isBest ? 'gold' : 'rgba(255, 255, 255, 0.1)'}
+                      borderRadius="xl"
+                      p={3}
+                      textAlign="center"
+                      position="relative"
                     >
-                      <HStack spacing={1}>
-                        {IconComponent && (
-                          <Icon as={IconComponent} boxSize={3} />
-                        )}
-                        <Text>{gameTypeNames[gameType]}</Text>
-                        {isBest && <Trophy size={12} />}
-                      </HStack>
-                    </Badge>
+                      {isBest && (
+                        <Box
+                          position="absolute"
+                          top={1}
+                          right={1}
+                          bg="gold"
+                          borderRadius="full"
+                          p={1}
+                        >
+                          <Crown size={12} color="black" />
+                        </Box>
+                      )}
+
+                      <VStack spacing={2}>
+                        <Box
+                          bg={colors.primary}
+                          borderRadius="lg"
+                          p={2}
+                          boxShadow={`0 0 15px ${colors.shadow}`}
+                        >
+                          {IconComponent && (
+                            <Icon
+                              as={IconComponent}
+                              boxSize={5}
+                              color="white"
+                            />
+                          )}
+                        </Box>
+                        <Text fontSize="xs" fontWeight="bold" color="white">
+                          {gameTypeNames[gameType].split(' ')[0]}
+                        </Text>
+                      </VStack>
+                    </Box>
                   )
                 })}
-              </HStack>
-            </Box>
+              </Grid>
 
-            <VStack spacing={2} w="100%">
-              <HStack justify="space-between" w="100%">
-                <Text fontSize="sm" color="gray.400">
-                  Total Attempts:
-                </Text>
-                <Text fontSize="sm" color="white">
-                  {completionData.totalAttempts}
-                </Text>
-              </HStack>
-              <HStack justify="space-between" w="100%">
-                <Text fontSize="sm" color="gray.400">
-                  Percentile:
-                </Text>
-                <Text fontSize="sm" color="green.400">
-                  {Math.round(completionData.percentile)}%
-                </Text>
-              </HStack>
+              {/* Stats Row */}
+              <Grid templateColumns="repeat(2, 1fr)" gap={4} w="100%">
+                <VStack spacing={1}>
+                  <Text fontSize="xl" fontWeight="bold" color="cyan.400">
+                    {completionData.totalAttempts}
+                  </Text>
+                  <Text fontSize="xs" color="gray.400" textAlign="center">
+                    Total Attempts
+                  </Text>
+                </VStack>
+                <VStack spacing={1}>
+                  <Text fontSize="xl" fontWeight="bold" color="green.400">
+                    {Math.round(completionData.percentile)}%
+                  </Text>
+                  <Text fontSize="xs" color="gray.400" textAlign="center">
+                    Percentile Rank
+                  </Text>
+                </VStack>
+              </Grid>
             </VStack>
-          </VStack>
-        </Box>
+          </MotionBox>
 
-        <VStack spacing={4} w="100%" maxW="400px">
-          <Button
-            onClick={onBackToArticle}
-            colorScheme="purple"
-            leftIcon={<ChevronLeft />}
-            size="lg"
-            width="100%"
-            _hover={{
-              transform: 'translateY(-2px)',
-              boxShadow: '0 8px 25px rgba(139, 92, 246, 0.4)',
-            }}
+          {/* Action Button */}
+          <MotionBox
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.6, delay: 0.4 }}
+            whileHover={{ scale: 1.02 }}
+            whileTap={{ scale: 0.98 }}
           >
-            Back to Article
-          </Button>
+            <Button
+              onClick={onBackToArticle}
+              size="lg"
+              height="50px"
+              px={8}
+              bgGradient="linear(45deg, #667eea, #764ba2)"
+              color="white"
+              leftIcon={<ChevronLeft size={20} />}
+              borderRadius="full"
+              fontSize="md"
+              fontWeight="bold"
+              boxShadow="0 8px 25px rgba(102, 126, 234, 0.4)"
+              _hover={{
+                boxShadow: '0 12px 30px rgba(102, 126, 234, 0.6)',
+              }}
+              transition="all 0.2s"
+            >
+              Return to Article
+            </Button>
+          </MotionBox>
         </VStack>
-
-        <Box
-          bg="gray.800"
-          p={4}
-          borderRadius="lg"
-          border="1px solid"
-          borderColor="gray.700"
-          maxW="500px"
-          textAlign="center"
-        >
-          <Text fontSize="sm" color="gray.300">
-            🌟 Great job completing the games! Your performance helps improve
-            your overall knowledge score. Continue reading articles and playing
-            games to boost your RQM ranking!
-          </Text>
-        </Box>
-      </VStack>
+      </Container>
     </Box>
   )
 }
 
-// Game Menu Component
+// Premium Game Menu Component - Optimized
 const GameMenu = ({ onSelectGame, gameData, articleId }) => {
   const { t } = useTranslation()
 
   const games = [
     {
       id: 'normal_quiz',
-      title: 'Normal Quiz',
+      title: 'Knowledge Quest',
+      subtitle: 'Multiple Choice',
       icon: FileText,
-      description: '5 multiple choice questions',
-      color: 'from-indigo-600 to-blue-500',
-      difficulty: 'Standard',
+      description: '5 strategic questions',
+      colors: gameTypeColors.normal_quiz,
+      difficulty: 'Balanced',
       time: '50s',
+      emoji: '🧠',
       available: gameData?.normal_quiz?.questions?.length >= 3,
     },
     {
       id: 'true_false',
-      title: 'True or False',
+      title: 'Truth Detector',
+      subtitle: 'Rapid Decisions',
       icon: FlipHorizontal2,
-      description: '7 challenging statements',
-      color: 'from-purple-600 to-pink-500',
-      difficulty: 'Quick',
+      description: '7 lightning challenges',
+      colors: gameTypeColors.true_false,
+      difficulty: 'Swift',
       time: '35s',
+      emoji: '⚡',
       available: gameData?.true_false?.statements?.length >= 5,
     },
     {
       id: 'word_weaver',
-      title: 'Word Weaver',
+      title: 'Word Architect',
+      subtitle: 'Letter Puzzles',
       icon: Sparkles,
-      description: '5 fill-in-the-blank puzzles',
-      color: 'from-emerald-600 to-teal-500',
-      difficulty: 'Challenge',
+      description: '5 word constructions',
+      colors: gameTypeColors.word_weaver,
+      difficulty: 'Creative',
       time: '100s',
+      emoji: '🔤',
       available: gameData?.word_weaver?.questions?.length >= 3,
     },
     {
       id: 'connections',
-      title: 'Connect Concepts',
+      title: 'Mind Mapper',
+      subtitle: 'Concept Relationships',
       icon: Link2,
-      description: '6 concepts, find connections',
-      color: 'from-violet-600 to-indigo-500',
-      difficulty: 'Expert',
-      time: '80s',
-      available: gameData?.connections?.concepts?.length >= 4,
+      description: '8 concepts in 4 perfect pairs',
+      colors: gameTypeColors.connections,
+      difficulty: 'Strategic',
+      time: '100s',
+      emoji: '🔗',
+      available: gameData?.connections?.concepts?.length >= 8,
     },
   ]
 
   return (
-    <Box minH="100vh" bg="gray.900" color="white" p={8}>
-      <VStack spacing={8}>
-        <Box textAlign="center">
-          <Text
-            fontSize="5xl"
-            fontWeight="bold"
-            mb={4}
-            bgGradient="linear(to-r, blue.400, purple.400)"
-            bgClip="text"
+    <Box minH="100vh" bg="gray.900" color="white" position="relative">
+      <PremiumBackground />
+
+      <Container maxW="6xl" py={6} position="relative" zIndex={1}>
+        <VStack spacing={8}>
+          {/* Enhanced Hero Header */}
+          <MotionBox
+            initial={{ opacity: 0, y: 30 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.6 }}
+            textAlign="center"
           >
-            Game Hub
-          </Text>
-          <Text fontSize="xl" color="gray.300">
-            Challenge yourself with interactive learning games
-          </Text>
-          <Text fontSize="sm" color="gray.500" mt={2}>
-            All games offer equivalent RQM scoring potential
-          </Text>
-        </Box>
+            <VStack spacing={6}>
+              {/* Main Title Section */}
+              <VStack spacing={3}>
+                <HStack spacing={3} justify="center" align="center">
+                  <Text fontSize={{ base: '4xl', md: '5xl' }}>🚀</Text>
+                  <Text
+                    fontSize={{ base: '2xl', md: '4xl' }}
+                    fontWeight="900"
+                    bgGradient="linear(45deg, #667eea, #764ba2, #f093fb)"
+                    bgClip="text"
+                    letterSpacing="tight"
+                  >
+                    Choose Your Challenge
+                  </Text>
+                  <Text fontSize={{ base: '4xl', md: '5xl' }}>🎯</Text>
+                </HStack>
 
-        <Flex wrap="wrap" justify="center" gap={6} maxW="6xl">
-          {games.map(game => {
-            const Icon = game.icon
-            const isDisabled = !game.available
+                <Text
+                  fontSize={{ base: 'lg', md: 'xl' }}
+                  color="gray.300"
+                  maxW="700px"
+                  lineHeight="1.6"
+                  fontWeight="500"
+                >
+                  Transform learning into an epic adventure. Master knowledge
+                  through interactive gameplay and compete for the highest RQM
+                  scores.
+                </Text>
+              </VStack>
 
-            return (
-              <MotionBox
-                key={game.id}
-                whileHover={isDisabled ? {} : { scale: 1.05 }}
-                whileTap={isDisabled ? {} : { scale: 0.95 }}
-                onClick={isDisabled ? undefined : () => onSelectGame(game.id)}
-                cursor={isDisabled ? 'not-allowed' : 'pointer'}
-                opacity={isDisabled ? 0.5 : 1}
-                bg="gray.800"
-                p={6}
-                borderRadius="2xl"
-                border="1px solid"
-                borderColor={isDisabled ? 'gray.600' : 'gray.700'}
-                width="280px"
-                position="relative"
-                overflow="hidden"
-                _hover={
-                  isDisabled
-                    ? {}
-                    : {
-                        borderColor: 'purple.500',
-                        boxShadow: '0 10px 25px rgba(0,0,0,0.3)',
-                      }
-                }
+              {/* Feature Highlights */}
+              <Grid
+                templateColumns={{
+                  base: 'repeat(2, 1fr)',
+                  md: 'repeat(4, 1fr)',
+                }}
+                gap={4}
+                maxW="600px"
               >
-                <Box
-                  position="absolute"
-                  top={0}
-                  left={0}
-                  right={0}
-                  bottom={0}
-                  bgGradient={`linear(to-br, ${game.color})`}
-                  opacity={0.1}
-                />
+                <VStack
+                  spacing={2}
+                  p={3}
+                  bg="rgba(16, 185, 129, 0.1)"
+                  borderRadius="xl"
+                  border="1px solid"
+                  borderColor="rgba(16, 185, 129, 0.3)"
+                >
+                  <Target size={20} color="#10B981" />
+                  <Text
+                    fontSize="xs"
+                    color="emerald.400"
+                    fontWeight="bold"
+                    textAlign="center"
+                  >
+                    EQUAL RQM SCORING
+                  </Text>
+                </VStack>
 
-                <VStack spacing={4} position="relative">
-                  <HStack justify="space-between" w="100%">
-                    <Box
-                      p={3}
-                      borderRadius="lg"
-                      bgGradient={`linear(to-br, ${game.color})`}
-                    >
-                      <Icon size={24} />
-                    </Box>
-                    <VStack spacing={1} align="end">
-                      <Text
-                        fontSize="xs"
-                        bg={isDisabled ? 'gray.600' : 'gray.700'}
-                        px={2}
-                        py={1}
-                        borderRadius="full"
-                        color="gray.300"
-                      >
-                        {game.difficulty}
-                      </Text>
-                      <Text fontSize="xs" color="gray.500">
-                        {game.time}
-                      </Text>
-                    </VStack>
-                  </HStack>
+                <VStack
+                  spacing={2}
+                  p={3}
+                  bg="rgba(139, 92, 246, 0.1)"
+                  borderRadius="xl"
+                  border="1px solid"
+                  borderColor="rgba(139, 92, 246, 0.3)"
+                >
+                  <Zap size={20} color="#8B5CF6" />
+                  <Text
+                    fontSize="xs"
+                    color="purple.400"
+                    fontWeight="bold"
+                    textAlign="center"
+                  >
+                    AI-POWERED
+                  </Text>
+                </VStack>
 
-                  <VStack spacing={2} align="start" w="100%">
-                    <Text fontSize="xl" fontWeight="bold">
-                      {game.title}
-                    </Text>
-                    <Text fontSize="sm" color="gray.400">
-                      {game.description}
-                    </Text>
-                    <HStack
-                      mt={4}
-                      color={isDisabled ? 'gray.600' : 'gray.500'}
-                      fontSize="sm"
-                    >
-                      <Play size={16} />
-                      <Text>{isDisabled ? 'Not Available' : 'Play Now'}</Text>
-                    </HStack>
-                  </VStack>
+                <VStack
+                  spacing={2}
+                  p={3}
+                  bg="rgba(59, 130, 246, 0.1)"
+                  borderRadius="xl"
+                  border="1px solid"
+                  borderColor="rgba(59, 130, 246, 0.3)"
+                >
+                  <Trophy size={20} color="#3B82F6" />
+                  <Text
+                    fontSize="xs"
+                    color="blue.400"
+                    fontWeight="bold"
+                    textAlign="center"
+                  >
+                    COMPETITIVE
+                  </Text>
+                </VStack>
 
-                  {isDisabled && (
+                <VStack
+                  spacing={2}
+                  p={3}
+                  bg="rgba(245, 158, 11, 0.1)"
+                  borderRadius="xl"
+                  border="1px solid"
+                  borderColor="rgba(245, 158, 11, 0.3)"
+                >
+                  <Star size={20} color="#F59E0B" />
+                  <Text
+                    fontSize="xs"
+                    color="yellow.400"
+                    fontWeight="bold"
+                    textAlign="center"
+                  >
+                    ADAPTIVE
+                  </Text>
+                </VStack>
+              </Grid>
+            </VStack>
+          </MotionBox>
+
+          {/* Premium Games Grid */}
+          <Grid
+            templateColumns={{
+              base: '1fr',
+              md: 'repeat(2, 1fr)',
+              lg: 'repeat(2, 1fr)',
+            }}
+            gap={{ base: 4, md: 5 }}
+            w="100%"
+            maxW="800px"
+          >
+            {games.map((game, index) => {
+              const Icon = game.icon
+              const isDisabled = !game.available
+
+              return (
+                <MotionBox
+                  key={game.id}
+                  initial={{ opacity: 0, y: 30 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ duration: 0.4, delay: index * 0.1 }}
+                  whileHover={
+                    isDisabled
+                      ? {}
+                      : {
+                          scale: 1.02,
+                          y: -5,
+                        }
+                  }
+                  whileTap={isDisabled ? {} : { scale: 0.98 }}
+                  onClick={isDisabled ? undefined : () => onSelectGame(game.id)}
+                  cursor={isDisabled ? 'not-allowed' : 'pointer'}
+                >
+                  <Box
+                    bg={
+                      isDisabled
+                        ? 'rgba(75, 85, 99, 0.3)'
+                        : 'rgba(255, 255, 255, 0.05)'
+                    }
+                    backdropFilter="blur(20px)"
+                    border="1px solid"
+                    borderColor={
+                      isDisabled
+                        ? 'rgba(75, 85, 99, 0.5)'
+                        : 'rgba(255, 255, 255, 0.1)'
+                    }
+                    borderRadius="2xl"
+                    p={{ base: 4, md: 6 }}
+                    position="relative"
+                    overflow="hidden"
+                    opacity={isDisabled ? 0.6 : 1}
+                    height={{ base: '200px', md: '220px' }}
+                    boxShadow={
+                      isDisabled
+                        ? 'none'
+                        : '0 20px 40px -12px rgba(0, 0, 0, 0.25)'
+                    }
+                    _hover={
+                      isDisabled
+                        ? {}
+                        : {
+                            borderColor: game.colors.primary,
+                            boxShadow: `0 20px 40px -12px ${game.colors.shadow}`,
+                          }
+                    }
+                    transition="all 0.3s ease"
+                  >
+                    {/* Status Indicator */}
                     <Box
                       position="absolute"
-                      top="50%"
-                      left="50%"
-                      transform="translate(-50%, -50%)"
-                      bg="red.600"
-                      color="white"
-                      px={3}
-                      py={1}
+                      top={3}
+                      right={3}
+                      bg={isDisabled ? 'red.500' : 'green.500'}
                       borderRadius="full"
-                      fontSize="xs"
+                      px={2}
+                      py={1}
+                      fontSize="2xs"
                       fontWeight="bold"
+                      color="white"
                     >
-                      Insufficient Data
+                      {isDisabled ? 'LOCKED' : 'READY'}
                     </Box>
-                  )}
-                </VStack>
-              </MotionBox>
-            )
-          })}
-        </Flex>
 
-        <Box maxW="5xl" w="100%">
-          <Box
-            bg="gray.800"
-            p={6}
-            borderRadius="xl"
-            border="1px solid"
-            borderColor="gray.700"
-          >
-            <HStack justify="space-between" mb={4}>
-              <Text fontSize="xl" fontWeight="bold" color="yellow.400">
-                📊 Article Game Data
-              </Text>
-              <Text fontSize="sm" color="gray.500">
-                Category: {gameData?.category || 'general'}
-                <Text as="span" color="green.400" ml={2}>
-                  ✨ Auto-calculated difficulties
-                </Text>
-              </Text>
-            </HStack>
+                    <VStack spacing={3} align="start" height="100%">
+                      {/* Header */}
+                      <HStack spacing={3} w="100%">
+                        <Box
+                          bg={isDisabled ? 'gray.600' : game.colors.primary}
+                          borderRadius="xl"
+                          p={3}
+                          boxShadow={
+                            isDisabled
+                              ? 'none'
+                              : `0 8px 25px ${game.colors.shadow}`
+                          }
+                        >
+                          <Icon size={24} color="white" />
+                        </Box>
 
-            <Text color="gray.300" mb={4}>
-              <Text as="span" color="green.400" fontWeight="semibold">
-                {gameData?.title || 'Loading game data...'}
-              </Text>
-              {gameData?.description && (
-                <Text color="gray.400" fontSize="sm" mt={1}>
-                  {gameData.description}
-                </Text>
-              )}
-            </Text>
+                        <VStack align="start" spacing={0} flex={1}>
+                          <HStack spacing={1}>
+                            <Text fontSize="sm" opacity={0.8}>
+                              {game.emoji}
+                            </Text>
+                            <Badge
+                              bg={
+                                isDisabled
+                                  ? 'gray.700'
+                                  : 'rgba(255, 255, 255, 0.1)'
+                              }
+                              color={isDisabled ? 'gray.400' : 'white'}
+                              px={2}
+                              py={0.5}
+                              borderRadius="full"
+                              fontSize="2xs"
+                              fontWeight="bold"
+                            >
+                              {game.difficulty}
+                            </Badge>
+                          </HStack>
 
-            <Flex wrap="wrap" gap={4}>
-              <Box bg="gray.900" p={3} borderRadius="md" flex="1" minW="200px">
-                <Text color="indigo.400" fontWeight="bold">
-                  Normal Quiz
-                </Text>
-                <Text color="gray.400">
-                  {gameData?.normal_quiz?.questions?.length || 0} questions
-                </Text>
-                <Text
-                  color={
-                    gameData?.normal_quiz?.questions?.length >= 3
-                      ? 'green.300'
-                      : 'red.300'
-                  }
-                  fontSize="xs"
-                >
-                  {gameData?.normal_quiz?.questions?.length >= 3
-                    ? '✓ Ready'
-                    : '✗ Need 3+ questions'}
-                </Text>
-              </Box>
+                          <Text
+                            fontSize={{ base: 'md', md: 'lg' }}
+                            fontWeight="900"
+                            color={isDisabled ? 'gray.400' : 'white'}
+                            lineHeight="1.2"
+                          >
+                            {game.title}
+                          </Text>
 
-              <Box bg="gray.900" p={3} borderRadius="md" flex="1" minW="200px">
-                <Text color="purple.400" fontWeight="bold">
-                  True/False
-                </Text>
-                <Text color="gray.400">
-                  {gameData?.true_false?.statements?.length || 0} statements
-                </Text>
-                <Text
-                  color={
-                    gameData?.true_false?.statements?.length >= 5
-                      ? 'green.300'
-                      : 'red.300'
-                  }
-                  fontSize="xs"
-                >
-                  {gameData?.true_false?.statements?.length >= 5
-                    ? '✓ Ready'
-                    : '✗ Need 5+ statements'}
-                </Text>
-              </Box>
+                          <Text
+                            fontSize="sm"
+                            color={isDisabled ? 'gray.500' : 'gray.300'}
+                            fontWeight="600"
+                          >
+                            {game.subtitle}
+                          </Text>
+                        </VStack>
+                      </HStack>
 
-              <Box bg="gray.900" p={3} borderRadius="md" flex="1" minW="200px">
-                <Text color="emerald.400" fontWeight="bold">
-                  Word Weaver
-                </Text>
-                <Text color="gray.400">
-                  {gameData?.word_weaver?.questions?.length || 0} puzzles
-                </Text>
-                <Text
-                  color={
-                    gameData?.word_weaver?.questions?.length >= 3
-                      ? 'green.300'
-                      : 'red.300'
-                  }
-                  fontSize="xs"
-                >
-                  {gameData?.word_weaver?.questions?.length >= 3
-                    ? '✓ Ready'
-                    : '✗ Need 3+ puzzles'}
-                </Text>
-              </Box>
+                      {/* Description */}
+                      <Text
+                        fontSize="sm"
+                        color={isDisabled ? 'gray.500' : 'gray.300'}
+                        lineHeight="1.5"
+                        flex={1}
+                      >
+                        {game.description}
+                      </Text>
 
-              <Box bg="gray.900" p={3} borderRadius="md" flex="1" minW="200px">
-                <Text color="violet.400" fontWeight="bold">
-                  Connections
-                </Text>
-                <Text color="gray.400">
-                  {gameData?.connections?.concepts?.length || 0} concepts
-                </Text>
-                <Text
-                  color={
-                    gameData?.connections?.concepts?.length >= 4
-                      ? 'green.300'
-                      : 'red.300'
-                  }
-                  fontSize="xs"
-                >
-                  {gameData?.connections?.concepts?.length >= 4
-                    ? '✓ Ready'
-                    : '✗ Need 4+ concepts'}
-                </Text>
-              </Box>
-            </Flex>
-          </Box>
-        </Box>
-      </VStack>
+                      {/* Footer */}
+                      <HStack justify="space-between" w="100%" mt="auto">
+                        <HStack spacing={1}>
+                          <Clock
+                            size={14}
+                            color={isDisabled ? '#6B7280' : game.colors.primary}
+                          />
+                          <Text
+                            fontSize="sm"
+                            color={isDisabled ? 'gray.500' : 'gray.300'}
+                          >
+                            {game.time}
+                          </Text>
+                        </HStack>
+
+                        <HStack
+                          spacing={1}
+                          color={isDisabled ? 'gray.600' : game.colors.primary}
+                        >
+                          <Play size={16} />
+                          <Text fontSize="sm" fontWeight="bold">
+                            {isDisabled ? 'LOCKED' : 'START'}
+                          </Text>
+                        </HStack>
+                      </HStack>
+
+                      {/* Disabled Overlay */}
+                      {isDisabled && (
+                        <Box
+                          position="absolute"
+                          top="50%"
+                          left="50%"
+                          transform="translate(-50%, -50%)"
+                          bg="rgba(239, 68, 68, 0.9)"
+                          color="white"
+                          px={3}
+                          py={1}
+                          borderRadius="full"
+                          fontSize="xs"
+                          fontWeight="bold"
+                          backdropFilter="blur(10px)"
+                        >
+                          🔒 Insufficient Data
+                        </Box>
+                      )}
+                    </VStack>
+                  </Box>
+                </MotionBox>
+              )
+            })}
+          </Grid>
+        </VStack>
+      </Container>
     </Box>
   )
 }
@@ -515,7 +713,6 @@ const IntegratedGameHub = () => {
     if (currentSocket && user) {
       currentSocket.emit('join game progress', user._id)
       currentSocket.on('game_generation_progress', data => {
-        console.log('Game generation progress:', data.progress)
         setGenerationProgress(data.progress || 0)
       })
     }
@@ -563,8 +760,9 @@ const IntegratedGameHub = () => {
       setGenerationProgress(0)
 
       toast({
-        title: 'Error',
-        description: 'Failed to load game data. Please try again.',
+        title: 'Connection Error',
+        description:
+          'Unable to load game data. Please check your connection and try again.',
         status: 'error',
         duration: 5000,
         isClosable: true,
@@ -630,10 +828,17 @@ const IntegratedGameHub = () => {
         display="flex"
         alignItems="center"
         justifyContent="center"
+        position="relative"
       >
-        <VStack spacing={4}>
-          <Box fontSize="6xl">🧠</Box>
-          <Text fontSize="xl">Loading Game Hub...</Text>
+        <PremiumBackground />
+        <VStack spacing={4} position="relative" zIndex={1}>
+          <Text fontSize="6xl">🧠</Text>
+          <Text fontSize="xl" fontWeight="bold">
+            Loading Game Universe...
+          </Text>
+          <Text fontSize="md" color="gray.400">
+            Preparing your learning adventure
+          </Text>
         </VStack>
       </Box>
     )
@@ -641,31 +846,55 @@ const IntegratedGameHub = () => {
 
   return (
     <>
-      <Flex
-        justify="space-between"
-        align="center"
-        p={6}
-        bg="gray.900"
+      {/* Premium Header */}
+      <Box
+        bg="rgba(0, 0, 0, 0.9)"
+        backdropFilter="blur(20px)"
         borderBottom="1px solid"
-        borderColor="gray.700"
+        borderColor="rgba(255, 255, 255, 0.1)"
         position="sticky"
         top={0}
-        zIndex={10}
+        zIndex={100}
       >
-        <Button
-          leftIcon={<ChevronLeft />}
-          onClick={handleBackToArticle}
-          variant="ghost"
-          color="gray.400"
-          _hover={{ color: 'white', bg: 'gray.800' }}
-        >
-          Back to Article
-        </Button>
-        <Text fontSize="lg" fontWeight="bold" color="white">
-          Game Hub
-        </Text>
-        <Box width="120px" />
-      </Flex>
+        <Container maxW="6xl">
+          <Flex justify="space-between" align="center" py={3}>
+            <MotionBox whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.98 }}>
+              <Button
+                leftIcon={<ChevronLeft size={18} />}
+                onClick={handleBackToArticle}
+                variant="ghost"
+                color="gray.300"
+                size="md"
+                borderRadius="full"
+                px={2}
+                _hover={{
+                  color: 'white',
+                  bg: 'rgba(255, 255, 255, 0.1)',
+                }}
+                transition="all 0.2s"
+              >
+                Back
+              </Button>
+            </MotionBox>
+
+            <HStack spacing={2}>
+              <Box bg="rgba(139, 92, 246, 0.1)" borderRadius="full" p={2}>
+                <Sparkles size={18} color="#8B5CF6" />
+              </Box>
+              <Text
+                fontSize="lg"
+                fontWeight="900"
+                bgGradient="linear(45deg, #667eea, #764ba2)"
+                bgClip="text"
+              >
+                Game Universe
+              </Text>
+            </HStack>
+
+            <Box width={{ base: '80px', md: '120px' }} />
+          </Flex>
+        </Container>
+      </Box>
 
       {completionData ? (
         <GamesCompletedView

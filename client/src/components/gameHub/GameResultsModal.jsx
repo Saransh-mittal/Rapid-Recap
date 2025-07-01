@@ -1,4 +1,4 @@
-// components/gameHub/GameResultsModal.jsx
+// components/gameHub/GameResultsModal.jsx - Optimized Minimal Version
 import React, { useState, useEffect } from 'react'
 import {
   Modal,
@@ -16,48 +16,29 @@ import {
   Progress,
   Badge,
   Flex,
-  Accordion,
-  AccordionItem,
-  AccordionButton,
-  AccordionPanel,
-  AccordionIcon,
-  Divider,
 } from '@chakra-ui/react'
 import { motion, AnimatePresence } from 'framer-motion'
-import {
-  Trophy,
-  ArrowLeft,
-  Star,
-  Clock,
-  Target,
-  TrendingUp,
-  Award,
-  Zap,
-} from 'lucide-react'
-import { useTranslation } from 'react-i18next'
+import { Trophy, Star, Clock, Target, Award, Zap, Rocket } from 'lucide-react'
 
 const MotionBox = motion(Box)
 
-// Confetti effect for perfect scores
+// Enhanced Confetti Component (lighter version)
 const Confetti = ({ active }) => {
   const [particles, setParticles] = useState([])
 
   useEffect(() => {
     if (active) {
-      const colors = [
-        '#FFD700',
-        '#FF6B6B',
-        '#4ECDC4',
-        '#45B7D1',
-        '#96CEB4',
-        '#FFEAA7',
-      ]
-      const newParticles = Array.from({ length: 50 }, (_, i) => ({
+      const colors = ['#FFD700', '#FF6B6B', '#4ECDC4', '#45B7D1', '#96CEB4']
+      const shapes = ['●', '★', '♦']
+
+      const newParticles = Array.from({ length: 30 }, (_, i) => ({
         id: i,
         left: Math.random() * 100,
         color: colors[Math.floor(Math.random() * colors.length)],
+        shape: shapes[Math.floor(Math.random() * shapes.length)],
         delay: Math.random() * 1000,
         duration: 3000 + Math.random() * 2000,
+        size: 8 + Math.random() * 8,
       }))
 
       setParticles(newParticles)
@@ -68,55 +49,60 @@ const Confetti = ({ active }) => {
   return (
     <>
       {particles.map(particle => (
-        <Box
+        <MotionBox
           key={particle.id}
           position="fixed"
           left={`${particle.left}%`}
-          top="-10px"
-          width="10px"
-          height="10px"
-          bg={particle.color}
-          borderRadius="50%"
-          style={{
-            animation: `fall 3s linear forwards`,
-            animationDelay: `${particle.delay}ms`,
+          top="-20px"
+          fontSize={`${particle.size}px`}
+          color={particle.color}
+          zIndex={9999}
+          pointerEvents="none"
+          initial={{ y: -20, opacity: 0 }}
+          animate={{
+            y: '110vh',
+            x: Math.random() * 100 - 50,
+            opacity: [0, 1, 1, 0],
           }}
-        />
+          transition={{
+            duration: particle.duration / 1000,
+            delay: particle.delay / 1000,
+            ease: 'easeOut',
+          }}
+        >
+          {particle.shape}
+        </MotionBox>
       ))}
-      <style jsx>{`
-        @keyframes fall {
-          to {
-            transform: translateY(100vh) rotate(360deg);
-            opacity: 0;
-          }
-        }
-      `}</style>
     </>
   )
 }
 
-const ScoreCard = ({ icon: Icon, label, value, color, delay = 0 }) => (
+// Compact Score Card Component
+const CompactScoreCard = ({ icon: Icon, label, value, color, delay = 0 }) => (
   <MotionBox
-    initial={{ opacity: 0, y: 20 }}
-    animate={{ opacity: 1, y: 0 }}
-    transition={{ delay, duration: 0.5 }}
+    initial={{ opacity: 0, scale: 0.8 }}
+    animate={{ opacity: 1, scale: 1 }}
+    transition={{ delay, duration: 0.3 }}
   >
     <Box
-      bg="gray.700"
-      p={4}
-      borderRadius="xl"
-      border="1px solid"
-      borderColor="gray.600"
+      bg="rgba(255, 255, 255, 0.05)"
+      border="1px solid rgba(255, 255, 255, 0.1)"
+      borderRadius="lg"
+      p={3}
       textAlign="center"
-      _hover={{ borderColor: color, transform: 'translateY(-2px)' }}
-      transition="all 0.3s"
+      h="80px"
+      display="flex"
+      flexDir="column"
+      justifyContent="center"
     >
-      <VStack spacing={2}>
-        <Icon size={24} color={color} />
-        <Text fontSize="2xl" fontWeight="bold" color={color}>
-          {value}
-        </Text>
-        <Text fontSize="sm" color="gray.400">
+      <VStack spacing={1}>
+        <HStack spacing={2}>
+          <Icon size={16} color={color} />
+          <Text fontSize="lg" fontWeight="bold" color={color}>
+            {value}
+          </Text>
+        </HStack>
+        <Text fontSize="xs" color="gray.400">
           {label}
         </Text>
       </VStack>
@@ -124,94 +110,15 @@ const ScoreCard = ({ icon: Icon, label, value, color, delay = 0 }) => (
   </MotionBox>
 )
 
-const PerformanceBreakdown = ({ results, gameType }) => {
-  const getPerformanceLevel = accuracy => {
-    if (accuracy >= 0.9)
-      return { level: 'Excellent', color: 'green.400', icon: Trophy }
-    if (accuracy >= 0.7) return { level: 'Good', color: 'blue.400', icon: Star }
-    if (accuracy >= 0.5)
-      return { level: 'Average', color: 'yellow.400', icon: Target }
-    return { level: 'Needs Work', color: 'red.400', icon: TrendingUp }
-  }
-
-  const performance = getPerformanceLevel(results.performance?.accuracy || 0)
-  const Icon = performance.icon
-
-  return (
-    <Box
-      bg="gray.800"
-      p={4}
-      borderRadius="lg"
-      border="1px solid"
-      borderColor="gray.700"
-    >
-      <HStack justify="space-between" mb={3}>
-        <Text fontSize="lg" fontWeight="bold" color="white">
-          Performance Analysis
-        </Text>
-        <Badge colorScheme={performance.color.split('.')[0]} variant="solid">
-          <HStack spacing={1}>
-            <Icon size={14} />
-            <Text>{performance.level}</Text>
-          </HStack>
-        </Badge>
-      </HStack>
-
-      <VStack spacing={3} align="stretch">
-        <Box>
-          <HStack justify="space-between" mb={1}>
-            <Text fontSize="sm" color="gray.400">
-              Accuracy
-            </Text>
-            <Text fontSize="sm" color={performance.color}>
-              {Math.round((results.performance?.accuracy || 0) * 100)}%
-            </Text>
-          </HStack>
-          <Progress
-            value={(results.performance?.accuracy || 0) * 100}
-            colorScheme={performance.color.split('.')[0]}
-            borderRadius="full"
-          />
-        </Box>
-
-        <Box>
-          <HStack justify="space-between" mb={1}>
-            <Text fontSize="sm" color="gray.400">
-              Difficulty
-            </Text>
-            <Text fontSize="sm" color="purple.400">
-              {Math.round((results.performance?.difficulty || 0) * 100)}%
-            </Text>
-          </HStack>
-          <Progress
-            value={(results.performance?.difficulty || 0) * 100}
-            colorScheme="purple"
-            borderRadius="full"
-          />
-        </Box>
-
-        <HStack justify="space-between">
-          <Text fontSize="sm" color="gray.400">
-            Time Efficiency
-          </Text>
-          <Text fontSize="sm" color="cyan.400">
-            {results.timeFactor}x
-          </Text>
-        </HStack>
-      </VStack>
-    </Box>
-  )
-}
-
 const GameResultsModal = ({
   isOpen,
   onClose,
   results,
   gameType,
-  onBackToMenu, // Removed onPlayAgain prop
+  onBackToMenu,
 }) => {
-  const { t } = useTranslation()
   const [showConfetti, setShowConfetti] = useState(false)
+  const [displayScore, setDisplayScore] = useState(0)
 
   useEffect(() => {
     if (isOpen && results?.performance?.accuracy === 1) {
@@ -220,235 +127,359 @@ const GameResultsModal = ({
     }
   }, [isOpen, results])
 
+  // Animated score counter
+  useEffect(() => {
+    if (isOpen && results?.RQM_score) {
+      const targetScore = results.RQM_score
+      const duration = 1500
+      const steps = 30
+      const increment = targetScore / steps
+
+      let current = 0
+      const timer = setInterval(() => {
+        current += increment
+        if (current >= targetScore) {
+          setDisplayScore(targetScore)
+          clearInterval(timer)
+        } else {
+          setDisplayScore(Math.floor(current))
+        }
+      }, duration / steps)
+
+      return () => clearInterval(timer)
+    }
+  }, [isOpen, results])
+
   if (!results) return null
 
   const isPerfectScore = results.performance?.accuracy === 1
-  const scoreColor = isPerfectScore ? '#FFD700' : '#A855F7'
+  const isExcellent = results.performance?.accuracy >= 0.8
+  const scoreColor = isPerfectScore
+    ? '#FFD700'
+    : isExcellent
+    ? '#10B981'
+    : '#8B5CF6'
 
   const getGameTypeDisplayName = type => {
     const names = {
-      normal_quiz: 'Normal Quiz',
-      true_false: 'True or False',
-      word_weaver: 'Word Weaver',
-      connections: 'Connections',
+      normal_quiz: 'Quiz',
+      true_false: 'T/F',
+      word_weaver: 'Words',
+      connections: 'Connect',
     }
     return names[type] || type
   }
 
   const getScoreDescription = score => {
-    if (score >= 80) return 'Outstanding! 🏆'
-    if (score >= 60) return 'Great job! 🌟'
-    if (score >= 40) return 'Good effort! 👍'
-    return 'Keep practicing! 💪'
+    if (score >= 90) return 'Legendary!'
+    if (score >= 80) return 'Outstanding!'
+    if (score >= 70) return 'Excellent!'
+    if (score >= 60) return 'Great job!'
+    if (score >= 40) return 'Good effort!'
+    return 'Keep practicing!'
+  }
+
+  const getScoreEmoji = score => {
+    if (score >= 90) return '👑'
+    if (score >= 80) return '🏆'
+    if (score >= 70) return '🌟'
+    if (score >= 60) return '🎯'
+    if (score >= 40) return '💪'
+    return '🚀'
   }
 
   return (
-    <>
-      <Confetti active={showConfetti} />
-      <Modal
-        isOpen={isOpen}
-        onClose={onClose}
-        size="xl"
-        closeOnOverlayClick={false}
-      >
-        <ModalOverlay bg="blackAlpha.800" />
-        <ModalContent bg="gray.900" color="white" mx={4}>
-          <ModalHeader textAlign="center" pb={2}>
-            <VStack spacing={3}>
-              <MotionBox
-                initial={{ scale: 0 }}
-                animate={{ scale: 1 }}
-                transition={{ type: 'spring', duration: 0.8 }}
-              >
-                {isPerfectScore ? (
-                  <Text fontSize="4xl">🏆</Text>
-                ) : (
-                  <Text fontSize="4xl">🎮</Text>
-                )}
-              </MotionBox>
-
-              <VStack spacing={1}>
-                <Text fontSize="2xl" fontWeight="bold">
-                  {isPerfectScore ? 'Perfect Score!' : 'Game Complete!'}
-                </Text>
-                <Badge colorScheme="purple" fontSize="sm" px={3} py={1}>
-                  {getGameTypeDisplayName(gameType)}
-                </Badge>
-              </VStack>
-            </VStack>
-          </ModalHeader>
-
-          <ModalCloseButton />
-
-          <ModalBody pb={6}>
-            <VStack spacing={6}>
-              {/* Main Score Display */}
-              <MotionBox
-                initial={{ opacity: 0, scale: 0.8 }}
-                animate={{ opacity: 1, scale: 1 }}
-                transition={{ delay: 0.2, duration: 0.6 }}
-                textAlign="center"
-              >
-                <Text
-                  fontSize="6xl"
-                  fontWeight="bold"
-                  color={scoreColor}
-                  lineHeight="1"
+    <AnimatePresence>
+      {isOpen && (
+        <>
+          <Confetti active={showConfetti} />
+          <Modal
+            isOpen={isOpen}
+            onClose={onClose}
+            size={{ base: 'full', md: 'xl' }}
+            closeOnOverlayClick={false}
+            isCentered
+          >
+            <ModalOverlay bg="blackAlpha.900" backdropFilter="blur(10px)" />
+            <MotionBox
+              as={ModalContent}
+              initial={{ opacity: 0, scale: 0.9 }}
+              animate={{ opacity: 1, scale: 1 }}
+              exit={{ opacity: 0, scale: 0.9 }}
+              transition={{ duration: 0.3 }}
+              bg="gray.900"
+              color="white"
+              mx={4}
+              borderRadius="2xl"
+              border="1px solid rgba(255, 255, 255, 0.1)"
+              maxH="90vh"
+              overflow="hidden"
+            >
+              <ModalHeader textAlign="center" pb={2}>
+                <MotionBox
+                  initial={{ opacity: 0, y: 20 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ duration: 0.4 }}
                 >
-                  {results.RQM_score}
-                </Text>
-                <Text fontSize="xl" color="gray.400" mb={2}>
-                  RQM Score
-                </Text>
-                <Text fontSize="md" color="gray.300">
-                  {getScoreDescription(results.RQM_score)}
-                </Text>
-              </MotionBox>
+                  <VStack spacing={3}>
+                    {/* Hero Icon */}
+                    <Text fontSize="4xl">
+                      {isPerfectScore ? '👑' : isExcellent ? '🏆' : '🎮'}
+                    </Text>
 
-              {/* Score Breakdown */}
-              <Grid templateColumns="repeat(2, 1fr)" gap={4} w="100%">
-                <ScoreCard
-                  icon={Target}
-                  label="Correct"
-                  value={`${results.performance?.correctCount || 0}/${
-                    results.performance?.totalItems || 0
-                  }`}
-                  color="#10B981"
-                  delay={0.3}
-                />
-                <ScoreCard
-                  icon={Clock}
-                  label="Time"
-                  value={`${results.timeTaken}s`}
-                  color="#3B82F6"
-                  delay={0.4}
-                />
-                <ScoreCard
-                  icon={Zap}
-                  label="Time Factor"
-                  value={`${results.timeFactor}x`}
-                  color="#F59E0B"
-                  delay={0.5}
-                />
-                <ScoreCard
-                  icon={Award}
-                  label="Bonus"
-                  value={`${results.performanceBonus}x`}
-                  color="#EF4444"
-                  delay={0.6}
-                />
-              </Grid>
+                    {/* Title */}
+                    <VStack spacing={1}>
+                      <Text fontSize="xl" fontWeight="bold" color={scoreColor}>
+                        {isPerfectScore
+                          ? 'Perfect Score!'
+                          : isExcellent
+                          ? 'Excellent!'
+                          : 'Complete!'}
+                      </Text>
+                      <Badge
+                        bg="rgba(139, 92, 246, 0.2)"
+                        color="purple.400"
+                        px={2}
+                        py={1}
+                        borderRadius="full"
+                      >
+                        {getGameTypeDisplayName(gameType)}
+                      </Badge>
+                    </VStack>
+                  </VStack>
+                </MotionBox>
+              </ModalHeader>
 
-              {/* Performance Analysis */}
-              <MotionBox
-                initial={{ opacity: 0, y: 20 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ delay: 0.7, duration: 0.5 }}
-                w="100%"
-              >
-                <PerformanceBreakdown results={results} gameType={gameType} />
-              </MotionBox>
+              <ModalCloseButton size="sm" borderRadius="full" />
 
-              {/* Additional Stats */}
-              <MotionBox
-                initial={{ opacity: 0, y: 20 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ delay: 0.8, duration: 0.5 }}
-                w="100%"
-              >
-                <Accordion allowToggle>
-                  <AccordionItem
-                    border="1px solid"
-                    borderColor="gray.700"
-                    borderRadius="lg"
+              <ModalBody pb={6} overflow="auto">
+                <VStack spacing={6}>
+                  {/* Main Score Display */}
+                  <MotionBox
+                    initial={{ opacity: 0, scale: 0.8 }}
+                    animate={{ opacity: 1, scale: 1 }}
+                    transition={{ delay: 0.2, duration: 0.4 }}
+                    textAlign="center"
                   >
-                    <AccordionButton>
-                      <Box flex="1" textAlign="left">
-                        <Text fontWeight="semibold">Detailed Statistics</Text>
-                      </Box>
-                      <AccordionIcon />
-                    </AccordionButton>
-                    <AccordionPanel pb={4}>
-                      <VStack spacing={3} align="stretch">
-                        <HStack justify="space-between">
-                          <Text color="gray.400">Base RQM Score:</Text>
-                          <Text color="white">
-                            {results.baseRQM_score || results.RQM_score}
+                    <VStack spacing={2}>
+                      <Text
+                        fontSize="4xl"
+                        fontWeight="bold"
+                        color={scoreColor}
+                        lineHeight="1"
+                      >
+                        {displayScore}
+                      </Text>
+                      <VStack spacing={1}>
+                        <Text fontSize="sm" color="gray.400">
+                          RQM Score
+                        </Text>
+                        <HStack spacing={2}>
+                          <Text fontSize="lg">
+                            {getScoreEmoji(results.RQM_score)}
+                          </Text>
+                          <Text
+                            fontSize="sm"
+                            color="gray.300"
+                            fontWeight="bold"
+                          >
+                            {getScoreDescription(results.RQM_score)}
                           </Text>
                         </HStack>
-                        <HStack justify="space-between">
-                          <Text color="gray.400">Difficulty Bonus:</Text>
-                          <Text color="purple.400">
-                            {Math.round(
-                              (results.performance?.difficulty || 0) * 100,
-                            )}
-                            %
-                          </Text>
-                        </HStack>
-                        <HStack justify="space-between">
-                          <Text color="gray.400">Time Bonus:</Text>
-                          <Text color="cyan.400">{results.timeFactor}x</Text>
-                        </HStack>
-                        <HStack justify="space-between">
-                          <Text color="gray.400">Performance Bonus:</Text>
-                          <Text color="green.400">
-                            {results.performanceBonus}x
-                          </Text>
-                        </HStack>
-                        {results.boost && results.boost > 1 && (
-                          <HStack justify="space-between">
-                            <Text color="gray.400">Power-up Bonus:</Text>
-                            <Text color="yellow.400">{results.boost}x</Text>
-                          </HStack>
-                        )}
                       </VStack>
-                    </AccordionPanel>
-                  </AccordionItem>
-                </Accordion>
-              </MotionBox>
+                    </VStack>
+                  </MotionBox>
 
-              <Divider borderColor="gray.700" />
+                  {/* Score Breakdown Cards */}
+                  <Grid templateColumns="repeat(2, 1fr)" gap={3} w="100%">
+                    <CompactScoreCard
+                      icon={Target}
+                      label="Correct"
+                      value={`${results.performance?.correctCount || 0}/${
+                        results.performance?.totalItems || 0
+                      }`}
+                      color="#10B981"
+                      delay={0.3}
+                    />
+                    <CompactScoreCard
+                      icon={Clock}
+                      label="Time"
+                      value={`${results.timeTaken}s`}
+                      color="#3B82F6"
+                      delay={0.4}
+                    />
+                    <CompactScoreCard
+                      icon={Zap}
+                      label="Speed Bonus"
+                      value={`${results.timeFactor}x`}
+                      color="#F59E0B"
+                      delay={0.5}
+                    />
+                    <CompactScoreCard
+                      icon={Award}
+                      label="Performance"
+                      value={`${results.performanceBonus}x`}
+                      color="#EF4444"
+                      delay={0.6}
+                    />
+                  </Grid>
 
-              {/* Action Button - Only Back to Menu */}
-              <MotionBox
-                initial={{ opacity: 0, y: 20 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ delay: 0.9, duration: 0.5 }}
-                w="100%"
-              >
-                <Button
-                  onClick={onBackToMenu}
-                  colorScheme="purple"
-                  leftIcon={<ArrowLeft />}
-                  size="lg"
-                  width="100%"
-                  _hover={{
-                    transform: 'translateY(-2px)',
-                    boxShadow: '0 8px 25px rgba(139, 92, 246, 0.4)',
-                  }}
-                >
-                  Back to Game Hub
-                </Button>
-              </MotionBox>
+                  {/* Performance Analysis */}
+                  <MotionBox
+                    initial={{ opacity: 0, y: 20 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    transition={{ duration: 0.4, delay: 0.7 }}
+                    w="100%"
+                  >
+                    <Box
+                      bg="rgba(255, 255, 255, 0.05)"
+                      border="1px solid rgba(255, 255, 255, 0.1)"
+                      borderRadius="xl"
+                      p={4}
+                    >
+                      <VStack spacing={3}>
+                        <HStack justify="space-between" w="100%">
+                          <Text fontSize="sm" fontWeight="bold">
+                            Performance
+                          </Text>
+                          <Badge
+                            bg={scoreColor}
+                            color="white"
+                            px={2}
+                            py={1}
+                            borderRadius="full"
+                            fontSize="xs"
+                          >
+                            {Math.round(
+                              (results.performance?.accuracy || 0) * 100,
+                            )}
+                            % Accuracy
+                          </Badge>
+                        </HStack>
 
-              {/* Encouragement Message */}
-              <MotionBox
-                initial={{ opacity: 0 }}
-                animate={{ opacity: 1 }}
-                transition={{ delay: 1.0, duration: 0.5 }}
-                textAlign="center"
-              >
-                <Text fontSize="sm" color="gray.500" fontStyle="italic">
-                  {isPerfectScore
-                    ? "🌟 Amazing! You've mastered this content!"
-                    : '🚀 Great job! Your performance helps improve your RQM score!'}
-                </Text>
-              </MotionBox>
-            </VStack>
-          </ModalBody>
-        </ModalContent>
-      </Modal>
-    </>
+                        <Box w="100%">
+                          <Progress
+                            value={(results.performance?.accuracy || 0) * 100}
+                            size="sm"
+                            borderRadius="full"
+                            bg="rgba(255, 255, 255, 0.1)"
+                            colorScheme={
+                              scoreColor.includes('#10B981')
+                                ? 'green'
+                                : scoreColor.includes('#3B82F6')
+                                ? 'blue'
+                                : 'yellow'
+                            }
+                          />
+                        </Box>
+
+                        <Grid
+                          templateColumns="repeat(3, 1fr)"
+                          gap={3}
+                          w="100%"
+                          fontSize="xs"
+                        >
+                          <VStack spacing={1}>
+                            <Text color="blue.400" fontWeight="bold">
+                              Time Efficiency
+                            </Text>
+                            <Text color="white">{results.timeFactor}x</Text>
+                          </VStack>
+                          <VStack spacing={1}>
+                            <Text color="purple.400" fontWeight="bold">
+                              Difficulty
+                            </Text>
+                            <Text color="white">
+                              {Math.round(
+                                (results.performance?.difficulty || 0) * 100,
+                              )}
+                              %
+                            </Text>
+                          </VStack>
+                          <VStack spacing={1}>
+                            <Text color="green.400" fontWeight="bold">
+                              Questions
+                            </Text>
+                            <Text color="white">
+                              {results.performance?.totalItems || 0}
+                            </Text>
+                          </VStack>
+                        </Grid>
+                      </VStack>
+                    </Box>
+                  </MotionBox>
+
+                  {/* Action Button */}
+                  <MotionBox
+                    initial={{ opacity: 0, y: 20 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    transition={{ duration: 0.4, delay: 0.8 }}
+                    w="100%"
+                  >
+                    <Button
+                      onClick={onBackToMenu}
+                      size="md"
+                      width="100%"
+                      h="50px"
+                      bg="linear-gradient(45deg, #667eea, #764ba2)"
+                      color="white"
+                      leftIcon={<Rocket size={18} />}
+                      borderRadius="full"
+                      fontSize="md"
+                      fontWeight="bold"
+                      _hover={{ opacity: 0.8 }}
+                      transition="all 0.2s"
+                    >
+                      Return to Game Universe
+                    </Button>
+                  </MotionBox>
+
+                  {/* Encouragement Message */}
+                  <MotionBox
+                    initial={{ opacity: 0 }}
+                    animate={{ opacity: 1 }}
+                    transition={{ duration: 0.6, delay: 0.9 }}
+                    textAlign="center"
+                  >
+                    <Box
+                      bg="rgba(16, 185, 129, 0.1)"
+                      border="1px solid rgba(16, 185, 129, 0.3)"
+                      borderRadius="xl"
+                      p={3}
+                    >
+                      <VStack spacing={2}>
+                        <HStack spacing={2}>
+                          <Star size={16} color="#10B981" />
+                          <Text
+                            fontSize="sm"
+                            fontWeight="bold"
+                            color="emerald.400"
+                          >
+                            {isPerfectScore
+                              ? 'Perfect Master!'
+                              : isExcellent
+                              ? 'Knowledge Champion!'
+                              : 'Learning Hero!'}
+                          </Text>
+                          <Star size={16} color="#10B981" />
+                        </HStack>
+                        <Text fontSize="xs" color="gray.300" lineHeight="1.4">
+                          {isPerfectScore
+                            ? "Flawless execution! You've achieved mastery!"
+                            : isExcellent
+                            ? 'Outstanding performance! Your dedication shows!'
+                            : 'Great progress! Keep building your knowledge!'}
+                        </Text>
+                      </VStack>
+                    </Box>
+                  </MotionBox>
+                </VStack>
+              </ModalBody>
+            </MotionBox>
+          </Modal>
+        </>
+      )}
+    </AnimatePresence>
   )
 }
 

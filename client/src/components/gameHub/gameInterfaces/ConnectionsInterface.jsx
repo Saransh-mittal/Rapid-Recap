@@ -1,5 +1,5 @@
-// components/gameHub/gameInterfaces/ConnectionsInterface.jsx - SECURE VERSION - No valid connections from backend
-import React, { useState, useMemo, useEffect } from 'react'
+// components/gameHub/gameInterfaces/ConnectionsInterface.jsx - Fixed Infinite Loop Issues + Added Node Tooltips
+import React, { useState, useMemo, useEffect, useCallback, useRef } from 'react'
 import {
   VStack,
   HStack,
@@ -7,11 +7,26 @@ import {
   Button,
   Box,
   Badge,
+  useBreakpointValue,
+  Container,
   Alert,
   AlertIcon,
+  AlertDescription,
+  Tooltip,
 } from '@chakra-ui/react'
-import { motion } from 'framer-motion'
-import { Link2, Trash2, RotateCcw, Target, CheckCircle } from 'lucide-react'
+import { motion, AnimatePresence } from 'framer-motion'
+import {
+  Link2,
+  Trash2,
+  Target,
+  CheckCircle,
+  Network,
+  X,
+  Moon,
+  AlertTriangle,
+  Crown,
+  Lock,
+} from 'lucide-react'
 import { useTranslation } from 'react-i18next'
 
 const MotionBox = motion(Box)
@@ -22,444 +37,952 @@ const ConnectionsInterface = ({
   selectedConnections = [],
 }) => {
   const [selectedNodes, setSelectedNodes] = useState([])
-  const [userConnections, setUserConnections] = useState(
-    selectedConnections || [],
-  )
+  const [userConnections, setUserConnections] = useState([])
   const { t } = useTranslation()
 
-  // SECURE: Only get safe data from backend (no validConnections exposed)
-  const { concepts } = gameData
+  // NEW: Refs to prevent infinite loops
+  const isUpdatingRef = useRef(false)
+  const lastConnectionsRef = useRef([])
+  const debounceTimeoutRef = useRef(null)
 
-  // Since we don't know the exact number of valid connections, we'll allow reasonable flexibility
-  const recommendedMinConnections = Math.max(
-    3,
-    Math.floor(concepts.length * 0.6),
-  ) // At least 60% of concepts should be connected
-  const maxReasonableConnections = Math.floor(
-    (concepts.length * (concepts.length - 1)) / 2,
-  ) // All possible pairs
-
-  console.log('Connections game data (SECURE):', {
-    concepts,
-    conceptCount: concepts.length,
-    recommendedMin: recommendedMinConnections,
+  const isMobile = useBreakpointValue({ base: true, md: false })
+  const containerSize = useBreakpointValue({
+    base: 320,
+    sm: 380,
+    md: 440,
+    lg: 480,
+  })
+  const nodeWidth = useBreakpointValue({
+    base: 85,
+    sm: 90,
+    md: 95,
+    lg: 100,
+  })
+  const nodeHeight = useBreakpointValue({
+    base: 50,
+    sm: 52,
+    md: 55,
+    lg: 58,
   })
 
-  // Update parent when connections change
-  useEffect(() => {
-    onAnswer(userConnections)
-  }, [userConnections, onAnswer])
+  const { concepts } = gameData
+  const conceptCount = concepts.length
+  const MAX_CONNECTIONS = 4
 
-  // Initialize with selected connections if provided
+  // NEW: Stable memoized calculations with proper dependencies
+  const connectedNodes = useMemo(() => {
+    const connected = new Set()
+    userConnections.forEach(connection => {
+      if (connection?.from && connection?.to) {
+        connected.add(connection.from)
+        connected.add(connection.to)
+      }
+    })
+    return connected
+  }, [userConnections]) // Only depend on userConnections
+
+  const availableNodes = useMemo(() => {
+    return concepts.filter(concept => !connectedNodes.has(concept))
+  }, [concepts, connectedNodes])
+
+  // NEW: Debounced onAnswer to prevent rapid calls
+  const debouncedOnAnswer = useCallback(
+    connections => {
+      if (debounceTimeoutRef.current) {
+        clearTimeout(debounceTimeoutRef.current)
+      }
+
+      debounceTimeoutRef.current = setTimeout(() => {
+        if (!isUpdatingRef.current) {
+          isUpdatingRef.current = true
+          onAnswer(connections)
+          setTimeout(() => {
+            isUpdatingRef.current = false
+          }, 100)
+        }
+      }, 150)
+    },
+    [onAnswer],
+  )
+
+  // NEW: Effect with proper dependency management and loop prevention
+  useEffect(() => {
+    // Prevent calling onAnswer during initial setup or if already updating
+    if (isUpdatingRef.current) return
+
+    // Compare connections to prevent unnecessary calls
+    const currentConnectionsStr = JSON.stringify(userConnections)
+    const lastConnectionsStr = JSON.stringify(lastConnectionsRef.current)
+
+    if (currentConnectionsStr !== lastConnectionsStr) {
+      lastConnectionsRef.current = [...userConnections]
+      debouncedOnAnswer(userConnections)
+    }
+  }, [userConnections, debouncedOnAnswer])
+
+  // NEW: Stable initialization effect
   useEffect(() => {
     if (
       selectedConnections &&
       Array.isArray(selectedConnections) &&
-      selectedConnections.length > 0
+      selectedConnections.length > 0 &&
+      userConnections.length === 0 // Only initialize if empty
     ) {
-      setUserConnections(selectedConnections)
-    }
-  }, [selectedConnections])
+      const validConnections = selectedConnections
+        .slice(0, MAX_CONNECTIONS)
+        .filter(conn => conn?.from && conn?.to && conn.from !== conn.to)
 
-  // Create positions for nodes in a circular pattern
+      if (validConnections.length > 0) {
+        setUserConnections(validConnections)
+      }
+    }
+  }, [selectedConnections]) // Remove userConnections from deps to prevent loop
+
+  // NEW: Stable node positions with fixed dependencies
   const nodePositions = useMemo(() => {
-    return concepts.reduce((acc, concept, index) => {
-      const angle = (index * 2 * Math.PI) / concepts.length
-      const radius = 120
-      acc[concept] = {
-        x: 250 + radius * Math.cos(angle),
-        y: 180 + radius * Math.sin(angle),
-      }
-      return acc
-    }, {})
-  }, [concepts])
+    const positions = {}
+    if (conceptCount === 0) return positions
 
-  const handleNodeClick = node => {
-    if (selectedNodes.includes(node)) {
-      setSelectedNodes(selectedNodes.filter(n => n !== node))
-    } else if (selectedNodes.length < 2) {
-      setSelectedNodes([...selectedNodes, node])
+    const center = containerSize / 2
+    const nodePadding = Math.max(nodeWidth, nodeHeight) / 2
+    const edgePadding = 5
+    const maxRadius = center - nodePadding - edgePadding
+
+    if (conceptCount === 1) {
+      positions[concepts[0]] = { x: center, y: center }
+    } else if (conceptCount === 2) {
+      const spacing = maxRadius
+      positions[concepts[0]] = { x: center - spacing, y: center }
+      positions[concepts[1]] = { x: center + spacing, y: center }
+    } else if (conceptCount === 3) {
+      const radius = maxRadius
+      positions[concepts[0]] = { x: center, y: center - radius }
+      positions[concepts[1]] = {
+        x: center - radius * Math.cos(Math.PI / 6),
+        y: center + radius * Math.sin(Math.PI / 6),
+      }
+      positions[concepts[2]] = {
+        x: center + radius * Math.cos(Math.PI / 6),
+        y: center + radius * Math.sin(Math.PI / 6),
+      }
+    } else if (conceptCount === 4) {
+      const spacing = maxRadius / Math.sqrt(2)
+      positions[concepts[0]] = { x: center - spacing, y: center - spacing }
+      positions[concepts[1]] = { x: center + spacing, y: center - spacing }
+      positions[concepts[2]] = { x: center - spacing, y: center + spacing }
+      positions[concepts[3]] = { x: center + spacing, y: center + spacing }
+    } else {
+      const radius = maxRadius
+      for (let i = 0; i < conceptCount; i++) {
+        const angle = (i * 2 * Math.PI) / conceptCount - Math.PI / 2
+        positions[concepts[i]] = {
+          x: center + radius * Math.cos(angle),
+          y: center + radius * Math.sin(angle),
+        }
+      }
     }
 
-    if (selectedNodes.length === 1 && !selectedNodes.includes(node)) {
-      const from = selectedNodes[0]
-      const to = node
+    // Ensure positions are within bounds
+    Object.keys(positions).forEach(concept => {
+      const pos = positions[concept]
+      const minCoord = nodePadding + edgePadding
+      const maxCoord = containerSize - nodePadding - edgePadding
+      pos.x = Math.max(minCoord, Math.min(maxCoord, pos.x))
+      pos.y = Math.max(minCoord, Math.min(maxCoord, pos.y))
+    })
 
-      // Check if connection already exists
-      const exists = userConnections.some(
+    return positions
+  }, [concepts, conceptCount, containerSize, nodeWidth, nodeHeight]) // Stable deps only
+
+  const connectionPaths = useMemo(() => {
+    return userConnections
+      .filter(conn => conn?.from && conn?.to) // Filter out invalid connections
+      .map((conn, idx) => {
+        const fromPos = nodePositions[conn.from]
+        const toPos = nodePositions[conn.to]
+        if (!fromPos || !toPos) return null
+
+        const mx = (fromPos.x + toPos.x) / 2
+        const my = (fromPos.y + toPos.y) / 2
+        const vx = toPos.x - fromPos.x
+        const vy = toPos.y - fromPos.y
+        const px = -vy
+        const py = vx
+        const pLength = Math.sqrt(px * px + py * py)
+        const nx = pLength === 0 ? 0 : px / pLength
+        const ny = pLength === 0 ? 0 : py / pLength
+        const curvatureAmount = 25
+        const cx = mx + nx * curvatureAmount
+        const cy = my + ny * curvatureAmount
+        const pathData = `M ${fromPos.x} ${fromPos.y} Q ${cx} ${cy} ${toPos.x} ${toPos.y}`
+        const removeBtnPos = {
+          x: 0.25 * fromPos.x + 0.5 * cx + 0.25 * toPos.x,
+          y: 0.25 * fromPos.y + 0.5 * cy + 0.25 * toPos.y,
+        }
+
+        return {
+          ...conn,
+          fromPos,
+          toPos,
+          pathData,
+          removeBtnPos,
+          gradientId: `connectionGradient-${idx}`,
+        }
+      })
+      .filter(Boolean)
+  }, [userConnections, nodePositions])
+
+  const hasReachedLimit = userConnections.length >= MAX_CONNECTIONS
+
+  // NEW: Stable event handlers with useCallback
+  const handleNodeClick = useCallback(
+    node => {
+      // Prevent rapid clicks and invalid operations
+      if (isUpdatingRef.current || !node) return
+
+      // Prevent clicking on locked (already connected) nodes
+      if (connectedNodes.has(node)) {
+        return
+      }
+
+      // Prevent node selection if limit reached and no available nodes can be selected
+      if (hasReachedLimit && selectedNodes.length === 0) {
+        return
+      }
+
+      setSelectedNodes(prevSelected => {
+        if (prevSelected.includes(node)) {
+          return prevSelected.filter(n => n !== node)
+        } else if (prevSelected.length < 2) {
+          const newSelected = [...prevSelected, node]
+
+          // If we now have 2 nodes selected, create connection
+          if (newSelected.length === 2) {
+            const [from, to] = newSelected
+
+            // Check if we can add more connections
+            if (hasReachedLimit) {
+              return [] // Clear selection
+            }
+
+            // Additional check - both nodes must be available (not connected)
+            if (connectedNodes.has(from) || connectedNodes.has(to)) {
+              return [] // Clear selection
+            }
+
+            // Check if connection already exists
+            const exists = userConnections.some(
+              conn =>
+                (conn.from === from && conn.to === to) ||
+                (conn.from === to && conn.to === from),
+            )
+
+            if (!exists) {
+              // Use setTimeout to prevent rapid state updates
+              setTimeout(() => {
+                setUserConnections(prevConnections => {
+                  const newConnection = { from, to }
+                  const isDuplicate = prevConnections.some(
+                    conn =>
+                      (conn.from === from && conn.to === to) ||
+                      (conn.from === to && conn.to === from),
+                  )
+
+                  if (!isDuplicate) {
+                    return [...prevConnections, newConnection]
+                  }
+                  return prevConnections
+                })
+              }, 50)
+            }
+
+            return [] // Clear selection after creating connection
+          }
+
+          return newSelected
+        }
+        return prevSelected
+      })
+    },
+    [connectedNodes, hasReachedLimit, selectedNodes.length, userConnections],
+  )
+
+  const removeConnection = useCallback((from, to) => {
+    if (isUpdatingRef.current) return
+
+    setUserConnections(prevConnections =>
+      prevConnections.filter(
         conn =>
-          (conn.from === from && conn.to === to) ||
-          (conn.from === to && conn.to === from),
-      )
-
-      if (!exists && userConnections.length < maxReasonableConnections) {
-        const newConnections = [...userConnections, { from, to }]
-        setUserConnections(newConnections)
-      }
-
-      setSelectedNodes([])
-    }
-  }
-
-  const removeConnection = (from, to) => {
-    const newConnections = userConnections.filter(
-      conn =>
-        !(conn.from === from && conn.to === to) &&
-        !(conn.from === to && conn.to === from),
+          !(conn.from === from && conn.to === to) &&
+          !(conn.from === to && conn.to === from),
+      ),
     )
-    setUserConnections(newConnections)
-  }
 
-  const clearAllConnections = () => {
+    // Clear selected nodes when removing connections to prevent invalid states
+    setSelectedNodes([])
+  }, [])
+
+  const clearAllConnections = useCallback(() => {
+    if (isUpdatingRef.current) return
+
     setUserConnections([])
     setSelectedNodes([])
-  }
+  }, [])
 
-  const getNodeStyle = node => {
-    const baseStyle = {
-      width: '90px',
-      height: '50px',
-      borderRadius: '8px',
-      display: 'flex',
-      alignItems: 'center',
-      justifyContent: 'center',
-      cursor: 'pointer',
-      transition: 'all 0.2s',
-      fontSize: '12px',
-      fontWeight: 'medium',
-      textAlign: 'center',
-      padding: '4px',
-    }
+  // NEW: Stable node style function
+  const getNodeStyle = useCallback(
+    node => {
+      const isSelected = selectedNodes.includes(node)
+      const isConnected = connectedNodes.has(node)
+      const isHighlighted =
+        selectedNodes.length === 1 &&
+        !selectedNodes.includes(node) &&
+        !isConnected
 
-    if (selectedNodes.includes(node)) {
+      const isDisabled =
+        isConnected || (hasReachedLimit && selectedNodes.length === 0)
+
+      const baseStyle = {
+        width: `${nodeWidth}px`,
+        height: `${nodeHeight}px`,
+        borderRadius: '12px',
+        display: 'flex',
+        alignItems: 'center',
+        justifyContent: 'center',
+        cursor: isDisabled ? 'not-allowed' : 'pointer',
+        transition: 'all 0.2s ease-in-out',
+        fontSize: useBreakpointValue({
+          base: '9px',
+          sm: '10px',
+          md: '11px',
+          lg: '12px',
+        }),
+        fontWeight: '600',
+        textAlign: 'center',
+        padding: '6px 8px',
+        border: '2px solid',
+        position: 'absolute',
+        transform: 'scale(1)',
+        boxShadow: '0 2px 8px rgba(0, 0, 0, 0.2)',
+        zIndex: 5,
+        overflow: 'hidden',
+        textOverflow: 'ellipsis',
+        whiteSpace: 'nowrap',
+        backdropFilter: 'blur(8px)',
+      }
+
+      if (isConnected) {
+        return {
+          ...baseStyle,
+          background: 'linear-gradient(45deg, #DC2626, #991B1B)',
+          borderColor: '#FCA5A5',
+          color: 'white',
+          opacity: 0.9,
+          cursor: 'not-allowed',
+          boxShadow: '0 0 15px rgba(220, 38, 38, 0.4)',
+        }
+      }
+
+      if (isSelected) {
+        return {
+          ...baseStyle,
+          background: 'linear-gradient(45deg, #A855F7, #6D28D9)',
+          borderColor: '#C4B5FD',
+          color: 'white',
+          boxShadow: '0 0 24px 6px rgba(168, 85, 247, 0.4)',
+          transform: 'scale(1.05)',
+          zIndex: 10,
+        }
+      }
+
+      if (isHighlighted) {
+        return {
+          ...baseStyle,
+          background: 'rgba(255, 255, 255, 0.05)',
+          borderColor: '#C4B5FD',
+          color: 'white',
+          boxShadow: '0 0 10px 2px rgba(168, 85, 247, 0.3)',
+        }
+      }
+
+      if (isDisabled) {
+        return {
+          ...baseStyle,
+          background: 'rgba(255, 255, 255, 0.02)',
+          borderColor: 'rgba(168, 85, 247, 0.3)',
+          color: 'rgba(255, 255, 255, 0.5)',
+          opacity: 0.6,
+        }
+      }
+
       return {
         ...baseStyle,
-        backgroundColor: '#7C3AED',
-        borderColor: '#A855F7',
+        background: 'rgba(255, 255, 255, 0.05)',
+        borderColor: 'rgba(168, 85, 247, 0.6)',
         color: 'white',
-        transform: 'scale(1.1)',
-        boxShadow: '0 4px 12px rgba(124, 58, 237, 0.4)',
       }
-    }
+    },
+    [selectedNodes, connectedNodes, hasReachedLimit, nodeWidth, nodeHeight],
+  )
 
-    if (selectedNodes.length === 1 && !selectedNodes.includes(node)) {
-      return {
-        ...baseStyle,
-        backgroundColor: '#374151',
-        borderColor: '#6B7280',
-        color: 'white',
-        border: '2px solid #A855F7',
-      }
-    }
-
-    return {
-      ...baseStyle,
-      backgroundColor: '#1F2937',
-      borderColor: '#4B5563',
-      color: 'white',
-      border: '2px solid #4B5563',
-    }
-  }
-
-  const getProgressStatus = () => {
+  const getProgressStatus = useCallback(() => {
     if (userConnections.length === 0) {
       return {
-        color: 'gray',
-        label: 'Not Started',
-        description: 'Start by clicking two concepts to connect them',
+        color: '#6B7280',
+        label: `Ready to Connect (${availableNodes.length} available)`,
+        icon: Target,
       }
     }
-
-    if (userConnections.length < recommendedMinConnections) {
-      return {
-        color: 'red',
-        label: 'Getting Started',
-        description: `Try to find at least ${recommendedMinConnections} meaningful connections`,
-      }
+    if (userConnections.length === MAX_CONNECTIONS) {
+      return { color: '#10B981', label: 'Perfect Network!', icon: Crown }
     }
-
-    if (userConnections.length >= recommendedMinConnections) {
-      return {
-        color: 'green',
-        label: 'Good Progress',
-        description:
-          'You have a good set of connections! You can submit or find more.',
-      }
-    }
-
     return {
-      color: 'yellow',
-      label: 'In Progress',
-      description: 'Keep finding logical connections',
+      color: '#F59E0B',
+      label: `Building Network (${availableNodes.length} available)`,
+      icon: Network,
     }
-  }
+  }, [userConnections.length, availableNodes.length])
 
   const progressStatus = getProgressStatus()
-  const canSubmit = userConnections.length > 0
+  const StatusIcon = progressStatus.icon
+
+  // NEW: Helper function to get tooltip content based on node state
+  const getTooltipContent = useCallback((concept, isConnected, isSelected) => {
+    let status = ''
+    if (isConnected) {
+      status = ' (Connected)'
+    } else if (isSelected) {
+      status = ' (Selected)'
+    }
+    return `${concept}${status}`
+  }, [])
+
+  // NEW: Cleanup effect
+  useEffect(() => {
+    return () => {
+      if (debounceTimeoutRef.current) {
+        clearTimeout(debounceTimeoutRef.current)
+      }
+    }
+  }, [])
 
   return (
-    <VStack spacing={6} w="100%">
-      {/* Header */}
-      <Box textAlign="center">
-        <HStack justify="center" spacing={4} mb={4}>
-          <Badge colorScheme="violet" fontSize="md" px={3} py={1}>
-            Connect Concepts
-          </Badge>
-          <Badge colorScheme={progressStatus.color} fontSize="sm" px={2} py={1}>
-            {progressStatus.label}
-          </Badge>
-        </HStack>
-        <Text fontSize="lg" fontWeight="bold" color="violet.200" mb={2}>
-          Find Logical Relationships
-        </Text>
-        <Text fontSize="sm" color="gray.400" mb={2}>
-          Click two concepts to create a connection based on the article
-          content.
-        </Text>
-        <Text fontSize="xs" color="gray.500">
-          {progressStatus.description}
-        </Text>
-
-        {/* Progress Display */}
-        <HStack justify="center" spacing={4} mt={4}>
-          <HStack spacing={2}>
-            <Target size={16} color="#8B5CF6" />
-            <Text fontSize="md" color="violet.400" fontWeight="semibold">
-              Connections: {userConnections.length}
-            </Text>
-          </HStack>
-          {userConnections.length > 0 && (
-            <Button
-              size="xs"
-              variant="ghost"
-              colorScheme="red"
-              leftIcon={<Trash2 size={12} />}
-              onClick={clearAllConnections}
-            >
-              Clear All
-            </Button>
-          )}
-        </HStack>
-      </Box>
-
-      {/* Game Board */}
-      <Box
-        bg="gray.800"
-        borderRadius="2xl"
-        p={6}
-        border="1px solid"
-        borderColor="gray.700"
-        position="relative"
-        overflow="hidden"
-        height="400px"
-        width="500px"
-        mx="auto"
+    <Container maxW="100%" px={isMobile ? 1 : 2} py={0}>
+      <MotionBox
+        initial={{ opacity: 0, y: 20 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.3 }}
+        w="100%"
       >
-        {/* SVG for connections */}
-        <svg
-          width="100%"
-          height="100%"
-          style={{ position: 'absolute', top: 0, left: 0 }}
-        >
-          {userConnections.map((conn, idx) => {
-            const fromPos = nodePositions[conn.from]
-            const toPos = nodePositions[conn.to]
-
-            return (
-              <g key={idx}>
-                <line
-                  x1={fromPos.x}
-                  y1={fromPos.y}
-                  x2={toPos.x}
-                  y2={toPos.y}
-                  stroke="#8B5CF6"
-                  strokeWidth="3"
-                  strokeDasharray="5,5"
-                  opacity={0.8}
-                />
-                <circle
-                  cx={(fromPos.x + toPos.x) / 2}
-                  cy={(fromPos.y + toPos.y) / 2}
-                  r="12"
-                  fill="#EF4444"
-                  stroke="#FCA5A5"
-                  strokeWidth="2"
-                  style={{ cursor: 'pointer' }}
-                  onClick={() => removeConnection(conn.from, conn.to)}
-                />
-                <text
-                  x={(fromPos.x + toPos.x) / 2}
-                  y={(fromPos.y + toPos.y) / 2 + 4}
-                  textAnchor="middle"
-                  fill="white"
-                  fontSize="12"
-                  fontWeight="bold"
-                  style={{ pointerEvents: 'none' }}
-                >
-                  ×
-                </text>
-              </g>
-            )
-          })}
-        </svg>
-
-        {/* Concept nodes */}
-        {concepts.map(concept => {
-          const pos = nodePositions[concept]
-          return (
-            <MotionBox
-              key={concept}
-              onClick={() => handleNodeClick(concept)}
-              position="absolute"
-              left={`${pos.x}px`}
-              top={`${pos.y}px`}
-              transform="translate(-50%, -50%)"
-              style={getNodeStyle(concept)}
-              whileHover={{ scale: 1.05 }}
-              whileTap={{ scale: 0.95 }}
-            >
-              <Text>{concept}</Text>
-            </MotionBox>
-          )
-        })}
-      </Box>
-
-      {/* Connection List */}
-      {userConnections.length > 0 && (
-        <Box
-          bg="gray.800"
-          p={4}
-          borderRadius="lg"
-          border="1px solid"
-          borderColor="gray.700"
-          w="100%"
-          maxW="500px"
-        >
-          <Text fontSize="sm" fontWeight="bold" color="violet.200" mb={3}>
-            Your Connections ({userConnections.length}):
-          </Text>
-          <VStack spacing={2}>
-            {userConnections.map((conn, idx) => (
+        <VStack spacing={4} w="100%" align="center">
+          {/* Header with connection counter */}
+          <VStack spacing={3} w="100%">
+            <VStack spacing={2} w="100%">
               <HStack
-                key={idx}
                 justify="space-between"
                 w="100%"
-                p={3}
-                bg="gray.900"
-                borderRadius="md"
-                border="1px solid"
-                borderColor="gray.600"
+                wrap="wrap"
+                spacing={2}
+                flexDir={isMobile ? 'column' : 'row'}
+                align="center"
               >
-                <HStack flex="1">
-                  <Text fontSize="sm" color="white" fontWeight="medium">
-                    {conn.from}
-                  </Text>
-                  <Link2 size={14} color="#8B5CF6" />
-                  <Text fontSize="sm" color="white" fontWeight="medium">
-                    {conn.to}
+                <Badge
+                  bg="rgba(245, 158, 11, 0.1)"
+                  color="yellow.400"
+                  px={3}
+                  py={1}
+                  borderRadius="full"
+                  fontSize="xs"
+                  fontWeight="bold"
+                >
+                  🔗 MIND MAPPER
+                </Badge>
+
+                <Badge
+                  bg={`${progressStatus.color}20`}
+                  color={progressStatus.color}
+                  px={3}
+                  py={1}
+                  borderRadius="full"
+                  fontSize="xs"
+                  fontWeight="bold"
+                >
+                  {progressStatus.label.toUpperCase()}
+                </Badge>
+
+                <HStack spacing={2}>
+                  <Link2 size={14} color="#F59E0B" />
+                  <Text fontSize="xs" color="yellow.400" fontWeight="bold">
+                    {userConnections.length}/{MAX_CONNECTIONS} connections
                   </Text>
                 </HStack>
+              </HStack>
+
+              <Text
+                fontSize={isMobile ? 'sm' : 'md'}
+                color="gray.300"
+                textAlign="center"
+                fontWeight="500"
+                px={2}
+                lineHeight="1.4"
+              >
+                Create {MAX_CONNECTIONS} connections • Pair all 8 nodes • Each
+                node used once
+              </Text>
+
+              {/* Node availability status */}
+              {userConnections.length > 0 &&
+                userConnections.length < MAX_CONNECTIONS && (
+                  <MotionBox
+                    initial={{ opacity: 0, scale: 0.9 }}
+                    animate={{ opacity: 1, scale: 1 }}
+                    transition={{ duration: 0.3 }}
+                    w="100%"
+                  >
+                    <Alert
+                      status="info"
+                      size="sm"
+                      borderRadius="lg"
+                      bg="rgba(59, 130, 246, 0.1)"
+                      border="1px solid"
+                      borderColor="rgba(59, 130, 246, 0.3)"
+                    >
+                      <AlertIcon size={14} />
+                      <AlertDescription fontSize="xs" color="white">
+                        {availableNodes.length} nodes available •{' '}
+                        {connectedNodes.size} nodes paired
+                      </AlertDescription>
+                    </Alert>
+                  </MotionBox>
+                )}
+
+              {/* Limit warning when approaching or at limit */}
+              {userConnections.length >= MAX_CONNECTIONS - 1 && (
+                <MotionBox
+                  initial={{ opacity: 0, scale: 0.9 }}
+                  animate={{ opacity: 1, scale: 1 }}
+                  transition={{ duration: 0.3 }}
+                  w="100%"
+                >
+                  <Alert
+                    status={
+                      userConnections.length === MAX_CONNECTIONS
+                        ? 'success'
+                        : 'warning'
+                    }
+                    size="sm"
+                    borderRadius="lg"
+                    bg={
+                      userConnections.length === MAX_CONNECTIONS
+                        ? 'rgba(16, 185, 129, 0.1)'
+                        : 'rgba(245, 158, 11, 0.1)'
+                    }
+                    border="1px solid"
+                    borderColor={
+                      userConnections.length === MAX_CONNECTIONS
+                        ? 'rgba(16, 185, 129, 0.3)'
+                        : 'rgba(245, 158, 11, 0.3)'
+                    }
+                  >
+                    <AlertIcon size={14} />
+                    <AlertDescription fontSize="xs" color="white">
+                      {userConnections.length === MAX_CONNECTIONS
+                        ? '🎉 Perfect! All 8 nodes connected in 4 unique pairs!'
+                        : `⚡ ${
+                            MAX_CONNECTIONS - userConnections.length
+                          } more connection${
+                            MAX_CONNECTIONS - userConnections.length > 1
+                              ? 's'
+                              : ''
+                          } needed • ${availableNodes.length} nodes available`}
+                    </AlertDescription>
+                  </Alert>
+                </MotionBox>
+              )}
+            </VStack>
+          </VStack>
+
+          {/* Game Board */}
+          <Box
+            display="flex"
+            justifyContent="center"
+            alignItems="center"
+            w="100%"
+          >
+            <Box
+              bg="rgba(255, 255, 255, 0.05)"
+              border="1px solid rgba(255, 255, 255, 0.1)"
+              borderRadius="xl"
+              position="relative"
+              width={`${containerSize}px`}
+              height={`${containerSize}px`}
+              overflow="hidden"
+              boxShadow="0 8px 32px rgba(0, 0, 0, 0.3)"
+              mx="auto"
+            >
+              {/* SVG for connections */}
+              <svg
+                width="100%"
+                height="100%"
+                style={{ position: 'absolute', top: 0, left: 0, zIndex: 1 }}
+                viewBox={`0 0 ${containerSize} ${containerSize}`}
+                preserveAspectRatio="xMidYMid meet"
+              >
+                <defs>
+                  {connectionPaths.map(pathInfo => (
+                    <linearGradient
+                      key={pathInfo.gradientId}
+                      id={pathInfo.gradientId}
+                      x1={pathInfo.fromPos.x}
+                      y1={pathInfo.fromPos.y}
+                      x2={pathInfo.toPos.x}
+                      y2={pathInfo.toPos.y}
+                      gradientUnits="userSpaceOnUse"
+                    >
+                      <stop offset="0%" stopColor="#F59E0B" stopOpacity={0.9} />
+                      <stop
+                        offset="100%"
+                        stopColor="#8B5CF6"
+                        stopOpacity={0.9}
+                      />
+                    </linearGradient>
+                  ))}
+                  <filter id="glow">
+                    <feGaussianBlur stdDeviation="3" result="coloredBlur" />
+                    <feMerge>
+                      <feMergeNode in="coloredBlur" />
+                      <feMergeNode in="SourceGraphic" />
+                    </feMerge>
+                  </filter>
+                  <filter id="shadow">
+                    <feDropShadow
+                      dx="0"
+                      dy="2"
+                      stdDeviation="4"
+                      floodColor="rgba(0,0,0,0.3)"
+                    />
+                  </filter>
+                </defs>
+
+                {/* Render all paths first */}
+                {connectionPaths.map(pathInfo => (
+                  <motion.path
+                    key={`${pathInfo.gradientId}-path`}
+                    initial={{ pathLength: 0, opacity: 0 }}
+                    animate={{ pathLength: 1, opacity: 1 }}
+                    transition={{ duration: 0.6, ease: 'easeInOut' }}
+                    d={pathInfo.pathData}
+                    stroke={`url(#${pathInfo.gradientId})`}
+                    strokeWidth={isMobile ? '3' : '4'}
+                    fill="none"
+                    filter="url(#glow)"
+                    strokeLinecap="round"
+                  />
+                ))}
+
+                {/* Render all buttons on top of paths */}
+                {connectionPaths.map(pathInfo => (
+                  <g
+                    key={`${pathInfo.gradientId}-button`}
+                    transform={`translate(${pathInfo.removeBtnPos.x}, ${pathInfo.removeBtnPos.y})`}
+                  >
+                    <circle
+                      r={isMobile ? '14' : '16'}
+                      fill="rgba(239, 68, 68, 0.95)"
+                      stroke="rgba(255, 255, 255, 0.9)"
+                      strokeWidth="2"
+                      style={{ cursor: 'pointer' }}
+                      onClick={() =>
+                        removeConnection(pathInfo.from, pathInfo.to)
+                      }
+                      filter="url(#shadow)"
+                    />
+                    <text
+                      textAnchor="middle"
+                      dy="4"
+                      fill="white"
+                      fontSize={isMobile ? '12' : '14'}
+                      fontWeight="bold"
+                      style={{ pointerEvents: 'none' }}
+                    >
+                      ×
+                    </text>
+                  </g>
+                ))}
+              </svg>
+
+              {/* Concept nodes with tooltips */}
+              {concepts.map((concept, index) => {
+                const pos = nodePositions[concept]
+                if (!pos) return null
+                const isSelected = selectedNodes.includes(concept)
+                const isConnected = connectedNodes.has(concept)
+
+                return (
+                  <Tooltip
+                    key={concept}
+                    label={getTooltipContent(concept, isConnected, isSelected)}
+                    placement="top"
+                    hasArrow
+                    bg="rgba(0, 0, 0, 0.9)"
+                    color="white"
+                    fontSize="xs"
+                    borderRadius="md"
+                    px={2}
+                    py={1}
+                    openDelay={300}
+                    closeDelay={100}
+                  >
+                    <MotionBox
+                      initial={{ opacity: 0, scale: 0.3 }}
+                      animate={{ opacity: 1, scale: 1 }}
+                      transition={{
+                        duration: 0.5,
+                        delay: index * 0.1,
+                        type: 'spring',
+                        stiffness: 200,
+                        damping: 20,
+                      }}
+                      whileHover={{
+                        scale: isConnected ? 1 : 1.08,
+                        transition: { duration: 0.2 },
+                      }}
+                      whileTap={{
+                        scale: isConnected ? 1 : 0.92,
+                      }}
+                      onClick={() => handleNodeClick(concept)}
+                      left={`${pos.x - nodeWidth / 2}px`}
+                      top={`${pos.y - nodeHeight / 2}px`}
+                      style={getNodeStyle(concept)}
+                    >
+                      <Text
+                        lineHeight="1.3"
+                        fontSize={useBreakpointValue({
+                          base: '9px',
+                          sm: '10px',
+                          md: '11px',
+                          lg: '12px',
+                        })}
+                        isTruncated
+                        maxW="100%"
+                        fontWeight="600"
+                      >
+                        {concept}
+                      </Text>
+
+                      {/* Icon indicators */}
+                      {isSelected && (
+                        <MotionBox
+                          initial={{ scale: 0, opacity: 0 }}
+                          animate={{ scale: 1, opacity: 1 }}
+                          transition={{ delay: 0.1, duration: 0.3 }}
+                          position="absolute"
+                          top={isMobile ? '4px' : '5px'}
+                          right={isMobile ? '4px' : '5px'}
+                        >
+                          <Moon
+                            size={isMobile ? 12 : 14}
+                            color="rgba(255, 255, 255, 0.9)"
+                            fill="rgba(255, 255, 255, 0.9)"
+                          />
+                        </MotionBox>
+                      )}
+
+                      {/* Lock icon for connected nodes */}
+                      {isConnected && (
+                        <MotionBox
+                          initial={{ scale: 0, opacity: 0 }}
+                          animate={{ scale: 1, opacity: 1 }}
+                          transition={{ delay: 0.2, duration: 0.3 }}
+                          position="absolute"
+                          top={isMobile ? '4px' : '5px'}
+                          right={isMobile ? '4px' : '5px'}
+                        >
+                          <Lock
+                            size={isMobile ? 10 : 12}
+                            color="rgba(255, 255, 255, 0.9)"
+                            fill="rgba(255, 255, 255, 0.9)"
+                          />
+                        </MotionBox>
+                      )}
+                    </MotionBox>
+                  </Tooltip>
+                )
+              })}
+            </Box>
+          </Box>
+
+          {/* Connection List */}
+          {userConnections.length > 0 && (
+            <Box
+              bg="rgba(255, 255, 255, 0.05)"
+              border="1px solid rgba(255, 255, 255, 0.1)"
+              borderRadius="lg"
+              p={3}
+              w="100%"
+              backdropFilter="blur(10px)"
+            >
+              <HStack spacing={2} mb={3} justify="space-between" wrap="wrap">
+                <HStack spacing={2}>
+                  <Network size={16} color="#F59E0B" />
+                  <Text fontSize="sm" fontWeight="bold" color="yellow.300">
+                    Connections ({userConnections.length}/{MAX_CONNECTIONS})
+                  </Text>
+                </HStack>
+
                 <Button
                   size="xs"
                   variant="ghost"
-                  colorScheme="red"
-                  onClick={() => removeConnection(conn.from, conn.to)}
-                  p={1}
+                  leftIcon={<Trash2 size={12} />}
+                  onClick={clearAllConnections}
+                  color="red.400"
+                  fontSize="xs"
+                  borderRadius="full"
+                  px={3}
+                  _hover={{ bg: 'rgba(239, 68, 68, 0.1)' }}
                 >
-                  <Trash2 size={12} />
+                  Clear All
                 </Button>
               </HStack>
-            ))}
-          </VStack>
-        </Box>
-      )}
 
-      {/* Instructions and Tips */}
-      <VStack spacing={3} w="100%" maxW="500px">
-        <Box
-          bg="blue.900"
-          p={4}
-          borderRadius="lg"
-          border="1px solid"
-          borderColor="blue.700"
-          w="100%"
-        >
-          <Text
-            fontSize="sm"
-            color="blue.200"
+              <VStack spacing={2} maxH="120px" overflowY="auto">
+                <AnimatePresence>
+                  {userConnections.map((conn, idx) => (
+                    <MotionBox
+                      key={`${conn.from}-${conn.to}-${idx}`}
+                      initial={{ opacity: 0, x: -20 }}
+                      animate={{ opacity: 1, x: 0 }}
+                      exit={{ opacity: 0, x: 20 }}
+                      transition={{ duration: 0.3 }}
+                      w="100%"
+                    >
+                      <Box
+                        w="100%"
+                        p={3}
+                        bg="rgba(255, 255, 255, 0.05)"
+                        borderRadius="lg"
+                        fontSize="xs"
+                        border="1px solid rgba(255, 255, 255, 0.1)"
+                      >
+                        <HStack justify="space-between" align="center">
+                          <HStack flex="1" spacing={3} align="center">
+                            <Badge
+                              bg="rgba(59, 130, 246, 0.2)"
+                              color="blue.300"
+                              px={2}
+                              py={1}
+                              borderRadius="md"
+                              fontSize="2xs"
+                              fontWeight="bold"
+                            >
+                              {idx + 1}
+                            </Badge>
+                            <Tooltip label={conn.from} placement="top" hasArrow>
+                              <Text
+                                color="white"
+                                fontWeight="500"
+                                fontSize="xs"
+                                isTruncated
+                                maxW={isMobile ? '70px' : 'auto'}
+                              >
+                                {conn.from}
+                              </Text>
+                            </Tooltip>
+                            <Link2 size={12} color="#F59E0B" />
+                            <Tooltip label={conn.to} placement="top" hasArrow>
+                              <Text
+                                color="white"
+                                fontWeight="500"
+                                fontSize="xs"
+                                isTruncated
+                                maxW={isMobile ? '70px' : 'auto'}
+                              >
+                                {conn.to}
+                              </Text>
+                            </Tooltip>
+                            <Lock size={10} color="#DC2626" />
+                          </HStack>
+                          <Button
+                            size="xs"
+                            variant="ghost"
+                            colorScheme="red"
+                            onClick={() => removeConnection(conn.from, conn.to)}
+                            p={1}
+                            minW="auto"
+                            borderRadius="full"
+                            w="28px"
+                            h="28px"
+                            _hover={{ bg: 'rgba(239, 68, 68, 0.2)' }}
+                          >
+                            <X size={10} />
+                          </Button>
+                        </HStack>
+                      </Box>
+                    </MotionBox>
+                  ))}
+                </AnimatePresence>
+              </VStack>
+            </Box>
+          )}
+
+          {/* Enhanced Status */}
+          <Box
+            bg="rgba(255, 255, 255, 0.05)"
+            border="1px solid rgba(255, 255, 255, 0.1)"
+            borderRadius="lg"
+            p={4}
+            w="100%"
             textAlign="center"
-            lineHeight="1.5"
+            backdropFilter="blur(10px)"
           >
-            💡 <strong>How to play:</strong> Click two concepts to create a
-            connection. Look for relationships like cause-effect, categories, or
-            thematic links based on the article content. Red X buttons remove
-            connections.
-          </Text>
-        </Box>
-
-        {/* Guidance for connections */}
-        <Box
-          bg="purple.900"
-          p={3}
-          borderRadius="lg"
-          border="1px solid"
-          borderColor="purple.700"
-          w="100%"
-        >
-          <Text fontSize="xs" color="purple.200" textAlign="center">
-            🔗 <strong>Look for:</strong> Cause-effect relationships, similar
-            categories, related topics, or concepts that work together in the
-            article's context.
-          </Text>
-        </Box>
-      </VStack>
-
-      {/* Progress feedback */}
-      {userConnections.length >= recommendedMinConnections && (
-        <Alert
-          status="success"
-          borderRadius="lg"
-          bg="green.900"
-          color="white"
-          maxW="500px"
-        >
-          <AlertIcon />
-          <VStack align="start" spacing={1}>
-            <Text fontWeight="bold">Great job!</Text>
-            <Text fontSize="sm">
-              You've found {userConnections.length} connections. You can submit
-              now or continue exploring for more relationships.
-            </Text>
-          </VStack>
-        </Alert>
-      )}
-
-      {userConnections.length > 0 &&
-        userConnections.length < recommendedMinConnections && (
-          <Box textAlign="center">
-            <Text fontSize="sm" color="yellow.400" fontWeight="medium">
-              🎯 Consider finding{' '}
-              {recommendedMinConnections - userConnections.length} more
-              connection
-              {recommendedMinConnections - userConnections.length !== 1
-                ? 's'
-                : ''}
-            </Text>
-            <Text fontSize="xs" color="gray.500" mt={1}>
-              You can submit with current connections or continue exploring
-            </Text>
+            {userConnections.length === MAX_CONNECTIONS ? (
+              <VStack spacing={2}>
+                <HStack justify="center" spacing={2}>
+                  <Crown size={18} color="#FFD700" />
+                  <Text color="yellow.400" fontWeight="600" fontSize="sm">
+                    Perfect network completed!
+                  </Text>
+                </HStack>
+                <Text color="gray.400" fontSize="xs">
+                  All 8 nodes connected in 4 unique pairs
+                </Text>
+              </VStack>
+            ) : userConnections.length > 0 ? (
+              <VStack spacing={2}>
+                <HStack justify="center" spacing={2}>
+                  <StatusIcon size={18} color={progressStatus.color} />
+                  <Text
+                    color={progressStatus.color}
+                    fontWeight="600"
+                    fontSize="sm"
+                  >
+                    Great progress!
+                  </Text>
+                </HStack>
+                <Text color="gray.400" fontSize="xs">
+                  {MAX_CONNECTIONS - userConnections.length} more connection
+                  {MAX_CONNECTIONS - userConnections.length > 1 ? 's' : ''}{' '}
+                  needed • Pair all {availableNodes.length} remaining nodes
+                </Text>
+              </VStack>
+            ) : (
+              <VStack spacing={2}>
+                <HStack justify="center" spacing={2}>
+                  <Target size={18} color="#6B7280" />
+                  <Text color="gray.400" fontSize="sm">
+                    {isMobile ? 'Tap' : 'Click'} two concepts to connect
+                  </Text>
+                </HStack>
+                <Text color="gray.500" fontSize="xs">
+                  Each node can only be used once • {availableNodes.length}{' '}
+                  nodes available
+                </Text>
+              </VStack>
+            )}
           </Box>
-        )}
-
-      {userConnections.length === 0 && (
-        <Box textAlign="center">
-          <Text fontSize="sm" color="gray.400" fontStyle="italic">
-            Start by clicking any two concepts that you think are related based
-            on the article.
-          </Text>
-        </Box>
-      )}
-    </VStack>
+        </VStack>
+      </MotionBox>
+    </Container>
   )
 }
 
