@@ -1,0 +1,1 @@
+import{f as m,Q as d,g as u,R as C,j as i,n as p}from"./index-9f58ad5f.js";import{C as x}from"./use-toast-64d0b517.js";const f=m((s,o)=>{const{onClick:a,className:t,...l}=s,{onClose:e}=d(),n=u("chakra-modal__close-btn",t),c=C();return i.jsx(x,{ref:o,__css:c.closeButton,className:n,onClick:p(a,r=>{r.stopPropagation(),e()}),...l})});f.displayName="ModalCloseButton";export{f as M};
