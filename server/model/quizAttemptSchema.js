@@ -1,4 +1,4 @@
-// model/quizAttemptSchema.js (Updated)
+// model/quizAttemptSchema.js (Updated with abandoned field)
 const mongoose = require('mongoose')
 
 const quizAttemptSchema = new mongoose.Schema({
@@ -103,6 +103,27 @@ const quizAttemptSchema = new mongoose.Schema({
   performanceBonus: {
     type: Number,
     default: 1.0,
+  },
+
+  // NEW: Abandoned game tracking
+  abandoned: {
+    type: Boolean,
+    default: false,
+  },
+  abandonedReason: {
+    type: String,
+    enum: [
+      'session_expired',
+      'page_refresh',
+      'navigation_away',
+      'connection_lost',
+      'unknown',
+    ],
+    default: null,
+  },
+  abandonedAt: {
+    type: Date,
+    default: null,
   },
 
   isBoosted: {
@@ -221,6 +242,9 @@ quizAttemptSchema.index({ season: 1 })
 quizAttemptSchema.index({ user: 1, article: 1, gameType: 1 })
 quizAttemptSchema.index({ gameType: 1 })
 quizAttemptSchema.index({ user: 1, createdAt: -1 })
+// NEW: Index for abandoned attempts
+quizAttemptSchema.index({ abandoned: 1, user: 1 })
+quizAttemptSchema.index({ abandoned: 1, createdAt: -1 })
 
 const QuizAttempt = mongoose.model('QUIZ_ATTEMPT', quizAttemptSchema)
 

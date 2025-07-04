@@ -58,7 +58,8 @@
     "returnToArticle": "Return to Article",
     "launchGame": "Launch Game",
     "startGame": "START",
-    "loadMore": "Load More"
+    "loadMore": "Load More",
+    "backToHub": "Back"
   },
   "headers": {
     "chooseChallenge": "Choose Your Challenge",

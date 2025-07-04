@@ -58,7 +58,8 @@
     "returnToArticle": "लेख पर वापस लौटें",
     "launchGame": "खेल शुरू करें",
     "startGame": "प्रारंभ",
-    "loadMore": "और लोड करें"
+    "loadMore": "और लोड करें",
+    "backToHub": "वापस जाएं"
   },
   "headers": {
     "chooseChallenge": "अपनी चुनौती चुनें",

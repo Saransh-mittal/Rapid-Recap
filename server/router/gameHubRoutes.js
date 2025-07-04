@@ -1,4 +1,4 @@
-// router/gameHubRoutes.js - UPDATED: Remove language parameter from routes
+// router/gameHubRoutes.js - UPDATED: Add abandoned game routes
 
 const express = require('express')
 const router = express.Router()
@@ -11,12 +11,14 @@ const {
   getGameReport,
   checkGameCompletion,
   regenerateSingleGame,
+  // NEW: Import abandoned game controllers
+  submitAbandonedGameAttempt,
+  getAbandonedAttempts,
+  getGameSessionStatus,
 } = require('../controllers/gameHub')
 const { Authenticate } = require('../middleware/authenticate')
 
-// MODIFY: Remove language parameter from route
-// OLD: router.route('/data/:articleId/:language').get(Authenticate, getGameData)
-// NEW: Get game data for an article (language auto-detected from user preference)
+// Get game data for an article (language auto-detected from user preference)
 router.route('/data/:articleId').get(Authenticate, getGameData)
 
 // Create a new game session
@@ -25,8 +27,19 @@ router.route('/session/create').post(Authenticate, createGameSession)
 // Start a game session
 router.route('/session/start/:sessionId').post(Authenticate, startGameSession)
 
+// NEW: Get game session status with abandonment check
+router
+  .route('/session/status/:sessionId')
+  .get(Authenticate, getGameSessionStatus)
+
 // Submit game attempt
 router.route('/attempt').post(Authenticate, submitGameAttempt)
+
+// NEW: Submit abandoned game attempt
+router.route('/abandon').post(Authenticate, submitAbandonedGameAttempt)
+
+// NEW: Get abandoned attempts for an article
+router.route('/abandoned/:articleId').get(Authenticate, getAbandonedAttempts)
 
 // Get game summary/report
 router.route('/summary/:sessionId').get(Authenticate, getGameSummary)

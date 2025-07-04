@@ -21,6 +21,11 @@ const {
   validateHindiWordAnswer,
   getHindiDisplayLength,
 } = require('../utils/hindiText.utils')
+const {
+  submitAbandonedGame,
+  checkAbandonedAttempts,
+  getAbandonmentMessage,
+} = require('../services/abandonedGameService')
 
 // @desc   Get game data for an article
 // @route  GET /api/gamehub/data/:articleId/:language
@@ -1023,6 +1028,184 @@ const submitGameAttempt = asyncHandler(async (req, res) => {
   }
 })
 
+// @desc   Submit abandoned game attempt
+// @route  POST /api/gamehub/abandon
+// @access Private
+const submitAbandonedGameAttempt = asyncHandler(async (req, res) => {
+  const { sessionId, reason = 'unknown' } = req.body
+  const userId = req.user._id
+
+  let session
+
+  try {
+    session = await mongoose.startSession()
+    session.startTransaction()
+
+    if (!sessionId) {
+      throw new Error('Session ID is required')
+    }
+
+    const result = await submitAbandonedGame({
+      userId,
+      sessionId,
+      reason,
+      session,
+    })
+
+    await session.commitTransaction()
+    session.endSession()
+
+    // Get user-friendly message
+    const abandonmentMessage = getAbandonmentMessage(
+      result.abandonedAttempt?.abandonedReason || reason,
+      result.gameType,
+    )
+
+    console.log(`Abandoned game processed: ${sessionId}, reason: ${reason}`)
+
+    res.status(200).json({
+      success: true,
+      message: result.message,
+      abandonmentInfo: {
+        ...abandonmentMessage,
+        gameType: result.gameType,
+        abandonedAt: result.abandonedAt,
+        sessionId: sessionId,
+      },
+      alreadyAbandoned: result.alreadyAbandoned,
+      // Don't send the full attempt data to frontend for security
+    })
+  } catch (error) {
+    if (session) {
+      await session.abortTransaction()
+      session.endSession()
+    }
+    console.error('Error submitting abandoned game:', error)
+    res.status(400).json({
+      error: error.message || 'Failed to process abandoned game',
+      details: error.message,
+    })
+  }
+})
+
+// @desc   Check abandoned attempts for an article
+// @route  GET /api/gamehub/abandoned/:articleId
+// @access Private
+const getAbandonedAttempts = asyncHandler(async (req, res) => {
+  const { articleId } = req.params
+  const userId = req.user._id
+
+  try {
+    const abandonedInfo = await checkAbandonedAttempts(userId, articleId)
+
+    res.status(200).json({
+      success: true,
+      ...abandonedInfo,
+    })
+  } catch (error) {
+    console.error('Error checking abandoned attempts:', error)
+    res.status(500).json({
+      error: 'Failed to check abandoned attempts',
+      details: error.message,
+    })
+  }
+})
+
+// @desc   Get game session status with abandonment check
+// @route  GET /api/gamehub/session/status/:sessionId
+// @access Private
+const getGameSessionStatus = asyncHandler(async (req, res) => {
+  const { sessionId } = req.params
+  const userId = req.user._id
+
+  try {
+    const ArticleQuizSession = require('../model/articleQuizSessionSchem')
+    const QuizAttempt = require('../model/quizAttemptSchema')
+
+    const gameSession = await ArticleQuizSession.findOne({
+      _id: sessionId,
+      user: userId,
+    })
+
+    if (!gameSession) {
+      return res.status(404).json({
+        error: 'Game session not found',
+        shouldAbandon: false,
+      })
+    }
+
+    // Check if there's already an attempt (either completed or abandoned)
+    const existingAttempt = await QuizAttempt.findOne({
+      user: userId,
+      articleQuizSession: sessionId,
+    })
+
+    let status = 'not_started'
+    let shouldAbandon = false
+    let abandonmentReason = null
+
+    if (existingAttempt) {
+      if (existingAttempt.abandoned) {
+        status = 'abandoned'
+        abandonmentReason = existingAttempt.abandonedReason
+      } else {
+        status = 'completed'
+      }
+    } else if (gameSession.completed) {
+      // Session marked as completed but no attempt found - data inconsistency
+      status = 'inconsistent'
+      shouldAbandon = true
+      abandonmentReason = 'session_expired'
+    } else if (gameSession.startTime) {
+      // Check if session has expired based on game timer
+      const { GAME_CONFIGS } = require('../utils/enhancedQuiz.utils')
+      const gameConfig = GAME_CONFIGS[gameSession.gameType]
+      const timeLimit = gameConfig ? gameConfig.timeLimit : 50
+
+      const now = new Date()
+      const sessionStart = new Date(gameSession.startTime)
+      const timeElapsed = Math.floor((now - sessionStart) / 1000)
+
+      if (timeElapsed > timeLimit + 30) {
+        // 30 second grace period
+        status = 'expired'
+        shouldAbandon = true
+        abandonmentReason = 'session_expired'
+      } else {
+        status = 'in_progress'
+      }
+    } else {
+      status = 'ready_to_start'
+    }
+
+    res.status(200).json({
+      success: true,
+      sessionId: sessionId,
+      status: status,
+      shouldAbandon: shouldAbandon,
+      abandonmentReason: abandonmentReason,
+      gameType: gameSession.gameType,
+      startTime: gameSession.startTime,
+      endTime: gameSession.endTime,
+      completed: gameSession.completed,
+      existingAttempt: existingAttempt
+        ? {
+            id: existingAttempt._id,
+            abandoned: existingAttempt.abandoned,
+            createdAt: existingAttempt.createdAt,
+            RQM_score: existingAttempt.RQM_score,
+          }
+        : null,
+    })
+  } catch (error) {
+    console.error('Error checking game session status:', error)
+    res.status(500).json({
+      error: 'Failed to check session status',
+      details: error.message,
+    })
+  }
+})
+
 // @desc   Get enhanced game summary/report with detailed analysis
 // @route  GET /api/gamehub/summary/:sessionId
 // @access Private
@@ -1562,4 +1745,7 @@ module.exports = {
   checkGameCompletion,
   getGameReport,
   regenerateSingleGame,
+  getAbandonedAttempts,
+  submitAbandonedGameAttempt,
+  getGameSessionStatus,
 }

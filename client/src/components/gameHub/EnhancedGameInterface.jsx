@@ -1,4 +1,4 @@
-// components/gameHub/EnhancedGameInterface.jsx - Fixed version without setShowResults
+// components/gameHub/EnhancedGameInterface.jsx - Updated with exit warning integration
 import React, { useState, useEffect, useCallback, useMemo, useRef } from 'react'
 import { useParams, useNavigate } from 'react-router-dom'
 import { useSelector, useDispatch } from 'react-redux'
@@ -38,6 +38,8 @@ import {
   useSubmitGame,
   useFetchGameData,
 } from '../../customHooks/useGameHub'
+import { useAbandonedGame } from '../../customHooks/useAbandonedGame'
+import { useGameExitWarning } from '../../customHooks/useGameExitWarning'
 
 // Import Redux actions
 import {
@@ -54,8 +56,9 @@ import TrueFalseInterface from './gameInterfaces/TrueFalseInterface'
 import WordWeaverInterface from './gameInterfaces/WordWeaverInterface'
 import ConnectionsInterface from './gameInterfaces/ConnectionsInterface'
 import GameSubmissionLoadingScreen from './GameSubmissionLoadingScreen'
+import AbandonedGameScreen from './AbandonedGameScreen'
+import GameExitWarningDialog from './GameExitWarningDialog'
 import { useSocket } from '../../customHooks/useSocket'
-// import { ensureArticleInHistory } from '../../utils/historyCleanup'
 
 const MotionBox = motion(Box)
 
@@ -162,7 +165,6 @@ const CompactTimer = ({ timeLeft, totalTime, gameType, onTimeUp }) => {
 
   return (
     <MotionBox
-      // SYNCED: Pulsing animation starts at criticalAt seconds
       animate={configWarningState === 'critical' ? { scale: [1, 1.08, 1] } : {}}
       transition={{
         duration: 0.6,
@@ -170,7 +172,6 @@ const CompactTimer = ({ timeLeft, totalTime, gameType, onTimeUp }) => {
       }}
     >
       <HStack spacing={3}>
-        {/* SINGLE timer display - only in circular progress */}
         <CircularProgress
           value={(timeLeft / totalTime) * 100}
           color={timerColor}
@@ -195,7 +196,6 @@ const CompactTimer = ({ timeLeft, totalTime, gameType, onTimeUp }) => {
           </CircularProgressLabel>
         </CircularProgress>
 
-        {/* SYNCED: Badge appears at warningAt seconds */}
         <VStack spacing={1} align="start">
           {configWarningState !== 'normal' && (
             <MotionBox
@@ -252,7 +252,6 @@ const CompactNavigationControls = ({
   const isLastQuestion = currentQuestionIndex === totalQuestions - 1
   const isSingleQuestion = gameType === 'connections' || totalQuestions === 1
 
-  // UPDATED: Hide previous navigation for quiz, true/false, and connections games
   const showPreviousButton = gameType === 'word_weaver'
 
   return (
@@ -264,7 +263,6 @@ const CompactNavigationControls = ({
       p={4}
     >
       <VStack spacing={3}>
-        {/* Progress */}
         <HStack justify="space-between" w="100%">
           <Text fontSize="xs" color="gray.400">
             {t('gameInterface.question')} {currentQuestionIndex + 1} of{' '}
@@ -289,9 +287,7 @@ const CompactNavigationControls = ({
           w="100%"
         />
 
-        {/* FIXED: Buttons - Updated layout to prevent overflow and ensure proper visibility */}
         <VStack spacing={3} w="100%">
-          {/* Main Action Button */}
           {isLastQuestion || isSingleQuestion ? (
             <Button
               rightIcon={<Send size={14} />}
@@ -336,7 +332,7 @@ const CompactNavigationControls = ({
               {t('navigation.next')}
             </Button>
           )}
-          {/* Previous Button Row - Only for word_weaver */}
+
           {showPreviousButton && (
             <Button
               leftIcon={<ArrowLeft size={14} />}
@@ -363,7 +359,6 @@ const CompactNavigationControls = ({
           )}
         </VStack>
 
-        {/* UPDATED: Add info text for no-previous-nav games */}
         {!showPreviousButton && !isSingleQuestion && (
           <Text
             fontSize="xs"
@@ -375,7 +370,6 @@ const CompactNavigationControls = ({
           </Text>
         )}
 
-        {/* UPDATED: Special message for connections */}
         {gameType === 'connections' && (
           <Text
             fontSize="xs"
@@ -428,12 +422,106 @@ const EnhancedGameInterface = () => {
       language: i18n.language,
     })
 
+  // Abandoned game hook
+  const {
+    submittingAbandoned,
+    abandonedInfo,
+    handleAutoAbandon,
+    checkSessionStatus,
+    resetAbandonedState,
+  } = useAbandonedGame()
+
   // Local state for timer and game management
   const [timeLeft, setTimeLeft] = useState(0)
   const [totalTime, setTotalTime] = useState(0)
   const [results, setResults] = useState(null)
   const [currentAnswers, setCurrentAnswers] = useState([])
   const [gameStarted, setGameStarted] = useState(false)
+  const [isAbandoned, setIsAbandoned] = useState(false)
+
+  // NEW: Handle submit and exit for exit warning
+  const handleSubmitAndExit = useCallback(
+    async (answers, reason) => {
+      navigate(-1)
+      try {
+        console.log('Submitting game due to exit warning:', {
+          reason,
+          answersCount: answers.length,
+        })
+
+        // Clear the timer
+        if (timerRef.current) {
+          clearInterval(timerRef.current)
+        }
+
+        // Calculate time taken
+        const timeTaken = totalTime - timeLeft
+
+        // Submit the game normally with current answers
+        const result = await submitGame({
+          sessionId,
+          userResponses: answers,
+          timeTaken: Math.max(timeTaken, 0),
+        })
+
+        console.log('Game submitted successfully via exit warning')
+
+        // Navigate directly to report after successful submission
+        navigate(`/gamehub/${articleId}/report`, { replace: true })
+
+        return result
+      } catch (error) {
+        console.error('Error submitting game via exit warning:', error)
+
+        // If normal submission fails, try abandoned submission
+        try {
+          const abandonResult = await handleAutoAbandon(sessionId, reason)
+          console.log('Fallback to abandoned submission successful')
+
+          // Still navigate to report even for abandoned games
+          navigate(`/gamehub/${articleId}/report`, { replace: true })
+
+          return abandonResult
+        } catch (abandonError) {
+          console.error('Both submission methods failed:', abandonError)
+          // If both fail, go to hub as fallback
+          navigate(`/gamehub/${articleId}`, { replace: true })
+          throw new Error('Failed to save game progress')
+        }
+      }
+    },
+    [
+      sessionId,
+      totalTime,
+      timeLeft,
+      submitGame,
+      navigate,
+      articleId,
+      handleAutoAbandon,
+    ],
+  )
+
+  // NEW: Exit warning hook
+  const {
+    showExitWarning,
+    exitReason,
+    isSubmittingExit,
+    currentProgress,
+    handleStayInGame,
+    handleConfirmExit,
+    disableWarnings,
+    resetWarningState,
+    createNavigationWrapper,
+  } = useGameExitWarning({
+    isGameActive: gameStarted && sessionStatus === 'playing' && !isAbandoned,
+    currentAnswers,
+    gameSession,
+    gameType,
+    timeLeft,
+    totalTime,
+    onSubmitAndExit: handleSubmitAndExit,
+    enableWarnings: true,
+  })
 
   // Get timer configuration for current game type
   const timerConfig = useMemo(
@@ -441,19 +529,68 @@ const EnhancedGameInterface = () => {
     [gameType],
   )
 
+  // Check for abandoned session on mount and when sessionId changes
+  useEffect(() => {
+    const checkForAbandonedSession = async () => {
+      if (sessionId && sessionStatus === 'error') {
+        console.log('Session status is error, checking if should abandon...', {
+          sessionId,
+        })
+
+        try {
+          const statusCheck = await checkSessionStatus(sessionId)
+
+          if (statusCheck.shouldAbandon) {
+            console.log(
+              'Session should be abandoned, submitting abandoned game...',
+              statusCheck,
+            )
+
+            const abandonResult = await handleAutoAbandon(
+              sessionId,
+              statusCheck.abandonmentReason || 'session_expired',
+            )
+
+            if (abandonResult.success) {
+              setIsAbandoned(true)
+              console.log('Successfully marked game as abandoned')
+            } else {
+              console.error('Failed to abandon game:', abandonResult.error)
+              // Still show abandoned screen even if submission failed
+              setIsAbandoned(true)
+            }
+          }
+        } catch (error) {
+          console.error('Error checking session status for abandonment:', error)
+          // Default to showing abandoned screen on error
+          setIsAbandoned(true)
+        }
+      }
+    }
+
+    if (sessionStatus === 'error' && sessionId) {
+      checkForAbandonedSession()
+    }
+  }, [sessionStatus, sessionId, checkSessionStatus, handleAutoAbandon])
+
   // Initialize game on component mount
   useEffect(() => {
-    // This effect runs when the component mounts or when articleId/gameType changes.
-    if (articleId && gameType && !sessionId) {
-      // FIX: Reset the game session state in Redux before starting a new one.
-      // This ensures that state from a previous game (like question index) is cleared.
+    if (articleId && gameType && !sessionId && !isAbandoned) {
       dispatch(resetGameSession())
-
+      resetWarningState() // NEW: Reset warning state
       dispatch(setCurrentGameType(gameType))
       dispatch(setGameState('loading'))
       initializeGame()
     }
-  }, [articleId, gameType, sessionId, dispatch, initializeGame])
+  }, [
+    articleId,
+    gameType,
+    sessionId,
+    dispatch,
+    initializeGame,
+    isAbandoned,
+    resetWarningState,
+  ])
 
   // Set up timer when game session is ready
   useEffect(() => {
@@ -476,7 +613,7 @@ const EnhancedGameInterface = () => {
     }
   }, [gameSession, gameType, currentAnswers.length])
 
-  // Timer countdown effect - Simplified without warning logic
+  // Timer countdown effect
   useEffect(() => {
     if (!gameStarted || sessionStatus !== 'playing' || timeLeft <= 0) {
       return
@@ -508,6 +645,9 @@ const EnhancedGameInterface = () => {
       clearInterval(timerRef.current)
     }
 
+    // NEW: Disable warnings before auto-submit
+    disableWarnings()
+
     toast({
       title: "Time's Up!",
       description: 'Your answers have been automatically submitted.',
@@ -517,7 +657,7 @@ const EnhancedGameInterface = () => {
     })
 
     submitGameAttempt(currentAnswers)
-  }, [currentAnswers])
+  }, [currentAnswers, disableWarnings])
 
   // Handle answer selection
   const handleAnswer = useCallback(
@@ -540,9 +680,8 @@ const EnhancedGameInterface = () => {
     [currentAnswers, currentQuestionIndex, gameType, dispatch],
   )
 
-  // UPDATED: Navigation handlers - restrict previous for quiz and true/false
+  // Navigation handlers
   const handlePrevious = useCallback(() => {
-    // UPDATED: Only allow previous navigation for word_weaver
     if (gameType === 'word_weaver' && currentQuestionIndex > 0) {
       dispatch(setCurrentQuestionIndex(currentQuestionIndex - 1))
     }
@@ -554,13 +693,17 @@ const EnhancedGameInterface = () => {
     }
   }, [currentQuestionIndex, gameSession, dispatch])
 
-  // Submit game attempt - FIXED: Navigate to report route after submission
+  // Submit game attempt (PERFECT EXISTING LOGIC PRESERVED)
   const submitGameAttempt = useCallback(
     async (answers = currentAnswers) => {
       try {
+        navigate(-1)
         if (timerRef.current) {
           clearInterval(timerRef.current)
         }
+
+        // NEW: Disable warnings when submitting normally
+        disableWarnings()
 
         dispatch(setGameState('submitting'))
         setGameStarted(false)
@@ -576,8 +719,6 @@ const EnhancedGameInterface = () => {
         setResults(result)
         dispatch(setGameState('completed'))
 
-        // FIXED: Simple history cleanup - remove game routes and go to report
-        // ensureArticleInHistory(navigate, articleId)
         navigate(`/gamehub/${articleId}/report`, { replace: true })
       } catch (error) {
         console.error('Error submitting game:', error)
@@ -601,17 +742,37 @@ const EnhancedGameInterface = () => {
       toast,
       navigate,
       articleId,
+      disableWarnings,
     ],
   )
 
-  // Handle back to menu
-  const handleBackToMenu = useCallback(() => {
-    if (timerRef.current) {
-      clearInterval(timerRef.current)
-    }
+  // Handle back to menu (WRAPPED WITH EXIT WARNING)
+  const handleBackToMenu = useCallback(
+    createNavigationWrapper(() => {
+      if (timerRef.current) {
+        clearInterval(timerRef.current)
+      }
+      dispatch(resetGameSession())
+      navigate(`/gamehub/${articleId}`)
+    }),
+    [createNavigationWrapper, dispatch, navigate, articleId],
+  )
+
+  // Handle retry from abandoned screen
+  const handleRetryGame = useCallback(() => {
+    resetAbandonedState()
+    setIsAbandoned(false)
     dispatch(resetGameSession())
-    navigate(`/gamehub/${articleId}`)
-  }, [dispatch, navigate, articleId])
+    resetWarningState() // NEW: Reset warning state
+    navigate(`/gamehub/${articleId}/${gameType}`, { replace: true })
+  }, [
+    resetAbandonedState,
+    dispatch,
+    navigate,
+    articleId,
+    gameType,
+    resetWarningState,
+  ])
 
   // Get current question for rendering
   const getCurrentQuestion = useCallback(() => {
@@ -738,6 +899,19 @@ const EnhancedGameInterface = () => {
     }
   }, [])
 
+  // Show abandoned game screen if game was abandoned
+  if (isAbandoned || (sessionStatus === 'error' && abandonedInfo)) {
+    return (
+      <AbandonedGameScreen
+        abandonmentInfo={abandonedInfo}
+        articleId={articleId}
+        onRetryGame={handleRetryGame}
+        showRetry={true}
+        isSubmitting={submittingAbandoned}
+      />
+    )
+  }
+
   // Loading state
   if (gameDataLoading || sessionStatus === 'creating') {
     return (
@@ -759,8 +933,8 @@ const EnhancedGameInterface = () => {
     )
   }
 
-  // Error state
-  if (sessionStatus === 'error') {
+  // Show loading while checking/submitting abandoned game
+  if (sessionStatus === 'error' && submittingAbandoned) {
     return (
       <Box
         minH="100vh"
@@ -771,13 +945,13 @@ const EnhancedGameInterface = () => {
         justifyContent="center"
       >
         <VStack spacing={4}>
-          <Text fontSize="4xl">❌</Text>
+          <Text fontSize="4xl">⏳</Text>
           <Text fontSize="lg" fontWeight="bold">
-            Failed to load game
+            Processing abandoned game...
           </Text>
-          <Button onClick={() => window.location.reload()} colorScheme="red">
-            Try Again
-          </Button>
+          <Text fontSize="md" color="gray.400">
+            Please wait while we save your attempt
+          </Text>
         </VStack>
       </Box>
     )
@@ -785,15 +959,29 @@ const EnhancedGameInterface = () => {
 
   return (
     <Box minH="100vh" bg="gray.900" color="white">
+      {/* NEW: Exit Warning Dialog */}
+      <GameExitWarningDialog
+        isOpen={showExitWarning}
+        onClose={handleStayInGame}
+        onConfirmExit={handleConfirmExit}
+        onStayInGame={handleStayInGame}
+        gameType={gameType}
+        currentProgress={currentProgress}
+        timeLeft={timeLeft}
+        totalTime={totalTime}
+        isSubmitting={isSubmittingExit}
+        exitReason={exitReason}
+      />
+
       {/* Show GameSubmissionLoadingScreen when submitting */}
       <GameSubmissionLoadingScreen
         socket={getSocket()}
         gameType={gameType}
-        isVisible={submitting}
+        isVisible={submitting || isSubmittingExit}
       />
 
       {/* Only show the main interface when not submitting */}
-      {!submitting && (
+      {!submitting && !isSubmittingExit && (
         <>
           {/* Compact Header */}
           <Box
