@@ -17,7 +17,7 @@ const {
   GAME_CONFIGS,
 } = require('../utils/enhancedQuiz.utils')
 const configService = require('../configService')
-const { checkTournamentEligibility } = require('../utils/tournament.utils')
+// const { checkTournamentEligibility } = require('../utils/tournament.utils')
 const User = require('../model/userSchema')
 const Article = require('../model/articleSchema')
 const QuizAttempt = require('../model/quizAttemptSchema')
@@ -509,7 +509,7 @@ const saveEnhancedQuizAttemptWithStats = async (
       activeQuinBoost.isUsed = true
       await inventory.save({ session })
       quinBoostUtilized = true
-      user.eligibleForTournament = true
+      // user.eligibleForTournament = true
     }
     if (activeStreakSurge) {
       // Check if notification has already been sent today
@@ -571,6 +571,9 @@ const saveEnhancedQuizAttemptWithStats = async (
     timeDilatedTimeTaken: activeTimeDilation ? timeTaken : null,
     additionalTime: activeTimeDilation?.abilityId?.additionalTime || 0,
     timeDilationBoosted: !!activeTimeDilation,
+    quinBoostUtilized: quinBoostUtilized, // Add this field
+    streakRevived: streakRevived, // Add this field
+    pauseRealTimeIQ: user.pauseRealTimeIQ, // Add this field
     season: parseInt(configService.getCurrentSeason(), 10),
     month: moment().month() + 1,
     year: moment().year(),
@@ -662,6 +665,16 @@ const saveEnhancedQuizAttemptWithStats = async (
     newQuizAttempt.newIQScore = newIQScore
     newQuizAttempt.prevUserScore = prevUserScore
     newQuizAttempt.newUserScore = finalUserScore
+    newQuizAttempt.hasSocietyOrCircleChanged = hasSocietyOrCircleChanged
+    newQuizAttempt.changedSocietyOrCircle = changedSocietyOrCircle
+    newQuizAttempt.isUpgrade = isUpgrade
+    newQuizAttempt.newSociety = newSociety
+    newQuizAttempt.newCircle = newCircle
+    newQuizAttempt.societyUpgradeMessage = societyUpgradeMessage
+    newQuizAttempt.boostMultiplier = boostMultiplier
+    newQuizAttempt.originalIncrement = originalIncrement
+    newQuizAttempt.boostedIncrement = boostedIncrement
+    newQuizAttempt.additionalScore = additionalScore
     await newQuizAttempt.save({ session })
 
     resultOfIQCalc = {
@@ -681,15 +694,15 @@ const saveEnhancedQuizAttemptWithStats = async (
   }
 
   emitProgress('updateStats', 100)
-  emitProgress('checkTournament', 50)
+  // emitProgress('checkTournament', 50)
 
-  const { messageForTournamentEligibility, userEligibleForTournament } =
-    await checkTournamentEligibility(
-      user,
-      rqmResult.rqmScore,
-      lastQuizAttempt,
-      session,
-    )
+  // const { messageForTournamentEligibility, userEligibleForTournament } =
+  //   await checkTournamentEligibility(
+  //     user,
+  //     rqmResult.rqmScore,
+  //     lastQuizAttempt,
+  //     session,
+  //   )
 
   const xpAwarded = await logActivity({
     userInGameName: user.inGameName,
@@ -697,6 +710,10 @@ const saveEnhancedQuizAttemptWithStats = async (
     consecutiveQuizCount: todayAttemptsCount,
     session,
   })
+
+  // Update the QuizAttempt with xpAwarded
+  newQuizAttempt.xpAwarded = xpAwarded
+  await newQuizAttempt.save({ session })
 
   if (quinBoostUtilized) {
     await logActivity({
@@ -706,7 +723,7 @@ const saveEnhancedQuizAttemptWithStats = async (
     })
   }
 
-  emitProgress('checkTournament', 100)
+  // emitProgress('checkTournament', 100)
   emitProgress('finalizeAttempt', 50)
 
   const quizzesToday = await currDayStreakCalulator(user._id)
@@ -744,8 +761,8 @@ const saveEnhancedQuizAttemptWithStats = async (
     pastRQMs,
     xpAwarded,
     quinBoostUtilized,
-    messageForTournamentEligibility,
-    userEligibleForTournament,
+    // messageForTournamentEligibility,
+    // userEligibleForTournament,
     performanceBonus: rqmResult.performanceBonus,
     timeDilationBoosted: !!activeTimeDilation,
     streakRevived,

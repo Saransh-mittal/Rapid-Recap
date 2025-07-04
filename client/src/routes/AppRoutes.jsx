@@ -23,12 +23,20 @@ const HallOfChampions = lazy(() => import('../screens/HallOfChampions'))
 const QuickClash = lazy(() => import('../screens/QuickClash'))
 const QuickClashSession = lazy(() => import('../screens/QuickClashSession'))
 
-// NEW: GameHub components
+// GameHub components
 const IntegratedGameHub = lazy(() =>
   import('../components/gameHub/IntegratedGameHub'),
 )
 const EnhancedGameInterface = lazy(() =>
   import('../components/gameHub/EnhancedGameInterface'),
+)
+// GameSummaryInterface component
+const GameSummaryInterface = lazy(() =>
+  import('../components/gameHub/GameSummaryInterface'),
+)
+// NEW: GameReportWrapper component
+const GameReportWrapper = lazy(() =>
+  import('../components/gameHub/GameReportWrapper'),
 )
 
 const OnboardingProcess = lazy(() => import('../screens/OnboardingProcess'))
@@ -105,7 +113,7 @@ const AppRoutes = ({ isToken, needsOnboarding, setIsGuestLoggedin }) => {
               }
             />
 
-            {/* NEW: GameHub routes */}
+            {/* GameHub routes */}
             <Route
               path="/gamehub/:articleId"
               element={
@@ -120,6 +128,20 @@ const AppRoutes = ({ isToken, needsOnboarding, setIsGuestLoggedin }) => {
                 ) : (
                   <Navigate to="/" replace />
                 )
+              }
+            />
+            {/* NEW: Game Report route */}
+            <Route
+              path="/gamehub/:articleId/report"
+              element={
+                isToken ? <GameReportWrapper /> : <Navigate to="/" replace />
+              }
+            />
+            {/* Game Summary route */}
+            <Route
+              path="/gamehub/:articleId/summary/:sessionId"
+              element={
+                isToken ? <GameSummaryInterface /> : <Navigate to="/" replace />
               }
             />
 

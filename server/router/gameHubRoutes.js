@@ -7,8 +7,7 @@ const {
   startGameSession,
   submitGameAttempt,
   getGameSummary,
-  importGameData,
-  exportGameData,
+  getGameReport,
   checkGameCompletion,
 } = require('../controllers/gameHub')
 const { Authenticate } = require('../middleware/authenticate')
@@ -28,11 +27,8 @@ router.route('/attempt').post(Authenticate, submitGameAttempt)
 // Get game summary/report
 router.route('/summary/:sessionId').get(Authenticate, getGameSummary)
 
-// Import custom game data
-router.route('/import').post(Authenticate, importGameData)
-
-// Export game data
-router.route('/export/:articleId').get(Authenticate, exportGameData)
+// NEW: Get game report for an article (latest attempt)
+router.route('/report/:articleId').get(Authenticate, getGameReport)
 
 // Check if user has completed any game for an article
 router

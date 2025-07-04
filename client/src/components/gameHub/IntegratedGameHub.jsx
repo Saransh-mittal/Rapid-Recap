@@ -38,7 +38,6 @@ import i18n from 'i18next'
 import { useTranslation } from 'react-i18next'
 import GameInstructionsModal from './GameInstructionsModal'
 import GameDataGenerationLoader from './GameDataGenerationLoader'
-import { useSocket } from '../../customHooks/useSocket'
 
 const MotionBox = motion(Box)
 
@@ -111,8 +110,10 @@ const GamesCompletedView = ({
   gameData,
   onViewResults,
   onBackToArticle,
+  articleId, // Add this prop
 }) => {
   const { t } = useTranslation()
+  const navigate = useNavigate() // Add this hook
 
   return (
     <Box minH="100vh" bg="gray.900" color="white" position="relative">
@@ -262,6 +263,52 @@ const GamesCompletedView = ({
             </VStack>
           </MotionBox>
 
+          {/* NEW: View Latest Report Button */}
+          <MotionBox
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.6, delay: 0.3 }}
+            w="100%"
+            maxW="400px"
+          >
+            <Button
+              onClick={() => navigate(`/gamehub/${articleId}/report`)}
+              size="lg"
+              height="60px"
+              width="100%"
+              bg="rgba(139, 92, 246, 0.1)"
+              border="1px solid"
+              borderColor="rgba(139, 92, 246, 0.3)"
+              color="purple.300"
+              borderRadius="xl"
+              leftIcon={<FileText size={20} />}
+              _hover={{
+                bg: 'rgba(139, 92, 246, 0.2)',
+                borderColor: 'rgba(139, 92, 246, 0.5)',
+                transform: 'translateY(-2px)',
+                boxShadow: '0 8px 25px rgba(139, 92, 246, 0.3)',
+              }}
+              _active={{
+                transform: 'translateY(0px)',
+              }}
+              transition="all 0.2s"
+              fontWeight="medium"
+              fontSize="md"
+              boxShadow="0 4px 15px rgba(139, 92, 246, 0.2)"
+            >
+              📊 View Latest Game Report
+            </Button>
+            <Text
+              fontSize="xs"
+              color="gray.500"
+              textAlign="center"
+              mt={2}
+              fontStyle="italic"
+            >
+              Review your most recent performance & detailed analysis
+            </Text>
+          </MotionBox>
+
           {/* Action Button */}
           <MotionBox
             initial={{ opacity: 0, y: 20 }}
@@ -345,7 +392,7 @@ const GameMenu = ({ onSelectGame, gameData, articleId }) => {
       description: '8 concepts in 4 perfect pairs',
       colors: gameTypeColors.connections,
       difficulty: 'Strategic',
-      time: '100s',
+      time: '72s',
       emoji: '🔗',
       available: gameData?.connections?.concepts?.length >= 8,
     },
@@ -695,7 +742,6 @@ const IntegratedGameHub = () => {
   const navigate = useNavigate()
   const toast = useToast()
   const { user } = useSelector(state => state.auth)
-  const { getSocket } = useSocket()
 
   // State management
   const [gameData, setGameData] = useState(null)
@@ -706,23 +752,6 @@ const IntegratedGameHub = () => {
   const [articleData, setArticleData] = useState(null)
   const [selectedGameType, setSelectedGameType] = useState(null)
   const [showInstructions, setShowInstructions] = useState(false)
-
-  // Socket setup for progress tracking
-  useEffect(() => {
-    const currentSocket = getSocket()
-    if (currentSocket && user) {
-      currentSocket.emit('join game progress', user._id)
-      currentSocket.on('game_generation_progress', data => {
-        setGenerationProgress(data.progress || 0)
-      })
-    }
-
-    return () => {
-      if (currentSocket) {
-        currentSocket.off('game_generation_progress')
-      }
-    }
-  }, [getSocket, user])
 
   useEffect(() => {
     if (articleId && user?._id) {
@@ -794,7 +823,7 @@ const IntegratedGameHub = () => {
 
   const handleStartGame = () => {
     setShowInstructions(false)
-    navigate(`/gamehub/${articleId}/${selectedGameType}`)
+    navigate(`/gamehub/${articleId}/${selectedGameType}`, { replace: true })
   }
 
   const handleBackToArticle = () => {
@@ -834,7 +863,7 @@ const IntegratedGameHub = () => {
         <VStack spacing={4} position="relative" zIndex={1}>
           <Text fontSize="6xl">🧠</Text>
           <Text fontSize="xl" fontWeight="bold">
-            Loading Game Universe...
+            Loading Game Hub...
           </Text>
           <Text fontSize="md" color="gray.400">
             Preparing your learning adventure
@@ -887,7 +916,7 @@ const IntegratedGameHub = () => {
                 bgGradient="linear(45deg, #667eea, #764ba2)"
                 bgClip="text"
               >
-                Game Universe
+                Game Hub
               </Text>
             </HStack>
 
@@ -901,6 +930,7 @@ const IntegratedGameHub = () => {
           completionData={completionData}
           gameData={gameData}
           onBackToArticle={handleBackToArticle}
+          articleId={articleId}
         />
       ) : (
         <GameMenu

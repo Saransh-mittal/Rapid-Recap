@@ -124,6 +124,8 @@ const quizAttemptSchema = new mongoose.Schema({
   year: {
     type: Number,
   },
+
+  // IQ Calculation and Society/Circle data
   prevIQScore: {
     type: Number,
   },
@@ -142,6 +144,45 @@ const quizAttemptSchema = new mongoose.Schema({
   globalStandardDeviation: {
     type: Number,
   },
+  hasSocietyOrCircleChanged: {
+    type: Boolean,
+    default: false,
+  },
+  changedSocietyOrCircle: {
+    type: String,
+  },
+  isUpgrade: {
+    type: Boolean,
+    default: false,
+  },
+  newSociety: {
+    type: String,
+  },
+  newCircle: {
+    type: String,
+  },
+  societyUpgradeMessage: {
+    type: String,
+  },
+  boostMultiplier: {
+    type: Number,
+    default: 1,
+  },
+  originalIncrement: {
+    type: Number,
+  },
+  boostedIncrement: {
+    type: Number,
+  },
+  additionalScore: {
+    type: Number,
+  },
+  pauseRealTimeIQ: {
+    type: Boolean,
+    default: false,
+  },
+
+  // Time Dilation and Boost tracking
   timeDilationBoosted: {
     type: Boolean,
     default: false,
@@ -153,6 +194,21 @@ const quizAttemptSchema = new mongoose.Schema({
   additionalTime: {
     type: Number,
   },
+
+  // Activity and Achievement tracking
+  xpAwarded: {
+    type: Number,
+    default: 0,
+  },
+  quinBoostUtilized: {
+    type: Boolean,
+    default: false,
+  },
+  streakRevived: {
+    type: Boolean,
+    default: false,
+  },
+
   createdAt: {
     type: Date,
     default: Date.now,
@@ -164,6 +220,7 @@ quizAttemptSchema.index({ createdAt: 1 })
 quizAttemptSchema.index({ season: 1 })
 quizAttemptSchema.index({ user: 1, article: 1, gameType: 1 })
 quizAttemptSchema.index({ gameType: 1 })
+quizAttemptSchema.index({ user: 1, createdAt: -1 })
 
 const QuizAttempt = mongoose.model('QUIZ_ATTEMPT', quizAttemptSchema)
 

@@ -1,10 +1,10 @@
-// src/components/quizComponents/ActionButtons.jsx
+// src/components/quizComponents/ActionButtons.jsx - Updated for report context
 import React from 'react'
 import { Grid, Button, Text, Box, Icon } from '@chakra-ui/react'
 import { motion } from 'framer-motion'
-import { Trophy, FileText } from 'lucide-react'
+import { Trophy, FileText, Home } from 'lucide-react'
 import { useTranslation } from 'react-i18next'
-import { useNavigate } from 'react-router-dom'
+import { useNavigate, useLocation } from 'react-router-dom'
 import { useDispatch, useSelector } from 'react-redux'
 import { setIsOpen } from '../../../redux/quizSlice'
 
@@ -69,9 +69,25 @@ const ActionButtons = React.memo(
   }) => {
     const { t } = useTranslation('SubmittedQuizInterface')
     const navigate = useNavigate()
+    const location = useLocation()
     const { user } = useSelector(state => state.auth)
     const dispatch = useDispatch()
+
     if (step < 4) return null
+
+    // Check if we're in the report context
+    const isInReportContext = location.pathname.includes('/report')
+
+    // Extract articleId from the current path for report context
+    const articleId = location.pathname.match(
+      /\/gamehub\/([^\/]+)\/report/,
+    )?.[1]
+
+    const handleBackToArticle = () => {
+      if (articleId) {
+        navigate(`/article/${articleId}`, { replace: true })
+      }
+    }
 
     return (
       <MotionBox
@@ -87,17 +103,36 @@ const ActionButtons = React.memo(
           maxW="100%"
           px={0}
         >
-          {!user?.needsOnboarding && !openedFromQuickClash && !isTournament && (
+          {/* Show different buttons based on context */}
+          {isInReportContext ? (
+            // In report context - show Back to Games button
             <ActionButton
-              icon={Trophy}
-              label={t('leaderboard')}
-              iconColor="yellow.300"
-              onClick={() => navigate('/leaderboard')}
-              testId="leaderboard-button"
+              icon={Home}
+              label="Back to Article"
+              iconColor="blue.300"
+              onClick={handleBackToArticle}
+              testId="back-to-article-button"
               t={t}
               dispatch={dispatch}
             />
+          ) : (
+            // In normal context - show leaderboard if conditions are met
+            !user?.needsOnboarding &&
+            !openedFromQuickClash &&
+            !isTournament && (
+              <ActionButton
+                icon={Trophy}
+                label={t('leaderboard')}
+                iconColor="yellow.300"
+                onClick={() => navigate('/leaderboard')}
+                testId="leaderboard-button"
+                t={t}
+                dispatch={dispatch}
+              />
+            )
           )}
+
+          {/* Always show Quiz Summary button */}
           <ActionButton
             icon={FileText}
             label={t('quizSummary')}

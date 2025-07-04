@@ -1,4 +1,4 @@
-// components/gameHub/gameInterfaces/NormalQuizInterface.jsx - Optimized Minimalistic Version
+// components/gameHub/gameInterfaces/NormalQuizInterface.jsx - Fixed text overflow issues
 import React from 'react'
 import { VStack, HStack, Text, Button, Box, Badge } from '@chakra-ui/react'
 import { motion, AnimatePresence } from 'framer-motion'
@@ -42,7 +42,7 @@ const NormalQuizInterface = ({
     >
       <VStack spacing={4} align="stretch">
         {/* Compact Header */}
-        <HStack justify="space-between" wrap="wrap">
+        <HStack justify="space-between" wrap="wrap" spacing={2}>
           <Badge
             bg="rgba(59, 130, 246, 0.1)"
             color="blue.400"
@@ -80,13 +80,15 @@ const NormalQuizInterface = ({
             color="white"
             lineHeight="1.6"
             fontWeight="500"
+            whiteSpace="normal"
+            wordBreak="break-word"
           >
             {question.question}
           </Text>
         </Box>
 
-        {/* Answer Options */}
-        <VStack spacing={2}>
+        {/* Answer Options - FIXED: Better text handling */}
+        <VStack spacing={3}>
           <AnimatePresence>
             {Object.entries(question.options || {}).map(
               ([key, value], index) => {
@@ -109,7 +111,8 @@ const NormalQuizInterface = ({
                       onClick={() => handleOptionSelect(key)}
                       size="md"
                       width="100%"
-                      minH="50px"
+                      minH={{ base: '60px', md: '65px' }} // Increased min height
+                      height="auto" // Allow dynamic height
                       justifyContent="flex-start"
                       bg={
                         isSelected
@@ -122,6 +125,8 @@ const NormalQuizInterface = ({
                         isSelected ? '#3B82F6' : 'rgba(255, 255, 255, 0.1)'
                       }
                       borderRadius="lg"
+                      py={3} // Increased vertical padding
+                      px={3}
                       _hover={{
                         borderColor: isSelected
                           ? '#2563EB'
@@ -131,12 +136,15 @@ const NormalQuizInterface = ({
                           : 'rgba(255, 255, 255, 0.08)',
                       }}
                       transition="all 0.2s"
+                      whiteSpace="normal" // Allow text wrapping
+                      textAlign="left"
                     >
-                      <HStack align="flex-start" w="100%" spacing={3}>
-                        {/* Option Letter */}
+                      <HStack align="flex-start" w="100%" spacing={3} flex={1}>
+                        {/* Option Letter - Fixed size */}
                         <Box
-                          w="30px"
-                          h="30px"
+                          w={{ base: '28px', md: '32px' }}
+                          h={{ base: '28px', md: '32px' }}
+                          minW={{ base: '28px', md: '32px' }} // Prevent shrinking
                           borderRadius="lg"
                           bg={
                             isSelected ? '#3B82F6' : 'rgba(255, 255, 255, 0.1)'
@@ -145,27 +153,39 @@ const NormalQuizInterface = ({
                           alignItems="center"
                           justifyContent="center"
                           flexShrink={0}
+                          mt={1} // Slight top margin for better alignment
                         >
                           {isSelected ? (
                             <CheckCircle size={16} color="white" />
                           ) : (
-                            <Text fontWeight="bold" fontSize="sm" color="white">
+                            <Text
+                              fontWeight="bold"
+                              fontSize={{ base: 'xs', md: 'sm' }}
+                              color="white"
+                            >
                               {key.toUpperCase()}
                             </Text>
                           )}
                         </Box>
 
-                        {/* Option Text */}
-                        <Text
-                          fontSize="sm"
-                          lineHeight="1.5"
-                          textAlign="left"
-                          fontWeight={isSelected ? '600' : '500'}
-                          color={isSelected ? 'white' : 'gray.200'}
-                          flex={1}
-                        >
-                          {value}
-                        </Text>
+                        {/* Option Text - FIXED: Better text wrapping */}
+                        <Box flex={1} minW={0}>
+                          {' '}
+                          {/* minW={0} allows flex item to shrink */}
+                          <Text
+                            fontSize={{ base: 'sm', md: 'md' }}
+                            lineHeight="1.5"
+                            textAlign="left"
+                            fontWeight={isSelected ? '600' : '500'}
+                            color={isSelected ? 'white' : 'gray.200'}
+                            whiteSpace="normal" // Allow wrapping
+                            wordBreak="break-word" // Break long words
+                            overflowWrap="break-word" // Additional word breaking
+                            hyphens="auto" // Add hyphens where appropriate
+                          >
+                            {value}
+                          </Text>
+                        </Box>
                       </HStack>
                     </Button>
                   </MotionBox>

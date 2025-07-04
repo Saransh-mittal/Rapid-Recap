@@ -46,16 +46,9 @@ export const useFetchGameData = ({ articleId, language = 'en' }) => {
     const currentSocket = getSocket()
     if (currentSocket && user) {
       currentSocket.emit('join game progress', user._id)
-      currentSocket.on('game_generation_progress', data => {
-        console.log('Game generation progress:', data.progress)
-      })
     }
 
-    return () => {
-      if (currentSocket) {
-        currentSocket.off('game_generation_progress')
-      }
-    }
+    return () => {}
   }, [getSocket, user])
 
   useEffect(() => {
@@ -180,6 +173,8 @@ export const useGameSession = ({ articleId, gameType, language = 'en' }) => {
 export const useSubmitGame = () => {
   const [submitting, setSubmitting] = useState(false)
   const [submissionProgress, setSubmissionProgress] = useState(0)
+  const [stepProgress, setStepProgress] = useState({})
+  const [completedSteps, setCompletedSteps] = useState(new Set())
   const toast = useToast()
   const { getSocket } = useSocket()
   const { user } = useSelector(state => state.auth)
@@ -187,24 +182,61 @@ export const useSubmitGame = () => {
   useEffect(() => {
     const currentSocket = getSocket()
     if (currentSocket && user) {
+      // Join the game submission progress room
       currentSocket.emit('join game submission progress', user._id)
-      currentSocket.on('game_submission_progress', data => {
-        console.log('Submission progress:', data)
-        setSubmissionProgress(data.progress || 0)
-      })
-    }
 
-    return () => {
-      if (currentSocket) {
-        currentSocket.off('game_submission_progress')
+      // Listen for detailed step progress
+      const handleStepProgress = data => {
+        console.log('Game submission step progress:', data)
+        setStepProgress(prev => {
+          const newProgress = { ...prev, [data.stepId]: data.progress }
+
+          // Mark step as completed when it reaches 100%
+          if (data.progress === 100) {
+            setCompletedSteps(prev => new Set([...prev, data.stepId]))
+          }
+
+          return newProgress
+        })
+      }
+
+      currentSocket.on('game_submission_progress', handleStepProgress)
+
+      return () => {
+        currentSocket.off('game_submission_progress', handleStepProgress)
       }
     }
   }, [getSocket, user])
+
+  // Calculate overall progress based on step completion
+  useEffect(() => {
+    const submissionSteps = [
+      { id: 'initializeCalculation', weight: 15 },
+      { id: 'calculateRQM', weight: 25 },
+      { id: 'saveAttempt', weight: 20 },
+      { id: 'updateStats', weight: 25 },
+      { id: 'finalizeAttempt', weight: 15 },
+    ]
+
+    const totalWeight = submissionSteps.reduce(
+      (sum, step) => sum + step.weight,
+      0,
+    )
+    const weightedProgress = submissionSteps.reduce((sum, step) => {
+      const stepProgressValue = stepProgress[step.id] || 0
+      return sum + (stepProgressValue * step.weight) / 100
+    }, 0)
+
+    const overallProgress = (weightedProgress / totalWeight) * 100
+    setSubmissionProgress(overallProgress)
+  }, [stepProgress])
 
   const submitGame = useCallback(
     async ({ sessionId, userResponses, timeTaken }) => {
       setSubmitting(true)
       setSubmissionProgress(0)
+      setStepProgress({})
+      setCompletedSteps(new Set())
 
       try {
         console.log('Submitting game attempt:', {
@@ -242,7 +274,12 @@ export const useSubmitGame = () => {
         throw error
       } finally {
         setSubmitting(false)
-        setSubmissionProgress(0)
+        // Reset progress after a delay to allow for result display
+        setTimeout(() => {
+          setSubmissionProgress(0)
+          setStepProgress({})
+          setCompletedSteps(new Set())
+        }, 2000)
       }
     },
     [toast],
@@ -252,6 +289,8 @@ export const useSubmitGame = () => {
     submitGame,
     submitting,
     submissionProgress,
+    stepProgress,
+    completedSteps,
   }
 }
 

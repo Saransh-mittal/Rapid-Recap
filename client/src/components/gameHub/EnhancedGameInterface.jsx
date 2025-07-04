@@ -1,4 +1,4 @@
-// components/gameHub/EnhancedGameInterface.jsx - Optimized Minimalistic Version - NO PREVIOUS NAV FOR QUIZ & T/F
+// components/gameHub/EnhancedGameInterface.jsx - Fixed version without setShowResults
 import React, { useState, useEffect, useCallback, useMemo, useRef } from 'react'
 import { useParams, useNavigate } from 'react-router-dom'
 import { useSelector, useDispatch } from 'react-redux'
@@ -53,7 +53,9 @@ import NormalQuizInterface from './gameInterfaces/NormalQuizInterface'
 import TrueFalseInterface from './gameInterfaces/TrueFalseInterface'
 import WordWeaverInterface from './gameInterfaces/WordWeaverInterface'
 import ConnectionsInterface from './gameInterfaces/ConnectionsInterface'
-import GameResultsModal from './GameResultsModal'
+import GameSubmissionLoadingScreen from './GameSubmissionLoadingScreen'
+import { useSocket } from '../../customHooks/useSocket'
+// import { ensureArticleInHistory } from '../../utils/historyCleanup'
 
 const MotionBox = motion(Box)
 
@@ -390,6 +392,7 @@ const EnhancedGameInterface = () => {
   const toast = useToast()
   const { t } = useTranslation()
   const timerRef = useRef(null)
+  const { getSocket } = useSocket()
 
   const config = gameTypeConfigs[gameType] || gameTypeConfigs.normal_quiz
 
@@ -404,15 +407,19 @@ const EnhancedGameInterface = () => {
     articleId,
     language: i18n.language,
   })
-
+  const {
+    submitGame,
+    submitting,
+    submissionProgress,
+    stepProgress,
+    completedSteps,
+  } = useSubmitGame()
   const { sessionId, gameSession, sessionStatus, initializeGame } =
     useGameSession({
       articleId,
       gameType,
       language: i18n.language,
     })
-
-  const { submitGame, submitting, submissionProgress } = useSubmitGame()
 
   // Local state for timer and game management
   const [timeLeft, setTimeLeft] = useState(0)
@@ -535,7 +542,7 @@ const EnhancedGameInterface = () => {
     }
   }, [currentQuestionIndex, gameSession, dispatch])
 
-  // Submit game attempt
+  // Submit game attempt - FIXED: Navigate to report route after submission
   const submitGameAttempt = useCallback(
     async (answers = currentAnswers) => {
       try {
@@ -556,6 +563,10 @@ const EnhancedGameInterface = () => {
 
         setResults(result)
         dispatch(setGameState('completed'))
+
+        // FIXED: Simple history cleanup - remove game routes and go to report
+        // ensureArticleInHistory(navigate, articleId)
+        navigate(`/gamehub/${articleId}/report`, { replace: true })
       } catch (error) {
         console.error('Error submitting game:', error)
         dispatch(setGameState('error'))
@@ -576,6 +587,8 @@ const EnhancedGameInterface = () => {
       submitGame,
       dispatch,
       toast,
+      navigate,
+      articleId,
     ],
   )
 
@@ -760,119 +773,96 @@ const EnhancedGameInterface = () => {
 
   return (
     <Box minH="100vh" bg="gray.900" color="white">
-      {/* Compact Header */}
-      <Box
-        bg="rgba(0, 0, 0, 0.8)"
-        backdropFilter="blur(10px)"
-        borderBottom="1px solid rgba(255, 255, 255, 0.1)"
-        position="sticky"
-        top={0}
-        zIndex={100}
-      >
-        <Container maxW="6xl">
-          <Flex justify="space-between" align="center" py={3}>
-            <Button
-              leftIcon={<ChevronLeft size={16} />}
-              onClick={handleBackToMenu}
-              variant="ghost"
-              size="sm"
-              color="gray.300"
-              fontSize="xs"
-            >
-              Back
-            </Button>
-
-            <HStack spacing={2}>
-              <Text fontSize="sm">{config.emoji}</Text>
-              <Text fontSize="sm" fontWeight="bold" color={config.color}>
-                {config.title}
-              </Text>
-            </HStack>
-
-            {gameStarted && sessionStatus === 'playing' && totalTime > 0 && (
-              <CompactTimer
-                timeLeft={timeLeft}
-                totalTime={totalTime}
-                gameType={gameType}
-                onTimeUp={handleTimeUp}
-              />
-            )}
-          </Flex>
-        </Container>
-      </Box>
-
-      {/* Game Content - Optimized for no scroll */}
-      <Container maxW="4xl" py={4}>
-        <AnimatePresence mode="wait">
-          {sessionStatus === 'playing' && gameStarted && (
-            <MotionBox
-              key={`${currentQuestionIndex}-${gameType}`}
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
-              exit={{ opacity: 0 }}
-              transition={{ duration: 0.3 }}
-            >
-              <VStack spacing={4} minH="calc(100vh - 120px)">
-                {/* Game Interface */}
-                <Box flex={1} w="100%">
-                  {renderGameInterface()}
-                </Box>
-
-                {/* Compact Navigation */}
-                <CompactNavigationControls
-                  currentQuestionIndex={currentQuestionIndex}
-                  totalQuestions={gameSession?.questions?.length || 1}
-                  gameType={gameType}
-                  hasAnswer={hasCurrentAnswer}
-                  onPrevious={handlePrevious}
-                  onNext={handleNext}
-                  onSubmit={() => submitGameAttempt(currentAnswers)}
-                  canNavigateNext={canNavigateNext}
-                  canSubmit={canSubmit}
-                  isSubmitting={submitting}
-                />
-              </VStack>
-            </MotionBox>
-          )}
-
-          {submitting && (
-            <MotionBox
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
-              transition={{ duration: 0.3 }}
-            >
-              <VStack spacing={6} py={20}>
-                <Text fontSize="4xl">⏳</Text>
-                <VStack spacing={2}>
-                  <Text fontSize="xl" fontWeight="bold">
-                    Calculating Score...
-                  </Text>
-                  <Text fontSize="sm" color="gray.400">
-                    Time: {Math.max(totalTime - timeLeft, 0)}s
-                  </Text>
-                </VStack>
-                <Progress
-                  value={submissionProgress}
-                  size="md"
-                  borderRadius="full"
-                  bg="rgba(255, 255, 255, 0.1)"
-                  colorScheme="purple"
-                  w="300px"
-                />
-              </VStack>
-            </MotionBox>
-          )}
-        </AnimatePresence>
-      </Container>
-
-      {/* Results Modal */}
-      <GameResultsModal
-        isOpen={gameState === 'completed' && !!results}
-        onClose={handleBackToMenu}
-        results={results}
+      {/* Show GameSubmissionLoadingScreen when submitting */}
+      <GameSubmissionLoadingScreen
+        socket={getSocket()}
         gameType={gameType}
-        onBackToMenu={handleBackToMenu}
+        isVisible={submitting}
       />
+
+      {/* Only show the main interface when not submitting */}
+      {!submitting && (
+        <>
+          {/* Compact Header */}
+          <Box
+            bg="rgba(0, 0, 0, 0.8)"
+            backdropFilter="blur(10px)"
+            borderBottom="1px solid rgba(255, 255, 255, 0.1)"
+            position="sticky"
+            top={0}
+            zIndex={100}
+          >
+            <Container maxW="6xl">
+              <Flex justify="space-between" align="center" py={3}>
+                <Button
+                  leftIcon={<ChevronLeft size={16} />}
+                  onClick={handleBackToMenu}
+                  variant="ghost"
+                  size="sm"
+                  color="gray.300"
+                  fontSize="xs"
+                >
+                  Back
+                </Button>
+
+                <HStack spacing={2}>
+                  <Text fontSize="sm">{config.emoji}</Text>
+                  <Text fontSize="sm" fontWeight="bold" color={config.color}>
+                    {config.title}
+                  </Text>
+                </HStack>
+
+                {gameStarted &&
+                  sessionStatus === 'playing' &&
+                  totalTime > 0 && (
+                    <CompactTimer
+                      timeLeft={timeLeft}
+                      totalTime={totalTime}
+                      gameType={gameType}
+                      onTimeUp={handleTimeUp}
+                    />
+                  )}
+              </Flex>
+            </Container>
+          </Box>
+
+          {/* Game Content - Optimized for no scroll */}
+          <Container maxW="4xl" py={4}>
+            <AnimatePresence mode="wait">
+              {sessionStatus === 'playing' && gameStarted && (
+                <MotionBox
+                  key={`${currentQuestionIndex}-${gameType}`}
+                  initial={{ opacity: 0 }}
+                  animate={{ opacity: 1 }}
+                  exit={{ opacity: 0 }}
+                  transition={{ duration: 0.3 }}
+                >
+                  <VStack spacing={4} minH="calc(100vh - 120px)">
+                    {/* Game Interface */}
+                    <Box flex={1} w="100%">
+                      {renderGameInterface()}
+                    </Box>
+
+                    {/* Compact Navigation */}
+                    <CompactNavigationControls
+                      currentQuestionIndex={currentQuestionIndex}
+                      totalQuestions={gameSession?.questions?.length || 1}
+                      gameType={gameType}
+                      hasAnswer={hasCurrentAnswer}
+                      onPrevious={handlePrevious}
+                      onNext={handleNext}
+                      onSubmit={() => submitGameAttempt(currentAnswers)}
+                      canNavigateNext={canNavigateNext}
+                      canSubmit={canSubmit}
+                      isSubmitting={submitting}
+                    />
+                  </VStack>
+                </MotionBox>
+              )}
+            </AnimatePresence>
+          </Container>
+        </>
+      )}
     </Box>
   )
 }

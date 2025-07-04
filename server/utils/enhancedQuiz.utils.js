@@ -43,9 +43,9 @@ const GAME_CONFIGS = {
     cognitiveLoad: 1.15,
   },
   connections: {
-    timeLimit: 100,
+    timeLimit: 72,
     itemCount: 8,
-    BASELINE_TIME_PER_QUESTION: 30,
+    BASELINE_TIME_PER_QUESTION: 20,
     ALL_CORRECT_BONUS: 1.3,
     ONE_WRONG_BONUS: 1.2,
     BASE_TIME_WINDOW: 100,
@@ -357,7 +357,6 @@ const generateEnhancedGameData = async ({
   mainText,
   articleId,
   article,
-  emitProgress,
   session,
   language = 'en',
 }) => {
@@ -450,9 +449,9 @@ Generate comprehensive game data for multiple quiz types based on this article. 
 }
 
 Requirements:
-- Normal quiz: 5 questions with 4 options each
-- True/False: 7 statements
-- Word Weaver: 5 fill-in-the-blank questions with SINGLE WORD answers only
+- Normal quiz: EXACTLY 5 questions with 4 options each
+- True/False: EXACTLY 7 statements
+- Word Weaver: EXACTLY 5 fill-in-the-blank questions with SINGLE WORD answers only
 - Connections: EXACTLY 8 concepts with EXACTLY 4 valid connections forming perfect pairs
 
 CRITICAL WORD WEAVER REQUIREMENTS - NO CONTEXT NEEDED:
@@ -498,12 +497,10 @@ CRITICAL CONNECTION REQUIREMENTS:
 - Provide clear explanations that reference article content
 - Word Weaver answers must be single words only (no spaces, no phrases)`
 
-    emitProgress && emitProgress(40)
-
     while (attempts-- > 0) {
       try {
         result = await openai.chat.completions.create({
-          model: 'gpt-4.1-nano-2025-04-14',
+          model: 'gpt-4.1-nano',
           response_format: { type: 'json_object' },
           messages: [
             {
@@ -565,9 +562,9 @@ CRITICAL CONNECTION REQUIREMENTS:
         // Enhanced validation with proper Word Weaver checks
         if (
           response &&
-          response.normal_quiz?.questions?.length >= 3 &&
-          response.true_false?.statements?.length >= 5 &&
-          response.word_weaver?.questions?.length >= 3 && // Must have valid questions after filtering
+          response.normal_quiz?.questions?.length === 5 &&
+          response.true_false?.statements?.length === 7 &&
+          response.word_weaver?.questions?.length === 5 && // Must have valid questions after filtering
           response.connections?.concepts?.length === 8 &&
           response.connections?.validConnections?.length === 4
         ) {
@@ -669,7 +666,6 @@ CRITICAL CONNECTION REQUIREMENTS:
           })
 
           await newGameData.save({ session })
-          emitProgress && emitProgress(80)
 
           console.log(
             'Game data saved with word weaver questions (no context):',
@@ -687,7 +683,7 @@ CRITICAL CONNECTION REQUIREMENTS:
           const issues = []
           if (
             !response.normal_quiz?.questions?.length ||
-            response.normal_quiz.questions.length < 3
+            response.normal_quiz.questions.length !== 5
           ) {
             issues.push(
               `Normal quiz: ${
@@ -697,7 +693,7 @@ CRITICAL CONNECTION REQUIREMENTS:
           }
           if (
             !response.true_false?.statements?.length ||
-            response.true_false.statements.length < 5
+            response.true_false.statements.length !== 7
           ) {
             issues.push(
               `True/False: ${
@@ -707,7 +703,7 @@ CRITICAL CONNECTION REQUIREMENTS:
           }
           if (
             !response.word_weaver?.questions?.length ||
-            response.word_weaver.questions.length < 3
+            response.word_weaver.questions.length !== 5
           ) {
             issues.push(
               `Word Weaver: ${

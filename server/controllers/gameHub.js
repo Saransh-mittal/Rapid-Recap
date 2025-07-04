@@ -25,12 +25,6 @@ const getGameData = asyncHandler(async (req, res) => {
     session = await mongoose.startSession()
     session.startTransaction()
 
-    const emitProgress = progress => {
-      globalEmitter.emit('game_generation_progress', { userId, progress })
-    }
-
-    emitProgress(20)
-
     if (!articleId || articleId === 'undefined') {
       throw new Error('No article provided')
     }
@@ -46,8 +40,6 @@ const getGameData = asyncHandler(async (req, res) => {
       language: language,
       isActive: true,
     }).session(session)
-
-    emitProgress(40)
 
     if (!gameData) {
       // Generate new game data
@@ -67,26 +59,19 @@ const getGameData = asyncHandler(async (req, res) => {
         throw new Error('Game data cannot be generated for this article')
       }
 
-      emitProgress(50)
-
       gameData = await generateEnhancedGameData({
         title: language === 'en' ? title : hindiTitle,
         author: language === 'en' ? author : hindiAuthor,
         mainText: language === 'en' ? mainText : hindiMainText,
         articleId,
         article,
-        emitProgress,
         session,
         language,
       })
-
-      emitProgress(90)
     }
 
     await session.commitTransaction()
     session.endSession()
-
-    emitProgress(100)
 
     res.status(200).json({
       message: 'Game data retrieved successfully',
@@ -568,6 +553,7 @@ const submitGameAttempt = asyncHandler(async (req, res) => {
   const { sessionId, userResponses, timeTaken } = req.body
   const userId = req.user._id
 
+  // Updated emitProgress function to use correct event name for games
   const emitProgress = (stepId, progress) => {
     globalEmitter.emit('game_submission_progress', { userId, stepId, progress })
   }
@@ -927,7 +913,7 @@ const submitGameAttempt = asyncHandler(async (req, res) => {
   }
 })
 
-// @desc   Get game summary/report
+// @desc   Get enhanced game summary/report with detailed analysis
 // @route  GET /api/gamehub/summary/:sessionId
 // @access Private
 const getGameSummary = asyncHandler(async (req, res) => {
@@ -938,7 +924,9 @@ const getGameSummary = asyncHandler(async (req, res) => {
     const gameSession = await ArticleQuizSession.findOne({
       _id: sessionId,
       user: userId,
-    }).populate('gameData')
+    })
+      .populate('gameData')
+      .populate('article', 'title hindiTitle category')
 
     if (!gameSession) {
       return res.status(404).json({ error: 'Game session not found' })
@@ -948,158 +936,216 @@ const getGameSummary = asyncHandler(async (req, res) => {
       return res.status(400).json({ error: 'Game session not completed yet' })
     }
 
-    // Get the enhanced quiz attempt
+    // Get the enhanced quiz attempt for additional data
     const enhancedAttempt = await QuizAttempt.findOne({
       user: userId,
       articleQuizSession: sessionId,
       gameType: gameSession.gameType,
     }).sort({ createdAt: -1 })
 
-    // Prepare summary based on game type
-    let summary = {
+    // Prepare enhanced summary based on game type
+    let enhancedSummary = {
       gameType: gameSession.gameType,
+      articleTitle:
+        gameSession.article?.title || gameSession.article?.hindiTitle,
+      articleCategory: gameSession.article?.category,
       timeTaken: enhancedAttempt?.timeTaken || 0,
       RQM_score: enhancedAttempt?.RQM_score || 0,
+      baseRQM_score: enhancedAttempt?.baseRQM_score || 0,
       performance: enhancedAttempt?.performance || {},
+      isBoosted: enhancedAttempt?.isBoosted || false,
+      boost: enhancedAttempt?.boost || 1,
+      timeDilationBoosted: enhancedAttempt?.timeDilationBoosted || false,
+      completedAt: gameSession.endTime,
+      language: gameSession.language,
       questions: [],
       responses: gameSession.responses,
+      overallStats: {
+        totalQuestions: gameSession.questions.length,
+        correctAnswers: 0,
+        accuracy: 0,
+        difficultyLevel: enhancedAttempt?.articleDifficulty || 0.5,
+      },
     }
 
-    // Add game-specific summary data
+    // Process questions and responses based on game type
     switch (gameSession.gameType) {
       case 'normal_quiz':
+        enhancedSummary.questions = gameSession.questions.map(
+          (question, index) => {
+            const response = gameSession.responses[index]
+            const isCorrect = response?.isCorrect || false
+
+            if (isCorrect) enhancedSummary.overallStats.correctAnswers++
+
+            return {
+              questionNumber: index + 1,
+              questionId: question.questionId || question._id,
+              questionText: question.question,
+              questionType: 'multiple_choice',
+              options: {
+                a: question.options?.a?.text || question.options?.a,
+                b: question.options?.b?.text || question.options?.b,
+                c: question.options?.c?.text || question.options?.c,
+                d: question.options?.d?.text || question.options?.d,
+              },
+              correctAnswer: question.answer,
+              correctAnswerText:
+                question.options?.[question.answer]?.text ||
+                question.options?.[question.answer],
+              userAnswer: response?.userAnswer,
+              userAnswerText: response?.userAnswer
+                ? question.options?.[response.userAnswer]?.text ||
+                  question.options?.[response.userAnswer]
+                : 'No Answer',
+              isCorrect: isCorrect,
+              explanation: question.explanation || 'No explanation provided',
+              difficulty: question.difficulty || 0.5,
+              timeTaken: null, // Individual question time not tracked
+            }
+          },
+        )
+        break
+
       case 'true_false':
-        summary.questions = gameSession.questions.map((question, index) => {
-          const response = gameSession.responses[index]
-          return {
-            question: question.question || question.text,
-            options: question.options,
-            correctAnswer: question.answer || question.correct,
-            userAnswer: response?.userAnswer,
-            isCorrect: response?.isCorrect,
-            explanation: question.explanation,
-          }
-        })
+        enhancedSummary.questions = gameSession.questions.map(
+          (question, index) => {
+            const response = gameSession.responses[index]
+            const isCorrect = response?.isCorrect || false
+
+            if (isCorrect) enhancedSummary.overallStats.correctAnswers++
+
+            return {
+              questionNumber: index + 1,
+              questionId: question.questionId || question._id,
+              questionText: question.text,
+              questionType: 'true_false',
+              correctAnswer: question.correct,
+              correctAnswerText: question.correct ? 'True' : 'False',
+              userAnswer: response?.userAnswer,
+              userAnswerText:
+                response?.userAnswer !== undefined
+                  ? response.userAnswer
+                    ? 'True'
+                    : 'False'
+                  : 'No Answer',
+              isCorrect: isCorrect,
+              explanation: question.explanation || 'No explanation provided',
+              difficulty: question.difficulty || 0.5,
+              timeTaken: null,
+            }
+          },
+        )
         break
 
       case 'word_weaver':
-        // UPDATED: Remove context from summary
-        summary.questions = gameSession.questions.map((question, index) => {
-          const response = gameSession.responses[index]
-          return {
-            // UPDATED: Remove context field
-            blank: question.blank,
-            correctAnswer: question.answer,
-            userAnswer: response?.userWord,
-            isCorrect: response?.isCorrect,
-          }
-        })
+        enhancedSummary.questions = gameSession.questions.map(
+          (question, index) => {
+            const response = gameSession.responses[index]
+            const isCorrect = response?.isCorrect || false
+
+            if (isCorrect) enhancedSummary.overallStats.correctAnswers++
+
+            return {
+              questionNumber: index + 1,
+              questionId: question.questionId || question._id,
+              questionText: question.blank,
+              questionType: 'word_weaver',
+              correctAnswer: question.answer,
+              correctAnswerText: question.answer,
+              userAnswer: response?.userWord || '',
+              userAnswerText: response?.userWord || 'No Answer',
+              isCorrect: isCorrect,
+              explanation: `The correct word is "${question.answer}". ${
+                isCorrect
+                  ? 'Well done!'
+                  : 'Try to think about the context and meaning of the sentence.'
+              }`,
+              difficulty: question.difficulty || 0.5,
+              timeTaken: null,
+              wordLength: question.answer?.length || 0,
+              wasSkipped: !response?.userWord,
+            }
+          },
+        )
         break
 
       case 'connections':
-        summary.questions = [
+        const connectionsQuestion = gameSession.questions[0]
+        const connectionsResponse = gameSession.responses[0]
+
+        // Calculate correct connections
+        const correctConnections =
+          connectionsResponse?.connections?.filter(conn => conn.isValid)
+            .length || 0
+        const totalPossibleConnections =
+          connectionsQuestion?.validConnections?.length || 0
+
+        enhancedSummary.overallStats.correctAnswers = correctConnections
+        enhancedSummary.overallStats.totalQuestions = totalPossibleConnections
+
+        enhancedSummary.questions = [
           {
-            concepts: gameSession.questions[0].concepts,
-            validConnections: gameSession.questions[0].validConnections,
-            userConnections: gameSession.responses[0]?.connections || [],
+            questionNumber: 1,
+            questionId:
+              connectionsQuestion.questionId || connectionsQuestion._id,
+            questionText: 'Connect related concepts',
+            questionType: 'connections',
+            concepts: connectionsQuestion.concepts,
+            validConnections: connectionsQuestion.validConnections.map(vc => ({
+              from: vc.from,
+              to: vc.to,
+              reasoning: vc.reasoning,
+              difficulty: vc.difficulty || 0.5,
+              connectionType: vc.connectionType || 'conceptual',
+            })),
+            userConnections: connectionsResponse?.connections || [],
+            correctConnectionsCount: correctConnections,
+            totalPossibleConnections: totalPossibleConnections,
+            isCorrect: correctConnections === totalPossibleConnections,
+            explanation: `You found ${correctConnections} out of ${totalPossibleConnections} valid connections. ${
+              correctConnections === totalPossibleConnections
+                ? 'Perfect! You identified all the relationships.'
+                : 'Try to think about different types of relationships: cause-effect, category-example, opposites, etc.'
+            }`,
+            difficulty: connectionsQuestion.difficulty || 0.5,
+            timeTaken: enhancedAttempt?.timeTaken || 0,
           },
         ]
         break
+
+      default:
+        return res.status(400).json({ error: 'Unsupported game type' })
     }
 
-    res.status(200).json(summary)
-  } catch (error) {
-    console.error('Error getting game summary:', error)
-    res.status(400).json({ error: 'Something went wrong' })
-  }
-})
+    // Calculate overall accuracy
+    const totalQuestions = enhancedSummary.overallStats.totalQuestions
+    enhancedSummary.overallStats.accuracy =
+      totalQuestions > 0
+        ? (enhancedSummary.overallStats.correctAnswers / totalQuestions) * 100
+        : 0
 
-// @desc   Import custom game data
-// @route  POST /api/gamehub/import
-// @access Private
-const importGameData = asyncHandler(async (req, res) => {
-  const { gameData } = req.body
-  const userId = req.user._id
+    console.log(
+      `Enhanced game summary generated for ${gameSession.gameType}:`,
+      {
+        sessionId,
+        gameType: gameSession.gameType,
+        totalQuestions,
+        correctAnswers: enhancedSummary.overallStats.correctAnswers,
+        accuracy: enhancedSummary.overallStats.accuracy.toFixed(1) + '%',
+      },
+    )
 
-  try {
-    // Validate game data structure
-    const requiredFields = [
-      'title',
-      'normal_quiz',
-      'true_false',
-      'word_weaver',
-      'connections',
-    ]
-    const missing = requiredFields.filter(field => !gameData[field])
-
-    if (missing.length > 0) {
-      return res.status(400).json({
-        error: `Missing required fields: ${missing.join(', ')}`,
-      })
-    }
-
-    // Process and add automatic difficulty calculations
-    const processedData = processGameDataWithDifficulties(gameData)
-
-    // Create new game data
-    const newGameData = new GameData({
-      title: processedData.title,
-      description: processedData.description || '',
-      category: processedData.category || 'general',
-      normal_quiz: processedData.normal_quiz,
-      true_false: processedData.true_false,
-      word_weaver: processedData.word_weaver,
-      connections: processedData.connections,
-      language: 'en', // Default to English for imported data
-    })
-
-    await newGameData.save()
-
-    res.status(201).json({
-      message: 'Game data imported successfully',
-      gameDataId: newGameData._id,
+    res.status(200).json({
+      success: true,
+      summary: enhancedSummary,
     })
   } catch (error) {
-    console.error('Error importing game data:', error)
-    res
-      .status(400)
-      .json({ error: error.message || 'Failed to import game data' })
-  }
-})
-
-// @desc   Export game data
-// @route  GET /api/gamehub/export/:articleId
-// @access Private
-const exportGameData = asyncHandler(async (req, res) => {
-  const { articleId } = req.params
-  const { language = 'en' } = req.query
-
-  try {
-    const gameData = await GameData.findOne({
-      article: articleId,
-      language: language,
-      isActive: true,
+    console.error('Error getting enhanced game summary:', error)
+    res.status(500).json({
+      error: 'Failed to retrieve game summary',
+      details: error.message,
     })
-
-    if (!gameData) {
-      return res.status(404).json({ error: 'Game data not found' })
-    }
-
-    // Remove internal fields for export
-    const exportData = {
-      title: gameData.title,
-      description: gameData.description,
-      category: gameData.category,
-      normal_quiz: gameData.normal_quiz,
-      true_false: gameData.true_false,
-      word_weaver: gameData.word_weaver,
-      connections: gameData.connections,
-    }
-
-    res.status(200).json(exportData)
-  } catch (error) {
-    console.error('Error exporting game data:', error)
-    res.status(400).json({ error: 'Failed to export game data' })
   }
 })
 
@@ -1173,13 +1219,153 @@ const checkGameCompletion = asyncHandler(async (req, res) => {
   }
 })
 
+// @desc   Get game report for an article (latest attempt by user)
+// @route  GET /api/gamehub/report/:articleId
+// @access Private
+const getGameReport = asyncHandler(async (req, res) => {
+  const { articleId } = req.params
+  const userId = req.user._id
+
+  try {
+    // Find the latest completed quiz attempt for this user and article
+    const latestAttempt = await QuizAttempt.findOne({
+      user: userId,
+      article: articleId,
+    })
+      .sort({ createdAt: -1 })
+      .populate('articleQuizSession')
+      .populate('article', 'title hindiTitle category')
+      .populate('user', 'userLanguage pauseRealTimeIQ')
+
+    if (!latestAttempt) {
+      return res.status(404).json({
+        error: 'No completed games found for this article',
+      })
+    }
+
+    // Get the associated quiz session for additional data
+    const quizSession = latestAttempt.articleQuizSession
+
+    if (!quizSession || !quizSession.completed) {
+      return res.status(404).json({
+        error: 'Game session not found or not completed',
+      })
+    }
+
+    // Calculate score string (correct/total)
+    const scoreString = `${latestAttempt.performance?.correctCount || 0}/${
+      latestAttempt.performance?.totalItems || 0
+    }`
+
+    // Get past RQMs for progress tracking
+    const pastRQMs = await QuizAttempt.find({
+      user: userId,
+      createdAt: {
+        $gte: new Date(new Date().setHours(0, 0, 0, 0)),
+        $lt: new Date(new Date().setHours(23, 59, 59, 999)),
+      },
+    })
+      .sort({ createdAt: 1 })
+      .select('RQM_score createdAt')
+      .limit(20)
+
+    // Determine quiz difficulty level
+    const quizDifficulty =
+      latestAttempt.articleDifficulty < 0.5
+        ? 'easy'
+        : latestAttempt.articleDifficulty >= 0.5 &&
+          latestAttempt.articleDifficulty < 0.7
+        ? 'medium'
+        : 'hard'
+
+    // Format the response to match exactly what saveEnhancedQuizAttemptWithStats returns
+    const reportData = {
+      message: 'Game report retrieved successfully',
+
+      // Core scoring data
+      RQM_score: latestAttempt.RQM_score,
+      nonBoostedRQM: latestAttempt.baseRQM_score,
+      baseRQM_score: latestAttempt.baseRQM_score,
+      boost: latestAttempt.boost,
+      isBoosted: latestAttempt.isBoosted,
+      quizDifficulty,
+      timeTaken: latestAttempt.timeTaken,
+      score: scoreString,
+      pastRQMs: pastRQMs.map(attempt => ({
+        score: attempt.RQM_score,
+        timestamp: attempt.createdAt,
+      })),
+
+      // Activity and Achievement data
+      xpAwarded: latestAttempt.xpAwarded || 0,
+      quinBoostUtilized: latestAttempt.quinBoostUtilized || false,
+
+      // Performance metrics
+      performanceBonus: latestAttempt.performanceBonus || 1.0,
+      timeDilationBoosted: latestAttempt.timeDilationBoosted || false,
+      streakRevived: latestAttempt.streakRevived || false,
+      pauseRealTimeIQ:
+        latestAttempt.pauseRealTimeIQ ||
+        latestAttempt.user?.pauseRealTimeIQ ||
+        false,
+      gameType: latestAttempt.gameType,
+      performance: latestAttempt.performance,
+      timeFactor: latestAttempt.timeFactor,
+
+      // IQ Calculation results (spreading like in saveEnhancedQuizAttemptWithStats)
+      newIQScore: latestAttempt.newIQScore,
+      prevIQScore: latestAttempt.prevIQScore,
+      hasSocietyOrCircleChanged:
+        latestAttempt.hasSocietyOrCircleChanged || false,
+      changedSocietyOrCircle: latestAttempt.changedSocietyOrCircle,
+      isUpgrade: latestAttempt.isUpgrade || false,
+      newSociety: latestAttempt.newSociety,
+      newCircle: latestAttempt.newCircle,
+      societyUpgradeMessage: latestAttempt.societyUpgradeMessage,
+      boostMultiplier: latestAttempt.boostMultiplier,
+      originalIncrement: latestAttempt.originalIncrement,
+      boostedIncrement: latestAttempt.boostedIncrement,
+      additionalScore: latestAttempt.additionalScore,
+
+      // Additional context for UI
+      sessionId: quizSession._id,
+      articleTitle:
+        latestAttempt.article?.title || latestAttempt.article?.hindiTitle,
+      articleCategory: latestAttempt.article?.category,
+      completedAt: latestAttempt.createdAt,
+
+      // Flags for UI behavior
+      fromReport: true, // Flag to indicate this is from report route
+    }
+
+    console.log(`Game report fetched for article ${articleId}:`, {
+      userId: userId.toString(),
+      gameType: latestAttempt.gameType,
+      RQMScore: latestAttempt.RQM_score,
+      completedAt: latestAttempt.createdAt,
+      hasIQData: !!(latestAttempt.newIQScore && latestAttempt.prevIQScore),
+      hasSocietyChange: latestAttempt.hasSocietyOrCircleChanged,
+    })
+
+    res.status(200).json({
+      success: true,
+      report: reportData,
+    })
+  } catch (error) {
+    console.error('Error fetching game report:', error)
+    res.status(500).json({
+      error: 'Failed to fetch game report',
+      details: error.message,
+    })
+  }
+})
+
 module.exports = {
   getGameData,
   createGameSession,
   startGameSession,
   submitGameAttempt,
   getGameSummary,
-  importGameData,
-  exportGameData,
   checkGameCompletion,
+  getGameReport,
 }
