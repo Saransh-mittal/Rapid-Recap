@@ -1,4 +1,3 @@
-// components/gameHub/gameInterfaces/WordWeaverInterface.jsx - UPDATED: Remove context display
 import React, { useState, useEffect, useCallback, useRef } from 'react'
 import {
   VStack,
@@ -25,8 +24,8 @@ const WordWeaverInterface = ({
   selectedAnswer,
 }) => {
   // Core state
-  const [selectedLetters, setSelectedLetters] = useState([])
-  const [availableLetters, setAvailableLetters] = useState([])
+  const [selectedUnits, setSelectedUnits] = useState([])
+  const [availableUnits, setAvailableUnits] = useState([])
   const [initialized, setInitialized] = useState(false)
 
   // Refs to prevent unnecessary re-renders and dependency issues
@@ -35,11 +34,29 @@ const WordWeaverInterface = ({
   const { t } = useTranslation('GameHub')
   const toast = useToast()
 
-  // Extract question data with fallbacks - UPDATED: Remove context
+  // Extract question data with fallbacks - UPDATED: Add Hindi detection
   const blank = question?.blank || ''
   const difficulty = question?.difficulty || 0.5
-  const shuffledLetters = question?.shuffledLetters || []
+  const shuffledUnits =
+    question?.shuffledUnits || question?.shuffledLetters || []
   const wordLength = question?.wordLength || 6
+  const isHindiWord = question?.isHindiWord || false
+
+  // UPDATED: Detect if this is a Hindi word based on the content
+  const detectHindiContent = () => {
+    // Check if units contain Hindi characters
+    if (shuffledUnits.some(unit => /[\u0900-\u097F]/.test(unit))) {
+      return true
+    }
+    // Check if blank text contains Hindi characters
+    if (/[\u0900-\u097F]/.test(blank)) {
+      return true
+    }
+    // Use the backend flag
+    return isHindiWord
+  }
+
+  const isActuallyHindi = detectHindiContent()
 
   // Safely extract current answer with multiple fallback checks
   const getCurrentSelectedAnswer = () => {
@@ -87,90 +104,205 @@ const WordWeaverInterface = ({
     return t('difficulty.hard')
   }
 
-  // Fallback letter generation
-  const generateFallbackLetters = useCallback(length => {
-    const letters = [
-      'A',
-      'E',
-      'I',
-      'O',
-      'U',
-      'R',
-      'T',
-      'N',
-      'S',
-      'L',
-      'C',
-      'D',
-      'M',
-      'P',
-      'B',
-      'G',
-      'H',
-      'F',
-      'Y',
-      'W',
-      'K',
-      'V',
-      'X',
-      'Z',
-      'Q',
-      'J',
-    ]
+  // UPDATED: Fallback generation for both Hindi and English
+  const generateFallbackUnits = useCallback((length, isHindi) => {
+    if (isHindi) {
+      // Hindi fallback units (common Hindi characters and combinations)
+      const hindiUnits = [
+        'क',
+        'ख',
+        'ग',
+        'घ',
+        'च',
+        'छ',
+        'ज',
+        'झ',
+        'ट',
+        'ठ',
+        'ड',
+        'ढ',
+        'त',
+        'थ',
+        'द',
+        'ध',
+        'न',
+        'प',
+        'फ',
+        'ब',
+        'भ',
+        'म',
+        'य',
+        'र',
+        'ल',
+        'व',
+        'श',
+        'ष',
+        'स',
+        'ह',
+        'का',
+        'की',
+        'के',
+        'को',
+        'कु',
+        'रा',
+        'री',
+        'रे',
+        'रो',
+        'ना',
+        'नी',
+        'ने',
+        'नो',
+        'मा',
+        'मी',
+        'मे',
+        'मो',
+        'सा',
+        'सी',
+        'से',
+        'सो',
+      ]
 
-    const needed = Math.max(8, length + 2)
-    const result = []
+      const needed = Math.max(6, length + 2)
+      const result = []
 
-    for (let i = 0; i < needed; i++) {
-      result.push(letters[i % letters.length])
+      for (let i = 0; i < needed && i < hindiUnits.length; i++) {
+        result.push(hindiUnits[i])
+      }
+
+      return result.sort(() => Math.random() - 0.5)
+    } else {
+      // English fallback letters
+      const letters = [
+        'A',
+        'E',
+        'I',
+        'O',
+        'U',
+        'R',
+        'T',
+        'N',
+        'S',
+        'L',
+        'C',
+        'D',
+        'M',
+        'P',
+        'B',
+        'G',
+        'H',
+        'F',
+        'Y',
+        'W',
+        'K',
+        'V',
+        'X',
+        'Z',
+        'Q',
+        'J',
+      ]
+
+      const needed = Math.max(8, length + 2)
+      const result = []
+
+      for (let i = 0; i < needed; i++) {
+        result.push(letters[i % letters.length])
+      }
+
+      return result.sort(() => Math.random() - 0.5)
     }
-
-    return result.sort(() => Math.random() - 0.5)
   }, [])
 
-  // Initialize question letters
+  // Initialize question units
   const initializeQuestion = useCallback(() => {
-    const baseLetters =
-      shuffledLetters.length > 0
-        ? [...shuffledLetters]
-        : generateFallbackLetters(wordLength)
+    const baseUnits =
+      shuffledUnits.length > 0
+        ? [...shuffledUnits]
+        : generateFallbackUnits(wordLength, isActuallyHindi)
 
-    setAvailableLetters(baseLetters)
-    setSelectedLetters([])
+    setAvailableUnits(baseUnits)
+    setSelectedUnits([])
     setInitialized(true)
-  }, [shuffledLetters, wordLength, questionIndex, generateFallbackLetters])
+  }, [
+    shuffledUnits,
+    wordLength,
+    questionIndex,
+    generateFallbackUnits,
+    isActuallyHindi,
+  ])
 
-  // Restore previous answer
+  // UPDATED: Restore previous answer for both Hindi and English
   const restorePreviousAnswer = useCallback(() => {
     if (!currentSelectedAnswer || typeof currentSelectedAnswer !== 'string') {
       initializeQuestion()
       return
     }
 
-    const answerLetters = currentSelectedAnswer.toUpperCase().split('')
-    const baseLetters =
-      shuffledLetters.length > 0
-        ? [...shuffledLetters]
-        : generateFallbackLetters(wordLength)
+    let answerUnits = []
 
-    const remainingLetters = [...baseLetters]
-    answerLetters.forEach(letter => {
-      const index = remainingLetters.indexOf(letter)
+    if (isActuallyHindi) {
+      // For Hindi, we need to properly segment the answer
+      // This is a simplified approach - in production, you'd use the Hindi segmentation utility
+      answerUnits = currentSelectedAnswer.split('')
+
+      // Try to match the segmentation from shuffledUnits if available
+      if (shuffledUnits.length > 0) {
+        // Attempt to reconstruct units based on available shuffled units
+        const tempAnswer = currentSelectedAnswer
+        const tempUnits = []
+        let i = 0
+
+        while (i < tempAnswer.length) {
+          let foundUnit = false
+
+          // Try to match longer units first (up to 3 characters)
+          for (let len = Math.min(3, tempAnswer.length - i); len > 0; len--) {
+            const unit = tempAnswer.substr(i, len)
+            if (shuffledUnits.includes(unit)) {
+              tempUnits.push(unit)
+              i += len
+              foundUnit = true
+              break
+            }
+          }
+
+          if (!foundUnit) {
+            // Fallback to single character
+            tempUnits.push(tempAnswer[i])
+            i++
+          }
+        }
+
+        answerUnits = tempUnits
+      }
+    } else {
+      // For English, split into individual letters
+      answerUnits = currentSelectedAnswer.toUpperCase().split('')
+    }
+
+    const baseUnits =
+      shuffledUnits.length > 0
+        ? [...shuffledUnits]
+        : generateFallbackUnits(wordLength, isActuallyHindi)
+
+    const remainingUnits = [...baseUnits]
+    answerUnits.forEach(unit => {
+      const index = remainingUnits.indexOf(unit)
       if (index !== -1) {
-        remainingLetters.splice(index, 1)
+        remainingUnits.splice(index, 1)
       }
     })
 
-    setSelectedLetters(answerLetters)
-    setAvailableLetters(remainingLetters)
+    setSelectedUnits(answerUnits)
+    setAvailableUnits(remainingUnits)
     setInitialized(true)
   }, [
     currentSelectedAnswer,
-    shuffledLetters,
+    shuffledUnits,
     wordLength,
     questionIndex,
     initializeQuestion,
-    generateFallbackLetters,
+    generateFallbackUnits,
+    isActuallyHindi,
   ])
 
   // Handle question changes - main effect
@@ -198,13 +330,13 @@ const WordWeaverInterface = ({
     initializeQuestion,
   ])
 
-  // Update answer when selected letters change
+  // Update answer when selected units change
   useEffect(() => {
     if (!initialized || isUpdatingAnswerRef.current) {
       return
     }
 
-    const currentAnswer = selectedLetters.join('')
+    const currentAnswer = selectedUnits.join('')
 
     const timeoutId = setTimeout(() => {
       isUpdatingAnswerRef.current = true
@@ -220,16 +352,18 @@ const WordWeaverInterface = ({
     }, 150)
 
     return () => clearTimeout(timeoutId)
-  }, [selectedLetters, initialized, onAnswer, questionIndex])
+  }, [selectedUnits, initialized, onAnswer, questionIndex])
 
-  // Letter interaction handlers
-  const handleLetterClick = useCallback(
-    (letter, index) => {
-      if (!initialized || selectedLetters.length >= wordLength) {
-        if (selectedLetters.length >= wordLength) {
+  // UPDATED: Unit interaction handlers
+  const handleUnitClick = useCallback(
+    (unit, index) => {
+      if (!initialized || selectedUnits.length >= wordLength) {
+        if (selectedUnits.length >= wordLength) {
           toast({
-            title: 'Word Complete',
-            description: `This word only has ${wordLength} letters!`,
+            title: isActuallyHindi ? 'शब्द पूरा हो गया' : 'Word Complete',
+            description: isActuallyHindi
+              ? `इस शब्द में केवल ${wordLength} यूनिट हैं!`
+              : `This word only has ${wordLength} units!`,
             status: 'info',
             duration: 2000,
             isClosable: true,
@@ -238,37 +372,44 @@ const WordWeaverInterface = ({
         return
       }
 
-      setSelectedLetters(prev => [...prev, letter.toUpperCase()])
-      setAvailableLetters(prev => prev.filter((_, i) => i !== index))
+      setSelectedUnits(prev => [...prev, unit])
+      setAvailableUnits(prev => prev.filter((_, i) => i !== index))
     },
-    [initialized, selectedLetters.length, wordLength, questionIndex, toast],
+    [
+      initialized,
+      selectedUnits.length,
+      wordLength,
+      questionIndex,
+      toast,
+      isActuallyHindi,
+    ],
   )
 
-  const handleLetterRemove = useCallback(
+  const handleUnitRemove = useCallback(
     removeIndex => {
       if (!initialized) return
 
-      const removedLetter = selectedLetters[removeIndex]
-      setSelectedLetters(prev => prev.filter((_, i) => i !== removeIndex))
-      setAvailableLetters(prev => [...prev, removedLetter])
+      const removedUnit = selectedUnits[removeIndex]
+      setSelectedUnits(prev => prev.filter((_, i) => i !== removeIndex))
+      setAvailableUnits(prev => [...prev, removedUnit])
     },
-    [initialized, selectedLetters, questionIndex],
+    [initialized, selectedUnits, questionIndex],
   )
 
   const handleClearWord = useCallback(() => {
-    if (!initialized || selectedLetters.length === 0) return
+    if (!initialized || selectedUnits.length === 0) return
 
-    setAvailableLetters(prev => [...prev, ...selectedLetters])
-    setSelectedLetters([])
-  }, [initialized, selectedLetters, questionIndex])
+    setAvailableUnits(prev => [...prev, ...selectedUnits])
+    setSelectedUnits([])
+  }, [initialized, selectedUnits, questionIndex])
 
-  const handleShuffleLetters = useCallback(() => {
+  const handleShuffleUnits = useCallback(() => {
     if (!initialized) return
 
-    setAvailableLetters(prev => [...prev].sort(() => Math.random() - 0.5))
+    setAvailableUnits(prev => [...prev].sort(() => Math.random() - 0.5))
   }, [initialized, questionIndex])
 
-  const currentAnswer = selectedLetters.join('')
+  const currentAnswer = selectedUnits.join('')
 
   // Don't render until initialized
   if (!initialized) {
@@ -283,7 +424,9 @@ const WordWeaverInterface = ({
         justifyContent="center"
       >
         <Text color="gray.400" fontSize="md">
-          {t('loading.preparingWordArchitect')}
+          {isActuallyHindi
+            ? 'शब्द निर्माता तैयार कर रहे हैं...'
+            : t('loading.preparingWordArchitect')}
         </Text>
       </MotionBox>
     )
@@ -308,7 +451,8 @@ const WordWeaverInterface = ({
             borderRadius="full"
             fontSize="xs"
           >
-            {t('gameInterface.wordPuzzle')} {questionIndex + 1}/{totalQuestions}
+            {isActuallyHindi ? 'शब्द पहेली' : t('gameInterface.wordPuzzle')}{' '}
+            {questionIndex + 1}/{totalQuestions}
           </Badge>
 
           <Badge
@@ -330,8 +474,23 @@ const WordWeaverInterface = ({
             borderRadius="full"
             fontSize="xs"
           >
-            {selectedLetters.length}/{wordLength} {t('stats.letters')}
+            {selectedUnits.length}/{wordLength}{' '}
+            {isActuallyHindi ? 'यूनिट' : t('stats.letters')}
           </Badge>
+
+          {/* Language Indicator */}
+          {isActuallyHindi && (
+            <Badge
+              bg="rgba(245, 158, 11, 0.1)"
+              color="yellow.400"
+              px={2}
+              py={1}
+              borderRadius="full"
+              fontSize="xs"
+            >
+              हिंदी
+            </Badge>
+          )}
         </HStack>
 
         {/* Fill-in-the-blank Question */}
@@ -356,14 +515,17 @@ const WordWeaverInterface = ({
         <VStack spacing={3}>
           <HStack spacing={2} justify="center">
             <Text fontSize="sm" color="gray.400">
-              {t('gameInterface.yourWord')}:
+              {isActuallyHindi ? 'आपका शब्द:' : t('gameInterface.yourWord')}:
             </Text>
             <Text fontSize="lg" color="emerald.400" fontWeight="bold">
-              {currentAnswer || t('gameInterface.building')}
+              {currentAnswer ||
+                (isActuallyHindi
+                  ? 'बना रहे हैं...'
+                  : t('gameInterface.building'))}
             </Text>
           </HStack>
 
-          {/* Selected Letters Display */}
+          {/* Selected Units Display */}
           <Box
             minH="60px"
             w="100%"
@@ -375,16 +537,18 @@ const WordWeaverInterface = ({
             alignItems="center"
             justifyContent="center"
           >
-            {selectedLetters.length === 0 ? (
+            {selectedUnits.length === 0 ? (
               <Text color="gray.500" fontSize="sm" textAlign="center">
-                {t('gameInterface.clickLettersInstruction')}
+                {isActuallyHindi
+                  ? 'यूनिट्स पर क्लिक करके शब्द बनाएं'
+                  : t('gameInterface.clickLettersInstruction')}
               </Text>
             ) : (
               <Flex gap={2} flexWrap="wrap" justify="center">
                 <AnimatePresence>
-                  {selectedLetters.map((letter, index) => (
+                  {selectedUnits.map((unit, index) => (
                     <MotionBox
-                      key={`selected-${index}-${letter}-${questionIndex}`}
+                      key={`selected-${index}-${unit}-${questionIndex}`}
                       initial={{ opacity: 0, scale: 0.5 }}
                       animate={{ opacity: 1, scale: 1 }}
                       exit={{ opacity: 0, scale: 0.5 }}
@@ -393,18 +557,18 @@ const WordWeaverInterface = ({
                       whileTap={{ scale: 0.9 }}
                     >
                       <Button
-                        onClick={() => handleLetterRemove(index)}
-                        w="40px"
-                        h="40px"
+                        onClick={() => handleUnitRemove(index)}
+                        w={isActuallyHindi ? '50px' : '40px'}
+                        h={isActuallyHindi ? '50px' : '40px'}
                         borderRadius="lg"
                         bg="linear-gradient(45deg, #10B981, #059669)"
                         color="white"
                         border="1px solid rgba(16, 185, 129, 0.6)"
-                        fontSize="lg"
+                        fontSize={isActuallyHindi ? 'xl' : 'lg'}
                         fontWeight="bold"
-                        minW="40px"
+                        minW={isActuallyHindi ? '50px' : '40px'}
                       >
-                        {letter}
+                        {unit}
                       </Button>
                     </MotionBox>
                   ))}
@@ -414,38 +578,38 @@ const WordWeaverInterface = ({
           </Box>
         </VStack>
 
-        {/* Available Letters */}
+        {/* Available Units */}
         <VStack spacing={3}>
           <HStack justify="space-between" w="100%">
             <Text fontSize="sm" color="gray.300" fontWeight="600">
-              Available Letters:
+              {isActuallyHindi ? 'उपलब्ध यूनिट्स:' : 'Available Units:'}
             </Text>
             <Button
-              onClick={handleShuffleLetters}
+              onClick={handleShuffleUnits}
               size="xs"
               variant="ghost"
               leftIcon={<Shuffle size={12} />}
               color="gray.400"
               fontSize="xs"
             >
-              {t('actions.shuffle')}
+              {isActuallyHindi ? 'फेरबदल' : t('actions.shuffle')}
             </Button>
           </HStack>
 
           <Flex gap={2} flexWrap="wrap" justify="center">
-            {availableLetters.map((letter, index) => (
+            {availableUnits.map((unit, index) => (
               <MotionButton
-                key={`available-${index}-${letter}-${questionIndex}`}
-                onClick={() => handleLetterClick(letter, index)}
-                w="35px"
-                h="35px"
+                key={`available-${index}-${unit}-${questionIndex}`}
+                onClick={() => handleUnitClick(unit, index)}
+                w={isActuallyHindi ? '50px' : '35px'}
+                h={isActuallyHindi ? '50px' : '35px'}
                 borderRadius="lg"
                 fontWeight="bold"
-                fontSize="md"
+                fontSize={isActuallyHindi ? 'lg' : 'md'}
                 bg="rgba(255, 255, 255, 0.05)"
                 color="white"
                 border="1px solid rgba(255, 255, 255, 0.2)"
-                minW="35px"
+                minW={isActuallyHindi ? '50px' : '35px'}
                 whileHover={{ scale: 1.1 }}
                 whileTap={{ scale: 0.9 }}
                 _hover={{
@@ -454,7 +618,7 @@ const WordWeaverInterface = ({
                 }}
                 transition="all 0.2s"
               >
-                {letter}
+                {unit}
               </MotionButton>
             ))}
           </Flex>
@@ -465,16 +629,17 @@ const WordWeaverInterface = ({
               onClick={handleClearWord}
               size="sm"
               variant="outline"
+              color={'white'}
               leftIcon={<RotateCcw size={14} />}
-              isDisabled={selectedLetters.length === 0}
+              isDisabled={selectedUnits.length === 0}
               borderRadius="full"
               borderColor="rgba(255, 255, 255, 0.2)"
               fontSize="xs"
             >
-              {t('actions.clear')}
+              {isActuallyHindi ? 'साफ़ करें' : t('actions.clear')}
             </Button>
 
-            {selectedLetters.length === wordLength && (
+            {selectedUnits.length === wordLength && (
               <Badge
                 bg="rgba(16, 185, 129, 0.9)"
                 color="white"
@@ -483,7 +648,7 @@ const WordWeaverInterface = ({
                 borderRadius="full"
                 fontSize="xs"
               >
-                ✨ {t('status.complete')}!
+                ✨ {isActuallyHindi ? 'पूरा!' : t('status.complete')}!
               </Badge>
             )}
           </HStack>
@@ -497,11 +662,13 @@ const WordWeaverInterface = ({
           p={3}
           textAlign="center"
         >
-          {selectedLetters.length === wordLength ? (
+          {selectedUnits.length === wordLength ? (
             <HStack justify="center" spacing={2}>
               <Target size={16} color="#10B981" />
               <Text color="emerald.400" fontWeight="600" fontSize="sm">
-                {t('gameInterface.wordCompleted')}
+                {isActuallyHindi
+                  ? 'शब्द पूरा हो गया!'
+                  : t('gameInterface.wordCompleted')}
               </Text>
             </HStack>
           ) : (
@@ -509,11 +676,15 @@ const WordWeaverInterface = ({
               <HStack justify="center" spacing={2}>
                 <Target size={16} color="#6B7280" />
                 <Text color="gray.400" fontSize="sm">
-                  {t('gameInterface.completeSentenceInstruction')}
+                  {isActuallyHindi
+                    ? 'वाक्य पूरा करने के लिए शब्द बनाएं'
+                    : t('gameInterface.completeSentenceInstruction')}
                 </Text>
               </HStack>
               <Text fontSize="xs" color="gray.500">
-                {t('gameInterface.clickLettersInstruction')}
+                {isActuallyHindi
+                  ? 'यूनिट्स पर क्लिक करके शब्द बनाएं'
+                  : t('gameInterface.clickLettersInstruction')}
               </Text>
             </VStack>
           )}

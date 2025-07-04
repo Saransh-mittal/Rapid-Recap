@@ -1,5 +1,6 @@
 // model/gameDataSchema.js - Updated Word Weaver section without context
 const mongoose = require('mongoose')
+const connectionTypes = require('../data/connectionGameTypes')
 
 const gameDataSchema = new mongoose.Schema({
   title: {
@@ -179,17 +180,7 @@ const gameDataSchema = new mongoose.Schema({
         },
         connectionType: {
           type: String,
-          enum: [
-            'cause_effect',
-            'category_example',
-            'sequential',
-            'opposing',
-            'functional',
-            'geographic',
-            'temporal',
-            'conceptual',
-            'definitional',
-          ],
+          enum: connectionTypes,
           default: 'conceptual',
         },
       },

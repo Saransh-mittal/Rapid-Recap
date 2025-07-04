@@ -3,6 +3,12 @@ const OpenAI = require('openai')
 const GameData = require('../model/gameDataSchema')
 const QuizAttempt = require('../model/quizAttemptSchema')
 const { calculateArticleDifficulty } = require('./article.utils')
+const connectionTypes = require('../data/connectionGameTypes')
+const {
+  containsHindi,
+  getHindiDisplayLength,
+  segmentHindiText,
+} = require('./hindiText.utils')
 
 // UPDATED: Game-specific configurations (unchanged)
 const GAME_CONFIGS = {
@@ -221,41 +227,119 @@ const calculateTrueFalseDifficulty = statement => {
 const calculateWordWeaverDifficulty = (blank, answer) => {
   let difficultyScore = 0.4 // Base difficulty (word puzzles are inherently challenging)
 
-  // Answer word length (longer words are harder)
-  const answerLength = answer.length
-  if (answerLength > 10) difficultyScore += 0.25
-  else if (answerLength > 8) difficultyScore += 0.2
-  else if (answerLength > 6) difficultyScore += 0.15
-  else if (answerLength > 4) difficultyScore += 0.1
+  if (!answer || typeof answer !== 'string') {
+    return Math.min(
+      0.99,
+      Math.max(0.01, Math.round(difficultyScore * 100) / 100),
+    )
+  }
 
-  // UPDATED: Blank sentence complexity (instead of context)
-  const blankLength = blank.split(' ').length
-  if (blankLength > 25) difficultyScore += 0.1
-  else if (blankLength > 20) difficultyScore += 0.08
-  else if (blankLength > 15) difficultyScore += 0.05
+  const cleanAnswer = answer.replace(/\s+/g, '').trim()
+  const isHindiWord = containsHindi(cleanAnswer)
 
-  // Word complexity based on length - longer words are typically more complex
-  if (answer.length > 12) difficultyScore += 0.15
-  else if (answer.length > 9) difficultyScore += 0.1
+  if (isHindiWord) {
+    // Hindi-specific difficulty calculation
+    try {
+      const hindiUnits = segmentHindiText(cleanAnswer)
+      const wordLength = hindiUnits.length
 
-  // Proper noun detection (capitalized words)
-  const isProperNoun = /^[A-Z][a-z]+$/.test(answer)
-  if (isProperNoun) difficultyScore += 0.1
+      // Answer unit length (longer words are harder in Hindi)
+      if (wordLength > 8) difficultyScore += 0.25
+      else if (wordLength > 6) difficultyScore += 0.2
+      else if (wordLength > 4) difficultyScore += 0.15
+      else if (wordLength > 3) difficultyScore += 0.1
 
-  // Uncommon letters (harder to unscramble)
-  const uncommonLetters = ['Q', 'X', 'Z', 'J', 'K']
-  const uncommonCount = answer
-    .split('')
-    .filter(letter => uncommonLetters.includes(letter.toUpperCase())).length
-  if (uncommonCount > 0) difficultyScore += uncommonCount * 0.05
+      // Complex matras and conjuncts make Hindi words harder
+      const complexMatras = ['ौ', 'ै', 'ी', 'ू', 'ृ', 'ॄ', 'ॢ', 'ॣ']
+      const conjunctPattern = /्[क-ह]/g // Halant followed by consonant
 
-  // Letter frequency - words with repeated letters might be easier
-  const letterCounts = {}
-  answer.split('').forEach(letter => {
-    letterCounts[letter] = (letterCounts[letter] || 0) + 1
-  })
-  const maxRepeats = Math.max(...Object.values(letterCounts))
-  if (maxRepeats > 2) difficultyScore -= 0.05 // Slightly easier if letters repeat
+      let complexityCount = 0
+      hindiUnits.forEach(unit => {
+        // Check for complex matras
+        complexMatras.forEach(matra => {
+          if (unit.includes(matra)) complexityCount++
+        })
+
+        // Check for conjuncts (halant + consonant)
+        if (conjunctPattern.test(unit)) complexityCount++
+      })
+
+      if (complexityCount > 0) difficultyScore += complexityCount * 0.08
+
+      // Rare letters in Hindi
+      const rareHindiLetters = ['क्ष', 'त्र', 'ज्ञ', 'श्र', 'ढ़', 'ड़', 'ऋ']
+      const rareCount = rareHindiLetters.filter(rare =>
+        cleanAnswer.includes(rare),
+      ).length
+      if (rareCount > 0) difficultyScore += rareCount * 0.1
+
+      // Repeated units might be easier in Hindi
+      const unitCounts = {}
+      hindiUnits.forEach(unit => {
+        unitCounts[unit] = (unitCounts[unit] || 0) + 1
+      })
+      const maxRepeats = Math.max(...Object.values(unitCounts))
+      if (maxRepeats > 2) difficultyScore -= 0.05
+
+      console.log('Hindi word difficulty calculation:', {
+        answer: cleanAnswer,
+        units: hindiUnits,
+        wordLength,
+        complexityCount,
+        rareCount,
+        maxRepeats,
+        finalDifficulty: difficultyScore,
+      })
+    } catch (error) {
+      console.error('Error calculating Hindi difficulty:', error)
+      // Fallback to character-based calculation for Hindi
+      const answerLength = cleanAnswer.length
+      if (answerLength > 10) difficultyScore += 0.25
+      else if (answerLength > 8) difficultyScore += 0.2
+      else if (answerLength > 6) difficultyScore += 0.15
+      else if (answerLength > 4) difficultyScore += 0.1
+    }
+  } else {
+    // English-specific difficulty calculation (existing logic)
+    const answerLength = cleanAnswer.length
+
+    // Answer word length (longer words are harder)
+    if (answerLength > 10) difficultyScore += 0.25
+    else if (answerLength > 8) difficultyScore += 0.2
+    else if (answerLength > 6) difficultyScore += 0.15
+    else if (answerLength > 4) difficultyScore += 0.1
+
+    // Word complexity based on length - longer words are typically more complex
+    if (answerLength > 12) difficultyScore += 0.15
+    else if (answerLength > 9) difficultyScore += 0.1
+
+    // Proper noun detection (capitalized words)
+    const isProperNoun = /^[A-Z][a-z]+$/.test(answer)
+    if (isProperNoun) difficultyScore += 0.1
+
+    // Uncommon letters (harder to unscramble)
+    const uncommonLetters = ['Q', 'X', 'Z', 'J', 'K']
+    const uncommonCount = cleanAnswer
+      .split('')
+      .filter(letter => uncommonLetters.includes(letter.toUpperCase())).length
+    if (uncommonCount > 0) difficultyScore += uncommonCount * 0.05
+
+    // Letter frequency - words with repeated letters might be easier
+    const letterCounts = {}
+    cleanAnswer.split('').forEach(letter => {
+      letterCounts[letter] = (letterCounts[letter] || 0) + 1
+    })
+    const maxRepeats = Math.max(...Object.values(letterCounts))
+    if (maxRepeats > 2) difficultyScore -= 0.05 // Slightly easier if letters repeat
+  }
+
+  // Blank sentence complexity (applies to both languages)
+  if (blank && typeof blank === 'string') {
+    const blankLength = blank.split(' ').length
+    if (blankLength > 25) difficultyScore += 0.1
+    else if (blankLength > 20) difficultyScore += 0.08
+    else if (blankLength > 15) difficultyScore += 0.05
+  }
 
   return Math.min(0.99, Math.max(0.01, Math.round(difficultyScore * 100) / 100))
 }
@@ -350,7 +434,237 @@ const calculateEnhancedRQM = (
   }
 }
 
-// UPDATED: Enhanced game data generation with removed context and proper validation
+// --- START: SPECIALIZED GAME GENERATION FUNCTIONS ---
+
+const callOpenAIWithRetry = async (
+  prompt,
+  language,
+  model = 'gpt-4.1-nano',
+  attempts = 3,
+) => {
+  const openai = new OpenAI(process.env.OPENAI_API_KEY)
+  let lastError = null
+
+  while (attempts-- > 0) {
+    try {
+      const systemMessage = `You are an expert educational game generator. Create quiz content based on the provided article. ${
+        language === 'hi'
+          ? 'Generate ALL content in HINDI language (हिंदी में). Use proper Hindi grammar and vocabulary.'
+          : 'Generate ALL content in ENGLISH language.'
+      } Respond with a valid JSON object.`
+
+      const result = await openai.chat.completions.create({
+        model: model,
+        response_format: { type: 'json_object' },
+        messages: [
+          { role: 'system', content: systemMessage },
+          { role: 'user', content: prompt },
+        ],
+      })
+      const responseText = result.choices[0].message.content
+        .replace(/```json|```/g, '')
+        .trim()
+      return JSON.parse(responseText)
+    } catch (err) {
+      console.error(
+        `Error during OpenAI API call (attempt ${3 - attempts}/3):`,
+        err.message,
+      )
+      lastError = err
+    }
+  }
+  throw new Error(
+    `Failed to get a valid JSON response after multiple attempts. Last error: ${lastError?.message}`,
+  )
+}
+
+const generateNormalQuizData = async ({
+  title,
+  author,
+  mainText,
+  language,
+}) => {
+  const prompt = `Based on the article titled "${title}" by ${author}, generate a JSON object for a normal quiz.
+    Article Text: """${mainText}"""
+
+    Requirements:
+    - The JSON object must have a single key "normal_quiz".
+    - The value should be an object with a "questions" array.
+    - Generate EXACTLY 5 multiple-choice questions.
+    - Each question object must have: "question", "options" (an object with keys "a", "b", "c", "d"), "correct" (the key of the correct option, e.g., "a"), and "explanation".
+    - All content MUST be in ${language === 'hi' ? 'Hindi' : 'English'}.
+
+    Example Structure:
+    {
+      "normal_quiz": {
+        "questions": [
+          {
+            "question": "...",
+            "options": { "a": "...", "b": "...", "c": "...", "d": "..." },
+            "correct": "c",
+            "explanation": "..."
+          }
+        ]
+      }
+    }`
+  const response = await callOpenAIWithRetry(prompt, language)
+  if (response.normal_quiz?.questions?.length === 5) {
+    return processGameDataWithDifficulties(response).normal_quiz
+  }
+  throw new Error('Invalid normal_quiz data received from AI.')
+}
+
+const generateTrueFalseData = async ({ title, author, mainText, language }) => {
+  const prompt = `Based on the article titled "${title}" by ${author}, generate a JSON object for a true/false game.
+    Article Text: """${mainText}"""
+
+    Requirements:
+    - The JSON object must have a single key "true_false".
+    - The value should be an object with a "statements" array.
+    - Generate EXACTLY 7 true/false statements.
+    - Each statement object must have: "text", "correct" (a boolean true/false), and "explanation".
+    - All content MUST be in ${language === 'hi' ? 'Hindi' : 'English'}.
+
+    Example Structure:
+    {
+      "true_false": {
+        "statements": [
+          { "text": "...", "correct": true, "explanation": "..." }
+        ]
+      }
+    }`
+  const response = await callOpenAIWithRetry(prompt, language)
+  if (response.true_false?.statements?.length === 7) {
+    return processGameDataWithDifficulties(response).true_false
+  }
+  throw new Error('Invalid true_false data received from AI.')
+}
+
+const generateWordWeaverData = async ({
+  title,
+  author,
+  mainText,
+  language,
+}) => {
+  const prompt = `Based on the article titled "${title}" by ${author}, generate a JSON object for a Word Weaver game.
+    Article Text: """${mainText}"""
+
+    CRITICAL REQUIREMENTS:
+    - The JSON object must have a single key "word_weaver".
+    - The value should be an object with a "questions" array.
+    - Generate EXACTLY 5 fill-in-the-blank questions.
+    - For each question:
+        1. Pick an EXACT sentence from the article text.
+        2. Replace ONE significant, single word (4-12 letters, no spaces) with a "_____" placeholder.
+        3. The result is the "blank" value.
+        4. The removed word is the "answer" value (MUST be a single word).
+    - All content MUST be in ${language === 'hi' ? 'Hindi' : 'English'}.
+
+    Example Structure:
+    {
+      "word_weaver": {
+        "questions": [
+          { "blank": "The capital of India is _____.", "answer": "DELHI" }
+        ]
+      }
+    }`
+  let response = await callOpenAIWithRetry(prompt, language, 'gpt-4o-mini')
+  if (response.word_weaver?.questions) {
+    const validQuestions = response.word_weaver.questions
+      .map(q => {
+        if (
+          !q.blank ||
+          !q.answer ||
+          typeof q.blank !== 'string' ||
+          typeof q.answer !== 'string'
+        )
+          return null
+        if ((q.blank.match(/_____/g) || []).length !== 1) return null
+        if (q.answer.trim().includes(' ')) return null
+        return { blank: q.blank.trim(), answer: q.answer.trim().toUpperCase() }
+      })
+      .filter(Boolean)
+
+    if (validQuestions.length === 5) {
+      response.word_weaver.questions = validQuestions
+      return processGameDataWithDifficulties(response).word_weaver
+    }
+  }
+  throw new Error(
+    `Invalid or insufficient word_weaver data received from AI. (Required: >=3, Found response: ${JSON.stringify(
+      response.word_weaver?.questions || [],
+      null,
+      2,
+    )})`,
+  )
+}
+const generateConnectionsData = async ({
+  title,
+  author,
+  mainText,
+  language,
+}) => {
+  const prompt = `Based on the article titled "${title}" by ${author}, generate a JSON object for a Connections game.
+    Article Text: """${mainText}"""
+
+    Requirements:
+    - The JSON object must have a single key "connections".
+    - The value should be an object containing:
+        - "concepts": An array of EXACTLY 8 distinct, important concepts from the article.
+        - "validConnections": An array of EXACTLY 4 connection objects that pair up all 8 concepts perfectly.
+    - Each connection object must have: "from", "to", "reasoning", "difficulty" (0.01-0.99), and "connectionType".
+    - Each concept must appear in EXACTLY ONE connection.
+    - So no concept can be reused across connections.
+    - All content MUST be in ${language === 'hi' ? 'Hindi' : 'English'}.
+
+    Connection Types allowed:
+    ${connectionTypes.map(type => `- ${type}`).join('\n')}
+
+    Example Structure:
+    {
+      "connections": {
+        "concepts": ["Concept1", ..., "Concept8"],
+        "validConnections": [
+          { "from": "Concept1", "to": "Concept2", "reasoning": "...", "difficulty": 0.6, "connectionType": "cause_effect" },
+          ... (3 more connections)
+        ]
+      }
+    }`
+  const response = await callOpenAIWithRetry(prompt, language, 'gpt-4o-mini')
+  const concepts = response.connections?.concepts
+  let connections = response.connections?.validConnections
+
+  if (concepts?.length === 8 && connections?.length === 4) {
+    // NEW: Sanitize the connectionType field before validation
+    connections.forEach(conn => {
+      if (!connectionTypes.includes(conn.connectionType)) {
+        console.warn(
+          `Invalid connectionType "${conn.connectionType}" received from AI. Replacing with "conceptual".`,
+        )
+        conn.connectionType = 'conceptual' // Replace with a valid default
+      }
+    })
+
+    // Now proceed with validation
+    const usedConcepts = new Set(connections.flatMap(c => [c.from, c.to]))
+    if (usedConcepts.size === 8) {
+      // Assign the sanitized connections back to the response object
+      response.connections.validConnections = connections
+      return response.connections
+    }
+  }
+  throw new Error(
+    `Invalid connections data structure received from AI. : ${JSON.stringify(
+      response.connections,
+      null,
+      2,
+    )}`,
+  )
+}
+
+// --- END: SPECIALIZED GAME GENERATION FUNCTIONS ---
+
+// UPDATED: Orchestrator for game data generation
 const generateEnhancedGameData = async ({
   title,
   author,
@@ -363,502 +677,97 @@ const generateEnhancedGameData = async ({
   if (!article || !article.save || typeof article.save !== 'function') {
     throw new Error('Invalid article object - must be a Mongoose document')
   }
-
   if (!title || !author || !mainText || !articleId) {
     throw new Error('Missing required parameters')
   }
 
-  try {
-    const openai = new OpenAI(process.env.OPENAI_API_KEY)
-    let attempts = 5
-    let result
-    let response
+  const promptData = { title, author, mainText, language }
 
-    // ADD: Language-aware prompt generation
-    const getLanguageSpecificPrompt = (language, title, author, mainText) => {
-      const isHindi = language === 'hi'
+  console.log(
+    `Starting modular game data generation for article ${articleId} in ${language}...`,
+  )
 
-      const languageInstructions = isHindi
-        ? `Generate ALL content in HINDI language (हिंदी में). All questions, options, statements, explanations, and content must be in Hindi. Use proper Hindi grammar and vocabulary.`
-        : `Generate ALL content in ENGLISH language. All questions, options, statements, explanations, and content must be in English.`
+  // Use Promise.allSettled to attempt all generations, even if some fail
+  const results = await Promise.allSettled([
+    generateNormalQuizData(promptData),
+    generateTrueFalseData(promptData),
+    generateWordWeaverData(promptData),
+    generateConnectionsData(promptData),
+  ])
 
-      const exampleStructure = isHindi
-        ? {
-            normal_quiz_example: `"question": "लेख के अनुसार मुख्य विषय क्या है?", "options": {"a": "विकल्प 1", "b": "विकल्प 2", "c": "विकल्प 3", "d": "विकल्प 4"}, "correct": "a", "explanation": "यह सही है क्योंकि..."`,
-            true_false_example: `"text": "लेख के अनुसार यह कथन सत्य है।", "correct": true, "explanation": "यह सत्य है क्योंकि..."`,
-            word_weaver_example: `"blank": "भारत की राजधानी _____ है।", "answer": "दिल्ली"`,
-            connections_example: `"concepts": ["अवधारणा1", "अवधारणा2", "अवधारणा3", "अवधारणा4"], "reasoning": "ये दोनों अवधारणाएं इसलिए जुड़ी हैं कि..."`,
-          }
-        : {
-            normal_quiz_example: `"question": "What is the main topic according to the article?", "options": {"a": "Option 1", "b": "Option 2", "c": "Option 3", "d": "Option 4"}, "correct": "a", "explanation": "This is correct because..."`,
-            true_false_example: `"text": "According to the article, this statement is true.", "correct": true, "explanation": "This is true because..."`,
-            word_weaver_example: `"blank": "The capital of India is _____.", "answer": "DELHI"`,
-            connections_example: `"concepts": ["Concept1", "Concept2", "Concept3", "Concept4"], "reasoning": "These concepts are connected because..."`,
-          }
+  const [
+    normalQuizResult,
+    trueFalseResult,
+    wordWeaverResult,
+    connectionsResult,
+  ] = results
 
-      return `Title: ${title}
-Author: ${author}
-MainText: ${mainText}
+  const generatedData = {}
 
-${languageInstructions}
-
-Generate comprehensive game data for multiple quiz types based on this article. Return a JSON object with the following structure:
-
-{
-  "title": "${isHindi ? 'लेख का शीर्षक' : 'Article title'}",
-  "description": "${isHindi ? 'संक्षिप्त विवरण' : 'Brief description'}",
-  "category": "${isHindi ? 'लेख श्रेणी' : 'article category'}",
-  "normal_quiz": {
-    "questions": [
-      {
-        ${exampleStructure.normal_quiz_example}
-      }
-    ]
-  },
-  "true_false": {
-    "statements": [
-      {
-        ${exampleStructure.true_false_example}
-      }
-    ]
-  },
-  "word_weaver": {
-    "questions": [
-      {
-        ${exampleStructure.word_weaver_example}
-      }
-    ]
-  },
-  "connections": {
-    "concepts": [${
-      exampleStructure.connections_example.split('"concepts":')[1].split(',')[0]
-    }, "Concept5", "Concept6", "Concept7", "Concept8"],
-    "overallDifficulty": 0.65,
-    "validConnections": [
-      {
-        "from": "Concept1",
-        "to": "Concept2",
-        ${exampleStructure.connections_example.split('"reasoning":')[1]},
-        "difficulty": 0.45,
-        "connectionType": "category_example"
-      },
-      {
-        "from": "Concept3",
-        "to": "Concept4",
-        "reasoning": "${
-          isHindi
-            ? 'विस्तृत स्पष्टीकरण के साथ लेख-विशिष्ट संदर्भ।'
-            : 'COMPREHENSIVE explanation of the connection with specific article references.'
-        }",
-        "difficulty": 0.72,
-        "connectionType": "cause_effect"
-      },
-      {
-        "from": "Concept5",
-        "to": "Concept6",
-        "reasoning": "${
-          isHindi
-            ? 'रिश्ते की गहरी समझ दिखाने वाला पूर्ण तर्क।'
-            : 'THOROUGH reasoning that demonstrates deep understanding of relationship.'
-        }",
-        "difficulty": 0.58,
-        "connectionType": "functional"
-      },
-      {
-        "from": "Concept7",
-        "to": "Concept8",
-        "reasoning": "${
-          isHindi
-            ? 'लेख-विशिष्ट संदर्भ के साथ रिश्ते का विस्तृत विश्लेषण।'
-            : 'DETAILED analysis of the relationship with article-specific context.'
-        }",
-        "difficulty": 0.81,
-        "connectionType": "opposing"
-      }
-    ]
-  }
-}
-
-Requirements:
-- Normal quiz: EXACTLY 5 questions with 4 options each
-- True/False: EXACTLY 7 statements
-- Word Weaver: EXACTLY 5 fill-in-the-blank questions with SINGLE WORD answers only
-- Connections: EXACTLY 8 concepts with EXACTLY 4 valid connections forming perfect pairs
-
-${isHindi ? 'हिंदी भाषा की आवश्यकताएं:' : 'LANGUAGE REQUIREMENTS:'}
-- ${
-        isHindi
-          ? 'सभी प्रश्न, विकल्प, कथन, और स्पष्टीकरण हिंदी में होने चाहिए'
-          : 'All questions, options, statements, and explanations must be in the specified language'
-      }
-- ${
-        isHindi
-          ? 'उचित हिंदी व्याकरण और शब्दावली का उपयोग करें'
-          : 'Use proper grammar and vocabulary for the language'
-      }
-- ${
-        isHindi
-          ? 'तकनीकी शब्दों के लिए उनके हिंदी समकक्ष का उपयोग करें जहाँ संभव हो'
-          : 'Use appropriate technical terms for the language context'
-      }
-
-CRITICAL WORD WEAVER REQUIREMENTS:
-- ${
-        isHindi
-          ? 'लेख के वास्तविक वाक्यों/कथनों को चुनें'
-          : 'MUST pick exact sentences/statements from the provided article text'
-      }
-- ${
-        isHindi
-          ? 'केवल एक महत्वपूर्ण शब्द को _____ से बदलें'
-          : 'Replace only ONE significant word from the exact sentence with _____ (exactly 5 underscores)'
-      }
-- ${
-        isHindi
-          ? 'हटाया गया शब्द एक ही शब्द होना चाहिए (कोई स्पेस नहीं)'
-          : 'The removed word must be a single word (no spaces, no phrases)'
-      }
-- ${
-        isHindi
-          ? 'शब्द की लंबाई 4-12 अक्षर होनी चाहिए'
-          : 'Word length should be 4-12 letters'
-      }
-- ${
-        isHindi
-          ? 'लेख की मूल वाक्य संरचना का उपयोग करें'
-          : 'Use the exact sentence structure from the article'
-      }
-
-${isHindi ? 'सामान्य प्रश्न आवश्यकताएं:' : 'CRITICAL NORMAL QUIZ REQUIREMENTS:'}
-- ${
-        isHindi
-          ? 'प्रश्न लेख की समझ का परीक्षण करें'
-          : 'Questions must test comprehension of article content'
-      }
-- ${
-        isHindi
-          ? 'तथ्यात्मक, विश्लेषणात्मक, और अनुमानित प्रश्न शामिल करें'
-          : 'Include variety: factual, analytical, and inferential questions'
-      }
-- ${
-        isHindi
-          ? 'विकल्प संभावित लेकिन स्पष्ट रूप से अलग होने चाहिए'
-          : 'Options should be plausible but clearly distinguishable'
-      }
-- ${
-        isHindi
-          ? 'स्पष्टीकरण में लेख की विशिष्ट सामग्री का संदर्भ दें'
-          : 'Explanations should reference specific article content'
-      }
-
-${isHindi ? 'सत्य/असत्य आवश्यकताएं:' : 'CRITICAL TRUE/FALSE REQUIREMENTS:'}
-- ${
-        isHindi
-          ? 'कथन लेख की सामग्री से सीधे सत्यापित होने चाहिए'
-          : 'Statements must be directly verifiable from article content'
-      }
-- ${
-        isHindi
-          ? 'स्पष्ट सत्य, स्पष्ट असत्य, और सूक्ष्म भ्रामक कथन मिलाएं'
-          : 'Mix obviously true, obviously false, and subtly misleading statements'
-      }
-- ${
-        isHindi
-          ? 'पूर्ण शब्दों से बचें जब तक कि लेख में विशेष रूप से न कहा गया हो'
-          : 'Avoid absolute terms unless specifically stated in article'
-      }
-
-${isHindi ? 'कनेक्शन आवश्यकताएं:' : 'CRITICAL CONNECTION REQUIREMENTS:'}
-- ${
-        isHindi
-          ? 'लेख से बिल्कुल 8 अलग, महत्वपूर्ण अवधारणाएं प्रदान करें'
-          : 'MUST provide exactly 8 distinct, important concepts from the article'
-      }
-- ${
-        isHindi
-          ? 'बिल्कुल 4 कनेक्शन बनाएं जो सभी 8 अवधारणाओं को जोड़ें'
-          : 'Create EXACTLY 4 connections that pair up all 8 concepts'
-      }
-- ${
-        isHindi
-          ? 'प्रत्येक अवधारणा बिल्कुल एक कनेक्शन में दिखाई देनी चाहिए'
-          : 'Each concept appears in EXACTLY ONE connection (no reuse)'
-      }
-
-- ${
-        isHindi
-          ? 'प्रश्न प्रकारों और कठिनाई में विविधता सुनिश्चित करें'
-          : 'Ensure variety in question types and difficulty'
-      }
-- ${
-        isHindi
-          ? 'सभी सामग्री सीधे लेख की सामग्री से ली जानी चाहिए'
-          : 'All content must be derived directly from the provided article text'
-      }
-- ${
-        isHindi
-          ? 'स्पष्ट स्पष्टीकरण प्रदान करें जो लेख की सामग्री का संदर्भ दें'
-          : 'Provide clear explanations that reference article content'
-      }
-- ${
-        isHindi
-          ? 'वर्ड वीवर उत्तर केवल एक शब्द होने चाहिए'
-          : 'Word Weaver answers must be single words only (no spaces, no phrases)'
-      }`
-    }
-
-    // Generate the appropriate prompt based on language
-    const prompt = getLanguageSpecificPrompt(language, title, author, mainText)
-
-    while (attempts-- > 0) {
-      try {
-        result = await openai.chat.completions.create({
-          model: 'gpt-4.1-nano',
-          response_format: { type: 'json_object' },
-          messages: [
-            {
-              role: 'system',
-              content: `You are an educational game generator. Create comprehensive quiz content based on articles. ${
-                language === 'hi'
-                  ? 'Generate ALL content in HINDI language (हिंदी में). Use proper Hindi grammar, vocabulary, and sentence structure.'
-                  : 'Generate ALL content in ENGLISH language.'
-              } For Word Weaver, create fill-in-the-blank sentences - each sentence must be self-contained and meaningful.`,
-            },
-            {
-              role: 'user',
-              content: prompt,
-            },
-          ],
-        })
-
-        let responseText = result.choices[0].message.content
-        responseText = responseText.replace(/```json|```/g, '').trim()
-        response = JSON.parse(responseText)
-
-        // Enhanced Word Weaver validation (language-agnostic)
-        if (response.word_weaver?.questions) {
-          response.word_weaver.questions = response.word_weaver.questions
-            .map(q => {
-              if (!q.blank || typeof q.blank !== 'string') {
-                console.warn('Invalid blank format, skipping question')
-                return null
-              }
-
-              const blankCount = (q.blank.match(/_____/g) || []).length
-              if (blankCount !== 1) {
-                console.warn(
-                  `Invalid blank count (${blankCount}), must have exactly one _____ placeholder, skipping question`,
-                )
-                return null
-              }
-
-              if (q.blank.split(' ').length < 5) {
-                // Reduced requirement for Hindi
-                console.warn('Blank sentence too short, skipping question')
-                return null
-              }
-
-              let cleanAnswer = q.answer.replace(/\s+/g, '').toUpperCase()
-              if (cleanAnswer.length < 2 || cleanAnswer.length > 15) {
-                // Adjusted for Hindi
-                console.warn('Invalid answer length, skipping question')
-                return null
-              }
-
-              return {
-                blank: q.blank,
-                answer: cleanAnswer,
-              }
-            })
-            .filter(Boolean)
-        }
-
-        // Enhanced validation with language-specific logging
-        if (
-          response &&
-          response.normal_quiz?.questions?.length === 5 &&
-          response.true_false?.statements?.length === 7 &&
-          response.word_weaver?.questions?.length === 5 &&
-          response.connections?.concepts?.length === 8 &&
-          response.connections?.validConnections?.length === 4
-        ) {
-          // Validate connections structure (language-agnostic)
-          const concepts = response.connections.concepts
-          const connections = response.connections.validConnections
-
-          const uniqueConcepts = new Set(concepts)
-          if (uniqueConcepts.size !== 8) {
-            throw new Error('Connections must have exactly 8 unique concepts')
-          }
-
-          const usedConcepts = new Set()
-          const invalidConnections = []
-
-          connections.forEach((conn, index) => {
-            if (!concepts.includes(conn.from) || !concepts.includes(conn.to)) {
-              invalidConnections.push(
-                `Connection ${index + 1}: Uses invalid concept`,
-              )
-            }
-
-            if (usedConcepts.has(conn.from)) {
-              invalidConnections.push(
-                `Connection ${index + 1}: "${conn.from}" already used`,
-              )
-            }
-            if (usedConcepts.has(conn.to)) {
-              invalidConnections.push(
-                `Connection ${index + 1}: "${conn.to}" already used`,
-              )
-            }
-
-            if (conn.from === conn.to) {
-              invalidConnections.push(
-                `Connection ${index + 1}: Self-connection not allowed`,
-              )
-            }
-
-            usedConcepts.add(conn.from)
-            usedConcepts.add(conn.to)
-          })
-
-          if (usedConcepts.size !== 8) {
-            invalidConnections.push(
-              `Only ${usedConcepts.size} of 8 concepts used in connections`,
-            )
-          }
-
-          if (invalidConnections.length > 0) {
-            console.error('Invalid connections structure:', invalidConnections)
-            throw new Error(
-              `Invalid connections: ${invalidConnections.join('; ')}`,
-            )
-          }
-
-          console.log(`✓ Game data validation passed for ${language}:`, {
-            language: language,
-            conceptCount: concepts.length,
-            connectionCount: connections.length,
-            allConceptsUsed: usedConcepts.size === 8,
-            perfectPairs: connections.length === 4,
-          })
-
-          // Process and add automatic difficulty calculations
-          const processedData = processGameDataWithDifficulties(response)
-
-          // Add word length for Word Weaver questions
-          if (processedData.word_weaver?.questions) {
-            processedData.word_weaver.questions =
-              processedData.word_weaver.questions.map(q => {
-                const wordLength = q.answer.replace(/\s+/g, '').length
-                return {
-                  ...q,
-                  wordLength: wordLength,
-                }
-              })
-          }
-
-          // Create GameData document with proper language setting
-          const newGameData = new GameData({
-            title: processedData.title || title,
-            description: processedData.description || '',
-            category: processedData.category || article.category || 'general',
-            article: articleId,
-            normal_quiz: processedData.normal_quiz,
-            true_false: processedData.true_false,
-            word_weaver: processedData.word_weaver,
-            connections: processedData.connections,
-            language: language, // Ensure language is set correctly
-          })
-
-          await newGameData.save({ session })
-
-          console.log(
-            `Game data saved for ${language} with word weaver questions:`,
-            newGameData.word_weaver?.questions?.map(q => ({
-              blank: q.blank.substring(0, 50) + '...',
-              answer: q.answer,
-              wordLength: q.wordLength,
-              hasExactlyOneBlank: (q.blank.match(/_____/g) || []).length === 1,
-              language: language,
-            })),
-          )
-
-          return newGameData
-        } else {
-          // Enhanced error message for debugging
-          const issues = []
-          if (
-            !response.normal_quiz?.questions?.length ||
-            response.normal_quiz.questions.length !== 5
-          ) {
-            issues.push(
-              `Normal quiz: ${
-                response.normal_quiz?.questions?.length || 0
-              }/5 questions`,
-            )
-          }
-          if (
-            !response.true_false?.statements?.length ||
-            response.true_false.statements.length !== 7
-          ) {
-            issues.push(
-              `True/False: ${
-                response.true_false?.statements?.length || 0
-              }/7 statements`,
-            )
-          }
-          if (
-            !response.word_weaver?.questions?.length ||
-            response.word_weaver.questions.length !== 5
-          ) {
-            issues.push(
-              `Word Weaver: ${
-                response.word_weaver?.questions?.length || 0
-              }/5 questions (after validation)`,
-            )
-          }
-          if (
-            !response.connections?.concepts?.length ||
-            response.connections.concepts.length !== 8
-          ) {
-            issues.push(
-              `Connections concepts: ${
-                response.connections?.concepts?.length || 0
-              }/8 (must be exactly 8)`,
-            )
-          }
-          if (
-            !response.connections?.validConnections?.length ||
-            response.connections.validConnections.length !== 4
-          ) {
-            issues.push(
-              `Connections pairs: ${
-                response.connections?.validConnections?.length || 0
-              }/4 (must be exactly 4)`,
-            )
-          }
-
-          throw new Error(
-            `Invalid response format for ${language}. Issues: ${issues.join(
-              ', ',
-            )}`,
-          )
-        }
-      } catch (err) {
-        console.error(
-          `Error during OpenAI API call for ${language}:`,
-          err.message,
-        )
-      }
-    }
-    throw new Error(
-      `Failed to generate game data for ${language} after multiple attempts`,
+  if (normalQuizResult.status === 'fulfilled') {
+    generatedData.normal_quiz = normalQuizResult.value
+    console.log(`✓ Successfully generated Normal Quiz data for ${language}.`)
+  } else {
+    console.error(
+      `✗ Failed to generate Normal Quiz data for ${language}:`,
+      normalQuizResult.reason.message,
     )
-  } catch (error) {
-    console.error(`Error generating enhanced game data for ${language}:`, error)
-    throw error
   }
+
+  if (trueFalseResult.status === 'fulfilled') {
+    generatedData.true_false = trueFalseResult.value
+    console.log(`✓ Successfully generated True/False data for ${language}.`)
+  } else {
+    console.error(
+      `✗ Failed to generate True/False data for ${language}:`,
+      trueFalseResult.reason.message,
+    )
+  }
+
+  if (wordWeaverResult.status === 'fulfilled') {
+    generatedData.word_weaver = wordWeaverResult.value
+    // Add wordLength after generation
+    generatedData.word_weaver.questions =
+      generatedData.word_weaver.questions.map(q => ({
+        ...q,
+        wordLength: q.answer.replace(/\s+/g, '').length,
+      }))
+    console.log(`✓ Successfully generated Word Weaver data for ${language}.`)
+  } else {
+    console.error(
+      `✗ Failed to generate Word Weaver data for ${language}:`,
+      wordWeaverResult.reason.message,
+    )
+  }
+
+  if (connectionsResult.status === 'fulfilled') {
+    generatedData.connections = connectionsResult.value
+    console.log(`✓ Successfully generated Connections data for ${language}.`)
+  } else {
+    console.error(
+      `✗ Failed to generate Connections data for ${language}:`,
+      connectionsResult.reason.message,
+    )
+  }
+
+  // Create GameData document even with partial data
+  const newGameData = new GameData({
+    title: title,
+    description: `Games for article: ${title}`,
+    category: article.category || 'general',
+    article: articleId,
+    normal_quiz: generatedData.normal_quiz,
+    true_false: generatedData.true_false,
+    word_weaver: generatedData.word_weaver,
+    connections: generatedData.connections,
+    language: language,
+  })
+
+  await newGameData.save({ session })
+  console.log(
+    `Game data (partial or full) saved for article ${articleId} in ${language}.`,
+  )
+  return newGameData
 }
 
 // UPDATED: Process game data and add automatic difficulty calculations (without context)
@@ -1005,5 +914,9 @@ module.exports = {
   generateEnhancedGameData,
   processGameDataWithDifficulties,
   saveEnhancedQuizAttempt,
+  generateNormalQuizData,
+  generateTrueFalseData,
+  generateWordWeaverData,
+  generateConnectionsData,
   GAME_CONFIGS,
 }

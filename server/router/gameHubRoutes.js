@@ -10,6 +10,7 @@ const {
   getGameSummary,
   getGameReport,
   checkGameCompletion,
+  regenerateSingleGame,
 } = require('../controllers/gameHub')
 const { Authenticate } = require('../middleware/authenticate')
 
@@ -37,5 +38,10 @@ router.route('/report/:articleId').get(Authenticate, getGameReport)
 router
   .route('/completion/:articleId/:userId')
   .get(Authenticate, checkGameCompletion)
+
+// regenerate game data for an article
+router
+  .route('/regenerate/:articleId/:gameType')
+  .post(Authenticate, regenerateSingleGame)
 
 module.exports = router

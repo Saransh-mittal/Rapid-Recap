@@ -7,10 +7,20 @@ const asyncHandler = require('express-async-handler')
 const {
   generateEnhancedGameData,
   processGameDataWithDifficulties,
+  generateNormalQuizData,
+  generateTrueFalseData,
+  generateWordWeaverData,
+  generateConnectionsData,
   GAME_CONFIGS,
 } = require('../utils/enhancedQuiz.utils')
 const mongoose = require('mongoose')
 const globalEmitter = require('../eventEmitter')
+const {
+  generateHindiWordWeaverUnits,
+  containsHindi,
+  validateHindiWordAnswer,
+  getHindiDisplayLength,
+} = require('../utils/hindiText.utils')
 
 // @desc   Get game data for an article
 // @route  GET /api/gamehub/data/:articleId/:language
@@ -203,113 +213,171 @@ const startGameSession = asyncHandler(async (req, res) => {
         break
 
       case 'word_weaver':
-        // UPDATED: Generate shuffled letters WITHOUT context handling
         resultGameSession.questions = gameSession.questions.map((q, index) => {
-          let shuffledLetters = []
+          let shuffledUnits = []
           let wordLength = 6 // default fallback
+          let isHindiWord = false
 
-          // Generate shuffled letters from the answer (we have access to it here)
+          // Generate shuffled units from the answer
           if (q.answer && typeof q.answer === 'string') {
-            const cleanWord = q.answer.replace(/\s+/g, '').toUpperCase()
-            const wordLetters = cleanWord.split('')
+            const cleanAnswer = q.answer.replace(/\s+/g, '').trim()
+            isHindiWord = containsHindi(cleanAnswer)
 
-            // Calculate correct word length
-            wordLength = cleanWord.length
+            if (isHindiWord) {
+              // Handle Hindi words using proper segmentation with EXTRA UNITS for confusion
+              try {
+                const hindiData = generateHindiWordWeaverUnits(cleanAnswer, {
+                  addExtraUnits: true, // CHANGED: Enable extra units for Hindi
+                  extraUnitsCount: 3, // CHANGED: Add 3 extra confusing units
+                  language: 'hi',
+                })
 
-            // Add extra letters based on word length
-            const extraLetters = [
-              'K',
-              'V',
-              'X',
-              'Z',
-              'Q',
-              'J',
-              'W',
-              'Y',
-              'H',
-              'B',
-              'C',
-              'P',
-            ]
-            const availableExtraLetters = extraLetters.filter(
-              letter => !wordLetters.includes(letter),
-            )
+                shuffledUnits = hindiData.shuffledUnits
+                wordLength = hindiData.wordLength
 
-            const selectedExtraLetters = []
-            let extraCount = 0
-
-            // Add the determined number of extra letters
-            for (let i = 0; i < extraCount; i++) {
-              if (availableExtraLetters.length > 0) {
-                const randomIndex = Math.floor(
-                  Math.random() * availableExtraLetters.length,
+                console.log(
+                  `Generated Hindi word weaver units for question ${
+                    index + 1
+                  }:`,
+                  {
+                    answer: cleanAnswer,
+                    correctUnits: hindiData.correctUnits,
+                    wordLength: hindiData.wordLength,
+                    shuffledUnits: hindiData.shuffledUnits,
+                    totalUnitsCount: hindiData.totalUnitsCount,
+                    extraUnitsAdded: hindiData.extraUnitsAdded,
+                    isHindi: true,
+                  },
                 )
-                const selectedLetter = availableExtraLetters.splice(
-                  randomIndex,
-                  1,
-                )[0]
-                selectedExtraLetters.push(selectedLetter)
+              } catch (error) {
+                console.error(
+                  `Error generating Hindi units for question ${index + 1}:`,
+                  error.message,
+                )
+                // Fallback to character-based approach for Hindi
+                wordLength = cleanAnswer.length
+                shuffledUnits = cleanAnswer
+                  .split('')
+                  .sort(() => Math.random() - 0.5)
               }
+            } else {
+              // Handle English words using existing character-based logic
+              const cleanWord = cleanAnswer.toUpperCase()
+              const wordLetters = cleanWord.split('')
+              wordLength = cleanWord.length
+
+              // Add extra letters for English (existing logic)
+              const extraLetters = [
+                'K',
+                'V',
+                'X',
+                'Z',
+                'Q',
+                'J',
+                'W',
+                'Y',
+                'H',
+                'B',
+                'C',
+                'P',
+              ]
+              const availableExtraLetters = extraLetters.filter(
+                letter => !wordLetters.includes(letter),
+              )
+
+              const selectedExtraLetters = []
+              let extraCount = 0 // No extra letters for now, matching existing logic
+
+              for (let i = 0; i < extraCount; i++) {
+                if (availableExtraLetters.length > 0) {
+                  const randomIndex = Math.floor(
+                    Math.random() * availableExtraLetters.length,
+                  )
+                  const selectedLetter = availableExtraLetters.splice(
+                    randomIndex,
+                    1,
+                  )[0]
+                  selectedExtraLetters.push(selectedLetter)
+                }
+              }
+
+              // Combine word letters with extra letters and shuffle
+              const allLetters = [...wordLetters, ...selectedExtraLetters]
+              shuffledUnits = allLetters.sort(() => Math.random() - 0.5)
+
+              console.log(
+                `Generated English word weaver letters for question ${
+                  index + 1
+                }:`,
+                {
+                  answer: cleanWord,
+                  wordLength: wordLength,
+                  wordLetters: wordLetters,
+                  extraLettersCount: selectedExtraLetters.length,
+                  shuffledUnits: shuffledUnits,
+                  totalCount: shuffledUnits.length,
+                  isHindi: false,
+                },
+              )
             }
-
-            // Combine word letters with extra letters and shuffle
-            const allLetters = [...wordLetters, ...selectedExtraLetters]
-            shuffledLetters = allLetters.sort(() => Math.random() - 0.5)
-
-            console.log(
-              `Generated shuffled letters for question ${index + 1}:`,
-              {
-                answer: cleanWord,
-                correctWordLength: wordLength,
-                wordLetters: wordLetters,
-                extraLettersCount: selectedExtraLetters.length,
-                extraLetters: selectedExtraLetters,
-                shuffledLetters: shuffledLetters,
-                totalCount: shuffledLetters.length,
-                rule: 'No extra letters',
-              },
-            )
           } else {
-            // Emergency fallback if no answer
+            // Emergency fallback
             console.warn(
               `No answer found for word weaver question ${
                 index + 1
-              }, using fallback letters`,
+              }, using fallback`,
             )
-            wordLength = q.wordLength || 6 // use stored length or default
-            const fallbackLetters = [
-              'A',
-              'E',
-              'I',
-              'O',
-              'U',
-              'R',
-              'T',
-              'N',
-              'S',
-              'L',
-              'C',
-              'D',
-              'M',
-              'P',
-            ]
+            wordLength = q.wordLength || 6
 
-            // Apply same logic for fallback
-            let fallbackExtraCount = 0
-
-            shuffledLetters = fallbackLetters
-              .slice(0, Math.max(wordLength, wordLength + fallbackExtraCount))
-              .sort(() => Math.random() - 0.5)
+            if (isHindiWord) {
+              // Hindi fallback
+              const fallbackHindiUnits = [
+                'क',
+                'र',
+                'त',
+                'म',
+                'न',
+                'ल',
+                'स',
+                'द',
+                'प',
+                'व',
+              ]
+              shuffledUnits = fallbackHindiUnits
+                .slice(0, Math.max(wordLength, 6))
+                .sort(() => Math.random() - 0.5)
+            } else {
+              // English fallback
+              const fallbackLetters = [
+                'A',
+                'E',
+                'I',
+                'O',
+                'U',
+                'R',
+                'T',
+                'N',
+                'S',
+                'L',
+                'C',
+                'D',
+                'M',
+                'P',
+              ]
+              shuffledUnits = fallbackLetters
+                .slice(0, Math.max(wordLength, 6))
+                .sort(() => Math.random() - 0.5)
+            }
           }
 
           return {
-            // UPDATED: Remove context field
             blank: q.blank,
-            shuffledLetters: shuffledLetters, // Freshly generated letters with new logic
-            wordLength: wordLength, // Correct word length
+            shuffledUnits: shuffledUnits, // Updated field name to be more generic
+            wordLength: wordLength,
             questionId: q.questionId,
             _id: q._id,
             difficulty: q.difficulty,
+            isHindiWord: isHindiWord, // Add language info for frontend
             // SECURE: answer field NOT sent to frontend
           }
         })
@@ -674,23 +742,40 @@ const submitGameAttempt = asyncHandler(async (req, res) => {
           let isCorrect = false
 
           if (userWord && correctAnswer && typeof userWord === 'string') {
-            // Case-insensitive comparison, remove spaces and special characters
-            const normalizedUserWord = userWord
-              .replace(/[^A-Za-z]/g, '')
-              .toUpperCase()
-            const normalizedCorrectAnswer = correctAnswer
-              .replace(/[^A-Za-z]/g, '')
-              .toUpperCase()
-            isCorrect = normalizedUserWord === normalizedCorrectAnswer
+            // Check if this is a Hindi word
+            const isHindiWord = containsHindi(correctAnswer)
 
-            console.log('Word validation:', {
-              questionIndex: index,
-              userWord,
-              normalizedUserWord,
-              correctAnswer,
-              normalizedCorrectAnswer,
-              isCorrect,
-            })
+            if (isHindiWord) {
+              // Use Hindi-specific validation
+              isCorrect = validateHindiWordAnswer(userWord, correctAnswer)
+
+              console.log('Hindi word validation:', {
+                questionIndex: index,
+                userWord,
+                correctAnswer,
+                isCorrect,
+                isHindi: true,
+              })
+            } else {
+              // Use existing English validation (case-insensitive comparison)
+              const normalizedUserWord = userWord
+                .replace(/[^A-Za-z]/g, '')
+                .toUpperCase()
+              const normalizedCorrectAnswer = correctAnswer
+                .replace(/[^A-Za-z]/g, '')
+                .toUpperCase()
+              isCorrect = normalizedUserWord === normalizedCorrectAnswer
+
+              console.log('English word validation:', {
+                questionIndex: index,
+                userWord,
+                normalizedUserWord,
+                correctAnswer,
+                normalizedCorrectAnswer,
+                isCorrect,
+                isHindi: false,
+              })
+            }
           } else {
             console.log('Skipping validation (empty answer):', {
               questionIndex: index,
@@ -706,12 +791,14 @@ const submitGameAttempt = asyncHandler(async (req, res) => {
             correctAnswer,
             isCorrect,
             isEmpty: !userWord,
+            language: containsHindi(correctAnswer) ? 'Hindi' : 'English',
           })
 
           return {
             questionId: question.questionId || question._id,
             userWord: userWord,
             isCorrect: isCorrect,
+            language: containsHindi(correctAnswer) ? 'hi' : 'en', // Add language info
             // No skip field needed - empty answers are just worth 0 points
           }
         })
@@ -1383,6 +1470,89 @@ const getGameReport = asyncHandler(async (req, res) => {
   }
 })
 
+// @desc   Regenerate data for a single failed game type
+// @route  POST /api/gamehub/regenerate/:articleId/:gameType
+// @access Private
+const regenerateSingleGame = asyncHandler(async (req, res) => {
+  const { articleId, gameType } = req.params
+  const userId = req.user._id
+  console.log(
+    `Regenerating game data for article ${articleId}, game type: ${gameType}`,
+  )
+
+  const User = require('../model/userSchema')
+  const user = await User.findById(userId).select('userLanguage')
+  const userLanguage = user?.userLanguage || 'en'
+
+  const article = await Article.findById(articleId)
+  if (!article) {
+    throw new Error('Article not found')
+  }
+
+  const gameData = await GameData.findOne({
+    article: articleId,
+    language: userLanguage,
+  })
+  if (!gameData) {
+    throw new Error(`Game data for article in ${userLanguage} not found.`)
+  }
+
+  const { title, author, mainText, hindiTitle, hindiAuthor, hindiMainText } =
+    article
+  const promptData = {
+    title: userLanguage === 'en' ? title : hindiTitle,
+    author: userLanguage === 'en' ? author : hindiAuthor,
+    mainText: userLanguage === 'en' ? mainText : hindiMainText,
+    language: userLanguage,
+  }
+
+  let newGameContent
+  try {
+    console.log(
+      `Attempting to regenerate [${gameType}] for article ${articleId}...`,
+    )
+    switch (gameType) {
+      case 'normal_quiz':
+        newGameContent = await generateNormalQuizData(promptData)
+        gameData.normal_quiz = newGameContent
+        break
+      case 'true_false':
+        newGameContent = await generateTrueFalseData(promptData)
+        gameData.true_false = newGameContent
+        break
+      case 'word_weaver':
+        newGameContent = await generateWordWeaverData(promptData)
+        // Add wordLength after generation
+        newGameContent.questions = newGameContent.questions.map(q => ({
+          ...q,
+          wordLength: q.answer.replace(/\s+/g, '').length,
+        }))
+        gameData.word_weaver = newGameContent
+        break
+      case 'connections':
+        newGameContent = await generateConnectionsData(promptData)
+        gameData.connections = newGameContent
+        break
+      default:
+        throw new Error('Invalid game type for regeneration.')
+    }
+
+    await gameData.save()
+    console.log(`✓ Successfully regenerated and saved [${gameType}].`)
+
+    res.status(200).json({
+      message: `${gameType} data regenerated successfully!`,
+      gameData, // Send back the full, updated gameData
+    })
+  } catch (error) {
+    console.error(`Error regenerating ${gameType}:`, error)
+    res.status(500).json({
+      error: `Failed to regenerate data for ${gameType}. Please try again.`,
+      details: error.message,
+    })
+  }
+})
+
 module.exports = {
   getGameData,
   createGameSession,
@@ -1391,4 +1561,5 @@ module.exports = {
   getGameSummary,
   checkGameCompletion,
   getGameReport,
+  regenerateSingleGame,
 }

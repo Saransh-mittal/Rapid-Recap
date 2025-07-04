@@ -374,12 +374,12 @@ const ConnectionsInterface = ({
       if (isConnected) {
         return {
           ...baseStyle,
-          background: 'linear-gradient(45deg, #DC2626, #991B1B)',
-          borderColor: '#FCA5A5',
+          background: 'linear-gradient(45deg, #3B82F6, #1E40AF)',
+          borderColor: '#93C5FD',
           color: 'white',
           opacity: 0.9,
           cursor: 'not-allowed',
-          boxShadow: '0 0 15px rgba(220, 38, 38, 0.4)',
+          boxShadow: '0 0 15px rgba(59, 130, 246, 0.4)',
         }
       }
 

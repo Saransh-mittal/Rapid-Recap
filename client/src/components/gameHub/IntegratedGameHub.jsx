@@ -15,6 +15,7 @@ import {
   Crown,
   Gem,
   Target,
+  RefreshCw,
 } from 'lucide-react'
 import {
   Box,
@@ -29,6 +30,7 @@ import {
   Grid,
   GridItem,
   Container,
+  Spinner,
 } from '@chakra-ui/react'
 import { motion, AnimatePresence } from 'framer-motion'
 import { useParams, useNavigate } from 'react-router-dom'
@@ -344,8 +346,22 @@ const GamesCompletedView = ({
 }
 
 // Premium Game Menu Component - Optimized
-const GameMenu = ({ onSelectGame, gameData, articleId }) => {
+const GameMenu = ({ onSelectGame, gameData, articleId, onRegenerate }) => {
   const { t } = useTranslation('GameHub')
+
+  const [regenerating, setRegenerating] = useState({
+    normal_quiz: false,
+    true_false: false,
+    word_weaver: false,
+    connections: false,
+  })
+
+  const handleRegenerate = async (e, gameType) => {
+    e.stopPropagation() // Prevent card click
+    setRegenerating(prev => ({ ...prev, [gameType]: true }))
+    await onRegenerate(gameType)
+    setRegenerating(prev => ({ ...prev, [gameType]: false }))
+  }
 
   const games = [
     {
@@ -358,7 +374,7 @@ const GameMenu = ({ onSelectGame, gameData, articleId }) => {
       difficulty: t('difficulty.balanced'),
       time: '50s',
       emoji: '🧠',
-      available: gameData?.normal_quiz?.questions?.length >= 3,
+      available: gameData?.normal_quiz?.questions?.length === 5,
     },
     {
       id: 'true_false',
@@ -370,7 +386,7 @@ const GameMenu = ({ onSelectGame, gameData, articleId }) => {
       difficulty: t('difficulty.swift'),
       time: '35s',
       emoji: '⚡',
-      available: gameData?.true_false?.statements?.length >= 5,
+      available: gameData?.true_false?.statements?.length === 7,
     },
     {
       id: 'word_weaver',
@@ -382,7 +398,7 @@ const GameMenu = ({ onSelectGame, gameData, articleId }) => {
       difficulty: t('difficulty.creative'),
       time: '100s',
       emoji: '🔤',
-      available: gameData?.word_weaver?.questions?.length >= 3,
+      available: gameData?.word_weaver?.questions?.length === 5,
     },
     {
       id: 'connections',
@@ -394,7 +410,9 @@ const GameMenu = ({ onSelectGame, gameData, articleId }) => {
       difficulty: t('difficulty.strategic'),
       time: '72s',
       emoji: '🔗',
-      available: gameData?.connections?.concepts?.length >= 8,
+      available:
+        gameData?.connections?.concepts?.length === 8 &&
+        gameData?.connections?.validConnections?.length === 4,
     },
   ]
 
@@ -541,6 +559,7 @@ const GameMenu = ({ onSelectGame, gameData, articleId }) => {
             {games.map((game, index) => {
               const Icon = game.icon
               const isDisabled = !game.available
+              const isRegenInProgress = regenerating[game.id]
 
               return (
                 <MotionBox
@@ -549,39 +568,44 @@ const GameMenu = ({ onSelectGame, gameData, articleId }) => {
                   animate={{ opacity: 1, y: 0 }}
                   transition={{ duration: 0.4, delay: index * 0.1 }}
                   whileHover={
-                    isDisabled
+                    isDisabled || isRegenInProgress
                       ? {}
-                      : {
-                          scale: 1.02,
-                          y: -5,
-                        }
+                      : { scale: 1.02, y: -5 }
                   }
-                  whileTap={isDisabled ? {} : { scale: 0.98 }}
-                  onClick={isDisabled ? undefined : () => onSelectGame(game.id)}
-                  cursor={isDisabled ? 'not-allowed' : 'pointer'}
+                  whileTap={
+                    isDisabled || isRegenInProgress ? {} : { scale: 0.98 }
+                  }
+                  onClick={
+                    isDisabled || isRegenInProgress
+                      ? undefined
+                      : () => onSelectGame(game.id)
+                  }
+                  cursor={
+                    isDisabled || isRegenInProgress ? 'default' : 'pointer'
+                  }
                 >
                   <Box
                     bg={
                       isDisabled
-                        ? 'rgba(75, 85, 99, 0.3)'
+                        ? 'rgba(75, 85, 99, 0.2)'
                         : 'rgba(255, 255, 255, 0.05)'
                     }
                     backdropFilter="blur(20px)"
                     border="1px solid"
                     borderColor={
                       isDisabled
-                        ? 'rgba(75, 85, 99, 0.5)'
+                        ? 'rgba(75, 85, 99, 0.4)'
                         : 'rgba(255, 255, 255, 0.1)'
                     }
                     borderRadius="2xl"
                     p={{ base: 4, md: 6 }}
                     position="relative"
                     overflow="hidden"
-                    opacity={isDisabled ? 0.6 : 1}
+                    // REMOVED: opacity={isDisabled ? 0.6 : 1} - this was making everything faded
                     height={{ base: '200px', md: '220px' }}
                     boxShadow={
                       isDisabled
-                        ? 'none'
+                        ? '0 10px 25px -5px rgba(239, 68, 68, 0.2)' // Red shadow for disabled
                         : '0 20px 40px -12px rgba(0, 0, 0, 0.25)'
                     }
                     _hover={
@@ -594,7 +618,7 @@ const GameMenu = ({ onSelectGame, gameData, articleId }) => {
                     }
                     transition="all 0.3s ease"
                   >
-                    {/* Status Indicator */}
+                    {/* Enhanced Status Indicator */}
                     <Box
                       position="absolute"
                       top={3}
@@ -606,13 +630,22 @@ const GameMenu = ({ onSelectGame, gameData, articleId }) => {
                       fontSize="2xs"
                       fontWeight="bold"
                       color="white"
+                      boxShadow={
+                        isDisabled
+                          ? '0 0 10px rgba(239, 68, 68, 0.5)'
+                          : '0 0 10px rgba(34, 197, 94, 0.5)'
+                      }
                     >
                       {isDisabled ? t('status.locked') : t('status.ready')}
                     </Box>
 
                     <VStack spacing={3} align="start" height="100%">
-                      {/* Header */}
-                      <HStack spacing={3} w="100%">
+                      {/* Header - Apply fading to content when disabled */}
+                      <HStack
+                        spacing={3}
+                        w="100%"
+                        opacity={isDisabled ? 0.5 : 1}
+                      >
                         <Box
                           bg={isDisabled ? 'gray.600' : game.colors.primary}
                           borderRadius="xl"
@@ -667,19 +700,23 @@ const GameMenu = ({ onSelectGame, gameData, articleId }) => {
                         </VStack>
                       </HStack>
 
-                      {/* Description */}
+                      {/* Description - Apply fading when disabled */}
                       <Text
                         fontSize="sm"
                         color={isDisabled ? 'gray.500' : 'gray.300'}
                         lineHeight="1.5"
                         flex={1}
+                        opacity={isDisabled ? 0.5 : 1}
                       >
-                        {game.description}
+                        {isDisabled
+                          ? t('errors.insufficientData')
+                          : game.description}
                       </Text>
 
-                      {/* Footer */}
+                      {/* Footer - Different treatment for disabled/enabled */}
                       <HStack justify="space-between" w="100%" mt="auto">
-                        <HStack spacing={1}>
+                        {/* Time indicator - faded when disabled */}
+                        <HStack spacing={1} opacity={isDisabled ? 0.4 : 1}>
                           <Clock
                             size={14}
                             color={isDisabled ? '#6B7280' : game.colors.primary}
@@ -692,27 +729,74 @@ const GameMenu = ({ onSelectGame, gameData, articleId }) => {
                           </Text>
                         </HStack>
 
-                        <HStack
-                          spacing={1}
-                          color={isDisabled ? 'gray.600' : game.colors.primary}
-                        >
-                          <Play size={16} />
-                          <Text fontSize="sm" fontWeight="bold">
-                            {isDisabled
-                              ? t('status.locked')
-                              : t('navigation.startGame')}
-                          </Text>
-                        </HStack>
+                        {/* Action Button - HIGHLIGHTED when disabled */}
+                        {isDisabled ? (
+                          <Button
+                            size="sm"
+                            leftIcon={
+                              isRegenInProgress ? (
+                                <Spinner size="xs" />
+                              ) : (
+                                <RefreshCw size={14} />
+                              )
+                            }
+                            onClick={e => handleRegenerate(e, game.id)}
+                            // ENHANCED STYLING FOR PROMINENCE
+                            bg="linear-gradient(135deg, #F59E0B, #EAB308)"
+                            color="white"
+                            borderRadius="full"
+                            isLoading={isRegenInProgress}
+                            loadingText={t('actions.generating')}
+                            _hover={{
+                              bg: 'linear-gradient(135deg, #EAB308, #F59E0B)',
+                              transform: 'translateY(-2px)',
+                              boxShadow: '0 8px 25px rgba(245, 158, 11, 0.4)',
+                            }}
+                            _active={{
+                              transform: 'translateY(0px)',
+                            }}
+                            fontWeight="bold"
+                            fontSize="sm"
+                            px={4}
+                            // GLOWING EFFECT
+                            boxShadow="0 0 20px rgba(245, 158, 11, 0.3)"
+                            border="1px solid"
+                            borderColor="yellow.400"
+                            transition="all 0.2s ease"
+                            // PULSING ANIMATION
+                            animation={
+                              !isRegenInProgress ? 'pulse 2s infinite' : 'none'
+                            }
+                            sx={{
+                              '@keyframes pulse': {
+                                '0%, 100%': {
+                                  boxShadow: '0 0 20px rgba(245, 158, 11, 0.3)',
+                                },
+                                '50%': {
+                                  boxShadow: '0 0 30px rgba(245, 158, 11, 0.6)',
+                                },
+                              },
+                            }}
+                          >
+                            {t('actions.retryGeneration')}
+                          </Button>
+                        ) : (
+                          <HStack spacing={1} color={game.colors.primary}>
+                            <Play size={16} />
+                            <Text fontSize="sm" fontWeight="bold">
+                              {t('navigation.startGame')}
+                            </Text>
+                          </HStack>
+                        )}
                       </HStack>
 
-                      {/* Disabled Overlay */}
+                      {/* Enhanced Disabled Overlay - More subtle */}
                       {isDisabled && (
                         <Box
                           position="absolute"
-                          top="50%"
-                          left="50%"
-                          transform="translate(-50%, -50%)"
-                          bg="rgba(239, 68, 68, 0.9)"
+                          top="20px"
+                          left="20px"
+                          bg="rgba(239, 68, 68, 0.8)"
                           color="white"
                           px={3}
                           py={1}
@@ -720,8 +804,9 @@ const GameMenu = ({ onSelectGame, gameData, articleId }) => {
                           fontSize="xs"
                           fontWeight="bold"
                           backdropFilter="blur(10px)"
+                          boxShadow="0 4px 15px rgba(239, 68, 68, 0.3)"
                         >
-                          🔒 {t('errors.insufficientData')}
+                          🔒 {t('errors.needsGeneration')}
                         </Box>
                       )}
                     </VStack>
@@ -798,6 +883,49 @@ const IntegratedGameHub = () => {
       })
     } finally {
       setLoading(false)
+    }
+  }
+
+  const handleRegenerateGame = async gameType => {
+    toast({
+      title: t('toasts.generationStarted.title'),
+      description: t('toasts.generationStarted.description', {
+        game: t(`gameTypes.${gameType}`),
+      }),
+      status: 'info',
+      duration: 3000,
+      isClosable: true,
+      position: 'top',
+    })
+
+    try {
+      const response = await axios.post(
+        `/api/gamehub/regenerate/${articleId}/${gameType}`,
+      )
+      // Update the state with the complete, new game data object
+      setGameData(response.data.gameData)
+      toast({
+        title: t('toasts.generationSuccess.title'),
+        description: t('toasts.generationSuccess.description', {
+          game: t(`gameTypes.${gameType}`),
+        }),
+        status: 'success',
+        duration: 5000,
+        isClosable: true,
+        position: 'top',
+      })
+    } catch (error) {
+      console.error(`Error regenerating ${gameType}:`, error)
+      toast({
+        title: t('toasts.generationFailed.title'),
+        description:
+          error.response?.data?.error ||
+          t('toasts.generationFailed.description'),
+        status: 'error',
+        duration: 5000,
+        isClosable: true,
+        position: 'top',
+      })
     }
   }
 
@@ -936,6 +1064,7 @@ const IntegratedGameHub = () => {
           onSelectGame={handleSelectGame}
           gameData={gameData}
           articleId={articleId}
+          onRegenerate={handleRegenerateGame} // <-- Pass the new handler
         />
       )}
 

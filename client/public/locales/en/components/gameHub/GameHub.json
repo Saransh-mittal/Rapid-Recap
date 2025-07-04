@@ -237,7 +237,8 @@
     "summaryNotAvailable": "Detailed summary is not available for this report.",
     "noSummaryAvailable": "No Summary Available",
     "noSummaryData": "We couldn't find any summary data for this session.",
-    "insufficientData": "Insufficient Data"
+    "insufficientData": "Insufficient Data",
+    "needsGeneration": "Needs Generation"
   },
   "success": {
     "answersSubmitted": "Your answers have been automatically submitted.",
@@ -266,7 +267,23 @@
     "clearAll": "Clear All",
     "viewLatestReport": "📊 View Latest Game Report",
     "reviewPerformance": "Review your most recent performance & detailed analysis",
-    "viewDetailedReport": "📊 View Detailed Report"
+    "viewDetailedReport": "📊 View Detailed Report",
+    "retryGeneration": "Retry Generation",
+    "generating": "Generating..."
+  },
+  "toasts": {
+    "generationStarted": {
+      "title": "Regeneration Started",
+      "description": "AI is now regenerating the {{game}} challenges for you."
+    },
+    "generationSuccess": {
+      "title": "Generation Complete!",
+      "description": "{{game}} is now ready to play."
+    },
+    "generationFailed": {
+      "title": "Generation Failed",
+      "description": "We couldn't regenerate the game. Please try again."
+    }
   },
   "alerts": {
     "loginRequired": "Login Required",

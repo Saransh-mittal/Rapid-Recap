@@ -237,7 +237,8 @@
     "summaryNotAvailable": "इस रिपोर्ट के लिए विस्तृत सारांश उपलब्ध नहीं है।",
     "noSummaryAvailable": "कोई सारांश उपलब्ध नहीं",
     "noSummaryData": "हमें इस सत्र के लिए कोई सारांश डेटा नहीं मिला।",
-    "insufficientData": "अपर्याप्त डेटा"
+    "insufficientData": "अपर्याप्त डेटा",
+    "needsGeneration": "निर्माण आवश्यक"
   },
   "success": {
     "answersSubmitted": "आपके उत्तर स्वचालित रूप से जमा कर दिए गए हैं।",
@@ -266,7 +267,23 @@
     "clearAll": "सभी साफ़ करें",
     "viewLatestReport": "📊 नवीनतम गेम रिपोर्ट देखें",
     "reviewPerformance": "अपने सबसे हाल के प्रदर्शन और विस्तृत विश्लेषण की समीक्षा करें",
-    "viewDetailedReport": "📊 विस्तृत रिपोर्ट देखें"
+    "viewDetailedReport": "📊 विस्तृत रिपोर्ट देखें",
+    "retryGeneration": "पुनः उत्पन्न करें",
+    "generating": "उत्पन्न हो रहा है..."
+  },
+  "toasts": {
+    "generationStarted": {
+      "title": "पुनर्जनन शुरू हुआ",
+      "description": "AI अब आपके लिए {{game}} की चुनौतियाँ पुनः उत्पन्न कर रहा है।"
+    },
+    "generationSuccess": {
+      "title": "उत्पादन पूरा!",
+      "description": "{{game}} अब खेलने के लिए तैयार है।"
+    },
+    "generationFailed": {
+      "title": "उत्पादन विफल",
+      "description": "हम खेल को पुनः उत्पन्न नहीं कर सके। कृपया पुनः प्रयास करें।"
+    }
   },
   "alerts": {
     "loginRequired": "लॉगिन आवश्यक",

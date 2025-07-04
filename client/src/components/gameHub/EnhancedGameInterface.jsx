@@ -443,7 +443,12 @@ const EnhancedGameInterface = () => {
 
   // Initialize game on component mount
   useEffect(() => {
+    // This effect runs when the component mounts or when articleId/gameType changes.
     if (articleId && gameType && !sessionId) {
+      // FIX: Reset the game session state in Redux before starting a new one.
+      // This ensures that state from a previous game (like question index) is cleared.
+      dispatch(resetGameSession())
+
       dispatch(setCurrentGameType(gameType))
       dispatch(setGameState('loading'))
       initializeGame()
