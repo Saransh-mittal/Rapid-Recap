@@ -1,9 +1,9 @@
 // routes/quickClashRoutes.js
 const express = require('express')
 const { Authenticate } = require('../middleware/authenticate')
-const {
-  checkQuickClashAuthorization,
-} = require('../middleware/quickClashAuthMiddleware')
+// const {
+//   checkQuickClashAuthorization,
+// } = require('../middleware/quickClashAuthMiddleware')
 const {
   createNewChallenge,
   handleAcceptChallenge,

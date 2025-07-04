@@ -6,6 +6,7 @@ const express = require('express')
 const userRoutes = require('./router/userRoutes')
 const articleRoutes = require('./router/articleRoutes')
 const quizRoutes = require('./router/quizRoutes')
+const gameHubRoutes = require('./router/gameHubRoutes')
 const subscriptionRoutes = require('./router/subscriptionRoutes')
 const mailRoutes = require('./router/mailRoutes')
 const timeSpentRoutes = require('./router/timeSpentRoutes')
@@ -321,6 +322,9 @@ require('./scripts/script_prepare_article_data')()
 const generateSitemap = require('./generate-sitemap')
 generateSitemap()
 const generateGoogleNewsSitemap = require('./google-sitemap-generator')
+const {
+  languageDetectionMiddleware,
+} = require('./utils/languageDetection.utils')
 generateGoogleNewsSitemap()
 //
 // Load scheduler
@@ -343,11 +347,13 @@ async function initializeServer() {
     // MODIFY: API Routes setup
     const apiRouter = express.Router()
     app.use(configureSession())
+    app.use('/api', languageDetectionMiddleware)
     app.use(generateCsrfToken)
     apiRouter.use(validateCsrfToken)
     apiRouter.use('/user', userRoutes)
     apiRouter.use('/articles', articleRoutes)
     apiRouter.use('/quiz', quizRoutes)
+    apiRouter.use('/gamehub', gameHubRoutes)
     apiRouter.use('/subs', subscriptionRoutes)
     apiRouter.use('/mail', mailRoutes)
     apiRouter.use('/timeSpent', timeSpentRoutes)
