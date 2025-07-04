@@ -32,7 +32,7 @@ const WordWeaverInterface = ({
   // Refs to prevent unnecessary re-renders and dependency issues
   const lastQuestionIndexRef = useRef(null)
   const isUpdatingAnswerRef = useRef(false)
-  const { t } = useTranslation()
+  const { t } = useTranslation('GameHub')
   const toast = useToast()
 
   // Extract question data with fallbacks - UPDATED: Remove context
@@ -82,9 +82,9 @@ const WordWeaverInterface = ({
   }
 
   const getDifficultyLabel = difficulty => {
-    if (difficulty < 0.3) return 'Easy'
-    if (difficulty < 0.6) return 'Medium'
-    return 'Hard'
+    if (difficulty < 0.3) return t('difficulty.easy')
+    if (difficulty < 0.6) return t('difficulty.medium')
+    return t('difficulty.hard')
   }
 
   // Fallback letter generation
@@ -283,7 +283,7 @@ const WordWeaverInterface = ({
         justifyContent="center"
       >
         <Text color="gray.400" fontSize="md">
-          Preparing Word Architect...
+          {t('loading.preparingWordArchitect')}
         </Text>
       </MotionBox>
     )
@@ -308,7 +308,7 @@ const WordWeaverInterface = ({
             borderRadius="full"
             fontSize="xs"
           >
-            Word Puzzle {questionIndex + 1}/{totalQuestions}
+            {t('gameInterface.wordPuzzle')} {questionIndex + 1}/{totalQuestions}
           </Badge>
 
           <Badge
@@ -330,11 +330,9 @@ const WordWeaverInterface = ({
             borderRadius="full"
             fontSize="xs"
           >
-            {selectedLetters.length}/{wordLength} letters
+            {selectedLetters.length}/{wordLength} {t('stats.letters')}
           </Badge>
         </HStack>
-
-        {/* UPDATED: Remove context section - the question blank is now self-explanatory */}
 
         {/* Fill-in-the-blank Question */}
         <Box
@@ -358,10 +356,10 @@ const WordWeaverInterface = ({
         <VStack spacing={3}>
           <HStack spacing={2} justify="center">
             <Text fontSize="sm" color="gray.400">
-              Your Word:
+              {t('gameInterface.yourWord')}:
             </Text>
             <Text fontSize="lg" color="emerald.400" fontWeight="bold">
-              {currentAnswer || '[BUILDING...]'}
+              {currentAnswer || t('gameInterface.building')}
             </Text>
           </HStack>
 
@@ -379,7 +377,7 @@ const WordWeaverInterface = ({
           >
             {selectedLetters.length === 0 ? (
               <Text color="gray.500" fontSize="sm" textAlign="center">
-                Click letters below to build your word
+                {t('gameInterface.clickLettersInstruction')}
               </Text>
             ) : (
               <Flex gap={2} flexWrap="wrap" justify="center">
@@ -430,7 +428,7 @@ const WordWeaverInterface = ({
               color="gray.400"
               fontSize="xs"
             >
-              Shuffle
+              {t('actions.shuffle')}
             </Button>
           </HStack>
 
@@ -473,7 +471,7 @@ const WordWeaverInterface = ({
               borderColor="rgba(255, 255, 255, 0.2)"
               fontSize="xs"
             >
-              Clear
+              {t('actions.clear')}
             </Button>
 
             {selectedLetters.length === wordLength && (
@@ -485,13 +483,13 @@ const WordWeaverInterface = ({
                 borderRadius="full"
                 fontSize="xs"
               >
-                ✨ Complete!
+                ✨ {t('status.complete')}!
               </Badge>
             )}
           </HStack>
         </VStack>
 
-        {/* UPDATED: Enhanced instruction text since there's no context */}
+        {/* Status Information */}
         <Box
           bg="rgba(255, 255, 255, 0.05)"
           border="1px solid rgba(255, 255, 255, 0.1)"
@@ -503,7 +501,7 @@ const WordWeaverInterface = ({
             <HStack justify="center" spacing={2}>
               <Target size={16} color="#10B981" />
               <Text color="emerald.400" fontWeight="600" fontSize="sm">
-                Word completed! Ready to submit.
+                {t('gameInterface.wordCompleted')}
               </Text>
             </HStack>
           ) : (
@@ -511,11 +509,11 @@ const WordWeaverInterface = ({
               <HStack justify="center" spacing={2}>
                 <Target size={16} color="#6B7280" />
                 <Text color="gray.400" fontSize="sm">
-                  Complete the sentence by building the missing word
+                  {t('gameInterface.completeSentenceInstruction')}
                 </Text>
               </HStack>
               <Text fontSize="xs" color="gray.500">
-                Click letters to spell the word that fits in the blank
+                {t('gameInterface.clickLettersInstruction')}
               </Text>
             </VStack>
           )}

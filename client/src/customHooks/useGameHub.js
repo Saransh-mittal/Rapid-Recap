@@ -22,9 +22,7 @@ export const useFetchGameData = ({ articleId, language = 'en' }) => {
     setError(null)
 
     try {
-      const response = await axios.get(
-        `/api/gamehub/data/${articleId}/${language}`,
-      )
+      const response = await axios.get(`/api/gamehub/data/${articleId}`)
       setGameData(response.data.gameData)
     } catch (err) {
       console.error('Error fetching game data:', err)

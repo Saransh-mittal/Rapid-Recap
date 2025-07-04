@@ -40,136 +40,6 @@ import { useTranslation } from 'react-i18next'
 const MotionBox = motion(Box)
 
 // Move static data outside component to prevent recreation on every render
-const GAME_INSTRUCTIONS = {
-  normal_quiz: {
-    icon: FileText,
-    title: 'Knowledge Quest',
-    subtitle: 'Multiple Choice Mastery',
-    time: '50 seconds',
-    difficulty: 'Balanced',
-    emoji: '🧠',
-    description:
-      'Navigate through strategic multiple-choice challenges that test your comprehension',
-    colors: {
-      primary: '#EC4899',
-      secondary: '#F472B6',
-      background: 'linear(135deg, #ec4899 0%, #be185d 100%)',
-      light: 'rgba(236, 72, 153, 0.2)',
-      border: 'rgba(236, 72, 153, 0.4)',
-      text: '#F9A8D4',
-    },
-    instructions: [
-      'Answer 5 carefully crafted multiple choice questions',
-      'Each question offers 4 strategic options (A, B, C, D)',
-      'Navigate freely between questions to review answers',
-      'Submit when confident in your responses',
-    ],
-    tips: [
-      'Read each question thoroughly before examining options',
-      'Eliminate obviously incorrect answers first',
-      'Reference article details to verify selections',
-      'Trust your first instinct when confident',
-    ],
-    features: ['Adaptive Difficulty', 'Smart Navigation', 'Instant Validation'],
-  },
-  true_false: {
-    icon: FlipHorizontal2,
-    title: 'Truth Detector',
-    subtitle: 'Lightning Decision Engine',
-    time: '35 seconds',
-    difficulty: 'Swift',
-    emoji: '⚡',
-    description:
-      'Rapid-fire accuracy challenge with binary decisions that test attention to detail',
-    colors: {
-      primary: '#8B5CF6',
-      secondary: '#A78BFA',
-      background: 'linear(135deg, #8b5cf6 0%, #7c3aed 100%)',
-      light: 'rgba(139, 92, 246, 0.2)',
-      border: 'rgba(139, 92, 246, 0.4)',
-      text: '#C4B5FD',
-    },
-    instructions: [
-      'Evaluate 7 precisely crafted statements from the article',
-      'Determine TRUE or FALSE for each statement quickly',
-      'Base decisions solely on article information',
-      'Speed and accuracy both contribute to your score',
-    ],
-    tips: [
-      'Watch for absolute terms like "always," "never," or "all"',
-      'Verify statements against specific article facts',
-      'Be cautious with partially correct statements',
-      'Quick decisions often yield better time bonuses',
-    ],
-    features: ['Speed Bonus', 'Binary Simplicity', 'Fact Verification'],
-  },
-  word_weaver: {
-    icon: Sparkles,
-    title: 'Word Architect',
-    subtitle: 'Letter Puzzle Mastery',
-    time: '100 seconds',
-    difficulty: 'Creative',
-    emoji: '🔤',
-    description:
-      'Construct words from scrambled letters using contextual clues and creative thinking',
-    colors: {
-      primary: '#10B981',
-      secondary: '#34D399',
-      background: 'linear(135deg, #10b981 0%, #059669 100%)',
-      light: 'rgba(16, 185, 129, 0.2)',
-      border: 'rgba(16, 185, 129, 0.4)',
-      text: '#6EE7B7',
-    },
-    instructions: [
-      'Complete 5 fill-in-the-blank puzzles by unscrambling letters',
-      'Click letters to build words that fit the given context',
-      'Use sentence context as your primary guidance tool',
-      'Remove letters by clicking them in your answer area',
-    ],
-    tips: [
-      'Analyze the sentence context for logical word fits',
-      'Think about word length and letter frequency',
-      'Use the shuffle feature to see letters differently',
-      'Consider word variations and common endings',
-    ],
-    features: ['Context Clues', 'Letter Shuffling', 'Progressive Difficulty'],
-  },
-  connections: {
-    icon: Link2,
-    title: 'Mind Mapper',
-    subtitle: 'Concept Relationship Matrix',
-    time: '100 seconds',
-    difficulty: 'Strategic',
-    emoji: '🔗',
-    description:
-      'Create perfect concept pairs by connecting all 8 strategic concepts from the article',
-    colors: {
-      primary: '#F59E0B',
-      secondary: '#FBBF24',
-      background: 'linear(135deg, #f59e0b 0%, #d97706 100%)',
-      light: 'rgba(245, 158, 11, 0.2)',
-      border: 'rgba(245, 158, 11, 0.4)',
-      text: '#FCD34D',
-    },
-    instructions: [
-      'Connect all 8 strategically chosen concepts in perfect pairs',
-      'Click two concepts to create logical connections (4 total)',
-      'Each concept must be used exactly once in the network',
-      'Remove incorrect connections using the red X buttons',
-    ],
-    tips: [
-      'Look for cause-effect relationships in the article',
-      'Consider thematic and categorical connections',
-      'Think about how concepts interact or relate',
-      'All concepts must be paired - no orphaned nodes allowed',
-    ],
-    features: [
-      'Perfect Pairing',
-      'Strategic Thinking',
-      'Complete Network Mapping',
-    ],
-  },
-}
 
 // Memoized animation variants
 const ANIMATION_VARIANTS = {
@@ -304,86 +174,192 @@ const TipsList = memo(({ tips }) => (
   </VStack>
 ))
 
-const RQMScoringSection = memo(() => (
-  <Box
-    bg="linear-gradient(135deg, rgba(255, 215, 0, 0.1), rgba(255, 193, 7, 0.05))"
-    border="1px solid"
-    borderColor="rgba(255, 215, 0, 0.3)"
-    borderRadius="lg"
-    p={3}
-  >
-    <HStack mb={2} spacing={2} justify="center">
-      <Box
-        bg="linear-gradient(45deg, #FFD700, #FFA000)"
-        borderRadius="md"
-        p={1.5}
-      >
-        <Award size={16} color="white" />
-      </Box>
-      <Text fontSize="sm" fontWeight="bold" color="#FCD34D">
-        RQM Scoring System
-      </Text>
-    </HStack>
+const RQMScoringSection = memo(() => {
+  const { t } = useTranslation('GameHub')
 
-    <Grid templateColumns="repeat(3, 1fr)" gap={2}>
-      <VStack spacing={1}>
+  return (
+    <Box
+      bg="linear-gradient(135deg, rgba(255, 215, 0, 0.1), rgba(255, 193, 7, 0.05))"
+      border="1px solid"
+      borderColor="rgba(255, 215, 0, 0.3)"
+      borderRadius="lg"
+      p={3}
+    >
+      <HStack mb={2} spacing={2} justify="center">
         <Box
-          bg="linear-gradient(45deg, #3B82F6, #1E40AF)"
+          bg="linear-gradient(45deg, #FFD700, #FFA000)"
           borderRadius="md"
           p={1.5}
         >
-          <Shield size={14} color="white" />
+          <Award size={16} color="white" />
         </Box>
-        <Text
-          fontSize="2xs"
-          color="#93C5FD"
-          fontWeight="bold"
-          textAlign="center"
-        >
-          ACCURACY
+        <Text fontSize="sm" fontWeight="bold" color="#FCD34D">
+          {t('headers.rqmScoring')}
         </Text>
-      </VStack>
-      <VStack spacing={1}>
-        <Box
-          bg="linear-gradient(45deg, #F59E0B, #D97706)"
-          borderRadius="md"
-          p={1.5}
-        >
-          <Zap size={14} color="white" />
-        </Box>
-        <Text
-          fontSize="2xs"
-          color="#FCD34D"
-          fontWeight="bold"
-          textAlign="center"
-        >
-          SPEED
-        </Text>
-      </VStack>
-      <VStack spacing={1}>
-        <Box
-          bg="linear-gradient(45deg, #EF4444, #DC2626)"
-          borderRadius="md"
-          p={1.5}
-        >
-          <Target size={14} color="white" />
-        </Box>
-        <Text
-          fontSize="2xs"
-          color="#FCA5A5"
-          fontWeight="bold"
-          textAlign="center"
-        >
-          DIFFICULTY
-        </Text>
-      </VStack>
-    </Grid>
-  </Box>
-))
+      </HStack>
+
+      <Grid templateColumns="repeat(3, 1fr)" gap={2}>
+        <VStack spacing={1}>
+          <Box
+            bg="linear-gradient(45deg, #3B82F6, #1E40AF)"
+            borderRadius="md"
+            p={1.5}
+          >
+            <Shield size={14} color="white" />
+          </Box>
+          <Text
+            fontSize="2xs"
+            color="#93C5FD"
+            fontWeight="bold"
+            textAlign="center"
+          >
+            {t('stats.accuracy').toUpperCase()}
+          </Text>
+        </VStack>
+        <VStack spacing={1}>
+          <Box
+            bg="linear-gradient(45deg, #F59E0B, #D97706)"
+            borderRadius="md"
+            p={1.5}
+          >
+            <Zap size={14} color="white" />
+          </Box>
+          <Text
+            fontSize="2xs"
+            color="#FCD34D"
+            fontWeight="bold"
+            textAlign="center"
+          >
+            {t('stats.speed').toUpperCase()}
+          </Text>
+        </VStack>
+        <VStack spacing={1}>
+          <Box
+            bg="linear-gradient(45deg, #EF4444, #DC2626)"
+            borderRadius="md"
+            p={1.5}
+          >
+            <Target size={14} color="white" />
+          </Box>
+          <Text
+            fontSize="2xs"
+            color="#FCA5A5"
+            fontWeight="bold"
+            textAlign="center"
+          >
+            DIFFICULTY
+          </Text>
+        </VStack>
+      </Grid>
+    </Box>
+  )
+})
 
 const GameInstructionsModal = memo(
   ({ isOpen, onClose, gameType, onStartGame }) => {
-    const { t } = useTranslation()
+    const { t } = useTranslation('GameHub')
+
+    const GAME_INSTRUCTIONS = useMemo(
+      () => ({
+        normal_quiz: {
+          icon: FileText,
+          title: t('gameTypes.normal_quiz'),
+          subtitle: t('gameSubtitles.normal_quiz'),
+          time: '50 seconds',
+          difficulty: t('difficulty.balanced'),
+          emoji: '🧠',
+          description: t('gameDescriptions.normal_quiz'),
+          colors: {
+            primary: '#EC4899',
+            secondary: '#F472B6',
+            background: 'linear(135deg, #ec4899 0%, #be185d 100%)',
+            light: 'rgba(236, 72, 153, 0.2)',
+            border: 'rgba(236, 72, 153, 0.4)',
+            text: '#F9A8D4',
+          },
+          instructions: t('instructions.normalQuiz', { returnObjects: true }),
+          tips: [t('tips.0'), t('tips.1'), t('tips.2'), t('tips.3')],
+          features: [
+            t('features.adaptiveDifficulty'),
+            t('features.smartNavigation'),
+            t('features.instantValidation'),
+          ],
+        },
+        true_false: {
+          icon: FlipHorizontal2,
+          title: t('gameTypes.true_false'),
+          subtitle: t('gameSubtitles.true_false'),
+          time: '35 seconds',
+          difficulty: t('difficulty.swift'),
+          emoji: '⚡',
+          description: t('gameDescriptions.true_false'),
+          colors: {
+            primary: '#8B5CF6',
+            secondary: '#A78BFA',
+            background: 'linear(135deg, #8b5cf6 0%, #7c3aed 100%)',
+            light: 'rgba(139, 92, 246, 0.2)',
+            border: 'rgba(139, 92, 246, 0.4)',
+            text: '#C4B5FD',
+          },
+          instructions: t('instructions.trueFalse', { returnObjects: true }),
+          tips: [t('tips.4'), t('tips.5'), t('tips.6'), t('tips.7')],
+          features: [
+            t('features.speedBonus'),
+            t('features.binarySimplicity'),
+            t('features.factVerification'),
+          ],
+        },
+        word_weaver: {
+          icon: Sparkles,
+          title: t('gameTypes.word_weaver'),
+          subtitle: t('gameSubtitles.word_weaver'),
+          time: '100 seconds',
+          difficulty: t('difficulty.creative'),
+          emoji: '🔤',
+          description: t('gameDescriptions.word_weaver'),
+          colors: {
+            primary: '#10B981',
+            secondary: '#34D399',
+            background: 'linear(135deg, #10b981 0%, #059669 100%)',
+            light: 'rgba(16, 185, 129, 0.2)',
+            border: 'rgba(16, 185, 129, 0.4)',
+            text: '#6EE7B7',
+          },
+          instructions: t('instructions.wordWeaver', { returnObjects: true }),
+          tips: [t('tips.8'), t('tips.9'), t('tips.10'), t('tips.11')],
+          features: [
+            t('features.contextClues'),
+            t('features.letterShuffling'),
+            t('features.progressiveDifficulty'),
+          ],
+        },
+        connections: {
+          icon: Link2,
+          title: t('gameTypes.connections'),
+          subtitle: t('gameSubtitles.connections'),
+          time: '100 seconds',
+          difficulty: t('difficulty.strategic'),
+          emoji: '🔗',
+          description: t('gameDescriptions.connections'),
+          colors: {
+            primary: '#F59E0B',
+            secondary: '#FBBF24',
+            background: 'linear(135deg, #f59e0b 0%, #d97706 100%)',
+            light: 'rgba(245, 158, 11, 0.2)',
+            border: 'rgba(245, 158, 11, 0.4)',
+            text: '#FCD34D',
+          },
+          instructions: t('instructions.connections', { returnObjects: true }),
+          tips: [t('tips.12'), t('tips.13'), t('tips.14'), t('tips.15')],
+          features: [
+            t('features.perfectPairing'),
+            t('features.strategicThinking'),
+            t('features.completeNetworkMapping'),
+          ],
+        },
+      }),
+      [t],
+    )
 
     // Memoize game data to prevent recalculation
     const game = useMemo(() => {
@@ -616,7 +592,7 @@ const GameInstructionsModal = memo(
                             fontWeight="bold"
                             color={game.colors.text}
                           >
-                            How to Play
+                            {t('headers.howToPlay')}
                           </Text>
                         </HStack>
 
@@ -660,7 +636,7 @@ const GameInstructionsModal = memo(
                               fontWeight="bold"
                               color={game.colors.text}
                             >
-                              Features
+                              {t('headers.features')}
                             </Text>
                           </HStack>
 
@@ -698,7 +674,7 @@ const GameInstructionsModal = memo(
                               fontWeight="bold"
                               color="#6EE7B7"
                             >
-                              Pro Tips
+                              {t('headers.proTips')}
                             </Text>
                           </HStack>
 
@@ -763,7 +739,7 @@ const GameInstructionsModal = memo(
                         }}
                         transition="all 0.2s ease"
                       >
-                        Back to Menu
+                        {t('navigation.backToMenu')}
                       </Button>
                     </MotionBox>
 
@@ -793,7 +769,7 @@ const GameInstructionsModal = memo(
                         }}
                         transition="all 0.2s ease"
                       >
-                        Launch Game
+                        {t('navigation.launchGame')}
                       </Button>
                     </MotionBox>
                   </HStack>

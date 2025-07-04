@@ -14,7 +14,7 @@ const TrueFalseInterface = ({
   onAnswer,
   selectedAnswer,
 }) => {
-  const { t } = useTranslation()
+  const { t } = useTranslation('GameHub')
 
   // Handle both statement object and direct question object
   const statement = question.text || question.statement || question.question
@@ -31,9 +31,9 @@ const TrueFalseInterface = ({
   }
 
   const getDifficultyLabel = difficulty => {
-    if (difficulty < 0.3) return 'Easy'
-    if (difficulty < 0.6) return 'Medium'
-    return 'Hard'
+    if (difficulty < 0.3) return t('difficulty.easy')
+    if (difficulty < 0.6) return t('difficulty.medium')
+    return t('difficulty.hard')
   }
 
   return (
@@ -55,7 +55,7 @@ const TrueFalseInterface = ({
             borderRadius="full"
             fontSize="xs"
           >
-            Statement {questionIndex + 1}/{totalQuestions}
+            {t('gameInterface.statement')} {questionIndex + 1}/{totalQuestions}
           </Badge>
 
           {difficulty && (
@@ -99,7 +99,7 @@ const TrueFalseInterface = ({
           fontWeight="600"
           textAlign="center"
         >
-          Is this statement TRUE or FALSE?
+          {t('gameInterface.isStatementTrue')}
         </Text>
 
         {/* Answer Buttons */}
@@ -142,7 +142,7 @@ const TrueFalseInterface = ({
                     color="white"
                     fontSize="2xs"
                   >
-                    SELECTED
+                    {t('status.selected')}
                   </Badge>
                 )}
               </VStack>
@@ -187,7 +187,7 @@ const TrueFalseInterface = ({
                     color="white"
                     fontSize="2xs"
                   >
-                    SELECTED
+                    {t('status.selected')}
                   </Badge>
                 )}
               </VStack>
@@ -217,14 +217,15 @@ const TrueFalseInterface = ({
                 fontSize="sm"
                 color={selectedAnswer ? '#10B981' : '#EF4444'}
               >
-                {selectedAnswer ? 'TRUE' : 'FALSE'} selected
+                {selectedAnswer ? 'TRUE' : 'FALSE'}{' '}
+                {t('gameInterface.optionSelected')}
               </Text>
             </HStack>
           ) : (
             <HStack justify="center" spacing={2}>
               <Target size={16} color="#6B7280" />
               <Text color="gray.400" fontSize="sm">
-                Make your choice
+                {t('gameInterface.makeChoice')}
               </Text>
             </HStack>
           )}

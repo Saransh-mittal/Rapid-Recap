@@ -17,117 +17,127 @@ import { useToast } from '@chakra-ui/react'
 import { ChevronLeft, AlertTriangle, FileText } from 'lucide-react'
 import axios from 'axios'
 import SubmittedQuizInterface from '../quizComponents/SubmittedQuizInterface'
+import { useTranslation } from 'react-i18next'
 
 const MotionBox = motion(Box)
 
-const LoadingState = () => (
-  <Box
-    minH="100vh"
-    bgGradient="linear(to-br, blue.900, purple.900, violet.900)"
-    display="flex"
-    alignItems="center"
-    justifyContent="center"
-    color="white"
-  >
-    <VStack spacing={4}>
-      <Spinner size="xl" color="blue.400" thickness="4px" />
-      <Text fontSize="lg" fontWeight="medium">
-        Loading your game report...
-      </Text>
-      <Text fontSize="sm" color="gray.300">
-        Fetching your latest performance data
-      </Text>
-    </VStack>
-  </Box>
-)
+const LoadingState = () => {
+  const { t } = useTranslation('GameHub')
 
-const ErrorState = ({ error, onRetry, onGoBack }) => (
-  <Box
-    minH="100vh"
-    bgGradient="linear(to-br, blue.900, purple.900, violet.900)"
-    display="flex"
-    alignItems="center"
-    justifyContent="center"
-    color="white"
-    p={4}
-  >
-    <Container maxW="md">
-      <MotionBox
-        initial={{ opacity: 0, y: 20 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ duration: 0.5 }}
-      >
-        <VStack spacing={6} textAlign="center">
-          {/* Error Icon */}
-          <Box
-            p={4}
-            bg="rgba(239, 68, 68, 0.1)"
-            borderRadius="full"
-            border="2px solid"
-            borderColor="red.400"
-          >
-            <AlertTriangle size={48} color="#EF4444" />
-          </Box>
+  return (
+    <Box
+      minH="100vh"
+      bgGradient="linear(to-br, blue.900, purple.900, violet.900)"
+      display="flex"
+      alignItems="center"
+      justifyContent="center"
+      color="white"
+    >
+      <VStack spacing={4}>
+        <Spinner size="xl" color="blue.400" thickness="4px" />
+        <Text fontSize="lg" fontWeight="medium">
+          {t('loading.loadingGameReport')}
+        </Text>
+        <Text fontSize="sm" color="gray.300">
+          {t('loading.fetchingPerformanceData')}
+        </Text>
+      </VStack>
+    </Box>
+  )
+}
 
-          {/* Error Message */}
-          <VStack spacing={3}>
-            <Text fontSize="xl" fontWeight="bold" color="white">
-              Unable to Load Report
-            </Text>
-            <Alert
-              status="error"
+// Update the ErrorState component:
+const ErrorState = ({ error, onRetry, onGoBack }) => {
+  const { t } = useTranslation('GameHub')
+
+  return (
+    <Box
+      minH="100vh"
+      bgGradient="linear(to-br, blue.900, purple.900, violet.900)"
+      display="flex"
+      alignItems="center"
+      justifyContent="center"
+      color="white"
+      p={4}
+    >
+      <Container maxW="md">
+        <MotionBox
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.5 }}
+        >
+          <VStack spacing={6} textAlign="center">
+            {/* Error Icon */}
+            <Box
+              p={4}
               bg="rgba(239, 68, 68, 0.1)"
-              border="1px solid"
+              borderRadius="full"
+              border="2px solid"
               borderColor="red.400"
-              borderRadius="lg"
-              color="white"
             >
-              <AlertIcon color="red.400" />
-              <AlertDescription fontSize="sm">
-                {error || 'Failed to fetch your game report. Please try again.'}
-              </AlertDescription>
-            </Alert>
-          </VStack>
+              <AlertTriangle size={48} color="#EF4444" />
+            </Box>
 
-          {/* Action Buttons */}
-          <VStack spacing={3} w="100%">
-            <Button
-              onClick={onRetry}
-              colorScheme="blue"
-              size="lg"
-              width="100%"
-              borderRadius="full"
-              fontWeight="medium"
-            >
-              Try Again
-            </Button>
-            <Button
-              onClick={onGoBack}
-              variant="outline"
-              size="md"
-              width="100%"
-              borderRadius="full"
-              borderColor="gray.400"
-              color="gray.300"
-              _hover={{
-                borderColor: 'gray.300',
-                color: 'white',
-              }}
-              leftIcon={<FileText size={18} />}
-            >
-              Back to Article
-            </Button>
-          </VStack>
+            {/* Error Message */}
+            <VStack spacing={3}>
+              <Text fontSize="xl" fontWeight="bold" color="white">
+                {t('errors.unableToLoadReport')}
+              </Text>
+              <Alert
+                status="error"
+                bg="rgba(239, 68, 68, 0.1)"
+                border="1px solid"
+                borderColor="red.400"
+                borderRadius="lg"
+                color="white"
+              >
+                <AlertIcon color="red.400" />
+                <AlertDescription fontSize="sm">
+                  {error || t('errors.failedToFetch')}
+                </AlertDescription>
+              </Alert>
+            </VStack>
 
-          {/* Help Text */}
-          <Text fontSize="xs" color="gray.400" textAlign="center">
-            Make sure you have completed at least one game for this article.
-          </Text>
-        </VStack>
-      </MotionBox>
-    </Container>
-  </Box>
-)
+            {/* Action Buttons */}
+            <VStack spacing={3} w="100%">
+              <Button
+                onClick={onRetry}
+                colorScheme="blue"
+                size="lg"
+                width="100%"
+                borderRadius="full"
+                fontWeight="medium"
+              >
+                {t('errors.tryAgain')}
+              </Button>
+              <Button
+                onClick={onGoBack}
+                variant="outline"
+                size="md"
+                width="100%"
+                borderRadius="full"
+                borderColor="gray.400"
+                color="gray.300"
+                _hover={{
+                  borderColor: 'gray.300',
+                  color: 'white',
+                }}
+                leftIcon={<FileText size={18} />}
+              >
+                {t('navigation.backToArticle')}
+              </Button>
+            </VStack>
+
+            {/* Help Text */}
+            <Text fontSize="xs" color="gray.400" textAlign="center">
+              {t('errors.noGamesCompleted')}
+            </Text>
+          </VStack>
+        </MotionBox>
+      </Container>
+    </Box>
+  )
+}
 
 const GameReportWrapper = () => {
   const { articleId } = useParams()

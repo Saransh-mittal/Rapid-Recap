@@ -1,4 +1,4 @@
-// model/articleQuizSessionSchem.js - Updated without context for word weaver
+// model/articleQuizSessionSchem.js - UPDATED: Enhanced language support and indexing
 
 const mongoose = require('mongoose')
 
@@ -60,8 +60,7 @@ const articleQuizSessionSchema = new mongoose.Schema({
       text: String, // Statement text
       correct: Boolean, // True/false answer
 
-      // Word Weaver fields - UPDATED: Removed context
-      // REMOVED: context: String,
+      // Word Weaver fields
       blank: String, // Must contain fill-in-the-blank with _____
 
       // Connections fields
@@ -125,18 +124,41 @@ const articleQuizSessionSchema = new mongoose.Schema({
     en: Number,
     hi: Number,
   },
+  // MODIFY: Enhanced language field with validation
   language: {
     type: String,
     required: true,
     enum: ['en', 'hi'],
+    default: 'en',
+    validate: {
+      validator: function (value) {
+        return ['en', 'hi'].includes(value)
+      },
+      message: 'Language must be either "en" (English) or "hi" (Hindi)',
+    },
   },
 })
 
-// Updated index to include gameType for better performance
+// MODIFY: Enhanced indexing for better performance with language queries
 articleQuizSessionSchema.index(
-  { user: 1, article: 1, gameType: 1 },
+  { user: 1, article: 1, gameType: 1, language: 1 },
   { unique: true },
 )
+
+// ADD: Additional indexes for language-specific queries
+articleQuizSessionSchema.index({ language: 1 })
+articleQuizSessionSchema.index({ user: 1, language: 1 })
+articleQuizSessionSchema.index({ article: 1, language: 1 })
+articleQuizSessionSchema.index({ gameType: 1, language: 1 })
+articleQuizSessionSchema.index({ completed: 1, language: 1 })
+
+// ADD: Compound index for common query patterns
+articleQuizSessionSchema.index({
+  user: 1,
+  article: 1,
+  completed: 1,
+  language: 1,
+})
 
 const ArticleQuizSession = mongoose.model(
   'ARTICLE_QUIZ_SESSION',

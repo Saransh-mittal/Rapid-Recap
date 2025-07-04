@@ -49,21 +49,6 @@ const gameTypeIcons = {
   connections: Link2,
 }
 
-const gameTypeNames = {
-  normal_quiz: 'Knowledge Quest',
-  true_false: 'Truth Detector',
-  word_weaver: 'Word Architect',
-  connections: 'Mind Mapper',
-}
-
-const gameTypeDescriptions = {
-  normal_quiz:
-    'Master strategic multiple-choice challenges with deep comprehension',
-  true_false: 'Lightning-fast binary decisions testing attention to detail',
-  word_weaver: 'Creative letter puzzles building vocabulary mastery',
-  connections: 'Strategic concept mapping and relationship building',
-}
-
 const gameTypeColors = {
   normal_quiz: { primary: '#3B82F6', bg: 'rgba(59, 130, 246, 0.1)' },
   true_false: { primary: '#8B5CF6', bg: 'rgba(139, 92, 246, 0.1)' },
@@ -72,7 +57,7 @@ const gameTypeColors = {
 }
 
 const GivenQuiz = ({ articleId, percentile, RQM_score, gameData }) => {
-  const { t } = useTranslation()
+  const { t } = useTranslation('GameHub')
   const navigate = useNavigate()
 
   // Handle both old format (boolean) and new format (object with game details)
@@ -84,47 +69,47 @@ const GivenQuiz = ({ articleId, percentile, RQM_score, gameData }) => {
   const totalAttempts = isNewFormat ? gameData.totalAttempts : 1
   const gameTimeTaken = isNewFormat ? gameData.timeTaken : null
 
-  const getPerformanceData = (percentile, score) => {
-    if (percentile >= 90)
+  const getPerformanceData = (p, score) => {
+    if (p >= 90)
       return {
-        level: 'LEGEND',
+        level: t('performanceLevels.legend'),
         color: '#FFD700',
         bg: 'linear(45deg, #FFD700, #FFA500)',
         icon: Crown,
         emoji: '👑',
-        description: 'Elite Performance',
+        description: t('performanceDescriptions.legend'),
       }
-    if (percentile >= 75)
+    if (p >= 75)
       return {
-        level: 'MASTER',
+        level: t('performanceLevels.master'),
         color: '#8B5CF6',
         bg: 'linear(45deg, #8B5CF6, #7C3AED)',
         icon: Star,
         emoji: '⭐',
-        description: 'Excellent Score',
+        description: t('performanceDescriptions.master'),
       }
-    if (percentile >= 50)
+    if (p >= 50)
       return {
-        level: 'SKILLED',
+        level: t('performanceLevels.skilled'),
         color: '#10B981',
         bg: 'linear(45deg, #10B981, #059669)',
         icon: Target,
         emoji: '🎯',
-        description: 'Above Average',
+        description: t('performanceDescriptions.skilled'),
       }
     return {
-      level: 'RISING',
+      level: t('performanceLevels.rising'),
       color: '#F59E0B',
       bg: 'linear(45deg, #F59E0B, #D97706)',
       icon: TrendingUp,
       emoji: '📈',
-      description: 'Keep Improving',
+      description: t('performanceDescriptions.rising'),
     }
   }
 
   const performance = useMemo(
     () => getPerformanceData(percentile, RQM_score),
-    [percentile, RQM_score],
+    [percentile, RQM_score, t],
   )
   const PerformanceIcon = performance.icon
   const completedGameConfig =
@@ -221,7 +206,7 @@ const GivenQuiz = ({ articleId, percentile, RQM_score, gameData }) => {
                     color="white"
                     lineHeight="1.2"
                   >
-                    {gameTypeNames[completedGameType]}
+                    {t(`gameTypes.${completedGameType}`)}
                   </Text>
                   <Badge
                     bg="linear-gradient(45deg, #10B981, #059669)"
@@ -234,7 +219,7 @@ const GivenQuiz = ({ articleId, percentile, RQM_score, gameData }) => {
                   >
                     <HStack spacing={1}>
                       <Trophy size={10} />
-                      <Text>COMPLETED</Text>
+                      <Text>{t('status.completed')}</Text>
                     </HStack>
                   </Badge>
                 </HStack>
@@ -244,7 +229,7 @@ const GivenQuiz = ({ articleId, percentile, RQM_score, gameData }) => {
                   color={completedGameConfig.primary}
                   fontWeight="600"
                 >
-                  Challenge mastered successfully
+                  {t('popover.challengeMastered')}
                 </Text>
               </VStack>
             </HStack>
@@ -259,7 +244,7 @@ const GivenQuiz = ({ articleId, percentile, RQM_score, gameData }) => {
                 lineHeight="1.4"
                 textAlign="center"
               >
-                {gameTypeDescriptions[completedGameType]}
+                {t(`gameDescriptions.${completedGameType}`)}
               </Text>
 
               {/* Stats */}
@@ -282,7 +267,7 @@ const GivenQuiz = ({ articleId, percentile, RQM_score, gameData }) => {
                     </Text>
                   </HStack>
                   <Text fontSize="2xs" color="gray.400">
-                    RQM Score
+                    {t('stats.rqmScore')}
                   </Text>
                 </VStack>
 
@@ -296,7 +281,7 @@ const GivenQuiz = ({ articleId, percentile, RQM_score, gameData }) => {
                     </Text>
                   </HStack>
                   <Text fontSize="2xs" color="gray.400">
-                    Percentile
+                    {t('stats.percentile')}
                   </Text>
                 </VStack>
               </HStack>
@@ -313,7 +298,7 @@ const GivenQuiz = ({ articleId, percentile, RQM_score, gameData }) => {
                 <HStack spacing={2} justify="center">
                   <Text fontSize="xs">🎯</Text>
                   <Text fontSize="xs" color="white" fontWeight="600">
-                    Game Challenge Completed
+                    {t('popover.gameChallengeCompleted')}
                   </Text>
                 </HStack>
               </Box>
@@ -385,7 +370,7 @@ const GivenQuiz = ({ articleId, percentile, RQM_score, gameData }) => {
               <Text fontSize="lg">{performance.emoji}</Text>
               <VStack spacing={0} align="start">
                 <Text fontSize="md" fontWeight="bold" color="white">
-                  Games Mastered
+                  {t('headers.gamesMastered')}
                 </Text>
               </VStack>
             </HStack>
@@ -427,11 +412,11 @@ const GivenQuiz = ({ articleId, percentile, RQM_score, gameData }) => {
                     {RQM_score}
                   </Text>
                   <Text fontSize="xs" color="gray.400">
-                    RQM
+                    {t('stats.rqmUnit')}
                   </Text>
                 </HStack>
                 <Text fontSize="xs" color="gray.500" textAlign="center">
-                  Best Score
+                  {t('stats.bestScoreShort')}
                 </Text>
               </VStack>
             </GridItem>
@@ -462,7 +447,7 @@ const GivenQuiz = ({ articleId, percentile, RQM_score, gameData }) => {
                         </Text>
                       </HStack>
                       <Text fontSize="2xs" color="gray.500" lineHeight="1">
-                        rank
+                        {t('stats.rank')}
                       </Text>
                     </VStack>
                   </CircularProgressLabel>
@@ -490,7 +475,7 @@ const GivenQuiz = ({ articleId, percentile, RQM_score, gameData }) => {
               <VStack spacing={1}>
                 <CompletedGamePopover />
                 <Text fontSize="xs" color="gray.400" textAlign="center">
-                  Completed
+                  {t('status.completedShort')}
                 </Text>
               </VStack>
             </GridItem>
@@ -511,7 +496,7 @@ const GivenQuiz = ({ articleId, percentile, RQM_score, gameData }) => {
             >
               <HStack spacing={1}>
                 <Icon as={gameTypeIcons[completedGameType]} boxSize={3} />
-                <Text>{gameTypeNames[completedGameType]}</Text>
+                <Text>{t(`gameTypes.${completedGameType}`)}</Text>
               </HStack>
             </Badge>
 
@@ -529,7 +514,9 @@ const GivenQuiz = ({ articleId, percentile, RQM_score, gameData }) => {
               >
                 <HStack spacing={1}>
                   <Target size={10} />
-                  <Text>{totalAttempts} attempts</Text>
+                  <Text>
+                    {totalAttempts} {t('stats.attempts')}
+                  </Text>
                 </HStack>
               </Badge>
             )}
@@ -562,7 +549,7 @@ const GivenQuiz = ({ articleId, percentile, RQM_score, gameData }) => {
               }}
               transition="all 0.2s"
             >
-              📊 View Detailed Report
+              {t('actions.viewDetailedReport')}
             </Button>
           </MotionBox>
 

@@ -38,7 +38,7 @@ const ConnectionsInterface = ({
 }) => {
   const [selectedNodes, setSelectedNodes] = useState([])
   const [userConnections, setUserConnections] = useState([])
-  const { t } = useTranslation()
+  const { t } = useTranslation('GameHub')
 
   // NEW: Refs to prevent infinite loops
   const isUpdatingRef = useRef(false)
@@ -429,33 +429,44 @@ const ConnectionsInterface = ({
     if (userConnections.length === 0) {
       return {
         color: '#6B7280',
-        label: `Ready to Connect (${availableNodes.length} available)`,
+        label: `${t('gameInterface.readyToConnect')} (${
+          availableNodes.length
+        } ${t('gameInterface.nodesAvailable')})`,
         icon: Target,
       }
     }
     if (userConnections.length === MAX_CONNECTIONS) {
-      return { color: '#10B981', label: 'Perfect Network!', icon: Crown }
+      return {
+        color: '#10B981',
+        label: t('gameInterface.perfectNetworkStatus'),
+        icon: Crown,
+      }
     }
     return {
       color: '#F59E0B',
-      label: `Building Network (${availableNodes.length} available)`,
+      label: `${t('gameInterface.buildingNetwork')} (${
+        availableNodes.length
+      } ${t('gameInterface.nodesAvailable')})`,
       icon: Network,
     }
-  }, [userConnections.length, availableNodes.length])
+  }, [userConnections.length, availableNodes.length, t])
 
   const progressStatus = getProgressStatus()
   const StatusIcon = progressStatus.icon
 
   // NEW: Helper function to get tooltip content based on node state
-  const getTooltipContent = useCallback((concept, isConnected, isSelected) => {
-    let status = ''
-    if (isConnected) {
-      status = ' (Connected)'
-    } else if (isSelected) {
-      status = ' (Selected)'
-    }
-    return `${concept}${status}`
-  }, [])
+  const getTooltipContent = useCallback(
+    (concept, isConnected, isSelected) => {
+      let status = ''
+      if (isConnected) {
+        status = ` (${t('gameInterface.connected')})`
+      } else if (isSelected) {
+        status = ` (${t('status.selected')})`
+      }
+      return `${concept}${status}`
+    },
+    [t],
+  )
 
   // NEW: Cleanup effect
   useEffect(() => {
@@ -495,7 +506,7 @@ const ConnectionsInterface = ({
                   fontSize="xs"
                   fontWeight="bold"
                 >
-                  🔗 MIND MAPPER
+                  🔗 {t('gameTypes.connections').toUpperCase()}
                 </Badge>
 
                 <Badge
@@ -513,7 +524,8 @@ const ConnectionsInterface = ({
                 <HStack spacing={2}>
                   <Link2 size={14} color="#F59E0B" />
                   <Text fontSize="xs" color="yellow.400" fontWeight="bold">
-                    {userConnections.length}/{MAX_CONNECTIONS} connections
+                    {userConnections.length}/{MAX_CONNECTIONS}{' '}
+                    {t('stats.connections')}
                   </Text>
                 </HStack>
               </HStack>
@@ -526,8 +538,9 @@ const ConnectionsInterface = ({
                 px={2}
                 lineHeight="1.4"
               >
-                Create {MAX_CONNECTIONS} connections • Pair all 8 nodes • Each
-                node used once
+                {t('gameInterface.createConnections')} •{' '}
+                {t('gameInterface.pairAllNodes')} •{' '}
+                {t('gameInterface.eachNodeOnce')}
               </Text>
 
               {/* Node availability status */}
@@ -549,8 +562,10 @@ const ConnectionsInterface = ({
                     >
                       <AlertIcon size={14} />
                       <AlertDescription fontSize="xs" color="white">
-                        {availableNodes.length} nodes available •{' '}
-                        {connectedNodes.size} nodes paired
+                        {t('alerts.nodeStatus', {
+                          available: availableNodes.length,
+                          connected: connectedNodes.size,
+                        })}
                       </AlertDescription>
                     </Alert>
                   </MotionBox>
@@ -587,14 +602,18 @@ const ConnectionsInterface = ({
                     <AlertIcon size={14} />
                     <AlertDescription fontSize="xs" color="white">
                       {userConnections.length === MAX_CONNECTIONS
-                        ? '🎉 Perfect! All 8 nodes connected in 4 unique pairs!'
-                        : `⚡ ${
-                            MAX_CONNECTIONS - userConnections.length
-                          } more connection${
-                            MAX_CONNECTIONS - userConnections.length > 1
-                              ? 's'
-                              : ''
-                          } needed • ${availableNodes.length} nodes available`}
+                        ? t('alerts.perfectConnections')
+                        : t(
+                            `alerts.connectionsNeeded${
+                              MAX_CONNECTIONS - userConnections.length > 1
+                                ? 'Plural'
+                                : ''
+                            }`,
+                            {
+                              count: MAX_CONNECTIONS - userConnections.length,
+                              available: availableNodes.length,
+                            },
+                          )}
                     </AlertDescription>
                   </Alert>
                 </MotionBox>
@@ -826,7 +845,8 @@ const ConnectionsInterface = ({
                 <HStack spacing={2}>
                   <Network size={16} color="#F59E0B" />
                   <Text fontSize="sm" fontWeight="bold" color="yellow.300">
-                    Connections ({userConnections.length}/{MAX_CONNECTIONS})
+                    {t('stats.connections')} ({userConnections.length}/
+                    {MAX_CONNECTIONS})
                   </Text>
                 </HStack>
 
@@ -841,7 +861,7 @@ const ConnectionsInterface = ({
                   px={3}
                   _hover={{ bg: 'rgba(239, 68, 68, 0.1)' }}
                 >
-                  Clear All
+                  {t('actions.clearAll')}
                 </Button>
               </HStack>
 
@@ -940,11 +960,11 @@ const ConnectionsInterface = ({
                 <HStack justify="center" spacing={2}>
                   <Crown size={18} color="#FFD700" />
                   <Text color="yellow.400" fontWeight="600" fontSize="sm">
-                    Perfect network completed!
+                    {t('gameInterface.perfectNetwork')}
                   </Text>
                 </HStack>
                 <Text color="gray.400" fontSize="xs">
-                  All 8 nodes connected in 4 unique pairs
+                  {t('gameInterface.allNodesConnected')}
                 </Text>
               </VStack>
             ) : userConnections.length > 0 ? (
@@ -956,13 +976,22 @@ const ConnectionsInterface = ({
                     fontWeight="600"
                     fontSize="sm"
                   >
-                    Great progress!
+                    {t('gameInterface.greatProgress')}
                   </Text>
                 </HStack>
                 <Text color="gray.400" fontSize="xs">
-                  {MAX_CONNECTIONS - userConnections.length} more connection
-                  {MAX_CONNECTIONS - userConnections.length > 1 ? 's' : ''}{' '}
-                  needed • Pair all {availableNodes.length} remaining nodes
+                  {t(
+                    `gameInterface.moreConnectionsNeeded${
+                      MAX_CONNECTIONS - userConnections.length > 1
+                        ? 'Plural'
+                        : ''
+                    }`,
+                    {
+                      count: MAX_CONNECTIONS - userConnections.length,
+                    },
+                  )}{' '}
+                  • {t('gameInterface.pairRemaining')} {availableNodes.length}{' '}
+                  {t('gameInterface.remainingNodes')}
                 </Text>
               </VStack>
             ) : (
@@ -970,12 +999,14 @@ const ConnectionsInterface = ({
                 <HStack justify="center" spacing={2}>
                   <Target size={18} color="#6B7280" />
                   <Text color="gray.400" fontSize="sm">
-                    {isMobile ? 'Tap' : 'Click'} two concepts to connect
+                    {isMobile
+                      ? t('gameInterface.tapToConnect')
+                      : t('gameInterface.clickToConnect')}
                   </Text>
                 </HStack>
                 <Text color="gray.500" fontSize="xs">
-                  Each node can only be used once • {availableNodes.length}{' '}
-                  nodes available
+                  {t('gameInterface.eachNodeOnce')} • {availableNodes.length}{' '}
+                  {t('gameInterface.nodesAvailable')}
                 </Text>
               </VStack>
             )}

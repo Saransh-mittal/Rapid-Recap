@@ -14,7 +14,7 @@ const NormalQuizInterface = ({
   onAnswer,
   selectedAnswer,
 }) => {
-  const { t } = useTranslation()
+  const { t } = useTranslation('GameHub')
 
   const handleOptionSelect = optionKey => {
     onAnswer(optionKey)
@@ -27,9 +27,9 @@ const NormalQuizInterface = ({
   }
 
   const getDifficultyLabel = difficulty => {
-    if (difficulty < 0.3) return 'Easy'
-    if (difficulty < 0.6) return 'Medium'
-    return 'Hard'
+    if (difficulty < 0.3) return t('difficulty.easy')
+    if (difficulty < 0.6) return t('difficulty.medium')
+    return t('difficulty.hard')
   }
 
   return (
@@ -51,7 +51,7 @@ const NormalQuizInterface = ({
             borderRadius="full"
             fontSize="xs"
           >
-            Question {questionIndex + 1}/{totalQuestions}
+            {t('gameInterface.question')} {questionIndex + 1}/{totalQuestions}
           </Badge>
 
           {question.difficulty && (
@@ -207,14 +207,16 @@ const NormalQuizInterface = ({
             <HStack justify="center" spacing={2}>
               <CheckCircle size={16} color="#10B981" />
               <Text color="emerald.400" fontWeight="600" fontSize="sm">
-                Option {selectedAnswer.toUpperCase()} selected
+                {t('gameInterface.optionSelected', {
+                  option: selectedAnswer.toUpperCase(),
+                })}
               </Text>
             </HStack>
           ) : (
             <HStack justify="center" spacing={2}>
               <Target size={16} color="#6B7280" />
               <Text color="gray.400" fontSize="sm">
-                Select your answer
+                {t('gameInterface.selectAnswer')}
               </Text>
             </HStack>
           )}

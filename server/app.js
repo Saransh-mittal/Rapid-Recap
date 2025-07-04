@@ -45,6 +45,9 @@ const {
   globalErrorHandler,
   notFoundHandler,
 } = require('./middleware/globalErrorHandlerMiddleware')
+const {
+  languageDetectionMiddleware,
+} = require('./utils/languageDetection.utils')
 
 const app = express()
 // CORS configuration - only needed in development
@@ -193,6 +196,7 @@ require('./scheduler/setupCronJobs')
 const PORT = process.env.PORT
 authRouter.use(cookieParser())
 app.use(configureSession())
+app.use('/api', languageDetectionMiddleware)
 app.use(generateCsrfToken)
 authRouter.use(validateCsrfToken)
 authRouter.use('/user', userRoutes)

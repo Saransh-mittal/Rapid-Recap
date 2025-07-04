@@ -11,6 +11,7 @@ import {
   CheckCircle,
   Loader,
 } from 'lucide-react'
+import { useTranslation } from 'react-i18next'
 
 const MotionBox = motion(Box)
 
@@ -24,26 +25,57 @@ const GameDataGenerationLoader = ({
   const [currentStep, setCurrentStep] = useState(0)
   const [isGenerating, setIsGenerating] = useState(autoStart)
   const [startTime, setStartTime] = useState(null)
+  const { t } = useTranslation('GameHub')
 
   const gameTypes = [
-    { icon: FileText, name: 'Quiz', color: '#3B82F6', emoji: '🧠' },
-    { icon: FlipHorizontal2, name: 'T/F', color: '#8B5CF6', emoji: '⚡' },
-    { icon: Sparkles, name: 'Words', color: '#10B981', emoji: '🔤' },
-    { icon: Link2, name: 'Connect', color: '#F59E0B', emoji: '🔗' },
+    {
+      icon: FileText,
+      name: t('gameTypes.normal_quiz').split(' ')[0],
+      color: '#3B82F6',
+      emoji: '🧠',
+    },
+    {
+      icon: FlipHorizontal2,
+      name: t('gameTypes.true_false').split(' ')[0],
+      color: '#8B5CF6',
+      emoji: '⚡',
+    },
+    {
+      icon: Sparkles,
+      name: t('gameTypes.word_weaver').split(' ')[0],
+      color: '#10B981',
+      emoji: '🔤',
+    },
+    {
+      icon: Link2,
+      name: t('gameTypes.connections').split(' ')[0],
+      color: '#F59E0B',
+      emoji: '🔗',
+    },
   ]
 
   const processingSteps = [
-    { step: 25, message: 'Analyzing content', icon: Brain, color: '#3B82F6' },
+    {
+      step: 25,
+      message: t('generation.step.analyzing'),
+      icon: Brain,
+      color: '#3B82F6',
+    },
     {
       step: 50,
-      message: 'Crafting questions',
+      message: t('generation.step.crafting'),
       icon: FileText,
       color: '#8B5CF6',
     },
-    { step: 75, message: 'Building puzzles', icon: Sparkles, color: '#10B981' },
+    {
+      step: 75,
+      message: t('generation.step.building'),
+      icon: Sparkles,
+      color: '#10B981',
+    },
     {
       step: 100,
-      message: 'Finalizing games',
+      message: t('generation.step.finalizing'),
       icon: CheckCircle,
       color: '#10B981',
     },
@@ -143,11 +175,10 @@ const GameDataGenerationLoader = ({
                   bgGradient="linear(45deg, #667eea, #764ba2)"
                   bgClip="text"
                 >
-                  Crafting Your Games
+                  {t('generation.craftingYourGames')}
                 </Text>
                 <Text fontSize="sm" color="gray.400" maxW="300px">
-                  AI is analyzing your content and building personalized
-                  challenges
+                  {t('generation.aiAnalyzingContent')}
                 </Text>
               </VStack>
 
@@ -227,7 +258,7 @@ const GameDataGenerationLoader = ({
                       {currentStepData.message}
                     </Text>
                     <Text fontSize="xs" color="gray.400">
-                      Building your experience...
+                      {t('loading.buildingExperience')}
                     </Text>
                   </VStack>
                 </HStack>
@@ -293,7 +324,7 @@ const GameDataGenerationLoader = ({
                                     color="emerald.400"
                                     fontWeight="bold"
                                   >
-                                    READY
+                                    {t('status.ready')}
                                   </Text>
                                 </HStack>
                               ) : isActive ? (
@@ -313,7 +344,7 @@ const GameDataGenerationLoader = ({
                                     color={game.color}
                                     fontWeight="bold"
                                   >
-                                    BUILDING
+                                    {t('status.building')}
                                   </Text>
                                 </HStack>
                               ) : (
@@ -322,7 +353,7 @@ const GameDataGenerationLoader = ({
                                   color="gray.500"
                                   fontWeight="bold"
                                 >
-                                  PENDING
+                                  {t('status.pending')}
                                 </Text>
                               )}
                             </Box>
@@ -353,17 +384,19 @@ const GameDataGenerationLoader = ({
               >
                 <HStack spacing={2}>
                   <Text fontSize="xs" color="yellow.300" fontWeight="bold">
-                    🚀 AI-POWERED GENERATION
+                    {t('alerts.aiPoweredGeneration')}
                   </Text>
                 </HStack>
               </Box>
               <Text fontSize="xs" color="gray.500">
                 {displayedProgress < 100
-                  ? `⏱️ ${Math.ceil(
-                      (duration - (Date.now() - (startTime || Date.now()))) /
-                        1000,
-                    )}s remaining`
-                  : '🎉 Complete! Launching your games...'}
+                  ? t('alerts.timeRemaining', {
+                      seconds: Math.ceil(
+                        (duration - (Date.now() - (startTime || Date.now()))) /
+                          1000,
+                      ),
+                    })
+                  : t('success.complete')}
               </Text>
             </VStack>
           </MotionBox>

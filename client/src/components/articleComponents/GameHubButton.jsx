@@ -29,7 +29,7 @@ const GameHubButton = ({
   disabled = false,
   loading = false,
 }) => {
-  const { t } = useTranslation()
+  const { t } = useTranslation('GameHub')
   const navigate = useNavigate()
   const { activeAbilities } = useSelector(state => state.inventory)
 
@@ -88,8 +88,8 @@ const GameHubButton = ({
       <Tooltip
         label={
           disabled
-            ? 'Complete previous quiz first'
-            : 'Choose from 4 different game modes'
+            ? t('tooltips.completePrevious')
+            : t('tooltips.chooseGameMode')
         }
         placement="top"
       >
@@ -140,12 +140,12 @@ const GameHubButton = ({
             <HStack spacing={2} align="center">
               <Icon as={Gamepad2} boxSize={6} />
               <Text fontSize="xl" fontWeight="bold" color="white">
-                Game Hub
+                {t('headers.gameHub')}
               </Text>
             </HStack>
 
             <Text fontSize="sm" color="whiteAlpha.900" textAlign="center">
-              Choose from 4 different game modes
+              {t('descriptions.chooseGameMode')}
             </Text>
 
             {/* Active boosts display */}
@@ -160,7 +160,7 @@ const GameHubButton = ({
                     py={1}
                     borderRadius="full"
                   >
-                    {multiplier} RQM
+                    {multiplier} {t('stats.rqmUnit')}
                   </Badge>
                 )}
                 {additionalTime && (

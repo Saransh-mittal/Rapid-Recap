@@ -110,10 +110,10 @@ const GamesCompletedView = ({
   gameData,
   onViewResults,
   onBackToArticle,
-  articleId, // Add this prop
+  articleId,
 }) => {
-  const { t } = useTranslation()
-  const navigate = useNavigate() // Add this hook
+  const { t } = useTranslation('GameHub')
+  const navigate = useNavigate()
 
   return (
     <Box minH="100vh" bg="gray.900" color="white" position="relative">
@@ -140,11 +140,11 @@ const GamesCompletedView = ({
               mb={3}
               letterSpacing="tight"
             >
-              Mission Accomplished!
+              {t('headers.missionAccomplished')}
             </Text>
 
             <Text fontSize="lg" color="gray.300" maxW="500px" lineHeight="1.6">
-              You've mastered all interactive challenges for this article.
+              {t('descriptions.masteredChallenges')}
             </Text>
           </MotionBox>
 
@@ -177,7 +177,7 @@ const GamesCompletedView = ({
                     {completionData.bestScore}
                   </Text>
                   <Text fontSize="sm" color="gray.400" fontWeight="600">
-                    BEST RQM SCORE
+                    {t('stats.bestScore')}
                   </Text>
                 </VStack>
               </HStack>
@@ -233,7 +233,7 @@ const GamesCompletedView = ({
                           )}
                         </Box>
                         <Text fontSize="xs" fontWeight="bold" color="white">
-                          {gameTypeNames[gameType].split(' ')[0]}
+                          {t(`gameTypes.${gameType}`).split(' ')[0]}
                         </Text>
                       </VStack>
                     </Box>
@@ -248,7 +248,7 @@ const GamesCompletedView = ({
                     {completionData.totalAttempts}
                   </Text>
                   <Text fontSize="xs" color="gray.400" textAlign="center">
-                    Total Attempts
+                    {t('stats.totalAttempts')}
                   </Text>
                 </VStack>
                 <VStack spacing={1}>
@@ -256,7 +256,7 @@ const GamesCompletedView = ({
                     {Math.round(completionData.percentile)}%
                   </Text>
                   <Text fontSize="xs" color="gray.400" textAlign="center">
-                    Percentile Rank
+                    {t('stats.percentileRank')}
                   </Text>
                 </VStack>
               </Grid>
@@ -296,7 +296,7 @@ const GamesCompletedView = ({
               fontSize="md"
               boxShadow="0 4px 15px rgba(139, 92, 246, 0.2)"
             >
-              📊 View Latest Game Report
+              {t('actions.viewLatestReport')}
             </Button>
             <Text
               fontSize="xs"
@@ -305,7 +305,7 @@ const GamesCompletedView = ({
               mt={2}
               fontStyle="italic"
             >
-              Review your most recent performance & detailed analysis
+              {t('actions.reviewPerformance')}
             </Text>
           </MotionBox>
 
@@ -334,7 +334,7 @@ const GamesCompletedView = ({
               }}
               transition="all 0.2s"
             >
-              Return to Article
+              {t('navigation.returnToArticle')}
             </Button>
           </MotionBox>
         </VStack>
@@ -345,53 +345,53 @@ const GamesCompletedView = ({
 
 // Premium Game Menu Component - Optimized
 const GameMenu = ({ onSelectGame, gameData, articleId }) => {
-  const { t } = useTranslation()
+  const { t } = useTranslation('GameHub')
 
   const games = [
     {
       id: 'normal_quiz',
-      title: 'Knowledge Quest',
-      subtitle: 'Multiple Choice',
+      title: t('gameTypes.normal_quiz'),
+      subtitle: t('gameSubtitles.normal_quiz'),
       icon: FileText,
-      description: '5 strategic questions',
+      description: t('gameShortDescriptions.normal_quiz'),
       colors: gameTypeColors.normal_quiz,
-      difficulty: 'Balanced',
+      difficulty: t('difficulty.balanced'),
       time: '50s',
       emoji: '🧠',
       available: gameData?.normal_quiz?.questions?.length >= 3,
     },
     {
       id: 'true_false',
-      title: 'Truth Detector',
-      subtitle: 'Rapid Decisions',
+      title: t('gameTypes.true_false'),
+      subtitle: t('gameSubtitles.true_false'),
       icon: FlipHorizontal2,
-      description: '7 lightning challenges',
+      description: t('gameShortDescriptions.true_false'),
       colors: gameTypeColors.true_false,
-      difficulty: 'Swift',
+      difficulty: t('difficulty.swift'),
       time: '35s',
       emoji: '⚡',
       available: gameData?.true_false?.statements?.length >= 5,
     },
     {
       id: 'word_weaver',
-      title: 'Word Architect',
-      subtitle: 'Letter Puzzles',
+      title: t('gameTypes.word_weaver'),
+      subtitle: t('gameSubtitles.word_weaver'),
       icon: Sparkles,
-      description: '5 word constructions',
+      description: t('gameShortDescriptions.word_weaver'),
       colors: gameTypeColors.word_weaver,
-      difficulty: 'Creative',
+      difficulty: t('difficulty.creative'),
       time: '100s',
       emoji: '🔤',
       available: gameData?.word_weaver?.questions?.length >= 3,
     },
     {
       id: 'connections',
-      title: 'Mind Mapper',
-      subtitle: 'Concept Relationships',
+      title: t('gameTypes.connections'),
+      subtitle: t('gameSubtitles.connections'),
       icon: Link2,
-      description: '8 concepts in 4 perfect pairs',
+      description: t('gameShortDescriptions.connections'),
       colors: gameTypeColors.connections,
-      difficulty: 'Strategic',
+      difficulty: t('difficulty.strategic'),
       time: '72s',
       emoji: '🔗',
       available: gameData?.connections?.concepts?.length >= 8,
@@ -423,7 +423,7 @@ const GameMenu = ({ onSelectGame, gameData, articleId }) => {
                     bgClip="text"
                     letterSpacing="tight"
                   >
-                    Choose Your Challenge
+                    {t('headers.chooseChallenge')}
                   </Text>
                   <Text fontSize={{ base: '4xl', md: '5xl' }}>🎯</Text>
                 </HStack>
@@ -435,9 +435,7 @@ const GameMenu = ({ onSelectGame, gameData, articleId }) => {
                   lineHeight="1.6"
                   fontWeight="500"
                 >
-                  Transform learning into an epic adventure. Master knowledge
-                  through interactive gameplay and compete for the highest RQM
-                  scores.
+                  {t('descriptions.transformLearning')}
                 </Text>
               </VStack>
 
@@ -465,7 +463,7 @@ const GameMenu = ({ onSelectGame, gameData, articleId }) => {
                     fontWeight="bold"
                     textAlign="center"
                   >
-                    EQUAL RQM SCORING
+                    {t('features.equalScoring')}
                   </Text>
                 </VStack>
 
@@ -484,7 +482,7 @@ const GameMenu = ({ onSelectGame, gameData, articleId }) => {
                     fontWeight="bold"
                     textAlign="center"
                   >
-                    AI-POWERED
+                    {t('features.aiPowered')}
                   </Text>
                 </VStack>
 
@@ -503,7 +501,7 @@ const GameMenu = ({ onSelectGame, gameData, articleId }) => {
                     fontWeight="bold"
                     textAlign="center"
                   >
-                    COMPETITIVE
+                    {t('features.competitive')}
                   </Text>
                 </VStack>
 
@@ -522,7 +520,7 @@ const GameMenu = ({ onSelectGame, gameData, articleId }) => {
                     fontWeight="bold"
                     textAlign="center"
                   >
-                    ADAPTIVE
+                    {t('features.adaptive')}
                   </Text>
                 </VStack>
               </Grid>
@@ -609,7 +607,7 @@ const GameMenu = ({ onSelectGame, gameData, articleId }) => {
                       fontWeight="bold"
                       color="white"
                     >
-                      {isDisabled ? 'LOCKED' : 'READY'}
+                      {isDisabled ? t('status.locked') : t('status.ready')}
                     </Box>
 
                     <VStack spacing={3} align="start" height="100%">
@@ -700,7 +698,9 @@ const GameMenu = ({ onSelectGame, gameData, articleId }) => {
                         >
                           <Play size={16} />
                           <Text fontSize="sm" fontWeight="bold">
-                            {isDisabled ? 'LOCKED' : 'START'}
+                            {isDisabled
+                              ? t('status.locked')
+                              : t('navigation.startGame')}
                           </Text>
                         </HStack>
                       </HStack>
@@ -721,7 +721,7 @@ const GameMenu = ({ onSelectGame, gameData, articleId }) => {
                           fontWeight="bold"
                           backdropFilter="blur(10px)"
                         >
-                          🔒 Insufficient Data
+                          🔒 {t('errors.insufficientData')}
                         </Box>
                       )}
                     </VStack>
@@ -742,6 +742,7 @@ const IntegratedGameHub = () => {
   const navigate = useNavigate()
   const toast = useToast()
   const { user } = useSelector(state => state.auth)
+  const { t } = useTranslation('GameHub')
 
   // State management
   const [gameData, setGameData] = useState(null)
@@ -776,9 +777,7 @@ const IntegratedGameHub = () => {
         console.warn('Could not fetch article data:', err)
       }
 
-      const response = await axios.get(
-        `/api/gamehub/data/${articleId}/${i18n.language}`,
-      )
+      const response = await axios.get(`/api/gamehub/data/${articleId}`)
 
       setGameData(response.data.gameData)
       setIsGenerating(false)
@@ -902,7 +901,7 @@ const IntegratedGameHub = () => {
                 }}
                 transition="all 0.2s"
               >
-                Back
+                {t('navigation.back')}
               </Button>
             </MotionBox>
 
@@ -916,7 +915,7 @@ const IntegratedGameHub = () => {
                 bgGradient="linear(45deg, #667eea, #764ba2)"
                 bgClip="text"
               >
-                Game Hub
+                {t('headers.gameHub')}
               </Text>
             </HStack>
 

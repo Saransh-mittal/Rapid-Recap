@@ -16,6 +16,7 @@ import {
 } from '@chakra-ui/react'
 import { motion, AnimatePresence } from 'framer-motion'
 import { useSelector } from 'react-redux'
+import { useTranslation } from 'react-i18next'
 
 const MotionBox = motion(Box)
 const MotionFlex = motion(Flex)
@@ -48,6 +49,8 @@ const FloatingOrb = React.memo(({ size, delay, color, x, y }) => (
 // Ultra compact step component
 const CompactStep = React.memo(
   ({ step, isActive, isCompleted, progress = 0, index }) => {
+    const { t } = useTranslation('GameHub')
+
     return (
       <MotionFlex
         initial={{ opacity: 0, x: -20 }}
@@ -146,7 +149,11 @@ const CompactStep = React.memo(
             px={1.5}
             py={0.5}
           >
-            {isCompleted ? 'DONE' : isActive ? 'LIVE' : 'WAIT'}
+            {isCompleted
+              ? t('status.done')
+              : isActive
+              ? t('status.live')
+              : t('status.wait')}
           </Badge>
         </HStack>
       </MotionFlex>
@@ -163,36 +170,39 @@ const GameSubmissionLoadingScreen = React.memo(
     const [activeStep, setActiveStep] = useState(null)
     const shownTips = useRef(new Set())
     const { user } = useSelector(state => state.auth)
+    const { t } = useTranslation('GameHub')
 
     // Compact game themes
     const gameThemes = useMemo(
       () => ({
         normal_quiz: {
           emoji: '🧠',
-          title: 'Knowledge Quest Analysis',
+          title:
+            t('gameTypes.normal_quiz') + ' ' + t('loading.analysisComplete'),
           primaryColor: '#6366f1',
           accentColor: '#818cf8',
         },
         true_false: {
           emoji: '⚡',
-          title: 'Truth Detector Evaluation',
+          title: t('gameTypes.true_false') + ' ' + t('loading.evaluation'),
           primaryColor: '#a855f7',
           accentColor: '#c084fc',
         },
         word_weaver: {
           emoji: '🔤',
-          title: 'Word Architect Assessment',
+          title: t('gameTypes.word_weaver') + ' ' + t('loading.assessment'),
           primaryColor: '#10b981',
           accentColor: '#34d399',
         },
         connections: {
           emoji: '🔗',
-          title: 'Mind Mapper Analysis',
+          title:
+            t('gameTypes.connections') + ' ' + t('loading.analysisComplete'),
           primaryColor: '#f97316',
           accentColor: '#fb923c',
         },
       }),
-      [],
+      [t],
     )
 
     const theme = gameThemes[gameType] || gameThemes.normal_quiz
@@ -214,36 +224,36 @@ const GameSubmissionLoadingScreen = React.memo(
       () => [
         {
           id: 'initializeCalculation',
-          label: 'Initialize Engine',
-          description: 'Launching systems',
+          label: t('loading.initializeEngine'),
+          description: t('loading.launchingSystems'),
           weight: 15,
         },
         {
           id: 'calculateRQM',
-          label: 'Compute Score',
-          description: 'Processing metrics',
+          label: t('loading.computeScore'),
+          description: t('loading.processingMetrics'),
           weight: 30,
         },
         {
           id: 'saveAttempt',
-          label: 'Save Session',
-          description: 'Archiving data',
+          label: t('loading.saveSession'),
+          description: t('loading.archivingData'),
           weight: 25,
         },
         {
           id: 'updateStats',
-          label: 'Update Profile',
-          description: 'Refreshing stats',
+          label: t('loading.updateProfile'),
+          description: t('loading.refreshingStats'),
           weight: 20,
         },
         {
           id: 'finalizeAttempt',
-          label: 'Complete',
-          description: 'Finalizing',
+          label: t('loading.complete'),
+          description: t('loading.finalizing'),
           weight: 10,
         },
       ],
-      [],
+      [t],
     )
 
     // Socket handling
@@ -453,7 +463,7 @@ const GameSubmissionLoadingScreen = React.memo(
                         color="gray.300"
                         fontWeight="500"
                       >
-                        Processing your mastery metrics
+                        {t('generation.processingYourMastery')}
                       </Text>
                     </VStack>
                   </VStack>
@@ -482,7 +492,7 @@ const GameSubmissionLoadingScreen = React.memo(
                               color="gray.400"
                               textTransform="uppercase"
                             >
-                              Done
+                              {t('status.done')}
                             </Text>
                           </VStack>
                         </CircularProgressLabel>
@@ -545,7 +555,7 @@ const GameSubmissionLoadingScreen = React.memo(
                           textTransform="uppercase"
                           letterSpacing="wide"
                         >
-                          AI Insight
+                          {t('alerts.aiInsight')}
                         </Text>
                         <Circle size="3px" bg={theme.primaryColor} />
                       </HStack>
@@ -573,7 +583,7 @@ const GameSubmissionLoadingScreen = React.memo(
                     textAlign="center"
                     mb={1}
                   >
-                    Processing Pipeline
+                    {t('headers.processingPipeline')}
                   </Text>
 
                   <VStack spacing={2} w="100%">
@@ -607,11 +617,11 @@ const GameSubmissionLoadingScreen = React.memo(
                       <HStack spacing={2} justify="center">
                         <Text fontSize="md">🎉</Text>
                         <Text fontSize="sm" fontWeight="bold" color="green.300">
-                          Analysis Complete!
+                          {t('loading.analysisComplete')}
                         </Text>
                       </HStack>
                       <Text fontSize="xs" color="green.200">
-                        Preparing results...
+                        {t('loading.preparingResults')}
                       </Text>
                     </MotionBox>
                   )}

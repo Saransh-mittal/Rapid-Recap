@@ -758,7 +758,7 @@ const GameSummaryInterface = () => {
   const { articleId, sessionId } = useParams()
   const navigate = useNavigate()
   const toast = useToast()
-  const { t } = useTranslation()
+  const { t } = useTranslation('GameHub')
   const isMobile = useBreakpointValue({ base: true, md: false })
 
   const [summary, setSummary] = useState(null)
@@ -825,10 +825,10 @@ const GameSummaryInterface = () => {
             </MotionBox>
             <VStack spacing={2}>
               <Text fontSize="xl" fontWeight="bold" color="white">
-                Loading Game Summary
+                {t('loading.loadingGameSummary')}
               </Text>
               <Text fontSize="md" color="gray.400">
-                Analyzing your performance...
+                {t('loading.analyzingPerformance')}
               </Text>
             </VStack>
           </VStack>
@@ -837,6 +837,7 @@ const GameSummaryInterface = () => {
     )
   }
 
+  // Error state return:
   if (error) {
     return (
       <Box minH="100vh" bg="gray.900" color="white" position="relative">
@@ -852,7 +853,7 @@ const GameSummaryInterface = () => {
             </Circle>
             <VStack spacing={4} textAlign="center">
               <Text fontSize="2xl" fontWeight="bold" color="white">
-                Something went wrong
+                {t('errors.somethingWentWrong')}
               </Text>
               <Alert
                 status="error"
@@ -873,7 +874,7 @@ const GameSummaryInterface = () => {
                   borderRadius="full"
                   px={8}
                 >
-                  Try Again
+                  {t('errors.tryAgain')}
                 </MotionButton>
                 <MotionButton
                   whileHover={{ scale: 1.05 }}
@@ -886,7 +887,7 @@ const GameSummaryInterface = () => {
                   borderColor="gray.400"
                   color="gray.300"
                 >
-                  Go Back
+                  {t('errors.goBack')}
                 </MotionButton>
               </HStack>
             </VStack>
@@ -896,6 +897,7 @@ const GameSummaryInterface = () => {
     )
   }
 
+  // No summary state return:
   if (!summary) {
     return (
       <Box minH="100vh" bg="gray.900" color="white" position="relative">
@@ -911,10 +913,10 @@ const GameSummaryInterface = () => {
             </Circle>
             <VStack spacing={4}>
               <Text fontSize="xl" fontWeight="bold" color="white">
-                No Summary Available
+                {t('errors.noSummaryAvailable')}
               </Text>
               <Text color="gray.400" textAlign="center">
-                We couldn't find any summary data for this session.
+                {t('errors.noSummaryData')}
               </Text>
               <MotionButton
                 whileHover={{ scale: 1.05 }}
@@ -925,7 +927,7 @@ const GameSummaryInterface = () => {
                 borderRadius="full"
                 px={8}
               >
-                Go Back
+                {t('errors.goBack')}
               </MotionButton>
             </VStack>
           </VStack>
@@ -972,7 +974,7 @@ const GameSummaryInterface = () => {
                 bg: 'rgba(255, 255, 255, 0.1)',
               }}
             >
-              {isMobile ? 'Back' : 'Back to Results'}
+              {isMobile ? t('navigation.back') : t('navigation.backToResults')}
             </MotionButton>
 
             <VStack spacing={0}>
@@ -991,7 +993,7 @@ const GameSummaryInterface = () => {
                     fontWeight="bold"
                     color={config.lightColor}
                   >
-                    {config.title}
+                    {t(`gameTypes.${summary.gameType}`)}
                   </Text>
                 </VStack>
               </HStack>
@@ -1052,7 +1054,7 @@ const GameSummaryInterface = () => {
                     textTransform="uppercase"
                     letterSpacing="wider"
                   >
-                    Performance Report
+                    {t('headers.performanceReport')}
                   </Text>
                 </HStack>
 
@@ -1087,7 +1089,7 @@ const GameSummaryInterface = () => {
                     fontSize="xs"
                     fontWeight="bold"
                   >
-                    {config.title}
+                    {t(`gameTypes.${summary.gameType}`)}
                   </Badge>
                 </HStack>
               </VStack>
@@ -1116,14 +1118,14 @@ const GameSummaryInterface = () => {
                     fontWeight="900"
                     color="white"
                   >
-                    Question Analysis
+                    {t('headers.questionAnalysis')}
                   </Text>
                   <Text
                     fontSize={{ base: 'sm', md: 'md' }}
                     color="gray.400"
                     fontWeight="500"
                   >
-                    Detailed breakdown of your performance
+                    {t('descriptions.detailedBreakdown')}
                   </Text>
                 </VStack>
               </HStack>

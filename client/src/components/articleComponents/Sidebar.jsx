@@ -1,3 +1,4 @@
+// File: client/src/components/articleComponents/Sidebar.jsx
 import React, {
   useCallback,
   useMemo,

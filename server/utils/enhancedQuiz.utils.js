@@ -374,73 +374,104 @@ const generateEnhancedGameData = async ({
     let result
     let response
 
-    // UPDATED: Prompt without context requirement and with proper fill-in-blank validation
-    const prompt = `Title: ${title}
+    // ADD: Language-aware prompt generation
+    const getLanguageSpecificPrompt = (language, title, author, mainText) => {
+      const isHindi = language === 'hi'
+
+      const languageInstructions = isHindi
+        ? `Generate ALL content in HINDI language (हिंदी में). All questions, options, statements, explanations, and content must be in Hindi. Use proper Hindi grammar and vocabulary.`
+        : `Generate ALL content in ENGLISH language. All questions, options, statements, explanations, and content must be in English.`
+
+      const exampleStructure = isHindi
+        ? {
+            normal_quiz_example: `"question": "लेख के अनुसार मुख्य विषय क्या है?", "options": {"a": "विकल्प 1", "b": "विकल्प 2", "c": "विकल्प 3", "d": "विकल्प 4"}, "correct": "a", "explanation": "यह सही है क्योंकि..."`,
+            true_false_example: `"text": "लेख के अनुसार यह कथन सत्य है।", "correct": true, "explanation": "यह सत्य है क्योंकि..."`,
+            word_weaver_example: `"blank": "भारत की राजधानी _____ है।", "answer": "दिल्ली"`,
+            connections_example: `"concepts": ["अवधारणा1", "अवधारणा2", "अवधारणा3", "अवधारणा4"], "reasoning": "ये दोनों अवधारणाएं इसलिए जुड़ी हैं कि..."`,
+          }
+        : {
+            normal_quiz_example: `"question": "What is the main topic according to the article?", "options": {"a": "Option 1", "b": "Option 2", "c": "Option 3", "d": "Option 4"}, "correct": "a", "explanation": "This is correct because..."`,
+            true_false_example: `"text": "According to the article, this statement is true.", "correct": true, "explanation": "This is true because..."`,
+            word_weaver_example: `"blank": "The capital of India is _____.", "answer": "DELHI"`,
+            connections_example: `"concepts": ["Concept1", "Concept2", "Concept3", "Concept4"], "reasoning": "These concepts are connected because..."`,
+          }
+
+      return `Title: ${title}
 Author: ${author}
 MainText: ${mainText}
+
+${languageInstructions}
 
 Generate comprehensive game data for multiple quiz types based on this article. Return a JSON object with the following structure:
 
 {
-  "title": "Article title",
-  "description": "Brief description",
-  "category": "article category",
+  "title": "${isHindi ? 'लेख का शीर्षक' : 'Article title'}",
+  "description": "${isHindi ? 'संक्षिप्त विवरण' : 'Brief description'}",
+  "category": "${isHindi ? 'लेख श्रेणी' : 'article category'}",
   "normal_quiz": {
     "questions": [
       {
-        "question": "Question text",
-        "options": {"a": "option1", "b": "option2", "c": "option3", "d": "option4"},
-        "correct": "a",
-        "explanation": "Why this is correct"
+        ${exampleStructure.normal_quiz_example}
       }
     ]
   },
   "true_false": {
     "statements": [
       {
-        "text": "Statement to evaluate",
-        "correct": true,
-        "explanation": "Explanation"
+        ${exampleStructure.true_false_example}
       }
     ]
   },
   "word_weaver": {
     "questions": [
       {
-        "blank": "Complete sentence from article with EXACTLY ONE word replaced by _____: The _____ was significant in the development.",
-        "answer": "SINGLEWORD"
+        ${exampleStructure.word_weaver_example}
       }
     ]
   },
   "connections": {
-    "concepts": ["Concept1", "Concept2", "Concept3", "Concept4", "Concept5", "Concept6", "Concept7", "Concept8"],
+    "concepts": [${
+      exampleStructure.connections_example.split('"concepts":')[1].split(',')[0]
+    }, "Concept5", "Concept6", "Concept7", "Concept8"],
     "overallDifficulty": 0.65,
     "validConnections": [
       {
         "from": "Concept1",
         "to": "Concept2",
-        "reasoning": "DETAILED reasoning explaining how these concepts connect based on article content.",
+        ${exampleStructure.connections_example.split('"reasoning":')[1]},
         "difficulty": 0.45,
         "connectionType": "category_example"
       },
       {
         "from": "Concept3",
         "to": "Concept4",
-        "reasoning": "COMPREHENSIVE explanation of the connection with specific article references.",
+        "reasoning": "${
+          isHindi
+            ? 'विस्तृत स्पष्टीकरण के साथ लेख-विशिष्ट संदर्भ।'
+            : 'COMPREHENSIVE explanation of the connection with specific article references.'
+        }",
         "difficulty": 0.72,
         "connectionType": "cause_effect"
       },
       {
         "from": "Concept5",
         "to": "Concept6",
-        "reasoning": "THOROUGH reasoning that demonstrates deep understanding of relationship.",
+        "reasoning": "${
+          isHindi
+            ? 'रिश्ते की गहरी समझ दिखाने वाला पूर्ण तर्क।'
+            : 'THOROUGH reasoning that demonstrates deep understanding of relationship.'
+        }",
         "difficulty": 0.58,
         "connectionType": "functional"
       },
       {
         "from": "Concept7",
         "to": "Concept8",
-        "reasoning": "DETAILED analysis of the relationship with article-specific context.",
+        "reasoning": "${
+          isHindi
+            ? 'लेख-विशिष्ट संदर्भ के साथ रिश्ते का विस्तृत विश्लेषण।'
+            : 'DETAILED analysis of the relationship with article-specific context.'
+        }",
         "difficulty": 0.81,
         "connectionType": "opposing"
       }
@@ -454,48 +485,130 @@ Requirements:
 - Word Weaver: EXACTLY 5 fill-in-the-blank questions with SINGLE WORD answers only
 - Connections: EXACTLY 8 concepts with EXACTLY 4 valid connections forming perfect pairs
 
-CRITICAL WORD WEAVER REQUIREMENTS - NO CONTEXT NEEDED:
-- MUST pick exact sentences/statements from the provided article text
-- Replace only ONE significant word from the exact sentence with _____ (exactly 5 underscores)
-- The removed word must be a single word (no spaces, no phrases)
-- Word length should be 4-12 letters
-- Use the exact sentence structure from the article
-- The sentence must be complete and self-explanatory without additional context
-- Choose sentences that are clear and meaningful on their own
-- Prioritize sentences with nouns, verbs, or adjectives that are central to the article's meaning
-- Each blank sentence must contain EXACTLY ONE _____ placeholder
-- The sentence should make grammatical sense with the blank
-- Choose important keywords, concepts, or facts from the article
+${isHindi ? 'हिंदी भाषा की आवश्यकताएं:' : 'LANGUAGE REQUIREMENTS:'}
+- ${
+        isHindi
+          ? 'सभी प्रश्न, विकल्प, कथन, और स्पष्टीकरण हिंदी में होने चाहिए'
+          : 'All questions, options, statements, and explanations must be in the specified language'
+      }
+- ${
+        isHindi
+          ? 'उचित हिंदी व्याकरण और शब्दावली का उपयोग करें'
+          : 'Use proper grammar and vocabulary for the language'
+      }
+- ${
+        isHindi
+          ? 'तकनीकी शब्दों के लिए उनके हिंदी समकक्ष का उपयोग करें जहाँ संभव हो'
+          : 'Use appropriate technical terms for the language context'
+      }
 
-WORD WEAVER VALIDATION REQUIREMENTS:
-- Each "blank" field must contain exactly one _____ (5 underscores)
-- The sentence must be grammatically correct
-- The sentence must be at least 10 words long
-- The answer must be a single word (4-8 characters, no spaces)
-- The sentence should be self-contained and understandable
+CRITICAL WORD WEAVER REQUIREMENTS:
+- ${
+        isHindi
+          ? 'लेख के वास्तविक वाक्यों/कथनों को चुनें'
+          : 'MUST pick exact sentences/statements from the provided article text'
+      }
+- ${
+        isHindi
+          ? 'केवल एक महत्वपूर्ण शब्द को _____ से बदलें'
+          : 'Replace only ONE significant word from the exact sentence with _____ (exactly 5 underscores)'
+      }
+- ${
+        isHindi
+          ? 'हटाया गया शब्द एक ही शब्द होना चाहिए (कोई स्पेस नहीं)'
+          : 'The removed word must be a single word (no spaces, no phrases)'
+      }
+- ${
+        isHindi
+          ? 'शब्द की लंबाई 4-12 अक्षर होनी चाहिए'
+          : 'Word length should be 4-12 letters'
+      }
+- ${
+        isHindi
+          ? 'लेख की मूल वाक्य संरचना का उपयोग करें'
+          : 'Use the exact sentence structure from the article'
+      }
 
-CRITICAL NORMAL QUIZ REQUIREMENTS:
-- Questions must test comprehension of article content
-- Include variety: factual, analytical, and inferential questions
-- Options should be plausible but clearly distinguishable
-- Explanations should reference specific article content
+${isHindi ? 'सामान्य प्रश्न आवश्यकताएं:' : 'CRITICAL NORMAL QUIZ REQUIREMENTS:'}
+- ${
+        isHindi
+          ? 'प्रश्न लेख की समझ का परीक्षण करें'
+          : 'Questions must test comprehension of article content'
+      }
+- ${
+        isHindi
+          ? 'तथ्यात्मक, विश्लेषणात्मक, और अनुमानित प्रश्न शामिल करें'
+          : 'Include variety: factual, analytical, and inferential questions'
+      }
+- ${
+        isHindi
+          ? 'विकल्प संभावित लेकिन स्पष्ट रूप से अलग होने चाहिए'
+          : 'Options should be plausible but clearly distinguishable'
+      }
+- ${
+        isHindi
+          ? 'स्पष्टीकरण में लेख की विशिष्ट सामग्री का संदर्भ दें'
+          : 'Explanations should reference specific article content'
+      }
 
-CRITICAL TRUE/FALSE REQUIREMENTS:
-- Statements must be directly verifiable from article content
-- Mix obviously true, obviously false, and subtly misleading statements
-- Avoid absolute terms unless specifically stated in article
-- Include both factual and conceptual statements
+${isHindi ? 'सत्य/असत्य आवश्यकताएं:' : 'CRITICAL TRUE/FALSE REQUIREMENTS:'}
+- ${
+        isHindi
+          ? 'कथन लेख की सामग्री से सीधे सत्यापित होने चाहिए'
+          : 'Statements must be directly verifiable from article content'
+      }
+- ${
+        isHindi
+          ? 'स्पष्ट सत्य, स्पष्ट असत्य, और सूक्ष्म भ्रामक कथन मिलाएं'
+          : 'Mix obviously true, obviously false, and subtly misleading statements'
+      }
+- ${
+        isHindi
+          ? 'पूर्ण शब्दों से बचें जब तक कि लेख में विशेष रूप से न कहा गया हो'
+          : 'Avoid absolute terms unless specifically stated in article'
+      }
 
-CRITICAL CONNECTION REQUIREMENTS:
-- MUST provide exactly 8 distinct, important concepts from the article
-- Create EXACTLY 4 connections that pair up all 8 concepts
-- Each concept appears in EXACTLY ONE connection (no reuse)
-- Each connection must represent a meaningful relationship from the article
+${isHindi ? 'कनेक्शन आवश्यकताएं:' : 'CRITICAL CONNECTION REQUIREMENTS:'}
+- ${
+        isHindi
+          ? 'लेख से बिल्कुल 8 अलग, महत्वपूर्ण अवधारणाएं प्रदान करें'
+          : 'MUST provide exactly 8 distinct, important concepts from the article'
+      }
+- ${
+        isHindi
+          ? 'बिल्कुल 4 कनेक्शन बनाएं जो सभी 8 अवधारणाओं को जोड़ें'
+          : 'Create EXACTLY 4 connections that pair up all 8 concepts'
+      }
+- ${
+        isHindi
+          ? 'प्रत्येक अवधारणा बिल्कुल एक कनेक्शन में दिखाई देनी चाहिए'
+          : 'Each concept appears in EXACTLY ONE connection (no reuse)'
+      }
 
-- Ensure variety in question types and difficulty
-- All content must be derived directly from the provided article text
-- Provide clear explanations that reference article content
-- Word Weaver answers must be single words only (no spaces, no phrases)`
+- ${
+        isHindi
+          ? 'प्रश्न प्रकारों और कठिनाई में विविधता सुनिश्चित करें'
+          : 'Ensure variety in question types and difficulty'
+      }
+- ${
+        isHindi
+          ? 'सभी सामग्री सीधे लेख की सामग्री से ली जानी चाहिए'
+          : 'All content must be derived directly from the provided article text'
+      }
+- ${
+        isHindi
+          ? 'स्पष्ट स्पष्टीकरण प्रदान करें जो लेख की सामग्री का संदर्भ दें'
+          : 'Provide clear explanations that reference article content'
+      }
+- ${
+        isHindi
+          ? 'वर्ड वीवर उत्तर केवल एक शब्द होने चाहिए'
+          : 'Word Weaver answers must be single words only (no spaces, no phrases)'
+      }`
+    }
+
+    // Generate the appropriate prompt based on language
+    const prompt = getLanguageSpecificPrompt(language, title, author, mainText)
 
     while (attempts-- > 0) {
       try {
@@ -505,8 +618,11 @@ CRITICAL CONNECTION REQUIREMENTS:
           messages: [
             {
               role: 'system',
-              content:
-                'You are an educational game generator. Create comprehensive quiz content based on articles. For Word Weaver, create fill-in-the-blank sentences without context - each sentence must be self-contained and meaningful.',
+              content: `You are an educational game generator. Create comprehensive quiz content based on articles. ${
+                language === 'hi'
+                  ? 'Generate ALL content in HINDI language (हिंदी में). Use proper Hindi grammar, vocabulary, and sentence structure.'
+                  : 'Generate ALL content in ENGLISH language.'
+              } For Word Weaver, create fill-in-the-blank sentences - each sentence must be self-contained and meaningful.`,
             },
             {
               role: 'user',
@@ -519,17 +635,15 @@ CRITICAL CONNECTION REQUIREMENTS:
         responseText = responseText.replace(/```json|```/g, '').trim()
         response = JSON.parse(responseText)
 
-        // UPDATED: Enhanced Word Weaver validation without context
+        // Enhanced Word Weaver validation (language-agnostic)
         if (response.word_weaver?.questions) {
           response.word_weaver.questions = response.word_weaver.questions
             .map(q => {
-              // Validate blank format
               if (!q.blank || typeof q.blank !== 'string') {
                 console.warn('Invalid blank format, skipping question')
                 return null
               }
 
-              // Check for exactly one _____ placeholder
               const blankCount = (q.blank.match(/_____/g) || []).length
               if (blankCount !== 1) {
                 console.warn(
@@ -538,15 +652,15 @@ CRITICAL CONNECTION REQUIREMENTS:
                 return null
               }
 
-              // Check minimum sentence length
-              if (q.blank.split(' ').length < 10) {
+              if (q.blank.split(' ').length < 5) {
+                // Reduced requirement for Hindi
                 console.warn('Blank sentence too short, skipping question')
                 return null
               }
 
-              // Validate answer
               let cleanAnswer = q.answer.replace(/\s+/g, '').toUpperCase()
-              if (cleanAnswer.length < 3 || cleanAnswer.length > 15) {
+              if (cleanAnswer.length < 2 || cleanAnswer.length > 15) {
+                // Adjusted for Hindi
                 console.warn('Invalid answer length, skipping question')
                 return null
               }
@@ -556,19 +670,19 @@ CRITICAL CONNECTION REQUIREMENTS:
                 answer: cleanAnswer,
               }
             })
-            .filter(Boolean) // Remove null entries
+            .filter(Boolean)
         }
 
-        // Enhanced validation with proper Word Weaver checks
+        // Enhanced validation with language-specific logging
         if (
           response &&
           response.normal_quiz?.questions?.length === 5 &&
           response.true_false?.statements?.length === 7 &&
-          response.word_weaver?.questions?.length === 5 && // Must have valid questions after filtering
+          response.word_weaver?.questions?.length === 5 &&
           response.connections?.concepts?.length === 8 &&
           response.connections?.validConnections?.length === 4
         ) {
-          // Additional validation for connections game (existing code)
+          // Validate connections structure (language-agnostic)
           const concepts = response.connections.concepts
           const connections = response.connections.validConnections
 
@@ -614,15 +728,6 @@ CRITICAL CONNECTION REQUIREMENTS:
             )
           }
 
-          const unusedConcepts = concepts.filter(
-            concept => !usedConcepts.has(concept),
-          )
-          if (unusedConcepts.length > 0) {
-            invalidConnections.push(
-              `Unused concepts: ${unusedConcepts.join(', ')}`,
-            )
-          }
-
           if (invalidConnections.length > 0) {
             console.error('Invalid connections structure:', invalidConnections)
             throw new Error(
@@ -630,7 +735,8 @@ CRITICAL CONNECTION REQUIREMENTS:
             )
           }
 
-          console.log('✓ Connections validation passed:', {
+          console.log(`✓ Game data validation passed for ${language}:`, {
+            language: language,
             conceptCount: concepts.length,
             connectionCount: connections.length,
             allConceptsUsed: usedConcepts.size === 8,
@@ -652,7 +758,7 @@ CRITICAL CONNECTION REQUIREMENTS:
               })
           }
 
-          // Create GameData document
+          // Create GameData document with proper language setting
           const newGameData = new GameData({
             title: processedData.title || title,
             description: processedData.description || '',
@@ -662,18 +768,19 @@ CRITICAL CONNECTION REQUIREMENTS:
             true_false: processedData.true_false,
             word_weaver: processedData.word_weaver,
             connections: processedData.connections,
-            language: language,
+            language: language, // Ensure language is set correctly
           })
 
           await newGameData.save({ session })
 
           console.log(
-            'Game data saved with word weaver questions (no context):',
+            `Game data saved for ${language} with word weaver questions:`,
             newGameData.word_weaver?.questions?.map(q => ({
               blank: q.blank.substring(0, 50) + '...',
               answer: q.answer,
               wordLength: q.wordLength,
               hasExactlyOneBlank: (q.blank.match(/_____/g) || []).length === 1,
+              language: language,
             })),
           )
 
@@ -688,7 +795,7 @@ CRITICAL CONNECTION REQUIREMENTS:
             issues.push(
               `Normal quiz: ${
                 response.normal_quiz?.questions?.length || 0
-              }/3+ questions`,
+              }/5 questions`,
             )
           }
           if (
@@ -698,7 +805,7 @@ CRITICAL CONNECTION REQUIREMENTS:
             issues.push(
               `True/False: ${
                 response.true_false?.statements?.length || 0
-              }/5+ statements`,
+              }/7 statements`,
             )
           }
           if (
@@ -708,7 +815,7 @@ CRITICAL CONNECTION REQUIREMENTS:
             issues.push(
               `Word Weaver: ${
                 response.word_weaver?.questions?.length || 0
-              }/3+ questions (after validation)`,
+              }/5 questions (after validation)`,
             )
           }
           if (
@@ -733,16 +840,23 @@ CRITICAL CONNECTION REQUIREMENTS:
           }
 
           throw new Error(
-            `Invalid response format. Issues: ${issues.join(', ')}`,
+            `Invalid response format for ${language}. Issues: ${issues.join(
+              ', ',
+            )}`,
           )
         }
       } catch (err) {
-        console.error('Error during OpenAI API call:', err.message)
+        console.error(
+          `Error during OpenAI API call for ${language}:`,
+          err.message,
+        )
       }
     }
-    throw new Error('Failed to generate game data after multiple attempts')
+    throw new Error(
+      `Failed to generate game data for ${language} after multiple attempts`,
+    )
   } catch (error) {
-    console.error('Error generating enhanced game data:', error)
+    console.error(`Error generating enhanced game data for ${language}:`, error)
     throw error
   }
 }

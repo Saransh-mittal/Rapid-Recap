@@ -16,7 +16,7 @@ const globalEmitter = require('../eventEmitter')
 // @route  GET /api/gamehub/data/:articleId/:language
 // @access Private
 const getGameData = asyncHandler(async (req, res) => {
-  const { articleId, language } = req.params
+  const { articleId } = req.params
   const userId = req.user._id
 
   let session
@@ -29,20 +29,27 @@ const getGameData = asyncHandler(async (req, res) => {
       throw new Error('No article provided')
     }
 
+    // ADD: Get user's language preference
+    const User = require('../model/userSchema')
+    const user = await User.findById(userId)
+      .select('userLanguage')
+      .session(session)
+    const userLanguage = user?.userLanguage || 'en' // Default to English if not set
+
     const article = await Article.findById(articleId).session(session)
     if (!article) {
       throw new Error('Article not found')
     }
 
-    // Check if game data already exists
+    // Check if game data already exists for user's language
     let gameData = await GameData.findOne({
       article: articleId,
-      language: language,
+      language: userLanguage,
       isActive: true,
     }).session(session)
 
     if (!gameData) {
-      // Generate new game data
+      // Generate new game data in user's preferred language
       const {
         title,
         author,
@@ -52,21 +59,27 @@ const getGameData = asyncHandler(async (req, res) => {
         hindiMainText,
       } = article
 
+      // Validate content availability for the requested language
       if (
-        (language === 'en' && (!title || !mainText)) ||
-        (language === 'hi' && (!hindiTitle || !hindiMainText || !hindiAuthor))
+        (userLanguage === 'en' && (!title || !mainText || !author)) ||
+        (userLanguage === 'hi' &&
+          (!hindiTitle || !hindiMainText || !hindiAuthor))
       ) {
-        throw new Error('Game data cannot be generated for this article')
+        throw new Error(
+          `Game data cannot be generated for this article in ${
+            userLanguage === 'en' ? 'English' : 'Hindi'
+          } language. Content is not available.`,
+        )
       }
 
       gameData = await generateEnhancedGameData({
-        title: language === 'en' ? title : hindiTitle,
-        author: language === 'en' ? author : hindiAuthor,
-        mainText: language === 'en' ? mainText : hindiMainText,
+        title: userLanguage === 'en' ? title : hindiTitle,
+        author: userLanguage === 'en' ? author : hindiAuthor,
+        mainText: userLanguage === 'en' ? mainText : hindiMainText,
         articleId,
         article,
         session,
-        language,
+        language: userLanguage,
       })
     }
 
@@ -80,12 +93,14 @@ const getGameData = asyncHandler(async (req, res) => {
         title: gameData.title,
         description: gameData.description,
         category: gameData.category,
+        language: gameData.language,
         normal_quiz: gameData.normal_quiz,
         true_false: gameData.true_false,
         word_weaver: gameData.word_weaver,
         connections: gameData.connections,
       },
       status: 'ready',
+      userLanguage: userLanguage,
     })
   } catch (error) {
     if (session) {
@@ -395,19 +410,28 @@ const startGameSession = asyncHandler(async (req, res) => {
 // @route  POST /api/gamehub/session/create
 // @access Private
 const createGameSession = asyncHandler(async (req, res) => {
-  const { articleId, gameType, language } = req.body
+  const { articleId, gameType } = req.body
   const userId = req.user._id
 
   try {
-    // Get game data
+    // ADD: Get user's language preference
+    const User = require('../model/userSchema')
+    const user = await User.findById(userId).select('userLanguage')
+    const userLanguage = user?.userLanguage || 'en' // Default to English if not set
+
+    // Get game data for user's language
     const gameData = await GameData.findOne({
       article: articleId,
-      language: language || 'en',
+      language: userLanguage,
       isActive: true,
     })
 
     if (!gameData) {
-      return res.status(404).json({ error: 'Game data not found' })
+      return res.status(404).json({
+        error: `Game data not found for ${
+          userLanguage === 'en' ? 'English' : 'Hindi'
+        } language. Please try generating the game data first.`,
+      })
     }
 
     // Check if user already has an active session for this specific game type
@@ -425,6 +449,7 @@ const createGameSession = asyncHandler(async (req, res) => {
         sessionId: existingSession._id,
         timer: timer,
         status: 'ready',
+        language: userLanguage,
       })
     }
 
@@ -477,18 +502,15 @@ const createGameSession = asyncHandler(async (req, res) => {
         break
 
       case 'word_weaver':
-        // UPDATED: Remove context handling, just store basic question data
         questions = gameData.word_weaver.questions.slice(0, 5).map(q => {
-          // Calculate correct word length from the actual answer
           const correctWordLength = q.answer
             ? q.answer.replace(/\s+/g, '').length
             : 6
 
           return {
-            // UPDATED: Remove context field
             blank: q.blank,
-            answer: q.answer, // Keep answer for validation (not sent to frontend)
-            wordLength: correctWordLength, // Use correct word length
+            answer: q.answer,
+            wordLength: correctWordLength,
             difficulty: q.difficulty,
             questionId: q._id,
           }
@@ -509,7 +531,7 @@ const createGameSession = asyncHandler(async (req, res) => {
         return res.status(400).json({ error: 'Invalid game type' })
     }
 
-    // Create new session
+    // Create new session with user's language
     const gameSession = new ArticleQuizSession({
       user: userId,
       article: articleId,
@@ -519,14 +541,14 @@ const createGameSession = asyncHandler(async (req, res) => {
       startTime: null,
       endTime: null,
       completed: false,
-      language: language || 'en',
+      language: userLanguage,
       responses: [],
     })
 
     await gameSession.save()
 
     console.log(
-      `Game session created: ${gameType}, Timer: ${timer}s, Questions: ${questions.length}`,
+      `Game session created: ${gameType}, Timer: ${timer}s, Questions: ${questions.length}, Language: ${userLanguage}`,
     )
 
     res.status(200).json({
@@ -536,6 +558,7 @@ const createGameSession = asyncHandler(async (req, res) => {
       gameType: gameType,
       totalQuestions: questions.length,
       status: 'ready',
+      language: userLanguage,
     })
   } catch (error) {
     console.error('Error creating game session:', error)

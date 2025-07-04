@@ -8,9 +8,7 @@ export const fetchGameData = createAsyncThunk(
   'gameHub/fetchGameData',
   async ({ articleId, language = 'en' }, { rejectWithValue }) => {
     try {
-      const response = await axios.get(
-        `/api/gamehub/data/${articleId}/${language}`,
-      )
+      const response = await axios.get(`/api/gamehub/data/${articleId}`)
       return response.data.gameData
     } catch (error) {
       return rejectWithValue(

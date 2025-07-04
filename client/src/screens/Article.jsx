@@ -112,13 +112,13 @@ const Article = () => {
 
   const fetchQuiz = useCallback(async () => {
     try {
-      const endpoint = `/api/gamehub/data/${id}/${i18n.language}`
+      const endpoint = `/api/gamehub/data/${id}`
 
       await axios.get(endpoint)
     } catch (error) {
       console.log(error.message)
     }
-  }, [id, i18n.language])
+  }, [id])
 
   const bookmarkStatus = useCallback(
     async ({ view, update }) => {

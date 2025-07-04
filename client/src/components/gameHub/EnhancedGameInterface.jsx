@@ -85,6 +85,7 @@ const gameTypeConfigs = {
 
 // Compact Timer Component - Config-synced visual and audio warnings
 const CompactTimer = ({ timeLeft, totalTime, gameType, onTimeUp }) => {
+  const { t } = useTranslation('GameHub')
   const config = gameTypeConfigs[gameType] || gameTypeConfigs.normal_quiz
   const toast = useToast()
 
@@ -130,8 +131,8 @@ const CompactTimer = ({ timeLeft, totalTime, gameType, onTimeUp }) => {
     ) {
       criticalShownRef.current = true
       toast({
-        title: '🚨 CRITICAL TIME!',
-        description: `Only ${timeLeft} seconds left!`,
+        title: `🚨 ${t('timer.criticalTime')}`,
+        description: t('timer.onlySecondsLeft', { count: timeLeft }),
         status: 'error',
         duration: 4000,
         isClosable: true,
@@ -147,15 +148,17 @@ const CompactTimer = ({ timeLeft, totalTime, gameType, onTimeUp }) => {
     ) {
       warningShownRef.current = true
       toast({
-        title: '⏰ Time Running Low!',
-        description: `${timeLeft} seconds remaining - speed up!`,
+        title: `⏰ ${t('timer.timeRunningLow')}`,
+        description: `${timeLeft} ${t('timer.secondsRemaining')} - ${t(
+          'timer.speedUp',
+        )}`,
         status: 'warning',
         duration: 3000,
         isClosable: true,
         position: 'top',
       })
     }
-  }, [timeLeft, totalTime, gameTimerConfig, toast])
+  }, [timeLeft, totalTime, gameTimerConfig, toast, t])
 
   return (
     <MotionBox
@@ -186,7 +189,7 @@ const CompactTimer = ({ timeLeft, totalTime, gameType, onTimeUp }) => {
                 {timeLeft}
               </Text>
               <Text fontSize="2xs" color="gray.400" lineHeight="1">
-                sec
+                {t('timer.sec')}
               </Text>
             </VStack>
           </CircularProgressLabel>
@@ -218,7 +221,9 @@ const CompactTimer = ({ timeLeft, totalTime, gameType, onTimeUp }) => {
                 fontSize="2xs"
                 variant="solid"
               >
-                {configWarningState === 'critical' ? 'URGENT!' : 'HURRY!'}
+                {configWarningState === 'critical'
+                  ? t('timer.urgent')
+                  : t('timer.hurry')}
               </Badge>
             </MotionBox>
           )}
@@ -241,6 +246,7 @@ const CompactNavigationControls = ({
   canSubmit,
   isSubmitting,
 }) => {
+  const { t } = useTranslation('GameHub')
   const config = gameTypeConfigs[gameType] || gameTypeConfigs.normal_quiz
   const isFirstQuestion = currentQuestionIndex === 0
   const isLastQuestion = currentQuestionIndex === totalQuestions - 1
@@ -261,13 +267,14 @@ const CompactNavigationControls = ({
         {/* Progress */}
         <HStack justify="space-between" w="100%">
           <Text fontSize="xs" color="gray.400">
-            Question {currentQuestionIndex + 1} of {totalQuestions}
+            {t('gameInterface.question')} {currentQuestionIndex + 1} of{' '}
+            {totalQuestions}
           </Text>
           {hasAnswer && (
             <HStack spacing={1}>
               <CheckCircle size={12} color={config.color} />
               <Text fontSize="xs" color={config.color}>
-                Answered
+                {t('gameInterface.answered')}
               </Text>
             </HStack>
           )}
@@ -305,7 +312,7 @@ const CompactNavigationControls = ({
                 cursor: 'not-allowed',
               }}
             >
-              Submit
+              {t('navigation.submit')}
             </Button>
           ) : (
             <Button
@@ -326,7 +333,7 @@ const CompactNavigationControls = ({
                 cursor: 'not-allowed',
               }}
             >
-              Next
+              {t('navigation.next')}
             </Button>
           )}
           {/* Previous Button Row - Only for word_weaver */}
@@ -351,7 +358,7 @@ const CompactNavigationControls = ({
                 cursor: 'not-allowed',
               }}
             >
-              Previous
+              {t('navigation.previous')}
             </Button>
           )}
         </VStack>
@@ -364,7 +371,7 @@ const CompactNavigationControls = ({
             textAlign="center"
             fontStyle="italic"
           >
-            💡 No going back - choose wisely!
+            {t('gameInterface.noGoingBack')}
           </Text>
         )}
 
@@ -376,7 +383,7 @@ const CompactNavigationControls = ({
             textAlign="center"
             fontStyle="italic"
           >
-            🔗 Build your network and submit when ready!
+            {t('gameInterface.buildNetwork')}
           </Text>
         )}
       </VStack>
@@ -390,7 +397,7 @@ const EnhancedGameInterface = () => {
   const navigate = useNavigate()
   const dispatch = useDispatch()
   const toast = useToast()
-  const { t } = useTranslation()
+  const { t } = useTranslation('GameHub')
   const timerRef = useRef(null)
   const { getSocket } = useSocket()
 
@@ -802,13 +809,13 @@ const EnhancedGameInterface = () => {
                   color="gray.300"
                   fontSize="xs"
                 >
-                  Back
+                  {t('navigation.back')}
                 </Button>
 
                 <HStack spacing={2}>
                   <Text fontSize="sm">{config.emoji}</Text>
                   <Text fontSize="sm" fontWeight="bold" color={config.color}>
-                    {config.title}
+                    {t(`gameTypes.${gameType}`)}
                   </Text>
                 </HStack>
 
