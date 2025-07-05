@@ -464,6 +464,10 @@ function initializeSocket(server) {
       socket.join(`tournament_quiz_submission_progress_${userId}`)
     })
 
+    socket.on('join game submission progress', userId => {
+      socket.join(`game_submission_progress_${userId}`)
+    })
+
     socket.off('setup', userData => {
       userOpenChats.delete(userData._id)
       socket.leave(userData._id)
@@ -934,6 +938,20 @@ function initializeSocket(server) {
     ({ userId, stepId, progress }) => {
       io.to(`tournament_quiz_submission_progress_${userId}`).emit(
         'tournament_quiz_submission_progress',
+        {
+          stepId,
+          progress,
+        },
+      )
+    },
+  )
+
+  // Add this bridge between custom emitter and Socket.IO for game submission progress (around line 520 after other bridges)
+  globalEmitter.on(
+    'game_submission_progress',
+    ({ userId, stepId, progress }) => {
+      io.to(`game_submission_progress_${userId}`).emit(
+        'game_submission_progress',
         {
           stepId,
           progress,

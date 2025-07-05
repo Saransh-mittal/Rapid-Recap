@@ -6,6 +6,7 @@ const express = require('express')
 const userRoutes = require('./router/userRoutes')
 const articleRoutes = require('./router/articleRoutes')
 const quizRoutes = require('./router/quizRoutes')
+const gameHubRoutes = require('./router/gameHubRoutes')
 const subscriptionRoutes = require('./router/subscriptionRoutes')
 const mailRoutes = require('./router/mailRoutes')
 const timeSpentRoutes = require('./router/timeSpentRoutes')
@@ -44,6 +45,9 @@ const {
   globalErrorHandler,
   notFoundHandler,
 } = require('./middleware/globalErrorHandlerMiddleware')
+const {
+  languageDetectionMiddleware,
+} = require('./utils/languageDetection.utils')
 
 const app = express()
 // CORS configuration - only needed in development
@@ -192,11 +196,13 @@ require('./scheduler/setupCronJobs')
 const PORT = process.env.PORT
 authRouter.use(cookieParser())
 app.use(configureSession())
+app.use('/api', languageDetectionMiddleware)
 app.use(generateCsrfToken)
 authRouter.use(validateCsrfToken)
 authRouter.use('/user', userRoutes)
 authRouter.use('/articles', articleRoutes)
 authRouter.use('/quiz', quizRoutes)
+authRouter.use('/gamehub', gameHubRoutes)
 authRouter.use('/subs', subscriptionRoutes)
 authRouter.use('/mail', mailRoutes)
 authRouter.use('/timeSpent', timeSpentRoutes)

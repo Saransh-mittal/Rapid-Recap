@@ -112,13 +112,13 @@ const Article = () => {
 
   const fetchQuiz = useCallback(async () => {
     try {
-      const endpoint = `/api/quiz/getQuiz/${id}/${i18n.language}`
+      const endpoint = `/api/gamehub/data/${id}`
 
       await axios.get(endpoint)
     } catch (error) {
       console.log(error.message)
     }
-  }, [id, i18n.language])
+  }, [id])
 
   const bookmarkStatus = useCallback(
     async ({ view, update }) => {
@@ -271,19 +271,34 @@ const Article = () => {
     }
     setIsQuizGivenLoading(true)
     try {
-      const response = await axios.get(`/api/quiz/given/${id}/${userId}`)
-      if (response.data.given) {
+      // Use the new GameHub endpoint that checks for any game type completion
+      const response = await axios.get(
+        `/api/gamehub/completion/${id}/${userId}`,
+      )
+      console.log('Game completion response:', response.data)
+
+      if (response.data.hasPlayed) {
         setPercentile(response.data.percentile)
-        setRQM_score(response.data.RQM_score)
-        setGivenQuiz(true)
+        setRQM_score(response.data.bestScore)
+        setGivenQuiz(response.data) // Store the full response for more detailed info
+        console.log(
+          `User has played ${
+            response.data.gamesPlayed.length
+          } game(s): ${response.data.gamesPlayed.join(', ')}`,
+        )
+        console.log(
+          `Best score: ${response.data.bestScore} from ${response.data.bestGameType}`,
+        )
+      } else {
+        setGivenQuiz(false)
       }
     } catch (error) {
-      console.log(error.message)
+      console.log('Error checking game completion:', error.message)
       setGivenQuiz(false)
     } finally {
       setIsQuizGivenLoading(false)
     }
-  }, [id, user, givenQuiz, loginCheckStatus])
+  }, [id, user, loginCheckStatus])
 
   const checkOnGoingQuiz = useCallback(async () => {
     try {

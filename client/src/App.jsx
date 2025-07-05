@@ -613,7 +613,8 @@ const App = () => {
               location.pathname.startsWith('/profile')
             ) &&
             location.pathname != '/') ||
-            (!location.pathname.startsWith('/quickclash') && !isLoggedIn)) && (
+            (!location.pathname.startsWith('/quickclash') && !isLoggedIn)) &&
+          !location.pathname.startsWith('/gamehub') && (
             <Suspense fallback={null}>
               {/* <Navbar onNavbarLoad={handleNavbarLoad} /> */}
               <ModernNavbar onNavbarLoad={handleNavbarLoad} />

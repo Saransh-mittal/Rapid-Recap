@@ -1,3 +1,4 @@
+// model/quizAttemptSchema.js (Updated with abandoned field)
 const mongoose = require('mongoose')
 
 const quizAttemptSchema = new mongoose.Schema({
@@ -13,17 +14,32 @@ const quizAttemptSchema = new mongoose.Schema({
   articleQuizSession: {
     type: mongoose.Schema.Types.ObjectId,
     ref: 'ARTICLE_QUIZ_SESSION',
+    required: true,
   },
   quiz: {
     type: mongoose.Schema.Types.ObjectId,
     ref: 'QUIZ',
   },
+
+  // NEW: Game hub related fields
+  gameData: {
+    type: mongoose.Schema.Types.ObjectId,
+    ref: 'GAME_DATA',
+  },
+  gameType: {
+    type: String,
+    enum: ['normal_quiz', 'true_false', 'word_weaver', 'connections'],
+    default: 'normal_quiz',
+  },
+
+  // Enhanced responses to support different game types
   responses: [
     {
       questionId: {
         type: mongoose.Schema.Types.ObjectId,
         required: true,
       },
+      // Normal quiz & True/False
       userAnswer: {
         type: String,
       },
@@ -31,8 +47,31 @@ const quizAttemptSchema = new mongoose.Schema({
         type: Boolean,
         default: false,
       },
+      // Word Weaver
+      userWord: String,
+      skipped: {
+        type: Boolean,
+        default: false,
+      },
+      // Connections
+      connections: [
+        {
+          from: String,
+          to: String,
+          isValid: Boolean,
+        },
+      ],
     },
   ],
+
+  // Performance metrics for enhanced games
+  performance: {
+    accuracy: Number,
+    difficulty: Number,
+    correctCount: Number,
+    totalItems: Number,
+  },
+
   RQM_score: {
     type: Number,
     required: true,
@@ -56,6 +95,37 @@ const quizAttemptSchema = new mongoose.Schema({
   expectedTime: {
     type: Number,
   },
+
+  // Enhanced scoring factors
+  timeFactor: {
+    type: Number,
+  },
+  performanceBonus: {
+    type: Number,
+    default: 1.0,
+  },
+
+  // NEW: Abandoned game tracking
+  abandoned: {
+    type: Boolean,
+    default: false,
+  },
+  abandonedReason: {
+    type: String,
+    enum: [
+      'session_expired',
+      'page_refresh',
+      'navigation_away',
+      'connection_lost',
+      'unknown',
+    ],
+    default: null,
+  },
+  abandonedAt: {
+    type: Date,
+    default: null,
+  },
+
   isBoosted: {
     type: Boolean,
     default: false,
@@ -67,7 +137,7 @@ const quizAttemptSchema = new mongoose.Schema({
   season: {
     type: Number,
     required: true,
-    deafult: 1,
+    default: 1,
   },
   month: {
     type: Number,
@@ -75,6 +145,8 @@ const quizAttemptSchema = new mongoose.Schema({
   year: {
     type: Number,
   },
+
+  // IQ Calculation and Society/Circle data
   prevIQScore: {
     type: Number,
   },
@@ -93,6 +165,45 @@ const quizAttemptSchema = new mongoose.Schema({
   globalStandardDeviation: {
     type: Number,
   },
+  hasSocietyOrCircleChanged: {
+    type: Boolean,
+    default: false,
+  },
+  changedSocietyOrCircle: {
+    type: String,
+  },
+  isUpgrade: {
+    type: Boolean,
+    default: false,
+  },
+  newSociety: {
+    type: String,
+  },
+  newCircle: {
+    type: String,
+  },
+  societyUpgradeMessage: {
+    type: String,
+  },
+  boostMultiplier: {
+    type: Number,
+    default: 1,
+  },
+  originalIncrement: {
+    type: Number,
+  },
+  boostedIncrement: {
+    type: Number,
+  },
+  additionalScore: {
+    type: Number,
+  },
+  pauseRealTimeIQ: {
+    type: Boolean,
+    default: false,
+  },
+
+  // Time Dilation and Boost tracking
   timeDilationBoosted: {
     type: Boolean,
     default: false,
@@ -104,14 +215,37 @@ const quizAttemptSchema = new mongoose.Schema({
   additionalTime: {
     type: Number,
   },
+
+  // Activity and Achievement tracking
+  xpAwarded: {
+    type: Number,
+    default: 0,
+  },
+  quinBoostUtilized: {
+    type: Boolean,
+    default: false,
+  },
+  streakRevived: {
+    type: Boolean,
+    default: false,
+  },
+
   createdAt: {
     type: Date,
     default: Date.now,
   },
 })
+
 quizAttemptSchema.index({ user: 1 })
 quizAttemptSchema.index({ createdAt: 1 })
-quizAttemptSchema.index({ season: 1 }) // Add this index
+quizAttemptSchema.index({ season: 1 })
+quizAttemptSchema.index({ user: 1, article: 1, gameType: 1 })
+quizAttemptSchema.index({ gameType: 1 })
+quizAttemptSchema.index({ user: 1, createdAt: -1 })
+// NEW: Index for abandoned attempts
+quizAttemptSchema.index({ abandoned: 1, user: 1 })
+quizAttemptSchema.index({ abandoned: 1, createdAt: -1 })
+
 const QuizAttempt = mongoose.model('QUIZ_ATTEMPT', quizAttemptSchema)
 
 module.exports = QuizAttempt
