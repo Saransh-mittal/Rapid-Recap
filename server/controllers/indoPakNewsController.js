@@ -4,7 +4,7 @@ const SpecialCategory = require('../model/specialCategorySchema')
 const {
   runScraper,
   processScrapedArticles,
-} = require('../utils/indoPakNewsRunner')
+} = require('../utils/scraper.utils/indoPakNewsRunner')
 
 /**
  * @desc    Fetch Indo-Pak news articles on demand
