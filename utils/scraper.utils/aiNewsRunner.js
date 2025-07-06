@@ -17,7 +17,7 @@ const runScraper = async categoryKey => {
     // Use a fixed path to the Python script
     const scriptPath = path.join(
       __dirname,
-      '../../scripts/web/aiNewsScraper.py',
+      '../../scripts/web/AINewsScraper.py',
     )
 
     return new Promise((resolve, reject) => {
