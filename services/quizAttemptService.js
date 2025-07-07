@@ -1,4 +1,4 @@
-// services/enhancedQuizAttemptService.js
+// services/quizAttemptService.js
 const { scheduleQuizEmails } = require('./emailService')
 const { logActivity } = require('../utils/activity.utils')
 const { activityTypes } = require('../data/activityTypes')
@@ -423,7 +423,6 @@ const saveEnhancedQuizAttemptWithStats = async (
     correctCount,
     totalItems,
   }
-  console.log(performance)
   // Calculate enhanced RQM
   const rqmResult = calculateEnhancedRQM(
     gameType,
@@ -449,7 +448,7 @@ const saveEnhancedQuizAttemptWithStats = async (
   }
 
   let quinBoostUtilized = false
-  const nonBoostedRQM = rqmResult.rqmScore
+  const nonBoostedRQM = rqmResult.baseRQM_score
 
   let totalBoostMultiplier = 1
   if (inventory) {

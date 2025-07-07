@@ -6,10 +6,10 @@
     "connections": "Mind Mapper"
   },
   "gameSubtitles": {
-    "normal_quiz": "Multiple Choice Mastery",
-    "true_false": "Lightning Decision Engine",
-    "word_weaver": "Letter Puzzle Mastery",
-    "connections": "Concept Relationship Matrix"
+    "normal_quiz": "Multiple Choice Challenge",
+    "true_false": "Binary Decision Making",
+    "word_weaver": "Fill-in-the-Blank Mastery",
+    "connections": "Conceptual Relationships"
   },
   "gameDescriptions": {
     "normal_quiz": "Navigate through strategic multiple-choice challenges that test your comprehension",
@@ -18,19 +18,19 @@
     "connections": "Create perfect concept pairs by connecting all 8 strategic concepts from the article"
   },
   "gameShortDescriptions": {
-    "normal_quiz": "5 strategic questions",
-    "true_false": "7 lightning challenges",
-    "word_weaver": "5 word constructions",
-    "connections": "8 concepts in 4 perfect pairs"
+    "normal_quiz": "Test your comprehension with strategic multiple-choice questions",
+    "true_false": "Quick-fire true or false statements to test your knowledge",
+    "word_weaver": "Reconstruct missing words using scrambled letters or units",
+    "connections": "Discover hidden connections between related concepts"
   },
   "difficulty": {
-    "easy": "Easy",
-    "medium": "Medium",
-    "hard": "Hard",
     "balanced": "Balanced",
     "swift": "Swift",
     "creative": "Creative",
-    "strategic": "Strategic"
+    "strategic": "Strategic",
+    "easy": "Easy",
+    "medium": "Medium",
+    "hard": "Hard"
   },
   "status": {
     "ready": "READY",
@@ -46,25 +46,25 @@
     "valid": "VALID",
     "invalid": "INVALID",
     "completed": "COMPLETED",
-    "completedShort": "Completed"
+    "completedShort": "Completed",
+    "complete": "Complete",
+    "readyToGenerate": "Ready to Generate",
+    "generate": "Generate"
   },
   "navigation": {
-    "back": "Back",
     "next": "Next",
     "previous": "Previous",
     "submit": "Submit",
     "backToMenu": "Back to Menu",
     "backToArticle": "Back to Article",
-    "returnToArticle": "Return to Article",
     "launchGame": "Launch Game",
-    "startGame": "START",
     "loadMore": "Load More",
-    "backToHub": "Back"
+    "backToHub": "Back",
+    "back": "Back",
+    "startGame": "Start Game",
+    "returnToArticle": "Return to Article"
   },
   "headers": {
-    "chooseChallenge": "Choose Your Challenge",
-    "missionAccomplished": "Mission Accomplished!",
-    "gameHub": "Game Hub",
     "performanceReport": "Performance Report",
     "questionAnalysis": "Question Analysis",
     "howToPlay": "How to Play",
@@ -72,21 +72,20 @@
     "proTips": "Pro Tips",
     "rqmScoring": "RQM Scoring System",
     "processingPipeline": "Processing Pipeline",
-    "gamesMastered": "Games Mastered"
+    "gamesMastered": "Games Mastered",
+    "chooseChallenge": "Choose Your Challenge",
+    "gameHub": "Game Hub",
+    "missionAccomplished": "Mission Accomplished"
   },
   "descriptions": {
-    "transformLearning": "Transform learning into an epic adventure. Master knowledge through interactive gameplay and compete for the highest RQM scores.",
-    "masteredChallenges": "You've mastered all interactive challenges for this article.",
     "detailedBreakdown": "Detailed breakdown of your performance",
     "aiAnalyzing": "AI is analyzing your content and building personalized challenges",
     "preparingExperience": "Preparing your learning adventure",
-    "chooseGameMode": "Choose from 4 different game modes"
+    "chooseGameMode": "Choose from 4 different game modes",
+    "transformLearning": "Transform learning into an engaging adventure with AI-powered games",
+    "masteredChallenges": "You've mastered the challenges and proven your knowledge"
   },
   "features": {
-    "equalScoring": "EQUAL RQM SCORING",
-    "aiPowered": "AI-POWERED",
-    "competitive": "COMPETITIVE",
-    "adaptive": "ADAPTIVE",
     "speedBonus": "Speed Bonus",
     "binarySimplicity": "Binary Simplicity",
     "factVerification": "Fact Verification",
@@ -98,7 +97,11 @@
     "completeNetworkMapping": "Complete Network Mapping",
     "adaptiveDifficulty": "Adaptive Difficulty",
     "smartNavigation": "Smart Navigation",
-    "instantValidation": "Instant Validation"
+    "instantValidation": "Instant Validation",
+    "equalScoring": "Equal Scoring",
+    "aiPowered": "AI Powered",
+    "competitive": "Competitive",
+    "adaptive": "Adaptive"
   },
   "instructions": {
     "normalQuiz": [
@@ -181,7 +184,13 @@
     "availableConcepts": "Available Concepts:",
     "yourConnections": "Your Connections vs Valid Connections:",
     "allValidConnections": "All Valid Connections",
-    "overallPerformance": "Overall Performance"
+    "overallPerformance": "Overall Performance",
+    "timeDilationActive": "Time Dilation Active",
+    "enhancedTime": "Enhanced Time",
+    "baseTime": "Base Time",
+    "additionalTime": "Additional Time",
+    "answered": "Answered",
+    "connected": "Connected"
   },
   "timer": {
     "timeRunningLow": "Time Running Low!",
@@ -238,7 +247,7 @@
     "summaryNotAvailable": "Detailed summary is not available for this report.",
     "noSummaryAvailable": "No Summary Available",
     "noSummaryData": "We couldn't find any summary data for this session.",
-    "insufficientData": "Insufficient Data",
+    "insufficientData": "Game content is being prepared. Please generate to continue.",
     "needsGeneration": "Needs Generation"
   },
   "success": {
@@ -270,20 +279,25 @@
     "reviewPerformance": "Review your most recent performance & detailed analysis",
     "viewDetailedReport": "📊 View Detailed Report",
     "retryGeneration": "Retry Generation",
-    "generating": "Generating..."
+    "generating": "Generating...",
+    "generate": "Generate"
+  },
+  "abilities": {
+    "timeDilationAvailable": "Time Boost Available",
+    "timeDilationActive": "Time Boost Active"
   },
   "toasts": {
     "generationStarted": {
-      "title": "Regeneration Started",
-      "description": "AI is now regenerating the {{game}} challenges for you."
+      "title": "Generation Started",
+      "description": "Generating {{game}} content..."
     },
     "generationSuccess": {
-      "title": "Generation Complete!",
-      "description": "{{game}} is now ready to play."
+      "title": "Generation Complete",
+      "description": "{{game}} is now ready to play!"
     },
     "generationFailed": {
       "title": "Generation Failed",
-      "description": "We couldn't regenerate the game. Please try again."
+      "description": "Failed to generate game content. Please try again."
     }
   },
   "alerts": {
