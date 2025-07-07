@@ -39,8 +39,6 @@ import { useTranslation } from 'react-i18next'
 
 const MotionBox = motion(Box)
 
-// Move static data outside component to prevent recreation on every render
-
 // Memoized animation variants
 const ANIMATION_VARIANTS = {
   modal: {
@@ -78,6 +76,7 @@ const GameIcon = memo(({ game }) => (
     </Box>
   </Box>
 ))
+GameIcon.displayName = 'GameIcon'
 
 const QuickStats = memo(({ game }) => (
   <Grid templateColumns="repeat(3, 1fr)" gap={4} w="100%" maxW="300px">
@@ -101,6 +100,7 @@ const QuickStats = memo(({ game }) => (
     </VStack>
   </Grid>
 ))
+QuickStats.displayName = 'QuickStats'
 
 const InstructionsList = memo(({ instructions, colors }) => (
   <VStack spacing={2} align="stretch">
@@ -134,6 +134,7 @@ const InstructionsList = memo(({ instructions, colors }) => (
     ))}
   </VStack>
 ))
+InstructionsList.displayName = 'InstructionsList'
 
 const FeaturesList = memo(({ features, colors }) => (
   <VStack spacing={1.5} align="stretch">
@@ -153,6 +154,7 @@ const FeaturesList = memo(({ features, colors }) => (
     ))}
   </VStack>
 ))
+FeaturesList.displayName = 'FeaturesList'
 
 const TipsList = memo(({ tips }) => (
   <VStack spacing={1.5} align="stretch">
@@ -173,6 +175,7 @@ const TipsList = memo(({ tips }) => (
     ))}
   </VStack>
 ))
+TipsList.displayName = 'TipsList'
 
 const RQMScoringSection = memo(() => {
   const { t } = useTranslation('GameHub')
@@ -254,6 +257,7 @@ const RQMScoringSection = memo(() => {
     </Box>
   )
 })
+RQMScoringSection.displayName = 'RQMScoringSection'
 
 const GameInstructionsModal = memo(
   ({ isOpen, onClose, gameType, onStartGame }) => {
@@ -361,22 +365,11 @@ const GameInstructionsModal = memo(
       [t],
     )
 
-    // Memoize game data to prevent recalculation
-    const game = useMemo(() => {
-      if (!gameType || !GAME_INSTRUCTIONS[gameType]) return null
-      return GAME_INSTRUCTIONS[gameType]
-    }, [gameType])
+    const game = useMemo(
+      () => (gameType ? GAME_INSTRUCTIONS[gameType] : null),
+      [gameType, GAME_INSTRUCTIONS],
+    )
 
-    // Memoize event handlers
-    const handleClose = useCallback(() => {
-      onClose()
-    }, [onClose])
-
-    const handleStartGame = useCallback(() => {
-      onStartGame()
-    }, [onStartGame])
-
-    // Early return if no valid game type
     if (!game) return null
 
     return (
@@ -384,7 +377,7 @@ const GameInstructionsModal = memo(
         {isOpen && (
           <Modal
             isOpen={isOpen}
-            onClose={handleClose}
+            onClose={onClose}
             size={{ base: 'full', md: '4xl' }}
             closeOnOverlayClick={false}
             motionPreset="slideInBottom"
@@ -414,7 +407,6 @@ const GameInstructionsModal = memo(
               flexDirection="column"
               style={{ zIndex: 1401 }}
             >
-              {/* Dynamic Background Gradient - Optimized */}
               <Box
                 position="absolute"
                 top={0}
@@ -427,7 +419,6 @@ const GameInstructionsModal = memo(
                 pointerEvents="none"
               />
 
-              {/* Custom Close Button - Optimized positioning */}
               <Box
                 position="absolute"
                 top={{ base: 4, md: 6 }}
@@ -439,7 +430,7 @@ const GameInstructionsModal = memo(
                   whileTap={{ scale: 0.9 }}
                 >
                   <Button
-                    onClick={handleClose}
+                    onClick={onClose}
                     size="lg"
                     borderRadius="full"
                     bg="rgba(0, 0, 0, 0.6)"
@@ -461,7 +452,6 @@ const GameInstructionsModal = memo(
                 </MotionBox>
               </Box>
 
-              {/* Header - Fixed */}
               <ModalHeader
                 pt={{ base: 8, md: 8 }}
                 pb={4}
@@ -477,7 +467,6 @@ const GameInstructionsModal = memo(
                   <VStack spacing={6} align="center">
                     <VStack spacing={4} align="center">
                       <GameIcon game={game} />
-
                       <VStack spacing={2} align="center">
                         <Text
                           fontSize={{ base: '2xl', md: '3xl' }}
@@ -488,7 +477,6 @@ const GameInstructionsModal = memo(
                         >
                           {game.title}
                         </Text>
-
                         <HStack spacing={2} align="center">
                           <Badge
                             bg={game.colors.light}
@@ -503,20 +491,17 @@ const GameInstructionsModal = memo(
                           >
                             {game.difficulty}
                           </Badge>
-
                           <Text fontSize="md" color="gray.300" fontWeight="600">
                             {game.subtitle}
                           </Text>
                         </HStack>
                       </VStack>
-
                       <QuickStats game={game} />
                     </VStack>
                   </VStack>
                 </MotionBox>
               </ModalHeader>
 
-              {/* Body - Scrollable */}
               <ModalBody
                 py={0}
                 px={{ base: 6, md: 8 }}
@@ -525,9 +510,7 @@ const GameInstructionsModal = memo(
                 overflow="auto"
                 flex="1"
                 css={{
-                  '&::-webkit-scrollbar': {
-                    width: '6px',
-                  },
+                  '&::-webkit-scrollbar': { width: '6px' },
                   '&::-webkit-scrollbar-track': {
                     background: 'rgba(255, 255, 255, 0.1)',
                     borderRadius: '3px',
@@ -543,7 +526,6 @@ const GameInstructionsModal = memo(
               >
                 <Container maxW="3xl" p={0}>
                   <VStack spacing={6} pb={4}>
-                    {/* Description */}
                     <MotionBox
                       {...ANIMATION_VARIANTS.content}
                       transition={{ duration: 0.5, delay: 0.1 }}
@@ -563,8 +545,6 @@ const GameInstructionsModal = memo(
                         {game.description}
                       </Text>
                     </MotionBox>
-
-                    {/* How to Play Section */}
                     <MotionBox
                       {...ANIMATION_VARIANTS.content}
                       transition={{ duration: 0.5, delay: 0.2 }}
@@ -595,21 +575,17 @@ const GameInstructionsModal = memo(
                             {t('headers.howToPlay')}
                           </Text>
                         </HStack>
-
                         <InstructionsList
                           instructions={game.instructions}
                           colors={game.colors}
                         />
                       </Box>
                     </MotionBox>
-
-                    {/* Features and Tips Row */}
                     <Grid
                       templateColumns={{ base: '1fr', md: 'repeat(2, 1fr)' }}
                       gap={4}
                       w="100%"
                     >
-                      {/* Features */}
                       <MotionBox
                         {...ANIMATION_VARIANTS.content}
                         transition={{ duration: 0.5, delay: 0.3 }}
@@ -639,15 +615,12 @@ const GameInstructionsModal = memo(
                               {t('headers.features')}
                             </Text>
                           </HStack>
-
                           <FeaturesList
                             features={game.features}
                             colors={game.colors}
                           />
                         </Box>
                       </MotionBox>
-
-                      {/* Pro Tips */}
                       <MotionBox
                         {...ANIMATION_VARIANTS.content}
                         transition={{ duration: 0.5, delay: 0.4 }}
@@ -677,13 +650,10 @@ const GameInstructionsModal = memo(
                               {t('headers.proTips')}
                             </Text>
                           </HStack>
-
                           <TipsList tips={game.tips} />
                         </Box>
                       </MotionBox>
                     </Grid>
-
-                    {/* RQM Scoring */}
                     <MotionBox
                       {...ANIMATION_VARIANTS.content}
                       transition={{ duration: 0.5, delay: 0.5 }}
@@ -695,7 +665,6 @@ const GameInstructionsModal = memo(
                 </Container>
               </ModalBody>
 
-              {/* Footer - Fixed */}
               <ModalFooter
                 pt={4}
                 px={{ base: 6, md: 8 }}
@@ -720,7 +689,7 @@ const GameInstructionsModal = memo(
                       whileTap={{ scale: 0.98 }}
                     >
                       <Button
-                        onClick={handleClose}
+                        onClick={onClose}
                         size="md"
                         px={6}
                         py={3}
@@ -742,13 +711,12 @@ const GameInstructionsModal = memo(
                         {t('navigation.backToMenu')}
                       </Button>
                     </MotionBox>
-
                     <MotionBox
                       whileHover={{ scale: 1.02 }}
                       whileTap={{ scale: 0.98 }}
                     >
                       <Button
-                        onClick={handleStartGame}
+                        onClick={onStartGame}
                         size="md"
                         px={8}
                         py={3}
@@ -773,8 +741,6 @@ const GameInstructionsModal = memo(
                       </Button>
                     </MotionBox>
                   </HStack>
-
-                  {/* Safe area for mobile devices */}
                   <Box
                     display={{ base: 'block', md: 'none' }}
                     h="env(safe-area-inset-bottom, 0px)"

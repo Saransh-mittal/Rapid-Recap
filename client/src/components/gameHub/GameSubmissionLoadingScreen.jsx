@@ -1,5 +1,5 @@
 // components/gameHub/GameSubmissionLoadingScreen.jsx - No Overflow Version
-import React, { useState, useEffect, useRef, useMemo } from 'react'
+import React, { useState, useEffect, useRef, useMemo, memo } from 'react'
 import {
   Box,
   Text,
@@ -21,8 +21,7 @@ import { useTranslation } from 'react-i18next'
 const MotionBox = motion(Box)
 const MotionFlex = motion(Flex)
 
-// Minimal floating orbs for ambient effect
-const FloatingOrb = React.memo(({ size, delay, color, x, y }) => (
+const FloatingOrb = memo(({ size, delay, color, x, y }) => (
   <MotionBox
     position="absolute"
     width={`${size}px`}
@@ -45,9 +44,9 @@ const FloatingOrb = React.memo(({ size, delay, color, x, y }) => (
     }}
   />
 ))
+FloatingOrb.displayName = 'FloatingOrb'
 
-// Ultra compact step component
-const CompactStep = React.memo(
+const CompactStep = memo(
   ({ step, isActive, isCompleted, progress = 0, index }) => {
     const { t } = useTranslation('GameHub')
 
@@ -79,7 +78,6 @@ const CompactStep = React.memo(
         h="45px"
         w="100%"
       >
-        {/* Progress fill */}
         {isActive && progress > 0 && (
           <MotionBox
             position="absolute"
@@ -94,7 +92,6 @@ const CompactStep = React.memo(
         )}
 
         <HStack spacing={2} position="relative" zIndex={1} w="100%">
-          {/* Ultra compact indicator */}
           <Circle
             size="24px"
             bg={
@@ -115,7 +112,6 @@ const CompactStep = React.memo(
               : index + 1}
           </Circle>
 
-          {/* Compact step text */}
           <VStack align="start" spacing={0} flex={1} minW={0}>
             <Text
               fontSize="xs"
@@ -140,7 +136,6 @@ const CompactStep = React.memo(
             </Text>
           </VStack>
 
-          {/* Ultra compact status */}
           <Badge
             size="sm"
             colorScheme={isCompleted ? 'green' : isActive ? 'blue' : 'gray'}
@@ -160,8 +155,9 @@ const CompactStep = React.memo(
     )
   },
 )
+CompactStep.displayName = 'CompactStep'
 
-const GameSubmissionLoadingScreen = React.memo(
+const GameSubmissionLoadingScreen = memo(
   ({ socket, gameType = 'normal_quiz', isVisible = true }) => {
     const [progress, setProgress] = useState(0)
     const [stepProgress, setStepProgress] = useState({})
@@ -172,7 +168,6 @@ const GameSubmissionLoadingScreen = React.memo(
     const { user } = useSelector(state => state.auth)
     const { t } = useTranslation('GameHub')
 
-    // Compact game themes
     const gameThemes = useMemo(
       () => ({
         normal_quiz: {
@@ -205,9 +200,11 @@ const GameSubmissionLoadingScreen = React.memo(
       [t],
     )
 
-    const theme = gameThemes[gameType] || gameThemes.normal_quiz
+    const theme = useMemo(
+      () => gameThemes[gameType] || gameThemes.normal_quiz,
+      [gameType, gameThemes],
+    )
 
-    // Shorter tips for compact display
     const gameTips = useMemo(
       () => [
         'AI processes cognitive patterns for optimal scoring',
@@ -219,7 +216,6 @@ const GameSubmissionLoadingScreen = React.memo(
       [],
     )
 
-    // Compact submission steps
     const submissionSteps = useMemo(
       () => [
         {
@@ -256,21 +252,15 @@ const GameSubmissionLoadingScreen = React.memo(
       [t],
     )
 
-    // Socket handling
     useEffect(() => {
       if (!socket || !user || !isVisible) return
 
       socket.emit('join game submission progress', user._id)
-
       const handleProgress = data => {
-        setStepProgress(prev => {
-          const newProgress = { ...prev, [data.stepId]: data.progress }
-          if (data.progress === 100) {
-            setCompletedSteps(prev => new Set([...prev, data.stepId]))
-          }
-          return newProgress
-        })
-
+        setStepProgress(prev => ({ ...prev, [data.stepId]: data.progress }))
+        if (data.progress === 100) {
+          setCompletedSteps(prev => new Set(prev).add(data.stepId))
+        }
         if (data.progress > 0 && data.progress < 100) {
           setActiveStep(data.stepId)
         }
@@ -278,9 +268,8 @@ const GameSubmissionLoadingScreen = React.memo(
 
       socket.on('game_submission_progress', handleProgress)
       return () => socket.off('game_submission_progress', handleProgress)
-    }, [socket, user, isVisible])
+    }, [socket, user?._id, isVisible])
 
-    // Progress calculation
     useEffect(() => {
       const totalWeight = submissionSteps.reduce(
         (sum, step) => sum + step.weight,
@@ -293,10 +282,9 @@ const GameSubmissionLoadingScreen = React.memo(
       setProgress((weightedProgress / totalWeight) * 100)
     }, [stepProgress, submissionSteps])
 
-    // Tip rotation
     useEffect(() => {
       const getRandomTip = () => {
-        if (shownTips.current.size === gameTips.length) {
+        if (shownTips.current.size >= gameTips.length) {
           shownTips.current.clear()
         }
         let newTip
@@ -305,19 +293,16 @@ const GameSubmissionLoadingScreen = React.memo(
         } while (shownTips.current.has(newTip))
         return newTip
       }
-
       const showNewTip = () => {
         const newTip = getRandomTip()
         setCurrentTip(newTip)
         shownTips.current.add(newTip)
       }
-
       showNewTip()
       const tipInterval = setInterval(showNewTip, 4000)
       return () => clearInterval(tipInterval)
     }, [gameTips])
 
-    // Minimal ambient orbs
     const orbs = useMemo(
       () => [
         {
@@ -369,23 +354,15 @@ const GameSubmissionLoadingScreen = React.memo(
         overflow="hidden"
         pointerEvents="auto"
       >
-        {/* Minimal ambient orbs */}
         {orbs.map(orb => (
           <FloatingOrb key={orb.id} {...orb} />
         ))}
-
-        {/* Glassmorphism overlay */}
         <Box
           position="absolute"
-          top={0}
-          left={0}
-          right={0}
-          bottom={0}
+          inset={0}
           bg="rgba(0, 0, 0, 0.75)"
           backdropFilter="blur(12px)"
         />
-
-        {/* Main content - constrained to viewport height */}
         <Box
           position="relative"
           zIndex={1}
@@ -406,7 +383,6 @@ const GameSubmissionLoadingScreen = React.memo(
             h="fit-content"
             maxH="calc(100vh - 32px)"
           >
-            {/* Left side - Main display */}
             <GridItem>
               <MotionBox
                 initial={{ opacity: 0, x: -30 }}
@@ -414,16 +390,11 @@ const GameSubmissionLoadingScreen = React.memo(
                 transition={{ duration: 0.6 }}
               >
                 <VStack spacing={{ base: 3, md: 4 }} align="center">
-                  {/* Hero section */}
                   <VStack spacing={2} textAlign="center">
-                    {/* Animated emoji */}
                     <MotionBox
                       fontSize={{ base: '50px', md: '60px' }}
                       position="relative"
-                      animate={{
-                        y: [0, -6, 0],
-                        rotate: [0, 1, -1, 0],
-                      }}
+                      animate={{ y: [0, -6, 0], rotate: [0, 1, -1, 0] }}
                       transition={{
                         duration: 3,
                         repeat: Infinity,
@@ -446,8 +417,6 @@ const GameSubmissionLoadingScreen = React.memo(
                         {theme.emoji}
                       </Text>
                     </MotionBox>
-
-                    {/* Title */}
                     <VStack spacing={1}>
                       <Text
                         fontSize={{ base: 'lg', md: 'xl' }}
@@ -467,8 +436,6 @@ const GameSubmissionLoadingScreen = React.memo(
                       </Text>
                     </VStack>
                   </VStack>
-
-                  {/* Main progress */}
                   <VStack spacing={3}>
                     <Box position="relative">
                       <CircularProgress
@@ -497,8 +464,6 @@ const GameSubmissionLoadingScreen = React.memo(
                           </VStack>
                         </CircularProgressLabel>
                       </CircularProgress>
-
-                      {/* Glow effect */}
                       <Box
                         position="absolute"
                         top="50%"
@@ -513,8 +478,6 @@ const GameSubmissionLoadingScreen = React.memo(
                         zIndex={-1}
                       />
                     </Box>
-
-                    {/* Linear progress */}
                     <Box w={{ base: '200px', md: '220px' }}>
                       <Progress
                         value={progress}
@@ -529,8 +492,6 @@ const GameSubmissionLoadingScreen = React.memo(
                       />
                     </Box>
                   </VStack>
-
-                  {/* Tip display */}
                   <AnimatePresence mode="wait">
                     <MotionBox
                       key={currentTip}
@@ -568,7 +529,6 @@ const GameSubmissionLoadingScreen = React.memo(
               </MotionBox>
             </GridItem>
 
-            {/* Right side - Steps */}
             <GridItem>
               <MotionBox
                 initial={{ opacity: 0, x: 30 }}
@@ -585,7 +545,6 @@ const GameSubmissionLoadingScreen = React.memo(
                   >
                     {t('headers.processingPipeline')}
                   </Text>
-
                   <VStack spacing={2} w="100%">
                     {submissionSteps.map((step, index) => (
                       <CompactStep
@@ -598,8 +557,6 @@ const GameSubmissionLoadingScreen = React.memo(
                       />
                     ))}
                   </VStack>
-
-                  {/* Completion indicator */}
                   {progress >= 100 && (
                     <MotionBox
                       initial={{ scale: 0, opacity: 0 }}

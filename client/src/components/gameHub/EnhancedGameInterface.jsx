@@ -1,5 +1,12 @@
 // components/gameHub/EnhancedGameInterface.jsx - Updated with exit warning integration
-import React, { useState, useEffect, useCallback, useMemo, useRef } from 'react'
+import React, {
+  useState,
+  useEffect,
+  useCallback,
+  useMemo,
+  useRef,
+  memo,
+} from 'react'
 import { useParams, useNavigate } from 'react-router-dom'
 import { useSelector, useDispatch } from 'react-redux'
 import {
@@ -62,7 +69,7 @@ import { useSocket } from '../../customHooks/useSocket'
 
 const MotionBox = motion(Box)
 
-// Game type configurations
+// Game type configurations (static data)
 const gameTypeConfigs = {
   normal_quiz: {
     title: 'Knowledge Quest',
@@ -86,31 +93,27 @@ const gameTypeConfigs = {
   },
 }
 
-// Compact Timer Component - Config-synced visual and audio warnings
-const CompactTimer = ({ timeLeft, totalTime, gameType, onTimeUp }) => {
+// Compact Timer Component - Memoized for performance
+const CompactTimer = memo(({ timeLeft, totalTime, gameType, onTimeUp }) => {
   const { t } = useTranslation('GameHub')
-  const config = gameTypeConfigs[gameType] || gameTypeConfigs.normal_quiz
   const toast = useToast()
 
-  // Use timer utilities and game-specific config
-  const timerColor = getTimerColor(timeLeft, totalTime)
-  const gameTimerConfig = getGameTypeTimerConfig(gameType)
-
-  // CONFIG-BASED warning states (not percentage-based)
-  const getConfigWarningState = () => {
+  const configWarningState = useMemo(() => {
+    const gameTimerConfig = getGameTypeTimerConfig(gameType)
     if (timeLeft <= gameTimerConfig.criticalAt) return 'critical'
     if (timeLeft <= gameTimerConfig.warningAt) return 'warning'
     return 'normal'
-  }
+  }, [timeLeft, gameType])
 
-  const configWarningState = getConfigWarningState()
+  const timerColor = useMemo(
+    () => getTimerColor(timeLeft, totalTime),
+    [timeLeft, totalTime],
+  )
 
-  // Refs to track if warnings have been shown
   const warningShownRef = useRef(false)
   const criticalShownRef = useRef(false)
   const previousTimeRef = useRef(timeLeft)
 
-  // Reset warning states when timer resets or game starts
   useEffect(() => {
     if (timeLeft >= totalTime * 0.9) {
       warningShownRef.current = false
@@ -118,15 +121,13 @@ const CompactTimer = ({ timeLeft, totalTime, gameType, onTimeUp }) => {
     }
   }, [timeLeft, totalTime])
 
-  // Show toast warnings using config values
   useEffect(() => {
+    const gameTimerConfig = getGameTypeTimerConfig(gameType)
     const previousTime = previousTimeRef.current
     previousTimeRef.current = timeLeft
 
-    // Only show warnings when time is decreasing (not when timer resets)
     if (timeLeft >= previousTime) return
 
-    // Critical warning based on config criticalAt value
     if (
       timeLeft <= gameTimerConfig.criticalAt &&
       !criticalShownRef.current &&
@@ -141,9 +142,7 @@ const CompactTimer = ({ timeLeft, totalTime, gameType, onTimeUp }) => {
         isClosable: true,
         position: 'top',
       })
-    }
-    // Warning based on config warningAt value (but not if critical already shown)
-    else if (
+    } else if (
       timeLeft <= gameTimerConfig.warningAt &&
       !warningShownRef.current &&
       !criticalShownRef.current &&
@@ -161,7 +160,7 @@ const CompactTimer = ({ timeLeft, totalTime, gameType, onTimeUp }) => {
         position: 'top',
       })
     }
-  }, [timeLeft, totalTime, gameTimerConfig, toast, t])
+  }, [timeLeft, gameType, toast, t])
 
   return (
     <MotionBox
@@ -231,159 +230,162 @@ const CompactTimer = ({ timeLeft, totalTime, gameType, onTimeUp }) => {
       </HStack>
     </MotionBox>
   )
-}
+})
+CompactTimer.displayName = 'CompactTimer'
 
-// Compact Navigation Controls - Updated to hide Previous for Quiz & T/F
-const CompactNavigationControls = ({
-  currentQuestionIndex,
-  totalQuestions,
-  gameType,
-  hasAnswer,
-  onPrevious,
-  onNext,
-  onSubmit,
-  canNavigateNext,
-  canSubmit,
-  isSubmitting,
-}) => {
-  const { t } = useTranslation('GameHub')
-  const config = gameTypeConfigs[gameType] || gameTypeConfigs.normal_quiz
-  const isFirstQuestion = currentQuestionIndex === 0
-  const isLastQuestion = currentQuestionIndex === totalQuestions - 1
-  const isSingleQuestion = gameType === 'connections' || totalQuestions === 1
+// Compact Navigation Controls - Memoized for performance
+const CompactNavigationControls = memo(
+  ({
+    currentQuestionIndex,
+    totalQuestions,
+    gameType,
+    hasAnswer,
+    onPrevious,
+    onNext,
+    onSubmit,
+    canNavigateNext,
+    canSubmit,
+    isSubmitting,
+  }) => {
+    const { t } = useTranslation('GameHub')
+    const config = gameTypeConfigs[gameType] || gameTypeConfigs.normal_quiz
+    const isFirstQuestion = currentQuestionIndex === 0
+    const isLastQuestion = currentQuestionIndex === totalQuestions - 1
+    const isSingleQuestion = gameType === 'connections' || totalQuestions === 1
+    const showPreviousButton = gameType === 'word_weaver'
 
-  const showPreviousButton = gameType === 'word_weaver'
+    return (
+      <Box
+        bg="rgba(255, 255, 255, 0.05)"
+        backdropFilter="blur(10px)"
+        border="1px solid rgba(255, 255, 255, 0.1)"
+        borderRadius="xl"
+        p={4}
+      >
+        <VStack spacing={3}>
+          <HStack justify="space-between" w="100%">
+            <Text fontSize="xs" color="gray.400">
+              {t('gameInterface.question')} {currentQuestionIndex + 1} of{' '}
+              {totalQuestions}
+            </Text>
+            {hasAnswer && (
+              <HStack spacing={1}>
+                <CheckCircle size={12} color={config.color} />
+                <Text fontSize="xs" color={config.color}>
+                  {t('gameInterface.answered')}
+                </Text>
+              </HStack>
+            )}
+          </HStack>
 
-  return (
-    <Box
-      bg="rgba(255, 255, 255, 0.05)"
-      backdropFilter="blur(10px)"
-      border="1px solid rgba(255, 255, 255, 0.1)"
-      borderRadius="xl"
-      p={4}
-    >
-      <VStack spacing={3}>
-        <HStack justify="space-between" w="100%">
-          <Text fontSize="xs" color="gray.400">
-            {t('gameInterface.question')} {currentQuestionIndex + 1} of{' '}
-            {totalQuestions}
-          </Text>
-          {hasAnswer && (
-            <HStack spacing={1}>
-              <CheckCircle size={12} color={config.color} />
-              <Text fontSize="xs" color={config.color}>
-                {t('gameInterface.answered')}
-              </Text>
-            </HStack>
+          <Progress
+            value={((currentQuestionIndex + 1) / totalQuestions) * 100}
+            size="sm"
+            borderRadius="full"
+            bg="rgba(255, 255, 255, 0.1)"
+            colorScheme="blue"
+            w="100%"
+          />
+
+          <VStack spacing={3} w="100%">
+            {isLastQuestion || isSingleQuestion ? (
+              <Button
+                rightIcon={<Send size={14} />}
+                onClick={onSubmit}
+                isDisabled={!canSubmit}
+                isLoading={isSubmitting}
+                size="sm"
+                bgGradient={`linear(45deg, ${config.color}, ${config.color}dd)`}
+                color="white"
+                borderRadius="full"
+                fontSize="xs"
+                w="100%"
+                _hover={{
+                  bgGradient: `linear(45deg, ${config.color}dd, ${config.color}bb)`,
+                }}
+                _disabled={{
+                  opacity: 0.6,
+                  cursor: 'not-allowed',
+                }}
+              >
+                {t('navigation.submit')}
+              </Button>
+            ) : (
+              <Button
+                rightIcon={<ArrowRight size={14} />}
+                onClick={onNext}
+                isDisabled={!canNavigateNext}
+                size="sm"
+                bgGradient={`linear(45deg, ${config.color}, ${config.color}dd)`}
+                color="white"
+                borderRadius="full"
+                fontSize="xs"
+                w="100%"
+                _hover={{
+                  bgGradient: `linear(45deg, ${config.color}dd, ${config.color}bb)`,
+                }}
+                _disabled={{
+                  opacity: 0.6,
+                  cursor: 'not-allowed',
+                }}
+              >
+                {t('navigation.next')}
+              </Button>
+            )}
+
+            {showPreviousButton && (
+              <Button
+                leftIcon={<ArrowLeft size={14} />}
+                onClick={onPrevious}
+                isDisabled={isFirstQuestion || isSingleQuestion || isSubmitting}
+                color={'white'}
+                variant="outline"
+                size="sm"
+                borderRadius="full"
+                borderColor="rgba(255, 255, 255, 0.2)"
+                fontSize="xs"
+                w="100%"
+                _hover={{
+                  borderColor: 'rgba(255, 255, 255, 0.4)',
+                  bg: 'rgba(255, 255, 255, 0.05)',
+                }}
+                _disabled={{
+                  opacity: 0.5,
+                  cursor: 'not-allowed',
+                }}
+              >
+                {t('navigation.previous')}
+              </Button>
+            )}
+          </VStack>
+
+          {!showPreviousButton && !isSingleQuestion && (
+            <Text
+              fontSize="xs"
+              color="gray.500"
+              textAlign="center"
+              fontStyle="italic"
+            >
+              {t('gameInterface.noGoingBack')}
+            </Text>
           )}
-        </HStack>
 
-        <Progress
-          value={((currentQuestionIndex + 1) / totalQuestions) * 100}
-          size="sm"
-          borderRadius="full"
-          bg="rgba(255, 255, 255, 0.1)"
-          colorScheme="blue"
-          w="100%"
-        />
-
-        <VStack spacing={3} w="100%">
-          {isLastQuestion || isSingleQuestion ? (
-            <Button
-              rightIcon={<Send size={14} />}
-              onClick={onSubmit}
-              isDisabled={!canSubmit}
-              isLoading={isSubmitting}
-              size="sm"
-              bgGradient={`linear(45deg, ${config.color}, ${config.color}dd)`}
-              color="white"
-              borderRadius="full"
+          {gameType === 'connections' && (
+            <Text
               fontSize="xs"
-              w="100%"
-              _hover={{
-                bgGradient: `linear(45deg, ${config.color}dd, ${config.color}bb)`,
-              }}
-              _disabled={{
-                opacity: 0.6,
-                cursor: 'not-allowed',
-              }}
+              color="gray.500"
+              textAlign="center"
+              fontStyle="italic"
             >
-              {t('navigation.submit')}
-            </Button>
-          ) : (
-            <Button
-              rightIcon={<ArrowRight size={14} />}
-              onClick={onNext}
-              isDisabled={!canNavigateNext}
-              size="sm"
-              bgGradient={`linear(45deg, ${config.color}, ${config.color}dd)`}
-              color="white"
-              borderRadius="full"
-              fontSize="xs"
-              w="100%"
-              _hover={{
-                bgGradient: `linear(45deg, ${config.color}dd, ${config.color}bb)`,
-              }}
-              _disabled={{
-                opacity: 0.6,
-                cursor: 'not-allowed',
-              }}
-            >
-              {t('navigation.next')}
-            </Button>
-          )}
-
-          {showPreviousButton && (
-            <Button
-              leftIcon={<ArrowLeft size={14} />}
-              onClick={onPrevious}
-              isDisabled={isFirstQuestion || isSingleQuestion || isSubmitting}
-              color={'white'}
-              variant="outline"
-              size="sm"
-              borderRadius="full"
-              borderColor="rgba(255, 255, 255, 0.2)"
-              fontSize="xs"
-              w="100%"
-              _hover={{
-                borderColor: 'rgba(255, 255, 255, 0.4)',
-                bg: 'rgba(255, 255, 255, 0.05)',
-              }}
-              _disabled={{
-                opacity: 0.5,
-                cursor: 'not-allowed',
-              }}
-            >
-              {t('navigation.previous')}
-            </Button>
+              {t('gameInterface.buildNetwork')}
+            </Text>
           )}
         </VStack>
-
-        {!showPreviousButton && !isSingleQuestion && (
-          <Text
-            fontSize="xs"
-            color="gray.500"
-            textAlign="center"
-            fontStyle="italic"
-          >
-            {t('gameInterface.noGoingBack')}
-          </Text>
-        )}
-
-        {gameType === 'connections' && (
-          <Text
-            fontSize="xs"
-            color="gray.500"
-            textAlign="center"
-            fontStyle="italic"
-          >
-            {t('gameInterface.buildNetwork')}
-          </Text>
-        )}
-      </VStack>
-    </Box>
-  )
-}
+      </Box>
+    )
+  },
+)
+CompactNavigationControls.displayName = 'CompactNavigationControls'
 
 // Main Enhanced Game Interface
 const EnhancedGameInterface = () => {
@@ -395,7 +397,10 @@ const EnhancedGameInterface = () => {
   const timerRef = useRef(null)
   const { getSocket } = useSocket()
 
-  const config = gameTypeConfigs[gameType] || gameTypeConfigs.normal_quiz
+  const config = useMemo(
+    () => gameTypeConfigs[gameType] || gameTypeConfigs.normal_quiz,
+    [gameType],
+  )
 
   // Redux state
   const { user } = useSelector(state => state.auth)
@@ -408,21 +413,13 @@ const EnhancedGameInterface = () => {
     articleId,
     language: i18n.language,
   })
-  const {
-    submitGame,
-    submitting,
-    submissionProgress,
-    stepProgress,
-    completedSteps,
-  } = useSubmitGame()
+  const { submitGame, submitting } = useSubmitGame()
   const { sessionId, gameSession, sessionStatus, initializeGame } =
     useGameSession({
       articleId,
       gameType,
       language: i18n.language,
     })
-
-  // Abandoned game hook
   const {
     submittingAbandoned,
     abandonedInfo,
@@ -431,60 +428,31 @@ const EnhancedGameInterface = () => {
     resetAbandonedState,
   } = useAbandonedGame()
 
-  // Local state for timer and game management
+  // Local state
   const [timeLeft, setTimeLeft] = useState(0)
   const [totalTime, setTotalTime] = useState(0)
-  const [results, setResults] = useState(null)
   const [currentAnswers, setCurrentAnswers] = useState([])
   const [gameStarted, setGameStarted] = useState(false)
   const [isAbandoned, setIsAbandoned] = useState(false)
 
-  // NEW: Handle submit and exit for exit warning
+  // Handle submit and exit for exit warning
   const handleSubmitAndExit = useCallback(
     async (answers, reason) => {
       navigate(-1)
       try {
-        console.log('Submitting game due to exit warning:', {
-          reason,
-          answersCount: answers.length,
-        })
-
-        // Clear the timer
-        if (timerRef.current) {
-          clearInterval(timerRef.current)
-        }
-
-        // Calculate time taken
+        if (timerRef.current) clearInterval(timerRef.current)
         const timeTaken = totalTime - timeLeft
-
-        // Submit the game normally with current answers
-        const result = await submitGame({
+        await submitGame({
           sessionId,
           userResponses: answers,
           timeTaken: Math.max(timeTaken, 0),
         })
-
-        console.log('Game submitted successfully via exit warning')
-
-        // Navigate directly to report after successful submission
         navigate(`/gamehub/${articleId}/report`, { replace: true })
-
-        return result
       } catch (error) {
-        console.error('Error submitting game via exit warning:', error)
-
-        // If normal submission fails, try abandoned submission
         try {
-          const abandonResult = await handleAutoAbandon(sessionId, reason)
-          console.log('Fallback to abandoned submission successful')
-
-          // Still navigate to report even for abandoned games
+          await handleAutoAbandon(sessionId, reason)
           navigate(`/gamehub/${articleId}/report`, { replace: true })
-
-          return abandonResult
         } catch (abandonError) {
-          console.error('Both submission methods failed:', abandonError)
-          // If both fail, go to hub as fallback
           navigate(`/gamehub/${articleId}`, { replace: true })
           throw new Error('Failed to save game progress')
         }
@@ -501,7 +469,7 @@ const EnhancedGameInterface = () => {
     ],
   )
 
-  // NEW: Exit warning hook
+  // Exit warning hook
   const {
     showExitWarning,
     exitReason,
@@ -529,55 +497,34 @@ const EnhancedGameInterface = () => {
     [gameType],
   )
 
-  // Check for abandoned session on mount and when sessionId changes
+  // Check for abandoned session
   useEffect(() => {
     const checkForAbandonedSession = async () => {
       if (sessionId && sessionStatus === 'error') {
-        console.log('Session status is error, checking if should abandon...', {
-          sessionId,
-        })
-
         try {
           const statusCheck = await checkSessionStatus(sessionId)
-
           if (statusCheck.shouldAbandon) {
-            console.log(
-              'Session should be abandoned, submitting abandoned game...',
-              statusCheck,
-            )
-
             const abandonResult = await handleAutoAbandon(
               sessionId,
               statusCheck.abandonmentReason || 'session_expired',
             )
-
-            if (abandonResult.success) {
-              setIsAbandoned(true)
-              console.log('Successfully marked game as abandoned')
-            } else {
-              console.error('Failed to abandon game:', abandonResult.error)
-              // Still show abandoned screen even if submission failed
-              setIsAbandoned(true)
-            }
+            setIsAbandoned(abandonResult.success || true)
           }
         } catch (error) {
-          console.error('Error checking session status for abandonment:', error)
-          // Default to showing abandoned screen on error
           setIsAbandoned(true)
         }
       }
     }
-
     if (sessionStatus === 'error' && sessionId) {
       checkForAbandonedSession()
     }
   }, [sessionStatus, sessionId, checkSessionStatus, handleAutoAbandon])
 
-  // Initialize game on component mount
+  // Initialize game on mount
   useEffect(() => {
     if (articleId && gameType && !sessionId && !isAbandoned) {
       dispatch(resetGameSession())
-      resetWarningState() // NEW: Reset warning state
+      resetWarningState()
       dispatch(setCurrentGameType(gameType))
       dispatch(setGameState('loading'))
       initializeGame()
@@ -586,13 +533,13 @@ const EnhancedGameInterface = () => {
     articleId,
     gameType,
     sessionId,
+    isAbandoned,
     dispatch,
     initializeGame,
-    isAbandoned,
     resetWarningState,
   ])
 
-  // Set up timer when game session is ready
+  // Set up timer
   useEffect(() => {
     if (gameSession && sessionStatus === 'playing') {
       const timer = gameSession.timer || timerConfig.timeLimit
@@ -600,128 +547,37 @@ const EnhancedGameInterface = () => {
       setTimeLeft(timer)
       setGameStarted(true)
     }
-  }, [gameSession, sessionStatus, gameType, timerConfig])
+  }, [gameSession, sessionStatus, timerConfig])
 
-  // Initialize answers array based on game type
+  // Initialize answers array
   useEffect(() => {
     if (gameSession && currentAnswers.length === 0) {
-      if (gameType === 'connections') {
-        setCurrentAnswers([])
-      } else {
-        setCurrentAnswers(new Array(gameSession.questions.length).fill(null))
-      }
+      const initialAnswers =
+        gameType === 'connections'
+          ? []
+          : new Array(gameSession.questions.length).fill(null)
+      setCurrentAnswers(initialAnswers)
     }
   }, [gameSession, gameType, currentAnswers.length])
 
-  // Timer countdown effect
-  useEffect(() => {
-    if (!gameStarted || sessionStatus !== 'playing' || timeLeft <= 0) {
-      return
-    }
-
-    timerRef.current = setInterval(() => {
-      setTimeLeft(prevTime => {
-        const newTime = prevTime - 1
-
-        if (newTime <= 0) {
-          handleTimeUp()
-          return 0
-        }
-
-        return newTime
-      })
-    }, 1000)
-
-    return () => {
-      if (timerRef.current) {
-        clearInterval(timerRef.current)
-      }
-    }
-  }, [gameStarted, sessionStatus, timeLeft])
-
-  // Handle time up - auto submit current answers
-  const handleTimeUp = useCallback(() => {
-    if (timerRef.current) {
-      clearInterval(timerRef.current)
-    }
-
-    // NEW: Disable warnings before auto-submit
-    disableWarnings()
-
-    toast({
-      title: "Time's Up!",
-      description: 'Your answers have been automatically submitted.',
-      status: 'info',
-      duration: 3000,
-      isClosable: true,
-    })
-
-    submitGameAttempt(currentAnswers)
-  }, [currentAnswers, disableWarnings])
-
-  // Handle answer selection
-  const handleAnswer = useCallback(
-    (answer, isCorrect = null) => {
-      const newAnswers = [...currentAnswers]
-
-      if (gameType === 'connections') {
-        setCurrentAnswers(answer)
-        dispatch(setSelectedAnswers(answer))
-      } else if (gameType === 'word_weaver') {
-        newAnswers[currentQuestionIndex] = { answer, isCorrect }
-        setCurrentAnswers(newAnswers)
-        dispatch(setSelectedAnswers(newAnswers))
-      } else {
-        newAnswers[currentQuestionIndex] = answer
-        setCurrentAnswers(newAnswers)
-        dispatch(setSelectedAnswers(newAnswers))
-      }
-    },
-    [currentAnswers, currentQuestionIndex, gameType, dispatch],
-  )
-
-  // Navigation handlers
-  const handlePrevious = useCallback(() => {
-    if (gameType === 'word_weaver' && currentQuestionIndex > 0) {
-      dispatch(setCurrentQuestionIndex(currentQuestionIndex - 1))
-    }
-  }, [currentQuestionIndex, gameType, dispatch])
-
-  const handleNext = useCallback(() => {
-    if (currentQuestionIndex < gameSession.questions.length - 1) {
-      dispatch(setCurrentQuestionIndex(currentQuestionIndex + 1))
-    }
-  }, [currentQuestionIndex, gameSession, dispatch])
-
-  // Submit game attempt (PERFECT EXISTING LOGIC PRESERVED)
+  // Submit game attempt
   const submitGameAttempt = useCallback(
     async (answers = currentAnswers) => {
       try {
         navigate(-1)
-        if (timerRef.current) {
-          clearInterval(timerRef.current)
-        }
-
-        // NEW: Disable warnings when submitting normally
+        if (timerRef.current) clearInterval(timerRef.current)
         disableWarnings()
-
         dispatch(setGameState('submitting'))
         setGameStarted(false)
-
         const timeTaken = totalTime - timeLeft
-
-        const result = await submitGame({
+        await submitGame({
           sessionId,
           userResponses: answers,
           timeTaken: Math.max(timeTaken, 0),
         })
-
-        setResults(result)
         dispatch(setGameState('completed'))
-
         navigate(`/gamehub/${articleId}/report`, { replace: true })
       } catch (error) {
-        console.error('Error submitting game:', error)
         dispatch(setGameState('error'))
         toast({
           title: 'Submission Error',
@@ -746,12 +602,78 @@ const EnhancedGameInterface = () => {
     ],
   )
 
-  // Handle back to menu (WRAPPED WITH EXIT WARNING)
+  // Handle time up
+  const handleTimeUp = useCallback(() => {
+    if (timerRef.current) clearInterval(timerRef.current)
+    disableWarnings()
+    toast({
+      title: "Time's Up!",
+      description: 'Your answers have been automatically submitted.',
+      status: 'info',
+      duration: 3000,
+      isClosable: true,
+    })
+    submitGameAttempt()
+  }, [disableWarnings, toast, submitGameAttempt])
+
+  // Timer countdown effect
+  useEffect(() => {
+    if (!gameStarted || sessionStatus !== 'playing' || timeLeft <= 0) {
+      if (timerRef.current) clearInterval(timerRef.current)
+      return
+    }
+    timerRef.current = setInterval(() => {
+      setTimeLeft(prevTime => {
+        if (prevTime <= 1) {
+          handleTimeUp()
+          return 0
+        }
+        return prevTime - 1
+      })
+    }, 1000)
+    return () => clearInterval(timerRef.current)
+  }, [gameStarted, sessionStatus, timeLeft, handleTimeUp])
+
+  // Handle answer selection
+  const handleAnswer = useCallback(
+    (answer, isCorrect = null) => {
+      setCurrentAnswers(prevAnswers => {
+        const newAnswers = [...prevAnswers]
+        if (gameType === 'connections') {
+          dispatch(setSelectedAnswers(answer))
+          return answer
+        } else if (gameType === 'word_weaver') {
+          newAnswers[currentQuestionIndex] = { answer, isCorrect }
+        } else {
+          newAnswers[currentQuestionIndex] = answer
+        }
+        dispatch(setSelectedAnswers(newAnswers))
+        return newAnswers
+      })
+    },
+    [currentQuestionIndex, gameType, dispatch],
+  )
+
+  // Navigation handlers
+  const handlePrevious = useCallback(() => {
+    if (gameType === 'word_weaver' && currentQuestionIndex > 0) {
+      dispatch(setCurrentQuestionIndex(currentQuestionIndex - 1))
+    }
+  }, [currentQuestionIndex, gameType, dispatch])
+
+  const handleNext = useCallback(() => {
+    if (
+      gameSession &&
+      currentQuestionIndex < gameSession.questions.length - 1
+    ) {
+      dispatch(setCurrentQuestionIndex(currentQuestionIndex + 1))
+    }
+  }, [currentQuestionIndex, gameSession, dispatch])
+
+  // Handle back to menu (wrapped with exit warning)
   const handleBackToMenu = useCallback(
     createNavigationWrapper(() => {
-      if (timerRef.current) {
-        clearInterval(timerRef.current)
-      }
+      if (timerRef.current) clearInterval(timerRef.current)
       dispatch(resetGameSession())
       navigate(`/gamehub/${articleId}`)
     }),
@@ -763,7 +685,7 @@ const EnhancedGameInterface = () => {
     resetAbandonedState()
     setIsAbandoned(false)
     dispatch(resetGameSession())
-    resetWarningState() // NEW: Reset warning state
+    resetWarningState()
     navigate(`/gamehub/${articleId}/${gameType}`, { replace: true })
   }, [
     resetAbandonedState,
@@ -777,81 +699,49 @@ const EnhancedGameInterface = () => {
   // Get current question for rendering
   const getCurrentQuestion = useCallback(() => {
     if (!gameSession?.questions) return null
-
-    let currentQuestion
-    if (gameType === 'connections') {
-      currentQuestion = gameSession.questions[0]
-    } else {
-      currentQuestion = gameSession.questions[currentQuestionIndex]
-    }
-
-    if (!currentQuestion) return null
-
-    if (gameType === 'normal_quiz' && currentQuestion.options) {
+    const currentQ =
+      gameType === 'connections'
+        ? gameSession.questions[0]
+        : gameSession.questions[currentQuestionIndex]
+    if (!currentQ) return null
+    if (gameType === 'normal_quiz' && currentQ.options) {
       const safeOptions = {}
-      Object.entries(currentQuestion.options).forEach(([key, value]) => {
-        if (typeof value === 'object' && value?.text) {
-          safeOptions[key] = value.text
-        } else if (typeof value === 'string') {
-          safeOptions[key] = value
-        } else {
-          safeOptions[key] = String(value)
-        }
+      Object.entries(currentQ.options).forEach(([key, value]) => {
+        safeOptions[key] =
+          typeof value === 'object' && value?.text ? value.text : String(value)
       })
-
-      return {
-        ...currentQuestion,
-        options: safeOptions,
-      }
+      return { ...currentQ, options: safeOptions }
     }
-
-    return currentQuestion
+    return currentQ
   }, [gameSession, gameType, currentQuestionIndex])
 
-  // Check if user has provided an answer for current question
+  // Derived states
   const hasCurrentAnswer = useMemo(() => {
-    if (gameType === 'connections') {
-      return (
-        currentAnswers &&
-        Array.isArray(currentAnswers) &&
-        currentAnswers.length > 0
-      )
-    }
-
-    const currentAnswer = currentAnswers[currentQuestionIndex]
-    return (
-      currentAnswer !== null &&
-      currentAnswer !== undefined &&
-      currentAnswer !== ''
-    )
+    if (gameType === 'connections') return currentAnswers?.length > 0
+    const current = currentAnswers[currentQuestionIndex]
+    return current !== null && current !== undefined && current !== ''
   }, [currentAnswers, currentQuestionIndex, gameType])
 
-  // Check if can navigate to next question
-  const canNavigateNext = useMemo(() => {
-    return (
+  const canNavigateNext = useMemo(
+    () =>
       hasCurrentAnswer &&
-      currentQuestionIndex < gameSession?.questions?.length - 1
-    )
-  }, [hasCurrentAnswer, currentQuestionIndex, gameSession])
+      gameSession &&
+      currentQuestionIndex < gameSession.questions.length - 1,
+    [hasCurrentAnswer, currentQuestionIndex, gameSession],
+  )
 
-  // Check if can submit game
-  const canSubmit = useMemo(() => {
-    if (gameType === 'connections') {
-      return (
-        currentAnswers &&
-        Array.isArray(currentAnswers) &&
-        currentAnswers.length > 0
-      )
-    }
+  const canSubmit = useMemo(
+    () =>
+      gameType === 'connections'
+        ? currentAnswers?.length > 0
+        : hasCurrentAnswer,
+    [gameType, currentAnswers, hasCurrentAnswer],
+  )
 
-    return hasCurrentAnswer
-  }, [gameType, currentAnswers, hasCurrentAnswer])
-
-  // Render game interface based on type
+  // Render game interface
   const renderGameInterface = () => {
     const currentQuestion = getCurrentQuestion()
     if (!currentQuestion) return null
-
     const sharedProps = {
       question: currentQuestion,
       questionIndex: currentQuestionIndex,
@@ -860,14 +750,11 @@ const EnhancedGameInterface = () => {
       selectedAnswer: currentAnswers[currentQuestionIndex],
       isSubmitted: false,
     }
-
     switch (gameType) {
       case 'normal_quiz':
         return <NormalQuizInterface {...sharedProps} />
-
       case 'true_false':
         return <TrueFalseInterface {...sharedProps} />
-
       case 'word_weaver':
         return (
           <WordWeaverInterface
@@ -875,7 +762,6 @@ const EnhancedGameInterface = () => {
             allQuestions={gameSession.questions}
           />
         )
-
       case 'connections':
         return (
           <ConnectionsInterface
@@ -884,22 +770,12 @@ const EnhancedGameInterface = () => {
             selectedConnections={currentAnswers}
           />
         )
-
       default:
         return <Text>Unknown game type</Text>
     }
   }
 
-  // Cleanup timer on unmount
-  useEffect(() => {
-    return () => {
-      if (timerRef.current) {
-        clearInterval(timerRef.current)
-      }
-    }
-  }, [])
-
-  // Show abandoned game screen if game was abandoned
+  // Show abandoned game screen
   if (isAbandoned || (sessionStatus === 'error' && abandonedInfo)) {
     return (
       <AbandonedGameScreen
@@ -912,7 +788,7 @@ const EnhancedGameInterface = () => {
     )
   }
 
-  // Loading state
+  // Loading states
   if (gameDataLoading || sessionStatus === 'creating') {
     return (
       <Box
@@ -932,8 +808,6 @@ const EnhancedGameInterface = () => {
       </Box>
     )
   }
-
-  // Show loading while checking/submitting abandoned game
   if (sessionStatus === 'error' && submittingAbandoned) {
     return (
       <Box
@@ -959,7 +833,6 @@ const EnhancedGameInterface = () => {
 
   return (
     <Box minH="100vh" bg="gray.900" color="white">
-      {/* NEW: Exit Warning Dialog */}
       <GameExitWarningDialog
         isOpen={showExitWarning}
         onClose={handleStayInGame}
@@ -972,18 +845,14 @@ const EnhancedGameInterface = () => {
         isSubmitting={isSubmittingExit}
         exitReason={exitReason}
       />
-
-      {/* Show GameSubmissionLoadingScreen when submitting */}
       <GameSubmissionLoadingScreen
         socket={getSocket()}
         gameType={gameType}
         isVisible={submitting || isSubmittingExit}
       />
 
-      {/* Only show the main interface when not submitting */}
       {!submitting && !isSubmittingExit && (
         <>
-          {/* Compact Header */}
           <Box
             bg="rgba(0, 0, 0, 0.8)"
             backdropFilter="blur(10px)"
@@ -1004,14 +873,12 @@ const EnhancedGameInterface = () => {
                 >
                   {t('navigation.back')}
                 </Button>
-
                 <HStack spacing={2}>
                   <Text fontSize="sm">{config.emoji}</Text>
                   <Text fontSize="sm" fontWeight="bold" color={config.color}>
                     {t(`gameTypes.${gameType}`)}
                   </Text>
                 </HStack>
-
                 {gameStarted &&
                   sessionStatus === 'playing' &&
                   totalTime > 0 && (
@@ -1025,8 +892,6 @@ const EnhancedGameInterface = () => {
               </Flex>
             </Container>
           </Box>
-
-          {/* Game Content - Optimized for no scroll */}
           <Container maxW="4xl" py={4}>
             <AnimatePresence mode="wait">
               {sessionStatus === 'playing' && gameStarted && (
@@ -1038,12 +903,9 @@ const EnhancedGameInterface = () => {
                   transition={{ duration: 0.3 }}
                 >
                   <VStack spacing={4} minH="calc(100vh - 120px)">
-                    {/* Game Interface */}
                     <Box flex={1} w="100%">
                       {renderGameInterface()}
                     </Box>
-
-                    {/* Compact Navigation */}
                     <CompactNavigationControls
                       currentQuestionIndex={currentQuestionIndex}
                       totalQuestions={gameSession?.questions?.length || 1}

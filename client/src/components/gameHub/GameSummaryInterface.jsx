@@ -1,5 +1,5 @@
 // components/gameHub/GameSummaryInterface.jsx - Premium Redesigned Version
-import React, { useState, useEffect } from 'react'
+import React, { useState, useEffect, useCallback, memo } from 'react'
 import {
   Box,
   Container,
@@ -10,13 +10,11 @@ import {
   Badge,
   Divider,
   Grid,
-  GridItem,
   Accordion,
   AccordionItem,
   AccordionButton,
   AccordionPanel,
   AccordionIcon,
-  Progress,
   useToast,
   Spinner,
   Alert,
@@ -26,7 +24,7 @@ import {
   Circle,
   useBreakpointValue,
 } from '@chakra-ui/react'
-import { motion, AnimatePresence } from 'framer-motion'
+import { motion } from 'framer-motion'
 import {
   ChevronLeft,
   CheckCircle,
@@ -47,7 +45,7 @@ import axios from 'axios'
 const MotionBox = motion(Box)
 const MotionButton = motion(Button)
 
-// Game type configurations with enhanced colors
+// Static data moved outside
 const gameTypeConfigs = {
   normal_quiz: {
     title: 'Knowledge Quest',
@@ -83,18 +81,8 @@ const gameTypeConfigs = {
   },
 }
 
-// Premium Background Component
-const PremiumBackground = () => (
-  <Box
-    position="absolute"
-    top={0}
-    left={0}
-    right={0}
-    bottom={0}
-    overflow="hidden"
-    zIndex={0}
-  >
-    {/* Animated gradient orbs */}
+const PremiumBackground = memo(() => (
+  <Box position="absolute" inset={0} overflow="hidden" zIndex={0}>
     <MotionBox
       position="absolute"
       width="400px"
@@ -103,16 +91,8 @@ const PremiumBackground = () => (
       bg="radial-gradient(circle, rgba(99, 102, 241, 0.1) 0%, transparent 70%)"
       top="-200px"
       left="-200px"
-      animate={{
-        x: [0, 50, 0],
-        y: [0, 30, 0],
-        scale: [1, 1.1, 1],
-      }}
-      transition={{
-        duration: 20,
-        repeat: Infinity,
-        ease: 'easeInOut',
-      }}
+      animate={{ x: [0, 50, 0], y: [0, 30, 0], scale: [1, 1.1, 1] }}
+      transition={{ duration: 20, repeat: Infinity, ease: 'easeInOut' }}
     />
     <MotionBox
       position="absolute"
@@ -122,22 +102,14 @@ const PremiumBackground = () => (
       bg="radial-gradient(circle, rgba(139, 92, 246, 0.08) 0%, transparent 70%)"
       bottom="-150px"
       right="-150px"
-      animate={{
-        x: [0, -30, 0],
-        y: [0, -50, 0],
-        scale: [1, 1.2, 1],
-      }}
-      transition={{
-        duration: 25,
-        repeat: Infinity,
-        ease: 'easeInOut',
-      }}
+      animate={{ x: [0, -30, 0], y: [0, -50, 0], scale: [1, 1.2, 1] }}
+      transition={{ duration: 25, repeat: Infinity, ease: 'easeInOut' }}
     />
   </Box>
-)
+))
+PremiumBackground.displayName = 'PremiumBackground'
 
-// Enhanced Question Result Card
-const PremiumQuestionCard = ({ question, index, gameType }) => {
+const PremiumQuestionCard = memo(({ question, index, gameType }) => {
   const config = gameTypeConfigs[gameType]
   const isCorrect = question.isCorrect
   const isMobile = useBreakpointValue({ base: true, md: false })
@@ -162,7 +134,6 @@ const PremiumQuestionCard = ({ question, index, gameType }) => {
                 {question.questionText}
               </Text>
             </Box>
-
             <Grid
               templateColumns={{ base: '1fr', md: 'repeat(2, 1fr)' }}
               gap={2}
@@ -170,7 +141,6 @@ const PremiumQuestionCard = ({ question, index, gameType }) => {
               {Object.entries(question.options).map(([key, value]) => {
                 const isUserChoice = key === question.userAnswer
                 const isCorrectChoice = key === question.correctAnswer
-
                 return (
                   <MotionBox
                     key={key}
@@ -214,7 +184,6 @@ const PremiumQuestionCard = ({ question, index, gameType }) => {
                           )}
                         </Box>
                       )}
-
                       <HStack spacing={2}>
                         <Circle
                           size="24px"
@@ -245,7 +214,6 @@ const PremiumQuestionCard = ({ question, index, gameType }) => {
                 )
               })}
             </Grid>
-
             <Box
               bg="rgba(139, 92, 246, 0.05)"
               border="1px solid rgba(139, 92, 246, 0.2)"
@@ -264,7 +232,6 @@ const PremiumQuestionCard = ({ question, index, gameType }) => {
             </Box>
           </VStack>
         )
-
       case 'true_false':
         return (
           <VStack align="stretch" spacing={3}>
@@ -283,7 +250,6 @@ const PremiumQuestionCard = ({ question, index, gameType }) => {
                 {question.questionText}
               </Text>
             </Box>
-
             <HStack spacing={3} justify="center">
               {[
                 { value: true, label: 'TRUE', color: '#10B981' },
@@ -291,7 +257,6 @@ const PremiumQuestionCard = ({ question, index, gameType }) => {
               ].map(option => {
                 const isCorrectChoice = question.correctAnswer === option.value
                 const isUserChoice = question.userAnswer === option.value
-
                 return (
                   <MotionBox
                     key={option.label}
@@ -340,7 +305,6 @@ const PremiumQuestionCard = ({ question, index, gameType }) => {
                 )
               })}
             </HStack>
-
             <Box
               bg="rgba(139, 92, 246, 0.05)"
               border="1px solid rgba(139, 92, 246, 0.2)"
@@ -359,7 +323,6 @@ const PremiumQuestionCard = ({ question, index, gameType }) => {
             </Box>
           </VStack>
         )
-
       case 'word_weaver':
         return (
           <VStack align="stretch" spacing={3}>
@@ -383,7 +346,6 @@ const PremiumQuestionCard = ({ question, index, gameType }) => {
                 </Text>
               </Box>
             </Box>
-
             <Grid templateColumns={{ base: '1fr', md: '1fr 1fr' }} gap={3}>
               <Box
                 p={4}
@@ -418,7 +380,6 @@ const PremiumQuestionCard = ({ question, index, gameType }) => {
                   </Text>
                 </VStack>
               </Box>
-
               <Box
                 p={4}
                 bg="rgba(16, 185, 129, 0.1)"
@@ -443,7 +404,6 @@ const PremiumQuestionCard = ({ question, index, gameType }) => {
                 </VStack>
               </Box>
             </Grid>
-
             <Box
               bg="rgba(139, 92, 246, 0.05)"
               border="1px solid rgba(139, 92, 246, 0.2)"
@@ -462,7 +422,6 @@ const PremiumQuestionCard = ({ question, index, gameType }) => {
             </Box>
           </VStack>
         )
-
       case 'connections':
         return (
           <VStack align="stretch" spacing={3}>
@@ -480,7 +439,6 @@ const PremiumQuestionCard = ({ question, index, gameType }) => {
               >
                 Connect related concepts from the given list
               </Text>
-
               <Box>
                 <Text fontSize="sm" color="gray.400" mb={2} fontWeight="600">
                   Available Concepts:
@@ -506,12 +464,10 @@ const PremiumQuestionCard = ({ question, index, gameType }) => {
                 </Grid>
               </Box>
             </Box>
-
             <VStack align="stretch" spacing={2}>
               <Text fontSize="sm" color="gray.400" fontWeight="600">
                 Your Connections vs Valid Connections:
               </Text>
-
               {question.userConnections.map((userConn, idx) => (
                 <MotionBox
                   key={idx}
@@ -561,9 +517,7 @@ const PremiumQuestionCard = ({ question, index, gameType }) => {
                   </Box>
                 </MotionBox>
               ))}
-
               <Divider borderColor="rgba(255, 255, 255, 0.1)" />
-
               <Box>
                 <HStack spacing={2} mb={2}>
                   <Sparkles size={14} color="#8B5CF6" />
@@ -618,7 +572,6 @@ const PremiumQuestionCard = ({ question, index, gameType }) => {
                 </VStack>
               </Box>
             </VStack>
-
             <Box
               bg="rgba(139, 92, 246, 0.05)"
               border="1px solid rgba(139, 92, 246, 0.2)"
@@ -637,7 +590,6 @@ const PremiumQuestionCard = ({ question, index, gameType }) => {
             </Box>
           </VStack>
         )
-
       default:
         return <Text>Unsupported question type</Text>
     }
@@ -678,7 +630,6 @@ const PremiumQuestionCard = ({ question, index, gameType }) => {
               >
                 <config.icon size={isMobile ? 16 : 20} />
               </Circle>
-
               <VStack align="start" spacing={1}>
                 <HStack spacing={2} flexWrap="wrap">
                   <Text
@@ -705,7 +656,6 @@ const PremiumQuestionCard = ({ question, index, gameType }) => {
                 </Text>
               </VStack>
             </HStack>
-
             <HStack spacing={2}>
               <MotionBox
                 whileHover={{ scale: 1.05 }}
@@ -740,7 +690,6 @@ const PremiumQuestionCard = ({ question, index, gameType }) => {
           </HStack>
           <AccordionIcon color="gray.400" ml={2} />
         </AccordionButton>
-
         <AccordionPanel
           p={{ base: 4, md: 5 }}
           bg="rgba(0, 0, 0, 0.2)"
@@ -751,11 +700,11 @@ const PremiumQuestionCard = ({ question, index, gameType }) => {
       </AccordionItem>
     </MotionBox>
   )
-}
+})
+PremiumQuestionCard.displayName = 'PremiumQuestionCard'
 
-// Main Premium Game Summary Interface
 const GameSummaryInterface = () => {
-  const { articleId, sessionId } = useParams()
+  const { sessionId } = useParams()
   const navigate = useNavigate()
   const toast = useToast()
   const { t } = useTranslation('GameHub')
@@ -765,31 +714,19 @@ const GameSummaryInterface = () => {
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState(null)
 
-  const handleBackToResults = () => {
-    navigate(-1)
-  }
-
-  const handleBackToArticle = () => {
-    navigate(-2)
-  }
-
-  useEffect(() => {
-    fetchGameSummary()
-  }, [sessionId])
-
-  const fetchGameSummary = async () => {
+  const fetchGameSummary = useCallback(async () => {
+    setLoading(true)
+    setError(null)
     try {
-      setLoading(true)
-      setError(null)
-
       const response = await axios.get(`/api/gamehub/summary/${sessionId}`)
       setSummary(response.data.summary)
     } catch (err) {
-      console.error('Error fetching game summary:', err)
-      setError(err.response?.data?.error || 'Failed to load game summary')
+      const errorMessage =
+        err.response?.data?.error || 'Failed to load game summary'
+      setError(errorMessage)
       toast({
         title: 'Error',
-        description: 'Failed to load game summary',
+        description: errorMessage,
         status: 'error',
         duration: 3000,
         isClosable: true,
@@ -797,19 +734,21 @@ const GameSummaryInterface = () => {
     } finally {
       setLoading(false)
     }
-  }
+  }, [sessionId, toast])
+
+  useEffect(() => {
+    fetchGameSummary()
+  }, [fetchGameSummary])
+
+  const handleBackToResults = useCallback(() => {
+    navigate(-1)
+  }, [navigate])
 
   if (loading) {
     return (
       <Box minH="100vh" bg="gray.900" color="white" position="relative">
         <PremiumBackground />
-        <Flex
-          align="center"
-          justify="center"
-          minH="100vh"
-          position="relative"
-          zIndex={1}
-        >
+        <Flex align="center" justify="center" minH="100vh" zIndex={1}>
           <VStack spacing={6}>
             <MotionBox
               animate={{ rotate: 360 }}
@@ -837,97 +776,46 @@ const GameSummaryInterface = () => {
     )
   }
 
-  // Error state return:
-  if (error) {
+  if (error || !summary) {
+    const isError = !!error
     return (
       <Box minH="100vh" bg="gray.900" color="white" position="relative">
         <PremiumBackground />
-        <Container maxW="4xl" py={8} position="relative" zIndex={1}>
+        <Container maxW="4xl" py={8} zIndex={1}>
           <VStack spacing={6} align="center" justify="center" minH="60vh">
             <Circle
               size="100px"
-              bg="rgba(239, 68, 68, 0.1)"
-              border="2px solid #EF4444"
+              bg={
+                isError ? 'rgba(239, 68, 68, 0.1)' : 'rgba(156, 163, 175, 0.1)'
+              }
+              border="2px solid"
+              borderColor={isError ? '#EF4444' : '#9CA3AF'}
             >
-              <XCircle size={40} color="#EF4444" />
+              {isError ? (
+                <XCircle size={40} color="#EF4444" />
+              ) : (
+                <FileText size={40} color="#9CA3AF" />
+              )}
             </Circle>
             <VStack spacing={4} textAlign="center">
               <Text fontSize="2xl" fontWeight="bold" color="white">
-                {t('errors.somethingWentWrong')}
+                {isError
+                  ? t('errors.somethingWentWrong')
+                  : t('errors.noSummaryAvailable')}
               </Text>
-              <Alert
-                status="error"
-                bg="rgba(239, 68, 68, 0.1)"
-                borderRadius="xl"
-                border="1px solid #EF4444"
-              >
-                <AlertIcon />
-                <AlertDescription color="white">{error}</AlertDescription>
-              </Alert>
-              <HStack spacing={4}>
-                <MotionButton
-                  whileHover={{ scale: 1.05 }}
-                  whileTap={{ scale: 0.95 }}
-                  onClick={fetchGameSummary}
-                  colorScheme="blue"
-                  size="lg"
-                  borderRadius="full"
-                  px={8}
-                >
-                  {t('errors.tryAgain')}
-                </MotionButton>
-                <MotionButton
-                  whileHover={{ scale: 1.05 }}
-                  whileTap={{ scale: 0.95 }}
-                  onClick={handleBackToResults}
-                  variant="outline"
-                  size="lg"
-                  borderRadius="full"
-                  px={8}
-                  borderColor="gray.400"
-                  color="gray.300"
-                >
-                  {t('errors.goBack')}
-                </MotionButton>
-              </HStack>
-            </VStack>
-          </VStack>
-        </Container>
-      </Box>
-    )
-  }
-
-  // No summary state return:
-  if (!summary) {
-    return (
-      <Box minH="100vh" bg="gray.900" color="white" position="relative">
-        <PremiumBackground />
-        <Container maxW="4xl" py={8} position="relative" zIndex={1}>
-          <VStack spacing={6} align="center" justify="center" minH="60vh">
-            <Circle
-              size="100px"
-              bg="rgba(156, 163, 175, 0.1)"
-              border="2px solid #9CA3AF"
-            >
-              <FileText size={40} color="#9CA3AF" />
-            </Circle>
-            <VStack spacing={4}>
-              <Text fontSize="xl" fontWeight="bold" color="white">
-                {t('errors.noSummaryAvailable')}
-              </Text>
-              <Text color="gray.400" textAlign="center">
-                {t('errors.noSummaryData')}
+              <Text color="gray.400" maxW="lg">
+                {isError ? error : t('errors.noSummaryData')}
               </Text>
               <MotionButton
                 whileHover={{ scale: 1.05 }}
                 whileTap={{ scale: 0.95 }}
-                onClick={handleBackToResults}
+                onClick={isError ? fetchGameSummary : handleBackToResults}
                 colorScheme="blue"
                 size="lg"
                 borderRadius="full"
                 px={8}
               >
-                {t('errors.goBack')}
+                {isError ? t('errors.tryAgain') : t('errors.goBack')}
               </MotionButton>
             </VStack>
           </VStack>
@@ -941,8 +829,6 @@ const GameSummaryInterface = () => {
   return (
     <Box minH="100vh" bg="gray.900" color="white" position="relative">
       <PremiumBackground />
-
-      {/* Premium Header */}
       <Box
         bg="rgba(0, 0, 0, 0.8)"
         backdropFilter="blur(20px)"
@@ -969,40 +855,26 @@ const GameSummaryInterface = () => {
               fontSize={{ base: 'sm', md: 'md' }}
               whileHover={{ scale: 1.02, x: -2 }}
               whileTap={{ scale: 0.98 }}
-              _hover={{
-                color: 'white',
-                bg: 'rgba(255, 255, 255, 0.1)',
-              }}
+              _hover={{ color: 'white', bg: 'rgba(255, 255, 255, 0.1)' }}
             >
               {isMobile ? t('navigation.back') : t('navigation.backToResults')}
             </MotionButton>
-
-            <VStack spacing={0}>
-              <HStack spacing={2}>
-                <Circle
-                  size={{ base: '32px', md: '40px' }}
-                  bg={config.gradient}
-                >
-                  <Text fontSize={{ base: 'md', md: 'lg' }}>
-                    {config.emoji}
-                  </Text>
-                </Circle>
-                <VStack spacing={0} align="center">
-                  <Text
-                    fontSize={{ base: 'md', md: 'lg' }}
-                    fontWeight="bold"
-                    color={config.lightColor}
-                  >
-                    {t(`gameTypes.${summary.gameType}`)}
-                  </Text>
-                </VStack>
-              </HStack>
-            </VStack>
+            <HStack spacing={2}>
+              <Circle size={{ base: '32px', md: '40px' }} bg={config.gradient}>
+                <Text fontSize={{ base: 'md', md: 'lg' }}>{config.emoji}</Text>
+              </Circle>
+              <Text
+                fontSize={{ base: 'md', md: 'lg' }}
+                fontWeight="bold"
+                color={config.lightColor}
+              >
+                {t(`gameTypes.${summary.gameType}`)}
+              </Text>
+            </HStack>
+            <Box w={{ base: '70px', md: '160px' }} />
           </HStack>
         </Container>
       </Box>
-
-      {/* Content */}
       <Container
         maxW="4xl"
         py={{ base: 4, md: 6 }}
@@ -1011,7 +883,6 @@ const GameSummaryInterface = () => {
         zIndex={1}
       >
         <VStack spacing={{ base: 4, md: 6 }}>
-          {/* Premium Article Header */}
           <MotionBox
             initial={{ opacity: 0, y: 30 }}
             animate={{ opacity: 1, y: 0 }}
@@ -1028,18 +899,12 @@ const GameSummaryInterface = () => {
               position="relative"
               overflow="hidden"
             >
-              {/* Gradient overlay */}
               <Box
                 position="absolute"
-                top={0}
-                left={0}
-                right={0}
-                bottom={0}
+                inset={0}
                 bgGradient={config.gradient}
                 opacity={0.05}
-                borderRadius="2xl"
               />
-
               <VStack
                 spacing={{ base: 3, md: 4 }}
                 position="relative"
@@ -1057,7 +922,6 @@ const GameSummaryInterface = () => {
                     {t('headers.performanceReport')}
                   </Text>
                 </HStack>
-
                 <Text
                   fontSize={{ base: 'lg', md: 'xl', lg: '2xl' }}
                   fontWeight="900"
@@ -1067,7 +931,6 @@ const GameSummaryInterface = () => {
                 >
                   {summary.articleTitle}
                 </Text>
-
                 <HStack spacing={3} justify="center" flexWrap="wrap">
                   <Badge
                     bg="rgba(139, 92, 246, 0.2)"
@@ -1095,8 +958,6 @@ const GameSummaryInterface = () => {
               </VStack>
             </Box>
           </MotionBox>
-
-          {/* Premium Questions Analysis */}
           <MotionBox
             initial={{ opacity: 0, y: 30 }}
             animate={{ opacity: 1, y: 0 }}
@@ -1104,7 +965,7 @@ const GameSummaryInterface = () => {
             w="100%"
           >
             <VStack spacing={{ base: 4, md: 5 }} align="stretch">
-              <HStack spacing={3} justify="center">
+              <HStack spacing={3}>
                 <Circle
                   size={{ base: '40px', md: '50px' }}
                   bg="rgba(139, 92, 246, 0.1)"
@@ -1129,7 +990,6 @@ const GameSummaryInterface = () => {
                   </Text>
                 </VStack>
               </HStack>
-
               <Accordion allowMultiple>
                 {summary.questions.map((question, index) => (
                   <PremiumQuestionCard

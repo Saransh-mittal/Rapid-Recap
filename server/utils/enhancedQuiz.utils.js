@@ -54,7 +54,7 @@ const GAME_CONFIGS = {
     BASELINE_TIME_PER_QUESTION: 20,
     ALL_CORRECT_BONUS: 1.3,
     ONE_WRONG_BONUS: 1.2,
-    BASE_TIME_WINDOW: 100,
+    BASE_TIME_WINDOW: 72,
     difficultyMultiplier: 1.2,
     timeMultiplier: 0.8,
     skillComplexity: 1.15,
@@ -411,6 +411,9 @@ const calculateEnhancedRQM = (
   adjustedScore *= config.difficultyMultiplier
   adjustedScore *= config.skillComplexity
 
+  const baseRQM_score = Math.ceil(
+    (adjustedScore * timeFactor * config.cognitiveLoad * 150) / 2,
+  )
   if (performance.correctCount === totalItems) {
     adjustedScore *= config.ALL_CORRECT_BONUS
   } else if (performance.correctCount === totalItems - 1) {
@@ -423,6 +426,7 @@ const calculateEnhancedRQM = (
   )
 
   return {
+    baseRQM_score,
     rqmScore,
     timeFactor: parseFloat(timeFactor.toFixed(2)),
     performanceBonus:
