@@ -2122,10 +2122,9 @@ const getGameReport = asyncHandler(async (req, res) => {
       quizDifficulty,
       timeTaken: latestAttempt.timeTaken,
       score: scoreString,
-      pastRQMs: pastRQMs.map(attempt => ({
-        score: attempt.RQM_score,
-        timestamp: attempt.createdAt,
-      })),
+      // *** FIX APPLIED HERE ***
+      // We map to an array of numbers, which is what the chart expects.
+      pastRQMs: pastRQMs.map(attempt => attempt.RQM_score),
 
       // Activity and Achievement data
       xpAwarded: latestAttempt.xpAwarded || 0,
