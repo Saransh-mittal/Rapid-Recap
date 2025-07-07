@@ -488,29 +488,97 @@ const generateNormalQuizData = async ({
   mainText,
   language,
 }) => {
-  const prompt = `Based on the article titled "${title}" by ${author}, generate a JSON object for a normal quiz.
+  const prompt = `Based on the article titled "${title}" by ${author}, generate a JSON object for a normal quiz with high-quality, challenging multiple-choice questions.
+
     Article Text: """${mainText}"""
 
-    Requirements:
-    - The JSON object must have a single key "normal_quiz".
-    - The value should be an object with a "questions" array.
-    - Generate EXACTLY 5 multiple-choice questions.
-    - Each question object must have: "question", "options" (an object with keys "a", "b", "c", "d"), "correct" (the key of the correct option, e.g., "a"), and "explanation".
-    - All content MUST be in ${language === 'hi' ? 'Hindi' : 'English'}.
+    CRITICAL REQUIREMENTS FOR HIGH-QUALITY QUIZ GENERATION:
 
-    Example Structure:
+    1. JSON STRUCTURE:
+    - The JSON object must have a single key "normal_quiz"
+    - The value should be an object with a "questions" array
+    - Generate EXACTLY 5 multiple-choice questions
+    - Each question object must have: "question", "options" (object with keys "a", "b", "c", "d"), "correct" (key of correct option), and "explanation"
+
+    2. OPTION LENGTH CONSISTENCY:
+    - ALL four options (a, b, c, d) for each question MUST be approximately the same character length
+    - Target 15-40 characters per option, with maximum variance of ±5 characters between options
+    - If one option is 25 characters, others should be 20-30 characters
+    - Use similar sentence structures and formatting for all options
+
+    3. CONTENT QUALITY AND DIFFICULTY:
+    - ALL options must be plausible and contextually relevant to the article topic
+    - Create sophisticated distractors that sound correct but contain subtle errors
+    - Wrong options should be based on:
+      * Common misconceptions about the topic
+      * Partial truths or incomplete information
+      * Similar concepts mentioned in the article but used incorrectly
+      * Logical-sounding but factually wrong statements
+      * Mixed-up facts from different parts of the article
+
+    4. QUESTION DESIGN PRINCIPLES:
+    - Questions should test comprehension, not just recall
+    - Focus on key concepts, relationships, and implications
+    - Avoid questions where answer is obvious without reading the article
+    - Include questions about cause-effect, comparisons, and analysis
+    - Mix question types: factual, inferential, and analytical
+
+    5. DISTRACTOR CREATION GUIDELINES:
+    - Wrong options should be BELIEVABLE and require careful consideration
+    - Use numbers/dates that are close to but not exactly correct
+    - Include names/terms that appear in the article but in wrong contexts
+    - Create options that test common confusions about the topic
+    - Make sure reading the question AND options is necessary to answer correctly
+
+    6. LANGUAGE AND FORMATTING:
+    - All content MUST be in ${language === 'hi' ? 'Hindi' : 'English'}
+    - Use clear, concise language appropriate for educated readers
+    - Maintain consistent terminology throughout
+    - Ensure grammatical correctness and natural flow
+
+    7. VALIDATION CHECKLIST:
+    - Each question tests important article content
+    - All options are similar in length and complexity
+    - Wrong options are plausible but definitely incorrect
+    - Correct option is unambiguously right
+    - Question cannot be answered without reading both article and options carefully
+
+    EXAMPLE OF WELL-DESIGNED QUESTION:
+    {
+      "question": "According to the article, what was the primary factor that led to the economic transformation?",
+      "options": {
+        "a": "Implementation of new trade policies",
+        "b": "Introduction of advanced technology",
+        "c": "Expansion of manufacturing sectors",
+        "d": "Development of infrastructure projects"
+      },
+      "correct": "b",
+      "explanation": "The article specifically states that the introduction of advanced technology was the catalyst for the economic transformation, while the other factors were secondary developments."
+    }
+
+    Notice how all options:
+    - Are similar in length (32-37 characters)
+    - Are all plausible economic factors
+    - Require knowledge of the article to distinguish
+    - Sound equally professional and specific
+
+    FINAL STRUCTURE:
     {
       "normal_quiz": {
         "questions": [
           {
             "question": "...",
             "options": { "a": "...", "b": "...", "c": "...", "d": "..." },
-            "correct": "c",
+            "correct": "a",
             "explanation": "..."
           }
+          // ... 4 more questions
         ]
       }
-    }`
+    }
+
+    Generate questions that truly challenge readers' understanding and cannot be solved through guessing or elimination based on relevance alone.`
+
   const response = await callOpenAIWithRetry(prompt, language)
   if (response.normal_quiz?.questions?.length === 5) {
     return processGameDataWithDifficulties(response).normal_quiz
