@@ -12,6 +12,7 @@ import {
 import { motion, AnimatePresence } from 'framer-motion'
 import { Shuffle, RotateCcw, Target } from 'lucide-react'
 import { useTranslation } from 'react-i18next'
+import { useMemo } from 'react'
 
 const MotionBox = motion(Box)
 const MotionButton = motion(Button)
