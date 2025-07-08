@@ -463,6 +463,22 @@ const userSchema = new mongoose.Schema(
       },
       // We'll use createdAt for the 2-week activity protection period
     },
+    earlyAdopterCode: {
+      type: String,
+      default: null,
+    },
+    isEarlyAdopter: {
+      type: Boolean,
+      default: false,
+    },
+    earlyAdopterVerifiedAt: {
+      type: Date,
+      default: null,
+    },
+    tutorialChoice: {
+      type: Boolean,
+      default: null,
+    },
   },
   { collection: 'Users' },
 )

@@ -6,11 +6,31 @@ const {
   cleanupBattleExpiryEvents,
 } = require('./tasks/processBattleExpiryEvents')
 const { fallbackBattleCompletion } = require('./tasks/fallbackBattleCompletion')
+const { manageBotMatchmaking } = require('./tasks/botMatchmakingTask')
+const {
+  botHealthCheck,
+  botHealthCleanup,
+} = require('./tasks/botHealthMonitoringTask')
 
 /**
  * Schedule configuration for Quick Clash related tasks
  */
 const quickClashSchedules = [
+  {
+    name: 'bot-health-check',
+    cronPattern: '*/2 * * * *', // Every 2 minutes
+    task: botHealthCheck,
+  },
+  {
+    name: 'bot-health-cleanup',
+    cronPattern: '*/10 * * * *', // Every 10 minutes
+    task: botHealthCleanup,
+  },
+  {
+    name: 'bot-matchmaking-management',
+    cronPattern: '*/5 * * * * *', // Every 5 seconds (note the extra * for seconds)
+    task: manageBotMatchmaking,
+  },
   // Run 6 times a day to process expired challenges
   {
     name: 'process-expired-challenges-morning',

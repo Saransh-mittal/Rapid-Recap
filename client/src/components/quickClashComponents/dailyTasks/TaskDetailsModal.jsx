@@ -1,5 +1,5 @@
 // components/quickClashComponents/dailyTasks/TaskDetailsModal.jsx
-import React from 'react'
+import React, { useMemo, useCallback } from 'react'
 import {
   Modal,
   ModalOverlay,
@@ -42,46 +42,6 @@ const MotionBox = motion(Box)
 const MotionFlex = motion(Flex)
 const MotionButton = motion(Button)
 
-// Task type to details mapping for UI display - moved outside component to avoid re-creation
-const TASK_TYPE_DETAILS = {
-  COMPLETE_CHALLENGES: {
-    icon: Target,
-    color: 'blue',
-    description: 'Complete Quick Clash challenges against opponents',
-    benefit: 'Improves your knowledge and game skills',
-  },
-  ACHIEVE_RQM_SCORE: {
-    icon: Target,
-    color: 'purple',
-    description: 'Reach certain Reading Quality Metric scores in challenges',
-    benefit: 'Enhances your reading comprehension abilities',
-  },
-  WIN_CHALLENGES: {
-    icon: Trophy,
-    color: 'yellow',
-    description: 'Win Quick Clash challenges against opponents',
-    benefit: 'Boosts your ranking and confidence',
-  },
-  PLAY_CONSECUTIVE_DAYS: {
-    icon: Clock,
-    color: 'green',
-    description: 'Play Quick Clash on consecutive days',
-    benefit: 'Develops a consistent learning habit',
-  },
-  CHALLENGE_FRIEND: {
-    icon: Target,
-    color: 'pink',
-    description: 'Invite friends to compete in Quick Clash',
-    benefit: 'Expands your knowledge network',
-  },
-  DEFAULT: {
-    icon: Info,
-    color: 'gray',
-    description: 'Complete this task to earn rewards',
-    benefit: 'Improves your Quick Clash experience',
-  },
-}
-
 /**
  * Detailed modal for displaying comprehensive task information
  * Shows statistics, progress, and allows reward claiming
@@ -91,9 +51,87 @@ const TaskDetailsModal = ({ isOpen, onClose, task }) => {
   const dispatch = useDispatch()
   const toast = useToast()
 
-  // ⚠️ IMPORTANT: All hooks must be called unconditionally at the top level
+  // Task type to details mapping for UI display - moved inside and memoized for translation
+  const TASK_TYPE_DETAILS = useMemo(
+    () => ({
+      COMPLETE_CHALLENGES: {
+        icon: Target,
+        color: 'blue',
+        description: t(
+          'taskType.COMPLETE_CHALLENGES.description',
+          'Complete Quick Clash challenges against opponents',
+        ),
+        benefit: t(
+          'taskType.COMPLETE_CHALLENGES.benefit',
+          'Improves your knowledge and game skills',
+        ),
+      },
+      ACHIEVE_RQM_SCORE: {
+        icon: Target,
+        color: 'purple',
+        description: t(
+          'taskType.ACHIEVE_RQM_SCORE.description',
+          'Reach certain Reading Quality Metric scores in challenges',
+        ),
+        benefit: t(
+          'taskType.ACHIEVE_RQM_SCORE.benefit',
+          'Enhances your reading comprehension abilities',
+        ),
+      },
+      WIN_CHALLENGES: {
+        icon: Trophy,
+        color: 'yellow',
+        description: t(
+          'taskType.WIN_CHALLENGES.description',
+          'Win Quick Clash challenges against opponents',
+        ),
+        benefit: t(
+          'taskType.WIN_CHALLENGES.benefit',
+          'Boosts your ranking and confidence',
+        ),
+      },
+      PLAY_CONSECUTIVE_DAYS: {
+        icon: Clock,
+        color: 'green',
+        description: t(
+          'taskType.PLAY_CONSECUTIVE_DAYS.description',
+          'Play Quick Clash on consecutive days',
+        ),
+        benefit: t(
+          'taskType.PLAY_CONSECUTIVE_DAYS.benefit',
+          'Develops a consistent learning habit',
+        ),
+      },
+      CHALLENGE_FRIEND: {
+        icon: Target,
+        color: 'pink',
+        description: t(
+          'taskType.CHALLENGE_FRIEND.description',
+          'Invite friends to compete in Quick Clash',
+        ),
+        benefit: t(
+          'taskType.CHALLENGE_FRIEND.benefit',
+          'Expands your knowledge network',
+        ),
+      },
+      DEFAULT: {
+        icon: Info,
+        color: 'gray',
+        description: t(
+          'taskType.DEFAULT.description',
+          'Complete this task to earn rewards',
+        ),
+        benefit: t(
+          'taskType.DEFAULT.benefit',
+          'Improves your Quick Clash experience',
+        ),
+      },
+    }),
+    [t],
+  )
+
   // Handle reward claim
-  const handleClaimReward = React.useCallback(() => {
+  const handleClaimReward = useCallback(() => {
     if (!task) return
 
     dispatch(claimTaskReward(task._id))
@@ -120,19 +158,19 @@ const TaskDetailsModal = ({ isOpen, onClose, task }) => {
   }, [dispatch, task, toast, t, onClose])
 
   // Calculate progress percentage - always computed, even if task is null
-  const progressPercentage = React.useMemo(() => {
+  const progressPercentage = useMemo(() => {
     if (!task) return 0
     return Math.min(100, Math.round((task.progress / task.target) * 100))
   }, [task])
 
   // Get task type details - always computed, even if task is null
-  const taskTypeDetails = React.useMemo(() => {
+  const taskTypeDetails = useMemo(() => {
     if (!task) return TASK_TYPE_DETAILS.DEFAULT
     return TASK_TYPE_DETAILS[task.taskType] || TASK_TYPE_DETAILS.DEFAULT
-  }, [task])
+  }, [task, TASK_TYPE_DETAILS])
 
   // Determine difficulty stars - always computed, even if task is null
-  const difficultyStars = React.useMemo(() => {
+  const difficultyStars = useMemo(() => {
     if (!task) return []
     return [...Array(task.difficulty || 0)].map((_, i) => (
       <Icon key={i} as={Star} color="yellow.400" boxSize={4} />
@@ -140,7 +178,7 @@ const TaskDetailsModal = ({ isOpen, onClose, task }) => {
   }, [task])
 
   // Time remaining - always computed even if task is null
-  const timeLeft = React.useMemo(() => {
+  const timeLeft = useMemo(() => {
     if (!task) return ''
     const expiryDate = new Date(task.expiresAt)
     return formatDistanceToNow(expiryDate, { addSuffix: true })

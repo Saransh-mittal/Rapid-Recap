@@ -306,7 +306,7 @@ const GlobalMatchmakingButton = React.memo(
             pointerEvents: 'none',
           }}
         >
-          {config.text}
+          {t(config.text)}
         </MotionButton>
       )
     }

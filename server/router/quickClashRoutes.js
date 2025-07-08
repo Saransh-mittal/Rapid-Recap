@@ -1,6 +1,9 @@
 // routes/quickClashRoutes.js
 const express = require('express')
 const { Authenticate } = require('../middleware/authenticate')
+// const {
+//   checkQuickClashAuthorization,
+// } = require('../middleware/quickClashAuthMiddleware')
 const {
   createNewChallenge,
   handleAcceptChallenge,
@@ -52,8 +55,12 @@ const {
   getUserStatistics,
 } = require('../controllers/quickClashProfileController')
 
-// All routes need authentication
+// All routes need authentication first
 router.use(Authenticate)
+
+// IMPORTANT: Apply QuickClash authorization to ALL routes
+// This middleware will return a 403 with coming soon data for unauthorized users
+// router.use(checkQuickClashAuthorization)
 
 // Mount daily task routes
 router.use('/dailyTasks', dailyTaskRoutes)

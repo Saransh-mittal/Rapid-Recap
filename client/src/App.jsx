@@ -72,10 +72,10 @@ import {
   isSubscribedChecker,
 } from './redux/notificationSlice.js'
 import TournamentQuiz from './components/tournamentComponents/tournamentQuiz/TournamentQuiz.jsx'
-import {
-  checkTournamentRegistration,
-  getTopLeaderboard,
-} from './redux/tournamentSlice.js'
+// import {
+//   // checkTournamentRegistration,
+//   getTopLeaderboard,
+// } from './redux/tournamentSlice.js'
 import LoadingScreen from './screens/LoadingScreen.jsx'
 import { setIsLoading, setTaskProgress } from './redux/loadingProgressSlice.js'
 import { NavbarProvider } from './contextAPI/NavbarContext.jsx'
@@ -94,8 +94,10 @@ import { fetchInventory } from './redux/inventorySlice.js'
 import useQuickClashSocket from './customHooks/useQuickClashSocket.js'
 import useQuickClash from './customHooks/useQuickClash.js'
 import NotificationReminderModal from './components/miscellaneous/NotificationReminderModal.jsx'
-import useDailyTasks from './customHooks/useDailyTasks.js'
 import { fetchSpecialCategories } from './services/specialCategoryService.js'
+const ConnectionStatusIndicator = React.lazy(() =>
+  import('./components/connection/ConnectionStatusIndicator.jsx'),
+)
 
 const App = () => {
   // ReactGA.initialize('G-ES5VQ8NW7Z')
@@ -355,17 +357,17 @@ const App = () => {
     }
   }, [dispatch, isToken]) // Added t to dependencies for translations
 
-  useEffect(() => {
-    if (tournamentId && status === 'ongoing') {
-      dispatch(getTopLeaderboard({ tournamentId, t }))
-    }
-  }, [tournamentId, status])
+  // useEffect(() => {
+  //   if (tournamentId && status === 'ongoing') {
+  //     dispatch(getTopLeaderboard({ tournamentId, t }))
+  //   }
+  // }, [tournamentId, status])
 
-  useEffect(() => {
-    if (loginCheckStatus === 'fulfilled') {
-      dispatch(checkTournamentRegistration(tournamentSliceTranslation))
-    }
-  }, [loginCheckStatus])
+  // useEffect(() => {
+  //   if (loginCheckStatus === 'fulfilled') {
+  //     dispatch(checkTournamentRegistration(tournamentSliceTranslation))
+  //   }
+  // }, [loginCheckStatus])
 
   useEffect(() => {
     if (loginCheckStatus === 'fulfilled' && isAuthenticated) {
@@ -377,12 +379,31 @@ const App = () => {
         !isAuthenticated &&
         loginCheckStatus === 'fulfilled'
       ) {
-        if (window.location.hash.split('?')?.[1]?.split('=')?.[0] === 'ref') {
+        // Handle referral code
+        if (
+          window.location.hash
+            .split('?')?.[1]
+            ?.split('&')?.[0]
+            ?.split('=')?.[0] === 'ref'
+        ) {
           localStorage.setItem(
             'ref',
-            window.location.hash.split('?')?.[1]?.split('=')?.[1],
+            window.location.hash
+              .split('?')?.[1]
+              ?.split('&')?.[0]
+              ?.split('=')?.[1],
           )
         }
+
+        // Handle early adopter code
+        const searchParams = new URLSearchParams(
+          window.location.hash.split('?')[1],
+        )
+        const eocParam = searchParams.get('EOC')
+        if (eocParam) {
+          localStorage.setItem('EOC', eocParam)
+        }
+
         dispatch(setIsSigninOpen(true))
       }
       if (
@@ -592,7 +613,8 @@ const App = () => {
               location.pathname.startsWith('/profile')
             ) &&
             location.pathname != '/') ||
-            (!location.pathname.startsWith('/quickclash') && !isLoggedIn)) && (
+            (!location.pathname.startsWith('/quickclash') && !isLoggedIn)) &&
+          !location.pathname.startsWith('/gamehub') && (
             <Suspense fallback={null}>
               {/* <Navbar onNavbarLoad={handleNavbarLoad} /> */}
               <ModernNavbar onNavbarLoad={handleNavbarLoad} />
@@ -634,6 +656,10 @@ const App = () => {
         <RewardDisplay />
       </Suspense>
       <NotificationReminderModal />
+
+      <Suspense fallback={null}>
+        <ConnectionStatusIndicator />
+      </Suspense>
     </MaintenanceHandler>
   )
 }

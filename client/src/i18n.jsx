@@ -40,6 +40,7 @@ const namespaces = {
     'TotalUserAttempted',
     'TrackTime',
   ],
+  gameHub: ['GameHub'],
   rewards: ['rewards', 'GameInventory', 'BadgesSection'],
   tournamentComponents: [
     'TournamentLoadingScreen',
@@ -183,6 +184,8 @@ i18n
             return `/locales/${lng}/utils/${namespace}.json`
           case 'articleComponents':
             return `/locales/${lng}/components/articleComponents/${namespace}.json`
+          case 'gameHub':
+            return `/locales/${lng}/components/gameHub/${namespace}.json`
           case 'rewards':
             return `/locales/${lng}/components/rewards/${namespace}.json`
           case 'tournamentComponents':

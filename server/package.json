@@ -12,14 +12,15 @@
     "clientinstall": "npm install --prefix client",
     "dev-mac": "concurrently \"npm run setup-pyenv-mac\" \"npm run start-dev-mac\"",
     "dev-win": "concurrently \"npm run setup-pyenv-win\" \"npm run start-dev-win\"",
-    "setup-pyenv-win": "py -m venv venv && venv\\Scripts\\pip install -r requirements.txt",
-    "setup-pyenv-mac": "python3 -m venv venv && source venv/bin/activate && pip install -r requirements.txt",
+    "setup-pyenv-win": "py -m venv venv && venv\\Scripts\\pip install -r requirements.txt && venv\\Scripts\\pip install setuptools && venv\\Scripts\\python -m playwright install chromium && venv\\Scripts\\python -c \"import nltk; nltk.download('punkt'); nltk.download('stopwords')\"",
+    "setup-pyenv-mac": "python3 -m venv venv && source venv/bin/activate && pip install -r requirements.txt && pip install setuptools && python3 -m playwright install chromium && python3 -c \"import nltk; nltk.download('punkt'); nltk.download('stopwords')\"",
     "start-dev-win": "venv\\Scripts\\activate && nodemon app.js",
     "start-dev-mac": "source venv/bin/activate && nodemon app.js"
   },
   "author": "",
   "license": "ISC",
   "dependencies": {
+    "async-mutex": "^0.5.0",
     "axios": "^1.7.1",
     "bcryptjs": "^2.4.3",
     "body-parser": "^1.20.2",

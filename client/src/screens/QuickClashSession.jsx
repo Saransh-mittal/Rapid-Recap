@@ -174,6 +174,7 @@ TimerHeader.displayName = 'TimerHeader'
 // Main component with optimization but preserved logic
 const QuickClashSession = () => {
   const { t } = useTranslation('QuickClash')
+  const { t: catTranslate } = useTranslation('categories')
   const { challengeId } = useParams()
   const navigate = useNavigate()
   const toast = useToast()
@@ -505,7 +506,7 @@ const QuickClashSession = () => {
           {phase === 'reading' && article && (
             <Suspense fallback={<LoadingFallback />}>
               <ReadingPhase
-                category={challenge?.category}
+                category={catTranslate(challenge?.category)}
                 article={article}
                 timeLeft={timeLeft}
                 onComplete={handleReadingComplete}

@@ -19,6 +19,11 @@ class SocketInitManager {
     this._deviceFingerprint = null
     this._fingerprintPromise = null
     this._endpoint = this._determineEndpoint()
+
+    // NEW: Enhanced connection tracking
+    this._hasEverConnected = false // Track if we've ever successfully connected
+    this._connectionHistory = [] // Track connection events for debugging
+    this._initialConnectionAttempted = false // Track if initial connection was attempted
   }
 
   /**
@@ -58,6 +63,29 @@ class SocketInitManager {
       `[SocketManager] Auto-detected endpoint: ${endpoint} (from hostname: ${hostname})`,
     )
     return endpoint
+  }
+
+  /**
+   * Record connection event for tracking
+   * @private
+   * @param {string} event - Connection event type
+   * @param {Object} data - Event data
+   */
+  _recordConnectionEvent(event, data = {}) {
+    const eventRecord = {
+      event,
+      timestamp: Date.now(),
+      data,
+    }
+
+    this._connectionHistory.push(eventRecord)
+
+    // Keep only last 20 events
+    if (this._connectionHistory.length > 20) {
+      this._connectionHistory = this._connectionHistory.slice(-20)
+    }
+
+    console.log(`[SocketManager] ${event}:`, data)
   }
 
   /**
@@ -237,6 +265,7 @@ class SocketInitManager {
     this._lastInitTime = now
     this._connecting = true
     this._connectionAttempted = true
+    this._initialConnectionAttempted = true // NEW: Track that we attempted connection
 
     // Clean up existing socket if disconnected
     if (this._socket && this._socket.disconnected) {
@@ -279,6 +308,15 @@ class SocketInitManager {
       console.log(
         `SocketManager: Socket connected to ${this._endpoint}, ID: ${this._socket.id}`,
       )
+
+      // NEW: Track connection state
+      this._hasEverConnected = true
+      this._recordConnectionEvent('connected', {
+        socketId: this._socket.id,
+        endpoint: this._endpoint,
+        deviceFingerprint: deviceFingerprint?.substring(0, 8) + '...',
+      })
+
       this._connecting = false
       this._notifyConnectionListeners(true)
 
@@ -291,6 +329,15 @@ class SocketInitManager {
         `SocketManager: Connection error to ${this._endpoint}:`,
         error,
       )
+
+      // NEW: Record connection error
+      this._recordConnectionEvent('connect_error', {
+        error: error.message,
+        endpoint: this._endpoint,
+        hasEverConnected: this._hasEverConnected,
+        initialConnectionAttempted: this._initialConnectionAttempted,
+      })
+
       this._connecting = false
 
       // Try alternative endpoint in development
@@ -312,6 +359,14 @@ class SocketInitManager {
       console.log(
         `SocketManager: Socket disconnected from ${this._endpoint}, reason: ${reason}`,
       )
+
+      // NEW: Record disconnection
+      this._recordConnectionEvent('disconnected', {
+        reason,
+        endpoint: this._endpoint,
+        hadBeenConnected: this._hasEverConnected,
+      })
+
       this._notifyConnectionListeners(false)
     })
 
@@ -437,6 +492,9 @@ class SocketInitManager {
     this._deviceFingerprint = null
     this._fingerprintPromise = null
 
+    // NEW: Reset connection tracking
+    this.resetConnectionTracking()
+
     // Clear session storage
     if (window.sessionStorage) {
       sessionStorage.removeItem('lastDeviceFingerprint')
@@ -445,7 +503,7 @@ class SocketInitManager {
     }
 
     console.log(
-      'SocketManager: Force disconnected and cleared device fingerprint',
+      'SocketManager: Force disconnected and cleared device fingerprint and connection tracking',
     )
   }
 
@@ -585,6 +643,40 @@ class SocketInitManager {
   }
 
   /**
+   * Check if we've ever successfully connected
+   * @returns {boolean} True if we've ever connected
+   */
+  hasEverConnected() {
+    return this._hasEverConnected
+  }
+
+  /**
+   * Check if initial connection was attempted
+   * @returns {boolean} True if initial connection was attempted
+   */
+  isInitialConnectionAttempted() {
+    return this._initialConnectionAttempted
+  }
+
+  /**
+   * Get connection history for debugging
+   * @returns {Array} Array of connection events
+   */
+  getConnectionHistory() {
+    return [...this._connectionHistory]
+  }
+
+  /**
+   * Reset connection tracking (for logout or force disconnect)
+   */
+  resetConnectionTracking() {
+    this._hasEverConnected = false
+    this._initialConnectionAttempted = false
+    this._connectionHistory = []
+    this._recordConnectionEvent('tracking_reset')
+  }
+
+  /**
    * Get connection debug info
    * @returns {Object} Debug information
    */
@@ -600,6 +692,12 @@ class SocketInitManager {
       lastInitTime: this._lastInitTime,
       endpoint: this._endpoint,
       hostname: window.location.hostname,
+
+      // NEW: Enhanced tracking info
+      hasEverConnected: this._hasEverConnected,
+      initialConnectionAttempted: this._initialConnectionAttempted,
+      connectionHistory: this._connectionHistory,
+
       sessionData: window.sessionStorage
         ? {
             lastDeviceFingerprint: sessionStorage.getItem(

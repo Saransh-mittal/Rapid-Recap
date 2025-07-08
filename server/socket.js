@@ -464,6 +464,10 @@ function initializeSocket(server) {
       socket.join(`tournament_quiz_submission_progress_${userId}`)
     })
 
+    socket.on('join game submission progress', userId => {
+      socket.join(`game_submission_progress_${userId}`)
+    })
+
     socket.off('setup', userData => {
       userOpenChats.delete(userData._id)
       socket.leave(userData._id)
@@ -713,7 +717,7 @@ function initializeSocket(server) {
   function getUserActiveDevices(userId) {
     const userDevices = userDeviceConnections.get(userId)
     if (!userDevices || userDevices.size === 0) {
-      console.log(`[DEVICE_LOOKUP] No devices found for user ${userId}`)
+      // console.log(`[DEVICE_LOOKUP] No devices found for user ${userId}`)
       return []
     }
 
@@ -725,12 +729,12 @@ function initializeSocket(server) {
           const socket = io.sockets.sockets.get(socketId)
           const isConnected = socket && socket.connected
           if (!isConnected) {
-            console.log(
-              `[DEVICE_LOOKUP] Socket ${socketId} not connected, removing from device ${deviceFingerprint.substring(
-                0,
-                8,
-              )}...`,
-            )
+            // console.log(
+            //   `[DEVICE_LOOKUP] Socket ${socketId} not connected, removing from device ${deviceFingerprint.substring(
+            //     0,
+            //     8,
+            //   )}...`,
+            // )
             socketSet.delete(socketId) // Clean up disconnected sockets
             socketMetadata.delete(socketId)
           }
@@ -743,26 +747,26 @@ function initializeSocket(server) {
             socketIds: connectedSockets,
             socketCount: connectedSockets.length,
           })
-          console.log(
-            `[DEVICE_LOOKUP] Found ${
-              connectedSockets.length
-            } active socket(s) for device ${deviceFingerprint.substring(
-              0,
-              8,
-            )}...`,
-          )
+          // console.log(
+          //   `[DEVICE_LOOKUP] Found ${
+          //     connectedSockets.length
+          //   } active socket(s) for device ${deviceFingerprint.substring(
+          //     0,
+          //     8,
+          //   )}...`,
+          // )
         }
       }
     }
 
-    console.log(
-      `[DEVICE_LOOKUP] User ${userId} has ${
-        activeDevices.length
-      } active device(s) with total ${activeDevices.reduce(
-        (sum, dev) => sum + dev.socketCount,
-        0,
-      )} socket(s)`,
-    )
+    // console.log(
+    //   `[DEVICE_LOOKUP] User ${userId} has ${
+    //     activeDevices.length
+    //   } active device(s) with total ${activeDevices.reduce(
+    //     (sum, dev) => sum + dev.socketCount,
+    //     0,
+    //   )} socket(s)`,
+    // )
     return activeDevices
   }
 
@@ -770,22 +774,22 @@ function initializeSocket(server) {
    * Enhanced function to notify user across all devices
    */
   function notifyUserAllDevices(userId, event, data) {
-    console.log(
-      `[NOTIFY] Attempting to notify user ${userId} with event ${event}`,
-    )
+    // console.log(
+    //   `[NOTIFY] Attempting to notify user ${userId} with event ${event}`,
+    // )
 
     const activeDevices = getUserActiveDevices(userId)
 
     if (activeDevices.length === 0) {
-      console.log(`[NOTIFY] No active devices found for user ${userId}`)
+      // console.log(`[NOTIFY] No active devices found for user ${userId}`)
 
       // FALLBACK: Try room-based notification
       const userRoom = `quickClash:${userId}`
       const room = io.sockets.adapter.rooms.get(userRoom)
       if (room && room.size > 0) {
-        console.log(
-          `[NOTIFY] Fallback: Using room ${userRoom} with ${room.size} socket(s)`,
-        )
+        // console.log(
+        //   `[NOTIFY] Fallback: Using room ${userRoom} with ${room.size} socket(s)`,
+        // )
         io.to(userRoom).emit(event, data)
         return true
       }
@@ -799,21 +803,21 @@ function initializeSocket(server) {
       device.socketIds.forEach(socketId => {
         const socket = io.sockets.sockets.get(socketId)
         if (socket && socket.connected) {
-          console.log(
-            `[NOTIFY] Sending ${event} to socket ${socketId} for device ${device.deviceFingerprint.substring(
-              0,
-              8,
-            )}...`,
-          )
+          // console.log(
+          //   `[NOTIFY] Sending ${event} to socket ${socketId} for device ${device.deviceFingerprint.substring(
+          //     0,
+          //     8,
+          //   )}...`,
+          // )
           socket.emit(event, {
             ...data,
             deviceFingerprint: device.deviceFingerprint.substring(0, 8) + '...',
           })
           notifiedSockets++
         } else {
-          console.log(
-            `[NOTIFY] Socket ${socketId} not available for notification`,
-          )
+          // console.log(
+          //   `[NOTIFY] Socket ${socketId} not available for notification`,
+          // )
         }
       })
     })
@@ -934,6 +938,20 @@ function initializeSocket(server) {
     ({ userId, stepId, progress }) => {
       io.to(`tournament_quiz_submission_progress_${userId}`).emit(
         'tournament_quiz_submission_progress',
+        {
+          stepId,
+          progress,
+        },
+      )
+    },
+  )
+
+  // Add this bridge between custom emitter and Socket.IO for game submission progress (around line 520 after other bridges)
+  globalEmitter.on(
+    'game_submission_progress',
+    ({ userId, stepId, progress }) => {
+      io.to(`game_submission_progress_${userId}`).emit(
+        'game_submission_progress',
         {
           stepId,
           progress,

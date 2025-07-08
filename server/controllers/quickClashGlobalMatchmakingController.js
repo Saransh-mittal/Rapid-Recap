@@ -1,4 +1,6 @@
 // controllers/quickClashGlobalMatchmakingController.js
+// MODIFY: Add enhanced error handling for write conflicts and retry logic
+
 const asyncHandler = require('express-async-handler')
 const {
   joinGlobalMatchmaking,
@@ -29,7 +31,57 @@ const joinGlobalMatchmakingQueue = asyncHandler(async (req, res) => {
       matchmaking,
     })
   } catch (error) {
-    // Specific error message when user is already in matchmaking
+    console.log('Error joining global matchmaking:', error.message)
+
+    // ENHANCED: Handle specific error types with user-friendly messages
+
+    // Handle retry exhausted errors (after all retries failed)
+    if (error.isRetryExhausted) {
+      console.log('Matchmaking retry exhausted for user:', userId)
+      return res.status(503).json({
+        success: false,
+        message: 'Matchmaking is currently busy. Please try again in a moment.',
+        code: 'MATCHMAKING_BUSY',
+        reason:
+          'The matchmaking system is experiencing high load. Please wait a moment and try again.',
+        retryAfter: 3, // Suggest retry after 3 seconds
+      })
+    }
+
+    // Handle write conflict errors (if they somehow escape retry logic)
+    if (
+      error.codeName === 'WriteConflict' ||
+      error.message.includes('Write conflict') ||
+      error.message.includes('yielding is disabled')
+    ) {
+      console.log('Write conflict in matchmaking for user:', userId)
+      return res.status(503).json({
+        success: false,
+        message: 'Matchmaking is temporarily busy. Please try again.',
+        code: 'MATCHMAKING_CONFLICT',
+        reason:
+          'Multiple players are joining matchmaking simultaneously. Please try again in a moment.',
+        retryAfter: 2, // Suggest retry after 2 seconds
+      })
+    }
+
+    // Handle transaction errors
+    if (
+      error.message.includes('TransientTransactionError') ||
+      error.message.includes('transaction')
+    ) {
+      console.log('Transaction error in matchmaking for user:', userId)
+      return res.status(503).json({
+        success: false,
+        message: 'Unable to join matchmaking right now. Please try again.',
+        code: 'TRANSACTION_ERROR',
+        reason:
+          'A temporary database issue occurred. Please try again in a moment.',
+        retryAfter: 2,
+      })
+    }
+
+    // Handle user already in matchmaking errors
     if (
       error.message.includes('already in matchmaking') ||
       error.message.includes('already in team matchmaking')
@@ -42,11 +94,48 @@ const joinGlobalMatchmakingQueue = asyncHandler(async (req, res) => {
       })
     }
 
-    res.status(400).json({
+    // Handle network/database connectivity issues
+    if (
+      error.name === 'MongoNetworkError' ||
+      error.name === 'MongoTimeoutError' ||
+      error.message.includes('network') ||
+      error.message.includes('timeout')
+    ) {
+      console.log('Network error in matchmaking for user:', userId)
+      return res.status(503).json({
+        success: false,
+        message: 'Connection issue. Please check your internet and try again.',
+        code: 'NETWORK_ERROR',
+        reason:
+          'Unable to connect to the matchmaking service. Please check your internet connection.',
+        retryAfter: 5,
+      })
+    }
+
+    // Handle validation errors (user not found, etc.)
+    if (
+      error.message.includes('not found') ||
+      error.message.includes('invalid') ||
+      error.message.includes('User not found')
+    ) {
+      return res.status(400).json({
+        success: false,
+        message:
+          'Unable to join matchmaking. Please try logging out and back in.',
+        code: 'VALIDATION_ERROR',
+        reason: error.message,
+      })
+    }
+
+    // Generic fallback for unknown errors
+    console.error('Unexpected error in global matchmaking:', error)
+    res.status(500).json({
       success: false,
-      message: error.message || 'Failed to join global matchmaking',
+      message: 'Unable to join matchmaking at this time. Please try again.',
+      code: 'UNKNOWN_ERROR',
       reason:
-        error.message || 'Unknown error occurred while joining matchmaking', // Include reason
+        'An unexpected error occurred. Please try again or contact support if the issue persists.',
+      retryAfter: 5,
     })
   }
 })
@@ -69,9 +158,59 @@ const leaveGlobalMatchmakingQueue = asyncHandler(async (req, res) => {
         : 'User not in global matchmaking',
     })
   } catch (error) {
-    res.status(400).json({
+    console.log('Error leaving global matchmaking:', error.message)
+
+    // ENHANCED: Handle specific error types for leaving matchmaking
+
+    // Handle retry exhausted errors
+    if (error.isRetryExhausted) {
+      return res.status(503).json({
+        success: false,
+        message: 'Unable to leave matchmaking right now. Please try again.',
+        code: 'LEAVE_MATCHMAKING_BUSY',
+        reason:
+          'The system is busy processing your request. Please try again in a moment.',
+        retryAfter: 3,
+      })
+    }
+
+    // Handle write conflicts
+    if (
+      error.codeName === 'WriteConflict' ||
+      error.message.includes('Write conflict')
+    ) {
+      return res.status(503).json({
+        success: false,
+        message: 'Unable to leave matchmaking right now. Please try again.',
+        code: 'LEAVE_MATCHMAKING_CONFLICT',
+        reason:
+          'Multiple operations are happening simultaneously. Please try again in a moment.',
+        retryAfter: 2,
+      })
+    }
+
+    // Handle network errors
+    if (
+      error.name === 'MongoNetworkError' ||
+      error.name === 'MongoTimeoutError'
+    ) {
+      return res.status(503).json({
+        success: false,
+        message: 'Connection issue. Please check your internet and try again.',
+        code: 'NETWORK_ERROR',
+        reason: 'Unable to connect to the matchmaking service.',
+        retryAfter: 5,
+      })
+    }
+
+    // Generic fallback
+    console.error('Unexpected error leaving global matchmaking:', error)
+    res.status(500).json({
       success: false,
-      message: error.message || 'Failed to leave global matchmaking',
+      message: 'Unable to leave matchmaking. Please try again.',
+      code: 'UNKNOWN_ERROR',
+      reason: 'An unexpected error occurred while leaving matchmaking.',
+      retryAfter: 5,
     })
   }
 })
@@ -92,9 +231,29 @@ const getGlobalMatchmakingStatusController = asyncHandler(async (req, res) => {
       ...status,
     })
   } catch (error) {
+    console.log('Error getting global matchmaking status:', error.message)
+
+    // Handle database errors gracefully for status checks
+    if (
+      error.name === 'MongoNetworkError' ||
+      error.name === 'MongoTimeoutError' ||
+      error.codeName === 'WriteConflict'
+    ) {
+      // For status checks, return a safe default state
+      return res.status(200).json({
+        success: true,
+        inMatchmaking: false,
+        status: null,
+        matchmaking: null,
+        type: null,
+        note: 'Status check temporarily unavailable',
+      })
+    }
+
     res.status(400).json({
       success: false,
-      message: error.message || 'Failed to get global matchmaking status',
+      message: 'Unable to get matchmaking status. Please try again.',
+      code: 'STATUS_CHECK_ERROR',
     })
   }
 })
@@ -121,9 +280,32 @@ const processGlobalMatchmakingController = asyncHandler(async (req, res) => {
       message: 'Global matchmaking processed successfully',
     })
   } catch (error) {
+    console.log('Error processing global matchmaking (admin):', error.message)
+
+    // ENHANCED: Handle admin processing errors
+    if (error.isRetryExhausted) {
+      return res.status(503).json({
+        success: false,
+        message: 'Matchmaking processing is currently overloaded',
+        code: 'PROCESSING_BUSY',
+      })
+    }
+
+    if (
+      error.codeName === 'WriteConflict' ||
+      error.message.includes('Write conflict')
+    ) {
+      return res.status(503).json({
+        success: false,
+        message: 'Matchmaking is busy. Please try again.',
+        code: 'PROCESSING_CONFLICT',
+      })
+    }
+
     res.status(500).json({
       success: false,
-      message: error.message || 'Failed to process global matchmaking',
+      message: 'Failed to process global matchmaking',
+      code: 'PROCESSING_ERROR',
     })
   }
 })
@@ -274,9 +456,27 @@ const getGlobalMatchmakingStatusDetailed = asyncHandler(async (req, res) => {
     })
   } catch (error) {
     console.error('Error getting detailed global matchmaking status:', error)
+
+    // ENHANCED: Handle database errors gracefully for detailed status
+    if (
+      error.name === 'MongoNetworkError' ||
+      error.name === 'MongoTimeoutError' ||
+      error.codeName === 'WriteConflict'
+    ) {
+      // Return a safe default response
+      return res.json({
+        success: true,
+        inMatchmaking: false,
+        status: 'status_unavailable',
+        message: 'Status temporarily unavailable. Please try again.',
+        retryAfter: 3,
+      })
+    }
+
     res.status(500).json({
       success: false,
       message: 'Failed to get matchmaking status',
+      code: 'STATUS_ERROR',
     })
   }
 })
@@ -329,9 +529,13 @@ const canLeaveMatchmakingController = asyncHandler(async (req, res) => {
     })
   } catch (error) {
     console.error('Error checking if user can leave matchmaking:', error)
-    res.status(500).json({
-      success: false,
-      message: 'Failed to check matchmaking status',
+
+    // ENHANCED: For leave-check errors, err on the side of allowing leave
+    res.json({
+      success: true,
+      canLeave: true,
+      reason: null,
+      note: 'Status check temporarily unavailable, leaving is allowed',
     })
   }
 })

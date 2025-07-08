@@ -82,7 +82,7 @@ const NavbarModalManager = memo(
       () => [
         { key: 'Home', label: t('home'), path: '/home' },
         { key: 'Dashboard', label: t('dashboard'), path: '/dashboard' },
-        { key: 'Tournament', label: t('tournament'), path: '/tournament' },
+        // { key: 'Tournament', label: t('tournament'), path: '/tournament' },
         { key: 'Leaderboard', label: t('leaderboard'), path: '/leaderboard' },
         {
           key: 'HallOfChampions',

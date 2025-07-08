@@ -6,3 +6,12 @@ pymongo
 python-dotenv
 scipy
 joblib
+setuptools>=59.6.0
+fake-useragent
+beautifulsoup4
+playwright
+playwright-stealth
+nltk
+feedparser
+nest-asyncio
+requests

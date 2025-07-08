@@ -14,28 +14,32 @@ export const rewardsSlice = createSlice({
   reducers: {
     addReward: (state, action) => {
       // Add id if not provided
-      // dont add if already exists
-      if (
-        ['TOURNAMENT_ACE', 'TOURNAMENT_PRO', 'TOURNAMENT_CHAMP'].includes(
-          action.payload.type,
-        ) &&
-        state.queue.find(
-          item => item.reward.description === action.payload.description,
-        )
-      )
-        return
-      else if (
-        !['TOURNAMENT_ACE', 'TOURNAMENT_PRO', 'TOURNAMENT_CHAMP'].includes(
-          action.payload.type,
-        ) &&
-        state.queue.find(item => item.reward.type === action.payload.type)
-      ) {
-        return
-      }
-
       const reward = {
         ...action.payload,
         id: action.payload.id || uuidv4(),
+      }
+
+      // Check for duplicates based on more specific criteria
+      let isDuplicate = false
+
+      if (
+        ['TOURNAMENT_ACE', 'TOURNAMENT_PRO', 'TOURNAMENT_CHAMP'].includes(
+          reward.type,
+        )
+      ) {
+        // For tournament rewards, check by description
+        isDuplicate = state.queue.find(
+          item => item.reward.description === reward.description,
+        )
+      } else {
+        // For other rewards, check by _id (more specific than type)
+        // This allows multiple abilities of the same type but different IDs
+        isDuplicate = state.queue.find(item => item.reward._id === reward._id)
+      }
+
+      // Don't add if duplicate exists
+      if (isDuplicate) {
+        return
       }
 
       const queueItem = {
@@ -74,7 +78,6 @@ export const rewardsSlice = createSlice({
         state.isDisplaying = true
       } else {
         state.isDisplaying = false
-        window.location.reload()
       }
     },
 

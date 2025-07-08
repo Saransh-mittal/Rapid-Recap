@@ -1,4 +1,10 @@
-import React, { useState, useMemo, useCallback, useEffect } from 'react'
+import React, {
+  useState,
+  useMemo,
+  useCallback,
+  useEffect,
+  Suspense,
+} from 'react'
 import { useNavigate } from 'react-router-dom'
 import { useDispatch, useSelector } from 'react-redux'
 import { Box, Button, useToast } from '@chakra-ui/react'
@@ -18,6 +24,12 @@ import { getVisitedArticle } from '../utils/article.utils'
 import ArticleSelection from '../components/onboarding/ArticleSelection'
 import TimeIndicatorBadge from '../components/onboarding/TimeIndicatorBadge'
 import ReferralStep from '../components/onboarding/ReferralStep'
+const EarlyAdopterStep = React.lazy(() =>
+  import('../components/onboarding/EarlyAdopterStep'),
+)
+const TutorialChoice = React.lazy(() =>
+  import('../components/onboarding/TutorialChoice'),
+)
 
 const MotionBox = motion(Box)
 
@@ -51,8 +63,10 @@ const Star = React.memo(({ size, top, left }) => (
 // Define step constants
 const ONBOARDING_STEPS = {
   LANGUAGE: 'language',
+  EARLY_ADOPTER: 'early_adopter',
   REFERRAL: 'referral',
   CATEGORIES: 'categories',
+  TUTORIAL_CHOICE: 'tutorial_choice',
   ARTICLE_SELECTION: 'article_selection',
   ARTICLE_READING: 'article_reading',
   LEADERBOARD: 'leaderboard',
@@ -61,8 +75,10 @@ const ONBOARDING_STEPS = {
 // Define step sequence
 const STEP_SEQUENCE = [
   ONBOARDING_STEPS.LANGUAGE,
+  ONBOARDING_STEPS.EARLY_ADOPTER,
   ONBOARDING_STEPS.REFERRAL,
   ONBOARDING_STEPS.CATEGORIES,
+  ONBOARDING_STEPS.TUTORIAL_CHOICE,
   ONBOARDING_STEPS.ARTICLE_SELECTION,
   ONBOARDING_STEPS.ARTICLE_READING,
   ONBOARDING_STEPS.LEADERBOARD,
@@ -74,6 +90,8 @@ const OnboardingProcess = ({ setIsGuestLoggedin }) => {
   const [selectedCategories, setSelectedCategories] = useState([])
   const [article, setArticle] = useState(null)
   const [visitedArticle, setVisitedArticle] = useState(null)
+  const [isEarlyAdopter, setIsEarlyAdopter] = useState(false)
+  const [takeTutorial, setTakeTutorial] = useState(null)
   const [isVisitedArticleFetching, setIsVisitedArticleFetching] =
     useState(false)
   const [isArticleFetching, setIsArticleFetching] = useState(false)
@@ -105,16 +123,107 @@ const OnboardingProcess = ({ setIsGuestLoggedin }) => {
     [],
   )
 
-  const getNextStepId = useCallback(currentId => {
-    if (
-      !getVisitedArticle() &&
-      currentId === ONBOARDING_STEPS.ARTICLE_SELECTION
-    ) {
-      return ONBOARDING_STEPS.ARTICLE_READING
+  const getNextStepId = useCallback(
+    (currentId, wantsTutorial) => {
+      // Skip article selection if user doesn't want tutorial
+      if (
+        (currentId === ONBOARDING_STEPS.TUTORIAL_CHOICE &&
+          wantsTutorial === false) ||
+        (currentId === ONBOARDING_STEPS.ARTICLE_SELECTION &&
+          wantsTutorial === false) ||
+        (currentId === ONBOARDING_STEPS.ARTICLE_READING &&
+          wantsTutorial === false)
+      ) {
+        return ONBOARDING_STEPS.LEADERBOARD
+      }
+
+      if (
+        !getVisitedArticle() &&
+        currentId === ONBOARDING_STEPS.ARTICLE_SELECTION
+      ) {
+        return ONBOARDING_STEPS.ARTICLE_READING
+      }
+
+      const currentIndex = STEP_SEQUENCE.indexOf(currentId)
+      const nextIndex = currentIndex + 1
+
+      return STEP_SEQUENCE[nextIndex] || currentId
+    },
+    [takeTutorial],
+  )
+
+  const handleTutorialChoice = async (data = {}) => {
+    setIsLoadingNext(true)
+    try {
+      const { takeTutorial: wantsTutorial } = data
+      setTakeTutorial(wantsTutorial)
+
+      const nextStepId = getNextStepId(
+        ONBOARDING_STEPS.TUTORIAL_CHOICE,
+        wantsTutorial,
+      )
+
+      await updateOnboardingProgress(
+        ONBOARDING_STEPS.TUTORIAL_CHOICE,
+        nextStepId,
+        {
+          takeTutorial: wantsTutorial,
+        },
+      )
+
+      setCurrentStepId(nextStepId)
+
+      // If user chose tutorial and going to article reading, fetch article
+      if (nextStepId === ONBOARDING_STEPS.ARTICLE_READING) {
+        fetchOnBoardingArticle()
+      }
+    } catch (error) {
+      console.error('Failed to process tutorial choice:', error)
+      toast({
+        title: 'Error',
+        description: 'Failed to proceed. Please try again.',
+        status: 'error',
+        duration: 3000,
+        isClosable: true,
+      })
+    } finally {
+      setIsLoadingNext(false)
     }
-    const currentIndex = STEP_SEQUENCE.indexOf(currentId)
-    return STEP_SEQUENCE[currentIndex + 1] || currentId
-  }, [])
+  }
+
+  const handleEarlyAdopterComplete = async (data = {}) => {
+    setIsLoadingNext(true)
+    try {
+      const { earlyAdopterCode } = data
+
+      if (earlyAdopterCode) {
+        setIsEarlyAdopter(true)
+      }
+
+      const nextStepId = getNextStepId(ONBOARDING_STEPS.EARLY_ADOPTER)
+
+      await updateOnboardingProgress(
+        ONBOARDING_STEPS.EARLY_ADOPTER,
+        nextStepId,
+        {
+          earlyAdopterCode,
+        },
+      )
+
+      setCurrentStepId(nextStepId)
+    } catch (error) {
+      console.error('Failed to process early adopter step:', error)
+      toast({
+        title: 'Error',
+        description: 'Failed to proceed. Please try again.',
+        status: 'error',
+        duration: 3000,
+        isClosable: true,
+      })
+    } finally {
+      setIsLoadingNext(false)
+    }
+  }
 
   const sanitizeData = (stepId, data) => {
     // Sanitize data for the current step
@@ -122,6 +231,14 @@ const OnboardingProcess = ({ setIsGuestLoggedin }) => {
       case ONBOARDING_STEPS.LANGUAGE:
         return {
           language: data.language,
+        }
+      case ONBOARDING_STEPS.EARLY_ADOPTER:
+        return {
+          earlyAdopterCode: data.earlyAdopterCode,
+        }
+      case ONBOARDING_STEPS.TUTORIAL_CHOICE:
+        return {
+          takeTutorial: data.takeTutorial,
         }
       case ONBOARDING_STEPS.CATEGORIES:
         return {
@@ -160,7 +277,7 @@ const OnboardingProcess = ({ setIsGuestLoggedin }) => {
     try {
       setSelectedLanguage(lang)
       await i18n.changeLanguage(lang)
-      const nextStepId = ONBOARDING_STEPS.REFERRAL
+      const nextStepId = ONBOARDING_STEPS.EARLY_ADOPTER // Changed from REFERRAL to EARLY_ADOPTER
       await updateOnboardingProgress(ONBOARDING_STEPS.LANGUAGE, nextStepId, {
         language: lang,
       })
@@ -316,9 +433,17 @@ const OnboardingProcess = ({ setIsGuestLoggedin }) => {
   useEffect(() => {
     const fetchUserOnboardingProgress = async () => {
       try {
+        // Check for EOC parameter first
+        const searchParams = new URLSearchParams(location.hash.split('?')[1])
+        const eocParam = searchParams.get('EOC')
+        if (eocParam) {
+          localStorage.setItem('EOC', eocParam)
+        }
+
         const response = await axios.get('/api/user/onboarding-progress')
         const stepId =
           STEP_SEQUENCE[response.data.step - 1] || ONBOARDING_STEPS.LANGUAGE
+
         // Skip article selection if user didn't come from an article page
         if (
           stepId === ONBOARDING_STEPS.ARTICLE_SELECTION &&
@@ -329,12 +454,19 @@ const OnboardingProcess = ({ setIsGuestLoggedin }) => {
           setCurrentStepId(stepId)
         }
 
+        // Set onboarding data based on progress
         if (response.data.step >= 1) {
           setSelectedLanguage(response.data.language)
         }
-        if (response.data.step >= 4) {
+        if (response.data.step >= 5) {
           setSelectedCategories(response.data.categories)
         }
+
+        if (response.data.step >= 6) {
+          setTakeTutorial(response.data.tutorialChoice)
+        }
+
+        // Handle article fetching based on step
         if (stepId === ONBOARDING_STEPS.ARTICLE_SELECTION) {
           fetchVisitedArticle(getVisitedArticle()?.id)
           fetchOnBoardingArticle()
@@ -365,6 +497,11 @@ const OnboardingProcess = ({ setIsGuestLoggedin }) => {
         selectedLanguage={selectedLanguage}
       />
     ),
+    [ONBOARDING_STEPS.EARLY_ADOPTER]: (
+      <Suspense fallback={null}>
+        <EarlyAdopterStep onComplete={handleEarlyAdopterComplete} />
+      </Suspense>
+    ),
     [ONBOARDING_STEPS.REFERRAL]: (
       <ReferralStep onComplete={() => handleNext()} />
     ),
@@ -373,6 +510,11 @@ const OnboardingProcess = ({ setIsGuestLoggedin }) => {
         selectedCategories={selectedCategories}
         onCategoryToggle={handleCategoryToggle}
       />
+    ),
+    [ONBOARDING_STEPS.TUTORIAL_CHOICE]: (
+      <Suspense fallback={null}>
+        <TutorialChoice onChoice={handleTutorialChoice} />
+      </Suspense>
     ),
     [ONBOARDING_STEPS.ARTICLE_SELECTION]: (
       <ArticleSelection

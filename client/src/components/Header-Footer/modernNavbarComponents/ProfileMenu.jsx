@@ -62,11 +62,12 @@ const ProfileMenu = memo(({ user, handleLogout, isLoggingOut }) => {
   const showDashboard = isAuthenticated && user && user.role === 'admin'
   const showRedDotOnMenu =
     activeChallenges &&
-    activeChallenges.filter(
+    activeChallenges?.filter(
       challenge =>
-        (challenge.challenger._id === user?._id &&
-          !challenge.challengerAttempted) ||
-        (challenge.opponent._id === user?._id && !challenge.opponentAttempted),
+        (challenge?.challenger?._id === user?._id &&
+          !challenge?.challengerAttempted) ||
+        (challenge?.opponent?._id === user?._id &&
+          !challenge?.opponentAttempted),
     ).length > 0
   const menuItems = [
     {
@@ -207,10 +208,10 @@ const ProfileMenu = memo(({ user, handleLogout, isLoggingOut }) => {
                         {
                           activeChallenges.filter(
                             challenge =>
-                              (challenge.challenger._id === user?._id &&
-                                !challenge.challengerAttempted) ||
-                              (challenge.opponent._id === user?._id &&
-                                !challenge.opponentAttempted),
+                              (challenge?.challenger?._id === user?._id &&
+                                !challenge?.challengerAttempted) ||
+                              (challenge?.opponent._id === user?._id &&
+                                !challenge?.opponentAttempted),
                           ).length
                         }
                       </Badge>

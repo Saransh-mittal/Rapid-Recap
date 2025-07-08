@@ -17,9 +17,17 @@ const TimeIndicatorBadge = ({ currentStep, STEP_SEQUENCE }) => {
       time: '10 sec',
       message: t('timeIndicator.steps.language'),
     },
+    early_adopter: {
+      time: '1 min',
+      message: t('timeIndicator.steps.earlyAdopter'),
+    },
     welcome: {
       time: '10 sec',
       message: t('timeIndicator.steps.welcome'),
+    },
+    referral: {
+      time: '30 sec',
+      message: t('timeIndicator.steps.referral'),
     },
     categories: {
       time: '45 sec',

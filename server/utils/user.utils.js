@@ -695,19 +695,38 @@ function prepareOnboardingData(body) {
   function getStepId(step) {
     const stepMap = {
       1: 'language',
-      2: 'referral',
-      3: 'categories',
-      4: 'article_selection',
-      5: 'article_reading',
-      6: 'leaderboard',
+      2: 'early_adopter',
+      3: 'referral',
+      4: 'categories',
+      5: 'tutorial_choice',
+      6: 'article_selection',
+      7: 'article_reading',
+      8: 'leaderboard',
     }
     return stepMap[step] || 'language'
   }
 
+  const getStepNode = stepId => {
+    const stepNodeMap = {
+      language: 1,
+      early_adopter: 2,
+      referral: 3,
+      categories: 4,
+      tutorial_choice: 5,
+      article_selection: 6,
+      article_reading: 7,
+      leaderboard: 8,
+    }
+    return stepNodeMap[stepId] || 1
+  }
+  console.log('next step id', nextStepId)
+  console.log('next step', nextStep)
+  // get nextStep using nextStepId if nextStep is not provided
+
   // Normalize the data format
   const normalizedData = {
     currentStep: currentStep || step || 0,
-    nextStep: isOldFormat ? step + 1 : nextStep || currentStep + 1,
+    nextStep: getStepNode(nextStepId),
     currentStepId: currentStepId || stepId || getStepId(step),
     nextStepId: nextStepId || getStepId(isOldFormat ? step + 1 : nextStep),
     data: {
@@ -716,6 +735,8 @@ function prepareOnboardingData(body) {
       quizResult: quizResult || restData.quizResult,
     },
   }
+
+  console.log('Normalized Onboarding Data:', normalizedData)
 
   return { normalizedData }
 }
@@ -737,12 +758,20 @@ const executeOnboardingUpdate = async req => {
 
     // Update user data
     user.onboardingStep = normalizedData.nextStep
-
+    console.log(normalizedData.currentStepId)
     // Process data based on the current step
     switch (normalizedData.currentStepId) {
       case 'language':
         if (normalizedData.data.language) {
           user.userLanguage = normalizedData.data.language
+        }
+        break
+
+      case 'early_adopter':
+        if (normalizedData.data.earlyAdopterCode) {
+          user.earlyAdopterCode = normalizedData.data.earlyAdopterCode
+          user.isEarlyAdopter = true
+          user.earlyAdopterVerifiedAt = new Date()
         }
         break
 
@@ -768,6 +797,13 @@ const executeOnboardingUpdate = async req => {
               isInferred: false,
             }),
           )
+        }
+        break
+
+      case 'tutorial_choice':
+        if (normalizedData.data.takeTutorial !== undefined) {
+          user.tutorialChoice = normalizedData.data.takeTutorial
+          console.log('Setting tutorialChoice to:', user.tutorialChoice)
         }
         break
 
@@ -819,6 +855,21 @@ const retryableOnboardingUpdate = makeRetryable(executeOnboardingUpdate, {
   },
 })
 
+/**
+ * Check if a user is a bot (has dummy email)
+ * @param {string} userId - User ID to check
+ * @returns {Promise<boolean>} Whether the user is a bot
+ */
+const isBotUser = async userId => {
+  try {
+    const user = await User.findById(userId).select('email').lean()
+    return user && /^dummy\d+@mail\.com$/.test(user.email)
+  } catch (error) {
+    console.error('Error checking if user is bot:', error)
+    return false
+  }
+}
+
 module.exports = {
   calculateTopPercent,
   calculateLabelsAndData,
@@ -838,4 +889,5 @@ module.exports = {
   formatPreferredCategories,
   calculateLoginStreak,
   retryableOnboardingUpdate,
+  isBotUser,
 }

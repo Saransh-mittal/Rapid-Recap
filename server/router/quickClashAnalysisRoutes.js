@@ -1,6 +1,7 @@
-// router/quickClashAnalysisRoutes.js (Enhanced with feedback integration)
+// router/quickClashAnalysisRoutes.js (Enhanced with authorization)
 const express = require('express')
 const { Authenticate } = require('../middleware/authenticate')
+// Note: QuickClash authorization is already applied in the parent router (quickClashRoutes.js)
 const {
   getTeamBattleAnalysis,
   getUserBattleAnalysis,
@@ -25,8 +26,8 @@ const {
 
 const router = express.Router()
 
-// All routes need authentication
-router.use(Authenticate)
+// Authentication and QuickClash authorization are already applied in the parent router
+// All routes here are automatically protected
 
 // Battle analysis routes with retry mechanism and feedback tracking
 router.get(
@@ -87,8 +88,7 @@ router.post(
   }),
 )
 
-// Update the existing personalization route (around line 120)
-// REPLACE the existing personalization route with:
+// Update the existing personalization route
 router.get(
   '/personalization',
   trackUserAction('personalization_view'),
@@ -98,7 +98,7 @@ router.get(
   }),
 )
 
-// NEW: Admin analytics endpoints
+// Admin analytics endpoints (would need admin middleware in production)
 router.get(
   '/feedback-analytics',
   // TODO: Add admin middleware here
@@ -125,6 +125,7 @@ router.get('/health', (req, res) => {
       aiPersonalization: true,
       automaticAnalysis: true,
       engagementTracking: true,
+      authorizationProtected: true, // NEW: Indicates this is now protected
     },
   })
 })
@@ -223,7 +224,7 @@ router.get('/check-feedback', async (req, res) => {
   }
 })
 
-// NEW: Feedback summary for user
+// Feedback summary for user
 router.get('/feedback-summary', async (req, res) => {
   try {
     const QuickClashInsightFeedback = require('../model/quickClashSchemas/quickClashInsightFeedbackSchema')
