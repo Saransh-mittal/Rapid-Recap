@@ -1955,12 +1955,8 @@ const updateBattleWithQuizResults = makeRetryable(
 
         // Mark as completed if:
         // 1. All challenges are completed, OR
-        // 2. Time expired AND at least one team has completed one challenge
-        const shouldComplete =
-          allChallengesCompleted ||
-          (timeRemaining <= 0 &&
-            (battle.challenges.some(c => c.teamACompleted) ||
-              battle.challenges.some(c => c.teamBCompleted)))
+        // 2. Time expired
+        const shouldComplete = allChallengesCompleted || timeRemaining <= 0
 
         if (shouldComplete) {
           battle.status = 'completed'

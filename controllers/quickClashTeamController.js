@@ -21,6 +21,11 @@ const {
   getTeamMatchmakingStatus,
 } = require('../services/quickClashServices/quickClashTeamMatchmakingService')
 
+// ADD: Import the notification service
+const {
+  notifyTeamMatchmakingStarted,
+} = require('../services/quickClashServices/quickClashNotificationService')
+
 const {
   selectCategoryForUser,
   getUserTeamBattles,
@@ -423,8 +428,11 @@ const joinTeamMatchmakingController = asyncHandler(async (req, res) => {
   const userId = req.user._id
 
   try {
-    // Verify user is team leader
-    const team = await QuickClashTeam.findById(teamId)
+    // Verify user is team leader and get team details for notifications
+    const team = await QuickClashTeam.findById(teamId).populate(
+      'members.user',
+      '_id name inGameName',
+    ) // ADD: Populate user details for notifications
 
     if (!team) {
       return res.status(404).json({
@@ -436,7 +444,7 @@ const joinTeamMatchmakingController = asyncHandler(async (req, res) => {
     // Check if the user is a leader of this team
     const isLeader = team.members.some(
       member =>
-        member.user.toString() === userId.toString() &&
+        member.user._id.toString() === userId.toString() &&
         member.role === 'leader',
     )
 
@@ -449,6 +457,36 @@ const joinTeamMatchmakingController = asyncHandler(async (req, res) => {
     }
 
     const matchmaking = await joinTeamMatchmaking({ teamId })
+
+    // ADD: Send engaging notifications to offline teammates after successful matchmaking join
+    try {
+      // Get leader's name for notification
+      const leader = team.members.find(
+        member => member.user._id.toString() === userId.toString(),
+      )
+      const leaderName =
+        leader?.user?.inGameName || leader?.user?.name || 'Team Leader'
+
+      // Send notifications to offline teammates
+      const notificationResult = await notifyTeamMatchmakingStarted({
+        teamId: team._id.toString(),
+        teamName: team.name || 'Your Squad',
+        leaderName,
+        teamMembers: team.members,
+        leaderId: userId.toString(),
+      })
+
+      console.log(
+        `[TEAM_MATCHMAKING] Notification result for team "${team.name}":`,
+        notificationResult,
+      )
+    } catch (notificationError) {
+      // Don't fail the matchmaking join if notifications fail
+      console.error(
+        '[TEAM_MATCHMAKING] Error sending notifications:',
+        notificationError,
+      )
+    }
 
     res.status(200).json({
       success: true,
