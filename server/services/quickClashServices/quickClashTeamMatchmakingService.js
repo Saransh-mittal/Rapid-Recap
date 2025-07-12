@@ -147,6 +147,9 @@ const joinTeamMatchmaking = async ({
         teamId.toString(),
         team.members.length,
       )
+      // MODIFY: Use retryable matchmaking process
+      await performMatchmakingWithRetry(session)
+
       globalEmitter.emit('quickClash:teamJoinedMatchmaking', {
         teamId: team._id.toString(),
         teamName: team.name,
@@ -165,9 +168,6 @@ const joinTeamMatchmaking = async ({
         formationInfo: team.formationInfo,
         timestamp: new Date(),
       })
-
-      // MODIFY: Use retryable matchmaking process
-      await performMatchmakingWithRetry(session)
     } else {
       // Emit event for real-time updates
       globalEmitter.emit('quickClash:teamJoinedMatchmaking', {

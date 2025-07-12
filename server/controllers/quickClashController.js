@@ -67,24 +67,10 @@ const createNewChallenge = asyncHandler(async (req, res) => {
       categories,
     })
 
-    // Handle post-creation tasks (background highlight generation)
+    // Handle post-creation tasks (background highlight generation and notifications)
     // after sending the response to avoid blocking
     if (challengeResult && challengeResult.challenge) {
-      // Notify the challenger about successful creation
-      const { challenger, opponent, challenge } = challengeResult.notifyData
-      notifyChallengerAboutCreation({
-        challenge,
-        challenger,
-        opponent,
-        success: true,
-      }).catch(err =>
-        console.error(
-          'Error notifying challenger about successful creation:',
-          err,
-        ),
-      )
-
-      // Schedule post-creation tasks
+      // Schedule post-creation tasks including notifications
       process.nextTick(() => {
         postChallengeCreation(
           challengeResult.challenge._id,
@@ -103,16 +89,15 @@ const createNewChallenge = asyncHandler(async (req, res) => {
   } catch (error) {
     console.error('Error creating challenge:', error)
 
-    // If we have user data available, notify the challenger about failure
+    // Only notify challenger about failure
     if (req.user) {
-      // We need to fetch the opponent's data since we don't have it yet
       try {
         const opponent = await User.findById(opponentId).select(
           '_id name inGameName',
         )
 
         notifyChallengerAboutCreation({
-          challenge: { category },
+          challenge: { category: categories?.[0] || 'unknown' },
           challenger: req.user,
           opponent,
           success: false,
