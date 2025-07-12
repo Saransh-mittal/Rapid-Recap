@@ -186,6 +186,8 @@ if (process.env.NODE_ENV === 'development') {
             'https://apis.google.com',
             'https://*.googleusercontent.com',
             'https://storage.googleapis.com',
+            'https://www.clarity.ms',
+            'https://*.clarity.ms',
             `https://${process.env.RAILWAY_PUBLIC_DOMAIN || ''}`.trim(),
           ].filter(Boolean),
           scriptSrcElem: [
@@ -196,6 +198,8 @@ if (process.env.NODE_ENV === 'development') {
             'https://accounts.google.com',
             'https://apis.google.com',
             'https://*.googleusercontent.com',
+            'https://www.clarity.ms',
+            'https://*.clarity.ms',
           ],
           frameSrc: [
             "'self'",
@@ -235,6 +239,8 @@ if (process.env.NODE_ENV === 'development') {
             'http://*',
             'ws:',
             'wss:',
+            'https://www.clarity.ms',
+            'https://*.clarity.ms',
             `https://${process.env.RAILWAY_PUBLIC_DOMAIN || ''}`.trim(),
             `https://${process.env.RAILWAY_PRIVATE_DOMAIN || ''}`.trim(),
             'https://rapidrecap.co.in',
@@ -253,11 +259,8 @@ if (process.env.NODE_ENV === 'development') {
             `https://${process.env.RAILWAY_PUBLIC_DOMAIN || ''}`.trim(),
           ].filter(Boolean),
           frameAncestors: ["'self'"],
-          // Remove upgradeInsecureRequests to allow mixed content
-          // upgradeInsecureRequests: [],
         },
       },
-      // Disable restrictive cross-origin policies
       crossOriginOpenerPolicy: false,
       crossOriginEmbedderPolicy: false,
       crossOriginResourcePolicy: {
