@@ -1,0 +1,1 @@
+import{i as e}from"./i18n-vendor.bace24f0.js";const n={QUIN_BOOST:{nameKey:"milestones.QUIN_BOOST.name",descriptionKey:"milestones.QUIN_BOOST.description",xpReward:10}},s=s=>{const i=n[s]||null;return i?{name:e.t(i.nameKey,{ns:"milestones"}),description:e.t(i.descriptionKey,{ns:"milestones"}),xpReward:i.xpReward}:null};export{s as g};

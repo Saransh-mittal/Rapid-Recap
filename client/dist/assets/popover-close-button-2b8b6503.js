@@ -1,1 +1,0 @@
-import{f as r,j as a,g as n}from"./index-f1dd2b88.js";import{a as l,b as c}from"./heading-3b9d44d6.js";import{C as m}from"./use-toast-32562902.js";const p=r(function(o,s){const{onClose:e}=l(),t=c();return a.jsx(m,{size:"sm",onClick:e,className:n("chakra-popover__close-btn",o.className),__css:t.closeButton,ref:s,...o})});p.displayName="PopoverCloseButton";export{p as P};
