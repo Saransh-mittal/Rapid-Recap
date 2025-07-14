@@ -27,6 +27,7 @@ const webpush = require('web-push')
 const cookieParser = require('cookie-parser')
 const path = require('path')
 const http = require('http')
+const https = require('https')
 const compression = require('compression')
 const helmet = require('helmet')
 const { initBotTracking } = require('./utils/botTracker')
@@ -361,7 +362,10 @@ const smartKeepAlive = () => {
 
   const startTime = Date.now()
 
-  http
+  // Use https module for HTTPS URLs, http for HTTP URLs
+  const client = url.startsWith('https://') ? https : http
+
+  client
     .get(url, res => {
       const duration = Date.now() - startTime
       keepAliveCount++
@@ -507,8 +511,8 @@ async function initializeServer() {
           `[Keep-Alive] Will ping: https://${process.env.RAILWAY_PUBLIC_DOMAIN}/ping every 8 minutes`,
         )
 
-        // Set up keep-alive interval (4 minutes = 240,000 ms)
-        setInterval(smartKeepAlive, 4 * 60 * 1000)
+        // Set up keep-alive interval (8 minutes = 480,000 ms)
+        setInterval(smartKeepAlive, 8 * 60 * 1000)
 
         // Initial ping after 2 minutes to ensure app is fully ready
         setTimeout(() => {
