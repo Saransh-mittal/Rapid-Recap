@@ -241,4 +241,157 @@ router.route('/test-db-performance').get(async (req, res) => {
   }
 })
 
+// Add to userRoutes.js
+router.route('/test-logincheck-timing').get(Authenticate, async (req, res) => {
+  const timings = {}
+  const startTime = Date.now()
+
+  try {
+    // Time the database query
+    console.time('db-query')
+    const user = await User.findById(req.user._id)
+      .select('-password -cpassword -googleId')
+      .lean()
+      .exec()
+    console.timeEnd('db-query')
+    timings.dbQuery = Date.now() - startTime
+
+    if (!user) {
+      return res.status(404).json({ message: 'User not found' })
+    }
+
+    // Time date operations
+    const dateStart = Date.now()
+    const today = new Date()
+    today.setUTCHours(0, 0, 0, 0)
+    timings.dateOperations = Date.now() - dateStart
+
+    // Time streak calculation
+    console.time('calculate-streak')
+    const streakStart = Date.now()
+    // Simulate calculateLoginStreak - replace with your actual function
+    const newStreakData = { streak: user.loginStreak || 0 } // Simplified
+    timings.streakCalculation = Date.now() - streakStart
+    console.timeEnd('calculate-streak')
+
+    // Time badge operations
+    console.time('badge-processing')
+    const badgeStart = Date.now()
+    let badges = user?.badges || []
+    const now = moment().tz('Asia/Kolkata')
+
+    let unClaimedValidBadges = badges.filter(
+      badge =>
+        badge.canBeClaimedUntil &&
+        moment(badge.canBeClaimedUntil).isAfter(now) &&
+        !badge.claimed,
+    )
+    timings.badgeProcessing = Date.now() - badgeStart
+    console.timeEnd('badge-processing')
+
+    // Time privilege processing
+    console.time('privilege-processing')
+    const privilegeStart = Date.now()
+    // Simulate processBadgePrivileges - replace with your actual function
+    const categoryPrivileges = {} // Simplified
+    timings.privilegeProcessing = Date.now() - privilegeStart
+    console.timeEnd('privilege-processing')
+
+    // Time cache operations
+    const cacheStart = Date.now()
+    Object.keys(categoryPrivileges).forEach(key => {
+      const cacheKey = `privilege_${req.user._id}_${key}`
+      cache.put(cacheKey, categoryPrivileges[key], 5 * 60 * 1000)
+    })
+    timings.cacheOperations = Date.now() - cacheStart
+
+    timings.total = Date.now() - startTime
+
+    console.log('=== LOGIN CHECK TIMING BREAKDOWN ===')
+    console.log(`Total: ${timings.total}ms`)
+    console.log(`DB Query: ${timings.dbQuery}ms`)
+    console.log(`Date Operations: ${timings.dateOperations}ms`)
+    console.log(`Streak Calculation: ${timings.streakCalculation}ms`)
+    console.log(`Badge Processing: ${timings.badgeProcessing}ms`)
+    console.log(`Privilege Processing: ${timings.privilegeProcessing}ms`)
+    console.log(`Cache Operations: ${timings.cacheOperations}ms`)
+
+    res.json({
+      status: 'success',
+      message: 'Check console for detailed timing breakdown',
+      timings,
+      userBadgeCount: badges.length,
+      userInfo: {
+        id: user._id,
+        inGameName: user.inGameName,
+      },
+    })
+  } catch (error) {
+    console.error('LoginCheck timing test failed:', error)
+    res.status(500).json({
+      status: 'error',
+      error: error.message,
+      timings,
+    })
+  }
+})
+
+// Add this to userRoutes.js - test middleware timing
+router.route('/test-middleware-timing').get(async (req, res) => {
+  const startTime = Date.now()
+
+  console.log('=== MIDDLEWARE TIMING TEST ===')
+  console.log(`Request started at: ${new Date().toISOString()}`)
+
+  res.json({
+    status: 'success',
+    message: 'This endpoint bypasses auth - should be fast',
+    timing: {
+      totalTime: Date.now() - startTime,
+      timestamp: new Date().toISOString(),
+    },
+  })
+})
+
+// Add this to test WITH authentication
+router.route('/test-auth-timing').get(Authenticate, async (req, res) => {
+  const startTime = Date.now()
+
+  console.log('=== AUTH MIDDLEWARE TIMING TEST ===')
+  console.log(`Request started at: ${new Date().toISOString()}`)
+  console.log(`Auth completed, processing request...`)
+
+  res.json({
+    status: 'success',
+    message: 'This endpoint tests auth middleware timing',
+    timing: {
+      totalTime: Date.now() - startTime,
+      timestamp: new Date().toISOString(),
+    },
+    user: {
+      id: req.user._id,
+      // Don't include sensitive data
+    },
+  })
+})
+
+// Add this to test maintenance middleware
+router
+  .route('/test-maintenance-timing')
+  .get(maintenanceMiddleware, async (req, res) => {
+    const startTime = Date.now()
+
+    console.log('=== MAINTENANCE MIDDLEWARE TIMING TEST ===')
+    console.log(`Request started at: ${new Date().toISOString()}`)
+
+    res.json({
+      status: 'success',
+      message: 'This endpoint tests maintenance middleware timing',
+      timing: {
+        totalTime: Date.now() - startTime,
+        timestamp: new Date().toISOString(),
+      },
+    })
+  })
+
 module.exports = router
