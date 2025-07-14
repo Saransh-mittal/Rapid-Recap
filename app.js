@@ -68,6 +68,7 @@ const setCorsHeaders = (req, res, next) => {
   }
   next()
 }
+
 // Redirect requests from rapidrecap.co.in to rapidrecap.ai
 app.use((req, res, next) => {
   // Get the host from the incoming request
@@ -288,6 +289,7 @@ if (process.env.NODE_ENV === 'development') {
     }),
   )
 }
+
 // Unified special file handling middleware
 app.use((req, res, next) => {
   if (!res.headersSent) {
@@ -329,10 +331,57 @@ const {
   languageDetectionMiddleware,
 } = require('./utils/languageDetection.utils')
 generateGoogleNewsSitemap()
-//
+
 // Load scheduler
 require('./scheduler/setupCronJobs')
-// require('./scripts/analyzeArticleRelations')
+
+// ============== KEEP-ALIVE FUNCTIONALITY ==============
+// Check if we're running on Railway
+const isRailway = process.env.RAILWAY_ENVIRONMENT !== undefined
+const isDevelopment = process.env.NODE_ENV !== 'production'
+
+// Keep-alive counter for monitoring
+let keepAliveCount = 0
+
+const smartKeepAlive = () => {
+  // Only run keep-alive on Railway in production
+  if (!isRailway || isDevelopment) {
+    console.log('[Keep-Alive] Skipped: not Railway production environment')
+    return
+  }
+
+  const url = process.env.RAILWAY_PUBLIC_DOMAIN
+    ? `https://${process.env.RAILWAY_PUBLIC_DOMAIN}/ping`
+    : null
+
+  if (!url) {
+    console.error('[Keep-Alive] Railway public domain not available')
+    return
+  }
+
+  const startTime = Date.now()
+
+  http
+    .get(url, res => {
+      const duration = Date.now() - startTime
+      keepAliveCount++
+      console.log(
+        `[Keep-Alive] #${keepAliveCount} Success: ${
+          res.statusCode
+        } (${duration}ms) at ${new Date().toISOString()}`,
+      )
+
+      // Consume response data to complete the request
+      res.on('data', () => {})
+      res.on('end', () => {})
+    })
+    .on('error', err => {
+      console.error(`[Keep-Alive] #${keepAliveCount + 1} Failed:`, err.message)
+    })
+    .on('timeout', () => {
+      console.error(`[Keep-Alive] #${keepAliveCount + 1} Timeout`)
+    })
+}
 
 // Setup routes and SSR
 async function initializeServer() {
@@ -352,9 +401,22 @@ async function initializeServer() {
     app.use(configureSession())
     app.use('/api', languageDetectionMiddleware)
     app.use(generateCsrfToken)
+
+    // Enhanced ping endpoint with keep-alive info
     app.get('/ping', (req, res) => {
-      res.send('pong')
+      res.status(200).json({
+        status: 'pong',
+        timestamp: new Date().toISOString(),
+        uptime: process.uptime(),
+        environment: process.env.RAILWAY_ENVIRONMENT_NAME || 'development',
+        keepAlive: {
+          enabled: isRailway && !isDevelopment,
+          count: keepAliveCount,
+          nextPing: isRailway && !isDevelopment ? '8 minutes' : 'disabled',
+        },
+      })
     })
+
     apiRouter.use(validateCsrfToken)
     apiRouter.use('/user', userRoutes)
     apiRouter.use('/articles', articleRoutes)
@@ -435,6 +497,27 @@ async function initializeServer() {
         `- Public Domain: ${process.env.RAILWAY_PUBLIC_DOMAIN || 'localhost'}`,
       )
       console.log(`- Port: ${PORT}`)
+
+      // ============== START KEEP-ALIVE ==============
+      if (isRailway && !isDevelopment) {
+        console.log(
+          '[Keep-Alive] Activating for Railway production environment',
+        )
+        console.log(
+          `[Keep-Alive] Will ping: https://${process.env.RAILWAY_PUBLIC_DOMAIN}/ping every 8 minutes`,
+        )
+
+        // Set up keep-alive interval (4 minutes = 240,000 ms)
+        setInterval(smartKeepAlive, 4 * 60 * 1000)
+
+        // Initial ping after 2 minutes to ensure app is fully ready
+        setTimeout(() => {
+          console.log('[Keep-Alive] Starting initial ping in 2 minutes...')
+          smartKeepAlive()
+        }, 2 * 60 * 1000)
+      } else {
+        console.log('[Keep-Alive] Disabled for development environment')
+      }
     })
   } catch (err) {
     console.error('Failed to initialize server:', err)
