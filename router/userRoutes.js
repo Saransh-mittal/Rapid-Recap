@@ -73,6 +73,7 @@ const {
 } = require('../controllers/referralController')
 const { refreshToken } = require('../controllers/refreshTokenController')
 const User = require('../model/userSchema')
+const mongoose = require('mongoose')
 
 router.route('/auth/refresh').post(refreshToken)
 router.route('/csrf-token').get((req, res) => {
