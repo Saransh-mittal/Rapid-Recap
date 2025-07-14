@@ -352,6 +352,9 @@ async function initializeServer() {
     app.use(configureSession())
     app.use('/api', languageDetectionMiddleware)
     app.use(generateCsrfToken)
+    app.get('/ping', (req, res) => {
+      res.send('pong')
+    })
     apiRouter.use(validateCsrfToken)
     apiRouter.use('/user', userRoutes)
     apiRouter.use('/articles', articleRoutes)
