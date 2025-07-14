@@ -508,9 +508,9 @@ const BOT_SKILL_RANGES = {
  */
 const addBotsToMatchmaking = async () => {
   try {
-    console.log(
-      '[BOT_MATCHMAKING] Checking if bots should be added to matchmaking',
-    )
+    // console.log(
+    //   '[BOT_MATCHMAKING] Checking if bots should be added to matchmaking',
+    // )
 
     // Get all users currently in global matchmaking
     const globalMatchmakingUsers = await QuickClashGlobalMatchmaking.find({
@@ -520,7 +520,7 @@ const addBotsToMatchmaking = async () => {
       .lean()
 
     if (!globalMatchmakingUsers.length) {
-      console.log('[BOT_MATCHMAKING] No users in global matchmaking')
+      // console.log('[BOT_MATCHMAKING] No users in global matchmaking')
     }
 
     // Check which ones are real players (not bots)
@@ -556,31 +556,31 @@ const addBotsToMatchmaking = async () => {
       }
     }
 
-    console.log(
-      `[BOT_MATCHMAKING] Real players - Global: ${realPlayersInGlobal}, Teams: ${realPlayersInTeams}`,
-    )
-    console.log(
-      `[BOT_MATCHMAKING] Current bots in global matchmaking: ${currentBots}`,
-    )
+    // console.log(
+    //   `[BOT_MATCHMAKING] Real players - Global: ${realPlayersInGlobal}, Teams: ${realPlayersInTeams}`,
+    // )
+    // console.log(
+    //   `[BOT_MATCHMAKING] Current bots in global matchmaking: ${currentBots}`,
+    // )
 
     // Only add bots if there are real players somewhere in matchmaking
     if (realPlayersInGlobal === 0 && realPlayersInTeams === 0) {
-      console.log(
-        '[BOT_MATCHMAKING] No real players in matchmaking, skipping bot addition',
-      )
+      // console.log(
+      //   '[BOT_MATCHMAKING] No real players in matchmaking, skipping bot addition',
+      // )
       return
     }
 
     // Don't add more bots if we already have enough
     if (currentBots >= MAX_BOTS_IN_MATCHMAKING) {
-      console.log('[BOT_MATCHMAKING] Maximum bot limit reached, skipping')
+      // console.log('[BOT_MATCHMAKING] Maximum bot limit reached, skipping')
       return
     }
 
     // Calculate how many bots to add (up to 2, but don't exceed max)
     const botsToAdd = Math.min(2, MAX_BOTS_IN_MATCHMAKING - currentBots)
 
-    console.log(`[BOT_MATCHMAKING] Adding ${botsToAdd} bots to matchmaking`)
+    // console.log(`[BOT_MATCHMAKING] Adding ${botsToAdd} bots to matchmaking`)
 
     // Add bots
     const addBotPromises = []
@@ -591,9 +591,9 @@ const addBotsToMatchmaking = async () => {
     const results = await Promise.allSettled(addBotPromises)
     const successful = results.filter(r => r.status === 'fulfilled').length
 
-    console.log(
-      `[BOT_MATCHMAKING] Successfully added ${successful}/${botsToAdd} bots to matchmaking`,
-    )
+    // console.log(
+    //   `[BOT_MATCHMAKING] Successfully added ${successful}/${botsToAdd} bots to matchmaking`,
+    // )
   } catch (error) {
     console.error('[BOT_MATCHMAKING] Error adding bots to matchmaking:', error)
   }
@@ -609,7 +609,7 @@ const addSingleBotToMatchmaking = async () => {
     const botUser = await getRandomBotUser()
 
     if (!botUser) {
-      console.log('[BOT_MATCHMAKING] No bot users available in database')
+      // console.log('[BOT_MATCHMAKING] No bot users available in database')
       return
     }
 
@@ -619,16 +619,16 @@ const addSingleBotToMatchmaking = async () => {
     })
 
     if (existingEntry) {
-      console.log(`[BOT_MATCHMAKING] Bot ${botUser._id} already in matchmaking`)
+      // console.log(`[BOT_MATCHMAKING] Bot ${botUser._id} already in matchmaking`)
       return
     }
 
     // Add bot to global matchmaking
     await joinGlobalMatchmaking({ userId: botUser._id })
 
-    console.log(
-      `[BOT_MATCHMAKING] Added bot ${botUser._id} to global matchmaking`,
-    )
+    // console.log(
+    //   `[BOT_MATCHMAKING] Added bot ${botUser._id} to global matchmaking`,
+    // )
   } catch (error) {
     console.error(
       '[BOT_MATCHMAKING] Error adding single bot to matchmaking:',

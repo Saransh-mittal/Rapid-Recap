@@ -72,6 +72,7 @@ const {
   checkReferralCode,
 } = require('../controllers/referralController')
 const { refreshToken } = require('../controllers/refreshTokenController')
+const User = require('../model/userSchema')
 
 router.route('/auth/refresh').post(refreshToken)
 router.route('/csrf-token').get((req, res) => {
@@ -145,5 +146,98 @@ router.route('/apply-early-adopter').post(Authenticate, applyEarlyAdopterCode)
 // Guest routes
 router.route('/guestLogin').post(enhancedGuestLogin)
 router.route('/exportGuestData').post(Authenticate, exportGuestData)
+
+// Add this route to your userRoutes.js file
+router.route('/test-db-performance').get(async (req, res) => {
+  const results = {
+    timestamp: new Date().toISOString(),
+    tests: {},
+  }
+
+  try {
+    // Test 1: Basic mongoose connection check
+    console.time('connection-check')
+    const connectionState = mongoose.connection.readyState
+    console.timeEnd('connection-check')
+    results.tests.connectionState = {
+      state: connectionState, // 0=disconnected, 1=connected, 2=connecting, 3=disconnecting
+      time: 'logged to console',
+    }
+
+    // Test 2: Simple count query
+    console.time('simple-count')
+    const userCount = await User.countDocuments()
+    console.timeEnd('simple-count')
+    results.tests.simpleCount = {
+      count: userCount,
+      time: 'logged to console',
+    }
+
+    // Test 3: Find by ID (same as loginCheck but with any user)
+    console.time('findById-test')
+    const testUser = await User.findOne({}).select('_id inGameName').lean()
+    console.timeEnd('findById-test')
+
+    if (testUser) {
+      console.time('findById-actual')
+      const foundUser = await User.findById(testUser._id)
+        .select('-password -cpassword -googleId')
+        .lean()
+        .exec()
+      console.timeEnd('findById-actual')
+
+      results.tests.findById = {
+        found: !!foundUser,
+        userId: testUser._id,
+        time: 'logged to console',
+      }
+    }
+
+    // Test 4: Test the exact loginCheck query with your user ID
+    if (req.query.userId) {
+      console.time('loginCheck-exact')
+      const loginUser = await User.findById(req.query.userId)
+        .select('-password -cpassword -googleId')
+        .lean()
+        .exec()
+      console.timeEnd('loginCheck-exact')
+
+      results.tests.loginCheckExact = {
+        found: !!loginUser,
+        time: 'logged to console',
+      }
+    }
+
+    // Test 5: Multiple small queries (test connection reuse)
+    console.time('multiple-queries')
+    await Promise.all([
+      User.findOne({}).select('_id').lean(),
+      User.findOne({}).select('_id').lean(),
+      User.findOne({}).select('_id').lean(),
+    ])
+    console.timeEnd('multiple-queries')
+    results.tests.multipleQueries = {
+      time: 'logged to console',
+    }
+
+    res.json({
+      status: 'success',
+      message: 'Check server console for detailed timings',
+      results,
+      instructions: {
+        normal: 'curl "https://your-domain.com/api/user/test-db-performance"',
+        withUserId:
+          'curl "https://your-domain.com/api/user/test-db-performance?userId=YOUR_USER_ID"',
+      },
+    })
+  } catch (error) {
+    console.error('Test failed:', error)
+    res.status(500).json({
+      status: 'error',
+      error: error.message,
+      results,
+    })
+  }
+})
 
 module.exports = router
