@@ -1,238 +1,317 @@
+// src/i18n.jsx - FIXED VERSION for Bundled Translations
 import i18n from 'i18next'
 import { initReactI18next } from 'react-i18next'
 import LanguageDetector from 'i18next-browser-languagedetector'
-import HttpBackend from 'i18next-http-backend'
 
-const namespaces = {
-  screens: [
-    'Contact',
-    'Home',
-    'LeaderBoard',
-    'Profile',
-    'Register',
-    'Signin',
-    'Tournament',
-    'Quiz',
-    'ComingSoonTournament',
-    'GetStarted',
-    'LoadingScreen',
-    'OnboardingProcess',
-    'rulebook',
-    'QuickClash',
-    'AppStartScreen',
-  ],
-  redux: ['tournamentSlice'],
-  utils: ['formatDate'],
-  categories: ['categories', 'tournamentCategories'],
-  articleComponents: [
-    'ArticleHeader',
-    'AuthorInfo',
-    'BoostSection',
-    'GivenQuiz',
-    'QuinBoostModal',
-    'StreakSurgeModal',
-    'CategoryBoostModal',
-    'QuizExpired',
-    'RelatedArticlesToggle',
-    'ShareButton',
-    'Sidebar',
-    'TakeQuizButton',
-    'TotalUserAttempted',
-    'TrackTime',
-  ],
-  gameHub: ['GameHub'],
-  rewards: ['rewards', 'GameInventory', 'BadgesSection'],
-  tournamentComponents: [
-    'TournamentLoadingScreen',
-    'EpicQuestGuide',
-    'CategoryCard',
-    'CategorySelection',
-    'LeaderboardSearch',
-    'LeaderboardSection',
-    'LeaderboardTable',
-    'PreviousTournamentLeaderboard',
-    'RegisteredUsersCount',
-    'RegistrationForm',
-    'RegistrationSection',
-    'TimeInfo',
-    'TournamentGuideModal',
-    'TournamentHeader',
-    'TournamentStatus',
-    'UserStatsModal',
-    'CategoryLeaders',
-    'LeaderCard',
-    'QuizConfirmationModal',
-    'ShutterAnimation',
-    'TournamentQuiz',
-    'TournamentBadge',
-  ],
-  quizComponents: [
-    'BoostedSubmittedQuizInterface',
-    'ConfirmationModal',
-    'GivenQuizInterface',
-    'InstructionModal',
-    'ModalComponent',
-    'QuinBoost',
-    'QuizGivenSummary',
-    'QuizInterface',
-    'SubmittedQuizInterface',
-  ],
-  authComponents: [
-    'EmailVerify',
-    'GuestLogin',
-    'GuestLoginModal',
-    'ResetPassword',
-  ],
+// Create a custom backend that loads bundled files once and caches them
+class BundledBackend {
+  constructor() {
+    this.type = 'backend'
+    this.cache = new Map()
+    this.bundleCache = new Map()
+    this.loadingPromises = new Map()
+  }
 
-  contactComponents: ['FeedbackModal'],
-  chatComponent: [
-    'userChats',
-    'ChatSideDrawer',
-    'UserListItem',
-    'MessageReactions',
-    'ReactionModal',
-    'BookmarksModal',
-    'ChatHeader',
-    'DeleteMessageModal',
-    'MessageRequestComponent',
-    'ContextMenu',
-    'ShareChatModal',
-    'SingleChat',
-    'MessageInput',
-  ],
-  headerFooter: [
-    'HamburgerModal',
-    'NotificationDrawer',
-    'IQScoreModal',
-    'NavbarContent',
-    'OutsideNavbarContent',
-    'Navbar',
-    'NavBrand',
-    'XPLevelModal',
-    'LogoutButton',
-  ],
-  homeComponents: ['SearchBarInput', 'Timeline', 'UpgradeModal', 'Card'],
-  leaderBoardComponents: ['LeaderBoardTable', 'SearchBar', 'LeaderBoardRow'],
-  miscellaneous: [
-    'UserSearchDrawer',
-    'SecureYourProgress',
-    'NoteMessageSummary',
-    'NoteMessageQueue',
-    'ButtonFactory',
-    'milestones',
-    'StreakNoteMessage',
-    'TournamentNoteMessage',
-    'XPAwardNoteMessage',
-    'DifficultyLegend',
-    'UnifiedFeedbackNoteMessage',
-    'ProfileBox',
-  ],
-  Notifications: ['NotificationSubscription'],
-  streakComponents: ['DailyStreakModal'],
-  profileComponents: [
-    'Bookmarks',
-    'EditProfileModal',
-    'IQBarGraph',
-    'LineGraph',
-    'LeftProfileBox',
-    'ProfileButton',
-    'ProfileDropDownMenu',
-    'ProfileExperienceLevel',
-    'RankAndSociety',
-    'SeasonModal',
-    'SeasonSelectorModal',
-    'SolvedQuizzes',
-    'Settings',
-    'ToggleProfileVisibility',
-    'BrainModal',
-    'CircleModal',
-    'SolvedQuizHistory',
-    'FriendItem',
-    'FriendRequestItem',
-    'EnhancedSocietyCircle',
-    'WiseWeb',
-    'TournamentSection',
-    'TournamentSelectorDrawer',
-    'TournamentModal',
-    'LastTournamentRank',
-    'TournamentBadgeGallery',
-  ],
-  HallOfChampions: ['ChampionDetailsModal'],
-  assets: ['Circles', 'Brains', 'CircleAndSocietyData'],
-  main: ['App'],
+  init(services, backendOptions, i18nextOptions) {
+    this.services = services
+    this.options = backendOptions || {}
+  }
+
+  read(language, namespace, callback) {
+    const cacheKey = `${language}-${namespace}`
+
+    // Return cached namespace data if available
+    if (this.cache.has(cacheKey)) {
+      callback(null, this.cache.get(cacheKey))
+      return
+    }
+
+    // If already loading this bundle, wait for it
+    const bundleKey = language
+    if (this.loadingPromises.has(bundleKey)) {
+      this.loadingPromises
+        .get(bundleKey)
+        .then(() => {
+          const data = this.extractNamespaceData(language, namespace)
+          this.cache.set(cacheKey, data)
+          callback(null, data)
+        })
+        .catch(callback)
+      return
+    }
+
+    // Load the entire bundle for this language
+    const loadPromise = this.loadBundle(language)
+      .then(bundleData => {
+        this.bundleCache.set(bundleKey, bundleData)
+        this.loadingPromises.delete(bundleKey)
+
+        const data = this.extractNamespaceData(language, namespace)
+        this.cache.set(cacheKey, data)
+        return data
+      })
+      .catch(error => {
+        this.loadingPromises.delete(bundleKey)
+        throw error
+      })
+
+    this.loadingPromises.set(bundleKey, loadPromise)
+
+    loadPromise.then(
+      data => callback(null, data),
+      error => callback(error),
+    )
+  }
+
+  async loadBundle(language) {
+    const bundleKey = language
+
+    // Return cached bundle if available
+    if (this.bundleCache.has(bundleKey)) {
+      return this.bundleCache.get(bundleKey)
+    }
+
+    try {
+      const response = await fetch(`/locales/bundled/${language}/all.json`)
+      if (!response.ok) {
+        throw new Error(`Failed to load ${language} bundle: ${response.status}`)
+      }
+
+      const data = await response.json()
+      return data
+    } catch (error) {
+      console.error(`Error loading bundle for ${language}:`, error)
+      throw error
+    }
+  }
+
+  extractNamespaceData(language, namespace) {
+    const bundleData = this.bundleCache.get(language)
+    if (!bundleData) return {}
+
+    // Handle the bundled structure
+    // First try exact match
+    if (bundleData[namespace]) {
+      return bundleData[namespace]
+    }
+
+    // Then try to find namespace in nested structure
+    // Look for patterns like "components.headerFooter.NavBrand"
+    const possibleKeys = [
+      namespace,
+      `screens.${namespace}`,
+      `components.headerFooter.${namespace}`,
+      `components.homeComponents.${namespace}`,
+      `components.authComponents.${namespace}`,
+      `components.quizComponents.${namespace}`,
+      `components.tournamentComponents.${namespace}`,
+      `components.profileComponents.${namespace}`,
+      `components.miscellaneous.${namespace}`,
+      `components.chatComponent.${namespace}`,
+      `components.leaderBoardComponents.${namespace}`,
+      `components.contactComponents.${namespace}`,
+      `components.articleComponents.${namespace}`,
+      `components.streakComponents.${namespace}`,
+      `components.rewards.${namespace}`,
+      `components.gameHub.${namespace}`,
+      `components.HallOfChampions.${namespace}`,
+      `components.Notifications.${namespace}`,
+      `redux.${namespace}`,
+      `utils.${namespace}`,
+      `categories.${namespace}`,
+      `assets.${namespace}`,
+      `main.${namespace}`,
+    ]
+
+    for (const key of possibleKeys) {
+      if (bundleData[key]) {
+        return bundleData[key]
+      }
+    }
+
+    // If still not found, search all keys for partial matches
+    const keys = Object.keys(bundleData)
+    const matchingKey = keys.find(
+      key => key.endsWith(`.${namespace}`) || key === namespace,
+    )
+
+    if (matchingKey && bundleData[matchingKey]) {
+      return bundleData[matchingKey]
+    }
+
+    console.warn(
+      `Namespace '${namespace}' not found in ${language} bundle. Available keys:`,
+      keys.slice(0, 10),
+    )
+    return {}
+  }
 }
 
+// All your existing namespaces
+const namespaces = [
+  'Contact',
+  'Home',
+  'LeaderBoard',
+  'Profile',
+  'Register',
+  'Signin',
+  'Tournament',
+  'Quiz',
+  'ComingSoonTournament',
+  'GetStarted',
+  'LoadingScreen',
+  'OnboardingProcess',
+  'rulebook',
+  'QuickClash',
+  'AppStartScreen',
+  'tournamentSlice',
+  'formatDate',
+  'categories',
+  'tournamentCategories',
+  'ArticleHeader',
+  'AuthorInfo',
+  'BoostSection',
+  'GivenQuiz',
+  'QuinBoostModal',
+  'StreakSurgeModal',
+  'CategoryBoostModal',
+  'QuizExpired',
+  'RelatedArticlesToggle',
+  'ShareButton',
+  'Sidebar',
+  'TakeQuizButton',
+  'TotalUserAttempted',
+  'TrackTime',
+  'GameHub',
+  'rewards',
+  'GameInventory',
+  'BadgesSection',
+  'TournamentLoadingScreen',
+  'EpicQuestGuide',
+  'CategoryCard',
+  'CategorySelection',
+  'LeaderboardSearch',
+  'LeaderboardSection',
+  'LeaderboardTable',
+  'PreviousTournamentLeaderboard',
+  'RegisteredUsersCount',
+  'RegistrationForm',
+  'RegistrationSection',
+  'TimeInfo',
+  'TournamentGuideModal',
+  'TournamentHeader',
+  'TournamentStatus',
+  'UserStatsModal',
+  'CategoryLeaders',
+  'LeaderCard',
+  'QuizConfirmationModal',
+  'ShutterAnimation',
+  'TournamentQuiz',
+  'TournamentBadge',
+  'BoostedSubmittedQuizInterface',
+  'ConfirmationModal',
+  'GivenQuizInterface',
+  'InstructionModal',
+  'ModalComponent',
+  'QuinBoost',
+  'QuizGivenSummary',
+  'QuizInterface',
+  'SubmittedQuizInterface',
+  'EmailVerify',
+  'GuestLogin',
+  'GuestLoginModal',
+  'ResetPassword',
+  'FeedbackModal',
+  'userChats',
+  'ChatSideDrawer',
+  'UserListItem',
+  'MessageReactions',
+  'ReactionModal',
+  'BookmarksModal',
+  'ChatHeader',
+  'DeleteMessageModal',
+  'MessageRequestComponent',
+  'ContextMenu',
+  'ShareChatModal',
+  'SingleChat',
+  'MessageInput',
+  'HamburgerModal',
+  'NotificationDrawer',
+  'IQScoreModal',
+  'NavbarContent',
+  'OutsideNavbarContent',
+  'Navbar',
+  'NavBrand',
+  'XPLevelModal',
+  'LogoutButton',
+  'SearchBarInput',
+  'Timeline',
+  'UpgradeModal',
+  'Card',
+  'LeaderBoardTable',
+  'SearchBar',
+  'LeaderBoardRow',
+  'UserSearchDrawer',
+  'SecureYourProgress',
+  'NoteMessageSummary',
+  'NoteMessageQueue',
+  'ButtonFactory',
+  'milestones',
+  'StreakNoteMessage',
+  'TournamentNoteMessage',
+  'XPAwardNoteMessage',
+  'DifficultyLegend',
+  'UnifiedFeedbackNoteMessage',
+  'ProfileBox',
+  'NotificationSubscription',
+  'DailyStreakModal',
+  'Bookmarks',
+  'EditProfileModal',
+  'IQBarGraph',
+  'LineGraph',
+  'LeftProfileBox',
+  'ProfileButton',
+  'ProfileDropDownMenu',
+  'ProfileExperienceLevel',
+  'RankAndSociety',
+  'SeasonModal',
+  'SeasonSelectorModal',
+  'SolvedQuizzes',
+  'Settings',
+  'ToggleProfileVisibility',
+  'BrainModal',
+  'CircleModal',
+  'SolvedQuizHistory',
+  'FriendItem',
+  'FriendRequestItem',
+  'EnhancedSocietyCircle',
+  'WiseWeb',
+  'TournamentSection',
+  'TournamentSelectorDrawer',
+  'TournamentModal',
+  'LastTournamentRank',
+  'TournamentBadgeGallery',
+  'ChampionDetailsModal',
+  'Circles',
+  'Brains',
+  'CircleAndSocietyData',
+  'App',
+]
+
 i18n
-  .use(HttpBackend)
+  .use(new BundledBackend())
   .use(LanguageDetector)
   .use(initReactI18next)
   .init({
-    backend: {
-      loadPath: (lngs, ns) => {
-        const lng = Array.isArray(lngs) ? lngs[0] : lngs
-        const namespace = Array.isArray(ns) ? ns[0] : ns
-        const category = Object.keys(namespaces).find(key =>
-          namespaces[key].includes(namespace),
-        )
-
-        switch (category) {
-          case 'screens':
-            return `/locales/${lng}/screens/${namespace}.json`
-          case 'redux':
-            return `/locales/${lng}/redux/${namespace}.json`
-          case 'utils':
-            return `/locales/${lng}/utils/${namespace}.json`
-          case 'articleComponents':
-            return `/locales/${lng}/components/articleComponents/${namespace}.json`
-          case 'gameHub':
-            return `/locales/${lng}/components/gameHub/${namespace}.json`
-          case 'rewards':
-            return `/locales/${lng}/components/rewards/${namespace}.json`
-          case 'tournamentComponents':
-            return `/locales/${lng}/components/tournamentComponents/${namespace}.json`
-          case 'quizComponents':
-            return `/locales/${lng}/components/quizComponents/${namespace}.json`
-          case 'authComponents':
-            return `/locales/${lng}/components/authComponents/${namespace}.json`
-          case 'contactComponents':
-            return `/locales/${lng}/components/contactComponents/${namespace}.json`
-          case 'chatComponent':
-            return `/locales/${lng}/components/chatComponent/${namespace}.json`
-          case 'headerFooter':
-            return `/locales/${lng}/components/headerFooter/${namespace}.json`
-          case 'homeComponents':
-            return `/locales/${lng}/components/homeComponents/${namespace}.json`
-          case 'leaderBoardComponents':
-            return `/locales/${lng}/components/leaderBoardComponents/${namespace}.json`
-          case 'miscellaneous':
-            return `/locales/${lng}/components/miscellaneous/${namespace}.json`
-          case 'Notifications':
-            return `/locales/${lng}/components/Notifications/${namespace}.json`
-          case 'streakComponents':
-            return `/locales/${lng}/components/streakComponents/${namespace}.json`
-          case 'profileComponents':
-            return `/locales/${lng}/components/profileComponents/${namespace}.json`
-          case 'HallOfChampions':
-            return `/locales/${lng}/components/HallOfChampions/${namespace}.json`
-
-          case 'assets':
-            return `/locales/${lng}/assets/${namespace}.json`
-          case 'categories':
-            return `/locales/${lng}/categories/${namespace}.json`
-          case 'main':
-            return `/locales/${lng}/main/${namespace}.json`
-          default:
-            return `/locales/${lng}/${namespace}.json` // fallback
-        }
-      },
-    },
     fallbackLng: 'en',
     supportedLngs: ['en', 'hi'],
-    ns: Object.values(namespaces).flat(),
+    ns: namespaces,
     defaultNS: 'Contact',
+
     interpolation: {
       escapeValue: false,
     },
+
     detection: {
       order: ['querystring', 'cookie', 'localStorage', 'navigator', 'htmlTag'],
       lookupQuerystring: 'lng',
@@ -240,6 +319,12 @@ i18n
       lookupLocalStorage: 'i18nextLng',
       caches: ['localStorage', 'cookie'],
     },
+
+    // Performance optimizations
+    load: 'languageOnly',
+    cleanCode: true,
+    nonExplicitSupportedLngs: false,
+    initImmediate: false,
   })
 
 export default i18n

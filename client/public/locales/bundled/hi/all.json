@@ -1,0 +1,3898 @@
+{
+  "assets.Brains": {
+    "Explorers": {
+      "society": "एक्सप्लोरर्स",
+      "IQ_Lower": 0,
+      "IQ_Upper": 90,
+      "BrainInfo": "एक्सप्लोरर्स सोसाइटी में विभिन्न प्रकार की संज्ञानात्मक क्षमताओं और जिज्ञासा और रोमांच की भावना वाले व्यक्ति शामिल होते हैं। इस समाज के भीतर IQ स्कोर व्यापक रूप से भिन्न हो सकते हैं, लेकिन सदस्य अन्वेषण, सीखने और खोज के प्रति समान जुनून साझा करते हैं। वे ऐसे वातावरण में पनपते हैं जो प्रयोग और बौद्धिक जिज्ञासा को प्रोत्साहित करता है।"
+    },
+    "Strivers": {
+      "society": "स्ट्राइवर्स",
+      "IQ_Lower": 90,
+      "IQ_Upper": 110,
+      "BrainInfo": "स्ट्राइवर्स सोसाइटी में दृढ़ संकल्प वाले व्यक्तियों और एक निरंतर कार्य नैतिकता वाले व्यक्तियों का समूह होता है। 90 से 110 के IQ के साथ, इस समाज के सदस्य लचीलापन, संसाधनशीलता और आत्म-सुधार की मजबूत इच्छा प्रदर्शित करते हैं। वे चुनौतियों को पार करने और दृढ़ता और समर्पण के माध्यम से सफलता प्राप्त करने में उत्कृष्टता प्राप्त करते हैं।"
+    },
+    "Elites": {
+      "society": "एलीट्स",
+      "IQ_Lower": 110,
+      "IQ_Upper": 130,
+      "BrainInfo": "एलीट्स सोसाइटी में औसत से अधिक बुद्धिमत्ता वाले व्यक्ति और जटिल परिस्थितियों के अनुकूल होने की एक तेज़ क्षमता वाले व्यक्ति शामिल होते हैं। 110 से 130 तक के IQ के साथ, इस समाज के सदस्य मजबूत विश्लेषणात्मक कौशल, रणनीतिक सोच और निरंतर सुधार की प्रेरणा रखते हैं। वे अक्सर नेतृत्व की भूमिकाओं में होते हैं और प्रतिस्पर्धी वातावरण में उत्कृष्टता प्राप्त करते हैं।"
+    },
+    "Mavericks": {
+      "society": "मैवरिक्स",
+      "IQ_Lower": 130,
+      "IQ_Upper": 150,
+      "BrainInfo": "मैवरिक्स सोसाइटी में अत्यधिक बुद्धिमान व्यक्ति होते हैं जो स्वतंत्र सोच और अपरंपरागत दृष्टिकोणों में उत्कृष्टता प्राप्त करते हैं। 130 से 150 के IQ के साथ, इस समाज के सदस्य अपनी साहसिकता, सृजनात्मकता और यथास्थिति को चुनौती देने की इच्छा के लिए जाने जाते हैं। वे विभिन्न क्षेत्रों में नई विचारधाराओं को आगे बढ़ाने और सीमाओं को धकेलने में उत्कृष्टता प्राप्त करते हैं।"
+    },
+    "Titans": {
+      "society": "टाइटन्स",
+      "IQ_Lower": 150,
+      "IQ_Upper": null,
+      "BrainInfo": "टाइटन्स सोसाइटी में अत्यधिक संज्ञानात्मक क्षमताओं वाले व्यक्ति शामिल होते हैं, जो अक्सर प्रतिभा-स्तर की बुद्धिमत्ता प्रदर्शित करते हैं। इस एलीट समूह के सदस्य अद्वितीय समस्या-समाधान कौशल रखते हैं और असाधारण रचनात्मकता प्रदर्शित करते हैं। उनका मस्तिष्क अद्वितीय स्तर की जटिलता पर कार्य करता है, जिससे वे विभिन्न क्षेत्रों में दूरदर्शी नेता और नवप्रवर्तक बनते हैं।"
+    }
+  },
+  "assets.CircleAndSocietyData": {
+    "Titans": "टाइटन्स",
+    "Mavericks": "मैवरिक्स",
+    "Elites": "एलीट्स",
+    "Strivers": "स्ट्राइवर्स",
+    "Explorers": "एक्सप्लोरर्स",
+    "Visionaries": "विजनरीज़",
+    "Pioneers": "पायनियर्स",
+    "Scholars": "स्कॉलर्स",
+    "Masters": "मास्टर्स",
+    "Enthusiasts": "एंथूज़ियास्ट्स",
+    "Achievers": "अचीवर्स",
+    "Progressors": "प्रोग्रेसर्स",
+    "titansSocietyMsg": "बधाई हो! आप बौद्धिक उपलब्धि की ऊंचाइयों पर पहुंच चुके हैं। टाइटन्स सोसाइटी में आपका स्वागत है, जहाँ प्रतिभा की कोई सीमा नहीं होती। आप एक टाइटन हैं!",
+    "visionariesCircleMsg": "बधाई हो! आपने पारंपरिक सोच की सभी सीमाओं को पार कर दिया है और सच्चे दृष्टा के क्षेत्र में पहुँच गए हैं। विजनरीज़ सर्कल में आपका स्वागत है, जहाँ मैवरिक्स भविष्य की दिशा तय करते हैं!",
+    "pioneersCircleMsg": "बधाई हो! आपने समाज के दूसरे सबसे उच्च पद पर पदोन्नति प्राप्त की है, और अब आप पायनियर्स सर्कल में शामिल हो गए हैं। गर्व से अपने मैवरिक्स स्थिति को अपनाएं!",
+    "scholarsCircleMsg": "बधाई हो! आपने असाधारण बुद्धि का प्रदर्शन किया है और शैक्षिक अभिजात वर्ग में अपना स्थान अर्जित किया है। स्कॉलर्स सर्कल में आपका स्वागत है!",
+    "mastersCircleMsg": "बधाई हो! आपने अपने बौद्धिक प्रयासों में महारत हासिल कर ली है, और अब आप मास्टर्स सर्कल के सम्मानित सदस्यों में शामिल हो गए हैं।",
+    "enthusiastsCircleMsg": "बधाई हो! आपके उत्साह और समर्पण ने आपको एंथूज़ियास्ट्स सर्कल में पहुँचाया है। महानता की ओर बढ़ते रहें!",
+    "achieversCircleMsg": "बधाई हो! आपकी मेहनत और संकल्प रंग लाई है। अचीवर्स सर्कल में आपका स्वागत है!",
+    "progressorsCircleMsg": "बधाई हो! आपकी प्रगति के प्रति प्रतिबद्धता ने आपको प्रोग्रेसर्स सर्कल में पहुंचाया है। सीमाओं को धक्का देते रहें!",
+    "explorersSocietyMsg": "बधाई हो! आप खोज और अन्वेषण की एक अद्वितीय यात्रा पर निकल रहे हैं। अज्ञात को अपनाएं और एक्सप्लोरर्स सोसाइटी में आपका स्वागत है!"
+  },
+  "assets.Circles": {
+    "Progressors": {
+      "title": "प्रगतिशील",
+      "IQ_Lower": 90,
+      "IQ_Upper": 97,
+      "CircleInfo": "प्रगतिशील सर्कल व्यक्तियों को प्रत्याशील बुद्धिमत्ता और व्यक्तिगत और पेशेवर विकास के लिए मजबूत इच्छा वाले व्यक्तियों का प्रतिनिधित्व करता है। इस सर्कल के सदस्यों की बुद्धिमत्ता 90 से 97 तक है, जो निरंतर सुधार और विकास के लिए प्रतिबद्ध हैं। वे चुनौतियों को सीखने, अनुकूलनशीलता और प्रगति के अवसर के रूप में स्वीकार करते हैं।"
+    },
+    "Achievers": {
+      "title": "अचीवर्स",
+      "IQ_Lower": 974,
+      "IQ_Upper": 105,
+      "CircleInfo": "अचीवर्स सर्कल दृढ़ बुद्धिमत्ता और सफलता के लिए एक ड्राइव रखने वाले निर्धारित व्यक्तियों से मिलकर बनता है। इस सर्कल के सदस्यों की बुद्धिमत्ता 97 से 104 तक है, जो लक्ष्य-संवेदनशील और अपने परिपेक्ष्यों में दृढ़ता और सहयोग करने में उत्कृष्ट हैं। वे चुनौतियों को पार करने, मील के लक्ष्यों को स्थापित करने और अपने समुदायों में महत्वपूर्ण योगदान करने में उत्कृष्ट हैं।"
+    },
+    "Enthusiasts": {
+      "title": "उत्साही",
+      "IQ_Lower": 104,
+      "IQ_Upper": 110,
+      "CircleInfo": "उत्साही सर्कल उस समूह को संदर्भित करता है जिसमें औसत से अधिक बुद्धिमत्ता और विभिन्न विषयों और गतिविधियों में गहरी रुचि है। इस सर्कल के सदस्यों की बुद्धिमत्ता 104 से 110 तक है, जो उत्साही शिक्षार्थी और खोजकर्ता हैं। वे नई रुचियों में खोजने, शौकों का पीछा करने और विभिन्न क्षेत्रों में अपने ज्ञान को विस्तारित करने में आनंद लेते हैं।"
+    },
+    "Masters": {
+      "title": "मास्टर्स",
+      "IQ_Lower": 110,
+      "IQ_Upper": 120,
+      "CircleInfo": "मास्टर्स सर्कल उस समूह को संदर्भित करता है जिसमें मजबूत बुद्धिमत्ता और उनके चुने गए क्षेत्र में निपुणता है। इस सर्कल के सदस्यों की बुद्धिमत्ता 110 से 120 तक है, जो अपने विषयों में उनकी विशेषज्ञता, कौशल और सटीकता के लिए मान्यता प्राप्त हैं। वे जटिल समस्याओं का समाधान करने, टीमों का नेतृत्व करने और अपने प्रयासों में उत्कृष्टता प्राप्त करने में अद्वितीय हैं।"
+    },
+    "Scholars": {
+      "title": "विद्वान",
+      "IQ_Lower": 120,
+      "IQ_Upper": 130,
+      "CircleInfo": "विद्वान सर्कल उस समूह को संदर्भित करता है जिसमें औसत से अधिक बुद्धिमत्ता और ज्ञान और सीखने के प्रति गहरी रुचि है। इस सर्कल के सदस्यों की बुद्धिमत्ता 120 से 130 तक है, जो शैक्षिक उत्कृष्टता और बौद्धिक अन्वेषण के प्रति समर्पित हैं। वे शोध, विश्लेषण और महत्वपूर्ण समझ के क्षेत्रों में उत्कृष्ट हैं, अपने अध्ययन क्षेत्रों में मूल्यवान अंतर्दृष्टि प्रदान करते हैं।"
+    },
+    "Pioneers": {
+      "title": "पायनियर्स",
+      "IQ_Lower": 130,
+      "IQ_Upper": 140,
+      "CircleInfo": "पायनियर्स सर्कल में अत्यधिक बुद्धिमान व्यक्ति शामिल होते हैं जो सीमाओं को धकेलने और नए क्षेत्रों की खोज में कुशल होते हैं। IQ 130 से 140 तक के सदस्यों के साथ, इस सर्कल के सदस्य अपनी साहसिक भावना और जोखिम लेने की इच्छा के लिए जाने जाते हैं। वे नई अवधारणाओं, प्रौद्योगिकियों, और सोच के तरीकों में अग्रणी होते हैं, भविष्य के नवाचारों और खोजों की नींव रखते हैं।"
+    },
+    "Visionaries": {
+      "title": "दृष्टिगत",
+      "IQ_Lower": 140,
+      "IQ_Upper": 150,
+      "CircleInfo": "दृष्टिगत सर्कल में असाधारण बुद्धिमत्ता वाले व्यक्ति शामिल होते हैं, जो अक्सर प्रतिभा के करीब होते हैं। इस सर्कल के सदस्य असाधारण क्षमता रखते हैं, जो क्रांतिकारी विचारों की कल्पना और कार्यान्वयन में सक्षम होते हैं। वे अपनी दूरदर्शी सोच, नवोन्मेषी समाधानों, और मानदंडों को चुनौती देने की इच्छा के लिए जाने जाते हैं। दृष्टिगत प्रगति को आगे बढ़ाते हैं और अपनी साहसी और दूरदर्शी दृष्टिकोणों के माध्यम से भविष्य को आकार देते हैं।"
+    }
+  },
+  "categories.categories": {
+    "categories": {
+      "all": "सभी",
+      "top": "शीर्ष",
+      "general": "सामान्य",
+      "world": "दुनिया",
+      "politics": "राजनीति",
+      "business": "व्यवसाय",
+      "technology": "टेक्नोलॉजी",
+      "sports": "खेल",
+      "health": "स्वास्थ्य",
+      "science": "विज्ञान",
+      "environment": "पर्यावरण",
+      "crime": "अपराध",
+      "education": "शिक्षा",
+      "entertainment": "मनोरंजन",
+      "food": "भोजन",
+      "lifestyle": "जीवनशैली",
+      "tourism": "पर्यटन"
+    }
+  },
+  "categories.tournamentCategories": {
+    "categories": {
+      "world": "दुनिया",
+      "politics": "राजनीति",
+      "business": "व्यवसाय",
+      "technology": "टेक्नोलॉजी",
+      "sports": "खेल",
+      "health": "स्वास्थ्य",
+      "science": "विज्ञान",
+      "environment": "पर्यावरण",
+      "crime": "अपराध",
+      "education": "शिक्षा",
+      "entertainment": "मनोरंजन",
+      "food": "भोजन",
+      "lifestyle": "जीवनशैली",
+      "tourism": "पर्यटन",
+      "current affairs": "वर्तमान मामले"
+    }
+  },
+  "components.HallOfChampions.ChampionDetailsModal": {
+    "Rank": "रैंक",
+    "Exp Level": "अनुभव स्तर",
+    "Submissions": "सबमिशन",
+    "RQM Score": "RQM स्कोर",
+    "Quiz Performance": "क्विज प्रदर्शन",
+    "Total Quizzes": "कुल क्विज",
+    "Perfect Scores": "परफेक्ट स्कोर",
+    "Success Rate": "सफलता दर",
+    "League": "लीग",
+    "Top 3 Champion": "शीर्ष 3 चैंपियन",
+    "IQ Elite": "आईक्यू एलीट",
+    "Dedicated Solver": "समर्पित सॉल्वर",
+    "Quiz Master": "क्विज मास्टर",
+    "High RQM Achiever": "उच्च RQM अचीवर",
+    "Achievements": "उपलब्धियां",
+    "IQ Growth Rate": "आईक्यू वृद्धि दर",
+    "Quiz Success Rate": "क्विज सफलता दर",
+    "Performance Insights": "प्रदर्शन इंसाइट्स"
+  },
+  "components.Notifications.NotificationSubscription": {
+    "enableNotifications": "रैपिड रीकैप के लिए सूचनाएं सक्षम करें",
+    "browserSupport": "ब्राउज़र अधिसूचनाओं का समर्थन करता है",
+    "browserEnabled": "ब्राउज़र अधिसूचनाएं सक्षम हैं",
+    "sitePermission": "साइट अनुमति दी गई",
+    "backendSubscribed": "बैकएंड पर सदस्यता ली गई",
+    "checking": "(जांच हो रही है...)"
+  },
+  "components.articleComponents.ArticleHeader": {
+    "fetchErrorTitle": "लेख विवरण लाने में त्रुटि",
+    "updateSuccessTitle": "लेख सफलतापूर्वक अपडेट किया गया",
+    "updateErrorTitle": "लेख अपडेट करने में त्रुटि",
+    "loginRequiredTitle": "लॉगिन आवश्यक",
+    "loginRequiredDescription": "कृपया इस लेख को साझा करने के लिए लॉगिन करें।",
+    "timeToRead": "मिनट पढ़ें",
+    "selectTheme": "थीम चुनें",
+    "original": "मूल",
+    "space": "अंतरिक्ष",
+    "indianMythology": "भारतीय पौराणिक कथाएँ",
+    "bibleMythology": "बाइबल पौराणिक कथाएँ",
+    "greekMythology": "ग्रीक पौराणिक कथाएँ",
+    "scifi": "विज्ञान कथा",
+    "mysticWorld": "रहस्यमय दुनिया",
+    "featureInTesting": "परीक्षण में सुविधा",
+    "featureNotAvailableTitle": "सुविधा उपलब्ध नहीं है",
+    "featureNotAvailableDescription": "यह सुविधा इस समय हिंदी में उपलब्ध नहीं है।",
+    "loginRequiredTitleWithRealAccount": "लॉगिन आवश्यक है",
+    "loginRequiredDescriptionWithRealAccount": "इस सुविधा का उपयोग करने के लिए कृपया वास्तविक खाते से लॉगिन करें।",
+    "themeChangeErrorTitle": "थीम परिवर्तन त्रुटि",
+    "themeChangeErrorDescription": "थीम बदलते समय एक त्रुटि हुई। कृपया पुनः प्रयास करें।",
+    "Enhanced by Rapid Recap AI": "रैपिड रिकैप एआई द्वारा संवर्धित"
+  },
+  "components.articleComponents.AuthorInfo": {
+    "authorLabel": "लेखक"
+  },
+  "components.articleComponents.BoostSection": {
+    "quinBoostLabel": "क्विन बूस्ट",
+    "quizLeftMessage": "क्विज़ बाकी",
+    "loginRequiredTitle": "लॉगिन आवश्यक",
+    "loginRequiredDescription": "कृपया इस लेख को साझा करने के लिए लॉगिन करें।",
+    "enjoyMultiplier": "आनंद लें!! 1.5x गुणक",
+    "quizLeftText": "क्विन बूस्ट के लिए क्विज़ बाकी"
+  },
+  "components.articleComponents.CategoryBoostModal": {
+    "Category Boost": "श्रेणी बूस्ट",
+    "Master New Categories": "नई श्रेणियां सीखें",
+    "Weekday Boost Available": "सप्ताह के दिनों में बूस्ट उपलब्ध",
+    "Weekend - No Boost": "सप्ताहांत - कोई बूस्ट नहीं",
+    "Availability": "उपलब्धता",
+    "Active Now": "अभी सक्रिय",
+    "Available Mon-Fri": "सोम-शुक्र उपलब्ध",
+    "Boost active during weekdays!": "सप्ताह के दिनों में बूस्ट सक्रिय!",
+    "Category Boost returns on Monday": "श्रेणी बूस्ट सोमवार को वापस आएगा",
+    "Special Access Feature": "विशेष पहुंच सुविधा",
+    "Exclusive Boost for Special Players": "विशेष खिलाड़ियों के लिए एक्सक्लूसिव बूस्ट",
+    "Complete categories on weekdays to earn great rewards and unlock special achievements!": "सप्ताह के दिनों में श्रेणियां पूरी करें, बेहतरीन पुरस्कार पाएं और विशेष उपलब्धियां अनलॉक करें!",
+    "Boost Schedule": "बूस्ट कार्यक्रम",
+    "Category Boost is available Monday to Friday. Plan your learning to maximize XP gains!": "श्रेणी बूस्ट सोमवार से शुक्रवार तक उपलब्ध है। अधिकतम XP प्राप्त करने के लिए अपना सीखना योजनाबद्ध करें!",
+    "Continue": "जारी रखें"
+  },
+  "components.articleComponents.GivenQuiz": {
+    "quizPerformance": "क्विज़ प्रदर्शन",
+    "currentPercentile": "वर्तमान पर्सेंटाइल: ",
+    "rqmScore": "RQM-स्कोर:",
+    "tooltipLabel": "यह रैपिड क्विज़ मास्टरी (RQM) स्कोर है। इसे सही उत्तरों की संख्या, क्विज़ पूरा करने में लिया गया समय और कुल मिलाकर क्विज़ की कठिनाई स्तर के आधार पर गणना किया जाता है। RQM-स्कोर जितना अधिक होगा, प्रदर्शन उतना ही बेहतर होगा।",
+    "viewReportButton": "रिपोर्ट देखें"
+  },
+  "components.articleComponents.QuinBoostModal": {
+    "Quin Boost": "क्विन बूस्ट",
+    "levelUpSkill": "अपने लर्निंग जर्नी को बढ़ाएं",
+    "QuinBoostActive": "क्विन बूस्ट सक्रिय है!",
+    "QuinBoostInactive": "क्विन बूस्ट स्थिति",
+    "Current Quiz": "वर्तमान क्विज़",
+    "Next Boost": "अगला बूस्ट",
+    "quizzesUntilBoost": "आपके अगले क्विन बूस्ट तक और कितने क्विज़!",
+    "boostReady": "आपका क्विन बूस्ट सक्रिय करने के लिए तैयार है!",
+    "SuperchargeRQM": "1.5x स्कोर मल्टीप्लायर",
+    "boostDescription": "क्विज़ स्कोर्स में 50% की बूस्ट के साथ बेहतरीन लर्निंग का अनुभव करें!",
+    "ActivationPattern": "सक्रियण पैटर्न",
+    "activationDescription": "अपने दिन के 6वें, 12वें, 18वें और इसी प्रकार के क्विज़ पर अपना क्विन बूस्ट स्वत: अनलॉक करें!",
+    "boostActivated": "क्विन बूस्ट सक्रिय हो गया है!",
+    "boostActivatedMessage": "आपका क्विन बूस्ट अब सक्रिय है। अपने क्विज़ स्कोर्स में 50% की बूस्ट के साथ बेहतरीन लर्निंग का आनंद लें!",
+    "BoostActive": "क्विन बूस्ट सक्रिय",
+    "QuinBoostActivated": "क्विन बूस्ट सक्रिय हुआ",
+    "Continue": "सीखना जारी रखें"
+  },
+  "components.articleComponents.QuizExpired": {
+    "quizExpired": "क्विज़ समाप्त हो गया है"
+  },
+  "components.articleComponents.RelatedArticlesToggle": {
+    "relatedArticles": "संबंधित लेख",
+    "remmondedArticles": "सिफारिश किए गए लेख"
+  },
+  "components.articleComponents.ShareButton": {
+    "loginToShare": "कृपया साझा करने के लिए लॉगिन करें",
+    "share": "साझा करें",
+    "Register to see your IQ score and grow Wise Web": "अपने IQ स्कोर देखने और वाइज वेब बढ़ाने के लिए रजिस्टर करें"
+  },
+  "components.articleComponents.Sidebar": {
+    "loginRequired": "लॉगिन आवश्यक है",
+    "loginToShare": "इस लेख को साझा करने के लिए कृपया लॉगिन करें।",
+    "loginToGiveQuiz": "कृपया क्विज़ देने के लिए लॉगिन करें",
+    "loginToNavigate": "नेविगेट करने के लिए कृपया लॉगिन करें",
+    "quizAlreadyOngoing": "क्विज़ पहले से ही किसी अन्य टैब या डिवाइस में चल रही है",
+    "minRead": "मिनट पढ़ें",
+    "articleImageAlt": "लेख की छवि",
+    "loadMore": "और लोड करें",
+    "alreadyOnArticle": "आप पहले से ही इस लेख पर हैं",
+    "alreadyOnArticleDesc": "आप पहले से ही इस लेख पर हैं। कृपया किसी अन्य लेख पर नेविगेट करें।",
+    "warningForSummary": "बेहतर क्विज़ प्रदर्शन के लिए, पूरे लेख को पढ़ें"
+  },
+  "components.articleComponents.StreakSurgeModal": {
+    "title": "स्ट्रीक सर्ज",
+    "keepStreakAlive": "अपनी स्ट्रीक को जारी रखें",
+    "surgeActivated": "सर्ज सक्रिय हो गया!",
+    "streakSurgeActivated": "स्ट्रीक सर्ज सक्रिय है",
+    "streakSurgeInactive": "स्ट्रीक सर्ज निष्क्रिय है",
+    "currentStreak": "वर्तमान स्ट्रीक",
+    "surgeActive": "सर्ज सक्रिय है",
+    "nextSurge": "अगला सर्ज",
+    "surgeActiveMessage": "आपका स्ट्रीक सर्ज अब सक्रिय है!",
+    "daysUntilSurge": "अगले स्ट्रीक सर्ज तक {{count}} दिन",
+    "surgeReady": "सर्ज तैयार है!",
+    "powerUpProgress": "अपनी प्रगति को बढ़ाएं",
+    "powerUpDescription": "शक्तिशाली मल्टीप्लायर और पुरस्कार अनलॉक करने के लिए अपनी दैनिक स्ट्रीक बनाए रखें!",
+    "surgePattern": "सर्ज पैटर्न",
+    "surgePatternDescription": "अपनी स्ट्रीक बनाए रखने के लिए दैनिक गतिविधियां पूरी करें। सर्ज लगातार 7 दिनों की प्रगति पर सक्रिय होता है!",
+    "continue": "जारी रखें"
+  },
+  "components.articleComponents.TakeQuizButton": {
+    "takeQuiz": "क्विज़ लें"
+  },
+  "components.articleComponents.TotalUserAttempted": {
+    "quizStatistics": "क्विज़ आँकड़े:",
+    "Attempted": "प्रयास किया",
+    "AvgScore": "औसत स्कोर",
+    "YourScore": "आपका स्कोर"
+  },
+  "components.articleComponents.TrackTime": {
+    "XP Awarded For Reading Articles More Than 10 Minutes": "10 मिनट से अधिक समय तक लेख पढ़ने के लिए एक्सपी पुरस्कृत",
+    "10 Min Article Read": "10 मिनट लेख पढ़ा"
+  },
+  "components.authComponents.EmailVerify": {
+    "heading": "ओटीपी सत्यापन",
+    "otpSent": "एक ओटीपी भेजा गया है",
+    "enterOTP": "कृपया सत्यापित करने के लिए ओटीपी दर्ज करें",
+    "verifyButton": "सत्यापित करें",
+    "verifying": "सत्यापन हो रहा है",
+    "didntReceiveCode": "कोड नहीं मिला?",
+    "resendOTP": "ओटीपी पुनः भेजें",
+    "toastVerifySuccess": "ईमेल सत्यापित",
+    "toastResetSuccess": "ईमेल सत्यापित अब आप पासवर्ड रीसेट कर सकते हैं",
+    "toastVerifyFail": "ईमेल सत्यापन विफल",
+    "toastOTPSent": "ओटीपी भेजा गया",
+    "toastOTPFail": "ओटीपी भेजने में विफल"
+  },
+  "components.authComponents.GuestLogin": {
+    "toastSuccessTitle": "अतिथि लॉगिन सफल",
+    "toastSuccessDescription": "{{inGameName}} के रूप में लॉग इन किया गया",
+    "toastFailTitle": "अतिथि लॉगिन विफल",
+    "toastFailDescription": "अतिथि लॉगिन के दौरान एक त्रुटि हुई",
+    "buttonText": "अतिथि के रूप में जारी रखें"
+  },
+  "components.authComponents.GuestLoginModal": {
+    "copiedToClipboard": "क्लिपबोर्ड पर कॉपी किया गया",
+    "noWiseWebAccess": "WiseWeb सुविधा तक कोई पहुंच नहीं (दोस्त बनाना और चैट करना)",
+    "noIQScore": "IQ स्कोर उत्पन्न नहीं होगा",
+    "noCircleAssignment": "कोई सर्कल या समाज असाइनमेंट नहीं",
+    "noSeasonsEnrollment": "कोई सीजन में नामांकन नहीं",
+    "welcomeTo": "में आपका स्वागत है",
+    "rapidRecap": "रैपिड रिकैप",
+    "guestProfileGenerated": "आपकी अतिथि प्रोफ़ाइल सफलतापूर्वक बनाई गई है। यहां आपके लॉगिन विवरण हैं:",
+    "username": "उपयोगकर्ता नाम",
+    "password": "पासवर्ड",
+    "passwordChanged": "पासवर्ड बदल दिया गया है",
+    "guestAccessValid": "आपकी अतिथि पहुंच के लिए मान्य है",
+    "days": "दिन",
+    "guestAccessNotice": "। इस अवधि के दौरान, आप अपने डेटा और प्रगति को एक नए, गैर-पंजीकृत ईमेल पते पर स्थानांतरित या निर्यात कर सकते हैं। कृपया ध्यान दें कि 7-दिन की विंडो के बाद, आपका अतिथि आईडी समाप्त हो जाएगा, और कोई भी असुरक्षित प्रगति खो जाएगी।",
+    "guestLimitations": "अतिथि खाता सीमाएं",
+    "secureProgress": "अपनी प्रगति सुरक्षित करें",
+    "viewProfile": "प्रोफ़ाइल देखें",
+    "close": "बंद करें",
+    "copied": "कॉपी किया गया",
+    "copy": "कॉपी"
+  },
+  "components.authComponents.ResetPassword": {
+    "error": "त्रुटि",
+    "emailMissing": "ईमेल गायब है",
+    "passwordMismatch": "पासवर्ड मेल नहीं खाते",
+    "success": "सफलता",
+    "passwordResetSuccess": "पासवर्ड सफलतापूर्वक रीसेट किया गया",
+    "passwordResetFailed": "पासवर्ड रीसेट करने में विफल",
+    "resetPassword": "पासवर्ड रीसेट करें",
+    "newPassword": "नया पासवर्ड",
+    "enterNewPassword": "नया पासवर्ड दर्ज करें",
+    "confirmPassword": "पासवर्ड की पुष्टि करें",
+    "confirmNewPassword": "नया पासवर्ड की पुष्टि करें",
+    "hide": "छुपाएं",
+    "show": "दिखाएं",
+    "resetting": "रीसेट कर रहा है"
+  },
+  "components.chatComponent.BookmarksModal": {
+    "shareBookmarkedArticle": "बुकमार्क किया हुआ लेख साझा करें"
+  },
+  "components.chatComponent.ChatHeader": {
+    "backButton": "वापस",
+    "loading": "लोड हो रहा है...",
+    "typing": "टाइप कर रहा है..."
+  },
+  "components.chatComponent.ChatSideDrawer": {
+    "searchUsers": "उपयोगकर्ताओं की खोज करें",
+    "searchPlaceholder": "नाम या ईमेल से खोजें...",
+    "noUserFound": "कोई उपयोगकर्ता नहीं मिला",
+    "errorFetchingChat": "चैट लाने में त्रुटि"
+  },
+  "components.chatComponent.ContextMenu": {
+    "deleteForEveryone": "सभी के लिए हटाएँ",
+    "deleteForMe": "मेरे लिए हटाएँ",
+    "deletePermanent": "हटाएँ",
+    "copy": "प्रतिलिपि बनाएं"
+  },
+  "components.chatComponent.DeleteMessageModal": {
+    "deleteMessage": "संदेश हटाएं",
+    "confirmDeleteMessage": "क्या आप सुनिश्चित हैं कि आप इस संदेश को सभी के लिए हटाना चाहते हैं?",
+    "deleteForEveryone": "सभी के लिए हटाएं",
+    "cancel": "रद्द करें"
+  },
+  "components.chatComponent.MessageInput": {
+    "EnterMessage": "संदेश दर्ज करें.."
+  },
+  "components.chatComponent.MessageReactions": {
+    "loading": "लोड हो रहा है..."
+  },
+  "components.chatComponent.MessageRequestComponent": {
+    "acceptRequest": "{{senderName}} से संदेश अनुरोध स्वीकार करें?",
+    "requestDescription": "यदि आप इस अनुरोध को स्वीकार करते हैं, तो आप इस उपयोगकर्ता के संदेश और गतिविधियों को देख पाएंगे।",
+    "accept": "स्वीकार करें",
+    "reject": "अस्वीकार करें"
+  },
+  "components.chatComponent.ReactionModal": {
+    "reactionDetails": "प्रतिक्रिया विवरण",
+    "loading": "लोड हो रहा है...",
+    "you": "आप",
+    "tapToRemove": "हटाने के लिए टैप करें",
+    "noReactions": "इस श्रेणी में कोई प्रतिक्रिया नहीं है",
+    "all": "सभी"
+  },
+  "components.chatComponent.ShareChatModal": {
+    "shareToChat": "चैट में साझा करें",
+    "send": "भेजें",
+    "cancel": "रद्द करें",
+    "shareOnSocialMedia": "सोशल मीडिया पर साझा करें",
+    "copyArticleUrl": "लेख URL कॉपी करें",
+    "linkCopied": "लिंक कॉपी हो गया",
+    "articleUrlCopied": "लेख का URL क्लिपबोर्ड पर कॉपी हो गया",
+    "checkOutArticle": "इस लेख को देखें",
+    "errorOccurred": "एक त्रुटि हुई",
+    "failedToLoadChats": "चैट्स लोड करने में विफल",
+    "failedToShareArticle": "लेख साझा करने में विफल",
+    "noChatsSelected": "कोई चैट चयनित नहीं है",
+    "selectAtLeastOneChat": "कृपया कम से कम एक चैट का चयन करें",
+    "share": "साझा करें"
+  },
+  "components.chatComponent.SingleChat": {
+    "chatRequestAccepted": "चैट अनुरोध स्वीकृत।",
+    "errorOccurred": "एक त्रुटि हुई!",
+    "failedToAcceptChatRequest": "चैट अनुरोध को स्वीकृत करने में विफल रहा।",
+    "chatRequestRejected": "चैट अनुरोध अस्वीकृत।",
+    "failedToRejectChatRequest": "चैट अनुरोध को अस्वीकृत करने में विफल रहा।",
+    "rrlogoAlt": "आरआर लोगो",
+    "clickToStartChat": "चैटिंग शुरू करने के लिए क्लिक करें।",
+    "giveFeedback": "आवेदन और चैटिंग अनुभव के बारे में प्रतिक्रिया देने के लिए हमसे संपर्क करें।",
+    "selectChatToStart": "एक चैट का चयन करके शुरू करें या उपयोगकर्ता को खोजें...."
+  },
+  "components.chatComponent.UserListItem": {
+    "IQScore": "IQ स्कोर",
+    "InGameName": "इनगेम नाम"
+  },
+  "components.chatComponent.userChats": {
+    "Chats": "चैट्स",
+    "requests": "अनुरोध",
+    "searchUsersToChat": "चैट करने के लिए उपयोगकर्ताओं की खोज करें",
+    "searchUser": "उपयोगकर्ता खोजें",
+    "new": "नया",
+    "noMessages": "कोई संदेश नहीं",
+    "messageDeleted": "संदेश हटाया गया",
+    "messageDeletedForYou": "यह संदेश आपके लिए हटाया गया था",
+    "sharedArticle": "एक लेख साझा किया",
+    "scoreCard": "स्कोरकार्ड",
+    "you": "आप",
+    "errorTitle": "त्रुटि हुई",
+    "errorDescription": "चैट्स लोड करने में विफल"
+  },
+  "components.contactComponents.FeedbackModal": {
+    "Feedback": "प्रतिपुष्टि",
+    "Email": "ईमेल",
+    "How would you rate your overall experience with Rapid Recap?": "आप Rapid Recap के साथ अपने समग्र अनुभव को कैसे रेट करेंगे?",
+    "How often do you use Rapid Recap?": "आप Rapid Recap का कितनी बार उपयोग करते हैं?",
+    "How satisfied are you with the difficulty level of the quizzes?": "आप क्विज़ की कठिनाई स्तर से कितने संतुष्ट हैं?",
+    "Do you feel the IQ score accurately reflects your knowledge and understanding of the articles/news?": "क्या आपको लगता है कि IQ स्कोर सटीक रूप से आपके लेख/समाचार के ज्ञान और समझ को दर्शाता है?",
+    "What features do you like the most about the scoring system and leaderboard?": "आपको स्कोरिंग सिस्टम और लीडरबोर्ड के बारे में सबसे अधिक क्या पसंद है?",
+    "How would you rate the user interface and design of the app?": "आप ऐप के उपयोगकर्ता इंटरफ़ेस और डिज़ाइन को कैसे रेट करेंगे?",
+    "Is the IQ graph on your profile helpful in tracking your progress?": "क्या आपके प्रोफ़ाइल पर IQ ग्राफ़ आपके प्रगति को ट्रैक करने में सहायक है?",
+    "Do you find the IQ bar graph showing the top percentage of the population useful?": "क्या आप पाते हैं कि IQ बार ग्राफ़, जो जनसंख्या के शीर्ष प्रतिशत को दिखाता है, उपयोगी है?",
+    "Which feature do you use the most?": "आप किस फीचर का सबसे अधिक उपयोग करते हैं?",
+    "Are there any features you find missing or would like to see added?": "क्या कोई ऐसा फीचर है जो आपको गायब लगता है या आप देखना चाहेंगे?",
+    "Do you find the concept of societies (Explorers, Strivers, Elites, Mavericks) motivating?": "क्या आपको सोसाइटियों की अवधारणा (एक्सप्लोरर्स, स्ट्राइवर्स, एलीट्स, मैवरिक्स) प्रेरणादायक लगती है?",
+    "How often do you encounter technical issues (e.g., app crashes, slow loading times)?": "आप कितनी बार तकनीकी समस्याओं (जैसे, ऐप क्रैश, धीमे लोडिंग समय) का सामना करते हैं?",
+    "Have you ever faced issues with quiz scoring or leaderboard updates? If yes, please describe.": "क्या आपने कभी क्विज़ स्कोरिंग या लीडरबोर्ड अपडेट्स के साथ समस्याओं का सामना किया है? यदि हाँ, कृपया वर्णन करें।",
+    "Yes": "हां",
+    "No": "नहीं",
+    "In-Game Name": "इन-गेम नाम",
+    "Describe the issues...": "समस्याओं का वर्णन करें...",
+    "What improvements would you suggest for Rapid Recap?": "Rapid Recap के लिए आप क्या सुधार सुझाएंगे?",
+    "Would you recommend Rapid Recap to a friend or colleague?": "क्या आप Rapid Recap को किसी मित्र या सहयोगी को सिफारिश करेंगे?",
+    "Any additional comments or feedback?": "कोई अतिरिक्त टिप्पणी या प्रतिक्रिया?",
+    "Submit": "जमा करें",
+    "Poor": "खराब",
+    "Average": "औसत",
+    "Good": "अच्छा",
+    "Excellent": "उत्कृष्ट",
+    "Rarely": "कभी कभार",
+    "Monthly": "मासिक",
+    "Weekly": "साप्ताहिक",
+    "Daily": "दैनिक",
+    "Very Dissatisfied": "बहुत असंतुष्ट",
+    "Dissatisfied": "असंतुष्ट",
+    "Neutral": "तटस्थ",
+    "Satisfied": "संतुष्ट",
+    "Very Satisfied": "बहुत संतुष्ट",
+    "Strongly Disagree": "पूरी तरह असहमत",
+    "Disagree": "असहमत",
+    "Agree": "सहमत",
+    "Strongly Agree": "पूरी तरह सहमत",
+    "Very Unhelpful": "बहुत अनुत्पादक",
+    "Unhelpful": "अनुत्पादक",
+    "Helpful": "उपयोगी",
+    "Very Helpful": "बहुत उपयोगी",
+    "Very Not Useful": "बहुत अनुपयोगी",
+    "Not Useful": "अनुपयोगी",
+    "Useful": "उपयोगी",
+    "Very Useful": "बहुत उपयोगी",
+    "Very Not Motivating": "बहुत प्रेरक नहीं",
+    "Not Motivating": "प्रेरक नहीं",
+    "Motivating": "प्रेरक",
+    "Very Motivating": "बहुत प्रेरक",
+    "Never": "कभी नहीं",
+    "Sometimes": "कभी कभी",
+    "Often": "अक्सर",
+    "Always": "हमेशा",
+    "Definitely Not": "बिल्कुल नहीं",
+    "Probably Not": "शायद नहीं",
+    "Not Sure": "पक्का नहीं",
+    "Probably": "शायद",
+    "Definitely": "निश्चित रूप से"
+  },
+  "components.gameHub.GameHub": {
+    "gameTypes": {
+      "normal_quiz": "ज्ञान खोज",
+      "true_false": "सत्य डिटेक्टर",
+      "word_weaver": "शब्द शिल्पी",
+      "connections": "माइंड मैपर"
+    },
+    "gameSubtitles": {
+      "normal_quiz": "बहुविकल्पीय चुनौती",
+      "true_false": "द्विआधारी निर्णय लेना",
+      "word_weaver": "रिक्त-स्थान-पूर्ति में महारत",
+      "connections": "वैचारिक संबंध"
+    },
+    "gameDescriptions": {
+      "normal_quiz": "रणनीतिक बहुविकल्पीय चुनौतियों के माध्यम से नेविगेट करें जो आपकी समझ का परीक्षण करती हैं",
+      "true_false": "द्विआधारी निर्णयों के साथ रैपिड-फायर सटीकता चुनौती जो विस्तार पर ध्यान का परीक्षण करती है",
+      "word_weaver": "प्रासंगिक सुरागों और रचनात्मक सोच का उपयोग करके अव्यवस्थित अक्षरों से शब्द बनाएं",
+      "connections": "लेख से सभी 8 रणनीतिक अवधारणाओं को जोड़कर सही अवधारणा जोड़े बनाएं"
+    },
+    "gameShortDescriptions": {
+      "normal_quiz": "रणनीतिक बहुविकल्पीय प्रश्नों के साथ अपनी समझ का परीक्षण करें",
+      "true_false": "अपने ज्ञान का परीक्षण करने के लिए त्वरित सही या गलत कथन",
+      "word_weaver": "अव्यवस्थित अक्षरों या इकाइयों का उपयोग करके लापता शब्दों का पुनर्निर्माण करें",
+      "connections": "संबंधित अवधारणाओं के बीच छिपे हुए कनेक्शन खोजें"
+    },
+    "difficulty": {
+      "balanced": "संतुलित",
+      "swift": "तीव्र",
+      "creative": "रचनात्मक",
+      "strategic": "रणनीतिक",
+      "easy": "आसान",
+      "medium": "मध्यम",
+      "hard": "कठिन"
+    },
+    "status": {
+      "ready": "तैयार",
+      "locked": "लॉक",
+      "building": "बन रहा है",
+      "pending": "लंबित",
+      "done": "हो गया",
+      "live": "लाइव",
+      "wait": "प्रतीक्षा करें",
+      "selected": "चयनित",
+      "correct": "सही",
+      "incorrect": "गलत",
+      "valid": "मान्य",
+      "invalid": "अमान्य",
+      "completed": "पूर्ण",
+      "completedShort": "पूर्ण",
+      "complete": "पूरा करें",
+      "readyToGenerate": "जेनरेट करने के लिए तैयार",
+      "generate": "जेनरेट करें"
+    },
+    "navigation": {
+      "next": "अगला",
+      "previous": "पिछला",
+      "submit": "सबमिट करें",
+      "backToMenu": "मेनू पर वापस जाएं",
+      "backToArticle": "लेख पर वापस जाएं",
+      "launchGame": "गेम लॉन्च करें",
+      "loadMore": "और लोड करें",
+      "backToHub": "वापस",
+      "back": "वापस",
+      "startGame": "गेम शुरू करें",
+      "returnToArticle": "लेख पर लौटें"
+    },
+    "headers": {
+      "performanceReport": "प्रदर्शन रिपोर्ट",
+      "questionAnalysis": "प्रश्न विश्लेषण",
+      "howToPlay": "कैसे खेलें",
+      "features": "विशेषताएँ",
+      "proTips": "प्रो टिप्स",
+      "rqmScoring": "RQM स्कोरिंग प्रणाली",
+      "processingPipeline": "प्रोसेसिंग पाइपलाइन",
+      "gamesMastered": "गेम में महारत हासिल",
+      "chooseChallenge": "अपनी चुनौती चुनें",
+      "gameHub": "गेम हब",
+      "missionAccomplished": "मिशन पूरा हुआ"
+    },
+    "descriptions": {
+      "detailedBreakdown": "आपके प्रदर्शन का विस्तृत विवरण",
+      "aiAnalyzing": "AI आपकी सामग्री का विश्लेषण कर रहा है और व्यक्तिगत चुनौतियाँ बना रहा है",
+      "preparingExperience": "आपके सीखने के रोमांच की तैयारी",
+      "chooseGameMode": "4 अलग-अलग गेम मोड में से चुनें",
+      "transformLearning": "AI-संचालित खेलों के साथ सीखने को एक आकर्षक रोमांच में बदलें",
+      "masteredChallenges": "आपने चुनौतियों में महारत हासिल कर ली है और अपने ज्ञान को साबित कर दिया है"
+    },
+    "features": {
+      "speedBonus": "गति बोनस",
+      "binarySimplicity": "द्विआधारी सरलता",
+      "factVerification": "तथ्य सत्यापन",
+      "contextClues": "प्रासंगिक सुराग",
+      "letterShuffling": "अक्षर शफलिंग",
+      "progressiveDifficulty": "प्रगतिशील कठिनाई",
+      "perfectPairing": "परफेक्ट पेयरिंग",
+      "strategicThinking": "रणनीतिक सोच",
+      "completeNetworkMapping": "पूर्ण नेटवर्क मैपिंग",
+      "adaptiveDifficulty": "अनुकूली कठिनाई",
+      "smartNavigation": "स्मार्ट नेविगेशन",
+      "instantValidation": "तुरंत सत्यापन",
+      "equalScoring": "समान स्कोरिंग",
+      "aiPowered": "AI संचालित",
+      "competitive": "प्रतिस्पर्धी",
+      "adaptive": "अनुकूली"
+    },
+    "instructions": {
+      "normalQuiz": [
+        "5 ध्यान से तैयार किए गए बहुविकल्पीय प्रश्नों के उत्तर दें",
+        "प्रत्येक प्रश्न 4 रणनीतिक विकल्प (A, B, C, D) प्रदान करता है",
+        "उत्तरों की समीक्षा के लिए प्रश्नों के बीच स्वतंत्र रूप से नेविगेट करें",
+        "जब आप अपने उत्तरों पर विश्वास करें तो सबमिट करें"
+      ],
+      "trueFalse": [
+        "लेख से 7 सटीक रूप से तैयार किए गए कथनों का मूल्यांकन करें",
+        "प्रत्येक कथन के लिए जल्दी से सही या गलत निर्धारित करें",
+        "निर्णय केवल लेख की जानकारी पर आधारित करें",
+        "गति और सटीकता दोनों आपके स्कोर में योगदान करते हैं"
+      ],
+      "wordWeaver": [
+        "अक्षरों को खोलकर 5 रिक्त-स्थान-भरें पहेलियाँ पूरी करें",
+        "दिए गए संदर्भ में फिट होने वाले शब्द बनाने के लिए अक्षरों पर क्लिक करें",
+        "अपने प्राथमिक मार्गदर्शन उपकरण के रूप में वाक्य संदर्भ का उपयोग करें",
+        "अपने उत्तर क्षेत्र में अक्षरों पर क्लिक करके उन्हें हटाएं"
+      ],
+      "connections": [
+        "सभी 8 रणनीतिक रूप से चुने गए अवधारणाओं को सही जोड़ों में कनेक्ट करें",
+        "तार्किक कनेक्शन बनाने के लिए दो अवधारणाओं पर क्लिक करें (कुल 4)",
+        "प्रत्येक अवधारणा का नेटवर्क में ठीक एक बार उपयोग किया जाना चाहिए",
+        "लाल X बटन का उपयोग करके गलत कनेक्शन हटाएं"
+      ]
+    },
+    "tips": [
+      "विकल्पों की जांच करने से पहले प्रत्येक प्रश्न को अच्छी तरह से पढ़ें",
+      "स्पष्ट रूप से गलत उत्तरों को पहले हटा दें",
+      "चयन को सत्यापित करने के लिए लेख के विवरण देखें",
+      "जब विश्वास हो तो अपनी पहली प्रवृत्ति पर भरोसा करें",
+      "'हमेशा,' 'कभी नहीं,' या 'सभी' जैसे पूर्ण शब्दों पर ध्यान दें",
+      "विशिष्ट लेख तथ्यों के विरुद्ध कथनों को सत्यापित करें",
+      "आंशिक रूप से सही कथनों से सावधान रहें",
+      "त्वरित निर्णय अक्सर बेहतर समय बोनस देते हैं",
+      "तार्किक शब्द फिट के लिए वाक्य के संदर्भ का विश्लेषण करें",
+      "शब्द की लंबाई और अक्षर आवृत्ति के बारे में सोचें",
+      "अक्षरों को अलग तरह से देखने के लिए शफल सुविधा का उपयोग करें",
+      "शब्द भिन्नताओं और सामान्य अंत पर विचार करें",
+      "लेख में कारण-प्रभाव संबंधों की तलाश करें",
+      "विषयगत और श्रेणीबद्ध कनेक्शन पर विचार करें",
+      "अवधारणाएं कैसे बातचीत करती हैं या संबंधित हैं, इस पर सोचें",
+      "सभी अवधारणाओं को जोड़ा जाना चाहिए - कोई अकेला नोड नहीं"
+    ],
+    "gameInterface": {
+      "question": "प्रश्न",
+      "statement": "कथन",
+      "wordPuzzle": "शब्द पहेली",
+      "completeSentence": "वाक्य पूरा करें:",
+      "isStatementTrue": "क्या यह कथन सही है या गलत?",
+      "selectAnswer": "अपना उत्तर चुनें",
+      "makeChoice": "अपना चुनाव करें",
+      "yourAnswer": "आपका उत्तर",
+      "correctAnswer": "सही उत्तर",
+      "yourWord": "आपका शब्द",
+      "building": "[बन रहा है...]",
+      "noAnswer": "कोई उत्तर नहीं",
+      "optionSelected": "चयनित",
+      "wordCompleted": "शब्द पूरा हो गया! सबमिट करने के लिए तैयार।",
+      "completeSentenceInstruction": "लापता शब्द बनाकर वाक्य को पूरा करें",
+      "clickLettersInstruction": "रिक्त स्थान में फिट होने वाले शब्द की वर्तनी के लिए अक्षरों पर क्लिक करें",
+      "clickToConnect": "कनेक्ट करने के लिए दो अवधारणाओं पर क्लिक करें",
+      "tapToConnect": "कनेक्ट करने के लिए दो अवधारणाओं पर टैप करें",
+      "noGoingBack": "वापस नहीं जा सकते - बुद्धिमानी से चुनें!",
+      "buildNetwork": "अपना नेटवर्क बनाएं और तैयार होने पर सबमिट करें!",
+      "perfectNetwork": "परफेक्ट नेटवर्क पूरा हो गया!",
+      "allNodesConnected": "सभी 8 नोड्स 4 अद्वितीय जोड़ों में जुड़े हुए हैं",
+      "greatProgress": "बढ़िया प्रगति!",
+      "moreConnectionsNeeded": "और कनेक्शन की आवश्यकता है",
+      "moreConnectionsNeededPlural": "और कनेक्शन की आवश्यकता है",
+      "pairRemaining": "सभी को जोड़ें",
+      "remainingNodes": "शेष नोड्स",
+      "nodesAvailable": "नोड्स उपलब्ध हैं",
+      "nodesPaired": "नोड्स जोड़े गए",
+      "readyToConnect": "कनेक्ट करने के लिए तैयार",
+      "buildingNetwork": "नेटवर्क बन रहा है",
+      "perfectNetworkStatus": "परफेक्ट नेटवर्क!",
+      "connectRelatedConcepts": "दी गई सूची से संबंधित अवधारणाओं को कनेक्ट करें",
+      "availableConcepts": "उपलब्ध अवधारणाएँ:",
+      "yourConnections": "आपके कनेक्शन बनाम मान्य कनेक्शन:",
+      "allValidConnections": "सभी मान्य कनेक्शन",
+      "overallPerformance": "समग्र प्रदर्शन",
+      "timeDilationActive": "टाइम बूस्ट सक्रिय",
+      "enhancedTime": "बढ़ाया गया समय",
+      "baseTime": "आधार समय",
+      "additionalTime": "अतिरिक्त समय",
+      "answered": "उत्तर दिया",
+      "connected": "कनेक्ट किया गया",
+      "createConnections": "संबंध बनाने के लिए दो अवधारणाओं पर क्लिक करें",
+      "conceptsAvailable": "उपलब्ध अवधारणाएँ",
+      "conceptsConnected": "कनेक्ट की गई अवधारणाएँ",
+      "conceptsRemaining": "शेष अवधारणाएँ",
+      "conceptsAvailablePlural": "उपलब्ध अवधारणाएँ",
+      "conceptsConnectedPlural": "कनेक्ट की गई अवधारणाएँ",
+      "conceptsRemainingPlural": "शेष अवधारणाएँ",
+      "conceptsAvailableShort": "उपलब्ध",
+      "conceptsConnectedShort": "कनेक्ट किया गया",
+      "conceptsRemainingShort": "शेष",
+      "conceptsAvailableCount": "{{count}} अवधारणाएँ उपलब्ध हैं",
+      "conceptsConnectedCount": "{{count}} अवधारणाएँ कनेक्ट की गई हैं",
+      "conceptsRemainingCount": "{{count}} अवधारणाएँ शेष हैं",
+      "conceptsAvailableCountPlural": "{{count}} अवधारणाएँ उपलब्ध हैं",
+      "conceptsConnectedCountPlural": "{{count}} अवधारणाएँ कनेक्ट की गई हैं",
+      "conceptsRemainingCountPlural": "{{count}} अवधारणाएँ शेष हैं"
+    },
+    "timer": {
+      "timeRunningLow": "समय समाप्त हो रहा है!",
+      "criticalTime": "महत्वपूर्ण समय!",
+      "timeUp": "समय समाप्त!",
+      "secondsLeft": "सेकंड बचे हैं",
+      "secondsRemaining": "सेकंड शेष",
+      "speedUp": "तेजी करें!",
+      "onlySecondsLeft": "केवल {{count}} सेकंड बचे हैं!",
+      "sec": "सेकंड",
+      "urgent": "अत्यावश्यक!",
+      "hurry": "जल्दी करो!"
+    },
+    "loading": {
+      "loadingGameHub": "गेम हब लोड हो रहा है...",
+      "loadingGameReport": "आपकी गेम रिपोर्ट लोड हो रही है...",
+      "loadingGameSummary": "गेम सारांश लोड हो रहा है",
+      "craftingGames": "आपके गेम्स तैयार हो रहे हैं",
+      "analyzingContent": "सामग्री का विश्लेषण",
+      "craftingQuestions": "प्रश्न तैयार करना",
+      "buildingPuzzles": "पहेलियाँ बनाना",
+      "finalizingGames": "गेम को अंतिम रूप देना",
+      "launchingSystems": "सिस्टम लॉन्च करना",
+      "processingMetrics": "मेट्रिक्स संसाधित करना",
+      "archivingData": "डेटा संग्रहीत करना",
+      "refreshingStats": "आंकड़े ताज़ा करना",
+      "finalizing": "अंतिम रूप देना",
+      "initializeEngine": "इंजन प्रारंभ करें",
+      "computeScore": "स्कोर की गणना करें",
+      "saveSession": "सत्र सहेजें",
+      "updateProfile": "प्रोफ़ाइल अपडेट करें",
+      "complete": "पूर्ण",
+      "analysisComplete": "विश्लेषण पूर्ण!",
+      "preparingResults": "परिणाम तैयार हो रहे हैं...",
+      "buildingExperience": "आपका अनुभव बन रहा है...",
+      "preparingWordArchitect": "वर्ड आर्किटेक्ट तैयार हो रहा है...",
+      "fetchingPerformanceData": "आपका नवीनतम प्रदर्शन डेटा प्राप्त किया जा रहा है",
+      "analyzingPerformance": "आपके प्रदर्शन का विश्लेषण हो रहा है..."
+    },
+    "errors": {
+      "connectionError": "कनेक्शन त्रुटि",
+      "unableToLoad": "गेम डेटा लोड करने में असमर्थ। कृपया अपना कनेक्शन जांचें और पुनः प्रयास करें।",
+      "somethingWentWrong": "कुछ गलत हो गया",
+      "unableToLoadReport": "रिपोर्ट लोड करने में असमर्थ",
+      "failedToFetch": "आपकी गेम रिपोर्ट प्राप्त करने में विफल। कृपया पुनः प्रयास करें।",
+      "tryAgain": "पुनः प्रयास करें",
+      "goBack": "वापस जाएं",
+      "submissionError": "सबमिशन त्रुटि",
+      "failedToSubmit": "आपके उत्तर सबमिट करने में विफल। कृपया पुनः प्रयास करें।",
+      "noGameFound": "कोई गेम नहीं मिला",
+      "noGamesCompleted": "आपने अभी तक इस लेख के लिए कोई गेम पूरा नहीं किया है।",
+      "errorLoadingReport": "रिपोर्ट लोड करने में त्रुटि",
+      "summaryUnavailable": "सारांश अनुपलब्ध",
+      "summaryNotAvailable": "इस रिपोर्ट के लिए विस्तृत सारांश उपलब्ध नहीं है।",
+      "noSummaryAvailable": "कोई सारांश उपलब्ध नहीं",
+      "noSummaryData": "हमें इस सत्र के लिए कोई सारांश डेटा नहीं मिला।",
+      "insufficientData": "गेम सामग्री तैयार की जा रही है। जारी रखने के लिए कृपया जेनरेट करें।",
+      "needsGeneration": "जेनरेशन की आवश्यकता है"
+    },
+    "success": {
+      "answersSubmitted": "आपके उत्तर स्वचालित रूप से सबमिट कर दिए गए हैं।",
+      "complete": "पूर्ण! आपके गेम लॉन्च हो रहे हैं...",
+      "wordComplete": "शब्द पूर्ण",
+      "wordOnlyHasLetters": "इस शब्द में केवल {{count}} अक्षर हैं!"
+    },
+    "stats": {
+      "bestScore": "सर्वश्रेष्ठ RQM स्कोर",
+      "totalAttempts": "कुल प्रयास",
+      "percentileRank": "पर्सेंटाइल रैंक",
+      "accuracy": "सटीकता",
+      "speed": "गति",
+      "rqmScore": "RQM स्कोर",
+      "connections": "कनेक्शन",
+      "letters": "अक्षर",
+      "bestScoreShort": "सर्वश्रेष्ठ स्कोर",
+      "rank": "रैंक",
+      "attempts": "प्रयास",
+      "rqmUnit": "RQM",
+      "percentile": "पर्सेंटाइल"
+    },
+    "actions": {
+      "shuffle": "शफल",
+      "clear": "साफ़ करें",
+      "clearAll": "सभी साफ़ करें",
+      "viewLatestReport": "📊 नवीनतम गेम रिपोर्ट देखें",
+      "reviewPerformance": "अपने सबसे हाल के प्रदर्शन और विस्तृत विश्लेषण की समीक्षा करें",
+      "viewDetailedReport": "📊 विस्तृत रिपोर्ट देखें",
+      "retryGeneration": "जेनरेशन पुनः प्रयास करें",
+      "generating": "जेनरेट हो रहा है...",
+      "generate": "जेनरेट करें"
+    },
+    "abilities": {
+      "timeDilationAvailable": "टाइम बूस्ट उपलब्ध है",
+      "timeDilationActive": "टाइम बूस्ट सक्रिय है"
+    },
+    "toasts": {
+      "generationStarted": {
+        "title": "जेनरेशन शुरू हुआ",
+        "description": "{{game}} सामग्री जेनरेट हो रही है..."
+      },
+      "generationSuccess": {
+        "title": "जेनरेशन पूर्ण",
+        "description": "{{game}} अब खेलने के लिए तैयार है!"
+      },
+      "generationFailed": {
+        "title": "जेनरेशन विफल",
+        "description": "गेम सामग्री जेनरेट करने में विफल। कृपया पुनः प्रयास करें।"
+      }
+    },
+    "alerts": {
+      "loginRequired": "लॉगिन आवश्यक है",
+      "loginToGiveQuiz": "क्विज़ देने के लिए कृपया लॉगिन करें",
+      "aiInsight": "AI इनसाइट",
+      "rqmScoringSystem": "RQM स्कोरिंग प्रणाली",
+      "aiPoweredGeneration": "🚀 AI-संचालित जेनरेशन",
+      "timeRemaining": "⏱️ {{seconds}}s शेष हैं",
+      "connectionsNeeded": "⚡ {{count}} और कनेक्शन की आवश्यकता है • {{available}} नोड्स उपलब्ध हैं",
+      "connectionsNeededPlural": "⚡ {{count}} और कनेक्शन की आवश्यकता है • {{available}} नोड्स उपलब्ध हैं",
+      "perfectConnections": "🎉 उत्तम! सभी 8 नोड्स 4 अद्वितीय जोड़ों में जुड़े हुए हैं!",
+      "nodeStatus": "{{available}} नोड्स उपलब्ध हैं • {{connected}} नोड्स जोड़े गए"
+    },
+    "aiInsights": [
+      "AI इष्टतम स्कोरिंग के लिए संज्ञानात्मक पैटर्न संसाधित करता है",
+      "उन्नत मेट्रिक्स व्यक्तिगत अंतर्दृष्टि को अनलॉक करते हैं",
+      "वास्तविक समय का विश्लेषण सीखने के त्वरण को अधिकतम करता है",
+      "प्रदर्शन डेटा प्रतिस्पर्धी रैंकिंग को संचालित करता है",
+      "बुद्धिमान एल्गोरिदम खिलाड़ी के विकास को बढ़ाते हैं"
+    ],
+    "explanations": {
+      "explanation": "स्पष्टीकरण",
+      "connectionType": "कनेक्शन प्रकार",
+      "reasoning": "तर्क"
+    },
+    "generation": {
+      "craftingYourGames": "आपके गेम्स तैयार हो रहे हैं",
+      "aiAnalyzingContent": "AI आपकी सामग्री का विश्लेषण कर रहा है और व्यक्तिगत चुनौतियाँ बना रहा है",
+      "processingYourMastery": "आपकी महारत मेट्रिक्स संसाधित हो रही हैं",
+      "step": {
+        "analyzing": "सामग्री का विश्लेषण",
+        "crafting": "प्रश्न तैयार करना",
+        "building": "पहेलियाँ बनाना",
+        "finalizing": "गेम को अंतिम रूप देना",
+        "initializing": "सिस्टम लॉन्च करना",
+        "computing": "मेट्रिक्स संसाधित करना",
+        "saving": "डेटा संग्रहीत करना",
+        "updating": "आंकड़े ताज़ा करना",
+        "completing": "अंतिम रूप देना"
+      }
+    },
+    "accessibility": {
+      "articleImageAlt": "लेख की छवि",
+      "gameIcon": "गेम आइकन",
+      "difficultyIndicator": "कठिनाई संकेतक",
+      "timerDisplay": "टाइमर प्रदर्शन",
+      "progressIndicator": "प्रगति संकेतक"
+    },
+    "tooltips": {
+      "completePrevious": "पहले पिछला क्विज़ पूरा करें",
+      "chooseGameMode": "4 अलग-अलग गेम मोड में से चुनें"
+    },
+    "performanceLevels": {
+      "legend": "लीजेंड",
+      "master": "मास्टर",
+      "skilled": "कुशल",
+      "rising": "उभरता हुआ"
+    },
+    "performanceDescriptions": {
+      "legend": "उत्कृष्ट प्रदर्शन",
+      "master": "उत्कृष्ट स्कोर",
+      "skilled": "औसत से ऊपर",
+      "rising": "सुधार करते रहें"
+    },
+    "popover": {
+      "challengeMastered": "चुनौती सफलतापूर्वक पूरी हुई",
+      "gameChallengeCompleted": "गेम चुनौती पूरी हुई"
+    }
+  },
+  "components.headerFooter.HamburgerModal": {
+    "modalHeader": "मेनू",
+    "dashboard": "डैशबोर्ड",
+    "leaderboard": "लीडरबोर्ड",
+    "leaderboardLocked": "इस पृष्ठ तक पहुंचने के लिए आपको साइन इन करना होगा",
+    "profile": {
+      "title": "प्रोफ़ाइल"
+    },
+    "getStarted": "शुरू करें",
+    "logout": "लॉग आउट"
+  },
+  "components.headerFooter.IQScoreModal": {
+    "fetchError": "IQ स्कोर इतिहास लोड करने में विफल",
+    "loading": "लोड हो रहा है...",
+    "iqScoreHistoryTitle": "IQ स्कोर इतिहास",
+    "loadingHistory": "IQ स्कोर इतिहास लोड हो रहा है...",
+    "loadingChart": "चार्ट लोड हो रहा है...",
+    "iqScore": "IQ स्कोर",
+    "rank": "रैंक",
+    "iqScoreHelpText": "आपका IQ स्कोर विभिन्न परीक्षणों और चुनौतियों के माध्यम से आपके मानसिक प्रदर्शन को प्रतिनिधित्व करता है।",
+    "rankHelpText": "आपकी वैश्विक रैंकिंग उन सभी उपयोगकर्ताओं में जो वर्तमान में लीडरबोर्ड में हैं। इसे बनाए रखें!",
+    "societyAndCircleTitle": "सोसायटी और सर्किल",
+    "achievementBanner": "शानदार! आपका IQ स्कोर {{USER_IQ}} आपको वैश्विक रैंक {{USER_RANK}} पर रखता है। खुद को बेहतर बनाने के लिए खुद को चुनौती देते रहें!"
+  },
+  "components.headerFooter.LogoutButton": {
+    "LogOut": "लॉग आउट"
+  },
+  "components.headerFooter.NavBrand": {
+    "rr": "रैपिड रीकैप"
+  },
+  "components.headerFooter.Navbar": {
+    "tournament": "टूर्नामेंट",
+    "home": "होम",
+    "referral": "रेफरल",
+    "hallOfChampions": "विजेता",
+    "contact": "संपर्क करें",
+    "leaderboard": "लीडरबोर्ड",
+    "dashboard": "डैशबोर्ड",
+    "confirm": "लॉगआउट की पुष्टि करें!!!",
+    "confirmMessage": "एक मेहमान उपयोगकर्ता के रूप में, यदि आप लॉगआउट करते हैं तो आपकी प्रगति और खाता खो सकते हैं। क्या आप सुनिश्चित रूप से आगे बढ़ना चाहते हैं?",
+    "cancel": "रद्द करें",
+    "ConrfirmLogout": "लॉगआउट की पुष्टि करें",
+    "profileMenu": {
+      "title": "प्रोफ़ाइल",
+      "dashboard": "डैशबोर्ड",
+      "referral": "रेफरल",
+      "leaderboard": "लीडरबोर्ड",
+      "quickClash": "क्विक क्लैश",
+      "manual": "मैनुअल",
+      "help": "सहायता",
+      "leaderboardLocked": "आपको इस पृष्ठ तक पहुंचने के लिए साइन इन करना होगा",
+      "profile": {
+        "title": "प्रोफ़ाइल"
+      },
+      "getStarted": "शुरू हो जाओ",
+      "logout": {
+        "loading": "लॉगआउट हो रहा है...",
+        "default": "लॉगआउट"
+      }
+    }
+  },
+  "components.headerFooter.NavbarContent": {
+    "Dashboard": "डैशबोर्ड",
+    "Season": "मौसम",
+    "New": "नया"
+  },
+  "components.headerFooter.NotificationDrawer": {
+    "inbox": "इनबॉक्स",
+    "removeAllNotifications": "सभी हटाएं",
+    "noNotifications": "कोई सूचनाएं उपलब्ध नहीं हैं",
+    "deleteNotification": "सूचना हटाएं",
+    "deleteConfirmation": "क्या आप वाकई इस सूचना को हटाना चाहते हैं?",
+    "confirmDelete": "हटाने की पुष्टि करें",
+    "cancel": "रद्द करें",
+    "removeAllConfirmation": "क्या आप वाकई सभी सूचनाएं हटाना चाहते हैं?",
+    "removeAll": "सभी हटाएं",
+    "success": "सफलता",
+    "removeAllSuccess": "सभी सूचनाएं सफलतापूर्वक हटा दी गईं",
+    "removeAllError": "सभी सूचनाएं हटाने में विफल",
+    "error": "त्रुटि",
+    "deleteError": "सूचना हटाने में विफल",
+    "markAsReadError": "सूचना को पढ़ा हुआ चिह्नित करने में विफल",
+    "notificationImage": "सूचना चित्र",
+    "confirmRemove": "सूचना हटाने की पुष्टि करें",
+    "confirmRemoveAll": "सभी सूचनाएं हटाने की पुष्टि करें"
+  },
+  "components.headerFooter.OutsideNavbarContent": {
+    "OutsideNavbarContent": {
+      "getStarted": "शुरू करें",
+      "iqScore": {
+        "title": "आपका सूचना गुणांक (IQ) स्कोर",
+        "guestMessage": "अपना IQ स्कोर देखने और वाइज वेब को बढ़ाने के लिए रजिस्टर करें"
+      },
+      "xpLevel": {
+        "title": "XP स्तर"
+      },
+      "streakFire": {
+        "title": "स्ट्रीक फायर"
+      },
+      "search": {
+        "title": "खोज"
+      },
+      "messenger": {
+        "title": "मैसेंजर",
+        "guestMessage": "चैट करने और वाइज वेब को बढ़ाने के लिए रजिस्टर करें"
+      },
+      "secureProgress": "अपनी प्रगति सुरक्षित करें"
+    },
+    "Register to do chat and grow Wise Web": "चैट करने और वाइज वेब को बढ़ाने के लिए रजिस्टर करें"
+  },
+  "components.headerFooter.XPLevelModal": {
+    "Experience": "अनुभव"
+  },
+  "components.homeComponents.Card": {
+    "minRead": "मिनट पढ़ें"
+  },
+  "components.homeComponents.SearchBarInput": {
+    "placeholder": "लेख खोजें..."
+  },
+  "components.homeComponents.Timeline": {
+    "categories": {
+      "all": "सभी",
+      "top": "शीर्ष",
+      "general": "सामान्य",
+      "world": "विश्व",
+      "politics": "राजनीति",
+      "business": "व्यापार",
+      "technology": "टेक्नोलॉजी",
+      "sports": "खेल",
+      "health": "स्वास्थ्य",
+      "science": "विज्ञान",
+      "environment": "पर्यावरण",
+      "crime": "अपराध",
+      "education": "शिक्षा",
+      "entertainment": "मनोरंजन",
+      "food": "खाना",
+      "lifestyle": "जीवन शैली",
+      "tourism": "पर्यटन"
+    },
+    "buttons": {
+      "clearSearch": "खोज परिणाम साफ़ करें",
+      "loadMore": "और लोड करें"
+    },
+    "messages": {
+      "loginToContinue": "आगे जारी रखने के लिए लॉगिन करें",
+      "revisitLater": "अनुशंसित समाचार देखने के लिए कृपया कुछ समय बाद इस पृष्ठ पर फिर से आएं",
+      "noMoreNews": "दिखाने के लिए कोई और समाचार नहीं है"
+    }
+  },
+  "components.homeComponents.UpgradeModal": {
+    "congratulations": "बधाई हो, {{userName}}!",
+    "societyUpgrade": "समाज उन्नयन",
+    "circleUpgrade": "वृत्त उन्नयन",
+    "society": "{{society}} समाज",
+    "circle": "{{circle}}",
+    "upgradeMessage": "{{upgradeMessage}}",
+    "journeyContinues": "आपकी कुशलता की यात्रा जारी है...",
+    "continueJourney": "अपनी यात्रा जारी रखें..",
+    "Circle": "वृत्त",
+    "iqRange": "आईक्यू श्रेणी:"
+  },
+  "components.leaderBoardComponents.LeaderBoardRow": {
+    "IQ Score": "IQ स्कोर",
+    "Exp Level": "अनुभव स्तर",
+    "Submissions": "सबमिशन",
+    "Avg. RQM": "औसत RQM"
+  },
+  "components.leaderBoardComponents.LeaderBoardTable": {
+    "tableCaption": "जहां चैंपियंस बाहर खड़े होते हैं!",
+    "rank": "रैंक",
+    "inGameName": "इन गेम नाम",
+    "iqScores": "IQ स्कोर",
+    "quizSubmissions": "क्विज सबमिशन",
+    "avgRQMScore": "औसत RQM",
+    "Player": "खिलाड़ी",
+    "Experience": "अनुभव",
+    "rankAndPlayer": "रैंक और खिलाड़ी"
+  },
+  "components.leaderBoardComponents.SearchBar": {
+    "searchUser": "उपयोगकर्ताओं के लिए खोजें..."
+  },
+  "components.miscellaneous.ButtonFactory": {
+    "SIGN_IN": "साइन इन करें",
+    "VIEW_PROFILE": "प्रोफ़ाइल देखें",
+    "VIEW_EXPERIENCE": "अनुभव देखें",
+    "INBOX": "इनबॉक्स",
+    "CONFIRM": "पुष्टि करें",
+    "CANCEL": "रद्द करें",
+    "VIEW_ALL": "सभी देखें",
+    "DISMISS": "खारिज करें",
+    "REGISTER_TOURNAMENT": "टूर्नामेंट रजिस्टर करें",
+    "VIEW_STREAK": "स्ट्रीक देखें",
+    "VIEW_TOURNAMENT": "टूर्नामेंट देखें",
+    "SUBMIT_FEEDBACK": "प्रतिक्रिया जमा करें",
+    "SUBMIT_QUIZ_FEEDBACK": "प्रतिक्रिया जमा करें",
+    "SUBMIT_TOURNAMENT_FEEDBACK": "प्रतिक्रिया जमा करें",
+    "SUBMIT_STORY_FEEDBACK": "प्रतिक्रिया जमा करें"
+  },
+  "components.miscellaneous.DifficultyLegend": {
+    "difficultyLevels": "कठिनाई स्तर:",
+    "easy": "आसान",
+    "medium": "मध्यम",
+    "hard": "कठिन"
+  },
+  "components.miscellaneous.NoteMessageQueue": {
+    "newMessage": "आपके पास {{number}} नए संदेश हैं।"
+  },
+  "components.miscellaneous.NoteMessageSummary": {
+    "allMessages": "सभी संदेश",
+    "dismissAll": "सभी बंद करें",
+    "dismiss": "बंद करें",
+    "poor": "खराब",
+    "excellent": "उत्कृष्ट",
+    "notification": "सूचना",
+    "feedbackPlaceholder": "अपने अनुभव के बारे में हमें और बताएं (वैकल्पिक)",
+    "milestoneAchieved": "मील का पत्थर हासिल किया!",
+    "xpEarned": "{{totalXp}} XP अर्जित किया",
+    "streakEnded": "{{count}}-दिन की लगातार कोशिश समाप्त",
+    "streak": "{{count}}-दिन की लगातार कोशिश",
+    "completeMoreQuizzes": "अपनी लगातार कोशिश को पुनर्जीवित करने के लिए {{count}} और {{quizCount}} पूरा करें!",
+    "timeToRevive": "{{formattedTime}} में पुनर्जीवित करें",
+    "milestone": "मील का पत्थर",
+    "broken": "टूटा हुआ",
+    "revival": "पुनर्जीवन",
+    "revived": "पुनर्जीवित",
+    "active": "सक्रिय",
+    "streakRestartTip": "नई स्ट्रीक शुरू करने के लिए आज एक क्विज़ पूरा करें",
+    "streakRevivedMessage": "आपकी स्ट्रीक सफलतापूर्वक पुनर्जीवित हो गई है!",
+    "epicLevelUp": "एपिक स्तर ऊपर!",
+    "levelUp": "स्तर बढ़ा",
+    "level": "स्तर",
+    "experience": "अनुभव",
+    "xpAward": "XP पुरस्कार",
+    "source": "स्रोत",
+    "newMessages": "नए संदेश ({{number}})",
+    "feedbackRequest": "हम आपकी प्रतिक्रिया को महत्व देते हैं",
+    "rateYourExperience": "आपका अनुभव कैसा रहा?",
+    "submitFeedback": "प्रतिक्रिया जमा करें",
+    "feedbackSubmitted": "आपकी प्रतिक्रिया के लिए धन्यवाद!",
+    "milestoneContent": "मील का पत्थर सामग्री",
+    "milestoneDescription": "{{description}}",
+    "levelUpTitle": "अनुभव स्तर",
+    "epicLevelUpAchieved": "एपिक स्तर ऊपर हासिल किया!",
+    "viewResults": "परिणाम देखें"
+  },
+  "components.miscellaneous.ProfileBox": {
+    "visible": "दिखाई",
+    "hidden": "दृश्यमान"
+  },
+  "components.miscellaneous.SecureYourProgress": {
+    "SecureYourProgress": {
+      "heading": "अपनी प्रगति सुरक्षित करें",
+      "expiryMessage": "आपका खाता {{days}} दिनों और {{hours}} घंटों में समाप्त हो जाएगा",
+      "buttonText": "अपनी प्रगति सुरक्षित करें"
+    }
+  },
+  "components.miscellaneous.StreakNoteMessage": {
+    "StreakNoteMessage": {
+      "broken": "आपकी {{streakCount}}-दिन की स्ट्रीक समाप्त हो गई है",
+      "reviveMsg": "{{streakCount}} दिनों की अपनी टूटी हुई स्ट्रीक को पुनर्जीवित करें",
+      "current": "वर्तमान स्ट्रीक: {{streakCount}} दिन",
+      "timeRemaining": "अपनी स्ट्रीक को पुनर्जीवित करने का समय शेष:",
+      "toRevive": "पुनर्जीवित करने के लिए",
+      "completeQuizzes": "अपनी स्ट्रीक को पुनर्जीवित करने के लिए {{remainingQuizzes}} और {{quizText}} पूरा करें!",
+      "actions": {
+        "startNew": "नई स्ट्रीक शुरू करें",
+        "takeQuiz": "क्विज़ लें",
+        "viewStreak": "स्ट्रीक देखें"
+      },
+      "title": "स्ट्रीक {{status}}",
+      "status": {
+        "broken": "टूटा",
+        "revival": "पुनर्जीवन",
+        "revived": "पुनर्जीवित",
+        "active": "सक्रिय"
+      },
+      "streakEnded": "{{count}} दिनों की स्ट्रीक समाप्त हो गई",
+      "streakRevived": "आपकी स्ट्रीक सफलतापूर्वक पुनर्जीवित हो गई है!",
+      "streak": "स्ट्रीक: {{count}} दिन",
+      "timeToRevive": "शेष समय: {{formattedTime}}",
+      "streakRestartTip": "नई स्ट्रीक शुरू करने के लिए आज एक क्विज़ पूरा करें",
+      "streakRevivedMessage": "आपकी स्ट्रीक सफलतापूर्वक पुनर्जीवित हो गई है!",
+      "statusBadge": {
+        "broken": "टूटा",
+        "revival": "पुनर्जीवन",
+        "revived": "पुनर्जीवित",
+        "active": "सक्रिय"
+      }
+    },
+    "quiz": "क्विज़",
+    "quizzes": "क्विज़"
+  },
+  "components.miscellaneous.TournamentNoteMessage": {
+    "TournamentNoteMessage": {
+      "title": "टूर्नामेंट {{status}}",
+      "status": {
+        "registration": "पंजीकरण खुला है",
+        "locked": "पंजीकरण बंद है",
+        "default": "आगामी"
+      },
+      "registrationOpen": "पंजीकरण अब खुला है!",
+      "registrationEnds": "पंजीकरण खत्म होने में:",
+      "streakRequired": "{{requiredStreak}}-दिन की लगातारी आवश्यक है",
+      "yourStreak": "आपकी वर्तमान लगातारी: {{userStreak}} दिन",
+      "actions": {
+        "register": "अब पंजीकरण करें",
+        "viewStreak": "लगातारी देखें",
+        "viewTournament": "टूर्नामेंट देखें"
+      },
+      "motivation": {
+        "registration": {
+          "1": "आप आग में हैं!🔥 केवल दो दिनों में पूरा करने के लिए केवल 6 क्विज़। यह सिर्फ 50 सेकंड प्रति क्विज़ है!🏆 इस सप्ताहांत के टूर्नामेंट में अपने कौशल का प्रदर्शन क्यों नहीं करते?",
+          "2": "बड़ी प्रगति!👏 आपने पहले ही टूर्नामेंट पात्रता को अनलॉक कर लिया है। बस दो दिनों में फैले हुए 6 क्विज़ के साथ, समय कोई समस्या नहीं होगी। चुनौती लेने के लिए तैयार हैं?",
+          "3": "आप अपने क्विज़ के साथ अद्भुत काम कर रहे हैं!🌟 टूर्नामेंट में प्रतिस्पर्धा करें और और अधिक पहचान कमाएं। यह तेज़, मजेदार है और केवल कुछ मिनट लेता है!",
+          "4": "आप शीर्ष के बहुत करीब हैं!🚀 केवल प्रति क्विज़ में एक मिनट के साथ, टूर्नामेंट लेवल अप करने का सही मौका है। अब पंजीकरण करें!",
+          "5": "अपनी लगातारी को मजबूत रखें! टूर्नामेंट में केवल 6 क्विज़ हैं और आप टूर्नामेंट की महिमा की ओर अपने रास्ते पर हैं।🎯 आज ही पंजीकरण करें - यह तेज़ और मजेदार है!"
+        },
+        "locked": {
+          "1": "आप लगभग वहाँ हैं! बस {{requiredStreak}} और दिन बचे हैं इस टूर्नामेंट को अनलॉक करने के लिए। जारी रखें!",
+          "2": "आप टूर्नामेंट में प्रतिस्पर्धा करने के लिए केवल {{requiredStreak}} दिन दूर हैं! 🏅 उस अंतिम क्विज़ लगातारी को प्राप्त करें और एक धांधली वीकेंड का शोडाउन के लिए पंजीकरण करें!",
+          "3": "लगभग वहाँ हैं! टूर्नामेंट एक्सेस अनलॉक करने के लिए केवल {{requiredStreak}} और दिन बचे हैं। दो दिनों में केवल 6 क्विज़। अब पंजीकरण करें और अपने ज्ञान का प्रदर्शन करने के लिए तैयार हो जाइए!"
+        },
+        "default": "तैयार हो जाइए प्रतिस्पर्धा करने और अद्भुत पुरस्कार जीतने के लिए!",
+        "topLeaders": "शीर्ष  नेता",
+        "tournamentLeaderboard": "टूर्नामेंट लीडरबोर्ड"
+      }
+    },
+    "Embark on an epic journey! Join the tournament and rise to greatness.": "एक महाकाव्यिक यात्रा पर प्रारंभ करें! टूर्नामेंट में शामिल हों और महानता की ओर उठें।",
+    "Your quest continues! Push forward and claim your place among legends.": "आपकी खोज जारी रहती है! आगे बढ़ें और किंवदंतियों के बीच अपनी जगह दावत दें।",
+    "Your adventure awaits! Begin your first challenge and carve your path to glory.": "आपके एडवेंचर का इंतजार है! अपनी पहली चुनौती शुरू करें और अपने गौरव के लिए अपना मार्ग निर्माण करें।",
+    "A grand stage is set! Step into the arena and showcase your prowess.": "एक भव्य मंच तैयार है! अखाड़े में कदम रखें और अपनी क्षमता का प्रदर्शन करें।",
+    "Tournament": "टूर्नामेंट",
+    "Rank": "रैंक"
+  },
+  "components.miscellaneous.UnifiedFeedbackNoteMessage": {
+    "feedbackRequest": "हम आपकी प्रतिक्रिया को महत्व देते हैं",
+    "rateYourExperience": "आपका अनुभव कैसा रहा?",
+    "feedbackPlaceholder": "अपने अनुभव के बारे में हमें और बताएं (वैकल्पिक)",
+    "submitFeedback": "प्रतिक्रिया जमा करें",
+    "feedbackSubmitted": "आपकी प्रतिक्रिया के लिए धन्यवाद!",
+    "StoryBodyTitle": "कहानी थीम फीचर कैसा है?",
+    "QuizBodyTitle": "क्विज प्रश्न कैसे हैं?",
+    "TournamentQuizBodyTitle": "टूर्नामेंट प्रतिक्रिया जमा करें"
+  },
+  "components.miscellaneous.UserSearchDrawer": {
+    "UserSearchDrawer": {
+      "searchUsers": "उपयोगकर्ता खोजें"
+    }
+  },
+  "components.miscellaneous.XPAwardNoteMessage": {
+    "milestoneAchieved": "मील का पत्थर प्राप्त हुआ!",
+    "xpSourceCompleted": "{{xpSource}} पूरा किया",
+    "xpAwarded": "+{{xpAwarded}} XP",
+    "milestoneBonus": "{{milestoneName}} मील का पत्थर बोनस",
+    "milestoneXP": "+{{xp}} XP",
+    "milestoneContent": "मील का पत्थर सामग्री",
+    "totalXP": "कुल: +{{xp}} XP",
+    "majorAchievementUnlocked": "प्रमुख उपलब्धि अनलॉक!",
+    "achievementUnlocked": "उपलब्धि अनलॉक",
+    "viewExperience": "अनुभव देखें",
+    "epicLevelUp": "एपिक स्तर अप!",
+    "levelUpTitle": "अनुभव स्तर",
+    "epicLevelUpAchieved": "एपिक स्तर अप प्राप्त हुआ!"
+  },
+  "components.miscellaneous.milestones": {
+    "milestones": {
+      "QUIN_BOOST": {
+        "name": "क्विन बूस्ट",
+        "description": "सफलतापूर्वक 6 क्विज़ पूरे किए और वर्तमान क्विज़ पर स्कोर को अधिकतम करने के लिए 1.5x स्कोर बूस्ट को रणनीतिक रूप से लागू किया।"
+      }
+    }
+  },
+  "components.profileComponents.Bookmarks": {
+    "yourBookmarks": "आपके बुकमार्क्स",
+    "switchToListView": "सूची दृश्य पर स्विच करें",
+    "switchToGridView": "ग्रिड दृश्य पर स्विच करें",
+    "loading": "लोड हो रहा है...",
+    "bookmarkRemoved": "बुकमार्क हटा दिया गया",
+    "errorRemovingBookmark": "बुकमार्क हटाने में त्रुटि",
+    "close": "बंद करें"
+  },
+  "components.profileComponents.BrainModal": {
+    "societyDetails": "समाज",
+    "youAreHere": "आप यहाँ हैं!",
+    "iqRange": "IQ रेंज:",
+    "loading": "लोड हो रहा है...",
+    "previousPage": "पिछला पृष्ठ",
+    "nextPage": "अगला पृष्ठ",
+    "above": "ऊपर",
+    "society": "समाज"
+  },
+  "components.profileComponents.CircleModal": {
+    "circleDetails": "वृत्त विवरण",
+    "previousPage": "पिछला पृष्ठ",
+    "nextPage": "अगला पृष्ठ",
+    "youAreHere": "आप यहाँ हैं!",
+    "loading": "लोड हो रहा है...",
+    "circleImage": "वृत्त छवि",
+    "circle": "सर्कल",
+    "iqRange": "IQ सीमा:",
+    "above": "ऊपर"
+  },
+  "components.profileComponents.EditProfileModal": {
+    "editProfile": "प्रोफ़ाइल संपादित करें",
+    "uploadProfilePicture": "प्रोफ़ाइल चित्र अपलोड करें",
+    "chooseFile": "फ़ाइल चुनें",
+    "name": "नाम",
+    "inGameName": "इन-गेम नाम",
+    "bio": "जीवनी",
+    "saveChanges": "परिवर्तन सहेजें",
+    "cancel": "रद्द करें",
+    "updateFailed": "अपडेट विफल",
+    "somethingWentWrong": "कुछ गलत हो गया!",
+    "imageUploadFailed": "छवि अपलोड विफल",
+    "profilePicture": "प्रोफ़ाइल चित्र",
+    "inGameNameChangeMessage": "आप अपना इन-गेम नाम {{remainingDays}} दिन बाद पुनः बदल सकते हैं।"
+  },
+  "components.profileComponents.EnhancedSocietyCircle": {
+    "societyAndCircle": "समाज और मंडल",
+    "iqRange": "IQ रेंज"
+  },
+  "components.profileComponents.FriendItem": {
+    "commune": "संवाद",
+    "glimpseWisdom": "ज्ञान की झलक",
+    "severTies": "संबंध विच्छेद",
+    "severTiesWith": "{{name}} के साथ संबंध विच्छेद करें",
+    "severTiesConfirmation": "क्या आप सुनिश्चित हैं? यह क्रिया पूर्ववत नहीं की जा सकती। आप अब {{name}} के मित्र नहीं रहेंगे।",
+    "cancel": "रद्द करें"
+  },
+  "components.profileComponents.FriendRequestItem": {
+    "accept": "स्वीकार करें",
+    "reject": "अस्वीकार करें",
+    "iqScore": "IQ: {{score}}"
+  },
+  "components.profileComponents.IQBarGraph": {
+    "giveQuizzesToUnlock": "IQ स्कोर प्राप्त करने और बार ग्राफ़ अनलॉक करने के लिए क्विज़ दें",
+    "errorOccurred": "एक त्रुटि हुई।",
+    "unableToFetchExpectedIQ": "अपेक्षित IQ प्राप्त करने में असमर्थ। कृपया बाद में पुनः प्रयास करें।",
+    "registerToViewStandings": "अपना रैंकिंग देखने के लिए पंजीकरण करें",
+    "noDataForGuest": "अतिथि उपयोगकर्ता के लिए कोई डेटा नहीं",
+    "top": "शीर्ष",
+    "users": "उपयोगकर्ता",
+    "visibilityToOthers": "अन्य लोगों के लिए दृश्यता",
+    "hidden": "दृश्यमान",
+    "visible": "दिखाई"
+  },
+  "components.profileComponents.LastTournamentRank": {
+    "lastTournamentRank": "अंतिम टूर्नामेंट रैंक:",
+    "notAvailable": "उपलब्ध नहीं"
+  },
+  "components.profileComponents.LeftProfileBox": {
+    "toast": {
+      "successTitle": "सफलता",
+      "successDescription": "प्रोफ़ाइल सफलतापूर्वक अपडेट की गई",
+      "errorTitle": "त्रुटि",
+      "errorDescription": "प्रोफ़ाइल अपडेट करने में त्रुटि, कृपया फिर से प्रयास करें!",
+      "requestErrorTitle": "त्रुटि",
+      "requestErrorDescription": "मित्र अनुरोध स्थिति जांचने में त्रुटि",
+      "requestSuccessTitle": "सफलता",
+      "requestSuccessDescription": "मित्र अनुरोध सफलतापूर्वक भेजा गया",
+      "requestSendErrorTitle": "त्रुटि",
+      "requestSendErrorDescription": "मित्र अनुरोध भेजने में त्रुटि"
+    },
+    "alt": {
+      "profileImage": "प्रोफ़ाइल चित्र"
+    },
+    "rank": "रैंक",
+    "avgRQM": "औसत RQM",
+    "IQ score": "आईक्यू स्कोर",
+    "bio": "बायो",
+    "na": "एन/ए",
+    "friend": "मित्र",
+    "editProfile": "प्रोफ़ाइल संपादित करें",
+    "selectBadge": "बैज चुनें",
+    "noBadge": "कोई बैज नहीं",
+    "noBadgesAvailable": "कोई बैज आपके लिए उपलब्ध नहीं है क्योंकि आप किसी भी टूर्नामेंट में लीडरबोर्ड के शीर्ष 3 में नहीं थे।",
+    "badgeUpdateSuccess": "बैज सफलतापूर्वक अपडेट किया गया",
+    "badgeUpdateError": "बैज अपडेट करने में त्रुटि",
+    "tournamentBadge": "टूर्नामेंट {{number}}",
+    "showBadges": "बैज दिखाएं",
+    "edit": "संपादित करें",
+    "requestSent": "अनुरोध भेजा गया",
+    "addFriend": "मित्र जोड़ें"
+  },
+  "components.profileComponents.LineGraph": {
+    "noDataAvailable": "कोई डेटा उपलब्ध नहीं है",
+    "give10Quizzes": "IQ स्कोर प्राप्त करने और रैंकिंग में प्रवेश करने के लिए 10 क्विज़ दें",
+    "visibilityToOthers": "दूसरों के लिए दृश्यता",
+    "hidden": "दृश्यमान",
+    "visible": "दृश्यमान",
+    "iqScore": "IQ स्कोर",
+    "date": "तारीख",
+    "dailyRank": "दैनिक रैंक",
+    "noDataForGuest": "अतिथि उपयोगकर्ता के लिए कोई डेटा नहीं",
+    "registerToViewStandings": "अपनी स्थिति देखने के लिए पंजीकरण करें",
+    "unableToFetchIQ": "अपेक्षित IQ प्राप्त करने में असमर्थ। कृपया बाद में पुनः प्रयास करें।",
+    "anErrorOccurred": "एक त्रुटि हुई।",
+    "giveQuizzes": "अनलॉक करने के लिए एक क्विज़ दें"
+  },
+  "components.profileComponents.ProfileButton": {
+    "visibilityTooltip": "अन्य लोगों के लिए दृश्यता",
+    "hidden": "दृश्यमान",
+    "visible": "दिखाई"
+  },
+  "components.profileComponents.ProfileDropDownMenu": {
+    "loading": "लोड हो रहा है...",
+    "register_message": {
+      "title": "मित्र बनाने और वाइज़ वेब बनाने के लिए पंजीकरण करें"
+    },
+    "view_profile": "प्रोफ़ाइल देखें",
+    "logout": "लॉगआउट",
+    "Contact_Us": "संपर्क करें",
+    "Wise_Web": "वाइज़ वेब",
+    "View_Inbox": "इनबॉक्स देखें"
+  },
+  "components.profileComponents.ProfileExperienceLevel": {
+    "experienceProgress": "अनुभव प्रगति",
+    "level": "स्तर",
+    "currentXp": "वर्तमान XP",
+    "xpToNextLevel": "अगले स्तर तक XP",
+    "nextLevel": "अगला स्तर"
+  },
+  "components.profileComponents.RankAndSociety": {
+    "guestMessage": {
+      "title": "अपना समाज और सर्कल देखने के लिए पंजीकरण करें",
+      "text": "अतिथि उपयोगकर्ता के लिए कोई डेटा नहीं"
+    },
+    "privateSociety": {
+      "hidden": "दृश्यमान"
+    },
+    "tooltip": {
+      "visibility": "अन्य लोगों के लिए दृश्यता",
+      "hidden": "दृश्यमान",
+      "visible": "दृश्यमान"
+    }
+  },
+  "components.profileComponents.SeasonModal": {
+    "season": "सीज़न",
+    "seasonModal": "सीज़न मोडल",
+    "history": "इतिहास",
+    "notLoggedInUser": "आप इस सीज़न में लॉगिन नहीं थे",
+    "notLoggedInOther": "यह उपयोगकर्ता इस सीज़न में लॉगिन नहीं था"
+  },
+  "components.profileComponents.SeasonSelectorModal": {
+    "errorTitle": "त्रुटि",
+    "errorDescription": "सीज़न इतिहास प्राप्त करने में विफल।",
+    "selectSeason": "सीज़न चुनें",
+    "season": "सीज़न"
+  },
+  "components.profileComponents.Settings": {
+    "Settings": "सेटिंग्स",
+    "inAppNotifications": "ऐप में सूचनाएँ",
+    "milestoneSounds": "मील के पत्थर के लिए ध्वनि",
+    "clickSounds": "क्लिक ध्वनि",
+    "quizSoundEffects": "क्विज़ ध्वनि प्रभाव",
+    "detailedInAppNotifications": "ऐप में संदेशों के लिए ध्वनि सूचनाएँ जो ऊपर दाईं ओर से दिखाई देती हैं, जिनमें नियमित अपडेट और मील के पत्थर की उपलब्धियाँ शामिल हैं।",
+    "detailedMilestoneSounds": "ऐप में महत्वपूर्ण मील के पत्थर या उपलब्धियों को प्राप्त करने पर विशेष ध्वनि प्रभाव।",
+    "detailedClickSounds": "ऐप्लिकेशन में क्लिक और बटन इंटरैक्शन के लिए श्रव्य प्रतिक्रिया।",
+    "detailedQuizSoundEffects": "आपके क्विज़ अनुभव को बेहतर बनाने के लिए विशेष रूप से डिज़ाइन किए गए ध्वनि प्रभाव।",
+    "settingsUpdated": "सेटिंग्स अपडेट की गई",
+    "soundToggle": "{{soundType}} ध्वनि {{status}}",
+    "enabled": "सक्रिय",
+    "disabled": "निष्क्रिय",
+    "updateFailed": "अपडेट विफल हुआ",
+    "updateFailedDescription": "ध्वनि सेटिंग्स सहेजने में विफल हुआ। कृपया पुनः प्रयास करें।",
+    "close": "बंद करें",
+    "sound": "ध्वनि",
+    "soundSettings": "ध्वनि सेटिंग्स",
+    "languageSettings": "भाषा सेटिंग्स",
+    "selectLanguage": "ऐप्लिकेशन भाषा चुनें:",
+    "notificationsSubscribed": "सूचनाएँ सब्सक्राइब की गई हैं",
+    "notificationsNotSubscribed": "सूचनाएँ सब्सक्राइब नहीं की गई हैं",
+    "notificationsNotSupported": "सूचनाएँ समर्थित नहीं हैं",
+    "browserNotSupported": "ब्राउज़र समर्थित नहीं है",
+    "reEnableTooltip": "यदि काम नहीं कर रहा है तो आप सूचनाएँ पुनः सक्षम करने का प्रयास कर सकते हैं।",
+    "enableTooltip": "कृपया सूचनाएँ सक्षम करें ताकि ऐप में सूचनाएँ प्राप्त कर सकें।",
+    "notificationSettings": "सूचना सेटिंग्स",
+    "notSupported": "समर्थित नहीं है",
+    "reEnableNotifications": "सूचनाएँ पुनः सक्षम करें",
+    "enableNotifications": "सूचनाएँ सक्षम करें",
+    "description": "आप क्विज़, टूर्नामेंट और नई सामग्री के बारे में महत्वपूर्ण अपडेट से वंचित हो रहे हैं।",
+    "blockedTitle": "सूचनाएँ ब्लॉक की गई हैं",
+    "pwaNotice": "आप इंस्टॉल किए गए ऐप संस्करण का उपयोग कर रहे हैं। ऐप सूचना अनुमतियाँ अलग से ब्राउज़र अनुमतियों से प्रबंधित की जाती हैं।",
+    "instructions": {
+      "android": "पता बार में ताला/साइट जानकारी आइकन पर क्लिक करें\n'साइट सेटिंग्स' का चयन करें\nसूचनाएँ खोजें और 'अनुमति दें' का चयन करें\nच्रोम सेटिंग्स > साइट सेटिंग्स > सूचनाएँ भी देखें",
+      "ios": "सेटिंग्स ऐप खोलें\nनीचे तक स्क्रॉल करें और सफारी तक पहुंचें\nसूचनाएँ टैप करें\nइस साइट के लिए सूचनाएँ अनुमति देने के लिए टॉगल करें",
+      "mac": "पता बार में ताला/साइट जानकारी आइकन पर क्लिक करें\n'साइट सेटिंग्स' का चयन करें\nसूचनाएँ खोजें और 'अनुमति दें' का चयन करें\nआपको सिस्टम प्राथमिकताएँ > सूचनाएँ भी जांचनी होगी",
+      "generic": "अपने ब्राउज़र के पता बार में ताला/साइट जानकारी आइकन पर क्लिक करें\n'साइट सेटिंग्स' या 'अनुमतियाँ' का चयन करें\nसूचनाएँ खोजें और 'अनुमति दें' पर बदलें",
+      "androidPWA": "अपने डिवाइस सेटिंग्स खोलें\nApps (या Applications) पर जाएं\nRapid Recap खोजें और टैप करें\nसूचनाएँ चुनें\nसूचनाएँ को अनुमति देने के लिए टॉगल करें",
+      "iosPWA": "अपने डिवाइस सेटिंग्स खोलें\nनीचे स्क्रॉल करें और Rapid Recap खोजें\nसूचनाएँ पर टैप करें\nसूचनाएँ को अनुमति देने के लिए टॉगल करें",
+      "genericPWA": "अपने डिवाइस सेटिंग्स खोलें\nएप्लिकेशन या ऐप्स खोजें\nRapid Recap खोजें\nऐप सेटिंग्स में सूचनाएँ सक्षम करें"
+    },
+    "buttons": {
+      "gotIt": "समझ गया",
+      "showInstructions": "सूचनाएँ सक्षम करने के लिए कैसे",
+      "hideInstructions": "सूचनाएँ छिपाएं"
+    }
+  },
+  "components.profileComponents.SolvedQuizHistory": {
+    "header": "नवीनतम 50 हल की गई क्विज़ इतिहास",
+    "percentage": "प्रतिशत",
+    "article": "लेख",
+    "rqm": "RQM",
+    "difficulty": "कठिनाई",
+    "close": "बंद करें",
+    "Previous": "पिछला",
+    "of": "का",
+    "Next": "अगला",
+    "Page": "पृष्ठ"
+  },
+  "components.profileComponents.SolvedQuizzes": {
+    "errorOccurred": "एक त्रुटि हुई।",
+    "errorMessage": "सॉल्व्ड क्विज़ हिस्ट्री प्राप्त नहीं कर सके। कृपया बाद में पुनः प्रयास करें।",
+    "hidden": "छुपा हुआ",
+    "solvedQuizzes": "सॉल्व्ड क्विज़",
+    "visibilityToOthers": "दूसरों के लिए दृश्यता",
+    "totalSolvedQuizzes": "कुल सॉल्व्ड क्विज़",
+    "keepItUp": "ऐसे ही जारी रखें!",
+    "easy": "आसान",
+    "medium": "मध्यम",
+    "hard": "कठिन",
+    "solved": "{{count}} हल किए गए",
+    "beatsPercentage": "{{beats}}% से अधिक",
+    "visible": "दिखाई",
+    "viewHistory": "इतिहास देखें"
+  },
+  "components.profileComponents.ToggleProfileVisibility": {
+    "profileVisibility": {
+      "toggleVisibility": "प्रोफ़ाइल दृश्यता टॉगल करें",
+      "fullProfile": "पूर्ण प्रोफ़ाइल",
+      "lineGraph": "रेखा ग्राफ",
+      "barGraph": "बार ग्राफ",
+      "solvedQuizzes": "हल की गई क्विज़",
+      "society": "समाज",
+      "seasonAnalytics": "सीजन विश्लेषण",
+      "tournamentAnalytics": "टूर्नामेंट विश्लेषण",
+      "savedSuccessfully": "प्रोफ़ाइल दृश्यता सफलतापूर्वक सहेजी गई",
+      "errorSaving": "प्रोफ़ाइल दृश्यता सहेजने में त्रुटि"
+    },
+    "success": "सफलता",
+    "error": "त्रुटि",
+    "save": "सहेजें"
+  },
+  "components.profileComponents.TournamentBadgeGallery": {
+    "unnamedBadge": "अनाम बैज",
+    "errorTitle": "सेव करने में विफल",
+    "errorMessage": "बैज सेव करने में एक त्रुटि हुई।",
+    "selected": "चयनित",
+    "errorSaving": "सेव करने में त्रुटि",
+    "clickToOpen": "खोलने के लिए क्लिक करें",
+    "clickToSelect": "चयन करने के लिए क्लिक करें",
+    "badgeGallery": "बैज गैलरी",
+    "backToAllBadges": "सभी बैज पर वापस",
+    "close": "बंद करें"
+  },
+  "components.profileComponents.TournamentModal": {
+    "tournament": "टूर्नामेंट",
+    "overallPerformance": "कुल प्रदर्शन",
+    "totalScore": "कुल स्कोर",
+    "quizCount": "क्विज पूर्ण:",
+    "categoryBreakdown": "श्रेणी का विवरण",
+    "close": "बंद करें",
+    "rank": "रैंक",
+    "RQM": "RQM",
+    "right": "सही"
+  },
+  "components.profileComponents.TournamentSection": {
+    "performanceHeading": "टूर्नामेंट प्रदर्शन",
+    "lastTournamentHeading": "अंतिम टूर्नामेंट की विजय",
+    "lastTournamentSubheading": "आपकी नवीनतम जीत देखें",
+    "analyticsButton": "टूर्नामेंट विश्लेषण",
+    "guestMessage": "कृपया अपनी प्रगति सुरक्षित करें और टूर्नामेंट में भाग लें और यहां अपना प्रदर्शन देखें...",
+    "fetchError": "डेटा प्राप्त करने में त्रुटि",
+    "chart": {
+      "label": "स्कोर",
+      "score": "स्कोर",
+      "rank": "रैंक",
+      "date": "तारीख"
+    },
+    "visibilityTooltip": "दूसरों के लिए दृश्यता",
+    "hidden": "छिपा हुआ",
+    "visible": "दृश्यमान",
+    "noTournamentData": "कोई टूर्नामेंट डेटा उपलब्ध नहीं है"
+  },
+  "components.profileComponents.TournamentSelectorDrawer": {
+    "tournamentSelectorHeader": "टूर्नामेंट चयनकर्ता",
+    "tournamentNumber": "टूर्नामेंट#{{number}}"
+  },
+  "components.profileComponents.WiseWeb": {
+    "online_friends": "ऑनलाइन मित्र",
+    "leaderboard": "लीडरबोर्ड",
+    "ties_severed": "संबंध विच्छेद",
+    "unfriended_message": "आपने सफलतापूर्वक मित्रता समाप्त कर दी है।",
+    "error_severing_ties": "त्रुटि",
+    "sever_ties_error_message": "संबंध विच्छेद करने में विफल। कृपया पुनः प्रयास करें।",
+    "no_friends": "कोई मित्र नहीं मिला।",
+    "no_friend_requests": "कोई मित्र अनुरोध नहीं मिला।",
+    "your_friends": "आपके मित्र",
+    "requests": "अनुरोध",
+    "friends": "मित्र",
+    "wise_web": "वाइज वेब",
+    "friend_requests": "मित्र अनुरोध"
+  },
+  "components.quizComponents.BoostedSubmittedQuizInterface": {
+    "quizCompletedMessage": "क्विज़ पूरा हुआ। भाग लेने के लिए धन्यवाद!",
+    "rapidQuizMasteryScore": "रैपिड क्विज मास्टरी स्कोर",
+    "calculating": "गणना हो रही है...",
+    "boostedText": "बूस्टेड",
+    "dontGiveUp": "हार मत मानो! आगे बढ़ते रहो!",
+    "noWorryMessage": "चिंता न करें! आपके पास अभी भी बूस्ट बचे हुए हैं, इसलिए अभ्यास करते रहें; सुधार बस एक कदम दूर है!",
+    "congratulationMessage": "आपकी प्रगति के लिए बधाई! शानदार काम जारी रखें और बेहतर स्कोर के लिए अपने बूस्ट का पूरा लाभ उठाएं।",
+    "viewReport": "रिपोर्ट देखें"
+  },
+  "components.quizComponents.ConfirmationModal": {
+    "confirmationTitle": "पुष्टिकरण",
+    "confirmButton": "पुष्टि करें",
+    "cancelButton": "रद्द करें"
+  },
+  "components.quizComponents.GivenQuizInterface": {
+    "questionLabel": "प्रश्न {{currentQuestionIndex}} का {{totalQuestions}}",
+    "noQuizData": "कोई क्विज़ डेटा उपलब्ध नहीं है।",
+    "infoForOptions": "क्विज़ और सारांश में विकल्प संख्याएँ भिन्न हो सकती हैं। क्विज़ के दौरान विकल्पों को यादृच्छिक रूप से व्यवस्थित किया गया था, लेकिन सारांश में सही उत्तर दिखाया जाता है चाहे वह अपनी मूल स्थिति में हो या नहीं।"
+  },
+  "components.quizComponents.InstructionModal": {
+    "quizInstructions": "क्विज निर्देश",
+    "quinBoostAvailable": "क्विन बूस्ट उपलब्ध है!",
+    "boosted": "1.5x स्कोर मल्टीप्लायर सक्रिय!",
+    "readInstructions": "क्विज का प्रयास करने से पहले सभी निर्देशों को ध्यानपूर्वक पढ़ें:",
+    "instructions": [
+      "क्विज में अधिकतम पाँच प्रश्न होंगे।",
+      "सभी प्रश्न दिए गए लेख से ही होंगे।",
+      "सभी प्रश्न को हल करना अनिवार्य है।",
+      "अंत में, आपको अपना स्कोर और प्रतिशत प्राप्त होगा।",
+      "आप क्विज को बीच में छोड़ नहीं सकते।",
+      "क्विज का प्रयास करने से आपका IQ स्कोर प्रभावित होगा।"
+    ]
+  },
+  "components.quizComponents.ModalComponent": {
+    "StartQuiz": "क्विज़ शुरू करें",
+    "NextQuestion": "अगला प्रश्न",
+    "FinishQuiz": "क्विज़ समाप्त करें",
+    "QuizIsGenerating": "क्विज़ जनरेट हो रही है। प्रारंभ बटन की प्रतीक्षा करें..."
+  },
+  "components.quizComponents.QuinBoost": {
+    "QuinBoost": "क्विनबूस्ट"
+  },
+  "components.quizComponents.QuizGivenSummary": {
+    "next": "अगला",
+    "previous": "पिछला",
+    "totalTimeTaken": "कुल समय लिया गया: {{timeTaken}} सेकंड",
+    "explanation": "व्याख्या :",
+    "errorFetchingQuiz": "क्विज़ सारांश प्राप्त करने में त्रुटि",
+    "quizError": "क्विज़ में समस्या पाई गई - संभावित रूप से कनेक्शन लॉस या सिस्टम त्रुटि के कारण। पुनः प्रयास नहीं किया जा सकता। हम आपको असुविधा के लिए खेद अर्जित करते हैं।"
+  },
+  "components.quizComponents.QuizInterface": {
+    "question": "प्रश्न",
+    "of": "में से",
+    "noQuizData": "कोई क्विज डेटा उपलब्ध नहीं है।"
+  },
+  "components.quizComponents.SubmittedQuizInterface": {
+    "quizCompleted": "क्विज सफलतापूर्वक पूरा हुआ!",
+    "quiz": "क्विज",
+    "calculating": "गणना हो रही है...",
+    "score": "अंक",
+    "timeTaken": "लगा हुआ समय",
+    "articleDifficulty": "लेख की कठिनाई",
+    "rqmScore": "RQM स्कोर",
+    "rqmScoreLevel": "RQM स्कोर स्तर",
+    "rookie": "शिक्षार्थी",
+    "amateur": "शौकिया",
+    "advanced": "उन्नत",
+    "expert": "विशेषज्ञ",
+    "maestro": "मास्टर",
+    "todaysRqmUpdate": "आज का RQM स्कोर अपडेट",
+    "viewQuizSummary": "क्विज सारांश देखें",
+    "seconds": " सेकंड",
+    "loadingChart": "चार्ट लोड हो रहा है...",
+    "needsImprovement": "सुधार की जरूरत है",
+    "belowAverage": "औसत से कम",
+    "average": "औसत",
+    "goodJob": "अच्छा काम",
+    "greatWork": "शानदार काम",
+    "excellent": "उत्कृष्ट",
+    "tooSlow": "तेज़ी से हो सकता",
+    "decentSpeed": "ठीक गति",
+    "veryQuick": "बहुत तेज",
+    "keepPracticing": "अभ्यास जारी रखें!",
+    "wellDone": "शाबाश!",
+    "impressive": "प्रभावशाली!",
+    "keepGoing": "जारी रखें!",
+    "tryHarder": "और प्रयास करें",
+    "goodEffort": "अच्छा प्रयास",
+    "outstanding": "उत्कृष्ट",
+    "currentQuiz": "वर्तमान क्विज",
+    "easy": "आसान",
+    "medium": "मध्यम",
+    "hard": "कठिन",
+    "masterfullyDone": "शानदार प्रदर्शन!",
+    "iqScore": "बुद्धि लब्धि",
+    "performanceBonus": "प्रदर्शन बोनस (+{{bonus}}%)",
+    "quizBoost": "क्विज बूस्ट (+{{boost}}%)",
+    "newSociety": "{{society}} में आपका स्वागत है!",
+    "leaderboard": "लीडरबोर्ड",
+    "quizSummary": "क्विज सारांश",
+    "level": "स्तर",
+    "time": "समय",
+    "progress": "प्रगति",
+    "expectedScore": "अपेक्षित स्कोर",
+    "iqPaused": "अपडेट रुका हुआ",
+    "guestMode": "अतिथि मोड",
+    "registerTooltip": "अपनी वास्तविक IQ प्रगति को ट्रैक करने के लिए रजिस्टर करें",
+    "loginToTrackIQ": "अपनी वास्तविक IQ प्रगति को ट्रैक करने के लिए लॉगिन करें",
+    "registerNote": "इस अपेक्षित स्कोर को अपने प्रारंभिक IQ में बदलने के लिए रजिस्टर करें",
+    "maestroAchieved": "मास्टर प्राप्त हुआ",
+    "maxBoostAchieved": "अधिकतम बूस्ट प्राप्त हुआ",
+    "Time Dilated": "समय विस्तारित हुआ"
+  },
+  "components.reward.IQBoostDisplay": {
+    "claimButton": {
+      "text": "आईक्यू बूस्ट प्राप्त करें!"
+    },
+    "successMessage": {
+      "text": "बुद्धिमत्ता बढ़ी!"
+    },
+    "scoreDisplay": {
+      "previousScore": "पिछला आईक्यू स्कोर",
+      "newScore": "नया आईक्यू स्कोर",
+      "increase": "वृद्धि",
+      "points": "अंक"
+    },
+    "reward": {
+      "title": "आईक्यू बूस्ट पुरस्कार",
+      "description": "बधाई हो! आपके उत्कृष्ट प्रदर्शन के लिए आपको आईक्यू बूस्ट मिला है। आपका बुद्धिमत्ता स्कोर बढ़ गया है।",
+      "type": "iq_boost"
+    },
+    "accessibility": {
+      "claimButtonAria": "आपका आईक्यू बूस्ट पुरस्कार प्राप्त करने के लिए क्लिक करें",
+      "scoreDisplayAria": "आईक्यू बूस्ट दिखाने वाला स्कोर तुलना",
+      "successMessageAria": "आईक्यू बूस्ट सफलतापूर्वक प्राप्त किया गया"
+    },
+    "animations": {
+      "neuronEffect": "न्यूरॉन सक्रियण प्रभाव",
+      "brainIcon": "चमकता हुआ दिमाग आइकन"
+    }
+  },
+  "components.reward.QuinBoostDisplay": {
+    "title": "RQM बूस्ट तैयार!",
+    "subtitle": "अपने अगले क्विज़ के प्रदर्शन को सुपरचार्ज करें",
+    "benefits": {
+      "score": "उच्च स्कोर",
+      "iq": "बेहतर आईक्यू"
+    },
+    "button": {
+      "activate": "बूस्ट का दावा करें!",
+      "activated": "बूस्ट का दावा किया गया!"
+    }
+  },
+  "components.reward.StreakSurgeDisplay": {
+    "rewards": {
+      "bonus_xp": "बोनस एक्सपी",
+      "rqm_boost": "आरक्यूएम बूस्ट"
+    },
+    "buttons": {
+      "claim": "पुरस्कार प्राप्त करें",
+      "claimed": "पुरस्कार प्राप्त कर लिए गए!"
+    },
+    "tooltips": {
+      "trophy": "ट्रॉफी उपलब्धि",
+      "star": "एक्सपी पुरस्कार",
+      "zap": "बूस्ट पुरस्कार"
+    },
+    "messages": {
+      "success": "पुरस्कार प्राप्त कर लिए गए!",
+      "description": "{{description}}"
+    }
+  },
+  "components.rewards.BadgesSection": {
+    "header": {
+      "title": "टूर्नामेंट बैज"
+    },
+    "badges": {
+      "tournament": "टूर्नामेंट {{number}}",
+      "rank": {
+        "first": "विजेता",
+        "second": "उपविजेता",
+        "third": "द्वितीय उपविजेता",
+        "participant": "प्रतिभागी"
+      },
+      "stats": {
+        "participants": "{{count}} प्रतिभागी"
+      }
+    },
+    "notifications": {
+      "updateSuccess": {
+        "title": "बैज अपडेट किया गया",
+        "description": "आपका प्रदर्शित बैज सफलतापूर्वक अपडेट कर दिया गया है।"
+      },
+      "updateError": {
+        "title": "त्रुटि",
+        "description": "बैज अपडेट करने में विफल।"
+      }
+    },
+    "empty": {
+      "noBadges": "अभी तक कोई टूर्नामेंट बैज अर्जित नहीं किया गया"
+    }
+  },
+  "components.rewards.GameInventory": {
+    "header": {
+      "title": "खजाना तिजोरी"
+    },
+    "filters": {
+      "boost": "बूस्ट",
+      "power_up": "पावर-अप",
+      "badge": "बैज"
+    },
+    "sections": {
+      "activeAbilities": "सक्रिय क्षमताएं",
+      "availableAbilities": "उपलब्ध क्षमताएं"
+    },
+    "status": {
+      "active": "सक्रिय",
+      "quantity": "x{{count}}",
+      "multiplier": "{{value}}x",
+      "additionalTime": "+{{value}} sec"
+    },
+    "ability": {
+      "type": {
+        "boost": "बूस्ट",
+        "power_up": "पावर-अप",
+        "badge": "बैज"
+      }
+    },
+    "actions": {
+      "activate": "सक्रिय करें",
+      "activating": "सक्रिय हो रहा है..."
+    },
+    "notifications": {
+      "abilityActivated": {
+        "title": "क्षमता सक्रिय की गई",
+        "description": "क्षमता सफलतापूर्वक सक्रिय कर दी गई है!"
+      },
+      "activationFailed": {
+        "title": "सक्रियण विफल",
+        "description": "क्षमता सक्रिय करने में विफल"
+      }
+    },
+    "timer": {
+      "expired": "समाप्त",
+      "daysAndHours": "{{days}}दि {{hours}}घं",
+      "hoursAndMinutes": "{{hours}}घं {{minutes}}मि",
+      "minutes": "{{minutes}}मि"
+    },
+    "empty": {
+      "noItems": "इस श्रेणी में कोई आइटम नहीं मिला"
+    }
+  },
+  "components.rewards.rewards": {
+    "tournamentRewards": {
+      "ranks": {
+        "RANK_1": {
+          "title": "टूर्नामेंट चैंपियन आईक्यू बूस्ट!",
+          "description": "आपके शानदार प्रदर्शन ने आपकी बुद्धिमत्ता को बहुत बढ़ा दिया है!"
+        },
+        "RANK_2": {
+          "title": "एलीट प्रदर्शन आईक्यू बूस्ट!",
+          "description": "आपके असाधारण कौशल ने आपकी बुद्धिमत्ता को काफी बढ़ा दिया है!"
+        },
+        "RANK_3": {
+          "title": "राइजिंग स्टार आईक्यू बूस्ट!",
+          "description": "आपकी उत्कृष्ट उपलब्धि ने आपकी बुद्धिमत्ता को बढ़ाया है!"
+        }
+      },
+      "badges": {
+        "ACE": {
+          "title": "महान एस",
+          "description": "{category} श्रेणी के चैंपियन!",
+          "rewards": {
+            "insightRadar": {
+              "title": "श्रेणी अंतर्दृष्टि राडार",
+              "description": "{category} श्रेणी में लेख की कठिनाइयों का पूर्वावलोकन करें (सोम-शुक्र)।"
+            },
+            "rqmAmplifier": {
+              "title": "चैंपियन का आरक्यूएम एम्पलीफायर",
+              "description": "{category} श्रेणी की क्विज में 1.5x आरक्यूएम बूस्ट (सोम-शुक्र)।"
+            }
+          }
+        },
+        "PRO": {
+          "title": "एलीट विर्टुओसो",
+          "description": "{category} श्रेणी में एलीट उत्कृष्टता!",
+          "rewards": {
+            "rqmAmplifier": {
+              "title": "एलीट आरक्यूएम एम्पलीफायर",
+              "description": "{category} श्रेणी की क्विज में 1.5x आरक्यूएम बूस्ट (सोम-शुक्र)।"
+            }
+          }
+        },
+        "CHAMP": {
+          "title": "उभरते चैंपियन",
+          "description": "{category} श्रेणी में उत्कृष्ट विजेता!",
+          "rewards": {
+            "insightRadar": {
+              "title": "श्रेणी अंतर्दृष्टि राडार",
+              "description": "{category} श्रेणी में लेख की कठिनाइयों का पूर्वावलोकन करें (सोम-शुक्र)।"
+            }
+          }
+        }
+      }
+    },
+    "categorySelector": {
+      "title": "अपने बैज के लिए श्रेणी चुनें",
+      "confirmButton": "चयन की पुष्टि करें",
+      "errors": {
+        "selectCategory": "कृपया एक श्रेणी चुनें",
+        "fetchError": "श्रेणियां प्राप्त करने में त्रुटि",
+        "invalidCategory": {
+          "title": "अमान्य श्रेणी चयनित",
+          "description": "कृपया कोई अन्य श्रेणी चुनें"
+        },
+        "updateError": {
+          "title": "श्रेणी अपडेट करने में त्रुटि",
+          "fallback": "कृपया पुनः प्रयास करें"
+        }
+      },
+      "success": "श्रेणी सफलतापूर्वक चयनित की गई",
+      "categories": {
+        "world": "विश्व",
+        "politics": "राजनीति",
+        "business": "व्यवसाय",
+        "technology": "प्रौद्योगिकी",
+        "sports": "खेल",
+        "health": "स्वास्थ्य",
+        "science": "विज्ञान",
+        "environment": "पर्यावरण",
+        "crime": "अपराध",
+        "education": "शिक्षा",
+        "entertainment": "मनोरंजन",
+        "food": "खाद्य",
+        "lifestyle": "जीवनशैली",
+        "tourism": "पर्यटन"
+      }
+    },
+    "claimButton": {
+      "claim": "पुरस्कार प्राप्त करें",
+      "claimed": "पुरस्कार प्राप्त किया गया!"
+    },
+    "rqmBoost": {
+      "title": "आरक्यूएम बूस्ट तैयार!",
+      "subtitle": "अपने अगले क्विज़ प्रदर्शन को सुपरचार्ज करें",
+      "features": {
+        "score": "उच्च स्कोर",
+        "iq": "बेहतर आईक्यू"
+      },
+      "button": {
+        "activate": "बूस्ट का दावा करें!",
+        "activated": "बूस्ट का दावा किया गया!"
+      }
+    },
+    "iqBoost": {
+      "tournament": {
+        "numberPrefix": "टूर्नामेंट #"
+      },
+      "title": "बुद्धिमत्ता बढ़ाई गई!",
+      "disclaimer": "यह अंतिम आईक्यू स्कोर टूर्नामेंट के समय की आपकी उपलब्धि को दर्शाता है और आपके वर्तमान आईक्यू स्कोर से भिन्न हो सकता है।",
+      "button": {
+        "claim": "आईक्यू बूस्ट प्राप्त करें!",
+        "success": "बुद्धिमत्ता बढ़ाई गई!"
+      }
+    },
+    "modal": {
+      "title": "टूर्नामेंट पुरस्कार",
+      "subtitle": "इन प्रतिष्ठित पुरस्कारों और शक्तिशाली बूस्ट को जीतने के लिए प्रतिस्पर्धा करें",
+      "sections": {
+        "rankings": "टूर्नामेंट रैंकिंग",
+        "champions": "श्रेणी चैंपियंस",
+        "achievements": "उपलब्धि बैज"
+      }
+    },
+    "rankings": {
+      "RANK_1": {
+        "powerup": "आपकी बुद्धिमत्ता स्कोर में स्थायी +5 IQ बूस्ट",
+        "title": "टूर्नामेंट चैंपियन IQ बूस्ट!",
+        "description": "आपके शानदार प्रदर्शन ने आपकी बुद्धिमत्ता को बहुत बढ़ा दिया है!"
+      },
+      "RANK_2": {
+        "powerup": "आपकी बुद्धिमत्ता स्कोर में स्थायी +3 IQ बूस्ट",
+        "title": "एलीट प्रदर्शन IQ बूस्ट!",
+        "description": "आपके असाधारण कौशल ने आपकी बुद्धिमत्ता को काफी बढ़ा दिया है!"
+      },
+      "RANK_3": {
+        "powerup": "आपकी बुद्धिमत्ता स्कोर में स्थायी +2 IQ बूस्ट",
+        "title": "राइजिंग स्टार IQ बूस्ट!",
+        "description": "आपकी उत्कृष्ट उपलब्धि ने आपकी बुद्धिमत्ता को बढ़ाया है!"
+      }
+    },
+    "champions": {
+      "ACE": {
+        "title": "महान एस",
+        "description": "{category} श्रेणी के चैंपियन!",
+        "powerups": [
+          "श्रेणी अंतर्दृष्टि राडार - लेख की कठिनाइयों का पूर्वावलोकन करें (सोम-शुक्र)",
+          "चैंपियन का RQM एम्पलीफायर - श्रेणी क्विज में 1.5x RQM बूस्ट"
+        ]
+      },
+      "PRO": {
+        "title": "एलीट विर्टुओसो",
+        "description": "{category} श्रेणी में एलीट उत्कृष्टता!",
+        "powerups": [
+          "एलीट RQM एम्पलीफायर - श्रेणी क्विज में 1.5x RQM बूस्ट"
+        ]
+      },
+      "CHAMP": {
+        "title": "उभरते चैंपियन",
+        "description": "{category} श्रेणी में उत्कृष्ट विजेता!",
+        "powerups": [
+          "श्रेणी अंतर्दृष्टि राडार - लेख की कठिनाइयों का पूर्वावलोकन करें (सोम-शुक्र)"
+        ]
+      }
+    },
+    "achievements": {
+      "TOP_5": {
+        "title": "टॉप 5% फिनिशर",
+        "description": "कुल मिलाकर टॉप 5 में समाप्त किया"
+      },
+      "TOP_10": {
+        "title": "टॉप 10% फिनिशर",
+        "description": "कुल मिलाकर टॉप 10 में समाप्त किया"
+      },
+      "TOP_25": {
+        "title": "टॉप 25% फिनिशर",
+        "description": "कुल मिलाकर टॉप 25 में समाप्त किया"
+      },
+      "QUIZ_WARRIOR": {
+        "title": "क्विज वॉरियर",
+        "description": "टूर्नामेंट में कम से कम एक क्विज दिया"
+      }
+    },
+    "powerUp": {
+      "badge": {
+        "special": "विशेष पावर-अप"
+      },
+      "title": "पावर शील्ड सक्रिय",
+      "subtitle": "अपनी सुरक्षा बढ़ाएं और IQ पेनल्टी से अस्थायी प्रतिरक्षा प्राप्त करें",
+      "button": {
+        "activate": "पावर-अप का दावा करें!",
+        "activated": "पावर-अप का दावा किया गया!"
+      },
+      "selectCategory": "पावर-अप के लिए श्रेणी चुनें"
+    }
+  },
+  "components.streakComponents.DailyStreakModal": {
+    "streak_odyssey": "स्ट्रीक ओडिसी",
+    "embark_on_journey": "अपनी यात्रा शुरू करें",
+    "first_step_greatness": "महानता की ओर पहला कदम उठाएं",
+    "rekindle_flame": "ज्वाला को पुनर्जीवित करें",
+    "rise_again": "फिर से उठें और अपनी स्ट्रीक वापस पाएं",
+    "forging_legacy": "अपनी विरासत गढ़ रहे हैं",
+    "each_day_triumph": "हर दिन एक नई जीत है",
+    "ascending_heights": "नई ऊंचाइयों पर चढ़ रहे हैं",
+    "destiny_awaits": "आपकी नियति आपका इंतजार कर रही है, चढ़ते रहें",
+    "pinnacle_achievement": "उपलब्धि का शिखर",
+    "legacy_unfolds": "अपनी विरासत को खुलते देखें",
+    "celestial_favor": "स्वर्गीय कृपा",
+    "transcend_limits": "अपनी सीमाओं को पार करें",
+    "unwavering_dedication": "अडिग समर्पण",
+    "forge_ahead": "आगे बढ़ें, आपकी यात्रा जारी है",
+    "current_streak": "वर्तमान स्ट्रीक",
+    "longest_streak": "सबसे लंबी स्ट्रीक",
+    "days": "दिन",
+    "continue_journey": "यात्रा जारी रखें"
+  },
+  "components.tournamentComponents.CategoryCard": {
+    "world": "दुनिया",
+    "politics": "राजनीति",
+    "business": "व्यापार",
+    "technology": "प्रौद्योगिकी",
+    "sports": "खेल",
+    "health": "स्वास्थ्य",
+    "science": "विज्ञान",
+    "environment": "पर्यावरण",
+    "crime": "अपराध",
+    "education": "शिक्षा",
+    "entertainment": "मनोरंजन",
+    "food": "खाद्य",
+    "lifestyle": "जीवन शैली",
+    "tourism": "पर्यटन",
+    "current affairs": "वर्तमान मामले",
+    "twoAttemptsLeft": "2 प्रयास शेष",
+    "oneAttemptLeft": "1 प्रयास शेष",
+    "noAttemptsLeft": "कोई प्रयास शेष नहीं",
+    "bestScore": "सर्वोत्तम स्कोर"
+  },
+  "components.tournamentComponents.CategoryLeaders": {
+    "Category Leaders": "श्रेणी के नेता",
+    "Loading...": "लोड हो रहा है..."
+  },
+  "components.tournamentComponents.CategorySelection": {
+    "selectFiveCategories": "श्रेणियाँ चुनें:",
+    "selectCategoryStartQuiz": "क्विज़ शुरू करने के लिए एक श्रेणी चुनें",
+    "quickPick": "जल्दी चुनें",
+    "loading": "लोड हो रहा है...",
+    "currentAffairsNote": "वर्तमान घटनाक्रम एक अनिवार्य श्रेणी है।",
+    "currentAffairs": "वर्तमान घटनाक्रम",
+    "invalidSelectionTitle": "अवैध चयन",
+    "invalidSelectionDescription": "कृपया ठीक 5 श्रेणियाँ चुनें।",
+    "startQuiz": "क्विज़ शुरू करें",
+    "loadingModal": "मोडल लोड हो रहा है...",
+    "loadingQuizReport": "क्विज़ रिपोर्ट लोड हो रही है...",
+    "clearQuickPick": "चुनाई श्रेणियाँ हटाएं",
+    "SelectCategoryNote": "चुनने के लिए शेष श्रेणियाँ:",
+    "viewFirstAttempt": "पहली कोशिश देखें: "
+  },
+  "components.tournamentComponents.EpicQuestGuide": {
+    "title": "एपिक क्वेस्ट गाइड",
+    "subtitle": "टूर्नामेंट मोड को मास्टर करें",
+    "questions": [
+      {
+        "question": "टूर्नामेंट मोड क्या है?",
+        "answer": "टूर्नामेंट मोड एक मजेदार गेम है जिसमें आप विभिन्न विषयों पर प्रश्नों का उत्तर देकर अंक जीत सकते हैं और देख सकते हैं कि आप अन्यों के साथ कैसे तुलना करते हैं।"
+      },
+      {
+        "question": "कौन खेल सकता है?",
+        "answer": "टूर्नामेंट मोड में शामिल होने के लिए आपके पास होना चाहिए: 2-दिन का क्विज स्ट्रीक, या 30 मिनट के अंदर 3 क्विज़ पूरे करना, या एक दिन में 6 क्विज़ पूरे करना, या एक दिन में 2 क्विज़ में 42 से अधिक आरक्यूएम स्कोर हासिल करना। यह सुनिश्चित करता है कि आप तैयार हैं और तुलनात्मक रूप से प्रतिस्पर्धा करने के लिए तैयार हैं!"
+      },
+      {
+        "question": "मैं टूर्नामेंट के लिए कब पंजीकरण कर सकता हूं?",
+        "answer": "आप सोमवार से शुक्रवार तक, रात 11 बजे तक टूर्नामेंट के लिए पंजीकरण कर सकते हैं। चिंता न करें, आपको तैयार होने के लिए बहुत समय मिलेगा।"
+      },
+      {
+        "question": "विषय कैसे चुनें?",
+        "answer": "साइन अप करते समय, आपको खेल के लिए 3 श्रेणियों का चयन करना होगा जैसे कि स्पोर्ट्स, टेक्नोलॉजी, हेल्थ और अधिक। साथ ही, एक अतिरिक्त श्रेणी जिसका नाम करंट अफेयर्स है, स्वचालित रूप से चयनित होती है।"
+      },
+      {
+        "question": "टूर्नामेंट कब होता है?",
+        "answer": "टूर्नामेंट शनिवार और रविवार को होता है। आप इन दो दिनों के दौरान किसी भी समय खेल सकते हैं, इसलिए यह वास्तव में लचीला है।"
+      },
+      {
+        "question": "क्विज़ कैसे काम करता है?",
+        "answer": "आपको अपने चुने गए 3 श्रेणियों से 5 प्रश्नों का उत्तर देना होगा, साथ ही करंट अफेयर्स श्रेणी और हर श्रेणी के लिए आपको 2 प्रयास मिलेंगे जिसमें हम दोनों प्रयासों में से बेस्ट लेंगे। लेकिन ध्यान दें - आपके पास हर सेट के प्रश्नों के लिए केवल 50 सेकंड हैं!"
+      },
+      {
+        "question": "मेरा स्कोर और रैंकिंग कैसे देख सकता हूं?",
+        "answer": "जब आप समाप्त हो जाएंगे, तो आपका स्कोर और रैंकिंग टूर्नामेंट टैब में एक विशेष लीडरबोर्ड पर दिखाई देगा। आप तुरंत देख सकते हैं कि आपने अन्य खिलाड़ियों के साथ कितना अच्छा किया।"
+      },
+      {
+        "question": "मैं टूर्नामेंट में बैज आर्न कैसे कर सकता हूं?",
+        "answer": "आप टूर्नामेंट में अपने प्रदर्शन के आधार पर बैज कमा सकते हैं। उन प्रतिभागियों को जो समग्र में 1, 2 और 3 रैंक पर होंगे, हॉल ऑफ फेम बैज मिलेगा। विशेष श्रेणियों में, जो लोग 1, 2 और 3 रैंक पर होंगे, उन्हें एस, प्रो और चैंप बैज मिलेगा, क्रमशः। इसके अतिरिक्त, टूर्नामेंट लीडरबोर्ड के शीर्ष 5%, 10% और 25% में समाप्त होने वाले प्रतिभागियों को संबंधित बैज मिलेगा। अन्य सभी प्रतिभागियों को क्विज वॉरियर बैज प्रदान किया जाएगा। ये बैज आपके प्रोफाइल पेज और रैपिड रीकैप के मुख्य लीडरबोर्ड पर प्रदर्शित किए जाएंगे।"
+      },
+      {
+        "question": "प्रश्न कहाँ से आते हैं?",
+        "answer": "क्विज़ के प्रश्न उन 3 श्रेणियों से आएंगे जिन्हें आपने टूर्नामेंट के लिए पंजीकरण करते समय चुना है, साथ ही करंट अफेयर्स श्रेणी (प्रत्येक श्रेणी के लिए 2 प्रयास), जो पिछले सप्ताह दुनियाभर में हुए घटनाओं के बारे में हैं। यह सब कुछ ताजा और रोमांचक रखने के लिए है!"
+      },
+      {
+        "question": "मुझे क्यों खेलना चाहिए?",
+        "answer": "नए चीजें सीखने, खुद को चुनौती देने और दूसरों के साथ प्रतिस्पर्धा करने का एक बढ़िया तरीका है। साथ ही, लीडरबोर्ड पर अपना नाम ऊपर उठते हुए देखना भी मजेदार है!"
+      }
+    ],
+    "knowMore": "और जानें"
+  },
+  "components.tournamentComponents.LeaderCard": {
+    "Rank": "रैंक:"
+  },
+  "components.tournamentComponents.LeaderboardSearch": {
+    "searchPlayer": "खिलाड़ी खोजें....",
+    "No players found": "कोई खिलाड़ी नहीं मिला",
+    "Error searching players": "खिलाड़ी खोजने में त्रुटि"
+  },
+  "components.tournamentComponents.LeaderboardSection": {
+    "currentLeaderboard": "वर्तमान लीडरबोर्ड",
+    "yourCurrentRank": "आपकी वर्तमान रैंक",
+    "score": "स्कोर",
+    "fetchError": "डेटा प्राप्त करने में त्रुटि।",
+    "Leaderboard": "लीडरबोर्ड",
+    "Your Rank": "आपकी रैंक"
+  },
+  "components.tournamentComponents.LeaderboardTable": {
+    "Rank": "रैंक",
+    "Player": "खिलाड़ी",
+    "Score": "स्कोर",
+    "LoadingUserStats": "उपयोगकर्ता आँकड़े लोड हो रहे हैं..."
+  },
+  "components.tournamentComponents.PreviousTournamentLeaderboard": {
+    "heading": "पिछली प्रतियोगिता की लीडरबोर्ड",
+    "loading": "लीडरबोर्ड लोड हो रहा है...",
+    "noData": "कोई पिछली प्रतियोगिता डेटा उपलब्ध नहीं है।",
+    "endDate": "समाप्ति तिथि {{date}}",
+    "topLeadersInfo": "शीर्ष 5 नेता"
+  },
+  "components.tournamentComponents.QuizConfirmationModal": {
+    "quizInstructions": "क्विज़ निर्देश",
+    "confirmation": "क्या आप सुनिश्चित हैं कि आप {{category}} श्रेणी में क्विज़ शुरू करना चाहते हैं?",
+    "readInstructions": "क्विज़ शुरू करने से पहले कृपया नीचे दिए गए निर्देशों को पढ़ें।",
+    "instructions": [
+      "आपके पास 5 प्रश्नों का उत्तर देने के लिए 50 सेकंड हैं।",
+      "प्रत्येक सही उत्तर से आपको कठिनाई के आधार पर अंक मिलते हैं।",
+      "जितनी जल्दी आप उत्तर देंगे, उतने अधिक अंक आपको मिलेंगे।",
+      "समय सीमा के भीतर क्विज़ समाप्त करने का प्रयास करें।"
+    ],
+    "cancel": "रद्द करें",
+    "startQuiz": "क्विज़ शुरू करें"
+  },
+  "components.tournamentComponents.RegisteredUsersCount": {
+    "label": "पंजीकृत प्रतिभागी",
+    "helpText": "ज्ञान के महाक्रांति में शामिल हों!"
+  },
+  "components.tournamentComponents.RegistrationForm": {
+    "registrationSuccess": {
+      "title": "पंजीकरण सफल",
+      "description": "आप सफलतापूर्वक टूर्नामेंट के लिए पंजीकृत हो गए हैं।"
+    },
+    "registrationError": {
+      "title": "पंजीकरण विफल",
+      "description": "पंजीकरण के दौरान एक त्रुटि हुई। कृपया पुनः प्रयास करें।"
+    }
+  },
+  "components.tournamentComponents.RegistrationSection": {
+    "tournamentRegistrationHeading": "टूर्नामेंट पंजीकरण",
+    "loadingUsersCount": "उपयोगकर्ताओं की गिनती लोड हो रही है...",
+    "loadingRegistrationForm": "पंजीकरण फ़ॉर्म लोड हो रहा है...",
+    "exclusiveAccess": {
+      "title": "विशेष टूर्नामेंट एक्सेस",
+      "description": "इस महाकवि की लड़ाई में भाग लेने के लिए, आपको एक सत्यापित ईमेल खाता के साथ लॉग इन होना आवश्यक है।",
+      "callToAction": "हमारे ज्ञान योद्धाओं के समुदाय में शामिल हों और अपनी क्षमता साबित करें!"
+    },
+    "registrationSuccess": {
+      "title": "पंजीकरण सफल!",
+      "description": "महाकवि की लड़ाई के लिए तैयार हो जाइए!"
+    },
+    "tournamentDetails": {
+      "heading": "आपके टूर्नामेंट विवरण:"
+    },
+    "userDetails": {
+      "inGameNameLabel": "इन-गेम नाम:",
+      "selectedCategoriesLabel": "चुनी गई श्रेणियाँ:"
+    }
+  },
+  "components.tournamentComponents.ShutterAnimation": {
+    "Rapid Recap Tournament": "रैपिड रीकैप टूर्नामेंट",
+    "Get ready to begin!": "शुरू होने के लिए तैयार हो जाओ!"
+  },
+  "components.tournamentComponents.TimeInfo": {
+    "starts": "शुरू होता है",
+    "startsAt": "यहाँ शुरू होता है",
+    "ends": "समाप्त होता है",
+    "questDescription": "48 घंटे की महाकवि की खोज में शामिल हों!",
+    "Registration ends": "पंजीकरण समाप्त होता है"
+  },
+  "components.tournamentComponents.TournamentBadge": {
+    "rank": "रैंक",
+    "inTournament": "टूर्नामेंट में",
+    "outOf": "में से",
+    "participants": "प्रतिभागी"
+  },
+  "components.tournamentComponents.TournamentGuideModal": {
+    "page1": {
+      "title": "रैपिड रिकैप टूर्नामेंट में आपका स्वागत है!",
+      "content1": "रैपिड रिकैप टूर्नामेंट की रोमांचक दुनिया में आपका स्वागत है!",
+      "content2": "यह सप्ताहांत का आयोजन आपके ज्ञान को प्रदर्शित करने, दूसरों के साथ प्रतिस्पर्धा करने और नई चीज़ें सीखते हुए मज़े करने का एक अवसर है।",
+      "content3": "एक रोमांचक क्विज़ अनुभव के लिए तैयार हो जाइए जो विभिन्न श्रेणियों को कवर करता है और आपको वर्तमान घटनाओं से अद्यतित रखता है!"
+    },
+    "page2": {
+      "title": "पात्रता और पंजीकरण",
+      "content1": "टूर्नामेंट मोड में शामिल होने के लिए, आपके पास होना चाहिए: 2-दिन क्विज़ स्ट्रीक, या 30 मिनट के अंदर 3 क्विज़ पूरे करना, या एक दिन में 6 क्विज़ पूरे करना, या एक दिन में 2 क्विज़ में 42 से अधिक RQM स्कोर प्राप्त करना। यह सुनिश्चित करता है कि आप प्रतिस्पर्धा के लिए तैयार हैं! यह आपके क्विज़ शक्ति को बढ़ाने के समान है!",
+      "content2": "सोमवार से शुक्रवार तक रात 11 बजे तक पंजीकरण खुला है। ज्ञान के अखाड़े में प्रवेश करने का मौका न चूकें!",
+      "content3": "पंजीकरण के दौरान, आपको 15 रोमांचक विकल्पों में से 5 श्रेणियों को चुनना होगा। इसके अलावा, हर कोई 'वर्तमान घटनाएं' श्रेणी का सामना करेगा!"
+    },
+    "page3": {
+      "title": "टूर्नामेंट संरचना",
+      "content1": "बड़ा आयोजन हर शनिवार और रविवार को होता है। आप इन दो दिनों में किसी भी समय भाग ले सकते हैं!",
+      "content2": "आप अपनी चुनी हुई श्रेणियों से 5 प्रश्नों का सामना करेंगे, साथ ही वर्तमान घटनाओं से 5 प्रश्न होंगे। कुल मिलाकर 30 मस्तिष्क-कोशक प्रश्न!",
+      "content3": "वर्तमान घटनाओं के प्रश्न पिछले 5 दिनों की वैश्विक घटनाओं से संबंधित होते हैं, जो आपको अद्यतित रखते हैं!"
+    },
+    "page4": {
+      "title": "क्विज़ चैलेंज",
+      "content1": "यहाँ पर आपके ज्ञान और गति की असली परीक्षा है: आपके पास 5 प्रश्नों का उत्तर देने के लिए सिर्फ 50 सेकंड हैं।",
+      "content2": "अगर आप सभी प्रश्नों का उत्तर नहीं दे पाए तो तनाव न लें। हर क्विज़ में कुछ नया सीखना और मज़े करना ही मुख्य उद्देश्य है।",
+      "content3": "याद रखें, अभ्यास से परिपूर्णता आती है। जितना अधिक आप खेलेंगे, उतना ही बेहतर आप इन त्वरित प्रश्नों को हल करने में होंगे!"
+    },
+    "page5": {
+      "title": "स्कोरिंग और लीडरबोर्ड",
+      "content1": "क्विज़ पूरा करने के बाद, आप देख सकते हैं कि आप अन्य खिलाड़ियों के मुकाबले कहाँ खड़े हैं, रियल-टाइम लीडरबोर्ड पर।",
+      "content2": "आपकी रैंकिंग आपके कुल आरक्यूएम (रैपिड क्विज़ मास्टर) स्कोर पर आधारित होती है, जो सभी श्रेणियों में आपके प्रदर्शन को जोड़ती है।",
+      "content3": "लीडरबोर्ड तुरंत अपडेट होता है, ताकि प्रतियोगिता की गर्मी में आपको हमेशा पता हो कि आप कहाँ खड़े हैं!"
+    },
+    "page6": {
+      "title": "अंतिम सुझाव और शुभकामनाएँ!",
+      "content1": "जिज्ञासु बने रहें और सीखते रहें! टूर्नामेंट को मज़ेदार और शैक्षिक बनाने के लिए डिज़ाइन किया गया है।",
+      "content2": "वर्तमान घटनाओं पर ध्यान केंद्रित करें, यह आपको लीडरबोर्ड में आगे बढ़ने का मौका दे सकता है!",
+      "content3": "सबसे महत्वपूर्ण बात, इस अनुभव का आनंद लें। चाहे आप शीर्ष स्थान पर आने का लक्ष्य रखते हों या सिर्फ़ मज़े कर रहे हों, आप ज्ञान की महाकाव्य खोज में हिस्सा ले रहे हैं!",
+      "content4": "शुभकामनाएँ, रैपिड रिकैपर! आपका मस्तिष्क तेज़ हो और आपके उत्तर सही हों! 🏆🎉"
+    },
+    "previous": "पिछला",
+    "next": "अगला"
+  },
+  "components.tournamentComponents.TournamentHeader": {
+    "Rapid Recap Tournament": "रैपिड रीकैप टूर्नामेंट"
+  },
+  "components.tournamentComponents.TournamentLoadingScreen": {
+    "submittingYourTournamentQuiz": "आपका टूर्नामेंट क्विज़ जमा किया जा रहा है",
+    "submissionSteps": {
+      "initializeCalculation": "🚀 टूर्नामेंट शक्ति का प्रारंभ",
+      "calculateRQM": "🏆 त्वरित क्विज़ प्रवीणता का मापन",
+      "saveAttempt": "💾 आपके टूर्नामेंट प्रदर्शन का संरक्षण",
+      "updateStats": "📊 टूर्नामेंट स्थिति का अपडेट",
+      "finalizeAttempt": "🎉 आपके टूर्नामेंट राउंड का समापन"
+    },
+    "tips": [
+      "टूर्नामेंट के दौरान शांत और केंद्रित रहें!",
+      "याद रखें, टूर्नामेंट में हर सवाल मायने रखता है।",
+      "इस चुनौती में आपकी त्वरित सोच आपकी सुपर पावर है!",
+      "सटीकता और गति - सफलता के लिए एक आदर्श संयोजन।",
+      "प्रतियोगिता का स्वागत करें, यह आपके चमकने का मौका है!",
+      "हर क्विज़ आपको टूर्नामेंट की जीत के करीब लाता है।",
+      "इस दिमागी लड़ाई में आपका ज्ञान ही आपका हथियार है।",
+      "आत्मविश्वास बनाए रखें - आप इस पल के लिए तैयार हैं!",
+      "शीर्ष पर पहुंचने की दौड़ में हर सेकंड मायने रखता है।",
+      "अपने व्यक्तिगत सर्वश्रेष्ठ को पछाड़ने की चुनौती दें!"
+    ]
+  },
+  "components.tournamentComponents.TournamentQuiz": {
+    "QuizStartFailed": "क्विज़ शुरू करने में विफल",
+    "UnexpectedError": "एक अप्रत्याशित त्रुटि हुई। कृपया बाद में पुनः प्रयास करें।",
+    "QuizSubmissionFailed": "क्विज़ सबमिट करने में विफल",
+    "XPAwarded": "टूर्नामेंट क्विज़ के लिए एक्सपी प्रदान किया गया",
+    "ConfirmCloseMessage": "क्विज़ को केवल उत्तरित प्रश्न के RQM स्कोर के साथ जमा करने का परिणाम होगा। क्या आप सुनिश्चित हैं कि आप क्विज़ सबमिट करना चाहते हैं?",
+    "Loading": "लोड हो रहा है..."
+  },
+  "components.tournamentComponents.TournamentStatus": {
+    "upcoming": {
+      "title": "टूर्नामेंट जल्द ही शुरू होगा",
+      "loginPrompt": "रैपिड रिकैप टूर्नामेंट में शामिल होने के लिए कृपया एक सत्यापित ईमेल के साथ लॉग इन करें।",
+      "guestPrompt": "अतिथि उपयोगकर्ता टूर्नामेंट में भाग लेने की अनुमति नहीं है। कृपया भाग लेने के लिए पंजीकरण करें।",
+      "registered": "आप पंजीकृत हैं! टूर्नामेंट के लिए तैयार हो जाइए।",
+      "notRegistered": "आपने टूर्नामेंट के लिए पंजीकरण नहीं किया है!",
+      "futurePrompt": "भविष्य के टूर्नामेंट को न चूकें! आगामी प्रतियोगिताओं में अपनी जगह सुरक्षित करने के लिए समय पर पंजीकरण करें।"
+    },
+    "ongoing": {
+      "title": "टूर्नामेंट जारी है"
+    },
+    "completed": {
+      "title": "टूर्नामेंट पूरा हो गया",
+      "message": "यह टूर्नामेंट समाप्त हो गया है। नीचे परिणाम देखें!"
+    },
+    "loading": "लोड हो रहा है..."
+  },
+  "components.tournamentComponents.UserStatsModal": {
+    "playerStatistics": "खिलाड़ी सांख्यिकी",
+    "overallPerformance": "कुल प्रदर्शन",
+    "totalScore": "कुल स्कोर",
+    "quizCount": "श्रेणी गणना",
+    "categoryBreakdown": "श्रेणी का विवरण",
+    "rank": "रैंक",
+    "RQM": "RQM",
+    "right": "सही",
+    "viewProfile": "प्रोफ़ाइल देखें"
+  },
+  "main.App": {
+    "Start using Rapid Recap": "रैपिड रिकैप का उपयोग शुरू करें",
+    "Sign-In": "साइन-इन",
+    "Sign-In As Guest": "अतिथि के रूप में साइन-इन करें",
+    "Logged In": "लॉग इन",
+    "Logged Out": "लॉग आउट",
+    "anonymous": "गुमनाम",
+    "You can view your credentials of guest account in profile": "आप प्रोफ़ाइल में अतिथि खाते की साख देख सकते हैं",
+    "View Profile": "प्रोफाइल देखें",
+    "Register to Safeguard your progress": "अपनी प्रगति को सुरक्षित रखने के लिए पंजीकरण करें",
+    "Rapid Recap - Stay Informed, Stay Ahead": "रैपिड रिकैप - जानकारी में रहें, आगे रहें",
+    "Rapid Recap, news, articles, quizzes, IQ score, leaderboard": "रैपिड रिकैप, समाचार, लेख, क्विज़, IQ स्कोर, लीडरबोर्ड"
+  },
+  "redux.tournamentSlice": {
+    "Keep Going!": "जारी रखें!",
+    "Tournament Time!": "टूर्नामेंट समय!"
+  },
+  "screens.AppStartScreen": {
+    "Rapid Recap AI": "रैपिड रीकैप एआई",
+    "Welcome back": "वापसी पर स्वागत है",
+    "Choose your journey": "अपनी यात्रा चुनें",
+    "New": "नया",
+    "Quick Clash": "क्विक क्लैश",
+    "Challenge others in knowledge battles": "ज्ञान युद्ध में दूसरों को चुनौती दें",
+    "Continue to App": "ऐप जारी रखें",
+    "Explore news, quizzes and more": "समाचार, क्विज़ और बहुत कुछ एक्सप्लोर करें"
+  },
+  "screens.ComingSoonTournament": {
+    "heading": "टूर्नामेंट जल्द ही आ रहा है",
+    "subheading": "ज्ञान और कौशल की महाकाव्य लड़ाई के लिए तैयार हो जाइए!",
+    "note": "नोट: रिलीज़ के बाद गाइड में बदलाव हो सकते हैं।"
+  },
+  "screens.Contact": {
+    "contact_title": "किसी भी प्रश्न के लिए हमारी टीम से संपर्क करें",
+    "contact_help": "हम आपकी किस प्रकार मदद कर सकते हैं?",
+    "form_name": "नाम",
+    "form_email": "ईमेल पता",
+    "form_message": "संदेश",
+    "form_submit": "सबमिट करें",
+    "contact_info_title": "संपर्क जानकारी",
+    "email_label": "ईमेल:",
+    "instagram_label": "इंस्टाग्राम:",
+    "linkedin_label": "लिंक्डइन:",
+    "feedback_prompt": "आपकी प्रतिक्रिया हमें सुधारने में मदद करती है। अपने विचार साझा करें!",
+    "feedback_button": "फीडबैक"
+  },
+  "screens.GetStarted": {
+    "Header": {
+      "imageAlt": "दिमाग के लिए AI-संचालित बैटल अरेना",
+      "title": "अपने ज्ञान को बढ़ाएं और लीडरबोर्ड पर राज करें!",
+      "heading": {
+        "line1": "अपने ज्ञान को बढ़ाएं और",
+        "line2": "लीडरबोर्ड पर राज करें!"
+      },
+      "subtitle": "तेज़-गति वाली क्विज़ और दैनिक दिमागी युद्धों के साथ खुद को चुनौती दें!",
+      "getStartedButton": "साइन इन करें",
+      "searchPlaceholder": "गेम-चेंजिंग लेख और दिमागी युद्ध खोजें...",
+      "languageBadge": "अंग्रेजी और हिंदी में उपलब्ध",
+      "activeLearners": "1000+ मासिक चैलेंजर्स के साथ शामिल होकर अपने दिमाग को महान क्विज़ युद्धों में तेज करें!",
+      "stats": {
+        "monthlyUsers": {
+          "value": "1000+",
+          "label": "सक्रिय खिलाड़ी",
+          "subtext": "प्रतिबद्ध योद्धा"
+        },
+        "dailyMinutes": {
+          "value": "2500+",
+          "label": "विजित मिनट",
+          "subtext": "दैनिक दिमागी शक्ति बढ़ाना"
+        },
+        "tournamentPlayers": {
+          "value": "300+",
+          "label": "शीर्ष स्कोरर",
+          "subtext": "मासिक चैंपियन"
+        },
+        "dailyArticles": {
+          "value": "120+",
+          "label": "ताज़ी चुनौतियां",
+          "subtext": "प्रतिदिन नई सामग्री"
+        }
+      },
+      "badges": {
+        "freeAccess": " दिमागी युद्धों तक मुफ्त पहुंच",
+        "dailyArticles": " हर दिन 120+ ताज़ी चुनौतियां",
+        "weeklyTournaments": " ताज के लिए साप्ताहिक शोडाउन"
+      }
+    },
+    "BenefitsMap": {
+      "mainTitle": "आपका अंतिम दिमागी प्रशिक्षण प्लेटफॉर्म",
+      "yourLearningJourney": "महारत तक आपका रास्ता",
+      "benefits": {
+        "curatedNews": {
+          "title": "AI-क्यूरेटेड दिमागी ईंधन",
+          "description": "AI द्वारा चुनी गई ताज़ा, उच्च-गुणवत्ता वाली ज्ञान बम प्राप्त करें।"
+        },
+        "activeLearning": {
+          "title": "महाकाव्य क्विज़ युद्ध",
+          "description": "रोमांचक क्विज़ मुकाबलों के साथ अपने ज्ञान का परीक्षण करें।"
+        },
+        "trackProgress": {
+          "title": "हर दिन स्मार्टर!",
+          "description": "AI आपकी प्रगति को ट्रैक करता है और आपको लेवल अप करने में मदद करता है।"
+        },
+        "infoRetention": {
+          "title": "अधिकतम स्मृति मोड",
+          "description": "AI-संचालित स्मार्ट तकनीकों के साथ अपनी धारण क्षमता को सुपरचार्ज करें!",
+          "badge": "प्रीमियम सुविधा"
+        },
+        "competitiveEdge": {
+          "title": "लीडरबोर्ड पर राज करें",
+          "description": "दैनिक प्रतिस्पर्धा करें, रैंक बढ़ाएं, और शीर्ष पर अपना स्थान दावा करें!"
+        },
+        "informedCitizen": {
+          "title": "गेम से आगे रहें",
+          "description": "दैनिक समाचार चुनौतियां आपको तेज और सूचित रखती हैं।"
+        },
+        "personalGrowth": {
+          "title": "अपने दिमाग को पावर अप करें!",
+          "description": "AI-निर्देशित चुनौतियों के साथ अपने सोचने के कौशल को अपग्रेड करें।"
+        }
+      }
+    },
+    "Features": {
+      "mainTitle": "अगले-स्तर की क्विज़ अरेना सुविधाएँ",
+      "subtitle": "AI-संचालित चुनौतियों, लीडरबोर्ड और अधिक के साथ अपने सीखने के तरीके को बदलें!",
+      "discoverFeatures": "सुविधाएँ अनलॉक करें",
+      "premiumFeature": "प्रीमियम सुविधा",
+      "features": {
+        "curatedNews": {
+          "title": "AI-संचालित दैनिक चुनौतियां",
+          "description": "हर दिन आपके लिए क्यूरेट की गई ताज़ा ज्ञान युद्ध!"
+        },
+        "interactiveLearning": {
+          "title": "तेज़-गति वाली क्विज़िंग",
+          "description": "रैपिड-फायर क्विज़ में शामिल हों जो आपके दिमाग को तेज रखती हैं!"
+        },
+        "competitiveEdge": {
+          "title": "साप्ताहिक टूर्नामेंट",
+          "description": "रोमांचक ज्ञान युद्धों में सामना करें और रैंकिंग चढ़ें!"
+        },
+        "skillMastery": {
+          "title": "ट्रैक करें और लेवल अप करें",
+          "description": "AI-संचालित ट्रैकिंग के साथ अपनी प्रगति को ऊंचा उड़ते हुए देखें।"
+        }
+      },
+      "uiSections": {
+        "newsFeed": {
+          "title": "कस्टम-टेलर्ड ज्ञान फीड",
+          "description": "अपनी गेम योजना के अनुरूप सामग्री प्राप्त करें।"
+        },
+        "reading": {
+          "title": "त्वरित महारत के लिए अनुकूलित",
+          "description": "AI-एन्हांस्ड पठन जो सीखने को सरल बनाता है।"
+        },
+        "quiz": {
+          "title": "तीव्र क्विज़ युद्ध",
+          "description": "उच्च-गति ज्ञान द्वंद्वों के साथ खुद को चुनौती दें।"
+        },
+        "tournament": {
+          "title": "सप्ताहांत शोडाउन",
+          "description": "प्रतिस्पर्धी टूर्नामेंट में कूदें और जीत का दावा करें!"
+        },
+        "smartReading": {
+          "title": "AI रीडिंग सहायक",
+          "description": "तत्काल अंतर्दृष्टि और स्मार्ट हाइलाइट्स के साथ बेहतर समझ!",
+          "features": {
+            "highlighting": "मुख्य बातें हाइलाइट की गई",
+            "dictionary": "चलते-चलते तत्काल परिभाषाएँ"
+          }
+        }
+      }
+    },
+    "Tournament": {
+      "title": "सप्ताहांत बैटल रॉयल",
+      "countdown": {
+        "days": "दिन",
+        "hours": "घंटे",
+        "minutes": "मिनट",
+        "seconds": "सेकंड"
+      },
+      "statuses": {
+        "inProgress": "लाइव शोडाउन!",
+        "completed": "युद्ध समाप्त",
+        "startingSoon": "गौरव के लिए तैयार रहें"
+      },
+      "badges": {
+        "watchLive": "युद्धों को खुलते हुए देखें!",
+        "earnBadges": "विशेष बैज जीतें!"
+      },
+      "buttons": {
+        "viewDetails": "कार्रवाई में शामिल हों",
+        "register": "युद्ध में शामिल हों",
+        "viewTournament": "अरेना में प्रवेश करें",
+        "viewResults": "चैंपियंस देखें"
+      }
+    },
+    "SearchResults": {
+      "noResults": "कोई चुनौती नहीं मिली। फिर से प्रयास करें!",
+      "loadMore": "अधिक दिमागी युद्ध लोड करें",
+      "searchError": "उफ़! कुछ गलत हो गया।",
+      "searchFailed": "खोज विफल। फिर से प्रयास करें।",
+      "searchArticles": "अधिक चुनौतियां खोजें"
+    },
+    "premiumCTA": {
+      "guestUser": "अतिथि के रूप में जारी रखें",
+      "initial": {
+        "title": "क्या आप प्रतिस्पर्धा करने के लिए तैयार हैं?",
+        "subtitle": "AI-संचालित चुनौतियों और लीडरबोर्ड पर वर्चस्व को अनलॉक करने के लिए अभी साइन अप करें!",
+        "buttonText": "मुफ्त खाता बनाएं"
+      },
+      "engaged": {
+        "title": "गेम का आनंद ले रहे हैं?",
+        "subtitle": "हर दिन लेवल अप करने वाले हजारों लोगों से जुड़ें!",
+        "buttonText": "समुदाय से जुड़ें"
+      },
+      "quiz": {
+        "title": "नई चुनौती अलर्ट!",
+        "subtitle": "अपने ज्ञान का परीक्षण करें, अंक अर्जित करें, और रैंकिंग चढ़ें!",
+        "buttonText": "अभी शुरू करें"
+      },
+      "completion": {
+        "title": "बधाई हो!",
+        "subtitle": "आपने लेख का अंत तक पढ़ लिया है!",
+        "buttonText": "जारी रखने के लिए लॉगिन करें"
+      }
+    },
+    "premiumValue": {
+      "title": "VIP सुविधाएँ अनलॉक करें",
+      "features": {
+        "iqSystem": {
+          "title": "AI-संचालित IQ ट्रैकर",
+          "description": "मापें, सुधारें, और वर्चस्व स्थापित करें!",
+          "stats": "1000+ खिलाड़ी प्रगति ट्रैक कर रहे हैं",
+          "badge": "लोकप्रिय"
+        },
+        "tournaments": {
+          "title": "विशेष शोडाउन",
+          "description": "बड़ी जीत हासिल करें और अपने ज्ञान की महारत साबित करें!",
+          "stats": "हर महीने 500+ योद्धा",
+          "badge": "नया"
+        },
+        "analytics": {
+          "title": "स्मार्ट प्रदर्शन अंतर्दृष्टि",
+          "description": "AI आपकी ताकत और कमजोरियों को अंतिम विकास के लिए ट्रैक करता है!",
+          "stats": "रीयल-टाइम अपडेट",
+          "badge": "प्रीमियम"
+        }
+      }
+    },
+    "QuickClash": {
+      "title": "क्विक क्लैश",
+      "subtitle": "प्रतिस्पर्धी ज्ञान युद्ध जहां आप दूसरों को क्विज शोडाउन में चुनौती देते हैं!",
+      "howItWorks": "यह कैसे काम करता है",
+      "newBadge": "नया",
+      "tabs": {
+        "oneVone": "1v1 क्विक क्लैश",
+        "fourVfour": "4v4 टीम बैटल"
+      },
+      "steps": {
+        "challenge": "दोस्तों को चुनौती दें या मैचमेकिंग के माध्यम से प्रतिद्वंद्वियों को खोजें",
+        "read": "2 मिनट के लिए एक लेख पढ़ें",
+        "answer": "50 सेकंड में 5 प्रश्नों का उत्तर दें",
+        "compare": "विजेता निर्धारित करने के लिए परिणामों की तुलना करें",
+        "analysis": "AI-संचालित प्रदर्शन विश्लेषण प्राप्त करें"
+      },
+      "features": {
+        "categories": {
+          "title": "श्रेणी चुनौतियां",
+          "description": "वर्तमान मामलों, इतिहास और अधिक विशेष ज्ञान क्षेत्रों में प्रतिस्पर्धा करें"
+        },
+        "bilingual": {
+          "title": "द्विभाषी समर्थन",
+          "description": "पूर्ण भाषा समर्थन के साथ अंग्रेजी या हिंदी में खेलें"
+        },
+        "matchmaking": {
+          "title": "रीयल-टाइम मैचमेकिंग",
+          "description": "हमारे स्मार्ट मैचिंग सिस्टम के साथ तुरंत प्रतिद्वंद्वियों को खोजें"
+        },
+        "history": {
+          "title": "चुनौती इतिहास",
+          "description": "विस्तृत मैच इतिहास और लीडरबोर्ड के साथ अपने प्रदर्शन को ट्रैक करें"
+        }
+      },
+      "teamBattle": {
+        "title": "4v4 क्लैश में टीम की शक्ति दिखाएं",
+        "subtitle": "24 घंटे के रणनीतिक मुकाबले के लिए अपनी टीम को इकट्ठा करें। सहयोग करें, जीतें, और एक साथ विजय का दावा करें!",
+        "joinButton": "अपनी टीम इकट्ठा करें",
+        "features": {
+          "squadUp": {
+            "title": "लचीली टीमें",
+            "description": "अकेले जाएं या 1, 2, या 3 दोस्तों के साथ टीम बनाएं। हम आपकी 4 की टीम को पूरा करने के लिए साथी ढूंढ लेंगे।"
+          },
+          "categoryChoice": {
+            "title": "अपना युद्धक्षेत्र चुनें",
+            "description": "सिस्टम दोनों टीमों को 4 विविध ज्ञान श्रेणियाँ देगा — समझदारी से चुनें और अपने प्रतिद्वंदियों को पछाड़ें।"
+          },
+          "dailyShowdown": {
+            "title": "24-घंटे का मुकाबला",
+            "description": "यह लड़ाई पूरे एक दिन तक चलती है, जिससे आपकी टीम को समन्वय बनाने और लीडरबोर्ड पर हावी होने के लिए पर्याप्त समय मिलता है।"
+          },
+          "teamVictory": {
+            "title": "सामूहिक विजय",
+            "description": "आपकी टीम का संयुक्त स्कोर विजेता तय करेगा। सच्चा सहयोग ही महाकाव्य पुरस्कारों की ओर ले जाता है।"
+          }
+        }
+      }
+    }
+  },
+  "screens.Home": {
+    "title": "होम - रैपिड रिकैप",
+    "description": "ए.आई. सहायित जीके क्विज़ और दैनिक करंट अफेयर्स अपडेट के साथ सामान्य ज्ञान को मास्टर करें। 120+ दैनिक प्रश्नों का अभ्यास करें, वीकेंड टूर्नामेंट में शामिल हों, और अपनी प्रगति को जानकारी कोटियें (आईक्यू) स्कोरिंग के साथ ट्रैक करें। प्रतियोगी परीक्षा की तैयारी और निरंतर शिक्षा के लिए सही है।",
+    "keywords": "सामान्य ज्ञान क्विज़, जीके प्रश्न उत्तर के साथ, करंट अफेयर्स क्विज़, ऑनलाइन जीके परीक्षण, प्रतियोगी परीक्षा की तैयारी, दैनिक करंट अफेयर्स, आईक्यू स्कोर प्रणाली, ज्ञान टूर्नामेंट, क्विज़ प्लेटफॉर्म, ए.आई. शिक्षा प्लेटफॉर्म, सामान्य ज्ञान अभ्यास, करंट अफेयर्स अपडेट, सामान्य क्विज़ प्रश्न, मुफ्त जीके क्विज़",
+    "upgrade_modal_title": "समाज उन्नयन उपलब्ध",
+    "upgrade_modal_content": "आप समाज उन्नयन के लिए पात्र हैं।",
+    "fetch_error": "समाचार लाने में विफल"
+  },
+  "screens.LeaderBoard": {
+    "title": "लीडरबोर्ड",
+    "tag": "सीजन 2",
+    "toastErrorTitle": "त्रुटि",
+    "toastErrorDescription": "लीडरबोर्ड प्राप्त करने में विफल",
+    "helmet": {
+      "title": "रैपिड रिकैप लीडरबोर्ड - सीजन 2 | शीर्ष जानकारी कोटा अंक",
+      "metaDescription": "सीजन 2 के लिए रैपिड रिकैप लीडरबोर्ड का अन्वेषण करें। विभिन्न समाजों में शीर्ष जानकारी कोटा (IQ) अंक, क्विज़ प्रस्तुतियाँ और रैंकिंग देखें। बौद्धिक श्रेष्ठता में शामिल हों!",
+      "metaKeywords": "रैपिड रिकैप, लीडरबोर्ड, जानकारी कोटा, IQ स्कोर, क्विज़, समाचार, समाज, बौद्धिक वृत्त",
+      "metaOgTitle": "रैपिड रिकैप लीडरबोर्ड - सीजन 2",
+      "metaOgDescription": "रैपिड रिकैप के सीजन 2 लीडरबोर्ड में शीर्ष प्रदर्शनकर्ताओं की खोज करें। IQ स्कोर, क्विज़ प्रस्तुतियाँ, और समाज की रैंकिंग की तुलना करें।",
+      "metaOgUrl": "https://rapidrecap.com/leaderboard",
+      "metaOgType": "वेबसाइट"
+    },
+    "rankDiscrepancyNote": "अपडेट के कारण रैंक में अंतर हो सकता है।",
+    "Your_Rank": "आपकी रैंक",
+    "IQ_Score": "IQ स्कोर",
+    "infoForLeaderboard": "आपके स्कोर लीडरबोर्ड और आपकी प्रोफ़ाइल पर एक समय के लिए भिन्न दिख सकते हैं। चिंता न करें - वे जल्द ही मेल खाएंगे! आपकी सहनशीलता के लिए धन्यवाद।",
+    "rankNA": "रैंक खोलने के लिए खेलें",
+    "refreshIn": "लीडरबोर्ड रीसेट होने में"
+  },
+  "screens.LoadingScreen": {
+    "preparingYourQuiz": "आपकी प्रश्नोत्तरी तैयार की जा रही है",
+    "submittingYourQuiz": "आपकी प्रश्नोत्तरी जमा की जा रही है",
+    "tips": [
+      "उच्च RQM स्कोर चुनौतीपूर्ण प्रश्नों के तेज़ और सटीक उत्तरों को दर्शाते हैं।",
+      "आपका RQM स्कोर गति और सटीकता का माप है - सही संतुलन बनाने का लक्ष्य रखें!",
+      "विभिन्न विषयों में लगातार उच्च प्रतिशतक आपके IQ स्कोर को महत्वपूर्ण रूप से बढ़ा सकते हैं।",
+      "आप जो हर प्रश्नोत्तरी देते हैं वह आपके समग्र IQ स्कोर को सुधारने का एक अवसर है।",
+      "आपका औसत RQM स्कोर आपकी जानकारी धारण करने और त्वरित सोच की क्षमताओं की एक झलक है।",
+      "अपने ज्ञान को व्यापक बनाने और अपने स्कोर को बढ़ाने के लिए विविध विषयों के साथ खुद को चुनौती दें।",
+      "याद रखें, यह सिर्फ गति के बारे में नहीं है - उच्च RQM स्कोर प्राप्त करने के लिए सटीकता महत्वपूर्ण है।",
+      "कठिन प्रश्नोत्तरियों में आपका प्रदर्शन आपके समग्र स्कोर पर अधिक प्रभाव डालता है।",
+      "नियमित प्रश्नोत्तरी देना आपकी मानसिक चपलता और सूचना प्रसंस्करण कौशल को बढ़ाने में मदद करता है।",
+      "अपने RQM स्कोर में सुधार के लिए प्रयास करें - यह निरंतर सीखने की यात्रा है!",
+      "सक्रिय पठन प्रतिधारण को बेहतर बनाता है। पढ़ते समय अपने मन में प्रत्येक पैराग्राफ का सारांश बनाने का प्रयास करें।",
+      "अपने पठन को अधिक आकर्षक और यादगार बनाने के लिए थीम आधारित लेख सुविधा का उपयोग करें।",
+      "अपने लेख को एक अंतरिक्ष साहसिक कहानी या पौराणिक कथा में बदलकर एक नया पठन अनुभव प्राप्त करें!",
+      "अपनी प्रगति को ट्रैक करने और समय के साथ अपने सुधार को देखने के लिए नियमित रूप से अपनी प्रोफ़ाइल जांचें।",
+      "आपका अनुभव स्तर ऐप के साथ आपकी परिचितता को दर्शाता है। उच्च स्तर महारत का संकेत देते हैं!",
+      "प्रश्नोत्तरी स्ट्रीक बनाए रखें! 7वें लगातार दिन, आपको अपने RQM स्कोर पर 1.5x बूस्ट मिलेगा।",
+      "एक दिन में 5 प्रश्नोत्तरियां पूरी करके क्विन बूस्ट अनलॉक करें - अपनी अगली प्रश्नोत्तरी के लिए 1.5x RQM स्कोर गुणक!",
+      "अपने 7-दिन के स्ट्रीक को क्विन बूस्ट के साथ जोड़कर अद्भुत 1.75x RQM स्कोर गुणक प्राप्त करें!",
+      "अपने साप्ताहिक ज्ञान और समसामयिक मामलों की प्रवीणता का परीक्षण करने के लिए रैपिड रीकैप टूर्नामेंट में भाग लें।",
+      "टूर्नामेंट में बैज अर्जित करें! सभी प्रतिभागियों को क्विज वॉरियर बैज मिलता है।",
+      "शीर्ष के लिए लक्ष्य रखें! टूर्नामेंट श्रेणी में #1 रैंक प्रतिष्ठित हॉल ऑफ फेम बैज अर्जित करता है।",
+      "SQ3R विधि का प्रयास करें: सर्वेक्षण, प्रश्न, पढ़ना, दोहराना, और समीक्षा करना - बेहतर जानकारी प्रतिधारण के लिए।",
+      "आप जिन अवधारणाओं के बारे में पढ़ रहे हैं, उनकी मानसिक छवियां बनाएं। दृश्य संबंध स्मृति को बढ़ाते हैं।",
+      "अपनी समझ को मजबूत करने के लिए पढ़ते समय संक्षिप्त नोट्स लें या मानसिक मानचित्र बनाएं।",
+      "नई जानकारी को उन चीजों से जोड़ें जो आप पहले से जानते हैं। संबंध बनाना याद रखने में सुधार करता है।",
+      "अपनी समझ को मजबूत करने के लिए लेख के मुख्य बिंदुओं को एक काल्पनिक दोस्त को समझाने का अभ्यास करें।",
+      "अपना ध्यान अधिक प्रभावी ढंग से केंद्रित करने के लिए लेख पढ़ने से पहले विशिष्ट सीखने के लक्ष्य निर्धारित करें।",
+      "पोमोडोरो तकनीक का उपयोग करें: 25 मिनट पढ़ें, फिर ध्यान बढ़ाने के लिए 5 मिनट का विराम लें।",
+      "लेख में मुख्य बिंदुओं को हाइलाइट करें, लेकिन चयनात्मक रहें। अधिक हाइलाइटिंग प्रभावशीलता को कम कर सकती है।",
+      "पढ़ने के बाद, अपनी स्मृति को मजबूत करने के लिए लेख को देखे बिना मुख्य बिंदुओं को याद करने का प्रयास करें।"
+    ],
+    "submissionSteps": {
+      "initializeCalculation": "🚀 मस्तिष्क शक्ति का प्रारंभ",
+      "calculateRQM": "🧠 त्वरित प्रश्नोत्तरी प्रवीणता का मापन",
+      "saveAttempt": "💾 आपकी प्रतिभा का संरक्षण",
+      "updateStats": "📊 आंकड़ों का विश्लेषण और अद्यतन",
+      "checkTournament": "🏆 टूर्नामेंट पात्रता का मूल्यांकन",
+      "finalizeAttempt": "🎉 आपकी उपलब्धि का समापन"
+    },
+    "Tips will appear here": "यहाँ टिप्स दिखाई जाएगी"
+  },
+  "screens.OnboardingProcess": {
+    "selectInterests": "अपनी रुचियों का चयन करें",
+    "chooseCategories": "अपनी 5 पसंदीदा श्रेणियों का चयन करें। ये हमें आपके लिए सामग्री को वैयक्तिकृत करने में मदद करेंगी।",
+    "recommendedArticlesInfo": "प्रो टिप: आपको 'सभी' श्रेणी में आपकी चुनी गई रुचियों के आधार पर वैयक्तिकृत लेख सुझाव मिलेंगे!",
+    "languageSelection": {
+      "title": "अपनी भाषा चुनें",
+      "description": "रैपिड रीकैप के साथ एक आकर्षक यात्रा पर निकलने के लिए अपनी पसंदीदा भाषा चुनें।",
+      "languages": {
+        "english": "English",
+        "hindi": "हिंदी"
+      }
+    },
+    "welcome": {
+      "title": "रैपिड रीकैप में आपका स्वागत है!",
+      "description": "ज्ञान और खोज की यात्रा पर निकलें। जानकार रहें, खुद को चुनौती दें, और हर रीकैप के साथ विकसित हों!",
+      "logoAlt": "रैपिड रीकैप लोगो"
+    },
+    "quiz": {
+      "title": "त्वरित ज्ञान परीक्षण",
+      "submitting": "जमा किया जा रहा है",
+      "submitButton": "उत्तर जमा करें",
+      "loading": "प्रश्न लोड हो रहा है..."
+    },
+    "quizResult": {
+      "successTitle": "शानदार ज्ञान!",
+      "failureTitle": "सीखने का अवसर!",
+      "correctLabel": "सही!",
+      "wrongLabel": "गलत!",
+      "nextStepDescription": "अब हम इस परीक्षण अनुभव को और बेहतर बनाएंगे। आप एक छोटा लेख पढ़ेंगे और फिर इससे संबंधित कुछ प्रश्नों के उत्तर देंगे।",
+      "continueButton": "लेख पर जाएं"
+    },
+    "articleReading": {
+      "byAuthor": "लेखक",
+      "minuteRead": "मिनट का पठन",
+      "takeQuizButton": "प्रश्नोत्तरी शुरू करें",
+      "loading": "लेख लोड हो रहा है...",
+      "imageAlt": "लेख की छवि",
+      "readMore": "और पढ़ें",
+      "noImage": "कोई छवि उपलब्ध नहीं है"
+    },
+    "leaderboardOnboarding": {
+      "beginJourneyButton": "अपनी यात्रा शुरू करें",
+      "beginJourneyAriaLabel": "रैपिड रीकैप की यात्रा शुरू करने के लिए क्लिक करें",
+      "leaderboardTitle": "लीडरबोर्ड पूर्वावलोकन",
+      "leaderboardDescription": "देखें कि आप हमारे सीखने वाले समुदाय में कहाँ रैंक कर सकते हैं",
+      "loadingLeaderboard": "लीडरबोर्ड लोड हो रहा है...",
+      "competitionNote": "दुनिया भर के उपयोगकर्ताओं के साथ प्रतिस्पर्धा करें और अपनी प्रगति को ट्रैक करें"
+    },
+    "articleSelection": {
+      "title": "अपना प्रारंभिक लेख चुनें",
+      "subtitle": "अपनी यात्रा शुरू करने के लिए अपना पसंदीदा लेख चुनें",
+      "previouslyViewed": "पहले देखा गया",
+      "recommended": "अनुशंसित",
+      "minuteRead": "{{minutes}} मिनट का पढ़ना",
+      "continueReading": "पढ़ना जारी रखें",
+      "beginnerFriendly": "शुरुआती के लिए उपयुक्त"
+    },
+    "timeIndicator": {
+      "tooltipText": "शेष चरणों को पूरा करने का अनुमानित समय - आपकी गति के आधार पर भिन्न हो सकता है",
+      "estimated": "अनुमानित",
+      "stepProgress": "चरण {{current}} / {{total}}",
+      "processing": "प्रसंस्करण",
+      "steps": {
+        "language": "अपनी पसंदीदा भाषा चुनें",
+        "earlyAdopter": "प्रारंभिक उपयोगकर्ता सत्यापन",
+        "referral": "रेफरल कोड दर्ज करें",
+        "tutorialChoice": "ट्यूटोरियल विकल्प",
+        "welcome": "अपनी यात्रा शुरू करें",
+        "categories": "अपनी रुचियों की खोज करें",
+        "articleSelection": "अपना सही लेख खोजें",
+        "quizQuestion": "अपने दिमाग को चुनौती दें",
+        "quizResult": "अपनी उपलब्धि का जश्न मनाएं",
+        "articleReading": "खुद को डुबोएं",
+        "leaderboard": "अपनी रैंकिंग देखें"
+      }
+    },
+    "earlyAdopter": {
+      "title": "प्रारंभिक उपयोगकर्ता पहुंच",
+      "subtitle": "हमारे विशेष प्रारंभिक उपयोगकर्ता कार्यक्रम में शामिल हों",
+      "enterCode": "प्रारंभिक उपयोगकर्ता कोड दर्ज करें",
+      "codePholder": "EOC-XXXXXXXX",
+      "benefits": {
+        "title": "विशेष लाभ",
+        "exclusiveAccess": "विशेष प्रारंभिक पहुंच",
+        "prioritySupport": "प्राथमिकता समर्थन",
+        "specialBadge": "विशेष बैज",
+        "betaTesting": "बीटा परीक्षण",
+        "directFeedback": "प्रत्यक्ष प्रतिक्रिया चैनल"
+      },
+      "success": {
+        "title": "🎉 वाह! आप एक प्रारंभिक उपयोगकर्ता हैं! 🎉",
+        "description": "विशेष प्रारंभिक उपयोगकर्ता समुदाय में आपका स्वागत है!"
+      },
+      "buttons": {
+        "activate": "प्रारंभिक उपयोगकर्ता स्थिति सक्रिय करें",
+        "skip": "इस चरण को छोड़ें",
+        "invalidCode": "अमान्य कोड"
+      }
+    },
+    "tutorialChoice": {
+      "title": "सीखने के लिए तैयार?",
+      "subtitle": "क्या आप लेख पढ़ने और प्रश्नोत्तरी लेने के तरीके पर एक त्वरित ट्यूटोरियल लेना चाहेंगे?",
+      "benefitsTitle": "ट्यूटोरियल में शामिल हैं",
+      "benefit1": "लेखों को प्रभावी ढंग से पढ़ने का तरीका",
+      "benefit2": "प्रश्नोत्तरी प्रारूप को समझना",
+      "benefit3": "बेहतर स्कोर के लिए सुझाव",
+      "takeTutorial": "हाँ, ट्यूटोरियल लें",
+      "skipTutorial": "ट्यूटोरियल छोड़ें",
+      "helperText": "आप हमेशा सेटिंग मेनू से बाद में सहायता गाइड तक पहुंच सकते हैं"
+    }
+  },
+  "screens.Profile": {
+    "title": "{{name}} का Rapid Recap प्रोफ़ाइल | IQ स्कोर: {{score}}",
+    "metaDescription": "{{name}} का Rapid Recap प्रोफ़ाइल देखें। IQ स्कोर: {{score}}, {{quizzes}} क्विज़ हल किए गए। {{society}} {{circle}} के सदस्य। उनकी प्रगति और उपलब्धियों को देखें!",
+    "metaOgTitle": "{{name}} का Rapid Recap प्रोफ़ाइल",
+    "metaOgDescription": "{{name}} का प्रोफ़ाइल देखें। IQ स्कोर: {{score}}, हल किए गए क्विज़: {{quizzes}}। उनकी प्रगति {{society}} {{circle}} में देखें।",
+    "metaTwitterDescription": "{{name}} का Rapid Recap प्रोफ़ाइल देखें। IQ स्कोर: {{score}}, {{quizzes}} क्विज़ हल किए गए। उनकी प्रगति देखें!",
+    "userNotFound": "उपयोगकर्ता नहीं मिला",
+    "userNotFoundDescription": "जिस उपयोगकर्ता की आप तलाश कर रहे हैं वह मौजूद नहीं है",
+    "toggleProfileVisibility": "प्रोफ़ाइल दृश्यता टॉगल करें",
+    "seasonAnalytics": "सीज़न विश्लेषण",
+    "bookmarks": "बुकमार्क",
+    "secureYourProgress": "अपनी प्रगति सुरक्षित करें",
+    "Settings": "सेटिंग्स"
+  },
+  "screens.QuickClash": {
+    "Back to Home": "होम पर वापस जाएं",
+    "Quick Clash": "क्विक क्लैश",
+    "Challenge other players to rapid-fire reading and quiz battles, test your knowledge and rise up the ranks!": "अन्य खिलाड़ियों को रैपिड-फायर रीडिंग और क्विज़ बैटल्स के लिए चुनौती दें, अपने ज्ञान का परीक्षण करें और रैंकिंग में ऊपर चढ़ें!",
+    "New Challenge": "नई चुनौती",
+    "Win Rate": "जीत दर",
+    "Avg. Time": "औसत समय",
+    "Challenges": "चुनौतियां",
+    "Best Category": "सर्वश्रेष्ठ श्रेणी",
+    "History": "इतिहास",
+    "Analysis": "विश्लेषण",
+    "Find Opponent": "प्रतिद्वंद्वी खोजें",
+    "Search by name or username": "नाम या उपयोगकर्ता नाम से खोजें",
+    "Selected Opponent": "चयनित प्रतिद्वंद्वी",
+    "Select Categories": "श्रेणियां चुनें",
+    "Hold Ctrl/Cmd to select multiple categories (min 1, max 3)": "कई श्रेणियों का चयन करने के लिए Ctrl/Cmd दबाए रखें (न्यूनतम 1, अधिकतम 3)",
+    "Cancel": "रद्द करें",
+    "Send Challenge": "चुनौती भेजें",
+    "Create New Challenge": "नई चुनौती बनाएं",
+    "World": "विश्व",
+    "Politics": "राजनीति",
+    "Business": "व्यापार",
+    "Technology": "प्रौद्योगिकी",
+    "Sports": "खेल",
+    "Health": "स्वास्थ्य",
+    "Science": "विज्ञान",
+    "Environment": "पर्यावरण",
+    "Search failed": "खोज विफल",
+    "Incomplete form": "Incomplete फॉर्म",
+    "Please select both an opponent and at least one category": "कृपया एक प्रतिद्वंद्वी और कम से कम एक श्रेणी चुनें",
+    "Challenge created!": "चुनौती बनाई गई!",
+    "Your challenge has been sent to": "आपकी चुनौती को भेज दिया गया है",
+    "Challenge creation failed": "चुनौती निर्माण विफल",
+    "Failed to create challenge": "चुनौती बनाने में विफल",
+    "Total active and completed challenges": "कुल सक्रिय और पूर्ण चुनौतियां",
+    "Category with your best performance": "आपके सर्वोत्तम प्रदर्शन वाली श्रेणी",
+    "Complete challenges to build your win rate": "अपनी जीत दर बढ़ाने के लिए चुनौतियां पूरी करें",
+    "wins": "जीत",
+    "losses": "हार",
+    "ties": "टाई",
+    "Average time to complete quiz phase": "क्विज चरण पूरा करने का औसत समय",
+    "Quiz": "क्विज",
+    "Reading avg.": "पढ़ने का औसत",
+    "None": "कोई नहीं",
+    "Challenge Accepted": "चुनौती स्वीकार की गई",
+    "Challenge Declined": "चुनौती अस्वीकार की गई",
+    "Failed to load challenges": "चुनौतियां लोड करने में विफल",
+    "Loading challenges...": "चुनौतियां लोड हो रही हैं...",
+    "No challenges found": "कोई चुनौती नहीं मिली",
+    "No completed challenges found": "कोई पूर्ण चुनौती नहीं मिली",
+    "You": "आप",
+    "Victory": "विजय",
+    "Defeat": "हार",
+    "Tie": "टाई",
+    "Incomplete": "Incomplete",
+    "vs": "vs",
+    "from": "से",
+    "Details": "विवरण",
+    "View Report": "रिपोर्ट देखें",
+    "Accept": "स्वीकार",
+    "Decline": "अस्वीकार",
+    "Start": "शुरू करें",
+    "Error": "त्रुटि",
+    "Could not find your quiz session": "आपका क्विज़ सत्र नहीं मिल सका",
+    "Failed to load quiz session": "क्विज़ रिपोर्ट लोड करने में विफल",
+    "AI Analysis": "एआई विश्लेषण",
+    "Loading analysis...": "विश्लेषण लोड हो रहा है...",
+    "View Full Analysis": "पूर्ण विश्लेषण देखें",
+    "Generate Analysis": "विश्लेषण उत्पन्न करें",
+    "Analysis not available": "विश्लेषण उपलब्ध नहीं है",
+    "Challenge Details": "चुनौती विवरण",
+    "Category": "श्रेणी",
+    "Created": "बनाया गया",
+    "Challenger": "चुनौती देने वाला",
+    "Opponent": "प्रतिद्वंद्वी",
+    "Winner": "विजेता",
+    "Tie!": "टाई!",
+    "Victory!": "विजय!",
+    "Defeat!": "हार!",
+    "Time is running out!": "समय समाप्त हो रहा है!",
+    "Reading phase will end soon.": "पढ़ने का चरण जल्द ही समाप्त होगा।",
+    "Read carefully to answer questions": "प्रश्नों का उत्तर देने के लिए ध्यान से पढ़ें",
+    "Tip: Remember to scroll through the entire article. Important information could be at the bottom!": "टिप: पूरे लेख को स्क्रॉल करना याद रखें। महत्वपूर्ण जानकारी नीचे हो सकती है!",
+    "Article fully read!": "लेख पूरी तरह से पढ़ा गया!",
+    "read": "पढ़ा",
+    "Complete Reading": "पढ़ना पूरा करें",
+    "Continue Reading": "पढ़ना जारी रखें",
+    "Try to read the entire article for better quiz performance": "बेहतर क्विज प्रदर्शन के लिए पूरा लेख पढ़ने का प्रयास करें",
+    "Quiz Challenge Instructions": "क्विक क्लैश चुनौती निर्देश",
+    "It's time to test your knowledge! Get ready for the quiz challenge.": "यह आपके ज्ञान का परीक्षण करने का समय है! क्विज़ चुनौती के लिए तैयार हो जाइए।",
+    "Time Limit": "समय सीमा",
+    "seconds": "सेकंड",
+    "Questions": "प्रश्न",
+    "questions": "प्रश्न",
+    "Scoring": "स्कोरिंग",
+    "Accuracy + Speed": "सटीकता + गति",
+    "Quick Tips": "त्वरित सुझाव",
+    "Read each question carefully": "प्रत्येक प्रश्न को ध्यान से पढ़ें",
+    "Use the navigation buttons to move between questions": "प्रश्नों के बीच जाने के लिए नेविगेशन बटन का उपयोग करें",
+    "You can come back to questions if you're unsure": "यदि आप अनिश्चित हैं तो आप प्रश्नों पर वापस आ सकते हैं",
+    "The timer in the header shows your remaining time": "हेडर में टाइमर आपका शेष समय दिखाता है",
+    "Begin Challenge": "चुनौती शुरू करें",
+    "Next": "अगला",
+    "Submit Answers": "उत्तर जमा करें",
+    "Click on numbers to navigate between questions": "प्रश्नों के बीच नेविगेट करने के लिए संख्याओं पर क्लिक करें",
+    "Are you sure you want to submit your answers? This action cannot be undone.": "क्या आप वाकई अपने उत्तर जमा करना चाहते हैं? यह क्रिया पूर्ववत नहीं की जा सकती है।",
+    "Loading questions...": "प्रश्न लोड हो रहे हैं...",
+    "Failed to fetch quiz questions": "क्विज़ प्रश्न प्राप्त करने में विफल",
+    "Failed to submit quiz": "क्विज़ जमा करने में विफल",
+    "Challenge Complete!": "चुनौती पूरी!",
+    "Your Score": "आपका स्कोर",
+    "Score Recorded!": "स्कोर दर्ज किया गया!",
+    "Check back later to see the final results once your opponent completes the challenge.": "अपने प्रतिद्वंद्वी के चुनौती पूरी करने के बाद अंतिम परिणाम देखने के लिए बाद में फिर से जांचें।",
+    "Return to Challenges": "चुनौतियों पर वापस जाएं",
+    "Preparing your challenge...": "आपकी चुनौती तैयार की जा रही है...",
+    "Exit Challenge?": "चुनौती से बाहर निकलें?",
+    "Your progress in this challenge will be lost. Are you sure you want to leave?": "इस चुनौती में आपकी प्रगति खो जाएगी। क्या आप वाकई छोड़ना चाहते हैं?",
+    "Leave Challenge": "चुनौती छोड़ें",
+    "Continue Challenge": "चुनौती जारी रखें",
+    "Error Loading Report": "रिपोर्ट लोड करने में त्रुटि",
+    "Failed to load quiz report": "क्विज़ रिपोर्ट लोड करने में विफल",
+    "Completed": "Completed",
+    "Pending": "प्रतीक्षारत",
+    "Awaiting": "प्रतीक्षारत",
+    "New": "नया",
+    "Ready": "तैयार",
+    "Progress": "प्रगति",
+    "Done": "पूर्ण",
+    "Expired": "समाप्त हुआ",
+    "Rejected": "अस्वीकृत",
+    "Completed Challenges": "पूर्ण हुए बैटल",
+    "Date": "दिनांक",
+    "Score": "स्कोर",
+    "Result": "परिणाम",
+    "Actions": "कार्रवाई",
+    "Load More": "और लोड करें",
+    "Loading completed challenges...": "पूर्ण चुनौतियां लोड हो रही हैं...",
+    "and": "और",
+    "more": "अधिक",
+    "AI Analysis View": "एआई विश्लेषण दृश्य",
+    "Confirm Action": "कार्रवाई की पुष्टि करें",
+    "Your Strong Area": "आपका मज़बूत क्षेत्र",
+    "Opponent Strong Area": "प्रतिद्वंद्वी का मज़बूत क्षेत्र",
+    "You outperformed your opponent by": "आपने अपने प्रतिद्वंद्वी को इतने अंकों से पछाड़ा",
+    "Your opponent outperformed you by": "आपके प्रतिद्वंद्वी ने आपको इतने अंकों से पछाड़ा",
+    "You and your opponent performed equally": "आप और आपके प्रतिद्वंद्वी ने समान रूप से प्रदर्शन किया",
+    "You both excel in the same area": "आप दोनों एक ही क्षेत्र में उत्कृष्ट हैं",
+    "Consider improving in this area to match your opponent": "अपने प्रतिद्वंद्वी के बराबर होने के लिए इस क्षेत्र में सुधार पर विचार करें",
+    "Skill to Improve": "सुधार के लिए कौशल",
+    "Pro Tip:": "प्रो टिप:",
+    "Your Battle Performance": "Your Battle Performance",
+    "Strengths & Areas for Growth": "Strengths & Areas for Growth",
+    "Your Statistics": "आपके आंकड़े",
+    "Current Streak": "वर्तमान स्ट्रीक",
+    "Peak Time": "शिखर समय",
+    "Morning": "सुबह",
+    "Afternoon": "दोपहर",
+    "Evening": "शाम",
+    "Reading Speed": "पढ़ने की गति",
+    "Quiz Speed": "क्विज़ गति",
+    "sec/question": "सेकंड/प्रश्न",
+    "Improving": "सुधार हो रहा है",
+    "Declining": "गिरावट आ रही है",
+    "Consistent": "स्थिर",
+    "Score Comparison": "स्कोर तुलना",
+    "Factual Recall": "तथ्यात्मक स्मरण",
+    "Your ability to remember specific facts from the article": "लेख से विशिष्ट तथ्यों को याद रखने की आपकी क्षमता",
+    "Technical Terms": "तकनीकी शब्द",
+    "Your grasp of specialized terminology in this topic": "इस विषय में विशेष शब्दावली पर आपकी पकड़",
+    "Strategic Analysis": "रणनीतिक विश्लेषण",
+    "Your ability to understand complex relationships and implications": "जटिल संबंधों और निहितार्थों को समझने की आपकी क्षमता",
+    "Knowledge Patterns": "ज्ञान पैटर्न",
+    "This analysis shows how you process and recall different types of knowledge": "यह विश्लेषण दिखाता है कि आप विभिन्न प्रकार के ज्ञान को कैसे संसाधित और याद करते हैं",
+    "Recommendations": "Recommendations",
+    "Based on your patterns": "आपके पैटर्न के आधार पर",
+    "Compare with Opponent": "प्रतिद्वंद्वी के साथ तुलना करें",
+    "Your unique knowledge patterns show how your brain processes information. Focus on leveraging your strengths while developing your weaker areas.": "आपके अद्वितीय ज्ञान पैटर्न दिखाते हैं कि आपका मस्तिष्क जानकारी को कैसे संसाधित करता है। अपने कमजोर क्षेत्रों को विकसित करते हुए अपनी ताकत का लाभ उठाने पर ध्यान दें।",
+    "Focus Areas": "फोकस क्षेत्र",
+    "Personalized": "वैयक्तिकृत",
+    "Suggested Topics": "सुझाए गए विषय",
+    "Next Steps": "अगले कदम",
+    "Your Category Expertise": "आपकी श्रेणी विशेषज्ञता",
+    "Based on your performance, you're showing significant knowledge in": "आपके प्रदर्शन के आधार पर, आप इसमें महत्वपूर्ण ज्ञान दिखा रहे हैं",
+    ". Keep building on this strength!": "। इस ताकत पर निर्माण करते रहें!",
+    "Technical Vocabulary": "तकनीकी शब्दावली",
+    "Improve by reading articles multiple times and using flashcards for key facts.": "प्रमुख तथ्यों के लिए फ्लैशकार्ड का उपयोग करके और लेखों को कई बार पढ़कर सुधार करें।",
+    "Create a personal glossary of terms you encounter in each category.": "प्रत्येक श्रेणी में आपके सामने आने वाले शब्दों की एक व्यक्तिगत शब्दावली बनाएं।",
+    "Practice connecting concepts and predicting implications of what you read.": "आप जो पढ़ते हैं उसके अवधारणाओं को जोड़ने और प्रभावों की भविष्यवाणी करने का अभ्यास करें।",
+    "And": "और",
+    "more topics": "अधिक विषय",
+    "Victory Analysis": "विजय विश्लेषण",
+    "Draw Analysis": "ड्रॉ विश्लेषण",
+    "Challenge Results": "चुनौती परिणाम",
+    "Battle Insights": "युद्ध अंतर्दृष्टि",
+    "Speed Analysis": "गति विश्लेषण",
+    "Score Analysis": "स्कोर विश्लेषण",
+    "Your Winning Edge": "आपका जीतने का किनारा",
+    "Your Strong Points": "आपके मजबूत बिंदु",
+    "You outperformed your opponent in:": "आपने अपने प्रतिद्वंद्वी को इसमें पछाड़ा:",
+    "Despite the outcome, you showed strength in:": "परिणाम के बावजूद, आपने इसमें ताकत दिखाई:",
+    "Ready for more? Try these topics:": "और के लिए तैयार? इन विषयों को आजमाएं:",
+    "Share": "साझा करें",
+    "Download": "डाउनलोड",
+    "Strengths": "Strengths",
+    "Areas for Growth": "Areas for Growth",
+    "Time running out!": "समय समाप्त हो रहा है!",
+    "You can view your credentials of guest account in profile": "आप प्रोफाइल में अपने अतिथि खाते के क्रेडेंशियल देख सकते हैं",
+    "View Profile": "प्रोफ़ाइल देखें",
+    "Register to Safeguard your progress": "अपनी प्रगति की सुरक्षा के लिए पंजीकरण करें",
+    "Draw": "ड्रॉ",
+    "Difficulty": "कठिनाई",
+    "quickClashUpdate": "आपके पास एक त्वरित क्लैश अपडेट है!",
+    "New Challenge!": "नई चुनौती!",
+    "Challenge Accepted!": "चुनौती स्वीकार की गई!",
+    "Challenge Rejected": "चुनौती अस्वीकृत",
+    "Challenge Completed": "चुनौती पूरी हुई",
+    "Analysis Ready": "विश्लेषण तैयार!",
+    "Accepted": "स्वीकृत",
+    "Someone": "कोई",
+    "challengeYouTo": "ने आपको एक ज्ञान युद्ध के लिए चुनौती दी है!",
+    "acceptedYourChallenge": "ने आपकी चुनौती स्वीकार की है!",
+    "declinedYourChallenge": "ने आपकी चुनौती को अस्वीकार किया है।",
+    "opponentCompletedChallenge": "आपका प्रतिद्वंद्वी चुनौती का हिस्सा पूरा कर चुका है।",
+    "yourTurn": "अब आपकी बारी है खेलने की!",
+    "analysisPrepared": "आपके युद्ध प्रदर्शन का एआई विश्लेषण तैयार है!",
+    "viewInsights": "अपनी ताकतों और सुधार के क्षेत्रों की समीक्षा करें।",
+    "aiInsightsReady": "एआई इंसाइट्स उपलब्ध हैं",
+    "checkYourPerformance": "अपने युद्ध प्रदर्शन का विश्लेषण करें",
+    "View": "देखें",
+    "Play Now": "अभी खेलें",
+    "Later": "बाद में",
+    "Dismiss": "खारिज करें",
+    "View Analysis": "विश्लेषण देखें",
+    "viewResult": "अपने चुनौती परिणाम देखें",
+    "View Results": "परिणाम देखें",
+    "Unknown error": "एक अज्ञात त्रुटि हुई।",
+    "Matchmaking": "मैचमेकिंग",
+    "Matchmaking Room": "मैचमेकिंग रूम",
+    "Quick Matchmaking": "त्वरित मैचमेकिंग",
+    "Find opponents quickly in the matchmaking room. Join the room to make yourself available for challenges, or challenge other players directly.": "मैचमेकिंग रूम में जल्दी से प्रतिद्वंद्वी खोजें। चुनौतियों के लिए स्वयं को उपलब्ध बनाने के लिए रूम में शामिल हों, या अन्य खिलाड़ियों को सीधे चुनौती दें।",
+    "Challenge anyone": "किसी को भी चुनौती दें",
+    "Bot opponents available": "बॉट प्रतिद्वंद्वी उपलब्ध हैं",
+    "Include Bots": "बॉट शामिल करें",
+    "Not in matchmaking": "मैचमेकिंग में नहीं",
+    "Looking for opponents": "प्रतिद्वंद्वियों की खोज जारी",
+    "Live updates on": "लाइव अपडेट चालू",
+    "Live updates off": "लाइव अपडेट बंद",
+    "Join Matchmaking": "मैचमेकिंग में शामिल हों",
+    "Joining": "शामिल हो रहा है",
+    "Leave Matchmaking": "मैचमेकिंग छोड़ें",
+    "Leaving": "छोड़ रहा है",
+    "Finding available players...": "उपलब्ध खिलाड़ियों की खोज जारी...",
+    "No users available for matchmaking": "मैचमेकिंग के लिए कोई उपयोगकर्ता उपलब्ध नहीं है",
+    "Wait for others to join or try again later": "दूसरों के शामिल होने का इंतजार करें या बाद में पुनः प्रयास करें",
+    "Join matchmaking to find opponents": "प्रतिद्वंद्वियों को खोजने के लिए मैचमेकिंग में शामिल हों",
+    "Invalid Selection": "अमान्य चयन",
+    "Please select a user and at least one category": "कृपया एक उपयोगकर्ता और कम से कम एक श्रेणी चुनें",
+    "Refresh": "ताज़ा करें",
+    "Refreshing": "रीफ्रेश हो रहा है",
+    "User list has been refreshed": "उपयोगकर्ता सूची रीफ्रेश की गई है",
+    "Refreshed": "ताज़ा किया गया",
+    "Choose Categories for Challenge": "चुनौती के लिए श्रेणियां चुनें",
+    "Your opponent": "आपका प्रतिद्वंद्वी",
+    "Select categories (2 max)": "श्रेणियां चुनें (अधिकतम 2)",
+    "Joined Matchmaking": "मैचमेकिंग में शामिल हुए",
+    "Left Matchmaking": "मैचमेकिंग छोड़ी",
+    "Challenge Created": "चुनौती बनाई गई",
+    "Bot opponent will respond shortly": "बॉट प्रतिद्वंद्वी जल्द ही प्रतिक्रिया देगा",
+    "Challenge sent successfully": "चुनौती सफलतापूर्वक भेजी गई",
+    "A bot opponent has accepted your challenge": "एक बॉट प्रतिद्वंद्वी ने आपकी चुनौती स्वीकार की है",
+    "A bot opponent has declined your challenge": "एक बॉट प्रतिद्वंद्वी ने आपकी चुनौती अस्वीकार कर दी है",
+    "A bot opponent has completed your challenge": "एक बॉट प्रतिद्वंद्वी ने आपकी चुनौती पूरी कर ली है",
+    "Preferred categories: ": "पसंदीदा श्रेणियां: ",
+    "All categories": "सभी श्रेणियां",
+    "users available": "उपयोगकर्ता उपलब्ध",
+    "Bot Player": "बॉट खिलाड़ी",
+    "Bot": "बॉट",
+    "Challenging": "चुनौती दी जा रही है",
+    "Creating Your Challenge": "Creating Your Challenge",
+    "Creating challenge...": "Creating challenge...",
+    "Challenge ready!": "Challenge ready!",
+    "AI is mixing content from {{category}}": "AI is mixing content from {{category}}",
+    "Creating article for your challenge": "Creating article for your challenge",
+    "Generating questions for both players": "Generating questions for both players",
+    "You'll be notified when the challenge is ready": "You'll be notified when the challenge is ready",
+    "Challenge Ready": "Challenge Ready",
+    "Your challenge is ready to play!": "Your challenge is ready to play!",
+    "All tasks completed!": "सभी कार्य पूरे हुए!",
+    "tasks completed": "कार्य पूरे हुए",
+    "Less than 1 hour": "Less than 1 hour",
+    "hours": "hours",
+    "Reward Claimed!": "पुरस्कार का दावा किया गया!",
+    "You received {xp} XP": "आपको {xp} XP प्राप्त हुए",
+    "Time remaining until reset": "Time remaining until reset",
+    "Tasks Refreshed": "कार्य ताज़ा किए गए",
+    "Your daily tasks have been updated": "आपके दैनिक कार्य अपडेट कर दिए गए हैं",
+    "Complete tasks to earn XP": "Complete tasks to earn XP",
+    "Total XP Earned": "Total XP Earned",
+    "Completion Rate": "Completion Rate",
+    "In Progress": "प्रगति में",
+    "No tasks available": "No tasks available",
+    "Check back later or refresh to get new tasks": "Check back later or refresh to get new tasks",
+    "tasks remaining": "tasks remaining",
+    "And {count} more completed tasks": "And {{count}} more completed tasks",
+    "Claim {xp} XP": "{xp} XP का दावा करें",
+    "Results Ready": "परिणाम तैयार हैं!",
+    "Results": "परिणाम",
+    "resultsReady": "आपकी चुनौती के परिणाम अब उपलब्ध हैं!",
+    "readyToPlay": "खेलने के लिए तैयार",
+    "category": "श्रेणी",
+    "timeLimit": "समय सीमा",
+    "Start Challenge": "चुनौती शुरू करें",
+    "tryOtherPlayers": "मैचमेकिंग रूम में अन्य खिलाड़ियों को चुनौती देने का प्रयास करें",
+    "aiAnalysisDescription": "हमारे एआई ने आपके प्रदर्शन का विश्लेषण किया है और आपके ज्ञान में प्रमुख पैटर्न पहचाने हैं",
+    "pts": "अंक",
+    "hasChallengedYou": "ने आपको एक ज्ञान युद्ध के लिए चुनौती दी है!",
+    "completedTheChallenge": "ने अपना हिस्सा पूरा किया है",
+    "viewResults": "अपने चुनौती परिणाम देखें",
+    "challengeComplete": "चुनौती पूरी हुई",
+    "youWon": "आप जीत गए!",
+    "youLost": "आप हार गए!",
+    "itsTie": "यह बराबरी है!",
+    "emptyStates.noActive1v1Title": "कोई सक्रिय 1v1 चुनौतियां नहीं",
+    "emptyStates.noActive1v1AboveCompleted": "अभी कोई सक्रिय 1v1 चुनौतियां नहीं हैं। क्यों न आप नीचे दिए गए अपने पूरे किए गए गेम देखें या मुख्य स्क्रीन से एक नया शुरू करें?",
+    "Active": "सक्रिय",
+    "Daily Tasks": "दैनिक कार्य",
+    "Teams": "टीमें",
+    "SOLO": "सोलो",
+    "Connection Error": "कनेक्शन त्रुटि",
+    "Unable to verify access. Please try again.": "पहुंच सत्यापित करने में असमर्थ। कृपया पुनः प्रयास करें।",
+    "SQUAD": "स्क्वाड",
+    "Battle Ready!": "युद्ध के लिए तैयार!",
+    "Joining...": "शामिल हो रहा है...",
+    "Tasks": "कार्य",
+    "XP Earned": "XP अर्जित",
+    "Unclaimed": "दावा नहीं किया गया",
+    "Rewards": "पुरस्कार",
+    "Streak": "सिलसिला",
+    "Refresh Tasks": "कार्यों को ताज़ा करें",
+    "No Tasks In Progress": "कोई कार्य प्रगति में नहीं है",
+    "Looks like you've completed all your tasks! Check the completed tab or refresh to get new tasks.": "लगता है आपने अपने सभी कार्य पूरे कर लिए हैं! 'पूर्ण' टैब देखें या नए कार्य पाने के लिए ताज़ा करें।",
+    "No Completed Tasks": "कोई पूर्ण कार्य नहीं",
+    "You haven't completed any tasks yet. Start completing tasks to see them here!": "आपने अभी तक कोई कार्य पूरा नहीं किया है। उन्हें यहाँ देखने के लिए कार्य पूरा करना शुरू करें!",
+    "Loading your daily tasks...": "आपके दैनिक कार्य लोड हो रहे हैं...",
+    "Failed to load tasks": "कार्यों को लोड करने में विफल",
+    "Try Again": "पुनः प्रयास करें",
+    "Failed to refresh tasks": "कार्यों को ताज़ा करने में विफल",
+    "Failed to claim reward": "पुरस्कार का दावा करने में विफल",
+    "Task Details": "कार्य का विवरण",
+    "Claimed": "दावा किया गया",
+    "Reward": "पुरस्कार",
+    "Time Remaining": "शेष समय",
+    "Task Type": "कार्य का प्रकार",
+    "About This Task": "इस कार्य के बारे में",
+    "Benefit": "लाभ",
+    "Expires": "समाप्त होगा",
+    "Close": "बंद करें",
+    "taskType.COMPLETE_CHALLENGES.description": "प्रतिद्वंद्वियों के खिलाफ क्विक क्लैश चुनौतियां पूरी करें",
+    "taskType.COMPLETE_CHALLENGES.benefit": "आपके ज्ञान और खेल कौशल में सुधार करता है",
+    "taskType.ACHIEVE_RQM_SCORE.description": "चुनौतियों में निश्चित रीडिंग क्वालिटी मीट्रिक स्कोर तक पहुंचें",
+    "taskType.ACHIEVE_RQM_SCORE.benefit": "आपकी पढ़ने की समझ की क्षमताओं को बढ़ाता है",
+    "taskType.WIN_CHALLENGES.description": "प्रतिद्वंद्वियों के खिलाफ क्विक क्लैश चुनौतियां जीतें",
+    "taskType.WIN_CHALLENGES.benefit": "आपकी रैंकिंग और आत्मविश्वास को बढ़ाता है",
+    "taskType.PLAY_CONSECUTIVE_DAYS.description": "लगातार दिनों तक क्विक क्लैश खेलें",
+    "taskType.PLAY_CONSECUTIVE_DAYS.benefit": "एक सुसंगत सीखने की आदत विकसित करता है",
+    "taskType.CHALLENGE_FRIEND.description": "दोस्तों को क्विक क्लैश में प्रतिस्पर्धा करने के लिए आमंत्रित करें",
+    "taskType.CHALLENGE_FRIEND.benefit": "आपके ज्ञान नेटवर्क का विस्तार करता है",
+    "taskType.DEFAULT.description": "पुरस्कार अर्जित करने के लिए इस कार्य को पूरा करें",
+    "taskType.DEFAULT.benefit": "आपके क्विक क्लैश अनुभव में सुधार करता है",
+    "Today": "आज",
+    "Yesterday": "कल",
+    "Loading battles...": "बैटल लोड हो रहे हैं...",
+    "Active battles have been refreshed": "सक्रिय बैटल ताज़ा कर दिए गए हैं",
+    "Completed battles have been refreshed": "पूर्ण हुए बैटल ताज़ा कर दिए गए हैं",
+    "Team Battles": "टीम बैटल",
+    "Compete with your team in 4v4 knowledge battles": "4v4 ज्ञान बैटल में अपनी टीम के साथ प्रतिस्पर्धा करें",
+    "Active Battles": "सक्रिय बैटल",
+    "Completed Battles": "पूर्ण हुए बैटल",
+    "DRAW": "ड्रॉ",
+    "VICTORY": "विजय",
+    "DEFEAT": "हार",
+    "Enter": "प्रवेश करें",
+    "Ended": "समाप्त हुआ",
+    "Revenge": "बदला",
+    "Revenge sent": "बदला भेजा गया",
+    "Challenge cannot be continued once exited": "एक बार चुनौती से बाहर निकलने के बाद इसे जारी नहीं रखा जा सकता",
+    "You have already selected another category. Please deselect it first to choose this one.": "आपने पहले से ही एक और श्रेणी चुन ली है। इसे चुनने के लिए कृपया पहले उसे अचयनित करें।",
+    "You cannot select this category because you have already participated in another challenge": "आप इस श्रेणी का चयन नहीं कर सकते क्योंकि आपने पहले ही दूसरी चुनौती में भाग ले लिया है",
+    "You cannot select this category because you have already participated in another challenge in this battle.": "आप इस श्रेणी का चयन नहीं कर सकते क्योंकि आपने इस बैटल में पहले ही दूसरी चुनौती में भाग ले लिया है।",
+    "Selecting...": "चयन हो रहा है...",
+    "Deselecting...": "अचयनित हो रहा है...",
+    "Starting...": "शुरू हो रहा है...",
+    "Loading...": "लोड हो रहा है...",
+    "Cannot Continue": "जारी नहीं रख सकते",
+    "Change Selection": "चयन बदलें",
+    "Locked": "लॉक्ड",
+    "Select Category": "श्रेणी चुनें",
+    "Challenge Exited": "चुनौती से बाहर",
+    "Cannot resume": "जारी नहीं रख सकते",
+    "Another Selected": "अन्य चयनित",
+    "Change selection": "चयन बदलें",
+    "Category Locked": "श्रेणी लॉक्ड",
+    "Already participated": "पहले ही भाग लिया",
+    "Teammate": "टीम का साथी",
+    "Selected": "चयनित",
+    "Teammate Selected": "टीम के साथी द्वारा चयनित",
+    "Available": "उपलब्ध",
+    "Completed by Teammate": "टीम के साथी द्वारा पूर्ण",
+    "Once you exit a challenge, you cannot continue it. This prevents unfair advantages in team battles.": "एक बार जब आप एक चुनौती से बाहर निकल जाते हैं, तो आप इसे जारी नहीं रख सकते। यह टीम बैटल में अनुचित लाभ को रोकता है।",
+    "Back to Battles": "बैटल पर वापस जाएं",
+    "Expires {{time}}": "{{time}} को समाप्त होगा",
+    "Expired {{time}}": "{{time}} को समाप्त हुआ",
+    "4v4 Team Battle": "4v4 टीम बैटल",
+    "Challenge other teams in knowledge combat": "ज्ञान युद्ध में दूसरी टीमों को चुनौती दें",
+    "Battle Arena": "युद्ध क्षेत्र",
+    "Choose your battlefield & prove your skills!": "अपना युद्धक्षेत्र चुनें और अपने कौशल को साबित करें!",
+    "Challenge Participation Complete": "चुनौती में भागीदारी पूर्ण",
+    "You have already participated in a challenge in this battle. You cannot select or start additional challenges.": "आप इस बैटल में पहले ही एक चुनौती में भाग ले चुके हैं। आप अतिरिक्त चुनौतियां नहीं चुन सकते या शुरू नहीं कर सकते।",
+    "Category Selected: {{category}}": "श्रेणी चयनित: {{category}}",
+    "You have selected the {{category}} category. Other categories are now locked until you change your selection or begin your challenge.": "आपने {{category}} श्रेणी का चयन किया है। जब तक आप अपना चयन नहीं बदलते या अपनी चुनौती शुरू नहीं करते, तब तक अन्य श्रेणियां लॉक हैं।",
+    "Challenge in Progress": "चुनौती प्रगति पर है",
+    "You are currently participating in a challenge. Complete your current challenge before selecting another category.": "आप वर्तमान में एक चुनौती में भाग ले रहे हैं। दूसरी श्रेणी चुनने से पहले अपनी वर्तमान चुनौती पूरी करें।",
+    "Back to Team Battles": "टीम बैटल पर वापस जाएं",
+    "Loading battle details...": "बैटल विवरण लोड हो रहा है...",
+    "Battle not found": "बैटल नहीं मिला",
+    "Back": "वापस",
+    "This challenge has two phases: Reading and Quiz. Master both to win!": "इस चुनौती के दो चरण हैं: पढ़ना और क्विज़। जीतने के लिए दोनों में महारत हासिल करें!",
+    "Phase 1: Reading": "चरण 1: पढ़ना",
+    "minutes": "मिनट",
+    "Task": "कार्य",
+    "Read & Understand": "पढ़ें और समझें",
+    "Reading Tips": "पढ़ने के टिप्स",
+    "Pay attention to key facts and details": "मुख्य तथ्यों और विवरणों पर ध्यान दें",
+    "Note important concepts that might appear in questions": "उन महत्वपूर्ण अवधारणाओं को नोट करें जो प्रश्नों में आ सकती हैं",
+    "Use the progress bar to track your remaining time": "अपने शेष समय को ट्रैक करने के लिए प्रगति बार का उपयोग करें",
+    "You can finish early if you're ready for the quiz": "यदि आप क्विज़ के लिए तैयार हैं तो आप जल्दी समाप्त कर सकते हैं",
+    "Phase 2: Quiz": "चरण 2: क्विज़",
+    "Quiz Tips": "क्विज़ टिप्स",
+    "Note important concepts for questions": "प्रश्नों के लिए महत्वपूर्ण अवधारणाओं को नोट करें",
+    "You can finish early if ready": "तैयार होने पर आप जल्दी समाप्त कर सकते हैं",
+    "Time": "समय",
+    "Speed + Accuracy": "गति + सटीकता",
+    "Use navigation to move between questions": "प्रश्नों के बीच जाने के लिए नेविगेशन का उपयोग करें",
+    "You can review answers before submitting": "जमा करने से पहले आप उत्तरों की समीक्षा कर सकते हैं",
+    "Team A": "टीम A",
+    "Team B": "टीम B",
+    "VICTORY!": "विजय!",
+    "Great Performance!": "शानदार प्रदर्शन!",
+    "DRAW!": "ड्रॉ!",
+    "Well Fought!": "अच्छी लड़ाई लड़ी!",
+    "Try Again!": "पुनः प्रयास करें!",
+    "YOUR TEAM": "आपकी टीम",
+    "OPPONENT": "प्रतिद्वंद्वी",
+    "W": "जी",
+    "L": "हा",
+    "T": "टाई",
+    "Trophy Bonuses": "ट्रॉफी बोनस",
+    "Active Bonus": "सक्रिय बोनस",
+    "Active Bonus_plural": "सक्रिय बोनस",
+    "Extra Trophies": "अतिरिक्त ट्रॉफियां",
+    "Base Trophy Exchange": "बेस ट्रॉफी एक्सचेंज",
+    "Standard amount before bonuses.": "बोनस से पहले की मानक राशि।",
+    "trophies": "ट्रॉफियां",
+    "First Daily Battle": "पहला दैनिक बैटल",
+    "A special bonus awarded for completing your first team battle of the day. Encourages daily participation.": "दिन का पहला टीम बैटल पूरा करने के लिए एक विशेष बोनस दिया जाता है। दैनिक भागीदारी को प्रोत्साहित करता है।",
+    "Stronger Team Bonus": "मजबूत टीम बोनस",
+    "Awarded when your team defeats an opponent with significantly higher trophies. A true underdog victory!": "जब आपकी टीम काफी अधिक ट्रॉफियों वाले प्रतिद्वंद्वी को हराती है तो यह सम्मानित किया जाता है। एक सच्ची अंडरडॉग जीत!",
+    "Comeback Bonus": "वापसी बोनस",
+    "Your team was behind in the early stages of the battle but managed to turn things around for a win!": "आपकी टीम बैटल के शुरुआती चरणों में पीछे थी लेकिन जीत के लिए चीजों को पलटने में कामयाब रही!",
+    "All Categories Won": "सभी श्रेणियां जीतीं",
+    "Your team dominated every category in this battle. A perfect performance deserves extra rewards!": "आपकी टीम ने इस बैटल में हर श्रेणी पर हावी रहा। एक आदर्श प्रदर्शन अतिरिक्त पुरस्कारों का हकदार है!",
+    "Special Bonus": "विशेष बोनस",
+    "An additional bonus awarded for special circumstances or achievements.": "विशेष परिस्थितियों या उपलब्धियों के लिए एक अतिरिक्त बोनस दिया जाता है।",
+    "Final Trophy Exchange": "अंतिम ट्रॉफी एक्सचेंज",
+    "Total including all bonuses.": "सभी बोनस सहित कुल।",
+    "Individual trophy shares are based on performance and contribution within the team.": "व्यक्तिगत ट्रॉफी शेयर टीम के भीतर प्रदर्शन और योगदान पर आधारित होते हैं।",
+    "Trophy Exchange": "ट्रॉफी एक्सचेंज",
+    "GAINED": "प्राप्त किया",
+    "NO CHANGE": "कोई बदलाव नहीं",
+    "LOST": "खोया",
+    "BONUS": "बोनस",
+    "BONUS_plural": "बोनस",
+    "Trophies": "ट्रॉफियां",
+    "Previous Trophies Impact": "पिछली ट्रॉफियों का प्रभाव",
+    "Applied Bonuses": "लागू बोनस",
+    "bonusTitle.firstDaily": "पहला दैनिक बैटल",
+    "bonusDescription.firstDaily": "दिन का पहला बैटल।",
+    "bonusTitle.strongerTeam": "अंडरडॉग जीत",
+    "bonusDescription.strongerTeam": "एक मजबूत प्रतिद्वंद्वी को हराया।",
+    "bonusTitle.comebackWin": "वापसी के बादशाह",
+    "bonusDescription.comebackWin": "पीछे होने के बाद जीते।",
+    "bonusTitle.allWins": "क्लीन स्वीप",
+    "bonusDescription.allWins": "सभी चुनौती श्रेणियां जीतीं।",
+    "Special performance bonus": "विशेष प्रदर्शन बोनस",
+    "Team Trophy Distribution": "टीम ट्रॉफी वितरण",
+    "Total Team Exchange": "कुल टीम एक्सचेंज",
+    "Your Share": "आपका हिस्सा",
+    "Base Per Player": "प्रति खिलाड़ी आधार",
+    "Your trophy change includes performance bonuses and team contribution adjustments.": "आपके ट्रॉफी परिवर्तन में प्रदर्शन बोनस और टीम योगदान समायोजन शामिल हैं।",
+    "Your trophy change is based on team performance and individual contribution.": "आपका ट्रॉफी परिवर्तन टीम के प्रदर्शन और व्यक्तिगत योगदान पर आधारित है।",
+    "Match MVP": "मैच एमवीपी",
+    "Winner Team": "विजेता टीम",
+    "Won Category": "श्रेणी जीती",
+    "Highest Score": "उच्चतम स्कोर",
+    "Team MVP": "टीम एमवीपी",
+    "Losing Team": "हारने वाली टीम",
+    "Pivotal Player": "महत्वपूर्ण खिलाड़ी",
+    "Biggest Impact": "सबसे बड़ा प्रभाव",
+    "Category Winner": "श्रेणी विजेता",
+    "Point Difference": "अंकों का अंतर",
+    "Team Recognition": "टीम की पहचान",
+    "Your Team": "आपकी टीम",
+    "Opponent Team": "प्रतिद्वंद्वी टीम",
+    "MVP Award": "एमवीपी पुरस्कार",
+    "MVP Award_plural": "एमवीपी पुरस्कार",
+    "Legendary": "पौराणिक",
+    "Team MVP Awards": "टीम एमवीपी पुरस्कार",
+    "Margin": "अंतर",
+    "Legendary Performances": "पौराणिक प्रदर्शन",
+    "Points": "अंक",
+    "points": "अंक",
+    "Won their category": "अपनी श्रेणी जीती",
+    "Enhanced MVP Recognition System": "उन्नत एमवीपी मान्यता प्रणाली",
+    "Based on strict criteria: team role, category victory, and performance": "सख्त मानदंडों पर आधारित: टीम की भूमिका, श्रेणी की जीत और प्रदर्शन",
+    "100+ = Legendary": "100+ = पौराणिक",
+    "75+ = Excellent": "75+ = उत्कृष्ट",
+    "50+ = Good": "50+ = अच्छा",
+    "40+ = Average": "40+ = औसत",
+    "Performance Analysis Feedback": "प्रदर्शन विश्लेषण प्रतिक्रिया",
+    "AI Analysis Feedback": "एआई विश्लेषण प्रतिक्रिया",
+    "System Features Feedback": "सिस्टम सुविधाएँ प्रतिक्रिया",
+    "You seem engaged! Your feedback would be valuable.": "आप व्यस्त लग रहे हैं! आपकी प्रतिक्रिया मूल्यवान होगी।",
+    "This was an important battle - we'd love your thoughts!": "यह एक महत्वपूर्ण बैटल था - हम आपके विचार जानना चाहेंगे!",
+    "As a new user, your fresh perspective is valuable!": "एक नए उपयोगकर्ता के रूप में, आपका नया दृष्टिकोण मूल्यवान है!",
+    "Help us improve our AI analysis!": "हमारे एआई विश्लेषण को बेहतर बनाने में हमारी मदद करें!",
+    "Feedback received for this section": "इस अनुभाग के लिए प्रतिक्रिया प्राप्त हुई",
+    "Thank you for helping improve our AI!": "हमारे एआई को बेहतर बनाने में मदद करने के लिए धन्यवाद!",
+    "Trophy Change": "ट्रॉफी परिवर्तन",
+    "Categories": "श्रेणियाँ",
+    "Feedback Given": "प्रतिक्रिया दी गई",
+    "Complete Battle Analysis Feedback": "पूर्ण बैटल विश्लेषण प्रतिक्रिया",
+    "You seem very engaged with this analysis!": "आप इस विश्लेषण के साथ बहुत व्यस्त लग रहे हैं!",
+    "This was an important battle for you.": "यह आपके लिए एक महत्वपूर्ण बैटल था।",
+    "Your fresh perspective as a new user is valuable!": "एक नए उपयोगकर्ता के रूप में आपका नया दृष्टिकोण मूल्यवान है!",
+    "Your feedback is invaluable! Help us improve the AI analysis by sharing your thoughts on the overall battle insights.": "आपकी प्रतिक्रिया अमूल्य है! समग्र बैटल अंतर्दृष्टि पर अपने विचार साझा करके हमारे एआई विश्लेषण को बेहतर बनाने में हमारी मदद करें।",
+    "Your engagement score: {{score}}% | Confidence: {{confidence}}%": "आपका जुड़ाव स्कोर: {{score}}% | आत्मविश्वास: {{confidence}}%",
+    "Most of our users are on mobile - your mobile feedback drives our AI improvements!": "हमारे अधिकांश उपयोगकर्ता मोबाइल पर हैं - आपकी मोबाइल प्रतिक्रिया हमारे एआई सुधारों को बढ़ावा देती है!",
+    "Feedback Already Submitted": "प्रतिक्रिया पहले ही जमा कर दी गई है",
+    "You have already provided overall feedback for this battle analysis.": "आपने इस बैटल विश्लेषण के लिए पहले ही समग्र प्रतिक्रिया प्रदान कर दी है।",
+    "Thank you for helping us improve our AI system!": "हमारे एआई सिस्टम को बेहतर बनाने में हमारी मदद करने के लिए धन्यवाद!",
+    "Team Performance": "टीम का प्रदर्शन",
+    "Contribution and stats per player": "प्रति खिलाड़ी योगदान और आँकड़े",
+    "You seem engaged! Quick mobile feedback?": "आप व्यस्त लग रहे हैं! त्वरित मोबाइल प्रतिक्रिया?",
+    "Important battle - your mobile thoughts?": "महत्वपूर्ण बैटल - आपके मोबाइल विचार?",
+    "New user mobile feedback is valuable!": "नए उपयोगकर्ता की मोबाइल प्रतिक्रिया मूल्यवान है!",
+    "Quick mobile feedback?": "त्वरित मोबाइल प्रतिक्रिया?",
+    "Was this insight helpful?": "क्या यह अंतर्दृष्टि सहायक थी?",
+    "Smart Feedback": "स्मार्ट प्रतिक्रिया",
+    "Mobile priority": "मोबाइल प्राथमिकता",
+    "Close feedback prompt": "प्रतिक्रिया प्रॉम्प्ट बंद करें",
+    "Loading feedback summary...": "प्रतिक्रिया सारांश लोड हो रहा है...",
+    "Start Providing Smart Feedback": "स्मार्ट प्रतिक्रिया देना शुरू करें",
+    "Your mobile feedback is especially valuable!": "आपकी मोबाइल प्रतिक्रिया विशेष रूप से मूल्यवान है!",
+    "Your feedback helps improve AI analysis!": "आपकी प्रतिक्रिया एआई विश्लेषण को बेहतर बनाने में मदद करती है!",
+    "Your Feedback Impact": "आपकी प्रतिक्रिया का प्रभाव",
+    "Smart AI Learning": "स्मार्ट एआई लर्निंग",
+    "Total Smart Feedback": "कुल स्मार्ट प्रतिक्रिया",
+    "Avg Rating": "औसत रेटिंग",
+    "Improving AI": "एआई में सुधार",
+    "Last feedback:": "अंतिम प्रतिक्रिया:",
+    "Quick Feedback": "त्वरित प्रतिक्रिया",
+    "Share Thoughts": "विचार साझा करें",
+    "Rate Battle": "बैटल को रेट करें",
+    "Rate Analysis": "विश्लेषण को रेट करें",
+    "Help Us Learn": "सीखने में हमारी मदद करें",
+    "Share Experience": "अनुभव साझा करें",
+    "Feedback": "प्रतिक्रिया",
+    "Open smart feedback form": "स्मार्ट प्रतिक्रिया फॉर्म खोलें",
+    "Loading smart feedback analytics...": "स्मार्ट प्रतिक्रिया एनालिटिक्स लोड हो रहा है...",
+    "Failed to load analytics": "एनालिटिक्स लोड करने में विफल",
+    "No smart analytics data available for the selected timeframe.": "चयनित समय-सीमा के लिए कोई स्मार्ट एनालिटिक्स डेटा उपलब्ध नहीं है।",
+    "Smart Feedback Analytics": "स्मार्ट प्रतिक्रिया एनालिटिक्स",
+    "Last {{count}} days": "पिछले {{count}} दिन",
+    "Engagement Score": "जुड़ाव स्कोर",
+    "Smart Accuracy": "स्मार्ट सटीकता",
+    "Smart AI Insights": "स्मार्ट एआई अंतर्दृष्टि",
+    "Smart Insight": "स्मार्ट अंतर्दृष्टि",
+    "Confidence": "आत्मविश्वास",
+    "Unnamed Finding": "अनाम खोज",
+    "And {{count}} more smart insights...": "और {{count}} अधिक स्मार्ट अंतर्दृष्टि...",
+    "No smart insights identified in this period.": "इस अवधि में कोई स्मार्ट अंतर्दृष्टि की पहचान नहीं हुई।",
+    "Getting Started": "शुरू हो रहा है",
+    "Complete": "पूर्ण",
+    "Nearly Done": "लगभग पूर्ण",
+    "Explored": "खोजा गया",
+    "Analyzing": "विश्लेषण हो रहा है",
+    "Next Up": "अगला",
+    "No AI insights available for this battle yet.": "इस बैटल के लिए अभी तक कोई एआई अंतर्दृष्टि उपलब्ध नहीं है।",
+    "Check back later or try another battle analysis.": "बाद में फिर से जांचें या किसी अन्य बैटल विश्लेषण का प्रयास करें।",
+    "BattleSage AI": "बैटलसेज एआई",
+    "EXPLORED": "खोजा गया",
+    "Loading battle recap...": "बैटल रीकैप लोड हो रहा है...",
+    "Your Insight Journey": "आपकी अंतर्दृष्टि यात्रा",
+    "AI-Powered Progressive Analysis": "एआई-संचालित प्रगतिशील विश्लेषण",
+    "Questions adapt based on your previous answers": "प्रश्न आपके पिछले उत्तरों के आधार पर अनुकूलित होते हैं",
+    "Team Rating": "टीम रेटिंग",
+    "Teamwork": "टीम वर्क",
+    "Consistency": "संगति",
+    "Avg Score": "औसत स्कोर",
+    "Team Battle Summary": "टीम बैटल सारांश",
+    "Team Grade": "टीम ग्रेड",
+    "Grade": "ग्रेड",
+    "Grading System": "ग्रेडिंग प्रणाली",
+    "No Active Team Battles": "कोई सक्रिय टीम बैटल नहीं",
+    "No Completed Team Battles": "कोई पूर्ण टीम बैटल नहीं",
+    "Form your squad of 4 and challenge other teams to intense knowledge battles!": "4 का अपना स्क्वाड बनाएं और अन्य टीमों को गहन ज्ञान युद्धों के लिए चुनौती दें!",
+    "Your battle history will appear here once you complete your first team match.": "आपका पहला टीम मैच पूरा करने के बाद आपका बैटल इतिहास यहां दिखाई देगा।",
+    "Create Your Team": "अपनी टीम बनाएं",
+    "Position Reset": "स्थिति रीसेट",
+    "Menu position has been reset to default": "मेनू की स्थिति डिफ़ॉल्ट पर रीसेट कर दी गई है",
+    "Quick Profile": "त्वरित प्रोफ़ाइल",
+    "Notifications": "सूचनाएं",
+    "Leaderboard": "लीडरबोर्ड"
+  },
+  "screens.Quiz": {
+    "QuizFailed": "क्विज़ असफल!",
+    "RetryError": "कृपया पुनः प्रयास करें (क्विज़ बंद करें और पृष्ठ को पुनः ताज़ा करने का प्रयास करें)",
+    "QuizClosingError": "क्विज़ बंद करने में विफलता! कृपया पुनः प्रयास करें।",
+    "ConfirmCloseMessage": "क्विज़ को केवल उत्तरित प्रश्न के RQM स्कोर के साथ जमा करने का परिणाम होगा। क्या आप सुनिश्चित हैं कि आप क्विज़ सबमिट करना चाहते हैं?",
+    "XP Awarded For Quiz + Quin Boost": "क्विज़ + क्विन बूस्ट के लिए एक्सपी पुरस्कृत",
+    "XP Awarded For Quiz": "क्विज़ के लिए एक्सपी पुरस्कृत",
+    "Congratulations! Your Strek is Revived!": "बधाई हो! आपका स्ट्रेक पुनर्जीवित हो गया है!",
+    "Revive your streak!": "अपना स्ट्रीक पुनर्जीवित करें!"
+  },
+  "screens.Register": {
+    "register_title": "रजिस्टर करें",
+    "upload_profile_picture": "प्रोफाइल चित्र अपलोड करें",
+    "choose_file": "फाइल चुनें",
+    "enter_name": "नाम दर्ज करें",
+    "enter_in_game_name": "इन-गेम नाम दर्ज करें",
+    "enter_email": "ईमेल दर्ज करें",
+    "enter_password": "पासवर्ड दर्ज करें",
+    "confirm_password": "पासवर्ड की पुष्टि करें",
+    "register_button": "रजिस्टर करें",
+    "close_button": "बंद करें",
+    "registration_success": "सफलतापूर्वक पंजीकृत हुआ",
+    "registration_failed": "पंजीकरण विफल",
+    "logout_failed": "लॉगआउट विफल",
+    "image_upload_failed": "चित्र अपलोड विफल",
+    "meta_title": "रजिस्टर - रैपिड रिकैप",
+    "meta_description": "आज ही रैपिड रिकैप से जुड़ें! नवीनतम समाचारों और लेखों के साथ अद्यतित रहने के लिए अभी पंजीकरण करें, और अपनी जानकारी भागफल (IQ) स्कोर को ट्रैक करने के लिए आकर्षक प्रश्नोत्तरी में भाग लें।",
+    "meta_keywords": "रजिस्टर करें, रैपिड रिकैप, समाचार, लेख, प्रश्नोत्तरी, IQ स्कोर, लीडरबोर्ड",
+    "meta_og_title": "रजिस्टर - रैपिड रिकैप",
+    "meta_og_description": "आज ही रैपिड रिकैप से जुड़ें! नवीनतम समाचारों और लेखों के साथ अद्यतित रहने के लिए अभी पंजीकरण करें, और अपनी जानकारी भागफल (IQ) स्कोर को ट्रैक करने के लिए आकर्षक प्रश्नोत्तरी में भाग लें।"
+  },
+  "screens.Signin": {
+    "signin_title": "साइन-इन",
+    "submit_button": "सबमिट करें",
+    "create_account_button": "खाता बनाएं",
+    "forgot_password_button": "पासवर्ड भूल गए?",
+    "login_success": "साइन-इन सफल",
+    "login_failed": "साइन-इन विफल",
+    "enter_in_game_name": "इन-गेम नाम दर्ज करें",
+    "enter_password": "पासवर्ड दर्ज करें",
+    "enter_in_game_name_message": "कृपया जारी रखने के लिए अपना इन-गेम नाम दर्ज करें",
+    "email_not_verified": "ईमेल सत्यापित नहीं है",
+    "verify_email_message": "कृपया जारी रखने से पहले अपना ईमेल सत्यापित करें",
+    "otp_sent": "आपके ईमेल पर ओटीपी भेजा गया है",
+    "or_text": "या",
+    "close_button": "बंद करें",
+    "email_or_in_game_name_placeholder": "ईमेल / इन-गेम नाम",
+    "meta_title": "साइन-इन - रैपिड रिकैप",
+    "meta_description": "रैपिड रिकैप में साइन इन करें और नवीनतम समाचार, प्रश्नोत्तरी और अपने जानकारी भागफल (IQ) स्कोर से अद्यतित रहें।",
+    "meta_keywords": "साइन इन करें, रैपिड रिकैप, समाचार, प्रश्नोत्तरी, IQ स्कोर",
+    "meta_og_title": "साइन-इन - रैपिड रिकैप",
+    "meta_og_description": "रैपिड रिकैप में साइन इन करें और नवीनतम समाचार, प्रश्नोत्तरी और अपने जानकारी भागफल (IQ) स्कोर से अद्यतित रहें।"
+  },
+  "screens.Tournament": {
+    "noTournamentData": {
+      "title": "कोई टूर्नामेंट डेटा उपलब्ध नहीं है",
+      "description": "आने वाले टूर्नामेंट के लिए बने रहें!"
+    },
+    "tournamentNumber": "टूर्नामेंट #{{number}}",
+    "tournament": "टूर्नामेंट",
+    "current": "वर्तमान",
+    "previous": "पिछला",
+    "curr": "वर्तमान",
+    "prev": "पिछला",
+    "tournamentStatus": {
+      "notRegistered": "आप इस टूर्नामेंट के लिए पंजीकृत नहीं हैं। पंजीकरण बंद है, लेकिन आप अभी भी लीडरबोर्ड देख सकते हैं।"
+    },
+    "registrationSuccess": {
+      "title": "टूर्नामेंट पंजीकरण सफल"
+    },
+    "errorMessages": {
+      "fetchData": "टूर्नामेंट डेटा प्राप्त करने में विफल।",
+      "registerError": "टूर्नामेंट के लिए पंजीकरण विफल।"
+    },
+    "errorOccurred": "कोई त्रुटि हुई",
+    "bufferPeriod": {
+      "title": "अगले टूर्नामेंट के लिए तैयारी कर रहे हैं",
+      "message": "टूर्नामेंट #{{tournamentNumber}} समाप्त हो गया है। हम अगली रोमांचक घटना के लिए तैयारी कर रहे हैं!",
+      "nextTournamentPrompt": "अगला टूर्नामेंट जल्द ही घोषित किया जाएगा। बने रहें!",
+      "viewPreviousResults": "पिछले टूर्नामेंट के परिणाम देखें",
+      "hidePreviousResults": "पिछले टूर्नामेंट के परिणाम छुपाएं"
+    },
+    "loading": "लोड हो रहा है..."
+  },
+  "screens.rulebook": {
+    "meta": {
+      "title": "खिलाड़ी मैनुअल | रैपिड रीकैप",
+      "description": "हमारी व्यापक खिलाड़ी मैनुअल के साथ रैपिड रीकैप को खेलना और मास्टर करना सीखें।"
+    },
+    "heading": "खिलाड़ी मैनुअल",
+    "quiz-system": {
+      "title": "क्विज़ प्रणाली",
+      "sections": {
+        "how-quizzes-work": {
+          "title": "क्विज़ कैसे काम करती हैं",
+          "items": {
+            "reading-time": {
+              "text": "पढ़ने का समय: प्रति लेख 2-4 मिनट",
+              "explanation": "हमारा पढ़ने का समय जानकारी के अनुकूलतम अवशोषण के लिए सावधानीपूर्वक कैलिब्रेट किया गया है। 2-4 मिनट प्रमुख अवधारणाओं को समझने के लिए पर्याप्त समय प्रदान करते हैं जबकि रुचि बनाए रखते हैं।",
+              "hasDetails": true
+            },
+            "quiz-time": {
+              "text": "क्विज़ का समय: सर्वोत्तम प्रदर्शन के लिए 50 सेकंड",
+              "explanation": "50-सेकंड की समय सीमा संज्ञानात्मक विज्ञान अनुसंधान पर आधारित है। यह अवधि दबाव और प्रदर्शन के बीच सही संतुलन बनाती है।",
+              "hasDetails": true
+            },
+            "questions": {
+              "text": "प्रश्न: प्रति क्विज़ 5 प्रश्न",
+              "explanation": "प्रत्येक क्विज़ में प्रमुख अवधारणाओं की आपकी समझ का परीक्षण करने वाले 5 सावधानीपूर्वक तैयार किए गए प्रश्न होते हैं।",
+              "hasDetails": false
+            }
+          }
+        },
+        "theme-options": {
+          "title": "थीम विकल्प",
+          "items": {
+            "indian-mythology": {
+              "text": "भारतीय पौराणिक कथाएं",
+              "explanation": "भारतीय महाकाव्यों के माध्यम से समाचार का अनुभव करें! कहानियों को महाभारत और रामायण के पात्रों और घटनाओं का उपयोग करके पुनः बताया जाता है।",
+              "hasDetails": true
+            },
+            "mystic-world": {
+              "text": "रहस्यमय दुनिया",
+              "explanation": "जादू और सुपरहीरो की दुनिया में प्रवेश करें! लेखों को हैरी पॉटर, मार्वल और डीसी यूनिवर्स के तत्वों का उपयोग करके पुनर्कल्पित किया जाता है।",
+              "hasDetails": true
+            },
+            "space-theme": {
+              "text": "अंतरिक्ष थीम",
+              "explanation": "अंतरिक्ष अन्वेषण के दृष्टिकोण से उड़ान भरें! कहानियों को अंतरिक्ष अन्वेषण और खगोल विज्ञान के माध्यम से पुनः बताया जाता है।",
+              "hasDetails": true
+            },
+            "greek-mythology": {
+              "text": "यूनानी पौराणिक कथाएं",
+              "explanation": "प्राचीन यूनान की यात्रा करें! समाचार कहानियों को यूनानी पौराणिक कथाओं के माध्यम से बताया जाता है।",
+              "hasDetails": true
+            },
+            "bible-stories": {
+              "text": "बाइबल की कहानियां",
+              "explanation": "वर्तमान घटनाओं को बाइबल की कहानियों के माध्यम से अनुभव करें! लेखों को बाइबल की प्रसिद्ध कहानियों का उपयोग करके पुनः बताया जाता है।",
+              "hasDetails": true
+            },
+            "sci-fi-adventure": {
+              "text": "विज्ञान-कथा साहसिक कार्य",
+              "explanation": "भविष्य के ब्रह्मांड में प्रवेश करें! कहानियों को स्टार वार्स, स्टार ट्रेक और अन्य विज्ञान-कथा दुनियाओं के तत्वों का उपयोग करके पुनर्कल्पित किया जाता है।",
+              "hasDetails": true
+            }
+          }
+        }
+      }
+    },
+    "rqm-score": {
+      "title": "आरक्यूएम स्कोर",
+      "sections": {
+        "accuracy": {
+          "title": "सटीकता",
+          "items": {
+            "correct-answers": {
+              "text": "सही उत्तर",
+              "explanation": "प्रत्येक सही उत्तर आपके आधार आरक्यूएम स्कोर में योगदान करता है।",
+              "hasDetails": true
+            },
+            "perfect-score": {
+              "text": "पूर्ण स्कोर बोनस (20%)",
+              "explanation": "अपने आरक्यूएम में 20% की वृद्धि अर्जित करने के लिए एक पूर्ण स्कोर प्राप्त करें।",
+              "hasDetails": true
+            },
+            "near-perfect": {
+              "text": "लगभग-पूर्ण बोनस (10%)",
+              "explanation": "केवल एक प्रश्न गलत होने पर भी आपको 10% बोनस मिलता है।",
+              "hasDetails": true
+            }
+          }
+        },
+        "speed": {
+          "title": "गति",
+          "items": {
+            "base-time": {
+              "text": "आधार समय: प्रति प्रश्न 15 सेकंड",
+              "explanation": "प्रत्येक प्रश्न के लिए 15-सेकंड का आधार पढ़ने, प्रसंस्करण और उत्तर देने की अनुमति देने के लिए सावधानीपूर्वक गणना किया गया है।",
+              "hasDetails": true
+            },
+            "speed-bonus": {
+              "text": "गति बोनस 2x तक",
+              "explanation": "त्वरित उत्तर दोगुने अंक अर्जित कर सकते हैं! गति गुणक आपकी प्रतिक्रिया समय के आधार पर 1x से 2x तक सुचारू रूप से बढ़ता है।",
+              "hasDetails": true
+            }
+          }
+        }
+      }
+    },
+    "iq-system": {
+      "title": "आईक्यू प्रणाली",
+      "sections": {
+        "score-range": {
+          "title": "स्कोर रेंज",
+          "items": {
+            "average": {
+              "text": "औसत: 100",
+              "explanation": "सिस्टम मानक आईक्यू वितरण पैटर्न का अनुसरण करते हुए 100 के औसत स्कोर के आसपास केंद्रित है।",
+              "hasDetails": false
+            },
+            "standard-deviation": {
+              "text": "मानक विचलन: 15",
+              "explanation": "15 अंकों का मानक विचलन का मतलब है कि लगभग 68% उपयोगकर्ता 85-115 के बीच आते हैं।",
+              "hasDetails": true
+            }
+          }
+        },
+        "society-ranks": {
+          "title": "सोसाइटी रैंक",
+          "items": {
+            "titans": {
+              "text": "टाइटन्स सोसाइटी: 150+",
+              "explanation": "महान टाइटन्स सोसाइटी उपलब्धि की चरम सीमा का प्रतिनिधित्व करती है।",
+              "hasDetails": true
+            },
+            "mavericks": {
+              "text": "मैवरिक्स सोसाइटी: 130-150",
+              "explanation": "मैवरिक्स कुशल प्रदर्शनकर्ता हैं जो उत्कृष्ट समझ प्रदर्शित करते हैं।",
+              "hasDetails": true
+            },
+            "elites": {
+              "text": "एलीट्स सोसाइटी: 110-130",
+              "explanation": "एलीट्स औसत से ऊपर के प्रदर्शन और निरंतर विकास का प्रदर्शन करते हैं।",
+              "hasDetails": true
+            },
+            "strivers": {
+              "text": "स्ट्राइवर्स सोसाइटी: 90-110",
+              "explanation": "स्ट्राइवर्स हमारे समुदाय का मुख्य हिस्सा हैं।",
+              "hasDetails": true
+            },
+            "explorers": {
+              "text": "एक्सप्लोरर्स सोसाइटी: 90 से नीचे",
+              "explanation": "हर कोई एक एक्सप्लोरर के रूप में शुरू करता है।",
+              "hasDetails": true
+            }
+          }
+        }
+      }
+    },
+    "boosters": {
+      "title": "बूस्टर्स और मल्टीप्लायर्स",
+      "sections": {
+        "quin-boost": {
+          "title": "क्विन बूस्ट",
+          "items": {
+            "trigger": {
+              "text": "ट्रिगर: 5 लगातार क्विज़ पूरी करें",
+              "explanation": "क्विन बूस्ट लगातार 5 क्विज़ पूरी करने के बाद सक्रिय होता है।",
+              "hasDetails": true
+            },
+            "reward": {
+              "text": "पुरस्कार: 6वीं क्विज़ पर 1.5x आरक्यूएम मल्टीप्लायर",
+              "explanation": "आपकी 6वीं क्विज़ को 1.5x मल्टीप्लायर मिलता है।",
+              "hasDetails": true
+            }
+          }
+        },
+        "streak-surge": {
+          "title": "स्ट्रीक सर्ज",
+          "items": {
+            "trigger": {
+              "text": "ट्रिगर: 7-दिन की स्ट्रीक बनाए रखें",
+              "explanation": "एक सप्ताह की लगातार दैनिक गतिविधि स्ट्रीक सर्ज को अनलॉक करती है।",
+              "hasDetails": true
+            },
+            "reward": {
+              "text": "पुरस्कार: पूरे दिन के लिए 1.5x आरक्यूएम",
+              "explanation": "पूरे दिन के लिए सभी क्विज़ पर 1.5x मल्टीप्लायर का आनंद लें!",
+              "hasDetails": true
+            }
+          }
+        },
+        "maximum-power": {
+          "title": "अधिकतम शक्ति",
+          "items": {
+            "max-multiplier": {
+              "text": "संयुक्त अधिकतम मल्टीप्लायर: 2x",
+              "explanation": "सिस्टम कुल मल्टीप्लायर्स को 2x पर सीमित करता है।",
+              "hasDetails": true
+            },
+            "requirements": {
+              "text": "सक्रिय क्विन बूस्ट + स्ट्रीक सर्ज + श्रेणी बूस्ट की आवश्यकता",
+              "explanation": "अधिकतम गुणन प्राप्त करने के लिए कई बूस्ट प्रकारों के सक्रियण की आवश्यकता होती है।",
+              "hasDetails": true
+            }
+          }
+        }
+      }
+    },
+    "tournament": {
+      "title": "टूर्नामेंट प्रणाली",
+      "sections": {
+        "schedule": {
+          "title": "शेड्यूल",
+          "items": {
+            "registration": {
+              "text": "पंजीकरण: सोमवार-शुक्रवार",
+              "explanation": "पांच-दिवसीय पंजीकरण अवधि खिलाड़ियों को तैयारी और रणनीति बनाने की अनुमति देती है।",
+              "hasDetails": true
+            },
+            "competition": {
+              "text": "प्रतियोगिता: शनिवार-रविवार",
+              "explanation": "तीव्र सप्ताहांत प्रतियोगिता आपके ज्ञान और गति का परीक्षण करती है।",
+              "hasDetails": true
+            }
+          }
+        },
+        "championship": {
+          "title": "फरवरी चैम्पियनशिप",
+          "items": {
+            "duration": {
+              "text": "अवधि: फरवरी का पूरा महीना",
+              "explanation": "एक महीने लंबी चैंपियनशिप जो स्थिरता और सहनशक्ति का परीक्षण करती है।",
+              "hasDetails": true
+            },
+            "rewards": {
+              "text": "शीर्ष 5 खिलाड़ियों को मौद्रिक पुरस्कार",
+              "explanation": "उच्चतम प्रदर्शन करने वालों के लिए पर्याप्त पुरस्कार। पुरस्कार राशि शीर्ष 5 खिलाड़ियों में उनकी अंतिम रैंकिंग के आधार पर वितरित की जाती है।",
+              "hasDetails": true
+            },
+            "ranking": {
+              "text": "वैश्विक लीडरबोर्ड स्थिति के आधार पर",
+              "explanation": "आपकी रैंक विश्वव्यापी लीडरबोर्ड पर आपकी स्थिति से निर्धारित होती है।",
+              "hasDetails": false
+            },
+            "eligibility": {
+              "text": "सभी सक्रिय खिलाड़ी पात्र",
+              "explanation": "कोई न्यूनतम आवश्यकता नहीं - बस सक्रिय रहें और भाग लें!",
+              "hasDetails": false
+            }
+          }
+        }
+      }
+    },
+    "leaderboard": {
+      "title": "लीडरबोर्ड प्रणाली",
+      "sections": {
+        "monthly-reset": {
+          "title": "मासिक रीसेट",
+          "items": {
+            "refresh": {
+              "text": "प्रत्येक महीने की 1 तारीख को स्वचालित रीफ्रेश",
+              "explanation": "लीडरबोर्ड प्रत्येक महीने की शुरुआत में पूरी तरह से रीफ्रेश होता है, जो सभी खिलाड़ियों के लिए निष्पक्ष प्रतिस्पर्धा और नए अवसर सुनिश्चित करता है।",
+              "hasDetails": true
+            },
+            "archival": {
+              "text": "पिछले महीने की उपलब्धियां संग्रहित",
+              "explanation": "पिछले महीने का आपका प्रदर्शन एक सुलभ संग्रह में संरक्षित किया जाता है, जो आपको समय के साथ अपनी प्रगति को ट्रैक करने की अनुमति देता है।",
+              "hasDetails": true
+            },
+            "hall-of-champions": {
+              "text": "चैंपियंस का हॉल",
+              "explanation": "पिछले महीने के शीर्ष प्रदर्शनकर्ताओं को चैंपियंस के हॉल में सम्मानित किया जाता है, जहाँ उनके नाम प्रदर्शित किए जाते हैं।",
+              "hasDetails": true
+            }
+          }
+        },
+        "competition-cycles": {
+          "title": "प्रतियोगिता चक्र",
+          "items": {
+            "fresh-start": {
+              "text": "हर महीने नई शुरुआत",
+              "explanation": "प्रत्येक महीना रैंक में ऊपर चढ़ने का एक नया अवसर प्रस्तुत करता है। यह नियमित चक्रण प्रतिस्पर्धा को ताजा और प्रेरक रखता है।",
+              "hasDetails": true
+            },
+            "equal-opportunities": {
+              "text": "सभी खिलाड़ियों के लिए समान अवसर",
+              "explanation": "मासिक रीसेट सुनिश्चित करता है कि नए और मौजूदा खिलाड़ियों को शीर्ष रैंकिंग हासिल करने के समान मौके मिलें।",
+              "hasDetails": true
+            },
+            "dynamic-ranking": {
+              "text": "गतिशील रैंकिंग प्रणाली",
+              "explanation": "रैंकिंग आपके वर्तमान महीने के प्रदर्शन मैट्रिक्स के आधार पर गणना की जाती है, जिसमें आरक्यूएम स्कोर, क्विज़ पूर्णता दर और टूर्नामेंट भागीदारी शामिल हैं।",
+              "hasDetails": true
+            }
+          }
+        }
+      }
+    }
+  },
+  "utils.formatDate": {
+    "today": "आज",
+    "yesterday": "कल",
+    "weekdays": {
+      "0": "रविवार",
+      "1": "सोमवार",
+      "2": "मंगलवार",
+      "3": "बुधवार",
+      "4": "गुरुवार",
+      "5": "शुक्रवार",
+      "6": "शनिवार"
+    },
+    "months": {
+      "0": "जनवरी",
+      "1": "फरवरी",
+      "2": "मार्च",
+      "3": "अप्रैल",
+      "4": "मई",
+      "5": "जून",
+      "6": "जुलाई",
+      "7": "अगस्त",
+      "8": "सितंबर",
+      "9": "अक्टूबर",
+      "10": "नवंबर",
+      "11": "दिसंबर"
+    }
+  }
+}

@@ -153,7 +153,7 @@ const HeroV2 = ({ inViewFooter }) => {
                 color={COLORS.textPrimary}
                 lineHeight={1.15}
               >
-                {t('Header.heading.line1', 'Level Up Your Knowledge &')}
+                {t('Header.heading.line1')}
                 <Text
                   as="span"
                   display="block"
@@ -161,7 +161,7 @@ const HeroV2 = ({ inViewFooter }) => {
                   bgClip="text"
                   style={{ textShadow: `0 0 15px ${COLORS.accentGlow}` }}
                 >
-                  {t('Header.heading.line2', 'Dominate the Leaderboards!')}
+                  {t('Header.heading.line2')}
                 </Text>
               </Heading>
               <Text
