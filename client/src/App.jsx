@@ -245,6 +245,18 @@ const App = () => {
       }
     }
 
+    if (
+      localStorage.getItem('token') ||
+      localStorage.getItem('user_unload_cache') ||
+      localStorage.getItem('userProfile') ||
+      localStorage.getItem('role')
+    ) {
+      const demoQuizElement = document.getElementById('demo-quiz-overlay')
+      if (demoQuizElement) {
+        demoQuizElement.style.display = 'none'
+      }
+    }
+
     // Clean up function
     return () => {
       if (!isReload) {
