@@ -153,485 +153,506 @@
 </div>
 
 <script>
-// Modern Demo Quiz Logic with Language Support - FIXED VERSION
-let selectedAnswer = null;
-let timeLeft = 15;
-let timerInterval = null;
-let startTime = null;
-let demoQuestion = null;
-let currentLanguage = 'en'; // Default language
+  // Modern Demo Quiz Logic with Cold Start Handling - UPDATED VERSION
+  let selectedAnswer = null;
+  let timeLeft = 15;
+  let timerInterval = null;
+  let startTime = null;
+  let demoQuestion = null;
+  let currentLanguage = 'en';
 
-// UI translations
-const translations = {
-  en: {
-    brandTitle: 'Rapid Recap',
-    brandSubtitle: 'Experience the Challenge',
-    timerLabel: 'seconds',
-    questionLabel: 'Question 1/1',
-    selectAnswer: 'Select an answer',
-    optionSelected: 'Option {option} selected',
-    submitAnswer: 'Submit Answer',
-    processing: 'Processing...',
-    hintText: 'Take your time, think it through!',
-    timeUp: "Time's Up!",
-    timeUpMessage: "No worries! Daily practice makes perfect.",
-    brilliant: 'Brilliant!',
-    brilliantMessage: "You nailed it! This is how we challenge minds daily.",
-    almostThere: 'Almost There!',
-    almostMessage: "Great attempt! Our daily challenges help you master these.",
-    didYouKnow: 'Did You Know?',
-    readyForMore: 'Ready for More? 🚀',
-    joinThousands: 'Join thousands building their knowledge daily!',
-    signUpContinue: 'Sign Up & Continue',
-    freeText: '100% Free',
-    joinText: '1000+ learners'
-  },
-  hi: {
-    brandTitle: 'Rapid Recap',
-    brandSubtitle: 'चुनौती का अनुभव करें',
-    timerLabel: 'सेकंड',
-    questionLabel: 'प्रश्न 1/1',
-    selectAnswer: 'एक उत्तर चुनें',
-    optionSelected: 'विकल्प {option} चुना गया',
-    submitAnswer: 'उत्तर जमा करें',
-    processing: 'प्रसंस्करण...',
-    hintText: 'अपना समय लें, सोच-समझकर करें!',
-    timeUp: "समय समाप्त!",
-    timeUpMessage: "कोई बात नहीं! दैनिक अभ्यास से सिद्धि मिलती है।",
-    brilliant: 'शानदार!',
-    brilliantMessage: "आपने कमाल कर दिया! हम रोज़ाना ऐसे ही दिमागों को चुनौती देते हैं।",
-    almostThere: 'लगभग सही!',
-    almostMessage: "बेहतरीन कोशिश! हमारी दैनिक चुनौतियां आपको इन विषयों में निपुण बनाती हैं।",
-    didYouKnow: 'क्या आप जानते थे?',
-    readyForMore: 'और के लिए तैयार? 🚀',
-    joinThousands: 'हज़ारों लोगों के साथ अपना ज्ञान बढ़ाएं!',
-    signUpContinue: 'साइन अप करें और जारी रखें',
-    freeText: '100% मुफ्त',
-    joinText: '1000+ सीखने वालों से जुड़ें'
+  // Auth state management
+  const AUTH_KEYS = ['token', 'user_unload_cache', 'userProfile', 'role'];
+  const AUTH_SIGNAL_COOKIE = window.__AUTH_SIGNAL_COOKIE__ || 'auth_signal';
+
+  // Cookie management
+  const setCookie = (name, value, days = 30) => {
+    const expires = new Date(Date.now() + days * 24 * 60 * 60 * 1000).toUTCString()
+    const domain = window.location.hostname
+    const isSecure = window.location.protocol === 'https:'
+    document.cookie = `${name}=${value}; expires=${expires}; path=/; domain=${domain}${isSecure ? '; secure' : ''}; samesite=lax`
   }
-};
 
-// Initialize demo quiz
-document.addEventListener('DOMContentLoaded', function() {
-  // Check if we should show demo quiz
-  const shouldShowDemo = window.__SHOW_DEMO_QUIZ__ && window.__DEMO_QUESTION__;
-
-  if (shouldShowDemo) {
-    createParticles();
-    initializeDemoQuiz();
-    showDemoQuiz();
+  const deleteCookie = (name) => {
+    const domain = window.location.hostname
+    document.cookie = `${name}=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/; domain=${domain}`
   }
-});
 
-function createParticles() {
-  const particlesContainer = document.querySelector('#demo-quiz-overlay .particles-background');
-  if (!particlesContainer) return;
+  // Check if user has authentication signals
+  const hasAuthSignals = () => {
+    return AUTH_KEYS.some(key => localStorage.getItem(key));
+  };
 
-  for (let i = 0; i < 60; i++) {
-    const particle = document.createElement('div');
-    particle.classList.add('particle');
-
-    const size = Math.random() * 3 + 1;
-    const posX = Math.random() * 100;
-    const posY = Math.random() * 100;
-    const opacity = Math.random() * 0.5 + 0.1;
-    const animDuration = Math.random() * 20 + 10;
-    const animDelay = Math.random() * 5;
-
-    particle.style.cssText = `
-      position: absolute;
-      left: ${posX}%;
-      top: ${posY}%;
-      width: ${size}px;
-      height: ${size}px;
-      background-color: white;
-      border-radius: 50%;
-      opacity: ${opacity};
-      animation: twinkle ${animDuration}s infinite ease-in-out ${animDelay}s;
-    `;
-
-    particlesContainer.appendChild(particle);
+  // Update auth signal cookie based on localStorage
+  const updateAuthSignalCookie = () => {
+    if (hasAuthSignals()) {
+      setCookie(AUTH_SIGNAL_COOKIE, 'true', 30) // 30 days
+    } else {
+      deleteCookie(AUTH_SIGNAL_COOKIE)
+    }
   }
-}
 
-function showDemoQuiz() {
-  const demoOverlay = document.getElementById('demo-quiz-overlay');
-  if (demoOverlay) {
-    demoOverlay.style.display = 'flex';
-    demoOverlay.style.opacity = '0';
-    demoOverlay.style.transition = 'opacity 0.5s ease-in-out';
+  // UPDATED: Client-side decision logic
+  const shouldShowDemoQuiz = () => {
+    // If demo quiz is not included by server, don't show
+    if (!window.__INCLUDE_DEMO_QUIZ__) {
+      return false;
+    }
 
-    // Ensure we start at the top
-    demoOverlay.scrollTo({ top: 0, behavior: 'auto' });
+    // If user has auth signals in localStorage, don't show
+    if (hasAuthSignals()) {
+      return false;
+    }
 
-    setTimeout(() => {
-      demoOverlay.style.opacity = '1';
-    }, 100);
-  }
-}
+    // If server says show by default and no local auth signals, show it
+    return window.__SHOW_DEMO_QUIZ_BY_DEFAULT__ === true;
+  };
 
-function hideDemoQuiz() {
-  const demoOverlay = document.getElementById('demo-quiz-overlay');
-  if (demoOverlay) {
-    demoOverlay.style.opacity = '0';
-    demoOverlay.style.transition = 'opacity 0.3s ease-out';
+  // Initialize demo quiz with cold start handling
+  document.addEventListener('DOMContentLoaded', function() {
+    console.log('[Demo Quiz] Initialization started', {
+      includeDemoQuiz: window.__INCLUDE_DEMO_QUIZ__,
+      showByDefault: window.__SHOW_DEMO_QUIZ_BY_DEFAULT__,
+      hasAuthSignals: hasAuthSignals(),
+      demoQuestion: !!window.__DEMO_QUESTION__
+    });
 
-    setTimeout(() => {
-      demoOverlay.style.display = 'none';
-    }, 300);
-  }
-}
+    // ALWAYS update auth signal cookie on page load
+    updateAuthSignalCookie();
 
-// Language switching functions
-function switchLanguage(lang) {
-  currentLanguage = lang;
+    // Decide whether to show demo quiz
+    const shouldShow = shouldShowDemoQuiz();
 
-  // Update active button
-  document.querySelectorAll('.lang-btn').forEach(btn => {
-    btn.classList.remove('active');
-    if (btn.dataset.lang === lang) {
-      btn.classList.add('active');
+    if (shouldShow && window.__DEMO_QUESTION__) {
+      console.log('[Demo Quiz] Showing demo quiz');
+      demoQuestion = window.__DEMO_QUESTION__;
+      createParticles();
+      initializeDemoQuiz();
+      showDemoQuiz();
+    } else {
+      console.log('[Demo Quiz] Not showing demo quiz:', {
+        shouldShow,
+        hasDemoQuestion: !!window.__DEMO_QUESTION__,
+        reason: !shouldShow ? 'shouldShow=false' : 'no demo question'
+      });
+
+      // Hide demo quiz overlay if it exists
+      const demoOverlay = document.getElementById('demo-quiz-overlay');
+      if (demoOverlay) {
+        demoOverlay.style.display = 'none';
+      }
     }
   });
 
-  // Update UI text
-  updateUILanguage();
-
-  // Update question content if question is loaded
-  if (demoQuestion) {
-    updateQuestionLanguage();
-  }
-}
-
-function updateUILanguage() {
-  const t = translations[currentLanguage];
-
-  // Update header
-  document.getElementById('brand-title').textContent = t.brandTitle;
-  document.getElementById('brand-subtitle').textContent = t.brandSubtitle;
-  document.getElementById('timer-label').textContent = t.timerLabel;
-
-  // Update quiz elements
-  document.getElementById('question-badge').textContent = t.questionLabel;
-
-  const statusText = document.getElementById('status-text');
-  if (statusText && statusText.classList.contains('unselected')) {
-    statusText.textContent = t.selectAnswer;
-  }
-
-  document.getElementById('submit-text').textContent = t.submitAnswer;
-  document.getElementById('hint-text').textContent = `💡 ${t.hintText}`;
-}
-
-function updateQuestionLanguage() {
-  if (!demoQuestion) return;
-
-  // Update question text
-  const questionText = document.getElementById('question-text');
-  if (questionText) {
-    questionText.textContent = demoQuestion.question[currentLanguage] || demoQuestion.question;
-  }
-
-  // Update options
-  ['a', 'b', 'c', 'd'].forEach(option => {
-    const optionElement = document.querySelector(`[data-option="${option}"] .option-text`);
-    if (optionElement && demoQuestion.options[option]) {
-      const optionText = demoQuestion.options[option][currentLanguage] || demoQuestion.options[option];
-      optionElement.textContent = optionText;
+  // UI translations (keep existing translations object)
+  const translations = {
+    en: {
+      brandTitle: 'Rapid Recap',
+      brandSubtitle: 'Experience the Challenge',
+      timerLabel: 'seconds',
+      questionLabel: 'Question 1/1',
+      selectAnswer: 'Select an answer',
+      optionSelected: 'Option {option} selected',
+      submitAnswer: 'Submit Answer',
+      processing: 'Processing...',
+      hintText: 'Take your time, think it through!',
+      timeUp: "Time's Up!",
+      timeUpMessage: "No worries! Daily practice makes perfect.",
+      brilliant: 'Brilliant!',
+      brilliantMessage: "You nailed it! This is how we challenge minds daily.",
+      almostThere: 'Almost There!',
+      almostMessage: "Great attempt! Our daily challenges help you master these.",
+      didYouKnow: 'Did You Know?',
+      readyForMore: 'Ready for More? 🚀',
+      joinThousands: 'Join thousands building their knowledge daily!',
+      signUpContinue: 'Sign Up & Continue',
+      freeText: '100% Free',
+      joinText: '1000+ learners'
+    },
+    hi: {
+      brandTitle: 'Rapid Recap',
+      brandSubtitle: 'चुनौती का अनुभव करें',
+      timerLabel: 'सेकंड',
+      questionLabel: 'प्रश्न 1/1',
+      selectAnswer: 'एक उत्तर चुनें',
+      optionSelected: 'विकल्प {option} चुना गया',
+      submitAnswer: 'उत्तर जमा करें',
+      processing: 'प्रसंस्करण...',
+      hintText: 'अपना समय लें, सोच-समझकर करें!',
+      timeUp: "समय समाप्त!",
+      timeUpMessage: "कोई बात नहीं! दैनिक अभ्यास से सिद्धि मिलती है।",
+      brilliant: 'शानदार!',
+      brilliantMessage: "आपने कमाल कर दिया! हम रोज़ाना ऐसे ही दिमागों को चुनौती देते हैं।",
+      almostThere: 'लगभग सही!',
+      almostMessage: "बेहतरीन कोशिश! हमारी दैनिक चुनौतियां आपको इन विषयों में निपुण बनाती हैं।",
+      didYouKnow: 'क्या आप जानते थे?',
+      readyForMore: 'और के लिए तैयार? 🚀',
+      joinThousands: 'हज़ारों लोगों के साथ अपना ज्ञान बढ़ाएं!',
+      signUpContinue: 'साइन अप करें और जारी रखें',
+      freeText: '100% मुफ्त',
+      joinText: '1000+ सीखने वालों से जुड़ें'
     }
-  });
+  };
 
-  // Update difficulty badge
-  const difficultyBadge = document.querySelector('.difficulty-badge');
-  if (difficultyBadge && demoQuestion.category) {
-    const categoryText = demoQuestion.category[currentLanguage] || demoQuestion.category;
-    difficultyBadge.textContent = categoryText.toUpperCase();
-  }
-}
+  // Keep all the existing functions (createParticles, showDemoQuiz, etc.)
+  // ... [rest of the existing demo quiz functions remain the same]
 
-function updateResultLanguage() {
-  if (!demoQuestion) return;
+  function createParticles() {
+    const particlesContainer = document.querySelector('#demo-quiz-overlay .particles-background');
+    if (!particlesContainer) return;
 
-  const t = translations[currentLanguage];
+    for (let i = 0; i < 60; i++) {
+      const particle = document.createElement('div');
+      particle.classList.add('particle');
 
-  // Update explanation
-  const explanationText = document.getElementById('explanation-text');
-  if (explanationText) {
-    explanationText.textContent = demoQuestion.explanation[currentLanguage] || demoQuestion.explanation;
-  }
+      const size = Math.random() * 3 + 1;
+      const posX = Math.random() * 100;
+      const posY = Math.random() * 100;
+      const opacity = Math.random() * 0.5 + 0.1;
+      const animDuration = Math.random() * 20 + 10;
+      const animDelay = Math.random() * 5;
 
-  document.getElementById('explanation-title').textContent = t.didYouKnow;
-  document.getElementById('cta-title').textContent = t.readyForMore;
-  document.getElementById('cta-subtitle').textContent = t.joinThousands;
-  document.getElementById('signup-text').textContent = t.signUpContinue;
+      particle.style.cssText = `
+        position: absolute;
+        left: ${posX}%;
+        top: ${posY}%;
+        width: ${size}px;
+        height: ${size}px;
+        background-color: white;
+        border-radius: 50%;
+        opacity: ${opacity};
+        animation: twinkle ${animDuration}s infinite ease-in-out ${animDelay}s;
+      `;
 
-  // Fix for the signup note - use separate translation keys
-  const signupNote = document.getElementById('signup-note');
-  if (signupNote) {
-    signupNote.innerHTML = `<strong>${t.freeText}</strong> • ${t.joinText}`;
-  }
-}
-
-function initializeDemoQuiz() {
-  // Reset state
-  selectedAnswer = null;
-
-  // Get demo question data
-  if (window.__DEMO_QUESTION__) {
-    demoQuestion = window.__DEMO_QUESTION__;
-    timeLeft = demoQuestion.timeLimit || 15;
-    document.getElementById('timer-display').textContent = timeLeft;
-
-    // Update question content with current language
-    updateQuestionLanguage();
+      particlesContainer.appendChild(particle);
+    }
   }
 
-  // Initialize UI with current language
-  updateUILanguage();
+  function showDemoQuiz() {
+    const demoOverlay = document.getElementById('demo-quiz-overlay');
+    if (demoOverlay) {
+      demoOverlay.style.display = 'flex';
+      demoOverlay.style.opacity = '0';
+      demoOverlay.style.transition = 'opacity 0.5s ease-in-out';
+      demoOverlay.scrollTo({ top: 0, behavior: 'auto' });
 
-  // Setup event handlers
-  setupLanguageToggle();
-  setupOptionHandlers();
-  setupSubmitButton();
-  setupInfoButton();
-
-  // Initialize UI state
-  updateStatus(false);
-  const submitButton = document.getElementById('submit-button');
-  if (submitButton) {
-    submitButton.disabled = true;
+      setTimeout(() => {
+        demoOverlay.style.opacity = '1';
+      }, 100);
+    }
   }
 
-  // Start timer
-  startTimer();
-}
+  function hideDemoQuiz() {
+    const demoOverlay = document.getElementById('demo-quiz-overlay');
+    if (demoOverlay) {
+      demoOverlay.style.opacity = '0';
+      demoOverlay.style.transition = 'opacity 0.3s ease-out';
 
-function setupLanguageToggle() {
-  const languageButtons = document.querySelectorAll('.lang-btn');
+      setTimeout(() => {
+        demoOverlay.style.display = 'none';
+      }, 300);
+    }
+  }
 
-  languageButtons.forEach(button => {
-    button.addEventListener('click', (e) => {
-      e.preventDefault();
-      const lang = button.dataset.lang;
-      switchLanguage(lang);
+  // Language switching functions
+  function switchLanguage(lang) {
+    currentLanguage = lang;
+    document.querySelectorAll('.lang-btn').forEach(btn => {
+      btn.classList.remove('active');
+      if (btn.dataset.lang === lang) {
+        btn.classList.add('active');
+      }
     });
-  });
-}
+    updateUILanguage();
+    if (demoQuestion) {
+      updateQuestionLanguage();
+    }
+  }
 
-function setupOptionHandlers() {
-  const optionButtons = document.querySelectorAll('#demo-quiz-overlay .option-button');
+  function updateUILanguage() {
+    const t = translations[currentLanguage];
+    document.getElementById('brand-title').textContent = t.brandTitle;
+    document.getElementById('brand-subtitle').textContent = t.brandSubtitle;
+    document.getElementById('timer-label').textContent = t.timerLabel;
+    document.getElementById('question-badge').textContent = t.questionLabel;
 
-  optionButtons.forEach(button => {
-    button.addEventListener('click', (e) => {
-      e.preventDefault();
-      const option = button.dataset.option;
-      selectAnswer(option, button);
+    const statusText = document.getElementById('status-text');
+    if (statusText && statusText.classList.contains('unselected')) {
+      statusText.textContent = t.selectAnswer;
+    }
+
+    document.getElementById('submit-text').textContent = t.submitAnswer;
+    document.getElementById('hint-text').textContent = `💡 ${t.hintText}`;
+  }
+
+  function updateQuestionLanguage() {
+    if (!demoQuestion) return;
+
+    const questionText = document.getElementById('question-text');
+    if (questionText) {
+      questionText.textContent = demoQuestion.question[currentLanguage] || demoQuestion.question;
+    }
+
+    ['a', 'b', 'c', 'd'].forEach(option => {
+      const optionElement = document.querySelector(`[data-option="${option}"] .option-text`);
+      if (optionElement && demoQuestion.options[option]) {
+        const optionText = demoQuestion.options[option][currentLanguage] || demoQuestion.options[option];
+        optionElement.textContent = optionText;
+      }
     });
-  });
-}
 
-function setupSubmitButton() {
-  const submitButton = document.getElementById('submit-button');
-  if (submitButton) {
-    submitButton.addEventListener('click', (e) => {
-      e.preventDefault();
-      if (selectedAnswer) {
+    const difficultyBadge = document.querySelector('.difficulty-badge');
+    if (difficultyBadge && demoQuestion.category) {
+      const categoryText = demoQuestion.category[currentLanguage] || demoQuestion.category;
+      difficultyBadge.textContent = categoryText.toUpperCase();
+    }
+  }
+
+  function updateResultLanguage() {
+    if (!demoQuestion) return;
+
+    const t = translations[currentLanguage];
+    const explanationText = document.getElementById('explanation-text');
+    if (explanationText) {
+      explanationText.textContent = demoQuestion.explanation[currentLanguage] || demoQuestion.explanation;
+    }
+
+    document.getElementById('explanation-title').textContent = t.didYouKnow;
+    document.getElementById('cta-title').textContent = t.readyForMore;
+    document.getElementById('cta-subtitle').textContent = t.joinThousands;
+    document.getElementById('signup-text').textContent = t.signUpContinue;
+
+    const signupNote = document.getElementById('signup-note');
+    if (signupNote) {
+      signupNote.innerHTML = `<strong>${t.freeText}</strong> • ${t.joinText}`;
+    }
+  }
+
+  function initializeDemoQuiz() {
+    selectedAnswer = null;
+    if (window.__DEMO_QUESTION__) {
+      demoQuestion = window.__DEMO_QUESTION__;
+      timeLeft = demoQuestion.timeLimit || 15;
+      document.getElementById('timer-display').textContent = timeLeft;
+      updateQuestionLanguage();
+    }
+
+    updateUILanguage();
+    setupLanguageToggle();
+    setupOptionHandlers();
+    setupSubmitButton();
+    setupInfoButton();
+    updateStatus(false);
+
+    const submitButton = document.getElementById('submit-button');
+    if (submitButton) {
+      submitButton.disabled = true;
+    }
+
+    startTimer();
+  }
+
+  function setupLanguageToggle() {
+    const languageButtons = document.querySelectorAll('.lang-btn');
+    languageButtons.forEach(button => {
+      button.addEventListener('click', (e) => {
+        e.preventDefault();
+        switchLanguage(button.dataset.lang);
+      });
+    });
+  }
+
+  function setupOptionHandlers() {
+    const optionButtons = document.querySelectorAll('#demo-quiz-overlay .option-button');
+    optionButtons.forEach(button => {
+      button.addEventListener('click', (e) => {
+        e.preventDefault();
+        selectAnswer(button.dataset.option, button);
+      });
+    });
+  }
+
+  function setupSubmitButton() {
+    const submitButton = document.getElementById('submit-button');
+    if (submitButton) {
+      submitButton.addEventListener('click', (e) => {
+        e.preventDefault();
+        if (selectedAnswer) {
+          submitAnswer();
+        }
+      });
+    }
+  }
+
+  function setupInfoButton() {
+    const infoButton = document.getElementById('info-button');
+    if (infoButton) {
+      infoButton.addEventListener('click', () => {
+        hideDemoQuiz();
+      });
+    }
+  }
+
+  function selectAnswer(answer, buttonElement) {
+    selectedAnswer = answer;
+    document.querySelectorAll('#demo-quiz-overlay .option-button').forEach(btn => {
+      btn.classList.remove('selected');
+    });
+    buttonElement.classList.add('selected');
+    updateStatus(true);
+
+    const submitButton = document.getElementById('submit-button');
+    if (submitButton) {
+      submitButton.disabled = false;
+    }
+  }
+
+  function updateStatus(hasAnswer) {
+    const statusContent = document.getElementById('status-content');
+    const statusText = statusContent.querySelector('.status-text');
+    const statusIcon = statusContent.querySelector('.status-icon');
+    const t = translations[currentLanguage];
+
+    if (hasAnswer) {
+      statusText.textContent = t.optionSelected.replace('{option}', selectedAnswer.toUpperCase());
+      statusText.className = 'status-text';
+      statusIcon.innerHTML = `
+        <svg class="status-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <path d="M20 6L9 17l-5-5"/>
+        </svg>
+      `;
+    } else {
+      statusText.textContent = t.selectAnswer;
+      statusText.className = 'status-text unselected';
+      statusIcon.innerHTML = `
+        <svg class="status-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <circle cx="12" cy="12" r="10"/>
+          <circle cx="12" cy="12" r="3"/>
+        </svg>
+      `;
+    }
+  }
+
+  function startTimer() {
+    startTime = Date.now();
+    timerInterval = setInterval(() => {
+      timeLeft--;
+      const timerDisplay = document.getElementById('timer-display');
+      if (timerDisplay) {
+        timerDisplay.textContent = timeLeft;
+      }
+
+      const timerCircle = document.getElementById('timer-circle');
+      if (timerCircle) {
+        timerCircle.classList.remove('warning', 'critical');
+        if (timeLeft <= 5) {
+          timerCircle.classList.add('critical');
+        } else if (timeLeft <= 10) {
+          timerCircle.classList.add('warning');
+        }
+      }
+
+      if (timeLeft <= 0) {
+        clearInterval(timerInterval);
         submitAnswer();
       }
-    });
+    }, 1000);
   }
-}
 
-function setupInfoButton() {
-  const infoButton = document.getElementById('info-button');
-  if (infoButton) {
-    infoButton.addEventListener('click', () => {
-      // Simply hide the demo quiz overlay
-      hideDemoQuiz();
-    });
-  }
-}
-
-function selectAnswer(answer, buttonElement) {
-  selectedAnswer = answer;
-
-  // Update option buttons
-  document.querySelectorAll('#demo-quiz-overlay .option-button').forEach(btn => {
-    btn.classList.remove('selected');
-  });
-
-  buttonElement.classList.add('selected');
-
-  // Update status
-  updateStatus(true);
-
-  // Enable submit button
-  const submitButton = document.getElementById('submit-button');
-  if (submitButton) {
-    submitButton.disabled = false;
-  }
-}
-
-function updateStatus(hasAnswer) {
-  const statusContent = document.getElementById('status-content');
-  const statusText = statusContent.querySelector('.status-text');
-  const statusIcon = statusContent.querySelector('.status-icon');
-  const t = translations[currentLanguage];
-
-  if (hasAnswer) {
-    statusText.textContent = t.optionSelected.replace('{option}', selectedAnswer.toUpperCase());
-    statusText.className = 'status-text';
-    statusIcon.innerHTML = `
-      <svg class="status-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-        <path d="M20 6L9 17l-5-5"/>
-      </svg>
-    `;
-  } else {
-    statusText.textContent = t.selectAnswer;
-    statusText.className = 'status-text unselected';
-    statusIcon.innerHTML = `
-      <svg class="status-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-        <circle cx="12" cy="12" r="10"/>
-        <circle cx="12" cy="12" r="3"/>
-      </svg>
-    `;
-  }
-}
-
-function startTimer() {
-  startTime = Date.now();
-
-  timerInterval = setInterval(() => {
-    timeLeft--;
-    const timerDisplay = document.getElementById('timer-display');
-    if (timerDisplay) {
-      timerDisplay.textContent = timeLeft;
-    }
-
-    const timerCircle = document.getElementById('timer-circle');
-    if (timerCircle) {
-      timerCircle.classList.remove('warning', 'critical');
-      if (timeLeft <= 5) {
-        timerCircle.classList.add('critical');
-      } else if (timeLeft <= 10) {
-        timerCircle.classList.add('warning');
-      }
-    }
-
-    if (timeLeft <= 0) {
+  function submitAnswer() {
+    if (timerInterval) {
       clearInterval(timerInterval);
-      submitAnswer();
     }
-  }, 1000);
-}
 
-function submitAnswer() {
-  if (timerInterval) {
-    clearInterval(timerInterval);
+    const submitButton = document.getElementById('submit-button');
+    const t = translations[currentLanguage];
+
+    if (submitButton) {
+      submitButton.disabled = true;
+      document.getElementById('submit-text').textContent = t.processing;
+    }
+
+    const timeTaken = Math.round((Date.now() - startTime) / 1000);
+    submitDemoAnswer(selectedAnswer, timeTaken);
+    setTimeout(() => showResult(selectedAnswer), 800);
   }
 
-  // Disable submit button to prevent multiple submissions
-  const submitButton = document.getElementById('submit-button');
-  const t = translations[currentLanguage];
+  function showResult(userAnswer) {
+    const isCorrect = userAnswer === demoQuestion?.correctAnswer;
+    const t = translations[currentLanguage];
 
-  if (submitButton) {
-    submitButton.disabled = true;
-    document.getElementById('submit-text').textContent = t.processing;
+    const quizContainer = document.getElementById('quiz-container');
+    const resultContainer = document.getElementById('result-container');
+
+    if (quizContainer) {
+      quizContainer.style.opacity = '0';
+      quizContainer.style.transition = 'opacity 0.3s ease-out';
+
+      setTimeout(() => {
+        quizContainer.style.display = 'none';
+        if (resultContainer) {
+          resultContainer.style.display = 'block';
+          setTimeout(() => {
+            resultContainer.style.opacity = '1';
+            resultContainer.style.transform = 'translateY(0)';
+          }, 100);
+        }
+      }, 300);
+    }
+
+    const resultIcon = document.getElementById('result-icon');
+    const resultTitle = document.getElementById('result-title');
+    const resultMessage = document.getElementById('result-message');
+
+    if (userAnswer === null) {
+      if (resultIcon) resultIcon.textContent = '⏰';
+      if (resultTitle) resultTitle.textContent = t.timeUp;
+      if (resultMessage) resultMessage.textContent = t.timeUpMessage;
+    } else if (isCorrect) {
+      if (resultIcon) resultIcon.textContent = '🎉';
+      if (resultTitle) resultTitle.textContent = t.brilliant;
+      if (resultMessage) resultMessage.textContent = t.brilliantMessage;
+    } else {
+      if (resultIcon) resultIcon.textContent = '🎯';
+      if (resultTitle) resultTitle.textContent = t.almostThere;
+      if (resultMessage) resultMessage.textContent = t.almostMessage;
+    }
+
+    updateResultLanguage();
+    setupCTAButton();
   }
 
-  const timeTaken = Math.round((Date.now() - startTime) / 1000);
-
-  // Submit to backend
-  submitDemoAnswer(selectedAnswer, timeTaken);
-
-  // Show result with a small delay for better UX
-  setTimeout(() => showResult(selectedAnswer), 800);
-}
-
-function showResult(userAnswer) {
-  const isCorrect = userAnswer === demoQuestion?.correctAnswer;
-  const t = translations[currentLanguage];
-
-  // Hide quiz and show result
-  const quizContainer = document.getElementById('quiz-container');
-  const resultContainer = document.getElementById('result-container');
-
-  if (quizContainer) {
-    quizContainer.style.opacity = '0';
-    quizContainer.style.transition = 'opacity 0.3s ease-out';
-
-    setTimeout(() => {
-      quizContainer.style.display = 'none';
-      if (resultContainer) {
-        resultContainer.style.display = 'block';
-
-        // Animate result container in
-        setTimeout(() => {
-          resultContainer.style.opacity = '1';
-          resultContainer.style.transform = 'translateY(0)';
-        }, 100);
-      }
-    }, 300);
+  function setupCTAButton() {
+    const signupBtn = document.getElementById('signup-btn');
+    if (signupBtn) {
+      signupBtn.addEventListener('click', (e) => {
+        e.preventDefault();
+        hideDemoQuiz();
+        window.location.hash = '#signin';
+      });
+    }
   }
 
-  // Update result content
-  const resultIcon = document.getElementById('result-icon');
-  const resultTitle = document.getElementById('result-title');
-  const resultMessage = document.getElementById('result-message');
-
-  if (userAnswer === null) {
-    if (resultIcon) resultIcon.textContent = '⏰';
-    if (resultTitle) resultTitle.textContent = t.timeUp;
-    if (resultMessage) resultMessage.textContent = t.timeUpMessage;
-  } else if (isCorrect) {
-    if (resultIcon) resultIcon.textContent = '🎉';
-    if (resultTitle) resultTitle.textContent = t.brilliant;
-    if (resultMessage) resultMessage.textContent = t.brilliantMessage;
-  } else {
-    if (resultIcon) resultIcon.textContent = '🎯';
-    if (resultTitle) resultTitle.textContent = t.almostThere;
-    if (resultMessage) resultMessage.textContent = t.almostMessage;
+  async function submitDemoAnswer(answer, timeTaken) {
+    try {
+      await fetch('/api/demo-quiz/answer', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          selectedAnswer: answer,
+          timeTaken: timeTaken,
+          correctAnswer: demoQuestion?.correctAnswer,
+          questionCategory: demoQuestion?.category?.[currentLanguage] || demoQuestion?.category,
+          language: currentLanguage,
+        })
+      });
+    } catch (error) {
+      console.error('Failed to submit demo answer:', error);
+    }
   }
-
-  // Update result page language
-  updateResultLanguage();
-
-  // Setup CTA button
-  setupCTAButton();
-}
-
-function setupCTAButton() {
-  const signupBtn = document.getElementById('signup-btn');
-
-  if (signupBtn) {
-    signupBtn.addEventListener('click', (e) => {
-      e.preventDefault();
-      hideDemoQuiz();
-      window.location.hash = '#signin';
-    });
-  }
-}
-
-async function submitDemoAnswer(answer, timeTaken) {
-  try {
-    await fetch('/api/demo-quiz/answer', {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify({
-        selectedAnswer: answer,
-        timeTaken: timeTaken,
-        correctAnswer: demoQuestion?.correctAnswer,
-        questionCategory: demoQuestion?.category?.[currentLanguage] || demoQuestion?.category,
-        language: currentLanguage,
-      })
-    });
-  } catch (error) {
-    console.error('Failed to submit demo answer:', error);
-  }
-}
-</script>
+  </script>
 
 <style>
 /* Modern Demo Quiz Interface - Fixed Version */
