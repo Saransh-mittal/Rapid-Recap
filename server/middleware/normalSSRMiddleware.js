@@ -1,13 +1,13 @@
-// middleware/normalSSRMiddleware.js - Updated to inject demo quiz overlay into index.html
+// middleware/normalSSRMiddleware.js - PROPER SOLUTION for cold start
 
 const path = require('path')
 const fs = require('fs').promises
 const cache = require('memory-cache')
 const express = require('express')
-const jwt = require('jsonwebtoken')
 const { generateDemoQuestion } = require('../controllers/demoQuizController')
 
 const CACHE_DURATION = 5 * 60 * 1000 // 5 minutes
+const AUTH_SIGNAL_COOKIE = 'auth_signal'
 
 async function getSplashContent() {
   try {
@@ -47,7 +47,6 @@ async function getDemoQuizOverlayContent() {
   }
 }
 
-// Get demo question for injection
 async function getDemoQuestionForInjection() {
   try {
     const cachedQuestion = cache.get('demo-question-injection')
@@ -57,7 +56,7 @@ async function getDemoQuestionForInjection() {
 
     const result = await generateDemoQuestion()
     if (result.success) {
-      cache.put('demo-question-injection', result.question, 30 * 60 * 1000) // Cache for 30 minutes
+      cache.put('demo-question-injection', result.question, 30 * 60 * 1000)
       return result.question
     }
 
@@ -68,62 +67,51 @@ async function getDemoQuestionForInjection() {
   }
 }
 
-// Check if user is authenticated using same logic as authenticate.js
-function isUserAuthenticated(req) {
-  try {
-    const token = req.cookies.access_token
-    if (!token) {
-      return false
-    }
+// UPDATED: Handle cold start problem
+function getAuthenticationState(req) {
+  const authSignal = req.cookies[AUTH_SIGNAL_COOKIE]
+  const accessToken = req.cookies.access_token
 
-    // Verify JWT token
-    const decoded = jwt.verify(token, process.env.ACCESS_TOKEN_SECRET)
-
-    if (decoded) {
-      return true
-    }
-
-    return false
-  } catch (error) {
-    // Token is invalid or expired
-    return false
+  // If we have auth signal cookie, trust it (returning user)
+  if (authSignal === 'true') {
+    return { isAuthenticated: true, isReturningUser: true }
   }
+
+  // If we have access token but no auth signal, likely returning user
+  if (accessToken) {
+    return { isAuthenticated: true, isReturningUser: true }
+  }
+
+  // No cookies = cold start (could be new user OR returning user)
+  return { isAuthenticated: false, isReturningUser: false }
 }
 
-// UPDATED: Inject demo question into demo quiz overlay HTML with multilingual support
 function injectDemoQuestionIntoOverlay(overlayContent, demoQuestion) {
   if (!demoQuestion) return overlayContent
 
-  // Extract English content for SSR (default language)
   const questionText = demoQuestion.question?.en || demoQuestion.question || ''
   const category =
     demoQuestion.category?.en || demoQuestion.category || 'General Knowledge'
   const explanation =
     demoQuestion.explanation?.en || demoQuestion.explanation || ''
 
-  // Handle multilingual options
   const options = demoQuestion.options || {}
   const optionA = options.a?.en || options.a || ''
   const optionB = options.b?.en || options.b || ''
   const optionC = options.c?.en || options.c || ''
   const optionD = options.d?.en || options.d || ''
 
-  // Replace placeholders in HTML with actual question data using global regex
   let processedContent = overlayContent
     .replace(/{{QUESTION_TEXT}}/g, questionText)
     .replace(/{{QUESTION_CATEGORY}}/g, category)
     .replace(/{{TIME_LIMIT}}/g, demoQuestion.timeLimit || 15)
     .replace(/{{EXPLANATION}}/g, explanation)
     .replace(/{{CORRECT_ANSWER}}/g, demoQuestion.correctAnswer || 'a')
-
-  // Inject options using global regex
-  processedContent = processedContent
     .replace(/{{OPTION_A}}/g, optionA)
     .replace(/{{OPTION_B}}/g, optionB)
     .replace(/{{OPTION_C}}/g, optionC)
     .replace(/{{OPTION_D}}/g, optionD)
 
-  // Set difficulty class
   const difficulty = demoQuestion.difficulty || 0.5
   let difficultyClass = 'medium'
   let difficultyText = 'MEDIUM'
@@ -145,62 +133,63 @@ function injectDemoQuestionIntoOverlay(overlayContent, demoQuestion) {
 
 async function createSSRMiddleware(app) {
   try {
-    // Setup static file handling first
     setupStaticHandling(app)
 
     return async (req, res, next) => {
       const url = req.originalUrl
       const isPwaLaunch = req.query.source === 'pwa'
-      // Skip SSR for service-specific routes
+
       if (shouldSkipService(url)) {
         return next()
       }
 
-      // Handle CSS files specifically
       if (url.endsWith('.css')) {
         return handleCSSRequest(req, res, next)
       }
 
-      // Skip SSR for other static files
       if (shouldSkipSSR(url)) {
         return next()
       }
 
-      // Handle client-side rendering
       try {
         const isRootRoute = url === '/' || url === ''
-        const isAuthenticated = isUserAuthenticated(req)
+        const { isAuthenticated, isReturningUser } = getAuthenticationState(req)
 
-        // Determine if we should show demo quiz
-        const shouldShowDemoQuiz =
-          isRootRoute && !isAuthenticated && !isPwaLaunch
+        // UPDATED: New decision logic
+        const shouldIncludeDemoQuiz = isRootRoute && !isPwaLaunch
+        const shouldShowDemoQuizByDefault =
+          shouldIncludeDemoQuiz && (!isAuthenticated || !isReturningUser)
 
         console.log('SSR Processing:', {
           url,
           isRootRoute,
           isAuthenticated,
-          shouldShowDemoQuiz,
+          isReturningUser,
+          shouldIncludeDemoQuiz,
+          shouldShowDemoQuizByDefault,
+          authSignalCookie: req.cookies[AUTH_SIGNAL_COOKIE],
+          accessTokenCookie: !!req.cookies.access_token,
         })
 
-        // Get all required content
-        const [splashContent, template, demoQuizOverlayContent, demoQuestion] =
-          await Promise.all([
-            getSplashContent(),
-            fs.readFile(
-              path.resolve(__dirname, '../client/dist/index.html'),
-              'utf-8',
-            ),
-            shouldShowDemoQuiz
-              ? getDemoQuizOverlayContent()
-              : Promise.resolve(''),
-            shouldShowDemoQuiz
-              ? getDemoQuestionForInjection()
-              : Promise.resolve(null),
-          ])
+        // ALWAYS get splash content
+        const splashContent = await getSplashContent()
+        const template = await fs.readFile(
+          path.resolve(__dirname, '../client/dist/index.html'),
+          'utf-8',
+        )
 
-        // Process demo quiz overlay if needed
+        // Get demo quiz content if needed
+        let demoQuizOverlayContent = ''
+        let demoQuestion = null
+
+        if (shouldIncludeDemoQuiz) {
+          demoQuizOverlayContent = await getDemoQuizOverlayContent()
+          demoQuestion = await getDemoQuestionForInjection()
+        }
+
+        // Process demo quiz overlay
         let processedDemoQuizOverlay = ''
-        if (shouldShowDemoQuiz && demoQuizOverlayContent && demoQuestion) {
+        if (shouldIncludeDemoQuiz && demoQuizOverlayContent && demoQuestion) {
           processedDemoQuizOverlay = injectDemoQuestionIntoOverlay(
             demoQuizOverlayContent,
             demoQuestion,
@@ -216,15 +205,27 @@ async function createSSRMiddleware(app) {
             splashContent,
           )
 
-        // Add demo quiz overlay if needed (after splash screen)
-        if (shouldShowDemoQuiz && processedDemoQuizOverlay) {
-          // UPDATED: Inject demo quiz overlay with complete multilingual data
+        // UPDATED: Always include demo quiz HTML but let client decide visibility
+        if (shouldIncludeDemoQuiz && processedDemoQuizOverlay) {
           processedTemplate = processedTemplate.replace(
             '</body>',
             `${processedDemoQuizOverlay}
             <script>
-              window.__SHOW_DEMO_QUIZ__ = true;
+              // Let client-side decide based on localStorage
+              window.__INCLUDE_DEMO_QUIZ__ = true;
+              window.__SHOW_DEMO_QUIZ_BY_DEFAULT__ = ${shouldShowDemoQuizByDefault};
               window.__DEMO_QUESTION__ = ${JSON.stringify(demoQuestion)};
+              window.__AUTH_SIGNAL_COOKIE__ = '${AUTH_SIGNAL_COOKIE}';
+            </script>
+            </body>`,
+          )
+        } else {
+          processedTemplate = processedTemplate.replace(
+            '</body>',
+            `<script>
+              window.__INCLUDE_DEMO_QUIZ__ = false;
+              window.__SHOW_DEMO_QUIZ_BY_DEFAULT__ = false;
+              window.__AUTH_SIGNAL_COOKIE__ = '${AUTH_SIGNAL_COOKIE}';
             </script>
             </body>`,
           )
