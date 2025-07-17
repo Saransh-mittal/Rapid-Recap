@@ -72,7 +72,6 @@ async function getDemoQuestionForInjection() {
 function isUserAuthenticated(req) {
   try {
     const token = req.cookies.access_token
-    console.log(token)
     if (!token) {
       return false
     }
@@ -151,7 +150,7 @@ async function createSSRMiddleware(app) {
 
     return async (req, res, next) => {
       const url = req.originalUrl
-
+      const isPwaLaunch = req.query.source === 'pwa'
       // Skip SSR for service-specific routes
       if (shouldSkipService(url)) {
         return next()
@@ -173,7 +172,8 @@ async function createSSRMiddleware(app) {
         const isAuthenticated = isUserAuthenticated(req)
 
         // Determine if we should show demo quiz
-        const shouldShowDemoQuiz = isRootRoute && !isAuthenticated
+        const shouldShowDemoQuiz =
+          isRootRoute && !isAuthenticated && !isPwaLaunch
 
         console.log('SSR Processing:', {
           url,
