@@ -151,7 +151,6 @@ async function createSSRMiddleware(app) {
     return async (req, res, next) => {
       const url = req.originalUrl
       const isPwaLaunch = req.query.source === 'pwa'
-      console.log('isPwaLaunch:', isPwaLaunch)
       // Skip SSR for service-specific routes
       if (shouldSkipService(url)) {
         return next()
