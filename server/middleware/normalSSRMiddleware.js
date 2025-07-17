@@ -1,7 +1,11 @@
+// middleware/normalSSRMiddleware.js - Updated to inject demo quiz overlay into index.html
+
 const path = require('path')
 const fs = require('fs').promises
 const cache = require('memory-cache')
 const express = require('express')
+const jwt = require('jsonwebtoken')
+const { generateDemoQuestion } = require('../controllers/demoQuizController')
 
 const CACHE_DURATION = 5 * 60 * 1000 // 5 minutes
 
@@ -22,6 +26,122 @@ async function getSplashContent() {
     console.error('Error reading splash content:', error)
     return ''
   }
+}
+
+async function getDemoQuizOverlayContent() {
+  try {
+    const cachedContent = cache.get('demo-quiz-overlay-content')
+    if (cachedContent) {
+      return cachedContent
+    }
+
+    const content = await fs.readFile(
+      path.resolve(__dirname, '../client/dist/demo-quiz-overlay.html'),
+      'utf-8',
+    )
+    cache.put('demo-quiz-overlay-content', content, CACHE_DURATION)
+    return content
+  } catch (error) {
+    console.error('Error reading demo quiz overlay content:', error)
+    return ''
+  }
+}
+
+// Get demo question for injection
+async function getDemoQuestionForInjection() {
+  try {
+    const cachedQuestion = cache.get('demo-question-injection')
+    if (cachedQuestion) {
+      return cachedQuestion
+    }
+
+    const result = await generateDemoQuestion()
+    if (result.success) {
+      cache.put('demo-question-injection', result.question, 30 * 60 * 1000) // Cache for 30 minutes
+      return result.question
+    }
+
+    return null
+  } catch (error) {
+    console.error('Error getting demo question for injection:', error)
+    return null
+  }
+}
+
+// Check if user is authenticated using same logic as authenticate.js
+function isUserAuthenticated(req) {
+  try {
+    const token = req.cookies.access_token
+
+    if (!token) {
+      return false
+    }
+
+    // Verify JWT token
+    const decoded = jwt.verify(token, process.env.ACCESS_TOKEN_SECRET)
+
+    if (decoded) {
+      return true
+    }
+
+    return false
+  } catch (error) {
+    // Token is invalid or expired
+    return false
+  }
+}
+
+// UPDATED: Inject demo question into demo quiz overlay HTML with multilingual support
+function injectDemoQuestionIntoOverlay(overlayContent, demoQuestion) {
+  if (!demoQuestion) return overlayContent
+
+  // Extract English content for SSR (default language)
+  const questionText = demoQuestion.question?.en || demoQuestion.question || ''
+  const category =
+    demoQuestion.category?.en || demoQuestion.category || 'General Knowledge'
+  const explanation =
+    demoQuestion.explanation?.en || demoQuestion.explanation || ''
+
+  // Handle multilingual options
+  const options = demoQuestion.options || {}
+  const optionA = options.a?.en || options.a || ''
+  const optionB = options.b?.en || options.b || ''
+  const optionC = options.c?.en || options.c || ''
+  const optionD = options.d?.en || options.d || ''
+
+  // Replace placeholders in HTML with actual question data using global regex
+  let processedContent = overlayContent
+    .replace(/{{QUESTION_TEXT}}/g, questionText)
+    .replace(/{{QUESTION_CATEGORY}}/g, category)
+    .replace(/{{TIME_LIMIT}}/g, demoQuestion.timeLimit || 15)
+    .replace(/{{EXPLANATION}}/g, explanation)
+    .replace(/{{CORRECT_ANSWER}}/g, demoQuestion.correctAnswer || 'a')
+
+  // Inject options using global regex
+  processedContent = processedContent
+    .replace(/{{OPTION_A}}/g, optionA)
+    .replace(/{{OPTION_B}}/g, optionB)
+    .replace(/{{OPTION_C}}/g, optionC)
+    .replace(/{{OPTION_D}}/g, optionD)
+
+  // Set difficulty class
+  const difficulty = demoQuestion.difficulty || 0.5
+  let difficultyClass = 'medium'
+  let difficultyText = 'MEDIUM'
+
+  if (difficulty < 0.3) {
+    difficultyClass = 'easy'
+    difficultyText = 'EASY'
+  } else if (difficulty >= 0.6) {
+    difficultyClass = 'hard'
+    difficultyText = 'HARD'
+  }
+
+  processedContent = processedContent
+    .replace(/{{DIFFICULTY_CLASS}}/g, difficultyClass)
+    .replace(/{{DIFFICULTY_TEXT}}/g, difficultyText)
+
+  return processedContent
 }
 
 async function createSSRMiddleware(app) {
@@ -49,21 +169,66 @@ async function createSSRMiddleware(app) {
 
       // Handle client-side rendering
       try {
-        const [splashContent, template] = await Promise.all([
-          getSplashContent(),
-          fs.readFile(
-            path.resolve(__dirname, '../client/dist/index.html'),
-            'utf-8',
-          ),
-        ])
-        // console.log('splashContent', splashContent)
-        const processedTemplate = template
+        const isRootRoute = url === '/' || url === ''
+        const isAuthenticated = isUserAuthenticated(req)
+
+        // Determine if we should show demo quiz
+        const shouldShowDemoQuiz = isRootRoute && !isAuthenticated
+
+        console.log('SSR Processing:', {
+          url,
+          isRootRoute,
+          isAuthenticated,
+          shouldShowDemoQuiz,
+        })
+
+        // Get all required content
+        const [splashContent, template, demoQuizOverlayContent, demoQuestion] =
+          await Promise.all([
+            getSplashContent(),
+            fs.readFile(
+              path.resolve(__dirname, '../client/dist/index.html'),
+              'utf-8',
+            ),
+            shouldShowDemoQuiz
+              ? getDemoQuizOverlayContent()
+              : Promise.resolve(''),
+            shouldShowDemoQuiz
+              ? getDemoQuestionForInjection()
+              : Promise.resolve(null),
+          ])
+
+        // Process demo quiz overlay if needed
+        let processedDemoQuizOverlay = ''
+        if (shouldShowDemoQuiz && demoQuizOverlayContent && demoQuestion) {
+          processedDemoQuizOverlay = injectDemoQuestionIntoOverlay(
+            demoQuizOverlayContent,
+            demoQuestion,
+          )
+        }
+
+        // Inject splash screen content
+        let processedTemplate = template
           .replace('<!--ssr-outlet-->', '')
           .replace(
             `<div id="splash-screen" aria-label="Loading screen">
     </div>`,
             splashContent,
           )
+
+        // Add demo quiz overlay if needed (after splash screen)
+        if (shouldShowDemoQuiz && processedDemoQuizOverlay) {
+          // UPDATED: Inject demo quiz overlay with complete multilingual data
+          processedTemplate = processedTemplate.replace(
+            '</body>',
+            `${processedDemoQuizOverlay}
+            <script>
+              window.__SHOW_DEMO_QUIZ__ = true;
+              window.__DEMO_QUESTION__ = ${JSON.stringify(demoQuestion)};
+            </script>
+            </body>`,
+          )
+        }
 
         res.setHeader('Content-Type', 'text/html; charset=utf-8')
         res.setHeader('Cache-Control', 'no-store, must-revalidate')
