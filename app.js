@@ -334,7 +334,7 @@ const {
 generateGoogleNewsSitemap()
 
 // Load scheduler
-// require('./scheduler/setupCronJobs')
+require('./scheduler/setupCronJobs')
 
 // ============== KEEP-ALIVE FUNCTIONALITY ==============
 // Check if we're running on Railway
