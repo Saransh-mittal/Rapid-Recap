@@ -72,7 +72,8 @@ async function getDemoQuestionForInjection() {
 function isUserAuthenticated(req) {
   try {
     const token = req.cookies.access_token
-
+    console.log(req)
+    console.log(req.cookies)
     if (!token) {
       return false
     }
