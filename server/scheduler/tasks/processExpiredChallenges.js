@@ -1,11 +1,14 @@
 // scheduler/tasks/processExpiredChallenges.js
 const QuickClashChallenge = require('../../model/quickClashSchemas/quickClashChallengeSchema')
+const {
+  updateChallengeScore,
+} = require('../../services/quickClashServices/quickClashChallengeService')
 
 /**
  * Process expired Quick Clash challenges
  * - For challenges that are expired and one player has attempted but the other hasn't
  * - Mark non-attempting player with score 0 and challenge as completed
- * - Trigger analysis generation
+ * - Trigger analysis generation via updateChallengeScore
  */
 const processExpiredChallenges = async () => {
   try {
@@ -32,22 +35,22 @@ const processExpiredChallenges = async () => {
         const challengerAttempted = challenge.challengerAttempted
         const opponentAttempted = challenge.opponentAttempted
 
-        // Set the non-attempting player's score to 0 and mark as attempted
+        // Use updateChallengeScore to set the non-attempting player's score to 0
         if (challengerAttempted && !opponentAttempted) {
-          challenge.opponentScore = 0
-          challenge.opponentAttempted = true
-          challenge.winner =
-            challenge.challengerScore > 0 ? challenge.challenger._id : null
+          // Opponent didn't attempt, set their score to 0
+          await updateChallengeScore({
+            challengeId: challenge._id,
+            userId: challenge.opponent._id,
+            score: 0,
+          })
         } else if (!challengerAttempted && opponentAttempted) {
-          challenge.challengerScore = 0
-          challenge.challengerAttempted = true
-          challenge.winner =
-            challenge.opponentScore > 0 ? challenge.opponent._id : null
+          // Challenger didn't attempt, set their score to 0
+          await updateChallengeScore({
+            challengeId: challenge._id,
+            userId: challenge.challenger._id,
+            score: 0,
+          })
         }
-
-        // Mark challenge as completed
-        challenge.status = 'completed'
-        await challenge.save()
 
         console.log(`Processed expired challenge ${challenge._id}`)
       } catch (processingError) {

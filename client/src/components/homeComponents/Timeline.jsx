@@ -1,3 +1,4 @@
+// client/src/components/homeComponents/Timeline.jsx
 import React, { useEffect, useRef, useState, useMemo, useCallback } from 'react'
 import { Box, Flex, useBreakpointValue, useMediaQuery } from '@chakra-ui/react'
 import { useNavigate } from 'react-router-dom'
@@ -17,6 +18,7 @@ import VirtualizedGrid from './VirtualizedGrid'
 import ArticleSearchBar from './ArticleSearchBar'
 import ModernCategories from './ModernCategories'
 import FloatingActionButtons from './FloatingActionButtons'
+import EmptyState from './EmptyState'
 
 const Timeline = ({
   data,
@@ -71,6 +73,11 @@ const Timeline = ({
     return Array.isArray(data) ? data : []
   }, [isSearching, searchResults, data])
 
+  // Check if we should show empty state
+  const shouldShowEmptyState = useMemo(() => {
+    return !load && !searchLoading && displayedData.length === 0
+  }, [load, searchLoading, displayedData.length])
+
   // Category Navigation
   const handleActiveCategory = useCallback(
     ({ category: newCategory, shouldNavigateOrNot = true }) => {
@@ -94,6 +101,11 @@ const Timeline = ({
       )
     }
   }, [isSearching, searchResults.length, dispatchRedux, searchTerm])
+
+  // Refresh Handler
+  const handleRefresh = useCallback(() => {
+    window.location.reload()
+  }, [])
 
   // Category Index
   const activeCategoryIndex = useMemo(() => {
@@ -191,36 +203,38 @@ const Timeline = ({
           <Flex
             flexDirection={'column'}
             position={'relative'}
-            width={{ base: '100%', lg: 'calc(100vw - 260px)' }} // Increased from 82%
+            width={{ base: '100%', lg: 'calc(100vw - 260px)' }}
             ml={'auto'}
-            mr={{ base: '0', lg: '2rem' }} // Added explicit right margin
+            mr={{ base: '0', lg: '2rem' }}
             overflow={'hidden'}
             justifyContent={'center'}
             alignItems={'center'}
           >
-            {/* Search Bar */}
-            <Flex
-              width={{ base: '100%', lg: '80%' }}
-              className="search-bar"
-              justifyContent={'center'}
-              alignItems={'center'}
-              position={'sticky'}
-              top={0}
-              mt={'0.25rem'}
-              px={{ base: 3, lg: 1 }}
-              zIndex={999}
-              opacity={isSearchBarVisible ? 1 : 0}
-              transform={
-                isSearchBarVisible ? 'translateY(0)' : 'translateY(-100%)'
-              }
-              transition="opacity 0.2s ease-in-out, transform 0.2s ease-in-out"
-              display={'flex'}
-              backdropFilter="blur(8px)"
-            >
-              <ArticleSearchBar />
-            </Flex>
+            {/* Search Bar - Only show if not empty state */}
+            {!shouldShowEmptyState && (
+              <Flex
+                width={{ base: '100%', lg: '80%' }}
+                className="search-bar"
+                justifyContent={'center'}
+                alignItems={'center'}
+                position={'sticky'}
+                top={0}
+                mt={'0.25rem'}
+                px={{ base: 3, lg: 1 }}
+                zIndex={999}
+                opacity={isSearchBarVisible ? 1 : 0}
+                transform={
+                  isSearchBarVisible ? 'translateY(0)' : 'translateY(-100%)'
+                }
+                transition="opacity 0.2s ease-in-out, transform 0.2s ease-in-out"
+                display={'flex'}
+                backdropFilter="blur(8px)"
+              >
+                <ArticleSearchBar />
+              </Flex>
+            )}
 
-            {/* Virtualized Content */}
+            {/* Content Area - Conditional Rendering */}
             <Box
               flex={1}
               position="relative"
@@ -229,36 +243,47 @@ const Timeline = ({
               maxW="100%"
               overflow="hidden"
             >
-              <VirtualizedGrid
-                items={displayedData}
-                loading={load || searchLoading}
-                onLoadMore={onLoadMore}
-                hasMore={hasMoreItems}
-                setShowGetStarted={setShowGetStarted}
-              />
+              {shouldShowEmptyState ? (
+                <EmptyState
+                  category={category}
+                  onRefresh={handleRefresh}
+                  isSearching={isSearching}
+                />
+              ) : (
+                <VirtualizedGrid
+                  items={displayedData}
+                  loading={load || searchLoading}
+                  onLoadMore={onLoadMore}
+                  hasMore={hasMoreItems}
+                  setShowGetStarted={setShowGetStarted}
+                />
+              )}
             </Box>
           </Flex>
         </Flex>
       </Flex>
 
-      {!hasMoreItems && (user?.newAccount || user?.firstLogin) && (
-        <Flex
-          marginTop="2rem"
-          height="6rem"
-          width="100%"
-          color="white"
-          justifyContent="center"
-          alignItems="center"
-          borderRadius="8px"
-          padding="1rem"
-          paddingTop="4rem"
-          textAlign="center"
-        >
-          {t('messages.revisitLater')}
-        </Flex>
-      )}
+      {/* Bottom Messages - Only show when has data but no more items */}
+      {!shouldShowEmptyState &&
+        !hasMoreItems &&
+        (user?.newAccount || user?.firstLogin) && (
+          <Flex
+            marginTop="2rem"
+            height="6rem"
+            width="100%"
+            color="white"
+            justifyContent="center"
+            alignItems="center"
+            borderRadius="8px"
+            padding="1rem"
+            paddingTop="4rem"
+            textAlign="center"
+          >
+            {t('messages.revisitLater')}
+          </Flex>
+        )}
 
-      {!hasMoreItems && !user?.newAccount && (
+      {!shouldShowEmptyState && !hasMoreItems && !user?.newAccount && (
         <Flex
           marginTop="2rem"
           height="6rem"
