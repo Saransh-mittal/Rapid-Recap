@@ -578,7 +578,8 @@
       "backToHub": "वापस",
       "back": "वापस",
       "startGame": "गेम शुरू करें",
-      "returnToArticle": "लेख पर लौटें"
+      "returnToArticle": "लेख पर लौटें",
+      "backToResults": "परिणामों पर वापस जाएं"
     },
     "headers": {
       "performanceReport": "प्रदर्शन रिपोर्ट",

@@ -1743,7 +1743,7 @@ const updateOnBoardingArticle = asyncHandler(async (req, res) => {
   }
 })
 
-// @desc Get a random onboarding article with one quiz question
+// @desc Get a random onboarding article with one quiz question (Modified to check existing attempts)
 // @route GET /api/articles/onboarding
 // @access Private
 const getRandomOnBoardingArticle = asyncHandler(async (req, res) => {
@@ -1776,36 +1776,78 @@ const getRandomOnBoardingArticle = asyncHandler(async (req, res) => {
       },
     ])
   } else {
-    // Get user's preferred categories
-    const userCategories =
-      user?.preferredCategories?.map(pc => pc.category) || []
+    // NEW: Check if user has any existing quiz attempts on onboarding articles
+    const existingAttempt = await QuizAttempt.findOne({
+      user: userId,
+    })
+      .populate({
+        path: 'article',
+        match: { category: 'onBoardingArticle' },
+        select: '_id category onBoardingArticleCategory',
+      })
+      .sort({ createdAt: -1 }) // Get the most recent attempt
+      .lean()
 
-    if (!userCategories.length) {
-      return res.status(400).json({ message: 'No preferred categories found' })
+    // If user has an existing attempt on an onboarding article, use that article
+    if (existingAttempt && existingAttempt.article) {
+      article = await Article.aggregate([
+        {
+          $match: {
+            _id: new mongoose.Types.ObjectId(existingAttempt.article._id),
+          },
+        },
+        {
+          $project: {
+            _id: 1,
+            title: userLanguage === 'hi' ? '$hindiTitle' : '$title',
+            mainText: userLanguage === 'hi' ? '$hindiMainText' : '$mainText',
+            author: userLanguage === 'hi' ? '$hindiAuthor' : '$author',
+            dateTime: 1,
+            imgURL: 1,
+            avgReadTime: 1,
+            description: 1,
+          },
+        },
+      ])
+    } else {
+      // No existing attempts found, proceed with original logic
+      console.log(
+        `No existing onboarding attempts for user ${userId}, selecting random article`,
+      )
+
+      // Get user's preferred categories
+      const userCategories =
+        user?.preferredCategories?.map(pc => pc.category) || []
+
+      if (!userCategories.length) {
+        return res
+          .status(400)
+          .json({ message: 'No preferred categories found' })
+      }
+
+      // Get random article from user's preferred categories
+      article = await Article.aggregate([
+        {
+          $match: {
+            category: 'onBoardingArticle',
+            onBoardingArticleCategory: { $in: userCategories },
+          },
+        },
+        { $sample: { size: 1 } },
+        {
+          $project: {
+            _id: 1,
+            title: userLanguage === 'hi' ? '$hindiTitle' : '$title',
+            mainText: userLanguage === 'hi' ? '$hindiMainText' : '$mainText',
+            author: userLanguage === 'hi' ? '$hindiAuthor' : '$author',
+            dateTime: 1,
+            imgURL: 1,
+            avgReadTime: 1,
+            description: 1,
+          },
+        },
+      ])
     }
-
-    // Get random article from user's preferred categories
-    article = await Article.aggregate([
-      {
-        $match: {
-          category: 'onBoardingArticle',
-          onBoardingArticleCategory: { $in: userCategories },
-        },
-      },
-      { $sample: { size: 1 } },
-      {
-        $project: {
-          _id: 1,
-          title: userLanguage === 'hi' ? '$hindiTitle' : '$title',
-          mainText: userLanguage === 'hi' ? '$hindiMainText' : '$mainText',
-          author: userLanguage === 'hi' ? '$hindiAuthor' : '$author',
-          dateTime: 1,
-          imgURL: 1,
-          avgReadTime: 1,
-          description: 1,
-        },
-      },
-    ])
   }
 
   if (article.length === 0) {

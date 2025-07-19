@@ -56,7 +56,13 @@ const gameTypeColors = {
   connections: { primary: '#F59E0B', bg: 'rgba(245, 158, 11, 0.1)' },
 }
 
-const GivenQuiz = ({ articleId, percentile, RQM_score, gameData }) => {
+const GivenQuiz = ({
+  articleId,
+  percentile,
+  RQM_score,
+  gameData,
+  onBoarding = false,
+}) => {
   const { t } = useTranslation('GameHub')
   const navigate = useNavigate()
 
@@ -314,6 +320,7 @@ const GivenQuiz = ({ articleId, percentile, RQM_score, gameData }) => {
       initial={{ opacity: 0, y: 20 }}
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.5 }}
+      width={onBoarding ? '100%' : 'auto'}
     >
       <Box
         bg="rgba(255, 255, 255, 0.02)"

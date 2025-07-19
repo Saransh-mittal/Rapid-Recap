@@ -67,6 +67,37 @@ const AppRoutes = ({ isToken, needsOnboarding, setIsGuestLoggedin }) => {
                 <OnboardingProcess setIsGuestLoggedin={setIsGuestLoggedin} />
               }
             />
+            {/* GameHub routes */}
+            <Route
+              path="/gamehub/:articleId"
+              element={
+                isToken ? <IntegratedGameHub /> : <Navigate to="/" replace />
+              }
+            />
+            <Route
+              path="/gamehub/:articleId/:gameType"
+              element={
+                isToken ? (
+                  <EnhancedGameInterface />
+                ) : (
+                  <Navigate to="/" replace />
+                )
+              }
+            />
+            {/* NEW: Game Report route */}
+            <Route
+              path="/gamehub/:articleId/report"
+              element={
+                isToken ? <GameReportWrapper /> : <Navigate to="/" replace />
+              }
+            />
+            {/* Game Summary route */}
+            <Route
+              path="/gamehub/:articleId/summary/:sessionId"
+              element={
+                isToken ? <GameSummaryInterface /> : <Navigate to="/" replace />
+              }
+            />
             <Route path="*" element={<Navigate to="/" replace />} />
           </>
         ) : isVisible && summary ? (

@@ -415,20 +415,13 @@ const OnboardingProcess = ({ setIsGuestLoggedin }) => {
     [dispatch, isArticleFetching, toast],
   )
 
-  const handleQuizButtonClick = useCallback(() => {
+  const handleArticleNext = useCallback(async () => {
     playClick()
-    if (!isAuthenticated) {
-      toast({
-        title: 'Login Required',
-        description: 'Please login to take the quiz.',
-        status: 'warning',
-        duration: 3000,
-        isClosable: true,
-      })
-      return
-    }
-    dispatch(setIsOpen(true))
-  }, [isAuthenticated, playClick, toast, dispatch])
+
+    const nextStepId = ONBOARDING_STEPS.LEADERBOARD // Changed from REFERRAL to EARLY_ADOPTER
+    await updateOnboardingProgress(ONBOARDING_STEPS.ARTICLE_READING, nextStepId)
+    setCurrentStepId(nextStepId)
+  }, [playClick])
 
   useEffect(() => {
     const fetchUserOnboardingProgress = async () => {
@@ -531,7 +524,7 @@ const OnboardingProcess = ({ setIsGuestLoggedin }) => {
     ),
     [ONBOARDING_STEPS.ARTICLE_READING]: (
       <ArticleReading
-        onNext={handleQuizButtonClick}
+        onNext={handleArticleNext}
         article={article}
         isArticleFetching={isArticleFetching}
         fetchOnBoardingArticle={fetchOnBoardingArticle}

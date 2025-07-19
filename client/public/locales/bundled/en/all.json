@@ -578,7 +578,8 @@
       "backToHub": "Back",
       "back": "Back",
       "startGame": "Start Game",
-      "returnToArticle": "Return to Article"
+      "returnToArticle": "Return to Article",
+      "backToResults": "Back to Results"
     },
     "headers": {
       "performanceReport": "Performance Report",
