@@ -13,6 +13,10 @@ const {
 const TournamentQuestion = require('../model/tournamentQuestionSchema')
 const Tournament = require('../model/tournamentSchema')
 const { calculateArticleDifficulty } = require('./article.utils')
+const GameData = require('../model/gameDataSchema')
+const { GAME_CONFIGS, calculateEnhancedRQM } = require('./enhancedQuiz.utils')
+const mongoose = require('mongoose')
+
 const genQuiz = async ({ fullQuiz, title, session }) => {
   const selectedQuestions = new Set() // Using a Set to ensure uniqueness
 
@@ -506,50 +510,401 @@ const fetchTodaysPastRQMs = async ({ userId, session }) => {
   }
 }
 
+// Available game types and languages
+const availableGameTypes = [
+  'normal_quiz',
+  'true_false',
+  'word_weaver',
+  'connections',
+]
+const availableLanguages = ['en', 'hi']
+
+// Generate fake question data based on game type
+const generateFakeQuestions = (gameType, gameConfig) => {
+  switch (gameType) {
+    case 'normal_quiz':
+      return Array.from({ length: gameConfig.itemCount }, (_, i) => ({
+        _id: new mongoose.Types.ObjectId(),
+        difficulty: 0.3 + Math.random() * 0.4, // Random difficulty 0.3-0.7
+        questionType: 'multiple_choice',
+      }))
+
+    case 'true_false':
+      return Array.from({ length: gameConfig.itemCount }, (_, i) => ({
+        _id: new mongoose.Types.ObjectId(),
+        difficulty: 0.25 + Math.random() * 0.4, // Random difficulty 0.25-0.65
+        questionType: 'boolean',
+      }))
+
+    case 'word_weaver':
+      return Array.from({ length: gameConfig.itemCount }, (_, i) => ({
+        _id: new mongoose.Types.ObjectId(),
+        difficulty: 0.4 + Math.random() * 0.4, // Random difficulty 0.4-0.8
+        questionType: 'fill_blank',
+        wordLength: 4 + Math.floor(Math.random() * 8), // Random word length 4-11
+      }))
+
+    case 'connections':
+      return [
+        {
+          _id: new mongoose.Types.ObjectId(),
+          difficulty: 0.5 + Math.random() * 0.3, // Random difficulty 0.5-0.8
+          questionType: 'connections',
+          maxConnections: 4,
+          validConnections: Array.from({ length: 4 }, (_, i) => ({
+            _id: new mongoose.Types.ObjectId(),
+            from: `concept${i * 2}`,
+            to: `concept${i * 2 + 1}`,
+            difficulty: 0.4 + Math.random() * 0.4,
+            connectionType: [
+              'cause_effect',
+              'category',
+              'similarity',
+              'conceptual',
+            ][Math.floor(Math.random() * 4)],
+          })),
+        },
+      ]
+
+    default:
+      return []
+  }
+}
+
+// Generate realistic fake responses based on skill level
+const generateFakeResponses = ({ gameType, questions, skillLevel = 0.6 }) => {
+  let correctCount = 0
+  let totalItems = questions.length
+  const responses = []
+
+  switch (gameType) {
+    case 'normal_quiz':
+      questions.forEach((question, index) => {
+        const isCorrect = Math.random() < skillLevel
+        const selectedOption = ['a', 'b', 'c', 'd'][
+          Math.floor(Math.random() * 4)
+        ]
+
+        responses.push({
+          questionId: question._id,
+          userAnswer: selectedOption,
+          isCorrect: isCorrect,
+        })
+
+        if (isCorrect) correctCount++
+      })
+      break
+
+    case 'true_false':
+      questions.forEach((question, index) => {
+        const isCorrect = Math.random() < skillLevel
+        const userAnswer = Math.random() > 0.5 // Random true/false
+
+        responses.push({
+          questionId: question._id,
+          userAnswer: userAnswer,
+          isCorrect: isCorrect,
+        })
+
+        if (isCorrect) correctCount++
+      })
+      break
+
+    case 'word_weaver':
+      questions.forEach((question, index) => {
+        const isCorrect = Math.random() < skillLevel
+        const userWord = isCorrect ? 'CORRECT' : 'WRONG' // Simplified fake words
+
+        responses.push({
+          questionId: question._id,
+          userWord: userWord,
+          isCorrect: isCorrect,
+        })
+
+        if (isCorrect) correctCount++
+      })
+      break
+
+    case 'connections':
+      const question = questions[0]
+      const maxConnections = question.maxConnections || 4
+      const connectionsToMake = Math.floor(Math.random() * maxConnections) + 1
+      const correctConnections = Math.floor(connectionsToMake * skillLevel)
+
+      const connections = []
+      for (let i = 0; i < connectionsToMake; i++) {
+        connections.push({
+          from: `concept${i * 2}`,
+          to: `concept${i * 2 + 1}`,
+          isValid: i < correctConnections,
+        })
+      }
+
+      responses.push({
+        questionId: question._id,
+        connections: connections,
+      })
+
+      correctCount = correctConnections
+      totalItems = connectionsToMake
+      break
+
+    default:
+      break
+  }
+
+  return {
+    responses,
+    correctCount,
+    totalItems,
+  }
+}
+
+// Calculate performance metrics from responses
+const calculateFakePerformance = ({
+  responses,
+  questions,
+  gameType,
+  correctCount,
+  totalItems,
+}) => {
+  const accuracy = totalItems > 0 ? correctCount / totalItems : 0
+  const avgDifficulty =
+    questions.reduce((sum, q) => sum + (q.difficulty || 0.5), 0) /
+    questions.length
+
+  return {
+    accuracy,
+    difficulty: avgDifficulty,
+    correctCount,
+    totalItems,
+  }
+}
+
+// Generate realistic timing based on game type and skill level
+const generateRealisticTiming = (gameType, gameConfig, skillLevel) => {
+  const baseTime = gameConfig.timeLimit || 50
+
+  // Higher skill = faster completion (but not too fast)
+  const skillTimeFactor = 1.4 - skillLevel * 0.6 // Range: 0.8 to 1.4
+
+  // Add some randomness for realism
+  const randomFactor = 0.7 + Math.random() * 0.6 // Range: 0.7 to 1.3
+
+  const timeTaken = Math.floor(baseTime * skillTimeFactor * randomFactor)
+
+  // Ensure minimum realistic time (can't be too fast)
+  const minTime = Math.floor(baseTime * 0.3)
+  const maxTime = Math.floor(baseTime * 1.2)
+
+  return Math.max(minTime, Math.min(maxTime, timeTaken))
+}
+
+// Create a single fake attempt
+const createFakeAttempt = async ({ article, gameType, language, session }) => {
+  try {
+    const gameConfig = GAME_CONFIGS[gameType]
+
+    if (!gameConfig) {
+      console.error(`Invalid game type: ${gameType}`)
+      return null
+    }
+
+    // Generate fake questions for this game type
+    const questions = generateFakeQuestions(gameType, gameConfig)
+
+    if (questions.length === 0) {
+      console.error(`No questions generated for game type: ${gameType}`)
+      return null
+    }
+
+    // Generate random skill level (0.3 to 0.9 for realistic distribution)
+    const skillLevel = 0.3 + Math.random() * 0.6
+
+    // Generate fake responses based on skill level
+    const { responses, correctCount, totalItems } = generateFakeResponses({
+      gameType,
+      questions,
+      skillLevel,
+    })
+
+    // Calculate performance metrics
+    const performance = calculateFakePerformance({
+      responses,
+      questions,
+      gameType,
+      correctCount,
+      totalItems,
+    })
+
+    // Generate realistic timing
+    const timeTaken = generateRealisticTiming(gameType, gameConfig, skillLevel)
+
+    // Calculate enhanced RQM score using the actual game system
+    const rqmResult = calculateEnhancedRQM(
+      gameType,
+      performance,
+      timeTaken,
+      performance.totalItems,
+      null, // No time dilation for fake attempts
+    )
+
+    // Create realistic timestamps
+    const now = new Date()
+    const createdAt = new Date(
+      now.getTime() - Math.random() * 24 * 60 * 60 * 1000,
+    ) // Random time in last 24 hours
+
+    // Create the fake QuizAttempt
+    const quizAttempt = new QuizAttempt({
+      user: null, // No user for fake attempts
+      article: article._id,
+      articleQuizSession: new mongoose.Types.ObjectId(), // Fake session ID
+      gameData: null, // No GameData for fake attempts
+      gameType: gameType,
+      responses: responses,
+      performance: performance,
+      RQM_score: rqmResult.rqmScore,
+      baseRQM_score: rqmResult.rqmScore, // No boosts for fake attempts
+      articleDifficulty: performance.difficulty,
+      timeTaken: timeTaken,
+      expectedTime: gameConfig.timeLimit,
+      timeFactor: rqmResult.timeFactor,
+      performanceBonus: rqmResult.performanceBonus,
+      boost: 1, // No boosts for fake attempts
+      isBoosted: false,
+      timeDilationBoosted: false,
+      quinBoostUtilized: false,
+      streakRevived: false,
+      pauseRealTimeIQ: false,
+      season: parseInt(configService.getCurrentSeason(), 10),
+      month: moment().month() + 1,
+      year: moment().year(),
+      createdAt: createdAt,
+    })
+
+    await quizAttempt.save({ session })
+
+    return quizAttempt
+  } catch (error) {
+    console.error(`Error creating fake attempt for ${gameType}:`, error.message)
+    return null
+  }
+}
+
+// Main function to generate fake quiz attempts
 const fakeQuizAttemptCnt = async () => {
+  console.log('Starting fake quiz attempt generation for GameHub...')
+
   try {
     const currentDateTime = moment()
-    const oneDayAgoDateTime = currentDateTime
+    const twoDaysAgoDateTime = currentDateTime
+      .clone()
       .subtract(2, 'days')
       .format('YYYY-MM-DD')
 
     const query = {
       dateTime: {
-        $gte: oneDayAgoDateTime,
+        $gte: twoDaysAgoDateTime,
       },
     }
 
+    // Get all articles from the last 2 days (no GameData check needed)
     const articles = await Article.find(query)
+    console.log(`Found ${articles.length} articles from the last 2 days`)
 
-    for (let article of articles) {
-      let quizAttemptCnt = article.quizAttemptCnt
-      let { min, max } =
-        fakeQuizAttemptMinMax[article?.category?.toLocaleLowerCase()]
+    let processedCount = 0
+    let skippedCount = 0
 
-      if (quizAttemptCnt < min) {
-        const skew = 1 // Adjust this value to control the skewness
-        const weightedRandom = Math.pow(Math.random(), skew) * (max - 1) + 1
-        quizAttemptCnt += Math.floor(weightedRandom)
-        for (let i = 0; i < Math.floor(weightedRandom); i++) {
-          const topScore = Math.floor(Math.random() * 50)
-          const newQuizAttempt = new QuizAttempt({
-            article: article._id,
-            RQM_score: Math.floor(Math.random() * topScore),
-            articleDifficulty: Math.random(),
-            userPercentile: Math.random() * 100,
-            timeTaken: Math.floor(Math.random() * 100),
-            season: parseInt(configService.getCurrentSeason(), 10),
-          })
-          await newQuizAttempt.save()
-        }
+    for (const article of articles) {
+      // Skip articles with categories not in our min/max config
+      const categoryKey = article?.category?.toLowerCase()
+      if (!categoryKey || !fakeQuizAttemptMinMax[categoryKey]) {
+        console.log(
+          `Skipping article ${article._id} - category '${article.category}' not in config`,
+        )
+        skippedCount++
+        continue
       }
 
-      article.quizAttemptCnt = quizAttemptCnt
-      await article.save()
+      // Check if article already has enough attempts
+      const currentAttemptCount = article.quizAttemptCnt || 0
+      const { min, max } = fakeQuizAttemptMinMax[categoryKey]
+
+      if (currentAttemptCount >= min) {
+        console.log(
+          `Skipping article ${article._id} - already has ${currentAttemptCount} attempts (min: ${min})`,
+        )
+        continue
+      }
+
+      // Calculate how many attempts to add
+      const skew = 1.2 // Slight skew toward lower numbers
+      const attemptsToAdd = Math.floor(
+        Math.pow(Math.random(), skew) * (max - currentAttemptCount) + 1,
+      )
+
+      console.log(
+        `Adding ${attemptsToAdd} fake attempts to article ${article._id} (category: ${article.category})`,
+      )
+
+      // Start transaction for this article
+      const mongoSession = await mongoose.startSession()
+      mongoSession.startTransaction()
+
+      try {
+        let addedAttempts = 0
+
+        for (let i = 0; i < attemptsToAdd; i++) {
+          // Randomly select language and game type (no GameData dependency)
+          const language =
+            availableLanguages[
+              Math.floor(Math.random() * availableLanguages.length)
+            ]
+
+          const selectedGameType =
+            availableGameTypes[
+              Math.floor(Math.random() * availableGameTypes.length)
+            ]
+
+          // Create fake attempt (all fake data)
+          const fakeAttempt = await createFakeAttempt({
+            article,
+            gameType: selectedGameType,
+            language: language,
+            session: mongoSession,
+          })
+
+          if (fakeAttempt) {
+            addedAttempts++
+          }
+        }
+
+        // Update article attempt count
+        article.quizAttemptCnt = currentAttemptCount + addedAttempts
+        await article.save({ session: mongoSession })
+
+        await mongoSession.commitTransaction()
+        mongoSession.endSession()
+
+        console.log(
+          `Successfully added ${addedAttempts} fake attempts to article ${article._id}`,
+        )
+        processedCount++
+      } catch (error) {
+        await mongoSession.abortTransaction()
+        mongoSession.endSession()
+        console.error(`Error processing article ${article._id}:`, error.message)
+      }
     }
-    console.log('Fake quiz attempts incremented ', articles.length)
+
+    console.log(`Fake quiz attempt generation completed!`)
+    console.log(`Processed: ${processedCount} articles`)
+    console.log(`Skipped: ${skippedCount} articles`)
   } catch (error) {
-    console.error('Error updating quiz attempt counts:', error)
+    console.error('Error in fakeQuizAttemptCnt:', error.message)
+    console.error('Stack trace:', error.stack)
+    throw error
   }
 }
 

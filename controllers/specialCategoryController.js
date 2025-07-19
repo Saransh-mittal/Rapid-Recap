@@ -38,9 +38,9 @@ const getSpecialCategoryByKey = asyncHandler(async (req, res) => {
 
   const category = await SpecialCategory.findOne({ key })
 
-  if (!category) {
+  if (!category || category.isActive === false) {
     res.status(404)
-    throw new Error('Special category not found')
+    throw new Error('Special category not found or inactive')
   }
 
   res.json(category)
@@ -54,9 +54,9 @@ const getSpecialCategoryArticles = asyncHandler(async (req, res) => {
   const { page = 1, pageSize = 18, lang = 'en' } = req.query
   const category = await SpecialCategory.findOne({ key })
 
-  if (!category) {
+  if (!category || category.isActive === false) {
     res.status(404)
-    throw new Error('Special category not found')
+    throw new Error('Special category not found or inactive')
   }
 
   const articles = await Article.find({ specialCategory: category._id })

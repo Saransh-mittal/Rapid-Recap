@@ -31,6 +31,10 @@
     "min": 31,
     "max": 60
   },
+  "ai-news": {
+    "min": 1,
+    "max": 15
+  },
   "science": {
     "min": 1,
     "max": 15

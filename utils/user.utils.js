@@ -124,8 +124,6 @@ const getUserIQScoreHistory = async ({ userId, season = null }) => {
 }
 
 const currentTopPercentOfUser = async ({ userId, season = null }) => {
-  //console.log(userId, season);
-  //console.log(configService.getCurrentSeason());
   const user =
     !season || season == configService.getCurrentSeason()
       ? await User.findById(userId).select('IQ_score')
@@ -387,18 +385,6 @@ const dailyStreakCalculator = async userId => {
     const today = new Date()
     today.setUTCHours(0, 0, 0, 0) // Set time to start of the day
 
-    // const isDiffDay = Math.floor(
-    //   (yesterday.getTime() - latestAttemptDate.getTime()) / (1000 * 3600 * 24)
-    // );
-    // //console.log(isDiffDay, yesterday, latestAttemptDate, streakData[0]._id);
-    // if (isDiffDay) {
-    //   user.streak = 0;
-    //   latestAttemptDate.setUTCDate(latestAttemptDate.getUTCDate() + 1);
-    //   latestAttemptDate.setHours(0, 0, 0, 0);
-    //   user.streakExpiry = latestAttemptDate;
-    //   return 0; // No streak
-    // }
-
     // Iterate through quiz attempts to find streak
     let streak = 1
     for (let i = 1; i < streakData.length; i++) {
@@ -407,7 +393,7 @@ const dailyStreakCalculator = async userId => {
       const prevDay = new Date(streakData[i - 1]._id)
       const diffInTime = currentDay.getTime() - prevDay.getTime()
       const diffInDays = diffInTime / (1000 * 3600 * 24)
-      //console.log(currentDay, prevDay);
+
       if (Math.abs(diffInDays) === 1) {
         streak++
       } else {
@@ -719,8 +705,7 @@ function prepareOnboardingData(body) {
     }
     return stepNodeMap[stepId] || 1
   }
-  console.log('next step id', nextStepId)
-  console.log('next step', nextStep)
+
   // get nextStep using nextStepId if nextStep is not provided
 
   // Normalize the data format
@@ -735,8 +720,6 @@ function prepareOnboardingData(body) {
       quizResult: quizResult || restData.quizResult,
     },
   }
-
-  console.log('Normalized Onboarding Data:', normalizedData)
 
   return { normalizedData }
 }
@@ -758,7 +741,7 @@ const executeOnboardingUpdate = async req => {
 
     // Update user data
     user.onboardingStep = normalizedData.nextStep
-    console.log(normalizedData.currentStepId)
+
     // Process data based on the current step
     switch (normalizedData.currentStepId) {
       case 'language':
@@ -803,7 +786,6 @@ const executeOnboardingUpdate = async req => {
       case 'tutorial_choice':
         if (normalizedData.data.takeTutorial !== undefined) {
           user.tutorialChoice = normalizedData.data.takeTutorial
-          console.log('Setting tutorialChoice to:', user.tutorialChoice)
         }
         break
 

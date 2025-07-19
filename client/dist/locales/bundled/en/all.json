@@ -578,7 +578,8 @@
       "backToHub": "Back",
       "back": "Back",
       "startGame": "Start Game",
-      "returnToArticle": "Return to Article"
+      "returnToArticle": "Return to Article",
+      "backToResults": "Back to Results"
     },
     "headers": {
       "performanceReport": "Performance Report",
@@ -2675,7 +2676,51 @@
     "keywords": "general knowledge quiz, GK questions with answers, current affairs quiz, online GK test, competitive exam preparation, daily current affairs, IQ score system, knowledge tournaments, quiz platform, AI learning platform, general knowledge practice, current affairs updates, general quiz questions, free GK quiz",
     "upgrade_modal_title": "Society Upgrade Available",
     "upgrade_modal_content": "You are eligible for a society upgrade.",
-    "fetch_error": "Failed to fetch news"
+    "fetch_error": "Failed to fetch news",
+    "emptyState": {
+      "suggestions": "Here's what you can try:",
+      "search": {
+        "title": "No articles found",
+        "description": "We couldn't find any articles matching your search. Try different keywords or explore our trending categories.",
+        "suggestion1": "Use different or simpler keywords",
+        "suggestion2": "Check spelling and try again",
+        "suggestion3": "Browse popular categories instead",
+        "clearSearch": "Clear Search",
+        "browseAll": "Browse All Articles"
+      },
+      "all": {
+        "authenticatedTitle": "Your personalized feed is brewing! ☕",
+        "authenticatedDescription": "We're crafting personalized content based on your interests and quiz performance. Meanwhile, explore our curated categories or check back in a few moments for fresh recommendations.",
+        "authenticatedSuggestion1": "Complete more quizzes to improve recommendations",
+        "authenticatedSuggestion2": "Update your interests in profile settings",
+        "authenticatedSuggestion3": "Explore different categories to train our AI",
+        "guestTitle": "Welcome to your knowledge journey! 🌟",
+        "guestDescription": "Discover trending articles, take interactive quizzes, and boost your IQ score. Join thousands of learners improving their general knowledge daily!",
+        "guestSuggestion1": "Browse trending articles and breaking news",
+        "guestSuggestion2": "Sign up for personalized recommendations",
+        "exploreCategories": "Explore Categories",
+        "browseTop": "Browse Trending",
+        "refreshRecommendations": "Refresh Feed",
+        "signUp": "Join Now"
+      },
+      "top": {
+        "title": "No trending articles at the moment",
+        "description": "Our editorial team is curating the latest trending content. New articles are added throughout the day, so check back soon!",
+        "suggestion1": "Fresh trending content is updated every hour",
+        "suggestion2": "Try exploring specific categories like Technology or Sports",
+        "exploreGeneral": "Explore General News",
+        "refresh": "Refresh Page"
+      },
+      "category": {
+        "title": "No articles in {{category}} category yet",
+        "description": "We're continuously adding fresh {{category}} content from trusted sources. Meanwhile, discover fascinating articles in other categories!",
+        "suggestion1": "New articles are published throughout the day",
+        "suggestion2": "Try related categories that might interest you",
+        "suggestion3": "Bookmark this category and check back later",
+        "exploreAll": "Explore All Categories",
+        "exploreGeneral": "Browse General News"
+      }
+    }
   },
   "screens.LeaderBoard": {
     "title": "LEADERBOARD",
@@ -2824,23 +2869,61 @@
       "subtitle": "Join our exclusive early adopter program",
       "enterCode": "Enter Early Adopter Code",
       "codePholder": "EOC-XXXXXXXX",
+      "inputLabel": "Access Code",
+      "inputPlaceholder": "Please enter your code",
+      "loading": "Verifying code...",
+      "invalidCode": "Invalid code. Please try again",
+      "validCode": "Valid code! Ready to activate",
+      "status": {
+        "verifying": "Verifying code...",
+        "valid": "Valid code! Ready to activate",
+        "invalidHint": "Invalid code."
+      },
       "benefits": {
-        "title": "Exclusive Benefits",
-        "exclusiveAccess": "Exclusive Early Access",
-        "prioritySupport": "Priority Support",
-        "specialBadge": "Special Badge",
-        "betaTesting": "Beta Testing",
-        "directFeedback": "Direct Feedback Channel"
+        "previewTitle": "You'll Get Access To",
+        "feature1": "Early access to new features",
+        "feature2": "Priority customer support",
+        "feature3": "Exclusive early adopter badge"
       },
       "success": {
-        "title": "🎉 Hurray! You're an Early Adopter! 🎉",
-        "description": "Welcome to the exclusive early adopter community!"
+        "title": "🎉 Hurray! 🎉",
+        "subheading": "You're an Early Adopter!",
+        "description": "Welcome to our exclusive community! You now have access to special features and benefits.",
+        "statusBadge": "Early Adopter Status Activated"
       },
       "buttons": {
-        "activate": "Activate Early Adopter Status",
-        "skip": "Skip This Step",
+        "activate": "Activate Early Access",
+        "loadingText": "Activating...",
+        "skip": "Continue Without Code",
         "invalidCode": "Invalid Code"
-      }
+      },
+      "toast": {
+        "invalidTitle": "Invalid Code",
+        "invalidDescription": "Please enter your Early Adopter Code",
+        "errorTitle": "Error",
+        "errorDescription": "Something went wrong"
+      },
+      "skipMessage": "Don't have a code? No problem, continue to explore Rapid Recap"
+    },
+    "referral": {
+      "title": "Join the Knowledge Revolution",
+      "subtitle": "If you have a referral code, enter it below to get started.",
+      "inputPlaceholder": "Enter referral code",
+      "referredByLabel": "Referred by",
+      "buttons": {
+        "apply": "Apply Code",
+        "verifying": "Verifying Code",
+        "invalid": "Invalid Code",
+        "skip": "Skip"
+      },
+      "toast": {
+        "invalidTitle": "Invalid Referral Code",
+        "genericError": "Please try again",
+        "successTitle": "Referral Applied!",
+        "successDescription": "Welcome to Rapid Recap!",
+        "applyErrorTitle": "Error Applying Referral"
+      },
+      "skipMessage": "You can also skip this step"
     },
     "tutorialChoice": {
       "title": "Ready to Learn?",
