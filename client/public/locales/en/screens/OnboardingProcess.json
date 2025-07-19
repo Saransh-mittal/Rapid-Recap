@@ -79,23 +79,61 @@
     "subtitle": "Join our exclusive early adopter program",
     "enterCode": "Enter Early Adopter Code",
     "codePholder": "EOC-XXXXXXXX",
+    "inputLabel": "Access Code",
+    "inputPlaceholder": "Please enter your code",
+    "loading": "Verifying code...",
+    "invalidCode": "Invalid code. Please try again",
+    "validCode": "Valid code! Ready to activate",
+    "status": {
+      "verifying": "Verifying code...",
+      "valid": "Valid code! Ready to activate",
+      "invalidHint": "Invalid code."
+    },
     "benefits": {
-      "title": "Exclusive Benefits",
-      "exclusiveAccess": "Exclusive Early Access",
-      "prioritySupport": "Priority Support",
-      "specialBadge": "Special Badge",
-      "betaTesting": "Beta Testing",
-      "directFeedback": "Direct Feedback Channel"
+      "previewTitle": "You'll Get Access To",
+      "feature1": "Early access to new features",
+      "feature2": "Priority customer support",
+      "feature3": "Exclusive early adopter badge"
     },
     "success": {
-      "title": "🎉 Hurray! You're an Early Adopter! 🎉",
-      "description": "Welcome to the exclusive early adopter community!"
+      "title": "🎉 Hurray! 🎉",
+      "subheading": "You're an Early Adopter!",
+      "description": "Welcome to our exclusive community! You now have access to special features and benefits.",
+      "statusBadge": "Early Adopter Status Activated"
     },
     "buttons": {
-      "activate": "Activate Early Adopter Status",
-      "skip": "Skip This Step",
+      "activate": "Activate Early Access",
+      "loadingText": "Activating...",
+      "skip": "Continue Without Code",
       "invalidCode": "Invalid Code"
-    }
+    },
+    "toast": {
+      "invalidTitle": "Invalid Code",
+      "invalidDescription": "Please enter your Early Adopter Code",
+      "errorTitle": "Error",
+      "errorDescription": "Something went wrong"
+    },
+    "skipMessage": "Don't have a code? No problem, continue to explore Rapid Recap"
+  },
+  "referral": {
+    "title": "Join the Knowledge Revolution",
+    "subtitle": "If you have a referral code, enter it below to get started.",
+    "inputPlaceholder": "Enter referral code",
+    "referredByLabel": "Referred by",
+    "buttons": {
+      "apply": "Apply Code",
+      "verifying": "Verifying Code",
+      "invalid": "Invalid Code",
+      "skip": "Skip"
+    },
+    "toast": {
+      "invalidTitle": "Invalid Referral Code",
+      "genericError": "Please try again",
+      "successTitle": "Referral Applied!",
+      "successDescription": "Welcome to Rapid Recap!",
+      "applyErrorTitle": "Error Applying Referral"
+    },
+    "skipMessage": "You can also skip this step"
   },
   "tutorialChoice": {
     "title": "Ready to Learn?",

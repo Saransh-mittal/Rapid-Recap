@@ -10,7 +10,6 @@ import {
   Heading,
   Avatar,
   HStack,
-  Divider,
   Skeleton,
 } from '@chakra-ui/react'
 import { motion } from 'framer-motion'
@@ -18,6 +17,7 @@ import axios from 'axios'
 import { useLocation } from 'react-router-dom'
 import { Users, Sparkles } from 'lucide-react'
 import { keyframes } from '@emotion/react'
+import { useTranslation } from 'react-i18next'
 
 const MotionBox = motion(Box)
 
@@ -28,6 +28,7 @@ const glowAnimation = keyframes`
 `
 
 const ReferralStep = ({ onComplete }) => {
+  const { t } = useTranslation('OnboardingProcess')
   const [referralCode, setReferralCode] = useState('')
   const [isSubmitting, setIsSubmitting] = useState(false)
   const [isChecking, setIsChecking] = useState(false)
@@ -55,8 +56,9 @@ const ReferralStep = ({ onComplete }) => {
       setReferrer(response.data)
     } catch (error) {
       toast({
-        title: 'Invalid Referral Code',
-        description: error.response?.data?.error || 'Please try again',
+        title: t('referral.toast.invalidTitle'),
+        description:
+          error.response?.data?.error || t('referral.toast.genericError'),
         status: 'error',
         duration: 3000,
         isClosable: true,
@@ -89,8 +91,8 @@ const ReferralStep = ({ onComplete }) => {
     try {
       await axios.post('/api/user/apply-referral', { referralCode })
       toast({
-        title: 'Referral Applied!',
-        description: 'Welcome to Rapid Recap!',
+        title: t('referral.toast.successTitle'),
+        description: t('referral.toast.successDescription'),
         status: 'success',
         duration: 3000,
         isClosable: true,
@@ -98,8 +100,9 @@ const ReferralStep = ({ onComplete }) => {
       onComplete()
     } catch (error) {
       toast({
-        title: 'Error Applying Referral',
-        description: error.response?.data?.error || 'Please try again',
+        title: t('referral.toast.applyErrorTitle'),
+        description:
+          error.response?.data?.error || t('referral.toast.genericError'),
         status: 'error',
         duration: 3000,
         isClosable: true,
@@ -128,7 +131,7 @@ const ReferralStep = ({ onComplete }) => {
         <VStack spacing={8}>
           <Box>
             <Heading color="white" fontSize={{ base: '2xl', md: '4xl' }} mb={2}>
-              Join the Knowledge Revolution
+              {t('referral.title')}
             </Heading>
 
             <Text
@@ -136,13 +139,13 @@ const ReferralStep = ({ onComplete }) => {
               fontSize={{ base: 'md', md: 'lg' }}
               maxW="500px"
             >
-              If you have a referral code, enter it below to get started.
+              {t('referral.subtitle')}
             </Text>
           </Box>
 
           <Box w="100%" maxW="400px">
             <Input
-              placeholder="Enter referral code"
+              placeholder={t('referral.inputPlaceholder')}
               value={referralCode}
               onChange={handleCodeChange}
               size="lg"
@@ -155,7 +158,6 @@ const ReferralStep = ({ onComplete }) => {
               maxLength={8}
             />
 
-            {/* Referrer Details Card */}
             {(isChecking || referrer) && (
               <MotionBox
                 initial={{ opacity: 0, y: 10 }}
@@ -190,7 +192,7 @@ const ReferralStep = ({ onComplete }) => {
                         <HStack spacing={2}>
                           <Users size={16} color="#E9D8FD" />
                           <Text color="white" fontWeight="bold">
-                            Referred by
+                            {t('referral.referredByLabel')}
                           </Text>
                         </HStack>
                         <Text
@@ -225,16 +227,16 @@ const ReferralStep = ({ onComplete }) => {
             >
               {referralCode
                 ? referrer
-                  ? 'Apply Code'
+                  ? t('referral.buttons.apply')
                   : isChecking
-                  ? 'Verifying Code'
-                  : 'Invalid Code'
-                : 'Skip'}
+                  ? t('referral.buttons.verifying')
+                  : t('referral.buttons.invalid')
+                : t('referral.buttons.skip')}
             </Button>
 
             {!referralCode && (
               <Text color="whiteAlpha.600" fontSize="sm">
-                You can also skip this step
+                {t('referral.skipMessage')}
               </Text>
             )}
           </Box>

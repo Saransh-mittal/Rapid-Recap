@@ -1,5 +1,3 @@
-// Replace the entire EarlyAdopterStep.jsx file with this clean version
-
 import React, { useState, useEffect } from 'react'
 import {
   Box,
@@ -27,6 +25,7 @@ import {
 } from 'lucide-react'
 import { keyframes } from '@emotion/react'
 import confetti from 'canvas-confetti'
+import { useTranslation } from 'react-i18next'
 
 const MotionBox = motion(Box)
 const MotionText = motion(Text)
@@ -39,12 +38,8 @@ const bounceIn = keyframes`
   100% { transform: scale(1); opacity: 1; }
 `
 
-const shimmer = keyframes`
-  0% { background-position: -200px 0; }
-  100% { background-position: calc(200px + 100%) 0; }
-`
-
 const EarlyAdopterStep = ({ onComplete }) => {
+  const { t } = useTranslation('OnboardingProcess')
   const [eocCode, setEocCode] = useState('')
   const [isSubmitting, setIsSubmitting] = useState(false)
   const [isVerifying, setIsVerifying] = useState(false)
@@ -116,8 +111,8 @@ const EarlyAdopterStep = ({ onComplete }) => {
 
     if (!isValid) {
       toast({
-        title: 'Invalid Code',
-        description: 'Please enter your Early Adopter Code',
+        title: t('earlyAdopter.toast.invalidTitle'),
+        description: t('earlyAdopter.toast.invalidDescription'),
         status: 'error',
         duration: 2000,
         isClosable: true,
@@ -140,8 +135,10 @@ const EarlyAdopterStep = ({ onComplete }) => {
       }, 3500)
     } catch (error) {
       toast({
-        title: 'Error',
-        description: error.response?.data?.error || 'Something went wrong',
+        title: t('earlyAdopter.toast.errorTitle'),
+        description:
+          error.response?.data?.error ||
+          t('earlyAdopter.toast.errorDescription'),
         status: 'error',
         duration: 3000,
         isClosable: true,
@@ -171,7 +168,6 @@ const EarlyAdopterStep = ({ onComplete }) => {
             maxW="400px"
           >
             <VStack spacing={8}>
-              {/* Success Crown */}
               <MotionBox
                 bg="rgba(255, 215, 0, 0.15)"
                 borderRadius="full"
@@ -183,7 +179,6 @@ const EarlyAdopterStep = ({ onComplete }) => {
                 <Crown size={80} color="#FFD700" />
               </MotionBox>
 
-              {/* Success Message */}
               <VStack spacing={4}>
                 <MotionText
                   fontSize="3xl"
@@ -194,7 +189,7 @@ const EarlyAdopterStep = ({ onComplete }) => {
                   animate={{ y: 0, opacity: 1 }}
                   transition={{ delay: 0.3 }}
                 >
-                  🎉 Hurray! 🎉
+                  {t('earlyAdopter.success.title')}
                 </MotionText>
 
                 <MotionText
@@ -205,7 +200,7 @@ const EarlyAdopterStep = ({ onComplete }) => {
                   animate={{ y: 0, opacity: 1 }}
                   transition={{ delay: 0.5 }}
                 >
-                  You're an Early Adopter!
+                  {t('earlyAdopter.success.subheading')}
                 </MotionText>
 
                 <MotionText
@@ -217,12 +212,10 @@ const EarlyAdopterStep = ({ onComplete }) => {
                   animate={{ y: 0, opacity: 1 }}
                   transition={{ delay: 0.7 }}
                 >
-                  Welcome to our exclusive community! You now have access to
-                  special features and benefits.
+                  {t('earlyAdopter.success.description')}
                 </MotionText>
               </VStack>
 
-              {/* Success Badge */}
               <MotionBox
                 initial={{ y: 20, opacity: 0 }}
                 animate={{ y: 0, opacity: 1 }}
@@ -241,7 +234,7 @@ const EarlyAdopterStep = ({ onComplete }) => {
                 >
                   <HStack spacing={2}>
                     <Star size={16} />
-                    <Text>Early Adopter Status Activated</Text>
+                    <Text>{t('earlyAdopter.success.statusBadge')}</Text>
                   </HStack>
                 </Badge>
               </MotionBox>
@@ -257,7 +250,6 @@ const EarlyAdopterStep = ({ onComplete }) => {
             maxW="400px"
           >
             <VStack spacing={8}>
-              {/* Header */}
               <VStack spacing={4} textAlign="center">
                 <Box>
                   <Crown
@@ -275,15 +267,14 @@ const EarlyAdopterStep = ({ onComplete }) => {
                     bgGradient="linear(to-r, yellow.400, orange.400)"
                     bgClip="text"
                   >
-                    Early Access
+                    {t('earlyAdopter.title')}
                   </Text>
                   <Text color="whiteAlpha.700" fontSize="md">
-                    Enter your exclusive access code
+                    {t('earlyAdopter.subtitle')}
                   </Text>
                 </VStack>
               </VStack>
 
-              {/* Main Card */}
               <Box
                 bg="rgba(26, 21, 39, 0.6)"
                 borderRadius="2xl"
@@ -294,13 +285,12 @@ const EarlyAdopterStep = ({ onComplete }) => {
                 w="100%"
               >
                 <VStack spacing={6}>
-                  {/* Input Section */}
                   <VStack spacing={3} w="100%">
                     <Text color="white" fontWeight="semibold" fontSize="sm">
-                      Access Code
+                      {t('earlyAdopter.inputLabel')}
                     </Text>
                     <Input
-                      placeholder="Please enter your code"
+                      placeholder={t('earlyAdopter.inputPlaceholder')}
                       value={eocCode}
                       onChange={handleCodeChange}
                       size="lg"
@@ -328,7 +318,6 @@ const EarlyAdopterStep = ({ onComplete }) => {
                       fontSize="lg"
                     />
 
-                    {/* Status Messages */}
                     <AnimatePresence>
                       {isVerifying && (
                         <MotionBox
@@ -348,7 +337,7 @@ const EarlyAdopterStep = ({ onComplete }) => {
                               <Sparkles size={14} color="#9F7AEA" />
                             </motion.div>
                             <Text color="purple.300" fontSize="sm">
-                              Verifying code...
+                              {t('earlyAdopter.status.verifying')}
                             </Text>
                           </HStack>
                         </MotionBox>
@@ -362,7 +351,7 @@ const EarlyAdopterStep = ({ onComplete }) => {
                           <HStack spacing={2} color="green.400">
                             <CheckCircle size={16} />
                             <Text fontSize="sm" fontWeight="medium">
-                              Valid code! Ready to activate
+                              {t('earlyAdopter.status.valid')}
                             </Text>
                           </HStack>
                         </MotionBox>
@@ -374,14 +363,13 @@ const EarlyAdopterStep = ({ onComplete }) => {
                           animate={{ opacity: 1, scale: 1 }}
                         >
                           <Text color="red.400" fontSize="sm">
-                            Invalid code. Try RRCORE or RR2025
+                            {t('earlyAdopter.status.invalidHint')}
                           </Text>
                         </MotionBox>
                       )}
                     </AnimatePresence>
                   </VStack>
 
-                  {/* Benefits Preview */}
                   {isValid && (
                     <MotionBox
                       initial={{ opacity: 0, height: 0 }}
@@ -397,25 +385,24 @@ const EarlyAdopterStep = ({ onComplete }) => {
                             fontSize="sm"
                             fontWeight="semibold"
                           >
-                            You'll Get Access To
+                            {t('earlyAdopter.benefits.previewTitle')}
                           </Text>
                         </HStack>
                         <VStack spacing={1}>
                           <Text color="whiteAlpha.800" fontSize="xs">
-                            • Early access to new features
+                            • {t('earlyAdopter.benefits.feature1')}
                           </Text>
                           <Text color="whiteAlpha.800" fontSize="xs">
-                            • Priority customer support
+                            • {t('earlyAdopter.benefits.feature2')}
                           </Text>
                           <Text color="whiteAlpha.800" fontSize="xs">
-                            • Exclusive early adopter badge
+                            • {t('earlyAdopter.benefits.feature3')}
                           </Text>
                         </VStack>
                       </VStack>
                     </MotionBox>
                   )}
 
-                  {/* Action Button */}
                   <Button
                     onClick={handleEOCSubmit}
                     size="lg"
@@ -437,7 +424,7 @@ const EarlyAdopterStep = ({ onComplete }) => {
                       transform: 'translateY(0)',
                     }}
                     isLoading={isSubmitting}
-                    loadingText="Activating..."
+                    loadingText={t('earlyAdopter.buttons.loadingText')}
                     rightIcon={
                       !isSubmitting ? <ArrowRight size={16} /> : undefined
                     }
@@ -447,18 +434,17 @@ const EarlyAdopterStep = ({ onComplete }) => {
                     boxShadow="0 4px 12px rgba(0, 0, 0, 0.15)"
                   >
                     {isValid
-                      ? 'Activate Early Access'
+                      ? t('earlyAdopter.buttons.activate')
                       : eocCode
-                      ? 'Invalid Code'
-                      : 'Continue Without Code'}
+                      ? t('earlyAdopter.buttons.invalidCode')
+                      : t('earlyAdopter.buttons.skip')}
                   </Button>
                 </VStack>
               </Box>
 
-              {/* Skip Message */}
               {!eocCode && (
                 <Text color="whiteAlpha.500" fontSize="sm" textAlign="center">
-                  Don't have a code? No problem, continue to explore Rapid Recap
+                  {t('earlyAdopter.skipMessage')}
                 </Text>
               )}
             </VStack>

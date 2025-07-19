@@ -121,7 +121,7 @@ export const RightProfileSection = ({
             'society',
           )}
         </Flex>
-        {renderProfileBox(
+        {/* {renderProfileBox(
           <TournamentSection
             privateTournament={privacyProfileData?.tournamentAnalytics}
             loginedUserProfile={loginedUserProfile}
@@ -129,7 +129,7 @@ export const RightProfileSection = ({
             userId={profile?.userId}
           />,
           'tournamentAnalytics',
-        )}
+        )} */}
       </Flex>
     </Flex>
   )
