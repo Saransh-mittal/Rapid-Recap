@@ -197,13 +197,7 @@ async function createSSRMiddleware(app) {
         }
 
         // Inject splash screen content
-        let processedTemplate = template
-          .replace('<!--ssr-outlet-->', '')
-          .replace(
-            `<div id="splash-screen" aria-label="Loading screen">
-    </div>`,
-            splashContent,
-          )
+        let processedTemplate = template.replace('<!--ssr-outlet-->', '')
 
         // UPDATED: Always include demo quiz HTML but let client decide visibility
         if (shouldIncludeDemoQuiz && processedDemoQuizOverlay) {
@@ -220,15 +214,21 @@ async function createSSRMiddleware(app) {
             </body>`,
           )
         } else {
-          processedTemplate = processedTemplate.replace(
-            '</body>',
-            `<script>
+          processedTemplate = processedTemplate
+            .replace(
+              '</body>',
+              `<script>
               window.__INCLUDE_DEMO_QUIZ__ = false;
               window.__SHOW_DEMO_QUIZ_BY_DEFAULT__ = false;
               window.__AUTH_SIGNAL_COOKIE__ = '${AUTH_SIGNAL_COOKIE}';
             </script>
             </body>`,
-          )
+            )
+            .replace(
+              `<div id="splash-screen" aria-label="Loading screen">
+    </div>`,
+              splashContent,
+            )
         }
 
         res.setHeader('Content-Type', 'text/html; charset=utf-8')
