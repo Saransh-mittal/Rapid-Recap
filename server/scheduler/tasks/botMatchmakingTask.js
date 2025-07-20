@@ -9,7 +9,7 @@ const {
  */
 const manageBotMatchmaking = async () => {
   try {
-    console.log('Running bot matchmaking management')
+    // console.log('Running bot matchmaking management')
     await addBotsToMatchmaking()
   } catch (error) {
     console.error('Error in bot matchmaking management:', error)
