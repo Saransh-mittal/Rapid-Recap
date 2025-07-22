@@ -11,6 +11,12 @@ const {
   botHealthCheck,
   botHealthCleanup,
 } = require('./tasks/botHealthMonitoringTask')
+const {
+  processChallengeExpiryReminders,
+} = require('./tasks/challengeExpiryReminderTask')
+const {
+  processTeamBattleExpiryReminders,
+} = require('./tasks/teamBattleExpiryReminderTask')
 
 /**
  * Schedule configuration for Quick Clash related tasks
@@ -85,6 +91,16 @@ const quickClashSchedules = [
     name: 'fallback-battle-completion',
     cronPattern: '*/15 * * * *', // Every 15 minutes
     task: fallbackBattleCompletion,
+  },
+  {
+    name: 'challenge-expiry-reminders',
+    cronPattern: '*/15 * * * *', // Every 15 minutes
+    task: processChallengeExpiryReminders,
+  },
+  {
+    name: 'team-battle-expiry-reminders',
+    cronPattern: '*/30 * * * *', // Every 30 minutes
+    task: processTeamBattleExpiryReminders,
   },
 ]
 

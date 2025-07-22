@@ -1,0 +1,761 @@
+// components/gameHub/GameInstructionsModal.jsx - Optimized High-Performance Version
+import React, { memo, useMemo, useCallback } from 'react'
+import {
+  Modal,
+  ModalOverlay,
+  ModalContent,
+  ModalHeader,
+  ModalBody,
+  ModalFooter,
+  VStack,
+  HStack,
+  Text,
+  Button,
+  Box,
+  Badge,
+  Icon,
+  Grid,
+  Container,
+} from '@chakra-ui/react'
+import { motion, AnimatePresence } from 'framer-motion'
+import {
+  FileText,
+  FlipHorizontal2,
+  Sparkles,
+  Link2,
+  Clock,
+  Target,
+  Award,
+  Zap,
+  Trophy,
+  Brain,
+  Shield,
+  Gem,
+  Rocket,
+  X,
+  Star,
+} from 'lucide-react'
+import { useTranslation } from 'react-i18next'
+
+const MotionBox = motion(Box)
+
+// Memoized animation variants
+const ANIMATION_VARIANTS = {
+  modal: {
+    initial: { opacity: 0, scale: 0.95 },
+    animate: { opacity: 1, scale: 1 },
+    exit: { opacity: 0, scale: 0.95 },
+    transition: { duration: 0.3 },
+  },
+  content: {
+    initial: { opacity: 0, y: 20 },
+    animate: { opacity: 1, y: 0 },
+  },
+}
+
+// Memoized subcomponents for better performance
+const GameIcon = memo(({ game }) => (
+  <Box
+    position="relative"
+    p={4}
+    borderRadius="xl"
+    bg={game.colors.background}
+    boxShadow={`0 15px 30px ${game.colors.light}`}
+    border="2px solid"
+    borderColor="rgba(255, 255, 255, 0.2)"
+  >
+    <Icon as={game.icon} boxSize={7} color="white" />
+    <Box
+      position="absolute"
+      top="-8px"
+      right="-8px"
+      fontSize="lg"
+      filter="drop-shadow(0 2px 4px rgba(0,0,0,0.3))"
+    >
+      {game.emoji}
+    </Box>
+  </Box>
+))
+GameIcon.displayName = 'GameIcon'
+
+const QuickStats = memo(({ game }) => (
+  <Grid templateColumns="repeat(3, 1fr)" gap={4} w="100%" maxW="300px">
+    <VStack spacing={1}>
+      <Clock size={18} color={game.colors.primary} />
+      <Text fontSize="xs" color="gray.300" textAlign="center" fontWeight="600">
+        {game.time}
+      </Text>
+    </VStack>
+    <VStack spacing={1}>
+      <Target size={18} color={game.colors.primary} />
+      <Text fontSize="xs" color="gray.300" textAlign="center" fontWeight="600">
+        RQM Score
+      </Text>
+    </VStack>
+    <VStack spacing={1}>
+      <Trophy size={18} color={game.colors.primary} />
+      <Text fontSize="xs" color="gray.300" textAlign="center" fontWeight="600">
+        Compete
+      </Text>
+    </VStack>
+  </Grid>
+))
+QuickStats.displayName = 'QuickStats'
+
+const InstructionsList = memo(({ instructions, colors }) => (
+  <VStack spacing={2} align="stretch">
+    {instructions.map((instruction, index) => (
+      <HStack
+        key={index}
+        align="flex-start"
+        spacing={3}
+        bg="rgba(255, 255, 255, 0.05)"
+        borderRadius="lg"
+        p={3}
+      >
+        <Box
+          bg={colors.primary}
+          borderRadius="full"
+          minW="5"
+          h="5"
+          display="flex"
+          alignItems="center"
+          justifyContent="center"
+          mt={0.5}
+        >
+          <Text fontSize="xs" fontWeight="bold" color="white">
+            {index + 1}
+          </Text>
+        </Box>
+        <Text fontSize="sm" color="gray.200" lineHeight="1.4" flex="1">
+          {instruction}
+        </Text>
+      </HStack>
+    ))}
+  </VStack>
+))
+InstructionsList.displayName = 'InstructionsList'
+
+const FeaturesList = memo(({ features, colors }) => (
+  <VStack spacing={1.5} align="stretch">
+    {features.map((feature, index) => (
+      <HStack
+        key={index}
+        bg="rgba(255, 255, 255, 0.05)"
+        borderRadius="md"
+        p={2}
+        spacing={2}
+      >
+        <Gem size={12} color={colors.primary} />
+        <Text fontSize="xs" color="gray.200" fontWeight="500">
+          {feature}
+        </Text>
+      </HStack>
+    ))}
+  </VStack>
+))
+FeaturesList.displayName = 'FeaturesList'
+
+const TipsList = memo(({ tips }) => (
+  <VStack spacing={1.5} align="stretch">
+    {tips.slice(0, 2).map((tip, index) => (
+      <HStack
+        key={index}
+        align="flex-start"
+        spacing={2}
+        bg="rgba(255, 255, 255, 0.05)"
+        borderRadius="md"
+        p={2}
+      >
+        <Star size={10} color="#10B981" mt={0.5} />
+        <Text fontSize="xs" color="gray.200" lineHeight="1.3">
+          {tip}
+        </Text>
+      </HStack>
+    ))}
+  </VStack>
+))
+TipsList.displayName = 'TipsList'
+
+const RQMScoringSection = memo(() => {
+  const { t } = useTranslation('GameHub')
+
+  return (
+    <Box
+      bg="linear-gradient(135deg, rgba(255, 215, 0, 0.1), rgba(255, 193, 7, 0.05))"
+      border="1px solid"
+      borderColor="rgba(255, 215, 0, 0.3)"
+      borderRadius="lg"
+      p={3}
+    >
+      <HStack mb={2} spacing={2} justify="center">
+        <Box
+          bg="linear-gradient(45deg, #FFD700, #FFA000)"
+          borderRadius="md"
+          p={1.5}
+        >
+          <Award size={16} color="white" />
+        </Box>
+        <Text fontSize="sm" fontWeight="bold" color="#FCD34D">
+          {t('headers.rqmScoring')}
+        </Text>
+      </HStack>
+
+      <Grid templateColumns="repeat(3, 1fr)" gap={2}>
+        <VStack spacing={1}>
+          <Box
+            bg="linear-gradient(45deg, #3B82F6, #1E40AF)"
+            borderRadius="md"
+            p={1.5}
+          >
+            <Shield size={14} color="white" />
+          </Box>
+          <Text
+            fontSize="2xs"
+            color="#93C5FD"
+            fontWeight="bold"
+            textAlign="center"
+          >
+            {t('stats.accuracy').toUpperCase()}
+          </Text>
+        </VStack>
+        <VStack spacing={1}>
+          <Box
+            bg="linear-gradient(45deg, #F59E0B, #D97706)"
+            borderRadius="md"
+            p={1.5}
+          >
+            <Zap size={14} color="white" />
+          </Box>
+          <Text
+            fontSize="2xs"
+            color="#FCD34D"
+            fontWeight="bold"
+            textAlign="center"
+          >
+            {t('stats.speed').toUpperCase()}
+          </Text>
+        </VStack>
+        <VStack spacing={1}>
+          <Box
+            bg="linear-gradient(45deg, #EF4444, #DC2626)"
+            borderRadius="md"
+            p={1.5}
+          >
+            <Target size={14} color="white" />
+          </Box>
+          <Text
+            fontSize="2xs"
+            color="#FCA5A5"
+            fontWeight="bold"
+            textAlign="center"
+          >
+            DIFFICULTY
+          </Text>
+        </VStack>
+      </Grid>
+    </Box>
+  )
+})
+RQMScoringSection.displayName = 'RQMScoringSection'
+
+const GameInstructionsModal = memo(
+  ({ isOpen, onClose, gameType, onStartGame }) => {
+    const { t } = useTranslation('GameHub')
+
+    const GAME_INSTRUCTIONS = useMemo(
+      () => ({
+        normal_quiz: {
+          icon: FileText,
+          title: t('gameTypes.normal_quiz'),
+          subtitle: t('gameSubtitles.normal_quiz'),
+          time: '50 seconds',
+          difficulty: t('difficulty.balanced'),
+          emoji: '🧠',
+          description: t('gameDescriptions.normal_quiz'),
+          colors: {
+            primary: '#EC4899',
+            secondary: '#F472B6',
+            background: 'linear(135deg, #ec4899 0%, #be185d 100%)',
+            light: 'rgba(236, 72, 153, 0.2)',
+            border: 'rgba(236, 72, 153, 0.4)',
+            text: '#F9A8D4',
+          },
+          instructions: t('instructions.normalQuiz', { returnObjects: true }),
+          tips: [t('tips.0'), t('tips.1'), t('tips.2'), t('tips.3')],
+          features: [
+            t('features.adaptiveDifficulty'),
+            t('features.smartNavigation'),
+            t('features.instantValidation'),
+          ],
+        },
+        true_false: {
+          icon: FlipHorizontal2,
+          title: t('gameTypes.true_false'),
+          subtitle: t('gameSubtitles.true_false'),
+          time: '35 seconds',
+          difficulty: t('difficulty.swift'),
+          emoji: '⚡',
+          description: t('gameDescriptions.true_false'),
+          colors: {
+            primary: '#8B5CF6',
+            secondary: '#A78BFA',
+            background: 'linear(135deg, #8b5cf6 0%, #7c3aed 100%)',
+            light: 'rgba(139, 92, 246, 0.2)',
+            border: 'rgba(139, 92, 246, 0.4)',
+            text: '#C4B5FD',
+          },
+          instructions: t('instructions.trueFalse', { returnObjects: true }),
+          tips: [t('tips.4'), t('tips.5'), t('tips.6'), t('tips.7')],
+          features: [
+            t('features.speedBonus'),
+            t('features.binarySimplicity'),
+            t('features.factVerification'),
+          ],
+        },
+        word_weaver: {
+          icon: Sparkles,
+          title: t('gameTypes.word_weaver'),
+          subtitle: t('gameSubtitles.word_weaver'),
+          time: '100 seconds',
+          difficulty: t('difficulty.creative'),
+          emoji: '🔤',
+          description: t('gameDescriptions.word_weaver'),
+          colors: {
+            primary: '#10B981',
+            secondary: '#34D399',
+            background: 'linear(135deg, #10b981 0%, #059669 100%)',
+            light: 'rgba(16, 185, 129, 0.2)',
+            border: 'rgba(16, 185, 129, 0.4)',
+            text: '#6EE7B7',
+          },
+          instructions: t('instructions.wordWeaver', { returnObjects: true }),
+          tips: [t('tips.8'), t('tips.9'), t('tips.10'), t('tips.11')],
+          features: [
+            t('features.contextClues'),
+            t('features.letterShuffling'),
+            t('features.progressiveDifficulty'),
+          ],
+        },
+        connections: {
+          icon: Link2,
+          title: t('gameTypes.connections'),
+          subtitle: t('gameSubtitles.connections'),
+          time: '100 seconds',
+          difficulty: t('difficulty.strategic'),
+          emoji: '🔗',
+          description: t('gameDescriptions.connections'),
+          colors: {
+            primary: '#F59E0B',
+            secondary: '#FBBF24',
+            background: 'linear(135deg, #f59e0b 0%, #d97706 100%)',
+            light: 'rgba(245, 158, 11, 0.2)',
+            border: 'rgba(245, 158, 11, 0.4)',
+            text: '#FCD34D',
+          },
+          instructions: t('instructions.connections', { returnObjects: true }),
+          tips: [t('tips.12'), t('tips.13'), t('tips.14'), t('tips.15')],
+          features: [
+            t('features.perfectPairing'),
+            t('features.strategicThinking'),
+            t('features.completeNetworkMapping'),
+          ],
+        },
+      }),
+      [t],
+    )
+
+    const game = useMemo(
+      () => (gameType ? GAME_INSTRUCTIONS[gameType] : null),
+      [gameType, GAME_INSTRUCTIONS],
+    )
+
+    if (!game) return null
+
+    return (
+      <AnimatePresence mode="wait">
+        {isOpen && (
+          <Modal
+            isOpen={isOpen}
+            onClose={onClose}
+            size={{ base: 'full', md: '4xl' }}
+            closeOnOverlayClick={false}
+            motionPreset="slideInBottom"
+          >
+            <ModalOverlay
+              bg="blackAlpha.900"
+              backdropFilter="blur(10px)"
+              style={{ zIndex: 1400 }}
+            />
+
+            <MotionBox
+              as={ModalContent}
+              {...ANIMATION_VARIANTS.modal}
+              bg="gray.900"
+              color="white"
+              mx={{ base: 0, md: 4 }}
+              my={{ base: 0, md: 4 }}
+              borderRadius={{ base: 'none', md: '3xl' }}
+              border="1px solid"
+              borderColor="rgba(255, 255, 255, 0.1)"
+              boxShadow="0 25px 50px -12px rgba(0, 0, 0, 0.6)"
+              maxH={{ base: '100vh', md: '85vh' }}
+              h={{ base: '100vh', md: 'auto' }}
+              overflow="hidden"
+              position="relative"
+              display="flex"
+              flexDirection="column"
+              style={{ zIndex: 1401 }}
+            >
+              <Box
+                position="absolute"
+                top={0}
+                left={0}
+                right={0}
+                bottom={0}
+                bgGradient={`radial(circle at 30% 20%, ${game.colors.light}, transparent 70%)`}
+                opacity={0.3}
+                zIndex={0}
+                pointerEvents="none"
+              />
+
+              <Box
+                position="absolute"
+                top={{ base: 4, md: 6 }}
+                right={{ base: 4, md: 6 }}
+                zIndex={20}
+              >
+                <MotionBox
+                  whileHover={{ scale: 1.1 }}
+                  whileTap={{ scale: 0.9 }}
+                >
+                  <Button
+                    onClick={onClose}
+                    size="lg"
+                    borderRadius="full"
+                    bg="rgba(0, 0, 0, 0.6)"
+                    color="white"
+                    border="2px solid"
+                    borderColor="rgba(255, 255, 255, 0.2)"
+                    minW="auto"
+                    w="48px"
+                    h="48px"
+                    p={0}
+                    _hover={{
+                      bg: 'rgba(0, 0, 0, 0.8)',
+                      borderColor: game.colors.primary,
+                    }}
+                    transition="all 0.2s ease"
+                  >
+                    <X size={20} />
+                  </Button>
+                </MotionBox>
+              </Box>
+
+              <ModalHeader
+                pt={{ base: 8, md: 8 }}
+                pb={4}
+                px={{ base: 6, md: 8 }}
+                position="relative"
+                zIndex={1}
+                flexShrink={0}
+              >
+                <MotionBox
+                  {...ANIMATION_VARIANTS.content}
+                  transition={{ duration: 0.5 }}
+                >
+                  <VStack spacing={6} align="center">
+                    <VStack spacing={4} align="center">
+                      <GameIcon game={game} />
+                      <VStack spacing={2} align="center">
+                        <Text
+                          fontSize={{ base: '2xl', md: '3xl' }}
+                          fontWeight="900"
+                          color="white"
+                          textAlign="center"
+                          letterSpacing="tight"
+                        >
+                          {game.title}
+                        </Text>
+                        <HStack spacing={2} align="center">
+                          <Badge
+                            bg={game.colors.light}
+                            color={game.colors.text}
+                            border="1px solid"
+                            borderColor={game.colors.border}
+                            px={3}
+                            py={1}
+                            borderRadius="full"
+                            fontSize="xs"
+                            fontWeight="bold"
+                          >
+                            {game.difficulty}
+                          </Badge>
+                          <Text fontSize="md" color="gray.300" fontWeight="600">
+                            {game.subtitle}
+                          </Text>
+                        </HStack>
+                      </VStack>
+                      <QuickStats game={game} />
+                    </VStack>
+                  </VStack>
+                </MotionBox>
+              </ModalHeader>
+
+              <ModalBody
+                py={0}
+                px={{ base: 6, md: 8 }}
+                position="relative"
+                zIndex={1}
+                overflow="auto"
+                flex="1"
+                css={{
+                  '&::-webkit-scrollbar': { width: '6px' },
+                  '&::-webkit-scrollbar-track': {
+                    background: 'rgba(255, 255, 255, 0.1)',
+                    borderRadius: '3px',
+                  },
+                  '&::-webkit-scrollbar-thumb': {
+                    background: game.colors.primary,
+                    borderRadius: '3px',
+                  },
+                  '&::-webkit-scrollbar-thumb:hover': {
+                    background: game.colors.secondary,
+                  },
+                }}
+              >
+                <Container maxW="3xl" p={0}>
+                  <VStack spacing={6} pb={4}>
+                    <MotionBox
+                      {...ANIMATION_VARIANTS.content}
+                      transition={{ duration: 0.5, delay: 0.1 }}
+                      w="100%"
+                    >
+                      <Text
+                        fontSize="md"
+                        color="gray.300"
+                        textAlign="center"
+                        lineHeight="1.6"
+                        bg="rgba(0, 0, 0, 0.3)"
+                        borderRadius="xl"
+                        p={4}
+                        border="1px solid"
+                        borderColor="rgba(255, 255, 255, 0.1)"
+                      >
+                        {game.description}
+                      </Text>
+                    </MotionBox>
+                    <MotionBox
+                      {...ANIMATION_VARIANTS.content}
+                      transition={{ duration: 0.5, delay: 0.2 }}
+                      w="100%"
+                    >
+                      <Box
+                        bg="rgba(0, 0, 0, 0.4)"
+                        backdropFilter="blur(10px)"
+                        border="2px solid"
+                        borderColor={game.colors.border}
+                        borderRadius="xl"
+                        p={4}
+                      >
+                        <HStack mb={3} spacing={3}>
+                          <Box
+                            bg={game.colors.background}
+                            borderRadius="lg"
+                            p={2}
+                            boxShadow={`0 6px 15px ${game.colors.light}`}
+                          >
+                            <Target size={16} color="white" />
+                          </Box>
+                          <Text
+                            fontSize="md"
+                            fontWeight="bold"
+                            color={game.colors.text}
+                          >
+                            {t('headers.howToPlay')}
+                          </Text>
+                        </HStack>
+                        <InstructionsList
+                          instructions={game.instructions}
+                          colors={game.colors}
+                        />
+                      </Box>
+                    </MotionBox>
+                    <Grid
+                      templateColumns={{ base: '1fr', md: 'repeat(2, 1fr)' }}
+                      gap={4}
+                      w="100%"
+                    >
+                      <MotionBox
+                        {...ANIMATION_VARIANTS.content}
+                        transition={{ duration: 0.5, delay: 0.3 }}
+                      >
+                        <Box
+                          bg="rgba(0, 0, 0, 0.3)"
+                          backdropFilter="blur(10px)"
+                          border="1px solid"
+                          borderColor="rgba(255, 255, 255, 0.2)"
+                          borderRadius="lg"
+                          p={3}
+                          h="100%"
+                        >
+                          <HStack mb={2} spacing={2}>
+                            <Box
+                              bg={game.colors.primary}
+                              borderRadius="md"
+                              p={1.5}
+                            >
+                              <Zap size={14} color="white" />
+                            </Box>
+                            <Text
+                              fontSize="sm"
+                              fontWeight="bold"
+                              color={game.colors.text}
+                            >
+                              {t('headers.features')}
+                            </Text>
+                          </HStack>
+                          <FeaturesList
+                            features={game.features}
+                            colors={game.colors}
+                          />
+                        </Box>
+                      </MotionBox>
+                      <MotionBox
+                        {...ANIMATION_VARIANTS.content}
+                        transition={{ duration: 0.5, delay: 0.4 }}
+                      >
+                        <Box
+                          bg="rgba(0, 0, 0, 0.3)"
+                          backdropFilter="blur(10px)"
+                          border="1px solid"
+                          borderColor="rgba(255, 255, 255, 0.2)"
+                          borderRadius="lg"
+                          p={3}
+                          h="100%"
+                        >
+                          <HStack mb={2} spacing={2}>
+                            <Box
+                              bg="linear-gradient(45deg, #10B981, #059669)"
+                              borderRadius="md"
+                              p={1.5}
+                            >
+                              <Brain size={14} color="white" />
+                            </Box>
+                            <Text
+                              fontSize="sm"
+                              fontWeight="bold"
+                              color="#6EE7B7"
+                            >
+                              {t('headers.proTips')}
+                            </Text>
+                          </HStack>
+                          <TipsList tips={game.tips} />
+                        </Box>
+                      </MotionBox>
+                    </Grid>
+                    <MotionBox
+                      {...ANIMATION_VARIANTS.content}
+                      transition={{ duration: 0.5, delay: 0.5 }}
+                      w="100%"
+                    >
+                      <RQMScoringSection />
+                    </MotionBox>
+                  </VStack>
+                </Container>
+              </ModalBody>
+
+              <ModalFooter
+                pt={4}
+                px={{ base: 6, md: 8 }}
+                pb={{ base: 4, md: 6 }}
+                position="relative"
+                zIndex={1}
+                bg="rgba(0, 0, 0, 0.8)"
+                backdropFilter="blur(20px)"
+                borderTop="1px solid"
+                borderColor="rgba(255, 255, 255, 0.1)"
+                flexShrink={0}
+                w={'100%'}
+              >
+                <MotionBox
+                  {...ANIMATION_VARIANTS.content}
+                  transition={{ duration: 0.5, delay: 0.6 }}
+                  w="100%"
+                >
+                  <HStack spacing={3} w="100%" justify="center" align="center">
+                    <MotionBox
+                      whileHover={{ scale: 1.02 }}
+                      whileTap={{ scale: 0.98 }}
+                    >
+                      <Button
+                        onClick={onClose}
+                        size="md"
+                        px={6}
+                        py={3}
+                        borderRadius="full"
+                        bg="rgba(255, 255, 255, 0.1)"
+                        color="white"
+                        border="1px solid"
+                        borderColor="rgba(255, 255, 255, 0.2)"
+                        fontSize="sm"
+                        fontWeight="600"
+                        minW="120px"
+                        h="44px"
+                        _hover={{
+                          bg: 'rgba(255, 255, 255, 0.2)',
+                          borderColor: 'rgba(255, 255, 255, 0.4)',
+                        }}
+                        transition="all 0.2s ease"
+                      >
+                        {t('navigation.backToMenu')}
+                      </Button>
+                    </MotionBox>
+                    <MotionBox
+                      whileHover={{ scale: 1.02 }}
+                      whileTap={{ scale: 0.98 }}
+                    >
+                      <Button
+                        onClick={onStartGame}
+                        size="md"
+                        px={8}
+                        py={3}
+                        bg={game.colors.background}
+                        color="white"
+                        leftIcon={<Rocket size={16} />}
+                        borderRadius="full"
+                        fontSize="sm"
+                        fontWeight="bold"
+                        boxShadow={`0 8px 25px ${game.colors.light}`}
+                        border="1px solid"
+                        borderColor="rgba(255, 255, 255, 0.3)"
+                        minW="140px"
+                        h="44px"
+                        _hover={{
+                          boxShadow: `0 12px 30px ${game.colors.light}`,
+                          borderColor: 'rgba(255, 255, 255, 0.5)',
+                        }}
+                        transition="all 0.2s ease"
+                      >
+                        {t('navigation.launchGame')}
+                      </Button>
+                    </MotionBox>
+                  </HStack>
+                  <Box
+                    display={{ base: 'block', md: 'none' }}
+                    h="env(safe-area-inset-bottom, 0px)"
+                    minH="4px"
+                  />
+                </MotionBox>
+              </ModalFooter>
+            </MotionBox>
+          </Modal>
+        )}
+      </AnimatePresence>
+    )
+  },
+)
+
+GameInstructionsModal.displayName = 'GameInstructionsModal'
+
+export default GameInstructionsModal

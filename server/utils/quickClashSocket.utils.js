@@ -74,94 +74,6 @@ const isUserInRoom = (userId, roomType) => {
 }
 
 /**
- * Send push notification for offline users
- * @param {Object} options - Notification options
- */
-async function sendTeamRemovalPushNotification({
-  userId,
-  teamName,
-  removerName,
-}) {
-  try {
-    await sendNotification({
-      title: 'Removed from Team',
-      body: `You have been removed from team "${teamName}"`,
-      icon: '/images/rrlogo.webp',
-      url: '/quickclash',
-      userId: userId,
-      type: 'quickClash',
-      importance: 'important',
-    })
-    console.log(`[QC_PUSH] Push notification sent to offline user ${userId}`)
-  } catch (error) {
-    console.error(
-      `[QC_PUSH] Failed to send push notification to user ${userId}:`,
-      error,
-    )
-  }
-}
-
-/**
- * Send push notification for team invitations
- * @param {Object} options - Notification options
- */
-async function sendTeamInvitationPushNotification({
-  userId,
-  teamName,
-  inviterName,
-}) {
-  try {
-    await sendNotification({
-      title: 'Team Invitation',
-      body: `${inviterName} invited you to join "${teamName}"`,
-      icon: '/images/rrlogo.webp',
-      url: '/quickclash',
-      userId: userId,
-      type: 'quickClash',
-      importance: 'important',
-    })
-    console.log(
-      `[QC_PUSH] Team invitation push notification sent to offline user ${userId}`,
-    )
-  } catch (error) {
-    console.error(
-      `[QC_PUSH] Failed to send team invitation push notification to user ${userId}:`,
-      error,
-    )
-  }
-}
-
-/**
- * Send push notification for Quick Clash challenges
- * @param {Object} options - Notification options
- */
-async function sendQuickClashChallengePushNotification({
-  userId,
-  challengerName,
-  category,
-}) {
-  try {
-    await sendNotification({
-      title: 'Quick Clash Challenge',
-      body: `${challengerName} challenged you to a ${category} Quick Clash!`,
-      icon: '/images/rrlogo.webp',
-      url: '/quickclash',
-      userId: userId,
-      type: 'quickClash',
-      importance: 'important',
-    })
-    console.log(
-      `[QC_PUSH] Challenge push notification sent to offline user ${userId}`,
-    )
-  } catch (error) {
-    console.error(
-      `[QC_PUSH] Failed to send challenge push notification to user ${userId}:`,
-      error,
-    )
-  }
-}
-
-/**
  * Handle 1v1 matchmaking socket events with device awareness and debouncing
  * @param {Object} io - Socket.io instance
  * @param {Object} socket - Client socket connection
@@ -783,18 +695,6 @@ const setupQuickClashGlobalEvents = (io, utils = {}) => {
         console.log(
           `[QC_EVENT] Challenge created notification sent to ${opponent._id}: ${success}`,
         )
-
-        // If opponent is offline, send push notification
-        if (!success) {
-          console.log(
-            `[QC_EVENT] Opponent ${opponent._id} offline, sending push notification`,
-          )
-          sendQuickClashChallengePushNotification({
-            userId: opponent._id,
-            challengerName: challenger.name || challenger.inGameName,
-            category: challenge.category,
-          })
-        }
       }, 100)
     },
   )
@@ -1344,48 +1244,6 @@ const setupQuickClashGlobalEvents = (io, utils = {}) => {
           notifiedCount++
         } else {
           offlineCount++
-          // Send push notification for certain events to offline users
-          if (event === 'quickClash:teamMemberJoined') {
-            try {
-              await sendNotification({
-                title: 'Team Member Joined',
-                body: `${data.userName} joined your team "${team.name}"`,
-                icon: '/images/rrlogo.webp',
-                url: '/quickclash',
-                userId: userId,
-                type: 'quickClash',
-                importance: 'normal',
-              })
-              console.log(
-                `[QC_PUSH] Team member joined push notification sent to offline user ${userId}`,
-              )
-            } catch (error) {
-              console.error(
-                `[QC_PUSH] Failed to send team member joined push notification:`,
-                error,
-              )
-            }
-          } else if (event === 'quickClash:teamMemberLeft') {
-            try {
-              await sendNotification({
-                title: 'Team Member Left',
-                body: `${data.userName} left your team "${team.name}"`,
-                icon: '/images/rrlogo.webp',
-                url: '/quickclash',
-                userId: userId,
-                type: 'quickClash',
-                importance: 'normal',
-              })
-              console.log(
-                `[QC_PUSH] Team member left push notification sent to offline user ${userId}`,
-              )
-            } catch (error) {
-              console.error(
-                `[QC_PUSH] Failed to send team member left push notification:`,
-                error,
-              )
-            }
-          }
         }
       }
 
@@ -1747,18 +1605,6 @@ const setupQuickClashGlobalEvents = (io, utils = {}) => {
       console.log(
         `[QC_TEAM] Team invitation received notification sent to ${inviteeId}: ${success}`,
       )
-
-      // If invitee is offline, send push notification
-      if (!success) {
-        console.log(
-          `[QC_TEAM] Invitee ${inviteeId} offline, sending push notification`,
-        )
-        sendTeamInvitationPushNotification({
-          userId: inviteeId,
-          teamName,
-          inviterName,
-        })
-      }
     },
   )
 
@@ -1858,19 +1704,6 @@ const setupQuickClashGlobalEvents = (io, utils = {}) => {
       console.log(
         `[QC_TEAM] Team member removed notification sent to ${removedMember}: ${success}`,
       )
-
-      // If removed user is offline, send push notification
-      if (!success) {
-        console.log(
-          `[QC_TEAM] User ${removedMember} offline, sending push notification`,
-        )
-        // TODO: Add push notification service call here
-        sendTeamRemovalPushNotification({
-          userId: removedMember,
-          teamName,
-          removerName: removedMemberName,
-        })
-      }
     },
   )
 

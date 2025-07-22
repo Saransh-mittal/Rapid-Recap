@@ -464,6 +464,10 @@ function initializeSocket(server) {
       socket.join(`tournament_quiz_submission_progress_${userId}`)
     })
 
+    socket.on('join game submission progress', userId => {
+      socket.join(`game_submission_progress_${userId}`)
+    })
+
     socket.off('setup', userData => {
       userOpenChats.delete(userData._id)
       socket.leave(userData._id)
@@ -708,34 +712,71 @@ function initializeSocket(server) {
   }
 
   /**
-   * Enhanced function to get user's active devices for notifications
+   * Get user's active devices for notifications
+   * Includes fallback to room-based check for reliability
    */
   function getUserActiveDevices(userId) {
     const userDevices = userDeviceConnections.get(userId)
+
+    // FALLBACK: If Map is empty but user should be online, use room-based check
     if (!userDevices || userDevices.size === 0) {
-      // console.log(`[DEVICE_LOOKUP] No devices found for user ${userId}`)
+      // Check if user is in socket rooms (indicates they're actually connected)
+      const userRoom = io.sockets.adapter.rooms.get(userId)
+      const quickClashRoom = io.sockets.adapter.rooms.get(
+        `quickClash:${userId}`,
+      )
+
+      if (
+        (userRoom && userRoom.size > 0) ||
+        (quickClashRoom && quickClashRoom.size > 0)
+      ) {
+        // Get connected socket IDs from the rooms
+        const socketIds = []
+        if (userRoom && userRoom.size > 0) {
+          socketIds.push(...Array.from(userRoom))
+        }
+        if (quickClashRoom && quickClashRoom.size > 0) {
+          socketIds.push(...Array.from(quickClashRoom))
+        }
+
+        // Remove duplicates and verify sockets are connected
+        const uniqueSocketIds = [...new Set(socketIds)]
+        const connectedSockets = uniqueSocketIds.filter(socketId => {
+          const socket = io.sockets.sockets.get(socketId)
+          return socket && socket.connected
+        })
+
+        if (connectedSockets.length > 0) {
+          console.log(
+            `[SOCKET] User ${userId} found via room fallback (${connectedSockets.length} sockets)`,
+          )
+
+          // Return a fallback device entry
+          return [
+            {
+              deviceFingerprint: 'fallback_device_' + userId,
+              socketIds: connectedSockets,
+              socketCount: connectedSockets.length,
+            },
+          ]
+        }
+      }
+
       return []
     }
 
     const activeDevices = []
+
     for (const [deviceFingerprint, socketSet] of userDevices.entries()) {
       if (socketSet.size > 0) {
-        // Verify sockets are actually connected
-        const connectedSockets = Array.from(socketSet).filter(socketId => {
+        const connectedSockets = []
+
+        for (const socketId of socketSet) {
           const socket = io.sockets.sockets.get(socketId)
-          const isConnected = socket && socket.connected
-          if (!isConnected) {
-            // console.log(
-            //   `[DEVICE_LOOKUP] Socket ${socketId} not connected, removing from device ${deviceFingerprint.substring(
-            //     0,
-            //     8,
-            //   )}...`,
-            // )
-            socketSet.delete(socketId) // Clean up disconnected sockets
-            socketMetadata.delete(socketId)
+          if (socket && socket.connected) {
+            connectedSockets.push(socketId)
           }
-          return isConnected
-        })
+        }
 
         if (connectedSockets.length > 0) {
           activeDevices.push({
@@ -743,29 +784,12 @@ function initializeSocket(server) {
             socketIds: connectedSockets,
             socketCount: connectedSockets.length,
           })
-          // console.log(
-          //   `[DEVICE_LOOKUP] Found ${
-          //     connectedSockets.length
-          //   } active socket(s) for device ${deviceFingerprint.substring(
-          //     0,
-          //     8,
-          //   )}...`,
-          // )
         }
       }
     }
 
-    // console.log(
-    //   `[DEVICE_LOOKUP] User ${userId} has ${
-    //     activeDevices.length
-    //   } active device(s) with total ${activeDevices.reduce(
-    //     (sum, dev) => sum + dev.socketCount,
-    //     0,
-    //   )} socket(s)`,
-    // )
     return activeDevices
   }
-
   /**
    * Enhanced function to notify user across all devices
    */
@@ -942,6 +966,20 @@ function initializeSocket(server) {
     },
   )
 
+  // Add this bridge between custom emitter and Socket.IO for game submission progress (around line 520 after other bridges)
+  globalEmitter.on(
+    'game_submission_progress',
+    ({ userId, stepId, progress }) => {
+      io.to(`game_submission_progress_${userId}`).emit(
+        'game_submission_progress',
+        {
+          stepId,
+          progress,
+        },
+      )
+    },
+  )
+
   // Set up periodic heartbeat checking
   const HEARTBEAT_CHECK_INTERVAL = 60000 // 1 minute
   const BATCH_SIZE = 1000
@@ -968,6 +1006,9 @@ function initializeSocket(server) {
   io.getConnectionStats = getConnectionStats
   io.getUserActiveDevices = getUserActiveDevices
   io.notifyUserAllDevices = notifyUserAllDevices
+
+  const { initializeSocketUtils } = require('./utils/socketUtils')
+  initializeSocketUtils(io)
 
   exports.io = io
 }

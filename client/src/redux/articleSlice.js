@@ -1,3 +1,6 @@
+// Enhanced articleSlice.js to handle new search metadata
+// File: redux/articleSlice.js
+
 import { createSlice, createAsyncThunk } from '@reduxjs/toolkit'
 import axios from 'axios'
 
@@ -26,6 +29,15 @@ const articleSlice = createSlice({
     searchLoading: false,
     searchTerm: '',
     totalUsersGivenQuiz: 0,
+    // New search metadata
+    searchMetadata: {
+      searchType: null,
+      searchDuration: null,
+      cached: false,
+      queryIntent: null,
+      suggestions: [],
+      avgRelevance: null,
+    },
   },
   reducers: {
     setSearchTerm: (state, action) => {
@@ -40,6 +52,14 @@ const articleSlice = createSlice({
       state.searchResults = []
       state.isSearching = false
       state.hasMore = true
+      state.searchMetadata = {
+        searchType: null,
+        searchDuration: null,
+        cached: false,
+        queryIntent: null,
+        suggestions: [],
+        avgRelevance: null,
+      }
     },
     setTotalUsersGivenQuiz: (state, action) => {
       state.totalUsersGivenQuiz = action.payload
@@ -58,6 +78,8 @@ const articleSlice = createSlice({
         }
         state.searchLoading = false
         state.isSearching = true
+
+        // Handle pagination
         if (action.payload.currentPage === 1) {
           state.searchResults = action.payload.articles
         } else {
@@ -66,13 +88,32 @@ const articleSlice = createSlice({
             ...action.payload.articles,
           ]
         }
+
         state.hasMore = action.payload.hasMore
         state.error = null
+
+        // Store search metadata
+        state.searchMetadata = {
+          searchType: action.payload.searchType || 'unknown',
+          searchDuration: action.payload.searchDuration || null,
+          cached: action.payload.cached || false,
+          queryIntent: action.payload.queryIntent || null,
+          suggestions: action.payload.suggestions || [],
+          avgRelevance: action.payload.avgRelevance || null,
+        }
       })
       .addCase(searchArticles.rejected, (state, action) => {
         state.searchLoading = false
         state.isSearching = false
         state.error = action.payload
+        state.searchMetadata = {
+          searchType: null,
+          searchDuration: null,
+          cached: false,
+          queryIntent: null,
+          suggestions: [],
+          avgRelevance: null,
+        }
       })
   },
 })

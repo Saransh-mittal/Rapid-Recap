@@ -5,6 +5,9 @@ const QuickClashGlobalMatchmaking = require('../model/quickClashSchemas/quickCla
 const globalEmitter = require('../eventEmitter')
 const User = require('../model/userSchema')
 const QuickClashTeamTrophyHistory = require('../model/quickClashSchemas/quickClashTeamTrophyHistorySchema')
+const {
+  notifyTeamBattleCompleted,
+} = require('../services/quickClashServices/quickClashNotificationService')
 
 // Constants
 const MATCHMAKING_EXPIRY = 30 * 60 * 1000 // 30 minutes
@@ -555,6 +558,58 @@ const calculateFinalTrophies = async (battle, session) => {
         userScore: member.score,
       }).save({ session })
     }
+  }
+
+  // Send battle completion notifications to all participants
+  try {
+    // Fetch team details from database to get team names
+    const [teamADetails, teamBDetails] = await Promise.all([
+      QuickClashTeam.findById(battle.teamA)
+        .select('_id name')
+        .lean()
+        .session(session),
+      QuickClashTeam.findById(battle.teamB)
+        .select('_id name')
+        .lean()
+        .session(session),
+    ])
+
+    // Prepare team info with fallback names
+    const teamAInfo = {
+      _id: battle.teamA,
+      name: teamADetails?.name || 'Team A',
+    }
+
+    const teamBInfo = {
+      _id: battle.teamB,
+      name: teamBDetails?.name || 'Team B',
+    }
+
+    console.log(
+      `[TEAM_BATTLE_COMPLETED] Sending notifications for battle ${battle._id}: "${teamAInfo.name}" vs "${teamBInfo.name}"`,
+    )
+
+    const notificationsSent = await notifyTeamBattleCompleted({
+      battle,
+      teamAMembers: battle.teamAMembers,
+      teamBMembers: battle.teamBMembers,
+      teamA: teamAInfo,
+      teamB: teamBInfo,
+    })
+
+    console.log(
+      `[TEAM_BATTLE_COMPLETED] Sent completion notifications for battle ${
+        battle._id
+      } to ${notificationsSent}/${
+        battle.teamAMembers.length + battle.teamBMembers.length
+      } players`,
+    )
+  } catch (notificationError) {
+    // Don't fail the trophy calculation if notifications fail
+    console.error(
+      `[TEAM_BATTLE_COMPLETED] Error sending completion notifications for battle ${battle._id}:`,
+      notificationError,
+    )
   }
 }
 module.exports = {

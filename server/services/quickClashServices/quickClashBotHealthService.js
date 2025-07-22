@@ -179,7 +179,7 @@ const trackAllBotsInBattle = async ({
             })
 
             // Start bot participation immediately since battle is now fully ready
-            const delay = Math.floor(Math.random() * 15 + 5) * 1000 // 5-20 seconds (reduced since battle is ready)
+            const delay = Math.floor(Math.random() * 100 + 20) * 1000 // 20-120 seconds (reduced since battle is ready)
             setTimeout(() => {
               executeBotParticipation({
                 botId: userId.toString(),
@@ -354,7 +354,7 @@ const executeCategorySelection = async ({
             console.error(`[BOT_HEALTH] Retry failed for bot ${botId}:`, err)
             stopTrackingBot({ botId, battleId })
           })
-        }, 10000) // Wait 10 seconds before retry
+        }, 20000) // Wait 20 seconds before retry
         return
       } else {
         console.log(
@@ -642,7 +642,7 @@ const executeChallengeBegining = async ({ botId, battleId }) => {
     })
 
     // Schedule challenge completion
-    const delay = Math.floor(Math.random() * 90 + 30) * 1000 // 30-120 seconds
+    const delay = Math.floor(Math.random() * 150 + 30) * 1000 // 30-150 seconds
     setTimeout(() => {
       executeChallengeCompletion({ botId, battleId, challengeId }).catch(
         err => {

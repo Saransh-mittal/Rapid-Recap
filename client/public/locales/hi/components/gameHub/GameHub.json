@@ -1,0 +1,387 @@
+{
+  "gameTypes": {
+    "normal_quiz": "ज्ञान खोज",
+    "true_false": "सत्य डिटेक्टर",
+    "word_weaver": "शब्द शिल्पी",
+    "connections": "माइंड मैपर"
+  },
+  "gameSubtitles": {
+    "normal_quiz": "बहुविकल्पीय चुनौती",
+    "true_false": "द्विआधारी निर्णय लेना",
+    "word_weaver": "रिक्त-स्थान-पूर्ति में महारत",
+    "connections": "वैचारिक संबंध"
+  },
+  "gameDescriptions": {
+    "normal_quiz": "रणनीतिक बहुविकल्पीय चुनौतियों के माध्यम से नेविगेट करें जो आपकी समझ का परीक्षण करती हैं",
+    "true_false": "द्विआधारी निर्णयों के साथ रैपिड-फायर सटीकता चुनौती जो विस्तार पर ध्यान का परीक्षण करती है",
+    "word_weaver": "प्रासंगिक सुरागों और रचनात्मक सोच का उपयोग करके अव्यवस्थित अक्षरों से शब्द बनाएं",
+    "connections": "लेख से सभी 8 रणनीतिक अवधारणाओं को जोड़कर सही अवधारणा जोड़े बनाएं"
+  },
+  "gameShortDescriptions": {
+    "normal_quiz": "रणनीतिक बहुविकल्पीय प्रश्नों के साथ अपनी समझ का परीक्षण करें",
+    "true_false": "अपने ज्ञान का परीक्षण करने के लिए त्वरित सही या गलत कथन",
+    "word_weaver": "अव्यवस्थित अक्षरों या इकाइयों का उपयोग करके लापता शब्दों का पुनर्निर्माण करें",
+    "connections": "संबंधित अवधारणाओं के बीच छिपे हुए कनेक्शन खोजें"
+  },
+  "difficulty": {
+    "balanced": "संतुलित",
+    "swift": "तीव्र",
+    "creative": "रचनात्मक",
+    "strategic": "रणनीतिक",
+    "easy": "आसान",
+    "medium": "मध्यम",
+    "hard": "कठिन"
+  },
+  "status": {
+    "ready": "तैयार",
+    "locked": "लॉक",
+    "building": "बन रहा है",
+    "pending": "लंबित",
+    "done": "हो गया",
+    "live": "लाइव",
+    "wait": "प्रतीक्षा करें",
+    "selected": "चयनित",
+    "correct": "सही",
+    "incorrect": "गलत",
+    "valid": "मान्य",
+    "invalid": "अमान्य",
+    "completed": "पूर्ण",
+    "completedShort": "पूर्ण",
+    "complete": "पूरा करें",
+    "readyToGenerate": "जेनरेट करने के लिए तैयार",
+    "generate": "जेनरेट करें"
+  },
+  "navigation": {
+    "next": "अगला",
+    "previous": "पिछला",
+    "submit": "सबमिट करें",
+    "backToMenu": "मेनू पर वापस जाएं",
+    "backToArticle": "लेख पर वापस जाएं",
+    "launchGame": "गेम लॉन्च करें",
+    "loadMore": "और लोड करें",
+    "backToHub": "वापस",
+    "back": "वापस",
+    "startGame": "गेम शुरू करें",
+    "returnToArticle": "लेख पर लौटें",
+    "backToResults": "परिणामों पर वापस जाएं"
+  },
+  "headers": {
+    "performanceReport": "प्रदर्शन रिपोर्ट",
+    "questionAnalysis": "प्रश्न विश्लेषण",
+    "howToPlay": "कैसे खेलें",
+    "features": "विशेषताएँ",
+    "proTips": "प्रो टिप्स",
+    "rqmScoring": "RQM स्कोरिंग प्रणाली",
+    "processingPipeline": "प्रोसेसिंग पाइपलाइन",
+    "gamesMastered": "गेम में महारत हासिल",
+    "chooseChallenge": "अपनी चुनौती चुनें",
+    "gameHub": "गेम हब",
+    "missionAccomplished": "मिशन पूरा हुआ"
+  },
+  "descriptions": {
+    "detailedBreakdown": "आपके प्रदर्शन का विस्तृत विवरण",
+    "aiAnalyzing": "AI आपकी सामग्री का विश्लेषण कर रहा है और व्यक्तिगत चुनौतियाँ बना रहा है",
+    "preparingExperience": "आपके सीखने के रोमांच की तैयारी",
+    "chooseGameMode": "4 अलग-अलग गेम मोड में से चुनें",
+    "transformLearning": "AI-संचालित खेलों के साथ सीखने को एक आकर्षक रोमांच में बदलें",
+    "masteredChallenges": "आपने चुनौतियों में महारत हासिल कर ली है और अपने ज्ञान को साबित कर दिया है"
+  },
+  "features": {
+    "speedBonus": "गति बोनस",
+    "binarySimplicity": "द्विआधारी सरलता",
+    "factVerification": "तथ्य सत्यापन",
+    "contextClues": "प्रासंगिक सुराग",
+    "letterShuffling": "अक्षर शफलिंग",
+    "progressiveDifficulty": "प्रगतिशील कठिनाई",
+    "perfectPairing": "परफेक्ट पेयरिंग",
+    "strategicThinking": "रणनीतिक सोच",
+    "completeNetworkMapping": "पूर्ण नेटवर्क मैपिंग",
+    "adaptiveDifficulty": "अनुकूली कठिनाई",
+    "smartNavigation": "स्मार्ट नेविगेशन",
+    "instantValidation": "तुरंत सत्यापन",
+    "equalScoring": "समान स्कोरिंग",
+    "aiPowered": "AI संचालित",
+    "competitive": "प्रतिस्पर्धी",
+    "adaptive": "अनुकूली"
+  },
+  "instructions": {
+    "normalQuiz": [
+      "5 ध्यान से तैयार किए गए बहुविकल्पीय प्रश्नों के उत्तर दें",
+      "प्रत्येक प्रश्न 4 रणनीतिक विकल्प (A, B, C, D) प्रदान करता है",
+      "उत्तरों की समीक्षा के लिए प्रश्नों के बीच स्वतंत्र रूप से नेविगेट करें",
+      "जब आप अपने उत्तरों पर विश्वास करें तो सबमिट करें"
+    ],
+    "trueFalse": [
+      "लेख से 7 सटीक रूप से तैयार किए गए कथनों का मूल्यांकन करें",
+      "प्रत्येक कथन के लिए जल्दी से सही या गलत निर्धारित करें",
+      "निर्णय केवल लेख की जानकारी पर आधारित करें",
+      "गति और सटीकता दोनों आपके स्कोर में योगदान करते हैं"
+    ],
+    "wordWeaver": [
+      "अक्षरों को खोलकर 5 रिक्त-स्थान-भरें पहेलियाँ पूरी करें",
+      "दिए गए संदर्भ में फिट होने वाले शब्द बनाने के लिए अक्षरों पर क्लिक करें",
+      "अपने प्राथमिक मार्गदर्शन उपकरण के रूप में वाक्य संदर्भ का उपयोग करें",
+      "अपने उत्तर क्षेत्र में अक्षरों पर क्लिक करके उन्हें हटाएं"
+    ],
+    "connections": [
+      "सभी 8 रणनीतिक रूप से चुने गए अवधारणाओं को सही जोड़ों में कनेक्ट करें",
+      "तार्किक कनेक्शन बनाने के लिए दो अवधारणाओं पर क्लिक करें (कुल 4)",
+      "प्रत्येक अवधारणा का नेटवर्क में ठीक एक बार उपयोग किया जाना चाहिए",
+      "लाल X बटन का उपयोग करके गलत कनेक्शन हटाएं"
+    ]
+  },
+  "tips": [
+    "विकल्पों की जांच करने से पहले प्रत्येक प्रश्न को अच्छी तरह से पढ़ें",
+    "स्पष्ट रूप से गलत उत्तरों को पहले हटा दें",
+    "चयन को सत्यापित करने के लिए लेख के विवरण देखें",
+    "जब विश्वास हो तो अपनी पहली प्रवृत्ति पर भरोसा करें",
+    "'हमेशा,' 'कभी नहीं,' या 'सभी' जैसे पूर्ण शब्दों पर ध्यान दें",
+    "विशिष्ट लेख तथ्यों के विरुद्ध कथनों को सत्यापित करें",
+    "आंशिक रूप से सही कथनों से सावधान रहें",
+    "त्वरित निर्णय अक्सर बेहतर समय बोनस देते हैं",
+    "तार्किक शब्द फिट के लिए वाक्य के संदर्भ का विश्लेषण करें",
+    "शब्द की लंबाई और अक्षर आवृत्ति के बारे में सोचें",
+    "अक्षरों को अलग तरह से देखने के लिए शफल सुविधा का उपयोग करें",
+    "शब्द भिन्नताओं और सामान्य अंत पर विचार करें",
+    "लेख में कारण-प्रभाव संबंधों की तलाश करें",
+    "विषयगत और श्रेणीबद्ध कनेक्शन पर विचार करें",
+    "अवधारणाएं कैसे बातचीत करती हैं या संबंधित हैं, इस पर सोचें",
+    "सभी अवधारणाओं को जोड़ा जाना चाहिए - कोई अकेला नोड नहीं"
+  ],
+  "gameInterface": {
+    "question": "प्रश्न",
+    "statement": "कथन",
+    "wordPuzzle": "शब्द पहेली",
+    "completeSentence": "वाक्य पूरा करें:",
+    "isStatementTrue": "क्या यह कथन सही है या गलत?",
+    "selectAnswer": "अपना उत्तर चुनें",
+    "makeChoice": "अपना चुनाव करें",
+    "yourAnswer": "आपका उत्तर",
+    "correctAnswer": "सही उत्तर",
+    "yourWord": "आपका शब्द",
+    "building": "[बन रहा है...]",
+    "noAnswer": "कोई उत्तर नहीं",
+    "optionSelected": "चयनित",
+    "wordCompleted": "शब्द पूरा हो गया! सबमिट करने के लिए तैयार।",
+    "completeSentenceInstruction": "लापता शब्द बनाकर वाक्य को पूरा करें",
+    "clickLettersInstruction": "रिक्त स्थान में फिट होने वाले शब्द की वर्तनी के लिए अक्षरों पर क्लिक करें",
+    "clickToConnect": "कनेक्ट करने के लिए दो अवधारणाओं पर क्लिक करें",
+    "tapToConnect": "कनेक्ट करने के लिए दो अवधारणाओं पर टैप करें",
+    "noGoingBack": "वापस नहीं जा सकते - बुद्धिमानी से चुनें!",
+    "buildNetwork": "अपना नेटवर्क बनाएं और तैयार होने पर सबमिट करें!",
+    "perfectNetwork": "परफेक्ट नेटवर्क पूरा हो गया!",
+    "allNodesConnected": "सभी 8 नोड्स 4 अद्वितीय जोड़ों में जुड़े हुए हैं",
+    "greatProgress": "बढ़िया प्रगति!",
+    "moreConnectionsNeeded": "और कनेक्शन की आवश्यकता है",
+    "moreConnectionsNeededPlural": "और कनेक्शन की आवश्यकता है",
+    "pairRemaining": "सभी को जोड़ें",
+    "remainingNodes": "शेष नोड्स",
+    "nodesAvailable": "नोड्स उपलब्ध हैं",
+    "nodesPaired": "नोड्स जोड़े गए",
+    "readyToConnect": "कनेक्ट करने के लिए तैयार",
+    "buildingNetwork": "नेटवर्क बन रहा है",
+    "perfectNetworkStatus": "परफेक्ट नेटवर्क!",
+    "connectRelatedConcepts": "दी गई सूची से संबंधित अवधारणाओं को कनेक्ट करें",
+    "availableConcepts": "उपलब्ध अवधारणाएँ:",
+    "yourConnections": "आपके कनेक्शन बनाम मान्य कनेक्शन:",
+    "allValidConnections": "सभी मान्य कनेक्शन",
+    "overallPerformance": "समग्र प्रदर्शन",
+    "timeDilationActive": "टाइम बूस्ट सक्रिय",
+    "enhancedTime": "बढ़ाया गया समय",
+    "baseTime": "आधार समय",
+    "additionalTime": "अतिरिक्त समय",
+    "answered": "उत्तर दिया",
+    "connected": "कनेक्ट किया गया",
+    "createConnections": "संबंध बनाने के लिए दो अवधारणाओं पर क्लिक करें",
+    "conceptsAvailable": "उपलब्ध अवधारणाएँ",
+    "conceptsConnected": "कनेक्ट की गई अवधारणाएँ",
+    "conceptsRemaining": "शेष अवधारणाएँ",
+    "conceptsAvailablePlural": "उपलब्ध अवधारणाएँ",
+    "conceptsConnectedPlural": "कनेक्ट की गई अवधारणाएँ",
+    "conceptsRemainingPlural": "शेष अवधारणाएँ",
+    "conceptsAvailableShort": "उपलब्ध",
+    "conceptsConnectedShort": "कनेक्ट किया गया",
+    "conceptsRemainingShort": "शेष",
+    "conceptsAvailableCount": "{{count}} अवधारणाएँ उपलब्ध हैं",
+    "conceptsConnectedCount": "{{count}} अवधारणाएँ कनेक्ट की गई हैं",
+    "conceptsRemainingCount": "{{count}} अवधारणाएँ शेष हैं",
+    "conceptsAvailableCountPlural": "{{count}} अवधारणाएँ उपलब्ध हैं",
+    "conceptsConnectedCountPlural": "{{count}} अवधारणाएँ कनेक्ट की गई हैं",
+    "conceptsRemainingCountPlural": "{{count}} अवधारणाएँ शेष हैं"
+  },
+  "timer": {
+    "timeRunningLow": "समय समाप्त हो रहा है!",
+    "criticalTime": "महत्वपूर्ण समय!",
+    "timeUp": "समय समाप्त!",
+    "secondsLeft": "सेकंड बचे हैं",
+    "secondsRemaining": "सेकंड शेष",
+    "speedUp": "तेजी करें!",
+    "onlySecondsLeft": "केवल {{count}} सेकंड बचे हैं!",
+    "sec": "सेकंड",
+    "urgent": "अत्यावश्यक!",
+    "hurry": "जल्दी करो!"
+  },
+  "loading": {
+    "loadingGameHub": "गेम हब लोड हो रहा है...",
+    "loadingGameReport": "आपकी गेम रिपोर्ट लोड हो रही है...",
+    "loadingGameSummary": "गेम सारांश लोड हो रहा है",
+    "craftingGames": "आपके गेम्स तैयार हो रहे हैं",
+    "analyzingContent": "सामग्री का विश्लेषण",
+    "craftingQuestions": "प्रश्न तैयार करना",
+    "buildingPuzzles": "पहेलियाँ बनाना",
+    "finalizingGames": "गेम को अंतिम रूप देना",
+    "launchingSystems": "सिस्टम लॉन्च करना",
+    "processingMetrics": "मेट्रिक्स संसाधित करना",
+    "archivingData": "डेटा संग्रहीत करना",
+    "refreshingStats": "आंकड़े ताज़ा करना",
+    "finalizing": "अंतिम रूप देना",
+    "initializeEngine": "इंजन प्रारंभ करें",
+    "computeScore": "स्कोर की गणना करें",
+    "saveSession": "सत्र सहेजें",
+    "updateProfile": "प्रोफ़ाइल अपडेट करें",
+    "complete": "पूर्ण",
+    "analysisComplete": "विश्लेषण पूर्ण!",
+    "preparingResults": "परिणाम तैयार हो रहे हैं...",
+    "buildingExperience": "आपका अनुभव बन रहा है...",
+    "preparingWordArchitect": "वर्ड आर्किटेक्ट तैयार हो रहा है...",
+    "fetchingPerformanceData": "आपका नवीनतम प्रदर्शन डेटा प्राप्त किया जा रहा है",
+    "analyzingPerformance": "आपके प्रदर्शन का विश्लेषण हो रहा है..."
+  },
+  "errors": {
+    "connectionError": "कनेक्शन त्रुटि",
+    "unableToLoad": "गेम डेटा लोड करने में असमर्थ। कृपया अपना कनेक्शन जांचें और पुनः प्रयास करें।",
+    "somethingWentWrong": "कुछ गलत हो गया",
+    "unableToLoadReport": "रिपोर्ट लोड करने में असमर्थ",
+    "failedToFetch": "आपकी गेम रिपोर्ट प्राप्त करने में विफल। कृपया पुनः प्रयास करें।",
+    "tryAgain": "पुनः प्रयास करें",
+    "goBack": "वापस जाएं",
+    "submissionError": "सबमिशन त्रुटि",
+    "failedToSubmit": "आपके उत्तर सबमिट करने में विफल। कृपया पुनः प्रयास करें।",
+    "noGameFound": "कोई गेम नहीं मिला",
+    "noGamesCompleted": "आपने अभी तक इस लेख के लिए कोई गेम पूरा नहीं किया है।",
+    "errorLoadingReport": "रिपोर्ट लोड करने में त्रुटि",
+    "summaryUnavailable": "सारांश अनुपलब्ध",
+    "summaryNotAvailable": "इस रिपोर्ट के लिए विस्तृत सारांश उपलब्ध नहीं है।",
+    "noSummaryAvailable": "कोई सारांश उपलब्ध नहीं",
+    "noSummaryData": "हमें इस सत्र के लिए कोई सारांश डेटा नहीं मिला।",
+    "insufficientData": "गेम सामग्री तैयार की जा रही है। जारी रखने के लिए कृपया जेनरेट करें।",
+    "needsGeneration": "जेनरेशन की आवश्यकता है"
+  },
+  "success": {
+    "answersSubmitted": "आपके उत्तर स्वचालित रूप से सबमिट कर दिए गए हैं।",
+    "complete": "पूर्ण! आपके गेम लॉन्च हो रहे हैं...",
+    "wordComplete": "शब्द पूर्ण",
+    "wordOnlyHasLetters": "इस शब्द में केवल {{count}} अक्षर हैं!"
+  },
+  "stats": {
+    "bestScore": "सर्वश्रेष्ठ RQM स्कोर",
+    "totalAttempts": "कुल प्रयास",
+    "percentileRank": "पर्सेंटाइल रैंक",
+    "accuracy": "सटीकता",
+    "speed": "गति",
+    "rqmScore": "RQM स्कोर",
+    "connections": "कनेक्शन",
+    "letters": "अक्षर",
+    "bestScoreShort": "सर्वश्रेष्ठ स्कोर",
+    "rank": "रैंक",
+    "attempts": "प्रयास",
+    "rqmUnit": "RQM",
+    "percentile": "पर्सेंटाइल"
+  },
+  "actions": {
+    "shuffle": "शफल",
+    "clear": "साफ़ करें",
+    "clearAll": "सभी साफ़ करें",
+    "viewLatestReport": "📊 नवीनतम गेम रिपोर्ट देखें",
+    "reviewPerformance": "अपने सबसे हाल के प्रदर्शन और विस्तृत विश्लेषण की समीक्षा करें",
+    "viewDetailedReport": "📊 विस्तृत रिपोर्ट देखें",
+    "retryGeneration": "जेनरेशन पुनः प्रयास करें",
+    "generating": "जेनरेट हो रहा है...",
+    "generate": "जेनरेट करें"
+  },
+  "abilities": {
+    "timeDilationAvailable": "टाइम बूस्ट उपलब्ध है",
+    "timeDilationActive": "टाइम बूस्ट सक्रिय है"
+  },
+  "toasts": {
+    "generationStarted": {
+      "title": "जेनरेशन शुरू हुआ",
+      "description": "{{game}} सामग्री जेनरेट हो रही है..."
+    },
+    "generationSuccess": {
+      "title": "जेनरेशन पूर्ण",
+      "description": "{{game}} अब खेलने के लिए तैयार है!"
+    },
+    "generationFailed": {
+      "title": "जेनरेशन विफल",
+      "description": "गेम सामग्री जेनरेट करने में विफल। कृपया पुनः प्रयास करें।"
+    }
+  },
+  "alerts": {
+    "loginRequired": "लॉगिन आवश्यक है",
+    "loginToGiveQuiz": "क्विज़ देने के लिए कृपया लॉगिन करें",
+    "aiInsight": "AI इनसाइट",
+    "rqmScoringSystem": "RQM स्कोरिंग प्रणाली",
+    "aiPoweredGeneration": "🚀 AI-संचालित जेनरेशन",
+    "timeRemaining": "⏱️ {{seconds}}s शेष हैं",
+    "connectionsNeeded": "⚡ {{count}} और कनेक्शन की आवश्यकता है • {{available}} नोड्स उपलब्ध हैं",
+    "connectionsNeededPlural": "⚡ {{count}} और कनेक्शन की आवश्यकता है • {{available}} नोड्स उपलब्ध हैं",
+    "perfectConnections": "🎉 उत्तम! सभी 8 नोड्स 4 अद्वितीय जोड़ों में जुड़े हुए हैं!",
+    "nodeStatus": "{{available}} नोड्स उपलब्ध हैं • {{connected}} नोड्स जोड़े गए"
+  },
+  "aiInsights": [
+    "AI इष्टतम स्कोरिंग के लिए संज्ञानात्मक पैटर्न संसाधित करता है",
+    "उन्नत मेट्रिक्स व्यक्तिगत अंतर्दृष्टि को अनलॉक करते हैं",
+    "वास्तविक समय का विश्लेषण सीखने के त्वरण को अधिकतम करता है",
+    "प्रदर्शन डेटा प्रतिस्पर्धी रैंकिंग को संचालित करता है",
+    "बुद्धिमान एल्गोरिदम खिलाड़ी के विकास को बढ़ाते हैं"
+  ],
+  "explanations": {
+    "explanation": "स्पष्टीकरण",
+    "connectionType": "कनेक्शन प्रकार",
+    "reasoning": "तर्क"
+  },
+  "generation": {
+    "craftingYourGames": "आपके गेम्स तैयार हो रहे हैं",
+    "aiAnalyzingContent": "AI आपकी सामग्री का विश्लेषण कर रहा है और व्यक्तिगत चुनौतियाँ बना रहा है",
+    "processingYourMastery": "आपकी महारत मेट्रिक्स संसाधित हो रही हैं",
+    "step": {
+      "analyzing": "सामग्री का विश्लेषण",
+      "crafting": "प्रश्न तैयार करना",
+      "building": "पहेलियाँ बनाना",
+      "finalizing": "गेम को अंतिम रूप देना",
+      "initializing": "सिस्टम लॉन्च करना",
+      "computing": "मेट्रिक्स संसाधित करना",
+      "saving": "डेटा संग्रहीत करना",
+      "updating": "आंकड़े ताज़ा करना",
+      "completing": "अंतिम रूप देना"
+    }
+  },
+  "accessibility": {
+    "articleImageAlt": "लेख की छवि",
+    "gameIcon": "गेम आइकन",
+    "difficultyIndicator": "कठिनाई संकेतक",
+    "timerDisplay": "टाइमर प्रदर्शन",
+    "progressIndicator": "प्रगति संकेतक"
+  },
+  "tooltips": {
+    "completePrevious": "पहले पिछला क्विज़ पूरा करें",
+    "chooseGameMode": "4 अलग-अलग गेम मोड में से चुनें"
+  },
+  "performanceLevels": {
+    "legend": "लीजेंड",
+    "master": "मास्टर",
+    "skilled": "कुशल",
+    "rising": "उभरता हुआ"
+  },
+  "performanceDescriptions": {
+    "legend": "उत्कृष्ट प्रदर्शन",
+    "master": "उत्कृष्ट स्कोर",
+    "skilled": "औसत से ऊपर",
+    "rising": "सुधार करते रहें"
+  },
+  "popover": {
+    "challengeMastered": "चुनौती सफलतापूर्वक पूरी हुई",
+    "gameChallengeCompleted": "गेम चुनौती पूरी हुई"
+  }
+}

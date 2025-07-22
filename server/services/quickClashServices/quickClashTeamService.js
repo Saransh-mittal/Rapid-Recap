@@ -7,6 +7,14 @@ const globalEmitter = require('../../eventEmitter')
 const {
   createTeamInvitationNotification,
 } = require('./quickClashTeamInvitationService')
+const {
+  notifyTeamMemberJoined,
+  notifyTeamInvitationAccepted,
+  notifyTeamMemberLeft,
+  notifyTeamMemberRemoved,
+  notifyTeamInvitationSent,
+  notifyTeamInvitationRejected,
+} = require('./quickClashNotificationService')
 
 /**
  * Create a new team
@@ -144,13 +152,35 @@ const joinTeamByCode = async ({ teamCode, userId }) => {
       await team.save({ session })
 
       // Emit event
-      setTimeout(() => {
+      setTimeout(async () => {
         globalEmitter.emit('quickClash:teamMemberJoined', {
           team: team._id,
           user: userId,
           userName: user.name,
           userInGameName: user.inGameName,
         })
+        // Send notifications to existing team members
+        try {
+          const teamWithMembers = await QuickClashTeam.findById(team._id)
+            .populate('members.user', '_id name inGameName')
+            .lean()
+
+          if (teamWithMembers && teamWithMembers.members) {
+            await notifyTeamMemberJoined({
+              teamId: team._id,
+              userId: userId.toString(),
+              userName: user.name,
+              userInGameName: user.inGameName,
+              teamName: team.name || 'Your Squad',
+              teamMembers: teamWithMembers.members,
+            })
+          }
+        } catch (notificationError) {
+          console.error(
+            'Error sending team member joined notifications:',
+            notificationError,
+          )
+        }
       }, 0)
 
       return team
@@ -198,12 +228,39 @@ const respondToInvitation = async ({ teamId, userId, accept }) => {
 
         await team.save({ session })
 
-        // Emit event
-        setTimeout(() => {
+        setTimeout(async () => {
           globalEmitter.emit('quickClash:teamInviteAccepted', {
             team: team._id,
             user: userId,
           })
+
+          // Send notifications to team members about invitation acceptance
+          try {
+            const teamWithMembers = await QuickClashTeam.findById(team._id)
+              .populate('members.user', '_id name inGameName')
+              .lean()
+
+            const acceptingUser = await User.findById(userId)
+              .select('_id name inGameName')
+              .lean()
+
+            if (teamWithMembers && teamWithMembers.members && acceptingUser) {
+              await notifyTeamInvitationAccepted({
+                teamId: team._id,
+                userId: userId.toString(),
+                userName: acceptingUser.name,
+                userInGameName: acceptingUser.inGameName,
+                teamName: team.name || 'Your Squad',
+                inviterName: 'Team Leader', // Could be enhanced to track actual inviter
+                teamMembers: teamWithMembers.members,
+              })
+            }
+          } catch (notificationError) {
+            console.error(
+              'Error sending team invitation accepted notifications:',
+              notificationError,
+            )
+          }
         }, 0)
 
         return team
@@ -213,11 +270,39 @@ const respondToInvitation = async ({ teamId, userId, accept }) => {
         await team.save({ session })
 
         // Emit event
-        setTimeout(() => {
+        setTimeout(async () => {
           globalEmitter.emit('quickClash:teamInviteRejected', {
             team: team._id,
             user: userId,
           })
+
+          // Send notifications to team members about invitation rejection
+          try {
+            const teamWithMembers = await QuickClashTeam.findById(team._id)
+              .populate('members.user', '_id name inGameName')
+              .lean()
+
+            const rejectingUser = await User.findById(userId)
+              .select('_id name inGameName')
+              .lean()
+
+            if (teamWithMembers && teamWithMembers.members && rejectingUser) {
+              await notifyTeamInvitationRejected({
+                teamId: team._id,
+                userId: userId.toString(),
+                userName: rejectingUser.name,
+                userInGameName: rejectingUser.inGameName,
+                teamName: team.name || 'Your Squad',
+                inviterName: 'Team Leader', // Could be enhanced to track actual inviter
+                teamMembers: teamWithMembers.members,
+              })
+            }
+          } catch (notificationError) {
+            console.error(
+              'Error sending team invitation rejected notifications:',
+              notificationError,
+            )
+          }
         }, 0)
 
         return null
@@ -294,13 +379,36 @@ const leaveTeam = async ({ teamId, userId }) => {
         throw new Error('User not found')
       }
       // Emit event
-      setTimeout(() => {
+      setTimeout(async () => {
         globalEmitter.emit('quickClash:teamMemberLeft', {
           team: team._id,
           user: userId,
           userName: user.name,
           userInGameName: user.inGameName,
         })
+
+        // Send notifications to remaining team members
+        try {
+          const teamWithMembers = await QuickClashTeam.findById(team._id)
+            .populate('members.user', '_id name inGameName')
+            .lean()
+
+          if (teamWithMembers && teamWithMembers.members) {
+            await notifyTeamMemberLeft({
+              teamId: team._id,
+              userId: userId.toString(),
+              userName: user.name,
+              userInGameName: user.inGameName,
+              teamName: team.name || 'Your Squad',
+              teamMembers: teamWithMembers.members,
+            })
+          }
+        } catch (notificationError) {
+          console.error(
+            'Error sending team member left notifications:',
+            notificationError,
+          )
+        }
       }, 0)
 
       return team
@@ -493,7 +601,7 @@ const removeMember = async ({ teamId, leaderId, memberId }) => {
         throw new Error('Removed member not found')
       }
       // Emit event
-      setTimeout(() => {
+      setTimeout(async () => {
         globalEmitter.emit('quickClash:teamMemberRemoved', {
           team: team._id,
           leader: leaderId,
@@ -502,6 +610,35 @@ const removeMember = async ({ teamId, leaderId, memberId }) => {
           removedMemberName: removedMember.name,
           removedMemberInGameName: removedMember.inGameName,
         })
+
+        // Send notifications about member removal
+        try {
+          const teamWithMembers = await QuickClashTeam.findById(team._id)
+            .populate('members.user', '_id name inGameName')
+            .lean()
+
+          const leader = await User.findById(leaderId)
+            .select('_id name inGameName')
+            .lean()
+
+          if (teamWithMembers && teamWithMembers.members && leader) {
+            await notifyTeamMemberRemoved({
+              teamId: team._id,
+              leaderId: leaderId.toString(),
+              removedMemberId: memberId.toString(),
+              teamName: team.name || 'Your Squad',
+              removedMemberName: removedMember.name,
+              removedMemberInGameName: removedMember.inGameName,
+              leaderName: leader.inGameName || leader.name,
+              teamMembers: teamWithMembers.members,
+            })
+          }
+        } catch (notificationError) {
+          console.error(
+            'Error sending team member removed notifications:',
+            notificationError,
+          )
+        }
       }, 0)
 
       return team
@@ -556,6 +693,30 @@ const inviteToTeam = async ({ teamId, inviterId, inviteeId }) => {
         inviteeId,
         session,
       })
+
+      try {
+        const inviter = await User.findById(inviterId)
+          .select('_id name inGameName')
+          .lean()
+          .session(session)
+
+        if (inviter) {
+          setTimeout(async () => {
+            await notifyTeamInvitationSent({
+              teamId: teamId.toString(),
+              inviterId: inviterId.toString(),
+              inviteeId: inviteeId.toString(),
+              teamName: team.name || 'Squad',
+              inviterName: inviter.inGameName || inviter.name,
+            })
+          }, 0)
+        }
+      } catch (notificationError) {
+        console.error(
+          'Error sending team invitation notification:',
+          notificationError,
+        )
+      }
 
       return invitation
     })

@@ -1,19 +1,24 @@
-// utils/indoPakNewsRunner.js
+// utils/aiNewsRunner.js
 const { spawn } = require('child_process')
 const path = require('path')
-const Article = require('../model/articleSchema')
-const { averageReadTime } = require('./miscellaneous.utils')
-const { calculateArticleDifficulty } = require('./article.utils')
-const { generateHighlightForArticle } = require('./article.highlight.utils')
-const { findDuplicateArticles } = require('../services/duplicateCheckService')
-const { processArticle } = require('../services/articleProcessor')
+const Article = require('../../model/articleSchema')
+const { averageReadTime } = require('../miscellaneous.utils')
+const { calculateArticleDifficulty } = require('../article.utils')
+const { generateHighlightForArticle } = require('../article.highlight.utils')
+const {
+  findDuplicateArticles,
+} = require('../../services/duplicateCheckService')
+const { processArticle } = require('../../services/articleProcessor')
 
-// Run the scraper script and return the results
+// Run the AI news scraper script and return the results
 const runScraper = async categoryKey => {
   try {
-    console.log(`Starting Indo-Pak news scraper for category: ${categoryKey}`)
+    console.log(`Starting AI news scraper for category: ${categoryKey}`)
     // Use a fixed path to the Python script
-    const scriptPath = path.join(__dirname, '../scripts/indoPakNewsScraper.py')
+    const scriptPath = path.join(
+      __dirname,
+      '../../scripts/web/AINewsScraper.py',
+    )
 
     return new Promise((resolve, reject) => {
       // Use Python 3 directly
@@ -45,7 +50,7 @@ const runScraper = async categoryKey => {
         try {
           const articles = JSON.parse(dataString)
           console.log(
-            `Scraped ${articles.length} Indo-Pak news articles successfully`,
+            `Scraped ${articles.length} AI news articles successfully`,
           )
           resolve(articles)
         } catch (error) {
@@ -55,15 +60,15 @@ const runScraper = async categoryKey => {
       })
     })
   } catch (error) {
-    console.error('Error running scraper:', error)
+    console.error('Error running AI news scraper:', error)
     throw error
   }
 }
 
-// Process scraped articles and save to database
+// Process scraped AI articles and save to database
 const processScrapedArticles = async (articles, specialCategoryId) => {
   console.log(
-    `Processing ${articles.length} scraped articles for special category: ${specialCategoryId}`,
+    `Processing ${articles.length} scraped AI articles for special category: ${specialCategoryId}`,
   )
   const results = {
     added: 0,
@@ -80,9 +85,9 @@ const processScrapedArticles = async (articles, specialCategoryId) => {
         text: article.body,
         url: article.url,
         publish_date: article.published || new Date().toISOString(),
-        author: article.source || 'Indo-Pak News Monitor',
+        author: article.source || 'AI News Monitor',
         image: article.imgURL || '',
-        category: 'indo-pak',
+        category: 'ai-news',
       }
 
       // Process the article through the article processor
@@ -120,14 +125,14 @@ const processScrapedArticles = async (articles, specialCategoryId) => {
         vectorized: Boolean(contentVector),
         avgReadTime,
         articleDifficulty,
-        // Add any keywords not already in processedArticle.keywords
+        // Add AI-specific keywords not already in processedArticle.keywords
         keywords: [
           ...(processedArticle.keywords || []),
-          'indo-pak',
-          'india',
-          'pakistan',
-          'border',
-          'conflict',
+          'ai-news',
+          'artificial intelligence',
+          'machine learning',
+          'technology',
+          'ai research',
         ].filter((value, index, self) => self.indexOf(value) === index), // Remove duplicates
       })
 
@@ -154,7 +159,7 @@ const processScrapedArticles = async (articles, specialCategoryId) => {
 
       results.added++
     } catch (error) {
-      console.error('Error processing article:', error)
+      console.error('Error processing AI article:', error)
       results.errors++
       results.errorDetails.push({
         title: article.title,

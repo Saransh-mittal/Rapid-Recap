@@ -1,0 +1,2141 @@
+<div id="demo-quiz-overlay" aria-label="Demo Quiz Challenge" style="display: none;">
+  <div class="particles-background"></div>
+
+  <!-- Quiz Interface -->
+  <div class="quiz-container" id="quiz-container">
+    <!-- Header -->
+    <div class="quiz-header">
+      <div class="brand-section">
+        <img src="/images/rrlogo_512.png" alt="Rapid Recap Logo" class="brand-logo" />
+        <div class="brand-info">
+          <h1 id="brand-title">Rapid Recap</h1>
+          <p id="brand-subtitle">Experience the Challenge</p>
+        </div>
+      </div>
+
+      <!-- Language Toggle -->
+      <div class="language-toggle" id="language-toggle">
+        <button class="lang-btn active" data-lang="en">EN</button>
+        <button class="lang-btn" data-lang="hi">हिं</button>
+      </div>
+
+      <div class="timer-section">
+        <div class="timer-circle" id="timer-circle">
+          <span class="timer-text" id="timer-display">{{TIME_LIMIT}}</span>
+        </div>
+        <div class="timer-label" id="timer-label">seconds</div>
+      </div>
+    </div>
+
+    <!-- Question Wrapper -->
+    <div class="question-wrapper">
+      <!-- Badge Row -->
+      <div class="badge-row">
+        <div class="badge" id="question-badge">Question 1/1</div>
+        <div class="badge difficulty-badge" id="difficulty-badge">{{DIFFICULTY_TEXT}}</div>
+      </div>
+
+      <!-- Question Box -->
+      <div class="question-box">
+        <p class="question-text" id="question-text">{{QUESTION_TEXT}}</p>
+      </div>
+
+      <!-- Options Container -->
+      <div class="options-container" id="options-container">
+        <button class="option-button" data-option="a">
+          <div class="option-indicator">
+            <span class="option-letter">A</span>
+            <svg class="check-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <path d="M20 6L9 17l-5-5"/>
+            </svg>
+          </div>
+          <div class="option-text">{{OPTION_A}}</div>
+        </button>
+        <button class="option-button" data-option="b">
+          <div class="option-indicator">
+            <span class="option-letter">B</span>
+            <svg class="check-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <path d="M20 6L9 17l-5-5"/>
+            </svg>
+          </div>
+          <div class="option-text">{{OPTION_B}}</div>
+        </button>
+        <button class="option-button" data-option="c">
+          <div class="option-indicator">
+            <span class="option-letter">C</span>
+            <svg class="check-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <path d="M20 6L9 17l-5-5"/>
+            </svg>
+          </div>
+          <div class="option-text">{{OPTION_C}}</div>
+        </button>
+        <button class="option-button" data-option="d">
+          <div class="option-indicator">
+            <span class="option-letter">D</span>
+            <svg class="check-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <path d="M20 6L9 17l-5-5"/>
+            </svg>
+          </div>
+          <div class="option-text">{{OPTION_D}}</div>
+        </button>
+      </div>
+
+      <!-- Status Section -->
+      <div class="status-section">
+        <div class="status-content" id="status-content">
+          <svg class="status-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <circle cx="12" cy="12" r="10"/>
+            <circle cx="12" cy="12" r="3"/>
+          </svg>
+          <span class="status-text unselected" id="status-text">Select an answer</span>
+        </div>
+      </div>
+
+      <!-- Action Section -->
+      <div class="action-section">
+        <button class="submit-button" id="submit-button" disabled>
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <path d="M22 2L11 13"/>
+            <path d="M22 2l-7 20-4-9-9-4 20-7z"/>
+          </svg>
+          <span id="submit-text">Submit Answer</span>
+        </button>
+        <p class="hint-text" id="hint-text">💡 Take your time, think it through!</p>
+      </div>
+    </div>
+  </div>
+
+  <!-- Result Container -->
+  <div class="result-container" id="result-container">
+    <!-- Info Button -->
+    <button class="info-button" id="info-button" title="Close demo quiz">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+        <circle cx="12" cy="12" r="10"/>
+        <path d="M9,9h0a3,3,0,0,1,5.12-2.12A3,3,0,0,1,15,9c0,2-3,3-3,3"/>
+        <circle cx="12" cy="17" r="1"/>
+      </svg>
+    </button>
+
+    <div class="result-content">
+      <!-- Compact Result Header -->
+      <div class="result-header">
+        <div class="result-icon" id="result-icon">🎉</div>
+        <h2 class="result-title" id="result-title">Excellent!</h2>
+        <p class="result-message" id="result-message">You got it right!</p>
+      </div>
+
+      <!-- Compact Explanation -->
+      <div class="explanation-section">
+        <div class="explanation-header">
+          <span class="explanation-icon">💡</span>
+          <span class="explanation-title" id="explanation-title">Did You Know?</span>
+        </div>
+        <p class="explanation-text" id="explanation-text">{{EXPLANATION}}</p>
+      </div>
+
+      <!-- PWA Install Prompt Section -->
+      <div class="pwa-prompt-section" id="pwa-prompt-section">
+        <div class="pwa-prompt-content">
+          <div class="pwa-prompt-header">
+            <div class="pwa-prompt-icon">📱</div>
+            <h3 class="pwa-prompt-title" id="pwa-prompt-title">Install for Quick Access!</h3>
+          </div>
+          <p class="pwa-prompt-subtitle" id="pwa-prompt-subtitle">Add Rapid Recap to your home screen for instant access to daily challenges</p>
+
+          <!-- PWA Install Button (shows if PWA is available) -->
+          <div class="pwa-install-option" id="pwa-install-option" style="display: none;">
+            <button class="pwa-install-btn" id="pwa-install-btn">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/>
+                <polyline points="7,10 12,15 17,10"/>
+                <line x1="12" y1="15" x2="12" y2="3"/>
+              </svg>
+              <span id="pwa-install-text">Add to Home Screen</span>
+            </button>
+          </div>
+
+          <!-- Manual Instructions (shows after PWA rejection or for unsupported browsers) -->
+          <div class="manual-instructions" id="manual-instructions" style="display: none;">
+            <div class="instruction-header">
+              <span class="instruction-icon">📖</span>
+              <h4 class="instruction-title" id="instruction-title">Manual Installation Guide</h4>
+            </div>
+
+            <!-- Chrome Instructions -->
+            <div class="browser-instruction chrome-instruction" id="chrome-instruction" style="display: none;">
+              <div class="instruction-steps">
+                <div class="step-item">
+                  <span class="step-number">1</span>
+                  <span class="step-text" id="chrome-step-1">Tap the menu button (⋮) in the top right corner</span>
+                </div>
+                <div class="step-item">
+                  <span class="step-number">2</span>
+                  <span class="step-text" id="chrome-step-2">Select "Add to Home Screen" or "Install App"</span>
+                </div>
+                <div class="step-item">
+                  <span class="step-number">3</span>
+                  <span class="step-text" id="chrome-step-3">Tap "Add" to confirm</span>
+                </div>
+              </div>
+            </div>
+
+            <!-- Safari Instructions -->
+            <div class="browser-instruction safari-instruction" id="safari-instruction" style="display: none;">
+              <div class="instruction-steps">
+                <div class="step-item">
+                  <span class="step-number">1</span>
+                  <span class="step-text" id="safari-step-1">Tap the share button (□↗) at the bottom</span>
+                </div>
+                <div class="step-item">
+                  <span class="step-number">2</span>
+                  <span class="step-text" id="safari-step-2">Scroll down and select "Add to Home Screen"</span>
+                </div>
+                <div class="step-item">
+                  <span class="step-number">3</span>
+                  <span class="step-text" id="safari-step-3">Tap "Add" to confirm</span>
+                </div>
+              </div>
+            </div>
+
+            <!-- Firefox Instructions -->
+            <div class="browser-instruction firefox-instruction" id="firefox-instruction" style="display: none;">
+              <div class="instruction-steps">
+                <div class="step-item">
+                  <span class="step-number">1</span>
+                  <span class="step-text" id="firefox-step-1">Tap the menu button (⋮) in the top right corner</span>
+                </div>
+                <div class="step-item">
+                  <span class="step-number">2</span>
+                  <span class="step-text" id="firefox-step-2">Select "Add to Home Screen"</span>
+                </div>
+                <div class="step-item">
+                  <span class="step-number">3</span>
+                  <span class="step-text" id="firefox-step-3">Tap "Add" to confirm</span>
+                </div>
+              </div>
+            </div>
+
+            <!-- Edge Instructions -->
+            <div class="browser-instruction edge-instruction" id="edge-instruction" style="display: none;">
+              <div class="instruction-steps">
+                <div class="step-item">
+                  <span class="step-number">1</span>
+                  <span class="step-text" id="edge-step-1">Tap the menu button (⋯) in the bottom bar</span>
+                </div>
+                <div class="step-item">
+                  <span class="step-number">2</span>
+                  <span class="step-text" id="edge-step-2">Select "Add to Home Screen"</span>
+                </div>
+                <div class="step-item">
+                  <span class="step-number">3</span>
+                  <span class="step-text" id="edge-step-3">Tap "Add" to confirm</span>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Alternative Options -->
+          <div class="alternative-options" id="alternative-options">
+            <div class="option-divider">
+              <span class="divider-text" id="divider-text">Or choose an alternative</span>
+            </div>
+
+            <!-- Bookmark Option -->
+            <div class="bookmark-option" id="bookmark-option">
+              <button class="bookmark-btn" id="bookmark-btn">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                  <path d="M19 21l-7-5-7 5V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2z"/>
+                </svg>
+                <span id="bookmark-text">Bookmark This Page</span>
+              </button>
+            </div>
+
+            <!-- Try Manual Instructions Button -->
+            <div class="manual-guide-option" id="manual-guide-option">
+              <button class="manual-guide-btn" id="manual-guide-btn">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                  <circle cx="12" cy="12" r="10"/>
+                  <path d="M9,9h0a3,3,0,0,1,5.12-2.12A3,3,0,0,1,15,9c0,2-3,3-3,3"/>
+                  <circle cx="12" cy="17" r="1"/>
+                </svg>
+                <span id="manual-guide-text">Show Manual Instructions</span>
+              </button>
+            </div>
+          </div>
+
+          <!-- Skip Option -->
+          <button class="skip-pwa-btn" id="skip-pwa-btn">
+            <span id="skip-pwa-text">Skip for now</span>
+          </button>
+        </div>
+      </div>
+
+      <!-- CTA Section -->
+      <div class="cta-section" id="cta-section">
+        <h3 class="cta-title" id="cta-title">Ready for More? 🚀</h3>
+        <p class="cta-subtitle" id="cta-subtitle">Join thousands building their knowledge daily!</p>
+
+        <!-- Primary CTA Button -->
+        <button class="cta-button primary" id="signup-btn">
+          <span>🔐</span>
+          <span id="signup-text">Sign Up & Continue</span>
+        </button>
+
+        <p class="signup-note" id="signup-note">
+          <strong>100% Free</strong> • 1000+ learners
+        </p>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+  // Modern Demo Quiz Logic with PWA Install Prompt - ENHANCED VERSION
+  let selectedAnswer = null;
+  let timeLeft = 15;
+  let timerInterval = null;
+  let startTime = null;
+  let demoQuestion = null;
+  let currentLanguage = 'en';
+  let deferredPrompt = null;
+  let showPWAPrompt = false;
+
+  // Auth state management
+  const AUTH_KEYS = ['token', 'user_unload_cache', 'userProfile', 'role'];
+  const AUTH_SIGNAL_COOKIE = window.__AUTH_SIGNAL_COOKIE__ || 'auth_signal';
+
+  // PWA Install detection
+  window.addEventListener('beforeinstallprompt', (e) => {
+    e.preventDefault();
+    deferredPrompt = e;
+    showPWAPrompt = true;
+    console.log('[PWA] Install prompt available');
+  });
+
+  // Cookie management
+  const setCookie = (name, value, days = 30) => {
+    const expires = new Date(Date.now() + days * 24 * 60 * 60 * 1000).toUTCString()
+    const domain = window.location.hostname
+    const isSecure = window.location.protocol === 'https:'
+    document.cookie = `${name}=${value}; expires=${expires}; path=/; domain=${domain}${isSecure ? '; secure' : ''}; samesite=lax`
+  }
+
+  const deleteCookie = (name) => {
+    const domain = window.location.hostname
+    document.cookie = `${name}=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/; domain=${domain}`
+  }
+
+  // Check if user has authentication signals
+  const hasAuthSignals = () => {
+    return AUTH_KEYS.some(key => localStorage.getItem(key));
+  };
+
+  // Update auth signal cookie based on localStorage
+  const updateAuthSignalCookie = () => {
+    if (hasAuthSignals()) {
+      setCookie(AUTH_SIGNAL_COOKIE, 'true', 30) // 30 days
+    } else {
+      deleteCookie(AUTH_SIGNAL_COOKIE)
+    }
+  }
+
+  // Check if PWA is already installed
+  const isPWAInstalled = () => {
+    return window.matchMedia('(display-mode: standalone)').matches ||
+           window.navigator.standalone ||
+           document.referrer.includes('android-app://');
+  };
+
+  // Get browser type for instructions
+  const getBrowserType = () => {
+    const userAgent = navigator.userAgent.toLowerCase();
+    if (userAgent.includes('safari') && !userAgent.includes('chrome')) {
+      return 'safari';
+    } else if (userAgent.includes('chrome')) {
+      return 'chrome';
+    } else if (userAgent.includes('firefox')) {
+      return 'firefox';
+    } else if (userAgent.includes('edge')) {
+      return 'edge';
+    }
+    return 'unknown';
+  };
+
+  // Check if device is mobile
+  const isMobile = () => {
+    return window.innerWidth <= 768 || /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
+  };
+
+  // UPDATED: Client-side decision logic
+  const shouldShowDemoQuiz = () => {
+    // If demo quiz is not included by server, don't show
+    if (!window.__INCLUDE_DEMO_QUIZ__) {
+      return false;
+    }
+
+    // If user has auth signals in localStorage, don't show
+    if (hasAuthSignals()) {
+      return false;
+    }
+
+    // If server says show by default and no local auth signals, show it
+    return window.__SHOW_DEMO_QUIZ_BY_DEFAULT__ === true;
+  };
+
+  // Initialize demo quiz with PWA install prompt
+  document.addEventListener('DOMContentLoaded', function() {
+    console.log('[Demo Quiz] Initialization started', {
+      includeDemoQuiz: window.__INCLUDE_DEMO_QUIZ__,
+      showByDefault: window.__SHOW_DEMO_QUIZ_BY_DEFAULT__,
+      hasAuthSignals: hasAuthSignals(),
+      demoQuestion: !!window.__DEMO_QUESTION__,
+      isPWAInstalled: isPWAInstalled(),
+      isMobile: isMobile()
+    });
+
+    // ALWAYS update auth signal cookie on page load
+    updateAuthSignalCookie();
+
+    // Decide whether to show demo quiz
+    const shouldShow = shouldShowDemoQuiz();
+
+    if (shouldShow && window.__DEMO_QUESTION__) {
+      console.log('[Demo Quiz] Showing demo quiz');
+      demoQuestion = window.__DEMO_QUESTION__;
+      createParticles();
+      initializeDemoQuiz();
+      showDemoQuiz();
+    } else {
+      console.log('[Demo Quiz] Not showing demo quiz:', {
+        shouldShow,
+        hasDemoQuestion: !!window.__DEMO_QUESTION__,
+        reason: !shouldShow ? 'shouldShow=false' : 'no demo question'
+      });
+
+      // Hide demo quiz overlay if it exists
+      const demoOverlay = document.getElementById('demo-quiz-overlay');
+      if (demoOverlay) {
+        demoOverlay.style.display = 'none';
+      }
+    }
+  });
+
+  // UI translations (enhanced with PWA translations)
+  const translations = {
+    en: {
+      brandTitle: 'Rapid Recap',
+      brandSubtitle: 'Experience the Challenge',
+      timerLabel: 'seconds',
+      questionLabel: 'Question 1/1',
+      selectAnswer: 'Select an answer',
+      optionSelected: 'Option {option} selected',
+      submitAnswer: 'Submit Answer',
+      processing: 'Processing...',
+      hintText: 'Take your time, think it through!',
+      timeUp: "Time's Up!",
+      timeUpMessage: "No worries! Daily practice makes perfect.",
+      brilliant: 'Brilliant!',
+      brilliantMessage: "You nailed it! This is how we challenge minds daily.",
+      almostThere: 'Almost There!',
+      almostMessage: "Great attempt! Our daily challenges help you master these.",
+      didYouKnow: 'Did You Know?',
+      pwaPromptTitle: 'Install for Quick Access!',
+      pwaPromptSubtitle: 'Add Rapid Recap to your home screen for instant access to daily challenges',
+      addToHomeScreen: 'Add to Home Screen',
+      bookmarkPage: 'Bookmark This Page',
+      skipForNow: 'Skip for now',
+      manualInstallGuide: 'Manual Installation Guide',
+      orChooseAlternative: 'Or choose an alternative',
+      showManualInstructions: 'Show Manual Instructions',
+      chromeStep1: 'Tap the menu button (⋮) in the top right corner',
+      chromeStep2: 'Select "Add to Home Screen" or "Install App"',
+      chromeStep3: 'Tap "Add" to confirm',
+      safariStep1: 'Tap the share button (□↗) at the bottom',
+      safariStep2: 'Scroll down and select "Add to Home Screen"',
+      safariStep3: 'Tap "Add" to confirm',
+      firefoxStep1: 'Tap the menu button (⋮) in the top right corner',
+      firefoxStep2: 'Select "Add to Home Screen"',
+      firefoxStep3: 'Tap "Add" to confirm',
+      edgeStep1: 'Tap the menu button (⋯) in the bottom bar',
+      edgeStep2: 'Select "Add to Home Screen"',
+      edgeStep3: 'Tap "Add" to confirm',
+      readyForMore: 'Ready for More? 🚀',
+      joinThousands: 'Join thousands building their knowledge daily!',
+      signUpContinue: 'Sign Up & Continue',
+      freeText: '100% Free',
+      joinText: '1000+ learners'
+    },
+    hi: {
+      brandTitle: 'Rapid Recap',
+      brandSubtitle: 'चुनौती का अनुभव करें',
+      timerLabel: 'सेकंड',
+      questionLabel: 'प्रश्न 1/1',
+      selectAnswer: 'एक उत्तर चुनें',
+      optionSelected: 'विकल्प {option} चुना गया',
+      submitAnswer: 'उत्तर जमा करें',
+      processing: 'प्रसंस्करण...',
+      hintText: 'अपना समय लें, सोच-समझकर करें!',
+      timeUp: "समय समाप्त!",
+      timeUpMessage: "कोई बात नहीं! दैनिक अभ्यास से सिद्धि मिलती है।",
+      brilliant: 'शानदार!',
+      brilliantMessage: "आपने कमाल कर दिया! हम रोज़ाना ऐसे ही दिमागों को चुनौती देते हैं।",
+      almostThere: 'लगभग सही!',
+      almostMessage: "बेहतरीन कोशिश! हमारी दैनिक चुनौतियां आपको इन विषयों में निपुण बनाती हैं।",
+      didYouKnow: 'क्या आप जानते थे?',
+      pwaPromptTitle: 'त्वरित पहुंच के लिए इंस्टॉल करें!',
+      pwaPromptSubtitle: 'दैनिक चुनौतियों तक तुरंत पहुंच के लिए Rapid Recap को अपनी होम स्क्रीन पर जोड़ें',
+      addToHomeScreen: 'होम स्क्रीन पर जोड़ें',
+      bookmarkPage: 'इस पेज को बुकमार्क करें',
+      skipForNow: 'अभी छोड़ें',
+      manualInstallGuide: 'मैनुअल इंस्टॉलेशन गाइड',
+      orChooseAlternative: 'या कोई विकल्प चुनें',
+      showManualInstructions: 'मैनुअल निर्देश दिखाएं',
+      chromeStep1: 'ऊपर दाईं ओर मेनू बटन (⋮) पर टैप करें',
+      chromeStep2: '"होम स्क्रीन पर जोड़ें" या "ऐप इंस्टॉल करें" चुनें',
+      chromeStep3: 'पुष्टि के लिए "जोड़ें" पर टैप करें',
+      safariStep1: 'नीचे शेयर बटन (□↗) पर टैप करें',
+      safariStep2: 'नीचे स्क्रॉल करें और "होम स्क्रीन पर जोड़ें" चुनें',
+      safariStep3: 'पुष्टि के लिए "जोड़ें" पर टैप करें',
+      firefoxStep1: 'ऊपर दाईं ओर मेनू बटन (⋮) पर टैप करें',
+      firefoxStep2: '"होम स्क्रीन पर जोड़ें" चुनें',
+      firefoxStep3: 'पुष्टि के लिए "जोड़ें" पर टैप करें',
+      edgeStep1: 'नीचे मेनू बटन (⋯) पर टैप करें',
+      edgeStep2: '"होम स्क्रीन पर जोड़ें" चुनें',
+      edgeStep3: 'पुष्टि के लिए "जोड़ें" पर टैप करें',
+      readyForMore: 'और के लिए तैयार? 🚀',
+      joinThousands: 'हज़ारों लोगों के साथ अपना ज्ञान बढ़ाएं!',
+      signUpContinue: 'साइन अप करें और जारी रखें',
+      freeText: '100% मुफ्त',
+      joinText: '1000+ सीखने वालों से जुड़ें'
+    }
+  };
+
+  // Create particles for the background
+  function createParticles() {
+    const particlesContainer = document.querySelector('#demo-quiz-overlay .particles-background');
+    if (!particlesContainer) return;
+
+    for (let i = 0; i < 60; i++) {
+      const particle = document.createElement('div');
+      particle.classList.add('particle');
+
+      const size = Math.random() * 3 + 1;
+      const posX = Math.random() * 100;
+      const posY = Math.random() * 100;
+      const opacity = Math.random() * 0.5 + 0.1;
+      const animDuration = Math.random() * 20 + 10;
+      const animDelay = Math.random() * 5;
+
+      particle.style.cssText = `
+        position: absolute;
+        left: ${posX}%;
+        top: ${posY}%;
+        width: ${size}px;
+        height: ${size}px;
+        background-color: white;
+        border-radius: 50%;
+        opacity: ${opacity};
+        animation: twinkle ${animDuration}s infinite ease-in-out ${animDelay}s;
+      `;
+
+      particlesContainer.appendChild(particle);
+    }
+  }
+
+  function showDemoQuiz() {
+    const demoOverlay = document.getElementById('demo-quiz-overlay');
+    if (demoOverlay) {
+      demoOverlay.style.display = 'flex';
+      demoOverlay.style.opacity = '0';
+      demoOverlay.style.transition = 'opacity 0.5s ease-in-out';
+      demoOverlay.scrollTo({ top: 0, behavior: 'auto' });
+
+      setTimeout(() => {
+        demoOverlay.style.opacity = '1';
+      }, 100);
+    }
+  }
+
+  function hideDemoQuiz() {
+    const demoOverlay = document.getElementById('demo-quiz-overlay');
+    if (demoOverlay) {
+      demoOverlay.style.opacity = '0';
+      demoOverlay.style.transition = 'opacity 0.3s ease-out';
+
+      setTimeout(() => {
+        demoOverlay.style.display = 'none';
+      }, 300);
+    }
+  }
+
+  // Language switching functions
+  function switchLanguage(lang) {
+    currentLanguage = lang;
+    document.querySelectorAll('.lang-btn').forEach(btn => {
+      btn.classList.remove('active');
+      if (btn.dataset.lang === lang) {
+        btn.classList.add('active');
+      }
+    });
+    updateUILanguage();
+    if (demoQuestion) {
+      updateQuestionLanguage();
+    }
+  }
+
+  function updateUILanguage() {
+    const t = translations[currentLanguage];
+    document.getElementById('brand-title').textContent = t.brandTitle;
+    document.getElementById('brand-subtitle').textContent = t.brandSubtitle;
+    document.getElementById('timer-label').textContent = t.timerLabel;
+    document.getElementById('question-badge').textContent = t.questionLabel;
+
+    const statusText = document.getElementById('status-text');
+    if (statusText && statusText.classList.contains('unselected')) {
+      statusText.textContent = t.selectAnswer;
+    }
+
+    document.getElementById('submit-text').textContent = t.submitAnswer;
+    document.getElementById('hint-text').textContent = `💡 ${t.hintText}`;
+  }
+
+  function updateQuestionLanguage() {
+    if (!demoQuestion) return;
+
+    const questionText = document.getElementById('question-text');
+    if (questionText) {
+      questionText.textContent = demoQuestion.question[currentLanguage] || demoQuestion.question;
+    }
+
+    ['a', 'b', 'c', 'd'].forEach(option => {
+      const optionElement = document.querySelector(`[data-option="${option}"] .option-text`);
+      if (optionElement && demoQuestion.options[option]) {
+        const optionText = demoQuestion.options[option][currentLanguage] || demoQuestion.options[option];
+        optionElement.textContent = optionText;
+      }
+    });
+
+    const difficultyBadge = document.querySelector('.difficulty-badge');
+    if (difficultyBadge && demoQuestion.category) {
+      const categoryText = demoQuestion.category[currentLanguage] || demoQuestion.category;
+      difficultyBadge.textContent = categoryText.toUpperCase();
+    }
+  }
+
+  function updateResultLanguage() {
+    if (!demoQuestion) return;
+
+    const t = translations[currentLanguage];
+    const explanationText = document.getElementById('explanation-text');
+    if (explanationText) {
+      explanationText.textContent = demoQuestion.explanation[currentLanguage] || demoQuestion.explanation;
+    }
+
+    document.getElementById('explanation-title').textContent = t.didYouKnow;
+
+    // Update PWA prompt language
+    document.getElementById('pwa-prompt-title').textContent = t.pwaPromptTitle;
+    document.getElementById('pwa-prompt-subtitle').textContent = t.pwaPromptSubtitle;
+    document.getElementById('pwa-install-text').textContent = t.addToHomeScreen;
+    document.getElementById('bookmark-text').textContent = t.bookmarkPage;
+    document.getElementById('skip-pwa-text').textContent = t.skipForNow;
+
+    // Update manual instructions
+    document.getElementById('instruction-title').textContent = t.manualInstallGuide;
+    document.getElementById('divider-text').textContent = t.orChooseAlternative;
+    document.getElementById('manual-guide-text').textContent = t.showManualInstructions;
+
+    // Update browser-specific instructions
+    document.getElementById('chrome-step-1').textContent = t.chromeStep1;
+    document.getElementById('chrome-step-2').textContent = t.chromeStep2;
+    document.getElementById('chrome-step-3').textContent = t.chromeStep3;
+
+    document.getElementById('safari-step-1').textContent = t.safariStep1;
+    document.getElementById('safari-step-2').textContent = t.safariStep2;
+    document.getElementById('safari-step-3').textContent = t.safariStep3;
+
+    document.getElementById('firefox-step-1').textContent = t.firefoxStep1;
+    document.getElementById('firefox-step-2').textContent = t.firefoxStep2;
+    document.getElementById('firefox-step-3').textContent = t.firefoxStep3;
+
+    document.getElementById('edge-step-1').textContent = t.edgeStep1;
+    document.getElementById('edge-step-2').textContent = t.edgeStep2;
+    document.getElementById('edge-step-3').textContent = t.edgeStep3;
+
+    // Update CTA section
+    document.getElementById('cta-title').textContent = t.readyForMore;
+    document.getElementById('cta-subtitle').textContent = t.joinThousands;
+    document.getElementById('signup-text').textContent = t.signUpContinue;
+
+    const signupNote = document.getElementById('signup-note');
+    if (signupNote) {
+      signupNote.innerHTML = `<strong>${t.freeText}</strong> • ${t.joinText}`;
+    }
+  }
+
+  function initializeDemoQuiz() {
+    selectedAnswer = null;
+    if (window.__DEMO_QUESTION__) {
+      demoQuestion = window.__DEMO_QUESTION__;
+      timeLeft = demoQuestion.timeLimit || 15;
+      document.getElementById('timer-display').textContent = timeLeft;
+      updateQuestionLanguage();
+    }
+
+    updateUILanguage();
+    setupLanguageToggle();
+    setupOptionHandlers();
+    setupSubmitButton();
+    setupInfoButton();
+    updateStatus(false);
+
+    const submitButton = document.getElementById('submit-button');
+    if (submitButton) {
+      submitButton.disabled = true;
+    }
+
+    startTimer();
+  }
+
+  function setupLanguageToggle() {
+    const languageButtons = document.querySelectorAll('.lang-btn');
+    languageButtons.forEach(button => {
+      button.addEventListener('click', (e) => {
+        e.preventDefault();
+        switchLanguage(button.dataset.lang);
+      });
+    });
+  }
+
+  function setupOptionHandlers() {
+    const optionButtons = document.querySelectorAll('#demo-quiz-overlay .option-button');
+    optionButtons.forEach(button => {
+      button.addEventListener('click', (e) => {
+        e.preventDefault();
+        selectAnswer(button.dataset.option, button);
+      });
+    });
+  }
+
+  function setupSubmitButton() {
+    const submitButton = document.getElementById('submit-button');
+    if (submitButton) {
+      submitButton.addEventListener('click', (e) => {
+        e.preventDefault();
+        if (selectedAnswer) {
+          submitAnswer();
+        }
+      });
+    }
+  }
+
+  function setupInfoButton() {
+    const infoButton = document.getElementById('info-button');
+    if (infoButton) {
+      infoButton.addEventListener('click', () => {
+        hideDemoQuiz();
+      });
+    }
+  }
+
+  function selectAnswer(answer, buttonElement) {
+    selectedAnswer = answer;
+    document.querySelectorAll('#demo-quiz-overlay .option-button').forEach(btn => {
+      btn.classList.remove('selected');
+    });
+    buttonElement.classList.add('selected');
+    updateStatus(true);
+
+    const submitButton = document.getElementById('submit-button');
+    if (submitButton) {
+      submitButton.disabled = false;
+    }
+  }
+
+  function updateStatus(hasAnswer) {
+    const statusContent = document.getElementById('status-content');
+    const statusText = statusContent.querySelector('.status-text');
+    const statusIcon = statusContent.querySelector('.status-icon');
+    const t = translations[currentLanguage];
+
+    if (hasAnswer) {
+      statusText.textContent = t.optionSelected.replace('{option}', selectedAnswer.toUpperCase());
+      statusText.className = 'status-text';
+      statusIcon.innerHTML = `
+        <svg class="status-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <path d="M20 6L9 17l-5-5"/>
+        </svg>
+      `;
+    } else {
+      statusText.textContent = t.selectAnswer;
+      statusText.className = 'status-text unselected';
+      statusIcon.innerHTML = `
+        <svg class="status-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <circle cx="12" cy="12" r="10"/>
+          <circle cx="12" cy="12" r="3"/>
+        </svg>
+      `;
+    }
+  }
+
+  function startTimer() {
+    startTime = Date.now();
+    timerInterval = setInterval(() => {
+      timeLeft--;
+      const timerDisplay = document.getElementById('timer-display');
+      if (timerDisplay) {
+        timerDisplay.textContent = timeLeft;
+      }
+
+      const timerCircle = document.getElementById('timer-circle');
+      if (timerCircle) {
+        timerCircle.classList.remove('warning', 'critical');
+        if (timeLeft <= 5) {
+          timerCircle.classList.add('critical');
+        } else if (timeLeft <= 10) {
+          timerCircle.classList.add('warning');
+        }
+      }
+
+      if (timeLeft <= 0) {
+        clearInterval(timerInterval);
+        submitAnswer();
+      }
+    }, 1000);
+  }
+
+  function submitAnswer() {
+    if (timerInterval) {
+      clearInterval(timerInterval);
+    }
+
+    const submitButton = document.getElementById('submit-button');
+    const t = translations[currentLanguage];
+
+    if (submitButton) {
+      submitButton.disabled = true;
+      document.getElementById('submit-text').textContent = t.processing;
+    }
+
+    const timeTaken = Math.round((Date.now() - startTime) / 1000);
+    submitDemoAnswer(selectedAnswer, timeTaken);
+    setTimeout(() => showResult(selectedAnswer), 800);
+  }
+
+  function showResult(userAnswer) {
+    const isCorrect = userAnswer === demoQuestion?.correctAnswer;
+    const t = translations[currentLanguage];
+
+    const quizContainer = document.getElementById('quiz-container');
+    const resultContainer = document.getElementById('result-container');
+
+    if (quizContainer) {
+      quizContainer.style.opacity = '0';
+      quizContainer.style.transition = 'opacity 0.3s ease-out';
+
+      setTimeout(() => {
+        quizContainer.style.display = 'none';
+        if (resultContainer) {
+          resultContainer.style.display = 'block';
+          setTimeout(() => {
+            resultContainer.style.opacity = '1';
+            resultContainer.style.transform = 'translateY(0)';
+          }, 100);
+        }
+      }, 300);
+    }
+
+    const resultIcon = document.getElementById('result-icon');
+    const resultTitle = document.getElementById('result-title');
+    const resultMessage = document.getElementById('result-message');
+
+    if (userAnswer === null) {
+      if (resultIcon) resultIcon.textContent = '⏰';
+      if (resultTitle) resultTitle.textContent = t.timeUp;
+      if (resultMessage) resultMessage.textContent = t.timeUpMessage;
+    } else if (isCorrect) {
+      if (resultIcon) resultIcon.textContent = '🎉';
+      if (resultTitle) resultTitle.textContent = t.brilliant;
+      if (resultMessage) resultMessage.textContent = t.brilliantMessage;
+    } else {
+      if (resultIcon) resultIcon.textContent = '🎯';
+      if (resultTitle) resultTitle.textContent = t.almostThere;
+      if (resultMessage) resultMessage.textContent = t.almostMessage;
+    }
+
+    updateResultLanguage();
+    setupPWAPrompt();
+    setupCTAButton();
+  }
+
+  function setupPWAPrompt() {
+    const pwaPromptSection = document.getElementById('pwa-prompt-section');
+    const pwaInstallOption = document.getElementById('pwa-install-option');
+    const manualInstructions = document.getElementById('manual-instructions');
+    const alternativeOptions = document.getElementById('alternative-options');
+    const ctaSection = document.getElementById('cta-section');
+
+    // Don't show PWA prompt if already installed
+    if (isPWAInstalled()) {
+      pwaPromptSection.style.display = 'none';
+      return;
+    }
+
+    // Hide CTA section initially
+    ctaSection.style.display = 'none';
+
+    // Show PWA install button if available
+    if (showPWAPrompt && deferredPrompt) {
+      pwaInstallOption.style.display = 'block';
+      manualInstructions.style.display = 'none';
+      alternativeOptions.style.display = 'block';
+    } else {
+      // Show alternatives if PWA not available
+      pwaInstallOption.style.display = 'none';
+      manualInstructions.style.display = 'none';
+      alternativeOptions.style.display = 'block';
+    }
+
+    // Setup PWA install button
+    const pwaInstallBtn = document.getElementById('pwa-install-btn');
+    if (pwaInstallBtn) {
+      pwaInstallBtn.addEventListener('click', async () => {
+        if (deferredPrompt) {
+          try {
+            deferredPrompt.prompt();
+            const { outcome } = await deferredPrompt.userChoice;
+            console.log('[PWA] User choice:', outcome);
+
+            if (outcome === 'accepted') {
+              // User accepted - hide PWA prompt and show CTA
+              pwaPromptSection.style.display = 'none';
+              ctaSection.style.display = 'block';
+            } else {
+              // User rejected - show manual instructions
+              pwaInstallOption.style.display = 'none';
+              manualInstructions.style.display = 'block';
+              showBrowserSpecificInstructions();
+              alternativeOptions.style.display = 'block';
+            }
+
+            deferredPrompt = null;
+          } catch (error) {
+            console.error('[PWA] Install prompt error:', error);
+            // Fallback to manual instructions on error
+            pwaInstallOption.style.display = 'none';
+            manualInstructions.style.display = 'block';
+            showBrowserSpecificInstructions();
+          }
+        }
+      });
+    }
+
+    // Setup manual guide button
+    const manualGuideBtn = document.getElementById('manual-guide-btn');
+    if (manualGuideBtn) {
+      manualGuideBtn.addEventListener('click', () => {
+        manualInstructions.style.display = 'block';
+        showBrowserSpecificInstructions();
+        manualGuideBtn.style.display = 'none';
+      });
+    }
+
+    // Setup bookmark button
+    const bookmarkBtn = document.getElementById('bookmark-btn');
+    if (bookmarkBtn) {
+      bookmarkBtn.addEventListener('click', () => {
+        // Show browser-specific bookmark instructions
+        const browserType = getBrowserType();
+        let bookmarkShortcut = 'Ctrl+D';
+
+        if (navigator.userAgent.includes('Mac')) {
+          bookmarkShortcut = 'Cmd+D';
+        }
+
+        if (isMobile()) {
+          if (browserType === 'safari') {
+            alert('Tap the share button (□↗) at the bottom, then select "Add Bookmark"');
+          } else {
+            alert('Tap the menu button and select "Add Bookmark" or "Bookmark"');
+          }
+        } else {
+          alert(`Press ${bookmarkShortcut} to bookmark this page`);
+        }
+
+        // Track bookmark attempt
+        trackPWAInteraction('bookmark_attempted');
+
+        // Hide PWA prompt and show CTA after a delay
+        setTimeout(() => {
+          pwaPromptSection.style.display = 'none';
+          ctaSection.style.display = 'block';
+        }, 1500);
+      });
+    }
+
+    // Setup skip button
+    const skipPwaBtn = document.getElementById('skip-pwa-btn');
+    if (skipPwaBtn) {
+      skipPwaBtn.addEventListener('click', () => {
+        trackPWAInteraction('prompt_skipped');
+        pwaPromptSection.style.display = 'none';
+        ctaSection.style.display = 'block';
+      });
+    }
+  }
+
+  function showBrowserSpecificInstructions() {
+    const browserType = getBrowserType();
+
+    // Hide all instructions first
+    document.getElementById('chrome-instruction').style.display = 'none';
+    document.getElementById('safari-instruction').style.display = 'none';
+    document.getElementById('firefox-instruction').style.display = 'none';
+    document.getElementById('edge-instruction').style.display = 'none';
+
+    // Show appropriate instruction based on browser
+    if (browserType === 'safari') {
+      document.getElementById('safari-instruction').style.display = 'block';
+    } else if (browserType === 'firefox') {
+      document.getElementById('firefox-instruction').style.display = 'block';
+    } else if (browserType === 'edge') {
+      document.getElementById('edge-instruction').style.display = 'block';
+    } else {
+      // Default to Chrome instructions
+      document.getElementById('chrome-instruction').style.display = 'block';
+    }
+  }
+
+  function trackPWAInteraction(action) {
+    // Track PWA interaction for analytics
+    console.log('[PWA] Interaction tracked:', action);
+
+    // You can send this to your analytics endpoint
+    try {
+      fetch('/api/demo-quiz/pwa-interaction', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          action: action,
+          browserType: getBrowserType(),
+          isMobile: isMobile(),
+          timestamp: new Date().toISOString(),
+          userAgent: navigator.userAgent
+        })
+      }).catch(error => {
+        console.error('Failed to track PWA interaction:', error);
+      });
+    } catch (error) {
+      console.error('Failed to track PWA interaction:', error);
+    }
+  }
+
+  function setupCTAButton() {
+    const signupBtn = document.getElementById('signup-btn');
+    if (signupBtn) {
+      signupBtn.addEventListener('click', (e) => {
+        e.preventDefault();
+        hideDemoQuiz();
+        // Small delay to ensure demo quiz is hidden before navigation
+        setTimeout(() => {
+          window.location.hash = '#signin';
+        }, 100);
+      });
+    }
+  }
+
+  async function submitDemoAnswer(answer, timeTaken) {
+    try {
+      await fetch('/api/demo-quiz/answer', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          selectedAnswer: answer,
+          timeTaken: timeTaken,
+          correctAnswer: demoQuestion?.correctAnswer,
+          questionCategory: demoQuestion?.category?.[currentLanguage] || demoQuestion?.category,
+          language: currentLanguage,
+        })
+      });
+    } catch (error) {
+      console.error('Failed to submit demo answer:', error);
+    }
+  }
+</script>
+
+<style>
+/* Modern Demo Quiz Interface with PWA Install Prompt - Enhanced Version */
+
+#demo-quiz-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: linear-gradient(135deg, #1A1527 0%, #2D1B4E 60%, #4A2E69 100%);
+  display: flex;
+  justify-content: center;
+  align-items: flex-start;
+  z-index: 10000;
+  overflow-y: auto;
+  overflow-x: hidden;
+  padding: 1rem;
+  padding-top: 2rem;
+  box-sizing: border-box;
+  -webkit-overflow-scrolling: touch;
+  scroll-behavior: smooth;
+}
+
+#demo-quiz-overlay .particles-background {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  z-index: 1;
+}
+
+/* Container matching React VStack layout */
+#demo-quiz-overlay .quiz-container {
+  max-width: 800px;
+  width: 100%;
+  z-index: 2;
+  position: relative;
+  padding: 2rem;
+  margin: 2rem 0;
+}
+
+/* Language Toggle */
+#demo-quiz-overlay .language-toggle {
+  display: flex;
+  background: rgba(255, 255, 255, 0.05);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 2rem;
+  padding: 0.25rem;
+  backdrop-filter: blur(10px);
+  gap: 0.25rem;
+}
+
+#demo-quiz-overlay .lang-btn {
+  padding: 0.5rem 0.75rem;
+  border: none;
+  border-radius: 1.5rem;
+  background: transparent;
+  color: rgba(255, 255, 255, 0.7);
+  font-size: 0.75rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  min-width: 40px;
+}
+
+#demo-quiz-overlay .lang-btn:hover {
+  background: rgba(255, 255, 255, 0.1);
+  color: rgba(255, 255, 255, 0.9);
+}
+
+#demo-quiz-overlay .lang-btn.active {
+  background: linear-gradient(45deg, #3B82F6, #8B5CF6);
+  color: white;
+  box-shadow: 0 2px 8px rgba(59, 130, 246, 0.3);
+}
+
+/* Header section */
+#demo-quiz-overlay .quiz-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 2rem;
+  flex-wrap: wrap;
+  gap: 1rem;
+}
+
+#demo-quiz-overlay .brand-section {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+}
+
+#demo-quiz-overlay .brand-logo {
+  width: 50px;
+  height: 50px;
+  filter: drop-shadow(0 0 15px rgba(59, 130, 246, 0.5));
+}
+
+#demo-quiz-overlay .brand-info h1 {
+  font-size: 1.5rem;
+  font-weight: 900;
+  background: linear-gradient(45deg, #3B82F6, #8B5CF6);
+  -webkit-background-clip: text;
+  background-clip: text;
+  -webkit-text-fill-color: transparent;
+  margin: 0;
+}
+
+#demo-quiz-overlay .brand-info p {
+  color: rgba(255, 255, 255, 0.7);
+  font-size: 0.875rem;
+  margin: 0.25rem 0 0 0;
+}
+
+/* Timer section */
+#demo-quiz-overlay .timer-section {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  background: rgba(255, 255, 255, 0.05);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 1rem;
+  padding: 0.75rem 1rem;
+  backdrop-filter: blur(10px);
+}
+
+#demo-quiz-overlay .timer-circle {
+  width: 50px;
+  height: 50px;
+  border-radius: 50%;
+  background: rgba(16, 185, 129, 0.2);
+  border: 3px solid #10B981;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.3s ease;
+  position: relative;
+  overflow: hidden;
+}
+
+#demo-quiz-overlay .timer-circle.warning {
+  border-color: #F59E0B;
+  background: rgba(245, 158, 11, 0.2);
+}
+
+#demo-quiz-overlay .timer-circle.critical {
+  border-color: #EF4444;
+  background: rgba(239, 68, 68, 0.2);
+  animation: pulse 1s infinite;
+}
+
+#demo-quiz-overlay .timer-text {
+  font-size: 1.125rem;
+  font-weight: bold;
+  color: white;
+  z-index: 1;
+}
+
+#demo-quiz-overlay .timer-label {
+  color: rgba(255, 255, 255, 0.7);
+  font-size: 0.75rem;
+  font-weight: 500;
+}
+
+/* Question container */
+#demo-quiz-overlay .question-wrapper {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+  align-items: stretch;
+}
+
+/* Badge row */
+#demo-quiz-overlay .badge-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+}
+
+#demo-quiz-overlay .badge {
+  background: rgba(59, 130, 246, 0.1);
+  color: #60A5FA;
+  padding: 0.5rem 0.75rem;
+  border-radius: 9999px;
+  font-size: 0.75rem;
+  font-weight: 600;
+  border: 1px solid rgba(59, 130, 246, 0.3);
+}
+
+#demo-quiz-overlay .difficulty-badge {
+  background: rgba(245, 158, 11, 0.1);
+  color: #FBBF24;
+  border-color: rgba(245, 158, 11, 0.3);
+}
+
+/* Question box */
+#demo-quiz-overlay .question-box {
+  background: rgba(255, 255, 255, 0.05);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 0.75rem;
+  padding: 1.5rem;
+  backdrop-filter: blur(10px);
+}
+
+#demo-quiz-overlay .question-text {
+  font-size: 1.125rem;
+  color: white;
+  line-height: 1.6;
+  font-weight: 500;
+  margin: 0;
+  word-break: break-word;
+}
+
+/* Options container */
+#demo-quiz-overlay .options-container {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+}
+
+/* Option buttons */
+#demo-quiz-overlay .option-button {
+  display: flex;
+  align-items: flex-start;
+  gap: 0.75rem;
+  width: 100%;
+  min-height: 65px;
+  padding: 0.75rem;
+  background: rgba(255, 255, 255, 0.05);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 0.5rem;
+  color: white;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  font-family: inherit;
+  font-size: 0.875rem;
+  text-align: left;
+  backdrop-filter: blur(5px);
+  opacity: 0;
+  transform: translateX(30px);
+  animation: slideInOption 0.3s ease forwards;
+}
+
+#demo-quiz-overlay .option-button:nth-child(1) { animation-delay: 0.05s; }
+#demo-quiz-overlay .option-button:nth-child(2) { animation-delay: 0.1s; }
+#demo-quiz-overlay .option-button:nth-child(3) { animation-delay: 0.15s; }
+#demo-quiz-overlay .option-button:nth-child(4) { animation-delay: 0.2s; }
+
+#demo-quiz-overlay .option-button:hover {
+  border-color: rgba(255, 255, 255, 0.3);
+  background: rgba(255, 255, 255, 0.08);
+  transform: translateY(-2px);
+}
+
+#demo-quiz-overlay .option-button.selected {
+  border-color: #3B82F6;
+  background: rgba(59, 130, 246, 0.2);
+  transform: translateY(-2px);
+}
+
+#demo-quiz-overlay .option-button.selected:hover {
+  border-color: #2563EB;
+  background: rgba(59, 130, 246, 0.3);
+}
+
+/* Option indicator */
+#demo-quiz-overlay .option-indicator {
+  width: 32px;
+  height: 32px;
+  min-width: 32px;
+  border-radius: 0.5rem;
+  background: rgba(255, 255, 255, 0.1);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  transition: all 0.2s ease;
+  margin-top: 0.25rem;
+}
+
+#demo-quiz-overlay .option-button.selected .option-indicator {
+  background: #3B82F6;
+}
+
+#demo-quiz-overlay .option-letter {
+  font-weight: bold;
+  font-size: 0.875rem;
+  color: white;
+}
+
+#demo-quiz-overlay .option-text {
+  flex: 1;
+  line-height: 1.5;
+  font-weight: 500;
+  color: #E5E7EB;
+  min-width: 0;
+}
+
+#demo-quiz-overlay .option-button.selected .option-text {
+  color: white;
+  font-weight: 600;
+}
+
+/* Check icon for selected option */
+#demo-quiz-overlay .check-icon {
+  width: 16px;
+  height: 16px;
+  display: none;
+}
+
+#demo-quiz-overlay .option-button.selected .check-icon {
+  display: block;
+}
+
+#demo-quiz-overlay .option-button.selected .option-letter {
+  display: none;
+}
+
+/* Status section */
+#demo-quiz-overlay .status-section {
+  background: rgba(255, 255, 255, 0.05);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 0.5rem;
+  padding: 0.75rem;
+  text-align: center;
+  backdrop-filter: blur(5px);
+}
+
+#demo-quiz-overlay .status-content {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+#demo-quiz-overlay .status-icon {
+  width: 16px;
+  height: 16px;
+}
+
+#demo-quiz-overlay .status-text {
+  font-weight: 600;
+  font-size: 0.875rem;
+  color: #10B981;
+}
+
+#demo-quiz-overlay .status-text.unselected {
+  color: #6B7280;
+}
+
+/* Action buttons */
+#demo-quiz-overlay .action-section {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+  margin-top: 1rem;
+}
+
+#demo-quiz-overlay .submit-button {
+  width: 100%;
+  padding: 0.875rem 1.5rem;
+  background: linear-gradient(135deg, #3B82F6, #8B5CF6);
+  color: white;
+  border: none;
+  border-radius: 9999px;
+  font-weight: 700;
+  font-size: 1rem;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  box-shadow: 0 4px 15px rgba(59, 130, 246, 0.4);
+}
+
+#demo-quiz-overlay .submit-button:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 8px 25px rgba(59, 130, 246, 0.6);
+}
+
+#demo-quiz-overlay .submit-button:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+  transform: none;
+}
+
+#demo-quiz-overlay .hint-text {
+  text-align: center;
+  color: rgba(255, 255, 255, 0.6);
+  font-size: 0.875rem;
+  font-style: italic;
+  margin: 0;
+}
+
+/* Result container */
+#demo-quiz-overlay .result-container {
+  display: none;
+  max-width: 600px;
+  width: 100%;
+  z-index: 2;
+  position: relative;
+  padding: 2rem;
+  margin: 2rem 0;
+  animation: slideInUp 0.6s ease;
+}
+
+#demo-quiz-overlay .info-button {
+  position: absolute;
+  top: 1rem;
+  right: 1rem;
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  background: rgba(255, 255, 255, 0.1);
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  color: white;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  backdrop-filter: blur(10px);
+  z-index: 3;
+}
+
+#demo-quiz-overlay .info-button:hover {
+  background: rgba(255, 255, 255, 0.2);
+  transform: scale(1.05);
+}
+
+#demo-quiz-overlay .info-button svg {
+  width: 20px;
+  height: 20px;
+}
+
+#demo-quiz-overlay .result-header {
+  text-align: center;
+  margin-bottom: 2rem;
+}
+
+#demo-quiz-overlay .result-icon {
+  font-size: 4rem;
+  margin-bottom: 1rem;
+  animation: bounceIn 0.8s ease;
+}
+
+#demo-quiz-overlay .result-title {
+  font-size: 2.5rem;
+  font-weight: 900;
+  background: linear-gradient(45deg, #10B981, #3B82F6);
+  -webkit-background-clip: text;
+  background-clip: text;
+  -webkit-text-fill-color: transparent;
+  margin: 0 0 1rem 0;
+}
+
+#demo-quiz-overlay .result-message {
+  color: rgba(255, 255, 255, 0.9);
+  font-size: 1.125rem;
+  line-height: 1.6;
+  margin: 0;
+}
+
+#demo-quiz-overlay .explanation-section {
+  background: rgba(16, 185, 129, 0.1);
+  border: 1px solid rgba(16, 185, 129, 0.3);
+  border-radius: 1rem;
+  padding: 1.5rem;
+  margin-bottom: 2rem;
+  backdrop-filter: blur(10px);
+}
+
+#demo-quiz-overlay .explanation-header {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  margin-bottom: 1rem;
+}
+
+#demo-quiz-overlay .explanation-title {
+  font-weight: bold;
+  color: #10B981;
+  font-size: 1.125rem;
+}
+
+#demo-quiz-overlay .explanation-text {
+  color: rgba(255, 255, 255, 0.9);
+  line-height: 1.6;
+  margin: 0;
+}
+
+/* PWA Install Prompt Section */
+#demo-quiz-overlay .pwa-prompt-section {
+  background: rgba(59, 130, 246, 0.1);
+  border: 1px solid rgba(59, 130, 246, 0.3);
+  border-radius: 1rem;
+  padding: 1.5rem;
+  margin-bottom: 2rem;
+  backdrop-filter: blur(10px);
+  text-align: center;
+  animation: slideInUp 0.6s ease 0.2s both;
+}
+
+#demo-quiz-overlay .pwa-prompt-header {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.75rem;
+  margin-bottom: 1rem;
+}
+
+#demo-quiz-overlay .pwa-prompt-icon {
+  font-size: 2rem;
+  animation: bounceIn 0.8s ease 0.4s both;
+}
+
+#demo-quiz-overlay .pwa-prompt-title {
+  font-size: 1.5rem;
+  font-weight: bold;
+  color: #60A5FA;
+  margin: 0;
+}
+
+#demo-quiz-overlay .pwa-prompt-subtitle {
+  color: rgba(255, 255, 255, 0.9);
+  font-size: 1rem;
+  line-height: 1.6;
+  margin: 0 0 1.5rem 0;
+}
+
+#demo-quiz-overlay .pwa-install-option {
+  margin-bottom: 1.5rem;
+}
+
+#demo-quiz-overlay .pwa-install-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  padding: 0.875rem 1.5rem;
+  background: linear-gradient(45deg, #3B82F6, #1E40AF);
+  color: white;
+  border: none;
+  border-radius: 9999px;
+  font-weight: 700;
+  font-size: 1rem;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  box-shadow: 0 4px 15px rgba(59, 130, 246, 0.4);
+  margin: 0 auto;
+  min-width: 200px;
+}
+
+#demo-quiz-overlay .pwa-install-btn:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 8px 25px rgba(59, 130, 246, 0.6);
+}
+
+#demo-quiz-overlay .pwa-install-btn svg {
+  width: 20px;
+  height: 20px;
+}
+
+/* Manual Instructions Section */
+#demo-quiz-overlay .manual-instructions {
+  background: rgba(255, 255, 255, 0.05);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 0.75rem;
+  padding: 1.5rem;
+  margin: 1.5rem 0;
+  text-align: left;
+  backdrop-filter: blur(5px);
+  animation: slideInUp 0.4s ease both;
+}
+
+#demo-quiz-overlay .instruction-header {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  margin-bottom: 1rem;
+  justify-content: center;
+}
+
+#demo-quiz-overlay .instruction-title {
+  font-size: 1.125rem;
+  font-weight: bold;
+  color: #60A5FA;
+  margin: 0;
+}
+
+#demo-quiz-overlay .instruction-icon {
+  font-size: 1.5rem;
+}
+
+#demo-quiz-overlay .browser-instruction {
+  margin-bottom: 1rem;
+}
+
+#demo-quiz-overlay .instruction-steps {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+}
+
+#demo-quiz-overlay .step-item {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  padding: 0.75rem;
+  background: rgba(255, 255, 255, 0.05);
+  border-radius: 0.5rem;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+#demo-quiz-overlay .step-number {
+  width: 28px;
+  height: 28px;
+  border-radius: 50%;
+  background: linear-gradient(45deg, #3B82F6, #8B5CF6);
+  color: white;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: bold;
+  font-size: 0.875rem;
+  flex-shrink: 0;
+}
+
+#demo-quiz-overlay .step-text {
+  color: rgba(255, 255, 255, 0.9);
+  font-size: 0.875rem;
+  line-height: 1.4;
+}
+
+/* Alternative Options Section */
+#demo-quiz-overlay .alternative-options {
+  margin: 1.5rem 0;
+}
+
+#demo-quiz-overlay .option-divider {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin: 1.5rem 0;
+}
+
+#demo-quiz-overlay .divider-text {
+  color: rgba(255, 255, 255, 0.6);
+  font-size: 0.875rem;
+  font-style: italic;
+  background: rgba(26, 21, 39, 0.8);
+  padding: 0.5rem 1rem;
+  border-radius: 9999px;
+  position: relative;
+}
+
+#demo-quiz-overlay .divider-text::before {
+  content: '';
+  position: absolute;
+  left: -50px;
+  top: 50%;
+  width: 50px;
+  height: 1px;
+  background: rgba(255, 255, 255, 0.2);
+}
+
+#demo-quiz-overlay .divider-text::after {
+  content: '';
+  position: absolute;
+  right: -50px;
+  top: 50%;
+  width: 50px;
+  height: 1px;
+  background: rgba(255, 255, 255, 0.2);
+}
+
+#demo-quiz-overlay .bookmark-option,
+#demo-quiz-overlay .manual-guide-option {
+  margin-bottom: 1rem;
+}
+
+#demo-quiz-overlay .bookmark-btn,
+#demo-quiz-overlay .manual-guide-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  padding: 0.75rem 1.25rem;
+  background: rgba(255, 255, 255, 0.1);
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  border-radius: 9999px;
+  color: white;
+  font-weight: 600;
+  font-size: 0.875rem;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  backdrop-filter: blur(5px);
+  margin: 0 auto;
+  min-width: 180px;
+}
+
+#demo-quiz-overlay .bookmark-btn:hover,
+#demo-quiz-overlay .manual-guide-btn:hover {
+  background: rgba(255, 255, 255, 0.2);
+  border-color: rgba(255, 255, 255, 0.3);
+  transform: translateY(-1px);
+}
+
+#demo-quiz-overlay .bookmark-btn svg,
+#demo-quiz-overlay .manual-guide-btn svg {
+  width: 16px;
+  height: 16px;
+}
+
+#demo-quiz-overlay .skip-pwa-btn {
+  background: transparent;
+  border: none;
+  color: rgba(255, 255, 255, 0.6);
+  font-size: 0.875rem;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  padding: 0.5rem 1rem;
+  border-radius: 0.25rem;
+  margin-top: 1rem;
+}
+
+#demo-quiz-overlay .skip-pwa-btn:hover {
+  color: rgba(255, 255, 255, 0.8);
+  background: rgba(255, 255, 255, 0.05);
+}
+
+/* CTA Section */
+#demo-quiz-overlay .cta-section {
+  text-align: center;
+  animation: slideInUp 0.6s ease 0.4s both;
+}
+
+#demo-quiz-overlay .cta-title {
+  font-size: 2rem;
+  font-weight: bold;
+  color: white;
+  margin: 0 0 1rem 0;
+}
+
+#demo-quiz-overlay .cta-subtitle {
+  color: rgba(255, 255, 255, 0.8);
+  font-size: 1.125rem;
+  margin: 0 0 2rem 0;
+}
+
+#demo-quiz-overlay .cta-button {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  padding: 1rem 2rem;
+  border-radius: 9999px;
+  font-weight: 700;
+  font-size: 1rem;
+  border: none;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  text-decoration: none;
+  min-height: 60px;
+  background: linear-gradient(45deg, #10B981, #059669);
+  color: white;
+  box-shadow: 0 8px 25px rgba(16, 185, 129, 0.4);
+  margin: 0 auto 2rem auto;
+  max-width: 280px;
+  width: 100%;
+  animation: pulse 2s infinite;
+}
+
+#demo-quiz-overlay .cta-button:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 12px 35px rgba(16, 185, 129, 0.6);
+}
+
+#demo-quiz-overlay .signup-note {
+  color: rgba(255, 255, 255, 0.7);
+  font-size: 0.875rem;
+  font-style: italic;
+  line-height: 1.5;
+  margin: 0;
+}
+
+/* Animations */
+@keyframes slideInOption {
+  from {
+    opacity: 0;
+    transform: translateX(30px);
+  }
+  to {
+    opacity: 1;
+    transform: translateX(0);
+  }
+}
+
+@keyframes slideInUp {
+  from {
+    opacity: 0;
+    transform: translateY(30px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes bounceIn {
+  0% {
+    transform: scale(0.3);
+    opacity: 0;
+  }
+  50% {
+    transform: scale(1.05);
+  }
+  70% {
+    transform: scale(0.9);
+  }
+  100% {
+    transform: scale(1);
+    opacity: 1;
+  }
+}
+
+@keyframes pulse {
+  0% {
+    transform: scale(1);
+    box-shadow: 0 0 0 0 rgba(239, 68, 68, 0.7);
+  }
+  70% {
+    transform: scale(1.05);
+    box-shadow: 0 0 0 10px rgba(239, 68, 68, 0);
+  }
+  100% {
+    transform: scale(1);
+    box-shadow: 0 0 0 0 rgba(239, 68, 68, 0);
+  }
+}
+
+@keyframes twinkle {
+  0%, 100% {
+    opacity: 0.1;
+    transform: scale(1);
+  }
+  50% {
+    opacity: 0.8;
+    transform: scale(1.2);
+  }
+}
+
+/* Responsive Design */
+@media (max-width: 768px) {
+  #demo-quiz-overlay {
+    padding: 0.5rem;
+    padding-top: 1rem;
+  }
+
+  #demo-quiz-overlay .brand-logo {
+    position: absolute;
+    top: 0.5rem;
+    left: 1rem;
+    width: 50px;
+    height: 50px;
+    filter: drop-shadow(0 0 15px rgba(59, 130, 246, 0.5));
+  }
+
+  #demo-quiz-overlay .quiz-container {
+    padding: 1rem;
+    margin: 0 auto;
+  }
+
+  #demo-quiz-overlay .result-container {
+    padding: 1rem;
+    margin: 0 auto;
+  }
+
+  #demo-quiz-overlay .quiz-header {
+    flex-direction: column;
+    text-align: center;
+    gap: 1rem;
+  }
+
+  #demo-quiz-overlay .question-text {
+    font-size: 1rem;
+  }
+
+  #demo-quiz-overlay .option-button {
+    min-height: 60px;
+    padding: 0.75rem;
+  }
+
+  #demo-quiz-overlay .option-indicator {
+    width: 28px;
+    height: 28px;
+    min-width: 28px;
+  }
+
+  #demo-quiz-overlay .result-title {
+    font-size: 2rem;
+  }
+
+  #demo-quiz-overlay .cta-title {
+    font-size: 1.5rem;
+  }
+
+  #demo-quiz-overlay .pwa-prompt-title {
+    font-size: 1.25rem;
+  }
+
+  #demo-quiz-overlay .pwa-prompt-subtitle {
+    font-size: 0.875rem;
+  }
+
+  #demo-quiz-overlay .pwa-install-btn,
+  #demo-quiz-overlay .bookmark-btn {
+    min-width: 180px;
+    font-size: 0.875rem;
+    padding: 0.75rem 1.25rem;
+  }
+
+  #demo-quiz-overlay .manual-guide-btn {
+    min-width: 160px;
+    font-size: 0.875rem;
+    padding: 0.625rem 1rem;
+  }
+
+  #demo-quiz-overlay .step-item {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 0.5rem;
+    text-align: left;
+  }
+
+  #demo-quiz-overlay .step-number {
+    align-self: flex-start;
+  }
+
+  #demo-quiz-overlay .divider-text::before,
+  #demo-quiz-overlay .divider-text::after {
+    width: 30px;
+  }
+
+  #demo-quiz-overlay .divider-text::before {
+    left: -35px;
+  }
+
+  #demo-quiz-overlay .divider-text::after {
+    right: -35px;
+  }
+}
+
+@media (max-width: 480px) {
+  #demo-quiz-overlay .brand-logo {
+    position: absolute;
+    top: 0.5rem;
+    left: 1rem;
+    width: 50px;
+    height: 50px;
+    filter: drop-shadow(0 0 15px rgba(59, 130, 246, 0.5));
+  }
+
+  #demo-quiz-overlay {
+    padding: 0.25rem;
+    padding-top: 0.5rem;
+  }
+
+  #demo-quiz-overlay .quiz-container {
+    padding: 0.75rem;
+    margin: 0 auto;
+  }
+
+  #demo-quiz-overlay .result-container {
+    padding: 0.75rem;
+    margin: 0 auto;
+  }
+
+  #demo-quiz-overlay .brand-info h1 {
+    font-size: 1.25rem;
+  }
+
+  #demo-quiz-overlay .timer-circle {
+    width: 45px;
+    height: 45px;
+  }
+
+  #demo-quiz-overlay .timer-text {
+    font-size: 1rem;
+  }
+
+  #demo-quiz-overlay .question-text {
+    font-size: 0.875rem;
+  }
+
+  #demo-quiz-overlay .option-button {
+    min-height: 55px;
+    padding: 0.625rem;
+  }
+
+  #demo-quiz-overlay .option-indicator {
+    width: 26px;
+    height: 26px;
+    min-width: 26px;
+  }
+
+  #demo-quiz-overlay .pwa-install-btn,
+  #demo-quiz-overlay .bookmark-btn {
+    min-width: 160px;
+    font-size: 0.8rem;
+    padding: 0.625rem 1rem;
+  }
+
+  #demo-quiz-overlay .manual-guide-btn {
+    min-width: 140px;
+    font-size: 0.8rem;
+    padding: 0.5rem 0.875rem;
+  }
+
+  #demo-quiz-overlay .pwa-prompt-title {
+    font-size: 1.125rem;
+  }
+
+  #demo-quiz-overlay .pwa-prompt-subtitle {
+    font-size: 0.8rem;
+  }
+
+  #demo-quiz-overlay .instruction-title {
+    font-size: 1rem;
+  }
+
+  #demo-quiz-overlay .step-text {
+    font-size: 0.8rem;
+  }
+
+  #demo-quiz-overlay .step-number {
+    width: 24px;
+    height: 24px;
+    font-size: 0.75rem;
+  }
+
+  #demo-quiz-overlay .divider-text {
+    font-size: 0.75rem;
+    padding: 0.375rem 0.75rem;
+  }
+
+  #demo-quiz-overlay .divider-text::before,
+  #demo-quiz-overlay .divider-text::after {
+    width: 20px;
+  }
+
+  #demo-quiz-overlay .divider-text::before {
+    left: -25px;
+  }
+
+  #demo-quiz-overlay .divider-text::after {
+    right: -25px;
+  }
+
+  #demo-quiz-overlay .manual-instructions {
+    padding: 1rem;
+  }
+
+  #demo-quiz-overlay .step-item {
+    padding: 0.625rem;
+  }
+}
+</style>

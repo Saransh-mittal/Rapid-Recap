@@ -6,6 +6,7 @@ import contentReducer from './contentSlice'
 import articleReducer from './articleSlice'
 import notificationReducer from './notificationSlice'
 import quizReducer from './quizSlice'
+import gameHubReducer from './gameHubSlice'
 import tournamentReducer from './tournamentSlice'
 import loadingProgressReducer from './loadingProgressSlice'
 import noteMessageSummaryReducer from './noteMessageSummarySlice'
@@ -30,6 +31,7 @@ export const store = configureStore({
     articles: articleReducer,
     notifications: notificationReducer,
     quiz: quizReducer,
+    gameHub: gameHubReducer,
     tournament: tournamentReducer,
     loadingProgress: loadingProgressReducer,
     noteMessageSummary: noteMessageSummaryReducer,

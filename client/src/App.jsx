@@ -1,3 +1,5 @@
+// client/src/App.jsx - Updated to use auth state utility
+
 import './App.css'
 import React, {
   Suspense,
@@ -11,6 +13,14 @@ import { useLocation } from 'react-router-dom'
 import { Box } from '@chakra-ui/react'
 import { useDispatch, useSelector } from 'react-redux'
 import { useTranslation } from 'react-i18next'
+
+// UPDATED: Import auth state utility and localStorage wrapper
+import {
+  initializeAuthSignals,
+  updateAuthSignalCookie,
+  hasAuthSignals,
+} from './utils/authStateManager.js'
+import localStorageService from './services/localStorageWrapper.js'
 
 const FixedBackground = React.lazy(() =>
   import('./components/miscellaneous/FixedBackground.jsx'),
@@ -177,7 +187,7 @@ const App = () => {
     () => isAuthenticated && user,
     [isAuthenticated, user],
   )
-  const isToken = useCallback(() => localStorage.getItem('token'), [])
+  const isToken = useCallback(() => localStorageService.getItem('token'), [])
   const getUserInGameName = useMemo(
     () => (isLoggedIn ? user?.inGameName : null),
     [isLoggedIn, user],
@@ -206,6 +216,11 @@ const App = () => {
     setTimeout(() => {
       setShowUpgradeModal(true)
     }, 5000)
+
+    // UPDATED: Initialize auth signals and sync cookies
+    initializeAuthSignals()
+    updateAuthSignalCookie()
+
     if (window.performance) {
       const navigationEntries = performance.getEntriesByType('navigation')
       if (
@@ -244,6 +259,10 @@ const App = () => {
         sessionStorage.setItem('app_session_id', Date.now().toString())
       }
     }
+
+    // UPDATED: Demo quiz is now handled by the demo quiz overlay script
+    // No need to hide it here - the overlay script will handle it based on server flags
+    console.log('[App] Demo quiz handling delegated to overlay script')
 
     // Clean up function
     return () => {
@@ -386,7 +405,7 @@ const App = () => {
             ?.split('&')?.[0]
             ?.split('=')?.[0] === 'ref'
         ) {
-          localStorage.setItem(
+          localStorageService.setItem(
             'ref',
             window.location.hash
               .split('?')?.[1]
@@ -401,7 +420,7 @@ const App = () => {
         )
         const eocParam = searchParams.get('EOC')
         if (eocParam) {
-          localStorage.setItem('EOC', eocParam)
+          localStorageService.setItem('EOC', eocParam)
         }
 
         dispatch(setIsSigninOpen(true))
@@ -613,7 +632,8 @@ const App = () => {
               location.pathname.startsWith('/profile')
             ) &&
             location.pathname != '/') ||
-            (!location.pathname.startsWith('/quickclash') && !isLoggedIn)) && (
+            (!location.pathname.startsWith('/quickclash') && !isLoggedIn)) &&
+          !location.pathname.startsWith('/gamehub') && (
             <Suspense fallback={null}>
               {/* <Navbar onNavbarLoad={handleNavbarLoad} /> */}
               <ModernNavbar onNavbarLoad={handleNavbarLoad} />

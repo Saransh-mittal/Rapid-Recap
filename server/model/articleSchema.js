@@ -133,6 +133,7 @@ const articleSchema = new mongoose.Schema(
 
 articleSchema.index({ title: 1 }, { unique: true })
 articleSchema.index({ dateTime: 1 })
+articleSchema.index({ createdAt: -1 })
 articleSchema.pre('save', function (next) {
   if (this.author === null) {
     this.author = 'Rapid Recap Team'

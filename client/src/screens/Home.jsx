@@ -200,6 +200,17 @@ const Home = () => {
     ],
   )
 
+  const handleRefresh = useCallback(() => {
+    // Clear cache and reload data for current category
+    setPage(1)
+    setItems([])
+    setHasMoreItems(true)
+    loadingRef.current = false
+
+    // Fetch fresh data
+    fetchData(1, category)
+  }, [category, fetchData])
+
   useEffect(() => {
     if (!category || loginCheckStatus !== 'fulfilled') return
 
@@ -365,9 +376,7 @@ const Home = () => {
           setHasMoreItems={setHasMoreItems}
           setLoad={setLoad}
           onLoadMore={handleLoadMore}
-          fetchData={fetchData}
-          page={page}
-          setPage={setPage}
+          onRefresh={handleRefresh}
         />
       </React.Suspense>
 

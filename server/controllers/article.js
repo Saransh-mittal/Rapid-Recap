@@ -7,12 +7,12 @@ const {
   findQuizByLanguage,
 } = require('../utils/quiz.utils')
 const {
-  breakArticleIntoParagraphs,
   hindiConverter,
   fetchNews,
   processNews,
   extractNewsUtilityFunc,
   processArticlesWithPrivileges,
+  breakArticleIntoParagraphs,
 } = require('../utils/article.utils')
 const { sendNotification } = require('../services/notificationService')
 const {
@@ -49,7 +49,15 @@ const {
 const {
   processDetailedArticle,
 } = require('../services/articleServicesForEndUsers/articleDetailService')
-const { generateSearchVector } = require('../utils/search.utils')
+const {
+  generateSearchVector,
+  getTrendingSearchQueries,
+  normalizeQuery,
+  analyzeQueryIntent,
+  trackSearchAnalytics,
+  generateSearchSuggestions,
+  validateSearchParams,
+} = require('../utils/search.utils')
 const {
   getSearchResultsFromCache,
   cacheSearchResults,
@@ -541,55 +549,180 @@ const extractNews = async (req, res) => {
   }
 }
 
-// @desc    Search articles with pagination using vector search
+// @desc    Enterprise-grade search with semantic understanding and intelligent ranking
 // @route   GET /api/articles/search
 // @access  Protected
 const searchArticles = asyncHandler(async (req, res) => {
-  const { query, page = 1, limit = 10, category } = req.query
-  const pageNumber = parseInt(page)
-  const limitNumber = parseInt(limit)
+  const startTime = Date.now()
+  const {
+    query,
+    page = 1,
+    limit = 10,
+    category,
+    sortBy = 'relevance',
+  } = req.query
 
-  if (!query) {
-    return res.status(400).json({ message: 'Search query is required' })
+  // Input validation
+  const validation = validateSearchParams({ query, page, limit, category })
+  if (!validation.isValid) {
+    return res.status(400).json({
+      message: validation.errors[0],
+      suggestions: await getTrendingSearchQueries(),
+    })
   }
 
+  const { pageNumber, limitNumber, cleanQuery } = validation
+
   try {
-    // Check exact cache match first
-    const exactCacheResults = await getSearchResultsFromCache({
-      query,
+    // Smart caching with normalized queries
+    const normalizedQuery = normalizeQuery(cleanQuery)
+    const cacheKey = `search:${normalizedQuery}:${pageNumber}:${limitNumber}:${
+      category || 'all'
+    }:${sortBy}`
+
+    let cachedResults = await getSearchResultsFromCache({
+      query: normalizedQuery,
       page: pageNumber,
       limit: limitNumber,
       category,
     })
 
-    if (exactCacheResults) {
-      console.log('Exact cache match found')
-      return res.json(exactCacheResults)
+    if (cachedResults) {
+      return res.json({
+        ...cachedResults,
+        cached: true,
+        searchDuration: Date.now() - startTime,
+      })
     }
 
-    // Check cache for existing vector
-    let searchVector = await getVectorFromCache(query)
+    // Query intent analysis for better ranking
+    const queryIntent = analyzeQueryIntent(normalizedQuery)
 
+    // Intelligent search strategy selection
+    const vectorizedCount = await Article.countDocuments({
+      vectorized: true,
+      category: { $ne: 'onBoardingArticle' },
+    })
+
+    let searchResults
+    if (vectorizedCount > 50) {
+      searchResults = await executeOptimizedVectorSearch({
+        query: normalizedQuery,
+        queryIntent,
+        pageNumber,
+        limitNumber,
+        category,
+        sortBy,
+      })
+    } else {
+      searchResults = await executeEnhancedTextSearch({
+        query: normalizedQuery,
+        queryIntent,
+        pageNumber,
+        limitNumber,
+        category,
+        sortBy,
+      })
+    }
+
+    // Process and enhance results
+    const enhancedResults = await processSearchResults({
+      searchResults,
+      query: normalizedQuery,
+      pageNumber,
+      limitNumber,
+      userPreferences: req.user || null,
+    })
+
+    const searchDuration = Date.now() - startTime
+
+    // Final response with metadata
+    const finalResponse = {
+      ...enhancedResults,
+      searchDuration,
+      queryIntent: queryIntent.type,
+      cached: false,
+      searchType: searchResults.searchType,
+      avgRelevance: searchResults.avgRelevance,
+      suggestions:
+        enhancedResults.totalArticles === 0
+          ? await generateSearchSuggestions(normalizedQuery)
+          : null,
+    }
+
+    // Async operations (don't block response)
+    Promise.all([
+      cacheSearchResults({
+        query: normalizedQuery,
+        page: pageNumber,
+        limit: limitNumber,
+        category,
+        results: enhancedResults,
+      }),
+      trackSearchAnalytics({
+        query: normalizedQuery,
+        resultsCount: enhancedResults.totalArticles,
+        duration: searchDuration,
+        userId: req.user?._id,
+        category,
+      }),
+    ]).catch(err => console.error('Background operations failed:', err.message))
+
+    res.json(finalResponse)
+  } catch (error) {
+    console.error(`Search error for "${cleanQuery}":`, error.message)
+
+    // Graceful fallback
+    const fallbackResults = await executeBasicFallback({
+      query: cleanQuery,
+      pageNumber,
+      limitNumber,
+      category,
+    })
+
+    res.json({
+      ...fallbackResults,
+      fallback: true,
+      searchDuration: Date.now() - startTime,
+      error: 'Advanced search temporarily unavailable',
+    })
+  }
+})
+
+// Optimized vector search with performance improvements
+const executeOptimizedVectorSearch = async ({
+  query,
+  queryIntent,
+  pageNumber,
+  limitNumber,
+  category,
+  sortBy,
+}) => {
+  try {
+    // Efficient vector retrieval/generation
+    let searchVector = await getVectorFromCache(query)
     if (!searchVector) {
-      // Generate and cache vector if not found
       searchVector = await generateSearchVector({ searchQuery: query })
       await cacheVector(query, searchVector)
     }
 
-    // Get dates for time-based boosting
+    // Optimized time windows
     const now = new Date()
-    const oneDayAgo = new Date(now - 24 * 60 * 60 * 1000)
-    const threeDaysAgo = new Date(now - 3 * 24 * 60 * 60 * 1000)
-    const sevenDaysAgo = new Date(now - 7 * 24 * 60 * 60 * 1000)
+    const timeWindows = {
+      recent: new Date(now - 24 * 60 * 60 * 1000),
+      today: new Date(now - 48 * 60 * 60 * 1000),
+      week: new Date(now - 7 * 24 * 60 * 60 * 1000),
+    }
 
+    // Performance-optimized pipeline
     const pipeline = [
       {
         $vectorSearch: {
           index: 'vector_index',
           path: 'contentVector',
           queryVector: searchVector,
-          numCandidates: 2000,
-          limit: 1000,
+          numCandidates: Math.min(1000, limitNumber * 50), // Reduced for better performance
+          limit: Math.min(500, limitNumber * 25),
         },
       },
       {
@@ -597,76 +730,60 @@ const searchArticles = asyncHandler(async (req, res) => {
           vectorized: true,
           category: { $ne: 'onBoardingArticle' },
           ...(category && { category }),
+          ...(queryIntent.timePreference === 'recent' && {
+            dateTime: { $gte: timeWindows.recent.toISOString() },
+          }),
         },
       },
       {
         $addFields: {
+          vectorScore: { $meta: 'vectorSearchScore' },
           dateObj: { $dateFromString: { dateString: '$dateTime' } },
-          similarityScore: { $meta: 'vectorSearchScore' },
+
+          // Streamlined relevance calculation
           timeBoost: {
             $switch: {
               branches: [
-                {
-                  case: {
-                    $gte: [
-                      { $dateFromString: { dateString: '$dateTime' } },
-                      oneDayAgo,
-                    ],
-                  },
-                  then: 5,
-                },
-                {
-                  case: {
-                    $gte: [
-                      { $dateFromString: { dateString: '$dateTime' } },
-                      threeDaysAgo,
-                    ],
-                  },
-                  then: 3,
-                },
-                {
-                  case: {
-                    $gte: [
-                      { $dateFromString: { dateString: '$dateTime' } },
-                      sevenDaysAgo,
-                    ],
-                  },
-                  then: 2,
-                },
+                { case: { $gte: ['$dateObj', timeWindows.recent] }, then: 2.5 },
+                { case: { $gte: ['$dateObj', timeWindows.today] }, then: 2.0 },
+                { case: { $gte: ['$dateObj', timeWindows.week] }, then: 1.5 },
               ],
-              default: 1,
+              default: 1.0,
+            },
+          },
+
+          engagementBoost: {
+            $cond: {
+              if: { $gte: ['$quizAttemptCnt', 20] },
+              then: {
+                $add: [
+                  1.0,
+                  {
+                    $multiply: [{ $ln: { $add: ['$quizAttemptCnt', 1] } }, 0.1],
+                  },
+                ],
+              },
+              else: 1.0,
             },
           },
         },
       },
       {
         $addFields: {
-          finalScore: {
-            $multiply: [
-              {
-                $add: [
-                  { $multiply: ['$similarityScore', 0.8] },
-                  {
-                    $multiply: [
-                      {
-                        $divide: [
-                          { $subtract: ['$dateObj', new Date(0)] },
-                          1000 * 60 * 60 * 24,
-                        ],
-                      },
-                      0.2,
-                    ],
-                  },
-                ],
-              },
-              '$timeBoost',
-            ],
+          relevanceScore: {
+            $multiply: ['$vectorScore', '$timeBoost', '$engagementBoost'],
           },
         },
       },
-      { $sort: { finalScore: -1 } },
+      {
+        $sort:
+          sortBy === 'latest'
+            ? { dateTime: -1 }
+            : { relevanceScore: -1, dateTime: -1 },
+      },
     ]
 
+    // Parallel execution for better performance
     const [totalResults, articles] = await Promise.all([
       Article.aggregate([...pipeline, { $count: 'total' }]),
       Article.aggregate([
@@ -675,83 +792,354 @@ const searchArticles = asyncHandler(async (req, res) => {
         { $limit: limitNumber },
         {
           $project: {
-            url: 1,
-            dateTime: 1,
-            author: 1,
-            hindiAuthor: 1,
             title: 1,
-            hindiTitle: 1,
             mainText: 1,
-            hindiMainText: 1,
-            imgURL: 1,
-            quiz: 1,
-            userQuizStatus: 1,
+            author: 1,
+            dateTime: 1,
             category: 1,
-            relatedArticles: 1,
+            imgURL: 1,
             avgReadTime: 1,
             quizAttemptCnt: 1,
             _id: 1,
+            hindiTitle: 1,
+            hindiMainText: 1,
+            hindiAuthor: 1,
+            url: 1,
+            quiz: 1,
+            userQuizStatus: 1,
+            relatedArticles: 1,
+            relevanceScore: 1,
           },
         },
       ]),
     ])
 
-    const totalArticles = totalResults.length > 0 ? totalResults[0].total : 0
-    const totalPages = Math.ceil(totalArticles / limitNumber)
+    return {
+      articles,
+      totalCount: totalResults[0]?.total || 0,
+      searchType: 'vector',
+      avgRelevance:
+        articles.length > 0
+          ? (
+              articles.reduce((sum, a) => sum + (a.relevanceScore || 0), 0) /
+              articles.length
+            ).toFixed(3)
+          : 0,
+    }
+  } catch (error) {
+    console.error('Vector search failed:', error.message)
+    throw error
+  }
+}
+
+// Enhanced text search (unchanged - already optimized)
+const executeEnhancedTextSearch = async ({
+  query,
+  queryIntent,
+  pageNumber,
+  limitNumber,
+  category,
+  sortBy,
+}) => {
+  const queryTerms = query.split(' ').filter(term => term.length > 2)
+  const now = new Date()
+
+  const matchCondition = {
+    $and: [
+      {
+        $or: [
+          { title: { $regex: query, $options: 'i' } },
+          { mainText: { $regex: query, $options: 'i' } },
+          { keywords: { $in: queryTerms.map(term => new RegExp(term, 'i')) } },
+          { description: { $regex: query, $options: 'i' } },
+        ],
+      },
+      { category: { $ne: 'onBoardingArticle' } },
+      ...(category ? [{ category }] : []),
+      ...(queryIntent.timePreference === 'recent'
+        ? [
+            {
+              dateTime: {
+                $gte: new Date(now - 24 * 60 * 60 * 1000).toISOString(),
+              },
+            },
+          ]
+        : []),
+    ],
+  }
+
+  const pipeline = [
+    { $match: matchCondition },
+    {
+      $addFields: {
+        textScore: {
+          $add: [
+            {
+              $cond: [
+                {
+                  $regexMatch: { input: '$title', regex: query, options: 'i' },
+                },
+                4,
+                0,
+              ],
+            },
+            {
+              $cond: [
+                {
+                  $regexMatch: {
+                    input: '$mainText',
+                    regex: query,
+                    options: 'i',
+                  },
+                },
+                2,
+                0,
+              ],
+            },
+            {
+              $cond: [
+                {
+                  $regexMatch: {
+                    input: '$description',
+                    regex: query,
+                    options: 'i',
+                  },
+                },
+                1,
+                0,
+              ],
+            },
+          ],
+        },
+        daysSincePublished: {
+          $divide: [
+            {
+              $subtract: [
+                now,
+                { $dateFromString: { dateString: '$dateTime' } },
+              ],
+            },
+            86400000,
+          ],
+        },
+      },
+    },
+    {
+      $addFields: {
+        finalScore: {
+          $multiply: [
+            '$textScore',
+            {
+              $max: [
+                0.3,
+                { $subtract: [2, { $divide: ['$daysSincePublished', 7] }] },
+              ],
+            },
+            {
+              $add: [
+                1,
+                { $multiply: [{ $ln: { $add: ['$quizAttemptCnt', 1] } }, 0.1] },
+              ],
+            },
+          ],
+        },
+      },
+    },
+    {
+      $sort:
+        sortBy === 'latest'
+          ? { dateTime: -1 }
+          : { finalScore: -1, dateTime: -1 },
+    },
+  ]
+
+  const [totalResults, articles] = await Promise.all([
+    Article.aggregate([...pipeline, { $count: 'total' }]),
+    Article.aggregate([
+      ...pipeline,
+      { $skip: (pageNumber - 1) * limitNumber },
+      { $limit: limitNumber },
+      {
+        $project: {
+          title: 1,
+          mainText: 1,
+          author: 1,
+          dateTime: 1,
+          category: 1,
+          imgURL: 1,
+          avgReadTime: 1,
+          quizAttemptCnt: 1,
+          _id: 1,
+          hindiTitle: 1,
+          hindiMainText: 1,
+          hindiAuthor: 1,
+          url: 1,
+          quiz: 1,
+          userQuizStatus: 1,
+          relatedArticles: 1,
+          finalScore: 1,
+        },
+      },
+    ]),
+  ])
+
+  return {
+    articles,
+    totalCount: totalResults[0]?.total || 0,
+    searchType: 'enhanced_text',
+    avgRelevance:
+      articles.length > 0
+        ? (
+            articles.reduce((sum, a) => sum + (a.finalScore || 0), 0) /
+            articles.length
+          ).toFixed(3)
+        : 0,
+  }
+}
+
+// Result processing (unchanged - already optimized)
+const processSearchResults = async ({
+  searchResults,
+  query,
+  pageNumber,
+  limitNumber,
+  userPreferences,
+}) => {
+  const { articles, totalCount } = searchResults
+
+  let processedArticles = articles
+  if (userPreferences?.preferredCategories?.length > 0) {
+    processedArticles = articles.map(article => {
+      let personalizedScore = article.relevanceScore || article.finalScore || 1
+      if (userPreferences.preferredCategories.includes(article.category)) {
+        personalizedScore *= 1.15
+      }
+      return { ...article, personalizedScore }
+    })
+    processedArticles.sort(
+      (a, b) => (b.personalizedScore || 0) - (a.personalizedScore || 0),
+    )
+  }
+
+  const formattedArticles = await Promise.all(
+    processedArticles.map(async article => {
+      const paragraphs = await breakArticleIntoParagraphs(article.mainText)
+
+      return {
+        _id: article._id,
+        title: article.title,
+        mainText: paragraphs,
+        author: article.author,
+        dateTime: article.dateTime,
+        date: formatDate(article.dateTime),
+        category: article.category,
+        imgURL: Array.isArray(article.imgURL) ? article.imgURL[0] : '',
+        avgReadTime: article.avgReadTime || 3,
+        quizAttemptCnt: article.quizAttemptCnt || 0,
+        hindiTitle: article.hindiTitle,
+        hindiMainText: article.hindiMainText,
+        hindiAuthor: article.hindiAuthor,
+        url: article.url,
+        quiz: article.quiz,
+        userQuizStatus: article.userQuizStatus,
+        relatedArticles: article.relatedArticles,
+      }
+    }),
+  )
+
+  const totalPages = Math.ceil(totalCount / limitNumber)
+
+  return {
+    articles: formattedArticles,
+    currentPage: pageNumber,
+    totalPages,
+    totalArticles: totalCount,
+    hasMore: pageNumber < totalPages,
+    searchType: searchResults.searchType,
+    avgRelevance: searchResults.avgRelevance,
+  }
+}
+
+// Basic fallback (unchanged)
+const executeBasicFallback = async ({
+  query,
+  pageNumber,
+  limitNumber,
+  category,
+}) => {
+  try {
+    const matchCondition = {
+      $and: [
+        {
+          $or: [
+            { title: { $regex: query, $options: 'i' } },
+            { mainText: { $regex: query, $options: 'i' } },
+          ],
+        },
+        { category: { $ne: 'onBoardingArticle' } },
+        ...(category ? [{ category }] : []),
+      ],
+    }
+
+    const [totalCount, articles] = await Promise.all([
+      Article.countDocuments(matchCondition),
+      Article.find(matchCondition)
+        .select(
+          'title mainText author dateTime category imgURL avgReadTime quizAttemptCnt _id hindiTitle hindiMainText hindiAuthor url quiz userQuizStatus relatedArticles',
+        )
+        .sort({ dateTime: -1 })
+        .skip((pageNumber - 1) * limitNumber)
+        .limit(limitNumber)
+        .lean(),
+    ])
 
     const processedArticles = await Promise.all(
       articles.map(async article => {
         const paragraphs = await breakArticleIntoParagraphs(article.mainText)
         return {
-          category: article.category,
+          _id: article._id,
           title: article.title,
-          quizAttemptCnt: article.quizAttemptCnt,
           mainText: paragraphs,
           author: article.author,
-          imgURL: Array.isArray(article.imgURL) ? article.imgURL[0] : '',
-          hindiTitle: article?.hindiTitle,
-          hindiMainText: article?.hindiMainText,
-          hindiAuthor: article?.hindiAuthor,
-          avgReadTime: article?.avgReadTime,
-          date: formatDate(article.dateTime),
           dateTime: article.dateTime,
-          _id: article._id,
+          date: formatDate(article.dateTime),
+          category: article.category,
+          imgURL: Array.isArray(article.imgURL) ? article.imgURL[0] : '',
+          avgReadTime: article.avgReadTime || 3,
+          quizAttemptCnt: article.quizAttemptCnt || 0,
+          hindiTitle: article.hindiTitle,
+          hindiMainText: article.hindiMainText,
+          hindiAuthor: article.hindiAuthor,
+          url: article.url,
+          quiz: article.quiz,
+          userQuizStatus: article.userQuizStatus,
+          relatedArticles: article.relatedArticles,
         }
       }),
     )
 
-    const results = {
+    const totalPages = Math.ceil(totalCount / limitNumber)
+
+    return {
       articles: processedArticles,
       currentPage: pageNumber,
       totalPages,
-      totalArticles,
+      totalArticles: totalCount,
       hasMore: pageNumber < totalPages,
+      searchType: 'fallback',
     }
-
-    // Cache the results
-    await cacheSearchResults({
-      query,
-      page: pageNumber,
-      limit: limitNumber,
-      category,
-      results,
-    })
-
-    res.json(results)
   } catch (error) {
-    console.error('Error in searchArticles:', error)
-    if (error.code === 40602) {
-      return res.status(400).json({
-        message:
-          'Vector search is not properly configured. Please ensure vector index is created.',
-      })
+    console.error('Basic fallback failed:', error.message)
+    return {
+      articles: [],
+      currentPage: pageNumber,
+      totalPages: 0,
+      totalArticles: 0,
+      hasMore: false,
+      searchType: 'error',
     }
-    if (error.name === 'VectorSearchError') {
-      return res.status(400).json({ message: 'Invalid search parameters' })
-    }
-    res.status(500).json({ message: 'Server error while searching articles' })
   }
-})
+}
 
 // @desc    Update an article
 // @route   PUT /api/admin/articles/:id
@@ -1355,7 +1743,7 @@ const updateOnBoardingArticle = asyncHandler(async (req, res) => {
   }
 })
 
-// @desc Get a random onboarding article with one quiz question
+// @desc Get a random onboarding article with one quiz question (Modified to check existing attempts)
 // @route GET /api/articles/onboarding
 // @access Private
 const getRandomOnBoardingArticle = asyncHandler(async (req, res) => {
@@ -1388,36 +1776,78 @@ const getRandomOnBoardingArticle = asyncHandler(async (req, res) => {
       },
     ])
   } else {
-    // Get user's preferred categories
-    const userCategories =
-      user?.preferredCategories?.map(pc => pc.category) || []
+    // NEW: Check if user has any existing quiz attempts on onboarding articles
+    const existingAttempt = await QuizAttempt.findOne({
+      user: userId,
+    })
+      .populate({
+        path: 'article',
+        match: { category: 'onBoardingArticle' },
+        select: '_id category onBoardingArticleCategory',
+      })
+      .sort({ createdAt: -1 }) // Get the most recent attempt
+      .lean()
 
-    if (!userCategories.length) {
-      return res.status(400).json({ message: 'No preferred categories found' })
+    // If user has an existing attempt on an onboarding article, use that article
+    if (existingAttempt && existingAttempt.article) {
+      article = await Article.aggregate([
+        {
+          $match: {
+            _id: new mongoose.Types.ObjectId(existingAttempt.article._id),
+          },
+        },
+        {
+          $project: {
+            _id: 1,
+            title: userLanguage === 'hi' ? '$hindiTitle' : '$title',
+            mainText: userLanguage === 'hi' ? '$hindiMainText' : '$mainText',
+            author: userLanguage === 'hi' ? '$hindiAuthor' : '$author',
+            dateTime: 1,
+            imgURL: 1,
+            avgReadTime: 1,
+            description: 1,
+          },
+        },
+      ])
+    } else {
+      // No existing attempts found, proceed with original logic
+      console.log(
+        `No existing onboarding attempts for user ${userId}, selecting random article`,
+      )
+
+      // Get user's preferred categories
+      const userCategories =
+        user?.preferredCategories?.map(pc => pc.category) || []
+
+      if (!userCategories.length) {
+        return res
+          .status(400)
+          .json({ message: 'No preferred categories found' })
+      }
+
+      // Get random article from user's preferred categories
+      article = await Article.aggregate([
+        {
+          $match: {
+            category: 'onBoardingArticle',
+            onBoardingArticleCategory: { $in: userCategories },
+          },
+        },
+        { $sample: { size: 1 } },
+        {
+          $project: {
+            _id: 1,
+            title: userLanguage === 'hi' ? '$hindiTitle' : '$title',
+            mainText: userLanguage === 'hi' ? '$hindiMainText' : '$mainText',
+            author: userLanguage === 'hi' ? '$hindiAuthor' : '$author',
+            dateTime: 1,
+            imgURL: 1,
+            avgReadTime: 1,
+            description: 1,
+          },
+        },
+      ])
     }
-
-    // Get random article from user's preferred categories
-    article = await Article.aggregate([
-      {
-        $match: {
-          category: 'onBoardingArticle',
-          onBoardingArticleCategory: { $in: userCategories },
-        },
-      },
-      { $sample: { size: 1 } },
-      {
-        $project: {
-          _id: 1,
-          title: userLanguage === 'hi' ? '$hindiTitle' : '$title',
-          mainText: userLanguage === 'hi' ? '$hindiMainText' : '$mainText',
-          author: userLanguage === 'hi' ? '$hindiAuthor' : '$author',
-          dateTime: 1,
-          imgURL: 1,
-          avgReadTime: 1,
-          description: 1,
-        },
-      },
-    ])
   }
 
   if (article.length === 0) {

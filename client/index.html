@@ -24,6 +24,8 @@
   <!-- DNS prefetch -->
   <link rel="dns-prefetch" href="https://fonts.gstatic.com">
   <link rel="dns-prefetch" href="https://fonts.googleapis.com">
+  <!-- 🚀 OPTIMIZATION: Add DNS prefetch for Microsoft Clarity -->
+  <link rel="dns-prefetch" href="https://www.clarity.ms">
 
   <!-- Critical Resources Preload - high priority assets required for initial render -->
   <link rel="preload" href="/src/entry-client.jsx" as="script" fetchpriority="high">
@@ -31,6 +33,19 @@
   <link rel="preload" href="/styles/main.css" as="style">
   <link rel="preload" href="/images/rrlogo_512.png" as="image" fetchpriority="high">
   <link rel="preload" href="/images/rrlogo.webp" as="image" fetchpriority="high">
+
+  <!-- 🔥 CRITICAL OPTIMIZATION: Preload bundled translation files -->
+  <link rel="preload" href="/locales/bundled/en/all.json" as="fetch" crossorigin fetchpriority="high">
+  <link rel="preload" href="/locales/bundled/hi/all.json" as="fetch" crossorigin>
+
+  <!-- Microsoft Clarity - keeping in head as requested -->
+  <script type="text/javascript">
+    (function(c,l,a,r,i,t,y){
+        c[a]=c[a]||function(){(c[a].q=c[a].q||[]).push(arguments)};
+        t=l.createElement(r);t.async=1;t.src="https://www.clarity.ms/tag/"+i;
+        y=l.getElementsByTagName(r)[0];y.parentNode.insertBefore(t,y);
+    })(window, document, "clarity", "script", "sd2t5c3mee");
+  </script>
 
   <!-- Secondary Resources Preload - important but can load after initial render -->
   <link rel="preload" href="/src/redux/store.js" as="script">
@@ -45,7 +60,6 @@
   <link rel="manifest" href="/manifest.json">
   <link rel="apple-touch-icon" href="/images/rrlogo_512.png">
   <link rel="icon" type="image/webp" href="/images/rrlogo.webp">
-
 
   <!-- Add to index.html -->
 <script type="application/ld+json">

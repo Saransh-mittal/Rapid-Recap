@@ -215,7 +215,7 @@ const Contact = () => {
                 </Suspense>
                 {t('linkedin_label')}{' '}
                 <Link
-                  href="https://www.linkedin.com/company/rrapidrecap/"
+                  href="https://www.linkedin.com/company/rapid-recap-ai/"
                   isExternal
                   color="teal.200"
                 >

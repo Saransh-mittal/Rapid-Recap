@@ -1,37 +1,38 @@
-// scheduler/tasks/fetchIndoPakNews.js
-const SpecialCategory = require('../../model/specialCategorySchema')
+// scheduler/tasks/fetchAINews.js
 const {
   runScraper,
   processScrapedArticles,
-} = require('../../utils/indoPakNewsRunner')
-const { mailTransporter } = require('../../utils/mail.utils')
+} = require('../../../utils/scraper.utils/aiNewsRunner')
+const SpecialCategory = require('../../../model/specialCategorySchema')
+
+const { mailTransporter } = require('../../../utils/mail.utils')
 
 /**
- * Fetch Indo-Pak news for the designated special category
+ * Fetch AI news for the designated special category
  */
-const fetchIndoPakNews = async () => {
+const fetchAINews = async () => {
   try {
-    console.log('Starting scheduled Indo-Pak news fetch...')
+    console.log('Starting scheduled AI news fetch...')
 
-    // Find the active Indo-Pak news special category
+    // Find the active AI news special category
     const now = new Date()
     const specialCategory = await SpecialCategory.findOne({
-      key: 'indo-pak',
+      key: 'ai',
       isActive: true,
       startDate: { $lte: now },
       endDate: { $gte: now },
     })
 
     if (!specialCategory) {
-      console.log('No active Indo-Pak special category found. Skipping fetch.')
+      console.log('No active AI news special category found. Skipping fetch.')
       return
     }
 
-    // Run the scraper
+    // Run the AI news scraper
     const articles = await runScraper(specialCategory.key)
 
     if (!articles || articles.length === 0) {
-      console.log('No articles found by the Indo-Pak scraper')
+      console.log('No articles found by the AI news scraper')
       return
     }
 
@@ -43,7 +44,7 @@ const fetchIndoPakNews = async () => {
     await specialCategory.save()
 
     console.log(
-      `Indo-Pak news fetch completed. Added: ${results.added}, Duplicates: ${results.duplicates}, Errors: ${results.errors}`,
+      `AI news fetch completed. Added: ${results.added}, Duplicates: ${results.duplicates}, Errors: ${results.errors}`,
     )
 
     // Send notification email if articles were added
@@ -53,13 +54,13 @@ const fetchIndoPakNews = async () => {
 
     return results
   } catch (error) {
-    console.error('Error in Indo-Pak news fetch:', error)
+    console.error('Error in AI news fetch:', error)
     throw error
   }
 }
 
 /**
- * Send notification email about the fetch results
+ * Send notification email about the AI news fetch results
  */
 const sendNotificationEmail = async (category, results, totalFetched) => {
   try {
@@ -72,21 +73,22 @@ const sendNotificationEmail = async (category, results, totalFetched) => {
   <style>
     body { font-family: Arial, sans-serif; line-height: 1.6; }
     .container { max-width: 600px; margin: 0 auto; padding: 20px; }
-    .header { background-color: #4a2e69; color: white; padding: 10px; text-align: center; }
-    .content { padding: 20px; background-color: #f9f9f9; }
+    .header { background-color: #2d3748; color: white; padding: 10px; text-align: center; }
+    .content { padding: 20px; background-color: #f7fafc; }
     .stats { margin-bottom: 15px; padding: 10px; background-color: #fff; border-radius: 5px; }
-    .success { color: #28a745; }
-    .warning { color: #ffc107; }
-    .error { color: #dc3545; }
+    .success { color: #38a169; }
+    .warning { color: #d69e2e; }
+    .error { color: #e53e3e; }
+    .ai-icon { font-size: 24px; margin-right: 10px; }
   </style>
 </head>
 <body>
   <div class="container">
     <div class="header">
-      <h2>Indo-Pak News Update</h2>
+      <h2><span class="ai-icon">🤖</span>AI News Update</h2>
     </div>
     <div class="content">
-      <p>The system has completed a scheduled fetch of Indo-Pak news articles. Here's a summary:</p>
+      <p>The system has completed a scheduled fetch of AI news articles. Here's a summary:</p>
 
       <div class="stats">
         <h3>${category.name} Category Update</h3>
@@ -113,7 +115,7 @@ const sendNotificationEmail = async (category, results, totalFetched) => {
           : ''
       }
 
-      <p>This is an automated message. Please do not reply to this email.</p>
+      <p>This is an automated message from the AI News Monitoring System. Please do not reply to this email.</p>
     </div>
   </div>
 </body>
@@ -123,14 +125,14 @@ const sendNotificationEmail = async (category, results, totalFetched) => {
     await transporter.sendMail({
       from: 'rapidrecap2k23@gmail.com',
       to: '20ucs174@lnmiit.ac.in', // Change to your admin email
-      subject: `Indo-Pak News Update: ${results.added} articles added`,
+      subject: `🤖 AI News Update: ${results.added} articles added`,
       html: htmlContent,
     })
 
-    console.log('Indo-Pak news fetch notification email sent')
+    console.log('AI news fetch notification email sent')
   } catch (error) {
-    console.error('Error sending notification email:', error)
+    console.error('Error sending AI news notification email:', error)
   }
 }
 
-module.exports = fetchIndoPakNews
+module.exports = fetchAINews
