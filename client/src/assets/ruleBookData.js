@@ -31,6 +31,20 @@ export const getRuleBookPages = () => [
     },
   },
   {
+    id: 'quick-clash',
+    title: i18n.t('rulebook:quick-clash.title'),
+    content: {
+      ...createSection(
+        'rulebook:quick-clash.sections.1v1-battle.title',
+        'rulebook:quick-clash.sections.1v1-battle.items',
+      ),
+      ...createSection(
+        'rulebook:quick-clash.sections.4v4-battle.title',
+        'rulebook:quick-clash.sections.4v4-battle.items',
+      ),
+    },
+  },
+  {
     id: 'rqm-score',
     title: i18n.t('rulebook:rqm-score.title'),
     content: {
@@ -63,19 +77,16 @@ export const getRuleBookPages = () => [
     title: i18n.t('rulebook:boosters.title'),
     content: {
       ...createSection(
-        'rulebook:boosters.sections.quin-boost.title',
-        'rulebook:boosters.sections.quin-boost.items',
+        'rulebook:boosters.sections.abilities.title',
+        'rulebook:boosters.sections.abilities.items',
       ),
       ...createSection(
-        'rulebook:boosters.sections.streak-surge.title',
-        'rulebook:boosters.sections.streak-surge.items',
-      ),
-      ...createSection(
-        'rulebook:boosters.sections.maximum-power.title',
-        'rulebook:boosters.sections.maximum-power.items',
+        'rulebook:boosters.sections.multipliers.title',
+        'rulebook:boosters.sections.multipliers.items',
       ),
     },
   },
+
   {
     id: 'tournament',
     title: i18n.t('rulebook:tournament.title'),
@@ -83,6 +94,10 @@ export const getRuleBookPages = () => [
       ...createSection(
         'rulebook:tournament.sections.schedule.title',
         'rulebook:tournament.sections.schedule.items',
+      ),
+      ...createSection(
+        'rulebook:tournament.sections.championship.title',
+        'rulebook:tournament.sections.championship.items',
       ),
     },
   },

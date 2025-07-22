@@ -64,6 +64,61 @@
       }
     }
   },
+  "quick-clash": {
+    "title": "Quick Clash",
+    "sections": {
+      "1v1-battle": {
+        "title": "1v1 Battle",
+        "items": {
+          "matchmaking": {
+            "text": "Random Matchmaking",
+            "explanation": "Jump into the queue and get instantly matched with a random opponent from around the world to test your skills.",
+            "hasDetails": true
+          },
+          "gameplay": {
+            "text": "Article & Quiz",
+            "explanation": "Once the battle starts, both players receive the same random article. Read quickly and answer the quiz questions.",
+            "hasDetails": true
+          },
+          "winning-condition": {
+            "text": "Highest RQM Wins",
+            "explanation": "The winner is decided by the highest RQM score, which combines accuracy and speed. Every second counts!",
+            "hasDetails": true
+          },
+          "rewards": {
+            "text": "Trophy System",
+            "explanation": "Victory earns you trophies, helping you climb the ranks. Be careful, as losing a battle will cost you trophies.",
+            "hasDetails": true
+          }
+        }
+      },
+      "4v4-battle": {
+        "title": "4v4 Battle",
+        "items": {
+          "teaming-up": {
+            "text": "Team Formation",
+            "explanation": "You can queue for a 4v4 battle solo, with a partner, in a team of three, or as a full squad of four.",
+            "hasDetails": true
+          },
+          "category-lock": {
+            "text": "Category Lock-in",
+            "explanation": "The battle features four different article categories. Each player on the team locks in a category to compete in.",
+            "hasDetails": true
+          },
+          "scoring": {
+            "text": "Round-Based Scoring",
+            "explanation": "Each individual player's duel contributes to the team's score. The first team to win three rounds wins the match.",
+            "hasDetails": true
+          },
+          "tie-breaker": {
+            "text": "Tie-Breaker Rule",
+            "explanation": "If the match ends in a 2-2 tie, the team with the higher total RQM score from all four battles is declared the winner.",
+            "hasDetails": true
+          }
+        }
+      }
+    }
+  },
   "rqm-score": {
     "title": "RQM Score",
     "sections": {
@@ -155,55 +210,45 @@
     }
   },
   "boosters": {
-    "title": "Boosters & Multipliers",
+    "title": "Boosters, Multipliers & Abilities",
     "sections": {
-      "quin-boost": {
-        "title": "Quin Boost",
+      "abilities": {
+        "title": "Abilities",
         "items": {
-          "trigger": {
-            "text": "Trigger: Complete 5 consecutive quizzes",
-            "explanation": "The Quin Boost activates after completing 5 quizzes in sequence, rewarding sustained engagement.",
+          "category-boost": {
+            "text": "Category Boost",
+            "explanation": "Increases your RQM score by 1.25x when taking quizzes in that specific category.",
             "hasDetails": true
           },
-          "reward": {
-            "text": "Reward: 1.5x RQM multiplier on 6th quiz",
-            "explanation": "Your 6th quiz receives a powerful 1.5x multiplier to your RQM score.",
+          "category-radar": {
+            "text": "Category Radar",
+            "explanation": "Reveals the difficulty level of articles in that specific category before you take the quiz.",
+            "hasDetails": true
+          },
+          "time-dilation": {
+            "text": "Time Dilation",
+            "explanation": "Adds +30 seconds to your quiz time without affecting scoring, earned after scoring 40+ in two back-to-back quizzes.",
             "hasDetails": true
           }
         }
       },
-      "streak-surge": {
-        "title": "Streak Surge",
+      "multipliers": {
+        "title": "Multipliers",
         "items": {
-          "trigger": {
-            "text": "Trigger: Maintain 7-day streak",
-            "explanation": "A week of consistent daily activity unlocks the Streak Surge.",
+          "streak-surge": {
+            "text": "Streak Surge",
+            "explanation": "A 1.5x RQM multiplier for all quizzes taken on the 7th consecutive day of your quiz streak.",
             "hasDetails": true
           },
-          "reward": {
-            "text": "Reward: 1.5x RQM for the entire day",
-            "explanation": "Enjoy a 1.5x multiplier on all quizzes for a full day!",
-            "hasDetails": true
-          }
-        }
-      },
-      "maximum-power": {
-        "title": "Maximum Power",
-        "items": {
-          "max-multiplier": {
-            "text": "Combined maximum multiplier: 2x",
-            "explanation": "The system caps total multipliers at 2x to maintain balance.",
+          "quin-boost": {
+            "text": "QuinBoost",
+            "explanation": "A 1.5x RQM boost for your next quiz, earned after every 5 quiz attempts in a single day.",
             "hasDetails": true
           },
-          "requirements": {
-            "text": "Requires active Quin Boost + Streak Surge + Category boost",
-            "explanation": "Achieving maximum multiplication requires careful timing and activation of multiple boost types.",
+          "quiz-boost": {
+            "text": "QuizBoost",
+            "explanation": "A general 1.5x boost for any quiz, often rewarded to new users or via referral bonuses.",
             "hasDetails": true
-          },
-          "per-attempt": {
-            "text": "Applied per quiz attempt",
-            "explanation": "Each quiz calculates its multiplier independently.",
-            "hasDetails": false
           }
         }
       }
