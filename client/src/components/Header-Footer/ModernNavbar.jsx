@@ -1,4 +1,4 @@
-// ModernNavbar.js
+// ModernNavbar.js with immersive mode functionality
 import React, { useCallback, useEffect, useMemo, useState } from 'react'
 import {
   Badge,
@@ -64,9 +64,15 @@ const ModernNavbar = ({ onNavbarLoad }) => {
   const isToken = useCallback(() => localStorage.getItem('token'), [])
   const [notifyCont, setNotifyCnt] = useState(0)
   const [scrollOpacity, setScrollOpacity] = useState(0.95)
+
+  // Auth and app state
   const { isAuthenticated, user, loginCheckStatus } = useSelector(
     state => state.auth,
   )
+
+  // NEW: Get immersive mode state from articles slice
+  const { isImmersiveModeActive } = useSelector(state => state.articles)
+
   const [isLoggingOut, setIsLoggingOut] = useState(false)
   const { level } = user ? user : {}
   const {
@@ -103,7 +109,6 @@ const ModernNavbar = ({ onNavbarLoad }) => {
   const navItems = useMemo(
     () => [
       { label: t('home'), path: '/home' },
-      // { label: t('tournament'), path: '/tournament' },
       { label: t('leaderboard'), path: '/leaderboard' },
       { label: t('hallOfChampions'), path: '/hall-of-champions' },
     ],
@@ -317,13 +322,29 @@ const ModernNavbar = ({ onNavbarLoad }) => {
       position="fixed"
       top={2}
       left="50%"
-      transform="translateX(-50%) !important"
       width="95%"
       maxW="1400px"
       zIndex={1000}
-      initial={{ y: -20, opacity: 0 }}
-      animate={{ y: 0, opacity: 1 }}
-      transition={{ duration: 0.3 }}
+      initial={{
+        x: '-50%',
+        y: 0,
+        opacity: 0,
+      }}
+      animate={{
+        x: '-50%',
+        // NEW: Conditional Y position based on immersive mode
+        y: isImmersiveModeActive ? -120 : 0,
+        opacity: isImmersiveModeActive ? 0 : 1,
+      }}
+      transition={{
+        duration: 0.5,
+        ease: [0.4, 0.0, 0.2, 1], // Custom easing for smooth feel
+        opacity: { duration: 0.3 }, // Slightly faster opacity transition
+      }}
+      // NEW: Additional styles for better immersive experience
+      style={{
+        pointerEvents: isImmersiveModeActive ? 'none' : 'auto',
+      }}
     >
       {/* Add fade overlay */}
       <Box
@@ -345,6 +366,8 @@ const ModernNavbar = ({ onNavbarLoad }) => {
           WebkitMaskImage:
             'linear-gradient(to bottom, black 20%, transparent 100%)',
         }}
+        // NEW: Hide overlay in immersive mode
+        opacity={isImmersiveModeActive ? 0 : 1}
       />
       <Flex
         bg="rgba(62, 59, 80, 0.65)"
@@ -367,7 +390,6 @@ const ModernNavbar = ({ onNavbarLoad }) => {
           right: 0,
           bottom: 0,
           borderRadius: 'inherit',
-          // Simplified pseudo-element background
           bg: 'rgba(22, 19, 40, 0.85)',
           border: '1px solid rgba(255, 255, 255, 0.08)',
           boxShadow: '0 4px 30px rgba(0, 0, 0, 0.1)',

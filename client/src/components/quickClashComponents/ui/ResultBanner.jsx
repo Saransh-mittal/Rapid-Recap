@@ -13,15 +13,20 @@ import {
 import { motion } from 'framer-motion'
 import { useTranslation } from 'react-i18next'
 import { Trophy, Shield, Swords, AlertCircle } from 'lucide-react'
+import { css } from '@emotion/react'
 
 const MotionFlex = motion(Flex)
 const MotionButton = motion(Button)
 
 // Define keyframe animations for shine effect
-const resultBannerAnimations = `
+const resultBannerAnimations = css`
   @keyframes shineEffect {
-    0% { background-position: -100% 0; }
-    100% { background-position: 200% 0; }
+    0% {
+      background-position: -100% 0;
+    }
+    100% {
+      background-position: 200% 0;
+    }
   }
 `
 

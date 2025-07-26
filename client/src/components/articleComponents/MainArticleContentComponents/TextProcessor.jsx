@@ -1,52 +1,9 @@
+// client/src/components/articleComponents/MainArticleContentComponents/TextProcessor.jsx
+// FIXED VERSION: Better text processing with pagination-friendly formatting
+
 import React from 'react'
 import { Box } from '@chakra-ui/react'
 import { HighlightedWordsContext } from '../../../contextAPI/MainArticleProvider'
-
-// const processTextWithBold = text => {
-//   if (!text) return text
-//   if (typeof text !== 'string') return text
-
-//   // First get all matches to preserve their positions
-//   const matches = [...text.matchAll(/(\*\*[^*]+\*\*|#\w+)/g)]
-//   if (!matches.length) return text
-
-//   const result = []
-//   let lastIndex = 0
-
-//   matches.forEach((match, index) => {
-//     const [fullMatch] = match
-//     const startIndex = match.index
-
-//     // Add text before the match
-//     if (startIndex > lastIndex) {
-//       result.push(text.slice(lastIndex, startIndex))
-//     }
-
-//     // Add the formatted element
-//     if (fullMatch.startsWith('**')) {
-//       result.push(
-//         <Box as="span" key={`bold-${index}`} fontWeight="bold" color="white">
-//           {fullMatch.slice(2, -2)}
-//         </Box>,
-//       )
-//     } else if (fullMatch.startsWith('#')) {
-//       result.push(
-//         <Box as="span" key={`hash-${index}`} fontWeight="bold" color="white">
-//           {fullMatch.slice(1)}
-//         </Box>,
-//       )
-//     }
-
-//     lastIndex = startIndex + fullMatch.length
-//   })
-
-//   // Add remaining text
-//   if (lastIndex < text.length) {
-//     result.push(text.slice(lastIndex))
-//   }
-
-//   return result
-// }
 
 const DictionaryWord = React.memo(({ word, part, stableRef }) => {
   const { handleMouseEnter, handleMouseLeave, handleTouchStart } =
@@ -194,6 +151,7 @@ const highlightKeywords = (
   )
 }
 
+// FIXED: Better important sentence processing with spacing considerations
 const processImportantSentences = (content, importantSentences) => {
   if (!content || !importantSentences.length) return content
 
@@ -223,7 +181,7 @@ const processImportantSentences = (content, importantSentences) => {
   // Sort matches by position
   matches.sort((a, b) => a.start - b.start)
 
-  // Build components with highlighted sections
+  // Build components with highlighted sections and better spacing
   matches.forEach((match, index) => {
     if (match.start > lastIndex) {
       // Process non-highlighted text for bold
@@ -232,19 +190,20 @@ const processImportantSentences = (content, importantSentences) => {
       )
     }
 
-    // Process highlighted text for bold while maintaining the highlight
+    // FIXED: Better spacing for important sentences
     components.push(
       <Box
         key={`important-${index}`}
         as="span"
         display="inline-block"
         px={3}
-        py={1}
-        my={1}
+        py={2} // Increased padding
+        my={2} // Increased margin
         mx={1}
         bg="linear-gradient(135deg, rgba(236, 201, 75, 0.08), rgba(236, 201, 75, 0.15))"
         borderRadius="lg"
         position="relative"
+        minH="auto" // Allow natural height
         _before={{
           content: '""',
           position: 'absolute',
@@ -272,6 +231,7 @@ const processImportantSentences = (content, importantSentences) => {
   return components
 }
 
+// FIXED: Better bold text processing
 const processTextWithBold = text => {
   if (!text) return text
   if (typeof text !== 'string') return text
@@ -287,7 +247,7 @@ const processTextWithBold = text => {
       parts.push(text.substring(lastIndex, match.index))
     }
 
-    // Process bold/hash text
+    // Process bold/hash text with better spacing
     const [fullMatch] = match
     if (fullMatch.startsWith('**')) {
       parts.push(
@@ -296,6 +256,7 @@ const processTextWithBold = text => {
           key={`bold-${match.index}`}
           fontWeight="bold"
           color="white"
+          px={1} // Add slight padding for better readability
         >
           {fullMatch.slice(2, -2)}
         </Box>,
@@ -307,6 +268,7 @@ const processTextWithBold = text => {
           key={`hash-${match.index}`}
           fontWeight="bold"
           color="white"
+          px={1} // Add slight padding for better readability
         >
           {fullMatch.slice(1)}
         </Box>,

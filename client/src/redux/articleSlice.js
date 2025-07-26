@@ -1,4 +1,4 @@
-// Enhanced articleSlice.js to handle new search metadata
+// Enhanced articleSlice.js with immersive mode functionality
 // File: redux/articleSlice.js
 
 import { createSlice, createAsyncThunk } from '@reduxjs/toolkit'
@@ -29,7 +29,9 @@ const articleSlice = createSlice({
     searchLoading: false,
     searchTerm: '',
     totalUsersGivenQuiz: 0,
-    // New search metadata
+    // NEW: Immersive mode state
+    isImmersiveModeActive: false,
+    // Search metadata
     searchMetadata: {
       searchType: null,
       searchDuration: null,
@@ -63,6 +65,10 @@ const articleSlice = createSlice({
     },
     setTotalUsersGivenQuiz: (state, action) => {
       state.totalUsersGivenQuiz = action.payload
+    },
+    // NEW: Immersive mode actions
+    setImmersiveModeActive: (state, action) => {
+      state.isImmersiveModeActive = action.payload
     },
   },
   extraReducers: builder => {
@@ -123,6 +129,7 @@ export const {
   setSearchTerm,
   setArticleData,
   setTotalUsersGivenQuiz,
+  setImmersiveModeActive,
 } = articleSlice.actions
 
 export default articleSlice.reducer

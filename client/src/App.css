@@ -897,3 +897,318 @@ section {
 .shadow-text {
   text-shadow: 2px 2px 4px rgba(0,0,0,0.5);
 }
+
+
+/* CSS Optimizations for Smooth Animations */
+/* Location: client/src/styles/smoothAnimations.css */
+/* This is a new CSS file to be created and imported in your main CSS or index.css */
+
+/* Hardware acceleration for all animated elements */
+.smooth-animation {
+  will-change: transform, opacity;
+  backface-visibility: hidden;
+  -webkit-backface-visibility: hidden;
+  transform: translateZ(0);
+  -webkit-transform: translateZ(0);
+  /* Ensure smoothness on high-DPI displays */
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+/* Optimized container for full-screen animations */
+.game-mode-container {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  width: 100vw;
+  height: 100vh;
+  overflow: hidden;
+  background: linear-gradient(135deg, #1a202c 0%, #2d3748 100%);
+
+  /* Hardware acceleration */
+  will-change: transform, opacity;
+  backface-visibility: hidden;
+  -webkit-backface-visibility: hidden;
+  transform: translateZ(0);
+  -webkit-transform: translateZ(0);
+
+  /* LIGHTWEIGHT: Only prevent overscroll, don't interfere with touch */
+  overscroll-behavior: none;
+  -webkit-overscroll-behavior: none;
+  overscroll-behavior-y: none;
+  -webkit-overscroll-behavior-y: none;
+
+  /* Prevent layout shifts */
+  contain: layout style paint;
+
+  /* Smooth transitions */
+  transition: opacity 0.3s ease-out;
+}
+
+/* Optimized page transitions */
+.page-transition {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  width: 100%;
+  height: 100vh;
+
+  /* Critical for smooth animations */
+  will-change: transform, opacity;
+  backface-visibility: hidden;
+  -webkit-backface-visibility: hidden;
+  transform: translateZ(0);
+  -webkit-transform: translateZ(0);
+
+  /* Prevent sub-pixel rendering issues */
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+
+  /* GPU composite layer */
+  transform-style: preserve-3d;
+  -webkit-transform-style: preserve-3d;
+}
+
+/* Smooth scrolling optimizations */
+.smooth-scroll-container {
+  scroll-behavior: smooth;
+  -webkit-overflow-scrolling: touch;
+  overscroll-behavior: contain;
+
+  /* Custom scrollbar for better UX */
+  scrollbar-width: thin;
+  scrollbar-color: rgba(159, 122, 234, 0.8) rgba(255, 255, 255, 0.1);
+}
+
+.smooth-scroll-container::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+
+.smooth-scroll-container::-webkit-scrollbar-track {
+  background: rgba(255, 255, 255, 0.1);
+  border-radius: 3px;
+}
+
+.smooth-scroll-container::-webkit-scrollbar-thumb {
+  background: linear-gradient(180deg, rgba(159, 122, 234, 0.8), rgba(214, 158, 46, 0.8));
+  border-radius: 3px;
+  transition: background 0.3s ease;
+}
+
+.smooth-scroll-container::-webkit-scrollbar-thumb:hover {
+  background: linear-gradient(180deg, rgba(159, 122, 234, 1), rgba(214, 158, 46, 1));
+}
+
+/* Optimized backdrop blur */
+.optimized-backdrop {
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  background-color: rgba(0, 0, 0, 0.4);
+
+  /* Fallback for older browsers */
+  @supports not (backdrop-filter: blur(20px)) {
+    background-color: rgba(0, 0, 0, 0.7);
+  }
+}
+
+/* Progress bar animation optimizations */
+.smooth-progress-bar {
+  position: relative;
+  height: 2px;
+  background: rgba(255, 255, 255, 0.15);
+  border-radius: 9999px;
+  overflow: hidden;
+
+  /* Ensure smooth width transitions */
+  contain: layout style paint;
+}
+
+.smooth-progress-fill {
+  height: 100%;
+  background: linear-gradient(90deg, #9F7AEA, #D69E2E);
+  border-radius: 9999px;
+  box-shadow: 0 0 12px rgba(159, 122, 234, 0.4);
+
+  /* Critical for smooth width animations */
+  will-change: width;
+  transform: translateZ(0);
+  -webkit-transform: translateZ(0);
+
+  /* Smooth width transitions */
+  transition: width 0.4s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+}
+
+/* Touch optimization for mobile */
+.touch-optimized {
+  touch-action: manipulation;
+  -webkit-touch-callout: none;
+  -webkit-user-select: none;
+  -khtml-user-select: none;
+  -moz-user-select: none;
+  -ms-user-select: none;
+  user-select: none;
+
+  /* Prevent tap highlight on mobile */
+  -webkit-tap-highlight-color: transparent;
+  tap-highlight-color: transparent;
+}
+
+/* Smooth card animations */
+.smooth-card {
+  will-change: transform, box-shadow, opacity;
+  backface-visibility: hidden;
+  -webkit-backface-visibility: hidden;
+  transform: translateZ(0);
+  -webkit-transform: translateZ(0);
+
+  /* Smooth hover transitions */
+  transition:
+    transform 0.2s cubic-bezier(0.4, 0, 0.2, 1),
+    box-shadow 0.2s cubic-bezier(0.4, 0, 0.2, 1),
+    opacity 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.smooth-card:hover {
+  transform: translateY(-2px) scale(1.02);
+  box-shadow: 0 10px 25px rgba(0, 0, 0, 0.15);
+}
+
+/* Button animation optimizations */
+.smooth-button {
+  will-change: transform, background-color, box-shadow;
+  backface-visibility: hidden;
+  -webkit-backface-visibility: hidden;
+  transform: translateZ(0);
+  -webkit-transform: translateZ(0);
+
+  /* Smooth transitions */
+  transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.smooth-button:hover {
+  transform: translateY(-1px);
+}
+
+.smooth-button:active {
+  transform: translateY(0) scale(0.98);
+}
+
+/* Text rendering optimizations */
+.optimized-text {
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  text-rendering: optimizeLegibility;
+
+  /* Prevent text selection issues during animations */
+  -webkit-user-select: none;
+  -moz-user-select: none;
+  -ms-user-select: none;
+  user-select: none;
+}
+
+/* Reduce motion for users who prefer it */
+@media (prefers-reduced-motion: reduce) {
+  .smooth-animation,
+  .page-transition,
+  .smooth-card,
+  .smooth-button,
+  .smooth-progress-fill {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+}
+
+/* High refresh rate display optimizations */
+@media (min-resolution: 120dpi) {
+  .smooth-animation,
+  .page-transition {
+    /* Enhanced smoothness for high-DPI displays */
+    transform: translate3d(0, 0, 0);
+    -webkit-transform: translate3d(0, 0, 0);
+  }
+}
+
+/* Dark mode optimizations */
+@media (prefers-color-scheme: dark) {
+  .game-mode-container {
+    background: linear-gradient(135deg, #0d1117 0%, #1c2328 100%);
+  }
+}
+
+/* Performance optimization classes */
+.gpu-accelerated {
+  will-change: transform, opacity;
+  backface-visibility: hidden;
+  -webkit-backface-visibility: hidden;
+  transform: translateZ(0);
+  -webkit-transform: translateZ(0);
+  perspective: 1000px;
+  -webkit-perspective: 1000px;
+}
+
+.layout-optimized {
+  contain: layout style paint;
+}
+
+.composite-layer {
+  transform: translateZ(0);
+  -webkit-transform: translateZ(0);
+  will-change: transform, opacity;
+}
+
+/* Animations that should be GPU accelerated */
+@keyframes smoothFadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(20px) translateZ(0);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0) translateZ(0);
+  }
+}
+
+@keyframes smoothSlideUp {
+  from {
+    transform: translateY(100vh) translateZ(0);
+    opacity: 0;
+  }
+  to {
+    transform: translateY(0) translateZ(0);
+    opacity: 1;
+  }
+}
+
+@keyframes smoothScale {
+  from {
+    transform: scale(0.9) translateZ(0);
+    opacity: 0;
+  }
+  to {
+    transform: scale(1) translateZ(0);
+    opacity: 1;
+  }
+}
+
+/* Apply animations with GPU acceleration */
+.fade-in-smooth {
+  animation: smoothFadeIn 0.4s cubic-bezier(0.25, 0.46, 0.45, 0.94) forwards;
+  animation-fill-mode: both;
+}
+
+.slide-up-smooth {
+  animation: smoothSlideUp 0.4s cubic-bezier(0.25, 0.46, 0.45, 0.94) forwards;
+  animation-fill-mode: both;
+}
+
+.scale-smooth {
+  animation: smoothScale 0.3s cubic-bezier(0.4, 0, 0.2, 1) forwards;
+  animation-fill-mode: both;
+}

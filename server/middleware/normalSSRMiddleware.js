@@ -152,17 +152,17 @@ async function createSSRMiddleware(app) {
       }
 
       try {
-        const isRootRoute = url === '/' || url === ''
+        const isEligibleRoute = !url.includes('article')
         const { isAuthenticated, isReturningUser } = getAuthenticationState(req)
 
         // UPDATED: New decision logic
-        const shouldIncludeDemoQuiz = isRootRoute && !isPwaLaunch
+        const shouldIncludeDemoQuiz = isEligibleRoute && !isPwaLaunch
         const shouldShowDemoQuizByDefault =
           shouldIncludeDemoQuiz && (!isAuthenticated || !isReturningUser)
 
         console.log('SSR Processing:', {
           url,
-          isRootRoute,
+          isEligibleRoute,
           isAuthenticated,
           isReturningUser,
           shouldIncludeDemoQuiz,

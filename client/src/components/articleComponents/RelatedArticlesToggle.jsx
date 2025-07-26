@@ -6,6 +6,7 @@ const RelatedArticlesToggle = React.memo(({ showRelated, onToggle }) => {
   const { t } = useTranslation('RelatedArticlesToggle')
   return (
     <Box
+      w={'100%'}
       as="button"
       display="flex"
       alignItems="center"
@@ -28,6 +29,7 @@ const RelatedArticlesToggle = React.memo(({ showRelated, onToggle }) => {
         transition="all 0.3s"
         fontSize={{ base: '0.8rem', lg: '1.2rem' }}
         textTransform={'uppercase'}
+        w={'100%'}
       >
         {t('remmondedArticles')}
       </Box>
@@ -41,6 +43,7 @@ const RelatedArticlesToggle = React.memo(({ showRelated, onToggle }) => {
         transition="all 0.3s"
         fontSize={{ base: '0.8rem', lg: '1.2rem' }}
         textTransform={'uppercase'}
+        w={'100%'}
       >
         {t('relatedArticles')}
       </Box>

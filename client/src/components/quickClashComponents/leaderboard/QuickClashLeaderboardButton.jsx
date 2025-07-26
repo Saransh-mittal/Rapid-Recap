@@ -12,6 +12,7 @@ import {
 import { motion } from 'framer-motion'
 import { Trophy } from 'lucide-react'
 import { useTranslation } from 'react-i18next'
+import { css } from '@emotion/react'
 
 import QuickClashLeaderboardModal from './QuickClashLeaderboardModal'
 
@@ -86,12 +87,20 @@ const QuickClashLeaderboardButton = ({ showMobileVersion = true }) => {
   }
 
   // For glowing effect
-  const pulseAnimation = `
+  const pulseAnimation = css`
     @keyframes pulse {
-      0% { box-shadow: 0 0 0 0 rgba(128, 90, 213, 0.7); }
-      70% { box-shadow: 0 0 0 10px rgba(128, 90, 213, 0); }
-      100% { box-shadow: 0 0 0 0 rgba(128, 90, 213, 0); }
+      0% {
+        box-shadow: 0 0 0 0 rgba(128, 90, 213, 0.7);
+      }
+      70% {
+        box-shadow: 0 0 0 10px rgba(128, 90, 213, 0);
+      }
+      100% {
+        box-shadow: 0 0 0 0 rgba(128, 90, 213, 0);
+      }
     }
+
+    animation: pulse 2s infinite;
   `
 
   if (isMobile && showMobileVersion) {
@@ -169,7 +178,6 @@ const QuickClashLeaderboardButton = ({ showMobileVersion = true }) => {
         _active={{}}
         bgGradient="linear(to-r, yellow.500, orange.500)"
         css={pulseAnimation}
-        animation="pulse 2.5s infinite"
       >
         {/* Background elements */}
         <Box
