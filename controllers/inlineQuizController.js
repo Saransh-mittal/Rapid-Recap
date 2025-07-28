@@ -152,7 +152,7 @@ const getInlineQuizWithStats = asyncHandler(async (req, res) => {
     // NEW: Get user's quiz history if authenticated
     let userHistory = []
 
-    if (req.user && req.user._id && questionsWithStats.length > 0) {
+    if (req?.user && req?.user?._id && questionsWithStats.length > 0) {
       try {
         // Create user history from the original quiz questions (which have userResponses)
         userHistory = quizQuestions.map(question => {

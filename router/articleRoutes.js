@@ -51,7 +51,9 @@ router.route('/onboarding').get(Authenticate, getRandomOnBoardingArticle)
 router.route('/bot-related/:articleId').get(getBotRelatedArticles)
 
 // Inline Quiz Routes
-router.route('/inline-quiz/:articleId').get(getInlineQuizWithStats)
+router
+  .route('/inline-quiz/:articleId')
+  .get(CheckLoggedInOrNot, getInlineQuizWithStats)
 router
   .route('/inline-quiz/:articleId/answer')
   .post(CheckLoggedInOrNot, submitQuizAnswer)
