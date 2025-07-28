@@ -123,6 +123,93 @@ const articleSchema = new mongoose.Schema(
       type: Date,
       default: null,
     },
+    inlineQuiz: [
+      {
+        question: {
+          type: String,
+          required: true,
+        },
+        options: [
+          {
+            type: String,
+            required: true,
+          },
+        ],
+        correctAnswer: {
+          type: Number, // Index of correct option (0-3)
+          required: true,
+          min: 0,
+          max: 3,
+        },
+        relatedSentences: [
+          {
+            sentenceIndex: {
+              type: Number,
+              required: true,
+            },
+            sentence: {
+              type: String,
+              required: true,
+            },
+          },
+        ],
+        sentencePosition: {
+          type: Number, // Position of the second sentence to determine where to show quiz
+          required: true,
+        },
+        language: {
+          type: String,
+          enum: ['en', 'hi'],
+          default: 'en',
+        },
+        difficulty: {
+          type: String,
+          enum: ['easy', 'medium', 'hard'],
+          default: 'medium',
+        },
+        // Answer statistics
+        answerStats: {
+          totalResponses: {
+            type: Number,
+            default: 0,
+          },
+          optionCounts: [
+            {
+              type: Number,
+              default: 0,
+            },
+          ], // Array of 4 numbers representing count for each option
+          lastUpdated: {
+            type: Date,
+            default: Date.now,
+          },
+        },
+        // User responses tracking (to prevent duplicate answers)
+        userResponses: [
+          {
+            userId: {
+              type: mongoose.Schema.Types.ObjectId,
+              ref: 'USER',
+              required: true,
+            },
+            selectedOption: {
+              type: Number,
+              required: true,
+              min: 0,
+              max: 3,
+            },
+            answeredAt: {
+              type: Date,
+              default: Date.now,
+            },
+          },
+        ],
+        createdAt: {
+          type: Date,
+          default: Date.now,
+        },
+      },
+    ],
     createdAt: {
       type: Date,
       default: Date.now,

@@ -5,7 +5,7 @@ const { makeRetryable } = require('../utils/retryUtils')
 const globalEmitter = require('../eventEmitter')
 
 const MAINTENANCE_CACHE_KEY = 'maintenance:status'
-const CACHE_DURATION = 60 * 10000 // 10 minutes in milliseconds
+const CACHE_DURATION = 60 * 1000 // 1 minute in milliseconds
 
 // Function to check if system is under maintenance
 const isUnderMaintenance = async () => {

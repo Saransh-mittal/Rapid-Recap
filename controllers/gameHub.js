@@ -1,4 +1,9 @@
-// controllers/gameHub.js - ENHANCED: Added comprehensive retry logic
+// controllers/gameHub.js - Updated submitGameAttempt with enhanced transaction retry
+
+const {
+  withTransactionRetry,
+  withOptimizedTransaction,
+} = require('../utils/transactionRetryUtils')
 const GameData = require('../model/gameDataSchema')
 const Article = require('../model/articleSchema')
 const QuizAttempt = require('../model/quizAttemptSchema')
@@ -1143,7 +1148,7 @@ const startGameSession = asyncHandler(async (req, res) => {
   }
 })
 
-// @desc   Submit game attempt with COMPREHENSIVE RETRY logic
+// @desc   Submit game attempt with ENHANCED TRANSACTION RETRY logic
 // @route  POST /api/gamehub/attempt
 // @access Private
 const submitGameAttempt = asyncHandler(async (req, res) => {
@@ -1156,363 +1161,293 @@ const submitGameAttempt = asyncHandler(async (req, res) => {
   }
 
   try {
-    // ENHANCED: Submit game attempt with comprehensive retry logic
-    const result = await withRetry(
-      async () => {
-        let session = await mongoose.startSession()
-        session.startTransaction()
+    // ENHANCED: Submit game attempt with proper transaction-level retry
+    const result = await withTransactionRetry(
+      async session => {
+        emitProgress('initializeCalculation', 25)
 
-        try {
-          emitProgress('initializeCalculation', 50)
+        // Step 1: Get and validate game session
+        const gameSession = await ArticleQuizSession.findOne({
+          _id: sessionId,
+          user: userId,
+        })
+          .populate('gameData')
+          .session(session)
 
-          const gameSession = await ArticleQuizSession.findOne({
-            _id: sessionId,
-            user: userId,
-          })
-            .populate('gameData')
-            .session(session)
+        if (!gameSession) {
+          throw new Error('Game session not found')
+        }
 
-          if (!gameSession) {
-            const error = new Error('Game session not found')
-            error.temporary = true // Mark as potentially temporary for retry
-            throw error
-          }
+        if (gameSession.completed) {
+          throw new Error('Game session already completed')
+        }
 
-          if (gameSession.completed) {
-            throw new Error('Game session already completed')
-          }
+        emitProgress('initializeCalculation', 50)
 
-          emitProgress('initializeCalculation', 100)
-          emitProgress('calculateRQM', 25)
+        // Step 2: Process and validate responses based on game type
+        let processedResponses = []
 
-          // SECURE: Process responses based on game type - validate answers on backend
-          let processedResponses = []
+        switch (gameSession.gameType) {
+          case 'normal_quiz':
+            processedResponses = gameSession.questions.map(
+              (question, index) => ({
+                questionId: question.questionId || question._id,
+                userAnswer: userResponses[index],
+                isCorrect: userResponses[index] === question.answer,
+              }),
+            )
+            break
 
-          switch (gameSession.gameType) {
-            case 'normal_quiz':
-              processedResponses = gameSession.questions.map(
-                (question, index) => ({
+          case 'true_false':
+            processedResponses = gameSession.questions.map(
+              (question, index) => {
+                const userAnswer = userResponses[index]
+                const isCorrect = userAnswer === question.correct
+                return {
                   questionId: question.questionId || question._id,
-                  userAnswer: userResponses[index],
-                  isCorrect: userResponses[index] === question.answer, // Validate on backend
-                }),
-              )
-              break
+                  userAnswer: userAnswer,
+                  isCorrect: isCorrect,
+                }
+              },
+            )
+            break
 
-            case 'true_false':
-              processedResponses = gameSession.questions.map(
-                (question, index) => {
-                  const userAnswer = userResponses[index]
-                  const isCorrect = userAnswer === question.correct // Validate on backend
-                  return {
-                    questionId: question.questionId || question._id,
-                    userAnswer: userAnswer,
-                    isCorrect: isCorrect,
-                  }
-                },
-              )
-              break
+          case 'word_weaver':
+            processedResponses = gameSession.questions.map(
+              (question, index) => {
+                const response = userResponses[index]
+                let userWord = ''
 
-            case 'word_weaver':
-              processedResponses = gameSession.questions.map(
-                (question, index) => {
-                  const response = userResponses[index]
-                  let userWord = ''
-
-                  // Handle different response formats from frontend with FIXED nested object handling
-                  if (typeof response === 'string') {
-                    userWord = response
-                  } else if (
-                    typeof response === 'object' &&
-                    response !== null
-                  ) {
-                    // Handle nested structure: response.answer.answer
-                    if (
-                      response.answer &&
-                      typeof response.answer === 'object' &&
-                      response.answer.answer !== undefined
-                    ) {
-                      userWord = response.answer.answer // Extract the actual string from nested object
-                    } else if (typeof response.answer === 'string') {
-                      userWord = response.answer // Direct string answer
-                    } else {
-                      userWord = response.userWord || '' // Fallback
-                    }
-                  }
-
-                  // Ensure userWord is a string before processing
-                  if (typeof userWord !== 'string') {
-                    console.warn(
-                      `userWord is not a string for question ${index}:`,
-                      {
-                        userWord,
-                        type: typeof userWord,
-                      },
-                    )
-                    userWord = String(userWord || '')
-                  }
-
-                  // SECURE: Validate answer on backend using stored correct answer
-                  const correctAnswer = question.answer || ''
-                  let isCorrect = false
-
+                // Handle different response formats from frontend
+                if (typeof response === 'string') {
+                  userWord = response
+                } else if (typeof response === 'object' && response !== null) {
                   if (
-                    userWord &&
-                    correctAnswer &&
-                    typeof userWord === 'string'
+                    response.answer &&
+                    typeof response.answer === 'object' &&
+                    response.answer.answer !== undefined
                   ) {
-                    // Check if this is a Hindi word
-                    const isHindiWord = containsHindi(correctAnswer)
-
-                    if (isHindiWord) {
-                      // Use Hindi-specific validation
-                      isCorrect = validateHindiWordAnswer(
-                        userWord,
-                        correctAnswer,
-                      )
-                    } else {
-                      // Use existing English validation (case-insensitive comparison)
-                      const normalizedUserWord = userWord
-                        .replace(/[^A-Za-z]/g, '')
-                        .toUpperCase()
-                      const normalizedCorrectAnswer = correctAnswer
-                        .replace(/[^A-Za-z]/g, '')
-                        .toUpperCase()
-                      isCorrect = normalizedUserWord === normalizedCorrectAnswer
-                    }
+                    userWord = response.answer.answer
+                  } else if (typeof response.answer === 'string') {
+                    userWord = response.answer
                   } else {
-                    console.log('Skipping validation (empty answer):', {
-                      questionIndex: index,
+                    userWord = response.userWord || ''
+                  }
+                }
+
+                // Ensure userWord is a string
+                if (typeof userWord !== 'string') {
+                  console.warn(
+                    `userWord is not a string for question ${index}:`,
+                    {
                       userWord,
-                      correctAnswer,
-                      isEmpty: !userWord,
-                    })
-                  }
-
-                  return {
-                    questionId: question.questionId || question._id,
-                    userWord: userWord,
-                    isCorrect: isCorrect,
-                    language: containsHindi(correctAnswer) ? 'hi' : 'en', // Add language info
-                    // No skip field needed - empty answers are just worth 0 points
-                  }
-                },
-              )
-              break
-
-            case 'connections':
-              // Validate connection count limit (maximum 4 connections)
-              if (!Array.isArray(userResponses)) {
-                throw new Error('Invalid connections data format')
-              }
-
-              // Enforce maximum 4 connections limit
-              const MAX_CONNECTIONS = 4
-              if (userResponses.length > MAX_CONNECTIONS) {
-                throw new Error(
-                  `Too many connections submitted. Maximum allowed: ${MAX_CONNECTIONS}, received: ${userResponses.length}`,
-                )
-              }
-
-              // Validate that all connections have required fields
-              const invalidConnections = userResponses.filter(
-                conn => !conn.from || !conn.to || conn.from === conn.to,
-              )
-
-              if (invalidConnections.length > 0) {
-                throw new Error(
-                  'Invalid connection data: connections must have different "from" and "to" values',
-                )
-              }
-
-              // Check for duplicate connections (same pair in different order)
-              const normalizedConnections = userResponses.map(conn => {
-                // Sort to normalize connection pairs (A->B same as B->A)
-                const sorted = [conn.from, conn.to].sort()
-                return { from: sorted[0], to: sorted[1], original: conn }
-              })
-
-              const uniqueConnections = new Set()
-              const duplicateConnections = []
-
-              normalizedConnections.forEach(({ from, to, original }) => {
-                const connectionKey = `${from}-${to}`
-                if (uniqueConnections.has(connectionKey)) {
-                  duplicateConnections.push(original)
-                } else {
-                  uniqueConnections.add(connectionKey)
-                }
-              })
-
-              if (duplicateConnections.length > 0) {
-                throw new Error(
-                  'Duplicate connections detected. Each connection can only be made once.',
-                )
-              }
-
-              // Validate that each node appears in at most one connection (Node Locking for 8 nodes)
-              const usedNodes = new Set()
-              const nodeConflicts = []
-
-              userResponses.forEach((conn, index) => {
-                // Check if either node is already used
-                if (usedNodes.has(conn.from)) {
-                  nodeConflicts.push({
-                    connection: index + 1,
-                    node: conn.from,
-                    type: 'from',
-                  })
-                }
-                if (usedNodes.has(conn.to)) {
-                  nodeConflicts.push({
-                    connection: index + 1,
-                    node: conn.to,
-                    type: 'to',
-                  })
-                }
-
-                // Add nodes to used set
-                usedNodes.add(conn.from)
-                usedNodes.add(conn.to)
-              })
-
-              if (nodeConflicts.length > 0) {
-                const conflictDetails = nodeConflicts
-                  .map(
-                    conflict =>
-                      `"${conflict.node}" in connection ${conflict.connection}`,
+                      type: typeof userWord,
+                    },
                   )
-                  .join(', ')
+                  userWord = String(userWord || '')
+                }
 
-                throw new Error(
-                  `Node reuse detected: Each node can only be used in one connection. ` +
-                    `Conflicts found: ${conflictDetails}. Please ensure each node appears only once.`,
-                )
+                // Validate answer on backend
+                const correctAnswer = question.answer || ''
+                let isCorrect = false
+
+                if (userWord && correctAnswer && typeof userWord === 'string') {
+                  const isHindiWord = containsHindi(correctAnswer)
+
+                  if (isHindiWord) {
+                    isCorrect = validateHindiWordAnswer(userWord, correctAnswer)
+                  } else {
+                    const normalizedUserWord = userWord
+                      .replace(/[^A-Za-z]/g, '')
+                      .toUpperCase()
+                    const normalizedCorrectAnswer = correctAnswer
+                      .replace(/[^A-Za-z]/g, '')
+                      .toUpperCase()
+                    isCorrect = normalizedUserWord === normalizedCorrectAnswer
+                  }
+                }
+
+                return {
+                  questionId: question.questionId || question._id,
+                  userWord: userWord,
+                  isCorrect: isCorrect,
+                  language: containsHindi(correctAnswer) ? 'hi' : 'en',
+                }
+              },
+            )
+            break
+
+          case 'connections':
+            // Validate connections format and constraints
+            if (!Array.isArray(userResponses)) {
+              throw new Error('Invalid connections data format')
+            }
+
+            const MAX_CONNECTIONS = 4
+            if (userResponses.length > MAX_CONNECTIONS) {
+              throw new Error(
+                `Too many connections submitted. Maximum allowed: ${MAX_CONNECTIONS}, received: ${userResponses.length}`,
+              )
+            }
+
+            // Validate connection fields
+            const invalidConnections = userResponses.filter(
+              conn => !conn.from || !conn.to || conn.from === conn.to,
+            )
+
+            if (invalidConnections.length > 0) {
+              throw new Error(
+                'Invalid connection data: connections must have different "from" and "to" values',
+              )
+            }
+
+            // Check for duplicate connections
+            const normalizedConnections = userResponses.map(conn => {
+              const sorted = [conn.from, conn.to].sort()
+              return { from: sorted[0], to: sorted[1], original: conn }
+            })
+
+            const uniqueConnections = new Set()
+            const duplicateConnections = []
+
+            normalizedConnections.forEach(({ from, to, original }) => {
+              const connectionKey = `${from}-${to}`
+              if (uniqueConnections.has(connectionKey)) {
+                duplicateConnections.push(original)
+              } else {
+                uniqueConnections.add(connectionKey)
               }
+            })
 
-              // Additional validation - with 8 nodes and max 4 connections, exactly 8 nodes should be used
-              const expectedNodesUsed = Math.min(userResponses.length * 2, 8)
-              const actualNodesUsed = usedNodes.size
+            if (duplicateConnections.length > 0) {
+              throw new Error(
+                'Duplicate connections detected. Each connection can only be made once.',
+              )
+            }
 
-              if (actualNodesUsed !== expectedNodesUsed) {
-                console.warn('Unexpected node usage:', {
-                  expected: expectedNodesUsed,
-                  actual: actualNodesUsed,
-                  connections: userResponses.length,
-                  usedNodes: Array.from(usedNodes),
+            // Validate node usage (each node can only be used once)
+            const usedNodes = new Set()
+            const nodeConflicts = []
+
+            userResponses.forEach((conn, index) => {
+              if (usedNodes.has(conn.from)) {
+                nodeConflicts.push({
+                  connection: index + 1,
+                  node: conn.from,
+                  type: 'from',
+                })
+              }
+              if (usedNodes.has(conn.to)) {
+                nodeConflicts.push({
+                  connection: index + 1,
+                  node: conn.to,
+                  type: 'to',
                 })
               }
 
-              // Validate nodes exist in the game's concept list (8 concepts)
-              const validConcepts = new Set(
-                gameSession.questions[0].concepts || [],
-              )
-              const invalidNodes = Array.from(usedNodes).filter(
-                node => !validConcepts.has(node),
-              )
+              usedNodes.add(conn.from)
+              usedNodes.add(conn.to)
+            })
 
-              if (invalidNodes.length > 0) {
-                throw new Error(
-                  `Invalid nodes detected: ${invalidNodes.join(', ')}. ` +
-                    `Nodes must be from the provided concept list.`,
+            if (nodeConflicts.length > 0) {
+              const conflictDetails = nodeConflicts
+                .map(
+                  conflict =>
+                    `"${conflict.node}" in connection ${conflict.connection}`,
                 )
-              }
+                .join(', ')
 
-              // SECURE: Validate connections on backend using stored validConnections
-              processedResponses = [
-                {
-                  questionId:
-                    gameSession.questions[0].questionId ||
-                    gameSession.questions[0]._id,
-                  connections: userResponses.map(connection => {
-                    // Validate each connection against stored validConnections
-                    const isValid =
-                      gameSession.questions[0].validConnections.some(
-                        vc =>
-                          (vc.from === connection.from &&
-                            vc.to === connection.to) ||
-                          (vc.from === connection.to &&
-                            vc.to === connection.from),
-                      )
-
-                    return {
-                      from: connection.from,
-                      to: connection.to,
-                      isValid,
-                    }
-                  }),
-                },
-              ]
-
-              // Enhanced validation summary for debugging
-              const validConnectionCount =
-                processedResponses[0].connections.filter(
-                  conn => conn.isValid,
-                ).length
-
-              break
-
-            default:
-              throw new Error('Invalid game type')
-          }
-
-          emitProgress('calculateRQM', 75)
-
-          // Update game session first with retry
-          await retryableDatabaseOp(async () => {
-            gameSession.responses = processedResponses
-            gameSession.completed = true
-            gameSession.endTime = new Date()
-            return await gameSession.save({ session })
-          })
-
-          emitProgress('calculateRQM', 100)
-          emitProgress('saveAttempt', 25)
-
-          // Use the comprehensive stats function for ALL game types with retry
-          const {
-            saveEnhancedQuizAttemptWithStats,
-          } = require('../services/quizAttemptService')
-
-          const quizAttemptResult = await withRetry(
-            async () => {
-              return await saveEnhancedQuizAttemptWithStats(
-                userId,
-                gameSession.article,
-                processedResponses,
-                gameSession.questions,
-                timeTaken,
-                sessionId,
-                gameSession,
-                session,
-                emitProgress,
-                gameSession.gameType,
+              throw new Error(
+                `Node reuse detected: Each node can only be used in one connection. ` +
+                  `Conflicts found: ${conflictDetails}. Please ensure each node appears only once.`,
               )
-            },
-            {
-              maxRetries: 2,
-              initialDelay: 1000,
-              isRetryable: isGameRetryableError,
-              operationName: 'Quiz Attempt Stats Calculation',
-            },
-          )
+            }
 
-          emitProgress('saveAttempt', 100)
+            // Validate nodes exist in concept list
+            const validConcepts = new Set(
+              gameSession.questions[0].concepts || [],
+            )
+            const invalidNodes = Array.from(usedNodes).filter(
+              node => !validConcepts.has(node),
+            )
 
-          await session.commitTransaction()
-          session.endSession()
+            if (invalidNodes.length > 0) {
+              throw new Error(
+                `Invalid nodes detected: ${invalidNodes.join(', ')}. ` +
+                  `Nodes must be from the provided concept list.`,
+              )
+            }
 
-          emitProgress('finalizeAttempt', 100)
+            // Validate connections against stored valid connections
+            processedResponses = [
+              {
+                questionId:
+                  gameSession.questions[0].questionId ||
+                  gameSession.questions[0]._id,
+                connections: userResponses.map(connection => {
+                  const isValid =
+                    gameSession.questions[0].validConnections.some(
+                      vc =>
+                        (vc.from === connection.from &&
+                          vc.to === connection.to) ||
+                        (vc.from === connection.to &&
+                          vc.to === connection.from),
+                    )
 
-          return quizAttemptResult
-        } catch (error) {
-          await session.abortTransaction()
-          session.endSession()
-          throw error
+                  return {
+                    from: connection.from,
+                    to: connection.to,
+                    isValid,
+                  }
+                }),
+              },
+            ]
+            break
+
+          default:
+            throw new Error('Invalid game type')
         }
+
+        emitProgress('initializeCalculation', 100)
+        emitProgress('calculateRQM', 25)
+
+        // Step 3: Update game session completion status
+        gameSession.responses = processedResponses
+        gameSession.completed = true
+        gameSession.endTime = new Date()
+        await gameSession.save({ session })
+
+        emitProgress('calculateRQM', 50)
+
+        // Step 4: Save enhanced quiz attempt with all statistics
+        // Import here to avoid circular dependency issues
+        const {
+          saveEnhancedQuizAttemptWithStats,
+        } = require('../services/quizAttemptService')
+
+        const quizAttemptResult = await saveEnhancedQuizAttemptWithStats(
+          userId,
+          gameSession.article,
+          processedResponses,
+          gameSession.questions,
+          timeTaken,
+          sessionId,
+          gameSession,
+          session, // Pass the current session
+          emitProgress,
+          gameSession.gameType,
+        )
+
+        emitProgress('calculateRQM', 100)
+        emitProgress('finalizeAttempt', 100)
+
+        return quizAttemptResult
       },
       {
-        ...RETRY_CONFIGS.submission,
+        operationName: 'Game Attempt Submission',
+        maxRetries: 3,
+        initialDelay: 500,
+        backoffFactor: 1.5,
         onRetry: (error, attempt) => {
           console.warn(
             `Game submission retry ${attempt} for session ${sessionId}:`,
@@ -1531,10 +1466,14 @@ const submitGameAttempt = asyncHandler(async (req, res) => {
       },
     )
 
-    // Return the comprehensive result for all game types
+    // Return the comprehensive result
     return res.status(201).json(result)
   } catch (error) {
     console.error('Error in submitGameAttempt:', error)
+
+    // Emit failure progress
+    emitProgress('failed', 100)
+
     res.status(500).json({
       error: error.message || 'Unable to save attempt. Please try again.',
       details: error.message,

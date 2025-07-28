@@ -21,8 +21,15 @@ const {
   getStory,
   getBotRelatedArticles,
 } = require('../controllers/article')
+const {
+  getInlineQuizWithStats,
+  submitQuizAnswer,
+  generateInlineQuizFallback,
+  getUserQuizHistory,
+} = require('../controllers/inlineQuizController')
 const { Authenticate } = require('../middleware/authenticate')
 const checkPrivileges = require('../middleware/checkPrivileges')
+const { CheckLoggedInOrNot } = require('../middleware/checkLoggedInOrNot')
 
 router.route('/').get(checkPrivileges, allArticles)
 router.route('/article/:id').get(checkPrivileges, getArticle)
@@ -42,5 +49,17 @@ router.route('/story').post(Authenticate, createStory)
 router.route('/story/:id').get(Authenticate, getStory)
 router.route('/onboarding').get(Authenticate, getRandomOnBoardingArticle)
 router.route('/bot-related/:articleId').get(getBotRelatedArticles)
+
+// Inline Quiz Routes
+router.route('/inline-quiz/:articleId').get(getInlineQuizWithStats)
+router
+  .route('/inline-quiz/:articleId/answer')
+  .post(CheckLoggedInOrNot, submitQuizAnswer)
+router
+  .route('/inline-quiz/:articleId/history')
+  .get(Authenticate, getUserQuizHistory)
+router
+  .route('/inline-quiz/generate/:articleId')
+  .post(Authenticate, generateInlineQuizFallback)
 
 module.exports = router
