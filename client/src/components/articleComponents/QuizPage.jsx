@@ -217,6 +217,8 @@ const QuizPage = memo(
     const [isTablet] = useMediaQuery('(max-width: 768px)')
     const [isLandscape] = useMediaQuery('(orientation: landscape)')
     const [isTouch] = useMediaQuery('(hover: none) and (pointer: coarse)')
+    const [startTime] = useState(Date.now())
+    const [hasEmittedStartEvent, setHasEmittedStartEvent] = useState(false)
 
     // Consolidated scroll state
     const [scrollState, setScrollState] = useState({
@@ -311,6 +313,20 @@ const QuizPage = memo(
     const handleScrollUp = useCallback(() => scrollTo('up'), [scrollTo])
     const handleScrollDown = useCallback(() => scrollTo('down'), [scrollTo])
 
+    useEffect(() => {
+      if (!hasEmittedStartEvent) {
+        window.dispatchEvent(
+          new CustomEvent('inlineQuizStart', {
+            detail: {
+              questionId: question._id,
+              questionText: question.question,
+              timestamp: Date.now(),
+            },
+          }),
+        )
+        setHasEmittedStartEvent(true)
+      }
+    }, [question._id, hasEmittedStartEvent])
     // Event listeners with proper cleanup
     useEffect(() => {
       const container = scrollContainerRef.current
@@ -340,15 +356,6 @@ const QuizPage = memo(
         }
       }
     }, [debouncedScrollCheck, scrollState.isScrolling])
-
-    // Optimized option click handler
-    const handleOptionClick = useCallback(
-      optionIndex => {
-        if (disabled || showStatistics) return
-        onAnswer?.(optionIndex)
-      },
-      [disabled, showStatistics, onAnswer],
-    )
 
     // Memoized option styles calculation
     const getOptionStyles = useCallback(
@@ -394,6 +401,46 @@ const QuizPage = memo(
         }
       },
       [showStatistics, selectedAnswer, question.correctAnswer],
+    )
+
+    const handleAnswerClick = useCallback(
+      answerIndex => {
+        if (disabled || showStatistics) return
+
+        const timeSpent = Date.now() - startTime
+        const isAnswerCorrect = answerIndex === question.correctAnswerIndex
+
+        // Call the original onAnswer function
+        onAnswer(answerIndex)
+
+        // NEW: Emit tracking event for quiz performance
+        window.dispatchEvent(
+          new CustomEvent('inlineQuizAnswer', {
+            detail: {
+              questionId: question._id,
+              answerIndex,
+              isCorrect: isAnswerCorrect,
+              timeSpent,
+              questionText: question.question,
+              selectedOption: question.options[answerIndex],
+              timestamp: Date.now(),
+            },
+          }),
+        )
+
+        // NEW: Also emit the completion event for backward compatibility
+        window.dispatchEvent(
+          new CustomEvent('inlineQuizCompleted', {
+            detail: {
+              score: isAnswerCorrect ? 1 : 0,
+              totalQuestions: 1,
+              hasCompleted: true,
+              questionId: question._id,
+            },
+          }),
+        )
+      },
+      [disabled, startTime, onAnswer, question, showStatistics],
     )
 
     // Memoized option icon
@@ -674,7 +721,7 @@ const QuizPage = memo(
                         duration: 0.4,
                         ease: 'easeOut',
                       }}
-                      onClick={() => handleOptionClick(index)}
+                      onClick={() => handleAnswerClick(index)}
                       w="100%"
                       h="auto"
                       minH={responsiveConfig.minHeight}

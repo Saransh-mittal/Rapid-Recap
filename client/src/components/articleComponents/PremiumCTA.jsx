@@ -9,6 +9,8 @@ import {
   HStack,
   Icon,
   useMediaQuery,
+  IconButton,
+  CloseButton,
 } from '@chakra-ui/react'
 import {
   ChevronRightIcon,
@@ -33,6 +35,7 @@ const shimmer = keyframes`
 const PremiumCTA = ({ readProgress }) => {
   const [showCTA, setShowCTA] = useState(false)
   const [ctaVariant, setCtaVariant] = useState('initial')
+  const [againShowCTA, setAgainShowCTA] = useState(false)
   const dispatch = useDispatch()
   const [isLargerThan768] = useMediaQuery('(min-width: 768px)')
   const { t } = useTranslation('GetStarted')
@@ -41,6 +44,17 @@ const PremiumCTA = ({ readProgress }) => {
     const timer = setTimeout(() => setShowCTA(true), 3000)
     return () => clearTimeout(timer)
   }, [])
+
+  useEffect(() => {
+    let timer
+    if (againShowCTA) {
+      timer = setTimeout(() => {
+        setShowCTA(true)
+        setAgainShowCTA(false)
+      }, 30000)
+    }
+    return () => clearTimeout(timer)
+  }, [againShowCTA])
 
   useEffect(() => {
     if (readProgress > 30 && readProgress <= 50) {
@@ -121,7 +135,15 @@ const PremiumCTA = ({ readProgress }) => {
                 />
               </Box>
             )}
-
+            <CloseButton
+              position={'absolute'}
+              right={1}
+              top={1}
+              onClick={() => {
+                setShowCTA(false)
+                setAgainShowCTA(true)
+              }}
+            />
             <VStack spacing={4} align="stretch" pt={2}>
               <HStack spacing={3}>
                 <Box p={2} bg="whiteAlpha.100" borderRadius="lg">

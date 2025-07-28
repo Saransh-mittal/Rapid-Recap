@@ -1,4 +1,7 @@
-// File: client/src/components/articleComponents/Sidebar.jsx
+// Updated Sidebar.jsx to pass quiz performance data to GameHubButton
+// Location: client/src/components/articleComponents/Sidebar.jsx
+// CHANGES: Added quiz performance tracking and passed to GameHubButton
+
 import React, {
   useCallback,
   useMemo,
@@ -23,7 +26,7 @@ import { LockIcon } from '@chakra-ui/icons'
 import { useDispatch, useSelector } from 'react-redux'
 
 import RelatedArticlesToggle from './RelatedArticlesToggle'
-import GameHubButton from './GameHubButton' // NEW: Import GameHub button
+import GameHubButton from './GameHubButton' // Updated GameHub button
 import axios from 'axios'
 import { formatDate } from '../../utils/helper.utils'
 import slugify from 'slugify'
@@ -67,6 +70,8 @@ const Sidebar = ({
   setLoadingRelatedArticles,
   setShouldScrollToTop,
   shouldScrollToTop,
+  // NEW: Props for tracking inline quiz performance
+  inlineQuizPerformance = null, // { score: number, totalQuestions: number, hasCompleted: boolean }
 }) => {
   const { t } = useTranslation('Sidebar')
   const { t: formatDateTranslate } = useTranslation('formatDate')
@@ -87,6 +92,44 @@ const Sidebar = ({
   const navigate = useNavigate()
   const dispatchRedux = useDispatch()
 
+  // NEW: Track quiz performance for conversion gate
+  const [localQuizPerformance, setLocalQuizPerformance] = useState(
+    inlineQuizPerformance || {
+      score: 0,
+      totalQuestions: 0,
+      hasCompleted: false,
+    },
+  )
+
+  // NEW: Update local quiz performance when prop changes
+  useEffect(() => {
+    if (inlineQuizPerformance) {
+      setLocalQuizPerformance(inlineQuizPerformance)
+    }
+  }, [inlineQuizPerformance])
+
+  // NEW: Listen for inline quiz completion events
+  useEffect(() => {
+    const handleInlineQuizCompletion = event => {
+      const { score, totalQuestions } = event.detail
+      setLocalQuizPerformance({
+        score,
+        totalQuestions,
+        hasCompleted: true,
+      })
+    }
+
+    // Listen for custom events from inline quiz components
+    window.addEventListener('inlineQuizCompleted', handleInlineQuizCompletion)
+
+    return () => {
+      window.removeEventListener(
+        'inlineQuizCompleted',
+        handleInlineQuizCompletion,
+      )
+    }
+  }, [])
+
   const isLoaded = useMemo(() => {
     return (
       onGoingQuiz !== null &&
@@ -98,9 +141,10 @@ const Sidebar = ({
   const handleQuizButtonClick = useCallback(() => {
     playClick()
     if (notLoggedIn) {
+      dispatchRedux(setIsSigninOpen(true))
       toast({
         title: t('loginRequired'),
-        description: t('loginToShare'),
+        description: t('loginToPlay'),
         status: 'warning',
         duration: 3000,
         isClosable: true,
@@ -356,39 +400,18 @@ const Sidebar = ({
         <QuizExpired />
       ) : (
         <Box position={'relative'}>
-          <Box
-            style={
-              notLoggedIn
-                ? { filter: 'blur(5px)', userSelect: 'none' }
-                : { userSelect: 'text' }
-            }
-            display={'flex'}
-            justifyContent={'center'}
-            alignItems={'center'}
-          >
-            {/* NEW: Use GameHub button instead of TakeQuizButton */}
+          <Box display={'flex'} justifyContent={'center'} alignItems={'center'}>
+            {/* UPDATED: Use GameHub button with quiz performance data */}
             <GameHubButton
               onClick={handleQuizButtonClick}
               category={category}
               articleId={id}
-              disabled={notLoggedIn}
+              // NEW: Pass quiz performance data for conversion gate
+              userQuizScore={localQuizPerformance.score}
+              totalQuizQuestions={localQuizPerformance.totalQuestions}
+              hasCompletedInlineQuiz={localQuizPerformance.hasCompleted}
             />
           </Box>
-          {notLoggedIn && (
-            <Tooltip label={t('loginToGiveQuiz')} placement="top">
-              <LockIcon
-                position="absolute"
-                top="50%"
-                left="50%"
-                transform="translate(-50%, -50%)"
-                color="white"
-                boxSize={8}
-                zIndex={2}
-                onClick={() => dispatchRedux(setIsSigninOpen(true))}
-                cursor={'pointer'}
-              />
-            </Tooltip>
-          )}
         </Box>
       )}
       {isQuizGivenLoading ? (

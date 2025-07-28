@@ -104,14 +104,6 @@ export const DesktopContextMenu = ({
         icon: Eye,
         shortcut: 'Ctrl+H',
       },
-      { type: 'separator' },
-      {
-        label: 'Exit Immersive Mode',
-        action: onExit,
-        icon: Square,
-        shortcut: 'Esc',
-        danger: true,
-      },
     ],
     [onNavigate, onToggleFullscreen, onToggleControls, onExit],
   )

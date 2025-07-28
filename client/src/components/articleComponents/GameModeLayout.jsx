@@ -1,6 +1,6 @@
-// Enhanced GameModeLayout.jsx with FIXED internal scrolling support
+// Enhanced GameModeLayout.jsx with IMPROVED articles section responsiveness
 // Location: client/src/components/articleComponents/GameModeLayout.jsx
-// FIXED: Internal scrolling now works properly on desktop while maintaining page navigation
+// FIXED: Articles section now properly responsive with visible Load More button on all screen sizes
 
 import React, {
   useReducer,
@@ -10,6 +10,7 @@ import React, {
   useRef,
   memo,
   startTransition,
+  useState,
 } from 'react'
 import {
   Box,
@@ -22,6 +23,13 @@ import {
   IconButton,
   Button,
   Tooltip,
+  Badge,
+  Grid,
+  GridItem,
+  SimpleGrid,
+  Image,
+  useToast,
+  Spinner,
 } from '@chakra-ui/react'
 import { motion, AnimatePresence } from 'framer-motion'
 import {
@@ -33,6 +41,9 @@ import {
   Keyboard,
   Monitor,
   Home,
+  Trophy,
+  TrendingUp,
+  Zap,
 } from 'lucide-react'
 import ArticleHeader from './ArticleHeader'
 import PaginatedArticleContent from './PaginatedArticleContent'
@@ -43,6 +54,19 @@ import QuizPage from './QuizPage'
 import { useInlineQuiz } from './hooks/useInlineQuiz'
 import { blackListedImgUrls } from '../../assets/blackListedImgUrls'
 import AnimatedScrollIndicator from './AnimatedScrollIndicator'
+import { useInlineQuizTracker } from './hooks/useInlineQuizTracker'
+import PremiumCTA from './PremiumCTA'
+import { useDispatch } from 'react-redux'
+import { setIsSigninOpen } from '../../redux/appSlice'
+import ArticleListSkeleton from './loaders/ArticleListSkeleton'
+import axios from 'axios'
+import i18n from 'i18next'
+import { formatDate } from '../../utils/helper.utils'
+import { useTranslation } from 'react-i18next'
+import useSafeSound from '../../customHooks/useSafeSound'
+import { useNavigate } from 'react-router-dom'
+import { useFeatureDetection } from '../../utils/featureDetection'
+import slugify from 'slugify'
 
 const MotionBox = motion(Box)
 const MotionFlex = motion(Flex)
@@ -225,6 +249,9 @@ const GameModeLayout = memo(
     totalUsersGivenQuiz,
     onQuizButtonClick,
     // Related articles
+    loadingRealatedArticles,
+    setLoadingRelatedArticles,
+    articleHeight,
     showRelated,
     onRelatedToggle,
     isDesktop = false,
@@ -236,9 +263,23 @@ const GameModeLayout = memo(
     isUserInteracting = false,
     // General
     isAuthenticated,
+    loginCheckStatus = 'pending',
   }) => {
+    const articleId = article?._id || ''
+    const dispatchRedux = useDispatch()
+    const navigate = useNavigate()
+    const { t } = useTranslation('Sidebar')
+    const { t: formatDateTranslate } = useTranslation('formatDate')
+    const features = useFeatureDetection()
+    const { playClick } = useSafeSound({
+      enabled: features.hasAudioSupport,
+      volume: 0.5,
+    })
+    const toast = useToast()
+
     // Enhanced state with desktop features
     const [gameState, dispatch] = useReducer(gameStateReducer, initialGameState)
+    const quizTracker = useInlineQuizTracker({ articleId })
     const {
       currentSection,
       direction,
@@ -250,6 +291,13 @@ const GameModeLayout = memo(
       showGoToTop,
       showDesktopNavigationHint,
     } = gameState
+
+    const [showOnlySummary, setShowOnlySummary] = useState(false)
+    const [recommendedArticles, setRecommendedArticles] = useState([])
+    const [page, setPage] = useState(1)
+    const [pageRelated, setPageRelated] = useState(1)
+    const [loading, setLoading] = useState(false)
+    const [latestNews, setLatestNews] = useState([])
 
     // Enhanced refs for desktop
     const containerRef = useRef(null)
@@ -270,12 +318,58 @@ const GameModeLayout = memo(
     const [isMobile] = useMediaQuery('(max-width: 480px)')
     const [isTablet] = useMediaQuery('(max-width: 768px)')
     const [isLargeDesktop] = useMediaQuery('(min-width: 1200px)')
+    const [isExtraLargeDesktop] = useMediaQuery('(min-width: 1440px)')
 
     // NEW: Desktop-specific gesture threshold
     const gestureThreshold = useMemo(() => {
       if (isDesktop) return 100 // Larger threshold for desktop mouse wheel
       return isMobile ? 50 : 70
     }, [isMobile, isDesktop])
+
+    const fetchRelatedArticles = async () => {
+      try {
+        setLoading(true)
+        const { data } = await axios.get(
+          `/api/articles/related/${articleId}?page=${pageRelated}&limit=5&lang=${i18n.language}`,
+        )
+        setLatestNews(prevArticles => [
+          ...prevArticles,
+          ...data.relatedArticles,
+        ])
+        setPageRelated(prevPage => prevPage + 1)
+      } catch (error) {
+        console.error('Error fetching related articles:', error)
+      } finally {
+        setLoading(false)
+      }
+    }
+
+    const fetchRecommendedArticles = async () => {
+      try {
+        setLoading(true)
+        const response = await axios.get(
+          `/api/recommendation/articlePageRecommendations/${articleId}?page=${page}&pageSize=5&lang=${i18n.language}`,
+        )
+
+        setRecommendedArticles(prevArticles => [
+          ...prevArticles,
+          ...response.data,
+        ])
+        setPage(prevPage => prevPage + 1)
+      } catch (error) {
+        console.error('Error fetching recommended articles:', error)
+      } finally {
+        setLoading(false)
+      }
+    }
+
+    useEffect(() => {
+      // Fetch both types of articles on component mount
+      fetchRecommendedArticles()
+      if (showRelated && latestNews.length === 0) {
+        fetchRelatedArticles()
+      }
+    }, [showRelated, article])
 
     // Update gesture threshold
     useEffect(() => {
@@ -671,16 +765,82 @@ const GameModeLayout = memo(
       ],
     )
 
+    const handleRelatedArticleClick = useCallback(
+      async (e, item) => {
+        if (!isAuthenticated) {
+          e.preventDefault()
+          toast({
+            title: t('loginRequired'),
+            description: t('loginToShare'),
+            status: 'warning',
+            duration: 3000,
+            isClosable: true,
+          })
+          return
+        }
+
+        playClick()
+        handleGoToTop()
+        // cut after article id
+        const pathname = location.pathname.split('/').slice(0, 3).join('/')
+
+        if (
+          pathname === `/article/${item?._id}/${slugify(item?.title)}` ||
+          pathname === `/article/${item?._id}/${slugify(item?.title)}/` ||
+          pathname === `/article/${item?._id}` ||
+          pathname === `/article/${item?._id}/`
+        ) {
+          toast({
+            title: t('alreadyOnArticle'),
+            description: t('alreadyOnArticleDesc'),
+            status: 'info',
+            duration: 3000,
+            isClosable: true,
+          })
+          return
+        }
+        setLoadingRelatedArticles(prev => ({ ...prev, [item?._id]: true }))
+
+        const path =
+          i18n.language === 'en'
+            ? `/article/${item?._id}/${slugify(item?.title)}`
+            : `/article/${item?._id}/${slugify(item?.hindiTitle)}`
+
+        navigate(path)
+
+        // Reset loading state after navigation
+        // setTimeout(() => {
+        //   setLoadingArticles(prev => ({ ...prev, [item?._id]: false }))
+        // }, 1000)
+      },
+      [
+        isAuthenticated,
+        playClick,
+        toast,
+        navigate,
+        i18n.language,
+        handleGoToTop,
+        t,
+      ],
+    )
+
     // Quiz answer handler
     const handleQuizAnswer = useCallback(
       async (questionId, answerIndex) => {
         try {
-          await submitAnswer(questionId, answerIndex)
+          const result = await submitAnswer(questionId, answerIndex)
+
+          // NEW: Track the quiz answer for conversion data
+          quizTracker.trackQuizAnswer({
+            questionId,
+            isCorrect: result?.isCorrect || false,
+            timeSpent: 0, // You can track time if needed
+          })
         } catch (error) {
           console.error('Error submitting quiz answer:', error)
         }
       },
-      [submitAnswer],
+      [submitAnswer, quizTracker],
     )
 
     // Quiz page calculations
@@ -712,18 +872,477 @@ const GameModeLayout = memo(
 
       quizContentPlacement.forEach((item, index) => {
         const assignedPage =
-          index === 0 ? item.earliestPage : currentQuizPage + 1
+          index === 0 ? item?.earliestPage : currentQuizPage + 1
         currentQuizPage = Math.max(assignedPage, currentQuizPage + 1)
 
         detectedQuizPages.push({
           afterPageIndex: currentQuizPage,
-          quiz: item.quiz,
+          quiz: item?.quiz,
           sectionIndex: 1 + currentQuizPage + 1 + index,
         })
       })
 
       return detectedQuizPages
     }, [isContentReady, quizQuestions, importantSentences, actualContentPages])
+
+    // ENHANCED: Articles rendering function with improved responsiveness
+    const renderArticles = useCallback(() => {
+      const articlesToShow = showRelated
+        ? latestNews.filter(item => item && item._id !== article?._id)
+        : recommendedArticles.filter(item => item && item._id !== article?._id)
+
+      if (!articlesToShow.length && !loading) {
+        return (
+          <MotionBox
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.5 }}
+            textAlign="center"
+            py={{ base: 6, md: 8, lg: 10 }}
+            w="100%"
+          >
+            <VStack spacing={{ base: 3, md: 4 }}>
+              <Icon
+                as={Users}
+                boxSize={{ base: 10, md: 12, lg: 14 }}
+                color="whiteAlpha.300"
+              />
+              <Text
+                fontSize={{ base: 'md', md: 'lg', lg: 'xl' }}
+                color="whiteAlpha.600"
+                fontWeight="500"
+              >
+                No {showRelated ? 'related' : 'recommended'} articles found
+              </Text>
+              <Text
+                fontSize={{ base: 'xs', md: 'sm' }}
+                color="whiteAlpha.400"
+                maxW={{ base: '280px', md: '350px' }}
+                textAlign="center"
+              >
+                Try exploring other categories or check back later
+              </Text>
+            </VStack>
+          </MotionBox>
+        )
+      }
+
+      return (
+        <VStack spacing={0} w="100%" align="stretch" h="100%">
+          {/* IMPROVED: Articles Grid Container with better height management */}
+          <Box
+            w="100%"
+            flex="1"
+            overflowY="auto"
+            overflowX="hidden"
+            css={{
+              '&::-webkit-scrollbar': {
+                width: '6px',
+              },
+              '&::-webkit-scrollbar-track': {
+                background: 'rgba(255, 255, 255, 0.1)',
+                borderRadius: '10px',
+              },
+              '&::-webkit-scrollbar-thumb': {
+                background: 'rgba(159, 122, 234, 0.6)',
+                borderRadius: '10px',
+              },
+              '&::-webkit-scrollbar-thumb:hover': {
+                background: 'rgba(159, 122, 234, 0.8)',
+              },
+            }}
+            pr={{ base: 1, md: 2 }}
+            pb={{ base: 4, md: 6 }} // Add bottom padding for Load More button
+          >
+            <VStack spacing={0} w="100%" align="stretch">
+              {/* Articles Grid */}
+              <Grid
+                templateColumns={{
+                  base: '1fr',
+                  md: 'repeat(2, 1fr)',
+                  lg: 'repeat(2, 1fr)',
+                  xl: isExtraLargeDesktop ? 'repeat(3, 1fr)' : 'repeat(2, 1fr)',
+                }}
+                gap={{
+                  base: 4,
+                  md: 5,
+                  lg: 6,
+                  xl: isExtraLargeDesktop ? 5 : 6,
+                }}
+                w="100%"
+                pb={articlesToShow.length > 0 ? { base: 4, md: 6 } : 0}
+              >
+                {articlesToShow.map((item, index) => (
+                  <GridItem key={`${item?._id}-${index}`} w="100%">
+                    <MotionBox
+                      initial={{ opacity: 0, y: 20 }}
+                      animate={{ opacity: 1, y: 0 }}
+                      transition={{
+                        duration: 0.5,
+                        delay: index * 0.1,
+                        ease: 'easeOut',
+                      }}
+                      whileHover={{
+                        y: -4,
+                        transition: { duration: 0.2, ease: 'easeOut' },
+                      }}
+                      onClick={e => handleRelatedArticleClick(e, item)}
+                      style={
+                        !isAuthenticated
+                          ? { filter: 'blur(5px)', userSelect: 'none' }
+                          : { userSelect: 'text', cursor: 'pointer' }
+                      }
+                      bg="rgba(255, 255, 255, 0.03)"
+                      borderRadius={{ base: 'lg', md: 'xl' }}
+                      border="1px solid"
+                      borderColor="rgba(255, 255, 255, 0.08)"
+                      overflow="hidden"
+                      position="relative"
+                      minH={{
+                        base: '140px',
+                        md: '160px',
+                        lg: '180px',
+                        xl: isExtraLargeDesktop ? '170px' : '180px',
+                      }}
+                      _hover={{
+                        borderColor: 'rgba(159, 122, 234, 0.3)',
+                        bg: 'rgba(255, 255, 255, 0.06)',
+                        transform: 'translateY(-4px)',
+                        boxShadow: '0 8px 32px rgba(159, 122, 234, 0.15)',
+                      }}
+                      _active={{
+                        transform: 'translateY(-2px)',
+                      }}
+                    >
+                      {/* Loading Overlay */}
+                      {loadingRealatedArticles[item?._id] && (
+                        <Flex
+                          position="absolute"
+                          top="0"
+                          left="0"
+                          right="0"
+                          bottom="0"
+                          backgroundColor="rgba(0, 0, 0, 0.7)"
+                          justifyContent="center"
+                          alignItems="center"
+                          borderRadius={{ base: 'lg', md: 'xl' }}
+                          zIndex={3}
+                          backdropFilter="blur(4px)"
+                        >
+                          <VStack spacing={2}>
+                            <Spinner
+                              thickness="3px"
+                              speed="0.65s"
+                              emptyColor="whiteAlpha.300"
+                              color="purple.400"
+                              size="lg"
+                            />
+                            <Text fontSize="xs" color="whiteAlpha.700">
+                              Loading...
+                            </Text>
+                          </VStack>
+                        </Flex>
+                      )}
+
+                      {/* Enhanced Card Content */}
+                      <Flex direction="column" h="100%" p={{ base: 4, md: 5 }}>
+                        {/* Article Metadata Header */}
+                        <Flex
+                          justify="space-between"
+                          align="center"
+                          mb={3}
+                          flexWrap={{ base: 'wrap', sm: 'nowrap' }}
+                          gap={2}
+                        >
+                          <HStack spacing={2} minW={0} flex={1}>
+                            <Box
+                              w="3px"
+                              h="3px"
+                              bg="purple.400"
+                              borderRadius="full"
+                              flexShrink={0}
+                            />
+                            <Text
+                              fontSize={{
+                                base: '2xs',
+                                sm: 'xs',
+                                xl: isExtraLargeDesktop ? '2xs' : 'xs',
+                              }}
+                              color="purple.300"
+                              fontWeight="600"
+                              textTransform="uppercase"
+                              letterSpacing="wider"
+                              noOfLines={1}
+                            >
+                              {formatDate(
+                                item?.dateTime,
+                                formatDateTranslate,
+                                i18n.language,
+                              )}
+                            </Text>
+                          </HStack>
+
+                          <Badge
+                            colorScheme="orange"
+                            variant="subtle"
+                            fontSize="2xs"
+                            px={2}
+                            py={1}
+                            borderRadius="md"
+                            bg="rgba(214, 158, 46, 0.1)"
+                            color="orange.300"
+                            border="1px solid"
+                            borderColor="rgba(214, 158, 46, 0.2)"
+                            flexShrink={0}
+                          >
+                            {item?.avgReadTime || 'N/A'} {t('minRead')}
+                          </Badge>
+                        </Flex>
+
+                        {/* Main Content Area */}
+                        <Flex flex={1} gap={{ base: 3, md: 4 }} align="stretch">
+                          {/* Article Image */}
+                          <Box
+                            position="relative"
+                            flexShrink={0}
+                            w={{
+                              base: '80px',
+                              sm: '100px',
+                              md: '120px',
+                              xl: isExtraLargeDesktop ? '100px' : '120px',
+                            }}
+                            h={{
+                              base: '60px',
+                              sm: '75px',
+                              md: '90px',
+                              xl: isExtraLargeDesktop ? '75px' : '90px',
+                            }}
+                            borderRadius={{ base: 'md', md: 'lg' }}
+                            overflow="hidden"
+                            bg="rgba(255, 255, 255, 0.05)"
+                          >
+                            <Image
+                              src={
+                                (!blackListedImgUrls.find(
+                                  url => url === item?.imgURL?.[0],
+                                ) &&
+                                  item?.imgURL?.[0]) ||
+                                fallback_news_image
+                              }
+                              alt={t('articleImageAlt')}
+                              onError={e => {
+                                e.target.onerror = null
+                                e.target.src = fallback_news_image
+                              }}
+                              w="100%"
+                              h="100%"
+                              objectFit="cover"
+                              loading="lazy"
+                              transition="transform 0.3s ease"
+                              _hover={{
+                                transform: 'scale(1.05)',
+                              }}
+                            />
+
+                            {/* Image Overlay for Better Text Contrast */}
+                            <Box
+                              position="absolute"
+                              top={0}
+                              left={0}
+                              right={0}
+                              bottom={0}
+                              bg="linear-gradient(135deg, rgba(159, 122, 234, 0.1), transparent 50%)"
+                              opacity={0}
+                              transition="opacity 0.3s ease"
+                              _groupHover={{ opacity: 1 }}
+                            />
+                          </Box>
+
+                          {/* Article Text Content */}
+                          <Flex
+                            direction="column"
+                            flex={1}
+                            justify="center"
+                            minW={0}
+                          >
+                            <Text
+                              fontSize={{
+                                base: 'sm',
+                                sm: 'md',
+                                md: 'lg',
+                                xl: isExtraLargeDesktop ? 'md' : 'lg',
+                              }}
+                              fontWeight="600"
+                              color="white"
+                              lineHeight={{ base: '1.3', md: '1.4' }}
+                              noOfLines={{
+                                base: 3,
+                                md: 4,
+                                xl: isExtraLargeDesktop ? 3 : 4,
+                              }}
+                              mb={2}
+                              transition="color 0.2s ease"
+                              _groupHover={{
+                                color: 'purple.200',
+                              }}
+                            >
+                              {i18n.language === 'en'
+                                ? item?.title
+                                : item?.hindiTitle}
+                            </Text>
+
+                            {/* Article Category/Tags */}
+                            {item?.category && (
+                              <HStack spacing={2} mt="auto">
+                                <Box
+                                  w="2px"
+                                  h="2px"
+                                  bg="orange.400"
+                                  borderRadius="full"
+                                />
+                                <Text
+                                  fontSize="2xs"
+                                  color="orange.300"
+                                  fontWeight="500"
+                                  textTransform="capitalize"
+                                  letterSpacing="wide"
+                                >
+                                  {item?.category}
+                                </Text>
+                              </HStack>
+                            )}
+                          </Flex>
+                        </Flex>
+
+                        {/* Subtle Hover Indicator */}
+                        <Box
+                          position="absolute"
+                          bottom={0}
+                          left={0}
+                          right={0}
+                          h="2px"
+                          bg="linear-gradient(90deg, rgba(159, 122, 234, 0.6), rgba(214, 158, 46, 0.6))"
+                          transform="scaleX(0)"
+                          transformOrigin="left"
+                          transition="transform 0.3s ease"
+                          _groupHover={{
+                            transform: 'scaleX(1)',
+                          }}
+                        />
+                      </Flex>
+                    </MotionBox>
+                  </GridItem>
+                ))}
+              </Grid>
+
+              {/* IMPROVED: Load More Button with fixed positioning */}
+              {!loading && articlesToShow.length > 0 && (
+                <MotionBox
+                  initial={{ opacity: 0, y: 10 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ delay: 0.3, duration: 0.4 }}
+                  mt={{ base: 4, md: 6 }}
+                  textAlign="center"
+                  w="100%"
+                  pb={{ base: 2, md: 4 }} // Extra bottom padding
+                >
+                  <Button
+                    onClick={() =>
+                      showRelated
+                        ? fetchRelatedArticles()
+                        : fetchRecommendedArticles()
+                    }
+                    size={{
+                      base: 'md',
+                      md: 'lg',
+                      lg: isLargeDesktop ? 'lg' : 'md',
+                    }}
+                    bg="rgba(159, 122, 234, 0.1)"
+                    border="2px solid"
+                    borderColor="rgba(159, 122, 234, 0.3)"
+                    color="purple.300"
+                    borderRadius="xl"
+                    px={{ base: 6, md: 8, lg: 10 }}
+                    py={{ base: 2, md: 3 }}
+                    fontWeight="600"
+                    letterSpacing="wide"
+                    transition="all 0.3s cubic-bezier(0.4, 0, 0.2, 1)"
+                    _hover={{
+                      bg: 'rgba(159, 122, 234, 0.2)',
+                      borderColor: 'rgba(159, 122, 234, 0.5)',
+                      color: 'purple.200',
+                      transform: 'translateY(-2px)',
+                      boxShadow: '0 8px 25px rgba(159, 122, 234, 0.2)',
+                    }}
+                    _active={{
+                      transform: 'translateY(0px)',
+                      boxShadow: '0 4px 15px rgba(159, 122, 234, 0.2)',
+                    }}
+                    leftIcon={
+                      <Icon
+                        as={TrendingUp}
+                        boxSize={{
+                          base: 4,
+                          md: 5,
+                          lg: isLargeDesktop ? 5 : 4,
+                        }}
+                        transition="transform 0.2s ease"
+                        _groupHover={{ transform: 'rotate(12deg)' }}
+                      />
+                    }
+                  >
+                    {t('loadMore')}
+                  </Button>
+                </MotionBox>
+              )}
+
+              {/* Loading State */}
+              {loading && (
+                <MotionBox
+                  initial={{ opacity: 0 }}
+                  animate={{ opacity: 1 }}
+                  transition={{ duration: 0.3 }}
+                  mt={4}
+                  w="100%"
+                >
+                  <ArticleListSkeleton
+                    count={
+                      isExtraLargeDesktop
+                        ? 6
+                        : isLargeDesktop
+                        ? 4
+                        : isDesktop
+                        ? 4
+                        : 2
+                    }
+                  />
+                </MotionBox>
+              )}
+            </VStack>
+          </Box>
+        </VStack>
+      )
+    }, [
+      showRelated,
+      latestNews,
+      recommendedArticles,
+      loading,
+      isDesktop,
+      isLargeDesktop,
+      isExtraLargeDesktop,
+      isAuthenticated,
+      handleRelatedArticleClick,
+      fetchRelatedArticles,
+      fetchRecommendedArticles,
+      loadingRealatedArticles,
+      article?._id,
+      blackListedImgUrls,
+      fallback_news_image,
+      formatDate,
+      formatDateTranslate,
+      i18n.language,
+      t,
+    ])
 
     // Enhanced section renderer with desktop optimizations
     const renderCurrentSection = useCallback(() => {
@@ -804,6 +1423,9 @@ const GameModeLayout = memo(
                     fallback_news_image
                   }
                   selectedLanguage={selectedLanguage}
+                  showSummaryToggle={true}
+                  showOnlySummary={showOnlySummary}
+                  onToggleSummary={() => setShowOnlySummary(!showOnlySummary)}
                   mainText={mainText}
                   themedContent={themedContent}
                   SourceURL={article?.url}
@@ -866,6 +1488,9 @@ const GameModeLayout = memo(
                   totalPages={actualContentPages}
                   showImage={false}
                   isAuthenticated={isAuthenticated}
+                  showSummaryToggle={true}
+                  showOnlySummary={showOnlySummary}
+                  onToggleSummary={() => setShowOnlySummary(!showOnlySummary)}
                 />
               </Flex>
             </Flex>
@@ -918,188 +1543,1310 @@ const GameModeLayout = memo(
             <Flex
               h="100vh"
               w="100%"
-              alignItems="center"
+              alignItems="flex-start" // Changed from center to flex-start
               justifyContent="center"
-              pt={sectionPaddingTop}
-              pb={8}
-              px={sectionPadding}
+              pt={{ base: '80px', sm: '90px' }} // Increased top padding to avoid progress bar
+              pb={{ base: 8, md: 12 }}
+              px={{ base: 4, sm: 6, md: sectionPadding }}
               position="relative"
-              bgGradient="radial(circle at center, rgba(159, 122, 234, 0.03), transparent 70%)"
+              overflow="hidden"
+              bg="radial-gradient(circle at 50% 50%, rgba(159, 122, 234, 0.08), transparent 60%)"
             >
+              {/* Simple background decoration */}
               <Box
                 position="absolute"
-                top={sectionPaddingTop}
-                w="100%"
-                display="flex"
-                justifyContent="center"
-              >
-                <HStack spacing={3} align="center">
-                  <Icon as={CheckCircle} color="green.400" boxSize={5} />
-                  <Text
-                    fontSize="lg"
-                    fontWeight="600"
-                    color="green.400"
-                    letterSpacing="wide"
-                  >
-                    Reading Complete
-                  </Text>
-                  <Box
-                    w="3px"
-                    h="3px"
-                    bg="green.400"
-                    borderRadius="full"
-                    animation="pulse 2s ease-in-out infinite"
-                  />
-                </HStack>
-              </Box>
+                top="25%" // Moved down to avoid top area
+                right="20%"
+                width={{ base: '80px', md: '150px' }}
+                height={{ base: '80px', md: '150px' }}
+                borderRadius="full"
+                bg="rgba(214, 158, 46, 0.04)"
+                filter="blur(30px)"
+                animation="gentle-float 8s ease-in-out infinite"
+                sx={{
+                  '@keyframes gentle-float': {
+                    '0%, 100%': { transform: 'translateY(0px)' },
+                    '50%': { transform: 'translateY(-15px)' },
+                  },
+                }}
+              />
 
+              {/* Main Content Container - Properly Spaced */}
               <Flex
+                direction="column"
+                align="center"
+                justify="flex-start" // Changed from center
                 w="100%"
-                h="100%"
-                alignItems="center"
-                justifyContent="center"
-                px={{ base: 4, md: 6, lg: isDesktop ? 8 : 6 }}
+                maxW={{ base: '100%', sm: '420px', md: '500px', lg: '600px' }}
+                mx="auto"
+                textAlign="center"
+                gap={{ base: 5, sm: 6, md: 8 }} // Consistent spacing
+                minH="calc(100vh - 160px)" // Ensure proper height calculation
               >
-                <VStack
-                  spacing={isDesktop ? 12 : 10}
+                {/* Reading Complete Header */}
+                <MotionBox
+                  initial={{ opacity: 0, y: -20 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ duration: 0.6, ease: 'easeOut' }}
                   w="100%"
-                  maxW={isDesktop ? '500px' : '420px'}
-                  align="center"
                 >
-                  <Box w="100%" display="flex" justifyContent="center">
-                    <GameHubButton
-                      onClick={onQuizButtonClick}
-                      category={article?.category}
-                      articleId={article?._id}
-                      disabled={!isAuthenticated}
+                  <HStack
+                    spacing={{ base: 2, md: 3 }}
+                    justify="center"
+                    mb={{ base: 2, md: 3 }}
+                  >
+                    <Icon
+                      as={CheckCircle}
+                      color="green.400"
+                      boxSize={{ base: 5, md: 6 }}
                     />
-                  </Box>
+                    <Text
+                      fontSize={{ base: 'md', sm: 'lg', md: 'xl' }}
+                      fontWeight="600"
+                      color="green.400"
+                      letterSpacing="wide"
+                    >
+                      Reading Complete
+                    </Text>
+                    <Box
+                      w={{ base: '3px', md: '4px' }}
+                      h={{ base: '3px', md: '4px' }}
+                      bg="green.400"
+                      borderRadius="full"
+                      animation="subtle-pulse 3s ease-in-out infinite"
+                      sx={{
+                        '@keyframes subtle-pulse': {
+                          '0%, 100%': { opacity: 0.6 },
+                          '50%': { opacity: 1 },
+                        },
+                      }}
+                    />
+                  </HStack>
+                </MotionBox>
 
+                {/* Achievement Box */}
+                {!isAuthenticated && (
+                  <MotionBox
+                    initial={{ opacity: 0, scale: 0.95 }}
+                    animate={{ opacity: 1, scale: 1 }}
+                    transition={{ delay: 0.2, duration: 0.5 }}
+                    w="100%"
+                    maxW={{ base: '100%', sm: '400px', md: '450px' }}
+                  >
+                    <Box
+                      bg="linear-gradient(135deg, rgba(34, 197, 94, 0.15), rgba(16, 185, 129, 0.1))"
+                      borderRadius={{ base: 'lg', md: 'xl' }}
+                      border="2px solid"
+                      borderColor="green.500"
+                      p={{ base: 4, sm: 5, md: 6 }}
+                      position="relative"
+                      overflow="hidden"
+                      boxShadow="0 8px 25px rgba(34, 197, 94, 0.2)"
+                    >
+                      {/* Subtle animation */}
+                      <Box
+                        position="absolute"
+                        top="0"
+                        left="-100%"
+                        width="100%"
+                        height="100%"
+                        bg="linear-gradient(90deg, transparent 0%, rgba(255,255,255,0.08) 50%, transparent 100%)"
+                        animation="subtle-shine 4s ease-in-out infinite"
+                        sx={{
+                          '@keyframes subtle-shine': {
+                            '0%': { left: '-100%' },
+                            '100%': { left: '100%' },
+                          },
+                        }}
+                      />
+
+                      <VStack
+                        spacing={{ base: 3, md: 4 }}
+                        position="relative"
+                        zIndex={1}
+                      >
+                        <HStack spacing={{ base: 2, md: 3 }} justify="center">
+                          <Icon
+                            as={Trophy}
+                            boxSize={{ base: 5, md: 6 }}
+                            color="yellow.400"
+                          />
+                          <Text
+                            fontSize={{ base: 'md', sm: 'lg', md: 'xl' }}
+                            fontWeight="bold"
+                            color="white"
+                            textAlign="center"
+                          >
+                            Your Quiz Performance
+                          </Text>
+                        </HStack>
+
+                        <VStack spacing={{ base: 2, md: 3 }}>
+                          <Badge
+                            colorScheme="green"
+                            variant="solid"
+                            fontSize={{ base: 'sm', md: 'md' }}
+                            px={{ base: 4, md: 5 }}
+                            py={{ base: 2, md: 2.5 }}
+                            borderRadius="full"
+                          >
+                            SCORE: ? • ✨
+                          </Badge>
+                          <Text
+                            fontSize={{ base: 'sm', md: 'md' }}
+                            color="whiteAlpha.800"
+                            fontWeight="500"
+                            textAlign="center"
+                          >
+                            Ready for the real challenge?
+                          </Text>
+                        </VStack>
+                      </VStack>
+                    </Box>
+                  </MotionBox>
+                )}
+
+                {/* Main Title Section */}
+                {!isAuthenticated && (
+                  <MotionBox
+                    initial={{ opacity: 0, y: 20 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    transition={{ delay: 0.4, duration: 0.5 }}
+                    w="100%"
+                  >
+                    <VStack spacing={{ base: 4, md: 5 }}>
+                      <Text
+                        fontSize={{
+                          base: 'xl',
+                          sm: '2xl',
+                          md: '3xl',
+                          lg: '4xl',
+                        }}
+                        fontWeight="800"
+                        bgGradient="linear(to-r, purple.400, pink.400, orange.400)"
+                        bgClip="text"
+                        lineHeight={{ base: '1.2', md: '1.1' }}
+                        textAlign="center"
+                        px={{ base: 2, md: 0 }}
+                      >
+                        Unlock Your Competitive Edge
+                      </Text>
+
+                      <Text
+                        fontSize={{ base: 'sm', sm: 'md', md: 'lg' }}
+                        color="whiteAlpha.800"
+                        maxW={{ base: '100%', sm: '380px', md: '420px' }}
+                        lineHeight={{ base: '1.4', md: '1.5' }}
+                        fontWeight="500"
+                        textAlign="center"
+                        px={{ base: 3, sm: 2, md: 0 }}
+                      >
+                        Join 1,000+ players competing daily. Track your IQ,
+                        climb leaderboards, and win real prizes.
+                      </Text>
+
+                      {/* Call-to-Action Arrow */}
+                      <VStack spacing={2} mt={{ base: 2, md: 3 }}>
+                        <Text
+                          fontSize={{ base: 'xs', sm: 'sm' }}
+                          color="purple.300"
+                          fontWeight="600"
+                          textAlign="center"
+                          animation="gentle-bounce 3s ease-in-out infinite"
+                          sx={{
+                            '@keyframes gentle-bounce': {
+                              '0%, 100%': { transform: 'translateY(0px)' },
+                              '50%': { transform: 'translateY(-3px)' },
+                            },
+                          }}
+                        >
+                          👇 Click below to start competing 👇
+                        </Text>
+                      </VStack>
+                    </VStack>
+                  </MotionBox>
+                )}
+
+                {/* GameHub Button */}
+                <MotionBox
+                  initial={{ opacity: 0, y: 30 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ delay: 0.6, duration: 0.5 }}
+                  w="100%"
+                  display="flex"
+                  justifyContent="center"
+                >
+                  <GameHubButton
+                    onClick={() => {
+                      if (!isAuthenticated) {
+                        dispatchRedux(setIsSigninOpen(true))
+                      } else {
+                        onQuizButtonClick()
+                      }
+                    }}
+                    category={article?.category}
+                    articleId={article?._id}
+                    disabled={false}
+                    userQuizScore="?"
+                    totalQuizQuestions={1}
+                    hasCompletedInlineQuiz={true}
+                  />
+                </MotionBox>
+                {isAuthenticated && (
                   <TotalUserAttempted
                     totalUsersGivenQuiz={totalUsersGivenQuiz}
                     notLoggedIn={!isAuthenticated}
                     RQM_score={RQM_score}
-                    articleId={article?._id}
+                    articleId={articleId}
                   />
+                )}
+                {/* Feature Highlights - Compact Layout */}
+                {!isAuthenticated && (
+                  <MotionBox
+                    initial={{ opacity: 0 }}
+                    animate={{ opacity: 1 }}
+                    transition={{ delay: 0.8, duration: 0.5 }}
+                    w="100%"
+                  >
+                    <VStack spacing={{ base: 4, md: 5 }}>
+                      {/* Feature Icons - Responsive Grid */}
+                      <Box w="100%">
+                        <Grid
+                          templateColumns={{
+                            base: 'repeat(2, 1fr)',
+                            sm: 'repeat(4, 1fr)',
+                            md: 'repeat(4, 1fr)',
+                          }}
+                          gap={{ base: 3, sm: 4, md: 6 }}
+                          w="100%"
+                          px={{ base: 2, md: 0 }}
+                        >
+                          <GridItem>
+                            <VStack spacing={1}>
+                              <Icon
+                                as={Trophy}
+                                boxSize={{ base: 4, md: 5 }}
+                                color="yellow.400"
+                              />
+                              <Text
+                                fontSize={{ base: 'xs', sm: 'sm' }}
+                                fontWeight="500"
+                                color="whiteAlpha.700"
+                                textAlign="center"
+                              >
+                                Win Prizes
+                              </Text>
+                            </VStack>
+                          </GridItem>
 
-                  {isAuthenticated && (
-                    <Box textAlign="center">
-                      <Text fontSize="sm" color="whiteAlpha.600" mb={2}>
-                        {isDesktop
-                          ? 'Use scroll wheel or arrow keys to continue'
-                          : 'Continue scrolling for more articles'}
-                      </Text>
+                          <GridItem>
+                            <VStack spacing={1}>
+                              <Icon
+                                as={TrendingUp}
+                                boxSize={{ base: 4, md: 5 }}
+                                color="green.400"
+                              />
+                              <Text
+                                fontSize={{ base: 'xs', sm: 'sm' }}
+                                fontWeight="500"
+                                color="whiteAlpha.700"
+                                textAlign="center"
+                              >
+                                Track IQ
+                              </Text>
+                            </VStack>
+                          </GridItem>
+
+                          <GridItem>
+                            <VStack spacing={1}>
+                              <Icon
+                                as={Users}
+                                boxSize={{ base: 4, md: 5 }}
+                                color="blue.400"
+                              />
+                              <Text
+                                fontSize={{ base: 'xs', sm: 'sm' }}
+                                fontWeight="500"
+                                color="whiteAlpha.700"
+                                textAlign="center"
+                              >
+                                1K+ Players
+                              </Text>
+                            </VStack>
+                          </GridItem>
+
+                          <GridItem>
+                            <VStack spacing={1}>
+                              <Icon
+                                as={Zap}
+                                boxSize={{ base: 4, md: 5 }}
+                                color="purple.400"
+                              />
+                              <Text
+                                fontSize={{ base: 'xs', sm: 'sm' }}
+                                fontWeight="500"
+                                color="whiteAlpha.700"
+                                textAlign="center"
+                              >
+                                Daily Challenges
+                              </Text>
+                            </VStack>
+                          </GridItem>
+                        </Grid>
+                      </Box>
+
+                      {/* Trust Indicators */}
                       <Box
-                        w="6px"
-                        h="15px"
-                        bg="linear-gradient(180deg, rgba(255,255,255,0.6), rgba(255,255,255,0.2))"
-                        mx="auto"
-                        borderRadius="full"
-                        animation="bounce 2s ease-in-out infinite"
+                        animation="subtle-glow 4s ease-in-out infinite"
                         sx={{
-                          '@keyframes bounce': {
-                            '0%, 100%': { transform: 'translateY(0px)' },
-                            '50%': { transform: 'translateY(-8px)' },
+                          '@keyframes subtle-glow': {
+                            '0%, 100%': { opacity: 0.8 },
+                            '50%': { opacity: 1 },
                           },
                         }}
-                      />
-                    </Box>
-                  )}
+                        textAlign="center"
+                      >
+                        <Flex
+                          align="center"
+                          justify="center"
+                          flexWrap="wrap"
+                          gap={{ base: 1, md: 2 }}
+                          px={{ base: 4, md: 0 }}
+                        >
+                          <Box
+                            w={{ base: '3px', md: '4px' }}
+                            h={{ base: '3px', md: '4px' }}
+                            bg="orange.400"
+                            borderRadius="full"
+                          />
+                          <Text
+                            fontSize={{ base: 'xs', sm: 'sm' }}
+                            color="orange.300"
+                            fontWeight="600"
+                            textAlign="center"
+                            whiteSpace={{ base: 'nowrap', sm: 'normal' }}
+                          >
+                            Free signup • Instant access • No commitment
+                          </Text>
+                          <Box
+                            w={{ base: '3px', md: '4px' }}
+                            h={{ base: '3px', md: '4px' }}
+                            bg="orange.400"
+                            borderRadius="full"
+                          />
+                        </Flex>
+                      </Box>
+                    </VStack>
+                  </MotionBox>
+                )}
 
-                  <Box textAlign="center" pt={4}>
-                    <Text fontSize="xs" color="whiteAlpha.500">
+                {/* Bottom Instructions for Authenticated Users */}
+                {isAuthenticated && (
+                  <Box
+                    textAlign="center"
+                    mt={{ base: 4, md: 6 }}
+                    px={{ base: 4, md: 0 }}
+                  >
+                    <Text
+                      fontSize={{ base: '2xs', sm: 'xs' }}
+                      color="whiteAlpha.500"
+                      textAlign="center"
+                    >
                       {isDesktop
                         ? 'Press ESC to exit immersive mode'
                         : 'Tap the view icon in header to switch reading modes'}
                     </Text>
                   </Box>
-                </VStack>
+                )}
               </Flex>
             </Flex>
           )
+
+        // Fixed Articles Section for GameModeLayout.jsx
+        // This replaces the 'articles' case in renderCurrentSection function
+        // Location: client/src/components/articleComponents/GameModeLayout.jsx
+        // Replace lines approximately 1340-1580 (the entire 'articles' case)
 
         case 'articles':
           return (
             <Flex
               h="100vh"
               w="100%"
-              alignItems="center"
+              alignItems="flex-start"
               justifyContent="center"
-              px={sectionPadding}
-              pt={sectionPaddingTop}
-              pb={8}
-              bgGradient="radial(circle at center, rgba(214, 158, 46, 0.03), transparent 70%)"
+              px={{
+                base: '12px',
+                md: '20px',
+                lg: isDesktop ? '40px' : '20px',
+                xl: isLargeDesktop ? '60px' : '40px',
+                '2xl': isExtraLargeDesktop ? '80px' : '60px',
+              }}
+              pt={{
+                base: '70px',
+                md: '80px',
+                lg: '90px',
+                xl: isLargeDesktop ? '100px' : '90px',
+              }}
+              pb={{
+                base: 4,
+                md: 6,
+                lg: 8,
+                xl: isLargeDesktop ? 10 : 8,
+              }}
+              position="relative"
+              overflow="hidden"
+              bg="radial-gradient(circle at 30% 70%, rgba(159, 122, 234, 0.04), transparent 70%)"
             >
+              {/* Background Decoration */}
+              <Box
+                position="absolute"
+                top="20%"
+                left="15%"
+                width={{
+                  base: '60px',
+                  md: '100px',
+                  lg: '140px',
+                  xl: isLargeDesktop ? '160px' : '140px',
+                }}
+                height={{
+                  base: '60px',
+                  md: '100px',
+                  lg: '140px',
+                  xl: isLargeDesktop ? '160px' : '140px',
+                }}
+                borderRadius="full"
+                bg="rgba(214, 158, 46, 0.03)"
+                filter="blur(40px)"
+                animation="gentle-float 10s ease-in-out infinite"
+                sx={{
+                  '@keyframes gentle-float': {
+                    '0%, 100%': { transform: 'translate(0px, 0px) scale(1)' },
+                    '33%': { transform: 'translate(20px, -20px) scale(1.1)' },
+                    '66%': { transform: 'translate(-15px, 15px) scale(0.9)' },
+                  },
+                }}
+              />
+
+              <Box
+                position="absolute"
+                bottom="30%"
+                right="20%"
+                width={{
+                  base: '40px',
+                  md: '80px',
+                  lg: '120px',
+                  xl: isLargeDesktop ? '140px' : '120px',
+                }}
+                height={{
+                  base: '40px',
+                  md: '80px',
+                  lg: '120px',
+                  xl: isLargeDesktop ? '140px' : '120px',
+                }}
+                borderRadius="full"
+                bg="rgba(159, 122, 234, 0.03)"
+                filter="blur(30px)"
+                animation="gentle-float-reverse 12s ease-in-out infinite"
+                sx={{
+                  '@keyframes gentle-float-reverse': {
+                    '0%, 100%': { transform: 'translate(0px, 0px) scale(1)' },
+                    '50%': { transform: 'translate(-25px, -25px) scale(1.2)' },
+                  },
+                }}
+              />
+
+              {/* FIXED: Main Content Container with proper height management */}
               <VStack
-                spacing={isDesktop ? 10 : 8}
+                spacing={{
+                  base: 4,
+                  md: 6,
+                  lg: 8,
+                  xl: isLargeDesktop ? 10 : 8,
+                }}
                 w="100%"
-                maxW={isDesktop ? '500px' : '400px'}
-                align="center"
+                maxW={{
+                  base: '100%',
+                  sm: '500px',
+                  md: '700px',
+                  lg: isDesktop ? '900px' : '700px',
+                  xl: isLargeDesktop ? '1200px' : '900px',
+                  '2xl': isExtraLargeDesktop ? '1400px' : '1200px',
+                }}
+                mx="auto"
+                h="100%"
+                justify="flex-start"
+                align="stretch"
+                overflow="hidden"
               >
-                <Box textAlign="center">
-                  <HStack spacing={3} justify="center" mb={3}>
-                    <Icon as={Users} color="orange.400" boxSize={6} />
-                    <Text
-                      fontSize="xl"
-                      fontWeight="bold"
-                      color="orange.400"
-                      letterSpacing="wide"
-                    >
-                      Discover More
-                    </Text>
-                  </HStack>
-                  <Text fontSize="sm" color="whiteAlpha.700">
-                    Explore related articles and personalized recommendations
-                  </Text>
-                </Box>
-
-                <RelatedArticlesToggle
-                  showRelated={showRelated}
-                  onToggle={onRelatedToggle}
-                />
-
-                <Box
-                  w="100%"
-                  bg="rgba(255, 255, 255, 0.05)"
-                  borderRadius="xl"
-                  p={isDesktop ? 8 : 6}
-                  border="1px solid"
-                  borderColor="whiteAlpha.100"
+                {/* Enhanced Header Section */}
+                <MotionBox
+                  initial={{ opacity: 0, y: -20 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ duration: 0.6, ease: 'easeOut' }}
                   textAlign="center"
-                  minH={isDesktop ? '250px' : '200px'}
-                  display="flex"
-                  alignItems="center"
-                  justifyContent="center"
+                  w="100%"
+                  flexShrink={0}
                 >
-                  <VStack spacing={3}>
-                    <Box
-                      w="40px"
-                      h="40px"
-                      border="2px solid"
-                      borderColor="whiteAlpha.300"
-                      borderTopColor="orange.400"
-                      borderRadius="full"
-                      animation="spin 1s linear infinite"
-                      sx={{
-                        '@keyframes spin': {
-                          '0%': { transform: 'rotate(0deg)' },
-                          '100%': { transform: 'rotate(360deg)' },
-                        },
+                  <VStack spacing={{ base: 3, md: 4, lg: 5 }}>
+                    <HStack spacing={{ base: 2, md: 3 }} justify="center">
+                      <Box
+                        w={{ base: '3px', md: '4px' }}
+                        h={{ base: '3px', md: '4px' }}
+                        bg="orange.400"
+                        borderRadius="full"
+                        animation="subtle-pulse 3s ease-in-out infinite"
+                        sx={{
+                          '@keyframes subtle-pulse': {
+                            '0%, 100%': { opacity: 0.6, transform: 'scale(1)' },
+                            '50%': { opacity: 1, transform: 'scale(1.2)' },
+                          },
+                        }}
+                      />
+                      <Text
+                        fontSize={{
+                          base: 'lg',
+                          sm: 'xl',
+                          md: '2xl',
+                          lg: isLargeDesktop ? '3xl' : '2xl',
+                        }}
+                        fontWeight="bold"
+                        color="orange.400"
+                        letterSpacing="wide"
+                        textTransform="uppercase"
+                      >
+                        Discover More
+                      </Text>
+                      <Box
+                        w={{ base: '3px', md: '4px' }}
+                        h={{ base: '3px', md: '4px' }}
+                        bg="purple.400"
+                        borderRadius="full"
+                        animation="subtle-pulse 3s ease-in-out infinite 0.5s"
+                      />
+                    </HStack>
+
+                    <Text
+                      fontSize={{
+                        base: 'sm',
+                        md: 'md',
+                        lg: isLargeDesktop ? 'lg' : 'md',
                       }}
-                    />
-                    <Text fontSize="sm" color="whiteAlpha.600">
+                      color="whiteAlpha.700"
+                      maxW={{
+                        base: '300px',
+                        md: '400px',
+                        lg: isLargeDesktop ? '500px' : '400px',
+                      }}
+                      lineHeight="1.5"
+                      fontWeight="500"
+                    >
+                      Explore{' '}
                       {showRelated
-                        ? 'Loading related articles...'
-                        : 'Loading recommendations...'}
+                        ? 'related articles'
+                        : 'personalized recommendations'}{' '}
+                      curated just for you
                     </Text>
                   </VStack>
-                </Box>
+                </MotionBox>
 
-                <Box textAlign="center" pt={4}>
-                  <Text fontSize="xs" color="whiteAlpha.400">
-                    You've reached the end
-                  </Text>
-                </Box>
+                {/* Toggle Section */}
+                <MotionBox
+                  initial={{ opacity: 0, scale: 0.95 }}
+                  animate={{ opacity: 1, scale: 1 }}
+                  transition={{ delay: 0.2, duration: 0.5 }}
+                  w="100%"
+                  display="flex"
+                  justifyContent="center"
+                  flexShrink={0}
+                >
+                  <RelatedArticlesToggle
+                    showRelated={showRelated}
+                    onToggle={onRelatedToggle}
+                  />
+                </MotionBox>
+
+                {/* FIXED: Articles Container with proper overflow and height */}
+                <MotionBox
+                  initial={{ opacity: 0, y: 20 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ delay: 0.4, duration: 0.6 }}
+                  w="100%"
+                  flex={1}
+                  bg="rgba(255, 255, 255, 0.02)"
+                  borderRadius={{ base: 'xl', md: '2xl' }}
+                  border="1px solid"
+                  borderColor="whiteAlpha.100"
+                  backdropFilter="blur(20px)"
+                  p={{
+                    base: 4,
+                    md: 6,
+                    lg: 6,
+                    xl: isLargeDesktop ? 8 : 6,
+                  }}
+                  position="relative"
+                  overflow="hidden"
+                  display="flex"
+                  flexDirection="column"
+                  // FIXED: Remove restrictive maxH to allow content to flow
+                  minH={{
+                    base: '300px',
+                    md: '400px',
+                    lg: '450px',
+                    xl: isLargeDesktop ? '500px' : '450px',
+                  }}
+                >
+                  {/* Subtle Inner Glow */}
+                  <Box
+                    position="absolute"
+                    top={0}
+                    left={0}
+                    right={0}
+                    bottom={0}
+                    bg="radial-gradient(circle at center, rgba(159, 122, 234, 0.02), transparent 60%)"
+                    pointerEvents="none"
+                    borderRadius={{ base: 'xl', md: '2xl' }}
+                  />
+
+                  {/* Articles Content with FIXED height management */}
+                  <Box
+                    position="relative"
+                    zIndex={1}
+                    h="100%"
+                    display="flex"
+                    flexDirection="column"
+                    overflow="hidden"
+                  >
+                    {isAuthenticated ? (
+                      <VStack spacing={0} w="100%" align="stretch" h="100%">
+                        {/* IMPROVED: Articles Grid Container */}
+                        <Box
+                          w="100%"
+                          flex="1"
+                          overflowY="auto"
+                          overflowX="hidden"
+                          css={{
+                            '&::-webkit-scrollbar': {
+                              width: '6px',
+                            },
+                            '&::-webkit-scrollbar-track': {
+                              background: 'rgba(255, 255, 255, 0.1)',
+                              borderRadius: '10px',
+                            },
+                            '&::-webkit-scrollbar-thumb': {
+                              background: 'rgba(159, 122, 234, 0.6)',
+                              borderRadius: '10px',
+                            },
+                            '&::-webkit-scrollbar-thumb:hover': {
+                              background: 'rgba(159, 122, 234, 0.8)',
+                            },
+                          }}
+                          pr={{ base: 1, md: 2 }}
+                          // FIXED: Remove bottom padding that was hiding Load More button
+                        >
+                          <VStack spacing={0} w="100%" align="stretch">
+                            {/* Articles Grid */}
+                            {(() => {
+                              const articlesToShow = showRelated
+                                ? latestNews.filter(
+                                    item => item && item._id !== article?._id,
+                                  )
+                                : recommendedArticles.filter(
+                                    item => item && item._id !== article?._id,
+                                  )
+
+                              if (!articlesToShow.length && !loading) {
+                                return (
+                                  <MotionBox
+                                    initial={{ opacity: 0, y: 20 }}
+                                    animate={{ opacity: 1, y: 0 }}
+                                    transition={{ duration: 0.5 }}
+                                    textAlign="center"
+                                    py={{ base: 6, md: 8, lg: 10 }}
+                                    w="100%"
+                                  >
+                                    <VStack spacing={{ base: 3, md: 4 }}>
+                                      <Icon
+                                        as={Users}
+                                        boxSize={{ base: 10, md: 12, lg: 14 }}
+                                        color="whiteAlpha.300"
+                                      />
+                                      <Text
+                                        fontSize={{
+                                          base: 'md',
+                                          md: 'lg',
+                                          lg: 'xl',
+                                        }}
+                                        color="whiteAlpha.600"
+                                        fontWeight="500"
+                                      >
+                                        No{' '}
+                                        {showRelated
+                                          ? 'related'
+                                          : 'recommended'}{' '}
+                                        articles found
+                                      </Text>
+                                      <Text
+                                        fontSize={{ base: 'xs', md: 'sm' }}
+                                        color="whiteAlpha.400"
+                                        maxW={{ base: '280px', md: '350px' }}
+                                        textAlign="center"
+                                      >
+                                        Try exploring other categories or check
+                                        back later
+                                      </Text>
+                                    </VStack>
+                                  </MotionBox>
+                                )
+                              }
+
+                              return (
+                                <>
+                                  {/* Articles Grid */}
+                                  <Grid
+                                    templateColumns={{
+                                      base: '1fr',
+                                      md: 'repeat(2, 1fr)',
+                                      lg: 'repeat(2, 1fr)',
+                                      xl: isExtraLargeDesktop
+                                        ? 'repeat(3, 1fr)'
+                                        : 'repeat(2, 1fr)',
+                                    }}
+                                    gap={{
+                                      base: 4,
+                                      md: 5,
+                                      lg: 6,
+                                      xl: isExtraLargeDesktop ? 5 : 6,
+                                    }}
+                                    w="100%"
+                                    mb={{ base: 4, md: 6, lg: 8 }} // Space for Load More button
+                                  >
+                                    {articlesToShow.map((item, index) => (
+                                      <GridItem
+                                        key={`${item?._id}-${index}`}
+                                        w="100%"
+                                      >
+                                        <MotionBox
+                                          initial={{ opacity: 0, y: 20 }}
+                                          animate={{ opacity: 1, y: 0 }}
+                                          transition={{
+                                            duration: 0.5,
+                                            delay: index * 0.1,
+                                            ease: 'easeOut',
+                                          }}
+                                          whileHover={{
+                                            y: -4,
+                                            transition: {
+                                              duration: 0.2,
+                                              ease: 'easeOut',
+                                            },
+                                          }}
+                                          onClick={e =>
+                                            handleRelatedArticleClick(e, item)
+                                          }
+                                          style={
+                                            !isAuthenticated
+                                              ? {
+                                                  filter: 'blur(5px)',
+                                                  userSelect: 'none',
+                                                }
+                                              : {
+                                                  userSelect: 'text',
+                                                  cursor: 'pointer',
+                                                }
+                                          }
+                                          bg="rgba(255, 255, 255, 0.03)"
+                                          borderRadius={{
+                                            base: 'lg',
+                                            md: 'xl',
+                                          }}
+                                          border="1px solid"
+                                          borderColor="rgba(255, 255, 255, 0.08)"
+                                          overflow="hidden"
+                                          position="relative"
+                                          minH={{
+                                            base: '140px',
+                                            md: '160px',
+                                            lg: '180px',
+                                            xl: isExtraLargeDesktop
+                                              ? '170px'
+                                              : '180px',
+                                          }}
+                                          _hover={{
+                                            borderColor:
+                                              'rgba(159, 122, 234, 0.3)',
+                                            bg: 'rgba(255, 255, 255, 0.06)',
+                                            transform: 'translateY(-4px)',
+                                            boxShadow:
+                                              '0 8px 32px rgba(159, 122, 234, 0.15)',
+                                          }}
+                                          _active={{
+                                            transform: 'translateY(-2px)',
+                                          }}
+                                        >
+                                          {/* Loading Overlay */}
+                                          {loadingRealatedArticles[
+                                            item?._id
+                                          ] && (
+                                            <Flex
+                                              position="absolute"
+                                              top="0"
+                                              left="0"
+                                              right="0"
+                                              bottom="0"
+                                              backgroundColor="rgba(0, 0, 0, 0.7)"
+                                              justifyContent="center"
+                                              alignItems="center"
+                                              borderRadius={{
+                                                base: 'lg',
+                                                md: 'xl',
+                                              }}
+                                              zIndex={3}
+                                              backdropFilter="blur(4px)"
+                                            >
+                                              <VStack spacing={2}>
+                                                <Spinner
+                                                  thickness="3px"
+                                                  speed="0.65s"
+                                                  emptyColor="whiteAlpha.300"
+                                                  color="purple.400"
+                                                  size="lg"
+                                                />
+                                                <Text
+                                                  fontSize="xs"
+                                                  color="whiteAlpha.700"
+                                                >
+                                                  Loading...
+                                                </Text>
+                                              </VStack>
+                                            </Flex>
+                                          )}
+
+                                          {/* Enhanced Card Content */}
+                                          <Flex
+                                            direction="column"
+                                            h="100%"
+                                            p={{ base: 4, md: 5 }}
+                                          >
+                                            {/* Article Metadata Header */}
+                                            <Flex
+                                              justify="space-between"
+                                              align="center"
+                                              mb={3}
+                                              flexWrap={{
+                                                base: 'wrap',
+                                                sm: 'nowrap',
+                                              }}
+                                              gap={2}
+                                            >
+                                              <HStack
+                                                spacing={2}
+                                                minW={0}
+                                                flex={1}
+                                              >
+                                                <Box
+                                                  w="3px"
+                                                  h="3px"
+                                                  bg="purple.400"
+                                                  borderRadius="full"
+                                                  flexShrink={0}
+                                                />
+                                                <Text
+                                                  fontSize={{
+                                                    base: '2xs',
+                                                    sm: 'xs',
+                                                    xl: isExtraLargeDesktop
+                                                      ? '2xs'
+                                                      : 'xs',
+                                                  }}
+                                                  color="purple.300"
+                                                  fontWeight="600"
+                                                  textTransform="uppercase"
+                                                  letterSpacing="wider"
+                                                  noOfLines={1}
+                                                >
+                                                  {formatDate(
+                                                    item?.dateTime,
+                                                    formatDateTranslate,
+                                                    i18n.language,
+                                                  )}
+                                                </Text>
+                                              </HStack>
+
+                                              <Badge
+                                                colorScheme="orange"
+                                                variant="subtle"
+                                                fontSize="2xs"
+                                                px={2}
+                                                py={1}
+                                                borderRadius="md"
+                                                bg="rgba(214, 158, 46, 0.1)"
+                                                color="orange.300"
+                                                border="1px solid"
+                                                borderColor="rgba(214, 158, 46, 0.2)"
+                                                flexShrink={0}
+                                              >
+                                                {item?.avgReadTime || 'N/A'}{' '}
+                                                {t('minRead')}
+                                              </Badge>
+                                            </Flex>
+
+                                            {/* Main Content Area */}
+                                            <Flex
+                                              flex={1}
+                                              gap={{ base: 3, md: 4 }}
+                                              align="stretch"
+                                            >
+                                              {/* Article Image */}
+                                              <Box
+                                                position="relative"
+                                                flexShrink={0}
+                                                w={{
+                                                  base: '80px',
+                                                  sm: '100px',
+                                                  md: '120px',
+                                                  xl: isExtraLargeDesktop
+                                                    ? '100px'
+                                                    : '120px',
+                                                }}
+                                                h={{
+                                                  base: '60px',
+                                                  sm: '75px',
+                                                  md: '90px',
+                                                  xl: isExtraLargeDesktop
+                                                    ? '75px'
+                                                    : '90px',
+                                                }}
+                                                borderRadius={{
+                                                  base: 'md',
+                                                  md: 'lg',
+                                                }}
+                                                overflow="hidden"
+                                                bg="rgba(255, 255, 255, 0.05)"
+                                              >
+                                                <Image
+                                                  src={
+                                                    (!blackListedImgUrls.find(
+                                                      url =>
+                                                        url ===
+                                                        item?.imgURL?.[0],
+                                                    ) &&
+                                                      item?.imgURL?.[0]) ||
+                                                    fallback_news_image
+                                                  }
+                                                  alt={t('articleImageAlt')}
+                                                  onError={e => {
+                                                    e.target.onerror = null
+                                                    e.target.src =
+                                                      fallback_news_image
+                                                  }}
+                                                  w="100%"
+                                                  h="100%"
+                                                  objectFit="cover"
+                                                  loading="lazy"
+                                                  transition="transform 0.3s ease"
+                                                  _hover={{
+                                                    transform: 'scale(1.05)',
+                                                  }}
+                                                />
+
+                                                {/* Image Overlay for Better Text Contrast */}
+                                                <Box
+                                                  position="absolute"
+                                                  top={0}
+                                                  left={0}
+                                                  right={0}
+                                                  bottom={0}
+                                                  bg="linear-gradient(135deg, rgba(159, 122, 234, 0.1), transparent 50%)"
+                                                  opacity={0}
+                                                  transition="opacity 0.3s ease"
+                                                  _groupHover={{ opacity: 1 }}
+                                                />
+                                              </Box>
+
+                                              {/* Article Text Content */}
+                                              <Flex
+                                                direction="column"
+                                                flex={1}
+                                                justify="center"
+                                                minW={0}
+                                              >
+                                                <Text
+                                                  fontSize={{
+                                                    base: 'sm',
+                                                    sm: 'md',
+                                                    md: 'lg',
+                                                    xl: isExtraLargeDesktop
+                                                      ? 'md'
+                                                      : 'lg',
+                                                  }}
+                                                  fontWeight="600"
+                                                  color="white"
+                                                  lineHeight={{
+                                                    base: '1.3',
+                                                    md: '1.4',
+                                                  }}
+                                                  noOfLines={{
+                                                    base: 3,
+                                                    md: 4,
+                                                    xl: isExtraLargeDesktop
+                                                      ? 3
+                                                      : 4,
+                                                  }}
+                                                  mb={2}
+                                                  transition="color 0.2s ease"
+                                                  _groupHover={{
+                                                    color: 'purple.200',
+                                                  }}
+                                                >
+                                                  {i18n.language === 'en'
+                                                    ? item?.title
+                                                    : item?.hindiTitle}
+                                                </Text>
+
+                                                {/* Article Category/Tags */}
+                                                {item?.category && (
+                                                  <HStack spacing={2} mt="auto">
+                                                    <Box
+                                                      w="2px"
+                                                      h="2px"
+                                                      bg="orange.400"
+                                                      borderRadius="full"
+                                                    />
+                                                    <Text
+                                                      fontSize="2xs"
+                                                      color="orange.300"
+                                                      fontWeight="500"
+                                                      textTransform="capitalize"
+                                                      letterSpacing="wide"
+                                                    >
+                                                      {item?.category}
+                                                    </Text>
+                                                  </HStack>
+                                                )}
+                                              </Flex>
+                                            </Flex>
+
+                                            {/* Subtle Hover Indicator */}
+                                            <Box
+                                              position="absolute"
+                                              bottom={0}
+                                              left={0}
+                                              right={0}
+                                              h="2px"
+                                              bg="linear-gradient(90deg, rgba(159, 122, 234, 0.6), rgba(214, 158, 46, 0.6))"
+                                              transform="scaleX(0)"
+                                              transformOrigin="left"
+                                              transition="transform 0.3s ease"
+                                              _groupHover={{
+                                                transform: 'scaleX(1)',
+                                              }}
+                                            />
+                                          </Flex>
+                                        </MotionBox>
+                                      </GridItem>
+                                    ))}
+                                  </Grid>
+
+                                  {/* FIXED: Load More Button - Always visible with proper spacing */}
+                                  {!loading && articlesToShow.length > 0 && (
+                                    <Box
+                                      w="100%"
+                                      textAlign="center"
+                                      py={{ base: 4, md: 6 }}
+                                      flexShrink={0}
+                                    >
+                                      <MotionBox
+                                        initial={{ opacity: 0, y: 10 }}
+                                        animate={{ opacity: 1, y: 0 }}
+                                        transition={{
+                                          delay: 0.3,
+                                          duration: 0.4,
+                                        }}
+                                      >
+                                        <Button
+                                          onClick={() =>
+                                            showRelated
+                                              ? fetchRelatedArticles()
+                                              : fetchRecommendedArticles()
+                                          }
+                                          size={{
+                                            base: 'md',
+                                            md: 'lg',
+                                            lg: isLargeDesktop ? 'lg' : 'md',
+                                          }}
+                                          bg="rgba(159, 122, 234, 0.1)"
+                                          border="2px solid"
+                                          borderColor="rgba(159, 122, 234, 0.3)"
+                                          color="purple.300"
+                                          borderRadius="xl"
+                                          px={{ base: 6, md: 8, lg: 10 }}
+                                          py={{ base: 2, md: 3 }}
+                                          fontWeight="600"
+                                          letterSpacing="wide"
+                                          transition="all 0.3s cubic-bezier(0.4, 0, 0.2, 1)"
+                                          _hover={{
+                                            bg: 'rgba(159, 122, 234, 0.2)',
+                                            borderColor:
+                                              'rgba(159, 122, 234, 0.5)',
+                                            color: 'purple.200',
+                                            transform: 'translateY(-2px)',
+                                            boxShadow:
+                                              '0 8px 25px rgba(159, 122, 234, 0.2)',
+                                          }}
+                                          _active={{
+                                            transform: 'translateY(0px)',
+                                            boxShadow:
+                                              '0 4px 15px rgba(159, 122, 234, 0.2)',
+                                          }}
+                                          leftIcon={
+                                            <Icon
+                                              as={TrendingUp}
+                                              boxSize={{
+                                                base: 4,
+                                                md: 5,
+                                                lg: isLargeDesktop ? 5 : 4,
+                                              }}
+                                              transition="transform 0.2s ease"
+                                              _groupHover={{
+                                                transform: 'rotate(12deg)',
+                                              }}
+                                            />
+                                          }
+                                        >
+                                          {t('loadMore')}
+                                        </Button>
+                                      </MotionBox>
+                                    </Box>
+                                  )}
+
+                                  {/* Loading State */}
+                                  {loading && (
+                                    <MotionBox
+                                      initial={{ opacity: 0 }}
+                                      animate={{ opacity: 1 }}
+                                      transition={{ duration: 0.3 }}
+                                      mt={4}
+                                      w="100%"
+                                    >
+                                      <ArticleListSkeleton
+                                        count={
+                                          isExtraLargeDesktop
+                                            ? 6
+                                            : isLargeDesktop
+                                            ? 4
+                                            : isDesktop
+                                            ? 4
+                                            : 2
+                                        }
+                                      />
+                                    </MotionBox>
+                                  )}
+                                </>
+                              )
+                            })()}
+                          </VStack>
+                        </Box>
+                      </VStack>
+                    ) : (
+                      <Flex
+                        h="100%"
+                        align="center"
+                        justify="center"
+                        direction="column"
+                        textAlign="center"
+                        gap={{ base: 3, md: 4 }}
+                        filter="blur(2px)"
+                      >
+                        <Icon
+                          as={Users}
+                          boxSize={{
+                            base: 12,
+                            md: 16,
+                            lg: isLargeDesktop ? 20 : 16,
+                          }}
+                          color="whiteAlpha.200"
+                        />
+                        <Text
+                          fontSize={{
+                            base: 'md',
+                            md: 'lg',
+                            lg: isLargeDesktop ? 'xl' : 'lg',
+                          }}
+                          color="whiteAlpha.400"
+                        >
+                          Sign in to explore articles
+                        </Text>
+                      </Flex>
+                    )}
+                  </Box>
+
+                  {/* Decorative Border Animation */}
+                  <Box
+                    position="absolute"
+                    top={0}
+                    left={0}
+                    right={0}
+                    bottom={0}
+                    borderRadius={{ base: 'xl', md: '2xl' }}
+                    border="1px solid transparent"
+                    bgGradient="linear(45deg, rgba(159, 122, 234, 0.2), rgba(214, 158, 46, 0.2), rgba(159, 122, 234, 0.2))"
+                    bgSize="300% 300%"
+                    animation="gradient-shift 8s ease-in-out infinite"
+                    opacity={0.3}
+                    pointerEvents="none"
+                    sx={{
+                      '@keyframes gradient-shift': {
+                        '0%, 100%': { backgroundPosition: '0% 50%' },
+                        '50%': { backgroundPosition: '100% 50%' },
+                      },
+                    }}
+                    mask="linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0)"
+                    maskComposite="xor"
+                    WebkitMask="linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0)"
+                    WebkitMaskComposite="xor"
+                    p="1px"
+                  />
+                </MotionBox>
+
+                {/* Enhanced Footer */}
+                <MotionBox
+                  initial={{ opacity: 0 }}
+                  animate={{ opacity: 1 }}
+                  transition={{ delay: 0.6, duration: 0.5 }}
+                  textAlign="center"
+                  w="100%"
+                  flexShrink={0}
+                >
+                  <VStack spacing={2}>
+                    <HStack spacing={2} justify="center">
+                      <Box
+                        w="2px"
+                        h="2px"
+                        bg="whiteAlpha.400"
+                        borderRadius="full"
+                      />
+                      <Text
+                        fontSize={{ base: 'xs', md: 'sm' }}
+                        color="whiteAlpha.400"
+                        fontWeight="500"
+                      >
+                        You've reached the end of this article
+                      </Text>
+                      <Box
+                        w="2px"
+                        h="2px"
+                        bg="whiteAlpha.400"
+                        borderRadius="full"
+                      />
+                    </HStack>
+
+                    {isDesktop && (
+                      <Text fontSize="2xs" color="whiteAlpha.300" mt={1}>
+                        Press ESC to exit immersive mode
+                      </Text>
+                    )}
+                  </VStack>
+                </MotionBox>
               </VStack>
             </Flex>
           )
@@ -1143,6 +2890,11 @@ const GameModeLayout = memo(
       onRelatedToggle,
       isDesktop,
       isLargeDesktop,
+      isExtraLargeDesktop,
+      renderArticles,
+      recommendedArticles,
+      latestNews,
+      quizQuestions,
     ])
 
     // Effects
@@ -1394,6 +3146,9 @@ const GameModeLayout = memo(
           WebkitBackfaceVisibility: 'hidden',
         }}
       >
+        {!isAuthenticated && loginCheckStatus === 'fulfilled' && (
+          <PremiumCTA readProgress={progress} />
+        )}
         {/* Enhanced Progress Bar */}
         <Box
           position="fixed"

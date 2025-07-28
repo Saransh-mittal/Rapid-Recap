@@ -343,7 +343,9 @@ const OnboardingProcess = ({ setIsGuestLoggedin }) => {
         }),
       )
       if (user.role === 'guest') setIsGuestLoggedin(true)
-      navigate('/home/all')
+      if (localStorage.getItem('newUserInitialURL')) {
+        navigate(localStorage.getItem('newUserInitialURL'))
+      } else navigate('/home/all')
     } catch (error) {
       toast({
         title: 'Error',

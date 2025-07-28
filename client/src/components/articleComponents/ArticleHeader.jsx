@@ -25,6 +25,7 @@ import {
   HStack,
   useBreakpointValue,
   Badge,
+  Portal,
 } from '@chakra-ui/react'
 import { ChevronDownIcon } from '@chakra-ui/icons'
 import { useDispatch, useSelector } from 'react-redux'
@@ -45,7 +46,7 @@ import { useFeatureDetection } from '../../utils/featureDetection'
 import useSafeSound from '../../customHooks/useSafeSound'
 import ArticleHeaderSkeleton from './loaders/ArticleHeaderSkeleton'
 import SocialShareComponent from './articleHeaderComponents/SocialShareComponent'
-import NotUserLangSwitcher from './NotUserLangSwitcher'
+import NotUserLangSwitcher from './articleHeaderComponents/NotUserLangSwitcher'
 
 const ArticleForm = React.lazy(() =>
   import('../dashboardComponents/ArticleManageComponents/ArticleForm'),
@@ -312,7 +313,6 @@ const ArticleHeader = ({
         mb={3}
         mt={{
           base: isImmersiveModeActive ? 0 : 3,
-          lg: 0,
         }}
       >
         <Box
@@ -436,34 +436,36 @@ const ArticleHeader = ({
                       ? themes.find(t => t.value === theme)?.label
                       : t('original')}
                   </MenuButton>
-                  <MenuList
-                    bg="rgba(30, 41, 59, 0.96)"
-                    borderColor="rgba(255, 255, 255, 0.18)"
-                    boxShadow="0 12px 30px rgba(0,0,0,0.4)"
-                    backdropFilter="blur(20px)"
-                    borderRadius="lg"
-                    py={isDesktop ? 2 : 1} // More padding in menu on desktop
-                  >
-                    {themes.map(themeOption => (
-                      <MenuItem
-                        key={themeOption.value}
-                        onClick={() => handleThemeChange(themeOption.value)}
-                        bg="transparent"
-                        color="white"
-                        _hover={{ bg: 'rgba(159, 122, 234, 0.18)' }}
-                        _focus={{ bg: 'rgba(159, 122, 234, 0.18)' }}
-                        borderRadius="md"
-                        mx={isDesktop ? 2 : 1}
-                        my={0.5}
-                        px={isDesktop ? 3 : 2} // More horizontal padding on desktop
-                        py={isDesktop ? 2 : 1.5} // More vertical padding on desktop
-                        fontSize="sm"
-                        transition="all 0.15s ease"
-                      >
-                        {themeOption.label}
-                      </MenuItem>
-                    ))}
-                  </MenuList>
+                  <Portal>
+                    <MenuList
+                      bg="rgba(30, 41, 59, 0.96)"
+                      borderColor="rgba(255, 255, 255, 0.18)"
+                      boxShadow="0 12px 30px rgba(0,0,0,0.4)"
+                      backdropFilter="blur(20px)"
+                      borderRadius="lg"
+                      py={isDesktop ? 2 : 1} // More padding in menu on desktop
+                    >
+                      {themes.map(themeOption => (
+                        <MenuItem
+                          key={themeOption.value}
+                          onClick={() => handleThemeChange(themeOption.value)}
+                          bg="transparent"
+                          color="white"
+                          _hover={{ bg: 'rgba(159, 122, 234, 0.18)' }}
+                          _focus={{ bg: 'rgba(159, 122, 234, 0.18)' }}
+                          borderRadius="md"
+                          mx={isDesktop ? 2 : 1}
+                          my={0.5}
+                          px={isDesktop ? 3 : 2} // More horizontal padding on desktop
+                          py={isDesktop ? 2 : 1.5} // More vertical padding on desktop
+                          fontSize="sm"
+                          transition="all 0.15s ease"
+                        >
+                          {themeOption.label}
+                        </MenuItem>
+                      ))}
+                    </MenuList>
+                  </Portal>
                 </Menu>
               </HStack>
             </MotionFlex>
@@ -481,18 +483,15 @@ const ArticleHeader = ({
               pt={isDesktop ? 1 : 0} // Extra top padding on desktop
             >
               {/* Left: Time Info + Language with enhanced spacing */}
-              <Flex
-                align="center"
-                gap={responsiveConfig.iconSpacing}
-                order={isMobile ? 2 : 1}
-              >
-                {!user && <NotUserLangSwitcher />}
+              <Flex align="center" order={isMobile ? 2 : 1} w={'100%'}>
+                <Box mr={'auto'}>{!user && <NotUserLangSwitcher />}</Box>
 
                 <Text
                   fontSize={isDesktop ? 'md' : 'sm'} // Larger text on desktop
                   color="whiteAlpha.900"
                   fontWeight="500"
                   textShadow="0 1px 2px rgba(0,0,0,0.3)"
+                  ml={'auto'}
                 >
                   {avgTimeRead} {t('timeToRead')} •
                   <Box as="time" ml={1}>
@@ -510,7 +509,7 @@ const ArticleHeader = ({
                   order={isMobile ? 1 : 2}
                 >
                   {/* Enhanced label with badge for desktop */}
-                  <HStack spacing={isDesktop ? 2 : 1.5} align="center">
+                  {/* <HStack spacing={isDesktop ? 2 : 1.5} align="center">
                     <Text
                       fontSize="2xs"
                       color="whiteAlpha.650"
@@ -533,14 +532,14 @@ const ArticleHeader = ({
                     >
                       {readingMode === 'normal' ? 'Standard' : 'Interactive'}
                     </Badge>
-                  </HStack>
+                  </HStack> */}
 
                   {/* Enhanced toggle for desktop */}
-                  <ReadingModeToggle
+                  {/* <ReadingModeToggle
                     readingMode={readingMode}
                     onToggle={handleReadingModeToggle}
                     playClick={playClick}
-                  />
+                  /> */}
                 </Flex>
               )}
             </MotionFlex>

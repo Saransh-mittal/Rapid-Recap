@@ -46,6 +46,7 @@ import { animationUtils, cssOptimizations } from '../utils/animationUtils'
 import GameModeLayout from '../components/articleComponents/GameModeLayout'
 import useImmersiveMode from '../customHooks/useImmersiveMode'
 import { DesktopContextMenu } from '../components/articleComponents/desktopImmersiveUtils/DesktopContextMenu'
+import { useInlineQuizTracker } from '../components/articleComponents/hooks/useInlineQuizTracker'
 
 //SSR images
 const fallback_news_image = '/images/fallback_news_image.webp'
@@ -68,7 +69,7 @@ const Article = () => {
   const { id } = useParams()
 
   // NEW: Reading mode state
-  const [readingMode, setReadingMode] = useState('normal') // 'normal' or 'game'
+  const [readingMode, setReadingMode] = useState('game') // 'normal' or 'game'
   const [isLargerThan821] = useMediaQuery('(min-width: 821px)')
 
   const [article, setArticle] = useState(articleData)
@@ -130,7 +131,7 @@ const Article = () => {
     useState(false)
 
   const notLoggedIn = !isAuthenticated
-
+  const quizTracker = useInlineQuizTracker({ articleId: id })
   const {
     isImmersiveModeActive,
     isDesktop,
@@ -186,9 +187,9 @@ const Article = () => {
         }
 
         switch (action) {
-          case 'exit':
-            setReadingMode('normal')
-            break
+          // case 'exit':
+          //   setReadingMode('normal')
+          //   break
           case 'fullscreen':
             if (toggleFullscreen) {
               toggleFullscreen()
@@ -234,11 +235,6 @@ const Article = () => {
     [toggleFullscreen, closeContextMenu, forceShowControls],
   )
 
-  // NEW: Check if game mode is available (only for mobile/tablet)
-  const isGameModeAvailable = useMemo(() => {
-    return importantSentences.length > 0
-  }, [importantSentences.length])
-
   // MODIFY the handleReadingModeChange function (around line 80) to enhance it:
   const handleReadingModeChange = useCallback(
     mode => {
@@ -281,7 +277,7 @@ const Article = () => {
 
   const bookmarkStatus = useCallback(
     async ({ view, update }) => {
-      if (notLoggedIn) return
+      if (notLoggedIn || !isAuthenticated) return
       try {
         update && setBookmark(true)
         const response = await axios.get(
@@ -289,14 +285,6 @@ const Article = () => {
         )
         setBookmark(response.data.bookmarkStatus)
       } catch (error) {
-        toast({
-          title: 'Error',
-          description: error.response.data.error || 'Error Bookmark Status',
-          status: 'error',
-          duration: 3000,
-          isClosable: true,
-          position: 'top',
-        })
         setBookmark(false)
       }
     },
@@ -366,6 +354,8 @@ const Article = () => {
       // Update UI with fresh data
       if (user?.userLanguage) {
         setSelectedLanguage(user?.userLanguage === 'hi' ? 'hindi' : 'english')
+      } else {
+        setSelectedLanguage(i18n.language === 'hi' ? 'hindi' : 'english')
       }
 
       dispatch(setArticleData(articleData))
@@ -386,21 +376,10 @@ const Article = () => {
         hindi: articleData.hindiMainText,
       })
 
-      if (
-        !cachedResponse ||
-        !cachedResponse?.newArticle ||
-        !cachedResponse?.newArticle?.dictionary
-      ) {
-        setDictionary(articleData.dictionary || [])
-      }
+      setDictionary(articleData.dictionary || [])
 
-      if (
-        !cachedResponse ||
-        !cachedResponse?.newArticle ||
-        !cachedResponse?.newArticle?.importantSentences
-      ) {
-        setImportantSentences(articleData.importantSentences || [])
-      }
+      setImportantSentences(articleData.importantSentences || [])
+
       setQuizExpired(response.data.quizExpired)
     } catch (error) {
       // Only show error if we don't have cached data
@@ -419,7 +398,7 @@ const Article = () => {
       setArticleLoading(false)
       setLoadingRelatedArticles(prev => ({ ...prev, [id]: false }))
     }
-  }, [id, toast, loginCheckStatus, user?.userLanguage, dispatch])
+  }, [id, toast, loginCheckStatus, user?.userLanguage, dispatch, i18n.language])
 
   const isQuizGiven = useCallback(async () => {
     const userId = user?._id
@@ -520,7 +499,7 @@ const Article = () => {
     })
     fetchArticle()
     fetchQuiz()
-  }, [fetchArticle, fetchQuiz, loginCheckStatus])
+  }, [fetchArticle, fetchQuiz, loginCheckStatus, i18n.language])
 
   useEffect(() => {
     if (readingMode === 'game') {
@@ -569,9 +548,11 @@ const Article = () => {
     if (articleData) {
       setArticleLoading(false)
     }
+    dispatch(setImmersiveModeActive(true))
     return () => {
       // clear articleData in redux
       dispatch(setArticleData(null))
+      dispatch(setImmersiveModeActive(false))
     }
   }, [])
 
@@ -639,6 +620,14 @@ const Article = () => {
       return () => clearTimeout(timeout)
     }
   }, [readingMode, isDesktop, isGameModeTransitioning, forceShowControls])
+
+  useEffect(() => {
+    if (loginCheckStatus === 'fulfilled' && !isAuthenticated) {
+      // set the newUserInitialURL in localStorage
+      const newUserInitialURL = `/article/${id}`
+      localStorage.setItem('newUserInitialURL', newUserInitialURL)
+    }
+  }, [isAuthenticated, loginCheckStatus])
 
   const handleThemeChange = useCallback(newThemedContent => {
     setThemedContent(newThemedContent)
@@ -722,7 +711,7 @@ const Article = () => {
   ])
 
   // NEW: Render Game Mode Layout
-  if (readingMode === 'game' && isGameModeAvailable) {
+  if (readingMode === 'game') {
     return (
       <Box
         w={'100vw'}
@@ -775,6 +764,9 @@ const Article = () => {
           totalUsersGivenQuiz={totalUsersGivenQuiz}
           onQuizButtonClick={handleQuizButtonClick}
           // Related articles
+          articleHeight={articleHeight}
+          loadingRealatedArticles={loadingRelatedArticles[id] || false}
+          setLoadingRelatedArticles={setLoadingRelatedArticlesState}
           showRelated={showRelated}
           onRelatedToggle={handleRelatedToggle}
           relatedArticles={relatedArticles}
@@ -783,6 +775,7 @@ const Article = () => {
           onLoadMore={handleLoadMore}
           // General
           isAuthenticated={isAuthenticated}
+          loginCheckStatus={loginCheckStatus}
           user={user}
           isDesktop={isDesktop}
           isMouseIdle={isMouseIdle}
@@ -815,7 +808,7 @@ const Article = () => {
                 handleDesktopContextAction('navigate-down')
               }
             }}
-            onExit={() => handleDesktopContextAction('exit')}
+            // onExit={() => handleDesktopContextAction('exit')}
             onToggleFullscreen={() => handleDesktopContextAction('fullscreen')}
             onToggleControls={() =>
               handleDesktopContextAction('toggle-controls')
@@ -1045,6 +1038,7 @@ const Article = () => {
               id={id}
               isQuizGivenLoading={isQuizGivenLoading}
               i18n={i18n}
+              inlineQuizPerformance={quizTracker.getConversionData()}
             />
           </Grid>
           {!isAuthenticated && loginCheckStatus === 'fulfilled' && (

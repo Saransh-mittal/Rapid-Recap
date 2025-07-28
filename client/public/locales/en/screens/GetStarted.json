@@ -160,17 +160,17 @@
     "initial": {
       "title": "Are You Ready to Compete?",
       "subtitle": "Sign up now to unlock AI-powered challenges and leaderboard domination!",
-      "buttonText": "Create Free Account"
+      "buttonText": "Login to Continue"
     },
     "engaged": {
       "title": "Enjoying the Game?",
       "subtitle": "Join thousands leveling up every day!",
-      "buttonText": "Join the Community"
+      "buttonText": "Login to Continue"
     },
     "quiz": {
       "title": "New Challenge Alert!",
       "subtitle": "Test your knowledge, earn points, and climb the rankings!",
-      "buttonText": "Start Now"
+      "buttonText": "Login to Continue"
     },
     "completion": {
       "title": "Congratulations!",
