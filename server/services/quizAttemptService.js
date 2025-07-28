@@ -74,6 +74,7 @@ const hasStreakSurgeNotificationToday = async user => {
   return user.todaysQuizCnt > 0
 }
 
+// Updated saveEnhancedQuizAttemptWithStats to work with passed session
 const saveEnhancedQuizAttemptWithStats = async (
   userId,
   articleId,
@@ -82,7 +83,7 @@ const saveEnhancedQuizAttemptWithStats = async (
   timeTaken,
   sessionId,
   quizSession,
-  session,
+  session, // This session is now passed from the controller
   emitProgress,
   gameType = 'normal_quiz',
 ) => {
@@ -90,7 +91,14 @@ const saveEnhancedQuizAttemptWithStats = async (
     throw new Error('Please provide all the details')
   }
 
+  // Ensure session is valid and in transaction
+  if (!session || !session.inTransaction()) {
+    throw new Error('Invalid or inactive transaction session provided')
+  }
+
   emitProgress('calculateRQM', 50)
+
+  // Use the passed session for all database operations
   const user = await User.findById(userId)
     .populate({
       path: 'quizAttempts',
@@ -98,25 +106,25 @@ const saveEnhancedQuizAttemptWithStats = async (
       match: {
         $and: [
           { season: parseInt(configService.getCurrentSeason(), 10) },
-          { month: new Date().getMonth() + 1 }, // JavaScript months are 0-based, so add 1
+          { month: new Date().getMonth() + 1 },
           { year: new Date().getFullYear() },
         ],
       },
     })
-    .session(session)
+    .session(session) // Use passed session
 
   const userAbsoluteTotalQuizAttempts = await QuizAttempt.countDocuments({
     user: userId,
-  }).session(session)
+  }).session(session) // Use passed session
 
-  // Handle early adopter and referral bonuses (same as original)
+  // Handle early adopter and referral bonuses with session
   if (
     (!userAbsoluteTotalQuizAttempts || userAbsoluteTotalQuizAttempts === 0) &&
     user.isEarlyAdopter
   ) {
     await createQuizBoostAbility({
       userId: user._id,
-      session,
+      session, // Pass the session
       quantity: 3,
       multiplier: 1.5,
     })
@@ -124,35 +132,34 @@ const saveEnhancedQuizAttemptWithStats = async (
       userId: user._id,
       category: 'Category',
       multiplier: 1.5,
-      duration: 5 * 24 * 60, // 5 days
+      duration: 5 * 24 * 60,
       expiresAt: moment().add(1, 'month').toDate(),
       isClaimed: false,
       isActive: false,
       description: `Increases RQM score by 1.5x for your chosen category as you are an Early Adopter`,
       isBadgePowerUp: false,
-      session,
+      session, // Pass the session
     })
     await createCategoryRadar({
       userId: user._id,
       category: 'category',
-      duration: 5 * 24 * 60, // 5 days
+      duration: 5 * 24 * 60,
       expiresAt: moment().add(1, 'month').toDate(),
       isClaimed: false,
       isActive: false,
       description: `You can view difficulty of each articles for your chosen category as you are an Early Adopter`,
       isBadgePowerUp: false,
-      session,
+      session, // Pass the session
     })
   }
 
-  // Handle referral bonuses (same logic as original)
+  // Handle referral bonuses with session
   if (
     (!userAbsoluteTotalQuizAttempts || userAbsoluteTotalQuizAttempts === 0) &&
     user.referredBy
   ) {
     const referrer = await User.findById(user.referredBy).session(session)
 
-    // Find the referral and update its status
     const referralIndex = referrer.referrals.findIndex(
       referral => referral.user.toString() === user._id.toString(),
     )
@@ -161,19 +168,19 @@ const saveEnhancedQuizAttemptWithStats = async (
       if (!user.isEarlyAdopter)
         await createQuizBoostAbility({
           userId: user._id,
-          session,
+          session, // Pass the session
           quantity: 2,
           multiplier: 1.5,
         })
       referrer.referrals[referralIndex].status = 'complete'
-      await referrer.save({ session })
+      await referrer.save({ session }) // Use passed session
 
       const referralCount = referrer.referralCount
 
       if (referralCount === 1) {
         await createQuizBoostAbility({
           userId: referrer._id,
-          session,
+          session, // Pass the session
           quantity: 3,
           multiplier: 1.5,
         })
@@ -182,44 +189,43 @@ const saveEnhancedQuizAttemptWithStats = async (
           userId: referrer._id,
           category: 'category',
           multiplier: 1.5,
-          duration: 3 * 24 * 60, // 3 days
+          duration: 3 * 24 * 60,
           expiresAt: moment().add(1, 'month').toDate(),
           isClaimed: false,
           isActive: false,
           description: `Increases RQM score by 1.5x for your chosen category as you referred 3 friends`,
           isBadgePowerUp: false,
-          session,
+          session, // Pass the session
         })
       } else if (referralCount === 5) {
         await createCategoryBoost({
           userId: referrer._id,
           category: 'category',
           multiplier: 1.5,
-          duration: 5 * 24 * 60, // 5 days
+          duration: 5 * 24 * 60,
           expiresAt: moment().add(1, 'month').toDate(),
           isClaimed: false,
           isActive: false,
           description: `Increases RQM score by 1.5x for your chosen category as you referred 5 friends`,
           isBadgePowerUp: false,
-          session,
+          session, // Pass the session
         })
         await createCategoryRadar({
           userId: referrer._id,
           category: 'category',
-          duration: 5 * 24 * 60, // 5 days
+          duration: 5 * 24 * 60,
           expiresAt: moment().add(1, 'month').toDate(),
           isClaimed: false,
           isActive: false,
           description: `You can view difficulty of each articles for your chosen category as you referred 5 friends`,
           isBadgePowerUp: false,
-          session,
+          session, // Pass the session
         })
       }
     }
   } else if (user.referredBy && userAbsoluteTotalQuizAttempts === 4) {
     const referrer = await User.findById(user.referredBy).session(session)
 
-    // Find the referral and update its status
     const referralIndex = referrer.referrals.findIndex(
       referral => referral.user.toString() === user._id.toString(),
     )
@@ -229,24 +235,22 @@ const saveEnhancedQuizAttemptWithStats = async (
           userId: user._id,
           category: 'category',
           multiplier: 1.5,
-          duration: 2 * 24 * 60, // 2 days
+          duration: 2 * 24 * 60,
           expiresAt: moment().add(1, 'month').toDate(),
           isClaimed: false,
           isActive: false,
           description: `Increases RQM score by 1.5x for your chosen category as you were referred and completed 5 quizzes`,
           isBadgePowerUp: false,
-          session,
+          session, // Pass the session
         })
     }
   }
 
   const article = await Article.findById(articleId)
     .select('_id category quizAttemptCnt')
-    .session(session)
+    .session(session) // Use passed session
 
   const localizedI18n = i18n.cloneInstance({ initImmediate: false })
-
-  // Switch to user's language
   await localizedI18n.changeLanguage(
     user?.userLanguage ? user.userLanguage : 'en',
   )
@@ -255,16 +259,17 @@ const saveEnhancedQuizAttemptWithStats = async (
     user: userId,
     article: articleId,
     articleQuizSession: sessionId,
-  }).session(session)
+  }).session(session) // Use passed session
 
   if (existingAttempt) {
     throw new Error('User has already attempted this quiz session.')
   }
 
-  // Check active ability boosts
+  // Check active ability boosts with session
   const inventory = await Inventory.findOne({ user: userId })
     .populate('abilities.abilityId')
-    .session(session)
+    .session(session) // Use passed session
+
   const activeTimeDilation =
     inventory?.abilities?.find(
       ability =>
@@ -301,28 +306,24 @@ const saveEnhancedQuizAttemptWithStats = async (
 
   const accuracy = await (async () => {
     if (gameType === 'connections') {
-      // ENHANCED: Calculate weighted accuracy using AI-generated connection difficulties
       const gameSession = await ArticleQuizSession.findById(sessionId)
         .populate('gameData')
-        .session(session)
+        .session(session) // Use passed session
 
       const validConnections =
         gameSession?.gameData?.connections?.validConnections || []
 
       if (validConnections.length === 0) {
-        // Fallback to standard accuracy if no difficulty data available
         return totalItems > 0 ? correctCount / totalItems : 0
       }
 
       let weightedCorrectness = 0
       let totalWeight = validConnections.length
 
-      // Calculate earned weight from user's correct connections
       userResponses.forEach(response => {
         if (response.connections && Array.isArray(response.connections)) {
           response.connections.forEach(userConnection => {
             if (userConnection.isValid) {
-              // Find the corresponding valid connection to get its AI-generated difficulty
               const matchingValidConnection = validConnections.find(
                 vc =>
                   (vc.from === userConnection.from &&
@@ -333,7 +334,6 @@ const saveEnhancedQuizAttemptWithStats = async (
 
               if (matchingValidConnection) {
                 const difficulty = matchingValidConnection.difficulty || 0.5
-
                 weightedCorrectness += difficulty
 
                 console.log('Weighted connection scored:', {
@@ -348,7 +348,6 @@ const saveEnhancedQuizAttemptWithStats = async (
         }
       })
 
-      // Calculate weighted accuracy
       const weightedAccuracy =
         totalWeight > 0 ? weightedCorrectness / totalWeight : 0
 
@@ -362,7 +361,6 @@ const saveEnhancedQuizAttemptWithStats = async (
 
       return weightedAccuracy
     } else {
-      // Standard difficulty-weighted accuracy for other game types
       return (
         userResponses.reduce((acc, res, index) => {
           if (res.isCorrect) {
@@ -376,20 +374,17 @@ const saveEnhancedQuizAttemptWithStats = async (
 
   const avgDifficulty = await (async () => {
     if (gameType === 'connections') {
-      // For connections, calculate average from individual connection difficulties
       const gameSession = await ArticleQuizSession.findById(sessionId)
         .populate('gameData')
-        .session(session)
+        .session(session) // Use passed session
 
       const validConnections =
         gameSession?.gameData?.connections?.validConnections || []
 
       if (validConnections.length === 0) {
-        // Fallback to overall difficulty or default
         return gameSession?.gameData?.connections?.overallDifficulty || 0.5
       }
 
-      // Calculate average from individual AI-generated connection difficulties
       const totalDifficulty = validConnections.reduce((sum, vc) => {
         return sum + (vc.difficulty || 0.5)
       }, 0)
@@ -409,7 +404,6 @@ const saveEnhancedQuizAttemptWithStats = async (
 
       return avgConnectionDifficulty
     } else {
-      // Standard calculation for other game types
       return (
         questions.reduce((sum, q) => sum + (q.difficulty || 0.5), 0) /
         questions.length
@@ -423,6 +417,7 @@ const saveEnhancedQuizAttemptWithStats = async (
     correctCount,
     totalItems,
   }
+
   // Calculate enhanced RQM
   const rqmResult = calculateEnhancedRQM(
     gameType,
@@ -435,7 +430,7 @@ const saveEnhancedQuizAttemptWithStats = async (
   if (activeTimeDilation && activeTimeDilation.isActive) {
     activeTimeDilation.isActive = false
     activeTimeDilation.isUsed = true
-    await inventory.save({ session })
+    await inventory.save({ session }) // Use passed session
   }
 
   let streakRevived = false
@@ -443,7 +438,7 @@ const saveEnhancedQuizAttemptWithStats = async (
     user.streak = user.streakBeforeBreak + 1
     user.streakBeforeBreak = 0
     user.revivalPeriodEnd = null
-    await user.save({ session })
+    await user.save({ session }) // Use passed session
     streakRevived = true
   }
 
@@ -472,7 +467,6 @@ const saveEnhancedQuizAttemptWithStats = async (
     )
     const activeAbilities = inventory.abilities
       .filter(ability => {
-        // Basic active ability checks
         const isActive =
           ability.isActive &&
           ability.abilityId?.type === 'BOOST' &&
@@ -480,13 +474,11 @@ const saveEnhancedQuizAttemptWithStats = async (
 
         if (!isActive) return false
 
-        // Handle category boosts
         if (isCategoryBoost(ability.abilityId.name)) {
           const boostCategory = getCategoryFromBoost(ability.abilityId.name)
           return boostCategory.toLowerCase() === article.category.toLowerCase()
         }
 
-        // Include all other types of boosts
         return true
       })
       .map(ability => ({
@@ -506,12 +498,10 @@ const saveEnhancedQuizAttemptWithStats = async (
     if (activeQuinBoost) {
       activeQuinBoost.isActive = false
       activeQuinBoost.isUsed = true
-      await inventory.save({ session })
+      await inventory.save({ session }) // Use passed session
       quinBoostUtilized = true
-      // user.eligibleForTournament = true
     }
     if (activeStreakSurge) {
-      // Check if notification has already been sent today
       const hasNotification = await hasStreakSurgeNotificationToday(user)
 
       if (!hasNotification) {
@@ -524,7 +514,7 @@ const saveEnhancedQuizAttemptWithStats = async (
           userId: userId,
           type: 'applicationUpdate',
         })
-        await newNotification.save()
+        await newNotification.save({ session }) // Use passed session
       }
     }
     if (activeQuizBoost) {
@@ -535,7 +525,7 @@ const saveEnhancedQuizAttemptWithStats = async (
       } else {
         activeQuizBoost.quantity -= 1
       }
-      await inventory.save({ session })
+      await inventory.save({ session }) // Use passed session
     }
 
     rqmResult.rqmScore = finalRQMScore
@@ -570,15 +560,15 @@ const saveEnhancedQuizAttemptWithStats = async (
     timeDilatedTimeTaken: activeTimeDilation ? timeTaken : null,
     additionalTime: activeTimeDilation?.abilityId?.additionalTime || 0,
     timeDilationBoosted: !!activeTimeDilation,
-    quinBoostUtilized: quinBoostUtilized, // Add this field
-    streakRevived: streakRevived, // Add this field
-    pauseRealTimeIQ: user.pauseRealTimeIQ, // Add this field
+    quinBoostUtilized: quinBoostUtilized,
+    streakRevived: streakRevived,
+    pauseRealTimeIQ: user.pauseRealTimeIQ,
     season: parseInt(configService.getCurrentSeason(), 10),
     month: moment().month() + 1,
     year: moment().year(),
   })
 
-  await newQuizAttempt.save({ session })
+  await newQuizAttempt.save({ session }) // Use passed session
 
   // Update quiz session scores
   if (!quizSession.RQM_score) quizSession.RQM_score = {}
@@ -586,10 +576,10 @@ const saveEnhancedQuizAttemptWithStats = async (
 
   quizSession.RQM_score[user.userLanguage] = rqmResult.rqmScore
   quizSession.timeTaken[user.userLanguage] = timeTaken
-  await quizSession.save({ session })
+  await quizSession.save({ session }) // Use passed session
 
   article.quizAttemptCnt++
-  await article.save({ session })
+  await article.save({ session }) // Use passed session
 
   emitProgress('saveAttempt', 100)
   emitProgress('updateStats', 25)
@@ -599,7 +589,7 @@ const saveEnhancedQuizAttemptWithStats = async (
   const todayAttemptsCount = await QuizAttempt.countDocuments({
     user: userId,
     createdAt: { $gte: currentDate },
-  }).session(session)
+  }).session(session) // Use passed session
 
   if (todayAttemptsCount % 5 === 0 && todayAttemptsCount > 0)
     await handleQuinBoostEarned({ user, session })
@@ -610,14 +600,14 @@ const saveEnhancedQuizAttemptWithStats = async (
     RQM_score: rqmResult.rqmScore,
     articleDifficulty,
     todayAttemptsCount,
-    session,
+    session, // Pass the session
     newQuizAttempt,
   })
 
   if (rqmResult.rqmScore >= 40) {
     await checkAndAwardTimeDilation({
       userId,
-      session,
+      session, // Pass the session
     })
   }
 
@@ -628,13 +618,14 @@ const saveEnhancedQuizAttemptWithStats = async (
     const userPercentile = await calcUserPercentile({
       userId,
       articleId,
-      session,
+      session, // Pass the session
     })
     const prevUserScore = user.userScore
     const newUserScore = user.userScore + articleDifficulty * userPercentile
 
     user.userScore = newUserScore
-    await user.save({ session })
+    await user.save({ session }) // Use passed session
+
     const {
       newIQScore,
       prevIQScore,
@@ -655,7 +646,7 @@ const saveEnhancedQuizAttemptWithStats = async (
       userId,
       newUserScore,
       rqmResult.rqmScore,
-      session,
+      session, // Pass the session
     )
 
     newQuizAttempt.globalMeanUserScore = globalMeanUserScore
@@ -674,7 +665,7 @@ const saveEnhancedQuizAttemptWithStats = async (
     newQuizAttempt.originalIncrement = originalIncrement
     newQuizAttempt.boostedIncrement = boostedIncrement
     newQuizAttempt.additionalScore = additionalScore
-    await newQuizAttempt.save({ session })
+    await newQuizAttempt.save({ session }) // Use passed session
 
     resultOfIQCalc = {
       newIQScore,
@@ -693,36 +684,25 @@ const saveEnhancedQuizAttemptWithStats = async (
   }
 
   emitProgress('updateStats', 100)
-  // emitProgress('checkTournament', 50)
-
-  // const { messageForTournamentEligibility, userEligibleForTournament } =
-  //   await checkTournamentEligibility(
-  //     user,
-  //     rqmResult.rqmScore,
-  //     lastQuizAttempt,
-  //     session,
-  //   )
 
   const xpAwarded = await logActivity({
     userInGameName: user.inGameName,
     type: activityTypes.RANDOM_QUIZ.type,
     consecutiveQuizCount: todayAttemptsCount,
-    session,
+    session, // Pass the session
   })
 
-  // Update the QuizAttempt with xpAwarded
   newQuizAttempt.xpAwarded = xpAwarded
-  await newQuizAttempt.save({ session })
+  await newQuizAttempt.save({ session }) // Use passed session
 
   if (quinBoostUtilized) {
     await logActivity({
       userInGameName: user.inGameName,
       type: activityTypes.QUINBOOST_UTILIZED.type,
-      session,
+      session, // Pass the session
     })
   }
 
-  // emitProgress('checkTournament', 100)
   emitProgress('finalizeAttempt', 50)
 
   const quizzesToday = await currDayStreakCalulator(user._id)
@@ -760,8 +740,6 @@ const saveEnhancedQuizAttemptWithStats = async (
     pastRQMs,
     xpAwarded,
     quinBoostUtilized,
-    // messageForTournamentEligibility,
-    // userEligibleForTournament,
     performanceBonus: rqmResult.performanceBonus,
     timeDilationBoosted: !!activeTimeDilation,
     streakRevived,
