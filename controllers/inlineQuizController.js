@@ -162,6 +162,7 @@ const getInlineQuizWithStats = asyncHandler(async (req, res) => {
           )
 
           return {
+            _id: question._id,
             questionId: question._id,
             question: question.question,
             options: question.options,

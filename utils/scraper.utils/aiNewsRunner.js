@@ -9,6 +9,9 @@ const {
   findDuplicateArticles,
 } = require('../../services/duplicateCheckService')
 const { processArticle } = require('../../services/articleProcessor')
+const {
+  getOrGenerateHighlights,
+} = require('../../services/articleServicesForEndUsers/articleHighlightService')
 
 // Run the AI news scraper script and return the results
 const runScraper = async categoryKey => {
@@ -141,14 +144,8 @@ const processScrapedArticles = async (articles, specialCategoryId) => {
       // Generate highlights asynchronously
       try {
         await Promise.all([
-          generateHighlightForArticle({
-            articleId: newArticle._id,
-            lang: 'en',
-          }),
-          generateHighlightForArticle({
-            articleId: newArticle._id,
-            lang: 'hi',
-          }),
+          getOrGenerateHighlights(newArticle._id, 'en'),
+          getOrGenerateHighlights(newArticle._id, 'hi'),
         ])
       } catch (highlightError) {
         console.error(
