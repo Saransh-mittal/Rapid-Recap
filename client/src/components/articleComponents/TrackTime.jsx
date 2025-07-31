@@ -3,6 +3,7 @@ import { useDispatch, useSelector } from 'react-redux'
 import { addNoteMessage } from '../../redux/appSlice'
 import { setUser } from '../../redux/authSlice'
 import { useTranslation } from 'react-i18next'
+import { getCsrfToken, fetchCsrfToken } from '../../services/csrfService'
 
 const TrackTime = ({ userId, articleId }) => {
   const dispatch = useDispatch()
@@ -41,10 +42,22 @@ const TrackTime = ({ userId, articleId }) => {
           timestamp: now,
         }
 
+        // Get CSRF token for the request
+        const csrfToken = getCsrfToken()
+        const headers = {
+          'Content-Type': 'application/json',
+        }
+
+        // Include CSRF token if available
+        if (csrfToken) {
+          headers['X-CSRF-Token'] = csrfToken
+        }
+
         sendingPromiseRef.current = await fetch('/api/timeSpent', {
           method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
+          headers,
           body: JSON.stringify(payload),
+          credentials: 'include', // This ensures cookies are sent with the request
           keepalive: true,
         })
 
@@ -78,7 +91,80 @@ const TrackTime = ({ userId, articleId }) => {
             accumulatedTimeRef.current = 0
             startTimeRef.current = now
           } else {
-            console.error('Failed to send time spent:', await response.text())
+            const errorText = await response.text()
+            console.error('Failed to send time spent:', errorText)
+
+            // Handle CSRF validation errors specifically
+            if (response.status === 403 && errorText.includes('CSRF')) {
+              console.log(
+                'CSRF validation failed, attempting to refresh token and retry...',
+              )
+              // Try to refresh CSRF token and retry once
+              try {
+                await fetchCsrfToken()
+                const newCsrfToken = getCsrfToken()
+
+                if (newCsrfToken) {
+                  const retryHeaders = {
+                    'Content-Type': 'application/json',
+                    'X-CSRF-Token': newCsrfToken,
+                  }
+
+                  const retryResponse = await fetch('/api/timeSpent', {
+                    method: 'POST',
+                    headers: retryHeaders,
+                    body: JSON.stringify(payload),
+                    credentials: 'include',
+                    keepalive: true,
+                  })
+
+                  if (retryResponse.ok) {
+                    const retryJsonData = await retryResponse.json()
+                    // Process the successful retry response
+                    const XP_AWARD_COOLDOWN = 60 * 60 * 1000
+                    if (
+                      retryJsonData.xpAwardedForTimeSpentMoreThan10Min &&
+                      now - lastXpAwardTimeRef.current > XP_AWARD_COOLDOWN
+                    ) {
+                      dispatch(setUser({ ...user, xp: user.xp + 10 }))
+                      dispatch(
+                        addNoteMessage({
+                          messageType: 'xpAward',
+                          xpAwarded: 10,
+                          title: t(
+                            'XP Awarded For Reading Articles More Than 10 Minutes',
+                          ),
+                          actions: [{ actionType: 'VIEW_EXPERIENCE' }],
+                          duration: 15000,
+                          width: '300px',
+                          xpSource: t('10 Min Article Read'),
+                        }),
+                      )
+                      lastXpAwardTimeRef.current = now
+                    }
+                    lastSentTimeRef.current = now
+                    accumulatedTimeRef.current = 0
+                    startTimeRef.current = now
+                    return // Exit early on successful retry
+                  }
+                }
+              } catch (retryError) {
+                console.error('Retry after CSRF refresh failed:', retryError)
+              }
+            }
+
+            // Handle authentication errors specifically
+            if (response.status === 401) {
+              try {
+                const errorData = JSON.parse(errorText)
+                if (errorData.tokenExpired) {
+                  console.log('Authentication token expired')
+                  // You might want to trigger a login redirect here
+                }
+              } catch (parseError) {
+                // Error text wasn't JSON, ignore
+              }
+            }
           }
         } catch (error) {
           console.error('Error sending time spent:', error)

@@ -20,6 +20,9 @@ const { findDuplicateArticles } = require('../services/duplicateCheckService')
 const { commonTerms } = require('./commonTerms')
 const { processArticle } = require('../services/articleProcessor')
 const ArticleHighlight = require('../model/articleHighlightSchema')
+const {
+  getOrGenerateHighlights,
+} = require('../services/articleServicesForEndUsers/articleHighlightService')
 
 const breakArticleIntoParagraphs = async mainText => {
   const tokenizer = new natural.SentenceTokenizer()
@@ -415,14 +418,8 @@ const processExtractedNews = async (news, category) => {
         await newArticle.save()
         // Generate highlights asynchronously
         Promise.all([
-          generateHighlightForArticle({
-            articleId: newArticle._id,
-            lang: 'en',
-          }),
-          generateHighlightForArticle({
-            articleId: newArticle._id,
-            lang: 'hi',
-          }),
+          getOrGenerateHighlights(newArticle._id, 'en'),
+          getOrGenerateHighlights(newArticle._id, 'hi'),
         ]).catch(error => {
           console.error(
             `❌ Error generating highlights for "${newArticle.title}":`,

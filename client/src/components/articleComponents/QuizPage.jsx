@@ -1,6 +1,6 @@
-// Optimized QuizPage.jsx with performance enhancements
+// Enhanced QuizPage.jsx with option click loader
 // Location: client/src/components/articleComponents/QuizPage.jsx
-// Optimizations: State consolidation, memoization, efficient responsive calculations, improved scroll handling
+// Added: Loading state management and visual indicators for option clicks
 
 import React, {
   useCallback,
@@ -22,6 +22,7 @@ import {
   Flex,
   Container,
   useBreakpointValue,
+  Spinner,
 } from '@chakra-ui/react'
 import { motion } from 'framer-motion'
 import { CheckIcon, CircleX, Zap, ChevronDown } from 'lucide-react'
@@ -61,6 +62,20 @@ const scrollIndicatorVariants = {
   visible: { opacity: 0.7, y: 0 },
 }
 
+// NEW: Loading pulse animation variants
+const loadingPulseVariants = {
+  initial: { opacity: 0.5, scale: 1 },
+  animate: {
+    opacity: [0.5, 1, 0.5],
+    scale: [1, 1.02, 1],
+    transition: {
+      duration: 1.5,
+      repeat: Infinity,
+      ease: 'easeInOut',
+    },
+  },
+}
+
 // Optimized responsive configuration with memoization
 const getResponsiveConfig = (breakpoint, isLandscape, isMobile) => {
   const baseConfigs = {
@@ -76,6 +91,7 @@ const getResponsiveConfig = (breakpoint, isLandscape, isMobile) => {
       headerSize: 'sm',
       borderRadius: 'md',
       iconSize: 3,
+      spinnerSize: 'sm',
     },
     sm: {
       containerPadding: 3,
@@ -89,6 +105,7 @@ const getResponsiveConfig = (breakpoint, isLandscape, isMobile) => {
       headerSize: 'md',
       borderRadius: 'lg',
       iconSize: 4,
+      spinnerSize: 'sm',
     },
     md: {
       containerPadding: 4,
@@ -102,6 +119,7 @@ const getResponsiveConfig = (breakpoint, isLandscape, isMobile) => {
       headerSize: 'lg',
       borderRadius: 'lg',
       iconSize: 4,
+      spinnerSize: 'md',
     },
     lg: {
       containerPadding: 5,
@@ -115,6 +133,7 @@ const getResponsiveConfig = (breakpoint, isLandscape, isMobile) => {
       headerSize: 'xl',
       borderRadius: 'xl',
       iconSize: 5,
+      spinnerSize: 'md',
     },
   }
 
@@ -130,6 +149,7 @@ const getResponsiveConfig = (breakpoint, isLandscape, isMobile) => {
       containerPadding: 2,
       minHeight: '40px',
       circleSize: '20px',
+      spinnerSize: 'xs',
     }
   }
 
@@ -201,6 +221,46 @@ const StatisticsBar = memo(({ percentage, isMobile }) => (
 
 StatisticsBar.displayName = 'StatisticsBar'
 
+// NEW: Loading indicator component for options
+const OptionLoadingIndicator = memo(({ size, isVisible }) => {
+  if (!isVisible) return null
+
+  return (
+    <MotionBox
+      variants={loadingPulseVariants}
+      initial="initial"
+      animate="animate"
+      position="absolute"
+      top={0}
+      left={0}
+      right={0}
+      bottom={0}
+      bg="rgba(159, 122, 234, 0.1)"
+      borderRadius="inherit"
+      display="flex"
+      alignItems="center"
+      justifyContent="center"
+      backdropFilter="blur(2px)"
+      zIndex={2}
+    >
+      <VStack spacing={2}>
+        <Spinner
+          thickness="3px"
+          speed="0.8s"
+          emptyColor="rgba(255,255,255,0.3)"
+          color="purple.400"
+          size={size}
+        />
+        <Text fontSize="xs" color="purple.200" fontWeight="500">
+          Processing...
+        </Text>
+      </VStack>
+    </MotionBox>
+  )
+})
+
+OptionLoadingIndicator.displayName = 'OptionLoadingIndicator'
+
 const QuizPage = memo(
   ({
     question,
@@ -220,6 +280,10 @@ const QuizPage = memo(
     const [startTime] = useState(Date.now())
     const [hasEmittedStartEvent, setHasEmittedStartEvent] = useState(false)
 
+    // NEW: Loading state for option clicks
+    const [loadingOptionIndex, setLoadingOptionIndex] = useState(null)
+    const [isProcessing, setIsProcessing] = useState(false)
+
     // Consolidated scroll state
     const [scrollState, setScrollState] = useState({
       canScrollUp: false,
@@ -229,6 +293,7 @@ const QuizPage = memo(
 
     const scrollContainerRef = useRef(null)
     const scrollTimeoutRef = useRef(null)
+    const loadingTimeoutRef = useRef(null)
     const { t } = useTranslation('GameHub')
 
     // Determine current breakpoint for responsive config
@@ -327,6 +392,7 @@ const QuizPage = memo(
         setHasEmittedStartEvent(true)
       }
     }, [question._id, hasEmittedStartEvent])
+
     // Event listeners with proper cleanup
     useEffect(() => {
       const container = scrollContainerRef.current
@@ -357,12 +423,45 @@ const QuizPage = memo(
       }
     }, [debouncedScrollCheck, scrollState.isScrolling])
 
-    // Memoized option styles calculation
+    // NEW: Cleanup loading timeouts
+    useEffect(() => {
+      return () => {
+        if (loadingTimeoutRef.current) {
+          clearTimeout(loadingTimeoutRef.current)
+        }
+      }
+    }, [])
+
+    // Memoized option styles calculation with loading states
     const getOptionStyles = useCallback(
       optionIndex => {
         const isSelected = selectedAnswer === optionIndex
         const isCorrectAnswer = optionIndex === question.correctAnswer
         const isWrongSelected = isSelected && !isCorrectAnswer && showStatistics
+        const isLoading = loadingOptionIndex === optionIndex
+        const isOtherLoading = loadingOptionIndex !== null && !isLoading
+
+        // Loading state styles
+        if (isLoading) {
+          return {
+            bg: 'rgba(159, 122, 234, 0.15)',
+            borderColor: '#9F7AEA',
+            shadow: '0 0 20px rgba(159, 122, 234, 0.6)',
+            transform: 'scale(1.01)',
+            opacity: 1,
+          }
+        }
+
+        // Disabled while other option is loading
+        if (isOtherLoading) {
+          return {
+            bg: 'rgba(255, 255, 255, 0.04)',
+            borderColor: 'rgba(255, 255, 255, 0.1)',
+            shadow: 'none',
+            transform: 'scale(1)',
+            opacity: 0.5,
+          }
+        }
 
         if (!showStatistics) {
           return {
@@ -372,6 +471,7 @@ const QuizPage = memo(
             borderColor: isSelected ? '#9F7AEA' : 'rgba(255, 255, 255, 0.2)',
             shadow: isSelected ? '0 0 15px rgba(159, 122, 234, 0.5)' : 'none',
             transform: isSelected ? 'scale(1.01)' : 'scale(1)',
+            opacity: 1,
           }
         }
 
@@ -381,6 +481,7 @@ const QuizPage = memo(
             borderColor: '#48BB78',
             shadow: '0 0 15px rgba(72, 187, 120, 0.4)',
             transform: 'scale(1)',
+            opacity: 1,
           }
         }
 
@@ -390,6 +491,7 @@ const QuizPage = memo(
             borderColor: '#F56565',
             shadow: '0 0 15px rgba(245, 101, 101, 0.4)',
             transform: 'scale(1)',
+            opacity: 1,
           }
         }
 
@@ -398,54 +500,98 @@ const QuizPage = memo(
           borderColor: 'rgba(255, 255, 255, 0.2)',
           shadow: 'none',
           transform: 'scale(1)',
+          opacity: 1,
         }
       },
-      [showStatistics, selectedAnswer, question.correctAnswer],
+      [
+        showStatistics,
+        selectedAnswer,
+        question.correctAnswer,
+        loadingOptionIndex,
+      ],
     )
 
+    // ENHANCED: Handle answer click with loading states
     const handleAnswerClick = useCallback(
       answerIndex => {
-        if (disabled || showStatistics) return
+        if (disabled || showStatistics || isProcessing) return
+
+        // Set loading state
+        setLoadingOptionIndex(answerIndex)
+        setIsProcessing(true)
 
         const timeSpent = Date.now() - startTime
         const isAnswerCorrect = answerIndex === question.correctAnswerIndex
 
-        // Call the original onAnswer function
-        onAnswer(answerIndex)
+        // Simulate processing time with visual feedback
+        loadingTimeoutRef.current = setTimeout(
+          () => {
+            // Call the original onAnswer function
+            onAnswer(answerIndex)
 
-        // NEW: Emit tracking event for quiz performance
-        window.dispatchEvent(
-          new CustomEvent('inlineQuizAnswer', {
-            detail: {
-              questionId: question._id,
-              answerIndex,
-              isCorrect: isAnswerCorrect,
-              timeSpent,
-              questionText: question.question,
-              selectedOption: question.options[answerIndex],
-              timestamp: Date.now(),
-            },
-          }),
-        )
+            // Emit tracking events
+            window.dispatchEvent(
+              new CustomEvent('inlineQuizAnswer', {
+                detail: {
+                  questionId: question._id,
+                  answerIndex,
+                  isCorrect: isAnswerCorrect,
+                  timeSpent,
+                  questionText: question.question,
+                  selectedOption: question.options[answerIndex],
+                  timestamp: Date.now(),
+                },
+              }),
+            )
 
-        // NEW: Also emit the completion event for backward compatibility
-        window.dispatchEvent(
-          new CustomEvent('inlineQuizCompleted', {
-            detail: {
-              score: isAnswerCorrect ? 1 : 0,
-              totalQuestions: 1,
-              hasCompleted: true,
-              questionId: question._id,
-            },
-          }),
-        )
+            window.dispatchEvent(
+              new CustomEvent('inlineQuizCompleted', {
+                detail: {
+                  score: isAnswerCorrect ? 1 : 0,
+                  totalQuestions: 1,
+                  hasCompleted: true,
+                  questionId: question._id,
+                },
+              }),
+            )
+
+            // Clear loading states after a brief delay
+            setTimeout(() => {
+              setLoadingOptionIndex(null)
+              setIsProcessing(false)
+            }, 300)
+          },
+          isMobile ? 800 : 1200,
+        ) // Shorter delay on mobile
       },
-      [disabled, startTime, onAnswer, question, showStatistics],
+      [
+        disabled,
+        startTime,
+        onAnswer,
+        question,
+        showStatistics,
+        isProcessing,
+        isMobile,
+      ],
     )
 
-    // Memoized option icon
+    // Memoized option icon with loading states
     const getOptionIcon = useCallback(
       optionIndex => {
+        const isLoading = loadingOptionIndex === optionIndex
+
+        if (isLoading) {
+          return (
+            <Spinner
+              thickness="2px"
+              speed="0.8s"
+              emptyColor="rgba(255,255,255,0.3)"
+              color="purple.300"
+              size={responsiveConfig.spinnerSize}
+            />
+          )
+        }
+
         if (!showStatistics) return String.fromCharCode(65 + optionIndex)
 
         if (optionIndex === question.correctAnswer) {
@@ -478,6 +624,8 @@ const QuizPage = memo(
         selectedAnswer,
         question.correctAnswer,
         responsiveConfig.iconSize,
+        responsiveConfig.spinnerSize,
+        loadingOptionIndex,
       ],
     )
 
@@ -670,6 +818,37 @@ const QuizPage = memo(
                 </MotionBox>
               )}
 
+              {/* NEW: Processing Notice */}
+              {isProcessing && (
+                <MotionBox
+                  initial={{ opacity: 0, scale: 0.95 }}
+                  animate={{ opacity: 1, scale: 1 }}
+                  transition={{ duration: 0.3 }}
+                  w="100%"
+                  bg="rgba(159, 122, 234, 0.1)"
+                  border="1px solid rgba(159, 122, 234, 0.3)"
+                  borderRadius={responsiveConfig.borderRadius}
+                  p={responsiveConfig.containerPadding}
+                >
+                  <HStack justify="center" spacing={3}>
+                    <Spinner
+                      thickness="2px"
+                      speed="0.8s"
+                      emptyColor="rgba(255,255,255,0.3)"
+                      color="purple.300"
+                      size="sm"
+                    />
+                    <Text
+                      fontSize={responsiveConfig.optionFontSize}
+                      color="purple.100"
+                      fontWeight="500"
+                    >
+                      Processing your answer...
+                    </Text>
+                  </HStack>
+                </MotionBox>
+              )}
+
               {/* Question */}
               <MotionBox
                 initial={{ opacity: 0, y: 30 }}
@@ -698,6 +877,11 @@ const QuizPage = memo(
               <VStack spacing={responsiveConfig.spacing} w="100%">
                 {question.options.map((option, index) => {
                   const styles = getOptionStyles(index)
+                  const isLoading = loadingOptionIndex === index
+                  const isOtherLoading =
+                    loadingOptionIndex !== null && !isLoading
+                  const isCurrentlyDisabled =
+                    disabled || isProcessing || isOtherLoading
 
                   return (
                     <MotionButton
@@ -707,12 +891,16 @@ const QuizPage = memo(
                       initial="initial"
                       animate="animate"
                       whileHover={
-                        !disabled && !showStatistics && isAuthenticated
+                        !isCurrentlyDisabled &&
+                        !showStatistics &&
+                        isAuthenticated
                           ? 'hover'
                           : {}
                       }
                       whileTap={
-                        !disabled && !showStatistics && isAuthenticated
+                        !isCurrentlyDisabled &&
+                        !showStatistics &&
+                        isAuthenticated
                           ? 'tap'
                           : {}
                       }
@@ -734,18 +922,26 @@ const QuizPage = memo(
                       fontSize={responsiveConfig.optionFontSize}
                       fontWeight="500"
                       textAlign="left"
-                      isDisabled={disabled}
+                      isDisabled={isCurrentlyDisabled}
                       cursor={
-                        disabled || showStatistics ? 'not-allowed' : 'pointer'
+                        isCurrentlyDisabled || showStatistics
+                          ? 'not-allowed'
+                          : 'pointer'
                       }
                       boxShadow={styles.shadow}
+                      opacity={styles.opacity}
+                      transform={styles.transform}
                       _hover={{
                         bg:
-                          !disabled && !showStatistics && isAuthenticated
+                          !isCurrentlyDisabled &&
+                          !showStatistics &&
+                          isAuthenticated
                             ? 'rgba(255, 255, 255, 0.12)'
                             : undefined,
                         borderColor:
-                          !disabled && !showStatistics && isAuthenticated
+                          !isCurrentlyDisabled &&
+                          !showStatistics &&
+                          isAuthenticated
                             ? 'rgba(159, 122, 234, 0.6)'
                             : undefined,
                       }}
@@ -775,6 +971,7 @@ const QuizPage = memo(
                             wordBreak="break-word"
                             whiteSpace="normal"
                             textAlign="left"
+                            opacity={isLoading ? 0.7 : 1}
                           >
                             {option}
                           </Text>
@@ -782,22 +979,30 @@ const QuizPage = memo(
                         </Box>
                       </Flex>
 
+                      {/* NEW: Loading overlay */}
+                      <OptionLoadingIndicator
+                        size={responsiveConfig.spinnerSize}
+                        isVisible={isLoading}
+                      />
+
                       {/* Selection effect */}
-                      {selectedAnswer === index && !showStatistics && (
-                        <Box
-                          position="absolute"
-                          top={0}
-                          left={0}
-                          right={0}
-                          bottom={0}
-                          bg="linear-gradient(90deg, transparent, rgba(159, 122, 234, 0.1), transparent)"
-                          animation="pulse 2s ease-in-out infinite"
-                          pointerEvents="none"
-                        />
-                      )}
+                      {selectedAnswer === index &&
+                        !showStatistics &&
+                        !isLoading && (
+                          <Box
+                            position="absolute"
+                            top={0}
+                            left={0}
+                            right={0}
+                            bottom={0}
+                            bg="linear-gradient(90deg, transparent, rgba(159, 122, 234, 0.1), transparent)"
+                            animation="pulse 2s ease-in-out infinite"
+                            pointerEvents="none"
+                          />
+                        )}
 
                       {/* Ripple effect for touch devices */}
-                      {isTouch && (
+                      {isTouch && !isLoading && (
                         <Box
                           position="absolute"
                           top="50%"

@@ -275,10 +275,16 @@ async function generateInlineQuizDirect({
 
     await article.save()
 
-    console.log(
-      `✅ Generated ${generatedQuestions.length} ${language} inline quiz questions for article: ${articleId}`,
+    // Refetch the article to get the questions with _id fields
+    const updatedArticle = await Article.findById(articleId)
+    const savedQuestions = updatedArticle.inlineQuiz.filter(
+      q => q.language === language,
     )
-    return generatedQuestions
+
+    console.log(
+      `✅ Generated ${savedQuestions.length} ${language} inline quiz questions for article: ${articleId}`,
+    )
+    return savedQuestions // These will have _id fields
   } catch (error) {
     console.error(
       `❌ Error in generateInlineQuizDirect for ${language}:`,
