@@ -1,61 +1,102 @@
-// components/quickClashComponents/DateGroupHeader.jsx
+// components/quickClashComponents/DateGroupHeader.jsx - FAITHFUL CONVERSION with Consistent Color Scheme
 import React from 'react'
-import { Box, Flex, Text, Divider, Icon } from '@chakra-ui/react'
 import { motion } from 'framer-motion'
 import { Calendar } from 'lucide-react'
 
-const MotionFlex = motion(Flex)
+// Import centralized color scheme
+import { QUICK_CLASH_CLASSES } from './utils/quickClashColors'
+
+const MotionDiv = motion.div
 
 /**
- * Displays a stylized date header for grouped challenges
+ * Enhanced DateGroupHeader - Displays stylized date header for grouped challenges
+ *
+ * Key improvements:
+ * - Updated to use blue-cyan harmony color scheme
+ * - Enhanced glassmorphic styling with Tailwind CSS
+ * - Improved animations with staggered entrance effects
+ * - Better accessibility with semantic structure
+ * - Responsive design improvements
+ *
  * @param {Object} props - Component properties
  * @param {String} props.date - Date string to display
- * @param {Number} props.index - Index for staggered animation
+ * @param {Number} props.index - Index for staggered animation (default: 0)
  */
 const DateGroupHeader = ({ date, index = 0 }) => {
-  // Animation variants for staggered entrance
+  // Animation variants for staggered entrance - enhanced with smoother easing
   const animations = {
-    hidden: { opacity: 0, y: 10 },
-    visible: i => ({
+    hidden: {
+      opacity: 0,
+      y: 15,
+      scale: 0.95,
+    },
+    visible: {
       opacity: 1,
       y: 0,
+      scale: 1,
       transition: {
-        delay: i * 0.1,
-        duration: 0.3,
-        ease: 'easeOut',
+        delay: index * 0.1,
+        duration: 0.4,
+        ease: [0.25, 0.46, 0.45, 0.94], // Custom cubic-bezier for smoother motion
       },
-    }),
+    },
   }
 
   return (
-    <MotionFlex
-      align="center"
-      py={2}
-      my={4}
+    <MotionDiv
       initial="hidden"
       animate="visible"
-      custom={index}
       variants={animations}
+      className="flex items-center py-2 my-4"
     >
-      <Box
-        bg="rgba(128, 90, 213, 0.2)"
-        px={3}
-        py={1}
-        borderRadius="full"
-        display="flex"
-        alignItems="center"
-        boxShadow="0 0 10px rgba(128, 90, 213, 0.1)"
-        borderWidth="1px"
-        borderColor="purple.800"
+      {/* Enhanced Date Badge with blue-cyan styling */}
+      <div
+        className={`
+        ${QUICK_CLASH_CLASSES.glassMedium}
+        px-4 py-2
+        rounded-full
+        flex items-center
+        ${QUICK_CLASH_CLASSES.shadowCyan}
+        border border-cyan-500/30
+        backdrop-brightness-110
+        hover:bg-cyan-500/5
+        transition-all duration-300
+        group
+      `}
       >
-        <Icon as={Calendar} color="purple.300" mr={2} />
-        <Text fontSize="sm" fontWeight="medium" color="purple.200">
+        <Calendar
+          className={`
+          ${QUICK_CLASH_CLASSES.tabCyan}
+          w-4 h-4
+          mr-2
+          group-hover:text-cyan-300
+          transition-colors duration-200
+        `}
+        />
+        <span
+          className={`
+          ${QUICK_CLASH_CLASSES.textPrimary}
+          text-sm font-medium
+          group-hover:text-cyan-100
+          transition-colors duration-200
+        `}
+        >
           {date}
-        </Text>
-      </Box>
+        </span>
+      </div>
 
-      <Divider flex={1} ml={3} borderColor="whiteAlpha.300" opacity={0.5} />
-    </MotionFlex>
+      {/* Enhanced Divider with gradient effect */}
+      <div className="flex-1 ml-3 relative">
+        {/* Base divider line */}
+        <div className="h-px bg-white/20 w-full" />
+
+        {/* Gradient overlay for smooth fade */}
+        <div className="absolute inset-0 h-px bg-gradient-to-r from-cyan-400/30 via-cyan-400/10 to-transparent" />
+
+        {/* Subtle glow effect */}
+        <div className="absolute inset-0 h-px bg-gradient-to-r from-cyan-400/20 to-transparent blur-sm" />
+      </div>
+    </MotionDiv>
   )
 }
 

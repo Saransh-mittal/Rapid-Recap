@@ -1,3 +1,4 @@
+// routes/AppRoutes.jsx - Updated with smooth page transitions
 import React, { lazy, Suspense } from 'react'
 import { Route, Routes, Navigate } from 'react-router-dom'
 import Loading from '../components/miscellaneous/Loading'
@@ -7,6 +8,7 @@ import ConfirmDeleteAccount from '../screens/ConfirmDeleteAccount'
 import DeleteAccount from '../screens/DeleteAccount'
 import { useSelector } from 'react-redux'
 import ReferralDashboard from '../screens/ReferralDashboard'
+import PageTransitionWrapper from '../components/transitions/PageTransitionWrapper'
 
 const TournamentWrapper = lazy(() => import('../screens/TournamentWrapper'))
 const Home = lazy(() => import('../screens/Home'))
@@ -54,178 +56,188 @@ const QuickClashSocketTest =
     : React.lazy(() => import('../screens/testing/QuickClashSocketTest'))
 const AppStartScreen = lazy(() => import('../screens/AppStartScreen'))
 
+// Enhanced loading component with glassmorphic design
+const EnhancedLoading = () => (
+  <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-slate-900 to-slate-800">
+    <div className="relative">
+      {/* Background blur circle */}
+      <div className="absolute inset-0 bg-purple-600/20 rounded-full blur-xl scale-150"></div>
+
+      {/* Loading spinner */}
+      <div className="relative w-16 h-16 border-4 border-purple-400/30 border-t-purple-400 rounded-full animate-spin"></div>
+
+      {/* Loading text */}
+      <p className="mt-4 text-white/70 text-center text-sm">Loading...</p>
+    </div>
+  </div>
+)
+
 const AppRoutes = ({ isToken, needsOnboarding, setIsGuestLoggedin }) => {
   const { summary, isVisible } = useSelector(state => state.demotionSummary)
+
   return (
-    <Suspense fallback={<Loading />}>
-      <Routes>
-        {needsOnboarding ? (
-          <>
-            <Route
-              path="/"
-              element={
-                <OnboardingProcess setIsGuestLoggedin={setIsGuestLoggedin} />
-              }
-            />
-            {/* GameHub routes */}
-            <Route
-              path="/gamehub/:articleId"
-              element={
-                isToken ? <IntegratedGameHub /> : <Navigate to="/" replace />
-              }
-            />
-            <Route
-              path="/gamehub/:articleId/:gameType"
-              element={
-                isToken ? (
-                  <EnhancedGameInterface />
-                ) : (
-                  <Navigate to="/" replace />
-                )
-              }
-            />
-            {/* NEW: Game Report route */}
-            <Route
-              path="/gamehub/:articleId/report"
-              element={
-                isToken ? <GameReportWrapper /> : <Navigate to="/" replace />
-              }
-            />
-            {/* Game Summary route */}
-            <Route
-              path="/gamehub/:articleId/summary/:sessionId"
-              element={
-                isToken ? <GameSummaryInterface /> : <Navigate to="/" replace />
-              }
-            />
-            <Route path="*" element={<Navigate to="/" replace />} />
-          </>
-        ) : isVisible && summary ? (
-          <>
-            <Route path="/" element={<DemotionSummary />} />
-            <Route path="*" element={<Navigate to="/" replace />} />
-          </>
-        ) : (
-          <>
-            <Route
-              path="/"
-              element={isToken ? <AppStartScreen /> : <GetStarted />}
-            />
-            {process.env.NODE_ENV != 'production' && (
+    <PageTransitionWrapper>
+      <Suspense fallback={<EnhancedLoading />}>
+        <Routes>
+          {needsOnboarding ? (
+            <>
               <Route
-                path="/quickclash/test-socket"
-                element={<QuickClashSocketTest />}
+                path="/"
+                element={
+                  <OnboardingProcess setIsGuestLoggedin={setIsGuestLoggedin} />
+                }
               />
-            )}
-            <Route
-              path="/quickclash"
-              element={isToken ? <QuickClash /> : <Navigate to="/" replace />}
-            />
-            <Route
-              path="/quickclash/teamBattle/:battleId"
-              element={
-                isToken ? <TeamBattlePage /> : <Navigate to="/" replace />
-              }
-            />
-            <Route
-              path="/quickclash/analysis/:battleId"
-              element={
-                isToken ? (
-                  <TeamBattleAnalysisPage />
-                ) : (
-                  <Navigate to="/" replace />
-                )
-              }
-            />
-            <Route
-              path="/quickclash/session/:challengeId"
-              element={
-                isToken ? <QuickClashSession /> : <Navigate to="/" replace />
-              }
-            />
-
-            {/* GameHub routes */}
-            <Route
-              path="/gamehub/:articleId"
-              element={
-                isToken ? <IntegratedGameHub /> : <Navigate to="/" replace />
-              }
-            />
-            <Route
-              path="/gamehub/:articleId/:gameType"
-              element={
-                isToken ? (
-                  <EnhancedGameInterface />
-                ) : (
-                  <Navigate to="/" replace />
-                )
-              }
-            />
-            {/* NEW: Game Report route */}
-            <Route
-              path="/gamehub/:articleId/report"
-              element={
-                isToken ? <GameReportWrapper /> : <Navigate to="/" replace />
-              }
-            />
-            {/* Game Summary route */}
-            <Route
-              path="/gamehub/:articleId/summary/:sessionId"
-              element={
-                isToken ? <GameSummaryInterface /> : <Navigate to="/" replace />
-              }
-            />
-
-            <Route path="/manual" element={<RuleBook />} />
-            <Route path="/manual/:pageId" element={<RuleBook />} />
-            {/* <Route path="/get-started" element={<GetStarted />} /> */}
-            <Route path="/hall-of-champions" element={<HallOfChampions />} />
-            <Route path="/contact/feedback" element={<ContactLayout />} />
-            <Route path="/home/:category" element={<Home />} />
-            <Route path="/home" element={<Home />} />
-            <Route
-              path="/referral"
-              // element={isToken ? <ReferralDashboard /> : <GetStarted />}
-              element={<ReferralDashboard />}
-            />
-            {/* <Route
-              path="/chats"
-              element={
-                <ServiceScreen
-                  title="Chat Feature Under Maintainance"
-                  description="We're working hard to bring you better version of our chat feature aka Wise Web. Stay tuned for updates!"
-                  quote="The best way to predict the future is to create it."
-                  quoteAuthor="Peter Drucker"
+              {/* GameHub routes */}
+              <Route
+                path="/gamehub/:articleId"
+                element={
+                  isToken ? <IntegratedGameHub /> : <Navigate to="/" replace />
+                }
+              />
+              <Route
+                path="/gamehub/:articleId/:gameType"
+                element={
+                  isToken ? (
+                    <EnhancedGameInterface />
+                  ) : (
+                    <Navigate to="/" replace />
+                  )
+                }
+              />
+              {/* NEW: Game Report route */}
+              <Route
+                path="/gamehub/:articleId/report"
+                element={
+                  isToken ? <GameReportWrapper /> : <Navigate to="/" replace />
+                }
+              />
+              {/* Game Summary route */}
+              <Route
+                path="/gamehub/:articleId/summary/:sessionId"
+                element={
+                  isToken ? (
+                    <GameSummaryInterface />
+                  ) : (
+                    <Navigate to="/" replace />
+                  )
+                }
+              />
+              <Route path="*" element={<Navigate to="/" replace />} />
+            </>
+          ) : isVisible && summary ? (
+            <>
+              <Route path="/" element={<DemotionSummary />} />
+              <Route path="*" element={<Navigate to="/" replace />} />
+            </>
+          ) : (
+            <>
+              <Route
+                path="/"
+                element={isToken ? <AppStartScreen /> : <GetStarted />}
+              />
+              {process.env.NODE_ENV != 'production' && (
+                <Route
+                  path="/quickclash/test-socket"
+                  element={<QuickClashSocketTest />}
                 />
-              }
-            /> */}
-            <Route path="/article/:id/:slug" element={<Article />} />
-            <Route path="/article/:id" element={<Article />} />
-            <Route path="/profile/:inGameName" element={<Profile />} />
-            <Route path="/profile" element={<Profile />} />
-            <Route path="/contact" element={<ContactLayout />} />
-            <Route path="/leaderboard" element={<Leaderboard />} />
-            {/* <Route path="/tournament" element={<TournamentWrapper />} /> */}
+              )}
+              <Route
+                path="/quickclash"
+                element={isToken ? <QuickClash /> : <Navigate to="/" replace />}
+              />
+              <Route
+                path="/quickclash/teamBattle/:battleId"
+                element={
+                  isToken ? <TeamBattlePage /> : <Navigate to="/" replace />
+                }
+              />
+              <Route
+                path="/quickclash/analysis/:battleId"
+                element={
+                  isToken ? (
+                    <TeamBattleAnalysisPage />
+                  ) : (
+                    <Navigate to="/" replace />
+                  )
+                }
+              />
+              <Route
+                path="/quickclash/session/:challengeId"
+                element={
+                  isToken ? <QuickClashSession /> : <Navigate to="/" replace />
+                }
+              />
 
-            <Route
-              path="/dashboard"
-              element={
-                <AdminRoute>
-                  <Dashboard />
-                </AdminRoute>
-              }
-            />
-            <Route path="*" element={<Navigate to="/" replace />} />
-            <Route path="/delete-account" element={<DeleteAccount />} />
-            <Route path="/privacy-policy" element={<PrivacyPolicy />} />
-            <Route
-              path="/confirmDeleteAccount/:token"
-              element={<ConfirmDeleteAccount />}
-            />
-          </>
-        )}
-      </Routes>
-    </Suspense>
+              {/* GameHub routes */}
+              <Route
+                path="/gamehub/:articleId"
+                element={
+                  isToken ? <IntegratedGameHub /> : <Navigate to="/" replace />
+                }
+              />
+              <Route
+                path="/gamehub/:articleId/:gameType"
+                element={
+                  isToken ? (
+                    <EnhancedGameInterface />
+                  ) : (
+                    <Navigate to="/" replace />
+                  )
+                }
+              />
+              {/* NEW: Game Report route */}
+              <Route
+                path="/gamehub/:articleId/report"
+                element={
+                  isToken ? <GameReportWrapper /> : <Navigate to="/" replace />
+                }
+              />
+              {/* Game Summary route */}
+              <Route
+                path="/gamehub/:articleId/summary/:sessionId"
+                element={
+                  isToken ? (
+                    <GameSummaryInterface />
+                  ) : (
+                    <Navigate to="/" replace />
+                  )
+                }
+              />
+
+              <Route path="/manual" element={<RuleBook />} />
+              <Route path="/manual/:pageId" element={<RuleBook />} />
+              <Route path="/hall-of-champions" element={<HallOfChampions />} />
+              <Route path="/contact/feedback" element={<ContactLayout />} />
+              <Route path="/home/:category" element={<Home />} />
+              <Route path="/home" element={<Home />} />
+              <Route path="/referral" element={<ReferralDashboard />} />
+              <Route path="/article/:id/:slug" element={<Article />} />
+              <Route path="/article/:id" element={<Article />} />
+              <Route path="/profile/:inGameName" element={<Profile />} />
+              <Route path="/profile" element={<Profile />} />
+              <Route path="/contact" element={<ContactLayout />} />
+              <Route path="/leaderboard" element={<Leaderboard />} />
+
+              <Route
+                path="/dashboard"
+                element={
+                  <AdminRoute>
+                    <Dashboard />
+                  </AdminRoute>
+                }
+              />
+              <Route path="*" element={<Navigate to="/" replace />} />
+              <Route path="/delete-account" element={<DeleteAccount />} />
+              <Route path="/privacy-policy" element={<PrivacyPolicy />} />
+              <Route
+                path="/confirmDeleteAccount/:token"
+                element={<ConfirmDeleteAccount />}
+              />
+            </>
+          )}
+        </Routes>
+      </Suspense>
+    </PageTransitionWrapper>
   )
 }
 

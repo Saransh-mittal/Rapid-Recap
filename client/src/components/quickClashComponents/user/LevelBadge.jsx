@@ -1,38 +1,123 @@
-// components/quickClashComponents/user/LevelBadge.jsx
-import React from 'react'
-import {
-  Box,
-  Flex,
-  Text,
-  Icon,
-  Popover,
-  PopoverTrigger,
-  PopoverContent,
-  PopoverBody,
-  PopoverArrow,
-  PopoverCloseButton,
-  HStack,
-  VStack,
-} from '@chakra-ui/react'
-import { motion } from 'framer-motion'
+// components/quickClashComponents/user/LevelBadge.jsx - FAITHFUL CONVERSION to Tailwind with Blue-Cyan Color Scheme
+import React, { useState, useRef, useEffect } from 'react'
+import { motion, AnimatePresence } from 'framer-motion'
 import { Star } from 'lucide-react'
 import { useTranslation } from 'react-i18next'
 import { useSelector } from 'react-redux'
 
-const MotionBox = motion(Box)
-const MotionFlex = motion(Flex)
-const MotionIcon = motion(Icon)
-const MotionText = motion(Text)
+// Import centralized color scheme
+import { QUICK_CLASH_CLASSES } from '../utils/quickClashColors'
+
+const MotionDiv = motion.div
+
+// Custom Popover Component
+const CustomPopover = ({ isOpen, onClose, children, trigger }) => {
+  const [position, setPosition] = useState({ top: 0, left: 0 })
+  const triggerRef = useRef(null)
+  const popoverRef = useRef(null)
+
+  useEffect(() => {
+    if (isOpen && triggerRef.current) {
+      const triggerRect = triggerRef.current.getBoundingClientRect()
+      const popoverWidth = 340
+      const popoverHeight = 200 // Approximate height
+
+      let left = triggerRect.left + triggerRect.width / 2 - popoverWidth / 2
+      let top = triggerRect.bottom + 10
+
+      // Ensure popover stays within viewport
+      if (left < 10) left = 10
+      if (left + popoverWidth > window.innerWidth - 10) {
+        left = window.innerWidth - popoverWidth - 10
+      }
+
+      if (top + popoverHeight > window.innerHeight - 10) {
+        top = triggerRect.top - popoverHeight - 10
+      }
+
+      setPosition({ top, left })
+    }
+  }, [isOpen])
+
+  // Close on outside click
+  useEffect(() => {
+    const handleOutsideClick = event => {
+      if (
+        isOpen &&
+        popoverRef.current &&
+        !popoverRef.current.contains(event.target) &&
+        !triggerRef.current.contains(event.target)
+      ) {
+        onClose()
+      }
+    }
+
+    document.addEventListener('mousedown', handleOutsideClick)
+    return () => document.removeEventListener('mousedown', handleOutsideClick)
+  }, [isOpen, onClose])
+
+  return (
+    <>
+      <div ref={triggerRef}>{trigger}</div>
+      <AnimatePresence>
+        {isOpen && (
+          <>
+            {/* Backdrop */}
+            <div className="fixed inset-0 z-40" onClick={onClose} />
+
+            {/* Popover */}
+            <MotionDiv
+              ref={popoverRef}
+              className={`
+                fixed z-50 w-[340px] ${QUICK_CLASH_CLASSES.glassMedium}
+                backdrop-blur-[16px] border border-cyan-400/40 rounded-xl overflow-hidden
+                shadow-2xl shadow-black/40
+              `}
+              style={{
+                top: position.top,
+                left: position.left,
+                background: 'rgba(15, 23, 42, 0.95)',
+                boxShadow:
+                  '0 8px 32px rgba(0, 0, 0, 0.4), 0 0 15px rgba(6, 182, 212, 0.3)',
+              }}
+              initial={{ opacity: 0, scale: 0.95, y: -10 }}
+              animate={{ opacity: 1, scale: 1, y: 0 }}
+              exit={{ opacity: 0, scale: 0.95, y: -10 }}
+              transition={{ duration: 0.2 }}
+            >
+              {/* Arrow */}
+              <div
+                className="absolute -top-2 left-1/2 transform -translate-x-1/2 w-4 h-4 rotate-45"
+                style={{ background: 'rgba(15, 23, 42, 0.95)' }}
+              />
+
+              {/* Close button */}
+              <button
+                onClick={onClose}
+                className="absolute top-2 right-2 z-10 w-6 h-6 flex items-center justify-center text-white/70 hover:text-white rounded-full hover:bg-white/10 transition-colors"
+              >
+                ×
+              </button>
+
+              {children}
+            </MotionDiv>
+          </>
+        )}
+      </AnimatePresence>
+    </>
+  )
+}
 
 /**
- * A premium, sleek level badge showing the user's current level
+ * A premium, sleek level badge showing the user's current level with cyan/blue theme
  * Features a minimal, horizontal popover with important level information
  */
 const LevelBadge = () => {
   const { t } = useTranslation('QuickClash')
   const { user } = useSelector(state => state.auth)
+  const [isPopoverOpen, setIsPopoverOpen] = useState(false)
 
-  // Calculate level and XP metrics
+  // Calculate level and XP metrics - EXACTLY as original
   const level = user?.level || 0
   const xp = user?.xp || 0
   const xpBaseAtCurrLevel = (level * (level + 1) * 10) / 2
@@ -43,271 +128,203 @@ const LevelBadge = () => {
     Math.round((xpProgress / xpForNextLevel) * 100),
   )
 
-  return (
-    <Popover placement="bottom" trigger="click">
-      <PopoverTrigger>
-        <MotionFlex
-          align="center"
-          justify="center"
-          py={1.5}
-          px={3}
-          borderRadius="full"
-          bg="rgba(26, 32, 44, 0.4)"
-          backdropFilter="blur(8px)"
-          boxShadow="0 4px 12px rgba(0, 0, 0, 0.2)"
-          cursor="pointer"
-          transition="all 0.2s"
-          whileHover={{
-            scale: 1.05,
-            boxShadow: '0 0 20px rgba(119, 81, 204, 0.4)',
-          }}
-          whileTap={{ scale: 0.95 }}
-          position="relative"
-          overflow="hidden"
-          border="1px solid"
-          borderColor="rgba(138, 92, 246, 0.3)"
-          _focusVisible={{ outline: 'none' }}
-          sx={{
-            // Remove focus outline/rectangle across browsers
-            '&:focus': { outline: 'none', boxShadow: 'none' },
-            '&:focus-visible': { outline: 'none', boxShadow: 'none' },
-            '&:active': { outline: 'none' },
-            '&::selection': { background: 'transparent' },
-          }}
-        >
-          {/* Premium gradient background */}
-          <Box
-            position="absolute"
-            top={0}
-            left={0}
-            right={0}
-            bottom={0}
-            bgGradient="linear(to-br, rgba(138, 92, 246, 0.2), rgba(79, 70, 229, 0.1))"
-            opacity={0.7}
-            zIndex={0}
-          />
+  const handleClick = () => {
+    setIsPopoverOpen(!isPopoverOpen)
+  }
 
-          {/* Animated star icon */}
-          <MotionIcon
-            as={Star}
-            color="#F7D147"
-            boxSize={4}
-            mr={1.5} // Adjusted margin for a tighter look
-            animate={{
-              rotate: [0, 10, 0],
-              scale: [1, 1.1, 1],
-            }}
-            transition={{
-              repeat: Infinity,
-              repeatType: 'reverse',
-              duration: 4,
-            }}
-            zIndex={1}
-            filter="drop-shadow(0 0 3px rgba(247, 209, 71, 0.8))"
-          />
+  const triggerComponent = (
+    <MotionDiv
+      className={`
+        flex items-center justify-center py-1.5 px-3 rounded-full cursor-pointer
+        ${QUICK_CLASH_CLASSES.glassMedium} backdrop-blur-[8px] border border-cyan-500/30
+        shadow-lg shadow-black/20 relative overflow-hidden transition-all duration-200
+        hover:border-cyan-400/50 hover:shadow-xl hover:shadow-cyan-500/20
+      `}
+      onClick={handleClick}
+      whileHover={{
+        scale: 1.05,
+        boxShadow: '0 0 20px rgba(6, 182, 212, 0.4)',
+      }}
+      whileTap={{ scale: 0.95 }}
+      style={{
+        outline: 'none',
+        WebkitTapHighlightColor: 'transparent',
+      }}
+    >
+      {/* Premium gradient background */}
+      <div
+        className="absolute inset-0 opacity-70 z-0"
+        style={{
+          background:
+            'linear-gradient(to bottom right, rgba(6, 182, 212, 0.2), rgba(14, 165, 233, 0.1))',
+        }}
+      />
 
-          {/* Level text */}
-          <MotionText
-            color="white"
-            fontWeight="bold"
-            fontSize="lg"
-            zIndex={1}
-            // Removed mr={3} to bring it closer to the star
-          >
-            {level}
-          </MotionText>
-
-          {/* Mini progress bar - REMOVED */}
-          {/*
-          <Box
-            w="32px"
-            h="3px"
-            borderRadius="full"
-            bg="whiteAlpha.200"
-            zIndex={1}
-          >
-            <Box
-              h="100%"
-              w={`${progressPercentage}%`}
-              borderRadius="full"
-              bgGradient="linear(to-r, #9F7AFA, #7551CC)"
-            />
-          </Box>
-          */}
-        </MotionFlex>
-      </PopoverTrigger>
-
-      <PopoverContent
-        bg="rgba(20, 20, 30, 0.95)"
-        backdropFilter="blur(16px)"
-        borderColor="rgba(138, 92, 246, 0.4)"
-        boxShadow="0 8px 32px rgba(0, 0, 0, 0.4), 0 0 15px rgba(128, 90, 213, 0.3)"
-        width="340px"
-        height="auto"
-        p={0}
-        overflow="hidden"
-        borderRadius="xl"
-        _focus={{ outline: 'none', boxShadow: 'none' }}
-        sx={{
-          // Remove focus styles for the popover content too
-          '&:focus': { outline: 'none' },
-          '&:focus-visible': { outline: 'none' },
+      {/* Animated star icon */}
+      <MotionDiv
+        className="relative z-10 mr-1.5"
+        animate={{
+          rotate: [0, 10, 0],
+          scale: [1, 1.1, 1],
+        }}
+        transition={{
+          repeat: Infinity,
+          repeatType: 'reverse',
+          duration: 4,
+        }}
+        style={{
+          filter: 'drop-shadow(0 0 3px rgba(255, 215, 0, 0.8))',
         }}
       >
-        <PopoverArrow bg="rgba(20, 20, 30, 0.95)" />
-        <PopoverCloseButton color="whiteAlpha.700" zIndex={2} />
-        <PopoverBody p={0}>
-          {/* Top section with current level */}
-          <Flex
-            bg="rgba(30, 30, 45, 0.8)"
-            p={4}
-            borderBottomWidth="1px"
-            borderColor="rgba(138, 92, 246, 0.2)"
-            position="relative"
-            overflow="hidden"
+        <Star className="w-4 h-4 text-yellow-400 fill-current" />
+      </MotionDiv>
+
+      {/* Level text */}
+      <span className="text-white font-bold text-lg z-10">{level}</span>
+    </MotionDiv>
+  )
+
+  const popoverContent = (
+    <div className="p-0">
+      {/* Top section with current level */}
+      <div
+        className="p-4 border-b border-cyan-400/20 relative overflow-hidden"
+        style={{
+          background: 'rgba(30, 30, 45, 1)',
+        }}
+      >
+        {/* Background glow effect */}
+        <div
+          className="absolute -top-5 -left-5 w-20 h-20 rounded-full blur-[10px] opacity-30"
+          style={{
+            background:
+              'radial-gradient(circle, rgba(6, 182, 212, 0.3), transparent 70%)',
+          }}
+        />
+
+        {/* Level info */}
+        <div className="flex items-center w-full">
+          <div
+            className={`
+              w-14 h-14 rounded-full flex items-center justify-center mr-4 shadow-lg
+              ${QUICK_CLASH_CLASSES.gradientPrimary}
+            `}
+            style={{
+              background: 'linear-gradient(to bottom right, #06B6D4, #0891B2)',
+              boxShadow: '0 0 20px rgba(6, 182, 212, 0.4)',
+            }}
           >
-            {/* Background glow effect */}
-            <Box
-              position="absolute"
-              top="-20px"
-              left="-20px"
-              width="80px"
-              height="80px"
-              borderRadius="full"
-              bgGradient="radial(circle, rgba(138, 92, 246, 0.3), transparent 70%)"
-              filter="blur(10px)"
-            />
+            <span className="text-2xl font-bold text-white">{level}</span>
+          </div>
 
-            {/* Level info */}
-            <Flex align="center" width="100%">
-              <Flex
-                w="56px"
-                h="56px"
-                borderRadius="full"
-                bgGradient="linear(to-br, #9F7AFA, #7551CC)"
-                align="center"
-                justify="center"
-                boxShadow="0 0 20px rgba(119, 81, 204, 0.4)"
-                mr={4}
-              >
-                <Text fontSize="2xl" fontWeight="bold" color="white">
-                  {level}
-                </Text>
-              </Flex>
+          <div className="flex flex-col flex-1">
+            <span className="text-white font-bold text-base mb-1">
+              {t('Current Level')}
+            </span>
+            <div className="flex gap-3 mt-1">
+              <div className="flex items-center gap-1">
+                <span className={`${QUICK_CLASH_CLASSES.textMuted} text-sm`}>
+                  {t('Total XP')}:
+                </span>
+                <span className="text-cyan-400 font-bold text-sm">{xp} XP</span>
+              </div>
 
-              <VStack align="start" spacing={0} flex={1}>
-                <Text color="white" fontWeight="bold" fontSize="md">
-                  {t('Current Level')}
-                </Text>
-                <HStack spacing={3} mt={1}>
-                  <HStack spacing={1}>
-                    <Text color="whiteAlpha.700" fontSize="sm">
-                      {t('Total XP')}:
-                    </Text>
-                    <Text color="#9F7AFA" fontWeight="bold" fontSize="sm">
-                      {xp} XP
-                    </Text>
-                  </HStack>
+              <div className="flex items-center gap-1">
+                <span className={`${QUICK_CLASH_CLASSES.textMuted} text-sm`}>
+                  {t('Next')}:
+                </span>
+                <span className="text-green-400 font-bold text-sm">
+                  {xpProgress}/{xpForNextLevel} XP
+                </span>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
 
-                  <HStack spacing={1}>
-                    <Text color="whiteAlpha.700" fontSize="sm">
-                      {t('Next')}:
-                    </Text>
-                    <Text color="#10B981" fontWeight="bold" fontSize="sm">
-                      {xpProgress}/{xpForNextLevel} XP
-                    </Text>
-                  </HStack>
-                </HStack>
-              </VStack>
-            </Flex>
-          </Flex>
+      {/* Progress section */}
+      <div
+        className="px-4 py-3"
+        style={{ background: 'rgba(20, 25, 40, 0.9)' }}
+      >
+        <div className="flex justify-between mb-1 items-center">
+          <span className={`${QUICK_CLASH_CLASSES.textMuted} text-xs`}>
+            {progressPercentage}%
+          </span>
+          <span className={`${QUICK_CLASH_CLASSES.textMuted} text-xs`}>
+            {t('Level')} {level} → {level + 1}
+          </span>
+        </div>
 
-          {/* Progress section */}
-          <Box px={4} py={3}>
-            <Flex justify="space-between" mb={1} align="center">
-              <Text color="whiteAlpha.600" fontSize="xs">
-                {progressPercentage}%
-              </Text>
-              <Text color="whiteAlpha.600" fontSize="xs">
-                {t('Level')} {level} → {level + 1}
-              </Text>
-            </Flex>
+        <div className="w-full h-[5px] bg-slate-800/60 rounded-full overflow-hidden relative">
+          {/* Progress fill */}
+          <div
+            className="absolute inset-y-0 left-0 rounded-full bg-gradient-to-r from-cyan-500 to-blue-600"
+            style={{ width: `${progressPercentage}%` }}
+          />
 
-            <Box
-              w="100%"
-              h="5px"
-              bg="rgba(30, 30, 45, 0.6)"
-              borderRadius="full"
-              overflow="hidden"
-              position="relative"
-            >
-              {/* Progress fill */}
-              <Box
-                position="absolute"
-                top={0}
-                left={0}
-                bottom={0}
-                width={`${progressPercentage}%`}
-                bgGradient="linear(to-r, #9F7AFA, #7551CC)"
-                borderRadius="full"
-              />
+          {/* Shimmering effect */}
+          <MotionDiv
+            className="absolute inset-0 rounded-full"
+            style={{
+              background:
+                'linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.1), transparent)',
+              backgroundSize: '200% 100%',
+            }}
+            animate={{
+              backgroundPosition: ['200% 0', '0% 0'],
+            }}
+            transition={{
+              duration: 2,
+              repeat: Infinity,
+              ease: 'linear',
+            }}
+          />
+        </div>
+      </div>
 
-              {/* Shimmering effect */}
-              <Box
-                position="absolute"
-                top={0}
-                left={0}
-                right={0}
-                bottom={0}
-                bgGradient="linear(90deg, transparent, rgba(255, 255, 255, 0.1), transparent)"
-                backgroundSize="200% 100%"
-                animation="shimmer 2s infinite linear"
-                sx={{
-                  '@keyframes shimmer': {
-                    '0%': { backgroundPosition: '200% 0' },
-                    '100%': { backgroundPosition: '0% 0' },
-                  },
-                }}
-              />
-            </Box>
-          </Box>
+      {/* Tip section */}
+      <div
+        className="flex items-center gap-3 px-4 py-3 border-t border-cyan-400/15"
+        style={{
+          background: 'rgba(30, 30, 45, 1)',
+        }}
+      >
+        <MotionDiv
+          animate={{
+            rotate: [0, 10, 0, -10, 0],
+            scale: [1, 1.1, 1, 1.1, 1],
+          }}
+          transition={{
+            duration: 5,
+            repeat: Infinity,
+          }}
+          style={{
+            filter: 'drop-shadow(0 0 4px rgba(255, 215, 0, 0.6))',
+          }}
+        >
+          <Star className="w-5 h-5 text-yellow-400 fill-current" />
+        </MotionDiv>
+        <div className="flex flex-col">
+          <span className="text-white font-bold text-xs">
+            {t('Keep Earning XP')}
+          </span>
+          <span className={`${QUICK_CLASH_CLASSES.textMuted} text-[10px]`}>
+            {t('Complete challenges and daily tasks to level up!')}
+          </span>
+        </div>
+      </div>
+    </div>
+  )
 
-          {/* Tip section */}
-          <HStack
-            spacing={3}
-            px={4}
-            py={3}
-            align="center"
-            bg="rgba(30, 30, 45, 0.4)"
-            borderTop="1px solid"
-            borderColor="rgba(138, 92, 246, 0.15)"
-          >
-            <MotionIcon
-              as={Star}
-              color="#F7D147"
-              boxSize={5}
-              animate={{
-                rotate: [0, 10, 0, -10, 0],
-                scale: [1, 1.1, 1, 1.1, 1],
-              }}
-              transition={{
-                duration: 5,
-                repeat: Infinity,
-              }}
-              filter="drop-shadow(0 0 4px rgba(247, 209, 71, 0.6))"
-            />
-            <VStack spacing={0} align="start">
-              <Text color="white" fontWeight="bold" fontSize="xs">
-                {t('Keep Earning XP')}
-              </Text>
-              <Text color="whiteAlpha.600" fontSize="2xs">
-                {t('Complete challenges and daily tasks to level up!')}
-              </Text>
-            </VStack>
-          </HStack>
-        </PopoverBody>
-      </PopoverContent>
-    </Popover>
+  return (
+    <CustomPopover
+      isOpen={isPopoverOpen}
+      onClose={() => setIsPopoverOpen(false)}
+      trigger={triggerComponent}
+    >
+      {popoverContent}
+    </CustomPopover>
   )
 }
 

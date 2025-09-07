@@ -53,6 +53,9 @@ const {
   getUserAchievements,
   getUserRecentMatches,
   getUserStatistics,
+  getBattleStatsForLanding,
+  getDetailedRQMAnalysis,
+  getGlobalRQMStats,
 } = require('../controllers/quickClashProfileController')
 
 // All routes need authentication first
@@ -131,5 +134,12 @@ router.get('/profile/:userId', getUserProfile)
 router.get('/profile/:userId/achievements', getUserAchievements)
 router.get('/profile/:userId/matches', getUserRecentMatches)
 router.get('/profile/:userId/statistics', getUserStatistics)
+router.get('/battle-stats', getBattleStatsForLanding)
+
+// NEW: Detailed RQM analysis route
+router.get('/rqm-analysis', getDetailedRQMAnalysis)
+
+// NEW: Global RQM statistics route (public data)
+router.get('/global-stats', getGlobalRQMStats)
 
 module.exports = router

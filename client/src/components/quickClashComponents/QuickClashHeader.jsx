@@ -1,4 +1,4 @@
-// components/quickClashComponents/QuickClashHeader.jsx
+// components/quickClashComponents/QuickClashHeader.jsx - FAITHFUL CONVERSION to Tailwind with Blue-Cyan Color Scheme
 import React, {
   memo,
   useEffect,
@@ -8,25 +8,17 @@ import React, {
   lazy,
   Suspense,
 } from 'react'
-import {
-  Box,
-  Heading,
-  Text,
-  Button, // Keep for desktop new challenge
-  Flex,
-  Icon,
-  HStack,
-  useBreakpointValue,
-  Tooltip,
-  IconButton,
-  Badge,
-} from '@chakra-ui/react'
 import { motion } from 'framer-motion'
-import { FiZap, FiHome } from 'react-icons/fi' // FiZap for New Challenge & default 1v1
-import { Target, Zap as ZapIconLucide, Bell, User } from 'lucide-react' // Target for header, Zap for 1v1 icon
+import { FiZap, FiHome } from 'react-icons/fi'
+import { Target, Zap as ZapIconLucide, Bell, User } from 'lucide-react'
 import { useTranslation } from 'react-i18next'
 import { useNavigate } from 'react-router-dom'
 import { useDispatch, useSelector } from 'react-redux'
+
+// Import centralized color scheme
+import { QUICK_CLASH_CLASSES } from './utils/quickClashColors'
+
+// Import components (these should already exist)
 import QuickClashLeaderboardButton from './leaderboard/QuickClashLeaderboardButton'
 import LevelBadge from './user/LevelBadge'
 import TaskProgressIndicator from './dailyTasks/TaskProgressIndicator'
@@ -36,24 +28,56 @@ import { setIsNotifDrawerOpen } from '../../redux/appSlice'
 
 const TaskPopup = lazy(() => import('./dailyTasks/TaskPopup'))
 
-const MotionBox = motion(Box)
-const MotionButton = motion(Button) // For desktop "New Challenge"
-const MotionFlex = motion(Flex)
-const MotionIconButton = motion(IconButton)
+const MotionDiv = motion.div
+const MotionButton = motion.button
+
+// Tooltip component (simple implementation to replace Chakra's Tooltip)
+const Tooltip = ({ children, label }) => {
+  const [showTooltip, setShowTooltip] = useState(false)
+
+  return (
+    <div className="relative inline-block">
+      <div
+        onMouseEnter={() => setShowTooltip(true)}
+        onMouseLeave={() => setShowTooltip(false)}
+      >
+        {children}
+      </div>
+      {showTooltip && (
+        <div className="absolute bottom-full left-1/2 transform -translate-x-1/2 mb-2 px-2 py-1 bg-slate-800 text-white text-xs rounded whitespace-nowrap z-50">
+          {label}
+          <div className="absolute top-full left-1/2 transform -translate-x-1/2 w-0 h-0 border-l-4 border-r-4 border-t-4 border-l-transparent border-r-transparent border-t-slate-800"></div>
+        </div>
+      )}
+    </div>
+  )
+}
 
 const QuickClashHeader = ({ onNewChallenge }) => {
   const { t } = useTranslation('QuickClash')
   const navigate = useNavigate()
   const dispatch = useDispatch()
-  const isDesktop = useBreakpointValue({ base: false, md: true })
+
+  // Responsive state management
+  const [isDesktop, setIsDesktop] = useState(false)
+
+  useEffect(() => {
+    const checkDesktop = () => {
+      setIsDesktop(window.innerWidth >= 768)
+    }
+    checkDesktop()
+    window.addEventListener('resize', checkDesktop)
+    return () => window.removeEventListener('resize', checkDesktop)
+  }, [])
+
   const { user } = useSelector(state => state.auth)
 
-  // Get notification data from Redux
+  // Get notification data from Redux - EXACTLY as original
   const { updates, unreadFriendRequests, notification } = useSelector(
     state => state.app,
   )
 
-  // Calculate notification count - memoized
+  // Calculate notification count - memoized - EXACTLY as original
   const notificationCount = useMemo(() => {
     const unreadUpdates = updates?.filter(u => !u.read).length || 0
     const friendRequests = unreadFriendRequests || 0
@@ -65,6 +89,7 @@ const QuickClashHeader = ({ onNewChallenge }) => {
 
   const [showTaskPopup, setShowTaskPopup] = useState(false)
 
+  // ALL ORIGINAL EFFECTS AND HANDLERS PRESERVED EXACTLY
   useEffect(() => {
     dispatch(fetchUserTrophies())
   }, [dispatch])
@@ -85,7 +110,7 @@ const QuickClashHeader = ({ onNewChallenge }) => {
     dispatch(setIsNotifDrawerOpen(true))
   }
 
-  // Animation variants (assuming these are defined elsewhere or are simple)
+  // Animation variants - EXACTLY as original but adapted for blue-cyan theme
   const containerVariants = {
     initial: { opacity: 0, y: -10 },
     animate: {
@@ -107,7 +132,6 @@ const QuickClashHeader = ({ onNewChallenge }) => {
     },
     hover: {
       scale: 1.05,
-      boxShadow: '0 0 15px rgba(128, 90, 213, 0.6)',
       transition: { type: 'spring', stiffness: 300, damping: 10 },
     },
     tap: { scale: 0.98 },
@@ -115,7 +139,6 @@ const QuickClashHeader = ({ onNewChallenge }) => {
   const homeButtonVariants = {
     hover: {
       scale: 1.1,
-      boxShadow: '0 0 12px rgba(168, 130, 255, 0.6)',
       transition: { duration: 0.3, type: 'spring', stiffness: 200 },
     },
     tap: { scale: 0.9 },
@@ -133,7 +156,6 @@ const QuickClashHeader = ({ onNewChallenge }) => {
   const inboxButtonVariants = {
     hover: {
       scale: 1.1,
-      boxShadow: '0 0 12px rgba(66, 153, 225, 0.6)',
       transition: {
         duration: 0.3,
         type: 'spring',
@@ -144,241 +166,171 @@ const QuickClashHeader = ({ onNewChallenge }) => {
   }
 
   return (
-    <MotionBox
+    <MotionDiv
       variants={containerVariants}
       initial="initial"
       animate="animate"
-      position="relative"
+      className="relative"
     >
       {/* Mobile Fixed Header */}
-      <MotionFlex
-        position="fixed"
-        top="16px"
-        left="16px"
-        right="16px"
-        zIndex={1000} // Ensure it's above other content
-        display={{ base: 'flex', md: 'none' }}
-        justifyContent="space-between"
-        alignItems="center"
+      <MotionDiv
+        className="fixed top-4 left-4 right-4 z-[1000] flex md:hidden justify-between items-center"
         variants={itemVariants}
       >
         <Tooltip label={t('Back to Home')}>
-          <MotionIconButton
-            as={motion.button}
-            icon={<FiHome size={18} />}
+          <MotionButton
             onClick={handleBackToHome}
-            colorScheme="purple"
-            bg="rgba(128, 90, 213, 0.2)"
-            color="white"
-            size="md"
-            borderRadius="full"
-            boxShadow="0 0 10px rgba(0,0,0,0.3)"
-            _hover={{
-              bg: 'rgba(128, 90, 213, 0.4)',
-              color: 'white',
-            }}
-            aria-label={t('Back to Home')}
-            variants={homeButtonVariants} // Re-using homeButtonVariants for consistency
-            initial="initial" // Needed if variants has initial
-            animate="animate" // Needed if variants has animate
+            className={`
+              flex items-center justify-center w-10 h-10
+              ${QUICK_CLASH_CLASSES.glassMedium} hover:bg-cyan-500/20
+              text-white rounded-full shadow-lg backdrop-blur-md
+              border border-cyan-500/20 hover:border-cyan-400/40
+              transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-cyan-400/50
+            `}
+            variants={homeButtonVariants}
+            initial="initial"
+            animate="animate"
             whileHover="hover"
             whileTap="tap"
-          />
+            aria-label={t('Back to Home')}
+          >
+            <FiHome size={18} />
+          </MotionButton>
         </Tooltip>
 
-        <HStack spacing={2}>
+        <div className="flex items-center gap-2">
           <TrophyDisplay />
           <LevelBadge />
           <TaskProgressIndicator onViewTasks={handleViewTasksClick} size="sm" />
-        </HStack>
-      </MotionFlex>
+        </div>
+      </MotionDiv>
 
       {/* Desktop Header */}
-      <MotionFlex
-        justify="space-between"
-        align="center"
-        mb={4}
+      <MotionDiv
+        className="hidden md:flex justify-between items-center mb-4"
         variants={itemVariants}
-        display={{ base: 'none', md: 'flex' }}
       >
-        <MotionFlex gap={3} align="center">
+        <div className="flex items-center gap-3">
           <MotionButton
-            as={motion.button} // Ensure framer-motion integration
-            leftIcon={<FiHome size={18} />}
             onClick={handleBackToHome}
-            variant="ghost"
-            colorScheme="purple"
-            color="whiteAlpha.900"
-            size="md"
-            borderRadius="full"
-            p={3}
-            _hover={{
-              bg: 'rgba(128, 90, 213, 0.2)',
-              color: 'purple.300',
-              transform: 'translateY(-2px)',
-            }}
-            aria-label={t('Back to Home')}
+            className={`
+              flex items-center gap-2 px-3 py-2
+              ${QUICK_CLASH_CLASSES.hoverCyan} hover:bg-cyan-500/10
+              text-white/90 hover:text-cyan-300 rounded-full
+              transition-all duration-200 hover:-translate-y-0.5
+              focus:outline-none focus:ring-2 focus:ring-cyan-400/50
+            `}
             variants={homeButtonVariants}
             whileHover="hover"
             whileTap="tap"
+            aria-label={t('Back to Home')}
           >
+            <FiHome size={18} />
             {t('Home')}
           </MotionButton>
 
           <MotionButton
-            as={motion.button}
-            leftIcon={<User size={20} />}
             onClick={handleProfileClick}
-            variant="ghost"
-            colorScheme="purple"
-            color="whiteAlpha.900"
-            size="md"
-            borderRadius="full"
-            p={3}
-            _hover={{
-              bg: 'rgba(128, 90, 213, 0.2)',
-              color: 'purple.300',
-              transform: 'translateY(-2px)',
-            }}
-            aria-label={t('Open Quick Clash Profile')}
+            className={`
+              flex items-center gap-2 px-3 py-2
+              ${QUICK_CLASH_CLASSES.hoverCyan} hover:bg-cyan-500/10
+              text-white/90 hover:text-cyan-300 rounded-full
+              transition-all duration-200 hover:-translate-y-0.5
+              focus:outline-none focus:ring-2 focus:ring-cyan-400/50
+            `}
             variants={homeButtonVariants}
             whileHover="hover"
             whileTap="tap"
+            aria-label={t('Open Quick Clash Profile')}
           >
+            <User size={20} />
             {t('Profile')}
           </MotionButton>
-        </MotionFlex>
+        </div>
 
-        <HStack spacing={3}>
+        <div className="flex items-center gap-3">
           <TrophyDisplay />
           <LevelBadge />
 
           {/* Inbox Button - Desktop */}
-          <Box position="relative">
+          <div className="relative">
             <Tooltip label={t('Notifications')}>
-              <MotionIconButton
-                as={motion.button}
-                icon={<Bell size={20} />}
+              <MotionButton
                 onClick={handleInboxClick}
-                variant="ghost"
-                colorScheme="blue"
-                color="whiteAlpha.900"
-                size="md"
-                borderRadius="full"
-                p={3}
-                _hover={{
-                  bg: 'rgba(66, 153, 225, 0.2)',
-                  color: 'blue.300',
-                  transform: 'translateY(-2px)',
-                }}
-                aria-label={t('Open Notifications')}
+                className={`
+                  flex items-center justify-center w-10 h-10
+                  ${QUICK_CLASH_CLASSES.hoverBlue} hover:bg-blue-500/10
+                  text-white/90 hover:text-blue-300 rounded-full
+                  transition-all duration-200 hover:-translate-y-0.5
+                  focus:outline-none focus:ring-2 focus:ring-blue-400/50
+                `}
                 variants={inboxButtonVariants}
                 whileHover="hover"
                 whileTap="tap"
-              />
+                aria-label={t('Open Notifications')}
+              >
+                <Bell size={20} />
+              </MotionButton>
             </Tooltip>
             {notificationCount > 0 && (
-              <Badge
-                position="absolute"
-                top="-2px"
-                right="-2px"
-                bg="red.500"
-                color="white"
-                borderRadius="full"
-                fontSize="xs"
-                minW="18px"
-                h="18px"
-                display="flex"
-                alignItems="center"
-                justifyContent="center"
-                border="2px solid"
-                borderColor="blue.500"
-                zIndex={1}
-              >
+              <span className="absolute -top-0.5 -right-0.5 bg-red-500 text-white text-xs rounded-full min-w-[18px] h-[18px] flex items-center justify-center font-bold border-2 border-blue-500 z-10">
                 {notificationCount > 99 ? '99+' : notificationCount}
-              </Badge>
+              </span>
             )}
-          </Box>
+          </div>
           <TaskProgressIndicator onViewTasks={handleViewTasksClick} size="sm" />
-        </HStack>
-      </MotionFlex>
+        </div>
+      </MotionDiv>
 
       {/* Main Header Content */}
-      <Flex
-        direction={{ base: 'column', md: 'row' }}
-        justifyContent="space-between"
-        alignItems={{ base: 'center', md: 'center' }}
-        mb={{ base: 4, md: 8 }} // Adjusted margin bottom for mobile
-        gap={{ base: 3, md: 4 }} // Gap between title/desc and buttons on mobile
-        mt={{ base: '80px', md: 0 }} // Increased top margin for mobile to clear fixed header
-      >
+      <div className="flex flex-col md:flex-row justify-between items-center mb-4 md:mb-8 gap-3 md:gap-4 mt-20 md:mt-0">
         {/* Title and Description */}
-        <MotionBox
-          flex="1"
+        <MotionDiv
+          className="flex-1 text-center md:text-left max-w-full md:max-w-[60%]"
           variants={itemVariants}
-          textAlign={{ base: 'center', md: 'left' }}
-          maxW={{ base: '100%', md: '60%' }}
-          // mb={{ base: 4, md: 0 }} // Margin bottom now handled by parent Flex gap
         >
-          <Heading
-            size={{ base: 'xl', md: '2xl' }}
-            color="purple.300"
-            mb={2}
-            textShadow="0 0 15px rgba(128, 90, 213, 0.4)"
+          <h1
+            className="text-xl md:text-3xl font-bold text-cyan-300 mb-2 flex items-center justify-center md:justify-start"
+            style={{ textShadow: '0 0 15px rgba(6, 182, 212, 0.4)' }}
           >
-            <Flex
-              alignItems="center"
-              justifyContent={{ base: 'center', md: 'flex-start' }}
-            >
-              <Icon
-                as={Target}
-                mr={2}
-                boxSize={{ base: 6, md: 8 }}
-                color="purple.300"
-              />
-              {t('Quick Clash')}
-            </Flex>
-          </Heading>
-          <Text color="whiteAlpha.800" fontSize={{ base: 'sm', md: 'md' }}>
+            <Target className="mr-2 w-6 h-6 md:w-8 md:h-8 text-cyan-300" />
+            {t('Quick Clash')}
+          </h1>
+          <p
+            className={`${QUICK_CLASH_CLASSES.textSecondary} text-sm md:text-base`}
+          >
             {t(
               'Challenge other players to rapid-fire reading and quiz battles, test your knowledge and rise up the ranks!',
             )}
-          </Text>
-        </MotionBox>
+          </p>
+        </MotionDiv>
 
-        {/* Desktop Action Buttons Group (New Challenge, Leaderboard) */}
-        <HStack
-          spacing={3}
-          align="center"
-          justify={{ base: 'center', md: 'flex-end' }}
-          // mt={{ base: 4, md: 0 }} // Removed as mobile buttons are in their own HStack
-          w={{ base: '100%', md: 'auto' }}
-          display={{ base: 'none', md: 'flex' }} // IMPORTANT: Hide on mobile
-          variants={itemVariants}
-        >
+        {/* Desktop Action Buttons Group */}
+        <div className="hidden md:flex items-center gap-3 w-auto">
           <MotionButton
-            as={motion.button} // Ensure framer-motion integration
-            leftIcon={<FiZap />} // Original New Challenge icon
-            bg="purple.600"
-            _hover={{ bg: 'purple.700' }}
             onClick={onNewChallenge}
-            size={{ base: 'md', md: 'lg' }} // Responsive size
-            color="white"
-            px={6}
-            borderRadius="lg"
-            boxShadow="0 4px 15px rgba(0,0,0,0.3)"
-            fontWeight="bold"
+            className={`
+              flex items-center gap-2 px-6 py-3
+              ${QUICK_CLASH_CLASSES.btnPrimary} hover:shadow-lg hover:shadow-cyan-500/30
+              text-white font-bold rounded-lg
+              transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-cyan-400/50
+            `}
             variants={buttonVariants}
             whileHover="hover"
             whileTap="tap"
+            style={{
+              background: 'linear-gradient(135deg, #06B6D4 0%, #0891B2 100%)',
+              boxShadow: '0 4px 15px rgba(0,0,0,0.3)',
+            }}
           >
+            <FiZap />
             {t('New Challenge')}
           </MotionButton>
           <QuickClashLeaderboardButton showMobileVersion={isDesktop} />
-        </HStack>
-      </Flex>
+        </div>
+      </div>
 
-      {/* Task Popup */}
+      {/* Task Popup - EXACTLY as original */}
       {showTaskPopup && (
         <Suspense fallback={null}>
           <TaskPopup
@@ -388,7 +340,7 @@ const QuickClashHeader = ({ onNewChallenge }) => {
           />
         </Suspense>
       )}
-    </MotionBox>
+    </MotionDiv>
   )
 }
 

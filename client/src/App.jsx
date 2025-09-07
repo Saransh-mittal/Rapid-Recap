@@ -86,7 +86,6 @@ import TournamentQuiz from './components/tournamentComponents/tournamentQuiz/Tou
 //   // checkTournamentRegistration,
 //   getTopLeaderboard,
 // } from './redux/tournamentSlice.js'
-import LoadingScreen from './screens/LoadingScreen.jsx'
 import { setIsLoading, setTaskProgress } from './redux/loadingProgressSlice.js'
 import { NavbarProvider } from './contextAPI/NavbarContext.jsx'
 import useCountdown from './customHooks/useCountdown.js'
@@ -105,6 +104,10 @@ import useQuickClashSocket from './customHooks/useQuickClashSocket.js'
 import useQuickClash from './customHooks/useQuickClash.js'
 import NotificationReminderModal from './components/miscellaneous/NotificationReminderModal.jsx'
 import { fetchSpecialCategories } from './services/specialCategoryService.js'
+import {
+  LoadingScreen,
+  useResponsiveBreakpoints,
+} from './screens/AppStartScreen.jsx'
 const ConnectionStatusIndicator = React.lazy(() =>
   import('./components/connection/ConnectionStatusIndicator.jsx'),
 )
@@ -171,6 +174,23 @@ const App = () => {
     dispatch(setIsNotifInboxModalOpen(false))
     dispatch(setSelectedNotificationId(null))
   }, [dispatch])
+  const [videoLoaded, setVideoLoaded] = useState(false)
+
+  const screenInfo = useResponsiveBreakpoints()
+  const videoOverlays = useMemo(
+    () => [
+      {
+        className: screenInfo.isMobile
+          ? 'bg-gradient-to-b from-slate-900/50 via-transparent to-slate-900/70'
+          : 'bg-gradient-to-b from-slate-900/40 via-transparent to-slate-900/60',
+        style: { zIndex: 1 },
+      },
+    ],
+    [screenInfo.isMobile],
+  )
+  const handleVideoLoad = useCallback(() => {
+    setVideoLoaded(true)
+  }, [])
 
   useEffect(() => {
     if (selectedNotificationId) {
@@ -563,10 +583,22 @@ const App = () => {
 
   return (
     <MaintenanceHandler>
-      {showLoadingScreen && <LoadingScreen progress={overallProgress} />}
+      {/* {showLoadingScreen && <LoadingScreen progress={overallProgress} />} */}
 
       <Suspense fallback={null}>
-        {!showLoadingScreen && <FixedBackground />}
+        {!showLoadingScreen && (
+          <FixedBackground
+            useVideo={true}
+            desktopVideo="/videos/Desktop_Screen"
+            mobileVideo="/videos/Mobile_Screen"
+            onVideoLoad={handleVideoLoad}
+            forceRender={true}
+            customOverlays={videoOverlays}
+          />
+        )}
+        {!videoLoaded && showLoadingScreen && (
+          <LoadingScreen screenInfo={screenInfo} />
+        )}
       </Suspense>
       <Suspense fallback={null}>
         {showPWAPrompt && <PWAPromptStrip onClose={handlePromptClose} />}

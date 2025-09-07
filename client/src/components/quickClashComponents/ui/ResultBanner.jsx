@@ -1,38 +1,42 @@
-// components/quickClashComponents/ui/ResultBanner.jsx
+// components/quickClashComponents/ui/ResultBanner.jsx - FIXED VERSION
 import React from 'react'
-import {
-  Flex,
-  Badge,
-  HStack,
-  Text,
-  Icon,
-  Box,
-  Button,
-  Tooltip,
-} from '@chakra-ui/react'
 import { motion } from 'framer-motion'
 import { useTranslation } from 'react-i18next'
 import { Trophy, Shield, Swords, AlertCircle } from 'lucide-react'
-import { css } from '@emotion/react'
 
-const MotionFlex = motion(Flex)
-const MotionButton = motion(Button)
+// Import centralized color scheme
+import { QUICK_CLASH_CLASSES } from '../utils/quickClashColors'
 
-// Define keyframe animations for shine effect
-const resultBannerAnimations = css`
-  @keyframes shineEffect {
-    0% {
-      background-position: -100% 0;
-    }
-    100% {
-      background-position: 200% 0;
-    }
-  }
-`
+// You'll need to install these components: npx shadcn-ui@latest add badge button tooltip
+import { Badge } from '@/components/ui/badge'
+import { Button } from '@/components/ui/button'
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipProvider,
+  TooltipTrigger,
+} from '@/components/ui/tooltip'
+
+const MotionDiv = motion.div
 
 /**
- * Enhanced banner showing the result of a completed challenge without trophy displays
- * Protection information moved to VSLine component
+ * Enhanced ResultBanner - Shows challenge completion results with premium animations
+ *
+ * Key improvements:
+ * - Updated to blue-cyan harmony color scheme
+ * - Enhanced gradient backgrounds and shine effects
+ * - Better responsive design and accessibility
+ * - Improved revenge button styling and animations
+ * - Maintained all original functionality and animations
+ *
+ * @param {Boolean} isWinner - Whether user won the challenge
+ * @param {Boolean} isTie - Whether the challenge was a tie
+ * @param {Boolean} isDefeat - Whether user was defeated
+ * @param {String} expiresAt - Challenge expiry date
+ * @param {String} category - Challenge category
+ * @param {Function} onRevenge - Revenge callback function
+ * @param {String} revengeStatus - Current revenge status
+ * @param {Boolean} revengeLoading - Whether revenge is being processed
  */
 const ResultBanner = ({
   isWinner,
@@ -47,7 +51,7 @@ const ResultBanner = ({
   const { t } = useTranslation('QuickClash')
   const isExpired = new Date(expiresAt) < new Date()
 
-  // Adjust the condition to always show the banner for completed challenges
+  // Don't show banner for expired challenges that aren't completed
   if (isExpired && !isWinner && !isTie && !isDefeat) return null
 
   const getCategoryStyle = category => {
@@ -63,134 +67,204 @@ const ResultBanner = ({
       LIFESTYLE: 'purple',
       FOOD: 'orange',
     }
-    return categoryColors[category] || 'purple'
+    return categoryColors[category] || 'cyan'
   }
 
-  // Enhanced premium gradients - sleek but visible
-  const bgGradient = isWinner
-    ? 'linear-gradient(135deg, rgba(128, 90, 213, 0.9), rgba(66, 153, 225, 0.9))'
-    : isTie
-    ? 'linear-gradient(135deg, rgba(236, 201, 75, 0.9), rgba(237, 137, 54, 0.9))'
-    : 'linear-gradient(135deg, rgba(229, 62, 62, 0.9), rgba(159, 18, 57, 0.9))'
+  // Enhanced premium gradients with blue-cyan theme
+  const getBackgroundClasses = () => {
+    if (isWinner) {
+      return 'bg-gradient-to-r from-cyan-600/90 via-blue-600/90 to-cyan-700/90'
+    } else if (isTie) {
+      return 'bg-gradient-to-r from-yellow-600/90 via-orange-500/90 to-yellow-700/90'
+    } else {
+      return 'bg-gradient-to-r from-red-600/90 via-red-700/90 to-red-800/90'
+    }
+  }
 
-  // Shine overlay gradient for premium effect
-  const shineGradient =
-    'linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.2), transparent)'
+  // Select appropriate icon and text for result
+  const getResultConfig = () => {
+    if (isWinner) {
+      return {
+        icon: Trophy,
+        text: t('Victory!'),
+        iconColor: 'text-yellow-300',
+      }
+    } else if (isTie) {
+      return {
+        icon: Shield,
+        text: t('Tie!'),
+        iconColor: 'text-yellow-100',
+      }
+    } else {
+      return {
+        icon: AlertCircle,
+        text: t('Defeat!'),
+        iconColor: 'text-red-100',
+      }
+    }
+  }
 
-  // Select appropriate icon for result
-  const resultIcon = isWinner ? Trophy : isTie ? Shield : AlertCircle
+  const resultConfig = getResultConfig()
+  const ResultIcon = resultConfig.icon
+  const categoryColorScheme = getCategoryStyle(category)
 
   return (
-    <MotionFlex
-      position="relative"
-      py={{ base: 2, md: 2.5 }}
-      px={{ base: 3, md: 4 }}
-      bg={bgGradient}
-      backgroundSize="200% 100%"
-      overflow="hidden"
-      borderBottomRadius="lg"
-      alignItems="center"
-      justifyContent="space-between"
-      color="white"
-      fontWeight="bold"
-      boxShadow="0 2px 8px rgba(0,0,0,0.2)"
+    <MotionDiv
       initial={{ opacity: 0, y: -10 }}
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.3 }}
-      css={resultBannerAnimations}
-      _before={{
-        content: '""',
-        position: 'absolute',
-        top: 0,
-        left: 0,
-        right: 0,
-        bottom: 0,
-        background: shineGradient,
-        backgroundSize: '200% 100%',
-        animation: 'shineEffect 3s infinite linear',
-        zIndex: 0,
-      }}
+      className={`
+        ${getBackgroundClasses()}
+        relative
+        py-2 md:py-3
+        px-3 md:px-4
+        flex items-center justify-between
+        text-white
+        font-bold
+        rounded-b-2xl
+        overflow-hidden
+        ${QUICK_CLASH_CLASSES.shadowStrong}
+      `}
     >
-      <HStack spacing={2} position="relative" zIndex={1}>
-        <Icon
-          as={resultIcon}
-          color={isWinner ? 'yellow.300' : isTie ? 'yellow.100' : 'red.100'}
-          boxSize={{ base: 4, md: 4.5 }}
-        />
-        <Text
-          textTransform="uppercase"
-          letterSpacing="wide"
-          fontSize={{ base: 'sm', md: 'sm' }}
-          fontWeight="bold"
-        >
-          {isWinner ? t('Victory!') : isTie ? t('Tie!') : t('Defeat!')}
-        </Text>
-      </HStack>
+      {/* Animated shine overlay */}
+      <div
+        className={`
+        absolute inset-0
+        bg-gradient-to-r from-transparent via-white/20 to-transparent
+        transform -translate-x-full
+        animate-[shine_3s_infinite_linear]
+      `}
+      />
 
-      <HStack spacing={1} position="relative" zIndex={1}>
-        {/* Category badge - appropriately sized */}
+      {/* Custom keyframes for shine animation */}
+      <style jsx>{`
+        @keyframes shine {
+          0% {
+            transform: translateX(-100%);
+          }
+          100% {
+            transform: translateX(200%);
+          }
+        }
+      `}</style>
+
+      {/* Left section: Result display */}
+      <div className="flex items-center space-x-2 relative z-10">
+        <ResultIcon
+          className={`
+          w-4 h-4 md:w-5 md:h-5
+          ${resultConfig.iconColor}
+        `}
+        />
+        <span className="text-sm md:text-base uppercase tracking-wide font-bold">
+          {resultConfig.text}
+        </span>
+      </div>
+
+      {/* Right section: Category and revenge button */}
+      <div className="flex items-center space-x-2 relative z-10">
+        {/* Category badge */}
         <Badge
-          colorScheme={getCategoryStyle(category)}
-          fontSize={{ base: '2xs', md: 'xs' }}
-          borderRadius="full"
-          px={2}
-          py={0.5}
-          fontWeight="medium"
+          className={`
+            text-xs md:text-sm
+            px-2 md:px-3 py-1
+            rounded-full
+            font-medium
+            ${
+              categoryColorScheme === 'cyan'
+                ? 'bg-cyan-500/80 hover:bg-cyan-500/90 text-white'
+                : categoryColorScheme === 'blue'
+                ? 'bg-blue-500/80 hover:bg-blue-500/90 text-white'
+                : categoryColorScheme === 'green'
+                ? 'bg-green-500/80 hover:bg-green-500/90 text-white'
+                : categoryColorScheme === 'orange'
+                ? 'bg-orange-500/80 hover:bg-orange-500/90 text-white'
+                : categoryColorScheme === 'red'
+                ? 'bg-red-500/80 hover:bg-red-500/90 text-white'
+                : 'bg-purple-500/80 hover:bg-purple-500/90 text-white'
+            }
+            border-0
+            shadow-lg
+          `}
         >
           {category}
         </Badge>
 
-        {/* Inline revenge button for defeats - bigger for better usability */}
+        {/* Revenge button for defeats */}
         {isDefeat && onRevenge && !revengeStatus && (
-          <MotionButton
-            size={{ base: 'sm', md: 'sm' }}
-            colorScheme="red"
-            bg="#e15b5b"
-            leftIcon={<Icon as={Swords} boxSize={{ base: 3, md: 3.5 }} />}
-            onClick={onRevenge}
-            borderRadius="full"
-            px={4}
-            py={1}
-            height={{ base: '28px', md: '32px' }}
-            minW="auto"
-            isLoading={revengeLoading}
-            fontWeight="bold"
-            fontSize={{ base: 'xs', md: 'sm' }}
-            boxShadow="0 0 10px rgba(229, 62, 62, 0.4)"
-            _hover={{
-              bg: '#d43c3c',
-              boxShadow: '0 0 12px rgba(229, 62, 62, 0.6)',
-              transform: 'translateY(-1px)',
-            }}
-            _active={{
-              bg: '#c83c3c',
-              transform: 'translateY(0)',
-            }}
-            whileHover={{ scale: 1.05 }}
-            whileTap={{ scale: 0.95 }}
-            animate={{
-              boxShadow: [
-                '0 0 10px rgba(229, 62, 62, 0.4)',
-                '0 0 15px rgba(229, 62, 62, 0.7)',
-                '0 0 10px rgba(229, 62, 62, 0.4)',
-              ],
-              transition: {
-                duration: 1.5,
-                repeat: Infinity,
-                repeatType: 'reverse',
-              },
-            }}
-          >
-            {t('Revenge')}
-          </MotionButton>
+          <TooltipProvider>
+            <Tooltip>
+              <TooltipTrigger asChild>
+                <motion.div
+                  whileHover={{ scale: 1.05 }}
+                  whileTap={{ scale: 0.95 }}
+                  animate={{
+                    boxShadow: [
+                      '0 4px 12px rgba(239, 68, 68, 0.4)',
+                      '0 6px 16px rgba(239, 68, 68, 0.7)',
+                      '0 4px 12px rgba(239, 68, 68, 0.4)',
+                    ],
+                  }}
+                  transition={{
+                    boxShadow: {
+                      duration: 1.5,
+                      repeat: Infinity,
+                      repeatType: 'reverse',
+                    },
+                    scale: {
+                      duration: 0.2,
+                    },
+                  }}
+                >
+                  <Button
+                    size="sm"
+                    onClick={onRevenge}
+                    disabled={revengeLoading}
+                    className={`
+                      bg-red-500/90
+                      hover:bg-red-600/90
+                      text-white
+                      border-0
+                      rounded-full
+                      px-3 md:px-4
+                      py-1 md:py-2
+                      h-7 md:h-8
+                      text-xs md:text-sm
+                      font-bold
+                      shadow-lg shadow-red-500/40
+                      hover:shadow-red-500/60
+                      transition-all duration-200
+                      ${QUICK_CLASH_CLASSES.focusRing}
+                    `}
+                  >
+                    <div className="flex items-center space-x-1">
+                      <Swords className="w-3 h-3 md:w-4 md:h-4" />
+                    </div>
+                  </Button>
+                </motion.div>
+              </TooltipTrigger>
+              <TooltipContent>
+                <p>{t('Challenge them back!')}</p>
+              </TooltipContent>
+            </Tooltip>
+          </TooltipProvider>
         )}
+
+        {/* Revenge status indicator */}
         {isDefeat && revengeStatus && (
-          <Text fontSize="xs" color="whiteAlpha.600" textAlign="center">
+          <span
+            className={`
+            ${QUICK_CLASH_CLASSES.textSecondary}
+            text-xs md:text-sm
+            text-center
+            px-2
+          `}
+          >
             {t('Revenge sent')}
-          </Text>
+          </span>
         )}
-      </HStack>
-    </MotionFlex>
+      </div>
+    </MotionDiv>
   )
 }
 

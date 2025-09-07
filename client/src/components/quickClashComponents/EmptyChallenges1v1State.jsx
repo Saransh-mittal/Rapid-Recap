@@ -1,53 +1,57 @@
-import React, { memo } from 'react'
-import {
-  Box,
-  VStack,
-  Button,
-  Text,
-  Icon,
-  Heading,
-  useBreakpointValue,
-  Flex,
-} from '@chakra-ui/react'
+// components/quickClashComponents/EmptyChallenges1v1State.jsx - FAITHFUL CONVERSION to Tailwind with Blue-Cyan Color Scheme
+import React, { memo, useState, useEffect } from 'react'
 import { motion } from 'framer-motion'
 import { useTranslation } from 'react-i18next'
 import { Target, PlusCircle, Trophy } from 'lucide-react'
 
-const MotionBox = motion(Box)
-const MotionFlex = motion(Flex)
-const MotionButton = motion(Button)
-const MotionIcon = motion(Icon)
+// Import centralized color scheme
+import { QUICK_CLASH_CLASSES } from './utils/quickClashColors'
+
+const MotionDiv = motion.div
+const MotionButton = motion.button
 
 const EmptyChallenges1v1State = memo(
   ({ type = 'active', onCreateChallenge, message, variant = 'default' }) => {
     const { t } = useTranslation('QuickClash')
 
+    // Responsive state management
+    const [isMobile, setIsMobile] = useState(false)
+    const [windowSize, setWindowSize] = useState({ width: 0, height: 0 })
+
+    useEffect(() => {
+      const updateSize = () => {
+        setIsMobile(window.innerWidth < 768)
+        setWindowSize({ width: window.innerWidth, height: window.innerHeight })
+      }
+      updateSize()
+      window.addEventListener('resize', updateSize)
+      return () => window.removeEventListener('resize', updateSize)
+    }, [])
+
     const isCompact = variant === 'compact'
 
-    const iconSize = useBreakpointValue({
-      base: isCompact ? 12 : 16,
-      md: isCompact ? 16 : 24,
-    })
-    const padding = useBreakpointValue({
-      base: isCompact ? 4 : 6,
-      md: isCompact ? 6 : 10,
-    })
-    const maxWidth = useBreakpointValue({
-      base: isCompact ? '280px' : '300px',
-      md: isCompact ? '400px' : '450px',
-    })
-    const headingSizeChakra = useBreakpointValue({
-      base: isCompact ? 'sm' : 'md',
-      md: isCompact ? 'md' : 'lg',
-    }) // Chakra heading sizes
-    const minHeight = isCompact ? 'auto' : '380px' // Use 'auto' for compact, or a smaller fixed value like '200px' or '250px'
-    const particleCount = isCompact ? 2 : 5 // Fewer particles for compact
-    const particleBlur = isCompact ? '15px' : '25px'
-    const particleSizeMultiplier = isCompact ? 0.6 : 1
-    const glowWidth = isCompact ? '70px' : '110px' // Smaller glow
-    const glowBlur = isCompact ? '15px' : '20px'
-    const VStackSpacing = isCompact ? 4 : 7 // Tighter spacing for compact
+    // Responsive values with mobile-first approach
+    const responsiveValues = {
+      iconSize: isMobile ? (isCompact ? 48 : 64) : isCompact ? 64 : 96,
+      padding: isMobile ? (isCompact ? 16 : 24) : isCompact ? 24 : 40,
+      maxWidth: isMobile ? (isCompact ? 280 : 300) : isCompact ? 400 : 450,
+      headingSize: isMobile
+        ? isCompact
+          ? 'text-lg'
+          : 'text-xl'
+        : isCompact
+        ? 'text-xl'
+        : 'text-2xl',
+      textSize: isMobile ? 'text-xs' : isCompact ? 'text-sm' : 'text-base',
+      minHeight: isCompact ? 'auto' : '380px',
+      particleCount: isCompact ? 2 : 5,
+      particleBlur: isCompact ? 'blur-sm' : 'blur-xl',
+      particleSizeMultiplier: isCompact ? 0.6 : 1,
+      glowSize: isMobile ? (isCompact ? 70 : 90) : isCompact ? 90 : 110,
+      spacing: isCompact ? 16 : 28,
+    }
 
+    // Animation variants with consistent easing
     const containerVariants = {
       hidden: { opacity: 0 },
       visible: {
@@ -55,6 +59,7 @@ const EmptyChallenges1v1State = memo(
         transition: { delay: 0.1, staggerChildren: 0.05 },
       },
     }
+
     const itemVariants = {
       hidden: { opacity: 0, y: 15 },
       visible: {
@@ -63,6 +68,7 @@ const EmptyChallenges1v1State = memo(
         transition: { type: 'spring', stiffness: 100, damping: 12 },
       },
     }
+
     const iconVariants = {
       hidden: { scale: 0.5, opacity: 0 },
       visible: {
@@ -75,6 +81,7 @@ const EmptyChallenges1v1State = memo(
         transition: { duration: 3, repeat: Infinity, ease: 'easeInOut' },
       },
     }
+
     const glowEffectVariants = {
       animate: {
         opacity: [0.2, 0.6, 0.2],
@@ -83,6 +90,21 @@ const EmptyChallenges1v1State = memo(
       },
     }
 
+    const buttonVariants = {
+      hidden: { opacity: 0, scale: 0.95 },
+      visible: {
+        opacity: 1,
+        scale: 1,
+        transition: { type: 'spring', stiffness: 200, damping: 10 },
+      },
+      hover: {
+        scale: 1.05,
+        transition: { type: 'spring', stiffness: 300, damping: 10 },
+      },
+      tap: { scale: 0.95 },
+    }
+
+    // Component selection based on type
     const mainIcon = type === 'active' ? Target : Trophy
     const defaultMessage =
       type === 'active'
@@ -95,58 +117,72 @@ const EmptyChallenges1v1State = memo(
             'Your 1v1 duels and triumphs will be recorded here. Complete a match to see your history.',
           )
 
+    const MainIcon = mainIcon
+
     return (
-      <MotionBox
+      <MotionDiv
         variants={containerVariants}
         initial="hidden"
         animate="visible"
         className={`enhanced-empty-1v1-state ${isCompact ? 'compact' : ''}`}
         data-testid="empty-1v1-state"
-        py={isCompact ? 3 : 8} // Less vertical padding for compact
-        my={isCompact ? 2 : 0} // Add some margin for compact if needed
+        style={{
+          paddingTop: isCompact ? 12 : 32,
+          paddingBottom: isCompact ? 12 : 32,
+          marginTop: isCompact ? 8 : 0,
+          marginBottom: isCompact ? 8 : 0,
+        }}
       >
-        <MotionFlex
+        <MotionDiv
           variants={itemVariants}
-          p={padding}
-          borderRadius="xl"
-          borderWidth="1px"
-          borderColor="purple.600"
-          bgGradient="linear(to-b, rgba(76, 39, 143, 0.15), rgba(26, 32, 44, 0.3))" // Slightly less intense gradient for compact
-          backdropFilter="blur(8px)" // Slightly less blur for compact
-          flexDirection="column"
-          align="center"
-          justify="center"
-          minH={minHeight}
-          position="relative"
-          overflow="hidden"
-          mx="auto"
-          maxW={{ base: '95%', md: isCompact ? '420px' : '500px' }} // Slightly adjusted max width
+          className={`
+            ${QUICK_CLASH_CLASSES.glassMedium} backdrop-brightness-110
+            rounded-xl border border-cyan-600/30 flex flex-col items-center justify-center
+            relative overflow-hidden mx-auto shadow-2xl
+          `}
+          style={{
+            padding: responsiveValues.padding,
+            minHeight: responsiveValues.minHeight,
+            maxWidth: isMobile ? '95%' : isCompact ? '420px' : '500px',
+            background:
+              'linear-gradient(to bottom, rgba(6, 182, 212, 0.15), rgba(15, 23, 42, 0.3))',
+          }}
         >
-          {[...Array(particleCount)].map((_, i) => (
-            <MotionBox
+          {/* Floating Particles with blue-cyan gradients */}
+          {[...Array(responsiveValues.particleCount)].map((_, i) => (
+            <MotionDiv
               key={i}
-              position="absolute"
-              borderRadius="full"
-              bgGradient="linear(to-r, purple.500, pink.500)"
-              opacity={0.1} // Less opacity for particles in compact
+              className={`absolute rounded-full bg-gradient-to-r from-cyan-500 to-blue-500 opacity-10 ${responsiveValues.particleBlur}`}
               animate={{
                 x: [
-                  Math.random() * 200 * particleSizeMultiplier -
-                    100 * particleSizeMultiplier,
-                  Math.random() * -200 * particleSizeMultiplier +
-                    100 * particleSizeMultiplier,
+                  Math.random() *
+                    200 *
+                    responsiveValues.particleSizeMultiplier -
+                    100 * responsiveValues.particleSizeMultiplier,
+                  Math.random() *
+                    -200 *
+                    responsiveValues.particleSizeMultiplier +
+                    100 * responsiveValues.particleSizeMultiplier,
                 ],
                 y: [
-                  Math.random() * 150 * particleSizeMultiplier -
-                    75 * particleSizeMultiplier,
-                  Math.random() * -150 * particleSizeMultiplier +
-                    75 * particleSizeMultiplier,
+                  Math.random() *
+                    150 *
+                    responsiveValues.particleSizeMultiplier -
+                    75 * responsiveValues.particleSizeMultiplier,
+                  Math.random() *
+                    -150 *
+                    responsiveValues.particleSizeMultiplier +
+                    75 * responsiveValues.particleSizeMultiplier,
                 ],
                 scale: [
-                  Math.random() * 0.7 * particleSizeMultiplier +
-                    0.4 * particleSizeMultiplier,
-                  Math.random() * 1.1 * particleSizeMultiplier +
-                    0.7 * particleSizeMultiplier,
+                  Math.random() *
+                    0.7 *
+                    responsiveValues.particleSizeMultiplier +
+                    0.4 * responsiveValues.particleSizeMultiplier,
+                  Math.random() *
+                    1.1 *
+                    responsiveValues.particleSizeMultiplier +
+                    0.7 * responsiveValues.particleSizeMultiplier,
                 ],
               }}
               transition={{
@@ -155,91 +191,106 @@ const EmptyChallenges1v1State = memo(
                 repeatType: 'reverse',
                 ease: 'easeInOut',
               }}
-              h={`${(Math.random() * 60 + 30) * particleSizeMultiplier}px`} // Smaller particles
-              w={`${(Math.random() * 60 + 30) * particleSizeMultiplier}px`}
-              filter={`blur(${particleBlur})`}
-              zIndex={0}
+              style={{
+                height: `${
+                  (Math.random() * 60 + 30) *
+                  responsiveValues.particleSizeMultiplier
+                }px`,
+                width: `${
+                  (Math.random() * 60 + 30) *
+                  responsiveValues.particleSizeMultiplier
+                }px`,
+                zIndex: 0,
+              }}
             />
           ))}
 
-          <VStack spacing={VStackSpacing} maxW={maxWidth} zIndex={1}>
-            <MotionBox position="relative">
-              <MotionBox
-                position="absolute"
-                top="50%"
-                left="50%"
-                transform="translate(-50%, -50%)"
-                width={glowWidth}
-                height={glowWidth}
-                borderRadius="full"
-                bgGradient="linear(to-r, purple.500, pink.500)"
-                filter={`blur(${glowBlur})`}
-                opacity={0.4}
+          {/* Main Content */}
+          <div
+            className="flex flex-col items-center relative z-10"
+            style={{
+              gap: responsiveValues.spacing,
+              maxWidth: responsiveValues.maxWidth,
+            }}
+          >
+            {/* Icon with Glow Effect */}
+            <MotionDiv className="relative">
+              <MotionDiv
+                className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 rounded-full bg-gradient-to-r from-cyan-500 to-blue-500 blur-lg opacity-40"
                 variants={glowEffectVariants}
                 animate="animate"
+                style={{
+                  width: responsiveValues.glowSize,
+                  height: responsiveValues.glowSize,
+                }}
               />
-              <MotionIcon
-                as={mainIcon}
-                boxSize={iconSize}
-                color="purple.300"
+              <MotionDiv
                 variants={iconVariants}
                 animate={['visible', 'float']}
-                zIndex={2}
-              />
-            </MotionBox>
-
-            <MotionBox variants={itemVariants} textAlign="center">
-              <Heading
-                size={headingSizeChakra}
-                color="white"
-                mb={isCompact ? 1 : 3}
-                bgGradient="linear(to-r, purple.300, pink.200)"
-                bgClip="text"
+                className="relative z-20 flex items-center justify-center"
               >
-                {/* You could customize the title too based on variant if needed */}
+                <MainIcon
+                  className="text-cyan-300"
+                  style={{
+                    width: responsiveValues.iconSize,
+                    height: responsiveValues.iconSize,
+                  }}
+                />
+              </MotionDiv>
+            </MotionDiv>
+
+            {/* Text Content */}
+            <MotionDiv variants={itemVariants} className="text-center">
+              <h3
+                className={`
+                  ${responsiveValues.headingSize} font-bold bg-gradient-to-r from-cyan-300 to-blue-200
+                  bg-clip-text text-transparent mb-3
+                `}
+                style={{ marginBottom: isCompact ? 4 : 12 }}
+              >
                 {type === 'active'
                   ? t('No Active 1v1 Challenges')
                   : t('No Completed 1v1 Challenges')}
-              </Heading>
-              <Text
-                color="whiteAlpha.800"
-                fontSize={{ base: 'xs', md: isCompact ? 'sm' : 'md' }}
-                lineHeight="1.6"
+              </h3>
+              <p
+                className={`${QUICK_CLASH_CLASSES.textSecondary} ${responsiveValues.textSize} leading-relaxed`}
               >
                 {message || defaultMessage}
-              </Text>
-            </MotionBox>
+              </p>
+            </MotionDiv>
 
+            {/* Create Challenge Button */}
             {variant === 'default' &&
               type === 'active' &&
               onCreateChallenge && (
                 <MotionButton
-                  as={motion.button}
-                  variants={itemVariants}
-                  leftIcon={<Icon as={PlusCircle} />}
-                  colorScheme="purple"
+                  variants={buttonVariants}
+                  initial="hidden"
+                  animate="visible"
+                  whileHover="hover"
+                  whileTap="tap"
                   onClick={onCreateChallenge}
-                  size={'lg'} // Keep lg for default, or make it responsive
-                  whileHover={{
-                    scale: 1.05,
-                    boxShadow: '0 0 20px rgba(128, 90, 213, 0.6)',
+                  className={`
+                    flex items-center gap-2 px-6 py-3
+                    ${QUICK_CLASH_CLASSES.btnPrimary}
+                    text-lg font-bold rounded-lg shadow-lg
+                    hover:shadow-cyan-500/40 hover:shadow-xl
+                    focus:outline-none focus:ring-2 focus:ring-cyan-400/50
+                    transition-all duration-200
+                  `}
+                  style={{
+                    background:
+                      'linear-gradient(135deg, #06B6D4 0%, #0891B2 100%)',
+                    boxShadow: '0 5px 15px rgba(6, 182, 212, 0.4)',
                   }}
-                  whileTap={{ scale: 0.95 }}
-                  bg="linear-gradient(135deg, #6B46C1 0%, #B794F4 100%)"
-                  _hover={{
-                    bg: 'linear-gradient(135deg, #805AD5 0%, #D6BCFA 100%)',
-                  }}
-                  _active={{
-                    bg: 'linear-gradient(135deg, #6B46C1 0%, #B794F4 100%)',
-                  }}
-                  boxShadow="0 5px 15px rgba(128, 90, 213, 0.4)"
                 >
+                  <PlusCircle className="w-5 h-5" />
                   {t('Create 1v1 Challenge')}
                 </MotionButton>
               )}
-          </VStack>
-        </MotionFlex>
-      </MotionBox>
+          </div>
+        </MotionDiv>
+      </MotionDiv>
     )
   },
 )

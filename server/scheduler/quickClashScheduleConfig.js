@@ -17,6 +17,7 @@ const {
 const {
   processTeamBattleExpiryReminders,
 } = require('./tasks/teamBattleExpiryReminderTask')
+const updateGlobalRQMStatsTask = require('./tasks/updateGlobalRQMStats')
 
 /**
  * Schedule configuration for Quick Clash related tasks
@@ -101,6 +102,11 @@ const quickClashSchedules = [
     name: 'team-battle-expiry-reminders',
     cronPattern: '*/30 * * * *', // Every 30 minutes
     task: processTeamBattleExpiryReminders,
+  },
+  {
+    name: 'update-global-rqm-stats-offpeak',
+    cronPattern: '0 18-2 * * *', // Every hour, 6 PM to 2 AM UTC (11:30 PM to 7:30 AM IST)
+    task: updateGlobalRQMStatsTask,
   },
 ]
 

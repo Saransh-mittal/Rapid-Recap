@@ -1,41 +1,35 @@
-// components/quickClashComponents/team/CreateTeamModal.jsx
+// components/quickClashComponents/team/CreateTeamModal.jsx - FAITHFUL CONVERSION to Tailwind CSS
 import React, { useState } from 'react'
-import {
-  Modal,
-  ModalOverlay,
-  ModalContent,
-  ModalHeader,
-  ModalFooter,
-  ModalBody,
-  ModalCloseButton,
-  Button,
-  FormControl,
-  FormLabel,
-  Input,
-  FormHelperText,
-  VStack,
-  Text,
-  Icon,
-  HStack,
-  Divider,
-} from '@chakra-ui/react'
 import { motion } from 'framer-motion'
 import { useTranslation } from 'react-i18next'
 import { Users, Shield } from 'lucide-react'
 
-const MotionModalContent = motion(ModalContent)
+// Import centralized color scheme
+import { QUICK_CLASH_CLASSES } from '../utils/quickClashColors'
 
-/**
- * Modal for creating a new team
- */
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from '@/components/ui/dialog'
+import { Button } from '@/components/ui/button'
+import { Input } from '@/components/ui/input'
+import { Label } from '@/components/ui/label'
+import { Separator } from '@/components/ui/separator'
+
+const MotionDiv = motion.div
+
 const CreateTeamModal = ({ isOpen, onClose, onCreate }) => {
   const { t } = useTranslation('QuickClash')
 
-  // Form state
+  // Form state - EXACTLY as original
   const [name, setName] = useState('')
   const [loading, setLoading] = useState(false)
 
-  // Modal animation
+  // Modal animation variants - EXACTLY as original
   const modalVariants = {
     hidden: {
       opacity: 0,
@@ -62,7 +56,7 @@ const CreateTeamModal = ({ isOpen, onClose, onCreate }) => {
     },
   }
 
-  // Handle form submission
+  // Handle form submission - EXACTLY as original
   const handleSubmit = async e => {
     e.preventDefault()
 
@@ -72,7 +66,6 @@ const CreateTeamModal = ({ isOpen, onClose, onCreate }) => {
 
     try {
       await onCreate({ name })
-
       // Reset form
       setName('')
     } catch (error) {
@@ -82,104 +75,171 @@ const CreateTeamModal = ({ isOpen, onClose, onCreate }) => {
     }
   }
 
-  // Handle close
+  // Handle close - EXACTLY as original
   const handleClose = () => {
     setName('')
     onClose()
   }
 
   return (
-    <Modal isOpen={isOpen} onClose={handleClose} isCentered>
-      <ModalOverlay bg="blackAlpha.700" backdropFilter="blur(5px)" />
-      <MotionModalContent
-        initial="hidden"
-        animate="visible"
-        exit="exit"
-        variants={modalVariants}
-        mx={4}
-        bg="rgba(23, 25, 35, 0.95)"
-        borderWidth="1px"
-        borderColor="purple.600"
-        boxShadow="0 0 20px rgba(128, 90, 213, 0.4)"
-        borderRadius="xl"
+    <Dialog open={isOpen} onOpenChange={handleClose}>
+      <DialogContent
+        className={`
+          max-w-md
+          ${QUICK_CLASH_CLASSES.glassDark}
+          border-2 border-cyan-600/60
+          ${QUICK_CLASH_CLASSES.shadowCyan}
+          backdrop-brightness-115
+        `}
+        asChild
       >
-        <ModalHeader>
-          <HStack spacing={2}>
-            <Icon as={Users} color="purple.400" />
-            <Text color="white">{t('Create New Team')}</Text>
-          </HStack>
-        </ModalHeader>
-        <ModalCloseButton color="white" />
+        <MotionDiv
+          variants={modalVariants}
+          initial="hidden"
+          animate="visible"
+          exit="exit"
+        >
+          {/* Enhanced Header */}
+          <DialogHeader className="space-y-3">
+            <div className="flex items-center gap-3">
+              <div
+                className={`
+                w-10 h-10 rounded-full flex items-center justify-center
+                bg-cyan-500/20 border border-cyan-400
+                ${QUICK_CLASH_CLASSES.shadowCyan}
+              `}
+              >
+                <Users className="w-5 h-5 text-cyan-400" />
+              </div>
+              <DialogTitle
+                className={`
+                text-xl font-bold
+                ${QUICK_CLASH_CLASSES.textPrimary}
+              `}
+              >
+                {t('Create New Team')}
+              </DialogTitle>
+            </div>
+            <DialogDescription
+              className={`${QUICK_CLASH_CLASSES.textMuted} text-sm`}
+            >
+              {t('Create a team to compete in 4v4 battles with your friends')}
+            </DialogDescription>
+          </DialogHeader>
 
-        <ModalBody pb={6}>
-          <form onSubmit={handleSubmit} id="create-team-form">
-            <VStack spacing={6} align="stretch">
-              <FormControl isRequired>
-                <FormLabel color="whiteAlpha.900">{t('Team Name')}</FormLabel>
-                <Input
-                  placeholder={t('Enter team name')}
-                  value={name}
-                  onChange={e => setName(e.target.value)}
-                  bg="blackAlpha.400"
-                  color="white"
-                  borderColor="whiteAlpha.300"
-                  _hover={{ borderColor: 'purple.400' }}
-                  _focus={{
-                    borderColor: 'purple.500',
-                    boxShadow: '0 0 0 1px var(--chakra-colors-purple-500)',
-                  }}
-                />
-                <FormHelperText color="whiteAlpha.600">
-                  {t('Choose a name for your team')}
-                </FormHelperText>
-              </FormControl>
+          {/* Form Content */}
+          <form
+            onSubmit={handleSubmit}
+            id="create-team-form"
+            className="space-y-6 py-4"
+          >
+            {/* Team Name Input */}
+            <div className="space-y-2">
+              <Label
+                htmlFor="team-name"
+                className={`text-sm font-medium ${QUICK_CLASH_CLASSES.textBright}`}
+              >
+                {t('Team Name')}
+              </Label>
+              <Input
+                id="team-name"
+                placeholder={t('Enter team name')}
+                value={name}
+                onChange={e => setName(e.target.value)}
+                className={`
+                  ${QUICK_CLASH_CLASSES.glassMedium}
+                  border-white/30 text-white placeholder:text-white/50
+                  focus:border-cyan-400 focus:ring-2 focus:ring-cyan-400/50
+                  hover:border-cyan-400/60
+                  transition-all duration-200
+                `}
+                required
+              />
+              <p className={`text-xs ${QUICK_CLASH_CLASSES.textMuted}`}>
+                {t('Choose a name for your team')}
+              </p>
+            </div>
 
-              <Divider borderColor="whiteAlpha.200" />
+            <Separator className="bg-white/10" />
 
-              <VStack align="stretch" spacing={2}>
-                <HStack>
-                  <Icon as={Shield} color="purple.400" boxSize={4} />
-                  <Text color="white" fontWeight="bold">
-                    {t('Team Benefits')}
-                  </Text>
-                </HStack>
-                <Text color="whiteAlpha.700" fontSize="sm">
-                  • {t('Participate in 4v4 team battles')}
-                </Text>
-                <Text color="whiteAlpha.700" fontSize="sm">
-                  • {t('Earn team bonuses and rewards')}
-                </Text>
-                <Text color="whiteAlpha.700" fontSize="sm">
-                  • {t('Climb the team leaderboards')}
-                </Text>
-              </VStack>
-            </VStack>
+            {/* Team Benefits Section */}
+            <div className="space-y-3">
+              <div className="flex items-center gap-2">
+                <Shield className="w-4 h-4 text-cyan-400" />
+                <h4 className={`font-bold ${QUICK_CLASH_CLASSES.textPrimary}`}>
+                  {t('Team Benefits')}
+                </h4>
+              </div>
+
+              <div className="space-y-2">
+                <div className="flex items-start gap-2">
+                  <div className="w-1.5 h-1.5 rounded-full bg-cyan-400 mt-2 flex-shrink-0" />
+                  <p className={`text-sm ${QUICK_CLASH_CLASSES.textMuted}`}>
+                    {t('Participate in 4v4 team battles')}
+                  </p>
+                </div>
+                <div className="flex items-start gap-2">
+                  <div className="w-1.5 h-1.5 rounded-full bg-cyan-400 mt-2 flex-shrink-0" />
+                  <p className={`text-sm ${QUICK_CLASH_CLASSES.textMuted}`}>
+                    {t('Earn team bonuses and rewards')}
+                  </p>
+                </div>
+                <div className="flex items-start gap-2">
+                  <div className="w-1.5 h-1.5 rounded-full bg-cyan-400 mt-2 flex-shrink-0" />
+                  <p className={`text-sm ${QUICK_CLASH_CLASSES.textMuted}`}>
+                    {t('Climb the team leaderboards')}
+                  </p>
+                </div>
+              </div>
+            </div>
           </form>
-        </ModalBody>
 
-        <ModalFooter>
-          <Button
-            variant="ghost"
-            mr={3}
-            onClick={handleClose}
-            color="whiteAlpha.800"
-            _hover={{ bg: 'whiteAlpha.100' }}
-          >
-            {t('Cancel')}
-          </Button>
-          <Button
-            colorScheme="purple"
-            type="submit"
-            form="create-team-form"
-            isLoading={loading}
-            loadingText={t('Creating...')}
-            leftIcon={<Icon as={Users} />}
-          >
-            {t('Create Team')}
-          </Button>
-        </ModalFooter>
-      </MotionModalContent>
-    </Modal>
+          {/* Enhanced Footer */}
+          <DialogFooter className="gap-3">
+            <Button
+              type="button"
+              variant="ghost"
+              onClick={handleClose}
+              className={`
+                ${QUICK_CLASH_CLASSES.glassMedium}
+                border border-white/20 text-white/80 hover:text-white
+                hover:bg-white/10 hover:border-white/30
+                ${QUICK_CLASH_CLASSES.focusRing}
+                transition-all duration-200
+              `}
+            >
+              {t('Cancel')}
+            </Button>
+
+            <Button
+              type="submit"
+              form="create-team-form"
+              disabled={loading || !name.trim()}
+              className={`
+                ${QUICK_CLASH_CLASSES.btnPrimary}
+                ${QUICK_CLASH_CLASSES.focusRing}
+                ${QUICK_CLASH_CLASSES.transformHover}
+                font-bold px-6
+                disabled:opacity-50 disabled:cursor-not-allowed
+                disabled:hover:transform-none
+              `}
+            >
+              {loading ? (
+                <>
+                  <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin mr-2" />
+                  {t('Creating...')}
+                </>
+              ) : (
+                <>
+                  <Users className="w-4 h-4 mr-2" />
+                  {t('Create Team')}
+                </>
+              )}
+            </Button>
+          </DialogFooter>
+        </MotionDiv>
+      </DialogContent>
+    </Dialog>
   )
 }
 

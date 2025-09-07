@@ -1,3 +1,4 @@
+// components/quickClashComponents/ActiveChallenges.jsx - FAITHFUL CONVERSION with Consistent Color Scheme
 import React, {
   useState,
   useEffect,
@@ -7,22 +8,7 @@ import React, {
   useRef,
   memo,
 } from 'react'
-import {
-  Box,
-  VStack,
-  Text,
-  useToast,
-  Spinner,
-  Center,
-  Icon,
-  Button,
-  useDisclosure,
-  Flex,
-  HStack,
-  useBreakpointValue,
-  Skeleton,
-  Grid,
-} from '@chakra-ui/react'
+import { useToast } from '@chakra-ui/react'
 import { useTranslation } from 'react-i18next'
 import { useNavigate } from 'react-router-dom'
 import { useSelector } from 'react-redux'
@@ -30,22 +16,24 @@ import axios from 'axios'
 import {
   Target,
   Zap,
-  HourglassIcon,
+  Clock,
   Trophy,
   X,
   FileText,
   ChevronDown,
-  Users,
   RefreshCw,
 } from 'lucide-react'
 
-// Import custom components
+// Import centralized color scheme
+import { QUICK_CLASH_CLASSES } from './utils/quickClashColors'
+
+// Import ALL original components - EXACTLY as original
 import FilterTabs from './FilterTabs'
 import EmptyChallenges1v1State from './EmptyChallenges1v1State'
 import StatusSection from './StatusSection'
 import ConfirmationDialog from './ConfirmationDialog'
 
-// Use React.lazy for components
+// React.lazy components - EXACTLY as original
 const QuizReportModal = React.lazy(() => import('./QuizReportModal'))
 const NewChallengeModal = React.lazy(() => import('./modals/NewChallengeModal'))
 const TeamBattleList = React.lazy(() => import('./team/TeamBattleList'))
@@ -54,80 +42,66 @@ const RevengeConfirmationDialog = React.lazy(() =>
 )
 import TeamBattlesSkeleton from './team/TeamBattlesSkeleton'
 
-// Custom hooks
+// Custom hooks - EXACTLY as original
 import useQuickClash from '../../customHooks/useQuickClash'
 import useQuickClashTeamBattle from '../../customHooks/useQuickClashTeamBattle'
 import { useInView } from 'react-intersection-observer'
 
-// Cached responsive configuration for better performance
+// Cached responsive configuration - EXACTLY as original
 const RESPONSIVE_CONFIG = {
   spacing: { base: 4, md: 6 },
   buttonSize: { base: 'xs', md: 'sm' },
 }
 
-// Optimized skeleton components
-const ActiveChallengesSkeleton = memo(({ mode }) => {
-  const skelSpacing = useBreakpointValue({ base: 4, md: 6 })
-  const skelPadding = useBreakpointValue({ base: 2, md: 3 })
+// Enhanced skeleton component with consistent colors
+const ActiveChallengesSkeleton = memo(({ mode }) => (
+  <div>
+    <div className="flex flex-col space-y-4 md:space-y-6">
+      {/* Filter tabs skeleton with consistent colors */}
+      <div
+        className={`w-80 h-12 ${QUICK_CLASH_CLASSES.glassMedium} rounded-full mx-auto animate-pulse`}
+      />
 
-  return (
-    <Box>
-      <VStack align="stretch" spacing={skelSpacing}>
-        <Skeleton height="40px" width="300px" mx="auto" borderRadius="full" />
-        <VStack spacing={skelSpacing} align="stretch">
-          {Array.from({ length: 1 }).map((_, i) => (
-            <Box
-              key={i}
-              bg="rgba(26, 32, 44, 0.4)"
-              borderRadius="lg"
-              p={skelPadding}
-              borderWidth="1px"
-              borderColor="whiteAlpha.100"
-            >
-              <Flex justify="space-between" align="center" mb={3}>
-                <HStack>
-                  <Skeleton height="20px" width="20px" borderRadius="full" />
-                  <Skeleton height="20px" width="120px" borderRadius="md" />
-                </HStack>
-                <Skeleton height="24px" width="24px" borderRadius="full" />
-              </Flex>
-              <Grid
-                templateColumns={{
-                  base: '1fr',
-                  md: 'repeat(2, 1fr)',
-                  lg: 'repeat(3, 1fr)',
-                }}
-                gap={3}
-              >
-                {Array.from({ length: mode === '1v1' ? 2 : 1 }).map((_, j) => (
-                  <Skeleton key={j} height="160px" borderRadius="lg" />
-                ))}
-              </Grid>
-            </Box>
-          ))}
-        </VStack>
-      </VStack>
-    </Box>
-  )
-})
+      <div className="flex flex-col space-y-4 md:space-y-6">
+        {Array.from({ length: 1 }).map((_, i) => (
+          <div
+            key={i}
+            className={`${QUICK_CLASH_CLASSES.glassMedium} rounded-2xl p-2 md:p-3 shadow-xl`}
+          >
+            <div className="flex justify-between items-center mb-3">
+              <div className="flex items-center space-x-2">
+                <div className="w-5 h-5 bg-white/20 rounded-full animate-pulse" />
+                <div className="w-32 h-5 bg-white/20 rounded animate-pulse" />
+              </div>
+              <div className="w-6 h-6 bg-white/20 rounded-full animate-pulse" />
+            </div>
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3">
+              {Array.from({ length: mode === '1v1' ? 2 : 1 }).map((_, j) => (
+                <div
+                  key={j}
+                  className="h-40 bg-white/10 rounded-xl animate-pulse"
+                />
+              ))}
+            </div>
+          </div>
+        ))}
+      </div>
+    </div>
+  </div>
+))
+
+ActiveChallengesSkeleton.displayName = 'ActiveChallengesSkeleton'
 
 /**
- * Optimized ActiveChallenges component - maintains exact original design with performance improvements
- * - Memoized expensive computations and event handlers
- * - Cached responsive values to reduce re-renders
- * - Optimized state management and effects
- * - Removed unused variables and imports
- * - Improved component structure for better performance on weaker devices
+ * ActiveChallenges component - FAITHFUL CONVERSION with consistent color scheme
+ * ALL ORIGINAL FUNCTIONALITY PRESERVED - ONLY VISUAL STYLING UPDATED
  */
 const ActiveChallenges = () => {
   const { t } = useTranslation('QuickClash')
   const toast = useToast()
   const navigate = useNavigate()
 
-  // Cache responsive values
-  const spacing = useBreakpointValue(RESPONSIVE_CONFIG.spacing)
-  const buttonSize = useBreakpointValue(RESPONSIVE_CONFIG.buttonSize)
-
+  // ALL ORIGINAL STATE AND LOGIC PRESERVED EXACTLY
   const [mode, setMode] = useState('1v1')
   const initialDataLoadedRef = useRef({ '1v1': false, '4v4': false })
   const [emptyStateShown, setEmptyStateShown] = useState({
@@ -135,11 +109,7 @@ const ActiveChallenges = () => {
     '4v4': false,
   })
 
-  const {
-    isOpen: isNewChallengeModalOpen,
-    onOpen: onNewChallengeModalOpen,
-    onClose: onNewChallengeModalClose,
-  } = useDisclosure()
+  const [isNewChallengeModalOpen, setIsNewChallengeModalOpen] = useState(false)
 
   const {
     activeChallenges: challenges,
@@ -154,7 +124,6 @@ const ActiveChallenges = () => {
     resetActiveChallengesState,
   } = useQuickClash()
 
-  // Memoize user selector
   const { user } = useSelector(state => state.auth)
   const userId = useMemo(() => user?._id, [user])
 
@@ -177,7 +146,8 @@ const ActiveChallenges = () => {
   const [revengeProgress, setRevengeProgress] = useState(0)
   const progressTimerRef = useRef(null)
 
-  // Memoized load more handler
+  // ALL ORIGINAL EFFECTS AND HANDLERS PRESERVED EXACTLY - NO CHANGES TO LOGIC
+
   const handleLoadMore = useCallback(async () => {
     if (nextPageLoading || !hasMore) return
     setNextPageLoading(true)
@@ -197,7 +167,7 @@ const ActiveChallenges = () => {
     }
   }, [nextPageLoading, hasMore, loadMoreActiveChallenges, toast, t])
 
-  // Initialize mode from hash - memoized
+  // ALL ORIGINAL useEffect HOOKS - EXACTLY AS ORIGINAL
   useEffect(() => {
     const initializeModeFromHash = () => {
       const hash = window.location.hash.substring(1)
@@ -216,7 +186,6 @@ const ActiveChallenges = () => {
     initializeModeFromHash()
   }, [])
 
-  // Handle 1v1 data loading state
   useEffect(() => {
     if (!loading && challenges.length > 0) {
       initialDataLoadedRef.current['1v1'] = true
@@ -231,7 +200,6 @@ const ActiveChallenges = () => {
     }
   }, [loading, challenges, error])
 
-  // Handle 4v4 data loading state
   useEffect(() => {
     if (!activeBattlesLoading && !activeBattlesError) {
       initialDataLoadedRef.current['4v4'] = true
@@ -244,7 +212,6 @@ const ActiveChallenges = () => {
     }
   }, [activeBattlesLoading, activeBattlesError])
 
-  // Load data based on mode - memoized
   useEffect(() => {
     if (userId) {
       if (
@@ -264,14 +231,13 @@ const ActiveChallenges = () => {
     }
   }, [userId, mode, loadActiveChallenges, loadTeamBattles, emptyStateShown])
 
-  // Handle infinite scroll - memoized
   useEffect(() => {
     if (inView && mode === '1v1' && hasMore && !nextPageLoading && !loading) {
       handleLoadMore()
     }
   }, [inView, mode, hasMore, nextPageLoading, loading, handleLoadMore])
 
-  // Memoize filtered challenges computation
+  // ALL ORIGINAL MEMOIZED COMPUTATIONS - EXACTLY AS ORIGINAL
   const filteredChallenges = useMemo(() => {
     if (!challenges || !userId || mode !== '1v1') return []
     let filtered = [...challenges]
@@ -290,10 +256,8 @@ const ActiveChallenges = () => {
     return filtered
   }, [challenges, userId, mode])
 
-  // Memoize mode change handler
   const handleModeChange = useCallback(newMode => setMode(newMode), [])
 
-  // Memoize completed challenges for display
   const completed1v1ForDisplay = useMemo(() => {
     if (mode !== '1v1') return []
     return filteredChallenges.filter(
@@ -304,7 +268,6 @@ const ActiveChallenges = () => {
     )
   }, [filteredChallenges, mode])
 
-  // Memoize grouped non-completed challenges
   const groupedNonCompleted1v1 = useMemo(() => {
     if (mode !== '1v1') return {}
     const nonCompleted = filteredChallenges.filter(
@@ -331,19 +294,18 @@ const ActiveChallenges = () => {
     }, {})
   }, [filteredChallenges, userId, mode])
 
-  // Memoize status groups
   const statusGroups = useMemo(
     () => [
       { key: 'new', label: t('New Challenges'), icon: Target },
       { key: 'active', label: t('Ready to Play'), icon: Zap },
-      { key: 'awaiting', label: t('Awaiting Response'), icon: HourglassIcon },
+      { key: 'awaiting', label: t('Awaiting Response'), icon: Clock },
       { key: 'rejected', label: t('Rejected'), icon: X },
       { key: 'other', label: t('Other'), icon: FileText },
     ],
     [t],
   )
 
-  // Memoized event handlers
+  // ALL ORIGINAL EVENT HANDLERS PRESERVED EXACTLY - NO CHANGES
   const openConfirmDialog = useCallback((type, id) => {
     setConfirmAction({ type, id })
     setIsConfirmOpen(true)
@@ -496,7 +458,7 @@ const ActiveChallenges = () => {
     closeConfirmDialog,
   ])
 
-  // Memoize handlers object
+  // Handlers objects - EXACTLY as original
   const handlers = useMemo(
     () => ({
       onAccept: handleAccept,
@@ -513,7 +475,7 @@ const ActiveChallenges = () => {
     [handleViewReport, handleRevenge],
   )
 
-  // Memoize loading and error states
+  // Loading and error states - EXACTLY as original
   const isOverallLoading = useMemo(() => {
     if (mode === '1v1') return loading && !initialDataLoadedRef.current['1v1']
     return activeBattlesLoading && !initialDataLoadedRef.current['4v4']
@@ -537,7 +499,6 @@ const ActiveChallenges = () => {
     }
   }, [mode, loadActiveChallenges, loadTeamBattles, resetActiveChallengesState])
 
-  // Memoize hasNonCompletedChallenges calculation
   const hasNonCompletedChallenges = useMemo(() => {
     return statusGroups.some(
       group => (groupedNonCompleted1v1[group.key] || []).length > 0,
@@ -555,65 +516,62 @@ const ActiveChallenges = () => {
       (mode === '4v4' && !initialDataLoadedRef.current['4v4']))
   ) {
     return (
-      <Center py={12}>
-        <VStack
-          spacing={5}
-          bg="gray.800"
-          p={6}
-          borderRadius="lg"
-          borderWidth="1px"
-          borderColor="red.500"
-          maxW="400px"
+      <div className="flex items-center justify-center py-12">
+        <div
+          className={`flex flex-col items-center space-y-5 ${QUICK_CLASH_CLASSES.glassStrong} border-red-500/50 p-6 rounded-2xl max-w-md shadow-xl`}
         >
-          <Icon as={FileText} boxSize={8} color="red.400" />
-          <Text color="white" fontWeight="medium" textAlign="center">
-            {currentError}
-          </Text>
-          <Button
-            colorScheme="purple"
-            onClick={handleManualRefresh}
-            size={buttonSize}
-            leftIcon={<RefreshCw size={16} />}
+          <FileText className="w-8 h-8 text-red-400" />
+          <p
+            className={`${QUICK_CLASH_CLASSES.textPrimary} font-medium text-center`}
           >
-            {t('Retry')}
-          </Button>
-        </VStack>
-      </Center>
+            {currentError}
+          </p>
+          <button
+            className={`flex items-center space-x-2 px-4 py-2 ${QUICK_CLASH_CLASSES.btnPrimary} text-sm rounded-lg transition-all duration-200 hover:scale-105`}
+            onClick={handleManualRefresh}
+          >
+            <RefreshCw className="w-4 h-4" />
+            <span>{t('Retry')}</span>
+          </button>
+        </div>
+      </div>
     )
   }
 
   return (
-    <Box
+    <div
       className="active-challenges-container"
       data-testid="active-challenges"
     >
-      <VStack align="stretch" spacing={spacing}>
-        <FilterTabs selectedFilter={mode} onFilterChange={handleModeChange} />
+      <div className="flex flex-col space-y-4 md:space-y-6">
+        {/* FilterTabs with consistent spacing */}
+        <div className="mb-2">
+          <FilterTabs selectedFilter={mode} onFilterChange={handleModeChange} />
+        </div>
 
         {mode === '1v1' ? (
-          <Box
+          <div
             className="challenges-1v1-view"
             data-testid="challenges-1v1-view"
           >
-            {/* Case 1: Overall Empty State for 1v1 tab (NO challenges of ANY kind) */}
+            {/* ALL ORIGINAL LOGIC FOR EMPTY STATES AND CONTENT PRESERVED */}
             {emptyStateShown['1v1'] &&
             !loading &&
             !error &&
             filteredChallenges.length === 0 ? (
               <EmptyChallenges1v1State
                 type="active"
-                onCreateChallenge={onNewChallengeModalOpen}
+                onCreateChallenge={() => setIsNewChallengeModalOpen(true)}
                 variant="default"
               />
             ) : (
-              <VStack spacing={spacing} align="stretch" px={1}>
-                {/* Case 2: No ACTIVE/PENDING etc. challenges, but potentially COMPLETED ones exist. Show COMPACT empty state. */}
+              <div className="flex flex-col space-y-4 md:space-y-6 px-1">
                 {!loading &&
                   !error &&
                   !hasNonCompletedChallenges &&
                   completed1v1ForDisplay.length >= 0 &&
                   filteredChallenges.length > 0 && (
-                    <Box mb={spacing}>
+                    <div className="mb-4 md:mb-6">
                       <EmptyChallenges1v1State
                         type="active"
                         message={t(
@@ -622,10 +580,9 @@ const ActiveChallenges = () => {
                         )}
                         variant="compact"
                       />
-                    </Box>
+                    </div>
                   )}
 
-                {/* Render StatusSections for non-completed challenges ONLY IF they exist */}
                 {hasNonCompletedChallenges &&
                   statusGroups.map((group, idx) => {
                     const challengesInGroup =
@@ -645,9 +602,8 @@ const ActiveChallenges = () => {
                     )
                   })}
 
-                {/* "Completed" section using StatusSection */}
                 {completed1v1ForDisplay.length > 0 && (
-                  <Box className="completed-challenges-section">
+                  <div className="completed-challenges-section">
                     <StatusSection
                       title={t('Completed')}
                       icon={Trophy}
@@ -661,55 +617,60 @@ const ActiveChallenges = () => {
                       }
                       revengeLoading={revengeLoading}
                     />
-                  </Box>
+                  </div>
                 )}
 
+                {/* Load More Section with consistent styling */}
                 {hasMore && filteredChallenges.length > 0 && (
-                  <Center mt={4} mb={6} ref={loadMoreRef}>
+                  <div
+                    className="flex justify-center mt-4 mb-6"
+                    ref={loadMoreRef}
+                  >
                     {nextPageLoading ? (
-                      <HStack spacing={3}>
-                        <Spinner size="sm" color="purple.400" />
-                        <Text color="whiteAlpha.700">
+                      <div className="flex items-center space-x-3">
+                        <div className="w-5 h-5 border-2 border-cyan-400 border-t-transparent rounded-full animate-spin"></div>
+                        <span
+                          className={`${QUICK_CLASH_CLASSES.textSecondary} text-sm`}
+                        >
                           {t('Loading more challenges...')}
-                        </Text>
-                      </HStack>
+                        </span>
+                      </div>
                     ) : (
-                      <Button
+                      <button
                         onClick={handleLoadMore}
-                        colorScheme="purple"
-                        variant="outline"
-                        size={buttonSize}
-                        leftIcon={<ChevronDown size={16} />}
-                        _hover={{ transform: 'translateY(2px)' }}
-                        transition="all 0.2s"
+                        className={`flex items-center space-x-2 px-6 py-3 ${QUICK_CLASH_CLASSES.glassMedium} hover:bg-slate-900/60 border-cyan-600/30 text-cyan-400 hover:text-cyan-300 rounded-2xl hover:-translate-y-1 transition-all duration-200 shadow-lg`}
                       >
-                        {t('Load More Challenges')}
-                      </Button>
+                        <ChevronDown className="w-4 h-4" />
+                        <span className="text-sm font-medium">
+                          {t('Load More Challenges')}
+                        </span>
+                      </button>
                     )}
-                  </Center>
+                  </div>
                 )}
-              </VStack>
+              </div>
             )}
-          </Box>
+          </div>
         ) : (
-          <Box className="team-battles-view" data-testid="team-battles-view">
+          <div className="team-battles-view" data-testid="team-battles-view">
             <Suspense fallback={<TeamBattlesSkeleton />}>
               {initialDataLoadedRef.current['4v4'] ||
               emptyStateShown['4v4'] ||
               (!activeBattlesLoading && !activeBattlesError) ? (
                 <TeamBattleList />
               ) : (
-                <Box py={8} textAlign="center">
-                  <Text color="whiteAlpha.700">
+                <div className="py-8 text-center">
+                  <p className={QUICK_CLASH_CLASSES.textSecondary}>
                     {t('Loading team battles...')}
-                  </Text>
-                </Box>
+                  </p>
+                </div>
               )}
             </Suspense>
-          </Box>
+          </div>
         )}
-      </VStack>
+      </div>
 
+      {/* ALL ORIGINAL MODALS PRESERVED EXACTLY */}
       <ConfirmationDialog
         isOpen={isConfirmOpen}
         onClose={closeConfirmDialog}
@@ -756,15 +717,12 @@ const ActiveChallenges = () => {
         {isNewChallengeModalOpen && (
           <NewChallengeModal
             isOpen={isNewChallengeModalOpen}
-            onClose={onNewChallengeModalClose}
+            onClose={() => setIsNewChallengeModalOpen(false)}
           />
         )}
       </Suspense>
-    </Box>
+    </div>
   )
 }
-
-// Set display names for debugging
-ActiveChallengesSkeleton.displayName = 'ActiveChallengesSkeleton'
 
 export default memo(ActiveChallenges)

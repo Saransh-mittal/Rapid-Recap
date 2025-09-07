@@ -1,18 +1,24 @@
-// vite.config.js - Replace your current config with this optimized version
+// vite.config.js - Updated with Tailwind v4 Configuration
 import { defineConfig } from 'vite'
-import react from '@vitejs/plugin-react-swc'
-import { visualizer } from 'rollup-plugin-visualizer'
+import react from '@vitejs/plugin-react'
+import path from 'path'
 
 export default defineConfig({
   plugins: [
     react({
-      // Use SWC for faster compilation
       jsxImportSource: '@emotion/react',
-      plugins: [['@swc/plugin-emotion', {}]],
+      babel: {
+        plugins: ['@emotion/babel-plugin'],
+      },
     }),
   ],
+  resolve: {
+    alias: {
+      '@': path.resolve(__dirname, './src'),
+    },
+  },
 
-  // Optimize dependency pre-bundling for your specific dependencies
+  // Rest of your existing config...
   optimizeDeps: {
     include: [
       'react',
@@ -27,7 +33,6 @@ export default defineConfig({
       'i18next',
       'framer-motion',
       'axios',
-      // Add other heavy dependencies from your package.json
       'chart.js',
       'react-chartjs-2',
       'socket.io-client',
@@ -37,42 +42,25 @@ export default defineConfig({
   },
 
   build: {
-    // Use modern JS for faster parsing
     target: 'esnext',
-
-    // Don't split CSS for critical path optimization
     cssCodeSplit: false,
-
-    // Optimize chunks for your app structure
     rollupOptions: {
       output: {
-        // Manual chunking optimized for your dependencies
         manualChunks: {
-          // Core React ecosystem
           'react-vendor': ['react', 'react-dom', 'react-router-dom'],
-
-          // Chakra UI and styling
           'ui-vendor': [
             '@chakra-ui/react',
             '@emotion/react',
             '@emotion/styled',
             'framer-motion',
           ],
-
-          // Redux ecosystem
           'redux-vendor': ['react-redux', '@reduxjs/toolkit'],
-
-          // Charts and visualization
           'charts-vendor': ['chart.js', 'react-chartjs-2', 'recharts'],
-
-          // Internationalization
           'i18n-vendor': [
             'react-i18next',
             'i18next',
             'i18next-browser-languagedetector',
           ],
-
-          // Utilities and smaller libraries
           'utils-vendor': [
             'axios',
             'moment',
@@ -81,12 +69,8 @@ export default defineConfig({
             'lodash.throttle',
             'js-cookie',
           ],
-
-          // Socket and real-time features
           'socket-vendor': ['socket.io-client'],
         },
-
-        // Optimize asset naming for better caching
         assetFileNames: assetInfo => {
           const info = assetInfo.name.split('.')
           const ext = info[info.length - 1]
@@ -101,40 +85,30 @@ export default defineConfig({
 
           return `assets/[name].[hash][extname]`
         },
-
         chunkFileNames: 'assets/js/[name].[hash].js',
         entryFileNames: 'assets/js/[name].[hash].js',
       },
     },
-
-    // Enable advanced minification
     minify: 'terser',
     terserOptions: {
       compress: {
-        drop_console: true, // Remove console.log in production
+        drop_console: true,
         drop_debugger: true,
-        pure_funcs: ['console.log', 'console.warn'], // Remove specific functions
+        pure_funcs: ['console.log', 'console.warn'],
       },
       mangle: {
-        safari10: true, // Fix Safari 10+ bugs
+        safari10: true,
       },
     },
-
-    // Disable source maps for production (faster builds)
     sourcemap: false,
-
-    // Optimize chunk size
     chunkSizeWarningLimit: 1000,
-
-    // Enable modern build optimizations
-    reportCompressedSize: false, // Faster builds
+    reportCompressedSize: false,
   },
 
   server: {
     host: true,
-    // Optimize HMR for faster development
     hmr: {
-      overlay: false, // Disable error overlay for faster development
+      overlay: false,
     },
     proxy: {
       '/api': {
@@ -144,14 +118,11 @@ export default defineConfig({
     },
   },
 
-  // CSS optimization
   css: {
-    devSourcemap: false, // Disable CSS source maps in dev for speed
+    devSourcemap: false,
   },
 
-  // Enable experimental features for better performance
   esbuild: {
-    // Remove console.log in production
     drop: process.env.NODE_ENV === 'production' ? ['console', 'debugger'] : [],
   },
 })

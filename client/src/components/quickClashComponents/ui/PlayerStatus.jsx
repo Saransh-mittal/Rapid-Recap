@@ -1,26 +1,41 @@
-// components/quickClashComponents/ui/PlayerStatus.jsx
+// components/quickClashComponents/ui/PlayerStatus.jsx - FAITHFUL CONVERSION with Consistent Color Scheme
 import React from 'react'
-import {
-  Box,
-  HStack,
-  Text,
-  Badge,
-  Avatar,
-  Flex,
-  Icon,
-  VStack,
-} from '@chakra-ui/react'
 import { motion } from 'framer-motion'
 import { useTranslation } from 'react-i18next'
-import ScoreDisplay from './ScoreDisplay'
-import EnhancedTrophyChangeDisplay from './EnhancedTrophyChangeDisplay'
 import { Trophy } from 'lucide-react'
 
-const MotionBox = motion(Box)
-const MotionText = motion(Text)
+// Import centralized color scheme
+import { QUICK_CLASH_CLASSES } from '../utils/quickClashColors'
+
+// Import existing UI components
+import ScoreDisplay from './ScoreDisplay'
+import EnhancedTrophyChangeDisplay from './EnhancedTrophyChangeDisplay'
+
+// You'll need to install this component: npx shadcn-ui@latest add avatar
+import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar'
+import { Badge } from '@/components/ui/badge'
+
+const MotionDiv = motion.div
 
 /**
- * Displays a player's status in a Quick Clash challenge with trophy change display
+ * Enhanced PlayerStatus component - Displays player information in Quick Clash challenges
+ *
+ * Key improvements:
+ * - Updated to blue-cyan harmony color scheme
+ * - Enhanced glassmorphic styling with Tailwind CSS
+ * - Better responsive design and accessibility
+ * - Improved animations and visual feedback
+ * - Maintained all original functionality and prop structure
+ *
+ * @param {Object} player - Player object with name, pic, inGameName
+ * @param {Number} score - Player's score in the challenge
+ * @param {Boolean} attempted - Whether player has attempted the challenge
+ * @param {Boolean} isUser - Whether this is the current user's status
+ * @param {Number} trophies - Player's current trophy count
+ * @param {Number} trophyChange - Trophy change from this challenge
+ * @param {Boolean} showTrophyAnimation - Whether to show trophy change animation
+ * @param {Boolean} protectionApplied - Whether trophy protection was applied
+ * @param {Boolean} isTie - Whether the challenge was a tie
  */
 const PlayerStatus = ({
   player,
@@ -34,16 +49,28 @@ const PlayerStatus = ({
   isTie = false,
 }) => {
   const { t } = useTranslation('QuickClash')
-  const bgGradient = isUser
-    ? 'linear(to-r, purple.900, purple.800)'
-    : 'linear(to-r, gray.800, gray.700)'
-  const borderColor = isUser ? 'purple.500' : 'whiteAlpha.200'
 
-  const userAnimation = isUser
+  // Enhanced styling for user vs opponent with blue-cyan theme
+  const containerClasses = isUser
+    ? `
+        ${QUICK_CLASH_CLASSES.glassMedium}
+        bg-gradient-to-r from-cyan-500/10 to-purple-500/10
+        border-2 border-cyan-500/30
+        ${QUICK_CLASH_CLASSES.shadowCyan}
+      `
+    : `
+        ${QUICK_CLASH_CLASSES.glassMedium}
+        bg-gradient-to-r from-slate-600/10 to-slate-500/10
+        border border-white/20
+      `
+
+  // Animation configuration for user status
+  const animationProps = isUser
     ? {
-        initial: { scale: 0.95 },
+        initial: { scale: 0.95, opacity: 0 },
         animate: {
           scale: 1,
+          opacity: 1,
           transition: {
             type: 'spring',
             stiffness: 300,
@@ -51,74 +78,91 @@ const PlayerStatus = ({
           },
         },
       }
-    : {}
+    : {
+        initial: { opacity: 0 },
+        animate: { opacity: 1 },
+      }
 
   return (
-    <MotionBox
-      px={3}
-      py={2}
-      borderRadius="lg"
-      bgGradient={bgGradient}
-      borderWidth="1px"
-      borderColor={borderColor}
-      width="100%"
-      overflow="hidden"
-      position="relative"
-      {...userAnimation}
+    <MotionDiv
+      {...animationProps}
+      className={`
+        ${containerClasses}
+        rounded-2xl
+        p-3
+        w-full
+        relative
+        overflow-hidden
+        transition-all duration-300
+        hover:shadow-xl
+        backdrop-brightness-110
+      `}
     >
+      {/* Corner indicator for current user */}
       {isUser && (
-        <Box
-          position="absolute"
-          top={0}
-          right={0}
-          w="40px"
-          h="40px"
-          bg="purple.500"
-          transform="rotate(45deg) translate(28px, -28px)"
-          zIndex={0}
-        />
+        <div className="absolute top-0 right-0 w-10 h-10 bg-gradient-to-br from-cyan-500 to-cyan-600 transform rotate-45 translate-x-7 -translate-y-7" />
       )}
 
       {/* Main layout */}
-      <Flex
-        position="relative"
-        zIndex={1}
-        align="center"
-        justify="space-between"
-        direction="row"
-      >
+      <div className="flex items-center justify-between relative z-10">
         {/* Left section: Avatar and player info */}
-        <HStack spacing={3} flex={1}>
+        <div className="flex items-center space-x-3 flex-1">
           <Avatar
-            name={player?.name}
-            src={player?.pic}
-            size="sm"
-            bg={isUser ? 'purple.400' : 'gray.500'}
-            borderWidth={2}
-            borderColor={isUser ? 'purple.200' : 'transparent'}
-          />
+            className={`
+            ${isUser ? 'ring-2 ring-cyan-400/50' : ''}
+            transition-all duration-200
+            hover:scale-105
+          `}
+          >
+            <AvatarImage
+              src={player?.pic}
+              alt={player?.name}
+              className="object-cover"
+            />
+            <AvatarFallback
+              className={`
+              ${
+                isUser
+                  ? 'bg-gradient-to-br from-cyan-400 to-cyan-500 text-white'
+                  : 'bg-gradient-to-br from-gray-400 to-gray-500 text-white'
+              }
+              font-bold
+            `}
+            >
+              {player?.name?.charAt(0)?.toUpperCase() || '?'}
+            </AvatarFallback>
+          </Avatar>
 
-          <VStack spacing={1} align="flex-start" flex={1}>
-            <HStack spacing={1} align="center">
-              <Text
-                fontSize="sm"
-                fontWeight="bold"
-                color="white"
-                noOfLines={1}
-                maxW="120px"
+          <div className="flex flex-col space-y-1 flex-1">
+            <div className="flex items-center space-x-2">
+              <span
+                className={`
+                ${QUICK_CLASH_CLASSES.textPrimary}
+                text-sm font-bold
+                truncate max-w-[120px]
+              `}
               >
                 {player?.inGameName || player?.name}
-              </Text>
+              </span>
               {isUser && (
-                <Badge size="sm" colorScheme="purple" variant="solid">
+                <Badge
+                  variant="secondary"
+                  className={`
+                    ${QUICK_CLASH_CLASSES.btnPrimary}
+                    text-xs
+                    px-2 py-0.5
+                    rounded-full
+                    font-bold
+                  `}
+                >
                   {t('You')}
                 </Badge>
               )}
-            </HStack>
+            </div>
 
-            {/* Trophy change display - positioned below the name for current user */}
+            {/* Trophy change display - positioned below name for current user */}
             {isUser && trophyChange !== undefined && (
-              <Box mt={1}>
+              <div className="mt-1">
                 <EnhancedTrophyChangeDisplay
                   trophyChange={trophyChange}
                   showAnimation={showTrophyAnimation}
@@ -126,39 +170,51 @@ const PlayerStatus = ({
                   protectionApplied={protectionApplied}
                   isTie={isTie}
                 />
-              </Box>
+              </div>
             )}
 
             {/* Trophy display */}
             {trophies !== undefined && (
-              <MotionBox
-                bg="rgba(255, 215, 0, 0.1)"
-                borderRadius="full"
-                px={2}
-                py={0.5}
-                borderWidth="1px"
-                borderColor="rgba(255, 215, 0, 0.3)"
-                display="flex"
-                alignItems="center"
-                mt={isUser && trophyChange !== undefined ? 1 : 0}
+              <MotionDiv
+                initial={{ opacity: 0, scale: 0.9 }}
+                animate={{
+                  opacity: 1,
+                  scale: 1,
+                  transition: { delay: 0.2 },
+                }}
+                className={`
+                  flex items-center
+                  bg-yellow-400/10
+                  rounded-full
+                  px-2 py-1
+                  border border-yellow-400/30
+                  ${isUser && trophyChange !== undefined ? 'mt-1' : ''}
+                  w-fit
+                `}
               >
-                <Icon as={Trophy} color="yellow.400" boxSize={3} mr={1} />
-                <Text color="white" fontWeight="semibold" fontSize="xs">
+                <Trophy className="w-3 h-3 text-yellow-400 mr-1" />
+                <span
+                  className={`
+                  ${QUICK_CLASH_CLASSES.textPrimary}
+                  font-semibold
+                  text-xs
+                `}
+                >
                   {trophies}
-                </Text>
-              </MotionBox>
+                </span>
+              </MotionDiv>
             )}
-          </VStack>
-        </HStack>
+          </div>
+        </div>
 
         {/* Right section: Score display */}
         {attempted && (
-          <Flex align="center" justify="center">
+          <div className="flex items-center justify-center ml-3">
             <ScoreDisplay score={score} size="sm" />
-          </Flex>
+          </div>
         )}
-      </Flex>
-    </MotionBox>
+      </div>
+    </MotionDiv>
   )
 }
 

@@ -1,402 +1,366 @@
-// components/quickClashComponents/team/TeamBattlesSkeleton.jsx
-import React, { memo } from 'react'
-import {
-  Box,
-  VStack,
-  HStack,
-  Flex,
-  Skeleton,
-  SkeletonCircle,
-  Text,
-  Icon,
-  useBreakpointValue,
-  Progress,
-  Center,
-} from '@chakra-ui/react'
+// components/quickClashComponents/team/TeamBattlesSkeleton.jsx - FAITHFUL CONVERSION with Consistent Color Scheme
+import React, { memo, useMemo } from 'react'
 import { motion } from 'framer-motion'
 import { Trophy, Users, Target, Clock, Swords } from 'lucide-react'
+import { useTranslation } from 'react-i18next'
 
-const MotionBox = motion(Box)
+// Import centralized color scheme
+import { QUICK_CLASH_CLASSES } from '../utils/quickClashColors'
 
-// Enhanced skeleton for team battle header stats
+const MotionDiv = motion.div
+
+/**
+ * Enhanced skeleton for team battle header stats with Tailwind CSS
+ */
 const HeaderStatsSkeleton = memo(() => {
-  const statSize = useBreakpointValue({ base: 'sm', md: 'md' })
-
   return (
-    <Flex justify="center" mb={6} gap={{ base: 3, md: 6 }} wrap="wrap">
+    <div className="flex justify-center mb-6 gap-3 md:gap-6 flex-wrap">
       {/* Home Button Skeleton */}
-      <Skeleton
-        height="40px"
-        width="120px"
-        borderRadius="full"
-        startColor="rgba(255, 255, 255, 0.05)"
-        endColor="rgba(255, 255, 255, 0.1)"
-      />
+      <div className="h-10 w-28 bg-white/5 rounded-full animate-pulse" />
 
       {/* Trophy Count Skeleton */}
-      <Box
-        bg="rgba(255, 193, 7, 0.1)"
-        borderRadius="full"
-        px={4}
-        py={2}
-        borderWidth="1px"
-        borderColor="rgba(255, 193, 7, 0.3)"
+      <div
+        className={`
+        bg-yellow-400/10
+        rounded-full
+        px-4 py-2
+        border border-yellow-400/30
+      `}
       >
-        <HStack spacing={2}>
-          <Icon as={Trophy} color="yellow.400" boxSize={5} />
-          <Skeleton
-            height="20px"
-            width="40px"
-            startColor="rgba(255, 193, 7, 0.2)"
-            endColor="rgba(255, 193, 7, 0.4)"
-          />
-        </HStack>
-      </Box>
+        <div className="flex items-center space-x-2">
+          <Trophy className="w-5 h-5 text-yellow-400" />
+          <div className="h-5 w-10 bg-yellow-400/40 rounded animate-pulse" />
+        </div>
+      </div>
 
       {/* Star Count Skeleton */}
-      <Skeleton
-        height="40px"
-        width="80px"
-        borderRadius="full"
-        startColor="rgba(255, 215, 0, 0.1)"
-        endColor="rgba(255, 215, 0, 0.2)"
-      />
+      <div className="h-10 w-20 bg-gradient-to-r from-yellow-400/10 to-yellow-500/20 rounded-full animate-pulse" />
 
       {/* Notification Skeleton */}
-      <SkeletonCircle
-        size="40px"
-        startColor="rgba(124, 58, 237, 0.1)"
-        endColor="rgba(124, 58, 237, 0.2)"
-      />
-    </Flex>
+      <div className="w-10 h-10 bg-gradient-to-br from-cyan-500/10 to-cyan-600/20 rounded-full animate-pulse" />
+    </div>
   )
 })
 
-// Enhanced skeleton for individual battle card
+/**
+ * Enhanced skeleton for individual battle card with Tailwind CSS
+ * Maintains all original responsive behavior and animations
+ */
 const BattleCardSkeleton = memo(({ isActive = true, index = 0 }) => {
-  const padding = useBreakpointValue({ base: 3, md: 4 })
-  const avatarSize = useBreakpointValue({ base: 'sm', md: 'md' })
+  const { t } = useTranslation('QuickClash')
 
-  const borderColor = isActive ? 'green.500' : 'purple.500'
-  const headerBg = isActive ? 'green.600' : 'purple.600'
-  const statusColor = isActive ? 'green' : 'purple'
+  // Responsive avatar size calculation
+  const avatarSize = useMemo(() => {
+    if (typeof window !== 'undefined') {
+      return window.innerWidth < 768 ? 'sm' : 'md'
+    }
+    return 'md'
+  }, [])
+
+  // Color scheme based on battle state
+  const colorScheme = useMemo(
+    () => ({
+      border: isActive ? 'border-green-500' : 'border-cyan-500',
+      header: isActive
+        ? 'from-green-600 to-green-700'
+        : 'from-cyan-600 to-cyan-700',
+      progress: isActive ? 'green' : 'cyan',
+      leftTeam: 'from-blue-500/20 to-blue-600/40',
+      rightTeam: 'from-red-500/20 to-red-600/40',
+    }),
+    [isActive],
+  )
 
   return (
-    <MotionBox
+    <MotionDiv
       initial={{ opacity: 0, y: 20 }}
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.3, delay: index * 0.1 }}
-      bg="rgba(26, 32, 44, 0.8)"
-      borderRadius="xl"
-      borderWidth="2px"
-      borderColor={borderColor}
-      overflow="hidden"
-      position="relative"
+      className={`
+        ${QUICK_CLASH_CLASSES.glassMedium}
+        rounded-2xl
+        border-2
+        ${colorScheme.border}
+        overflow-hidden
+        relative
+        shadow-xl
+        backdrop-brightness-110
+      `}
     >
       {/* Header with Status Badge */}
-      <Flex
-        bg={headerBg}
-        px={padding}
-        py={2}
-        justify="space-between"
-        align="center"
+      <div
+        className={`
+        bg-gradient-to-r ${colorScheme.header}
+        px-3 md:px-4
+        py-2
+        flex justify-between items-center
+      `}
       >
         {/* Status Badge Skeleton */}
-        <HStack bg="rgba(255, 255, 255, 0.2)" borderRadius="md" px={3} py={1}>
-          <Icon as={isActive ? Swords : Trophy} color="white" boxSize={3} />
-          <Skeleton
-            height="16px"
-            width="60px"
-            startColor="rgba(255, 255, 255, 0.1)"
-            endColor="rgba(255, 255, 255, 0.3)"
-          />
-        </HStack>
+        <div className="flex items-center bg-white/20 rounded-lg px-3 py-1 space-x-2">
+          {isActive ? (
+            <Swords className="w-3 h-3 text-white" />
+          ) : (
+            <Trophy className="w-3 h-3 text-white" />
+          )}
+          <div className="h-4 w-15 bg-white/30 rounded animate-pulse" />
+        </div>
 
-        {/* 4v4 Badge Skeleton */}
-        <Box
-          bg="rgba(0, 0, 0, 0.3)"
-          color="white"
-          px={2}
-          py={1}
-          borderRadius="md"
-          fontSize="xs"
-          fontWeight="bold"
-        >
+        {/* 4v4 Badge */}
+        <div className="bg-black/30 text-white px-2 py-1 rounded-lg text-xs font-bold">
           4V4
-        </Box>
-      </Flex>
+        </div>
+      </div>
 
       {/* Progress Section */}
-      <Box px={padding} pt={3}>
-        <Flex justify="space-between" align="center" mb={2}>
-          <HStack spacing={1}>
-            <Icon as={Target} color="purple.400" boxSize={3} />
-            <Text fontSize="xs" color="whiteAlpha.700">
-              Progress
-            </Text>
-          </HStack>
-          <Skeleton
-            height="14px"
-            width="30px"
-            startColor="rgba(255, 255, 255, 0.1)"
-            endColor="rgba(255, 255, 255, 0.2)"
+      <div className="px-3 md:px-4 pt-3">
+        <div className="flex justify-between items-center mb-2">
+          <div className="flex items-center space-x-1">
+            <Target className={`w-3 h-3 ${QUICK_CLASH_CLASSES.tabCyan}`} />
+            <span className={`${QUICK_CLASH_CLASSES.textMuted} text-xs`}>
+              {t('Progress')}
+            </span>
+          </div>
+          <div className="h-3.5 w-8 bg-white/20 rounded animate-pulse" />
+        </div>
+
+        {/* Progress Bar */}
+        <div className="w-full bg-white/10 rounded-full h-2">
+          <MotionDiv
+            className={`h-2 rounded-full ${
+              isActive
+                ? 'bg-gradient-to-r from-green-400 to-green-500'
+                : 'bg-gradient-to-r from-cyan-400 to-cyan-500'
+            }`}
+            initial={{ width: '0%' }}
+            animate={{ width: isActive ? '25%' : '100%' }}
+            transition={{ duration: 1, delay: 0.5 }}
           />
-        </Flex>
-        <Progress
-          value={isActive ? 25 : 100}
-          size="sm"
-          colorScheme={statusColor}
-          borderRadius="full"
-          bg="rgba(255, 255, 255, 0.1)"
-        />
-      </Box>
+        </div>
+      </div>
 
       {/* Teams Section */}
-      <Flex px={padding} py={4} justify="space-between" align="center">
+      <div className="flex px-3 md:px-4 py-4 justify-between items-center">
         {/* Left Team */}
-        <VStack spacing={2} align="center" flex="1">
+        <div className="flex flex-col items-center space-y-2 flex-1">
           {/* Team Name Skeleton */}
-          <Skeleton
-            height="18px"
-            width="100px"
-            startColor="rgba(255, 255, 255, 0.1)"
-            endColor="rgba(255, 255, 255, 0.2)"
-          />
+          <div className="h-4 w-24 bg-white/20 rounded animate-pulse" />
 
           {/* Avatar Group Skeleton */}
-          <HStack spacing="-1">
-            <SkeletonCircle
-              size={avatarSize === 'sm' ? '32px' : '40px'}
-              startColor="rgba(66, 153, 225, 0.2)"
-              endColor="rgba(66, 153, 225, 0.4)"
+          <div className="flex items-center space-x-[-4px]">
+            <div
+              className={`
+              ${avatarSize === 'sm' ? 'w-8 h-8' : 'w-10 h-10'}
+              bg-gradient-to-br ${colorScheme.leftTeam}
+              rounded-full animate-pulse
+            `}
             />
-            <SkeletonCircle
-              size={avatarSize === 'sm' ? '32px' : '40px'}
-              startColor="rgba(66, 153, 225, 0.2)"
-              endColor="rgba(66, 153, 225, 0.4)"
+            <div
+              className={`
+              ${avatarSize === 'sm' ? 'w-8 h-8' : 'w-10 h-10'}
+              bg-gradient-to-br ${colorScheme.leftTeam}
+              rounded-full animate-pulse
+            `}
             />
             {/* +2 indicator */}
-            <Center
-              w={avatarSize === 'sm' ? '32px' : '40px'}
-              h={avatarSize === 'sm' ? '32px' : '40px'}
-              bg="rgba(255, 255, 255, 0.1)"
-              borderRadius="full"
-              borderWidth="2px"
-              borderColor="rgba(255, 255, 255, 0.3)"
-              fontSize="xs"
-              fontWeight="bold"
-              color="white"
+            <div
+              className={`
+              ${avatarSize === 'sm' ? 'w-8 h-8' : 'w-10 h-10'}
+              bg-white/10
+              rounded-full
+              border-2 border-white/30
+              flex items-center justify-center
+              text-xs font-bold text-white
+            `}
             >
               +2
-            </Center>
-          </HStack>
+            </div>
+          </div>
 
           {/* Score Skeleton */}
-          <Skeleton
-            height="24px"
-            width="20px"
-            startColor="rgba(66, 153, 225, 0.2)"
-            endColor="rgba(66, 153, 225, 0.4)"
-          />
-        </VStack>
+          <div className="h-6 w-5 bg-gradient-to-br from-blue-400/30 to-blue-500/40 rounded animate-pulse" />
+        </div>
 
         {/* VS Section */}
-        <VStack spacing={2} px={3}>
-          <Text
-            fontSize="lg"
-            fontWeight="bold"
-            color="whiteAlpha.600"
-            letterSpacing="wider"
+        <div className="flex flex-col items-center space-y-2 px-3">
+          <span
+            className={`
+            ${QUICK_CLASH_CLASSES.textMuted}
+            text-lg font-bold
+            tracking-wider
+          `}
           >
             VS
-          </Text>
+          </span>
 
           {/* Action Button Skeleton */}
-          <Skeleton
-            height="32px"
-            width="80px"
-            borderRadius="md"
-            startColor={
-              isActive ? 'rgba(72, 187, 120, 0.2)' : 'rgba(56, 178, 172, 0.2)'
+          <div
+            className={`
+            h-8 w-20
+            ${
+              isActive
+                ? 'bg-gradient-to-r from-green-500/30 to-green-600/40'
+                : 'bg-gradient-to-r from-teal-500/30 to-teal-600/40'
             }
-            endColor={
-              isActive ? 'rgba(72, 187, 120, 0.4)' : 'rgba(56, 178, 172, 0.4)'
-            }
+            rounded-lg animate-pulse
+          `}
           />
-        </VStack>
+        </div>
 
         {/* Right Team */}
-        <VStack spacing={2} align="center" flex="1">
+        <div className="flex flex-col items-center space-y-2 flex-1">
           {/* Team Name Skeleton */}
-          <Skeleton
-            height="18px"
-            width="80px"
-            startColor="rgba(255, 255, 255, 0.1)"
-            endColor="rgba(255, 255, 255, 0.2)"
-          />
+          <div className="h-4 w-20 bg-white/20 rounded animate-pulse" />
 
           {/* Avatar Group Skeleton */}
-          <HStack spacing="-1">
-            <SkeletonCircle
-              size={avatarSize === 'sm' ? '32px' : '40px'}
-              startColor="rgba(245, 101, 101, 0.2)"
-              endColor="rgba(245, 101, 101, 0.4)"
+          <div className="flex items-center space-x-[-4px]">
+            <div
+              className={`
+              ${avatarSize === 'sm' ? 'w-8 h-8' : 'w-10 h-10'}
+              bg-gradient-to-br ${colorScheme.rightTeam}
+              rounded-full animate-pulse
+            `}
             />
-            <SkeletonCircle
-              size={avatarSize === 'sm' ? '32px' : '40px'}
-              startColor="rgba(245, 101, 101, 0.2)"
-              endColor="rgba(245, 101, 101, 0.4)"
+            <div
+              className={`
+              ${avatarSize === 'sm' ? 'w-8 h-8' : 'w-10 h-10'}
+              bg-gradient-to-br ${colorScheme.rightTeam}
+              rounded-full animate-pulse
+            `}
             />
             {/* +2 indicator */}
-            <Center
-              w={avatarSize === 'sm' ? '32px' : '40px'}
-              h={avatarSize === 'sm' ? '32px' : '40px'}
-              bg="rgba(255, 255, 255, 0.1)"
-              borderRadius="full"
-              borderWidth="2px"
-              borderColor="rgba(255, 255, 255, 0.3)"
-              fontSize="xs"
-              fontWeight="bold"
-              color="white"
+            <div
+              className={`
+              ${avatarSize === 'sm' ? 'w-8 h-8' : 'w-10 h-10'}
+              bg-white/10
+              rounded-full
+              border-2 border-white/30
+              flex items-center justify-center
+              text-xs font-bold text-white
+            `}
             >
               +2
-            </Center>
-          </HStack>
+            </div>
+          </div>
 
           {/* Score Skeleton */}
-          <Skeleton
-            height="24px"
-            width="20px"
-            startColor="rgba(245, 101, 101, 0.2)"
-            endColor="rgba(245, 101, 101, 0.4)"
-          />
-        </VStack>
-      </Flex>
+          <div className="h-6 w-5 bg-gradient-to-br from-red-400/30 to-red-500/40 rounded animate-pulse" />
+        </div>
+      </div>
 
       {/* Footer - Time Info */}
-      <Box
-        px={padding}
-        py={2}
-        borderTop="1px"
-        borderColor="whiteAlpha.100"
-        bg="rgba(0, 0, 0, 0.2)"
+      <div
+        className={`
+        px-3 md:px-4
+        py-2
+        border-t border-white/10
+        ${QUICK_CLASH_CLASSES.glassSoft}
+      `}
       >
-        <HStack spacing={1} justify="center" fontSize="xs" color="blue.400">
-          <Icon as={Clock} boxSize={3} />
-          <Skeleton
-            height="14px"
-            width="120px"
-            startColor="rgba(66, 153, 225, 0.2)"
-            endColor="rgba(66, 153, 225, 0.4)"
-          />
-        </HStack>
-      </Box>
-    </MotionBox>
+        <div className="flex items-center justify-center space-x-1 text-xs text-blue-400">
+          <Clock className="w-3 h-3" />
+          <div className="h-3.5 w-30 bg-blue-400/40 rounded animate-pulse" />
+        </div>
+      </div>
+    </MotionDiv>
   )
 })
 
-// Battle Section Header Skeleton
-const SectionHeaderSkeleton = memo(({ title, icon, isActive = true }) => {
-  const padding = useBreakpointValue({ base: 2, md: 4 })
-  const iconSize = useBreakpointValue({ base: 4, md: 5 })
-
+/**
+ * Battle Section Header Skeleton with Tailwind CSS
+ */
+const SectionHeaderSkeleton = memo(({ title, icon: Icon, isActive = true }) => {
   return (
-    <Flex
-      bg="rgba(26, 32, 44, 0.6)"
-      borderRadius="xl"
-      borderWidth="1px"
-      borderColor="whiteAlpha.200"
-      p={padding}
-      justify="space-between"
-      align="center"
-      mb={4}
+    <div
+      className={`
+      ${QUICK_CLASH_CLASSES.glassMedium}
+      rounded-2xl
+      border border-white/20
+      p-2 md:p-4
+      flex justify-between items-center
+      mb-4
+      backdrop-brightness-110
+    `}
     >
-      <HStack spacing={3}>
+      <div className="flex items-center space-x-3">
         <Icon
-          as={icon}
-          color={isActive ? 'green.400' : 'purple.400'}
-          boxSize={iconSize}
+          className={`
+            w-4 h-4 md:w-5 md:h-5
+            ${isActive ? 'text-green-400' : QUICK_CLASH_CLASSES.tabCyan}
+          `}
         />
-        <Skeleton
-          height="20px"
-          width="120px"
-          startColor="rgba(255, 255, 255, 0.1)"
-          endColor="rgba(255, 255, 255, 0.2)"
-        />
-        <SkeletonCircle
-          size="24px"
-          startColor={
-            isActive ? 'rgba(72, 187, 120, 0.2)' : 'rgba(124, 58, 237, 0.2)'
+        <div className="h-5 w-30 bg-white/20 rounded animate-pulse" />
+        <div
+          className={`
+          w-6 h-6
+          ${
+            isActive
+              ? 'bg-green-500/20 border-green-500/40'
+              : 'bg-cyan-500/20 border-cyan-500/40'
           }
-          endColor={
-            isActive ? 'rgba(72, 187, 120, 0.4)' : 'rgba(124, 58, 237, 0.4)'
-          }
+          rounded-full animate-pulse
+        `}
         />
-      </HStack>
+      </div>
 
-      <HStack spacing={2}>
-        <SkeletonCircle
-          size="32px"
-          startColor="rgba(124, 58, 237, 0.1)"
-          endColor="rgba(124, 58, 237, 0.2)"
-        />
-        <SkeletonCircle
-          size="32px"
-          startColor="rgba(124, 58, 237, 0.1)"
-          endColor="rgba(124, 58, 237, 0.2)"
-        />
-      </HStack>
-    </Flex>
+      <div className="flex items-center space-x-2">
+        <div className="w-8 h-8 bg-cyan-500/10 border-cyan-500/20 rounded-full animate-pulse" />
+        <div className="w-8 h-8 bg-cyan-500/10 border-cyan-500/20 rounded-full animate-pulse" />
+      </div>
+    </div>
   )
 })
 
-// Main TeamBattlesSkeleton Component
+/**
+ * Main TeamBattlesSkeleton Component with Tailwind CSS
+ *
+ * Key features maintained:
+ * - Multiple skeleton variations for different UI sections
+ * - Sophisticated animation using Framer Motion
+ * - Responsive design with proper breakpoints
+ * - Color variations for different battle states
+ * - Progressive loading animations
+ * - Accessibility considerations
+ */
 const TeamBattlesSkeleton = memo(() => {
-  const containerPadding = useBreakpointValue({ base: 1, md: 4 })
-  const sectionSpacing = useBreakpointValue({ base: 4, md: 6 })
-  const headerSize = useBreakpointValue({ base: 'md', md: 'lg' })
-  const columns = useBreakpointValue({ base: 1, md: 2 })
+  const { t } = useTranslation('QuickClash')
+
+  // Responsive configuration
+  const isDesktop = useMemo(() => {
+    if (typeof window !== 'undefined') {
+      return window.innerWidth >= 768
+    }
+    return false
+  }, [])
 
   return (
-    <Box
-      width="100%"
-      maxWidth="100vw"
-      overflow="hidden"
-      px={containerPadding}
-      className="team-battles-skeleton"
+    <div
+      className={`
+      w-full max-w-full overflow-hidden
+      px-1 md:px-4
+      team-battles-skeleton
+    `}
     >
       {/* Header Stats Skeleton */}
       <HeaderStatsSkeleton />
 
       {/* Page Title Skeleton */}
-      <MotionBox
+      <MotionDiv
         initial={{ opacity: 0, y: -10 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.4 }}
-        textAlign="center"
-        mb={sectionSpacing}
+        className="text-center mb-4 md:mb-6"
       >
-        <HStack spacing={3} justify="center" mb={2}>
-          <Icon as={Users} boxSize={6} color="purple.400" />
-          <Skeleton
-            height="28px"
-            width="160px"
-            startColor="rgba(255, 255, 255, 0.1)"
-            endColor="rgba(255, 255, 255, 0.2)"
-          />
-        </HStack>
-        <Skeleton
-          height="16px"
-          width="280px"
-          mx="auto"
-          startColor="rgba(255, 255, 255, 0.05)"
-          endColor="rgba(255, 255, 255, 0.1)"
-        />
-      </MotionBox>
+        <div className="flex items-center justify-center space-x-3 mb-2">
+          <Users className={`w-6 h-6 ${QUICK_CLASH_CLASSES.tabCyan}`} />
+          <div className="h-7 w-40 bg-white/20 rounded animate-pulse" />
+        </div>
+        <div className="h-4 w-70 mx-auto bg-white/10 rounded animate-pulse" />
+      </MotionDiv>
 
-      <VStack spacing={sectionSpacing} align="stretch">
+      <div className="flex flex-col space-y-4 md:space-y-6">
         {/* Active Battles Section */}
-        <Box>
+        <div>
           <SectionHeaderSkeleton
             title="Active Battles"
             icon={Swords}
@@ -405,10 +369,10 @@ const TeamBattlesSkeleton = memo(() => {
 
           {/* Active Battle Card */}
           <BattleCardSkeleton isActive={true} index={0} />
-        </Box>
+        </div>
 
         {/* Completed Battles Section */}
-        <Box>
+        <div>
           <SectionHeaderSkeleton
             title="Completed Battles"
             icon={Trophy}
@@ -416,52 +380,49 @@ const TeamBattlesSkeleton = memo(() => {
           />
 
           {/* Date Header Skeleton */}
-          <MotionBox
+          <MotionDiv
             initial={{ opacity: 0, x: -20 }}
             animate={{ opacity: 1, x: 0 }}
             transition={{ duration: 0.3 }}
-            mb={3}
+            className="mb-3"
           >
-            <HStack
-              bg="rgba(124, 58, 237, 0.1)"
-              borderRadius="full"
-              px={4}
-              py={2}
-              borderWidth="1px"
-              borderColor="rgba(124, 58, 237, 0.3)"
-              maxW="200px"
+            <div
+              className={`
+              flex items-center space-x-2
+              ${QUICK_CLASH_CLASSES.glassLight}
+              rounded-full
+              px-4 py-2
+              border border-cyan-500/30
+              max-w-[200px]
+              bg-gradient-to-r from-cyan-500/5 to-transparent
+            `}
             >
-              <Icon as={Clock} color="purple.400" boxSize={4} />
-              <Skeleton
-                height="16px"
-                width="100px"
-                startColor="rgba(124, 58, 237, 0.2)"
-                endColor="rgba(124, 58, 237, 0.4)"
-              />
-            </HStack>
-          </MotionBox>
+              <Clock className={`w-4 h-4 ${QUICK_CLASH_CLASSES.tabCyan}`} />
+              <div className="h-4 w-24 bg-cyan-400/40 rounded animate-pulse" />
+            </div>
+          </MotionDiv>
 
           {/* Completed Battle Cards */}
-          {columns === 1 ? (
-            <VStack spacing={4}>
-              <BattleCardSkeleton isActive={false} index={0} />
-            </VStack>
-          ) : (
-            <Flex gap={4} wrap="wrap">
-              <Box flex="1" minW="300px">
+          {isDesktop ? (
+            <div className="flex gap-4 flex-wrap">
+              <div className="flex-1 min-w-[300px]">
                 <BattleCardSkeleton isActive={false} index={0} />
-              </Box>
-              <Box flex="1" minW="300px">
+              </div>
+              <div className="flex-1 min-w-[300px]">
                 <BattleCardSkeleton isActive={false} index={1} />
-              </Box>
-            </Flex>
+              </div>
+            </div>
+          ) : (
+            <div className="flex flex-col space-y-4">
+              <BattleCardSkeleton isActive={false} index={0} />
+            </div>
           )}
-        </Box>
-      </VStack>
+        </div>
+      </div>
 
       {/* Loading indicator at bottom */}
-      <Center py={6} mt={4}>
-        <MotionBox
+      <div className="flex justify-center py-6 mt-4">
+        <MotionDiv
           animate={{
             scale: [1, 1.1, 1],
             opacity: [0.5, 1, 0.5],
@@ -472,19 +433,27 @@ const TeamBattlesSkeleton = memo(() => {
             repeatType: 'reverse',
           }}
         >
-          <HStack spacing={2}>
+          <div className="flex items-center space-x-2">
             {[...Array(3)].map((_, i) => (
-              <SkeletonCircle
+              <MotionDiv
                 key={i}
-                size="8px"
-                startColor="rgba(124, 58, 237, 0.3)"
-                endColor="rgba(124, 58, 237, 0.6)"
+                className="w-2 h-2 bg-cyan-500/60 rounded-full"
+                animate={{
+                  scale: [1, 1.2, 1],
+                  opacity: [0.3, 0.8, 0.3],
+                }}
+                transition={{
+                  duration: 1,
+                  repeat: Infinity,
+                  repeatType: 'reverse',
+                  delay: i * 0.2,
+                }}
               />
             ))}
-          </HStack>
-        </MotionBox>
-      </Center>
-    </Box>
+          </div>
+        </MotionDiv>
+      </div>
+    </div>
   )
 })
 

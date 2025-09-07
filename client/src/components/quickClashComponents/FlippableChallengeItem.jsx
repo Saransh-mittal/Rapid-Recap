@@ -1,4 +1,4 @@
-// components/quickClashComponents/FlippableChallengeItem.jsx
+// components/quickClashComponents/FlippableChallengeItem.jsx - FAITHFUL CONVERSION with Consistent Color Scheme
 import React, {
   useState,
   useMemo,
@@ -9,22 +9,7 @@ import React, {
   useRef,
   memo,
 } from 'react'
-import {
-  Box,
-  VStack,
-  Text,
-  Tag,
-  HStack,
-  Button,
-  Flex,
-  Icon,
-  Center,
-  IconButton,
-  useDisclosure,
-  Spinner,
-  useBreakpointValue,
-  Skeleton,
-} from '@chakra-ui/react'
+import { motion, AnimatePresence } from 'framer-motion'
 import { useTranslation } from 'react-i18next'
 import {
   Shield,
@@ -37,7 +22,11 @@ import {
   RotateCcw,
   Zap,
   BarChart,
+  Loader2,
 } from 'lucide-react'
+
+// Import centralized color scheme
+import { QUICK_CLASH_CLASSES } from './utils/quickClashColors'
 
 // Import UI components - keep original imports
 import StatusBadge from './ui/StatusBadge'
@@ -48,19 +37,32 @@ import useQuickClash from '../../customHooks/useQuickClash'
 import EnhancedPotentialTrophyDisplay from './ui/EnhancedPotentialTrophyDisplay'
 import { useSelector } from 'react-redux'
 
-// Lazy load the analysis card - keep original lazy loading
+// You'll need to install these components:
+// npx shadcn-ui@latest add button
+// npx shadcn-ui@latest add dialog
+import { Button } from '@/components/ui/button'
+
+// Lazy load the analysis components - keep original lazy loading
 const AnalysisSummaryCard = lazy(() =>
   import('./analysisCard/AnalysisSummaryCard'),
 )
 const ChallengeAnalysisModal = lazy(() => import('./ChallengeAnalysisModal'))
 
+const MotionDiv = motion.div
+
 /**
- * Optimized FlippableChallengeItem - maintains exact original design with performance improvements
- * - Memoized expensive calculations to reduce re-renders
- * - Cached responsive values
- * - Optimized event handlers
- * - Removed unused variables and imports
- * - Keep all original styling, animations, and layout exactly the same
+ * Enhanced FlippableChallengeItem - Faithful conversion with sophisticated flip functionality
+ *
+ * Key features maintained:
+ * - Complex flip animation between front/back faces
+ * - Lazy loading of analysis components for performance
+ * - All original memoization and performance optimizations
+ * - Sophisticated responsive design
+ * - Blue-cyan harmony color scheme integration
+ * - Analysis integration with error handling and retry logic
+ * - Trophy animations and state management
+ *
+ * This is the premium version used for completed challenges where both players completed
  */
 const FlippableChallengeItem = memo(
   ({
@@ -78,14 +80,29 @@ const FlippableChallengeItem = memo(
     const [showTrophyAnimation, setShowTrophyAnimation] = useState(false)
     const [isFlipped, setIsFlipped] = useState(false)
     const [cardHeight, setCardHeight] = useState('auto')
+    const [isAnalysisOpen, setIsAnalysisOpen] = useState(false)
     const frontCardRef = useRef(null)
 
-    // Keep original responsive styling
-    const fontSize = useBreakpointValue({ base: 'xs', md: 'sm' })
-    const iconSize = useBreakpointValue({ base: 3, md: 4 })
-    const buttonSize = useBreakpointValue({ base: 'xs', md: 'sm' })
-    const padding = useBreakpointValue({ base: 2, md: 3 })
-    const spacing = useBreakpointValue({ base: 1, md: 2 })
+    // Responsive values using window size (converted from Chakra UI breakpoints)
+    const responsiveValues = useMemo(() => {
+      if (typeof window !== 'undefined') {
+        const width = window.innerWidth
+        return {
+          fontSize: width < 768 ? 'text-xs' : 'text-sm',
+          iconSize: width < 768 ? 'w-3 h-3' : 'w-4 h-4',
+          buttonSize: width < 768 ? 'sm' : 'default',
+          padding: width < 768 ? 'p-2' : 'p-3',
+          spacing: width < 768 ? 'space-y-1' : 'space-y-2',
+        }
+      }
+      return {
+        fontSize: 'text-sm',
+        iconSize: 'w-4 h-4',
+        buttonSize: 'default',
+        padding: 'p-3',
+        spacing: 'space-y-2',
+      }
+    }, [])
 
     const {
       fetchChallengeAnalysis,
@@ -96,13 +113,7 @@ const FlippableChallengeItem = memo(
       challengeAnalysesError,
     } = useQuickClash()
 
-    const {
-      isOpen: isAnalysisOpen,
-      onOpen: onAnalysisOpen,
-      onClose: onAnalysisClose,
-    } = useDisclosure()
-
-    // Memoize basic challenge properties - optimize calculations while keeping logic identical
+    // Memoize basic challenge properties - EXACTLY as original
     const {
       isChallenger,
       opponent,
@@ -153,10 +164,7 @@ const FlippableChallengeItem = memo(
 
       const isDefeat = challenge.status === 'completed' && !isWinner && !isTie
 
-      // Only show flip button for completed challenges where both players completed
       const showFlipButton = challenge.status === 'completed'
-
-      // Determine if we should show player status section
       const showPlayerStatus =
         challenge.status !== 'pending' && challenge.status !== 'rejected'
 
@@ -174,7 +182,7 @@ const FlippableChallengeItem = memo(
       }
     }, [challenge, userId])
 
-    // Memoize player data - keep original logic exactly
+    // Memoize player data - EXACTLY as original
     const { userPlayer, opponentPlayer } = useMemo(() => {
       if (!challenge || !userId) {
         return { userPlayer: null, opponentPlayer: null }
@@ -272,7 +280,6 @@ const FlippableChallengeItem = memo(
         const timer = setTimeout(() => {
           setShowTrophyAnimation(true)
         }, 500)
-
         return () => clearTimeout(timer)
       }
     }, [challenge?.trophyUpdates, isWinner, isDefeat, isTie])
@@ -303,57 +310,53 @@ const FlippableChallengeItem = memo(
       return 0
     }, [challenge, isChallenger])
 
-    // Keep original card styling logic exactly
+    // Enhanced card styling with blue-cyan color scheme - EXACTLY as original logic
     const cardStyles = useMemo(() => {
       if (!challenge)
         return {
-          borderColor: 'whiteAlpha.200',
-          boxShadow: 'none',
-          gradientOverlay: 'none',
+          borderClass: 'border-white/20',
+          shadowClass: '',
+          gradientClass: '',
         }
 
-      let borderColorStyle = 'whiteAlpha.200'
-      let boxShadowStyle = 'none'
-      let gradientOverlay = 'none'
+      let borderClass = 'border-white/20'
+      let shadowClass = ''
+      let gradientClass = ''
 
       if (challenge.status === 'completed') {
         if (isWinner) {
-          borderColorStyle = 'purple.400'
-          boxShadowStyle = '0 0 10px rgba(124, 58, 237, 0.2)'
-          gradientOverlay =
-            'linear-gradient(135deg, rgba(124, 58, 237, 0.03), transparent)'
+          borderClass = 'border-cyan-400/60'
+          shadowClass = QUICK_CLASH_CLASSES.shadowCyan
+          gradientClass = 'from-cyan-500/5 to-transparent'
         } else if (isTie) {
-          borderColorStyle = 'yellow.400'
-          gradientOverlay =
-            'linear-gradient(135deg, rgba(236, 201, 75, 0.03), transparent)'
+          borderClass = 'border-yellow-400/60'
+          shadowClass = 'shadow-lg shadow-yellow-500/20'
+          gradientClass = 'from-yellow-500/5 to-transparent'
         } else if (isDefeat) {
-          borderColorStyle = 'red.400'
-          boxShadowStyle = '0 0 10px rgba(245, 101, 101, 0.2)'
-          gradientOverlay =
-            'linear-gradient(135deg, rgba(245, 101, 101, 0.03), transparent)'
+          borderClass = 'border-red-400/60'
+          shadowClass = 'shadow-lg shadow-red-500/20'
+          gradientClass = 'from-red-500/5 to-transparent'
         }
       } else if (challenge.status === 'active' && !myAttempted) {
-        borderColorStyle = 'green.400'
-        boxShadowStyle = '0 0 8px rgba(72, 187, 120, 0.2)'
-        gradientOverlay =
-          'linear-gradient(135deg, rgba(72, 187, 120, 0.03), transparent)'
+        borderClass = 'border-green-400/60'
+        shadowClass = 'shadow-lg shadow-green-500/20'
+        gradientClass = 'from-green-500/5 to-transparent'
       } else if (challenge.status === 'pending') {
-        borderColorStyle = 'yellow.400'
-        boxShadowStyle = '0 0 8px rgba(236, 201, 75, 0.15)'
-        gradientOverlay =
-          'linear-gradient(135deg, rgba(236, 201, 75, 0.03), transparent)'
+        borderClass = 'border-yellow-400/60'
+        shadowClass = 'shadow-lg shadow-yellow-500/15'
+        gradientClass = 'from-yellow-500/5 to-transparent'
       }
 
       return {
-        borderColor: borderColorStyle,
-        boxShadow: boxShadowStyle,
-        gradientOverlay,
+        borderClass,
+        shadowClass,
+        gradientClass,
       }
     }, [challenge, isWinner, isTie, isDefeat, myAttempted])
 
     // Keep original category style calculation
     const getCategoryStyle = useCallback(() => {
-      if (!challenge) return 'purple'
+      if (!challenge) return 'cyan'
 
       const categoryColors = {
         World: 'blue',
@@ -366,18 +369,22 @@ const FlippableChallengeItem = memo(
         Environment: 'green',
       }
 
-      return categoryColors[challenge.category] || 'purple'
+      return categoryColors[challenge.category] || 'cyan'
     }, [challenge])
 
-    // Optimized event handlers with useCallback
+    // Optimized event handlers with useCallback - EXACTLY as original
     const handleFlip = useCallback(e => {
       if (e) e.stopPropagation()
       setIsFlipped(prev => !prev)
     }, [])
 
     const handleViewAnalysis = useCallback(() => {
-      onAnalysisOpen()
-    }, [onAnalysisOpen])
+      setIsAnalysisOpen(true)
+    }, [])
+
+    const handleAnalysisClose = useCallback(() => {
+      setIsAnalysisOpen(false)
+    }, [])
 
     const handleRetryAnalysis = useCallback(() => {
       retryAnalysisFetch(challenge._id)
@@ -405,419 +412,434 @@ const FlippableChallengeItem = memo(
       }
     }, [onRevenge, opponent, isDefeat, challenge])
 
-    // Keep original category tag exactly
-    const CategoryTag = useMemo(() => {
-      if (!challenge) return null
-
-      return (
-        <Tag
-          size="sm"
-          colorScheme={getCategoryStyle()}
-          borderRadius="full"
-          px={2}
-        >
-          <Icon as={Target} size={12} mr={1} />
-          {challenge.category}
-        </Tag>
-      )
-    }, [getCategoryStyle, challenge])
-
-    // Keep original skeleton fallback
+    // Enhanced skeleton fallback with Tailwind
     if (!challenge) {
       return (
-        <Box
-          borderRadius="lg"
-          borderWidth="1px"
-          borderColor="whiteAlpha.200"
-          overflow="hidden"
-          bg="rgba(26, 32, 44, 0.5)"
+        <div
+          className={`
+          ${QUICK_CLASH_CLASSES.glassMedium}
+          rounded-2xl
+          border border-white/20
+          overflow-hidden
+          ${responsiveValues.padding}
+        `}
         >
-          <Flex
-            p={padding}
-            justify="space-between"
-            align="center"
-            borderBottom="1px solid"
-            borderColor="whiteAlpha.100"
-          >
-            <Skeleton height="20px" width="100px" borderRadius="md" />
-            <Skeleton height="24px" width="24px" borderRadius="full" />
-          </Flex>
-
-          <Box p={padding}>
-            <VStack spacing={2} align="stretch">
-              <Skeleton height="24px" width="100%" borderRadius="md" mb={1} />
-              <Skeleton height="18px" width="80%" borderRadius="md" />
-              <Skeleton height="10px" width="100%" borderRadius="md" my={2} />
-              <Skeleton height="24px" width="100%" borderRadius="md" mb={1} />
-              <Skeleton height="18px" width="80%" borderRadius="md" />
-            </VStack>
-
-            <Flex justify="center" mt={4}>
-              <Skeleton height="32px" width="180px" borderRadius="md" />
-            </Flex>
-          </Box>
-        </Box>
+          {/* Skeleton content - same as ChallengeItem */}
+          <div className="flex justify-between items-center border-b border-white/10 pb-3 mb-3">
+            <div className="h-5 w-24 bg-white/20 rounded-lg animate-pulse" />
+            <div className="h-6 w-6 bg-white/20 rounded-full animate-pulse" />
+          </div>
+          <div className={responsiveValues.spacing}>
+            <div className="h-6 w-full bg-white/20 rounded-lg animate-pulse mb-2" />
+            <div className="h-4 w-4/5 bg-white/20 rounded-lg animate-pulse" />
+            <div className="h-2 w-full bg-white/10 rounded-full my-3 animate-pulse" />
+            <div className="h-6 w-full bg-white/20 rounded-lg animate-pulse mb-2" />
+            <div className="h-4 w-4/5 bg-white/20 rounded-lg animate-pulse" />
+          </div>
+          <div className="flex justify-center mt-4">
+            <div className="h-8 w-44 bg-white/20 rounded-lg animate-pulse" />
+          </div>
+        </div>
       )
     }
 
     return (
-      <Box
-        className="flippable-challenge-item"
+      <MotionDiv
+        initial={{ opacity: 0, y: 20 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.3, delay: index * 0.05 }}
+        className={`
+          flippable-challenge-item
+          relative
+          transition-all duration-300
+          ${isFlipped ? '' : 'hover:-translate-y-1 hover:shadow-xl'}
+        `}
+        style={{ height: isFlipped ? cardHeight : 'auto' }}
         data-testid="flippable-challenge-item"
-        position="relative"
-        height={isFlipped ? cardHeight : 'auto'}
-        transition="all 0.2s"
-        _hover={{
-          transform: isFlipped ? 'none' : 'translateY(-2px)',
-          boxShadow: isFlipped ? 'none' : '0 6px 12px rgba(0, 0, 0, 0.1)',
-        }}
       >
-        {!isFlipped ? (
-          // FRONT FACE - Keep original structure exactly
-          <Box
-            ref={frontCardRef}
-            bg="rgba(26, 32, 44, 0.8)"
-            borderRadius="lg"
-            overflow="hidden"
-            borderWidth="1px"
-            borderColor={cardStyles.borderColor}
-            boxShadow={cardStyles.boxShadow}
-            position="relative"
-            height="100%"
-            transition="all 0.2s"
-            _before={{
-              content: '""',
-              position: 'absolute',
-              top: 0,
-              left: 0,
-              right: 0,
-              bottom: 0,
-              background: cardStyles.gradientOverlay,
-              opacity: 0.7,
-              pointerEvents: 'none',
-              borderRadius: 'lg',
-            }}
-          >
-            {/* Card Header - Keep original logic */}
-            {challenge.status !== 'completed' && (
-              <Flex
-                p={padding}
-                justify="space-between"
-                align="center"
-                borderBottomWidth="1px"
-                borderBottomColor="whiteAlpha.100"
-                bg="rgba(45, 55, 72, 0.3)"
-              >
-                <StatusBadge
-                  status={challenge.status}
-                  isChallenger={isChallenger}
-                  expiresAt={challenge.expiresAt}
+        <AnimatePresence mode="wait">
+          {!isFlipped ? (
+            // FRONT FACE - Keep original structure exactly
+            <MotionDiv
+              key="front"
+              ref={frontCardRef}
+              initial={{ rotateY: 0 }}
+              animate={{ rotateY: 0 }}
+              exit={{ rotateY: -90 }}
+              transition={{ duration: 0.3 }}
+              className={`
+                ${QUICK_CLASH_CLASSES.glassMedium}
+                rounded-2xl
+                overflow-hidden
+                border-2
+                ${cardStyles.borderClass}
+                ${cardStyles.shadowClass}
+                relative
+                h-full
+                backdrop-brightness-110
+              `}
+            >
+              {/* Gradient overlay */}
+              {cardStyles.gradientClass && (
+                <div
+                  className={`
+                  absolute inset-0
+                  bg-gradient-to-br ${cardStyles.gradientClass}
+                  opacity-70
+                  pointer-events-none
+                  rounded-2xl
+                `}
                 />
-              </Flex>
-            )}
-
-            {/* Card Body - Keep original structure */}
-            <Box p={padding}>
-              {/* Player Status Section - Keep original exactly */}
-              {showPlayerStatus && userPlayer && opponentPlayer && (
-                <VStack spacing={spacing} align="stretch" mb={2}>
-                  <PlayerStatus
-                    player={
-                      isChallenger ? challenge.challenger : challenge.opponent
-                    }
-                    score={
-                      isChallenger
-                        ? challenge.challengerScore
-                        : challenge.opponentScore
-                    }
-                    attempted={
-                      isChallenger
-                        ? challenge.challengerAttempted
-                        : challenge.opponentAttempted
-                    }
-                    isUser={true}
-                    trophies={
-                      isChallenger
-                        ? challenge.challenger.quickClashTrophies
-                        : challenge.opponent.quickClashTrophies
-                    }
-                    trophyChange={getTrophyChange()}
-                    showTrophyAnimation={showTrophyAnimation}
-                    protectionApplied={
-                      challenge.trophyUpdates?.protectionApplied &&
-                      (isChallenger
-                        ? challenge.trophyUpdates.protectionApplied.challenger
-                        : challenge.trophyUpdates.protectionApplied.opponent)
-                    }
-                    isTie={isTie}
-                  />
-
-                  {/* VS Line - Keep original */}
-                  <VSLine
-                    category={
-                      challenge.status === 'active' ? challenge.category : null
-                    }
-                    categoryColorScheme={getCategoryStyle()}
-                    isActiveChallenge={challenge.status === 'active'}
-                    myAttempted={myAttempted}
-                  />
-
-                  <PlayerStatus
-                    player={opponent}
-                    score={
-                      isChallenger
-                        ? challenge.opponentScore
-                        : challenge.challengerScore
-                    }
-                    attempted={
-                      isChallenger
-                        ? challenge.opponentAttempted
-                        : challenge.challengerAttempted
-                    }
-                    isUser={false}
-                    trophies={opponent.quickClashTrophies}
-                    trophyChange={undefined}
-                    showTrophyAnimation={false}
-                    protectionApplied={false}
-                    isTie={false}
-                  />
-                </VStack>
               )}
 
-              {/* Actions */}
-              <Flex
-                justify="center"
-                mt={3}
-                p={2}
-                bg="whiteAlpha.50"
-                borderRadius="md"
-              >
-                {myAttempted ? (
-                  <HStack spacing={3}>
-                    {/* ENHANCED "View Report" Button */}
-                    <Button
-                      size={buttonSize}
-                      leftIcon={<FileText size={14} />}
-                      onClick={handleViewReport}
-                      bg="transparent"
-                      color="purple.300"
-                      borderColor="purple.400"
-                      borderWidth="1px"
-                      fontWeight="bold"
-                      boxShadow="0px 0px 8px rgba(147, 51, 234, 0.3), inset 0px 0px 4px rgba(147, 51, 234, 0.2)"
-                      transition="all 0.3s ease"
-                      _hover={{
-                        bg: 'rgba(147, 51, 234, 0.15)',
-                        color: 'white',
-                        borderColor: 'purple.300',
-                        transform: 'scale(1.05)',
-                        boxShadow:
-                          '0px 0px 16px rgba(147, 51, 234, 0.5), inset 0px 0px 6px rgba(147, 51, 234, 0.3)',
-                      }}
-                      _active={{
-                        transform: 'scale(1.0)',
-                        bg: 'rgba(147, 51, 234, 0.25)',
-                      }}
-                    >
-                      {t('View Report')}
-                    </Button>
+              {/* Card Header - Only show for non-completed challenges */}
+              {challenge.status !== 'completed' && (
+                <div
+                  className={`
+                  flex justify-between items-center
+                  ${responsiveValues.padding}
+                  border-b border-white/10
+                  ${QUICK_CLASH_CLASSES.glassSoft}
+                  relative z-10
+                `}
+                >
+                  <StatusBadge
+                    status={challenge.status}
+                    isChallenger={isChallenger}
+                    expiresAt={challenge.expiresAt}
+                  />
+                </div>
+              )}
 
-                    {/* ENHANCED "Analysis" Button */}
-                    {showFlipButton && (
-                      <Button
-                        size={buttonSize}
-                        leftIcon={<BarChart size={14} />}
-                        onClick={handleFlip}
-                        bg="transparent"
-                        color="blue.300"
-                        borderColor="blue.400"
-                        borderWidth="1px"
-                        fontWeight="bold"
-                        boxShadow="0px 0px 8px rgba(59, 130, 246, 0.3), inset 0px 0px 4px rgba(59, 130, 246, 0.2)"
-                        transition="all 0.3s ease"
-                        _hover={{
-                          bg: 'rgba(59, 130, 246, 0.15)',
-                          color: 'white',
-                          borderColor: 'blue.300',
-                          transform: 'scale(1.05)',
-                          boxShadow:
-                            '0px 0px 16px rgba(59, 130, 246, 0.5), inset 0px 0px 6px rgba(59, 130, 246, 0.3)',
-                        }}
-                        _active={{
-                          transform: 'scale(1.0)',
-                          bg: 'rgba(59, 130, 246, 0.25)',
-                        }}
-                      >
-                        {t('Analysis')}
-                      </Button>
-                    )}
-                  </HStack>
-                ) : challenge.status === 'pending' && !isChallenger ? (
-                  <HStack spacing={3}>
-                    <Button
-                      size={buttonSize}
-                      colorScheme="green"
-                      onClick={handleAccept}
-                      leftIcon={<Check size={14} />}
-                      fontWeight="medium"
-                      boxShadow="0 0 6px rgba(72, 187, 120, 0.3)"
-                      _hover={{
-                        boxShadow: '0 0 8px rgba(72, 187, 120, 0.5)',
-                      }}
-                    >
-                      {t('Accept')}
-                    </Button>
-                    <Button
-                      size={buttonSize}
-                      variant="outline"
-                      colorScheme="red"
-                      onClick={handleDecline}
-                      leftIcon={<X size={14} />}
-                      fontWeight="medium"
-                    >
-                      {t('Decline')}
-                    </Button>
-                  </HStack>
-                ) : challenge.status === 'active' && !myAttempted ? (
-                  <Flex align="center" gap={spacing}>
-                    <EnhancedPotentialTrophyDisplay
-                      potentialGain={getTrophyPotential()}
-                      size={fontSize}
-                      compact={true}
+              {/* Card Body */}
+              <div className={`${responsiveValues.padding} relative z-10`}>
+                {/* Player Status Section - EXACTLY as original */}
+                {showPlayerStatus && userPlayer && opponentPlayer && (
+                  <div className={`${responsiveValues.spacing} mb-3`}>
+                    <PlayerStatus
+                      player={
+                        isChallenger ? challenge.challenger : challenge.opponent
+                      }
+                      score={
+                        isChallenger
+                          ? challenge.challengerScore
+                          : challenge.opponentScore
+                      }
+                      attempted={
+                        isChallenger
+                          ? challenge.challengerAttempted
+                          : challenge.opponentAttempted
+                      }
+                      isUser={true}
+                      trophies={
+                        isChallenger
+                          ? challenge.challenger.quickClashTrophies
+                          : challenge.opponent.quickClashTrophies
+                      }
+                      trophyChange={getTrophyChange()}
+                      showTrophyAnimation={showTrophyAnimation}
+                      protectionApplied={
+                        challenge.trophyUpdates?.protectionApplied &&
+                        (isChallenger
+                          ? challenge.trophyUpdates.protectionApplied.challenger
+                          : challenge.trophyUpdates.protectionApplied.opponent)
+                      }
+                      isTie={isTie}
                     />
 
-                    <Button
-                      size={buttonSize}
-                      colorScheme="green"
-                      onClick={handleStart}
-                      leftIcon={<PlayCircle size={14} />}
-                      fontWeight="bold"
-                      px={4}
-                      boxShadow="0 0 8px rgba(72, 187, 120, 0.3)"
-                      _hover={{
-                        boxShadow: '0 0 12px rgba(72, 187, 120, 0.5)',
-                        transform: 'translateY(-1px)',
-                      }}
-                      _active={{ transform: 'translateY(0)' }}
-                    >
-                      {t('Start')}
-                    </Button>
-                  </Flex>
-                ) : null}
-              </Flex>
-            </Box>
+                    {/* VS Line */}
+                    <VSLine
+                      category={
+                        challenge.status === 'active'
+                          ? challenge.category
+                          : null
+                      }
+                      categoryColorScheme={getCategoryStyle()}
+                      isActiveChallenge={challenge.status === 'active'}
+                      myAttempted={myAttempted}
+                    />
 
-            {/* Result Banner - Keep original exactly */}
-            {challenge.status === 'completed' &&
-              challenge.challengerAttempted &&
-              challenge.opponentAttempted && (
-                <ResultBanner
-                  isWinner={isWinner}
-                  isTie={isTie}
-                  isDefeat={isDefeat}
-                  expiresAt={challenge.expiresAt}
-                  category={challenge.category}
-                  onRevenge={isDefeat ? handleRevenge : null}
-                  revengeStatus={challenge.revengeStatus}
-                  revengeLoading={revengeLoading}
-                />
-              )}
-          </Box>
-        ) : (
-          // BACK FACE - Keep original structure exactly
-          <Box
-            bg="rgba(26, 32, 44, 0.95)"
-            borderRadius="lg"
-            overflow="hidden"
-            borderWidth="1px"
-            borderColor={cardStyles.borderColor}
-            boxShadow={cardStyles.boxShadow}
-            position="relative"
-            height="100%"
-          >
-            {/* Keep original flip back button exactly */}
-            <IconButton
-              icon={<RotateCcw size={18} />}
-              aria-label={t('View Challenge')}
-              size="sm"
-              colorScheme="blue"
-              bg="rgba(66, 153, 225, 0.3)"
-              position="absolute"
-              top={2}
-              right={2}
-              zIndex={10}
-              onClick={handleFlip}
-              borderRadius="full"
-              boxShadow="0 0 8px rgba(66, 153, 225, 0.4)"
-              _hover={{
-                bg: 'rgba(66, 153, 225, 0.5)',
-                boxShadow: '0 0 10px rgba(66, 153, 225, 0.6)',
-                transform: 'rotate(-180deg)',
-              }}
-              transition="all 0.3s"
-              title={t('View Challenge')}
-            />
+                    <PlayerStatus
+                      player={opponent}
+                      score={
+                        isChallenger
+                          ? challenge.opponentScore
+                          : challenge.challengerScore
+                      }
+                      attempted={
+                        isChallenger
+                          ? challenge.opponentAttempted
+                          : challenge.challengerAttempted
+                      }
+                      isUser={false}
+                      trophies={opponent.quickClashTrophies}
+                      trophyChange={undefined}
+                      showTrophyAnimation={false}
+                      protectionApplied={false}
+                      isTie={false}
+                    />
+                  </div>
+                )}
 
-            {/* Analysis Summary Card - Keep original fallback exactly */}
-            <Suspense
-              fallback={
-                <Center p={6} height="100%">
-                  <VStack spacing={4}>
-                    <Icon as={Zap} color="purple.400" boxSize={6} />
-                    <Text color="white" textAlign="center" fontSize={fontSize}>
-                      {t('Analyzing challenge data...')}
-                    </Text>
-                    <Spinner color="purple.400" size="md" thickness="2px" />
-                  </VStack>
-                </Center>
-              }
+                {/* Actions Section */}
+                <div
+                  className={`
+                  flex justify-center
+                  mt-4
+                  p-3
+                  ${QUICK_CLASH_CLASSES.glassLight}
+                  rounded-xl
+                  border border-white/5
+                `}
+                >
+                  {myAttempted ? (
+                    <div className="flex items-center space-x-3">
+                      {/* Enhanced "View Report" Button */}
+                      <Button
+                        size={responsiveValues.buttonSize}
+                        onClick={handleViewReport}
+                        className={`
+                          bg-transparent
+                          ${QUICK_CLASH_CLASSES.textSecondary}
+                          border-2 border-cyan-400/40
+                          hover:bg-cyan-500/15
+                          hover:text-white
+                          hover:border-cyan-300/60
+                          hover:scale-105
+                          transition-all duration-300
+                          ${QUICK_CLASH_CLASSES.shadowCyan}
+                          ${QUICK_CLASH_CLASSES.focusRing}
+                          font-bold
+                          rounded-lg
+                        `}
+                      >
+                        <FileText
+                          className={`${responsiveValues.iconSize} mr-2`}
+                        />
+                        {t('View Report')}
+                      </Button>
+
+                      {/* Enhanced "Analysis" Button */}
+                      {showFlipButton && (
+                        <Button
+                          size={responsiveValues.buttonSize}
+                          onClick={handleFlip}
+                          className={`
+                            bg-transparent
+                            text-blue-300
+                            border-2 border-blue-400/40
+                            hover:bg-blue-500/15
+                            hover:text-white
+                            hover:border-blue-300/60
+                            hover:scale-105
+                            transition-all duration-300
+                            shadow-lg shadow-blue-500/30
+                            hover:shadow-blue-500/50
+                            ${QUICK_CLASH_CLASSES.focusRing}
+                            font-bold
+                            rounded-lg
+                          `}
+                        >
+                          <BarChart
+                            className={`${responsiveValues.iconSize} mr-2`}
+                          />
+                          {t('Analysis')}
+                        </Button>
+                      )}
+                    </div>
+                  ) : challenge.status === 'pending' && !isChallenger ? (
+                    <div className="flex items-center space-x-3">
+                      <Button
+                        size={responsiveValues.buttonSize}
+                        onClick={handleAccept}
+                        className={`
+                          ${QUICK_CLASH_CLASSES.btnSuccess}
+                          rounded-lg
+                          font-medium
+                          transition-all duration-200
+                          hover:scale-105
+                          shadow-lg shadow-green-500/30
+                          hover:shadow-green-500/50
+                          ${QUICK_CLASH_CLASSES.focusRing}
+                        `}
+                      >
+                        <Check
+                          className={`${responsiveValues.iconSize} mr-2`}
+                        />
+                        {t('Accept')}
+                      </Button>
+                      <Button
+                        size={responsiveValues.buttonSize}
+                        onClick={handleDecline}
+                        variant="outline"
+                        className={`
+                          ${QUICK_CLASH_CLASSES.glassMedium}
+                          ${QUICK_CLASH_CLASSES.textPrimary}
+                          border-red-400/40
+                          hover:bg-red-500/10
+                          hover:border-red-400/60
+                          hover:text-red-300
+                          rounded-lg
+                          transition-all duration-200
+                          ${QUICK_CLASH_CLASSES.focusRing}
+                        `}
+                      >
+                        <X className={`${responsiveValues.iconSize} mr-2`} />
+                        {t('Decline')}
+                      </Button>
+                    </div>
+                  ) : challenge.status === 'active' && !myAttempted ? (
+                    <div className="flex items-center gap-3">
+                      <EnhancedPotentialTrophyDisplay
+                        potentialGain={getTrophyPotential()}
+                        size={responsiveValues.fontSize}
+                        compact={true}
+                      />
+
+                      <Button
+                        size={responsiveValues.buttonSize}
+                        onClick={handleStart}
+                        className={`
+                          ${QUICK_CLASH_CLASSES.btnSuccess}
+                          rounded-lg
+                          font-bold
+                          px-6
+                          transition-all duration-200
+                          hover:scale-105
+                          hover:-translate-y-0.5
+                          shadow-lg shadow-green-500/30
+                          hover:shadow-green-500/50
+                          ${QUICK_CLASH_CLASSES.focusRing}
+                        `}
+                      >
+                        <PlayCircle
+                          className={`${responsiveValues.iconSize} mr-2`}
+                        />
+                        {t('Start')}
+                      </Button>
+                    </div>
+                  ) : null}
+                </div>
+              </div>
+
+              {/* Result Banner - Keep original exactly */}
+              {challenge.status === 'completed' &&
+                challenge.challengerAttempted &&
+                challenge.opponentAttempted && (
+                  <ResultBanner
+                    isWinner={isWinner}
+                    isTie={isTie}
+                    isDefeat={isDefeat}
+                    expiresAt={challenge.expiresAt}
+                    category={challenge.category}
+                    onRevenge={isDefeat ? handleRevenge : null}
+                    revengeStatus={challenge.revengeStatus}
+                    revengeLoading={revengeLoading}
+                  />
+                )}
+            </MotionDiv>
+          ) : (
+            // BACK FACE - Keep original structure exactly
+            <MotionDiv
+              key="back"
+              initial={{ rotateY: 90 }}
+              animate={{ rotateY: 0 }}
+              exit={{ rotateY: 90 }}
+              transition={{ duration: 0.3 }}
+              className={`
+                ${QUICK_CLASH_CLASSES.glassMedium}
+                rounded-2xl
+                overflow-hidden
+                border-2
+                ${cardStyles.borderClass}
+                ${cardStyles.shadowClass}
+                relative
+                h-full
+                backdrop-brightness-110
+              `}
             >
-              <Box height="100%">
-                <AnalysisSummaryCard
-                  challenge={challenge}
-                  analysis={analysis}
-                  userId={userId}
-                  isLoading={isAnalysisLoading}
-                  isError={!!analysisError}
-                  errorMessage={analysisError}
-                  onViewFull={handleViewAnalysis}
-                  onRetry={handleRetryAnalysis}
-                />
-              </Box>
-            </Suspense>
-          </Box>
-        )}
+              {/* Enhanced flip back button */}
+              <button
+                onClick={handleFlip}
+                className={`
+                  absolute top-2 right-2 z-10
+                  w-10 h-10
+                  ${QUICK_CLASH_CLASSES.glassMedium}
+                  hover:bg-blue-500/20
+                  border border-blue-400/30
+                  hover:border-blue-300/50
+                  rounded-full
+                  flex items-center justify-center
+                  transition-all duration-300
+                  hover:scale-110
+                  hover:rotate-180
+                  ${QUICK_CLASH_CLASSES.shadowBlue}
+                  hover:shadow-blue-500/60
+                  ${QUICK_CLASH_CLASSES.focusRing}
+                `}
+                aria-label={t('View Challenge')}
+                title={t('View Challenge')}
+              >
+                <RotateCcw className="w-4 h-4 text-blue-300 hover:text-white transition-colors" />
+              </button>
+
+              {/* Analysis Summary Card with enhanced fallback */}
+              <Suspense
+                fallback={
+                  <div className="flex flex-col items-center justify-center h-full p-6 space-y-4">
+                    <Zap className={`w-8 h-8 ${QUICK_CLASH_CLASSES.tabCyan}`} />
+                    <p
+                      className={`${QUICK_CLASH_CLASSES.textPrimary} text-center ${responsiveValues.fontSize}`}
+                    >
+                      {t('Analyzing challenge data...')}
+                    </p>
+                    <Loader2
+                      className={`w-6 h-6 ${QUICK_CLASH_CLASSES.tabCyan} animate-spin`}
+                    />
+                  </div>
+                }
+              >
+                <div className="h-full">
+                  <AnalysisSummaryCard
+                    challenge={challenge}
+                    analysis={analysis}
+                    userId={userId}
+                    isLoading={isAnalysisLoading}
+                    isError={!!analysisError}
+                    errorMessage={analysisError}
+                    onViewFull={handleViewAnalysis}
+                    onRetry={handleRetryAnalysis}
+                  />
+                </div>
+              </Suspense>
+            </MotionDiv>
+          )}
+        </AnimatePresence>
 
         {/* Analysis Modal - Keep original exactly */}
         {isAnalysisOpen && (
           <Suspense
             fallback={
-              <Center
-                position="fixed"
-                top="0"
-                left="0"
-                right="0"
-                bottom="0"
-                bg="rgba(0,0,0,0.7)"
-                zIndex="modal"
-              >
-                <VStack spacing={4}>
-                  <Spinner size="lg" color="blue.500" thickness="3px" />
-                  <Text color="white" fontWeight="medium">
+              <div className="fixed inset-0 bg-black/70 flex items-center justify-center z-[100]">
+                <div className="flex flex-col items-center space-y-4">
+                  <Loader2 className="w-8 h-8 text-blue-400 animate-spin" />
+                  <p
+                    className={`${QUICK_CLASH_CLASSES.textPrimary} font-medium`}
+                  >
                     {t('Loading analysis...')}
-                  </Text>
-                </VStack>
-              </Center>
+                  </p>
+                </div>
+              </div>
             }
           >
             <ChallengeAnalysisModal
               isOpen={isAnalysisOpen}
-              onClose={onAnalysisClose}
+              onClose={handleAnalysisClose}
               challengeId={challenge._id}
             />
           </Suspense>
         )}
-      </Box>
+      </MotionDiv>
     )
   },
 )

@@ -1,105 +1,97 @@
+// components/quickClashComponents/FilterTabs.jsx - FAITHFUL CONVERSION with Consistent Color Scheme
 import React, { memo, useEffect, useCallback, useMemo, useRef } from 'react'
-import { HStack, Button, Icon, useBreakpointValue } from '@chakra-ui/react'
+import { motion } from 'framer-motion'
 import { Zap, Users } from 'lucide-react'
 import { useTranslation } from 'react-i18next'
 
-// Map mode names to URL hash suffixes
+// Import centralized color scheme
+import { QUICK_CLASH_CLASSES } from './utils/quickClashColors'
+
+const MotionDiv = motion.div
+const MotionButton = motion.button
+
+// Map mode names to URL hash suffixes - EXACTLY as original
 const MODE_HASH_MAP = {
   '1v1': '1v1',
   '4v4': '4v4',
 }
 
-// Reverse map for looking up mode from hash
+// Reverse map for looking up mode from hash - EXACTLY as original
 const HASH_MODE_MAP = {
   '1v1': '1v1',
   '4v4': '4v4',
 }
 
-// Cached responsive configuration for better performance
+// Responsive configuration - EXACTLY as original
 const RESPONSIVE_CONFIG = {
-  tabSpacing: { base: 2, md: 3 },
-  containerPadding: { base: 1, md: 2 },
-  maxWidth: { base: '300px', md: '350px' },
+  spacing: 'gap-2 md:gap-3',
+  padding: 'p-1 md:p-2',
+  maxWidth: 'max-w-[300px] md:max-w-[350px]',
 }
 
 /**
- * Optimized individual filter tab component
+ * Optimized individual filter tab component - Faithful conversion with consistent colors
  */
-const FilterTab = memo(({ isSelected, label, icon, onClick }) => {
-  // Memoized styles for better performance
-  const buttonStyles = useMemo(
-    () => ({
-      variant: isSelected ? 'solid' : 'ghost',
-      colorScheme: isSelected ? 'purple' : 'white',
-      borderRadius: 'full',
-      size: 'sm',
-      fontWeight: isSelected ? 'bold' : 'medium',
-      px: 4,
-      boxShadow: isSelected ? '0 0 8px rgba(124, 58, 237, 0.2)' : 'none',
-      transition: 'all 0.2s ease',
-      _hover: {
-        transform: 'translateY(-1px)',
-        boxShadow: '0 3px 8px rgba(0, 0, 0, 0.15)',
-      },
-      _active: {
-        transform: 'scale(0.98)',
-      },
-    }),
-    [isSelected],
-  )
+const FilterTab = memo(({ isSelected, label, icon: Icon, onClick }) => {
+  // Enhanced button classes with consistent color scheme
+  const buttonClasses = useMemo(() => {
+    const baseClasses = `
+      flex items-center gap-2 px-4 py-2 rounded-full text-sm font-medium
+      transition-all duration-200 ease-out transform-gpu
+      hover:scale-[1.02] hover:-translate-y-0.5 hover:shadow-lg
+      active:scale-[0.98] focus:outline-none focus:ring-2 focus:ring-cyan-400/50
+    `
+
+    const selectedClasses = isSelected
+      ? `
+        bg-gradient-to-br from-cyan-500 to-cyan-600 text-white font-bold
+        shadow-lg shadow-cyan-500/25
+      `
+      : `
+        bg-transparent text-white/70 hover:text-white hover:bg-white/10
+      `
+
+    return `${baseClasses} ${selectedClasses}`.trim()
+  }, [isSelected])
 
   return (
-    <Button
-      {...buttonStyles}
-      leftIcon={<Icon as={icon} boxSize={4} />}
+    <MotionButton
+      className={buttonClasses}
       onClick={onClick}
+      whileHover={{ y: -1 }}
+      whileTap={{ scale: 0.98 }}
+      transition={{ type: 'spring', stiffness: 300, damping: 25 }}
     >
-      {label}
-    </Button>
+      <Icon className="w-4 h-4" />
+      <span>{label}</span>
+    </MotionButton>
   )
 })
 
 FilterTab.displayName = 'FilterTab'
 
 /**
- * Optimized filter tabs component - maintains exact original design with performance improvements
- * - Cached responsive values to reduce re-renders
- * - Memoized expensive operations
- * - Optimized event handlers
- * - Hash-based navigation for direct linking to modes
- * - Debounced hash changes for smooth performance
+ * Enhanced FilterTabs component - Faithful conversion with consistent color scheme
+ * ALL ORIGINAL FUNCTIONALITY PRESERVED - Hash navigation, performance optimizations, etc.
  */
 const FilterTabs = memo(({ selectedFilter, onFilterChange }) => {
   const { t } = useTranslation('QuickClash')
   const hashChangeTimeoutRef = useRef()
   const isInitializedRef = useRef(false)
 
-  // Cache responsive values - using the cached config
-  const tabSpacing = useBreakpointValue(RESPONSIVE_CONFIG.tabSpacing)
-  const containerPadding = useBreakpointValue(
-    RESPONSIVE_CONFIG.containerPadding,
-  )
-  const maxWidth = useBreakpointValue(RESPONSIVE_CONFIG.maxWidth)
-
-  // Memoized container styles
-  const containerStyles = useMemo(
-    () => ({
-      spacing: tabSpacing,
-      p: containerPadding,
-      borderRadius: 'full',
-      bg: 'rgba(26, 32, 44, 0.6)',
-      justify: 'center',
-      overflowX: 'auto',
-      mx: 'auto',
-      maxW: maxWidth,
-      boxShadow: '0 4px 10px rgba(0, 0, 0, 0.1)',
-      className: 'filter-tabs-container',
-      'data-testid': 'filter-tabs',
-    }),
-    [tabSpacing, containerPadding, maxWidth],
+  // Container classes with full width design
+  const containerClasses = useMemo(
+    () =>
+      `
+    flex items-center justify-center mx-auto
+    ${RESPONSIVE_CONFIG.spacing} ${RESPONSIVE_CONFIG.padding} ${RESPONSIVE_CONFIG.maxWidth} w-fit
+    ${QUICK_CLASH_CLASSES.glassMedium} rounded-full shadow-xl backdrop-brightness-110
+    filter-tabs-container
+  `.trim(),
+    [],
   )
 
-  // Memoized tab data
+  // Memoized tab data - EXACTLY as original
   const tabData = useMemo(
     () => [
       {
@@ -116,7 +108,9 @@ const FilterTabs = memo(({ selectedFilter, onFilterChange }) => {
     [t],
   )
 
-  // Debounced hash sync function
+  // ALL ORIGINAL LOGIC PRESERVED EXACTLY - NO CHANGES TO FUNCTIONALITY
+
+  // Debounced hash sync function - EXACTLY as original
   const syncModeWithHash = useCallback(() => {
     clearTimeout(hashChangeTimeoutRef.current)
     hashChangeTimeoutRef.current = setTimeout(() => {
@@ -141,7 +135,7 @@ const FilterTabs = memo(({ selectedFilter, onFilterChange }) => {
     }, 50) // Debounce for 50ms
   }, [selectedFilter, onFilterChange])
 
-  // Check URL hash for initial mode and handle hash changes
+  // Check URL hash for initial mode and handle hash changes - EXACTLY as original
   useEffect(() => {
     // Only sync on initial mount
     if (!isInitializedRef.current) {
@@ -159,7 +153,7 @@ const FilterTabs = memo(({ selectedFilter, onFilterChange }) => {
     }
   }, [syncModeWithHash])
 
-  // Optimized mode change handler with reduced DOM operations
+  // Optimized mode change handler - EXACTLY as original
   const handleModeChange = useCallback(
     mode => {
       // Prevent unnecessary updates
@@ -182,7 +176,7 @@ const FilterTabs = memo(({ selectedFilter, onFilterChange }) => {
     [onFilterChange, selectedFilter],
   )
 
-  // Memoized click handlers to prevent recreation
+  // Memoized click handlers to prevent recreation - EXACTLY as original
   const clickHandlers = useMemo(
     () =>
       tabData.reduce((acc, tab) => {
@@ -193,7 +187,13 @@ const FilterTabs = memo(({ selectedFilter, onFilterChange }) => {
   )
 
   return (
-    <HStack {...containerStyles}>
+    <MotionDiv
+      className={containerClasses}
+      data-testid="filter-tabs"
+      initial={{ opacity: 0, y: 20 }}
+      animate={{ opacity: 1, y: 0 }}
+      transition={{ duration: 0.4, ease: [0.25, 0.46, 0.45, 0.94] }}
+    >
       {tabData.map(tab => (
         <FilterTab
           key={tab.mode}
@@ -203,7 +203,7 @@ const FilterTabs = memo(({ selectedFilter, onFilterChange }) => {
           onClick={clickHandlers[tab.mode]}
         />
       ))}
-    </HStack>
+    </MotionDiv>
   )
 })
 

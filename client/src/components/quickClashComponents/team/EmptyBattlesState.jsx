@@ -1,15 +1,5 @@
+// components/quickClashComponents/team/EmptyBattlesState.jsx - FAITHFUL CONVERSION to Tailwind CSS
 import React, { memo } from 'react'
-import {
-  Box,
-  VStack,
-  Button,
-  Text,
-  Icon,
-  Center,
-  Heading,
-  useBreakpointValue,
-  Flex,
-} from '@chakra-ui/react'
 import { motion } from 'framer-motion'
 import { useTranslation } from 'react-i18next'
 import {
@@ -21,24 +11,29 @@ import {
   Target,
 } from 'lucide-react'
 
-const MotionBox = motion(Box)
-const MotionFlex = motion(Flex)
-const MotionButton = motion(Button)
-const MotionIcon = motion(Icon)
+// Import centralized color scheme
+import { QUICK_CLASH_CLASSES } from '../utils/quickClashColors'
+
+// You'll need to install this component: npx shadcn-ui@latest add button
+import { Button } from '@/components/ui/button'
+
+const MotionDiv = motion.div
+const MotionButton = motion.button
 
 /**
- * Enhanced empty state with animated elements
+ * Enhanced empty state with animated elements - Converted to Tailwind CSS
+ *
+ * Key improvements in this conversion:
+ * - Migrated from Chakra UI to Tailwind CSS + Shadcn/ui
+ * - Implemented blue-cyan harmony color scheme
+ * - Enhanced glassmorphic effects with backdrop filters
+ * - Maintained all original animations and interactions
+ * - Improved responsive design with Tailwind's utility classes
  */
 const EmptyBattlesState = memo(({ type = 'active', onCreateMatch }) => {
   const { t } = useTranslation('QuickClash')
 
-  // Responsive styling
-  const iconSize = useBreakpointValue({ base: 16, md: 24 })
-  const padding = useBreakpointValue({ base: 6, md: 10 })
-  const maxWidth = useBreakpointValue({ base: '300px', md: '450px' })
-  const headingSize = useBreakpointValue({ base: 'md', md: 'lg' })
-
-  // Animation variants
+  // Animation variants - EXACTLY as original
   const containerVariants = {
     hidden: { opacity: 0 },
     visible: {
@@ -96,37 +91,43 @@ const EmptyBattlesState = memo(({ type = 'active', onCreateMatch }) => {
     },
   }
 
+  // Determine icon and colors based on type
+  const IconComponent = type === 'active' ? Swords : Trophy
+  const primaryColor = type === 'active' ? 'cyan' : 'blue'
+
   return (
-    <MotionBox
+    <MotionDiv
       variants={containerVariants}
       initial="hidden"
       animate="visible"
-      className="enhanced-empty-battles-state"
+      className="enhanced-empty-battles-state w-full"
       data-testid="empty-battles-state"
     >
-      <MotionFlex
+      <MotionDiv
         variants={itemVariants}
-        p={padding}
-        borderRadius="xl"
-        borderWidth="1px"
-        borderColor="purple.600"
-        bgGradient="linear(to-b, rgba(76, 39, 143, 0.2), rgba(26, 32, 44, 0.4))"
-        backdropFilter="blur(10px)"
-        flexDirection="column"
-        align="center"
-        justify="center"
-        minH="400px"
-        position="relative"
-        overflow="hidden"
+        className={`
+          relative overflow-hidden
+          flex flex-col items-center justify-center
+          min-h-[400px] p-6 md:p-10
+          ${QUICK_CLASH_CLASSES.glassMedium}
+          rounded-2xl border-2 border-cyan-500/60
+          ${QUICK_CLASH_CLASSES.shadowCyan}
+          backdrop-brightness-110
+        `}
       >
         {/* Background animated particles */}
         {[...Array(6)].map((_, i) => (
-          <MotionBox
+          <MotionDiv
             key={i}
-            position="absolute"
-            borderRadius="full"
-            bgGradient="linear(to-r, purple.500, pink.500)"
-            opacity={0.2}
+            className={`
+              absolute rounded-full opacity-20
+              bg-gradient-to-r from-cyan-500 to-blue-500
+              blur-[30px]
+            `}
+            style={{
+              width: `${Math.random() * 100 + 50}px`,
+              height: `${Math.random() * 100 + 50}px`,
+            }}
             animate={{
               x: [Math.random() * 300, Math.random() * -300],
               y: [Math.random() * 300, Math.random() * -300],
@@ -138,58 +139,55 @@ const EmptyBattlesState = memo(({ type = 'active', onCreateMatch }) => {
               repeatType: 'reverse',
               ease: 'easeInOut',
             }}
-            h={`${Math.random() * 100 + 50}px`}
-            w={`${Math.random() * 100 + 50}px`}
-            filter="blur(30px)"
-            zIndex={0}
           />
         ))}
 
-        <VStack spacing={8} maxW={maxWidth} zIndex={1}>
+        <div className="flex flex-col items-center space-y-8 max-w-[300px] md:max-w-[450px] relative z-10">
           {/* Icon with glow effect */}
-          <MotionBox position="relative">
-            <MotionBox
-              position="absolute"
-              top="50%"
-              left="50%"
-              transform="translate(-50%, -50%)"
-              width="120px"
-              height="120px"
-              borderRadius="full"
-              bgGradient="linear(to-r, purple.500, pink.500)"
-              filter="blur(25px)"
-              opacity={0.5}
+          <div className="relative">
+            <MotionDiv
+              className={`
+                absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2
+                w-[120px] h-[120px] rounded-full
+                bg-gradient-to-r from-cyan-500 to-blue-500
+                blur-[25px] opacity-50
+              `}
               variants={glowEffectVariants}
               animate="animate"
             />
 
-            <MotionIcon
-              as={type === 'active' ? Swords : Trophy}
-              boxSize={iconSize}
-              color="purple.300"
+            <MotionDiv
               variants={iconVariants}
               animate={['visible', 'float']}
-              zIndex={2}
-            />
-          </MotionBox>
+              className="relative z-20"
+            >
+              <IconComponent
+                className={`
+                  w-16 h-16 md:w-24 md:h-24
+                  ${primaryColor === 'cyan' ? 'text-cyan-300' : 'text-blue-300'}
+                `}
+              />
+            </MotionDiv>
+          </div>
 
-          <MotionBox variants={itemVariants} textAlign="center">
-            <Heading
-              size={headingSize}
-              color="white"
-              mb={3}
-              bgGradient="linear(to-r, purple.300, pink.200)"
-              bgClip="text"
+          <MotionDiv variants={itemVariants} className="text-center">
+            <h3
+              className={`
+                text-lg md:text-xl font-bold mb-3
+                bg-gradient-to-r from-cyan-300 to-blue-200
+                bg-clip-text text-transparent
+              `}
             >
               {type === 'active'
                 ? t('No Active Team Battles')
                 : t('No Completed Team Battles')}
-            </Heading>
+            </h3>
 
-            <Text
-              color="whiteAlpha.800"
-              fontSize={{ base: 'sm', md: 'md' }}
-              lineHeight="1.7"
+            <p
+              className={`
+                ${QUICK_CLASH_CLASSES.textSecondary}
+                text-sm md:text-base leading-relaxed
+              `}
             >
               {type === 'active'
                 ? t(
@@ -198,38 +196,39 @@ const EmptyBattlesState = memo(({ type = 'active', onCreateMatch }) => {
                 : t(
                     'Your battle history will appear here once you complete your first team match.',
                   )}
-            </Text>
-          </MotionBox>
+            </p>
+          </MotionDiv>
 
           {type === 'active' && (
-            <MotionButton
-              as={motion.button}
-              variants={itemVariants}
-              leftIcon={<Icon as={Users} />}
-              rightIcon={<Icon as={ArrowRight} />}
-              colorScheme="purple"
-              onClick={onCreateMatch}
-              size="lg"
-              whileHover={{
-                scale: 1.05,
-                boxShadow: '0 0 20px rgba(128, 90, 213, 0.6)',
-              }}
-              whileTap={{ scale: 0.95 }}
-              bg="linear-gradient(135deg, #6B46C1 0%, #B794F4 100%)"
-              _hover={{
-                bg: 'linear-gradient(135deg, #805AD5 0%, #D6BCFA 100%)',
-              }}
-              _active={{
-                bg: 'linear-gradient(135deg, #6B46C1 0%, #B794F4 100%)',
-              }}
-              boxShadow="0 5px 15px rgba(128, 90, 213, 0.4)"
-            >
-              {t('Create Your Team')}
-            </MotionButton>
+            <MotionDiv variants={itemVariants}>
+              <MotionButton
+                onClick={onCreateMatch}
+                className={`
+                  flex items-center gap-3 px-6 py-3
+                  ${QUICK_CLASH_CLASSES.btnPrimary}
+                  text-lg font-bold rounded-xl
+                  ${QUICK_CLASH_CLASSES.shadowCyan}
+                  ${QUICK_CLASH_CLASSES.transformHover}
+                  ${QUICK_CLASH_CLASSES.focusRing}
+                  hover:shadow-cyan-500/60
+                  active:scale-95
+                  transition-all duration-200
+                `}
+                whileHover={{
+                  scale: 1.05,
+                  boxShadow: '0 0 20px rgba(6, 182, 212, 0.6)',
+                }}
+                whileTap={{ scale: 0.95 }}
+              >
+                <Users className="w-5 h-5" />
+                <span>{t('Create Your Team')}</span>
+                <ArrowRight className="w-5 h-5" />
+              </MotionButton>
+            </MotionDiv>
           )}
-        </VStack>
-      </MotionFlex>
-    </MotionBox>
+        </div>
+      </MotionDiv>
+    </MotionDiv>
   )
 })
 

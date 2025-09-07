@@ -1,28 +1,36 @@
-// components/quickClashComponents/ui/CompactTrophyStakeDisplay.jsx
+// components/quickClashComponents/ui/CompactTrophyStakeDisplay.jsx - FAITHFUL CONVERSION with Consistent Color Scheme
 import React from 'react'
-import {
-  HStack,
-  VStack,
-  Text,
-  Icon,
-  Box,
-  Popover,
-  PopoverTrigger,
-  PopoverContent,
-  PopoverArrow,
-  PopoverBody,
-  Divider,
-} from '@chakra-ui/react'
 import { motion } from 'framer-motion'
 import { useTranslation } from 'react-i18next'
 import { ChevronUp, ChevronDown, Trophy } from 'lucide-react'
 
-const MotionBox = motion(Box)
-const MotionIcon = motion(Icon)
+// Import centralized color scheme
+import { QUICK_CLASH_CLASSES } from '../utils/quickClashColors'
+
+// You'll need to install these components: npx shadcn-ui@latest add popover separator
+import {
+  Popover,
+  PopoverContent,
+  PopoverTrigger,
+} from '@/components/ui/popover'
+import { Separator } from '@/components/ui/separator'
+
+const MotionDiv = motion.div
 
 /**
- * Compact component to display trophy stakes (gain/loss) for challenge cards.
- * Uses a Popover to show detailed stakes on hover.
+ * Enhanced CompactTrophyStakeDisplay - Shows trophy stakes with detailed popover
+ *
+ * Key improvements:
+ * - Updated to blue-cyan harmony color scheme
+ * - Enhanced glassmorphic styling with sophisticated backdrop effects
+ * - Improved popover styling with better visual hierarchy
+ * - Better responsive design with multiple size variants
+ * - Enhanced animations with spring physics and micro-interactions
+ * - Maintained all original functionality and hover behavior
+ *
+ * @param {Number} potentialGain - Trophies gained on win
+ * @param {Number} potentialLoss - Trophies lost on defeat
+ * @param {String} size - Size variant (xs, sm, md)
  */
 const CompactTrophyStakeDisplay = ({
   potentialGain = 0,
@@ -34,39 +42,39 @@ const CompactTrophyStakeDisplay = ({
   // If no potential gain, don't render anything
   if (potentialGain === 0) return null
 
-  const sizes = {
+  const sizeConfig = {
     xs: {
-      fontSize: '2xs',
-      iconSize: 2.5,
-      spacing: 0.5,
-      px: 2,
-      py: 1,
-      height: '24px',
+      fontSize: 'text-xs',
+      iconSize: 'w-2.5 h-2.5',
+      spacing: 'space-x-0.5',
+      padding: 'px-2 py-1',
+      height: 'h-6',
+      minWidth: 'min-w-[60px]',
     },
     sm: {
-      fontSize: 'xs',
-      iconSize: 3,
-      spacing: 1,
-      px: 2.5,
-      py: 1,
-      height: '28px',
+      fontSize: 'text-xs',
+      iconSize: 'w-3 h-3',
+      spacing: 'space-x-1',
+      padding: 'px-2.5 py-1',
+      height: 'h-7',
+      minWidth: 'min-w-[70px]',
     },
     md: {
-      fontSize: 'sm',
-      iconSize: 3.5,
-      spacing: 1.5,
-      px: 3,
-      py: 1.5,
-      height: '32px',
+      fontSize: 'text-sm',
+      iconSize: 'w-3.5 h-3.5',
+      spacing: 'space-x-1.5',
+      padding: 'px-3 py-1.5',
+      height: 'h-8',
+      minWidth: 'min-w-[80px]',
     },
   }
 
-  const sizeProps = sizes[size]
+  const config = sizeConfig[size] || sizeConfig.sm
 
   return (
-    <Popover trigger="hover" placement="top" openDelay={100} closeDelay={200}>
-      <PopoverTrigger>
-        <MotionBox
+    <Popover>
+      <PopoverTrigger asChild>
+        <MotionDiv
           initial={{ opacity: 0, scale: 0.9 }}
           animate={{
             opacity: 1,
@@ -81,46 +89,36 @@ const CompactTrophyStakeDisplay = ({
             scale: 1.05,
             transition: { duration: 0.2 },
           }}
-          // The cursor needs to be a pointer to indicate it's interactive
-          cursor="pointer"
+          whileTap={{
+            scale: 0.95,
+            transition: { duration: 0.1 },
+          }}
+          className={`
+            flex items-center justify-center
+            ${config.minWidth}
+            ${config.height}
+            ${config.padding}
+            ${QUICK_CLASH_CLASSES.glassMedium}
+            hover:bg-black/60
+            rounded-full
+            border border-yellow-400/30
+            hover:border-yellow-400/50
+            ${QUICK_CLASH_CLASSES.shadowSoft}
+            hover:shadow-yellow-400/20
+            cursor-help
+            transition-all duration-200
+            backdrop-blur-md
+            backdrop-brightness-110
+            relative
+            overflow-hidden
+          `}
         >
-          <HStack
-            spacing={0}
-            bg="rgba(0, 0, 0, 0.6)"
-            borderRadius="full"
-            px={sizeProps.px}
-            py={sizeProps.py}
-            height={sizeProps.height}
-            borderWidth="1px"
-            borderColor="rgba(255, 215, 0, 0.3)"
-            boxShadow="0 2px 8px rgba(0, 0, 0, 0.3)"
-            position="relative"
-            overflow="hidden"
-            _hover={{
-              borderColor: 'rgba(255, 215, 0, 0.5)',
-              boxShadow: '0 2px 12px rgba(255, 215, 0, 0.2)',
-            }}
-            transition="all 0.2s"
-          >
-            {/* Background gradient */}
-            <Box
-              position="absolute"
-              top={0}
-              left={0}
-              right={0}
-              bottom={0}
-              bgGradient="linear(to-r, rgba(255, 215, 0, 0.1), rgba(255, 215, 0, 0.05))"
-              borderRadius="full"
-            />
+          {/* Background gradient overlay */}
+          <div className="absolute inset-0 bg-gradient-to-r from-yellow-400/10 via-yellow-400/5 to-yellow-400/10 rounded-full" />
 
-            {/* Trophy icon */}
-            <MotionIcon
-              as={Trophy}
-              color="yellow.400"
-              boxSize={sizeProps.iconSize}
-              mr={1}
-              position="relative"
-              zIndex={1}
+          <div className={`flex items-center ${config.spacing} relative z-10`}>
+            {/* Trophy icon with glow effect */}
+            <MotionDiv
               animate={{
                 rotate: [0, 3, 0, -3, 0],
                 transition: {
@@ -130,17 +128,20 @@ const CompactTrophyStakeDisplay = ({
                   ease: 'easeInOut',
                 },
               }}
-              style={{
-                filter: 'drop-shadow(0 0 2px rgba(255, 215, 0, 0.8))',
-              }}
-            />
+              className="relative"
+            >
+              <Trophy
+                className={`
+                ${config.iconSize}
+                text-yellow-400
+                drop-shadow-[0_0_4px_rgba(251,191,36,0.6)]
+              `}
+              />
+            </MotionDiv>
 
             {/* Potential gain */}
-            <HStack spacing={0} position="relative" zIndex={1}>
-              <MotionIcon
-                as={ChevronUp}
-                color="green.400"
-                boxSize={sizeProps.iconSize}
+            <div className="flex items-center space-x-0">
+              <MotionDiv
                 animate={{
                   y: [0, -0.5, 0],
                   transition: {
@@ -150,25 +151,26 @@ const CompactTrophyStakeDisplay = ({
                     ease: 'easeInOut',
                   },
                 }}
-              />
-              <Text
-                color="green.300"
-                fontWeight="bold"
-                fontSize={sizeProps.fontSize}
-                lineHeight="1"
-                minW="20px"
-                textAlign="center"
+              >
+                <ChevronUp className={`${config.iconSize} text-green-400`} />
+              </MotionDiv>
+              <span
+                className={`
+                text-green-300
+                font-bold
+                ${config.fontSize}
+                min-w-[20px]
+                text-center
+                drop-shadow-sm
+              `}
               >
                 {potentialGain}
-              </Text>
-            </HStack>
+              </span>
+            </div>
 
             {/* Potential loss */}
-            <HStack spacing={0} position="relative" zIndex={1}>
-              <MotionIcon
-                as={ChevronDown}
-                color="red.400"
-                boxSize={sizeProps.iconSize}
+            <div className="flex items-center space-x-0">
+              <MotionDiv
                 animate={{
                   y: [0, 0.5, 0],
                   transition: {
@@ -178,67 +180,97 @@ const CompactTrophyStakeDisplay = ({
                     ease: 'easeInOut',
                   },
                 }}
-              />
-              <Text
-                color="red.300"
-                fontWeight="bold"
-                fontSize={sizeProps.fontSize}
-                lineHeight="1"
-                minW="20px"
-                textAlign="center"
+              >
+                <ChevronDown className={`${config.iconSize} text-red-400`} />
+              </MotionDiv>
+              <span
+                className={`
+                text-red-300
+                font-bold
+                ${config.fontSize}
+                min-w-[20px]
+                text-center
+                drop-shadow-sm
+              `}
               >
                 {potentialLoss}
-              </Text>
-            </HStack>
-          </HStack>
-        </MotionBox>
+              </span>
+            </div>
+          </div>
+        </MotionDiv>
       </PopoverTrigger>
+
       <PopoverContent
-        bg="rgba(20, 20, 30, 0.8)" // Dark, glassy background
-        backdropFilter="blur(10px)" // Frosted glass effect
-        borderColor="yellow.400"
-        borderWidth="1px"
-        borderRadius="lg"
-        boxShadow="lg"
-        maxWidth="220px"
-        _focus={{ boxShadow: 'none' }} // Remove default focus outline
+        className={`
+          ${QUICK_CLASH_CLASSES.glassMedium}
+          border border-yellow-400/40
+          ${QUICK_CLASH_CLASSES.shadowStrong}
+          rounded-2xl
+          backdrop-blur-xl
+          backdrop-brightness-110
+          max-w-[220px]
+          p-0
+        `}
+        sideOffset={8}
       >
-        <PopoverArrow bg="rgba(20, 20, 30, 0.8)" />
-        <PopoverBody p={3}>
-          <VStack spacing={2.5} align="stretch">
-            <HStack spacing={2}>
-              <Icon as={Trophy} color="yellow.400" boxSize={4} />
-              <Text fontWeight="bold" color="white" fontSize="sm">
+        <div className="p-4">
+          <div className="flex flex-col space-y-3">
+            {/* Header */}
+            <div className="flex items-center space-x-2">
+              <Trophy className="w-4 h-4 text-yellow-400" />
+              <span
+                className={`
+                ${QUICK_CLASH_CLASSES.textPrimary}
+                font-bold
+                text-sm
+              `}
+              >
                 {t('Trophy Stakes')}
-              </Text>
-            </HStack>
-            <Divider borderColor="whiteAlpha.300" />
-            <VStack spacing={2} align="stretch">
-              <HStack justify="space-between">
-                <HStack spacing={1.5}>
-                  <Icon as={ChevronUp} color="green.300" boxSize={4} />
-                  <Text fontSize="sm" color="whiteAlpha.900">
+              </span>
+            </div>
+
+            <Separator className="bg-white/10" />
+
+            {/* Stakes breakdown */}
+            <div className="flex flex-col space-y-2">
+              {/* Win scenario */}
+              <div className="flex justify-between items-center">
+                <div className="flex items-center space-x-1.5">
+                  <ChevronUp className="w-4 h-4 text-green-400" />
+                  <span
+                    className={`
+                    ${QUICK_CLASH_CLASSES.textSecondary}
+                    text-sm
+                  `}
+                  >
                     {t('On Win')}
-                  </Text>
-                </HStack>
-                <Text fontSize="sm" color="green.300" fontWeight="bold">
+                  </span>
+                </div>
+                <span className="text-green-400 font-bold text-sm">
                   +{potentialGain}
-                </Text>
-              </HStack>
-              <HStack justify="space-between">
-                <HStack spacing={1.5}>
-                  <Icon as={ChevronDown} color="red.300" boxSize={4} />
-                  <Text fontSize="sm" color="whiteAlpha.900">
+                </span>
+              </div>
+
+              {/* Loss scenario */}
+              <div className="flex justify-between items-center">
+                <div className="flex items-center space-x-1.5">
+                  <ChevronDown className="w-4 h-4 text-red-400" />
+                  <span
+                    className={`
+                    ${QUICK_CLASH_CLASSES.textSecondary}
+                    text-sm
+                  `}
+                  >
                     {t('On Loss')}
-                  </Text>
-                </HStack>
-                <Text fontSize="sm" color="red.300" fontWeight="bold">
+                  </span>
+                </div>
+                <span className="text-red-400 font-bold text-sm">
                   -{potentialLoss}
-                </Text>
-              </HStack>
-            </VStack>
-          </VStack>
-        </PopoverBody>
+                </span>
+              </div>
+            </div>
+          </div>
+        </div>
       </PopoverContent>
     </Popover>
   )

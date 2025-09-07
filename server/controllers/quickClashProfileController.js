@@ -6,6 +6,13 @@ const {
   getQuickClashRecentMatches,
   getQuickClashStatistics,
 } = require('../services/quickClashServices/quickClashProfileService')
+const {
+  getBattleStats,
+  getExtendedRQMAnalysis,
+} = require('../services/quickClashServices/quickClashBattleStatsService')
+const {
+  getCachedGlobalRQMStats,
+} = require('../services/quickClashServices/globalRQMStatsService')
 
 /**
  * @desc    Get Quick Clash profile data for current user
@@ -131,10 +138,164 @@ const getUserStatistics = asyncHandler(async (req, res) => {
   }
 })
 
+/**
+ * @desc    Get battle statistics for landing page with global RQM comparisons
+ * @route   GET /api/quickClash/battle-stats
+ * @access  Private
+ */
+const getBattleStatsForLanding = asyncHandler(async (req, res) => {
+  const userId = req.user._id
+
+  try {
+    const battleStats = await getBattleStats({ userId })
+
+    res.status(200).json({
+      success: true,
+      data: battleStats,
+      timestamp: new Date().toISOString(),
+    })
+  } catch (error) {
+    console.error('Error fetching battle stats:', error)
+    res.status(500).json({
+      success: false,
+      message: error.message || 'Failed to fetch battle statistics',
+      // Send default values on error
+      data: {
+        battlesWon: 0,
+        winRate: 0,
+        teamBattlesWon: 0,
+        averageRQM: 0,
+        weeklyTeamWins: 0,
+        currentWinStreak: 0,
+        userTrophies: 1000,
+        globalComparison: {
+          userRQM: 0,
+          globalAverage: 0,
+          highestRQM: 0,
+          userPercentile: 0,
+          totalPlayers: 0,
+          lastUpdated: new Date(),
+          performance: {
+            vsGlobal: 0,
+            vsHighest: 0,
+          },
+          percentileMessage: 'Keep playing to establish your ranking!',
+        },
+      },
+    })
+  }
+})
+
+/**
+ * @desc    Get extended RQM analysis with detailed comparisons
+ * @route   GET /api/quickClash/rqm-analysis
+ * @access  Private
+ */
+const getDetailedRQMAnalysis = asyncHandler(async (req, res) => {
+  const userId = req.user._id
+
+  try {
+    const analysis = await getExtendedRQMAnalysis({ userId })
+
+    res.status(200).json({
+      success: true,
+      data: analysis,
+      timestamp: new Date().toISOString(),
+    })
+  } catch (error) {
+    console.error('Error fetching RQM analysis:', error)
+    res.status(500).json({
+      success: false,
+      message: error.message || 'Failed to fetch RQM analysis',
+      data: null,
+    })
+  }
+})
+
+/**
+ * @desc    Get global RQM statistics (public endpoint for leaderboards, etc.)
+ * @route   GET /api/quickClash/global-stats
+ * @access  Private
+ */
+const getGlobalRQMStats = asyncHandler(async (req, res) => {
+  try {
+    const globalStats = await getCachedGlobalRQMStats()
+
+    // Format response for public consumption (remove sensitive data)
+    const publicStats = {
+      globalAverage: Math.round(globalStats.rqmStats?.globalAverage || 0),
+      highestRQM: Math.round(globalStats.rqmStats?.highestRQM || 0),
+      medianRQM: Math.round(globalStats.rqmStats?.medianRQM || 0),
+      totalPlayers: globalStats.rqmStats?.totalPlayersWithRQM || 0,
+      percentileRanges: {
+        elite: globalStats.rqmStats?.percentiles?.p95 || 0,
+        advanced: globalStats.rqmStats?.percentiles?.p75 || 0,
+        intermediate: globalStats.rqmStats?.percentiles?.p50 || 0,
+        beginner: globalStats.rqmStats?.percentiles?.p25 || 0,
+      },
+      trophyStats: {
+        averageTrophies: Math.round(
+          globalStats.trophyStats?.averageTrophies || 1000,
+        ),
+        highestTrophies: globalStats.trophyStats?.highestTrophies || 1000,
+        totalPlayers: globalStats.trophyStats?.totalPlayers || 0,
+      },
+      lastUpdated: globalStats.lastUpdated,
+      dataFreshness: {
+        minutesOld: Math.round(
+          (Date.now() - new Date(globalStats.lastUpdated).getTime()) /
+            (1000 * 60),
+        ),
+        status:
+          Math.round(
+            (Date.now() - new Date(globalStats.lastUpdated).getTime()) /
+              (1000 * 60),
+          ) < 60
+            ? 'fresh'
+            : 'stale',
+      },
+    }
+
+    res.status(200).json({
+      success: true,
+      data: publicStats,
+      timestamp: new Date().toISOString(),
+    })
+  } catch (error) {
+    console.error('Error fetching global RQM stats:', error)
+    res.status(500).json({
+      success: false,
+      message: error.message || 'Failed to fetch global statistics',
+      data: {
+        globalAverage: 0,
+        highestRQM: 0,
+        medianRQM: 0,
+        totalPlayers: 0,
+        percentileRanges: {
+          elite: 0,
+          advanced: 0,
+          intermediate: 0,
+          beginner: 0,
+        },
+        trophyStats: {
+          averageTrophies: 1000,
+          highestTrophies: 1000,
+          totalPlayers: 0,
+        },
+        lastUpdated: new Date(),
+        dataFreshness: { minutesOld: 0, status: 'unavailable' },
+      },
+    })
+  }
+})
+
 module.exports = {
   getCurrentUserProfile,
   getUserProfile,
   getUserAchievements,
   getUserRecentMatches,
   getUserStatistics,
+  getBattleStatsForLanding,
+  getDetailedRQMAnalysis,
+  getGlobalRQMStats,
 }
