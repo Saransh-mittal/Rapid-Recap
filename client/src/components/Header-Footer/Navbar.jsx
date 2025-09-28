@@ -75,7 +75,7 @@ const DailyStreakModal = React.lazy(() =>
 const NotificationModal = React.lazy(() => import('./Inbox/NotificationModal'))
 
 const IQScoreModal = React.lazy(() => import('./navbarComponents/IQScoreModal'))
-const WiseWeb = React.lazy(() => import('./navbarComponents/WiseWeb'))
+const WiseWeb = React.lazy(() => import('../WiseWeb/WiseWeb'))
 const OutsideNavbarContent = getLazyComponent(
   () => import('./navbarComponents/OutsideNavbarContent'),
   'OutsideNavbarContent',

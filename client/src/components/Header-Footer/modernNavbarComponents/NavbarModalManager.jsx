@@ -13,7 +13,7 @@ import { useTranslation } from 'react-i18next'
 import { createPreloadableComponents } from '../../../utils/lazyLoading'
 
 // Lazy load all modals and drawers
-const WiseWeb = React.lazy(() => import('./modals/WiseWeb'))
+const WiseWeb = React.lazy(() => import('../../WiseWeb/WiseWeb'))
 const UserSearchDrawer = React.lazy(() =>
   import('../../miscellaneous/UserSearchDrawer'),
 )

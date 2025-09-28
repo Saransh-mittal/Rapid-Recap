@@ -3,6 +3,7 @@ import React, { lazy, Suspense } from 'react'
 import ReactDOM from 'react-dom/client'
 import { initializeCsrf } from './services/csrfService.js'
 import { initializeTokenRefresh } from './services/tokenRefreshService.js'
+import { NotificationProvider } from './utils/notifications.jsx'
 // import { SocketProvider } from './contextAPI/SocketContext.jsx'
 
 // Lazy load all major components
@@ -104,7 +105,9 @@ if (!isBot) {
                         <Suspense fallback={<LoadingFallback />}>
                           <HelmetProvider>
                             <Suspense fallback={<LoadingFallback />}>
-                              <App />
+                              <NotificationProvider>
+                                <App />
+                              </NotificationProvider>
                             </Suspense>
                           </HelmetProvider>
                         </Suspense>

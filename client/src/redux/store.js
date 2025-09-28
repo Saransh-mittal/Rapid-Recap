@@ -21,6 +21,8 @@ import quickClashGlobalMatchmakingReducer from './quickClashGlobalMatchmakingSli
 import quickClashAnalysisReducer from './quickClashAnalysisSlice'
 import quickClashProfileReducer from './quickClashProfileSlice'
 import quickClashSocketReducer from './quickClashSocketSlice'
+import friendsReducer from './friendsSlice'
+import friendsChatReducer from './friendsChatSlice'
 
 export const store = configureStore({
   reducer: {
@@ -46,5 +48,17 @@ export const store = configureStore({
     quickClashAnalysis: quickClashAnalysisReducer,
     quickClashProfile: quickClashProfileReducer,
     quickClashSocket: quickClashSocketReducer,
+    friends: friendsReducer,
+    friendsChat: friendsChatReducer,
   },
+  middleware: getDefaultMiddleware =>
+    getDefaultMiddleware({
+      serializableCheck: {
+        // Temporarily disable serialization check until we identify root cause
+        // The friends slice now handles Set instances defensively
+        ignoredPaths: ['friends.pendingRequests'],
+      },
+    }),
+  // Enable Redux DevTools for debugging
+  devTools: process.env.NODE_ENV !== 'production',
 })

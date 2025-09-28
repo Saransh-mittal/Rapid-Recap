@@ -1,15 +1,20 @@
-// services/socketInitManager.js
+// services/socketInitManager.js - FIXED: Uses Socket.IO's built-in reconnection
 import io from 'socket.io-client'
 import { getDeviceFingerprint } from '../utils/deviceFingerprint.utils'
 
 /**
- * Enhanced singleton manager to handle socket initialization with device fingerprinting
- * This ensures only one socket connection per user per device/browser tab
- * Now supports multi-device development environments
+ * FIXED: Socket Manager with proper reconnection handling
+ *
+ * Key Changes:
+ * 1. Enabled Socket.IO's built-in reconnection (reconnection: true)
+ * 2. Added reconnection event listeners for state tracking
+ * 3. Prevent cleanup on auto-reconnect scenarios
+ * 4. Reuse existing socket instance instead of creating new ones
+ *
+ * This eliminates the infinite loop caused by device conflicts
  */
 class SocketInitManager {
   constructor() {
-    // Private instance variables
     this._socket = null
     this._connecting = false
     this._connectionAttempted = false
@@ -19,91 +24,72 @@ class SocketInitManager {
     this._deviceFingerprint = null
     this._fingerprintPromise = null
     this._endpoint = this._determineEndpoint()
+    this._hasEverConnected = false
+    this._connectionHistory = []
+    this._initialConnectionAttempted = false
 
-    // NEW: Enhanced connection tracking
-    this._hasEverConnected = false // Track if we've ever successfully connected
-    this._connectionHistory = [] // Track connection events for debugging
-    this._initialConnectionAttempted = false // Track if initial connection was attempted
+    // Track reconnection state from Socket.IO
+    this._isReconnecting = false
   }
 
-  /**
-   * Determine the appropriate endpoint for socket connection
-   * Supports multi-device development environments
-   * @private
-   * @returns {string} Socket endpoint URL
-   */
   _determineEndpoint() {
     if (process.env.NODE_ENV === 'production') {
       return 'https://rapidrecap.ai'
     }
 
-    // Development environment endpoint detection
     const hostname = window.location.hostname
     const protocol = window.location.protocol
 
-    // Custom endpoint from environment variable (for testing specific IPs)
     if (import.meta.env.VITE_SOCKET_ENDPOINT) {
-      const customEndpoint = import.meta.env.VITE_SOCKET_ENDPOINT
-      console.log(`[SocketManager] Using custom endpoint: ${customEndpoint}`)
-      return customEndpoint
+      return import.meta.env.VITE_SOCKET_ENDPOINT
     }
 
-    // Auto-detect endpoint based on current location
     let endpoint
-
     if (hostname === 'localhost' || hostname === '127.0.0.1') {
-      // Local development - use localhost
       endpoint = 'http://localhost:3000'
     } else {
-      // Network access - use current hostname with server port
       endpoint = `${protocol}//${hostname}:3000`
     }
 
-    console.log(
-      `[SocketManager] Auto-detected endpoint: ${endpoint} (from hostname: ${hostname})`,
-    )
+    console.log(`[SocketManager] Auto-detected endpoint: ${endpoint}`)
     return endpoint
   }
 
-  /**
-   * Record connection event for tracking
-   * @private
-   * @param {string} event - Connection event type
-   * @param {Object} data - Event data
-   */
   _recordConnectionEvent(event, data = {}) {
-    const eventRecord = {
-      event,
-      timestamp: Date.now(),
-      data,
-    }
-
+    const eventRecord = { event, timestamp: Date.now(), data }
     this._connectionHistory.push(eventRecord)
-
-    // Keep only last 20 events
     if (this._connectionHistory.length > 20) {
       this._connectionHistory = this._connectionHistory.slice(-20)
     }
-
     console.log(`[SocketManager] ${event}:`, data)
   }
 
-  /**
-   * Get or generate device fingerprint
-   * @returns {Promise<string>} Device fingerprint
-   */
+  _performSocketCleanup(reason = 'unknown') {
+    console.log(`[SocketManager] Performing socket cleanup, reason: ${reason}`)
+
+    if (this._socket) {
+      this._socket.removeAllListeners()
+      this._socket = null
+    }
+
+    this._connecting = false
+    this._connectionAttempted = false
+    this._notifyConnectionListeners(false)
+    this._recordConnectionEvent('cleanup_performed', {
+      reason,
+      endpoint: this._endpoint,
+    })
+  }
+
   async getDeviceFingerprint() {
-    // Return cached fingerprint if available
     if (this._deviceFingerprint) {
       return this._deviceFingerprint
     }
 
-    // Return ongoing fingerprint generation promise if in progress
     if (this._fingerprintPromise) {
       return this._fingerprintPromise
     }
 
-    // Generate new fingerprint
     this._fingerprintPromise = getDeviceFingerprint()
 
     try {
@@ -111,7 +97,6 @@ class SocketInitManager {
       return this._deviceFingerprint
     } catch (error) {
       console.error('Failed to generate device fingerprint:', error)
-      // Fallback fingerprint
       this._deviceFingerprint = `fallback_${Date.now()}_${Math.random()
         .toString(36)
         .substring(2, 15)}`
@@ -121,12 +106,6 @@ class SocketInitManager {
     }
   }
 
-  /**
-   * Test endpoint connectivity
-   * @private
-   * @param {string} endpoint - Endpoint to test
-   * @returns {Promise<boolean>} True if endpoint is reachable
-   */
   async _testEndpointConnectivity(endpoint) {
     try {
       const testUrl = endpoint.replace(/:\d+$/, ':3000') + '/api/user/check'
@@ -134,7 +113,7 @@ class SocketInitManager {
         method: 'GET',
         timeout: 5000,
       })
-      return response.ok || response.status === 401 // 401 is expected for protected endpoint
+      return response.ok || response.status === 401
     } catch (error) {
       console.warn(
         `[SocketManager] Endpoint ${endpoint} not reachable:`,
@@ -144,26 +123,19 @@ class SocketInitManager {
     }
   }
 
-  /**
-   * Initialize socket with user data and device fingerprinting
-   * @param {Object} user - User data for authentication
-   * @returns {Promise<Object>} Socket instance
-   */
   async initializeSocket(user) {
     // Return existing socket if already connected
     if (this._socket && this._socket.connected) {
-      console.log('SocketManager: Using existing connected socket')
-      // Verify the socket is properly authenticated with the same user
+      console.log('[SocketManager] Using existing connected socket')
       const metadata = this._socket._userData
       if (metadata && metadata._id === user._id) {
         return this._socket
       }
     }
 
-    // If connection is in progress, wait for it to complete
+    // If connection is in progress, wait for it
     if (this._connecting && this._socket) {
-      console.log('SocketManager: Connection already in progress, waiting...')
-      // Return a promise that resolves when connection completes
+      console.log('[SocketManager] Connection already in progress, waiting...')
       return new Promise(resolve => {
         const checkConnection = () => {
           if (!this._connecting) {
@@ -176,114 +148,54 @@ class SocketInitManager {
       })
     }
 
-    // Prevent rapid successive initialization attempts (increased to 3 seconds)
+    // Prevent rapid successive initialization attempts
     const now = Date.now()
     if (now - this._lastInitTime < 3000) {
-      console.log(
-        'SocketManager: Initialization throttled (too soon since last attempt)',
-      )
+      console.log('[SocketManager] Initialization throttled')
       if (this._socket && this._socket.connected) {
         return this._socket
       } else {
-        // Wait a bit before allowing retry
         await new Promise(resolve => setTimeout(resolve, 1000))
-      }
-    }
-
-    // Test endpoint connectivity first
-    console.log(`[SocketManager] Testing connectivity to: ${this._endpoint}`)
-    const isReachable = await this._testEndpointConnectivity(this._endpoint)
-
-    if (!isReachable) {
-      console.warn(
-        `[SocketManager] Primary endpoint ${this._endpoint} not reachable`,
-      )
-
-      // Try fallback endpoints for development
-      if (process.env.NODE_ENV !== 'production') {
-        const fallbackEndpoints = [
-          'http://localhost:3000',
-          'http://127.0.0.1:3000',
-        ]
-
-        for (const fallback of fallbackEndpoints) {
-          if (fallback !== this._endpoint) {
-            console.log(`[SocketManager] Trying fallback endpoint: ${fallback}`)
-            const fallbackReachable = await this._testEndpointConnectivity(
-              fallback,
-            )
-            if (fallbackReachable) {
-              console.log(
-                `[SocketManager] Using fallback endpoint: ${fallback}`,
-              )
-              this._endpoint = fallback
-              break
-            }
-          }
-        }
       }
     }
 
     // Get device fingerprint first
     const deviceFingerprint = await this.getDeviceFingerprint()
     console.log(
-      `SocketManager: Using device fingerprint: ${deviceFingerprint.substring(
+      `[SocketManager] Using device fingerprint: ${deviceFingerprint.substring(
         0,
         8,
       )}... connecting to ${this._endpoint}`,
     )
 
-    // Check if we're trying to reconnect with the same fingerprint too quickly
-    const lastFingerprint = window.sessionStorage
-      ? sessionStorage.getItem('lastDeviceFingerprint')
-      : null
-    const lastConnectionTime = window.sessionStorage
-      ? sessionStorage.getItem('lastConnectionTime')
-      : null
-
-    if (lastFingerprint === deviceFingerprint && lastConnectionTime) {
-      const timeSinceLastConnection = now - parseInt(lastConnectionTime)
-      if (timeSinceLastConnection < 1000) {
-        // Less than 1 second
-        console.log(
-          'SocketManager: Preventing duplicate connection attempt (same device, too soon)',
-        )
-        if (this._socket) {
-          return this._socket
-        }
-      }
-    }
-
-    // Store connection attempt info
-    if (window.sessionStorage) {
-      sessionStorage.setItem('lastDeviceFingerprint', deviceFingerprint)
-      sessionStorage.setItem('lastConnectionTime', now.toString())
-      sessionStorage.setItem('lastEndpoint', this._endpoint)
-    }
-
     // Update state for new connection
     this._lastInitTime = now
     this._connecting = true
     this._connectionAttempted = true
-    this._initialConnectionAttempted = true // NEW: Track that we attempted connection
+    this._initialConnectionAttempted = true
 
     // Clean up existing socket if disconnected
     if (this._socket && this._socket.disconnected) {
-      console.log('SocketManager: Cleaning up disconnected socket')
+      console.log('[SocketManager] Cleaning up disconnected socket')
       this._socket.removeAllListeners()
       this._socket = null
     }
 
-    // Create new socket with enhanced options
+    // CRITICAL FIX: Enable Socket.IO's built-in reconnection
     console.log(
-      `SocketManager: Creating new socket connection to ${this._endpoint}`,
+      `[SocketManager] Creating socket with built-in reconnection enabled`,
     )
     this._socket = io(this._endpoint, {
-      transports: ['websocket', 'polling'], // Allow fallback to polling
-      reconnection: false,
-      forceNew: true, // Force new connection to avoid reusing
-      timeout: 10000, // 10 second timeout
-      withCredentials: true, // Include credentials for CORS
+      transports: ['websocket', 'polling'],
+
+      // CHANGED: Enable built-in reconnection to prevent infinite loops
+      reconnection: true, // Enable automatic reconnection
+      reconnectionAttempts: 5, // Limit reconnection attempts
+      reconnectionDelay: 1000, // Start with 1 second delay
+      reconnectionDelayMax: 5000, // Maximum 5 seconds between attempts
+
+      timeout: 10000,
+      withCredentials: true,
       extraHeaders: {
         'Access-Control-Allow-Credentials': 'true',
       },
@@ -295,21 +207,18 @@ class SocketInitManager {
     return this._socket
   }
 
-  /**
-   * Set up socket event listeners with device fingerprinting
-   * @private
-   * @param {Object} user - User data
-   * @param {string} deviceFingerprint - Device fingerprint
-   */
   _setupSocketListeners(user, deviceFingerprint) {
     if (!this._socket) return
 
+    // ========================================
+    // CONNECTION EVENTS
+    // ========================================
+
     this._socket.on('connect', () => {
       console.log(
-        `SocketManager: Socket connected to ${this._endpoint}, ID: ${this._socket.id}`,
+        `[SocketManager] ✅ Socket connected to ${this._endpoint}, ID: ${this._socket.id}`,
       )
 
-      // NEW: Track connection state
       this._hasEverConnected = true
       this._recordConnectionEvent('connected', {
         socketId: this._socket.id,
@@ -318,123 +227,118 @@ class SocketInitManager {
       })
 
       this._connecting = false
+      this._isReconnecting = false
       this._notifyConnectionListeners(true)
 
-      // Register device fingerprint with server immediately after connection
+      // Register device fingerprint with server
       this._socket.emit('quickClash:registerDevice', { deviceFingerprint })
     })
 
     this._socket.on('connect_error', error => {
       console.error(
-        `SocketManager: Connection error to ${this._endpoint}:`,
+        `[SocketManager] ❌ Connection error to ${this._endpoint}:`,
         error,
       )
 
-      // NEW: Record connection error
       this._recordConnectionEvent('connect_error', {
         error: error.message,
         endpoint: this._endpoint,
         hasEverConnected: this._hasEverConnected,
-        initialConnectionAttempted: this._initialConnectionAttempted,
       })
 
       this._connecting = false
-
-      // Try alternative endpoint in development
-      if (process.env.NODE_ENV !== 'production') {
-        const currentHostname = window.location.hostname
-        if (
-          currentHostname !== 'localhost' &&
-          this._endpoint.includes('localhost')
-        ) {
-          console.log(
-            '[SocketManager] Will try network endpoint on next attempt',
-          )
-          this._endpoint = this._determineEndpoint()
-        }
-      }
     })
 
+    // CRITICAL FIX: Improved disconnect handling
     this._socket.on('disconnect', reason => {
       console.log(
-        `SocketManager: Socket disconnected from ${this._endpoint}, reason: ${reason}`,
+        `[SocketManager] 🔌 Socket disconnected from ${this._endpoint}, reason: ${reason}`,
       )
 
-      // NEW: Record disconnection
       this._recordConnectionEvent('disconnected', {
         reason,
         endpoint: this._endpoint,
         hadBeenConnected: this._hasEverConnected,
       })
 
+      // Check if Socket.IO will auto-reconnect
+      const autoReconnectReasons = [
+        'io server disconnect', // Server closed (restart), Socket.IO will reconnect
+        'transport close', // Connection lost, Socket.IO will reconnect
+        'transport error', // Transport error, Socket.IO will reconnect
+        'ping timeout', // Ping timeout, Socket.IO will reconnect
+      ]
+
+      if (autoReconnectReasons.includes(reason)) {
+        console.log(
+          '[SocketManager] ⏳ Socket.IO will handle automatic reconnection',
+        )
+        this._notifyConnectionListeners(false)
+        return // Let Socket.IO handle it - DON'T clean up
+      }
+
+      // Only clean up for manual/intentional disconnects
+      this._performSocketCleanup(`auto_disconnect: ${reason}`)
+    })
+
+    // ========================================
+    // SOCKET.IO RECONNECTION EVENTS (NEW)
+    // ========================================
+
+    this._socket.on('reconnect_attempt', attemptNumber => {
+      console.log(`[SocketManager] 🔄 Reconnection attempt ${attemptNumber}...`)
+      this._isReconnecting = true
       this._notifyConnectionListeners(false)
     })
 
-    // Handle device conflict (another connection from same device)
-    this._socket.on('quickClash:deviceConflict', data => {
-      console.log('SocketManager: Device conflict detected:', data.message)
-
-      // Emit custom event for UI handling
-      this._notifyDeviceConflict(data)
-
-      // Don't auto-disconnect, let the server handle it
-    })
-
-    // Handle device registration confirmation
-    this._socket.on('quickClash:deviceRegistered', data => {
+    this._socket.on('reconnect', attemptNumber => {
       console.log(
-        `SocketManager: Device registered successfully: ${data.deviceFingerprint} on ${this._endpoint}`,
+        `[SocketManager] ✅ Reconnected successfully after ${attemptNumber} attempts`,
       )
+      this._isReconnecting = false
 
-      // Set up with user data after device registration
-      if (user) {
-        this._socket.emit('setup', {
-          ...user,
-          deviceFingerprint: this._deviceFingerprint,
-        })
-      }
-    })
-
-    // Listen for connection confirmation
-    this._socket.on('connected', () => {
-      console.log(
-        `SocketManager: Server confirmed connection to ${this._endpoint}`,
-      )
-      this._connecting = false
-      this._notifyConnectionListeners(true)
-
-      // DEBUG: Check socket rooms after connection (safely)
-      setTimeout(() => {
-        if (this._socket && this._socket.connected) {
-          try {
-            const rooms = this._socket.rooms
-              ? Array.from(this._socket.rooms)
-              : []
-          } catch (error) {
-            console.log(`DEBUG: Could not get socket rooms:`, error.message)
-          }
-        }
-      }, 500)
-    })
-
-    // Handle force reload
-    this._socket.on('force-reload', () => {
-      console.log('SocketManager: Force reload received')
-      window.location.reload()
-    })
-
-    // Enhanced reconnection handling with device fingerprinting
-    this._socket.on('reconnect', () => {
-      console.log(
-        `SocketManager: Reconnected to ${this._endpoint}, re-registering device`,
-      )
-
-      // Re-register device fingerprint after reconnection
+      // Re-register device and setup after successful reconnection
       this._socket.emit('quickClash:registerDevice', {
         deviceFingerprint: this._deviceFingerprint,
       })
 
-      // Re-setup with user data
+      setTimeout(() => {
+        if (user) {
+          this._socket.emit('setup', {
+            ...user,
+            deviceFingerprint: this._deviceFingerprint,
+          })
+        }
+      }, 100)
+
+      this._notifyConnectionListeners(true)
+    })
+
+    this._socket.on('reconnect_error', error => {
+      console.error(`[SocketManager] ❌ Reconnection error:`, error)
+      this._recordConnectionEvent('reconnect_error', { error: error.message })
+    })
+
+    this._socket.on('reconnect_failed', () => {
+      console.error(`[SocketManager] 💀 Reconnection failed after all attempts`)
+      this._isReconnecting = false
+      this._performSocketCleanup('reconnection_failed')
+    })
+
+    // ========================================
+    // APPLICATION EVENTS
+    // ========================================
+
+    this._socket.on('quickClash:deviceConflict', data => {
+      console.log('[SocketManager] ⚠️ Device conflict detected:', data.message)
+      this._notifyDeviceConflict(data)
+    })
+
+    this._socket.on('quickClash:deviceRegistered', data => {
+      console.log(
+        `[SocketManager] ✅ Device registered: ${data.deviceFingerprint}`,
+      )
+
       if (user) {
         this._socket.emit('setup', {
           ...user,
@@ -442,99 +346,95 @@ class SocketInitManager {
         })
       }
     })
+
+    this._socket.on('connected', () => {
+      console.log(`[SocketManager] ✅ Server confirmed connection`)
+      this._connecting = false
+      this._notifyConnectionListeners(true)
+    })
+
+    this._socket.on('force-reload', () => {
+      console.log('[SocketManager] 🔄 Force reload received')
+      window.location.reload()
+    })
   }
 
-  /**
-   * Notify about device conflicts
-   * @private
-   * @param {Object} data - Conflict data
-   */
   _notifyDeviceConflict(data) {
-    // Create custom event for device conflict
-    const event = new CustomEvent('socketDeviceConflict', {
-      detail: data,
-    })
+    const event = new CustomEvent('socketDeviceConflict', { detail: data })
     window.dispatchEvent(event)
   }
 
-  /**
-   * Disconnect the socket
-   * @param {string} userId - User ID to send in disconnect event
-   */
   disconnect(userId) {
-    if (!this._socket) return
-
-    console.log(`SocketManager: Disconnecting socket from ${this._endpoint}`)
-
-    // Emit disconnect event if userId provided
-    if (userId) {
-      this._socket.emit('user-disconnected', userId)
+    if (!this._socket) {
+      console.log('[SocketManager] No socket to disconnect')
+      return
     }
 
-    // Clean up listeners and disconnect
-    this._socket.removeAllListeners()
-    this._socket.disconnect()
+    console.log(
+      `[SocketManager] Manually disconnecting socket from ${this._endpoint}`,
+    )
 
-    // Reset state
-    this._socket = null
-    this._connecting = false
-    this._connectionAttempted = false
-    this._notifyConnectionListeners(false)
+    if (userId && this._socket.connected) {
+      try {
+        this._socket.emit('user-disconnected', userId)
+        console.log(
+          `[SocketManager] Emitted user-disconnected for user: ${userId}`,
+        )
+      } catch (error) {
+        console.warn('[SocketManager] Failed to emit user-disconnected:', error)
+      }
+    }
+
+    try {
+      this._socket.disconnect()
+    } catch (error) {
+      console.warn('[SocketManager] Error during socket disconnect:', error)
+    }
+
+    this._performSocketCleanup(`manual_disconnect: ${userId || 'no_user_id'}`)
   }
 
-  /**
-   * Force disconnect and clear device fingerprint (for testing or logout)
-   */
   forceDisconnect() {
-    this.disconnect()
+    console.log('[SocketManager] Force disconnecting and clearing all state')
 
-    // Clear device fingerprint to force regeneration
+    if (this._socket) {
+      try {
+        this._socket.disconnect()
+      } catch (error) {
+        console.warn('[SocketManager] Error during force disconnect:', error)
+      }
+    }
+
+    this._performSocketCleanup('force_disconnect')
     this._deviceFingerprint = null
     this._fingerprintPromise = null
-
-    // NEW: Reset connection tracking
     this.resetConnectionTracking()
 
-    // Clear session storage
     if (window.sessionStorage) {
       sessionStorage.removeItem('lastDeviceFingerprint')
       sessionStorage.removeItem('lastConnectionTime')
       sessionStorage.removeItem('lastEndpoint')
     }
 
-    console.log(
-      'SocketManager: Force disconnected and cleared device fingerprint and connection tracking',
-    )
+    console.log('[SocketManager] Force disconnect complete')
   }
 
-  /**
-   * Add a connection state change listener
-   * @param {Function} listener - Callback function(isConnected)
-   * @returns {Function} Function to remove the listener
-   */
   addConnectionListener(listener) {
     if (typeof listener !== 'function') return () => {}
 
     this._connectionListeners.add(listener)
 
-    // Call immediately with current state if socket exists
     if (this._socket) {
       listener(this._socket.connected)
     } else {
       listener(false)
     }
 
-    // Return function to remove listener
     return () => {
       this._connectionListeners.delete(listener)
     }
   }
 
-  /**
-   * Add a device conflict listener
-   * @param {Function} listener - Callback function(conflictData)
-   * @returns {Function} Function to remove the listener
-   */
   addDeviceConflictListener(listener) {
     if (typeof listener !== 'function') return () => {}
 
@@ -544,77 +444,44 @@ class SocketInitManager {
 
     window.addEventListener('socketDeviceConflict', eventListener)
 
-    // Return function to remove listener
     return () => {
       window.removeEventListener('socketDeviceConflict', eventListener)
     }
   }
 
-  /**
-   * Notify all connection listeners
-   * @private
-   * @param {boolean} isConnected - Connection state
-   */
   _notifyConnectionListeners(isConnected) {
     this._connectionListeners.forEach(listener => {
       try {
         listener(isConnected)
       } catch (error) {
-        console.error('SocketManager: Error in connection listener:', error)
+        console.error('[SocketManager] Error in connection listener:', error)
       }
     })
   }
 
-  /**
-   * Get the current socket instance
-   * @returns {Object|null} Socket instance or null
-   */
   getSocket() {
     return this._socket
   }
 
-  /**
-   * Get the current device fingerprint
-   * @returns {string|null} Device fingerprint or null
-   */
   getCurrentDeviceFingerprint() {
     return this._deviceFingerprint
   }
 
-  /**
-   * Get the current endpoint
-   * @returns {string} Current endpoint URL
-   */
   getCurrentEndpoint() {
     return this._endpoint
   }
 
-  /**
-   * Check if connection has been attempted
-   * @returns {boolean} True if connection attempted
-   */
   isConnectionAttempted() {
     return this._connectionAttempted
   }
 
-  /**
-   * Check if socket is currently connected
-   * @returns {boolean} Connection status
-   */
   isConnected() {
     return this._socket && this._socket.connected
   }
 
-  /**
-   * Emit event with device fingerprint context
-   * @param {string} event - Event name
-   * @param {Object} data - Event data
-   */
   emitWithDeviceContext(event, data = {}) {
     if (!this._socket || !this._socket.connected) {
-      console.warn(
-        `Cannot emit ${event}: Socket not connected to ${this._endpoint}`,
-      )
+      console.warn(`Cannot emit ${event}: Socket not connected`)
       return false
     }
 
@@ -626,15 +493,9 @@ class SocketInitManager {
     return true
   }
 
-  /**
-   * Join a room with device context
-   * @param {string} room - Room name
-   */
   joinRoom(room) {
     if (!this._socket || !this._socket.connected) {
-      console.warn(
-        `Cannot join room ${room}: Socket not connected to ${this._endpoint}`,
-      )
+      console.warn(`Cannot join room ${room}: Socket not connected`)
       return false
     }
 
@@ -642,44 +503,33 @@ class SocketInitManager {
     return true
   }
 
-  /**
-   * Check if we've ever successfully connected
-   * @returns {boolean} True if we've ever connected
-   */
   hasEverConnected() {
     return this._hasEverConnected
   }
 
-  /**
-   * Check if initial connection was attempted
-   * @returns {boolean} True if initial connection was attempted
-   */
   isInitialConnectionAttempted() {
     return this._initialConnectionAttempted
   }
 
-  /**
-   * Get connection history for debugging
-   * @returns {Array} Array of connection events
-   */
   getConnectionHistory() {
     return [...this._connectionHistory]
   }
 
-  /**
-   * Reset connection tracking (for logout or force disconnect)
-   */
   resetConnectionTracking() {
     this._hasEverConnected = false
     this._initialConnectionAttempted = false
     this._connectionHistory = []
+    this._isReconnecting = false
     this._recordConnectionEvent('tracking_reset')
   }
 
-  /**
-   * Get connection debug info
-   * @returns {Object} Debug information
-   */
+  getReconnectionState() {
+    return {
+      isReconnecting: this._isReconnecting,
+      socketIOReconnecting: this._socket?.io?.reconnecting || false,
+    }
+  }
+
   getDebugInfo() {
     return {
       isConnected: this.isConnected(),
@@ -689,38 +539,21 @@ class SocketInitManager {
         ? this._deviceFingerprint.substring(0, 8) + '...'
         : null,
       socketId: this._socket ? this._socket.id : null,
-      lastInitTime: this._lastInitTime,
       endpoint: this._endpoint,
-      hostname: window.location.hostname,
-
-      // NEW: Enhanced tracking info
       hasEverConnected: this._hasEverConnected,
-      initialConnectionAttempted: this._initialConnectionAttempted,
+      reconnectionState: this.getReconnectionState(),
       connectionHistory: this._connectionHistory,
-
-      sessionData: window.sessionStorage
-        ? {
-            lastDeviceFingerprint: sessionStorage.getItem(
-              'lastDeviceFingerprint',
-            ),
-            lastConnectionTime: sessionStorage.getItem('lastConnectionTime'),
-            lastEndpoint: sessionStorage.getItem('lastEndpoint'),
-          }
-        : null,
     }
   }
 }
 
-// Create and export singleton instance
 const socketManager = new SocketInitManager()
 
-// Add global event listener for device conflicts (for debugging)
 if (typeof window !== 'undefined') {
   window.addEventListener('socketDeviceConflict', event => {
     console.warn('Device conflict detected:', event.detail)
   })
 
-  // Add global debug function
   window.getSocketDebugInfo = () => {
     return socketManager.getDebugInfo()
   }

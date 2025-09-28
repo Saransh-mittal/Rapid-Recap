@@ -21,6 +21,7 @@ import {
   hasAuthSignals,
 } from './utils/authStateManager.js'
 import localStorageService from './services/localStorageWrapper.js'
+import useFriendsSocket from './customHooks/useFriendsSocket'
 
 const FixedBackground = React.lazy(() =>
   import('./components/miscellaneous/FixedBackground.jsx'),
@@ -127,6 +128,23 @@ const App = () => {
   const { isAuthenticated, user, loginCheckStatus } = useSelector(
     state => state.auth,
   )
+  // Initialize friends socket at app level - this will be shared globally
+  const {
+    isConnected: friendsSocketConnected,
+    isConnecting: friendsSocketConnecting,
+    networkStatus: friendsNetworkStatus,
+    checkFriendsOnlineStatus,
+    requestFriendsUpdate,
+    joinConversation,
+    leaveConversation,
+    sendTypingIndicator,
+    reconnect: reconnectFriendsSocket,
+  } = useFriendsSocket({
+    autoConnect: true,
+    enableToasts: true,
+    enableOptimisticUpdates: true,
+    enableNotifications: true,
+  })
   const {
     isOpen: isOpenRewardsModal,
     onClose,
@@ -191,6 +209,39 @@ const App = () => {
   const handleVideoLoad = useCallback(() => {
     setVideoLoaded(true)
   }, [])
+
+  // Expose socket utilities globally for easy access
+  useEffect(() => {
+    if (typeof window !== 'undefined') {
+      window.friendsSocket = {
+        isConnected: friendsSocketConnected,
+        isConnecting: friendsSocketConnecting,
+        networkStatus: friendsNetworkStatus,
+        checkOnlineStatus: checkFriendsOnlineStatus,
+        requestUpdate: requestFriendsUpdate,
+        reconnect: reconnectFriendsSocket,
+        joinFriendConversation: joinConversation,
+        leaveFriendConversation: leaveConversation,
+        sendFriendTypingIndicator: sendTypingIndicator,
+      }
+    }
+
+    return () => {
+      if (typeof window !== 'undefined') {
+        delete window.friendsSocket
+      }
+    }
+  }, [
+    friendsSocketConnected,
+    friendsSocketConnecting,
+    friendsNetworkStatus,
+    checkFriendsOnlineStatus,
+    requestFriendsUpdate,
+    reconnectFriendsSocket,
+    joinConversation,
+    leaveConversation,
+    sendTypingIndicator,
+  ])
 
   useEffect(() => {
     if (selectedNotificationId) {

@@ -1,13 +1,18 @@
-// customHooks/useSocket.js
-import { useCallback, useEffect } from 'react'
+// customHooks/useSocket.js - FINAL FIX: Prevents duplicate socket creation during reconnection
+import { useCallback, useEffect, useRef } from 'react'
 import { useSelector } from 'react-redux'
 import { useSocketContext } from '../contextAPI/SocketContext'
 import socketManager from '../services/socketInitManager'
-import { useRef } from 'react'
 
 /**
- * Enhanced custom hook to interact with the device-aware socket connection
- * Uses the singleton pattern with device fingerprinting to ensure only one socket connection per device
+ * FINAL FIXED: Enhanced custom hook that properly handles reconnection
+ *
+ * Critical Fix:
+ * - Only initialize socket if it doesn't exist at all
+ * - Don't re-initialize when Socket.IO is handling automatic reconnection
+ * - Check socket existence before creating new instances
+ *
+ * This prevents the duplicate socket creation issue during reconnection
  */
 export const useSocket = () => {
   const { user } = useSelector(state => state.auth)
@@ -18,72 +23,140 @@ export const useSocket = () => {
     connectionStats,
   } = useSocketContext()
 
-  // Track initialization to prevent multiple attempts
+  // Track initialization only
   const initializationAttempted = useRef(false)
   const initializationPromise = useRef(null)
 
-  // Initialize socket when hook is first used with a user
-  useEffect(() => {
+  /**
+   * Initialize socket - Socket.IO will handle reconnection automatically
+   */
+  const initializeWithReconnection = useCallback(async () => {
     // Skip if no user
     if (!user || !Object.keys(user).length) {
-      return
+      return null
     }
 
     // Skip if already attempted initialization
     if (initializationAttempted.current) {
-      return
+      return socketManager.getSocket()
     }
 
     // Skip if already connected
     if (socketManager.isConnected()) {
-      return
+      return socketManager.getSocket()
     }
 
     // Skip if initialization is in progress
     if (initializationPromise.current) {
-      return
+      return initializationPromise.current
     }
 
     // Mark as attempted to prevent duplicate calls
     initializationAttempted.current = true
 
-    // Initialize socket with user data if not already connected
-    if (!socketManager.isConnectionAttempted()) {
-      initializationPromise.current = socketManager
-        .initializeSocket(user)
-        .then(socket => {
-          console.log('useSocket: Socket initialization completed')
-          return socket
-        })
-        .catch(error => {
-          console.error('useSocket: Failed to initialize socket:', error)
-          // Reset on error to allow retry
-          initializationAttempted.current = false
-          throw error
-        })
-        .finally(() => {
-          initializationPromise.current = null
-        })
-    }
+    console.log(
+      '[useSocket] Starting initialization (Socket.IO handles reconnection)',
+    )
 
-    // Cleanup function
-    return () => {
-      // Don't reset on unmount to prevent re-initialization
-      // initializationAttempted.current = false
+    try {
+      initializationPromise.current = socketManager.initializeSocket(user)
+      const socket = await initializationPromise.current
+
+      console.log('[useSocket] ✅ Initialization completed')
+      return socket
+    } catch (error) {
+      console.error('[useSocket] ❌ Initialization failed:', error)
+      // Reset on error to allow retry
+      initializationAttempted.current = false
+      throw error
+    } finally {
+      initializationPromise.current = null
     }
   }, [user])
 
-  // Reset initialization flag when user changes (login/logout)
+  /**
+   * Manual reconnection function for UI controls (if needed)
+   */
+  const manualReconnect = useCallback(async () => {
+    console.log('[useSocket] Manual reconnection requested')
+
+    // Reset state
+    initializationAttempted.current = false
+    initializationPromise.current = null
+
+    // Force disconnect to ensure clean state
+    socketManager.forceDisconnect()
+
+    // Wait for cleanup
+    await new Promise(resolve => setTimeout(resolve, 500))
+
+    // Attempt reconnection
+    return initializeWithReconnection()
+  }, [initializeWithReconnection])
+
+  /**
+   * Enable/disable Socket.IO's reconnection
+   */
+  const setReconnectionEnabled = useCallback(enabled => {
+    console.log('[useSocket] Reconnection', enabled ? 'enabled' : 'disabled')
+
+    const socket = socketManager.getSocket()
+    if (socket && socket.io) {
+      if (enabled) {
+        socket.io.reconnection(true)
+      } else {
+        socket.io.reconnection(false)
+      }
+    }
+  }, [])
+
+  // CRITICAL FIX: Auto-initialize ONLY when socket doesn't exist at all
+  useEffect(() => {
+    console.log(
+      '[useSocket] Auth state - User:',
+      !!user,
+      'Connected:',
+      isConnected,
+    )
+
+    // FIXED: Check if socket exists before initializing
+    const socketExists = socketManager.getSocket() !== null
+
+    // Only initialize if:
+    // 1. User exists
+    // 2. Not currently connected
+    // 3. Socket instance doesn't exist (prevents re-initialization during reconnection)
+    if (user && Object.keys(user).length && !isConnected && !socketExists) {
+      console.log(
+        '[useSocket] Starting auto-initialization (no socket exists)...',
+      )
+      initializeWithReconnection()
+    } else if (socketExists && !isConnected) {
+      console.log(
+        '[useSocket] Socket exists but disconnected - Socket.IO will handle reconnection',
+      )
+    }
+
+    return () => {
+      // Reset flags when user changes (login/logout)
+      if (!user || !Object.keys(user).length) {
+        initializationAttempted.current = false
+        initializationPromise.current = null
+      }
+    }
+  }, [user, isConnected, initializeWithReconnection])
+
+  // Reset initialization flag when user changes
   useEffect(() => {
     if (!user || !Object.keys(user).length) {
+      console.log('[useSocket] User logged out, resetting state')
       initializationAttempted.current = false
       initializationPromise.current = null
     }
-  }, [user?._id]) // Only reset when user ID actually changes
+  }, [user?._id])
 
   /**
    * Get the socket instance
-   * @returns {Object|null} Socket instance or null
    */
   const getSocket = useCallback(() => {
     return socketManager.getSocket()
@@ -93,6 +166,8 @@ export const useSocket = () => {
    * Disconnect the socket (for logout)
    */
   const disconnectSocket = useCallback(() => {
+    console.log('[useSocket] Manual disconnect requested')
+
     if (user?._id) {
       socketManager.disconnect(user._id)
     } else {
@@ -101,17 +176,15 @@ export const useSocket = () => {
   }, [user])
 
   /**
-   * Force disconnect and clear device fingerprint (for logout or testing)
+   * Force disconnect and clear device fingerprint
    */
   const forceDisconnectSocket = useCallback(() => {
+    console.log('[useSocket] Force disconnect requested')
     socketManager.forceDisconnect()
   }, [])
 
   /**
    * Emit event with device context
-   * @param {string} event - Event name
-   * @param {Object} data - Event data
-   * @returns {boolean} True if emitted successfully
    */
   const emitWithDeviceContext = useCallback((event, data = {}) => {
     return socketManager.emitWithDeviceContext(event, data)
@@ -119,24 +192,20 @@ export const useSocket = () => {
 
   /**
    * Join a room with device context
-   * @param {string} room - Room name
-   * @returns {boolean} True if joined successfully
    */
   const joinRoom = useCallback(room => {
     return socketManager.joinRoom(room)
   }, [])
 
   /**
-   * Get debug information about the socket connection
-   * @returns {Object} Debug information
+   * Get debug information
    */
   const getDebugInfo = useCallback(() => {
     return socketManager.getDebugInfo()
   }, [])
 
   /**
-   * Check if socket is available and connected
-   * @returns {boolean} True if socket is ready for use
+   * Check if socket is ready
    */
   const isSocketReady = useCallback(() => {
     const socket = socketManager.getSocket()
@@ -144,10 +213,7 @@ export const useSocket = () => {
   }, [])
 
   /**
-   * Add event listener to socket with automatic cleanup
-   * @param {string} event - Event name
-   * @param {Function} handler - Event handler
-   * @returns {Function} Cleanup function
+   * Add event listener with automatic cleanup
    */
   const addEventListener = useCallback((event, handler) => {
     const socket = socketManager.getSocket()
@@ -159,27 +225,18 @@ export const useSocket = () => {
       return () => {}
     }
 
-    // Wrap handler with debugging
-    const debugHandler = (...args) => {
-      handler(...args)
-    }
+    socket.on(event, handler)
 
-    socket.on(event, debugHandler)
-
-    // Return cleanup function
     return () => {
       const currentSocket = socketManager.getSocket()
       if (currentSocket) {
-        currentSocket.off(event, debugHandler)
+        currentSocket.off(event, handler)
       }
     }
   }, [])
 
   /**
-   * Add one-time event listener to socket
-   * @param {string} event - Event name
-   * @param {Function} handler - Event handler
-   * @returns {Function} Cleanup function
+   * Add one-time event listener
    */
   const addEventListenerOnce = useCallback((event, handler) => {
     const socket = socketManager.getSocket()
@@ -193,7 +250,6 @@ export const useSocket = () => {
 
     socket.once(event, handler)
 
-    // Return cleanup function (though it auto-cleans after first call)
     return () => {
       const currentSocket = socketManager.getSocket()
       if (currentSocket) {
@@ -201,6 +257,9 @@ export const useSocket = () => {
       }
     }
   }, [])
+
+  // Get reconnection state from socketManager
+  const reconnectionState = socketManager.getReconnectionState()
 
   return {
     // Core socket access
@@ -212,12 +271,21 @@ export const useSocket = () => {
     deviceConflictDetected,
     connectionStats,
 
+    // Reconnection state (from Socket.IO's built-in reconnection)
+    isReconnecting: reconnectionState.isReconnecting,
+    reconnectAttempts: 0, // Socket.IO doesn't expose attempt count
+    maxReconnectAttempts: 5, // From socket config
+
     // Core methods
     getSocket,
     disconnectSocket,
     forceDisconnectSocket,
 
-    // Enhanced methods with device context
+    // Reconnection controls
+    manualReconnect,
+    setReconnectionEnabled,
+
+    // Enhanced methods
     emitWithDeviceContext,
     joinRoom,
     isSocketReady,

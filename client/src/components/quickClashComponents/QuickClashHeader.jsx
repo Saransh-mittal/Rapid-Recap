@@ -1,4 +1,4 @@
-// components/quickClashComponents/QuickClashHeader.jsx - FAITHFUL CONVERSION to Tailwind with Blue-Cyan Color Scheme
+// components/quickClashComponents/QuickClashHeader.jsx - Enhanced with immediate friend request fetching
 import React, {
   memo,
   useEffect,
@@ -10,7 +10,7 @@ import React, {
 } from 'react'
 import { motion } from 'framer-motion'
 import { FiZap, FiHome } from 'react-icons/fi'
-import { Target, Zap as ZapIconLucide, Bell, User } from 'lucide-react'
+import { Target, Zap as ZapIconLucide, Bell, User, Users } from 'lucide-react'
 import { useTranslation } from 'react-i18next'
 import { useNavigate } from 'react-router-dom'
 import { useDispatch, useSelector } from 'react-redux'
@@ -18,40 +18,104 @@ import { useDispatch, useSelector } from 'react-redux'
 // Import centralized color scheme
 import { QUICK_CLASH_CLASSES } from './utils/quickClashColors'
 
-// Import components (these should already exist)
+// Import components
 import QuickClashLeaderboardButton from './leaderboard/QuickClashLeaderboardButton'
 import LevelBadge from './user/LevelBadge'
 import TaskProgressIndicator from './dailyTasks/TaskProgressIndicator'
 import TrophyDisplay from './user/TrophyDisplay'
 import { fetchUserTrophies } from '../../redux/quickClashSlice'
 import { setIsNotifDrawerOpen } from '../../redux/appSlice'
+import useFriends from '../../customHooks/useFriends'
+import WiseWeb from '../WiseWeb/WiseWeb'
 
 const TaskPopup = lazy(() => import('./dailyTasks/TaskPopup'))
 
 const MotionDiv = motion.div
 const MotionButton = motion.button
 
-// Tooltip component (simple implementation to replace Chakra's Tooltip)
-const Tooltip = ({ children, label }) => {
+// Enhanced tooltip component with better positioning
+const Tooltip = memo(({ children, label, placement = 'bottom' }) => {
   const [showTooltip, setShowTooltip] = useState(false)
+
+  const tooltipPositions = {
+    bottom: 'bottom-full left-1/2 transform -translate-x-1/2 mb-2',
+    top: 'top-full left-1/2 transform -translate-x-1/2 mt-2',
+    left: 'right-full top-1/2 transform -translate-y-1/2 mr-2',
+    right: 'left-full top-1/2 transform -translate-y-1/2 ml-2',
+  }
+
+  const arrowPositions = {
+    bottom:
+      'top-full left-1/2 transform -translate-x-1/2 border-l-4 border-r-4 border-t-4 border-l-transparent border-r-transparent border-t-slate-800',
+    top: 'bottom-full left-1/2 transform -translate-x-1/2 border-l-4 border-r-4 border-b-4 border-l-transparent border-r-transparent border-b-slate-800',
+    left: 'left-full top-1/2 transform -translate-y-1/2 border-t-4 border-b-4 border-r-4 border-t-transparent border-b-transparent border-r-slate-800',
+    right:
+      'right-full top-1/2 transform -translate-y-1/2 border-t-4 border-b-4 border-l-4 border-t-transparent border-b-transparent border-l-slate-800',
+  }
 
   return (
     <div className="relative inline-block">
       <div
         onMouseEnter={() => setShowTooltip(true)}
         onMouseLeave={() => setShowTooltip(false)}
+        onFocus={() => setShowTooltip(true)}
+        onBlur={() => setShowTooltip(false)}
       >
         {children}
       </div>
       {showTooltip && (
-        <div className="absolute bottom-full left-1/2 transform -translate-x-1/2 mb-2 px-2 py-1 bg-slate-800 text-white text-xs rounded whitespace-nowrap z-50">
-          {label}
-          <div className="absolute top-full left-1/2 transform -translate-x-1/2 w-0 h-0 border-l-4 border-r-4 border-t-4 border-l-transparent border-r-transparent border-t-slate-800"></div>
+        <div className={`absolute ${tooltipPositions[placement]} z-50`}>
+          <div className="px-2 py-1 bg-slate-800 text-white text-xs rounded whitespace-nowrap shadow-lg">
+            {label}
+            <div
+              className={`absolute w-0 h-0 ${arrowPositions[placement]}`}
+            ></div>
+          </div>
         </div>
       )}
     </div>
   )
-}
+})
+
+// Enhanced notification badge with pulsing animation
+const NotificationBadge = memo(
+  ({ count = 0, type = 'notification', pulseColor = 'cyan' }) => {
+    if (count <= 0) return null
+
+    const badgeColors = {
+      notification: 'bg-red-500',
+      friends: 'bg-cyan-500',
+      online: 'bg-green-500',
+    }
+
+    const borderColors = {
+      notification: 'border-slate-800',
+      friends: 'border-blue-500',
+      online: 'border-blue-500',
+    }
+
+    const pulseColors = {
+      cyan: 'animate-pulse',
+      green: 'animate-pulse',
+      red: 'animate-pulse',
+    }
+
+    return (
+      <motion.span
+        initial={{ scale: 0 }}
+        animate={{ scale: 1 }}
+        transition={{ type: 'spring', stiffness: 300, damping: 20 }}
+        className={`
+        absolute -top-0.5 -right-0.5 text-white text-xs rounded-full
+        min-w-[18px] h-[18px] flex items-center justify-center font-bold
+        border-2 z-10 ${badgeColors[type]} ${borderColors[type]} ${pulseColors[pulseColor]}
+      `}
+      >
+        {count > 99 ? '99+' : count}
+      </motion.span>
+    )
+  },
+)
 
 const QuickClashHeader = ({ onNewChallenge }) => {
   const { t } = useTranslation('QuickClash')
@@ -60,6 +124,24 @@ const QuickClashHeader = ({ onNewChallenge }) => {
 
   // Responsive state management
   const [isDesktop, setIsDesktop] = useState(false)
+  const [showTaskPopup, setShowTaskPopup] = useState(false)
+
+  // Enhanced friends hook with immediate fetching
+  const {
+    totalRequests,
+    onlineCount,
+    openWiseWeb,
+    closeWiseWeb,
+    isWiseWebOpen,
+    loading,
+    error,
+    refreshData,
+    networkStatus,
+  } = useFriends({
+    autoFetch: true, // Auto-fetch on mount
+    enableOptimisticUpdates: true,
+    enableAutoRetry: true,
+  })
 
   useEffect(() => {
     const checkDesktop = () => {
@@ -72,12 +154,12 @@ const QuickClashHeader = ({ onNewChallenge }) => {
 
   const { user } = useSelector(state => state.auth)
 
-  // Get notification data from Redux - EXACTLY as original
+  // Get notification data from Redux
   const { updates, unreadFriendRequests, notification } = useSelector(
     state => state.app,
   )
 
-  // Calculate notification count - memoized - EXACTLY as original
+  // Enhanced notification count calculation with memoization
   const notificationCount = useMemo(() => {
     const unreadUpdates = updates?.filter(u => !u.read).length || 0
     const friendRequests = unreadFriendRequests || 0
@@ -87,30 +169,55 @@ const QuickClashHeader = ({ onNewChallenge }) => {
     return unreadUpdates + friendRequests + notificationItems
   }, [updates, unreadFriendRequests, notification])
 
-  const [showTaskPopup, setShowTaskPopup] = useState(false)
-
-  // ALL ORIGINAL EFFECTS AND HANDLERS PRESERVED EXACTLY
+  // Effects and handlers - preserved exactly
   useEffect(() => {
     dispatch(fetchUserTrophies())
   }, [dispatch])
 
-  const handleBackToHome = () => navigate('/home')
-  const handleProfileClick = () => {
+  const handleBackToHome = useCallback(() => navigate('/home'), [navigate])
+
+  const handleProfileClick = useCallback(() => {
     navigate(`/profile/${user?.inGameName}`, {
       state: { showQuickClash: true },
     })
-  }
+  }, [navigate, user?.inGameName])
+
   const handleViewTasksClick = useCallback(() => setShowTaskPopup(true), [])
   const handleCloseTaskPopup = useCallback(() => setShowTaskPopup(false), [])
+
   const handleNavigateToTasksSection = useCallback(() => {
     window.location.hash = 'tasks'
   }, [])
 
-  const handleInboxClick = () => {
+  const handleInboxClick = useCallback(() => {
     dispatch(setIsNotifDrawerOpen(true))
-  }
+  }, [dispatch])
 
-  // Animation variants - EXACTLY as original but adapted for blue-cyan theme
+  // Enhanced WiseWeb handler with error handling
+  const handleOpenWiseWeb = useCallback(() => {
+    if (networkStatus === 'offline') {
+      // Still allow opening in offline mode, but show limited functionality
+      openWiseWeb()
+      return
+    }
+
+    // Refresh data before opening if it's stale
+    const shouldRefresh = error.friends || error.requests
+    if (shouldRefresh) {
+      refreshData()
+        .then(() => {
+          openWiseWeb()
+        })
+        .catch(() => {
+          // Open anyway, but user will see error state
+          openWiseWeb()
+        })
+    } else {
+      openWiseWeb()
+    }
+  }, [openWiseWeb, networkStatus, error, refreshData])
+
+  // Animation variants - preserved exactly
   const containerVariants = {
     initial: { opacity: 0, y: -10 },
     animate: {
@@ -119,10 +226,12 @@ const QuickClashHeader = ({ onNewChallenge }) => {
       transition: { duration: 0.3, staggerChildren: 0.1 },
     },
   }
+
   const itemVariants = {
     initial: { opacity: 0, y: -5 },
     animate: { opacity: 1, y: 0, transition: { duration: 0.3 } },
   }
+
   const buttonVariants = {
     initial: { opacity: 0, scale: 0.95 },
     animate: {
@@ -136,6 +245,7 @@ const QuickClashHeader = ({ onNewChallenge }) => {
     },
     tap: { scale: 0.98 },
   }
+
   const homeButtonVariants = {
     hover: {
       scale: 1.1,
@@ -164,6 +274,68 @@ const QuickClashHeader = ({ onNewChallenge }) => {
     },
     tap: { scale: 0.9 },
   }
+
+  // Enhanced WiseWeb button with loading states
+  const WiseWebButton = memo(({ isMobile = false }) => {
+    const size = isMobile ? 'w-8 h-8' : 'w-10 h-10'
+    const iconSize = isMobile ? 16 : 20
+
+    return (
+      <div className="relative">
+        <Tooltip
+          label={t('Friends')}
+          placement={isMobile ? 'bottom' : 'bottom'}
+        >
+          <MotionButton
+            onClick={handleOpenWiseWeb}
+            disabled={loading.friends && loading.requests}
+            className={`
+              flex items-center justify-center ${size}
+              ${QUICK_CLASH_CLASSES.hoverBlue} hover:bg-blue-500/10
+              text-white/90 hover:text-blue-300 rounded-full
+              transition-all duration-200 hover:-translate-y-0.5
+              focus:outline-none focus:ring-2 focus:ring-blue-400/50
+              disabled:opacity-50 disabled:cursor-not-allowed
+              ${
+                networkStatus === 'offline' ? 'border border-orange-400/30' : ''
+              }
+            `}
+            variants={inboxButtonVariants}
+            whileHover="hover"
+            whileTap="tap"
+            aria-label={t('Open WiseWeb')}
+          >
+            {loading.friends && loading.requests ? (
+              <div className="w-4 h-4 border-2 border-blue-400/30 border-t-blue-400 rounded-full animate-spin" />
+            ) : (
+              <Users size={iconSize} />
+            )}
+          </MotionButton>
+        </Tooltip>
+
+        {/* Enhanced badge system */}
+        {totalRequests > 0 && (
+          <NotificationBadge
+            count={totalRequests}
+            type="friends"
+            pulseColor="cyan"
+          />
+        )}
+        {onlineCount > 0 && totalRequests === 0 && (
+          <NotificationBadge
+            count={onlineCount}
+            type="online"
+            pulseColor="green"
+          />
+        )}
+
+        {/* Network status indicator */}
+        {networkStatus === 'offline' && (
+          <div className="absolute -bottom-1 -left-1 w-3 h-3 bg-orange-500 border border-slate-800 rounded-full" />
+        )}
+      </div>
+    )
+  })
 
   return (
     <MotionDiv
@@ -201,6 +373,7 @@ const QuickClashHeader = ({ onNewChallenge }) => {
         <div className="flex items-center gap-2">
           <TrophyDisplay />
           <LevelBadge />
+          <WiseWebButton isMobile={true} />
           <TaskProgressIndicator onViewTasks={handleViewTasksClick} size="sm" />
         </div>
       </MotionDiv>
@@ -251,8 +424,9 @@ const QuickClashHeader = ({ onNewChallenge }) => {
         <div className="flex items-center gap-3">
           <TrophyDisplay />
           <LevelBadge />
+          <WiseWebButton isMobile={false} />
 
-          {/* Inbox Button - Desktop */}
+          {/* Enhanced Inbox Button - Desktop */}
           <div className="relative">
             <Tooltip label={t('Notifications')}>
               <MotionButton
@@ -273,18 +447,20 @@ const QuickClashHeader = ({ onNewChallenge }) => {
               </MotionButton>
             </Tooltip>
             {notificationCount > 0 && (
-              <span className="absolute -top-0.5 -right-0.5 bg-red-500 text-white text-xs rounded-full min-w-[18px] h-[18px] flex items-center justify-center font-bold border-2 border-blue-500 z-10">
-                {notificationCount > 99 ? '99+' : notificationCount}
-              </span>
+              <NotificationBadge
+                count={notificationCount}
+                type="notification"
+                pulseColor="red"
+              />
             )}
           </div>
+
           <TaskProgressIndicator onViewTasks={handleViewTasksClick} size="sm" />
         </div>
       </MotionDiv>
 
-      {/* Main Header Content */}
+      {/* Main Header Content - preserved exactly */}
       <div className="flex flex-col md:flex-row justify-between items-center mb-4 md:mb-8 gap-3 md:gap-4 mt-20 md:mt-0">
-        {/* Title and Description */}
         <MotionDiv
           className="flex-1 text-center md:text-left max-w-full md:max-w-[60%]"
           variants={itemVariants}
@@ -330,7 +506,7 @@ const QuickClashHeader = ({ onNewChallenge }) => {
         </div>
       </div>
 
-      {/* Task Popup - EXACTLY as original */}
+      {/* Task Popup */}
       {showTaskPopup && (
         <Suspense fallback={null}>
           <TaskPopup
@@ -340,8 +516,16 @@ const QuickClashHeader = ({ onNewChallenge }) => {
           />
         </Suspense>
       )}
+
+      {/* Enhanced WiseWeb with error boundary */}
+      <WiseWeb isOpen={isWiseWebOpen} onClose={closeWiseWeb} />
     </MotionDiv>
   )
 }
+
+// Set display names for debugging
+Tooltip.displayName = 'Tooltip'
+NotificationBadge.displayName = 'NotificationBadge'
+QuickClashHeader.displayName = 'QuickClashHeader'
 
 export default memo(QuickClashHeader)

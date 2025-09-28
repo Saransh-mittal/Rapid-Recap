@@ -1,4 +1,4 @@
-// socket.js
+// socket.js - CLEANED: Removed duplicate handlers that are now in friendsSocket.utils.js
 const Message = require('./model/messageSchema')
 const User = require('./model/userSchema')
 const Chat = require('./model/chatSchema')
@@ -13,10 +13,18 @@ const {
   setupQuickClashSocketHandlers,
   setupQuickClashGlobalEvents,
 } = require('./utils/quickClashSocket.utils')
+const {
+  setupFriendsSocketHandlers,
+  setupFriendsGlobalEvents,
+} = require('./utils/friendsSocket.utils')
 
 // Enhanced tracking maps for device-aware connections
 const userDeviceConnections = new Map() // userId -> Map(deviceFingerprint -> Set(socketIds))
 const socketMetadata = new Map() // socketId -> { userId, deviceFingerprint, connectedAt }
+
+// FIXED: Track message IDs to prevent duplicate socket emissions (for legacy chat system)
+const recentMessageIds = new Set()
+const MESSAGE_ID_CLEANUP_INTERVAL = 300000 // 5 minutes
 
 // Helper function to get allowed origins for CORS
 function getAllowedOrigins() {
@@ -58,6 +66,33 @@ function getAllowedOrigins() {
   console.log(`[SOCKET] Allowed CORS origins:`, origins)
   return origins
 }
+
+// Helper function to prevent duplicate message processing (for legacy chat system)
+const shouldProcessMessage = messageId => {
+  if (recentMessageIds.has(messageId)) {
+    console.log('[SOCKET] Skipping duplicate message:', messageId)
+    return false
+  }
+
+  recentMessageIds.add(messageId)
+
+  // Clean up old message IDs periodically
+  if (recentMessageIds.size > 10000) {
+    // Prevent memory leaks
+    const oldestIds = Array.from(recentMessageIds).slice(0, 1000)
+    oldestIds.forEach(id => recentMessageIds.delete(id))
+  }
+
+  return true
+}
+
+// Clean up old message IDs periodically
+setInterval(() => {
+  if (recentMessageIds.size > 5000) {
+    recentMessageIds.clear()
+    console.log('[SOCKET] Cleaned up recent message IDs cache')
+  }
+}, MESSAGE_ID_CLEANUP_INTERVAL)
 
 function initializeSocket(server) {
   const allowedOrigins = getAllowedOrigins()
@@ -168,42 +203,12 @@ function initializeSocket(server) {
       socket.join(userId)
       console.log(`[SETUP] Socket ${socket.id} joined room: ${userId}`)
 
-      // Verify room joining
-      setTimeout(() => {
-        const room = io.sockets.adapter.rooms.get(userId)
-        console.log(
-          `DEBUG: Room ${userId} now has ${room ? room.size : 0} sockets`,
-        )
-        if (!room || !room.has(socket.id)) {
-          console.error(
-            `[SETUP] ERROR: Socket ${socket.id} failed to join room ${userId}`,
-          )
-          // Force join again
-          socket.join(userId)
-        }
-      }, 100)
-
       // Join QuickClash room
       const userRoom = `quickClash:${userId}`
       socket.join(userRoom)
       console.log(
         `[SETUP] Socket ${socket.id} joined QuickClash room: ${userRoom}`,
       )
-
-      // Verify QuickClash room joining
-      setTimeout(() => {
-        const room = io.sockets.adapter.rooms.get(userRoom)
-        console.log(
-          `DEBUG: Room ${userRoom} now has ${room ? room.size : 0} sockets`,
-        )
-        if (!room || !room.has(socket.id)) {
-          console.error(
-            `[SETUP] ERROR: Socket ${socket.id} failed to join QuickClash room ${userRoom}`,
-          )
-          // Force join again
-          socket.join(userRoom)
-        }
-      }, 150)
 
       socket.emit('connected')
       userOpenChats.set(userId, new Set())
@@ -214,15 +219,14 @@ function initializeSocket(server) {
       socket.broadcast.emit('user online', userId)
 
       // Setup Quick Clash handlers AFTER room joining and user data is stored
-      // This includes both team and 1v1 matchmaking handlers
       setupQuickClashSocketHandlers(io, socket, userData)
+
+      // Setup Friends socket handlers for real-time friend interactions
+      setupFriendsSocketHandlers(io, socket, userData)
 
       console.log(
         `[SETUP] Setup completed for user ${userId} (socket: ${socket.id}) from ${socket.handshake.address}`,
       )
-
-      // DEBUGGING: Log device tracking state after setup
-      logDeviceTrackingState(userId)
     })
 
     // Handle device registration (called before or after setup)
@@ -257,7 +261,7 @@ function initializeSocket(server) {
         return
       }
 
-      // Store device fingerprint with socket (don't mark as setup completed)
+      // Store device fingerprint with socket
       if (existingMetadata) {
         existingMetadata.deviceFingerprint = deviceFingerprint
       } else {
@@ -265,7 +269,7 @@ function initializeSocket(server) {
           userId: null,
           deviceFingerprint,
           connectedAt: new Date(),
-          setupCompleted: false, // Important: setup not completed yet
+          setupCompleted: false,
           clientAddress: socket.handshake.address,
         })
       }
@@ -282,10 +286,12 @@ function initializeSocket(server) {
       )
     })
 
+    // Core socket handlers
     socket.on('heartbeat', async userId => {
       await redis.setex(`user:${userId}:lastHeartbeat`, 90, Date.now())
     })
 
+    // Legacy chat system handlers (kept for backward compatibility)
     socket.on('join chat', room => {
       socket.join(room)
     })
@@ -293,9 +299,23 @@ function initializeSocket(server) {
     socket.on('typing', room => socket.in(room).emit('typing'))
     socket.on('stop typing', room => socket.in(room).emit('stop typing'))
 
+    // Legacy message handler (for old chat system)
     socket.on('new message', async newMessageRecieved => {
       var chat = newMessageRecieved.chat
       if (!chat.users) return console.log('chat.users not defined')
+
+      // Check for duplicate message processing
+      if (!shouldProcessMessage(newMessageRecieved._id)) {
+        console.log(
+          '[SOCKET] Skipping duplicate message processing:',
+          newMessageRecieved._id,
+        )
+        return
+      }
+
+      // Get sender information
+      const senderId = newMessageRecieved.sender._id
+      console.log('[SOCKET] Processing legacy message from sender:', senderId)
 
       // Decrypt the message content before broadcasting
       const decryptedMessage = { ...newMessageRecieved }
@@ -303,36 +323,51 @@ function initializeSocket(server) {
         const originalMessage = await Message.findById(newMessageRecieved._id)
         decryptedMessage.content = originalMessage.decryptContent()
       } catch (error) {
-        console.error('Error decrypting message:', error)
+        console.error('Error decrypting legacy message:', error)
       }
 
+      // Send message to all chat participants EXCEPT the sender
       chat.users.forEach(user => {
-        if (user._id == newMessageRecieved.sender._id) return
+        const userId = user._id.toString()
 
-        socket.in(user._id).emit('message recieved', decryptedMessage)
+        // Skip sending message back to the sender
+        if (userId === senderId.toString()) {
+          console.log(
+            '[SOCKET] Skipping legacy message send to sender:',
+            userId,
+          )
+          return
+        }
+
+        console.log('[SOCKET] Sending legacy message to user:', userId)
+        socket.in(userId).emit('message recieved', decryptedMessage)
+
         // Send notification for unread message
-        socket.in(user._id).emit('unread notification', {
+        socket.in(userId).emit('unread notification', {
           messageId: newMessageRecieved._id,
           chatId: chat._id,
-          senderId: newMessageRecieved.sender._id,
+          senderId: senderId,
         })
       })
+
       try {
         const updatedMessage = await Message.findByIdAndUpdate(
           newMessageRecieved._id,
           { status: 'sent' },
           { new: true },
         )
+
+        // Only send status update to the sender
         socket.emit('message status updated', {
           messageId: updatedMessage._id,
           status: 'sent',
         })
       } catch (error) {
-        console.error('Error updating message status:', error)
+        console.error('Error updating legacy message status:', error)
       }
     })
 
-    // New event listener for message delivered
+    // Legacy message status handlers
     socket.on('message delivered', async ({ messageId, userId }) => {
       try {
         const updatedMessage = await Message.findByIdAndUpdate(
@@ -340,6 +375,9 @@ function initializeSocket(server) {
           { status: 'delivered' },
           { new: true },
         )
+
+        if (!updatedMessage) return
+
         const userChats = userOpenChats.get(userId)
         if (userChats && userChats.has(updatedMessage.chat.toString())) {
           const updatedMessage = await Message.findByIdAndUpdate(
@@ -348,21 +386,25 @@ function initializeSocket(server) {
             { new: true },
           )
 
-          io.to(updatedMessage.sender.toString()).emit(
-            'message status updated',
-            {
+          const senderId = updatedMessage.sender.toString()
+          if (senderId !== userId) {
+            io.to(senderId).emit('message status updated', {
               messageId,
               status: 'read',
-            },
-          )
+            })
+          }
           return
         }
-        io.to(updatedMessage.sender.toString()).emit('message status updated', {
-          messageId,
-          status: 'delivered',
-        })
+
+        const senderId = updatedMessage.sender.toString()
+        if (senderId !== userId) {
+          io.to(senderId).emit('message status updated', {
+            messageId,
+            status: 'delivered',
+          })
+        }
       } catch (error) {
-        console.error('Error updating message delivery status:', error)
+        console.error('Error updating legacy message delivery status:', error)
       }
     })
 
@@ -374,52 +416,67 @@ function initializeSocket(server) {
           { new: true },
         )
 
-        io.to(updatedMessage.sender.toString()).emit('message status updated', {
-          messageId,
-          status: 'read',
-        })
+        if (!updatedMessage) return
+
+        const senderId = updatedMessage.sender.toString()
+        if (senderId !== userId) {
+          io.to(senderId).emit('message status updated', {
+            messageId,
+            status: 'read',
+          })
+        }
       } catch (error) {
-        console.error('Error updating message read status:', error)
+        console.error('Error updating legacy message read status:', error)
       }
     })
 
+    // Legacy delete message handler
     socket.on('delete message', async deletedMessageInfo => {
       const { chatId, messageId, deleteType, senderId } = deletedMessageInfo
-      // Emit the delete event to all users in the chat except the sender
-      socket
-        .to(chatId)
-        .emit('message deleted', { messageId, deleteType, chatId })
 
-      const chat = await Chat.findById(chatId)
-      if (chat) {
-        const allUsersId = chat.users.map(user => user._id.toString())
-        for (let userId of allUsersId) {
-          if (userId !== senderId) {
-            io.to(userId).emit('message deleted', {
-              messageId,
-              deleteType,
-              chatId,
-            })
+      console.log('[SOCKET] Processing legacy message deletion:', {
+        messageId,
+        senderId,
+        deleteType,
+      })
+
+      try {
+        const chat = await Chat.findById(chatId)
+        if (chat) {
+          const allUsersId = chat.users.map(user => user._id.toString())
+
+          // Send deletion event to all users EXCEPT the sender
+          for (let userId of allUsersId) {
+            if (userId !== senderId) {
+              io.to(userId).emit('message deleted', {
+                messageId,
+                deleteType,
+                chatId,
+              })
+            }
           }
         }
+      } catch (error) {
+        console.error('[SOCKET] Error handling legacy message deletion:', error)
       }
     })
 
-    // New event to handle when a user opens a chat
+    // Chat room management (legacy)
     socket.on('open chat', ({ userId, chatId }) => {
       if (userId && chatId) {
         const userChats = userOpenChats.get(userId) || new Set()
         userChats.add(chatId)
         userOpenChats.set(userId, userChats)
+        console.log('[SOCKET] User opened legacy chat:', userId, chatId)
       }
     })
 
-    // New event to handle when a user closes a chat
     socket.on('close chat', ({ userId, chatId }) => {
       if (userId && chatId) {
         const userChats = userOpenChats.get(userId)
         if (userChats) {
           userChats.delete(chatId)
+          console.log('[SOCKET] User closed legacy chat:', userId, chatId)
         }
       }
     })
@@ -434,13 +491,14 @@ function initializeSocket(server) {
       handleSocketDisconnection(socket.id)
     })
 
+    // Online status checker
     socket.on('check online status', async friendIds => {
       const onlineStatuses = {}
       for (const friendId of friendIds) {
         const isOnline = await checkUserOnlineStatus(friendId)
         if (!isOnline) {
           await User.findByIdAndUpdate(friendId, { isOnline: false })
-          io.emit('user offline', friendId)
+          socket.broadcast.emit('user offline', friendId)
         }
         onlineStatuses[friendId] = isOnline
       }
@@ -448,18 +506,16 @@ function initializeSocket(server) {
       socket.emit('online status response', onlineStatuses)
     })
 
-    // Add this new event listener for quiz progress
+    // Quiz progress handlers
     socket.on('join quiz progress', userId => {
       socket.join(`quiz_progress_${userId}`)
       socket.emit('quiz_generation_progress', { progress: 5 })
     })
 
-    // Add this new event handler for quiz submission progress
     socket.on('join quiz submission progress', userId => {
       socket.join(`quiz_submission_progress_${userId}`)
     })
 
-    // Add this new event handler for tournament quiz submission progress
     socket.on('join tournament quiz submission progress', userId => {
       socket.join(`tournament_quiz_submission_progress_${userId}`)
     })
@@ -489,11 +545,9 @@ function initializeSocket(server) {
     // Update existing metadata or create new one
     let metadata = socketMetadata.get(socketId)
     if (metadata) {
-      // Update existing metadata with user info
       metadata.userId = userId
       metadata.deviceFingerprint = deviceFingerprint
     } else {
-      // Create new metadata
       metadata = {
         userId,
         deviceFingerprint,
@@ -507,7 +561,6 @@ function initializeSocket(server) {
     // Initialize user's device map if not exists
     if (!userDeviceConnections.has(userId)) {
       userDeviceConnections.set(userId, new Map())
-      console.log(`[DEVICE_SETUP] Initialized device map for user ${userId}`)
     }
 
     const userDevices = userDeviceConnections.get(userId)
@@ -517,7 +570,6 @@ function initializeSocket(server) {
       const existingSockets = userDevices.get(deviceFingerprint)
 
       if (existingSockets.size > 0) {
-        // Check if any existing socket is still actually connected
         const stillConnectedSockets = Array.from(existingSockets).filter(
           socketId => {
             const existingSocket = io.sockets.sockets.get(socketId)
@@ -526,16 +578,6 @@ function initializeSocket(server) {
         )
 
         if (stillConnectedSockets.length > 0) {
-          console.log(
-            `Found ${
-              stillConnectedSockets.length
-            } still connected socket(s) for user ${userId} device ${deviceFingerprint.substring(
-              0,
-              8,
-            )}...`,
-          )
-
-          // Only disconnect if we have truly active connections
           stillConnectedSockets.forEach(existingSocketId => {
             const existingSocket = io.sockets.sockets.get(existingSocketId)
             if (existingSocket && existingSocket.connected) {
@@ -552,7 +594,7 @@ function initializeSocket(server) {
           })
         }
 
-        // Clean up any disconnected socket references
+        // Clean up disconnected socket references
         const socketsToRemove = Array.from(existingSockets).filter(socketId => {
           const existingSocket = io.sockets.sockets.get(socketId)
           return !existingSocket || !existingSocket.connected
@@ -565,15 +607,9 @@ function initializeSocket(server) {
       }
     }
 
-    // Ensure socket set exists for this device (create if not exists or if cleared)
+    // Ensure socket set exists for this device
     if (!userDevices.has(deviceFingerprint)) {
       userDevices.set(deviceFingerprint, new Set())
-      console.log(
-        `[DEVICE_SETUP] Created new socket set for device ${deviceFingerprint.substring(
-          0,
-          8,
-        )}...`,
-      )
     }
 
     // Add new socket to device set
@@ -583,15 +619,8 @@ function initializeSocket(server) {
       `[DEVICE_SETUP] User ${userId} connected with device ${deviceFingerprint.substring(
         0,
         8,
-      )}... (socket: ${socketId}) from ${
-        socket.handshake.address
-      } - Total devices: ${userDevices.size}, Sockets for this device: ${
-        userDevices.get(deviceFingerprint).size
-      }`,
+      )}... (socket: ${socketId})`,
     )
-
-    // DEBUGGING: Verify the socket was added properly
-    logDeviceTrackingState(userId)
   }
 
   /**
@@ -602,10 +631,9 @@ function initializeSocket(server) {
     const socketId = socket.id
 
     console.log(
-      `User ${userId} connected without device fingerprinting (legacy mode) from ${socket.handshake.address}`,
+      `User ${userId} connected without device fingerprinting (legacy mode)`,
     )
 
-    // Store basic metadata
     socketMetadata.set(socketId, {
       userId,
       deviceFingerprint: null,
@@ -625,15 +653,9 @@ function initializeSocket(server) {
       return
     }
 
-    const { userId, deviceFingerprint, clientAddress } = metadata
+    const { userId, deviceFingerprint } = metadata
 
-    console.log(
-      `Socket ${socketId} disconnected for user ${userId}${
-        deviceFingerprint
-          ? ` device ${deviceFingerprint.substring(0, 8)}...`
-          : ' (legacy)'
-      } from ${clientAddress}`,
-    )
+    console.log(`Socket ${socketId} disconnected for user ${userId}`)
 
     // Clean up device-aware tracking
     if (deviceFingerprint && userDeviceConnections.has(userId)) {
@@ -643,46 +665,20 @@ function initializeSocket(server) {
         const deviceSockets = userDevices.get(deviceFingerprint)
         deviceSockets.delete(socketId)
 
-        console.log(
-          `[CLEANUP] Removed socket ${socketId} from device ${deviceFingerprint.substring(
-            0,
-            8,
-          )}... - Remaining sockets: ${deviceSockets.size}`,
-        )
-
-        // Only clean up device entry if no more sockets AND not in a setup process
-        // We check if the Set is empty and wait a brief moment to avoid race conditions
         if (deviceSockets.size === 0) {
-          // Use a small delay to avoid race condition with new connections
           setTimeout(() => {
-            // Double-check that the Set is still empty after the delay
             if (deviceSockets.size === 0) {
               userDevices.delete(deviceFingerprint)
-              console.log(
-                `Device ${deviceFingerprint.substring(
-                  0,
-                  8,
-                )}... for user ${userId} completely disconnected`,
-              )
 
-              // If user has no more devices connected, clean up user entry
               if (userDevices.size === 0) {
                 userDeviceConnections.delete(userId)
-                console.log(
-                  `User ${userId} completely disconnected (no active devices)`,
-                )
-              } else {
-                console.log(
-                  `User ${userId} still has ${userDevices.size} active device(s)`,
-                )
               }
             }
-          }, 100) // 100ms delay to allow for immediate reconnections
+          }, 100)
         }
       }
     }
 
-    // Clean up metadata immediately
     socketMetadata.delete(socketId)
   }
 
@@ -694,33 +690,27 @@ function initializeSocket(server) {
 
     userOpenChats.delete(userId)
 
-    // Get socket instance and leave user room
     const socket = io.sockets.sockets.get(socketId)
     if (socket) {
       socket.leave(userId)
     }
 
-    // Clean up Redis and database
     await redis.del(`user:${userId}:lastHeartbeat`)
     await User.findByIdAndUpdate(userId, { isOnline: false })
 
-    // Broadcast offline status
     io.emit('user offline', userId)
 
-    // Handle socket disconnection cleanup
     handleSocketDisconnection(socketId)
   }
 
   /**
    * Get user's active devices for notifications
-   * Includes fallback to room-based check for reliability
    */
   function getUserActiveDevices(userId) {
     const userDevices = userDeviceConnections.get(userId)
 
-    // FALLBACK: If Map is empty but user should be online, use room-based check
     if (!userDevices || userDevices.size === 0) {
-      // Check if user is in socket rooms (indicates they're actually connected)
+      // Fallback to room-based check
       const userRoom = io.sockets.adapter.rooms.get(userId)
       const quickClashRoom = io.sockets.adapter.rooms.get(
         `quickClash:${userId}`,
@@ -730,7 +720,6 @@ function initializeSocket(server) {
         (userRoom && userRoom.size > 0) ||
         (quickClashRoom && quickClashRoom.size > 0)
       ) {
-        // Get connected socket IDs from the rooms
         const socketIds = []
         if (userRoom && userRoom.size > 0) {
           socketIds.push(...Array.from(userRoom))
@@ -739,7 +728,6 @@ function initializeSocket(server) {
           socketIds.push(...Array.from(quickClashRoom))
         }
 
-        // Remove duplicates and verify sockets are connected
         const uniqueSocketIds = [...new Set(socketIds)]
         const connectedSockets = uniqueSocketIds.filter(socketId => {
           const socket = io.sockets.sockets.get(socketId)
@@ -747,11 +735,6 @@ function initializeSocket(server) {
         })
 
         if (connectedSockets.length > 0) {
-          console.log(
-            `[SOCKET] User ${userId} found via room fallback (${connectedSockets.length} sockets)`,
-          )
-
-          // Return a fallback device entry
           return [
             {
               deviceFingerprint: 'fallback_device_' + userId,
@@ -790,26 +773,17 @@ function initializeSocket(server) {
 
     return activeDevices
   }
+
   /**
    * Enhanced function to notify user across all devices
    */
   function notifyUserAllDevices(userId, event, data) {
-    // console.log(
-    //   `[NOTIFY] Attempting to notify user ${userId} with event ${event}`,
-    // )
-
     const activeDevices = getUserActiveDevices(userId)
 
     if (activeDevices.length === 0) {
-      // console.log(`[NOTIFY] No active devices found for user ${userId}`)
-
-      // FALLBACK: Try room-based notification
       const userRoom = `quickClash:${userId}`
       const room = io.sockets.adapter.rooms.get(userRoom)
       if (room && room.size > 0) {
-        // console.log(
-        //   `[NOTIFY] Fallback: Using room ${userRoom} with ${room.size} socket(s)`,
-        // )
         io.to(userRoom).emit(event, data)
         return true
       }
@@ -823,105 +797,26 @@ function initializeSocket(server) {
       device.socketIds.forEach(socketId => {
         const socket = io.sockets.sockets.get(socketId)
         if (socket && socket.connected) {
-          // console.log(
-          //   `[NOTIFY] Sending ${event} to socket ${socketId} for device ${device.deviceFingerprint.substring(
-          //     0,
-          //     8,
-          //   )}...`,
-          // )
           socket.emit(event, {
             ...data,
             deviceFingerprint: device.deviceFingerprint.substring(0, 8) + '...',
           })
           notifiedSockets++
-        } else {
-          // console.log(
-          //   `[NOTIFY] Socket ${socketId} not available for notification`,
-          // )
         }
       })
     })
 
-    console.log(
-      `notifyUserAllDevices: Sent ${event} to ${notifiedSockets} socket(s) across ${activeDevices.length} device(s) for user ${userId}`,
-    )
-
     return notifiedSockets > 0
   }
 
-  /**
-   * Debug function to log device tracking state
-   */
-  function logDeviceTrackingState(userId) {
-    console.log(`[DEBUG_TRACKING] Device tracking state for user ${userId}:`)
-    const userDevices = userDeviceConnections.get(userId)
-    if (!userDevices) {
-      console.log(`[DEBUG_TRACKING] No device map found for user ${userId}`)
-      return
-    }
-
-    console.log(`[DEBUG_TRACKING] Total devices: ${userDevices.size}`)
-    for (const [deviceFingerprint, socketSet] of userDevices.entries()) {
-      console.log(
-        `[DEBUG_TRACKING] Device ${deviceFingerprint.substring(0, 8)}... has ${
-          socketSet.size
-        } socket(s):`,
-        Array.from(socketSet),
-      )
-
-      // Verify each socket
-      socketSet.forEach(socketId => {
-        const socket = io.sockets.sockets.get(socketId)
-        const metadata = socketMetadata.get(socketId)
-        console.log(
-          `[DEBUG_TRACKING]   Socket ${socketId}: connected=${
-            socket?.connected
-          }, metadata=${!!metadata}, address=${metadata?.clientAddress}`,
-        )
-      })
-    }
-  }
-
-  /**
-   * Get connection statistics for monitoring
-   */
-  function getConnectionStats() {
-    const stats = {
-      totalSockets: socketMetadata.size,
-      totalUsers: userDeviceConnections.size,
-      totalDevices: 0,
-      userBreakdown: {},
-      legacyConnections: 0,
-    }
-
-    // Count legacy connections (without device fingerprinting)
-    for (const [socketId, metadata] of socketMetadata.entries()) {
-      if (!metadata.deviceFingerprint) {
-        stats.legacyConnections++
-      }
-    }
-
-    // Count device-aware connections
-    for (const [userId, userDevices] of userDeviceConnections.entries()) {
-      stats.totalDevices += userDevices.size
-
-      const userStats = {
-        devices: userDevices.size,
-        sockets: 0,
-      }
-
-      for (const [deviceFingerprint, socketSet] of userDevices.entries()) {
-        userStats.sockets += socketSet.size
-      }
-
-      stats.userBreakdown[userId] = userStats
-    }
-
-    return stats
-  }
-
-  // Setup Quick Clash global events with enhanced notification system
+  // Setup Quick Clash global events
   setupQuickClashGlobalEvents(io, {
+    notifyUserAllDevices,
+    getUserActiveDevices,
+  })
+
+  // Setup Friends global events
+  setupFriendsGlobalEvents(io, {
     notifyUserAllDevices,
     getUserActiveDevices,
   })
@@ -933,7 +828,6 @@ function initializeSocket(server) {
     })
   })
 
-  // Update this bridge for quiz submission progress
   globalEmitter.on(
     'quiz_submission_progress',
     ({ userId, stepId, progress }) => {
@@ -952,7 +846,6 @@ function initializeSocket(server) {
     console.log('Force reload emitted to all clients')
   })
 
-  // Bridge between custom emitter and Socket.IO for tournament quiz submission progress
   globalEmitter.on(
     'tournament_quiz_submission_progress',
     ({ userId, stepId, progress }) => {
@@ -966,7 +859,6 @@ function initializeSocket(server) {
     },
   )
 
-  // Add this bridge between custom emitter and Socket.IO for game submission progress (around line 520 after other bridges)
   globalEmitter.on(
     'game_submission_progress',
     ({ userId, stepId, progress }) => {
@@ -981,29 +873,127 @@ function initializeSocket(server) {
   )
 
   // Set up periodic heartbeat checking
-  const HEARTBEAT_CHECK_INTERVAL = 60000 // 1 minute
+  const HEARTBEAT_CHECK_INTERVAL = 60000
   const BATCH_SIZE = 1000
 
   setInterval(async () => {
-    const onlineUsers = await User.find({ isOnline: true }, '_id').lean()
-    for (let i = 0; i < onlineUsers.length; i += BATCH_SIZE) {
-      const batch = onlineUsers.slice(i, i + BATCH_SIZE).map(user => user._id)
-      const offlineUsers = await checkUserBatch(batch)
-      if (offlineUsers.length > 0) {
-        await User.updateMany(
-          { _id: { $in: offlineUsers } },
-          { isOnline: false },
+    const startTime = Date.now()
+    console.log(
+      '\n🔄 [HEARTBEAT_CHECK] Starting user online status check...',
+      new Date().toISOString(),
+    )
+
+    try {
+      // Test Redis connection first
+      const redisStatus = await redis.ping()
+      console.log('✅ [REDIS_STATUS] Redis ping response:', redisStatus)
+
+      const onlineUsers = await User.find({ isOnline: true }, '_id').lean()
+      console.log(
+        `👥 [HEARTBEAT_CHECK] Found ${onlineUsers.length} users marked as online in database`,
+      )
+
+      if (onlineUsers.length === 0) {
+        console.log(
+          'ℹ️  [HEARTBEAT_CHECK] No online users to check, skipping...',
         )
-        offlineUsers.forEach(userId => {
-          redis.del(`user:${userId}:lastHeartbeat`)
-          io.emit('user offline', userId)
-        })
+        return
       }
+
+      let totalOfflineUsers = 0
+      let batchesProcessed = 0
+
+      for (let i = 0; i < onlineUsers.length; i += BATCH_SIZE) {
+        batchesProcessed++
+        const batch = onlineUsers.slice(i, i + BATCH_SIZE).map(user => user._id)
+
+        console.log(
+          `📦 [BATCH_${batchesProcessed}] Processing batch ${batchesProcessed} with ${
+            batch.length
+          } users (${i + 1}-${Math.min(i + BATCH_SIZE, onlineUsers.length)})`,
+        )
+
+        const batchStartTime = Date.now()
+        const offlineUsers = await checkUserBatch(batch)
+        const batchDuration = Date.now() - batchStartTime
+
+        console.log(
+          `⏱️  [BATCH_${batchesProcessed}] Completed in ${batchDuration}ms - Found ${offlineUsers.length} offline users`,
+        )
+
+        if (offlineUsers.length > 0) {
+          totalOfflineUsers += offlineUsers.length
+
+          // Log which users are going offline (limit to first 10 for readability)
+          const usersToLog = offlineUsers.slice(0, 10)
+          console.log(
+            `📴 [OFFLINE_USERS] Setting ${offlineUsers.length} users to offline:`,
+            usersToLog
+              .map(id => id.toString().substring(0, 8) + '...')
+              .join(', '),
+            offlineUsers.length > 10
+              ? `... and ${offlineUsers.length - 10} more`
+              : '',
+          )
+
+          try {
+            // Update database
+            const dbUpdateResult = await User.updateMany(
+              { _id: { $in: offlineUsers } },
+              { isOnline: false },
+            )
+            console.log(
+              `💾 [DATABASE] Updated ${dbUpdateResult.modifiedCount} users in database`,
+            )
+
+            // Clean up Redis keys and emit socket events
+            const redisDeletePromises = offlineUsers.map(async userId => {
+              try {
+                await redis.del(`user:${userId}:lastHeartbeat`)
+                io.emit('user offline', userId)
+                return userId
+              } catch (redisError) {
+                console.error(
+                  `❌ [REDIS_DELETE] Failed to delete heartbeat for user ${userId}:`,
+                  redisError.message,
+                )
+                return null
+              }
+            })
+
+            const redisResults = await Promise.allSettled(redisDeletePromises)
+            const successfulDeletes = redisResults.filter(
+              result => result.status === 'fulfilled' && result.value,
+            ).length
+            console.log(
+              `🗑️  [REDIS_CLEANUP] Cleaned up ${successfulDeletes}/${offlineUsers.length} Redis heartbeat keys`,
+            )
+          } catch (updateError) {
+            console.error(
+              '❌ [DATABASE_UPDATE] Failed to update offline users:',
+              updateError.message,
+            )
+          }
+        }
+      }
+
+      const totalDuration = Date.now() - startTime
+      console.log(`✅ [HEARTBEAT_CHECK] Completed check in ${totalDuration}ms`)
+      console.log(
+        `📊 [SUMMARY] Processed ${onlineUsers.length} users in ${batchesProcessed} batches, found ${totalOfflineUsers} offline users\n`,
+      )
+    } catch (error) {
+      console.error(
+        '❌ [HEARTBEAT_CHECK] Critical error during heartbeat check:',
+        {
+          message: error.message,
+          stack: error.stack,
+          timestamp: new Date().toISOString(),
+        },
+      )
     }
   }, HEARTBEAT_CHECK_INTERVAL)
-
-  // Expose connection stats and utility functions for monitoring
-  io.getConnectionStats = getConnectionStats
+  // Expose utility functions
   io.getUserActiveDevices = getUserActiveDevices
   io.notifyUserAllDevices = notifyUserAllDevices
 

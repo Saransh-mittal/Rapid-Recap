@@ -1,4 +1,4 @@
-// contextAPI/SocketContext.jsx
+// contextAPI/SocketContext.jsx - UPDATED: Listen to Socket.IO reconnection events
 import React, {
   createContext,
   useContext,
@@ -10,63 +10,98 @@ import { useToast } from '@chakra-ui/react'
 import socketManager from '../services/socketInitManager'
 
 /**
- * Enhanced context for sharing socket connection with device fingerprinting support
- * Uses the singleton socketManager to ensure only one connection per device exists
+ * UPDATED: Enhanced context now listens to Socket.IO's built-in reconnection events
+ *
+ * Key Changes:
+ * 1. Added listeners for Socket.IO reconnection events (reconnect_attempt, reconnect, etc.)
+ * 2. Track reconnection state from Socket.IO instead of custom logic
+ * 3. Show user-friendly notifications during reconnection
  */
 const SocketContext = createContext()
 
 export const SocketProvider = ({ children }) => {
-  // State to track connection status and device info for UI updates
   const [isConnected, setIsConnected] = useState(socketManager.isConnected())
   const [deviceFingerprint, setDeviceFingerprint] = useState(null)
   const [deviceConflictDetected, setDeviceConflictDetected] = useState(false)
+
   const [connectionStats, setConnectionStats] = useState({
     attempts: 0,
     lastConnectedAt: null,
     lastDisconnectedAt: null,
+    totalReconnections: 0,
+    longestConnectionDuration: 0,
   })
+
+  // Track Socket.IO's reconnection state
+  const [isReconnecting, setIsReconnecting] = useState(false)
+  const [reconnectionAttempts, setReconnectionAttempts] = useState(0)
+
   const [lastConflictTime, setLastConflictTime] = useState(0)
   const [isUIInteraction, setIsUIInteraction] = useState(false)
 
   const toast = useToast()
+  const connectionStartTime = React.useRef(null)
 
-  // Set up connection listener when provider mounts
+  const updateConnectionState = useCallback((connected, reason) => {
+    const now = new Date()
+
+    setIsConnected(connected)
+
+    if (connected) {
+      connectionStartTime.current = now
+      setConnectionStats(prev => ({
+        ...prev,
+        lastConnectedAt: now,
+        attempts: prev.attempts + 1,
+        totalReconnections:
+          prev.attempts > 1
+            ? prev.totalReconnections + 1
+            : prev.totalReconnections,
+      }))
+
+      setIsReconnecting(false)
+      setReconnectionAttempts(0)
+    } else {
+      let connectionDuration = 0
+      if (connectionStartTime.current) {
+        connectionDuration = now - connectionStartTime.current
+        connectionStartTime.current = null
+      }
+
+      setConnectionStats(prev => ({
+        ...prev,
+        lastDisconnectedAt: now,
+        longestConnectionDuration: Math.max(
+          prev.longestConnectionDuration,
+          connectionDuration,
+        ),
+      }))
+    }
+
+    if (connected) {
+      const fingerprint = socketManager.getCurrentDeviceFingerprint()
+      setDeviceFingerprint(fingerprint)
+    }
+  }, [])
+
+  // Set up connection listener
   useEffect(() => {
-    // Add listener for connection changes
     const removeConnectionListener = socketManager.addConnectionListener(
-      connected => {
-        setIsConnected(connected)
-
-        // Update connection stats
-        setConnectionStats(prev => ({
-          ...prev,
-          [connected ? 'lastConnectedAt' : 'lastDisconnectedAt']: new Date(),
-          attempts: connected ? prev.attempts + 1 : prev.attempts,
-        }))
-
-        // Get device fingerprint when connected
-        if (connected) {
-          const fingerprint = socketManager.getCurrentDeviceFingerprint()
-          setDeviceFingerprint(fingerprint)
-        }
+      (connected, reason) => {
+        updateConnectionState(connected, reason)
       },
     )
 
-    // Add listener for device conflicts with improved filtering
     const removeConflictListener = socketManager.addDeviceConflictListener(
       conflictData => {
         console.warn('Device conflict detected in SocketContext:', conflictData)
 
-        // Prevent duplicate notifications within 10 seconds (increased from 5)
         const now = Date.now()
         if (now - lastConflictTime < 10000) {
-          console.log(
-            'Device conflict notification suppressed (too soon since last one)',
-          )
+          console.log('Device conflict notification suppressed (too soon)')
           return
         }
 
-        // Don't show conflict if it's just a UI interaction
         if (isUIInteraction) {
           console.log('Device conflict suppressed - UI interaction in progress')
           return
@@ -75,11 +110,8 @@ export const SocketProvider = ({ children }) => {
         setLastConflictTime(now)
         setDeviceConflictDetected(true)
 
-        // Show user-friendly toast notification only for genuine conflicts
-        // Check if this is actually a different device/session
         const currentFingerprint = socketManager.getCurrentDeviceFingerprint()
         if (currentFingerprint && conflictData.newSocketId) {
-          // Additional check: only show if the socket IDs are significantly different
           const currentSocket = socketManager.getSocket()
           if (currentSocket && currentSocket.id !== conflictData.newSocketId) {
             toast({
@@ -94,112 +126,186 @@ export const SocketProvider = ({ children }) => {
           }
         }
 
-        // Reset conflict state after a delay
         setTimeout(() => {
           setDeviceConflictDetected(false)
-        }, 15000) // Increased from 10 seconds
+        }, 15000)
       },
     )
 
-    // Get initial device fingerprint if available
+    // NEW: Listen to Socket.IO's reconnection events
+    const socket = socketManager.getSocket()
+    if (socket) {
+      const handleReconnectAttempt = attemptNumber => {
+        console.log(`[SocketContext] 🔄 Reconnection attempt ${attemptNumber}`)
+        setIsReconnecting(true)
+        setReconnectionAttempts(attemptNumber)
+
+        // Show toast on first reconnection attempt
+        if (attemptNumber === 1) {
+          toast({
+            title: 'Connection Lost',
+            description: 'Attempting to reconnect...',
+            status: 'info',
+            duration: 3000,
+            isClosable: true,
+            position: 'top',
+          })
+        }
+      }
+
+      const handleReconnectFailed = () => {
+        console.log('[SocketContext] ❌ Reconnection failed')
+        setIsReconnecting(false)
+        setReconnectionAttempts(0)
+
+        toast({
+          title: 'Connection Lost',
+          description:
+            'Unable to reconnect to server. Please check your internet connection.',
+          status: 'error',
+          duration: 8000,
+          isClosable: true,
+          position: 'top',
+        })
+      }
+
+      const handleReconnect = attemptNumber => {
+        console.log(
+          `[SocketContext] ✅ Reconnected after ${attemptNumber} attempts`,
+        )
+        setIsReconnecting(false)
+        setReconnectionAttempts(0)
+
+        toast({
+          title: 'Reconnected',
+          description: 'Successfully reconnected to server.',
+          status: 'success',
+          duration: 3000,
+          isClosable: true,
+          position: 'top',
+        })
+      }
+
+      socket.on('reconnect_attempt', handleReconnectAttempt)
+      socket.on('reconnect_failed', handleReconnectFailed)
+      socket.on('reconnect', handleReconnect)
+
+      return () => {
+        socket.off('reconnect_attempt', handleReconnectAttempt)
+        socket.off('reconnect_failed', handleReconnectFailed)
+        socket.off('reconnect', handleReconnect)
+        removeConnectionListener()
+        removeConflictListener()
+      }
+    }
+
     const initialFingerprint = socketManager.getCurrentDeviceFingerprint()
     if (initialFingerprint) {
       setDeviceFingerprint(initialFingerprint)
     }
 
-    // Clean up listeners on unmount
     return () => {
       removeConnectionListener()
       removeConflictListener()
     }
-  }, [toast, isUIInteraction])
+  }, [toast, isUIInteraction, updateConnectionState, lastConflictTime])
 
-  // Helper function to emit events with device context
   const emitWithDeviceContext = useCallback((event, data = {}) => {
     return socketManager.emitWithDeviceContext(event, data)
   }, [])
 
-  // Helper function to join rooms
   const joinRoom = useCallback(room => {
     return socketManager.joinRoom(room)
   }, [])
 
-  // Helper function to get debug information
   const getDebugInfo = useCallback(() => {
     return {
       ...socketManager.getDebugInfo(),
       contextStats: connectionStats,
       deviceConflictDetected,
+      reconnectionState: {
+        isReconnecting,
+        attempts: reconnectionAttempts,
+      },
     }
-  }, [connectionStats, deviceConflictDetected])
+  }, [
+    connectionStats,
+    deviceConflictDetected,
+    isReconnecting,
+    reconnectionAttempts,
+  ])
 
-  // Force disconnect function (for logout or testing)
   const forceDisconnect = useCallback(() => {
     socketManager.forceDisconnect()
     setDeviceFingerprint(null)
     setDeviceConflictDetected(false)
     setLastConflictTime(0)
+    setIsReconnecting(false)
+    setReconnectionAttempts(0)
     setConnectionStats({
       attempts: 0,
       lastConnectedAt: null,
       lastDisconnectedAt: null,
+      totalReconnections: 0,
+      longestConnectionDuration: 0,
     })
   }, [])
 
-  // Function to mark UI interactions
   const markUIInteraction = useCallback(isInteracting => {
     setIsUIInteraction(isInteracting)
 
-    // Auto-reset after a delay
     if (isInteracting) {
       setTimeout(() => {
         setIsUIInteraction(false)
-      }, 3000) // Reset after 3 seconds
+      }, 3000)
     }
   }, [])
 
-  // Provide enhanced interface to components
+  const getConnectionQuality = useCallback(() => {
+    if (!isConnected) return 'disconnected'
+    if (isReconnecting) return 'reconnecting'
+    if (connectionStats.totalReconnections > 5) return 'poor'
+    if (connectionStats.totalReconnections > 2) return 'fair'
+    return 'good'
+  }, [isConnected, isReconnecting, connectionStats.totalReconnections])
+
   const value = {
-    // Core socket access
     socket: socketManager.getSocket(),
     isConnected,
     connectionAttempted: socketManager.isConnectionAttempted(),
 
-    // Device fingerprinting info
     deviceFingerprint: deviceFingerprint
       ? deviceFingerprint.substring(0, 8) + '...'
       : null,
     fullDeviceFingerprint: deviceFingerprint,
     deviceConflictDetected,
 
-    // Connection statistics
     connectionStats,
+    connectionQuality: getConnectionQuality(),
 
-    // Enhanced methods
+    isReconnecting,
+    reconnectionAttempts,
+
     emitWithDeviceContext,
     joinRoom,
     getDebugInfo,
     forceDisconnect,
     markUIInteraction,
 
-    // Legacy wrapper functions for backward compatibility
-    setSocket: newSocket => {
-      console.warn(
-        'Direct socket setting is not supported with device-aware singleton manager',
-      )
+    isConnectionHealthy: () => getConnectionQuality() === 'good',
+    needsAttention: () =>
+      ['poor', 'disconnected'].includes(getConnectionQuality()),
+
+    setSocket: () => {
+      console.warn('Direct socket setting not supported')
     },
-    setIsConnected: state => {
-      console.warn(
-        'Direct connection state setting is not supported with device-aware singleton manager',
-      )
+    setIsConnected: () => {
+      console.warn('Direct connection state setting not supported')
     },
-    setConnectionAttempted: state => {
-      console.warn(
-        'Direct connection attempt setting is not supported with device-aware singleton manager',
-      )
+    setConnectionAttempted: () => {
+      console.warn('Direct connection attempt setting not supported')
     },
 
-    // Manager access method for advanced usage
     getExistingSocket: () => socketManager.getSocket(),
     socketManager,
   }
@@ -217,7 +323,6 @@ export const useSocketContext = () => {
   return context
 }
 
-// Enhanced hook for device-aware socket operations
 export const useDeviceAwareSocket = () => {
   const context = useSocketContext()
 
@@ -229,37 +334,43 @@ export const useDeviceAwareSocket = () => {
     joinRoom,
     deviceConflictDetected,
     markUIInteraction,
+    isReconnecting,
+    connectionQuality,
   } = context
 
-  // Device-aware emit function
   const emit = useCallback(
     (event, data = {}) => {
-      if (!isConnected) {
-        console.warn(`Cannot emit ${event}: Socket not connected`)
+      if (!isConnected || isReconnecting) {
+        console.warn(
+          `Cannot emit ${event}: Socket ${
+            isReconnecting ? 'reconnecting' : 'not connected'
+          }`,
+        )
         return false
       }
 
       return emitWithDeviceContext(event, data)
     },
-    [isConnected, emitWithDeviceContext],
+    [isConnected, isReconnecting, emitWithDeviceContext],
   )
 
-  // Device-aware room joining with UI interaction marking
   const joinDeviceAwareRoom = useCallback(
     room => {
-      if (!isConnected) {
-        console.warn(`Cannot join room ${room}: Socket not connected`)
+      if (!isConnected || isReconnecting) {
+        console.warn(
+          `Cannot join room ${room}: Socket ${
+            isReconnecting ? 'reconnecting' : 'not connected'
+          }`,
+        )
         return false
       }
 
-      // Mark as UI interaction to prevent false conflict detection
       markUIInteraction(true)
       return joinRoom(room)
     },
-    [isConnected, joinRoom, markUIInteraction],
+    [isConnected, isReconnecting, joinRoom, markUIInteraction],
   )
 
-  // Listen to events with automatic cleanup
   const on = useCallback(
     (event, handler) => {
       if (!socket) {
@@ -269,7 +380,6 @@ export const useDeviceAwareSocket = () => {
 
       socket.on(event, handler)
 
-      // Return cleanup function
       return () => {
         if (socket) {
           socket.off(event, handler)
@@ -279,7 +389,6 @@ export const useDeviceAwareSocket = () => {
     [socket],
   )
 
-  // Listen to events once
   const once = useCallback(
     (event, handler) => {
       if (!socket) {
@@ -289,7 +398,6 @@ export const useDeviceAwareSocket = () => {
 
       socket.once(event, handler)
 
-      // Return cleanup function (though it's automatically cleaned up after first call)
       return () => {
         if (socket) {
           socket.off(event, handler)
@@ -304,6 +412,12 @@ export const useDeviceAwareSocket = () => {
     isConnected,
     deviceFingerprint,
     deviceConflictDetected,
+
+    isReconnecting,
+    connectionQuality,
+    isHealthy: connectionQuality === 'good',
+    needsAttention: ['poor', 'disconnected'].includes(connectionQuality),
+
     emit,
     on,
     once,

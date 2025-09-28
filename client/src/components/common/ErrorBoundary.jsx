@@ -1,18 +1,9 @@
-// components/common/ErrorBoundary.jsx
+// components/common/ErrorBoundary.jsx - Converted to Tailwind with backward compatibility
 import React from 'react'
-import {
-  Box,
-  Center,
-  VStack,
-  Text,
-  Button,
-  Icon,
-  Heading,
-} from '@chakra-ui/react'
 import { AlertTriangle, RefreshCw } from 'lucide-react'
 import { motion } from 'framer-motion'
 
-const MotionBox = motion(Box)
+const MotionDiv = motion.div
 
 class ErrorBoundary extends React.Component {
   constructor(props) {
@@ -42,90 +33,79 @@ class ErrorBoundary extends React.Component {
   render() {
     if (this.state.hasError) {
       return (
-        <Box minH="100vh" bg="gray.900" position="relative">
-          <Center minH="100vh" p={4}>
-            <VStack spacing={6} maxW="md" textAlign="center">
-              <MotionBox
+        <div className="min-h-screen bg-gray-900 relative">
+          <div className="min-h-screen flex items-center justify-center p-4">
+            <div className="flex flex-col items-center space-y-6 max-w-md text-center">
+              <MotionDiv
                 initial={{ scale: 0.8, opacity: 0 }}
                 animate={{ scale: 1, opacity: 1 }}
                 transition={{ duration: 0.3 }}
               >
-                <Box
-                  p={4}
-                  borderRadius="full"
-                  bg="rgba(239, 68, 68, 0.1)"
-                  border="2px solid"
-                  borderColor="red.500"
-                >
-                  <Icon as={AlertTriangle} color="red.400" boxSize={8} />
-                </Box>
-              </MotionBox>
+                <div className="p-4 rounded-full bg-red-500/10 border-2 border-red-500">
+                  <AlertTriangle className="w-8 h-8 text-red-400" />
+                </div>
+              </MotionDiv>
 
-              <VStack spacing={3}>
-                <Heading size="lg" color="red.400">
+              <div className="space-y-3">
+                <h2 className="text-lg font-bold text-red-400">
                   {this.props.title || 'Something went wrong'}
-                </Heading>
-                <Text color="whiteAlpha.800" fontSize="md">
+                </h2>
+                <p className="text-white/80 text-base">
                   {this.props.fallbackText ||
                     'An unexpected error occurred while loading the battle analysis.'}
-                </Text>
-              </VStack>
+                </p>
+              </div>
 
-              <VStack spacing={3} w="full">
-                <Button
-                  leftIcon={<RefreshCw size={16} />}
-                  colorScheme="red"
-                  size="lg"
+              <div className="flex flex-col space-y-3 w-full">
+                <button
                   onClick={this.handleReload}
-                  w="full"
-                  maxW="200px"
+                  className="
+                    flex items-center justify-center gap-2 px-6 py-3
+                    bg-red-600 hover:bg-red-700 text-white font-medium rounded-lg
+                    transition-colors duration-200 w-full max-w-[200px] mx-auto
+                    focus:outline-none focus:ring-2 focus:ring-red-500 focus:ring-offset-2 focus:ring-offset-gray-900
+                  "
                 >
+                  <RefreshCw size={16} />
                   Reload Page
-                </Button>
+                </button>
+
                 {this.props.onReset && (
-                  <Button
-                    variant="ghost"
-                    color="whiteAlpha.700"
-                    size="md"
+                  <button
                     onClick={this.props.onReset || this.handleReset}
+                    className="
+                      px-4 py-2 text-white/70 hover:text-white hover:bg-white/5
+                      transition-all duration-200 rounded-lg
+                      focus:outline-none focus:ring-2 focus:ring-white/20
+                    "
                   >
                     Try Again
-                  </Button>
+                  </button>
                 )}
-              </VStack>
+              </div>
 
               {process.env.NODE_ENV === 'development' && this.state.error && (
-                <Box
-                  mt={4}
-                  p={3}
-                  bg="red.900"
-                  borderRadius="md"
-                  fontSize="xs"
-                  color="red.100"
-                  textAlign="left"
-                  w="full"
-                  maxH="200px"
-                  overflow="auto"
+                <div
+                  className="
+                  mt-4 p-3 bg-red-900 rounded-md text-xs text-red-100
+                  text-left w-full max-h-[200px] overflow-auto
+                "
                 >
-                  <Text fontWeight="bold" mb={2}>
-                    Error Details:
-                  </Text>
-                  <Text>{this.state.error.toString()}</Text>
+                  <p className="font-bold mb-2">Error Details:</p>
+                  <p className="mb-2">{this.state.error.toString()}</p>
                   {this.state.errorInfo.componentStack && (
                     <>
-                      <Text fontWeight="bold" mt={2} mb={1}>
-                        Component Stack:
-                      </Text>
-                      <Text fontSize="2xs">
+                      <p className="font-bold mt-2 mb-1">Component Stack:</p>
+                      <p className="text-2xs">
                         {this.state.errorInfo.componentStack}
-                      </Text>
+                      </p>
                     </>
                   )}
-                </Box>
+                </div>
               )}
-            </VStack>
-          </Center>
-        </Box>
+            </div>
+          </div>
+        </div>
       )
     }
 
