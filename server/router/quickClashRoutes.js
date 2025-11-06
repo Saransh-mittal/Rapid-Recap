@@ -28,6 +28,7 @@ const {
   getUserTrophyHistoryController,
   calculatePotentialTrophyExchangeController,
   getUserCombinedTrophyHistoryController,
+  getWinProbabilityExplanation,
 } = require('../controllers/quickClashController')
 const {
   joinMatchmakingRoom,
@@ -81,6 +82,11 @@ router.get('/challenges/completed', getCompletedChallenges)
 router.get('/challenge/:challengeId', getChallenge)
 router.post('/challenge/:challengeId/accept', handleAcceptChallenge)
 router.post('/challenge/:challengeId/reject', handleRejectChallenge)
+// Win probability for solo challenges
+router.get(
+  '/challenge/:challengeId/win-probability',
+  getWinProbabilityExplanation,
+)
 router.get('/challenge/:challengeId/sessions', getSessionIdFromChallenge)
 router.post('/challenge/:challengeId/markRevenge', markChallengeRevenge)
 

@@ -37,6 +37,9 @@ const {
   calculateTrophiesToExchange,
 } = require('./quickClashTrophyService')
 const globalEmitter = require('../../eventEmitter')
+const {
+  calculateSoloWinProbability,
+} = require('./quickClashWinProbabilityService')
 
 const CHALLENGE_EXPIRY = 24 * 60 * 60 * 1000 // 24 hours
 
@@ -211,6 +214,24 @@ const createChallenge = async ({
     }
   }
 
+  // Calculate win probability
+  let winProbability = null
+  try {
+    winProbability = await calculateSoloWinProbability({
+      challengerId,
+      opponentId,
+      session: null,
+    })
+    console.log('[WIN_PROB] Solo challenge probability calculated:', {
+      challenger: winProbability.challenger.probability,
+      opponent: winProbability.opponent.probability,
+    })
+  } catch (probError) {
+    // Non-blocking: if probability calculation fails, continue without it
+    console.error('[WIN_PROB] Error calculating probability:', probError)
+    // Challenge creation continues even if probability fails
+  }
+
   const session = await mongoose.startSession()
 
   try {
@@ -277,6 +298,7 @@ const createChallenge = async ({
               potentialLoss: opponentLoss,
             },
           },
+          winProbability: winProbability,
         })
 
         if (fromMatchMaking) challenge.status = 'active'
@@ -671,8 +693,8 @@ const getUserChallenges = async ({
   const total = await QuickClashChallenge.countDocuments(query)
 
   const challenges = await QuickClashChallenge.find(query)
-    .populate('challenger', '_id name inGameName pic')
-    .populate('opponent', '_id name inGameName pic')
+    .populate('challenger', '_id name inGameName pic quickClashTrophies')
+    .populate('opponent', '_id name inGameName pic quickClashTrophies')
     .sort({ createdAt: -1 })
     .skip(skip)
     .limit(limit)

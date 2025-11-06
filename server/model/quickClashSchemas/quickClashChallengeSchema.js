@@ -114,6 +114,51 @@ const quickClashChallengeSchema = new mongoose.Schema({
       opponent_type: String,
     },
   },
+  winProbability: {
+    challenger: {
+      // Probability of challenger winning (0.0 to 1.0)
+      probability: {
+        type: Number,
+        min: 0,
+        max: 1,
+      },
+      // Challenger's effective rating
+      effectiveRating: Number,
+      // Rating components breakdown
+      components: {
+        trophyBase: Number,
+        performanceMod: Number,
+        consistencyMod: Number,
+      },
+      // Data quality indicator
+      dataQuality: {
+        type: String,
+        enum: ['low', 'medium', 'high'],
+      },
+      // Number of matches used for calculation
+      sampleSize: Number,
+    },
+    opponent: {
+      probability: {
+        type: Number,
+        min: 0,
+        max: 1,
+      },
+      effectiveRating: Number,
+      components: {
+        trophyBase: Number,
+        performanceMod: Number,
+        consistencyMod: Number,
+      },
+      dataQuality: {
+        type: String,
+        enum: ['low', 'medium', 'high'],
+      },
+      sampleSize: Number,
+    },
+    // Timestamp when probability was calculated
+    calculatedAt: Date,
+  },
   createdAt: {
     type: Date,
     default: Date.now,
@@ -129,6 +174,9 @@ quickClashChallengeSchema.index({ expiresAt: 1 })
 quickClashChallengeSchema.index({ challenger: 1, status: 1 })
 quickClashChallengeSchema.index({ opponent: 1, status: 1 })
 quickClashChallengeSchema.index({ teamBattle: 1 }) // NEW: Index for team battle lookup
+quickClashChallengeSchema.index({
+  'winProbability.calculatedAt': -1,
+})
 
 const QuickClashChallenge = mongoose.model(
   'QUICK_CLASH_CHALLENGE',

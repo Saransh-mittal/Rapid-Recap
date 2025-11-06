@@ -1,4 +1,4 @@
-// components/quickClashComponents/FlippableChallengeItem.jsx - FAITHFUL CONVERSION with Consistent Color Scheme
+// components/quickClashComponents/FlippableChallengeItem.jsx - IMPROVED VERSION (Cleaned & Compact)
 import React, {
   useState,
   useMemo,
@@ -11,38 +11,18 @@ import React, {
 } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
 import { useTranslation } from 'react-i18next'
-import {
-  Shield,
-  Award,
-  Target,
-  Check,
-  X,
-  PlayCircle,
-  FileText,
-  RotateCcw,
-  Zap,
-  BarChart,
-  Loader2,
-} from 'lucide-react'
+import { BarChart, RotateCcw, Zap, Loader2 } from 'lucide-react'
 
 // Import centralized color scheme
 import { QUICK_CLASH_CLASSES } from './utils/quickClashColors'
 
-// Import UI components - keep original imports
-import StatusBadge from './ui/StatusBadge'
-import PlayerStatus from './ui/PlayerStatus'
+// Import UI components
 import ResultBanner from './ui/ResultBanner'
-import VSLine from './VSLine'
-import useQuickClash from '../../customHooks/useQuickClash'
-import EnhancedPotentialTrophyDisplay from './ui/EnhancedPotentialTrophyDisplay'
-import { useSelector } from 'react-redux'
 
-// You'll need to install these components:
-// npx shadcn-ui@latest add button
-// npx shadcn-ui@latest add dialog
+import useQuickClash from '../../customHooks/useQuickClash'
 import { Button } from '@/components/ui/button'
 
-// Lazy load the analysis components - keep original lazy loading
+// Lazy load analysis components
 const AnalysisSummaryCard = lazy(() =>
   import('./analysisCard/AnalysisSummaryCard'),
 )
@@ -51,31 +31,24 @@ const ChallengeAnalysisModal = lazy(() => import('./ChallengeAnalysisModal'))
 const MotionDiv = motion.div
 
 /**
- * Enhanced FlippableChallengeItem - Faithful conversion with sophisticated flip functionality
+ * FlippableChallengeItem - IMPROVED VERSION
  *
- * Key features maintained:
- * - Complex flip animation between front/back faces
- * - Lazy loading of analysis components for performance
- * - All original memoization and performance optimizations
- * - Sophisticated responsive design
- * - Blue-cyan harmony color scheme integration
- * - Analysis integration with error handling and retry logic
- * - Trophy animations and state management
+ * PURPOSE: Only handles COMPLETED challenges with flip card + analysis
  *
- * This is the premium version used for completed challenges where both players completed
+ * KEY IMPROVEMENTS:
+ * ✅ Removed redundant action buttons (use ChallengeItem for pending/active)
+ * ✅ Removed status badge (only for completed challenges)
+ * ✅ Made more compact (reduced padding & spacing)
+ * ✅ Simplified logic (no duplicate calculations)
+ * ✅ Cleaner separation of concerns
+ * ✅ Focuses only on: flip animation, analysis display
+ *
+ * When to use:
+ * - Use ChallengeItem for: pending, active challenges with actions
+ * - Use FlippableChallengeItem for: completed challenges with analysis flip
  */
 const FlippableChallengeItem = memo(
-  ({
-    challenge,
-    userId,
-    onAccept,
-    onDecline,
-    onStart,
-    onViewReport,
-    onRevenge,
-    revengeLoading,
-    index,
-  }) => {
+  ({ challenge, userId, onViewReport, onRevenge, revengeLoading, index }) => {
     const { t } = useTranslation('QuickClash')
     const [showTrophyAnimation, setShowTrophyAnimation] = useState(false)
     const [isFlipped, setIsFlipped] = useState(false)
@@ -83,74 +56,50 @@ const FlippableChallengeItem = memo(
     const [isAnalysisOpen, setIsAnalysisOpen] = useState(false)
     const frontCardRef = useRef(null)
 
-    // Responsive values using window size (converted from Chakra UI breakpoints)
-    const responsiveValues = useMemo(() => {
-      if (typeof window !== 'undefined') {
-        const width = window.innerWidth
-        return {
-          fontSize: width < 768 ? 'text-xs' : 'text-sm',
-          iconSize: width < 768 ? 'w-3 h-3' : 'w-4 h-4',
-          buttonSize: width < 768 ? 'sm' : 'default',
-          padding: width < 768 ? 'p-2' : 'p-3',
-          spacing: width < 768 ? 'space-y-1' : 'space-y-2',
-        }
-      }
-      return {
-        fontSize: 'text-sm',
-        iconSize: 'w-4 h-4',
-        buttonSize: 'default',
-        padding: 'p-3',
-        spacing: 'space-y-2',
-      }
-    }, [])
-
+    // Get hook methods
     const {
       fetchChallengeAnalysis,
-      generateAnalysis,
       retryAnalysisFetch,
       challengeAnalyses,
       challengeAnalysesLoading,
       challengeAnalysesError,
     } = useQuickClash()
 
-    // Memoize basic challenge properties - EXACTLY as original
+    // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ //
+    // MEMOIZED CALCULATIONS (Minimal, only what's needed)
+    // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ //
+
     const {
       isChallenger,
       opponent,
-      myAttempted,
-      isExpired,
-      myScore,
       isWinner,
       isTie,
       isDefeat,
-      showFlipButton,
-      showPlayerStatus,
+      userPlayer,
+      opponentPlayer,
     } = useMemo(() => {
       if (!challenge || !userId) {
         return {
           isChallenger: false,
           opponent: null,
-          myAttempted: false,
-          isExpired: false,
-          myScore: 0,
           isWinner: false,
           isTie: false,
           isDefeat: false,
-          showFlipButton: false,
-          showPlayerStatus: false,
+          userPlayer: null,
+          opponentPlayer: null,
         }
       }
 
       const isChallenger = challenge.challenger._id === userId
       const opponent = isChallenger ? challenge.opponent : challenge.challenger
-      const myAttempted = isChallenger
-        ? challenge.challengerAttempted
-        : challenge.opponentAttempted
-      const isExpired = new Date(challenge.expiresAt) < new Date()
-      const myScore = isChallenger
-        ? challenge.challengerScore
-        : challenge.opponentScore
+      const userPlayer = isChallenger
+        ? challenge.challenger
+        : challenge.opponent
+      const opponentPlayer = isChallenger
+        ? challenge.opponent
+        : challenge.challenger
 
+      // Result determination
       const isWinner =
         challenge.status === 'completed' &&
         ((isChallenger &&
@@ -164,73 +113,18 @@ const FlippableChallengeItem = memo(
 
       const isDefeat = challenge.status === 'completed' && !isWinner && !isTie
 
-      const showFlipButton = challenge.status === 'completed'
-      const showPlayerStatus =
-        challenge.status !== 'pending' && challenge.status !== 'rejected'
-
       return {
         isChallenger,
         opponent,
-        myAttempted,
-        isExpired,
-        myScore,
         isWinner,
         isTie,
         isDefeat,
-        showFlipButton,
-        showPlayerStatus,
+        userPlayer,
+        opponentPlayer,
       }
     }, [challenge, userId])
 
-    // Memoize player data - EXACTLY as original
-    const { userPlayer, opponentPlayer } = useMemo(() => {
-      if (!challenge || !userId) {
-        return { userPlayer: null, opponentPlayer: null }
-      }
-
-      const isUserTheChallenger = challenge.challenger._id === userId
-
-      const uPlayer = isUserTheChallenger
-        ? challenge.challenger
-        : challenge.opponent
-      const oPlayer = isUserTheChallenger
-        ? challenge.opponent
-        : challenge.challenger
-
-      const uPlayerScore = isUserTheChallenger
-        ? challenge.challengerScore
-        : challenge.opponentScore
-      const oPlayerScore = isUserTheChallenger
-        ? challenge.opponentScore
-        : challenge.challengerScore
-
-      const uPlayerAttempted = isUserTheChallenger
-        ? challenge.challengerAttempted
-        : challenge.opponentAttempted
-      const oPlayerAttempted = isUserTheChallenger
-        ? challenge.opponentAttempted
-        : challenge.challengerAttempted
-
-      const uPlayerTrophies = uPlayer?.quickClashTrophies
-      const oPlayerTrophies = oPlayer?.quickClashTrophies
-
-      return {
-        userPlayer: {
-          player: uPlayer,
-          score: uPlayerScore,
-          attempted: uPlayerAttempted,
-          trophies: uPlayerTrophies,
-        },
-        opponentPlayer: {
-          player: oPlayer,
-          score: oPlayerScore,
-          attempted: oPlayerAttempted,
-          trophies: oPlayerTrophies,
-        },
-      }
-    }, [challenge, userId])
-
-    // Analysis data - keep original logic
+    // Analysis data
     const analysis = useMemo(
       () => challengeAnalyses[challenge?._id],
       [challengeAnalyses, challenge],
@@ -246,7 +140,63 @@ const FlippableChallengeItem = memo(
       [challengeAnalysesError, challenge],
     )
 
-    // Keep original height measurement effect
+    // Card styling based on result
+    const cardStyles = useMemo(() => {
+      if (isWinner) {
+        return {
+          borderClass: 'border-cyan-400/40',
+          shadowClass: 'shadow-xl shadow-cyan-500/10',
+          gradientClass: 'from-cyan-500/5 to-transparent',
+        }
+      } else if (isTie) {
+        return {
+          borderClass: 'border-amber-400/40',
+          shadowClass: 'shadow-xl shadow-amber-500/10',
+          gradientClass: 'from-amber-500/5 to-transparent',
+        }
+      } else if (isDefeat) {
+        return {
+          borderClass: 'border-red-400/40',
+          shadowClass: 'shadow-xl shadow-red-500/10',
+          gradientClass: 'from-red-500/5 to-transparent',
+        }
+      }
+      return {
+        borderClass: 'border-white/10',
+        shadowClass: 'shadow-lg',
+        gradientClass: '',
+      }
+    }, [isWinner, isTie, isDefeat])
+
+    // Get category color
+    const getCategoryStyle = useCallback(() => {
+      if (!challenge?.category) return 'cyan'
+      const colors = {
+        World: 'blue',
+        Politics: 'red',
+        Business: 'green',
+        Technology: 'cyan',
+        Sports: 'orange',
+        Health: 'teal',
+        Science: 'purple',
+        Environment: 'green',
+      }
+      return colors[challenge.category] || 'cyan'
+    }, [challenge])
+
+    // Trophy change calculation
+    const getTrophyChange = useCallback(() => {
+      if (!challenge?.trophyUpdates) return undefined
+      return isChallenger
+        ? challenge.trophyUpdates.challenger?.change
+        : challenge.trophyUpdates.opponent?.change
+    }, [challenge, isChallenger])
+
+    // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ //
+    // EFFECTS
+    // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ //
+
+    // Measure card height for flip animation
     useEffect(() => {
       if (frontCardRef.current && !isFlipped) {
         const height = frontCardRef.current.clientHeight
@@ -254,7 +204,7 @@ const FlippableChallengeItem = memo(
       }
     }, [frontCardRef, isFlipped, challenge])
 
-    // Keep original analysis fetch effect
+    // Fetch analysis when card is flipped
     useEffect(() => {
       if (
         isFlipped &&
@@ -274,7 +224,7 @@ const FlippableChallengeItem = memo(
       fetchChallengeAnalysis,
     ])
 
-    // Keep original trophy animation effect
+    // Trophy animation trigger
     useEffect(() => {
       if (challenge?.trophyUpdates && (isWinner || isDefeat || isTie)) {
         const timer = setTimeout(() => {
@@ -284,102 +234,13 @@ const FlippableChallengeItem = memo(
       }
     }, [challenge?.trophyUpdates, isWinner, isDefeat, isTie])
 
-    // Keep original trophy change calculation
-    const getTrophyChange = useCallback(() => {
-      if (!challenge?.trophyUpdates) return undefined
+    // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ //
+    // EVENT HANDLERS
+    // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ //
 
-      const userChange = isChallenger
-        ? challenge.trophyUpdates.challenger?.change
-        : challenge.trophyUpdates.opponent?.change
-
-      return userChange
-    }, [challenge, isChallenger])
-
-    // Keep original potential trophy calculation
-    const getTrophyPotential = useCallback(() => {
-      if (!challenge) return 0
-
-      if (challenge.status === 'active' || challenge.status === 'pending') {
-        if (!challenge.trophyPotential) return 0
-
-        return isChallenger
-          ? challenge.trophyPotential.challenger?.potentialGain
-          : challenge.trophyPotential.opponent?.potentialGain
-      }
-
-      return 0
-    }, [challenge, isChallenger])
-
-    // Enhanced card styling with blue-cyan color scheme - EXACTLY as original logic
-    const cardStyles = useMemo(() => {
-      if (!challenge)
-        return {
-          borderClass: 'border-white/20',
-          shadowClass: '',
-          gradientClass: '',
-        }
-
-      let borderClass = 'border-white/20'
-      let shadowClass = ''
-      let gradientClass = ''
-
-      if (challenge.status === 'completed') {
-        if (isWinner) {
-          borderClass = 'border-cyan-400/60'
-          shadowClass = QUICK_CLASH_CLASSES.shadowCyan
-          gradientClass = 'from-cyan-500/5 to-transparent'
-        } else if (isTie) {
-          borderClass = 'border-yellow-400/60'
-          shadowClass = 'shadow-lg shadow-yellow-500/20'
-          gradientClass = 'from-yellow-500/5 to-transparent'
-        } else if (isDefeat) {
-          borderClass = 'border-red-400/60'
-          shadowClass = 'shadow-lg shadow-red-500/20'
-          gradientClass = 'from-red-500/5 to-transparent'
-        }
-      } else if (challenge.status === 'active' && !myAttempted) {
-        borderClass = 'border-green-400/60'
-        shadowClass = 'shadow-lg shadow-green-500/20'
-        gradientClass = 'from-green-500/5 to-transparent'
-      } else if (challenge.status === 'pending') {
-        borderClass = 'border-yellow-400/60'
-        shadowClass = 'shadow-lg shadow-yellow-500/15'
-        gradientClass = 'from-yellow-500/5 to-transparent'
-      }
-
-      return {
-        borderClass,
-        shadowClass,
-        gradientClass,
-      }
-    }, [challenge, isWinner, isTie, isDefeat, myAttempted])
-
-    // Keep original category style calculation
-    const getCategoryStyle = useCallback(() => {
-      if (!challenge) return 'cyan'
-
-      const categoryColors = {
-        World: 'blue',
-        Politics: 'red',
-        Business: 'green',
-        Technology: 'cyan',
-        Sports: 'orange',
-        Health: 'teal',
-        Science: 'purple',
-        Environment: 'green',
-      }
-
-      return categoryColors[challenge.category] || 'cyan'
-    }, [challenge])
-
-    // Optimized event handlers with useCallback - EXACTLY as original
     const handleFlip = useCallback(e => {
       if (e) e.stopPropagation()
       setIsFlipped(prev => !prev)
-    }, [])
-
-    const handleViewAnalysis = useCallback(() => {
-      setIsAnalysisOpen(true)
     }, [])
 
     const handleAnalysisClose = useCallback(() => {
@@ -390,76 +251,29 @@ const FlippableChallengeItem = memo(
       retryAnalysisFetch(challenge._id)
     }, [retryAnalysisFetch, challenge])
 
-    const handleAccept = useCallback(() => {
-      onAccept(challenge._id)
-    }, [onAccept, challenge])
+    const handleViewAnalysis = useCallback(() => {
+      setIsAnalysisOpen(true)
+    }, [])
 
-    const handleDecline = useCallback(() => {
-      onDecline(challenge._id)
-    }, [onDecline, challenge])
+    // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ //
+    // RENDER
+    // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ //
 
-    const handleStart = useCallback(() => {
-      onStart(challenge._id)
-    }, [onStart, challenge])
-
-    const handleViewReport = useCallback(() => {
-      onViewReport(challenge)
-    }, [onViewReport, challenge])
-
-    const handleRevenge = useCallback(() => {
-      if (isDefeat) {
-        onRevenge(opponent, challenge)
-      }
-    }, [onRevenge, opponent, isDefeat, challenge])
-
-    // Enhanced skeleton fallback with Tailwind
-    if (!challenge) {
-      return (
-        <div
-          className={`
-          ${QUICK_CLASH_CLASSES.glassMedium}
-          rounded-2xl
-          border border-white/20
-          overflow-hidden
-          ${responsiveValues.padding}
-        `}
-        >
-          {/* Skeleton content - same as ChallengeItem */}
-          <div className="flex justify-between items-center border-b border-white/10 pb-3 mb-3">
-            <div className="h-5 w-24 bg-white/20 rounded-lg animate-pulse" />
-            <div className="h-6 w-6 bg-white/20 rounded-full animate-pulse" />
-          </div>
-          <div className={responsiveValues.spacing}>
-            <div className="h-6 w-full bg-white/20 rounded-lg animate-pulse mb-2" />
-            <div className="h-4 w-4/5 bg-white/20 rounded-lg animate-pulse" />
-            <div className="h-2 w-full bg-white/10 rounded-full my-3 animate-pulse" />
-            <div className="h-6 w-full bg-white/20 rounded-lg animate-pulse mb-2" />
-            <div className="h-4 w-4/5 bg-white/20 rounded-lg animate-pulse" />
-          </div>
-          <div className="flex justify-center mt-4">
-            <div className="h-8 w-44 bg-white/20 rounded-lg animate-pulse" />
-          </div>
-        </div>
-      )
-    }
+    if (!challenge) return null
 
     return (
       <MotionDiv
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.3, delay: index * 0.05 }}
-        className={`
-          flippable-challenge-item
-          relative
-          transition-all duration-300
-          ${isFlipped ? '' : 'hover:-translate-y-1 hover:shadow-xl'}
-        `}
+        className="relative"
         style={{ height: isFlipped ? cardHeight : 'auto' }}
-        data-testid="flippable-challenge-item"
       >
         <AnimatePresence mode="wait">
           {!isFlipped ? (
-            // FRONT FACE - Keep original structure exactly
+            // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ //
+            // FRONT FACE - Result Display
+            // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ //
             <MotionDiv
               key="front"
               ref={frontCardRef}
@@ -468,15 +282,19 @@ const FlippableChallengeItem = memo(
               exit={{ rotateY: -90 }}
               transition={{ duration: 0.3 }}
               className={`
-                ${QUICK_CLASH_CLASSES.glassMedium}
+                ${QUICK_CLASH_CLASSES.glassLight}
                 rounded-2xl
                 overflow-hidden
-                border-2
+                border
                 ${cardStyles.borderClass}
                 ${cardStyles.shadowClass}
                 relative
                 h-full
-                backdrop-brightness-110
+                backdrop-brightness-105
+                transition-all duration-300
+                hover:border-opacity-60
+                hover:shadow-2xl
+                hover:-translate-y-0.5
               `}
             >
               {/* Gradient overlay */}
@@ -485,244 +303,259 @@ const FlippableChallengeItem = memo(
                   className={`
                   absolute inset-0
                   bg-gradient-to-br ${cardStyles.gradientClass}
-                  opacity-70
+                  opacity-60
                   pointer-events-none
                   rounded-2xl
                 `}
                 />
               )}
 
-              {/* Card Header - Only show for non-completed challenges */}
-              {challenge.status !== 'completed' && (
-                <div
-                  className={`
-                  flex justify-between items-center
-                  ${responsiveValues.padding}
-                  border-b border-white/10
-                  ${QUICK_CLASH_CLASSES.glassSoft}
-                  relative z-10
-                `}
-                >
-                  <StatusBadge
-                    status={challenge.status}
-                    isChallenger={isChallenger}
-                    expiresAt={challenge.expiresAt}
-                  />
-                </div>
-              )}
+              <div className="relative z-10">
+                {/* PLAYER MATCHUP - Compact */}
+                <div className="px-3 md:px-4 py-3 md:py-3.5 space-y-2 md:space-y-2.5">
+                  {/* User Player Card - With Score & Trophy Change */}
+                  <MotionDiv
+                    initial={{ opacity: 0, x: -10 }}
+                    animate={{ opacity: 1, x: 0 }}
+                    transition={{ delay: 0.1 }}
+                    className={`
+                      flex items-center justify-between
+                      p-2.5 md:p-3
+                      rounded-lg
+                      border border-cyan-400/30
+                      bg-gradient-to-r from-cyan-500/8 to-transparent
+                      backdrop-blur-sm
+                      hover:border-cyan-400/50
+                      transition-all duration-200
+                    `}
+                  >
+                    {userPlayer && (
+                      <>
+                        <div className="flex items-center gap-2.5 flex-1 min-w-0">
+                          <div className="w-8 h-8 rounded-full ring-2 ring-cyan-400/50 flex-shrink-0 bg-gradient-to-br from-cyan-400 to-cyan-500" />
+                          <div className="flex flex-col min-w-0">
+                            <p className="text-xs font-semibold text-white truncate max-w-[100px]">
+                              {userPlayer?.inGameName || userPlayer?.name}
+                            </p>
+                            <span className="text-xs text-cyan-300/80 font-medium">
+                              You
+                            </span>
+                          </div>
+                        </div>
 
-              {/* Card Body */}
-              <div className={`${responsiveValues.padding} relative z-10`}>
-                {/* Player Status Section - EXACTLY as original */}
-                {showPlayerStatus && userPlayer && opponentPlayer && (
-                  <div className={`${responsiveValues.spacing} mb-3`}>
-                    <PlayerStatus
-                      player={
-                        isChallenger ? challenge.challenger : challenge.opponent
-                      }
-                      score={
-                        isChallenger
-                          ? challenge.challengerScore
-                          : challenge.opponentScore
-                      }
-                      attempted={
-                        isChallenger
-                          ? challenge.challengerAttempted
-                          : challenge.opponentAttempted
-                      }
-                      isUser={true}
-                      trophies={
-                        isChallenger
-                          ? challenge.challenger.quickClashTrophies
-                          : challenge.opponent.quickClashTrophies
-                      }
-                      trophyChange={getTrophyChange()}
-                      showTrophyAnimation={showTrophyAnimation}
-                      protectionApplied={
-                        challenge.trophyUpdates?.protectionApplied &&
-                        (isChallenger
-                          ? challenge.trophyUpdates.protectionApplied.challenger
-                          : challenge.trophyUpdates.protectionApplied.opponent)
-                      }
-                      isTie={isTie}
-                    />
+                        {/* Right section: Score + Trophy */}
+                        <div className="flex items-center gap-3 ml-2 flex-shrink-0">
+                          {/* Score */}
+                          {challenge?.challengerScore !== undefined && (
+                            <div className="flex flex-col items-center">
+                              <span className="text-xs text-white/50 font-medium">
+                                Score
+                              </span>
+                              <span className="text-sm font-bold text-white">
+                                {isChallenger
+                                  ? challenge.challengerScore
+                                  : challenge.opponentScore}
+                              </span>
+                            </div>
+                          )}
 
-                    {/* VS Line */}
-                    <VSLine
-                      category={
-                        challenge.status === 'active'
-                          ? challenge.category
-                          : null
-                      }
-                      categoryColorScheme={getCategoryStyle()}
-                      isActiveChallenge={challenge.status === 'active'}
-                      myAttempted={myAttempted}
-                    />
+                          {/* Trophy Change */}
+                          {challenge?.trophyUpdates &&
+                            getTrophyChange() !== undefined && (
+                              <div className="flex flex-col items-center">
+                                <span className="text-xs text-white/50 font-medium">
+                                  Trophy
+                                </span>
+                                <span
+                                  className={`text-sm font-bold ${
+                                    getTrophyChange() >= 0
+                                      ? 'text-green-400'
+                                      : 'text-red-400'
+                                  }`}
+                                >
+                                  {getTrophyChange() >= 0 ? '+' : ''}
+                                  {getTrophyChange()}
+                                </span>
+                              </div>
+                            )}
 
-                    <PlayerStatus
-                      player={opponent}
-                      score={
-                        isChallenger
-                          ? challenge.opponentScore
-                          : challenge.challengerScore
-                      }
-                      attempted={
-                        isChallenger
-                          ? challenge.opponentAttempted
-                          : challenge.challengerAttempted
-                      }
-                      isUser={false}
-                      trophies={opponent.quickClashTrophies}
-                      trophyChange={undefined}
-                      showTrophyAnimation={false}
-                      protectionApplied={false}
-                      isTie={false}
-                    />
+                          {/* Total Trophies */}
+                          <div className="flex flex-col items-center">
+                            <span className="text-xs text-white/50 font-medium">
+                              Total
+                            </span>
+                            <span className="text-sm font-bold text-yellow-400">
+                              {userPlayer?.quickClashTrophies || 0}
+                            </span>
+                          </div>
+                        </div>
+                      </>
+                    )}
+                  </MotionDiv>
+
+                  {/* VS Divider */}
+                  <div className="flex items-center justify-center py-1.5">
+                    <div className="flex-1 h-px bg-gradient-to-r from-transparent via-white/10 to-transparent" />
+                    <span className="px-2.5 text-xs text-white/50 font-medium">
+                      vs
+                    </span>
+                    <div className="flex-1 h-px bg-gradient-to-r from-transparent via-white/10 to-transparent" />
                   </div>
-                )}
 
-                {/* Actions Section */}
-                <div
-                  className={`
-                  flex justify-center
-                  mt-4
-                  p-3
-                  ${QUICK_CLASH_CLASSES.glassLight}
-                  rounded-xl
-                  border border-white/5
-                `}
-                >
-                  {myAttempted ? (
-                    <div className="flex items-center space-x-3">
-                      {/* Enhanced "View Report" Button */}
-                      <Button
-                        size={responsiveValues.buttonSize}
-                        onClick={handleViewReport}
-                        className={`
-                          bg-transparent
-                          ${QUICK_CLASH_CLASSES.textSecondary}
-                          border-2 border-cyan-400/40
-                          hover:bg-cyan-500/15
-                          hover:text-white
-                          hover:border-cyan-300/60
-                          hover:scale-105
-                          transition-all duration-300
-                          ${QUICK_CLASH_CLASSES.shadowCyan}
-                          ${QUICK_CLASH_CLASSES.focusRing}
-                          font-bold
-                          rounded-lg
-                        `}
-                      >
-                        <FileText
-                          className={`${responsiveValues.iconSize} mr-2`}
-                        />
-                        {t('View Report')}
-                      </Button>
+                  {/* Opponent Player Card - With Score & Trophy Change */}
+                  <MotionDiv
+                    initial={{ opacity: 0, x: 10 }}
+                    animate={{ opacity: 1, x: 0 }}
+                    transition={{ delay: 0.1 }}
+                    className={`
+                      flex items-center justify-between
+                      p-2.5 md:p-3
+                      rounded-lg
+                      border border-white/10
+                      bg-gradient-to-r from-slate-600/5 to-transparent
+                      backdrop-blur-sm
+                      hover:border-white/20
+                      transition-all duration-200
+                    `}
+                  >
+                    {opponentPlayer && (
+                      <>
+                        <div className="flex items-center gap-2.5 flex-1 min-w-0">
+                          <div className="w-8 h-8 rounded-full ring-2 ring-white/20 flex-shrink-0 bg-gradient-to-br from-gray-400 to-gray-500" />
+                          <div className="flex flex-col min-w-0">
+                            <p className="text-xs font-semibold text-white truncate max-w-[100px]">
+                              {opponentPlayer?.inGameName ||
+                                opponentPlayer?.name}
+                            </p>
+                            <span className="text-xs text-white/50 font-medium">
+                              Opponent
+                            </span>
+                          </div>
+                        </div>
 
-                      {/* Enhanced "Analysis" Button */}
-                      {showFlipButton && (
+                        {/* Right section: Score + Trophy */}
+                        <div className="flex items-center gap-3 ml-2 flex-shrink-0">
+                          {/* Score */}
+                          {challenge?.opponentScore !== undefined && (
+                            <div className="flex flex-col items-center">
+                              <span className="text-xs text-white/50 font-medium">
+                                Score
+                              </span>
+                              <span className="text-sm font-bold text-white">
+                                {!isChallenger
+                                  ? challenge.challengerScore
+                                  : challenge.opponentScore}
+                              </span>
+                            </div>
+                          )}
+
+                          {/* Trophy Change */}
+                          {challenge?.trophyUpdates && (
+                            <div className="flex flex-col items-center">
+                              <span className="text-xs text-white/50 font-medium">
+                                Trophy
+                              </span>
+                              <span
+                                className={`text-sm font-bold ${
+                                  (isChallenger
+                                    ? challenge.trophyUpdates.opponent?.change
+                                    : challenge.trophyUpdates.challenger
+                                        ?.change) >= 0
+                                    ? 'text-green-400'
+                                    : 'text-red-400'
+                                }`}
+                              >
+                                {(isChallenger
+                                  ? challenge.trophyUpdates.opponent?.change
+                                  : challenge.trophyUpdates.challenger
+                                      ?.change) >= 0
+                                  ? '+'
+                                  : ''}
+                                {isChallenger
+                                  ? challenge.trophyUpdates.opponent?.change
+                                  : challenge.trophyUpdates.challenger?.change}
+                              </span>
+                            </div>
+                          )}
+
+                          {/* Total Trophies */}
+                          <div className="flex flex-col items-center">
+                            <span className="text-xs text-white/50 font-medium">
+                              Total
+                            </span>
+                            <span className="text-sm font-bold text-yellow-400">
+                              {opponentPlayer?.quickClashTrophies || 0}
+                            </span>
+                          </div>
+                        </div>
+                      </>
+                    )}
+                  </MotionDiv>
+                </div>
+
+                {/* Actions - View Report & Flip */}
+                <div className="px-3 md:px-4 pb-3 md:pb-3.5">
+                  <div className="h-px bg-gradient-to-r from-transparent via-white/5 to-transparent mb-2.5 md:mb-3" />
+
+                  <div className="flex justify-center gap-2">
+                    {/* Analysis/Flip Button */}
+                    <Button
+                      onClick={handleFlip}
+                      className={`
+                        flex-1
+                        bg-transparent
+                        text-blue-300
+                        border-2 border-blue-400/40
+                        hover:bg-blue-500/15
+                        hover:text-white
+                        hover:border-blue-300/60
+                        hover:scale-105
+                        transition-all duration-300
+                        rounded-lg
+                        font-semibold
+                        py-2 md:py-2.5
+                        text-xs md:text-sm
+                        shadow-lg shadow-blue-500/30
+                        hover:shadow-blue-500/50
+                        ${QUICK_CLASH_CLASSES.focusRing}
+                      `}
+                    >
+                      <BarChart className="w-3.5 h-3.5 mr-2" />
+                      {t('Analysis')}
+                    </Button>
+
+                    {/* Report Button - If Already Attempted */}
+                    {challenge?.challengerAttempted &&
+                      challenge?.opponentAttempted && (
                         <Button
-                          size={responsiveValues.buttonSize}
-                          onClick={handleFlip}
+                          onClick={() => onViewReport(challenge)}
                           className={`
-                            bg-transparent
-                            text-blue-300
-                            border-2 border-blue-400/40
-                            hover:bg-blue-500/15
-                            hover:text-white
-                            hover:border-blue-300/60
-                            hover:scale-105
-                            transition-all duration-300
-                            shadow-lg shadow-blue-500/30
-                            hover:shadow-blue-500/50
-                            ${QUICK_CLASH_CLASSES.focusRing}
-                            font-bold
+                            flex-1
+                            ${QUICK_CLASH_CLASSES.glassMedium}
+                            ${QUICK_CLASH_CLASSES.textPrimary}
+                            hover:bg-cyan-500/20
+                            border border-cyan-400/40
+                            hover:border-cyan-400/60
                             rounded-lg
+                            font-semibold
+                            py-2 md:py-2.5
+                            text-xs md:text-sm
+                            transition-all duration-200
+                            hover:scale-105
+                            hover:-translate-y-0.5
+                            ${QUICK_CLASH_CLASSES.shadowCyan}
+                            ${QUICK_CLASH_CLASSES.focusRing}
                           `}
                         >
-                          <BarChart
-                            className={`${responsiveValues.iconSize} mr-2`}
-                          />
-                          {t('Analysis')}
+                          <BarChart className="w-3.5 h-3.5 mr-2" />
+                          {t('Report')}
                         </Button>
                       )}
-                    </div>
-                  ) : challenge.status === 'pending' && !isChallenger ? (
-                    <div className="flex items-center space-x-3">
-                      <Button
-                        size={responsiveValues.buttonSize}
-                        onClick={handleAccept}
-                        className={`
-                          ${QUICK_CLASH_CLASSES.btnSuccess}
-                          rounded-lg
-                          font-medium
-                          transition-all duration-200
-                          hover:scale-105
-                          shadow-lg shadow-green-500/30
-                          hover:shadow-green-500/50
-                          ${QUICK_CLASH_CLASSES.focusRing}
-                        `}
-                      >
-                        <Check
-                          className={`${responsiveValues.iconSize} mr-2`}
-                        />
-                        {t('Accept')}
-                      </Button>
-                      <Button
-                        size={responsiveValues.buttonSize}
-                        onClick={handleDecline}
-                        variant="outline"
-                        className={`
-                          ${QUICK_CLASH_CLASSES.glassMedium}
-                          ${QUICK_CLASH_CLASSES.textPrimary}
-                          border-red-400/40
-                          hover:bg-red-500/10
-                          hover:border-red-400/60
-                          hover:text-red-300
-                          rounded-lg
-                          transition-all duration-200
-                          ${QUICK_CLASH_CLASSES.focusRing}
-                        `}
-                      >
-                        <X className={`${responsiveValues.iconSize} mr-2`} />
-                        {t('Decline')}
-                      </Button>
-                    </div>
-                  ) : challenge.status === 'active' && !myAttempted ? (
-                    <div className="flex items-center gap-3">
-                      <EnhancedPotentialTrophyDisplay
-                        potentialGain={getTrophyPotential()}
-                        size={responsiveValues.fontSize}
-                        compact={true}
-                      />
-
-                      <Button
-                        size={responsiveValues.buttonSize}
-                        onClick={handleStart}
-                        className={`
-                          ${QUICK_CLASH_CLASSES.btnSuccess}
-                          rounded-lg
-                          font-bold
-                          px-6
-                          transition-all duration-200
-                          hover:scale-105
-                          hover:-translate-y-0.5
-                          shadow-lg shadow-green-500/30
-                          hover:shadow-green-500/50
-                          ${QUICK_CLASH_CLASSES.focusRing}
-                        `}
-                      >
-                        <PlayCircle
-                          className={`${responsiveValues.iconSize} mr-2`}
-                        />
-                        {t('Start')}
-                      </Button>
-                    </div>
-                  ) : null}
+                  </div>
                 </div>
               </div>
 
-              {/* Result Banner - Keep original exactly */}
+              {/* Result Banner */}
               {challenge.status === 'completed' &&
                 challenge.challengerAttempted &&
                 challenge.opponentAttempted && (
@@ -732,14 +565,18 @@ const FlippableChallengeItem = memo(
                     isDefeat={isDefeat}
                     expiresAt={challenge.expiresAt}
                     category={challenge.category}
-                    onRevenge={isDefeat ? handleRevenge : null}
+                    onRevenge={
+                      isDefeat ? () => onRevenge(opponent, challenge) : null
+                    }
                     revengeStatus={challenge.revengeStatus}
                     revengeLoading={revengeLoading}
                   />
                 )}
             </MotionDiv>
           ) : (
-            // BACK FACE - Keep original structure exactly
+            // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ //
+            // BACK FACE - Analysis Display
+            // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ //
             <MotionDiv
               key="back"
               initial={{ rotateY: 90 }}
@@ -747,18 +584,18 @@ const FlippableChallengeItem = memo(
               exit={{ rotateY: 90 }}
               transition={{ duration: 0.3 }}
               className={`
-                ${QUICK_CLASH_CLASSES.glassMedium}
+                ${QUICK_CLASH_CLASSES.glassLight}
                 rounded-2xl
                 overflow-hidden
-                border-2
+                border
                 ${cardStyles.borderClass}
                 ${cardStyles.shadowClass}
                 relative
                 h-full
-                backdrop-brightness-110
+                backdrop-brightness-105
               `}
             >
-              {/* Enhanced flip back button */}
+              {/* Flip Back Button */}
               <button
                 onClick={handleFlip}
                 className={`
@@ -783,13 +620,13 @@ const FlippableChallengeItem = memo(
                 <RotateCcw className="w-4 h-4 text-blue-300 hover:text-white transition-colors" />
               </button>
 
-              {/* Analysis Summary Card with enhanced fallback */}
+              {/* Analysis Summary Card */}
               <Suspense
                 fallback={
                   <div className="flex flex-col items-center justify-center h-full p-6 space-y-4">
                     <Zap className={`w-8 h-8 ${QUICK_CLASH_CLASSES.tabCyan}`} />
                     <p
-                      className={`${QUICK_CLASH_CLASSES.textPrimary} text-center ${responsiveValues.fontSize}`}
+                      className={`${QUICK_CLASH_CLASSES.textPrimary} text-center text-xs md:text-sm`}
                     >
                       {t('Analyzing challenge data...')}
                     </p>
@@ -800,23 +637,48 @@ const FlippableChallengeItem = memo(
                 }
               >
                 <div className="h-full">
-                  <AnalysisSummaryCard
-                    challenge={challenge}
-                    analysis={analysis}
-                    userId={userId}
-                    isLoading={isAnalysisLoading}
-                    isError={!!analysisError}
-                    errorMessage={analysisError}
-                    onViewFull={handleViewAnalysis}
-                    onRetry={handleRetryAnalysis}
-                  />
+                  {analysis ? (
+                    <AnalysisSummaryCard
+                      challenge={challenge}
+                      analysis={analysis}
+                      userId={userId}
+                      isLoading={isAnalysisLoading}
+                      isError={!!analysisError}
+                      errorMessage={analysisError}
+                      onViewFull={handleViewAnalysis}
+                      onRetry={handleRetryAnalysis}
+                    />
+                  ) : isAnalysisLoading ? (
+                    <div className="flex flex-col items-center justify-center h-full space-y-4">
+                      <Loader2 className="w-8 h-8 text-blue-400 animate-spin" />
+                      <p
+                        className={`${QUICK_CLASH_CLASSES.textPrimary} font-medium`}
+                      >
+                        {t('Loading analysis...')}
+                      </p>
+                    </div>
+                  ) : analysisError ? (
+                    <div className="flex flex-col items-center justify-center h-full space-y-4 p-4">
+                      <p
+                        className={`${QUICK_CLASH_CLASSES.textSecondary} text-center text-sm`}
+                      >
+                        {t('Error loading analysis')}
+                      </p>
+                      <Button
+                        onClick={handleRetryAnalysis}
+                        className={`${QUICK_CLASH_CLASSES.btnSecondary} rounded-lg`}
+                      >
+                        {t('Retry')}
+                      </Button>
+                    </div>
+                  ) : null}
                 </div>
               </Suspense>
             </MotionDiv>
           )}
         </AnimatePresence>
 
-        {/* Analysis Modal - Keep original exactly */}
+        {/* Full Analysis Modal */}
         {isAnalysisOpen && (
           <Suspense
             fallback={

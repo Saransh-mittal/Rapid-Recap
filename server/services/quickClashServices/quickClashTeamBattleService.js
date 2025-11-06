@@ -40,6 +40,10 @@ const {
   trackAllBotsInBattle,
   stopTrackingAllBotsInBattle,
 } = require('./quickClashBotHealthService')
+const {
+  calculateTeamWinProbability,
+  calculateLiveTeamWinProbability,
+} = require('./quickClashWinProbabilityService')
 
 // Constants
 const TEAM_BATTLE_EXPIRY = 24 * 60 * 60 * 1000 // 24 hours same as regular challenges
@@ -343,7 +347,26 @@ const createTeamBattle = makeRetryable(
 
       // ======= PROGRESS: BATTLE SETUP (55%) =======
       console.log(`[TeamBattle] PHASE 6: Battle setup (55%)`)
-
+      // Calculate initial win probability
+      let winProbability = null
+      try {
+        console.log('[WIN_PROB] Calculating team win probability')
+        winProbability = await calculateTeamWinProbability({
+          teamAId,
+          teamBId,
+          session,
+        })
+        console.log('[WIN_PROB] Team battle probability calculated:', {
+          teamA: winProbability.teamA.initial,
+          teamB: winProbability.teamB.initial,
+        })
+      } catch (probError) {
+        // Non-blocking: battle continues even if probability fails
+        console.error(
+          '[WIN_PROB] Error calculating team probability:',
+          probError,
+        )
+      }
       // Create the team battle
       console.log(`[TeamBattle] Creating team battle object`)
       const teamBattle = new QuickClashTeamBattle({
@@ -356,6 +379,7 @@ const createTeamBattle = makeRetryable(
         teamBMembers,
         expiresAt: new Date(Date.now() + TEAM_BATTLE_EXPIRY),
         fromMatchmaking: true,
+        winProbability: winProbability,
       })
 
       // Calculate potential trophy exchange
@@ -1943,6 +1967,45 @@ const updateBattleWithQuizResults = makeRetryable(
           (sum, member) => sum + member.score,
           0,
         )
+
+        // Calculate live win probability after each player completion
+        if (battle.winProbability) {
+          try {
+            console.log('[WIN_PROB] Calculating live probability update')
+            const updatedProbability = calculateLiveTeamWinProbability(battle)
+
+            // Update current probabilities
+            battle.winProbability.teamA.current = updatedProbability.teamA
+            battle.winProbability.teamB.current = updatedProbability.teamB
+
+            // Track in history
+            battle.winProbability.teamA.history.push({
+              afterUserId: userId,
+              afterChallenge: challengeId,
+              probability: updatedProbability.teamA,
+              timestamp: new Date(),
+              certaintyScore: updatedProbability.certaintyScore,
+              projectedWins: updatedProbability.projection.teamAWins,
+            })
+
+            battle.winProbability.lastUpdatedAt = new Date()
+            battle.winProbability.totalUpdates =
+              (battle.winProbability.totalUpdates || 0) + 1
+
+            console.log('[WIN_PROB] Live probability updated:', {
+              teamA: updatedProbability.teamA,
+              teamB: updatedProbability.teamB,
+              certainty: updatedProbability.certaintyScore,
+              trend: updatedProbability.trend,
+            })
+          } catch (probError) {
+            // Non-blocking: battle continues even if probability update fails
+            console.error(
+              '[WIN_PROB] Error updating live probability:',
+              probError,
+            )
+          }
+        }
 
         // Check if battle is completed (all challenges have a winner or time expired)
         const allChallengesCompleted = battle.challenges.every(

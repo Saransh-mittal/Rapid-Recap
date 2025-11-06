@@ -16,6 +16,11 @@ const {
 } = require('../services/quickClashServices/quickClashTeamService')
 
 const {
+  getCertaintyInfo,
+  getTrendIndicator,
+} = require('../utils/quickClashWinProbabilityHelpers')
+
+const {
   joinTeamMatchmaking,
   leaveTeamMatchmaking,
   getTeamMatchmakingStatus,
@@ -1264,6 +1269,230 @@ const getPendingInvitationsController = asyncHandler(async (req, res) => {
   }
 })
 
+/**
+ * Get current win probability for a team battle
+ *
+ * @desc    Get live win probability data for a 4v4 team battle
+ * @route   GET /api/quickClash/team-battle/:battleId/win-probability
+ * @access  Private (must be participant)
+ *
+ * RETURNS:
+ * - Current probabilities (updated live)
+ * - Initial probabilities (at battle start)
+ * - Certainty score
+ * - Completed challenges count
+ * - Trend indicator
+ * - Team-specific view
+ */
+const getTeamBattleProbability = asyncHandler(async (req, res) => {
+  const { battleId } = req.params
+  const userId = req.user._id
+
+  // Fetch battle with probability data
+  const battle = await QuickClashTeamBattle.findById(battleId)
+    .select('winProbability teamAMembers teamBMembers challenges')
+    .populate('teamA teamB', 'name')
+
+  if (!battle) {
+    return res.status(404).json({
+      success: false,
+      message: 'Battle not found',
+    })
+  }
+
+  // Verify user is part of this battle
+  const isTeamA = battle.teamAMembers.some(
+    m => m.user.toString() === userId.toString(),
+  )
+  const isTeamB = battle.teamBMembers.some(
+    m => m.user.toString() === userId.toString(),
+  )
+
+  if (!isTeamA && !isTeamB) {
+    return res.status(403).json({
+      success: false,
+      message: 'Not authorized to view this battle',
+    })
+  }
+
+  // Check if probability data exists
+  if (!battle.winProbability) {
+    return res.status(200).json({
+      success: true,
+      available: false,
+      message: 'Win probability not available for this battle',
+    })
+  }
+
+  // Get user's team perspective
+  const myTeamData = isTeamA
+    ? battle.winProbability.teamA
+    : battle.winProbability.teamB
+
+  const opponentTeamData = isTeamA
+    ? battle.winProbability.teamB
+    : battle.winProbability.teamA
+
+  const myTeam = isTeamA ? battle.teamA : battle.teamB
+  const opponentTeam = isTeamA ? battle.teamB : battle.teamA
+
+  // Calculate certainty and other metrics
+  const completedChallenges = battle.challenges.filter(
+    c => c.teamACompleted && c.teamBCompleted,
+  ).length
+
+  const certaintyScore = completedChallenges / 4 // 0.0 to 1.0
+  const certaintyInfo = getCertaintyInfo(certaintyScore)
+
+  // Determine trend
+  const currentProb = myTeamData.current
+  const initialProb = myTeamData.initial
+  let trend = 'stable'
+  if (currentProb > initialProb + 0.05) {
+    trend = 'up'
+  } else if (currentProb < initialProb - 0.05) {
+    trend = 'down'
+  }
+  const trendInfo = getTrendIndicator(trend)
+
+  // Format response
+  res.status(200).json({
+    success: true,
+    available: true,
+    probability: {
+      myTeam: {
+        name: myTeam.name,
+        current: {
+          percentage: formatProbability(currentProb),
+          decimal: currentProb,
+        },
+        initial: {
+          percentage: formatProbability(initialProb),
+          decimal: initialProb,
+        },
+        change: {
+          percentage: formatProbability(Math.abs(currentProb - initialProb)),
+          direction: trend,
+          ...trendInfo,
+        },
+        message: getProbabilityMessage(currentProb, myTeam.name),
+      },
+      opponentTeam: {
+        name: opponentTeam.name,
+        current: {
+          percentage: formatProbability(opponentTeamData.current),
+          decimal: opponentTeamData.current,
+        },
+      },
+      certainty: {
+        score: certaintyScore,
+        ...certaintyInfo,
+      },
+      metadata: {
+        completedChallenges: `${completedChallenges}/4`,
+        totalUpdates: battle.winProbability.totalUpdates,
+        lastUpdated: battle.winProbability.lastUpdatedAt,
+      },
+    },
+    calculatedAt: battle.winProbability.calculatedAt,
+  })
+})
+
+/**
+ * Get probability history for a team battle
+ *
+ * @desc    Get timeline of how probability changed throughout battle
+ * @route   GET /api/quickClash/team-battle/:battleId/win-probability/history
+ * @access  Private (must be participant)
+ *
+ * USEFUL FOR:
+ * - Showing probability graph/chart
+ * - Analyzing how battle unfolded
+ * - Understanding key turning points
+ */
+const getTeamBattleProbabilityHistory = asyncHandler(async (req, res) => {
+  const { battleId } = req.params
+  const userId = req.user._id
+
+  const battle = await QuickClashTeamBattle.findById(battleId)
+    .select('winProbability teamAMembers teamBMembers')
+    .populate('teamA teamB', 'name')
+    .populate({
+      path: 'winProbability.teamA.history.afterUserId',
+      select: 'name inGameName',
+    })
+
+  if (!battle) {
+    return res.status(404).json({
+      success: false,
+      message: 'Battle not found',
+    })
+  }
+
+  // Verify user is participant
+  const isTeamA = battle.teamAMembers.some(
+    m => m.user.toString() === userId.toString(),
+  )
+  const isTeamB = battle.teamBMembers.some(
+    m => m.user.toString() === userId.toString(),
+  )
+
+  if (!isTeamA && !isTeamB) {
+    return res.status(403).json({
+      success: false,
+      message: 'Not authorized',
+    })
+  }
+
+  if (!battle.winProbability) {
+    return res.status(200).json({
+      success: true,
+      available: false,
+      history: [],
+    })
+  }
+
+  // Build timeline
+  const myTeamData = isTeamA
+    ? battle.winProbability.teamA
+    : battle.winProbability.teamB
+
+  const timeline = [
+    // Start point
+    {
+      point: 0,
+      label: 'Battle Start',
+      probability: formatProbability(myTeamData.initial),
+      decimal: myTeamData.initial,
+      timestamp: battle.winProbability.calculatedAt,
+      certainty: 0,
+    },
+    // Update points
+    ...myTeamData.history.map((update, index) => ({
+      point: index + 1,
+      label: `After Challenge ${index + 1}`,
+      probability: formatProbability(update.probability),
+      decimal: update.probability,
+      timestamp: update.timestamp,
+      certainty: update.certaintyScore,
+      projectedWins: update.projectedWins.toFixed(1),
+      playerName: update.afterUserId?.inGameName || update.afterUserId?.name,
+    })),
+  ]
+
+  res.status(200).json({
+    success: true,
+    available: true,
+    battle: {
+      id: battleId,
+      myTeam: isTeamA ? battle.teamA.name : battle.teamB.name,
+      opponentTeam: isTeamA ? battle.teamB.name : battle.teamA.name,
+    },
+    timeline,
+    totalUpdates: myTeamData.history.length,
+  })
+})
+
 module.exports = {
   createNewTeam,
   getTeam,
@@ -1288,4 +1517,6 @@ module.exports = {
   acceptTeamInvitationController,
   rejectTeamInvitationController,
   getPendingInvitationsController,
+  getTeamBattleProbability,
+  getTeamBattleProbabilityHistory,
 }

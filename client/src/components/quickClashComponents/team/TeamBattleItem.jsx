@@ -1,4 +1,4 @@
-// components/quickClashComponents/team/TeamBattleItem.jsx - FAITHFUL CONVERSION to Tailwind CSS
+// components/quickClashComponents/team/TeamBattleItem.jsx - WITH WIN PROBABILITY
 import React, { memo, useMemo } from 'react'
 import { motion } from 'framer-motion'
 import { useTranslation } from 'react-i18next'
@@ -17,11 +17,9 @@ import { formatDistanceToNow } from 'date-fns'
 // Import centralized color scheme
 import { QUICK_CLASH_CLASSES } from '../utils/quickClashColors'
 
-// You'll need to install these components:
-// npx shadcn-ui@latest add button
-// npx shadcn-ui@latest add badge
-// npx shadcn-ui@latest add avatar
-// npx shadcn-ui@latest add progress
+// Import UI components
+import TeamWinProbabilityDisplay from '../ui/TeamWinProbabilityDisplay' // NEW
+
 import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar'
@@ -30,21 +28,18 @@ import { Progress } from '@/components/ui/progress'
 const MotionDiv = motion.div
 
 /**
- * Enhanced TeamBattleItem - Converted to Tailwind CSS with blue-cyan theme
+ * TeamBattleItem - WITH WIN PROBABILITY INTEGRATION
  *
- * Key improvements in this conversion:
- * - Migrated from Chakra UI to Tailwind CSS + Shadcn/ui
- * - Implemented blue-cyan harmony color scheme from quickClashColors.js
- * - Enhanced glassmorphic effects with consistent styling
- * - Maintained all original responsive design and calculations
- * - Improved accessibility with better focus states
- * - Updated time display logic for completed battles
+ * NEW FEATURE: Shows live team win probability with trend indicators
+ * - Displays current probability vs initial probability
+ * - Shows trend indicators (↑ ↓ →)
+ * - Certainty score display
+ * - Only shows for battles with winProbability data
  */
 const TeamBattleItem = memo(({ battle, index, onEnter, onViewAnalysis }) => {
   const { t } = useTranslation('QuickClash')
   const { user } = useSelector(state => state.auth)
 
-  // Responsive values using Tailwind's responsive design approach
   const responsiveConfig = useMemo(() => {
     if (typeof window !== 'undefined') {
       const width = window.innerWidth
@@ -53,7 +48,7 @@ const TeamBattleItem = memo(({ battle, index, onEnter, onViewAnalysis }) => {
         fontSize: width < 768 ? 'text-sm' : 'text-base',
         padding: width < 768 ? 'p-3' : 'p-4',
         buttonSize: width < 768 ? 'sm' : 'default',
-        avatarMax: width < 768 ? 2 : width < 1024 ? 1 : 4,
+        avatarMax: width < 768 ? 2 : width < 1024 ? 3 : 4,
       }
     }
     return {
@@ -65,7 +60,7 @@ const TeamBattleItem = memo(({ battle, index, onEnter, onViewAnalysis }) => {
     }
   }, [])
 
-  // Memoized calculations with enhanced time logic - EXACTLY as original
+  // Memoized calculations
   const { battleOutcome, completionPercentage, timeInfo, leftTeam, rightTeam } =
     useMemo(() => {
       if (!battle || !user) {
@@ -78,13 +73,11 @@ const TeamBattleItem = memo(({ battle, index, onEnter, onViewAnalysis }) => {
         }
       }
 
-      // User team calculation
       const isInTeamA = battle.teamAMembers?.some(
         member => member.user._id === user._id,
       )
       const userTeam = isInTeamA ? 'teamA' : 'teamB'
 
-      // Team arrangement
       const teams = {
         teamA: {
           data: battle.teamA,
@@ -102,7 +95,6 @@ const TeamBattleItem = memo(({ battle, index, onEnter, onViewAnalysis }) => {
       const leftTeam = teams[userTeam]
       const rightTeam = teams[userTeam === 'teamA' ? 'teamB' : 'teamA']
 
-      // Battle outcome with enhanced color mapping
       let battleOutcome
       if (battle.status === 'completed') {
         if (battle.winner === 'tie') {
@@ -116,7 +108,6 @@ const TeamBattleItem = memo(({ battle, index, onEnter, onViewAnalysis }) => {
         battleOutcome = { label: 'ACTIVE', color: 'green', icon: Zap }
       }
 
-      // Completion percentage
       const totalChallenges = battle.challenges?.length || 0
       const completedChallenges =
         battle.challenges?.filter(
@@ -127,7 +118,6 @@ const TeamBattleItem = memo(({ battle, index, onEnter, onViewAnalysis }) => {
           ? Math.round((completedChallenges / totalChallenges) * 100)
           : 0
 
-      // Enhanced time info logic for blue-cyan theme
       let timeInfo = { label: '', timeText: null, color: 'text-gray-400' }
       const isBattleOver = battle.status !== 'active'
 
@@ -156,7 +146,44 @@ const TeamBattleItem = memo(({ battle, index, onEnter, onViewAnalysis }) => {
       }
     }, [battle, user, t])
 
-  // Enhanced card styling with blue-cyan color scheme
+  // NEW: Extract win probability data
+  const winProbability = useMemo(() => {
+    if (!battle?.winProbability || !user) return null
+
+    const isInTeamA = battle.teamAMembers?.some(
+      member => member.user._id === user._id,
+    )
+
+    const myTeamProb = isInTeamA
+      ? battle.winProbability.teamA
+      : battle.winProbability.teamB
+
+    if (!myTeamProb) return null
+
+    // Calculate completed challenges count
+    const totalChallenges = battle.challenges?.length || 4
+    const completedChallenges =
+      battle.challenges?.filter(
+        challenge => challenge.teamACompleted && challenge.teamBCompleted,
+      ).length || 0
+
+    // Calculate certainty score from history
+    let certaintyScore = 0
+    if (myTeamProb.history && myTeamProb.history.length > 0) {
+      const latestHistory = myTeamProb.history[myTeamProb.history.length - 1]
+      certaintyScore = latestHistory.certaintyScore || 0
+    }
+
+    return {
+      currentProbability: myTeamProb.current || myTeamProb.initial || 0.5,
+      initialProbability: myTeamProb.initial || 0.5,
+      certaintyScore,
+      completedChallenges,
+      totalChallenges,
+    }
+  }, [battle, user])
+
+  // Card styling
   const cardStyles = useMemo(() => {
     const colorMap = {
       cyan: {
@@ -184,7 +211,6 @@ const TeamBattleItem = memo(({ battle, index, onEnter, onViewAnalysis }) => {
     return colorMap[battleOutcome.color] || colorMap.green
   }, [battleOutcome.color])
 
-  // Simple entrance animation - EXACTLY as original
   const cardVariants = {
     initial: { opacity: 0, y: 10 },
     animate: {
@@ -198,7 +224,7 @@ const TeamBattleItem = memo(({ battle, index, onEnter, onViewAnalysis }) => {
     },
   }
 
-  // Generate avatar group with overflow indicator
+  // Render avatar group
   const renderAvatarGroup = (members, borderColor) => {
     if (!members || members.length === 0) return null
 
@@ -318,6 +344,22 @@ const TeamBattleItem = memo(({ battle, index, onEnter, onViewAnalysis }) => {
             `}
           />
         </div>
+
+        {/* NEW: Win Probability Section (only for active battles) */}
+        {winProbability && battle.status === 'active' && (
+          <div className={`${responsiveConfig.padding} pt-2`}>
+            <TeamWinProbabilityDisplay
+              currentProbability={winProbability.currentProbability}
+              initialProbability={winProbability.initialProbability}
+              certaintyScore={winProbability.certaintyScore}
+              completedChallenges={winProbability.completedChallenges}
+              totalChallenges={winProbability.totalChallenges}
+              size="md"
+              showTrend={true}
+              showCertainty={true}
+            />
+          </div>
+        )}
 
         {/* Teams Section */}
         <div

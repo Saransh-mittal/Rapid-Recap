@@ -208,6 +208,95 @@ const quickClashTeamBattleSchema = new mongoose.Schema(
         },
       },
     ],
+    // Win Probability Data (Team Mode)
+    winProbability: {
+      teamA: {
+        // Initial calculation (at battle start)
+        initial: {
+          type: Number,
+          min: 0,
+          max: 1,
+          required: true,
+        },
+        initialEffectiveRating: Number,
+        initialComponents: {
+          trophyBase: Number,
+          performanceMod: Number,
+          synergyMod: Number,
+        },
+        isEstablishedTeam: Boolean,
+        battleCount: Number,
+
+        // Live updates (changes as challenges complete)
+        current: {
+          type: Number,
+          min: 0,
+          max: 1,
+          required: true,
+        },
+        // History of probability changes (8 updates max)
+        history: [
+          {
+            afterUserId: {
+              type: mongoose.Schema.Types.ObjectId,
+              ref: 'USER',
+            },
+            afterChallenge: {
+              type: mongoose.Schema.Types.ObjectId,
+              ref: 'QUICK_CLASH_CHALLENGE',
+            },
+            probability: Number,
+            timestamp: Date,
+            certaintyScore: Number,
+            projectedWins: Number,
+          },
+        ],
+      },
+      teamB: {
+        initial: {
+          type: Number,
+          min: 0,
+          max: 1,
+          required: true,
+        },
+        initialEffectiveRating: Number,
+        initialComponents: {
+          trophyBase: Number,
+          performanceMod: Number,
+          synergyMod: Number,
+        },
+        isEstablishedTeam: Boolean,
+        battleCount: Number,
+        current: {
+          type: Number,
+          min: 0,
+          max: 1,
+          required: true,
+        },
+        history: [
+          {
+            afterUserId: {
+              type: mongoose.Schema.Types.ObjectId,
+              ref: 'USER',
+            },
+            afterChallenge: {
+              type: mongoose.Schema.Types.ObjectId,
+              ref: 'QUICK_CLASH_CHALLENGE',
+            },
+            probability: Number,
+            timestamp: Date,
+            certaintyScore: Number,
+            projectedWins: Number,
+          },
+        ],
+      },
+      calculatedAt: Date,
+      lastUpdatedAt: Date,
+      totalUpdates: {
+        type: Number,
+        default: 0,
+      },
+    },
     createdAt: {
       type: Date,
       default: Date.now,
@@ -237,6 +326,15 @@ quickClashTeamBattleSchema.index({ status: 1, expiresAt: 1 })
 quickClashTeamBattleSchema.index({ 'teamAMembers.user': 1 })
 quickClashTeamBattleSchema.index({ 'teamBMembers.user': 1 })
 quickClashTeamBattleSchema.index({ createdAt: -1 })
+quickClashTeamBattleSchema.index({
+  'winProbability.teamA.current': -1,
+})
+quickClashTeamBattleSchema.index({
+  'winProbability.teamB.current': -1,
+})
+quickClashTeamBattleSchema.index({
+  'winProbability.lastUpdatedAt': -1,
+})
 
 const QuickClashTeamBattle = mongoose.model(
   'QUICK_CLASH_TEAM_BATTLE',

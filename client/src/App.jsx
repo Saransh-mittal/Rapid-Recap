@@ -192,7 +192,6 @@ const App = () => {
     dispatch(setIsNotifInboxModalOpen(false))
     dispatch(setSelectedNotificationId(null))
   }, [dispatch])
-  const [videoLoaded, setVideoLoaded] = useState(false)
 
   const screenInfo = useResponsiveBreakpoints()
   const videoOverlays = useMemo(
@@ -206,9 +205,6 @@ const App = () => {
     ],
     [screenInfo.isMobile],
   )
-  const handleVideoLoad = useCallback(() => {
-    setVideoLoaded(true)
-  }, [])
 
   // Expose socket utilities globally for easy access
   useEffect(() => {
@@ -637,19 +633,8 @@ const App = () => {
       {/* {showLoadingScreen && <LoadingScreen progress={overallProgress} />} */}
 
       <Suspense fallback={null}>
-        {!showLoadingScreen && (
-          <FixedBackground
-            useVideo={true}
-            desktopVideo="/videos/Desktop_Screen"
-            mobileVideo="/videos/Mobile_Screen"
-            onVideoLoad={handleVideoLoad}
-            forceRender={true}
-            customOverlays={videoOverlays}
-          />
-        )}
-        {!videoLoaded && showLoadingScreen && (
-          <LoadingScreen screenInfo={screenInfo} />
-        )}
+        {!showLoadingScreen && <FixedBackground forceRender={true} />}
+        {showLoadingScreen && <LoadingScreen screenInfo={screenInfo} />}
       </Suspense>
       <Suspense fallback={null}>
         {showPWAPrompt && <PWAPromptStrip onClose={handlePromptClose} />}

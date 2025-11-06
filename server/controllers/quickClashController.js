@@ -9,6 +9,12 @@ const {
   postChallengeCreation,
 } = require('../services/quickClashServices/quickClashChallengeService')
 const {
+  formatProbability,
+  getProbabilityMessage,
+  getDataQualityInfo,
+  calculateExpectedTrophyChange,
+} = require('../utils/quickClashWinProbabilityHelpers')
+const {
   createSession,
   startReading,
   completeReading,
@@ -918,6 +924,123 @@ const calculatePotentialTrophyExchangeController = asyncHandler(
   },
 )
 
+/**
+ * Get win probability explanation for a solo challenge
+ *
+ * @desc    Get detailed win probability data for a 1v1 challenge
+ * @route   GET /api/quickClash/challenge/:challengeId/win-probability
+ * @access  Private (must be participant)
+ *
+ * RETURNS:
+ * - Probability percentages
+ * - Effective ratings
+ * - Component breakdown (trophies, performance, consistency)
+ * - Data quality indicators
+ * - Contextual messages
+ * - Expected trophy changes
+ */
+const getWinProbabilityExplanation = asyncHandler(async (req, res) => {
+  const { challengeId } = req.params
+  const userId = req.user._id
+
+  // Fetch challenge with probability data
+  const challenge = await QuickClashChallenge.findById(challengeId)
+    .select('winProbability challenger opponent trophyPotential')
+    .populate('challenger opponent', 'name inGameName pic')
+
+  if (!challenge) {
+    return res.status(404).json({
+      success: false,
+      message: 'Challenge not found',
+    })
+  }
+
+  // Verify user is part of this challenge
+  const isChallenger = challenge.challenger._id.toString() === userId.toString()
+  const isOpponent = challenge.opponent._id.toString() === userId.toString()
+
+  if (!isChallenger && !isOpponent) {
+    return res.status(403).json({
+      success: false,
+      message: 'Not authorized to view this challenge',
+    })
+  }
+
+  // Check if probability data exists
+  if (!challenge.winProbability) {
+    return res.status(200).json({
+      success: true,
+      available: false,
+      message: 'Win probability not available for this challenge',
+    })
+  }
+
+  // Get user's perspective
+  const myData = isChallenger
+    ? challenge.winProbability.challenger
+    : challenge.winProbability.opponent
+
+  const opponentData = isChallenger
+    ? challenge.winProbability.opponent
+    : challenge.winProbability.challenger
+
+  const opponentUser = isChallenger ? challenge.opponent : challenge.challenger
+
+  // Format data for response
+  const myProbability = myData.probability
+  const opponentProbability = opponentData.probability
+
+  // Get contextual information
+  const dataQuality = getDataQualityInfo(myData.dataQuality)
+  const message = getProbabilityMessage(myProbability, req.user.name)
+
+  // Calculate expected trophy changes
+  const baseTrophies = isChallenger
+    ? challenge.trophyPotential?.challenger?.potentialGain || 30
+    : challenge.trophyPotential?.opponent?.potentialGain || 30
+
+  const trophyExpectation = calculateExpectedTrophyChange(
+    myProbability,
+    baseTrophies,
+  )
+
+  res.status(200).json({
+    success: true,
+    available: true,
+    probability: {
+      mine: {
+        percentage: formatProbability(myProbability),
+        decimal: myProbability,
+        effectiveRating: myData.effectiveRating,
+        components: {
+          trophyBase: myData.components.trophyBase,
+          performanceMod: myData.components.performanceMod,
+          consistencyMod: myData.components.consistencyMod,
+        },
+        dataQuality: {
+          level: myData.dataQuality,
+          ...dataQuality,
+        },
+        sampleSize: myData.sampleSize,
+      },
+      opponent: {
+        name: opponentUser.inGameName || opponentUser.name,
+        percentage: formatProbability(opponentProbability),
+        decimal: opponentProbability,
+        effectiveRating: opponentData.effectiveRating,
+        dataQuality: opponentData.dataQuality,
+      },
+      message,
+      trophyExpectation: {
+        onWin: `+${trophyExpectation.onWin}`,
+        onLoss: `${trophyExpectation.onLoss}`,
+        swingPotential: trophyExpectation.swingPotential,
+      },
+    },
+    calculatedAt: challenge.winProbability.calculatedAt,
+  })
+})
+
 module.exports = {
   createNewChallenge,
   handleAcceptChallenge,
@@ -942,4 +1065,5 @@ module.exports = {
   getUserTrophyHistoryController,
   calculatePotentialTrophyExchangeController,
   getUserCombinedTrophyHistoryController,
+  getWinProbabilityExplanation,
 }

@@ -1,4 +1,4 @@
-// components/quickClashComponents/modals/MatchPreparationModal.jsx - OPTIMIZED VERSION
+// components/quickClashComponents/modals/MatchPreparationModal.jsx - RESPONSIVE FOR ALL SCREENS
 import React, {
   useEffect,
   useRef,
@@ -7,28 +7,6 @@ import React, {
   memo,
   useMemo,
 } from 'react'
-import {
-  Modal,
-  ModalOverlay,
-  ModalContent,
-  ModalBody,
-  ModalHeader,
-  ModalFooter,
-  Box,
-  VStack,
-  HStack,
-  Text,
-  Avatar,
-  Icon,
-  Flex,
-  Badge,
-  Divider,
-  Button,
-  useToast,
-  useBreakpointValue,
-  IconButton,
-} from '@chakra-ui/react'
-import { keyframes } from '@emotion/react'
 import { motion, AnimatePresence } from 'framer-motion'
 import { useTranslation } from 'react-i18next'
 import {
@@ -46,22 +24,35 @@ import {
   clearMatchmakingAfterChallengeReady,
   clearMatchmakingAfterModalClose,
 } from '../../../redux/quickClashMatchmakingSlice'
-import MatchTrophyPotentialDisplay from '../ui/MatchTrophyPotentialDisplay'
 
-const MotionBox = motion(Box)
-const MotionAvatar = motion(Avatar)
-const MotionIcon = motion(Icon)
-const MotionBadge = motion(Badge)
-const MotionButton = motion(Button)
-const MotionIconButton = motion(IconButton)
+// Import centralized color scheme
+import { QUICK_CLASH_CLASSES } from '../utils/quickClashColors'
 
-// OPTIMIZATION: Memoized constants to prevent recreation
+// Import simplified win probability component
+import WinProbabilityBar from '../ui/WinProbabilityBar'
+
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogFooter,
+  DialogTitle,
+} from '@/components/ui/dialog'
+import { Button } from '@/components/ui/button'
+import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar'
+import { Badge } from '@/components/ui/badge'
+import { Progress } from '@/components/ui/progress'
+import { Separator } from '@/components/ui/separator'
+
+const MotionDiv = motion.div
+
+// Step configurations
 const STEP_CONFIGS = [
   {
     id: 'matchFound',
     title: 'Match Found',
     description: 'Found your opponent!',
-    color: 'green.500',
+    color: 'text-green-500',
     progressMin: 0,
     progressMax: 20,
   },
@@ -69,7 +60,7 @@ const STEP_CONFIGS = [
     id: 'contentLoading',
     title: 'Loading Content',
     description: 'Preparing quiz content...',
-    color: 'blue.500',
+    color: 'text-blue-500',
     progressMin: 20,
     progressMax: 60,
   },
@@ -77,7 +68,7 @@ const STEP_CONFIGS = [
     id: 'generatingQuiz',
     title: 'Generating Questions',
     description: 'Creating your challenge...',
-    color: 'purple.500',
+    color: 'text-purple-500',
     progressMin: 60,
     progressMax: 95,
   },
@@ -85,26 +76,12 @@ const STEP_CONFIGS = [
     id: 'challengeReady',
     title: 'Challenge Ready',
     description: 'Ready to play!',
-    color: 'teal.500',
+    color: 'text-teal-500',
     progressMin: 95,
     progressMax: 100,
   },
 ]
 
-// OPTIMIZATION: Pre-computed keyframes to prevent recreation
-const subtleFloat = keyframes`
-  0% { transform: translateY(0px); }
-  50% { transform: translateY(-2px); }
-  100% { transform: translateY(0px); }
-`
-
-const shineAnimation = keyframes`
-  0% { left: -100%; }
-  50% { left: 100%; }
-  100% { left: 100%; }
-`
-
-// OPTIMIZATION: Memoized helper function
 const calculateTrophyPotential = (playerTrophies, opponentTrophies) => {
   const BASE_TROPHIES = 30
   const TROPHY_K_FACTOR = 0.8
@@ -125,173 +102,132 @@ const calculateTrophyPotential = (playerTrophies, opponentTrophies) => {
   return { potentialGain, potentialLoss }
 }
 
-// OPTIMIZATION: Memoized VS Badge Component with minimal re-renders
-const OptimizedVSBadge = memo(({ size = 'md', isActive = false }) => {
-  // OPTIMIZATION: Memoize size properties
-  const sizeProps = useMemo(() => {
-    const configs = {
-      sm: { size: '32px', fontSize: 'xs' },
-      md: { size: '40px', fontSize: 'sm' },
-      lg: { size: '48px', fontSize: 'md' },
-    }
-    return configs[size] || configs.md
-  }, [size])
-
-  // OPTIMIZATION: Memoize styles
-  const badgeStyles = useMemo(
-    () => ({
-      width: sizeProps.size,
-      height: sizeProps.size,
-      borderRadius: 'full',
-      bg: isActive ? 'green.500' : 'gray.700',
-      border: '2px solid',
-      borderColor: isActive ? 'green.400' : 'yellow.400',
-      alignItems: 'center',
-      justifyContent: 'center',
-      position: 'relative',
-      boxShadow: isActive
-        ? '0 0 10px rgba(72, 187, 120, 0.5)'
-        : '0 0 8px rgba(255, 215, 0, 0.3)',
-      animation: isActive ? `${subtleFloat} 2s infinite` : 'none',
-    }),
-    [sizeProps.size, isActive],
-  )
-
-  const textStyles = useMemo(
-    () => ({
-      color: isActive ? 'white' : 'yellow.400',
-      fontWeight: 'bold',
-      fontSize: sizeProps.fontSize,
-      textShadow: isActive
-        ? '0 0 3px rgba(72, 187, 120, 0.5)'
-        : '0 0 3px rgba(255, 215, 0, 0.5)',
-    }),
-    [isActive, sizeProps.fontSize],
-  )
+// VS Badge Component
+const VSBadge = memo(({ size = 'md', isActive = false }) => {
+  const sizeClasses = {
+    sm: 'w-7 h-7 text-xs',
+    md: 'w-8 h-8 text-xs',
+    lg: 'w-10 h-10 text-sm',
+  }
 
   return (
-    <Flex {...badgeStyles}>
-      <Text {...textStyles}>VS</Text>
-    </Flex>
+    <div
+      className={`
+        ${sizeClasses[size]}
+        rounded-full
+        ${
+          isActive
+            ? 'bg-green-500 border-green-400'
+            : 'bg-gray-700 border-yellow-400'
+        }
+        border-2
+        flex items-center justify-center
+        ${
+          isActive
+            ? 'shadow-lg shadow-green-500/50'
+            : 'shadow-md shadow-yellow-400/30'
+        }
+        transition-all duration-300
+        flex-shrink-0
+      `}
+    >
+      <span
+        className={`font-bold ${isActive ? 'text-white' : 'text-yellow-400'}`}
+      >
+        VS
+      </span>
+    </div>
   )
 })
+VSBadge.displayName = 'VSBadge'
 
-// OPTIMIZATION: Memoized Progress Bar Component
-const OptimizedProgressBar = memo(({ progress, isComplete }) => {
-  const progressBarStyles = useMemo(
-    () => ({
-      position: 'relative',
-      w: '100%',
-      h: '10px',
-      borderRadius: 'full',
-      overflow: 'hidden',
-      bg: 'rgba(0,0,0,0.3)',
-      border: '1px solid',
-      borderColor: 'whiteAlpha.200',
-    }),
-    [],
-  )
-
-  const progressFillStyles = useMemo(
-    () => ({
-      position: 'absolute',
-      top: 0,
-      left: 0,
-      height: '100%',
-      bg: isComplete ? 'green.400' : 'purple.500',
-      borderRadius: 'full',
-      boxShadow: isComplete
-        ? '0 0 8px rgba(72, 187, 120, 0.4)'
-        : '0 0 6px rgba(128, 90, 213, 0.3)',
-    }),
-    [isComplete],
-  )
-
+// Progress Bar Component
+const ProgressBar = memo(({ progress, isComplete }) => {
   return (
-    <Box {...progressBarStyles}>
-      <MotionBox
-        {...progressFillStyles}
-        initial={{ width: '0%' }}
+    <div className="relative w-full h-2 bg-black/30 rounded-full overflow-hidden border border-white/20">
+      <MotionDiv
+        initial={{ width: 0 }}
         animate={{ width: `${progress}%` }}
         transition={{ type: 'spring', stiffness: 80, damping: 15 }}
-      >
-        <Box
-          position="absolute"
-          top={0}
-          left={0}
-          height="100%"
-          width="100%"
-          bgGradient="linear(90deg, transparent, rgba(255,255,255,0.3), transparent)"
-          animation={`${shineAnimation} 3s infinite`}
-        />
-      </MotionBox>
-    </Box>
+        className={`
+          absolute left-0 top-0 h-full
+          ${isComplete ? 'bg-green-400' : 'bg-purple-500'}
+          ${isComplete ? 'shadow-green-400/40' : 'shadow-purple-400/30'}
+          shadow-md
+          rounded-full
+        `}
+      />
+    </div>
   )
 })
+ProgressBar.displayName = 'ProgressBar'
 
-// OPTIMIZATION: Memoized Player Card Component
+// Player Card Component
 const PlayerCard = memo(({ player, isUser = false, avatarSize = 'lg' }) => {
-  const cardStyles = useMemo(
-    () => ({
-      spacing: 3,
-      flex: 1,
-      align: 'center',
-    }),
-    [],
-  )
-
-  const avatarProps = useMemo(
-    () => ({
-      size: avatarSize,
-      name: player?.name,
-      src: player?.pic,
-      bg: isUser ? 'purple.500' : 'blue.500',
-      border: '3px solid',
-      borderColor: isUser ? 'purple.300' : 'blue.300',
-    }),
-    [player, isUser, avatarSize],
-  )
-
-  const motionProps = useMemo(
-    () => ({
-      initial: { scale: 0.8, opacity: 0 },
-      animate: { scale: 1, opacity: 1 },
-      transition: {
-        type: 'spring',
-        stiffness: 200,
-        damping: 20,
-        delay: isUser ? 0.2 : 0.4,
-      },
-    }),
-    [isUser],
-  )
+  const sizeClasses = {
+    sm: 'w-12 h-12',
+    md: 'w-14 h-14',
+    lg: 'w-16 h-16',
+  }
 
   return (
-    <VStack {...cardStyles}>
-      <Text
-        color="whiteAlpha.700"
-        fontSize="xs"
-        fontWeight="medium"
-        textAlign="center"
+    <div className="flex flex-col items-center space-y-1.5 flex-1 min-w-0">
+      <span
+        className={`text-xs ${QUICK_CLASH_CLASSES.textMuted} font-medium text-center truncate max-w-full`}
       >
         {player?.inGameName || (isUser ? 'You' : 'Opponent')}
-      </Text>
-      <MotionAvatar {...avatarProps} {...motionProps} />
-      <Text
-        color="white"
-        fontWeight="bold"
-        fontSize="sm"
-        textAlign="center"
-        noOfLines={1}
+      </span>
+
+      <MotionDiv
+        initial={{ scale: 0.8, opacity: 0 }}
+        animate={{ scale: 1, opacity: 1 }}
+        transition={{
+          type: 'spring',
+          stiffness: 200,
+          damping: 20,
+          delay: isUser ? 0.2 : 0.4,
+        }}
       >
-        {player?.name}
-      </Text>
-    </VStack>
+        <Avatar
+          className={`
+            ${sizeClasses[avatarSize]}
+            ${isUser ? 'ring-2 ring-purple-300' : 'ring-2 ring-blue-300'}
+            ring-offset-2 ring-offset-slate-900
+          `}
+        >
+          <AvatarImage src={player?.pic} alt={player?.name} />
+          <AvatarFallback
+            className={`${
+              isUser ? 'bg-purple-500' : 'bg-blue-500'
+            } text-white font-bold text-sm`}
+          >
+            {player?.name?.[0]?.toUpperCase() || '?'}
+          </AvatarFallback>
+        </Avatar>
+      </MotionDiv>
+
+      <span
+        className={`text-xs sm:text-sm ${QUICK_CLASH_CLASSES.textPrimary} font-semibold text-center truncate max-w-full`}
+      >
+        {player?.name && player.name.length > 12
+          ? player.name.substring(0, 10) + '..'
+          : player?.name}
+      </span>
+    </div>
   )
 })
+PlayerCard.displayName = 'PlayerCard'
 
 /**
- * OPTIMIZED Match Preparation Modal with enhanced performance
+ * RESPONSIVE MatchPreparationModal - Mobile/Tablet/Desktop Optimized
+ *
+ * KEY IMPROVEMENTS:
+ * 1. Proper responsive breakpoints (mobile, tablet, desktop)
+ * 2. No overflow on any screen size
+ * 3. Consistent typography scale
+ * 4. Simplified padding and spacing
+ * 5. Touch-friendly on mobile
+ * 6. Adaptive layout (vertical on mobile, horizontal on desktop)
  */
 const MatchPreparationModal = ({
   isOpen,
@@ -304,30 +240,19 @@ const MatchPreparationModal = ({
 }) => {
   const { t } = useTranslation('QuickClash')
   const dispatch = useDispatch()
-  const toast = useToast()
   const { user } = useSelector(state => state.auth)
 
-  // OPTIMIZATION: Batch state updates
   const [modalState, setModalState] = useState({
     currentProgress: 0,
     isComplete: false,
     showPlayButton: false,
   })
 
-  // Refs
   const hasShownCompletionToast = useRef(false)
   const progressAnimationRef = useRef(null)
   const componentMounted = useRef(true)
 
-  // FIXED: Move responsive values to top level (cannot use hooks inside useMemo)
-  const avatarSize = useBreakpointValue({ base: 'lg', md: 'xl' })
-  const modalSize = useBreakpointValue({ base: 'full', md: 'xl' })
-  const contentPadding = useBreakpointValue({ base: 4, md: 6 })
-  const iconSize = useBreakpointValue({ base: 5, md: 6 })
-  const vsBadgeSize = useBreakpointValue({ base: 'sm', md: 'md' })
-  const trophySize = useBreakpointValue({ base: 'sm', md: 'md' })
-
-  // OPTIMIZATION: Cleanup on unmount
+  // Cleanup on unmount
   useEffect(() => {
     componentMounted.current = true
     return () => {
@@ -338,14 +263,13 @@ const MatchPreparationModal = ({
     }
   }, [])
 
-  // OPTIMIZATION: Batch state updates function
   const updateModalState = useCallback(updates => {
     if (componentMounted.current) {
       setModalState(prev => ({ ...prev, ...updates }))
     }
   }, [])
 
-  // OPTIMIZATION: Memoized progress animation
+  // Progress animation
   useEffect(() => {
     if (progress !== modalState.currentProgress) {
       if (progressAnimationRef.current) {
@@ -364,7 +288,7 @@ const MatchPreparationModal = ({
     }
   }, [progress, modalState.currentProgress, updateModalState])
 
-  // OPTIMIZATION: Handle completion state efficiently
+  // Handle completion
   useEffect(() => {
     if (
       modalState.currentProgress >= 100 &&
@@ -388,7 +312,7 @@ const MatchPreparationModal = ({
     updateModalState,
   ])
 
-  // OPTIMIZATION: Reset state when modal closes
+  // Reset state when modal closes
   useEffect(() => {
     if (!isOpen) {
       setModalState({
@@ -400,19 +324,15 @@ const MatchPreparationModal = ({
     }
   }, [isOpen])
 
-  // OPTIMIZATION: Memoize action handlers
+  // Action handlers
   const actionHandlers = useMemo(
     () => ({
       handleMinimize: () => {
-        if (onClose) {
-          onClose('minimize')
-        }
+        if (onClose) onClose('minimize')
       },
       handleCompleteClose: () => {
         dispatch(clearMatchmakingAfterModalClose())
-        if (onClose) {
-          onClose('close')
-        }
+        if (onClose) onClose('close')
       },
       handlePlayNow: () => {
         dispatch(clearMatchmakingAfterChallengeReady())
@@ -426,7 +346,7 @@ const MatchPreparationModal = ({
     [onClose, onPlayNow, challengeId, dispatch],
   )
 
-  // OPTIMIZATION: Memoize opponent info extraction
+  // Extract opponent info
   const opponent = useMemo(() => {
     if (preparingData?.opponent) {
       return preparingData.opponent
@@ -460,41 +380,21 @@ const MatchPreparationModal = ({
     }
   }, [preparingData, user])
 
-  // OPTIMIZATION: Memoize trophy calculations
-  const trophyCalculations = useMemo(() => {
+  // Calculate win probability
+  const winProbability = useMemo(() => {
     const userTrophies = user?.quickClashTrophies || 1000
     const opponentTrophies = opponent?.quickClashTrophies || 1000
 
-    const userWinGain = calculateTrophyPotential(
-      userTrophies,
-      opponentTrophies,
-    ).potentialGain
-    const opponentWinGain = calculateTrophyPotential(
-      opponentTrophies,
-      userTrophies,
-    ).potentialGain
+    const ratingDiff = userTrophies - opponentTrophies
+    const expectedScore = 1 / (1 + Math.pow(10, -ratingDiff / 400))
 
     return {
-      userTrophies,
-      opponentTrophies,
-      userTrophyPotential: {
-        potentialGain: userWinGain,
-        potentialLoss: Math.min(
-          opponentWinGain,
-          Math.max(0, userTrophies - 100),
-        ),
-      },
-      opponentTrophyPotential: {
-        potentialGain: opponentWinGain,
-        potentialLoss: Math.min(
-          userWinGain,
-          Math.max(0, opponentTrophies - 100),
-        ),
-      },
+      userProbability: expectedScore,
+      opponentProbability: 1 - expectedScore,
     }
   }, [user?.quickClashTrophies, opponent?.quickClashTrophies])
 
-  // OPTIMIZATION: Memoize current step calculation
+  // Current step
   const currentStepData = useMemo(() => {
     let stepIndex = 0
 
@@ -502,7 +402,6 @@ const MatchPreparationModal = ({
       const foundIndex = STEP_CONFIGS.findIndex(s => s.id === step)
       if (foundIndex >= 0) stepIndex = foundIndex
     } else {
-      // Fallback to progress-based step detection
       for (let i = STEP_CONFIGS.length - 1; i >= 0; i--) {
         if (modalState.currentProgress >= STEP_CONFIGS[i].progressMin) {
           stepIndex = i
@@ -514,343 +413,225 @@ const MatchPreparationModal = ({
     return STEP_CONFIGS[stepIndex] || STEP_CONFIGS[0]
   }, [step, modalState.currentProgress])
 
-  // OPTIMIZATION: Memoize modal styles
-  const modalStyles = useMemo(
-    () => ({
-      bg: '#0D1117',
-      borderWidth: '2px',
-      borderColor: modalState.isComplete ? 'green.400' : 'purple.400',
-      borderRadius: 'xl',
-      boxShadow: modalState.isComplete
-        ? '0 0 20px rgba(72, 187, 120, 0.4)'
-        : '0 0 15px rgba(128, 90, 213, 0.3)',
-      overflow: 'hidden',
-      position: 'relative',
-      mx: { base: 3, md: 'auto' },
-    }),
-    [modalState.isComplete],
-  )
+  const modalStyles = useMemo(() => {
+    const borderColor = modalState.isComplete
+      ? 'border-green-400/60'
+      : 'border-purple-400/60'
+    const shadowColor = modalState.isComplete
+      ? 'shadow-green-500/40'
+      : 'shadow-purple-500/30'
 
-  // OPTIMIZATION: Memoize background gradient
-  const backgroundGradient = useMemo(
-    () => ({
-      position: 'absolute',
-      top: 0,
-      left: 0,
-      right: 0,
-      bottom: 0,
-      bgGradient: modalState.isComplete
-        ? 'radial(circle at center, rgba(72, 187, 120, 0.05), transparent 60%)'
-        : 'radial(circle at center, rgba(128, 90, 213, 0.05), transparent 60%)',
-      zIndex: 0,
-      pointerEvents: 'none',
-    }),
-    [modalState.isComplete],
-  )
+    return { borderColor, shadowColor }
+  }, [modalState.isComplete])
 
-  // OPTIMIZATION: Memoize header content
-  const headerContent = useMemo(
-    () => (
-      <VStack spacing={3} mt={5}>
-        <HStack spacing={3} justify="center" align="center">
-          <MotionIcon
-            as={modalState.isComplete ? CheckCircle : Sword}
-            boxSize={iconSize}
-            color={modalState.isComplete ? 'green.400' : 'purple.400'}
-            animate={
-              modalState.isComplete
-                ? { scale: [1, 1.1, 1] }
-                : { rotate: [-5, 5, -5] }
-            }
-            transition={
-              modalState.isComplete
-                ? { duration: 1.5, repeat: Infinity }
-                : { duration: 2, repeat: Infinity, repeatType: 'reverse' }
-            }
-          />
-          <Text
-            fontSize={{ base: 'xl', md: '2xl' }}
-            fontWeight="bold"
-            bgGradient={
-              modalState.isComplete
-                ? 'linear(to-r, green.300, teal.300)'
-                : 'linear(to-r, purple.300, blue.300)'
-            }
-            bgClip="text"
-            letterSpacing="wide"
-          >
-            {modalState.isComplete
-              ? t('Challenge Ready!')
-              : t('Preparing Challenge')}
-          </Text>
-          <MotionIcon
-            as={modalState.isComplete ? Zap : Shield}
-            boxSize={iconSize}
-            color={modalState.isComplete ? 'teal.400' : 'blue.400'}
-            animate={
-              modalState.isComplete
-                ? { scale: [1, 1.1, 1] }
-                : { rotate: [5, -5, 5] }
-            }
-            transition={
-              modalState.isComplete
-                ? { duration: 1.5, repeat: Infinity }
-                : { duration: 2, repeat: Infinity, repeatType: 'reverse' }
-            }
-          />
-        </HStack>
-      </VStack>
-    ),
-    [modalState.isComplete, iconSize, t],
-  )
+  const StatusIcon = modalState.isComplete
+    ? CheckCircle
+    : currentStepData.id === 'matchFound'
+    ? Sword
+    : Shield
 
   return (
-    <Modal
-      isOpen={isOpen}
-      onClose={
-        modalState.showPlayButton
-          ? actionHandlers.handleCompleteClose
-          : actionHandlers.handleMinimize
-      }
-      closeOnOverlayClick={false}
-      closeOnEsc={modalState.showPlayButton}
-      size={modalSize}
-      motionPreset="slideInBottom"
-    >
-      <ModalOverlay bg="rgba(0, 0, 0, 0.8)" backdropFilter="blur(10px)" />
+    <Dialog open={isOpen} onOpenChange={actionHandlers.handleCompleteClose}>
+      <DialogContent
+        className={`
+          ${QUICK_CLASH_CLASSES.glassMedium}
+          border-2 ${modalStyles.borderColor}
+          ${modalStyles.shadowColor}
+          shadow-2xl
+          rounded-2xl
+          w-[95vw] max-w-2xl
+          sm:w-[90vw] md:w-full
+          p-4 sm:p-6
+          overflow-y-auto
+          max-h-[95vh] sm:max-h-[90vh]
+          backdrop-brightness-110
+        `}
+      >
+        {/* Background gradient */}
+        <div
+          className={`absolute inset-0 bg-gradient-to-br ${
+            modalState.isComplete
+              ? 'from-green-500/5 to-transparent'
+              : 'from-purple-500/5 to-transparent'
+          } opacity-70 pointer-events-none`}
+        />
 
-      <ModalContent {...modalStyles}>
-        <Box {...backgroundGradient} />
-
-        <ModalHeader
-          color="white"
-          textAlign="center"
-          py={6}
-          position="relative"
-          zIndex={2}
-        >
-          {headerContent}
-
-          <HStack position="absolute" top={4} right={-4} spacing={2}>
-            {modalState.showPlayButton ? (
-              <MotionIconButton
-                icon={<X size={16} />}
-                aria-label={t('Close')}
-                size="sm"
-                variant="ghost"
-                color="whiteAlpha.700"
-                _hover={{
-                  color: 'white',
-                  bg: 'whiteAlpha.200',
-                }}
-                onClick={actionHandlers.handleCompleteClose}
-                whileHover={{ scale: 1.1 }}
-                whileTap={{ scale: 0.9 }}
-                initial={{ opacity: 0, scale: 0.8 }}
-                animate={{ opacity: 1, scale: 1 }}
-                transition={{ type: 'spring', stiffness: 200, delay: 0.2 }}
+        {/* Header */}
+        <DialogHeader className="relative z-10 pb-3 sm:pb-4">
+          <div className="flex flex-col items-center space-y-2">
+            <div className="flex items-center justify-center space-x-2 flex-wrap">
+              <StatusIcon
+                className={`w-5 h-5 sm:w-6 sm:h-6 ${
+                  modalState.isComplete ? 'text-green-400' : 'text-purple-400'
+                }`}
               />
-            ) : (
-              <MotionIconButton
-                icon={<Minimize2 size={16} />}
-                aria-label={t('Minimize')}
-                size="sm"
-                variant="ghost"
-                color="whiteAlpha.700"
-                _hover={{
-                  color: 'white',
-                  bg: 'whiteAlpha.200',
-                }}
-                onClick={actionHandlers.handleMinimize}
-                whileHover={{ scale: 1.1 }}
-                whileTap={{ scale: 0.9 }}
-              />
-            )}
-          </HStack>
-        </ModalHeader>
-
-        <ModalBody
-          py={contentPadding}
-          px={{ base: 4, md: 6 }}
-          pt={{ base: 6, md: 8 }}
-          position="relative"
-          zIndex={2}
-        >
-          <VStack spacing={6} align="center">
-            {/* Players section */}
-            <Box
-              w="100%"
-              bg="rgba(0, 0, 0, 0.3)"
-              borderRadius="xl"
-              p={{ base: 4, md: 6 }}
-              border="1px solid"
-              borderColor="whiteAlpha.200"
-              backdropFilter="blur(5px)"
-            >
-              <Flex
-                justify="space-between"
-                align="center"
-                direction="row"
-                w="100%"
+              <DialogTitle
+                className={`text-lg sm:text-xl md:text-2xl font-bold bg-gradient-to-r ${
+                  modalState.isComplete
+                    ? 'from-green-300 to-teal-300'
+                    : 'from-purple-300 to-blue-300'
+                } bg-clip-text text-transparent`}
               >
-                <PlayerCard
-                  player={user}
-                  isUser={true}
-                  avatarSize={avatarSize}
-                />
-
-                <Flex justify="center" align="center" px={4}>
-                  <OptimizedVSBadge
-                    size={vsBadgeSize}
-                    isActive={modalState.isComplete}
-                  />
-                </Flex>
-
-                <PlayerCard
-                  player={opponent}
-                  isUser={false}
-                  avatarSize={avatarSize}
-                />
-              </Flex>
-            </Box>
-
-            {/* Trophy Potential Display */}
-            <Box w="100%" px={2}>
-              <MatchTrophyPotentialDisplay
-                userTrophies={trophyCalculations.userTrophies}
-                opponentTrophies={trophyCalculations.opponentTrophies}
-                userWinGain={
-                  trophyCalculations.userTrophyPotential.potentialGain
-                }
-                userLoss={trophyCalculations.userTrophyPotential.potentialLoss}
-                opponentWinGain={
-                  trophyCalculations.opponentTrophyPotential.potentialGain
-                }
-                opponentLoss={
-                  trophyCalculations.opponentTrophyPotential.potentialLoss
-                }
-                size={trophySize}
+                {modalState.isComplete
+                  ? t('Challenge Ready!')
+                  : t('Preparing Challenge')}
+              </DialogTitle>
+              <Zap
+                className={`w-5 h-5 sm:w-6 sm:h-6 ${
+                  modalState.isComplete ? 'text-teal-400' : 'text-blue-400'
+                }`}
               />
-            </Box>
+            </div>
+          </div>
 
-            <Divider borderColor="whiteAlpha.300" />
+          {/* Close/Minimize button */}
+          <Button
+            variant="ghost"
+            size="icon"
+            className="absolute top-0 right-0 text-white/70 hover:text-white hover:bg-white/10 w-8 h-8 sm:w-9 sm:h-9"
+            onClick={
+              modalState.showPlayButton
+                ? actionHandlers.handleCompleteClose
+                : actionHandlers.handleMinimize
+            }
+          >
+            {modalState.showPlayButton ? (
+              <X className="w-4 h-4" />
+            ) : (
+              <Minimize2 className="w-4 h-4" />
+            )}
+          </Button>
+        </DialogHeader>
 
-            {/* Progress Section */}
-            <VStack spacing={4} w="100%" align="center">
-              <Flex justify="space-between" w="100%" align="center" px={2}>
-                <VStack align="start" spacing={1} flex={1}>
-                  <Text color="white" fontWeight="bold" fontSize="lg">
-                    {t(currentStepData.title)}
-                  </Text>
-                  <Text color="whiteAlpha.700" fontSize="sm">
-                    {t(currentStepData.description)}
-                  </Text>
-                </VStack>
-                <MotionBadge
-                  bg={modalState.isComplete ? 'green.500' : 'purple.500'}
-                  color="white"
-                  borderRadius="full"
-                  px={3}
-                  py={1}
-                  fontWeight="bold"
-                  fontSize="md"
-                  animate={
-                    modalState.isComplete
-                      ? { scale: [1, 1.05, 1] }
-                      : { scale: 1 }
-                  }
-                  transition={{
-                    duration: 0.8,
-                    repeat: modalState.isComplete ? Infinity : 0,
-                    repeatType: 'reverse',
-                  }}
+        {/* Body */}
+        <div className="relative z-10 py-3 sm:py-4 space-y-3 sm:space-y-4">
+          {/* Players section */}
+          <div
+            className={`${QUICK_CLASH_CLASSES.glassLight} rounded-xl p-3 sm:p-4 border border-white/20`}
+          >
+            <div className="flex justify-between items-center gap-2">
+              <PlayerCard player={user} isUser={true} avatarSize="md" />
+
+              <div className="flex justify-center px-1">
+                <VSBadge size="md" isActive={modalState.isComplete} />
+              </div>
+
+              <PlayerCard player={opponent} isUser={false} avatarSize="md" />
+            </div>
+          </div>
+
+          {/* Win Probability Bar - Simplified */}
+          <WinProbabilityBar
+            userProbability={winProbability.userProbability}
+            opponentProbability={winProbability.opponentProbability}
+            userName={user?.inGameName || user?.name || 'You'}
+            opponentName={opponent?.inGameName || opponent?.name || 'Opponent'}
+            size="sm"
+            showLabels={true}
+          />
+
+          <Separator className="bg-white/10" />
+
+          {/* Progress Section */}
+          <div className="space-y-2 sm:space-y-3">
+            <div className="flex justify-between items-center gap-2">
+              <div className="space-y-1 flex-1 min-w-0">
+                <h3
+                  className={`${QUICK_CLASH_CLASSES.textPrimary} font-bold text-sm sm:text-base truncate`}
                 >
-                  {Math.round(modalState.currentProgress)}%
-                </MotionBadge>
-              </Flex>
+                  {t(currentStepData.title)}
+                </h3>
+                <p
+                  className={`${QUICK_CLASH_CLASSES.textMuted} text-xs sm:text-sm`}
+                >
+                  {t(currentStepData.description)}
+                </p>
+              </div>
+              <Badge
+                className={`
+                  ${modalState.isComplete ? 'bg-green-500' : 'bg-purple-500'}
+                  text-white
+                  rounded-full
+                  px-2 sm:px-3 py-1
+                  text-xs sm:text-sm
+                  font-bold
+                  flex-shrink-0
+                `}
+              >
+                {Math.round(modalState.currentProgress)}%
+              </Badge>
+            </div>
 
-              <OptimizedProgressBar
-                progress={modalState.currentProgress}
-                isComplete={modalState.isComplete}
-              />
+            <ProgressBar
+              progress={modalState.currentProgress}
+              isComplete={modalState.isComplete}
+            />
 
-              {!modalState.isComplete && (
-                <HStack justify="center" spacing={3} w="100%" pt={2}>
-                  <MotionIcon
-                    as={Loader}
-                    color={currentStepData.color}
-                    boxSize={4}
-                    animate={{ rotate: 360 }}
-                    transition={{
-                      duration: 2,
-                      repeat: Infinity,
-                      ease: 'linear',
-                    }}
-                  />
-                </HStack>
-              )}
-            </VStack>
-          </VStack>
-        </ModalBody>
+            {!modalState.isComplete && (
+              <div className="flex justify-center items-center space-x-3 pt-2">
+                <Loader
+                  className={`w-4 h-4 animate-spin ${currentStepData.color}`}
+                />
+              </div>
+            )}
+          </div>
+        </div>
 
-        <ModalFooter
-          borderTopWidth="1px"
-          borderColor="whiteAlpha.200"
-          justifyContent="center"
-          py={6}
-        >
+        {/* Footer */}
+        <DialogFooter className="relative z-10 border-t border-white/20 pt-3 sm:pt-4">
           <AnimatePresence>
             {modalState.showPlayButton ? (
-              <MotionButton
+              <MotionDiv
                 key="play-button"
-                colorScheme="green"
-                size="lg"
-                leftIcon={<Icon as={PlayCircle} />}
-                onClick={actionHandlers.handlePlayNow}
                 initial={{ opacity: 0, scale: 0.8 }}
                 animate={{ opacity: 1, scale: 1 }}
                 exit={{ opacity: 0, scale: 0.8 }}
                 transition={{ type: 'spring', stiffness: 200 }}
-                bg="green.500"
-                _hover={{
-                  bg: 'green.400',
-                  transform: 'translateY(-1px)',
-                }}
-                boxShadow="0 4px 15px rgba(72, 187, 120, 0.3)"
-                fontSize="lg"
-                px={8}
-                py={6}
-                borderRadius="full"
+                className="w-full flex justify-center"
               >
-                {t('Play Now!')}
-              </MotionButton>
+                <Button
+                  size="lg"
+                  onClick={actionHandlers.handlePlayNow}
+                  className={`
+                    ${QUICK_CLASH_CLASSES.btnSuccess}
+                    rounded-full
+                    px-6 sm:px-8 py-3 sm:py-4
+                    text-sm sm:text-base font-bold
+                    shadow-lg shadow-green-500/30
+                    hover:shadow-green-500/50
+                    ${QUICK_CLASH_CLASSES.transformHover}
+                    w-full sm:w-auto
+                  `}
+                >
+                  <PlayCircle className="w-4 h-4 sm:w-5 sm:h-5 mr-2" />
+                  {t('Play Now!')}
+                </Button>
+              </MotionDiv>
             ) : (
-              <MotionButton
+              <MotionDiv
                 key="minimize-button"
-                variant="ghost"
-                onClick={actionHandlers.handleMinimize}
                 initial={{ opacity: 0 }}
                 animate={{ opacity: 1 }}
                 exit={{ opacity: 0 }}
-                color="whiteAlpha.800"
-                _hover={{ bg: 'whiteAlpha.100' }}
-                size="md"
-                leftIcon={<Minimize2 size={16} />}
+                className="w-full flex justify-center"
               >
-                {t('Minimize')}
-              </MotionButton>
+                <Button
+                  variant="ghost"
+                  onClick={actionHandlers.handleMinimize}
+                  className="text-white/80 hover:text-white hover:bg-white/10 text-sm sm:text-base"
+                >
+                  <Minimize2 className="w-4 h-4 mr-2" />
+                  {t('Minimize')}
+                </Button>
+              </MotionDiv>
             )}
           </AnimatePresence>
-        </ModalFooter>
-      </ModalContent>
-    </Modal>
+        </DialogFooter>
+      </DialogContent>
+    </Dialog>
   )
 }
 
-// Set display names for debugging
-OptimizedVSBadge.displayName = 'OptimizedVSBadge'
-OptimizedProgressBar.displayName = 'OptimizedProgressBar'
-PlayerCard.displayName = 'PlayerCard'
 MatchPreparationModal.displayName = 'MatchPreparationModal'
 
 export default MatchPreparationModal

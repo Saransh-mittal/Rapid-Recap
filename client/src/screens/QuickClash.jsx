@@ -23,9 +23,6 @@ import {
 } from '../redux/appSlice'
 
 // Lazy loaded components - EXACTLY as original
-const QuickClashEntrance = lazy(() =>
-  import('../components/quickClashComponents/QuickClashEntrance'),
-)
 const TaskCompletionHandler = React.lazy(() =>
   import(
     '../components/quickClashComponents/dailyTasks/TaskCompletionHandler.jsx'
@@ -98,7 +95,6 @@ const QuickClash = () => {
   const dispatch = useDispatch()
   const toast = useToast()
   const { isOpen, onOpen, onClose } = useDisclosure()
-  const [showEntrance, setShowEntrance] = useState(true)
   const [showTaskPopup, setShowTaskPopup] = useState(false)
   const [activeTabIndex, setActiveTabIndex] = useState(0)
   const [selectedNotification, setSelectedNotification] = useState(null)
@@ -190,10 +186,7 @@ const QuickClash = () => {
     }
 
     if (!lastVisit || now - parseInt(lastVisit) > 60 * 60 * 1000) {
-      setShowEntrance(true)
       localStorage.setItem('quickClashLastVisit', now.toString())
-    } else {
-      setShowEntrance(false)
     }
 
     if (showDesktopTaskPopup) {
@@ -227,10 +220,6 @@ const QuickClash = () => {
     onOpen()
   }, [onOpen])
 
-  const handleEntranceComplete = useCallback(() => {
-    setShowEntrance(false)
-  }, [])
-
   const handleViewAllTasks = useCallback(() => {
     window.location.hash = 'tasks'
   }, [])
@@ -246,11 +235,11 @@ const QuickClash = () => {
   // Container style - EXACTLY as original
   const containerStyle = useMemo(
     () => ({
-      visibility: showEntrance ? 'hidden' : 'visible',
-      opacity: showEntrance ? 0 : 1,
+      visibility: 'visible',
+      opacity: 1,
       transition: 'opacity 0.3s ease-in-out',
     }),
-    [showEntrance],
+    [],
   )
 
   // Loading and coming soon states - EXACTLY as original
@@ -268,12 +257,6 @@ const QuickClash = () => {
 
   return (
     <>
-      {showEntrance && (
-        <Suspense fallback={<LoadingFallback />}>
-          <QuickClashEntrance onComplete={handleEntranceComplete} />
-        </Suspense>
-      )}
-
       {/* Container with consistent colors */}
       <div
         className="quick-clash-container max-w-7xl mx-auto px-2 py-4 pb-5"
