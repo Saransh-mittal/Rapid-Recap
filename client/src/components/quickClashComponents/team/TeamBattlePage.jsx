@@ -1,67 +1,55 @@
 // components/quickClashComponents/team/TeamBattlePage.jsx
 import React, { useState, useEffect, useCallback, useMemo } from 'react'
-import {
-  Box,
-  Button,
-  Center,
-  Spinner,
-  VStack,
-  Text,
-  Icon,
-  useToast,
-  useDisclosure,
-} from '@chakra-ui/react'
-import { useTranslation } from 'react-i18next'
-import { useNavigate, useParams, useLocation } from 'react-router-dom'
+import { useNavigate, useParams } from 'react-router-dom'
 import { useSelector } from 'react-redux'
-import { AlertTriangle, ArrowLeft } from 'lucide-react'
-import axios from 'axios'
+import { motion, AnimatePresence } from 'framer-motion'
+import { ArrowLeft, AlertTriangle, Loader2 } from 'lucide-react'
+import { useTranslation } from 'react-i18next'
 
 // Custom hooks
 import useQuickClashTeamBattle from '../../../customHooks/useQuickClashTeamBattle'
 import { useSocket } from '../../../customHooks/useSocket'
 
-// Import optimized components
+// Shadcn UI Components
+import { Button } from '@/components/ui/button'
+
+// Import redesigned sub-components
 import TeamBattleHeader from './teamBattlePageComponents/TeamBattleHeader'
 import TeamsGrid from './teamBattlePageComponents/TeamsGrid'
 import CategoriesSection from './teamBattlePageComponents/CategoriesSection'
 import BattleResultsSection from './teamBattlePageComponents/BattleResultsSection'
 
-// Import QuizReportModal with React.lazy
+// Lazy load report modal
 const QuizReportModal = React.lazy(() => import('../QuizReportModal'))
 
 /**
- * Team Battle Page Component - Animations Removed
+ * Team Battle Page - Mobile-First, No Background
+ *
+ * Works with existing FixedBackground from App.jsx
+ * Uses transparent glassmorphism to show app background
+ * Mobile-first responsive design
  */
 const TeamBattlePage = React.memo(() => {
   const { t } = useTranslation('QuickClash')
-  const toast = useToast()
   const navigate = useNavigate()
   const { battleId } = useParams()
-  const location = useLocation()
   const { user } = useSelector(state => state.auth)
   const { getSocket } = useSocket()
 
   // State for quiz report modal
   const [selectedSessionId, setSelectedSessionId] = useState(null)
   const [reportModalLoading, setReportModalLoading] = useState(false)
-  const {
-    isOpen: isReportOpen,
-    onOpen: openReportModal,
-    onClose: closeReportModal,
-  } = useDisclosure()
+  const [isReportOpen, setIsReportOpen] = useState(false)
 
-  // Custom hook for team battles
+  // Custom hook for team battles (unchanged)
   const {
     currentBattle,
     battleDetailsLoading,
     battleDetailsError,
-    // New loading states
     categoryOperationLoading,
     categoryOperationType,
     categoryOperationError,
     selectedCategoryForOperation,
-    // Legacy loading states (for backward compatibility)
     categorySelectionLoading,
     getBattleDetails,
     selectCategory,
@@ -72,10 +60,8 @@ const TeamBattlePage = React.memo(() => {
     setupTeamBattleSocketListeners,
     cleanupSocketListeners,
   } = useQuickClashTeamBattle()
-  // Local state
-  const [selectedCategoryId, setSelectedCategoryId] = useState(null)
 
-  // Memoized user team calculation
+  // Memoized user team calculation (unchanged logic)
   const userTeam = useMemo(() => {
     if (!currentBattle || !user) return null
 
@@ -89,7 +75,7 @@ const TeamBattlePage = React.memo(() => {
     return isInTeamA ? 'teamA' : isInTeamB ? 'teamB' : null
   }, [currentBattle, user?._id])
 
-  // Memoized battle status calculation
+  // Memoized battle status (unchanged logic)
   const battleStatus = useMemo(() => {
     if (!currentBattle)
       return {
@@ -134,25 +120,7 @@ const TeamBattlePage = React.memo(() => {
     }
   }, [currentBattle, userTeam])
 
-  // Memoized uncompleted categories
-  const uncompletedCategories = useMemo(() => {
-    if (!currentBattle || !userTeam) return []
-
-    const teamField = userTeam === 'teamA' ? 'teamACompleted' : 'teamBCompleted'
-    const teamPlayerField = userTeam === 'teamA' ? 'teamAPlayer' : 'teamBPlayer'
-
-    return currentBattle.challenges
-      .filter(
-        challenge =>
-          !challenge[teamField] && challenge[teamPlayerField] === null,
-      )
-      .map(challenge => ({
-        category: challenge.category,
-        challengeId: challenge.challenge,
-      }))
-  }, [currentBattle, userTeam])
-
-  // Optimized socket room joining
+  // Socket room joining (unchanged)
   useEffect(() => {
     const socket = getSocket()
     if (socket) {
@@ -160,20 +128,20 @@ const TeamBattlePage = React.memo(() => {
     }
   }, [getSocket])
 
-  // Fetch battle details on mount and when battleId changes
+  // Fetch battle details (unchanged)
   useEffect(() => {
     if (battleId) {
       getBattleDetails(battleId)
     }
   }, [battleId, getBattleDetails])
 
-  // Setup socket listeners on mount
+  // Setup socket listeners (unchanged)
   useEffect(() => {
     setupTeamBattleSocketListeners()
     return cleanupSocketListeners
   }, [setupTeamBattleSocketListeners, cleanupSocketListeners])
 
-  // Memoized event handlers - Fixed navigation to go back to team battles
+  // Event handlers (unchanged logic)
   const handleGoBack = useCallback(() => {
     navigate('/quickclash#active/4v4')
   }, [navigate])
@@ -181,7 +149,6 @@ const TeamBattlePage = React.memo(() => {
   const handleCategorySelect = useCallback(
     category => {
       if (!currentBattle) return
-
       selectCategory(currentBattle._id, category).catch(error => {
         console.error('Error selecting category:', error)
       })
@@ -191,7 +158,6 @@ const TeamBattlePage = React.memo(() => {
 
   const handleCategoryDeselect = useCallback(() => {
     if (!currentBattle) return
-
     deselectCategory(currentBattle._id).catch(error => {
       console.error('Error deselecting category:', error)
     })
@@ -199,20 +165,18 @@ const TeamBattlePage = React.memo(() => {
 
   const handleBeginChallenge = useCallback(() => {
     if (!currentBattle) return
-
     beginChallenge(currentBattle._id).catch(error => {
       console.error('Error beginning challenge:', error)
     })
   }, [currentBattle, beginChallenge])
 
-  // Clear operation errors when component unmounts or battle changes
+  // Clear errors (unchanged)
   useEffect(() => {
     return () => {
       resetOperationState()
     }
   }, [resetOperationState])
 
-  // Clear errors when battle changes
   useEffect(() => {
     if (categoryOperationError) {
       clearOperationError()
@@ -222,109 +186,129 @@ const TeamBattlePage = React.memo(() => {
   const handleViewReport = useCallback(
     async challengeId => {
       if (!challengeId) return
-
       setReportModalLoading(true)
 
       try {
-        const response = await axios.get(
+        const response = await fetch(
           `/api/quickClash/challenge/${challengeId}/sessions?userId=${user._id}`,
         )
+        const data = await response.json()
 
-        if (response.data && response.data.sessionId) {
-          setSelectedSessionId(response.data.sessionId)
-          openReportModal()
+        if (data && data.sessionId) {
+          setSelectedSessionId(data.sessionId)
+          setIsReportOpen(true)
         } else {
-          toast({
-            title: t('Error'),
-            description: t('Could not find your quiz session'),
-            status: 'error',
-            duration: 3000,
-            isClosable: true,
-          })
+          console.error('Could not find quiz session')
         }
       } catch (error) {
         console.error('Error fetching session:', error)
-        toast({
-          title: t('Error'),
-          description: t('Failed to load quiz report'),
-          status: 'error',
-          duration: 3000,
-          isClosable: true,
-        })
       } finally {
         setReportModalLoading(false)
       }
     },
-    [user, openReportModal, toast, t],
+    [user],
   )
 
-  // Loading state
+  // Loading state - minimal, works with app background
   if (battleDetailsLoading && !currentBattle) {
     return (
-      <Center minH="100vh" bg="gray.900">
-        <VStack spacing={6}>
-          <Spinner
-            thickness="4px"
-            speed="0.65s"
-            emptyColor="gray.700"
-            color="purple.500"
-            size="xl"
-          />
-          <Text color="whiteAlpha.800" fontSize="lg">
+      <div className="min-h-screen flex items-center justify-center px-4">
+        <motion.div
+          initial={{ opacity: 0, scale: 0.9 }}
+          animate={{ opacity: 1, scale: 1 }}
+          className="flex flex-col items-center gap-4 md:gap-6"
+        >
+          <div className="relative">
+            <motion.div
+              animate={{ rotate: 360 }}
+              transition={{ duration: 2, repeat: Infinity, ease: 'linear' }}
+            >
+              <Loader2 className="w-12 h-12 md:w-16 md:h-16 text-cyan-400" />
+            </motion.div>
+            <motion.div
+              className="absolute inset-0 blur-xl bg-cyan-400/30 rounded-full"
+              animate={{
+                scale: [1, 1.2, 1],
+                opacity: [0.5, 0.8, 0.5],
+              }}
+              transition={{ duration: 2, repeat: Infinity }}
+            />
+          </div>
+          <motion.p
+            initial={{ opacity: 0, y: 10 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.2 }}
+            className="text-base md:text-lg text-cyan-100 font-medium text-center"
+          >
             {t('Loading battle details...')}
-          </Text>
-        </VStack>
-      </Center>
+          </motion.p>
+        </motion.div>
+      </div>
     )
   }
 
   // Error state
   if (battleDetailsError && !currentBattle) {
     return (
-      <Center minH="100vh" bg="gray.900">
-        <VStack spacing={6}>
-          <Icon as={AlertTriangle} color="red.400" boxSize={12} />
-          <Text color="red.400" fontSize="xl" textAlign="center">
-            {battleDetailsError}
-          </Text>
-          <Button
-            leftIcon={<ArrowLeft size={18} />}
-            colorScheme="purple"
-            size="lg"
-            onClick={handleGoBack}
+      <div className="min-h-screen flex items-center justify-center px-4">
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          className="flex flex-col items-center gap-4 md:gap-6 max-w-md mx-auto"
+        >
+          <motion.div
+            animate={{
+              scale: [1, 1.1, 1],
+              rotate: [0, 5, -5, 0],
+            }}
+            transition={{ duration: 2, repeat: Infinity }}
           >
+            <AlertTriangle className="w-16 h-16 md:w-20 md:h-20 text-red-400" />
+          </motion.div>
+          <p className="text-lg md:text-xl text-red-400 text-center font-medium">
+            {battleDetailsError}
+          </p>
+          <Button
+            onClick={handleGoBack}
+            className="bg-gradient-to-r from-cyan-500 to-blue-500 hover:from-cyan-600 hover:to-blue-600 text-white"
+          >
+            <ArrowLeft className="w-4 h-4 mr-2" />
             {t('Back to Team Battles')}
           </Button>
-        </VStack>
-      </Center>
+        </motion.div>
+      </div>
     )
   }
 
   // Battle not found
   if (!currentBattle) {
     return (
-      <Center minH="100vh" bg="gray.900">
-        <VStack spacing={6}>
-          <Icon as={AlertTriangle} color="yellow.400" boxSize={12} />
-          <Text color="yellow.400" fontSize="xl">
+      <div className="min-h-screen flex items-center justify-center px-4">
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          className="flex flex-col items-center gap-4 md:gap-6"
+        >
+          <AlertTriangle className="w-16 h-16 md:w-20 md:h-20 text-yellow-400" />
+          <p className="text-lg md:text-xl text-yellow-400 font-medium">
             {t('Battle not found')}
-          </Text>
+          </p>
           <Button
-            leftIcon={<ArrowLeft size={18} />}
-            colorScheme="purple"
-            size="lg"
             onClick={handleGoBack}
+            className="bg-gradient-to-r from-cyan-500 to-blue-500 hover:from-cyan-600 hover:to-blue-600 text-white"
           >
+            <ArrowLeft className="w-4 h-4 mr-2" />
             {t('Back to Team Battles')}
           </Button>
-        </VStack>
-      </Center>
+        </motion.div>
+      </div>
     )
   }
 
   return (
-    <Box minH="100vh" bg="gray.900" position="relative" overflow="hidden">
-      <Box width="100%" position="relative" zIndex={1}>
+    <div className="min-h-screen relative overflow-hidden">
+      {/* Content - positioned relative to show above background */}
+      <div className="relative z-10 w-full pb-8 md:pb-12">
         {/* Header */}
         <TeamBattleHeader battle={currentBattle} onGoBack={handleGoBack} />
 
@@ -339,7 +323,6 @@ const TeamBattlePage = React.memo(() => {
         {currentBattle.status === 'active' && userTeam && (
           <CategoriesSection
             currentBattle={currentBattle}
-            uncompletedCategories={uncompletedCategories}
             userTeam={userTeam}
             user={user}
             onSelectCategory={handleCategorySelect}
@@ -347,14 +330,11 @@ const TeamBattlePage = React.memo(() => {
             onBeginChallenge={handleBeginChallenge}
             onViewReport={handleViewReport}
             reportModalLoading={reportModalLoading}
-            // New loading props
             categoryOperationLoading={categoryOperationLoading}
             categoryOperationType={categoryOperationType}
             categoryOperationError={categoryOperationError}
             selectedCategoryForOperation={selectedCategoryForOperation}
-            // Legacy props for backward compatibility
             categorySelectionLoading={categorySelectionLoading}
-            selectedCategoryId={selectedCategoryId}
             completedChallenges={battleStatus.completedChallenges}
             totalChallenges={battleStatus.totalChallenges}
           />
@@ -369,34 +349,42 @@ const TeamBattlePage = React.memo(() => {
         )}
 
         {/* Bottom Actions */}
-        <Box textAlign="center" pt={8} pb={12}>
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 0.5 }}
+          className="text-center pt-6 md:pt-8"
+        >
           <Button
-            leftIcon={<ArrowLeft size={18} />}
-            colorScheme="purple"
-            size="lg"
             onClick={handleGoBack}
-            bg="rgba(128, 90, 213, 0.8)"
-            _hover={{
-              bg: 'rgba(128, 90, 213, 1)',
-            }}
-            transition="all 0.2s"
+            variant="outline"
+            className="bg-slate-800/50 border-cyan-500/30 hover:bg-slate-800/70 hover:border-cyan-500/50 text-cyan-100"
           >
+            <ArrowLeft className="w-4 h-4 mr-2" />
             {t('Back to Team Battles')}
           </Button>
-        </Box>
-      </Box>
+        </motion.div>
+      </div>
 
       {/* Quiz Report Modal */}
-      {isReportOpen && selectedSessionId && (
-        <React.Suspense fallback={<Spinner />}>
-          <QuizReportModal
-            isOpen={isReportOpen}
-            onClose={closeReportModal}
-            sessionId={selectedSessionId}
-          />
-        </React.Suspense>
-      )}
-    </Box>
+      <AnimatePresence>
+        {isReportOpen && selectedSessionId && (
+          <React.Suspense
+            fallback={
+              <div className="fixed inset-0 flex items-center justify-center bg-black/50 backdrop-blur-sm z-50">
+                <Loader2 className="w-8 h-8 text-cyan-400 animate-spin" />
+              </div>
+            }
+          >
+            <QuizReportModal
+              isOpen={isReportOpen}
+              onClose={() => setIsReportOpen(false)}
+              sessionId={selectedSessionId}
+            />
+          </React.Suspense>
+        )}
+      </AnimatePresence>
+    </div>
   )
 })
 

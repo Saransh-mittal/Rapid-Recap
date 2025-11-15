@@ -1,175 +1,101 @@
-// components/quickClashComponents/globalmatchmaking/GlobalMatchmakingButton.jsx - FAITHFUL CONVERSION to Tailwind with Blue-Cyan Color Scheme
+// components/quickClashComponents/globalmatchmaking/GlobalMatchmakingButton.jsx
+// REDESIGNED - Premium Gamified Button with Enhanced Visual Hierarchy
 import React, { useState, useCallback, useMemo, useEffect } from 'react'
 import { motion } from 'framer-motion'
 import { useTranslation } from 'react-i18next'
 import { useSelector } from 'react-redux'
-import { Users, Activity, Globe, Zap, Shield } from 'lucide-react'
+import { Shield, Zap, Users, Sparkles, TrendingUp } from 'lucide-react'
 
-// Import centralized color scheme
 import { QUICK_CLASH_CLASSES } from '../utils/quickClashColors'
-
-// Import the modal component (assuming it exists)
 import GlobalMatchmakingModal from './GlobalMatchmakingModal'
 
 const MotionButton = motion.button
-const MotionDiv = motion.div
 
-// Enhanced button states with blue-cyan theme (differentiated from SOLO)
-const GLOBAL_BUTTON_STATES = {
+/**
+ * Enhanced button states with premium gamified theme
+ * Design Philosophy: Each state should feel distinct and exciting
+ * - idle: Inviting teal gradient with shield icon (represents strength)
+ * - searching: Dynamic emerald with activity indicator (shows progress)
+ * - ready: Triumphant cyan with electric bolt (battle excitement)
+ */
+const BUTTON_STATES = {
   idle: {
     text: 'SQUAD',
     icon: Shield,
-    gradient: 'linear-gradient(135deg, #0D9488 0%, #0F766E 100%)', // Teal gradient for differentiation
-    shadowColor: 'rgba(13, 148, 136, 0.4)',
-    hoverShadowColor: 'rgba(13, 148, 136, 0.6)',
-    glowColor: 'teal-400',
+    gradient: 'linear-gradient(135deg, #14B8A6 0%, #0D9488 50%, #0F766E 100%)',
+    glowColor: '#14B8A6',
+    borderColor: 'border-teal-400/50',
+    shadowIntensity: 'md',
   },
   searching: {
-    text: 'Active',
-    icon: Users,
-    gradient: 'linear-gradient(135deg, #059669 0%, #047857 100%)', // Green for active state
-    shadowColor: 'rgba(5, 150, 105, 0.4)',
-    hoverShadowColor: 'rgba(5, 150, 105, 0.6)',
-    glowColor: 'emerald-400',
+    text: 'Finding Battle',
+    icon: TrendingUp,
+    gradient: 'linear-gradient(135deg, #10B981 0%, #059669 50%, #047857 100%)',
+    glowColor: '#10B981',
+    borderColor: 'border-emerald-400/50',
+    shadowIntensity: 'lg',
   },
   ready: {
     text: 'Battle Ready!',
     icon: Zap,
-    gradient: 'linear-gradient(135deg, #10B981 0%, #059669 100%)', // Bright green for ready
-    shadowColor: 'rgba(16, 185, 129, 0.4)',
-    hoverShadowColor: 'rgba(16, 185, 129, 0.6)',
-    glowColor: 'green-400',
+    gradient: 'linear-gradient(135deg, #06B6D4 0%, #0891B2 50%, #0E7490 100%)',
+    glowColor: '#06B6D4',
+    borderColor: 'border-cyan-400/50',
+    shadowIntensity: 'xl',
   },
 }
 
-/**
- * Enhanced Global Matchmaking Button - FAITHFUL CONVERSION with blue-cyan theme
- * Handles SQUAD matchmaking with consistent sizing and styling
- */
 const GlobalMatchmakingButton = React.memo(
   ({
     compact = false,
     renderAsModal = false,
     onModalClose,
-    // Fixed sizing props to match MatchmakingButton exactly
     buttonSize = { base: 'md', md: 'lg' },
     buttonWidth = { base: '100%', md: '240px' },
     buttonHeight = { base: '48px', md: '56px' },
     buttonMinWidth = { base: '140px', md: '240px' },
-    // Text override props
-    buttonTextOverride,
-    iconOverride,
-    bgGradientOverride,
-    shadowColorOverride,
     ...otherProps
   }) => {
     const { t } = useTranslation('QuickClash')
     const [isModalOpen, setIsModalOpen] = useState(false)
-
-    // Responsive state management
     const [isMobile, setIsMobile] = useState(false)
 
     useEffect(() => {
-      const checkMobile = () => {
-        setIsMobile(window.innerWidth < 768)
-      }
+      const checkMobile = () => setIsMobile(window.innerWidth < 768)
       checkMobile()
       window.addEventListener('resize', checkMobile)
       return () => window.removeEventListener('resize', checkMobile)
     }, [])
 
-    // Subscribe to essential state with shallow comparison - EXACTLY as original
     const matchmakingState = useSelector(
       state => ({
         inMatchmaking:
           state.quickClashGlobalMatchmaking?.inMatchmaking || false,
         battleReady: state.quickClashGlobalMatchmaking?.battleReady || false,
         loading: state.quickClashGlobalMatchmaking?.loading || false,
-        battleCreationStatus:
-          state.quickClashGlobalMatchmaking?.battleCreationStatus || null,
       }),
       (prev, next) =>
         prev.inMatchmaking === next.inMatchmaking &&
         prev.battleReady === next.battleReady &&
-        prev.loading === next.loading &&
-        prev.battleCreationStatus === next.battleCreationStatus,
+        prev.loading === next.loading,
     )
 
-    // Memoized button configuration - EXACTLY as original logic
-    const buttonConfig = useMemo(() => {
-      const { inMatchmaking, battleReady } = matchmakingState
+    const buttonState = useMemo(() => {
+      if (matchmakingState.battleReady) return 'ready'
+      if (matchmakingState.inMatchmaking) return 'searching'
+      return 'idle'
+    }, [matchmakingState])
 
-      let currentState = 'idle'
-      if (battleReady) {
-        currentState = 'ready'
-      } else if (inMatchmaking) {
-        currentState = 'searching'
-      }
+    const config = BUTTON_STATES[buttonState]
 
-      const config = GLOBAL_BUTTON_STATES[currentState]
-
-      return {
-        ...config,
-        icon: iconOverride || config.icon,
-        gradient: bgGradientOverride || config.gradient,
-        text: buttonTextOverride || t(config.text),
-        shadowColor: shadowColorOverride || config.shadowColor,
-        hoverShadowColor: shadowColorOverride || config.hoverShadowColor,
-        glowColor: config.glowColor,
-        shouldPulse: currentState !== 'idle',
-        animationType:
-          currentState === 'searching'
-            ? 'spin'
-            : currentState === 'ready'
-            ? 'pulse'
-            : 'none',
-        currentState,
-      }
-    }, [
-      matchmakingState,
-      t,
-      buttonTextOverride,
-      iconOverride,
-      bgGradientOverride,
-      shadowColorOverride,
-    ])
-
-    // Enhanced button animations (matching MatchmakingButton) - EXACTLY as original
-    const buttonAnimation = useMemo(() => {
-      const baseAnimation = {
-        scale: 1,
-        rotate: 0,
-      }
-
-      if (buttonConfig.currentState === 'ready') {
-        return {
-          ...baseAnimation,
-          scale: [1, 1.02, 1],
-        }
-      }
-      if (buttonConfig.currentState === 'searching') {
-        return {
-          ...baseAnimation,
-        }
-      }
-      return baseAnimation
-    }, [buttonConfig.currentState])
-
-    const handleOpenModal = useCallback(() => {
-      setIsModalOpen(true)
-    }, [])
-
+    const handleOpenModal = useCallback(() => setIsModalOpen(true), [])
     const handleCloseModal = useCallback(() => {
       setIsModalOpen(false)
-      if (onModalClose) {
-        onModalClose()
-      }
+      onModalClose?.()
     }, [onModalClose])
 
-    // Responsive sizing - matching MatchmakingButton exactly
     const sizeConfig = useMemo(() => {
       const isBase = isMobile
-
       return {
         width: isBase
           ? typeof buttonWidth === 'object'
@@ -206,82 +132,79 @@ const GlobalMatchmakingButton = React.memo(
       )
     }
 
-    const { loading } = matchmakingState
-    const config = buttonConfig
     const IconComponent = config.icon
+    const isLoading = matchmakingState.loading
 
+    // Compact version for icon-only display
     if (compact) {
       return (
         <>
           <MotionButton
             onClick={handleOpenModal}
-            disabled={loading}
+            disabled={isLoading}
             className={`
-              rounded-full border-2 border-white/20 font-bold text-white
-              transition-all duration-200 hover:border-white/40
-              hover:-translate-y-0.5 active:translate-y-0
-              focus:outline-none focus:ring-2 focus:ring-teal-400/50
-              flex items-center justify-center
+              relative w-12 h-12 rounded-full overflow-hidden
+              ${config.borderColor} border-2
+              ${QUICK_CLASH_CLASSES.focusRing}
+              transition-all duration-300
+              ${isLoading ? 'opacity-60 cursor-not-allowed' : 'cursor-pointer'}
             `}
             style={{
               background: config.gradient,
-              boxShadow: `0 8px 32px ${config.shadowColor}`,
-              textShadow: '0 2px 4px rgba(0,0,0,0.3)',
+              boxShadow: `0 0 ${
+                config.shadowIntensity === 'xl' ? '40px' : '20px'
+              } ${config.glowColor}40`,
             }}
-            whileHover={
-              loading
-                ? {}
-                : {
-                    scale: 1.05,
-                    boxShadow: `0 12px 48px ${config.hoverShadowColor}`,
-                    transition: { duration: 0.2 },
+            whileHover={!isLoading ? { scale: 1.1, rotate: 5 } : {}}
+            whileTap={!isLoading ? { scale: 0.95 } : {}}
+            animate={
+              buttonState === 'ready'
+                ? {
+                    scale: [1, 1.05, 1],
+                    boxShadow: [
+                      `0 0 20px ${config.glowColor}40`,
+                      `0 0 40px ${config.glowColor}80`,
+                      `0 0 20px ${config.glowColor}40`,
+                    ],
                   }
+                : {}
             }
-            whileTap={
-              loading
-                ? {}
-                : {
-                    scale: 0.95,
-                    boxShadow: `0 6px 24px ${config.shadowColor}`,
-                    transition: { duration: 0.1 },
-                  }
-            }
+            transition={{
+              duration: 1.5,
+              repeat: buttonState === 'ready' ? Infinity : 0,
+            }}
             {...otherProps}
           >
-            {/* Glassmorphism overlay */}
-            <div
-              className="absolute inset-0 rounded-full pointer-events-none"
-              style={{
-                background:
-                  'linear-gradient(135deg, rgba(255,255,255,0.1) 0%, rgba(255,255,255,0.05) 100%)',
-              }}
-            />
+            {/* Multi-layer glass effect */}
+            <div className="absolute inset-0 bg-white/10 backdrop-blur-sm" />
+            <div className="absolute inset-0 bg-gradient-to-br from-white/20 to-transparent" />
 
-            {config.animationType === 'spin' ? (
-              <MotionDiv
-                animate={{ rotate: 360 }}
-                transition={{ duration: 2, repeat: Infinity, ease: 'linear' }}
-                className="relative z-10"
-              >
-                <IconComponent className="w-5 h-5" />
-              </MotionDiv>
-            ) : (
-              <IconComponent className="w-5 h-5 relative z-10" />
-            )}
+            {/* Icon with conditional animation */}
+            <div className="relative z-10 w-full h-full flex items-center justify-center">
+              {isLoading ? (
+                <div className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin" />
+              ) : buttonState === 'searching' ? (
+                <motion.div
+                  animate={{ rotate: 360 }}
+                  transition={{ duration: 2, repeat: Infinity, ease: 'linear' }}
+                >
+                  <IconComponent className="w-5 h-5 text-white" />
+                </motion.div>
+              ) : (
+                <IconComponent className="w-5 h-5 text-white" />
+              )}
+            </div>
 
-            {/* Glow effect for active states */}
-            {config.shouldPulse && (
-              <MotionDiv
-                className={`absolute inset-0 rounded-full bg-${config.glowColor}/20 blur-lg`}
+            {/* Pulsing glow for active states */}
+            {buttonState !== 'idle' && (
+              <motion.div
+                className="absolute inset-0 rounded-full"
+                style={{ background: `${config.glowColor}20` }}
                 animate={{
+                  scale: [0.8, 1.2, 0.8],
                   opacity: [0.5, 0.8, 0.5],
-                  scale: [0.95, 1.05, 0.95],
                 }}
-                transition={{
-                  duration: 2,
-                  repeat: Infinity,
-                  repeatType: 'reverse',
-                }}
+                transition={{ duration: 2, repeat: Infinity }}
               />
             )}
           </MotionButton>
@@ -293,109 +216,122 @@ const GlobalMatchmakingButton = React.memo(
       )
     }
 
+    // Full button version
     return (
       <>
         <MotionButton
           onClick={handleOpenModal}
-          disabled={loading}
+          disabled={isLoading}
           className={`
-            relative overflow-hidden rounded-full border-2 border-white/20
-            font-bold text-white transition-all duration-200
+            relative overflow-hidden rounded-2xl
+            ${config.borderColor} border-2
+            ${sizeConfig.fontSize} font-bold text-white
+            ${QUICK_CLASH_CLASSES.focusRing}
+            transition-all duration-300
             ${
-              loading
+              isLoading
                 ? 'opacity-60 cursor-not-allowed'
-                : 'hover:border-white/40'
+                : 'cursor-pointer hover:-translate-y-1'
             }
-            mb-4 ${sizeConfig.fontSize}
-            flex items-center justify-center gap-2 text-center
-            hover:-translate-y-0.5 active:translate-y-0
-            focus:outline-none focus:ring-2 focus:ring-teal-400/50
+            flex items-center justify-center gap-3
+            mb-4
           `}
           style={{
             background: config.gradient,
-            boxShadow: `0 8px 32px ${config.shadowColor}`,
             width: sizeConfig.width,
             height: sizeConfig.height,
             minWidth: sizeConfig.minWidth,
-            textShadow: '0 2px 4px rgba(0,0,0,0.3)',
-          }}
-          animate={buttonAnimation}
-          transition={{
-            duration: 0.3,
-            ease: 'easeInOut',
-            scale: {
-              duration: 1.5,
-              repeat: config.currentState === 'ready' ? Infinity : 0,
-              repeatType: 'reverse',
-            },
+            boxShadow: `0 8px 32px ${config.glowColor}40, 0 0 0 1px ${config.glowColor}20 inset`,
+            textShadow: '0 2px 8px rgba(0,0,0,0.5)',
           }}
           whileHover={
-            loading
-              ? {}
-              : {
-                  scale: 1.05,
-                  boxShadow: `0 12px 48px ${config.hoverShadowColor}`,
-                  transition: { duration: 0.2 },
+            !isLoading
+              ? {
+                  boxShadow: `0 12px 48px ${config.glowColor}60, 0 0 0 1px ${config.glowColor}40 inset`,
                 }
+              : {}
           }
-          whileTap={
-            loading
-              ? {}
-              : {
-                  scale: 0.98,
-                  boxShadow: `0 6px 24px ${config.shadowColor}`,
-                  transition: { duration: 0.1 },
+          whileTap={!isLoading ? { scale: 0.98 } : {}}
+          animate={
+            buttonState === 'ready'
+              ? {
+                  scale: [1, 1.02, 1],
+                  boxShadow: [
+                    `0 8px 32px ${config.glowColor}40, 0 0 0 1px ${config.glowColor}20 inset`,
+                    `0 12px 48px ${config.glowColor}80, 0 0 0 1px ${config.glowColor}60 inset`,
+                    `0 8px 32px ${config.glowColor}40, 0 0 0 1px ${config.glowColor}20 inset`,
+                  ],
                 }
+              : {}
           }
+          transition={{
+            duration: 1.5,
+            repeat: buttonState === 'ready' ? Infinity : 0,
+          }}
           {...otherProps}
         >
-          {/* Glassmorphism overlay */}
-          <div
-            className="absolute inset-0 rounded-full pointer-events-none"
-            style={{
-              background:
-                'linear-gradient(135deg, rgba(255,255,255,0.1) 0%, rgba(255,255,255,0.05) 100%)',
+          {/* Multi-layer glass effects */}
+          <div className="absolute inset-0 bg-white/10 backdrop-blur-sm" />
+          <div className="absolute inset-0 bg-gradient-to-br from-white/20 via-transparent to-black/10" />
+
+          {/* Animated shine effect */}
+          <motion.div
+            className="absolute inset-0 bg-gradient-to-r from-transparent via-white/20 to-transparent"
+            animate={{
+              x: ['-100%', '100%'],
+            }}
+            transition={{
+              duration: 3,
+              repeat: Infinity,
+              repeatDelay: 2,
             }}
           />
 
-          {/* Left Icon */}
-          <div className="relative z-10 flex items-center">
-            {loading ? (
+          {/* Content */}
+          <div className="relative z-10 flex items-center gap-3">
+            {/* Left Icon */}
+            {isLoading ? (
               <div className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin" />
+            ) : buttonState === 'searching' ? (
+              <motion.div
+                animate={{ rotate: 360 }}
+                transition={{ duration: 2, repeat: Infinity, ease: 'linear' }}
+              >
+                <IconComponent className="w-5 h-5" />
+              </motion.div>
             ) : (
               <IconComponent className="w-5 h-5" />
             )}
+
+            {/* Button Text */}
+            <span className="font-extrabold tracking-wide">
+              {isLoading ? t('Joining...') : t(config.text)}
+            </span>
+
+            {/* Right sparkle for ready state */}
+            {buttonState === 'ready' && !isLoading && (
+              <motion.div
+                animate={{
+                  scale: [1, 1.3, 1],
+                  rotate: [0, 180, 360],
+                }}
+                transition={{ duration: 2, repeat: Infinity }}
+              >
+                <Sparkles className="w-4 h-4" />
+              </motion.div>
+            )}
           </div>
 
-          {/* Button Text */}
-          <span className="relative z-10 font-bold">
-            {loading ? t('Joining...') : config.text}
-          </span>
-
-          {/* Right Icon for spinning globe */}
-          {config.animationType === 'spin' && !loading && (
-            <MotionDiv
-              animate={{ rotate: 360 }}
-              transition={{ duration: 2, repeat: Infinity, ease: 'linear' }}
-              className="relative z-10 flex items-center"
-            >
-              <Globe className="w-4 h-4" />
-            </MotionDiv>
-          )}
-
-          {/* Glow effect for active states */}
-          {config.shouldPulse && (
-            <MotionDiv
-              className={`absolute inset-0 rounded-full bg-${config.glowColor}/20 blur-lg`}
+          {/* Pulsing glow background for active states */}
+          {buttonState !== 'idle' && (
+            <motion.div
+              className="absolute inset-0 rounded-2xl"
+              style={{ background: `${config.glowColor}15` }}
               animate={{
+                scale: [0.9, 1.05, 0.9],
                 opacity: [0.5, 0.8, 0.5],
-                scale: [0.95, 1.05, 0.95],
               }}
-              transition={{
-                duration: 2,
-                repeat: Infinity,
-                repeatType: 'reverse',
-              }}
+              transition={{ duration: 2, repeat: Infinity }}
             />
           )}
         </MotionButton>

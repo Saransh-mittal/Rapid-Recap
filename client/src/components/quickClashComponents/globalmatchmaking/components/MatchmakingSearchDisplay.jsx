@@ -1,40 +1,38 @@
 // components/quickClashComponents/globalmatchmaking/components/MatchmakingSearchDisplay.jsx
+// REDESIGNED - Engaging search animation with real-time updates
 import React, { useMemo } from 'react'
-import {
-  VStack,
-  Text,
-  Box,
-  HStack,
-  Divider,
-  Icon,
-  Badge,
-  Tooltip,
-} from '@chakra-ui/react'
 import { motion } from 'framer-motion'
 import { useTranslation } from 'react-i18next'
-import { Globe, Clock, User, UserPlus, Users, Info } from 'lucide-react'
+import {
+  Globe,
+  Clock,
+  User,
+  UserPlus,
+  Users,
+  Info,
+  Activity,
+  Zap,
+  TrendingUp,
+  Target,
+} from 'lucide-react'
 
+import { QUICK_CLASH_CLASSES } from '../../utils/quickClashColors'
 import StatusUpdatesPanel from './StatusUpdatesPanel'
+import { Badge } from '@/components/ui/badge'
+import { Progress } from '@/components/ui/progress'
+import { Separator } from '@/components/ui/separator'
 
-const MotionFlex = motion(Box)
-const MotionBadge = motion(Badge)
-const MotionBox = motion(Box)
-
-// --- Optimization: Define constant animation objects outside the component ---
-const globeAnimation = { rotate: 360 }
-const globeTransition = { duration: 3, repeat: Infinity, ease: 'linear' }
-const flexAnimation = { scale: [1, 1.05, 1] }
-const flexTransition = { duration: 2, repeat: Infinity, repeatType: 'reverse' }
-const badgeAnimation = { y: [0, -2, 0] }
-const statusBadgeAnimation = { opacity: [0.7, 1, 0.7] }
-const badgeTransition = { duration: 2, repeat: Infinity, repeatType: 'reverse' }
-
-// --- Optimization: Move helper function outside component for stable reference ---
-const iconMap = { User, UserPlus, Users, Info }
-const getIconComponent = iconName => iconMap[iconName] || Users
+const MotionDiv = motion.div
 
 /**
- * Display component for when user is actively searching for a match
+ * MatchmakingSearchDisplay - REDESIGNED
+ *
+ * Key Features:
+ * - Animated global search indicator
+ * - Real-time status updates panel
+ * - Visual progress indication
+ * - Contextual badges based on join type
+ * - Engaging micro-animations
  */
 const MatchmakingSearchDisplay = React.memo(
   ({
@@ -46,164 +44,329 @@ const MatchmakingSearchDisplay = React.memo(
     formatMatchmakingTime,
   }) => {
     const { t } = useTranslation('QuickClash')
-    const IconComponent = useMemo(
-      () => getIconComponent(badgeInfo.icon),
-      [badgeInfo.icon],
-    )
+
+    // Get badge icon component
+    const BadgeIconComponent = useMemo(() => {
+      const iconMap = { User, UserPlus, Users, Info }
+      return iconMap[badgeInfo.icon] || Users
+    }, [badgeInfo.icon])
+
+    // Calculate progress based on time (caps at 90% to avoid implying completion)
+    const searchProgress = useMemo(() => {
+      return Math.min((matchmakingTime / 120) * 90, 90) // 2 minutes = 90%
+    }, [matchmakingTime])
 
     return (
-      <VStack spacing={6} align="center">
-        <MotionFlex
-          display={'flex'}
-          justifyContent="center"
-          alignItems="center"
-          w="120px"
-          h="120px"
-          borderRadius="full"
-          bg="rgba(66, 153, 225, 0.1)"
-          border="2px solid"
-          borderColor="blue.400"
-          position="relative"
-          animate={flexAnimation}
-          transition={flexTransition}
-        >
-          <MotionBox animate={globeAnimation} transition={globeTransition}>
-            <Icon as={Globe} color="blue.400" boxSize={16} />
-          </MotionBox>
-        </MotionFlex>
-
-        <Tooltip label={badgeInfo.tooltip} hasArrow placement="top">
-          <MotionBadge
-            colorScheme={badgeInfo.color}
-            px={3}
-            py={2}
-            borderRadius="full"
-            fontSize="sm"
-            display="flex"
-            alignItems="center"
-            animate={badgeAnimation}
-            transition={badgeTransition}
+      <div className="space-y-6">
+        {/* Main searching animation */}
+        <div className="flex justify-center relative">
+          <MotionDiv
+            className={`
+              w-32 h-32 rounded-full
+              ${QUICK_CLASH_CLASSES.glassMedium}
+              border-2 border-emerald-400/60
+              flex items-center justify-center
+              shadow-2xl shadow-emerald-500/40
+              relative overflow-hidden
+            `}
+            animate={{
+              boxShadow: [
+                '0 0 40px rgba(16, 185, 129, 0.4)',
+                '0 0 80px rgba(16, 185, 129, 0.6)',
+                '0 0 40px rgba(16, 185, 129, 0.4)',
+              ],
+            }}
+            transition={{
+              duration: 2,
+              repeat: Infinity,
+              ease: 'easeInOut',
+            }}
           >
-            <Icon as={IconComponent} mr={2} boxSize={4} />
+            {/* Rotating globe */}
+            <MotionDiv
+              animate={{ rotate: 360 }}
+              transition={{ duration: 4, repeat: Infinity, ease: 'linear' }}
+            >
+              <Globe className="w-16 h-16 text-emerald-400" />
+            </MotionDiv>
+
+            {/* Pulsing rings */}
+            {[0, 1, 2].map(i => (
+              <MotionDiv
+                key={i}
+                className="absolute inset-0 rounded-full border-2 border-emerald-400/30"
+                animate={{
+                  scale: [1, 1.5, 1],
+                  opacity: [0.7, 0, 0.7],
+                }}
+                transition={{
+                  duration: 3,
+                  repeat: Infinity,
+                  delay: i * 1,
+                }}
+              />
+            ))}
+
+            {/* Scanning line effect */}
+            <MotionDiv
+              className="absolute inset-0 bg-gradient-to-b from-transparent via-emerald-400/20 to-transparent"
+              animate={{
+                y: ['-100%', '100%'],
+              }}
+              transition={{
+                duration: 2,
+                repeat: Infinity,
+                ease: 'linear',
+              }}
+            />
+          </MotionDiv>
+
+          {/* Floating activity indicators */}
+          {[0, 1, 2, 3].map(i => (
+            <MotionDiv
+              key={i}
+              className="absolute"
+              style={{
+                left: `${20 + i * 20}%`,
+                top: `${10 + (i % 2) * 70}%`,
+              }}
+              animate={{
+                y: [0, -10, 0],
+                opacity: [0.3, 1, 0.3],
+              }}
+              transition={{
+                duration: 2,
+                repeat: Infinity,
+                delay: i * 0.5,
+              }}
+            >
+              <Activity className="w-4 h-4 text-emerald-300" />
+            </MotionDiv>
+          ))}
+        </div>
+
+        {/* Status badge with tooltip */}
+        <div className="flex justify-center">
+          <Badge
+            className={`
+              ${badgeInfo.bgClass}
+              ${badgeInfo.borderClass}
+              ${badgeInfo.textClass}
+              border
+              px-4 py-2
+              rounded-full
+              font-bold
+              text-sm
+              flex items-center gap-2
+              shadow-lg
+            `}
+            title={badgeInfo.tooltip}
+          >
+            <BadgeIconComponent className="w-4 h-4" />
             {badgeInfo.text}
-            {joinType !== 'regular' && (
-              <Icon as={Info} ml={2} boxSize={3} opacity={0.7} />
-            )}
-          </MotionBadge>
-        </Tooltip>
+            {joinType !== 'regular' && <Info className="w-3 h-3 opacity-70" />}
+          </Badge>
+        </div>
 
+        {/* Contextual team formation info */}
         {joinType === 'sourceTeam' && originalTeam && (
-          <Box
-            bg="rgba(121, 80, 242, 0.1)"
-            borderWidth="1px"
-            borderColor="purple.500"
-            borderRadius="md"
-            p={3}
-            w={{ base: '95%', md: '90%' }}
+          <MotionDiv
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            className={`
+              ${QUICK_CLASH_CLASSES.glassLight}
+              rounded-xl p-4
+              border border-purple-400/30
+              bg-gradient-to-r from-purple-500/5 to-blue-500/5
+            `}
           >
-            <HStack mb={1}>
-              <Icon as={Info} color="purple.300" boxSize={4} />
-              <Text color="white" fontWeight="bold" fontSize="sm">
-                {t('Auto-Team Formation')}
-              </Text>
-            </HStack>
-            <Text color="whiteAlpha.800" fontSize="sm">
-              {t(
-                'Your team "{{originalTeam}}" has been merged with other players to form a 4v4 battle team.',
-                { originalTeam: originalTeam.name || t('Original Team') },
-              )}
-            </Text>
-          </Box>
+            <div className="flex items-start gap-3">
+              <div className="w-10 h-10 rounded-full bg-purple-500/20 flex items-center justify-center flex-shrink-0">
+                <Users className="w-5 h-5 text-purple-400" />
+              </div>
+              <div>
+                <p
+                  className={`${QUICK_CLASH_CLASSES.textPrimary} font-bold text-sm mb-1`}
+                >
+                  {t('Auto-Team Formation')}
+                </p>
+                <p
+                  className={`${QUICK_CLASH_CLASSES.textMuted} text-xs leading-relaxed`}
+                >
+                  {t(
+                    'Your team "{{originalTeam}}" has been merged with other players to form a complete 4v4 battle team.',
+                    { originalTeam: originalTeam.name || t('Original Team') },
+                  )}
+                </p>
+              </div>
+            </div>
+          </MotionDiv>
         )}
 
         {joinType === 'solo' && (
-          <Box
-            bg="rgba(49, 151, 149, 0.1)"
-            borderWidth="1px"
-            borderColor="teal.500"
-            borderRadius="md"
-            p={3}
-            w={{ base: '95%', md: '90%' }}
+          <MotionDiv
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            className={`
+              ${QUICK_CLASH_CLASSES.glassLight}
+              rounded-xl p-4
+              border border-teal-400/30
+              bg-gradient-to-r from-teal-500/5 to-emerald-500/5
+            `}
           >
-            <HStack mb={1}>
-              <Icon as={Info} color="teal.300" boxSize={4} />
-              <Text color="white" fontWeight="bold" fontSize="sm">
-                {t('Auto-Team Formation')}
-              </Text>
-            </HStack>
-            <Text color="whiteAlpha.800" fontSize="sm">
-              {t(
-                'You joined individually and have been assigned to a team with other players for a 4v4 battle.',
-              )}
-            </Text>
-          </Box>
+            <div className="flex items-start gap-3">
+              <div className="w-10 h-10 rounded-full bg-teal-500/20 flex items-center justify-center flex-shrink-0">
+                <UserPlus className="w-5 h-5 text-teal-400" />
+              </div>
+              <div>
+                <p
+                  className={`${QUICK_CLASH_CLASSES.textPrimary} font-bold text-sm mb-1`}
+                >
+                  {t('Auto-Team Formation')}
+                </p>
+                <p
+                  className={`${QUICK_CLASH_CLASSES.textMuted} text-xs leading-relaxed`}
+                >
+                  {t(
+                    'You joined individually and will be assigned to a team with other players for an epic 4v4 battle.',
+                  )}
+                </p>
+              </div>
+            </div>
+          </MotionDiv>
         )}
 
-        <VStack spacing={3} align="center">
-          <Text color="white" fontSize="2xl" fontWeight="bold">
-            {t('Finding Your 4v4 Battle')}
-          </Text>
-          <Text
-            color="whiteAlpha.700"
-            fontSize="md"
-            textAlign="center"
-            px={{ base: 2, md: 4 }}
+        {/* Main search status */}
+        <div className="text-center space-y-3">
+          <h3
+            className={`${QUICK_CLASH_CLASSES.textPrimary} text-2xl font-bold`}
           >
-            {t('We are matching you with players of similar skill level...')}
-          </Text>
-        </VStack>
+            {t('Finding Your 4v4 Battle')}
+          </h3>
+          <p className={`${QUICK_CLASH_CLASSES.textSecondary} text-sm px-4`}>
+            {t('Matching you with players of similar skill level')}
+          </p>
 
-        <Divider borderColor="whiteAlpha.300" w="80%" />
+          {/* Search progress bar */}
+          <div className="pt-2 px-8">
+            <Progress
+              value={searchProgress}
+              className="h-2 bg-emerald-500/20"
+            />
+            <p className={`${QUICK_CLASH_CLASSES.textMuted} text-xs mt-2`}>
+              {searchProgress < 30
+                ? t('Starting search...')
+                : searchProgress < 60
+                ? t('Expanding search range...')
+                : t('Finding best match...')}
+            </p>
+          </div>
+        </div>
 
-        <HStack spacing={8} justify="center">
-          <VStack spacing={1}>
-            <Text color="whiteAlpha.600" fontSize="sm">
-              {t('Time in Queue')}
-            </Text>
-            <HStack
-              p={2}
-              borderRadius="md"
-              bg="whiteAlpha.100"
-              border="1px solid"
-              borderColor="whiteAlpha.200"
-            >
-              <Icon as={Clock} color="blue.300" boxSize={4} />
-              <Text color="white" fontWeight="bold" fontFamily="mono">
-                {formatMatchmakingTime(matchmakingTime)}
-              </Text>
-            </HStack>
-          </VStack>
-          <VStack spacing={1}>
-            <Text color="whiteAlpha.600" fontSize="sm">
-              {t('Status')}
-            </Text>
-            <MotionBadge
-              colorScheme="blue"
-              px={3}
-              py={1}
-              animate={statusBadgeAnimation}
-              transition={badgeTransition}
-            >
-              {t('Searching')}
-            </MotionBadge>
-          </VStack>
-        </HStack>
+        <Separator className="bg-white/10" />
 
+        {/* Stats section */}
+        <div
+          className={`
+          ${QUICK_CLASH_CLASSES.glassLight}
+          rounded-2xl p-4
+          border border-emerald-400/30
+        `}
+        >
+          <div className="grid grid-cols-2 gap-4">
+            {/* Time in queue */}
+            <div className="space-y-2">
+              <p
+                className={`${QUICK_CLASH_CLASSES.textMuted} text-xs flex items-center gap-2`}
+              >
+                <Clock className="w-3 h-3" />
+                {t('Time in Queue')}
+              </p>
+              <div
+                className={`
+                ${QUICK_CLASH_CLASSES.glassLight}
+                rounded-lg p-2.5
+                border border-emerald-400/20
+                text-center
+              `}
+              >
+                <p
+                  className={`${QUICK_CLASH_CLASSES.textPrimary} font-bold font-mono text-lg`}
+                >
+                  {formatMatchmakingTime(matchmakingTime)}
+                </p>
+              </div>
+            </div>
+
+            {/* Status indicator */}
+            <div className="space-y-2">
+              <p
+                className={`${QUICK_CLASH_CLASSES.textMuted} text-xs flex items-center gap-2`}
+              >
+                <Target className="w-3 h-3" />
+                {t('Status')}
+              </p>
+              <div
+                className={`
+                ${QUICK_CLASH_CLASSES.glassLight}
+                rounded-lg p-2.5
+                border border-emerald-400/20
+                flex items-center justify-center
+              `}
+              >
+                <MotionDiv
+                  animate={{
+                    opacity: [0.5, 1, 0.5],
+                  }}
+                  transition={{
+                    duration: 2,
+                    repeat: Infinity,
+                  }}
+                >
+                  <Badge className="bg-emerald-500 text-white font-bold text-xs px-3 py-1">
+                    <TrendingUp className="w-3 h-3 mr-1" />
+                    {t('Searching')}
+                  </Badge>
+                </MotionDiv>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        {/* Status updates panel */}
         <StatusUpdatesPanel statusUpdates={statusUpdates} />
 
-        <Box w="100%" pt={4}>
-          <Text
-            color="whiteAlpha.600"
-            fontSize="sm"
-            textAlign="center"
-            px={{ base: 2, md: 4 }}
-          >
-            {t(
-              'You can close this modal and continue using the app. We will notify you when your battle is ready.',
-            )}
-          </Text>
-        </Box>
-      </VStack>
+        {/* Info card */}
+        <MotionDiv
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          transition={{ delay: 0.5 }}
+          className={`
+            ${QUICK_CLASH_CLASSES.glassLight}
+            rounded-xl p-4
+            border border-cyan-400/30
+            bg-gradient-to-r from-cyan-500/5 to-blue-500/5
+          `}
+        >
+          <div className="flex items-start gap-3">
+            <Zap className="w-5 h-5 text-cyan-400 mt-0.5 flex-shrink-0" />
+            <div>
+              <p
+                className={`${QUICK_CLASH_CLASSES.textPrimary} text-sm font-bold mb-1`}
+              >
+                {t('Stay Flexible')}
+              </p>
+              <p
+                className={`${QUICK_CLASH_CLASSES.textMuted} text-xs leading-relaxed`}
+              >
+                {t(
+                  "You can close this modal and continue using the app. We'll notify you when your battle is ready!",
+                )}
+              </p>
+            </div>
+          </div>
+        </MotionDiv>
+      </div>
     )
   },
 )

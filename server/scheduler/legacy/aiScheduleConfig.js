@@ -1,6 +1,6 @@
 // scheduler/aiScheduleConfig.js
-const fetchAINews = require('./tasks/scraper/fetchAINews')
-const { convertISTtoUTCCron } = require('../utils/miscellaneous.utils')
+const fetchAINews = require('../tasks/scraper/fetchAINews')
+const { convertISTtoUTCCron } = require('../../utils/miscellaneous.utils')
 
 // Define AI news fetch schedule
 const aiNewsSchedules = [

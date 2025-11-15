@@ -9,13 +9,13 @@ import React, {
 } from 'react'
 import { useTranslation } from 'react-i18next'
 import useQuickClashMatchmaking from '../../../customHooks/useQuickClashMatchmaking'
-import useMatchmakingModal from '../../../customHooks/useMatchmakingModal'
-import MatchmakingButton from '../MatchmakingButton'
-import SearchModal from './SearchModal'
-import MatchPreparationModal from '../modals/MatchPreparationModal'
+import useMatchmakingModal from '../../../../customHooks/useMatchmakingModal'
+import MatchmakingButton from './MatchmakingButton'
+import SearchModal from '../../matchmaking/SearchModal'
+import MatchPreparationModal from '../../modals/MatchPreparationModal'
 
 // Import centralized color scheme
-import { QUICK_CLASH_CLASSES } from '../utils/quickClashColors'
+import { QUICK_CLASH_CLASSES } from '../../utils/quickClashColors'
 
 // Custom Toast Hook (simplified replacement for Chakra's useToast)
 const useToast = () => {

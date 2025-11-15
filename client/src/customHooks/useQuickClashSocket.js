@@ -43,7 +43,7 @@ import {
   clearMatchmakingError,
   resetMatchmakingState,
   setMatchmakingError,
-} from '../redux/quickClashMatchmakingSlice'
+} from '../redux/legacy/quickClashMatchmakingSlice'
 
 // Global matchmaking Redux imports
 import {

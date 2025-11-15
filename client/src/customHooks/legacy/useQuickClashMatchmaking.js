@@ -14,7 +14,7 @@ import {
   clearMatchmakingAfterChallengeReady,
   clearMatchmakingAfterModalClose,
   resetMatchmakingState,
-} from '../redux/quickClashMatchmakingSlice'
+} from '../redux/legacy/quickClashMatchmakingSlice'
 
 /**
  * Complete simplified hook for 1v1 Matchmaking

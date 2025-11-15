@@ -1,6 +1,6 @@
 // src/scheduler/demotionScheduleConfig.js
 
-const { demotionTask } = require('./tasks/monthlyDemotionTask')
+const { demotionTask } = require('../tasks/monthlyDemotionTask')
 
 // Define demotion schedules
 const demotionSchedules = [

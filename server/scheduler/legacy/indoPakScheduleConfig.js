@@ -1,6 +1,6 @@
 // scheduler/indoPakScheduleConfig.js
-const fetchIndoPakNews = require('./tasks/scraper/fetchIndoPakNews')
-const { convertISTtoUTCCron } = require('../utils/miscellaneous.utils')
+const fetchIndoPakNews = require('../tasks/scraper/fetchIndoPakNews')
+const { convertISTtoUTCCron } = require('../../utils/miscellaneous.utils')
 
 // Define Indo-Pak news fetch schedule
 const indoPakSchedules = [

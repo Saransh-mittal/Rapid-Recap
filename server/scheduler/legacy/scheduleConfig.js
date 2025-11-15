@@ -1,12 +1,12 @@
 const moment = require('moment-timezone')
-const extractNews = require('./tasks/extractNews')
-const sendRecommendedNewsNotification = require('./tasks/notifForRecommendedNews')
-const updateDailyRecommendations = require('./tasks/updateRecommendations')
-const resetNewSeasonModal = require('./tasks/newSeasonSevenDays')
-const sendStreakBrokenMails = require('./tasks/mailsForStreakBroken')
-const sendStreakReminder = require('./tasks/mailsForStreakReminder')
-const calculateUserIQScores = require('./tasks/userIQScoreScheduler')
-const incFakeQuizAttempts = require('./tasks/incFakeQuizAttempts')
+const extractNews = require('../tasks/extractNews')
+const sendRecommendedNewsNotification = require('../tasks/notifForRecommendedNews')
+const updateDailyRecommendations = require('../tasks/updateRecommendations')
+const resetNewSeasonModal = require('../tasks/newSeasonSevenDays')
+const sendStreakBrokenMails = require('../tasks/mailsForStreakBroken')
+const sendStreakReminder = require('../tasks/mailsForStreakReminder')
+const calculateUserIQScores = require('../tasks/userIQScoreScheduler')
+const incFakeQuizAttempts = require('../tasks/incFakeQuizAttempts')
 // const deleteExpiredGuestAccountsTask = require('./tasks/deleteExpiredGuestAccounts')
 // const sendGuestAccountExpiryNotifs = require('./tasks/guestAccountExpiryNotifs')
 // const {
@@ -24,9 +24,9 @@ const incFakeQuizAttempts = require('./tasks/incFakeQuizAttempts')
 //   registerDummyUsers,
 //   simulateBotQuizParticipation,
 // } = require('./tasks/dummyUserTournamentTasks')
-const { convertISTtoUTCCron } = require('../utils/miscellaneous.utils')
-const forceReloadAll = require('./tasks/forceReload')
-const fetchSpecialCategoryArticles = require('./tasks/fetchSpecialCategoryArticles')
+const { convertISTtoUTCCron } = require('../../utils/miscellaneous.utils')
+const forceReloadAll = require('../tasks/forceReload')
+const fetchSpecialCategoryArticles = require('../tasks/fetchSpecialCategoryArticles')
 
 const currentDate = moment().tz('Asia/Kolkata').format('YYYY-MM-DD')
 

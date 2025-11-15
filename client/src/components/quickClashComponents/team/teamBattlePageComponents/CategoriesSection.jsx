@@ -1,25 +1,37 @@
 // components/quickClashComponents/team/teamBattlePageComponents/CategoriesSection.jsx
-import React, { memo, useMemo } from 'react'
-import {
-  Box,
-  Heading,
-  Grid,
-  GridItem,
-  HStack,
-  Icon,
-  Text,
-  VStack,
-  useBreakpointValue,
-  useDisclosure,
-} from '@chakra-ui/react'
+import React, { memo, useMemo, useState } from 'react'
+import { motion, AnimatePresence } from 'framer-motion'
 import { useTranslation } from 'react-i18next'
-import { AlertTriangle, Zap, Target } from 'lucide-react'
+import {
+  Target,
+  AlertCircle,
+  Play,
+  CheckCircle2,
+  Lock,
+  Loader2,
+  Sparkles,
+  FileText,
+  Users,
+  X,
+} from 'lucide-react'
 
-import CategoryCard from './categoriesSection/CategoryCard'
-import QuickClashInstructionsModal from '../../QuickClashInstructionsModal'
+// Shadcn UI Components
+import { Button } from '@/components/ui/button'
+import { Badge } from '@/components/ui/badge'
+import { Progress } from '@/components/ui/progress'
+
+// Category utilities
+import { getCategoryInfo } from './categoriesSection/categoryUtils'
 
 /**
- * Categories Section Component with Enhanced Loading States and Fixed Priority Logic
+ * Professional Categories Section
+ *
+ * Design fixes:
+ * - Clean, spacious layout
+ * - Clear visual states
+ * - Vibrant but tasteful colors
+ * - Good information hierarchy
+ * - Proper touch targets
  */
 const CategoriesSection = memo(
   ({
@@ -31,38 +43,16 @@ const CategoriesSection = memo(
     onBeginChallenge,
     onViewReport,
     reportModalLoading,
-    // New loading props
     categoryOperationLoading,
     categoryOperationType,
     selectedCategoryForOperation,
-    // Legacy props for backward compatibility
-    categorySelectionLoading,
-    selectedCategoryId,
+    completedChallenges,
+    totalChallenges,
   }) => {
     const { t } = useTranslation('QuickClash')
+    const [showConfirm, setShowConfirm] = useState(false)
 
-    // Instructions modal state
-    const {
-      isOpen: isInstructionsOpen,
-      onOpen: openInstructions,
-      onClose: closeInstructions,
-    } = useDisclosure()
-
-    // Store the current challenge action to execute after instructions
-    const [pendingChallengeAction, setPendingChallengeAction] =
-      React.useState(null)
-
-    // Responsive values
-    const sectionPadding = useBreakpointValue({ base: 3, sm: 4, md: 6, lg: 8 })
-    const maxColumns = useBreakpointValue({
-      base: 2,
-      sm: 2,
-      md: 3,
-      lg: 4,
-      xl: 5,
-    })
-
-    // Memoized user participation status
+    // User participation status (unchanged)
     const userParticipationStatus = useMemo(() => {
       if (!currentBattle || !userTeam || !user) {
         return {
@@ -93,10 +83,7 @@ const CategoriesSection = memo(
         }
       }
 
-      // Check if user has participated but not completed (exited)
       const hasExited = userMember.participated && !userMember.completed
-
-      // Check if user has selected a category (even if not started)
       const hasSelected = !!userMember.category
       const selectedCategory = userMember.category
 
@@ -110,7 +97,7 @@ const CategoriesSection = memo(
       }
     }, [currentBattle, userTeam, user])
 
-    // Memoized enhanced category cards data with loading states and participation logic
+    // Enhanced category challenges (unchanged logic)
     const enhancedChallenges = useMemo(() => {
       if (!currentBattle || !userTeam || !user) return []
 
@@ -121,25 +108,21 @@ const CategoriesSection = memo(
         const opponentScore =
           userTeam === 'teamA' ? challenge.teamBScore : challenge.teamAScore
 
-        // Check if this challenge has been assigned to someone (started)
         const isAssignedToPlayer = challenge[playerField] !== null
         const isUserAssigned = challenge[playerField] === user._id
 
-        // Get user's selection status from team members
         const teamMembers =
           userTeam === 'teamA'
             ? currentBattle.teamAMembers
             : currentBattle.teamBMembers
         const userMember = teamMembers.find(m => m.user._id === user._id)
 
-        // Check completion for THIS specific category
         const isSelectedByUser = userMember?.category === challenge.category
         const hasUserParticipatedInThisCategory =
           isUserAssigned && userMember?.participated
         const hasUserCompletedThisCategory =
           isUserAssigned && userMember?.completed
 
-        // Check if selected by teammate (not assigned to player yet, but selected)
         const teammateWhoSelected = teamMembers.find(
           m =>
             m.user._id !== user._id &&
@@ -149,12 +132,6 @@ const CategoriesSection = memo(
 
         const isSelectedByTeammate = !!teammateWhoSelected
 
-        // Get teammate who is assigned to this challenge
-        const teammateWhoIsAssigned = teamMembers.find(
-          m => m.user._id !== user._id && m.user._id === challenge[playerField],
-        )
-
-        // Check if teammate completed this challenge
         const teammateWhoCompleted = teamMembers.find(
           m =>
             m.user._id !== user._id &&
@@ -162,73 +139,45 @@ const CategoriesSection = memo(
             m.completed,
         )
 
-        // Get teammate info for display
-        const teammateInfo =
-          teammateWhoSelected || teammateWhoIsAssigned || teammateWhoCompleted
-        const teammateName =
-          teammateInfo?.user?.name || teammateInfo?.user?.inGameName || null
-        const teammateInGameName = teammateInfo?.user?.inGameName || null
-        const teammateHasParticipated = teammateInfo?.participated || false
-        const teammateHasCompleted = teammateInfo?.completed || false
-
-        // Check if teammate completed this specific challenge
         const isCompletedByTeammate =
           !!teammateWhoCompleted &&
-          teammateWhoCompleted.completed &&
           !isUserAssigned &&
-          !hasUserCompletedThisCategory &&
-          !hasUserParticipatedInThisCategory
+          !hasUserCompletedThisCategory
 
-        // Check if user has participated in ANY challenge
-        const userHasParticipatedInAnyChallenge =
-          userParticipationStatus.hasParticipated
-        const userHasExitedAnyChallenge = userParticipationStatus.hasExited
-        const isThisTheParticipatedCategory =
-          challenge.category === userParticipationStatus.participatedCategory
+        const teammateInfo =
+          teammateWhoSelected ||
+          teamMembers.find(
+            m =>
+              m.user._id !== user._id && m.user._id === challenge[playerField],
+          ) ||
+          teammateWhoCompleted
 
-        // Check if user has selected ANY category (prevents selecting multiple)
-        const userHasSelectedAnyCategory = userParticipationStatus.hasSelected
-        const isThisTheSelectedCategory =
-          challenge.category === userParticipationStatus.selectedCategory
-
-        // Determine states based on THIS SPECIFIC category only
         const isCompleted = hasUserCompletedThisCategory
-        const isInProgress =
-          isUserAssigned &&
-          hasUserParticipatedInThisCategory &&
-          !hasUserCompletedThisCategory
-        const isStartedButExited =
-          isUserAssigned &&
-          hasUserParticipatedInThisCategory &&
-          !hasUserCompletedThisCategory
-
         const isSelectedButNotStarted =
           isSelectedByUser &&
           !isUserAssigned &&
           !hasUserParticipatedInThisCategory
 
-        // Availability logic
         const isAvailable =
           !isSelectedByUser &&
           !isSelectedByTeammate &&
           !isAssignedToPlayer &&
           !hasUserParticipatedInThisCategory &&
-          !userHasParticipatedInAnyChallenge &&
-          !userHasExitedAnyChallenge &&
-          !userHasSelectedAnyCategory &&
+          !userParticipationStatus.hasParticipated &&
+          !userParticipationStatus.hasExited &&
+          !userParticipationStatus.hasSelected &&
           !isCompletedByTeammate
 
-        // Lock logic
         const isLockedDueToSelection =
-          userHasSelectedAnyCategory && !isThisTheSelectedCategory
+          userParticipationStatus.hasSelected &&
+          challenge.category !== userParticipationStatus.selectedCategory
 
         const isLockedDueToExit =
-          userHasExitedAnyChallenge && !isThisTheParticipatedCategory
+          userParticipationStatus.hasExited &&
+          challenge.category !== userParticipationStatus.participatedCategory
 
-        // Combined lock state
         const isLocked = isLockedDueToSelection || isLockedDueToExit
 
-        // Loading states for this specific category
         const isThisCategoryLoading =
           categoryOperationLoading &&
           (selectedCategoryForOperation === challenge.category ||
@@ -236,54 +185,30 @@ const CategoriesSection = memo(
 
         const loadingType = isThisCategoryLoading ? categoryOperationType : null
 
-        // Determine if buttons should be disabled
-        const isAnyOperationLoading = categoryOperationLoading
-        const isThisCategoryOperating = isThisCategoryLoading
-        const shouldDisableButtons =
-          isAnyOperationLoading && !isThisCategoryOperating
+        const isDisabled = categoryOperationLoading && !isThisCategoryLoading
 
         return {
           ...challenge,
           isAvailable,
           isCompleted,
-          isInProgress,
-          isStartedButExited,
           isSelectedButNotStarted,
           isSelectedByTeammate,
           isUserAssigned,
           userScore,
           opponentScore,
-          // Loading states
           isLoading: isThisCategoryLoading,
           loadingType,
-          isDisabled: shouldDisableButtons,
-          // Enhanced lock states
+          isDisabled,
           isLockedDueToExit,
           isLockedDueToSelection,
           isLocked,
-          isThisTheParticipatedCategory,
-          isThisTheSelectedCategory,
-          // Teammate completion state
           isCompletedByTeammate,
-          // Teammate information
           teammateInfo: {
-            name: teammateName,
-            inGameName: teammateInGameName,
-            hasParticipated: teammateHasParticipated,
-            hasCompleted: teammateHasCompleted,
-            isSelected: !!teammateWhoSelected,
-            isAssigned: !!teammateWhoIsAssigned,
-            // Add teammate scores when completed
-            teammateScore: teammateWhoCompleted
-              ? userTeam === 'teamA'
-                ? challenge.teamAScore
-                : challenge.teamBScore
-              : null,
-            opponentScore: teammateWhoCompleted
-              ? userTeam === 'teamA'
-                ? challenge.teamBScore
-                : challenge.teamAScore
-              : null,
+            name: teammateInfo?.user?.name || teammateInfo?.user?.inGameName,
+            inGameName: teammateInfo?.user?.inGameName,
+            hasCompleted: teammateInfo?.completed || false,
+            teammateScore: teammateWhoCompleted ? userScore : null,
+            opponentScore: teammateWhoCompleted ? opponentScore : null,
           },
         }
       })
@@ -297,355 +222,405 @@ const CategoriesSection = memo(
       userParticipationStatus,
     ])
 
-    // Ensure we never have more columns than categories
-    const columns = Math.min(maxColumns, enhancedChallenges.length)
-    const gridSpacing = useBreakpointValue({
-      base: 2,
-      sm: 3,
-      md: 4,
-      lg: 5,
-      xl: 6,
-    })
-    const headerSize = useBreakpointValue({ base: 'lg', sm: 'xl', md: '2xl' })
-
-    // Memoized user completed categories
-    const userCompletedCategories = useMemo(() => {
-      if (!currentBattle || !userTeam || !user) return []
-      const teamMembers =
-        userTeam === 'teamA'
-          ? currentBattle.teamAMembers
-          : currentBattle.teamBMembers
-      const userMember = teamMembers.find(m => m.user._id === user._id)
-      return userMember?.completed && userMember.category
-        ? [userMember.category]
-        : []
-    }, [currentBattle, userTeam, user])
-
-    // Handle begin challenge with instructions modal
-    const handleBeginChallengeWithInstructions = React.useCallback(() => {
-      // Store the actual begin challenge function
-      setPendingChallengeAction(() => onBeginChallenge)
-      // Open instructions modal
-      openInstructions()
-    }, [onBeginChallenge, openInstructions])
-
-    // Handle starting challenge after instructions
-    const handleStartChallenge = React.useCallback(() => {
-      if (pendingChallengeAction) {
-        pendingChallengeAction()
-        setPendingChallengeAction(null)
-      }
-    }, [pendingChallengeAction])
-
-    // Handle modal close
-    const handleCloseInstructions = React.useCallback(() => {
-      closeInstructions()
-      setPendingChallengeAction(null)
-    }, [closeInstructions])
-
     if (!currentBattle || !userTeam) return null
 
     return (
-      <>
-        <Box
-          mx={{ base: 2, sm: 3, md: 6, lg: 8 }}
-          mb={{ base: 6, sm: 8, md: 10 }}
-          position="relative"
-          overflow="hidden"
+      <div className="px-4 mb-5 sm:px-6 sm:mb-6">
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 0.2 }}
+          className="bg-white/5 backdrop-blur-sm rounded-2xl p-5 sm:p-6 border border-white/10"
         >
-          <Box
-            position="absolute"
-            top={0}
-            left={0}
-            right={0}
-            bottom={0}
-            bg="rgba(15, 23, 42, 0.95)"
-            backdropFilter="blur(20px)"
-            borderRadius={{ base: 'xl', md: '2xl' }}
-            border="1px solid"
-            borderColor="rgba(71, 85, 105, 0.3)"
-            boxShadow="0 25px 50px rgba(0, 0, 0, 0.25)"
-          />
+          {/* Header */}
+          <div className="text-center mb-5">
+            <div className="flex items-center justify-center gap-2 mb-2">
+              <Target className="w-5 h-5 text-cyan-400" />
+              <h2 className="text-xl sm:text-2xl font-bold text-white">
+                {t('Choose Your Challenge')}
+              </h2>
+            </div>
+            <p className="text-sm text-white/60">
+              {t('Select a category to battle')}
+            </p>
+          </div>
 
-          <Box position="relative" zIndex={1} p={sectionPadding}>
-            <VStack
-              spacing={{ base: 4, sm: 6, md: 8 }}
-              w="100%"
-              alignItems="center"
-            >
-              {/* Header Section */}
-              <VStack
-                spacing={{ base: 1.5, sm: 2, md: 3 }}
-                textAlign="center"
-                w="100%"
-              >
-                <Box>
-                  <HStack spacing={3} justify="center" align="center">
-                    <Icon
-                      as={Zap}
-                      boxSize={{ base: 5, sm: 6, md: 7 }}
-                      color="#3B82F6"
-                    />
-                    <Heading
-                      size={headerSize}
-                      color="white"
-                      fontWeight="bold"
-                      letterSpacing="-0.02em"
-                      textAlign="center"
-                    >
-                      {t('Battle Arena')}
-                    </Heading>
-                    <Icon
-                      as={Target}
-                      boxSize={{ base: 5, sm: 6, md: 7 }}
-                      color="#10B981"
-                    />
-                  </HStack>
-                </Box>
+          {/* Progress */}
+          <div className="mb-5">
+            <div className="flex items-center justify-between text-sm text-white/70 mb-2">
+              <span className="font-semibold">{t('Progress')}</span>
+              <span className="font-bold text-white">
+                {completedChallenges}/{totalChallenges}
+              </span>
+            </div>
+            <Progress
+              value={(completedChallenges / totalChallenges) * 100}
+              className="h-2 bg-white/10"
+            />
+          </div>
 
-                <Box>
-                  <Text
-                    color="slate.400"
-                    fontSize={{ base: 'sm', sm: 'md', md: 'lg' }}
-                    fontWeight="medium"
-                    textAlign="center"
-                    lineHeight="1.5"
-                    maxW="md"
-                    mx="auto"
-                  >
-                    {t('Choose your battlefield & prove your skills!')}
-                  </Text>
-                </Box>
-              </VStack>
+          {/* Categories grid */}
+          <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-3 mb-4">
+            {enhancedChallenges.map((challenge, index) => (
+              <CategoryCard
+                key={`${challenge.category}-${index}`}
+                challenge={challenge}
+                index={index}
+                onSelectCategory={onSelectCategory}
+                onDeselectCategory={onDeselectCategory}
+                onBeginChallenge={() => setShowConfirm(true)}
+                onViewReport={onViewReport}
+                reportModalLoading={reportModalLoading}
+                t={t}
+              />
+            ))}
+          </div>
 
-              {/* Categories Grid Container */}
-              <Box
-                w="100%"
-                display="flex"
-                justifyContent="center"
-                px={{ base: 2, sm: 2, md: 0 }}
-              >
-                <Grid
-                  templateColumns={`repeat(${columns}, 1fr)`}
-                  gap={gridSpacing}
-                  w="100%"
-                  maxW="100%"
-                  justifyItems="center"
-                  alignItems="start"
-                >
-                  {enhancedChallenges.map((challenge, index) => (
-                    <GridItem
-                      key={`${challenge.category}-${index}-${
-                        challenge.challenge?._id || `fallback-${index}`
-                      }`}
-                      w="100%"
-                      maxW={{ base: '140px', sm: '160px', md: '180px' }}
-                    >
-                      <CategoryCard
-                        challenge={challenge}
-                        isAvailable={challenge.isAvailable}
-                        isCompleted={challenge.isCompleted}
-                        isInProgress={challenge.isInProgress}
-                        isStartedButExited={challenge.isStartedButExited}
-                        isSelectedButNotStarted={
-                          challenge.isSelectedButNotStarted
-                        }
-                        isSelectedByTeammate={challenge.isSelectedByTeammate}
-                        isUserAssigned={challenge.isUserAssigned}
-                        userScore={challenge.userScore}
-                        opponentScore={challenge.opponentScore}
-                        // Loading states
-                        isLoading={challenge.isLoading}
-                        loadingType={challenge.loadingType}
-                        isDisabled={challenge.isDisabled}
-                        // Enhanced lock states
-                        isLockedDueToExit={challenge.isLockedDueToExit}
-                        isLockedDueToSelection={
-                          challenge.isLockedDueToSelection
-                        }
-                        isLocked={challenge.isLocked}
-                        isThisTheParticipatedCategory={
-                          challenge.isThisTheParticipatedCategory
-                        }
-                        isThisTheSelectedCategory={
-                          challenge.isThisTheSelectedCategory
-                        }
-                        // Teammate completion state
-                        isCompletedByTeammate={challenge.isCompletedByTeammate}
-                        // Teammate info
-                        teammateInfo={challenge.teammateInfo}
-                        // Actions
-                        onSelectCategory={onSelectCategory}
-                        onDeselectCategory={onDeselectCategory}
-                        onBeginChallenge={handleBeginChallengeWithInstructions}
-                        onViewReport={onViewReport}
-                        reportModalLoading={reportModalLoading}
-                        // Legacy props for backward compatibility
-                        categorySelectionLoading={categorySelectionLoading}
-                        selectedCategoryId={selectedCategoryId}
-                        userTeam={userTeam}
-                        user={user}
-                      />
-                    </GridItem>
-                  ))}
-                </Grid>
-              </Box>
-
-              {/* User Participation Warnings */}
-              {userParticipationStatus.hasExited && (
-                <Box w="100%" maxW="md" mx="auto">
-                  <Box
-                    bg="rgba(239, 68, 68, 0.1)"
-                    backdropFilter="blur(10px)"
-                    borderRadius="xl"
-                    p={{ base: 4, sm: 5 }}
-                    border="1px solid"
-                    borderColor="rgba(239, 68, 68, 0.3)"
-                    boxShadow="0 10px 30px rgba(239, 68, 68, 0.1)"
-                  >
-                    <HStack spacing={3} align="flex-start">
-                      <Icon
-                        as={AlertTriangle}
-                        color="#EF4444"
-                        boxSize={{ base: 5, sm: 6 }}
-                        flexShrink={0}
-                        mt={0.5}
-                      />
-                      <VStack alignItems="flex-start" spacing={1} flex={1}>
-                        <Text
-                          color="#EF4444"
-                          fontWeight="bold"
-                          fontSize={{ base: 'sm', sm: 'md' }}
-                        >
-                          {t('Challenge Participation Complete')}
-                        </Text>
-                        <Text
-                          color="red.200"
-                          fontSize={{ base: 'xs', sm: 'sm' }}
-                          lineHeight="1.5"
-                          opacity={0.9}
-                        >
-                          {t(
-                            'You have already participated in a challenge in this battle. You cannot select or start additional challenges.',
-                          )}
-                        </Text>
-                      </VStack>
-                    </HStack>
-                  </Box>
-                </Box>
+          {/* Info messages */}
+          <AnimatePresence>
+            {userParticipationStatus.hasSelected &&
+              !userParticipationStatus.hasParticipated && (
+                <InfoMessage
+                  type="info"
+                  message={t('{{category}} selected. Ready to begin?', {
+                    category: userParticipationStatus.selectedCategory,
+                  })}
+                />
               )}
-
-              {/* Warning when user has selected a category */}
-              {userParticipationStatus.hasSelected &&
-                !userParticipationStatus.hasParticipated && (
-                  <Box w="100%" maxW="md" mx="auto">
-                    <Box
-                      bg="rgba(59, 130, 246, 0.1)"
-                      backdropFilter="blur(10px)"
-                      borderRadius="xl"
-                      p={{ base: 4, sm: 5 }}
-                      border="1px solid"
-                      borderColor="rgba(59, 130, 246, 0.3)"
-                      boxShadow="0 10px 30px rgba(59, 130, 246, 0.1)"
-                    >
-                      <HStack spacing={3} align="flex-start">
-                        <Icon
-                          as={Target}
-                          color="#3B82F6"
-                          boxSize={{ base: 5, sm: 6 }}
-                          flexShrink={0}
-                          mt={0.5}
-                        />
-                        <VStack alignItems="flex-start" spacing={1} flex={1}>
-                          <Text
-                            color="#3B82F6"
-                            fontWeight="bold"
-                            fontSize={{ base: 'sm', sm: 'md' }}
-                          >
-                            {t('Category Selected: {{category}}', {
-                              category:
-                                userParticipationStatus.selectedCategory,
-                            })}
-                          </Text>
-                          <Text
-                            color="blue.200"
-                            fontSize={{ base: 'xs', sm: 'sm' }}
-                            lineHeight="1.5"
-                            opacity={0.9}
-                          >
-                            {t(
-                              'You have selected the {{category}} category. Other categories are now locked until you change your selection or begin your challenge.',
-                              {
-                                category:
-                                  userParticipationStatus.selectedCategory,
-                              },
-                            )}
-                          </Text>
-                        </VStack>
-                      </HStack>
-                    </Box>
-                  </Box>
+            {userParticipationStatus.hasExited && (
+              <InfoMessage
+                type="warning"
+                message={t(
+                  'You have exited a challenge and cannot participate in others.',
                 )}
+              />
+            )}
+          </AnimatePresence>
+        </motion.div>
 
-              {userParticipationStatus.hasParticipated &&
-                !userParticipationStatus.hasExited &&
-                !userCompletedCategories.length && (
-                  <Box w="100%" maxW="md" mx="auto">
-                    <Box
-                      bg="rgba(245, 158, 11, 0.1)"
-                      backdropFilter="blur(10px)"
-                      borderRadius="xl"
-                      p={{ base: 4, sm: 5 }}
-                      border="1px solid"
-                      borderColor="rgba(245, 158, 11, 0.3)"
-                      boxShadow="0 10px 30px rgba(245, 158, 11, 0.1)"
-                    >
-                      <HStack spacing={3} align="flex-start">
-                        <Icon
-                          as={AlertTriangle}
-                          color="#F59E0B"
-                          boxSize={{ base: 5, sm: 6 }}
-                          flexShrink={0}
-                          mt={0.5}
-                        />
-                        <VStack alignItems="flex-start" spacing={1} flex={1}>
-                          <Text
-                            color="#F59E0B"
-                            fontWeight="bold"
-                            fontSize={{ base: 'sm', sm: 'md' }}
-                          >
-                            {t('Challenge in Progress')}
-                          </Text>
-                          <Text
-                            color="amber.200"
-                            fontSize={{ base: 'xs', sm: 'sm' }}
-                            lineHeight="1.5"
-                            opacity={0.9}
-                          >
-                            {t(
-                              'You are currently participating in a challenge. Complete your current challenge before selecting another category.',
-                            )}
-                          </Text>
-                        </VStack>
-                      </HStack>
-                    </Box>
-                  </Box>
-                )}
-            </VStack>
-          </Box>
-        </Box>
-
-        {/* Instructions Modal */}
-        <QuickClashInstructionsModal
-          isOpen={isInstructionsOpen}
-          onClose={handleCloseInstructions}
-          onStart={handleStartChallenge}
-        />
-      </>
+        {/* Clean confirmation modal */}
+        <AnimatePresence>
+          {showConfirm && (
+            <div
+              className="fixed inset-0 bg-black/70 backdrop-blur-sm z-50 flex items-center justify-center p-4"
+              onClick={() => setShowConfirm(false)}
+            >
+              <motion.div
+                initial={{ scale: 0.95, opacity: 0 }}
+                animate={{ scale: 1, opacity: 1 }}
+                exit={{ scale: 0.95, opacity: 0 }}
+                className="bg-slate-800 rounded-2xl p-6 max-w-sm w-full border border-white/10"
+                onClick={e => e.stopPropagation()}
+              >
+                <div className="text-center mb-5">
+                  <div className="inline-flex items-center justify-center w-12 h-12 mb-3 rounded-xl bg-orange-500/20">
+                    <AlertCircle className="w-6 h-6 text-orange-400" />
+                  </div>
+                  <h3 className="text-lg font-bold text-white mb-2">
+                    {t('Start Challenge?')}
+                  </h3>
+                  <p className="text-sm text-white/70">
+                    {t('You cannot change categories after starting.')}
+                  </p>
+                </div>
+                <div className="flex gap-2">
+                  <Button
+                    onClick={() => setShowConfirm(false)}
+                    variant="outline"
+                    className="flex-1 border-white/20 hover:bg-white/10 text-white"
+                  >
+                    {t('Cancel')}
+                  </Button>
+                  <Button
+                    onClick={() => {
+                      setShowConfirm(false)
+                      onBeginChallenge()
+                    }}
+                    className="flex-1 bg-gradient-to-r from-cyan-500 to-blue-500 hover:from-cyan-600 hover:to-blue-600 text-white font-semibold"
+                  >
+                    <Play className="w-4 h-4 mr-1" />
+                    {t('Start')}
+                  </Button>
+                </div>
+              </motion.div>
+            </div>
+          )}
+        </AnimatePresence>
+      </div>
     )
   },
 )
 
+/**
+ * Clean Category Card
+ */
+const CategoryCard = memo(
+  ({
+    challenge,
+    index,
+    onSelectCategory,
+    onDeselectCategory,
+    onBeginChallenge,
+    onViewReport,
+    reportModalLoading,
+    t,
+  }) => {
+    const categoryInfo = getCategoryInfo(challenge.category)
+
+    const getState = () => {
+      if (challenge.isCompleted) return 'completed'
+      if (challenge.isSelectedButNotStarted) return 'selected'
+      if (challenge.isCompletedByTeammate || challenge.isSelectedByTeammate)
+        return 'teammate'
+      if (challenge.isLocked) return 'locked'
+      if (challenge.isAvailable) return 'available'
+      return 'locked'
+    }
+
+    const state = getState()
+
+    const stateStyles = {
+      available: {
+        bg: 'bg-white/5 hover:bg-white/10',
+        border: 'border border-white/20 hover:border-cyan-500/50',
+        cursor: 'cursor-pointer',
+      },
+      selected: {
+        bg: 'bg-cyan-500/10',
+        border: 'border-2 border-cyan-500/50',
+      },
+      completed: {
+        bg: 'bg-green-500/10',
+        border: 'border-2 border-green-500/50',
+      },
+      teammate: {
+        bg: 'bg-purple-500/10',
+        border: 'border border-purple-500/30',
+      },
+      locked: {
+        bg: 'bg-white/5',
+        border: 'border border-white/10',
+        opacity: 'opacity-40',
+      },
+    }
+
+    const style = stateStyles[state]
+
+    return (
+      <motion.div
+        initial={{ opacity: 0, scale: 0.95 }}
+        animate={{ opacity: 1, scale: 1 }}
+        transition={{ delay: index * 0.04 }}
+        className={`relative rounded-xl p-3 transition-all ${style.bg} ${style.border} ${style.cursor} ${style.opacity}`}
+        onClick={() => {
+          if (challenge.isAvailable && !challenge.isDisabled) {
+            onSelectCategory(challenge.category)
+          }
+        }}
+      >
+        {/* Loading */}
+        {challenge.isLoading && (
+          <div className="absolute inset-0 bg-slate-900/80 backdrop-blur-sm rounded-xl z-10 flex items-center justify-center">
+            <Loader2 className="w-6 h-6 text-cyan-400 animate-spin" />
+          </div>
+        )}
+
+        {/* Status icon */}
+        <div className="absolute top-2 right-2 z-10">
+          {state === 'completed' && (
+            <CheckCircle2 className="w-4 h-4 text-green-400" />
+          )}
+          {state === 'selected' && (
+            <Sparkles className="w-4 h-4 text-cyan-400" />
+          )}
+          {state === 'teammate' && (
+            <Users className="w-4 h-4 text-purple-400" />
+          )}
+          {state === 'locked' && <Lock className="w-4 h-4 text-slate-400" />}
+        </div>
+
+        {/* Category icon */}
+        <div className="flex justify-center mb-3">
+          <div
+            className="p-3 rounded-lg"
+            style={{
+              background: `linear-gradient(135deg, ${categoryInfo.primaryColor}, ${categoryInfo.secondaryColor})`,
+            }}
+          >
+            {React.createElement(categoryInfo.iconComponent, {
+              className: 'w-6 h-6 sm:w-7 sm:h-7 text-white',
+            })}
+          </div>
+        </div>
+
+        {/* Name */}
+        <h4 className="text-sm font-bold text-center text-white capitalize mb-2 leading-tight">
+          {challenge.category}
+        </h4>
+
+        {/* Teammate */}
+        {challenge.teammateInfo?.name && (
+          <p className="text-xs text-center text-purple-300 mb-2 truncate">
+            {challenge.teammateInfo.inGameName || challenge.teammateInfo.name}
+          </p>
+        )}
+
+        {/* Scores */}
+        {(challenge.isCompleted || challenge.isCompletedByTeammate) && (
+          <div className="flex items-center justify-center gap-1.5 text-xs mb-2">
+            <span className="font-bold text-green-400">
+              {challenge.userScore ?? '?'}
+            </span>
+            <span className="text-white/50">-</span>
+            <span className="font-bold text-red-400">
+              {challenge.opponentScore ?? '?'}
+            </span>
+          </div>
+        )}
+
+        {/* Action */}
+        <CategoryAction
+          state={state}
+          challenge={challenge}
+          onSelectCategory={onSelectCategory}
+          onDeselectCategory={onDeselectCategory}
+          onBeginChallenge={onBeginChallenge}
+          onViewReport={onViewReport}
+          reportModalLoading={reportModalLoading}
+          t={t}
+        />
+      </motion.div>
+    )
+  },
+)
+
+/**
+ * Category Action Button
+ */
+const CategoryAction = memo(
+  ({
+    state,
+    challenge,
+    onSelectCategory,
+    onDeselectCategory,
+    onBeginChallenge,
+    onViewReport,
+    reportModalLoading,
+    t,
+  }) => {
+    switch (state) {
+      case 'completed':
+        return (
+          <Button
+            size="sm"
+            variant="outline"
+            className="w-full h-9 text-xs border-green-500/40 text-green-300 hover:bg-green-500/10"
+            onClick={e => {
+              e.stopPropagation()
+              onViewReport(challenge.challenge?._id)
+            }}
+            disabled={reportModalLoading}
+          >
+            <FileText className="w-3 h-3 mr-1" />
+            {t('Report')}
+          </Button>
+        )
+
+      case 'selected':
+        return (
+          <div className="space-y-1.5" onClick={e => e.stopPropagation()}>
+            <Button
+              size="sm"
+              className="w-full h-9 text-xs bg-gradient-to-r from-cyan-500 to-blue-500 hover:from-cyan-600 hover:to-blue-600 text-white font-semibold"
+              onClick={onBeginChallenge}
+              disabled={challenge.isDisabled}
+            >
+              <Play className="w-3 h-3 mr-1" />
+              {t('Start')}
+            </Button>
+            <Button
+              size="sm"
+              variant="ghost"
+              className="w-full h-7 text-xs text-white/60 hover:text-white hover:bg-white/10"
+              onClick={onDeselectCategory}
+              disabled={challenge.isDisabled}
+            >
+              <X className="w-3 h-3 mr-1" />
+              {t('Change')}
+            </Button>
+          </div>
+        )
+
+      case 'available':
+        return (
+          <Button
+            size="sm"
+            className="w-full h-9 text-xs bg-gradient-to-r from-cyan-500 to-blue-500 hover:from-cyan-600 hover:to-blue-600 text-white font-semibold"
+            onClick={e => {
+              e.stopPropagation()
+              onSelectCategory(challenge.category)
+            }}
+            disabled={challenge.isDisabled}
+          >
+            {t('Select')}
+          </Button>
+        )
+
+      case 'teammate':
+        return (
+          <Badge className="w-full justify-center h-9 bg-purple-500/20 text-purple-300 border-purple-500/40 text-xs">
+            {t('Teammate')}
+          </Badge>
+        )
+
+      default:
+        return (
+          <Badge className="w-full justify-center h-9 bg-white/5 text-slate-400 border-slate-500/30 text-xs">
+            <Lock className="w-3 h-3 mr-1" />
+            {t('Locked')}
+          </Badge>
+        )
+    }
+  },
+)
+
+/**
+ * Info Message
+ */
+const InfoMessage = memo(({ type, message }) => {
+  const config = {
+    info: {
+      bg: 'bg-cyan-500/10',
+      border: 'border-cyan-500/30',
+      text: 'text-cyan-300',
+      icon: Sparkles,
+    },
+    warning: {
+      bg: 'bg-red-500/10',
+      border: 'border-red-500/30',
+      text: 'text-red-300',
+      icon: AlertCircle,
+    },
+  }
+
+  const { bg, border, text, icon: Icon } = config[type]
+
+  return (
+    <motion.div
+      initial={{ opacity: 0, y: 10 }}
+      animate={{ opacity: 1, y: 0 }}
+      exit={{ opacity: 0, y: -10 }}
+      className={`${bg} ${border} border rounded-lg p-3 flex items-start gap-2`}
+    >
+      <Icon className={`w-4 h-4 ${text} flex-shrink-0 mt-0.5`} />
+      <p className={`text-sm ${text}`}>{message}</p>
+    </motion.div>
+  )
+})
+
+CategoryCard.displayName = 'CategoryCard'
+CategoryAction.displayName = 'CategoryAction'
+InfoMessage.displayName = 'InfoMessage'
 CategoriesSection.displayName = 'CategoriesSection'
 
 export default CategoriesSection

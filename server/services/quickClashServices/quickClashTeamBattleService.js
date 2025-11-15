@@ -46,7 +46,7 @@ const {
 } = require('./quickClashWinProbabilityService')
 
 // Constants
-const TEAM_BATTLE_EXPIRY = 24 * 60 * 60 * 1000 // 24 hours same as regular challenges
+const TEAM_BATTLE_EXPIRY = 4 * 60 * 60 * 1000 // 4 hours same as regular challenges
 const BASE_TROPHIES = 120 // Base trophies for 4v4 mode
 const TROPHY_K_FACTOR = 0.8 // From trophy formula
 

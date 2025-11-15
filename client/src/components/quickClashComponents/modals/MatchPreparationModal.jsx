@@ -23,7 +23,7 @@ import { useSelector, useDispatch } from 'react-redux'
 import {
   clearMatchmakingAfterChallengeReady,
   clearMatchmakingAfterModalClose,
-} from '../../../redux/quickClashMatchmakingSlice'
+} from '../../../redux/legacy/quickClashMatchmakingSlice'
 
 // Import centralized color scheme
 import { QUICK_CLASH_CLASSES } from '../utils/quickClashColors'

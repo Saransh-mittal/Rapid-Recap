@@ -1,6 +1,6 @@
 const cron = require('node-cron')
 const moment = require('moment') // Install moment for date manipulation: npm install moment
-const { mailTransporter } = require('../utils/mail.utils')
+const { mailTransporter } = require('../../utils/mail.utils')
 
 const tasks = {} // Store scheduled tasks here
 

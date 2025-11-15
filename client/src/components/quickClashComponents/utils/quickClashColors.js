@@ -13,7 +13,7 @@ export const QUICK_CLASH_COLORS = {
     darkBlue: '#0284C7', // Darker blue
   },
 
-  // Glass/Background Colors (keeping blue-tinted)
+  // Glass/Background Colors (transparent for app background)
   glass: {
     light: 'rgba(15, 23, 42, 0.2)', // Very transparent
     medium: 'rgba(15, 23, 42, 0.4)', // Medium transparency
@@ -22,6 +22,10 @@ export const QUICK_CLASH_COLORS = {
     soft: 'rgba(15, 23, 42, 0.25)', // Between light and medium
     intense: 'rgba(15, 23, 42, 0.7)', // Between strong and dark
     ultra: 'rgba(15, 23, 42, 0.9)', // Almost opaque
+    // NEW: Additional transparency levels for team battles
+    veryLight: 'rgba(15, 23, 42, 0.15)', // Extra transparent
+    subtle: 'rgba(15, 23, 42, 0.3)', // Subtle background
+    none: 'transparent', // Fully transparent
   },
 
   // Border Colors (cyan-tinted)
@@ -33,6 +37,14 @@ export const QUICK_CLASH_COLORS = {
     blue: 'rgba(14, 165, 233, 0.3)', // Blue tinted
     subtle: 'rgba(255, 255, 255, 0.03)', // Ultra subtle
     bright: 'rgba(255, 255, 255, 0.2)', // More visible
+    // NEW: Team battle borders
+    cyan: 'rgba(6, 182, 212, 0.4)', // Stronger cyan
+    cyanBright: 'rgba(6, 182, 212, 0.5)', // Bright cyan border
+    red: 'rgba(239, 68, 68, 0.4)', // Red border
+    redBright: 'rgba(239, 68, 68, 0.5)', // Bright red border
+    green: 'rgba(16, 185, 129, 0.4)', // Green border
+    yellow: 'rgba(245, 158, 11, 0.4)', // Yellow border
+    purple: 'rgba(139, 92, 246, 0.4)', // Purple border
   },
 
   // Text Colors
@@ -95,7 +107,7 @@ export const QUICK_CLASH_COLORS = {
     float: 'rgba(6, 182, 212, 0.3)', // Floating animation
   },
 
-  // Team Battle Specific Colors
+  // Team Battle Specific Colors (EXISTING)
   teamBattle: {
     userTeam: '#0EA5E9', // Blue for user's team
     opponentTeam: '#EF4444', // Red for opponent team
@@ -108,6 +120,86 @@ export const QUICK_CLASH_COLORS = {
       defeat: '#EF4444',
       draw: '#FBBF24',
     },
+    // NEW: Extended team battle colors for transparent backgrounds
+    cards: {
+      userTeamBg: 'rgba(6, 182, 212, 0.05)', // Very subtle cyan bg
+      userTeamBorder: 'rgba(6, 182, 212, 0.5)', // Cyan border
+      userTeamGlow: 'rgba(6, 182, 212, 0.3)', // Cyan glow
+      opponentTeamBg: 'rgba(239, 68, 68, 0.05)', // Very subtle red bg
+      opponentTeamBorder: 'rgba(239, 68, 68, 0.5)', // Red border
+      opponentTeamGlow: 'rgba(239, 68, 68, 0.3)', // Red glow
+      defaultBg: 'rgba(15, 23, 42, 0.4)', // Default card bg
+      defaultBorder: 'rgba(255, 255, 255, 0.1)', // Default border
+    },
+    states: {
+      victory: {
+        primary: '#06B6D4',
+        border: 'rgba(6, 182, 212, 0.5)',
+        glow: 'rgba(6, 182, 212, 0.4)',
+        bg: 'rgba(6, 182, 212, 0.08)',
+      },
+      defeat: {
+        primary: '#EF4444',
+        border: 'rgba(239, 68, 68, 0.5)',
+        glow: 'rgba(239, 68, 68, 0.4)',
+        bg: 'rgba(239, 68, 68, 0.08)',
+      },
+      tie: {
+        primary: '#F59E0B',
+        border: 'rgba(245, 158, 11, 0.5)',
+        glow: 'rgba(245, 158, 11, 0.4)',
+        bg: 'rgba(245, 158, 11, 0.08)',
+      },
+    },
+    category: {
+      available: {
+        border: 'rgba(6, 182, 212, 0.3)',
+        hover: 'rgba(6, 182, 212, 0.1)',
+        glow: 'rgba(6, 182, 212, 0.2)',
+        bg: 'rgba(15, 23, 42, 0.2)',
+      },
+      selected: {
+        border: 'rgba(6, 182, 212, 0.5)',
+        bg: 'rgba(6, 182, 212, 0.1)',
+        glow: 'rgba(6, 182, 212, 0.3)',
+      },
+      completed: {
+        border: 'rgba(16, 185, 129, 0.5)',
+        bg: 'rgba(16, 185, 129, 0.1)',
+        glow: 'rgba(16, 185, 129, 0.3)',
+      },
+      inProgress: {
+        border: 'rgba(245, 158, 11, 0.5)',
+        bg: 'rgba(245, 158, 11, 0.1)',
+        glow: 'rgba(245, 158, 11, 0.3)',
+      },
+      locked: {
+        border: 'rgba(107, 114, 128, 0.3)',
+        bg: 'rgba(107, 114, 128, 0.05)',
+        glow: 'rgba(107, 114, 128, 0.1)',
+      },
+      exited: {
+        border: 'rgba(239, 68, 68, 0.5)',
+        bg: 'rgba(239, 68, 68, 0.1)',
+        glow: 'rgba(239, 68, 68, 0.2)',
+      },
+      teammate: {
+        border: 'rgba(139, 92, 246, 0.5)',
+        bg: 'rgba(139, 92, 246, 0.1)',
+        glow: 'rgba(139, 92, 246, 0.3)',
+      },
+    },
+  },
+
+  // Shadow Colors (for glows and depth)
+  shadows: {
+    cyan: 'rgba(6, 182, 212, 0.3)',
+    blue: 'rgba(14, 165, 233, 0.3)',
+    green: 'rgba(16, 185, 129, 0.3)',
+    red: 'rgba(239, 68, 68, 0.3)',
+    yellow: 'rgba(245, 158, 11, 0.3)',
+    purple: 'rgba(139, 92, 246, 0.3)',
+    black: 'rgba(0, 0, 0, 0.5)',
   },
 }
 
@@ -136,6 +228,57 @@ export const getButtonStyle = (variant = 'primary', size = 'medium') => {
   return { ...baseStyle, ...sizeStyles[size] }
 }
 
+// NEW: Utility for team battle card styling (transparent backgrounds)
+export const getTeamBattleCardStyle = (variant = 'default') => {
+  const variants = {
+    default: {
+      backgroundColor: QUICK_CLASH_COLORS.teamBattle.cards.defaultBg,
+      border: `1px solid ${QUICK_CLASH_COLORS.teamBattle.cards.defaultBorder}`,
+    },
+    userTeam: {
+      backgroundColor: QUICK_CLASH_COLORS.teamBattle.cards.defaultBg,
+      border: `2px solid ${QUICK_CLASH_COLORS.teamBattle.cards.userTeamBorder}`,
+      boxShadow: `0 0 30px ${QUICK_CLASH_COLORS.teamBattle.cards.userTeamGlow}`,
+    },
+    opponentTeam: {
+      backgroundColor: QUICK_CLASH_COLORS.teamBattle.cards.defaultBg,
+      border: `2px solid ${QUICK_CLASH_COLORS.teamBattle.cards.opponentTeamBorder}`,
+      boxShadow: `0 0 20px ${QUICK_CLASH_COLORS.teamBattle.cards.opponentTeamGlow}`,
+    },
+    victory: {
+      backgroundColor: QUICK_CLASH_COLORS.glass.strong,
+      border: `2px solid ${QUICK_CLASH_COLORS.teamBattle.states.victory.border}`,
+      boxShadow: `0 0 40px ${QUICK_CLASH_COLORS.teamBattle.states.victory.glow}`,
+    },
+    defeat: {
+      backgroundColor: QUICK_CLASH_COLORS.glass.strong,
+      border: `2px solid ${QUICK_CLASH_COLORS.teamBattle.states.defeat.border}`,
+      boxShadow: `0 0 30px ${QUICK_CLASH_COLORS.teamBattle.states.defeat.glow}`,
+    },
+  }
+
+  return {
+    ...variants[variant],
+    backdropFilter: 'blur(12px)',
+    WebkitBackdropFilter: 'blur(12px)',
+  }
+}
+
+// NEW: Utility for category card styling (transparent backgrounds)
+export const getCategoryCardStyle = (state = 'available') => {
+  const config =
+    QUICK_CLASH_COLORS.teamBattle.category[state] ||
+    QUICK_CLASH_COLORS.teamBattle.category.available
+
+  return {
+    backgroundColor: config.bg || QUICK_CLASH_COLORS.glass.veryLight,
+    border: `2px solid ${config.border}`,
+    boxShadow: `0 0 20px ${config.glow}`,
+    backdropFilter: 'blur(8px)',
+    WebkitBackdropFilter: 'blur(8px)',
+  }
+}
+
 // Enhanced Tailwind CSS classes for consistent usage (Updated for Team Battles)
 export const QUICK_CLASH_CLASSES = {
   // Glass containers with enhanced variations
@@ -148,6 +291,13 @@ export const QUICK_CLASH_CLASSES = {
     'bg-slate-900/70 backdrop-blur-[20px] border border-white/20 backdrop-brightness-115',
   glassDark: 'bg-slate-900/80 backdrop-blur-[16px] border border-white/15',
   glassUltra: 'bg-slate-900/90 backdrop-blur-[24px] border border-white/25',
+  // NEW: Team battle specific glass styles
+  glassTeamBattle:
+    'bg-slate-900/40 backdrop-blur-[12px] border border-white/10',
+  glassTeamBattleLight:
+    'bg-slate-900/30 backdrop-blur-[12px] border border-white/10',
+  glassTeamBattleStrong:
+    'bg-slate-900/50 backdrop-blur-[12px] border border-white/15',
 
   // Text classes with enhanced variations
   textPrimary: 'text-white',
@@ -290,6 +440,30 @@ export const QUICK_CLASH_CLASSES = {
   teamBattleVictory: 'border-cyan-500/60 bg-cyan-500/5',
   teamBattleDefeat: 'border-red-500/60 bg-red-500/5',
   teamBattleDraw: 'border-yellow-500/60 bg-yellow-500/5',
+
+  // NEW: Team Battle Card Classes (transparent backgrounds)
+  teamBattleCard:
+    'bg-slate-900/40 backdrop-blur-[12px] border border-white/10 rounded-2xl',
+  teamBattleCardUserTeam:
+    'bg-slate-900/40 backdrop-blur-[12px] border-2 border-cyan-500/50 rounded-2xl shadow-[0_0_30px_rgba(6,182,212,0.3)]',
+  teamBattleCardOpponent:
+    'bg-slate-900/40 backdrop-blur-[12px] border-2 border-red-500/50 rounded-2xl shadow-[0_0_20px_rgba(239,68,68,0.3)]',
+
+  // NEW: Category card state classes
+  categoryAvailable:
+    'bg-slate-900/20 backdrop-blur-[8px] border-2 border-cyan-500/30 hover:border-cyan-500/50 hover:shadow-[0_0_20px_rgba(6,182,212,0.2)] active:scale-95',
+  categorySelected:
+    'bg-cyan-500/10 backdrop-blur-[8px] border-2 border-cyan-500/50 shadow-[0_0_20px_rgba(6,182,212,0.3)]',
+  categoryCompleted:
+    'bg-green-500/10 backdrop-blur-[8px] border-2 border-green-500/50 shadow-[0_0_20px_rgba(16,185,129,0.3)]',
+  categoryInProgress:
+    'bg-yellow-500/10 backdrop-blur-[8px] border-2 border-yellow-500/50 shadow-[0_0_20px_rgba(245,158,11,0.3)]',
+  categoryLocked:
+    'bg-slate-900/30 backdrop-blur-[8px] border-2 border-slate-700/30 opacity-50',
+  categoryExited:
+    'bg-red-500/10 backdrop-blur-[8px] border-2 border-red-500/50 opacity-60',
+  categoryTeammate:
+    'bg-purple-500/10 backdrop-blur-[8px] border-2 border-purple-500/50',
 
   // Avatar Group Classes
   avatarBorderUser: 'border-cyan-400 ring-2 ring-cyan-400/50',

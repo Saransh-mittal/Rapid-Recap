@@ -14,7 +14,6 @@ import rewardsReducer from './rewardsSlice'
 import demotionSummaryReducer from './demotionSummarySlice'
 import inventoryReducer from './inventorySlice'
 import quickClashReducer from './quickClashSlice'
-import quickClashMatchmakingReducer from './quickClashMatchmakingSlice'
 import quickClashDailyTasksReducer from './quickClashDailyTasksSlice'
 import quickClashTeamBattleReducer from './quickClashTeamBattleSlice'
 import quickClashGlobalMatchmakingReducer from './quickClashGlobalMatchmakingSlice'
@@ -41,7 +40,6 @@ export const store = configureStore({
     demotionSummary: demotionSummaryReducer,
     inventory: inventoryReducer,
     quickClash: quickClashReducer,
-    quickClashMatchmaking: quickClashMatchmakingReducer,
     quickClashDailyTasks: quickClashDailyTasksReducer,
     quickClashTeamBattle: quickClashTeamBattleReducer,
     quickClashGlobalMatchmaking: quickClashGlobalMatchmakingReducer,

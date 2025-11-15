@@ -2,7 +2,7 @@ const {
   scheduleEmail,
   cancelScheduledEmails,
   scheduleDayEndEmail,
-} = require('../scheduler/mail')
+} = require('../scheduler/legacy/mail')
 const MailTemplates = require('../data/MailTemplates')
 const { getTopThreeRecommendedArticles } = require('../utils/article.utils')
 

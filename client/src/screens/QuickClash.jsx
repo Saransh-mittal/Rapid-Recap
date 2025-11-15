@@ -40,11 +40,6 @@ const DailyTasksDashboard = lazy(() =>
 const TaskPopup = lazy(() =>
   import('../components/quickClashComponents/dailyTasks/TaskPopup'),
 )
-const MatchmakingModalManager = lazy(() =>
-  import(
-    '../components/quickClashComponents/matchmaking/MatchmakingModalManager'
-  ),
-)
 const FloatingActionMenu = lazy(() =>
   import('../components/quickClashComponents/FloatingActionMenu'),
 )
@@ -269,12 +264,6 @@ const QuickClash = () => {
         <div className="flex justify-center my-5">
           <Suspense fallback={<LoadingFallback />}>
             <div className="flex flex-row space-x-4 w-full max-w-2xl justify-center">
-              <MatchmakingModalManager
-                buttonTextOverride={t('SOLO')}
-                buttonWidth={{ base: '100%', md: '240px' }}
-                buttonHeight={{ base: '48px', md: '56px' }}
-                buttonMinWidth={{ base: '140px', md: '240px' }}
-              />
               <GlobalMatchmakingButton />
             </div>
           </Suspense>

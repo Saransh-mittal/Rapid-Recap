@@ -13,7 +13,7 @@ import { Users, Shield, Globe, PlayCircle, Sword } from 'lucide-react'
 import useQuickClashMatchmaking from '../../customHooks/useQuickClashMatchmaking'
 
 // Import centralized color scheme
-import { QUICK_CLASH_CLASSES } from './utils/quickClashColors'
+import { QUICK_CLASH_CLASSES } from '../../utils/quickClashColors'
 
 const MotionButton = motion.button
 const MotionDiv = motion.div

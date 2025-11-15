@@ -1,112 +1,130 @@
 // components/quickClashComponents/team/teamBattlePageComponents/TeamBattleHeader.jsx
-import React from 'react'
+import React, { useState, useEffect } from 'react'
+import { motion } from 'framer-motion'
 import {
-  HStack,
-  Button,
-  Heading,
-  Icon,
-  Flex,
-  Text,
-  Box,
-  useBreakpointValue,
-  VStack,
-} from '@chakra-ui/react'
+  differenceInSeconds,
+  differenceInMinutes,
+  differenceInHours,
+} from 'date-fns'
+import { ArrowLeft, Clock } from 'lucide-react'
 import { useTranslation } from 'react-i18next'
-import { format } from 'date-fns'
-import { Users, ArrowLeft, Clock } from 'lucide-react'
+
+// Shadcn UI Components
+import { Button } from '@/components/ui/button'
+import { Badge } from '@/components/ui/badge'
 
 /**
- * Header component for the Team Battle page (Animations Removed)
+ * Professional Team Battle Header - Compact & Efficient
+ *
+ * Design fixes:
+ * - Timer in top-right corner (not center)
+ * - Compact layout (no wasted space)
+ * - Clean typography hierarchy
+ * - Professional color scheme
  */
 const TeamBattleHeader = ({ battle, onGoBack }) => {
   const { t } = useTranslation('QuickClash')
+  const [timeRemaining, setTimeRemaining] = useState(null)
 
-  // Responsive values
-  const headerSize = useBreakpointValue({ base: 'lg', md: 'xl' })
-  const padding = useBreakpointValue({ base: 4, md: 6 })
-  const iconSize = useBreakpointValue({ base: 6, md: 8 })
+  useEffect(() => {
+    if (!battle?.expiresAt) return
+
+    const updateTimer = () => {
+      const now = new Date()
+      const expiryDate = new Date(battle.expiresAt)
+      const secondsLeft = differenceInSeconds(expiryDate, now)
+
+      if (secondsLeft <= 0) {
+        setTimeRemaining({ expired: true })
+        return
+      }
+
+      const hours = differenceInHours(expiryDate, now)
+      const minutes = differenceInMinutes(expiryDate, now) % 60
+      const seconds = secondsLeft % 60
+
+      setTimeRemaining({ hours, minutes, seconds, total: secondsLeft })
+    }
+
+    updateTimer()
+    const interval = setInterval(updateTimer, 1000)
+    return () => clearInterval(interval)
+  }, [battle?.expiresAt])
+
+  const getTimerColor = () => {
+    if (!timeRemaining || timeRemaining.expired) return 'bg-slate-600'
+    if (timeRemaining.total < 300) return 'bg-red-500'
+    if (timeRemaining.total < 1800) return 'bg-orange-500'
+    return 'bg-cyan-500'
+  }
 
   return (
-    <Flex
-      direction="column"
-      px={padding}
-      py={6}
-      mb={4}
-      position="relative"
-      overflow="hidden"
-    >
-      {/* Background glow effect */}
-      <Box
-        position="absolute"
-        top="50%"
-        left="50%"
-        transform="translate(-50%, -50%)"
-        width="150%"
-        height="200px"
-        bgGradient={`radial(circle, rgba(128, 90, 213, 0.1) 0%, transparent 70%)`}
-        filter="blur(40px)"
-        zIndex={0}
-      />
+    <div className="px-4 py-3 sm:px-6 sm:py-4">
+      <motion.div
+        initial={{ opacity: 0, y: -10 }}
+        animate={{ opacity: 1, y: 0 }}
+        className="flex items-center justify-between mb-4"
+      >
+        {/* Back button */}
+        <Button
+          onClick={onGoBack}
+          variant="ghost"
+          size="sm"
+          className="text-white/90 hover:text-white hover:bg-white/10 -ml-2"
+        >
+          <ArrowLeft className="w-4 h-4 mr-1" />
+          {t('Back')}
+        </Button>
 
-      {/* Main content container within the header card */}
-      <VStack spacing={4} align="stretch" position="relative" zIndex={1}>
-        {/* Top Row: Back Button and Expires Time */}
-        <Flex justify="space-between" align="center" w="100%">
-          <Button
-            leftIcon={<ArrowLeft size={18} />}
-            variant="ghost"
-            colorScheme="purple"
-            onClick={onGoBack}
-            size="md"
-            _hover={{
-              bg: 'rgba(128, 90, 213, 0.2)',
-            }}
-            transition="all 0.2s"
+        {/* Timer - Top right corner */}
+        {battle.expiresAt && timeRemaining && (
+          <div
+            className={`${getTimerColor()} rounded-lg px-3 py-1.5 flex items-center gap-2`}
           >
-            {t('Back to Battles')}
-          </Button>
+            <Clock className="w-3.5 h-3.5 text-white" />
+            <span className="text-sm font-bold text-white tabular-nums">
+              {timeRemaining.expired ? (
+                t('Expired')
+              ) : (
+                <>
+                  {timeRemaining.hours > 0 && `${timeRemaining.hours}:`}
+                  {String(timeRemaining.minutes).padStart(2, '0')}:
+                  {String(timeRemaining.seconds).padStart(2, '0')}
+                </>
+              )}
+            </span>
+          </div>
+        )}
+      </motion.div>
 
-          {battle.expiresAt && (
-            <HStack spacing={2} color="whiteAlpha.700" fontSize="sm">
-              <Icon as={Clock} boxSize={4} />
-              <Text>
-                {new Date(battle.expiresAt) > new Date()
-                  ? t('Expires {{time}}', {
-                      time: format(new Date(battle.expiresAt), 'MMM dd, HH:mm'),
-                    })
-                  : t('Expired {{time}}', {
-                      time: format(new Date(battle.expiresAt), 'MMM dd, HH:mm'),
-                    })}
-              </Text>
-            </HStack>
-          )}
-        </Flex>
-
-        {/* Title and Subtitle Section - Aligned to center */}
-        <VStack align="center" spacing={1}>
-          {' '}
-          {/* MODIFIED: align="center" */}
-          <HStack spacing={3}>
-            <Icon as={Users} boxSize={iconSize} color="purple.400" />
-            <Heading
-              size={headerSize}
-              color="white"
-              textShadow="0 2px 4px rgba(0,0,0,0.3)"
-            >
-              {t('4v4 Team Battle')}
-            </Heading>
-          </HStack>
-          <Text
-            color="whiteAlpha.700"
-            fontSize={{ base: 'sm', md: 'md' }}
-            fontWeight="medium"
-            // pl={iconSize + 12} // REMOVED: Padding for left alignment no longer needed
+      {/* Compact title section */}
+      <motion.div
+        initial={{ opacity: 0, y: -10 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ delay: 0.1 }}
+        className="text-center"
+      >
+        <h1 className="text-2xl sm:text-3xl font-bold text-white mb-1">
+          {t('4v4 Team Battle')}
+        </h1>
+        <p className="text-sm text-white/70">
+          {t('Challenge teams in knowledge combat')}
+        </p>
+        {battle.status && (
+          <Badge
+            className={`mt-3 ${
+              battle.status === 'active'
+                ? 'bg-green-500 hover:bg-green-600'
+                : battle.status === 'completed'
+                ? 'bg-blue-500 hover:bg-blue-600'
+                : 'bg-slate-500'
+            } text-white border-0 font-semibold`}
           >
-            {t('Challenge other teams in knowledge combat')}
-          </Text>
-        </VStack>
-      </VStack>
-    </Flex>
+            {battle.status.toUpperCase()}
+          </Badge>
+        )}
+      </motion.div>
+    </div>
   )
 }
 

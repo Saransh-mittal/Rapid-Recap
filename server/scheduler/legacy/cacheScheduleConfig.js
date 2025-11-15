@@ -1,11 +1,11 @@
 // src/scheduler/cacheScheduleConfig.js
 const {
   refreshRecentBotArticlesCache,
-} = require('./tasks/refreshBotArticleCache')
+} = require('../tasks/refreshBotArticleCache')
 const {
   refreshRecentUserArticlesCache,
-} = require('./tasks/refreshUserArticleCache')
-const refreshArticlesListCache = require('./tasks/refreshArticlesListCache')
+} = require('../tasks/refreshUserArticleCache')
+const refreshArticlesListCache = require('../tasks/refreshArticlesListCache')
 
 const cacheSchedules = [
   {

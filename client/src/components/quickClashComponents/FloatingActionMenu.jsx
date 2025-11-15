@@ -1,7 +1,7 @@
-// components/quickClashComponents/FloatingActionMenu.jsx - FAITHFUL CONVERSION to Tailwind with Blue-Cyan Color Scheme
+// components/quickClashComponents/FloatingActionMenu.jsx - FIXED STYLING VERSION
 import React, { useState, useEffect, useRef, useCallback, useMemo } from 'react'
 import { createPortal } from 'react-dom'
-import { motion, AnimatePresence } from 'framer-motion'
+import { motion, AnimatePresence, useMotionValue } from 'framer-motion'
 import { useTranslation } from 'react-i18next'
 import { Menu as MenuIcon, X, Sword, Bell, User, Trophy } from 'lucide-react'
 import { useSelector, useDispatch } from 'react-redux'
@@ -17,7 +17,11 @@ import QuickClashLeaderboardModal from './leaderboard/QuickClashLeaderboardModal
 const MotionDiv = motion.div
 const MotionButton = motion.button
 
-// Custom Toast Hook (matching previous implementations)
+// Constants
+const MENU_SIZE = 60
+const BOUNDARY_MARGIN = 10
+
+// Custom Toast Hook
 const useToast = () => {
   const showToast = useCallback(
     ({ title, description, status, duration = 2000, isClosable = true }) => {
@@ -47,14 +51,12 @@ const useToast = () => {
 
       document.body.appendChild(toastEl)
 
-      // Auto remove after duration
       setTimeout(() => {
         if (toastEl.parentNode) {
           toastEl.remove()
         }
       }, duration)
 
-      // Close button functionality
       if (isClosable) {
         const closeBtn = toastEl.querySelector('button')
         if (closeBtn) {
@@ -68,7 +70,7 @@ const useToast = () => {
   return { toast: showToast }
 }
 
-// Custom disclosure hook (replacing Chakra's useDisclosure)
+// Custom disclosure hook
 const useDisclosure = (defaultIsOpen = false) => {
   const [isOpen, setIsOpen] = useState(defaultIsOpen)
 
@@ -92,7 +94,7 @@ const Portal = ({ children }) => {
   return document.body ? createPortal(children, document.body) : null
 }
 
-// Animation variants - EXACTLY as original
+// Animation variants
 const menuItemVariants = {
   hidden: {
     opacity: 0,
@@ -105,9 +107,9 @@ const menuItemVariants = {
     x: 0,
     transition: {
       delay: i * 0.04,
-      type: 'tween',
-      duration: 0.2,
-      ease: 'easeOut',
+      type: 'spring',
+      stiffness: 400,
+      damping: 30,
     },
   }),
   exit: {
@@ -116,83 +118,35 @@ const menuItemVariants = {
     x: 20,
     transition: {
       duration: 0.15,
-      ease: 'easeIn',
     },
   },
 }
 
 const backdropVariants = {
-  hidden: {
-    opacity: 0,
-  },
-  visible: {
-    opacity: 1,
-    transition: {
-      duration: 0.2,
-      ease: 'easeOut',
-    },
-  },
-  exit: {
-    opacity: 0,
-    transition: {
-      duration: 0.15,
-      ease: 'easeIn',
-    },
-  },
+  hidden: { opacity: 0 },
+  visible: { opacity: 1, transition: { duration: 0.2 } },
+  exit: { opacity: 0, transition: { duration: 0.15 } },
 }
 
 const labelVariants = {
-  hidden: {
-    opacity: 0,
-    x: -10,
-  },
+  hidden: { opacity: 0, x: -10 },
   visible: (delay = 0) => ({
     opacity: 1,
     x: 0,
     transition: {
-      type: 'tween',
       duration: 0.15,
       delay: delay * 0.03,
     },
   }),
-  exit: {
-    opacity: 0,
-    x: -10,
-    transition: { duration: 0.1 },
-  },
-}
-
-const arrowVariants = {
-  hidden: {
-    opacity: 0,
-  },
-  visible: {
-    opacity: 0.6,
-    transition: {
-      type: 'tween',
-      duration: 0.15,
-    },
-  },
-  hover: {
-    opacity: 1,
-    x: -2,
-    transition: {
-      type: 'tween',
-      duration: 0.1,
-    },
-  },
+  exit: { opacity: 0, x: -10, transition: { duration: 0.1 } },
 }
 
 const mainButtonVariants = {
-  closed: {
-    rotate: 0,
-  },
-  open: {
-    rotate: 45,
-  },
+  closed: { rotate: 0 },
+  open: { rotate: 45 },
 }
 
-// Memoized components - EXACTLY as original logic with Tailwind styling
+// Memoized components
 const NotificationIndicator = React.memo(({ count }) => {
   if (count <= 0) return null
 
@@ -200,15 +154,8 @@ const NotificationIndicator = React.memo(({ count }) => {
     <MotionDiv
       className="absolute top-2 right-2 w-3 h-3 bg-red-500 border-2 border-white rounded-full shadow-lg z-30"
       initial={{ scale: 0 }}
-      animate={{
-        scale: 1,
-      }}
-      transition={{
-        scale: {
-          type: 'tween',
-          duration: 0.2,
-        },
-      }}
+      animate={{ scale: 1 }}
+      transition={{ duration: 0.2 }}
       style={{
         boxShadow: '0 0 8px rgba(239, 68, 68, 0.6)',
         animation: 'pulse 2s infinite',
@@ -274,10 +221,7 @@ const MenuItemBadge = React.memo(({ badge }) => {
       className="absolute -top-2 -right-1 z-[100]"
       initial={{ scale: 0 }}
       animate={{ scale: 1 }}
-      transition={{
-        type: 'tween',
-        duration: 0.2,
-      }}
+      transition={{ duration: 0.2 }}
     >
       <div
         className="min-w-[16px] h-4 flex items-center justify-center rounded-full border-2 border-white text-white font-bold text-[10px] shadow-lg"
@@ -294,21 +238,106 @@ const MenuItemBadge = React.memo(({ badge }) => {
 
 MenuItemBadge.displayName = 'MenuItemBadge'
 
-// Main component - FAITHFUL CONVERSION with blue-cyan theme
+// Main component with FIXED STYLING
 const FloatingActionMenu = ({ onNewChallenge }) => {
   const { t } = useTranslation('QuickClash')
   const dispatch = useDispatch()
   const { isOpen, onToggle, onClose } = useDisclosure()
-  const [position, setPosition] = useState({ x: 0, y: 0 })
   const [isDragging, setIsDragging] = useState(false)
   const [hoveredItem, setHoveredItem] = useState(null)
   const [isLeaderboardOpen, setIsLeaderboardOpen] = useState(false)
   const { toast } = useToast()
-  const menuRef = useRef(null)
   const navigate = useNavigate()
   const { user } = useSelector(state => state.auth)
+  const [menuAlignment, setMenuAlignment] = useState({
+    openLeft: true,
+    openTop: true,
+  })
 
-  // Memoized selectors - EXACTLY as original
+  // Use motion values for smooth dragging
+  const x = useMotionValue(0)
+  const y = useMotionValue(0)
+
+  // Get boundary constraints
+  const getBoundaries = useCallback(() => {
+    const width = window.innerWidth
+    const height = window.innerHeight
+
+    return {
+      left: BOUNDARY_MARGIN,
+      right: width - MENU_SIZE - BOUNDARY_MARGIN,
+      top: BOUNDARY_MARGIN,
+      bottom: height - MENU_SIZE - BOUNDARY_MARGIN,
+    }
+  }, [])
+
+  // Initialize position
+  useEffect(() => {
+    const boundaries = getBoundaries()
+    const initialX = boundaries.right
+    const initialY = boundaries.bottom - 50
+
+    x.set(initialX)
+    y.set(initialY)
+  }, [getBoundaries, x, y])
+
+  // Handle window resize
+  useEffect(() => {
+    const handleResize = () => {
+      const boundaries = getBoundaries()
+      const currentX = x.get()
+      const currentY = y.get()
+
+      const newX = Math.max(
+        boundaries.left,
+        Math.min(boundaries.right, currentX),
+      )
+      const newY = Math.max(
+        boundaries.top,
+        Math.min(boundaries.bottom, currentY),
+      )
+
+      x.set(newX)
+      y.set(newY)
+    }
+
+    window.addEventListener('resize', handleResize)
+    return () => window.removeEventListener('resize', handleResize)
+  }, [getBoundaries, x, y])
+
+  // Check menu alignment based on button position using motion values
+  useEffect(() => {
+    const updateAlignment = () => {
+      const currentX = x.get()
+      const currentY = y.get()
+
+      // If button is in RIGHT half of screen → open menu LEFT
+      const shouldOpenLeft = currentX > window.innerWidth / 2
+
+      // If button is in BOTTOM half of screen → open menu UP (top)
+      const shouldOpenTop = currentY > window.innerHeight / 2
+
+      setMenuAlignment({
+        openLeft: shouldOpenLeft,
+        openTop: shouldOpenTop,
+      })
+    }
+
+    // Update when menu opens or when dragging
+    const unsubscribeX = x.onChange(updateAlignment)
+    const unsubscribeY = y.onChange(updateAlignment)
+
+    if (isOpen) {
+      updateAlignment()
+    }
+
+    return () => {
+      unsubscribeX()
+      unsubscribeY()
+    }
+  }, [isOpen, x, y])
+
+  // Memoized selectors
   const notificationData = useSelector(
     state => ({
       updates: state.app.updates,
@@ -321,7 +350,6 @@ const FloatingActionMenu = ({ onNewChallenge }) => {
       prev.notification?.length === next.notification?.length,
   )
 
-  // Memoized calculations - EXACTLY as original
   const { unreadUpdatesCount, notificationCount } = useMemo(() => {
     const unreadUpdates =
       notificationData.updates?.filter(u => !u.read).length || 0
@@ -336,65 +364,35 @@ const FloatingActionMenu = ({ onNewChallenge }) => {
     }
   }, [notificationData])
 
-  // ALL ORIGINAL EFFECTS AND HANDLERS PRESERVED EXACTLY
-
-  // Load saved position on mount - EXACTLY as original
-  useEffect(() => {
-    const savedPosition = localStorage.getItem('floatingMenuPosition')
-    if (savedPosition) {
-      try {
-        const parsed = JSON.parse(savedPosition)
-        setPosition(parsed)
-      } catch {
-        setPosition({ x: window.innerWidth - 70, y: window.innerHeight - 160 })
-      }
-    } else {
-      setPosition({ x: window.innerWidth - 70, y: window.innerHeight - 160 })
+  // Calculate drag constraints
+  const dragConstraints = useMemo(() => {
+    const boundaries = getBoundaries()
+    return {
+      left: boundaries.left,
+      right: boundaries.right,
+      top: boundaries.top,
+      bottom: boundaries.bottom,
     }
-  }, [])
+  }, [getBoundaries])
 
-  // Debounced position save - EXACTLY as original
-  const savePositionTimeoutRef = useRef()
-  useEffect(() => {
-    if (!isDragging) {
-      clearTimeout(savePositionTimeoutRef.current)
-      savePositionTimeoutRef.current = setTimeout(() => {
-        localStorage.setItem('floatingMenuPosition', JSON.stringify(position))
-      }, 100)
-    }
-  }, [position, isDragging])
-
-  // Event handlers - EXACTLY as original
+  // Drag handlers
   const handleDragStart = useCallback(() => {
     setIsDragging(true)
     onClose()
   }, [onClose])
 
-  const handleDragEnd = useCallback((_, info) => {
+  const handleDragEnd = useCallback(() => {
     setIsDragging(false)
-    setPosition(prevPosition => {
-      const newX = Math.max(
-        20,
-        Math.min(window.innerWidth - 70, prevPosition.x + info.offset.x),
-      )
-      const newY = Math.max(
-        20,
-        Math.min(window.innerHeight - 70, prevPosition.y + info.offset.y),
-      )
-      return { x: newX, y: newY }
-    })
   }, [])
 
   const handleResetPosition = useCallback(() => {
-    const defaultPosition = {
-      x: window.innerWidth - 80,
-      y: window.innerHeight - 100,
-    }
-    setPosition(defaultPosition)
-    localStorage.setItem(
-      'floatingMenuPosition',
-      JSON.stringify(defaultPosition),
-    )
+    const boundaries = getBoundaries()
+    const defaultX = boundaries.right
+    const defaultY = boundaries.bottom - 100
+
+    x.set(defaultX)
+    y.set(defaultY)
+
     toast({
       title: t('Position Reset'),
       description: t('Menu position has been reset to default'),
@@ -402,9 +400,9 @@ const FloatingActionMenu = ({ onNewChallenge }) => {
       duration: 2000,
       isClosable: true,
     })
-  }, [toast, t])
+  }, [toast, t, getBoundaries, x, y])
 
-  // Click handlers - EXACTLY as original
+  // Click handlers
   const clickHandlers = useMemo(
     () => ({
       newChallenge: () => {
@@ -433,26 +431,16 @@ const FloatingActionMenu = ({ onNewChallenge }) => {
     setIsLeaderboardOpen(false)
   }, [])
 
-  // Menu items with updated blue-cyan harmonious colors
+  // Menu items
   const menuItems = useMemo(
     () => [
-      {
-        id: 'challenge',
-        label: t('New Challenge'),
-        icon: Sword,
-        onClick: clickHandlers.newChallenge,
-        gradient:
-          'linear-gradient(135deg, #EF4444 0%, #DC2626 50%, #B91C1C 100%)', // Red for challenge action
-        accentColor: '#EF4444',
-        shadowColor: 'rgba(239, 68, 68, 0.4)',
-      },
       {
         id: 'profile',
         label: t('Quick Profile'),
         icon: User,
         onClick: clickHandlers.profile,
         gradient:
-          'linear-gradient(135deg, #06B6D4 0%, #0891B2 50%, #0E7490 100%)', // Blue-cyan theme
+          'linear-gradient(135deg, #06B6D4 0%, #0891B2 50%, #0E7490 100%)',
         accentColor: '#06B6D4',
         shadowColor: 'rgba(6, 182, 212, 0.4)',
       },
@@ -462,7 +450,7 @@ const FloatingActionMenu = ({ onNewChallenge }) => {
         icon: Bell,
         onClick: clickHandlers.inbox,
         gradient:
-          'linear-gradient(135deg, #0EA5E9 0%, #0284C7 50%, #0369A1 100%)', // Blue theme
+          'linear-gradient(135deg, #0EA5E9 0%, #0284C7 50%, #0369A1 100%)',
         accentColor: '#0EA5E9',
         shadowColor: 'rgba(14, 165, 233, 0.4)',
         badge: notificationCount > 0 ? notificationCount : null,
@@ -473,7 +461,7 @@ const FloatingActionMenu = ({ onNewChallenge }) => {
         icon: Trophy,
         onClick: clickHandlers.leaderboard,
         gradient:
-          'linear-gradient(135deg, #F59E0B 0%, #D97706 50%, #B45309 100%)', // Gold for trophy (semantic)
+          'linear-gradient(135deg, #F59E0B 0%, #D97706 50%, #B45309 100%)',
         accentColor: '#F59E0B',
         shadowColor: 'rgba(245, 158, 11, 0.4)',
       },
@@ -483,11 +471,11 @@ const FloatingActionMenu = ({ onNewChallenge }) => {
 
   return (
     <Portal>
-      {/* Backdrop Overlay */}
+      {/* Backdrop */}
       <AnimatePresence>
         {isOpen && (
           <MotionDiv
-            className="fixed inset-0 z-[99] cursor-pointer"
+            className="fixed inset-0 z-[9998] cursor-pointer"
             style={{
               background: 'rgba(0, 0, 0, 0.5)',
               backdropFilter: 'blur(15px)',
@@ -501,47 +489,43 @@ const FloatingActionMenu = ({ onNewChallenge }) => {
         )}
       </AnimatePresence>
 
-      {/* Main Floating Menu Container */}
+      {/* Draggable Menu using Motion Values */}
       <MotionDiv
-        ref={menuRef}
-        className="fixed top-[60px] z-[100] select-none matchmaking-floating-menu"
         drag
         dragMomentum={false}
-        dragElastic={0.1}
+        dragElastic={0}
+        dragConstraints={dragConstraints}
         onDragStart={handleDragStart}
         onDragEnd={handleDragEnd}
-        initial={{ x: position.x, y: position.y }}
-        animate={{ x: position.x, y: position.y }}
-        transition={{ type: 'tween', duration: 0.2 }}
+        className="fixed z-[9999] matchmaking-floating-menu"
+        style={{
+          left: 0,
+          top: 0,
+          x,
+          y,
+          cursor: isDragging ? 'grabbing' : 'grab',
+          touchAction: 'none',
+        }}
       >
         {/* Main Button */}
         <MotionButton
-          className={`
-            w-[60px] h-[60px] rounded-full text-white relative overflow-hidden
-            shadow-xl hover:scale-[1.03] active:scale-95 transition-transform
-            select-none focus:outline-none focus:ring-2 focus:ring-cyan-400/50
-          `}
+          className="w-[60px] h-[60px] rounded-full text-white relative overflow-hidden shadow-xl select-none focus:outline-none focus:ring-2 focus:ring-cyan-400/50"
           style={{
             background: isOpen
-              ? 'linear-gradient(to bottom right, #EF4444, #DC2626)'
-              : 'linear-gradient(to bottom right, #06B6D4, #0891B2)',
-            boxShadow: '0 5px 15px rgba(0,0,0,0.3)',
+              ? 'linear-gradient(135deg, #EF4444, #DC2626)'
+              : 'linear-gradient(135deg, #06B6D4, #0891B2)',
+            boxShadow: isDragging
+              ? '0 12px 30px rgba(0,0,0,0.5)'
+              : '0 5px 15px rgba(0,0,0,0.3)',
           }}
           onClick={onToggle}
           variants={mainButtonVariants}
           animate={isOpen ? 'open' : 'closed'}
-          transition={{
-            type: 'tween',
-            duration: 0.2,
-          }}
-          whileHover={{ scale: 1.03 }}
-          whileTap={{ scale: 0.95 }}
+          whileHover={!isDragging ? { scale: 1.05 } : {}}
+          whileTap={!isDragging ? { scale: 0.95 } : {}}
           onDoubleClick={handleResetPosition}
         >
-          {/* Notification Indicator */}
           <NotificationIndicator count={unreadUpdatesCount} />
-
-          {/* Floating Particles */}
           {!isOpen && <FloatingParticles />}
 
           <div className="flex items-center justify-center w-full h-full z-20">
@@ -553,10 +537,20 @@ const FloatingActionMenu = ({ onNewChallenge }) => {
           </div>
         </MotionButton>
 
-        {/* Action Menu Items */}
+        {/* Menu Items - Simple Positioning */}
         <AnimatePresence mode="wait">
           {isOpen && (
-            <div className="absolute bottom-[70px] right-[5px] flex flex-col gap-2.5 items-end select-none">
+            <div
+              className={`
+                absolute flex flex-col gap-3 pointer-events-auto w-max
+                ${menuAlignment.openTop ? 'bottom-[70px]' : 'top-[70px]'}
+                ${
+                  menuAlignment.openLeft
+                    ? '-translate-x-[calc(100%+50px)]'
+                    : 'translate-x-0'
+                }
+              `}
+            >
               {menuItems.map((item, index) => {
                 const IconComponent = item.icon
                 return (
@@ -569,128 +563,82 @@ const FloatingActionMenu = ({ onNewChallenge }) => {
                     exit="exit"
                     onHoverStart={() => setHoveredItem(item.id)}
                     onHoverEnd={() => setHoveredItem(null)}
-                    whileHover={{
-                      scale: 1.01,
-                      y: -1,
-                      transition: { type: 'tween', duration: 0.1 },
-                    }}
+                    whileHover={{ scale: 1.02, y: -2 }}
                   >
                     <div
                       className={`
-                        ${QUICK_CLASH_CLASSES.glassLight} backdrop-blur-[20px]
-                        rounded-xl border border-white/10 px-3 py-2.5 w-[220px] h-[44px]
-                        cursor-pointer transition-all duration-200 relative overflow-visible
-                        hover:bg-white/8 hover:-translate-y-0.5
+                        ${QUICK_CLASH_CLASSES.glassLight} backdrop-blur-xl
+                        rounded-lg border border-white/10 px-4 py-3
+                        cursor-pointer transition-all duration-200 relative
+                        hover:bg-white/10 hover:border-white/20
+                        flex items-center justify-between gap-3 min-w-max
                       `}
                       onClick={item.onClick}
                       style={{
                         boxShadow:
-                          '0 4px 20px rgba(0, 0, 0, 0.08), inset 0 1px 0 rgba(255, 255, 255, 0.05)',
+                          '0 4px 20px rgba(0, 0, 0, 0.15), inset 0 1px 0 rgba(255, 255, 255, 0.05)',
                       }}
-                      onMouseEnter={() => {
-                        const el = document.querySelector(
-                          `[data-menu-item="${item.id}"]`,
-                        )
-                        if (el) {
-                          el.style.borderColor = item.accentColor
-                          el.style.boxShadow = `0 6px 24px rgba(0, 0, 0, 0.12), 0 0 0 1px ${item.accentColor}30`
-                        }
+                      onMouseEnter={e => {
+                        e.currentTarget.style.borderColor = item.accentColor
+                        e.currentTarget.style.boxShadow = `0 6px 24px rgba(0, 0, 0, 0.2), 0 0 0 1px ${item.accentColor}40`
+                        e.currentTarget.style.backgroundColor =
+                          'rgba(255, 255, 255, 0.12)'
                       }}
-                      onMouseLeave={() => {
-                        const el = document.querySelector(
-                          `[data-menu-item="${item.id}"]`,
-                        )
-                        if (el) {
-                          el.style.borderColor = 'rgba(255, 255, 255, 0.1)'
-                          el.style.boxShadow =
-                            '0 4px 20px rgba(0, 0, 0, 0.08), inset 0 1px 0 rgba(255, 255, 255, 0.05)'
-                        }
+                      onMouseLeave={e => {
+                        e.currentTarget.style.borderColor =
+                          'rgba(255, 255, 255, 0.1)'
+                        e.currentTarget.style.boxShadow =
+                          '0 4px 20px rgba(0, 0, 0, 0.15), inset 0 1px 0 rgba(255, 255, 255, 0.05)'
+                        e.currentTarget.style.backgroundColor =
+                          'rgba(15, 23, 42, 0.2)'
                       }}
-                      data-menu-item={item.id}
                     >
-                      <div className="flex items-center justify-between w-full h-full gap-2">
-                        {/* Label */}
-                        <MotionDiv
-                          variants={labelVariants}
-                          initial="hidden"
-                          animate="visible"
-                          exit="exit"
-                          custom={index}
-                          className="flex-1 min-w-0"
+                      {/* Text Label */}
+                      <MotionDiv
+                        variants={labelVariants}
+                        initial="hidden"
+                        animate="visible"
+                        exit="exit"
+                        custom={index}
+                        className="flex-1"
+                      >
+                        <span
+                          className="text-sm font-semibold text-white tracking-wide whitespace-nowrap"
+                          style={{ textShadow: '0 1px 3px rgba(0,0,0,0.5)' }}
                         >
-                          <span
-                            className="text-sm font-semibold text-white whitespace-nowrap tracking-wide"
-                            style={{ textShadow: '0 1px 4px rgba(0,0,0,0.4)' }}
-                          >
-                            {item.label}
-                          </span>
-                        </MotionDiv>
+                          {item.label}
+                        </span>
+                      </MotionDiv>
 
-                        {/* Arrow */}
-                        <MotionDiv
-                          variants={arrowVariants}
-                          initial="hidden"
-                          animate="visible"
-                          whileHover={
-                            hoveredItem === item.id ? 'hover' : 'visible'
-                          }
-                          custom={index}
-                          className="flex-shrink-0 mx-1"
+                      {/* Icon Button */}
+                      <div className="relative flex-shrink-0">
+                        <button
+                          onClick={item.onClick}
+                          className="w-8 h-8 rounded-lg border border-white/15 relative z-10 flex items-center justify-center transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-offset-slate-900/50"
+                          style={{
+                            background: item.gradient,
+                            boxShadow: `0 3px 12px ${item.shadowColor}`,
+                          }}
+                          onMouseEnter={e => {
+                            e.currentTarget.style.boxShadow = `0 5px 16px ${item.shadowColor}`
+                            e.currentTarget.style.transform = 'translateY(-2px)'
+                          }}
+                          onMouseLeave={e => {
+                            e.currentTarget.style.boxShadow = `0 3px 12px ${item.shadowColor}`
+                            e.currentTarget.style.transform = 'translateY(0)'
+                          }}
                         >
-                          <div className="relative w-5 h-1.5 flex items-center">
-                            <div
-                              className="w-6 h-1.5 rounded-full"
-                              style={{
-                                background: `linear-gradient(to left, ${item.accentColor}, ${item.accentColor}60)`,
-                                boxShadow: `0 0 4px ${item.accentColor}40`,
-                              }}
-                            />
-                            <div
-                              className="absolute left-0 w-0 h-0 border-t-[3px] border-b-[3px] border-r-[5px]"
-                              style={{
-                                borderTopColor: 'transparent',
-                                borderBottomColor: 'transparent',
-                                borderRightColor: item.accentColor,
-                                filter: `drop-shadow(0 0 2px ${item.accentColor}40)`,
-                              }}
-                            />
-                          </div>
-                        </MotionDiv>
-
-                        {/* Button */}
-                        <div className="relative flex-shrink-0">
-                          <button
-                            onClick={item.onClick}
-                            className={`
-                              w-9 h-9 rounded-[10px] border border-white/15 relative z-10
-                              flex items-center justify-center
-                              hover:-translate-y-0.5 active:scale-95 transition-all duration-200
-                              cursor-pointer select-none focus:outline-none focus:ring-2 focus:ring-cyan-400/50
-                            `}
+                          <div
+                            className="absolute inset-0 rounded-lg pointer-events-none"
                             style={{
-                              background: item.gradient,
-                              boxShadow: `0 2px 12px ${item.shadowColor}`,
+                              background:
+                                'linear-gradient(135deg, rgba(255, 255, 255, 0.15), transparent)',
                             }}
-                            onMouseEnter={e => {
-                              e.currentTarget.style.boxShadow = `0 4px 16px ${item.shadowColor}`
-                            }}
-                            onMouseLeave={e => {
-                              e.currentTarget.style.boxShadow = `0 2px 12px ${item.shadowColor}`
-                            }}
-                          >
-                            {/* Glassmorphism overlay */}
-                            <div
-                              className="absolute inset-0 rounded-[10px] pointer-events-none"
-                              style={{
-                                background:
-                                  'linear-gradient(135deg, rgba(255, 255, 255, 0.1), transparent)',
-                              }}
-                            />
-                            <IconComponent className="w-4 h-4 text-white relative z-10" />
-                          </button>
+                          />
+                          <IconComponent className="w-4 h-4 text-white relative z-10" />
+                        </button>
 
-                          <MenuItemBadge badge={item.badge} />
-                        </div>
+                        <MenuItemBadge badge={item.badge} />
                       </div>
                     </div>
                   </MotionDiv>
