@@ -620,24 +620,35 @@ const rejectChallenge = async ({ challengeId, userId }) => {
 const getChallengeDetails = async ({ challengeId }) => {
   const challenge = await QuickClashChallenge.findById(challengeId)
     .populate('challenger opponent')
+    .populate('forgeArticle') // Add forge article population
     .populate({
       path: 'article.sourceArticles',
       select: 'title dateTime category',
     })
 
+  if (!challenge) {
+    throw new Error('Challenge not found')
+  }
+
+  const challengeObj = challenge.toObject()
+
+  // Check if this is a forge challenge
+  if (challengeObj.forgeArticle) {
+    // Forge challenge - no highlights needed
+    // Forge article already populated with all sections
+    return challengeObj
+  }
+
+  // Traditional challenge - get highlights
   const [hindiHighlights, englishHighlights] = await Promise.all([
     getQuickClashHighlights({ challengeId, lang: 'hi' }),
     getQuickClashHighlights({ challengeId, lang: 'en' }),
   ])
 
-  if (!challenge) {
-    throw new Error('Challenge not found')
-  }
   if (!hindiHighlights || !englishHighlights) {
     throw new Error('Highlights not found')
   }
 
-  const challengeObj = challenge.toObject()
   challengeObj.article.hindiImportantSentences =
     hindiHighlights.importantSentences
   challengeObj.article.englishImportantSentences =

@@ -29,6 +29,11 @@ const {
   calculatePotentialTrophyExchangeController,
   getUserCombinedTrophyHistoryController,
   getWinProbabilityExplanation,
+  startForgeSession,
+  submitForgeSectionAnswer,
+  moveToNextForgeSection,
+  getForgeSessionSummary,
+  getForgeReviewController,
 } = require('../controllers/quickClashController')
 const {
   joinMatchmakingRoom,
@@ -147,5 +152,20 @@ router.get('/rqm-analysis', getDetailedRQMAnalysis)
 
 // NEW: Global RQM statistics route (public data)
 router.get('/global-stats', getGlobalRQMStats)
+
+// Start forge mode for a session
+router.post('/session/:sessionId/forge/start', startForgeSession)
+
+// Submit answer for current forge section
+router.post('/session/:sessionId/forge/answer', submitForgeSectionAnswer)
+
+// Advance to next forge section (after reading)
+router.post('/session/:sessionId/forge/next', moveToNextForgeSection)
+
+// Get forge session summary
+router.get('/session/:sessionId/forge/summary', getForgeSessionSummary)
+
+// Get forge review (full article after completion)
+router.get('/session/:sessionId/forge/review', getForgeReviewController)
 
 module.exports = router

@@ -299,6 +299,12 @@ export const QUICK_CLASH_CLASSES = {
   glassTeamBattleStrong:
     'bg-slate-900/50 backdrop-blur-[12px] border border-white/15',
 
+  // NEW: Quiz specific glass styles
+  glassQuiz:
+    'bg-slate-900/40 backdrop-blur-[20px] border border-white/10 shadow-[0_8px_32px_0_rgba(0,0,0,0.37)]',
+  glassQuizCard:
+    'bg-gradient-to-br from-white/10 to-white/5 backdrop-blur-[20px] border border-white/20 shadow-2xl',
+
   // Text classes with enhanced variations
   textPrimary: 'text-white',
   textSecondary: 'text-white/70',

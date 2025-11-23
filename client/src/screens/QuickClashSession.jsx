@@ -42,11 +42,20 @@ import { fetchActiveChallenges } from '../redux/quickClashSlice'
 
 // Lazy-loaded components with loading fallbacks
 const ReadingPhase = lazy(() =>
-  import('../components/quickClashComponents/ReadingPhase'),
+  import('../components/quickClashComponents/legacy/ReadingPhase'),
+)
+
+// NEW: Forge Mode Component
+const ForgeReadingPhase = lazy(() =>
+  import('../components/quickClashComponents/forge/ForgeReadingPhase'),
 )
 
 const QuickClashQuiz = lazy(() =>
   import('../components/quickClashComponents/QuickClashQuiz'),
+)
+
+const GamifiedQuiz = lazy(() =>
+  import('../components/quizComponents/GamifiedQuiz'),
 )
 
 // Memoized loading fallback component
@@ -60,6 +69,10 @@ LoadingFallback.displayName = 'LoadingFallback'
 // Memoized TimerHeader component for better performance
 const TimerHeader = memo(
   ({ phase, challenge, timeLeft, quizTimeLeft, phaseProgress, t }) => {
+    // Check if this is forge mode (don't show reading timer for forge)
+    const isForgeMode = challenge?.forgeArticle
+    const showReadingTimer = phase === 'reading' && !isForgeMode
+
     // Memoize phase info calculation
     const phaseInfo = useMemo(() => {
       switch (phase) {
@@ -72,7 +85,7 @@ const TimerHeader = memo(
           }
         case 'reading':
           return {
-            label: t('Reading Phase'),
+            label: isForgeMode ? t('Forge Mode') : t('Reading Phase'),
             totalTime: 120,
             currentTime: timeLeft,
             colorScheme: timeLeft <= 30 ? 'red' : 'blue',
@@ -99,7 +112,7 @@ const TimerHeader = memo(
             colorScheme: 'gray',
           }
       }
-    }, [phase, timeLeft, quizTimeLeft, t])
+    }, [phase, timeLeft, quizTimeLeft, t, isForgeMode])
 
     const categoryInfo = useMemo(() => {
       return challenge?.category ? getCategoryInfo(challenge.category) : null
@@ -107,16 +120,16 @@ const TimerHeader = memo(
 
     return (
       <Box
-        position="sticky"
         top={0}
         zIndex={100}
         w="100%"
-        bg="rgba(13, 10, 20, 0.9)"
-        backdropFilter="blur(8px)"
-        borderBottom="1px solid"
+        bg={isForgeMode ? 'transparent' : 'rgba(13, 10, 20, 0.9)'}
+        backdropFilter={isForgeMode ? 'none' : 'blur(8px)'}
+        borderBottom={isForgeMode ? 'none' : '1px solid'}
         borderColor="whiteAlpha.100"
         py={3}
         px={4}
+        position={isForgeMode ? 'absolute' : 'sticky'}
       >
         <VStack spacing={2} w="100%">
           <Flex w="100%" justifyContent="space-between" align="center">
@@ -125,16 +138,36 @@ const TimerHeader = memo(
                 <CategoryIcon categoryInfo={categoryInfo} />
               )}
               <Badge
-                colorScheme="purple"
+                colorScheme={isForgeMode ? 'whiteAlpha' : 'purple'}
+                variant={isForgeMode ? 'solid' : 'subtle'}
+                bg={isForgeMode ? 'whiteAlpha.200' : undefined}
+                color={isForgeMode ? 'white' : undefined}
                 p={categoryInfo ? 1.5 : 2}
                 borderRadius="md"
                 fontSize="sm"
+                backdropFilter={isForgeMode ? 'blur(10px)' : undefined}
+                border={isForgeMode ? '1px solid rgba(255,255,255,0.1)' : undefined}
               >
                 {challenge?.category || t('Quick Clash')}
+                {isForgeMode && ' - Forge Mode'}
               </Badge>
             </HStack>
 
             <HStack>
+              {/* Only show reading timer for traditional mode */}
+              {showReadingTimer && phaseInfo.currentTime !== null && (
+                <Badge
+                  colorScheme={phaseInfo.colorScheme}
+                  p={2}
+                  borderRadius="md"
+                  fontSize="sm"
+                >
+                  {Math.floor(phaseInfo.currentTime / 60)}:
+                  {(phaseInfo.currentTime % 60).toString().padStart(2, '0')}
+                </Badge>
+              )}
+
+              {/* Quiz timer */}
               {phase === 'quiz' && phaseInfo.currentTime !== null && (
                 <Badge
                   colorScheme={phaseInfo.colorScheme}
@@ -149,7 +182,8 @@ const TimerHeader = memo(
             </HStack>
           </Flex>
 
-          {(phase === 'reading' || phase === 'quiz') && (
+          {/* Progress bar - skip for forge mode in reading phase */}
+          {((phase === 'reading' && !isForgeMode) || phase === 'quiz') && (
             <Progress
               value={
                 phase === 'reading'
@@ -170,6 +204,14 @@ const TimerHeader = memo(
   },
 )
 TimerHeader.displayName = 'TimerHeader'
+
+// Module-level cache for active session initialization promises
+// This prevents double-initialization in React Strict Mode where the component remounts
+// but we want the network request to happen exactly once per challengeId
+const activeSessionPromises = {}
+
+// Stable no-op function to prevent re-renders
+const NO_OP = () => {}
 
 // Main component with optimization but preserved logic
 const QuickClashSession = () => {
@@ -223,8 +265,13 @@ const QuickClashSession = () => {
 
   const readingStartTimeRef = useRef(null)
 
-  // ORIGINAL INITIALIZATION LOGIC - PRESERVED
+  // MODIFIED INITIALIZATION LOGIC - WITH FORGE MODE DETECTION AND DEDUPLICATION
   const initSession = useCallback(async () => {
+    // If we already have a session for this challenge, don't re-initialize
+    if (session && session?.challengeId === challengeId) {
+      return
+    }
+
     try {
       setLoading(true)
       setPhase('loading')
@@ -237,39 +284,66 @@ const QuickClashSession = () => {
       setChallenge(fetchedChallenge)
       setActiveChallenge(fetchedChallenge)
 
-      // Start the session using our Redux action
-      const currentSession = await startSession(
-        challengeId,
-        user?.userLanguage || 'en',
-      )
+      // Handle session creation with deduplication
+      let currentSession
 
-      // Initialize article data
-      setArticle(
-        user?.userLanguage === 'en' || !user?.userLanguage
-          ? {
-              title: fetchedChallenge.article.title.english,
-              content: fetchedChallenge.article.content.english,
-              importantSentences:
-                fetchedChallenge.article.englishImportantSentences,
-              dictionary: fetchedChallenge.article.englishDictionary,
-            }
-          : {
-              title: fetchedChallenge.article.title.hindi,
-              content: fetchedChallenge.article.content.hindi,
-              importantSentences:
-                fetchedChallenge.article.hindiImportantSentences,
-              dictionary: fetchedChallenge.article.hindiDictionary,
-            },
-      )
+      // Check if we already have a promise for this challenge
+      if (activeSessionPromises[challengeId]) {
+        console.log('Using existing session promise for', challengeId)
+        currentSession = await activeSessionPromises[challengeId]
+      } else {
+        // Create a new promise and cache it
+        console.log('Creating new session promise for', challengeId)
+        const sessionPromise = startSession(
+          challengeId,
+          user?.userLanguage || 'en',
+        )
 
-      // Move to reading phase after loading
-      setPhase('reading')
-      readingStartTimeRef.current = Date.now()
+        activeSessionPromises[challengeId] = sessionPromise
 
-      // Start reading phase on the server
-      await axios.post(
-        `/api/quickClash/session/${currentSession._id}/reading/start`,
-      )
+        try {
+          currentSession = await sessionPromise
+        } catch (err) {
+          // If it fails, remove from cache so we can try again
+          delete activeSessionPromises[challengeId]
+          throw err
+        }
+      }
+
+      // NEW: Check if this is a forge mode challenge
+      if (fetchedChallenge.forgeArticle) {
+        // This is Forge Mode - skip article initialization
+        console.log('🔨 Forge Mode detected - using interactive reading')
+        setPhase('reading') // Will use ForgeReadingPhase component
+      } else {
+        // Traditional mode - initialize article as before
+        setArticle(
+          user?.userLanguage === 'en' || !user?.userLanguage
+            ? {
+                title: fetchedChallenge.article.title.english,
+                content: fetchedChallenge.article.content.english,
+                importantSentences:
+                  fetchedChallenge.article.englishImportantSentences,
+                dictionary: fetchedChallenge.article.englishDictionary,
+              }
+            : {
+                title: fetchedChallenge.article.title.hindi,
+                content: fetchedChallenge.article.content.hindi,
+                importantSentences:
+                  fetchedChallenge.article.hindiImportantSentences,
+                dictionary: fetchedChallenge.article.hindiDictionary,
+              },
+        )
+
+        // Move to reading phase after loading
+        setPhase('reading')
+        readingStartTimeRef.current = Date.now()
+
+        // Start reading phase on the server (traditional mode only)
+        await axios.post(
+          `/api/quickClash/session/${currentSession._id}/reading/start`,
+        )
+      }
 
       setError(null)
     } catch (err) {
@@ -288,16 +362,18 @@ const QuickClashSession = () => {
     setActiveChallenge,
     startSession,
     reduxSessionError,
+    session,
   ])
 
-  // ORIGINAL READING COMPLETION LOGIC - PRESERVED
+  // MODIFIED READING COMPLETION LOGIC - HANDLES BOTH MODES
   const handleReadingComplete = useCallback(async () => {
     setCompleteReadingLoading(true)
     try {
+      // Call the API to mark reading as complete and switch phase to 'quiz'
+      // This works for both Traditional and Forge modes
       await axios.post(
-        `/api/quickClash/session/${session._id}/reading/complete`,
+        `/api/quickClash/session/${session?._id}/reading/complete`,
       )
-      // Go directly to quiz phase after reading is complete
       setPhase('quiz')
       setPhaseProgress(0)
     } catch (error) {
@@ -366,8 +442,12 @@ const QuickClashSession = () => {
 
   // Effect for session initialization
   useEffect(() => {
+    console.log('Running init session')
     initSession()
     return () => {
+      // Only clear session on unmount, but keep the promise in cache for a bit
+      // in case of immediate remount (Strict Mode)
+      // We don't delete from activeSessionPromises here to handle the remount
       endSession()
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -382,7 +462,7 @@ const QuickClashSession = () => {
       const assignment = JSON.parse(storedAssignment)
 
       if (
-        assignment.userId !== user._id ||
+        assignment.userId !== user?._id ||
         Date.now() - assignment.timestamp > 30 * 60 * 1000
       ) {
         navigate('/quickclash')
@@ -396,10 +476,14 @@ const QuickClashSession = () => {
         return
       }
     }
-  }, [params.challengeId, user._id, navigate, toast])
+  }, [params.challengeId, user?._id, navigate, toast])
 
-  // ORIGINAL READING TIMER LOGIC - PRESERVED
+  // MODIFIED READING TIMER LOGIC - SKIP FOR FORGE MODE
   useEffect(() => {
+    // Skip timer for Forge Mode - it has its own internal timers
+    if (challenge?.forgeArticle) return
+
+    // Traditional reading timer
     if (phase !== 'reading' || !session) return
 
     const timer = setInterval(() => {
@@ -420,7 +504,7 @@ const QuickClashSession = () => {
 
     return () => clearInterval(timer)
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [phase, session])
+  }, [phase, session, challenge])
 
   // ORIGINAL BROWSER NAVIGATION PREVENTION - PRESERVED
   useBeforeUnload(
@@ -489,41 +573,142 @@ const QuickClashSession = () => {
   }
 
   return (
-    <Box minH="100vh" bg="rgba(13, 10, 20, 0.98)">
-      <TimerHeader
-        phase={phase}
-        challenge={challenge}
-        timeLeft={timeLeft}
-        quizTimeLeft={quizTimeLeft}
-        phaseProgress={phaseProgress}
-        t={t}
+    <Flex
+      direction="column"
+      h="100dvh"
+      bg="slate.900"
+      position="relative"
+      overflow="hidden"
+      _before={{
+        content: '""',
+        position: 'absolute',
+        top: 0,
+        left: 0,
+        right: 0,
+        bottom: 0,
+        bgGradient: 'linear(to-br, blue.900, slate.900, purple.900)',
+        opacity: 0.6,
+        zIndex: 0,
+      }}
+    >
+      {/* Animated Background Elements */}
+      <Box
+        position="absolute"
+        top="-20%"
+        left="-10%"
+        w="60%"
+        h="60%"
+        bgGradient="radial(circle, cyan.500 0%, transparent 70%)"
+        filter="blur(120px)"
+        opacity={0.2}
+        zIndex={0}
+        as={motion.div}
+        animate={{
+          scale: [1, 1.2, 1],
+          opacity: [0.2, 0.3, 0.2],
+        }}
+        transition={{
+          duration: 10,
+          repeat: Infinity,
+          ease: 'easeInOut',
+        }}
+      />
+      <Box
+        position="absolute"
+        bottom="-20%"
+        right="-10%"
+        w="60%"
+        h="60%"
+        bgGradient="radial(circle, purple.500 0%, transparent 70%)"
+        filter="blur(120px)"
+        opacity={0.2}
+        zIndex={0}
+        as={motion.div}
+        animate={{
+          scale: [1, 1.2, 1],
+          opacity: [0.2, 0.3, 0.2],
+        }}
+        transition={{
+          duration: 15,
+          repeat: Infinity,
+          ease: 'easeInOut',
+          delay: 2,
+        }}
       />
 
-      <Container maxW="container.lg" py={4} px={{ base: 2, md: 4 }}>
-        <VStack spacing={6} align="stretch">
+      {/* Hide TimerHeader in Forge Mode - it has its own integrated header */}
+      {!challenge?.forgeArticle && (
+        <Box flex="none" zIndex={10}>
+          <TimerHeader
+            phase={phase}
+            challenge={challenge}
+            timeLeft={timeLeft}
+            quizTimeLeft={quizTimeLeft}
+            phaseProgress={phaseProgress}
+            t={t}
+          />
+        </Box>
+      )}
+
+      <Container
+        maxW="container.lg"
+        flex="1"
+        h="auto"
+        py={phase === 'reading' && challenge?.forgeArticle ? 0 : 4}
+        px={{ base: 2, md: 4 }}
+        position="relative"
+        zIndex={1}
+        display="flex"
+        flexDirection="column"
+        overflow="hidden"
+      >
+        <VStack spacing={6} align="stretch" h="full" overflow="hidden">
           {phase === 'loading' && loadingScreen}
 
-          {phase === 'reading' && article && (
+          {/* MODIFIED: Conditional rendering for reading phase */}
+          {phase === 'reading' && (
             <Suspense fallback={<LoadingFallback />}>
-              <ReadingPhase
-                category={catTranslate(challenge?.category)}
-                article={article}
-                timeLeft={timeLeft}
-                onComplete={handleReadingComplete}
-                completeReadingLoading={completeReadingLoading}
-              />
+              {challenge?.forgeArticle ? (
+                // NEW: Forge Mode - Interactive Reading
+                <ForgeReadingPhase
+                  sessionId={session?._id}
+                  category={challenge?.category}
+                  onComplete={handleReadingComplete}
+                  onError={error => {
+                    setError(error)
+                    toast({
+                      title: t('Error'),
+                      description: error,
+                      status: 'error',
+                      duration: 5000,
+                      isClosable: true,
+                    })
+                  }}
+                />
+              ) : (
+                // EXISTING: Traditional Reading Phase
+                article && (
+                  <ReadingPhase
+                    category={catTranslate(challenge?.category)}
+                    article={article}
+                    timeLeft={timeLeft}
+                    onComplete={handleReadingComplete}
+                    completeReadingLoading={completeReadingLoading}
+                  />
+                )
+              )}
             </Suspense>
           )}
 
           {phase === 'quiz' && session && (
             <Suspense fallback={<LoadingFallback />}>
-              <QuickClashQuiz
-                sessionId={session._id}
+              <GamifiedQuiz
+                sessionId={session?._id}
                 onComplete={handleQuizComplete}
-                setStopTimerOnQuizSubmit={() => {}} // Placeholder, original prop was setStopTimerOnQuizSubmit
+                setStopTimerOnQuizSubmit={NO_OP}
                 quizTimeLeft={quizTimeLeft}
                 setQuizTimeLeft={setQuizTimeLeft}
-                setLoadingQuiz={() => {}} // Placeholder, original prop was setQuizContentReady
+                setLoadingQuiz={NO_OP}
               />
             </Suspense>
           )}
@@ -550,7 +735,7 @@ const QuickClashSession = () => {
           />
         </VStack>
       </Container>
-    </Box>
+    </Flex>
   )
 }
 

@@ -10,6 +10,7 @@ import {
 } from '@chakra-ui/react'
 import { motion, AnimatePresence } from 'framer-motion'
 import { useTranslation } from 'react-i18next'
+import { QUICK_CLASH_CLASSES } from '../quickClashComponents/utils/quickClashColors'
 
 // Lazy load OptionButton for code splitting
 const OptionButton = lazy(() => import('./OptionButton'))
@@ -43,16 +44,16 @@ const QuizInterface = ({
 
   if (load || !quizSession || quizSession.questions.length === 0) {
     return (
-      <Center height="100vh">
-        <Spinner size="xl" color={getColor('purple.500', 'yellow.500')} />
+      <Center height="400px">
+        <Spinner size="xl" color={getColor('cyan.400', 'yellow.500')} thickness="4px" />
       </Center>
     )
   }
 
   if (!currentQuestion) {
     return (
-      <Center height="100vh">
-        <Text fontSize="xl" color={getColor('gray.100', 'yellow.400')}>
+      <Center height="400px">
+        <Text fontSize="xl" color={getColor('whiteAlpha.800', 'yellow.400')}>
           {t('noQuizData')}
         </Text>
       </Center>
@@ -61,55 +62,47 @@ const QuizInterface = ({
 
   return (
     <Box
-      maxWidth="600px"
       width="100%"
       margin="0 auto"
-      padding={{ base: '20px', md: '40px' }}
-      paddingTop="0"
       display="flex"
       flexDirection="column"
       justifyContent="center"
-      borderRadius="xl"
-      boxShadow="0 4px 6px rgba(0, 0, 0, 0.1), 0 1px 3px rgba(0, 0, 0, 0.08)"
     >
       <AnimatePresence mode="wait">
         <motion.div
           key={currentQuestionIndex}
-          initial={{ y: 20, opacity: 0 }}
-          animate={{ y: 0, opacity: 1 }}
-          exit={{ y: -20, opacity: 0 }}
-          transition={{ duration: 0.5 }}
+          initial={{ x: 50, opacity: 0 }}
+          animate={{ x: 0, opacity: 1 }}
+          exit={{ x: -50, opacity: 0 }}
+          transition={{ duration: 0.4, ease: "easeOut" }}
         >
-          <Text
-            fontSize={{ base: 'xl', md: '2xl' }}
-            fontWeight="bold"
-            mb={6}
-            color={getColor('purple.200', 'yellow.500')}
-            textAlign={'center'}
-          >
-            {t('question')} {currentQuestionIndex + 1} {t('of')}{' '}
-            {totalQuestions}
-          </Text>
+          <div className="flex items-center justify-between mb-6">
+            <h2 className={`text-xl md:text-2xl font-bold ${isTournament ? 'text-yellow-400' : 'text-cyan-400'}`}>
+              {t('question')} {currentQuestionIndex + 1} <span className="text-white/40 text-lg font-normal">/ {totalQuestions}</span>
+            </h2>
 
-          <Progress
-            value={((currentQuestionIndex + 1) / totalQuestions) * 100}
-            size="sm"
-            mb={8}
-            borderRadius="full"
-            colorScheme={getColor('purple', 'yellow')}
-          />
+            {/* Custom Progress Bar */}
+            <div className="w-32 h-2 bg-white/10 rounded-full overflow-hidden">
+              <motion.div
+                className={`h-full ${isTournament ? 'bg-yellow-500' : 'bg-gradient-to-r from-cyan-500 to-blue-500'}`}
+                initial={{ width: 0 }}
+                animate={{ width: `${((currentQuestionIndex + 1) / totalQuestions) * 100}%` }}
+                transition={{ duration: 0.5 }}
+              />
+            </div>
+          </div>
 
-          <Text
-            fontSize={{ base: 'lg', md: 'xl' }}
-            mb={8}
-            color={getColor('gray.100', 'yellow.300')}
-            wordBreak="break-word"
-          >
-            {currentQuestion.question}
-          </Text>
+          <div className="mb-8 relative">
+            {/* Decorative quote icon */}
+            <div className="absolute -top-4 -left-2 text-6xl text-white/5 font-serif select-none pointer-events-none">"</div>
+
+            <p className={`text-lg md:text-xl font-medium leading-relaxed relative z-10 ${isTournament ? 'text-yellow-100' : 'text-white/90'}`}>
+              {currentQuestion.question}
+            </p>
+          </div>
 
           {currentQuestion && (
-            <VStack spacing={2} align="stretch">
+            <VStack spacing={3} align="stretch">
               {/* Map through options with correct structure handling */}
               {Object.entries(currentQuestion.options || {}).map(
                 ([key, value]) => (

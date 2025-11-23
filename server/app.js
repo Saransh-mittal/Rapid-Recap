@@ -192,6 +192,10 @@ app.use(errorHandler)
 // generateSitemap()
 // const generateGoogleNewsSitemap = require('./google-sitemap-generator')
 // generateGoogleNewsSitemap()
+// const { runCompleteWorkflow } = require('./scripts/runCompleteForgeWorkflow')
+// runCompleteWorkflow()
+// require('./utils/deletion.utils/removeForgeData.del')
+// require('./scripts/generateForgeQuizzes')
 require('./scheduler/setupCronJobs')
 
 const PORT = process.env.PORT

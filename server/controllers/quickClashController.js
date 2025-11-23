@@ -60,6 +60,14 @@ const {
   updateBattleWithQuizResults,
 } = require('../services/quickClashServices/quickClashTeamBattleService')
 
+const {
+  startForgeMode,
+  submitForgeAnswer,
+  advanceToNextSection,
+  getForgeSummary,
+  getForgeReview,
+} = require('../services/quickClashServices/quickClashSessionService')
+
 // Create a new challenge
 const createNewChallenge = asyncHandler(async (req, res) => {
   const { opponentId, categories } = req.body
@@ -164,6 +172,7 @@ const handleRejectChallenge = asyncHandler(async (req, res) => {
 })
 
 // Get challenge details
+// /api/quickClash/challenge/:challengeId
 const getChallenge = asyncHandler(async (req, res) => {
   const { challengeId } = req.params
 
@@ -1041,6 +1050,160 @@ const getWinProbabilityExplanation = asyncHandler(async (req, res) => {
   })
 })
 
+/**
+ * Start forge mode for a session
+ * @route POST /api/quickClash/session/:sessionId/forge/start
+ * @access Private
+ */
+const startForgeSession = asyncHandler(async (req, res) => {
+  const { sessionId } = req.params
+
+  try {
+    const firstSection = await startForgeMode({ sessionId })
+
+    res.status(200).json({
+      success: true,
+      message: 'Forge mode started',
+      data: firstSection,
+    })
+  } catch (error) {
+    console.error('Error starting forge mode:', error)
+    res.status(400).json({
+      success: false,
+      message: error.message || 'Error starting forge mode',
+    })
+  }
+})
+
+/**
+ * Submit answer for current forge section
+ * @route POST /api/quickClash/session/:sessionId/forge/answer
+ * @access Private
+ */
+const submitForgeSectionAnswer = asyncHandler(async (req, res) => {
+  const { sessionId } = req.params
+  const { sectionNumber, userAnswer, timeSpent } = req.body
+
+  // Validate input
+  if (
+    sectionNumber === undefined ||
+    userAnswer === undefined ||
+    timeSpent === undefined
+  ) {
+    return res.status(400).json({
+      success: false,
+      message: 'Missing required fields: sectionNumber, userAnswer, timeSpent',
+    })
+  }
+
+  // Validate answer is within range (0-3) or -1 for timeout/unanswered
+  if (userAnswer < -1 || userAnswer > 3) {
+    return res.status(400).json({
+      success: false,
+      message: 'Invalid answer: must be between 0 and 3, or -1 for unanswered',
+    })
+  }
+
+  try {
+    const result = await submitForgeAnswer({
+      sessionId,
+      sectionNumber,
+      userAnswer,
+      timeSpent,
+    })
+
+    res.status(200).json({
+      success: true,
+      message: result.isCorrect
+        ? 'Correct answer! Section unlocked.'
+        : 'Incorrect answer. Try the next section.',
+      data: result,
+    })
+  } catch (error) {
+    console.error('Error submitting forge answer:', error)
+    res.status(400).json({
+      success: false,
+      message: error.message || 'Error submitting answer',
+    })
+  }
+})
+
+/**
+ * Advance to next forge section
+ * Called after user completes reading current section
+ * @route POST /api/quickClash/session/:sessionId/forge/next
+ * @access Private
+ */
+const moveToNextForgeSection = asyncHandler(async (req, res) => {
+  const { sessionId } = req.params
+
+  try {
+    const nextSection = await advanceToNextSection({ sessionId })
+
+    res.status(200).json({
+      success: true,
+      message: nextSection.completed
+        ? 'Forge mode completed! Moving to quiz.'
+        : 'Moved to next section',
+      data: nextSection,
+    })
+  } catch (error) {
+    console.error('Error advancing to next section:', error)
+    res.status(400).json({
+      success: false,
+      message: error.message || 'Error advancing to next section',
+    })
+  }
+})
+
+/**
+ * Get forge session summary
+ * @route GET /api/quickClash/session/:sessionId/forge/summary
+ * @access Private
+ */
+const getForgeSessionSummary = asyncHandler(async (req, res) => {
+  const { sessionId } = req.params
+
+  try {
+    const summary = await getForgeSummary({ sessionId })
+
+    res.status(200).json({
+      success: true,
+      data: summary,
+    })
+  } catch (error) {
+    console.error('Error fetching forge summary:', error)
+    res.status(400).json({
+      success: false,
+      message: error.message || 'Error fetching summary',
+    })
+  }
+})
+
+/**
+ * Get forge review - Full article for post-completion review
+ * @route GET /api/quickClash/session/:sessionId/forge/review
+ * @access Private
+ */
+const getForgeReviewController = asyncHandler(async (req, res) => {
+  const { sessionId } = req.params
+
+  try {
+    const review = await getForgeReview({ sessionId })
+
+    res.status(200).json({
+      success: true,
+      data: review,
+    })
+  } catch (error) {
+    console.error('Error fetching forge review:', error)
+    res.status(400).json({
+      success: false,
+      message: error.message || 'Error fetching review',
+    })
+  }
+})
+
 module.exports = {
   createNewChallenge,
   handleAcceptChallenge,
@@ -1066,4 +1229,9 @@ module.exports = {
   calculatePotentialTrophyExchangeController,
   getUserCombinedTrophyHistoryController,
   getWinProbabilityExplanation,
+  startForgeSession,
+  submitForgeSectionAnswer,
+  moveToNextForgeSection,
+  getForgeSessionSummary,
+  getForgeReviewController,
 }

@@ -20,6 +20,7 @@
   "author": "",
   "license": "ISC",
   "dependencies": {
+    "@openai/agents": "^0.3.2",
     "async-mutex": "^0.5.0",
     "axios": "^1.7.1",
     "bcryptjs": "^2.4.3",
@@ -62,7 +63,8 @@
     "socket.io": "^4.7.5",
     "vite": "^5.4.10",
     "web-push": "^3.6.7",
-    "xmlbuilder": "^15.1.1"
+    "xmlbuilder": "^15.1.1",
+    "zod": "^3.25.76"
   },
   "devDependencies": {
     "@faker-js/faker": "^8.4.1",

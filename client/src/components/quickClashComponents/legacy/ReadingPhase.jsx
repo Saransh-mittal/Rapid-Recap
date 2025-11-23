@@ -30,7 +30,7 @@ import {
   AlertCircle,
   Clock,
 } from 'lucide-react'
-import MainArticleContent from '../articleComponents/MainArticleContent'
+import MainArticleContent from '../../articleComponents/MainArticleContent'
 
 // Image imports
 import world from '/images/quickclash/world_quickclash.webp'

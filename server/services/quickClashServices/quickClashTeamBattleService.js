@@ -44,6 +44,7 @@ const {
   calculateTeamWinProbability,
   calculateLiveTeamWinProbability,
 } = require('./quickClashWinProbabilityService')
+const ForgeArticle = require('../../model/quickClashSchemas/forgeArticleSchema')
 
 // Constants
 const TEAM_BATTLE_EXPIRY = 4 * 60 * 60 * 1000 // 4 hours same as regular challenges
@@ -162,6 +163,86 @@ const cleanupFailedBattleMatchmaking = async ({
           'Battle creation failed. Please restart the app and try again.',
       })
     }, 0)
+  }
+}
+
+/**
+ * Get a forge article for a given category
+ * @param {Object} params - Parameters
+ * @param {string} params.category - Category to filter by
+ * @param {mongoose.ClientSession} [params.session] - Optional session
+ * @returns {Promise<Object|null>} Forge article or null if none available
+ */
+const getForgeArticle = async ({ category, session }) => {
+  try {
+    // Find published forge articles for this category
+    const forgeArticles = await ForgeArticle.find({
+      category: category,
+    }).session(session)
+
+    // If no forge articles available, return null
+    if (!forgeArticles || forgeArticles.length === 0) {
+      console.log(
+        `[TeamBattle] No forge articles available for category: ${category}`,
+      )
+      return null
+    }
+
+    // Select a random forge article
+    const randomIndex = Math.floor(Math.random() * forgeArticles.length)
+    const selectedForge = forgeArticles[randomIndex]
+
+    console.log(
+      `[TeamBattle] Selected forge article: ${selectedForge._id} - "${selectedForge.title}"`,
+    )
+    return selectedForge
+  } catch (error) {
+    console.error(`[TeamBattle] Error fetching forge article: ${error.message}`)
+    return null
+  }
+}
+
+/**
+ * Decide whether to use forge article or traditional article for a category
+ * @param {Object} params - Parameters
+ * @param {string} params.category - Category
+ * @param {mongoose.ClientSession} [params.session] - Optional session
+ * @returns {Promise<Object>} { useForge: boolean, data: article or forgeArticle }
+ */
+const selectArticleTypeForCategory = async ({ category, session }) => {
+  // Try to get a forge article
+  const forgeArticle = await getForgeArticle({ category, session })
+  if (!forgeArticle) {
+    // No forge article available, use traditional article
+    console.log(
+      `[TeamBattle] Using traditional article for category: ${category}`,
+    )
+    const article = await getSourceArticle({ category, session })
+    return {
+      useForge: false,
+      data: article,
+      type: 'traditional',
+    }
+  }
+  const useForge = true
+
+  if (useForge) {
+    console.log(`[TeamBattle] Using FORGE article for category: ${category}`)
+    return {
+      useForge: true,
+      data: forgeArticle,
+      type: 'forge',
+    }
+  } else {
+    console.log(
+      `[TeamBattle] Using traditional article for category: ${category}`,
+    )
+    const article = await getSourceArticle({ category, session })
+    return {
+      useForge: false,
+      data: article,
+      type: 'traditional',
+    }
   }
 }
 
@@ -432,86 +513,125 @@ const createTeamBattle = makeRetryable(
           }: ${category}`,
         )
 
-        // Get a source article for this category
+        // Select article type (forge or traditional)
         console.log(
-          `[TeamBattle] Fetching source article for category: ${category}`,
+          `[TeamBattle] Selecting article type for category: ${category}`,
         )
-        const article = await getSourceArticle({ category })
+        const articleSelection = await selectArticleTypeForCategory({
+          category,
+          session,
+        })
+
+        const useForge = articleSelection.useForge
+        const sourceData = articleSelection.data
+
         console.log(
-          `[TeamBattle] Got article: ${article._id}, Title: ${article.title}`,
+          `[TeamBattle] Article type selected: ${articleSelection.type}`,
         )
 
-        // Check if Hindi translation exists
-        const hasHindiTranslation = !!(
-          article.hindiTitle &&
-          article.hindiMainText &&
-          article.hindiMainText.length > 0
-        )
-        console.log(
-          `[TeamBattle] Article has Hindi translation: ${hasHindiTranslation}`,
-        )
-
-        // Format article data
-        let articleData = {
-          title: {
-            english: article.title,
-            hindi: article.hindiTitle || '',
-          },
-          content: {
-            english: article.mainText,
-            hindi: article.hindiMainText ? article.hindiMainText.join(' ') : '',
-          },
-          sourceArticles: [article._id],
+        // Prepare challenge data based on article type
+        let challengeData = {
+          challenger: null,
+          opponent: null,
+          selectedCategories: [category],
+          category,
+          status: 'active',
+          expiresAt: teamBattle.expiresAt,
+          fromTeamBattle: true,
+          teamBattle: teamBattle._id,
         }
 
-        // Generate Hindi translation if it doesn't exist
-        if (!hasHindiTranslation) {
+        if (useForge) {
+          // FORGE ARTICLE PATH
           console.log(
-            `[TeamBattle] Generating Hindi translation for article ${article._id}`,
+            `[TeamBattle] Using forge article: ${sourceData._id} - "${sourceData.title}"`,
           )
-          try {
-            const hindiTranslation = await generateHindiTranslation({
-              title: article.title,
-              content: article.mainText,
-            })
-            console.log(`[TeamBattle] Hindi translation generated successfully`)
 
-            // Update article data with the new translation
-            articleData.title.hindi = hindiTranslation.title
-            articleData.content.hindi = hindiTranslation.content
+          // Set forge article reference (no Hindi needed)
+          challengeData.forgeArticle = sourceData._id
+          challengeData.article = null // No traditional article
 
-            // Optionally update the original article for future use
-            try {
-              // Convert content string to array format as expected by schema
-              const hindiContentArray = [hindiTranslation.content]
+          console.log(`[TeamBattle] Forge article assigned to challenge`)
+        } else {
+          // TRADITIONAL ARTICLE PATH
+          const article = sourceData
+          console.log(
+            `[TeamBattle] Using traditional article: ${article._id}, Title: ${article.title}`,
+          )
 
-              await Article.findByIdAndUpdate(article._id, {
-                hindiTitle: hindiTranslation.title,
-                hindiMainText: hindiContentArray,
-              })
+          // Check if Hindi translation exists
+          const hasHindiTranslation = !!(
+            article.hindiTitle &&
+            article.hindiMainText &&
+            article.hindiMainText.length > 0
+          )
+          console.log(
+            `[TeamBattle] Article has Hindi translation: ${hasHindiTranslation}`,
+          )
 
-              console.log(
-                `[TeamBattle] Updated article ${article._id} with Hindi translation`,
-              )
-            } catch (updateError) {
-              console.error(
-                `[TeamBattle] Error updating article with Hindi translation: ${updateError.message}`,
-                updateError,
-              )
-              // Continue with the challenge creation even if saving to article fails
-            }
-          } catch (translationError) {
-            console.error(
-              `[TeamBattle] Error generating Hindi translation for team battle: ${translationError.message}`,
-              translationError,
-            )
-            // Continue with empty Hindi content if translation fails
+          // Format article data
+          let articleData = {
+            title: {
+              english: article.title,
+              hindi: article.hindiTitle || '',
+            },
+            content: {
+              english: article.mainText,
+              hindi: article.hindiMainText
+                ? article.hindiMainText.join(' ')
+                : '',
+            },
+            sourceArticles: [article._id],
           }
-        }
 
+          // Generate Hindi translation if it doesn't exist
+          if (!hasHindiTranslation) {
+            console.log(
+              `[TeamBattle] Generating Hindi translation for article ${article._id}`,
+            )
+            try {
+              const hindiTranslation = await generateHindiTranslation({
+                title: article.title,
+                content: article.mainText,
+              })
+              console.log(
+                `[TeamBattle] Hindi translation generated successfully`,
+              )
+
+              // Update article data with the new translation
+              articleData.title.hindi = hindiTranslation.title
+              articleData.content.hindi = hindiTranslation.content
+
+              // Optionally update the original article for future use
+              try {
+                const hindiContentArray = [hindiTranslation.content]
+                await Article.findByIdAndUpdate(article._id, {
+                  hindiTitle: hindiTranslation.title,
+                  hindiMainText: hindiContentArray,
+                })
+                console.log(
+                  `[TeamBattle] Updated article ${article._id} with Hindi translation`,
+                )
+              } catch (updateError) {
+                console.error(
+                  `[TeamBattle] Error updating article with Hindi translation: ${updateError.message}`,
+                  updateError,
+                )
+              }
+            } catch (translationError) {
+              console.error(
+                `[TeamBattle] Error generating Hindi translation: ${translationError.message}`,
+                translationError,
+              )
+            }
+          }
+
+          // Set traditional article data
+          challengeData.article = articleData
+          challengeData.forgeArticle = null // No forge article
+        }
         // ======= PROGRESS: CHALLENGE CREATION (70% + i*5) =======
-        // Update progress as each challenge is created (65% to 85%)
-        const progressPercent = 70 + i * 5 // Will increment from 70% to 85% as i goes from 0 to 3
+        const progressPercent = 70 + i * 5
         console.log(
           `[TeamBattle] Creating challenge ${i + 1}/${
             categories.length
@@ -519,22 +639,29 @@ const createTeamBattle = makeRetryable(
         )
 
         // Create the challenge
-        const challenge = new QuickClashChallenge({
-          challenger: null, // Will be set when a player selects this category
-          opponent: null, // Will be set when a player selects this category
-          selectedCategories: [category],
-          category,
-          status: 'active',
-          article: articleData,
-          expiresAt: teamBattle.expiresAt,
-          fromTeamBattle: true,
-          teamBattle: teamBattle._id,
-        })
+        const challenge = new QuickClashChallenge(challengeData)
 
         console.log(`[TeamBattle] Saving challenge for category: ${category}`)
         await challenge.save({ session })
         console.log(`[TeamBattle] Challenge saved with ID: ${challenge._id}`)
-        createdChallenges.push({ challenge, article, articleData })
+
+        // Store different data based on article type
+        if (useForge) {
+          createdChallenges.push({
+            challenge,
+            article: null,
+            articleData: null,
+            useForge: true,
+            forgeArticle: sourceData,
+          })
+        } else {
+          createdChallenges.push({
+            challenge,
+            article: sourceData,
+            articleData: challengeData.article,
+            useForge: false,
+          })
+        }
 
         // Update the team battle with the challenge ID
         teamBattle.challenges[i].challenge = challenge._id
@@ -576,17 +703,104 @@ const createTeamBattle = makeRetryable(
 
       // Create an array of promises for quiz generation
       const quizGenerationPromises = createdChallenges.map(
-        async ({ challenge, article, articleData }, index) => {
+        async (
+          { challenge, article, articleData, useForge, forgeArticle },
+          index,
+        ) => {
           console.log(
             `[TeamBattle] Starting quiz generation for challenge ${index + 1}/${
               createdChallenges.length
-            }: ${challenge._id} (Category: ${challenge.category})`,
+            }: ${challenge._id} (Category: ${challenge.category}, Type: ${
+              useForge ? 'FORGE' : 'Traditional'
+            })`,
           )
 
           try {
-            // Update progress with more granular steps
             const progressStep = 90 + index * (5 / createdChallenges.length)
 
+            // SKIP QUIZ GENERATION FOR FORGE ARTICLES
+            if (useForge) {
+              console.log(
+                `[TeamBattle] Processing forge article quiz for challenge: ${challenge._id}`,
+              )
+
+              // STEP 1: Validate that forge article has a quiz
+              if (
+                !forgeArticle.quickClashQuiz ||
+                !forgeArticle.quickClashQuiz.questions ||
+                forgeArticle.quickClashQuiz.questions.length === 0
+              ) {
+                console.error(
+                  `[TeamBattle] ERROR: Forge article ${forgeArticle._id} does not have a valid quiz`,
+                )
+                throw new Error(
+                  `Forge article ${forgeArticle._id} missing quickClashQuiz. Run quiz generation service first.`,
+                )
+              }
+
+              console.log(
+                `[TeamBattle] Found ${forgeArticle.quickClashQuiz.questions.length} questions in forge article`,
+              )
+              console.log(
+                `[TeamBattle] Quiz difficulty: ${forgeArticle.quickClashQuiz.overallDifficulty}`,
+              )
+
+              // STEP 2: Create English quiz by COPYING from forge article
+              console.log(
+                `[TeamBattle] Creating English QuickClashQuiz from forge article`,
+              )
+              const englishQuiz = new QuickClashQuiz({
+                challenge: challenge._id,
+                language: 'en',
+                questions: forgeArticle.quickClashQuiz.questions, // Copy questions
+                overallDifficulty:
+                  forgeArticle.quickClashQuiz.overallDifficulty,
+              })
+
+              await englishQuiz.save({ session })
+              console.log(
+                `[TeamBattle] ✅ English quiz copied successfully: ${englishQuiz._id}`,
+              )
+
+              // STEP 3: Create Hindi quiz placeholder
+              // NOTE: For now, we create empty Hindi quiz
+              // TODO: Add Hindi translation for forge article quizzes
+              console.log(`[TeamBattle] Creating Hindi quiz placeholder`)
+              const hindiQuiz = new QuickClashQuiz({
+                challenge: challenge._id,
+                language: 'hi',
+                questions: [], // Empty initially - to be translated later
+                overallDifficulty:
+                  forgeArticle.quickClashQuiz.overallDifficulty,
+                translationStatus: 'pending',
+              })
+
+              await hindiQuiz.save({ session })
+              console.log(
+                `[TeamBattle] ✅ Hindi quiz placeholder created: ${hindiQuiz._id}`,
+              )
+
+              // STEP 4: Skip highlights processing for forge articles
+              // Forge articles use section-based reading, not highlights
+              console.log(
+                `[TeamBattle] Skipping highlights for forge article (section-based reading)`,
+              )
+
+              console.log(
+                `[TeamBattle] ✅ Quiz processing completed for forge challenge`,
+              )
+
+              // Return quiz data
+              return {
+                challenge,
+                englishQuiz,
+                hindiQuiz,
+                useForge: true,
+                forgeArticle, // Include forge article reference
+              }
+            }
+
+            // TRADITIONAL ARTICLE QUIZ GENERATION
             // Generate English quiz
             console.log(
               `[TeamBattle] Generating English quiz for challenge: ${challenge._id}`,
@@ -700,28 +914,37 @@ const createTeamBattle = makeRetryable(
               })(),
             )
 
-            // Wait for highlights to be processed
-            const [englishHighlight, hindiHighlight] = await Promise.all(
-              highlightPromises,
-            )
+            // Wait for all highlights to be processed
+            await Promise.all(highlightPromises)
+
+            // Schedule Hindi quiz translation in background
+            setTimeout(() => {
+              translateQuizBackground({
+                quizId: englishQuiz._id,
+                hindiQuizId: hindiQuiz._id,
+              }).catch(err => {
+                console.error(
+                  `[TeamBattle] Error in background Hindi quiz translation:`,
+                  err,
+                )
+              })
+            }, 100)
+
             console.log(
-              `[TeamBattle] Highlights processing completed for challenge: ${challenge._id}`,
+              `[TeamBattle] Quiz generation completed for challenge: ${challenge._id}`,
             )
 
-            // Return data needed for translation after transaction completes
             return {
-              challengeId: challenge._id,
-              hindiQuizId: hindiQuiz._id,
-              hindiTitle: articleData.title.hindi,
-              hindiMainText: articleData.content.hindi,
+              challenge,
               englishQuiz,
+              hindiQuiz,
+              useForge: false,
             }
           } catch (error) {
             console.error(
-              `[TeamBattle] Error processing challenge ${challenge._id}: ${error.message}`,
+              `[TeamBattle] Error generating quiz for challenge ${challenge._id}:`,
+              error,
             )
-            console.error(`[TeamBattle] Stack: ${error.stack}`)
-            // Rethrow to fail the Promise.all if needed
             throw error
           }
         },
@@ -2443,4 +2666,6 @@ module.exports = {
   getTeamBattleDetails,
   validateUserChallengeAssignment,
   checkUserParticipationStatus,
+  getForgeArticle,
+  selectArticleTypeForCategory,
 }

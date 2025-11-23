@@ -434,10 +434,27 @@ const QuickClashQuiz = ({
   }
 
   return (
-    <Box p={4} maxW="800px" mx="auto" color="white">
+    <Box
+      p={0}
+      maxW="800px"
+      mx="auto"
+      h="full"
+      color="white"
+      className="backdrop-blur-xl bg-white/5 rounded-2xl border border-white/10 shadow-2xl overflow-hidden"
+      display="flex"
+      flexDirection="column"
+    >
       {/* Timer - only starts after questions are fully loaded */}
       {quizReady && (
-        <Flex justify="center" mb={4}>
+        <Flex
+          justify="center"
+          mb={0}
+          p={4}
+          borderBottom="1px solid"
+          borderColor="whiteAlpha.100"
+          bg="blackAlpha.200"
+          flex="none"
+        >
           <Suspense fallback={<Box p={2}>Loading timer...</Box>}>
             <QuizTimer
               initialTime={50}
@@ -451,36 +468,50 @@ const QuickClashQuiz = ({
         </Flex>
       )}
 
-      <Suspense fallback={<Spinner size="xl" color="purple.500" />}>
-        <QuizInterface
-          load={loading}
-          currentQuestionIndex={currentQuestionIndex}
-          totalQuestions={questions.length}
-          handleAnswer={handleAnswer}
-          userAnswers={userAnswers}
-          quizSession={quizSession}
-        />
-      </Suspense>
+      <Box
+        p={{ base: 4, md: 6 }}
+        flex="1"
+        overflowY="auto"
+        display="flex"
+        flexDirection="column"
+      >
+        <Box flex="1">
+          <Suspense fallback={<Spinner size="xl" color="purple.500" />}>
+            <QuizInterface
+              load={loading}
+              currentQuestionIndex={currentQuestionIndex}
+              totalQuestions={questions.length}
+              handleAnswer={handleAnswer}
+              userAnswers={userAnswers}
+              quizSession={quizSession}
+            />
+          </Suspense>
+        </Box>
 
-      {/* Navigation controls */}
-      <NavigationControls
-        currentQuestionIndex={currentQuestionIndex}
-        totalQuestions={questions.length}
-        userAnswers={userAnswers}
-        onNext={handleNext}
-        onSubmit={handleSubmit}
-        submitLoading={submitLoading}
-        t={t}
-      />
+        {/* Navigation controls */}
+        <Box mt={8} flex="none">
+          <NavigationControls
+            currentQuestionIndex={currentQuestionIndex}
+            totalQuestions={questions.length}
+            userAnswers={userAnswers}
+            onNext={handleNext}
+            onSubmit={handleSubmit}
+            submitLoading={submitLoading}
+            t={t}
+          />
+        </Box>
 
-      {/* Question navigation */}
-      <QuestionNavigation
-        questions={questions}
-        currentQuestionIndex={currentQuestionIndex}
-        userAnswers={userAnswers}
-        onQuestionSelect={handleQuestionSelect}
-        t={t}
-      />
+        {/* Question navigation */}
+        <Box mt={6} pt={6} borderTop="1px solid" borderColor="whiteAlpha.100" flex="none">
+          <QuestionNavigation
+            questions={questions}
+            currentQuestionIndex={currentQuestionIndex}
+            userAnswers={userAnswers}
+            onQuestionSelect={handleQuestionSelect}
+            t={t}
+          />
+        </Box>
+      </Box>
 
       {/* Confirmation Modal */}
       {showConfirmModal && (

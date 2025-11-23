@@ -878,25 +878,25 @@ function initializeSocket(server) {
 
   setInterval(async () => {
     const startTime = Date.now()
-    console.log(
-      '\n🔄 [HEARTBEAT_CHECK] Starting user online status check...',
-      new Date().toISOString(),
-    )
+    // console.log(
+    //   '\n🔄 [HEARTBEAT_CHECK] Starting user online status check...',
+    //   new Date().toISOString(),
+    // )
 
     try {
       // Test Redis connection first
       const redisStatus = await redis.ping()
-      console.log('✅ [REDIS_STATUS] Redis ping response:', redisStatus)
+      // console.log('✅ [REDIS_STATUS] Redis ping response:', redisStatus)
 
       const onlineUsers = await User.find({ isOnline: true }, '_id').lean()
-      console.log(
-        `👥 [HEARTBEAT_CHECK] Found ${onlineUsers.length} users marked as online in database`,
-      )
+      // console.log(
+      //   `👥 [HEARTBEAT_CHECK] Found ${onlineUsers.length} users marked as online in database`,
+      // )
 
       if (onlineUsers.length === 0) {
-        console.log(
-          'ℹ️  [HEARTBEAT_CHECK] No online users to check, skipping...',
-        )
+        // console.log(
+        //   'ℹ️  [HEARTBEAT_CHECK] No online users to check, skipping...',
+        // )
         return
       }
 
@@ -978,19 +978,19 @@ function initializeSocket(server) {
       }
 
       const totalDuration = Date.now() - startTime
-      console.log(`✅ [HEARTBEAT_CHECK] Completed check in ${totalDuration}ms`)
-      console.log(
-        `📊 [SUMMARY] Processed ${onlineUsers.length} users in ${batchesProcessed} batches, found ${totalOfflineUsers} offline users\n`,
-      )
+      // console.log(`✅ [HEARTBEAT_CHECK] Completed check in ${totalDuration}ms`)
+      // console.log(
+      //   `📊 [SUMMARY] Processed ${onlineUsers.length} users in ${batchesProcessed} batches, found ${totalOfflineUsers} offline users\n`,
+      // )
     } catch (error) {
-      console.error(
-        '❌ [HEARTBEAT_CHECK] Critical error during heartbeat check:',
-        {
-          message: error.message,
-          stack: error.stack,
-          timestamp: new Date().toISOString(),
-        },
-      )
+      // console.error(
+      //   '❌ [HEARTBEAT_CHECK] Critical error during heartbeat check:',
+      //   {
+      //     message: error.message,
+      //     stack: error.stack,
+      //     timestamp: new Date().toISOString(),
+      //   },
+      // )
     }
   }, HEARTBEAT_CHECK_INTERVAL)
   // Expose utility functions

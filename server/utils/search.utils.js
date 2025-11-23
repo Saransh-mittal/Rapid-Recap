@@ -1,7 +1,7 @@
 // Enhanced search utilities with enterprise helper functions
 // File: utils/search.utils.js
 
-const { generateEmbedding } = require('../services/embeddingService')
+const { generateEmbedding } = require('../services/legacy/embeddingService')
 const cache = require('memory-cache')
 
 const MAX_RETRIES = 3

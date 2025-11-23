@@ -286,6 +286,10 @@ const submitQuizAnswersService = makeRetryable(
       const RQM_score = rqmResult.RQM_score
       const baseRQM_score = rqmResult.baseRQM_score || RQM_score
 
+      // Get Forge Mode score if applicable
+      const forgeScore = quizSession.forgeProgress?.score || 0
+      const totalScore = RQM_score + forgeScore
+
       // Update session
       quizSession.quizAttempt.responses = validatedResponses
       quizSession.quizAttempt.timeSpent = quizTimeSpent
@@ -295,7 +299,8 @@ const submitQuizAnswersService = makeRetryable(
       quizSession.score = {
         RQM_score,
         baseRQM_score,
-        total: RQM_score,
+        forgeScore, // Store forge score separately
+        total: totalScore, // Total is sum of Quiz + Forge
       }
 
       await quizSession.save({ session })
@@ -304,7 +309,7 @@ const submitQuizAnswersService = makeRetryable(
       await updateChallengeScore({
         challengeId: quizSession.challenge,
         userId: quizSession.user,
-        score: RQM_score,
+        score: totalScore, // Use TOTAL score for the challenge
         session,
       })
 
@@ -332,8 +337,10 @@ const submitQuizAnswersService = makeRetryable(
 
       const result = {
         message: 'Attempt saved successfully',
-        RQM_score,
-        nonBoostedRQM: RQM_score, // Same as RQM_score since no boosts in QuickClash
+        RQM_score: totalScore, // Return TOTAL score as the main score for display
+        quizScore: RQM_score, // Original quiz score
+        forgeScore,
+        nonBoostedRQM: totalScore, // Use total score
         baseRQM_score,
         boost: 1, // No boosts applied
         isBoosted: false,
