@@ -324,17 +324,17 @@ webpush.setVapidDetails(
 
 // Initialize bot tracking
 initBotTracking()
-require('./scripts/script_prepare_article_data')()
-const generateSitemap = require('./generate-sitemap')
-generateSitemap()
-const generateGoogleNewsSitemap = require('./google-sitemap-generator')
+// require('./scripts/script_prepare_article_data')()
+// const generateSitemap = require('./generate-sitemap')
+// generateSitemap()
+// const generateGoogleNewsSitemap = require('./google-sitemap-generator')
 const {
   languageDetectionMiddleware,
 } = require('./utils/languageDetection.utils')
-generateGoogleNewsSitemap()
+// generateGoogleNewsSitemap()
 
 // Load scheduler
-require('./scheduler/setupCronJobs')
+// require('./scheduler/setupCronJobs')
 
 // ============== KEEP-ALIVE FUNCTIONALITY ==============
 // Check if we're running on Railway
