@@ -3,7 +3,7 @@ services:
     name: rapid-recap
     env: docker
     plan: free
-    branch: rrremodelling
+    branch: RRConceptRemdeling
     envVars:
       - key: PORT
         value: 10000

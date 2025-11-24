@@ -20,7 +20,8 @@ This project is configured for deployment on **Render** using Docker. This allow
     *   `GOOGLE_CLIENT_ID` & `GOOGLE_CLIENT_SECRET`: For Google Auth.
     *   `PUBLIC_VAPID_KEY` & `PRIVATE_VAPID_KEY`: For Web Push notifications.
     *   `OPENAI_API_KEY`: For AI features.
-    *   `PORT`: Leave as `10000` (default for Render) or `3000`. The Dockerfile expects `3000` but Render sets `PORT` env var which the app should use.
+    *   **PORT**: Leave as `10000` (default for Render).
+    *   **Other Keys**: Copy the values from your local `.env` file or ask your team for the production keys. Render keeps these secure.
 7.  Click **Apply**.
 
 Render will now:
