@@ -9,17 +9,27 @@ services:
         value: 10000
       - key: NODE_ENV
         value: production
-      - key: MONGODB_URI
+      - key: DATABASE
         sync: false
-      - key: JWT_SECRET
+      - key: SECRET_KEY
         sync: false
-      - key: GOOGLE_CLIENT_ID
+      - key: CLIENT_ID
         sync: false
-      - key: GOOGLE_CLIENT_SECRET
+      - key: CLIENT_SECRET
         sync: false
       - key: PUBLIC_VAPID_KEY
         sync: false
       - key: PRIVATE_VAPID_KEY
         sync: false
       - key: OPENAI_API_KEY
+        sync: false
+      - key: REFRESH_TOKEN
+        sync: false
+      - key: ACCESS_TOKEN_SECRET
+        sync: false
+      - key: REFRESH_TOKEN_SECRET
+        sync: false
+      - key: SESSION_SECRET
+        sync: false
+      - key: REDIS_URL
         sync: false
