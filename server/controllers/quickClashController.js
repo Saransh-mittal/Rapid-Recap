@@ -7,6 +7,7 @@ const {
   getChallengeDetails,
   getUserChallenges,
   postChallengeCreation,
+  placeBet,
 } = require('../services/quickClashServices/quickClashChallengeService')
 const {
   formatProbability,
@@ -774,6 +775,37 @@ const getQuickClashLeaderboard = asyncHandler(async (req, res) => {
 })
 
 /**
+ * @desc    Place a bet on a challenge
+ * @route   POST /api/quickClash/challenge/:challengeId/bet
+ * @access  Private
+ */
+const placeBetController = asyncHandler(async (req, res) => {
+  const { challengeId } = req.params
+  const { amount } = req.body
+  const userId = req.user._id
+
+  try {
+    const challenge = await placeBet({
+      challengeId,
+      userId,
+      amount,
+    })
+
+    res.status(200).json({
+      success: true,
+      message: 'Bet placed successfully',
+      challenge,
+    })
+  } catch (error) {
+    console.error('Error placing bet:', error)
+    res.status(400).json({
+      success: false,
+      message: error.message || 'Failed to place bet',
+    })
+  }
+})
+
+/**
  * @desc    Mark a challenge as having had revenge taken
  * @route   POST /api/quickClash/challenge/:challengeId/markRevenge
  * @access  Private
@@ -1234,4 +1266,5 @@ module.exports = {
   moveToNextForgeSection,
   getForgeSessionSummary,
   getForgeReviewController,
+  placeBetController,
 }

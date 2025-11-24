@@ -760,6 +760,14 @@ const updateChallengeScore = async ({
     } else if (challenge?.opponent?._id.equals(userId)) {
       challenge.opponentScore = score
       challenge.opponentAttempted = true // Mark as attempted regardless of score
+    } else if (challenge.fromTeamBattle) {
+      // For team battles, the user might be a team member but not the direct challenger/opponent
+      // In this case, we don't update the challenge score directly here, but we return the challenge
+      // so the caller can proceed to update the team battle
+      console.log(
+        `[CHALLENGE_SERVICE] User ${userId} is not direct participant in challenge ${challengeId} but it is a team battle. Skipping direct score update.`,
+      )
+      return challenge
     } else {
       throw new Error('User not part of this challenge')
     }
@@ -799,6 +807,10 @@ const updateChallengeScore = async ({
           console.error('Error updating trophies:', trophyError)
           // Continue with challenge completion even if trophy update fails
         }
+      } else {
+        // Handle team battle completion logic here if needed
+        // For now, team battle service handles the overall battle completion
+        // But we might need to update individual challenge status in the team battle
       }
     } else if (
       !isNowComplete &&
@@ -825,26 +837,127 @@ const updateChallengeScore = async ({
           `[CHALLENGE_SERVICE] Challenge score updated, notifying completion: ${challengeId}`,
         )
         notifyChallengeCompleted({
-          challenge: result,
-          completedByUserId: userId,
+          challenge: {
+            _id: challenge._id,
+            category: challenge.category,
+            winner: challenge.winner,
+            challengerScore: challenge.challengerScore,
+            opponentScore: challenge.opponentScore,
+          },
+          challenger: challenge.challenger,
+          opponent: challenge.opponent,
         }).catch(err => {
-          console.error('Error sending challenge completion notification:', err)
+          console.error('Error sending challenge completed notification:', err)
         })
       }, 0)
     }
 
-    return result
+    return challenge
   } catch (error) {
     // If we started the transaction, abort it on error
     if (startedTransaction) {
       await session.abortTransaction()
     }
+    console.error('Error updating challenge score:', error)
     throw error
   } finally {
     // If we started the session, end it
-    if (!providedSession) {
-      session.endSession()
+    if (startedTransaction) {
+      await session.endSession()
     }
+  }
+}
+
+/**
+ * Place a bet on a challenge
+ * @param {Object} params - Parameters
+ * @param {string} params.challengeId - Challenge ID
+ * @param {string} params.userId - User ID placing the bet
+ * @param {number} params.amount - Bet amount (0, 1, 2, 5, 10)
+ * @returns {Promise<Object>} Updated challenge
+ */
+const placeBet = async ({ challengeId, userId, amount }) => {
+  // Validate bet amount
+  const allowedBets = [0, 1, 2, 5, 10]
+  if (!allowedBets.includes(amount)) {
+    throw new Error('Invalid bet amount. Allowed values: 0, 1, 2, 5, 10')
+  }
+
+  const session = await mongoose.startSession()
+  let result
+
+  try {
+    result = await session.withTransaction(async () => {
+      // Get challenge and user
+      const [challenge, user] = await Promise.all([
+        QuickClashChallenge.findById(challengeId).session(session),
+        User.findById(userId).select('quickClashTrophies').session(session),
+      ])
+
+      if (!challenge) {
+        throw new Error('Challenge not found')
+      }
+
+      // Check if betting is enabled
+      if (challenge.betting && challenge.betting.enabled === false) {
+        throw new Error('Betting is disabled for this challenge')
+      }
+
+      // Determine if user is challenger or opponent
+      let isChallenger = false
+      if (challenge.challenger.toString() === userId.toString()) {
+        isChallenger = true
+      } else if (challenge.opponent.toString() === userId.toString()) {
+        isChallenger = false
+      } else {
+        throw new Error('User is not a participant in this challenge')
+      }
+
+      // Check if bet already placed
+      const betInfo = isChallenger
+        ? challenge.betting.challenger
+        : challenge.betting.opponent
+
+      if (betInfo.betPlaced) {
+        throw new Error('Bet already placed')
+      }
+
+      // Check user balance
+      const currentTrophies = user.quickClashTrophies || 0
+      if (currentTrophies < amount) {
+        throw new Error('Insufficient trophies for this bet')
+      }
+
+      // Deduct trophies (escrow)
+      if (amount > 0) {
+        user.quickClashTrophies -= amount
+        await user.save({ session })
+      }
+
+      // Update challenge with bet info
+      if (isChallenger) {
+        challenge.betting.challenger.betAmount = amount
+        challenge.betting.challenger.betPlaced = true
+        challenge.betting.challenger.betPlacedAt = new Date()
+        challenge.betting.challenger.trophiesAtBet = currentTrophies
+      } else {
+        challenge.betting.opponent.betAmount = amount
+        challenge.betting.opponent.betPlaced = true
+        challenge.betting.opponent.betPlacedAt = new Date()
+        challenge.betting.opponent.trophiesAtBet = currentTrophies
+      }
+
+      await challenge.save({ session })
+
+      return challenge
+    })
+
+    console.log(
+      `[CHALLENGE_SERVICE] Bet placed: Challenge ${challengeId}, User ${userId}, Amount ${amount}`,
+    )
+    return result
+  } finally {
+    session.endSession()
   }
 }
 
@@ -857,4 +970,6 @@ module.exports = {
   getUserChallenges,
   updateChallengeScore,
   postChallengeCreation,
+  placeBet,
+  placeBet,
 }

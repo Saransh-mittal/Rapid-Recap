@@ -2129,6 +2129,38 @@ const updateBattleWithQuizResults = makeRetryable(
           throw new Error('User is not a member of either team')
         }
 
+        // Find the challenge to get betting info
+        const challengeDoc = await QuickClashChallenge.findById(challengeId).session(session)
+
+        // Extract betting info for this user
+        let userBetInfo = {
+          betAmount: 0,
+          betResult: null,
+          betTrophyChange: 0
+        }
+
+        if (challengeDoc && challengeDoc.betting && challengeDoc.betting.enabled) {
+          if (
+            challengeDoc.challenger &&
+            challengeDoc.challenger.toString() === userId.toString()
+          ) {
+            userBetInfo = {
+              betAmount: challengeDoc.betting.challenger.betAmount,
+              betResult: challengeDoc.betting.challenger.betResult,
+              betTrophyChange: challengeDoc.betting.challenger.trophiesGained,
+            }
+          } else if (
+            challengeDoc.opponent &&
+            challengeDoc.opponent.toString() === userId.toString()
+          ) {
+            userBetInfo = {
+              betAmount: challengeDoc.betting.opponent.betAmount,
+              betResult: challengeDoc.betting.opponent.betResult,
+              betTrophyChange: challengeDoc.betting.opponent.trophiesGained,
+            }
+          }
+        }
+
         // Update the member and challenge data
         if (isTeamAUser) {
           // Update team A member
@@ -2139,6 +2171,10 @@ const updateBattleWithQuizResults = makeRetryable(
           if (memberIndex !== -1) {
             battle.teamAMembers[memberIndex].completed = true
             battle.teamAMembers[memberIndex].score = score
+            // Update betting fields
+            battle.teamAMembers[memberIndex].betAmount = userBetInfo.betAmount
+            battle.teamAMembers[memberIndex].betResult = userBetInfo.betResult
+            battle.teamAMembers[memberIndex].betTrophyChange = userBetInfo.betTrophyChange
           }
 
           // Update challenge
@@ -2153,6 +2189,10 @@ const updateBattleWithQuizResults = makeRetryable(
           if (memberIndex !== -1) {
             battle.teamBMembers[memberIndex].completed = true
             battle.teamBMembers[memberIndex].score = score
+            // Update betting fields
+            battle.teamBMembers[memberIndex].betAmount = userBetInfo.betAmount
+            battle.teamBMembers[memberIndex].betResult = userBetInfo.betResult
+            battle.teamBMembers[memberIndex].betTrophyChange = userBetInfo.betTrophyChange
           }
 
           // Update challenge

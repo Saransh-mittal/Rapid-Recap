@@ -58,6 +58,10 @@ const GamifiedQuiz = lazy(() =>
   import('../components/quizComponents/GamifiedQuiz'),
 )
 
+const BettingScreen = lazy(() =>
+  import('../components/quickClashComponents/BettingScreen'),
+)
+
 // Memoized loading fallback component
 const LoadingFallback = memo(() => (
   <Center py={10}>
@@ -238,7 +242,7 @@ const QuickClashSession = () => {
   const params = useParams()
 
   // ORIGINAL STATE STRUCTURE - PRESERVED
-  const [phase, setPhase] = useState('loading') //  loading, reading, quiz, completed
+  const [phase, setPhase] = useState('loading') //  loading, reading, betting, quiz, completed
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState(null)
   const [challenge, setChallenge] = useState(null)
@@ -369,12 +373,18 @@ const QuickClashSession = () => {
   const handleReadingComplete = useCallback(async () => {
     setCompleteReadingLoading(true)
     try {
-      // Call the API to mark reading as complete and switch phase to 'quiz'
+      // Call the API to mark reading as complete and switch phase to 'betting'
       // This works for both Traditional and Forge modes
       await axios.post(
         `/api/quickClash/session/${session?._id}/reading/complete`,
       )
-      setPhase('quiz')
+
+      // Check if betting is enabled for this challenge
+      if (challenge?.betting?.enabled !== false) {
+        setPhase('betting')
+      } else {
+        setPhase('quiz')
+      }
       setPhaseProgress(0)
     } catch (error) {
       console.error('Error completing reading phase:', error)
@@ -390,7 +400,13 @@ const QuickClashSession = () => {
     } finally {
       setCompleteReadingLoading(false)
     }
-  }, [session?._id, toast, t])
+  }, [session?._id, toast, t, challenge?.betting?.enabled])
+
+  // NEW: Betting Completion Logic
+  const handleBettingComplete = useCallback(() => {
+    setPhase('quiz')
+    setPhaseProgress(0)
+  }, [])
 
   // ORIGINAL QUIZ COMPLETION LOGIC - PRESERVED
   const handleQuizComplete = useCallback(
@@ -700,6 +716,17 @@ const QuickClashSession = () => {
             </Suspense>
           )}
 
+          {phase === 'betting' && (
+            <Suspense fallback={<LoadingFallback />}>
+              <BettingScreen
+                challengeId={challenge?._id}
+                currentTrophies={user?.quickClashTrophies || 0}
+                onComplete={handleBettingComplete}
+                user={user}
+              />
+            </Suspense>
+          )}
+
           {phase === 'quiz' && session && (
             <Suspense fallback={<LoadingFallback />}>
               <GamifiedQuiz
@@ -718,6 +745,8 @@ const QuickClashSession = () => {
             onClose={closeResults}
             score={score}
             navigateToList={confirmNavigation}
+            challenge={challenge}
+            user={user}
           />
 
           {/* Navigation Confirmation Dialog */}

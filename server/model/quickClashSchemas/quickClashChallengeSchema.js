@@ -119,6 +119,54 @@ const quickClashChallengeSchema = new mongoose.Schema({
       opponent_type: String,
     },
   },
+  // NEW: Betting Mechanism
+  betting: {
+    enabled: {
+      type: Boolean,
+      default: true,
+    },
+    challenger: {
+      betAmount: {
+        type: Number,
+        default: 0,
+        enum: [0, 1, 2, 5, 10],
+      },
+      betPlaced: {
+        type: Boolean,
+        default: false,
+      },
+      betPlacedAt: Date,
+      trophiesAtBet: Number,
+      betResult: {
+        type: String,
+        enum: ['won', 'lost', 'returned'],
+      },
+      trophiesGained: Number,
+    },
+    opponent: {
+      betAmount: {
+        type: Number,
+        default: 0,
+        enum: [0, 1, 2, 5, 10],
+      },
+      betPlaced: {
+        type: Boolean,
+        default: false,
+      },
+      betPlacedAt: Date,
+      trophiesAtBet: Number,
+      betResult: {
+        type: String,
+        enum: ['won', 'lost', 'returned'],
+      },
+      trophiesGained: Number,
+    },
+    settled: {
+      type: Boolean,
+      default: false,
+    },
+    settledAt: Date,
+  },
   winProbability: {
     challenger: {
       probability: {

@@ -34,6 +34,7 @@ const {
   moveToNextForgeSection,
   getForgeSessionSummary,
   getForgeReviewController,
+  placeBetController,
 } = require('../controllers/quickClashController')
 const {
   joinMatchmakingRoom,
@@ -94,6 +95,7 @@ router.get(
 )
 router.get('/challenge/:challengeId/sessions', getSessionIdFromChallenge)
 router.post('/challenge/:challengeId/markRevenge', markChallengeRevenge)
+router.post('/challenge/:challengeId/bet', placeBetController)
 
 // Challenge session routes
 router.post('/session/:challengeId', startChallengeSession)
