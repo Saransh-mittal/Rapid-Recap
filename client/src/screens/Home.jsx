@@ -33,9 +33,7 @@ import { isSpecialCategory } from '../assets/Categories'
 const Timeline = React.lazy(() =>
   import('../components/homeComponents/Timeline'),
 )
-const WiseWeb = React.lazy(() =>
-  import('../components/Header-Footer/navbarComponents/WiseWeb'),
-)
+
 
 const Home = () => {
   const { t } = useTranslation('Home')
