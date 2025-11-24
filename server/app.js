@@ -225,8 +225,7 @@ authRouter.use('/quickClash', quickClashRoutes)
 authRouter.use('/special-categories', publicSpecialCategoryRoutes)
 app.use('/api', authRouter)
 
-app.use(notFoundHandler) // Handle 404s
-app.use(globalErrorHandler) // Handle all errors
+
 
 initBotTracking()
 async function initializeApp() {
@@ -239,7 +238,12 @@ async function initializeApp() {
         return next()
       }
       ssrMiddleware(req, res, next)
+      ssrMiddleware(req, res, next)
     })
+
+    // Add error handlers AFTER SSR middleware
+    app.use(notFoundHandler)
+    app.use(globalErrorHandler)
   } catch (err) {
     console.error('Failed to initialize SSR:', err)
     // Fallback to CSR in case of SSR failure
@@ -248,7 +252,12 @@ async function initializeApp() {
         return next()
       }
       res.sendFile(path.join(__dirname, '../client/dist/index.html'))
+      res.sendFile(path.join(__dirname, '../../client/dist/index.html'))
     })
+
+    // Add error handlers in fallback case too
+    app.use(notFoundHandler)
+    app.use(globalErrorHandler)
   }
 }
 initializeApp().catch(err => {
