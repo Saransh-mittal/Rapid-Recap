@@ -230,34 +230,15 @@ app.use('/api', authRouter)
 initBotTracking()
 async function initializeApp() {
   try {
-    const ssrMiddleware = await createSSRMiddleware(app)
+    // Use simple static middleware instead of complex SSR
+    const simpleStaticMiddleware = require('./middleware/simpleStaticMiddleware')
+    simpleStaticMiddleware(app)
 
-    // Apply SSR middleware after API routes but before static files
-    app.use((req, res, next) => {
-      if (req.path.startsWith('/api/')) {
-        return next()
-      }
-      ssrMiddleware(req, res, next)
-      ssrMiddleware(req, res, next)
-    })
-
-    // Add error handlers AFTER SSR middleware
+    // Add error handlers AFTER static middleware
     app.use(notFoundHandler)
     app.use(globalErrorHandler)
   } catch (err) {
-    console.error('Failed to initialize SSR:', err)
-    // Fallback to CSR in case of SSR failure
-    app.use((req, res) => {
-      if (req.path.startsWith('/api/')) {
-        return next()
-      }
-      res.sendFile(path.join(__dirname, '../client/dist/index.html'))
-      res.sendFile(path.join(__dirname, '../../client/dist/index.html'))
-    })
-
-    // Add error handlers in fallback case too
-    app.use(notFoundHandler)
-    app.use(globalErrorHandler)
+    console.error('Failed to initialize app:', err)
   }
 }
 initializeApp().catch(err => {
