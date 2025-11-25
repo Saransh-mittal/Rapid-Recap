@@ -50,6 +50,7 @@ const {
 } = require('./utils/languageDetection.utils')
 
 const app = express()
+app.set('trust proxy', 1) // Trust first proxy (Render load balancer)
 // CORS configuration - only needed in development
 if (process.env.NODE_ENV !== 'production') {
   app.use((req, res, next) => {
