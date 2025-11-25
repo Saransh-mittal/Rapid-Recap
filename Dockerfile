@@ -48,4 +48,4 @@ ENV PATH="$VIRTUAL_ENV/bin:$PATH"
 # Start the server
 # We use the "server" script from the root package.json or directly run the server
 WORKDIR /app/server
-CMD ["npm", "start"]
+CMD ["node", "app.js"]
