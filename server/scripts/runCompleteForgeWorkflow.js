@@ -1,7 +1,8 @@
+const path = require('path')
+require('dotenv').config({ path: path.join(__dirname, '../config.env') })
+
 const { runForgeScraper } = require('./runForgeScraper')
-const { processPendingSeeds } = require('../services/contentProcessingService')
 const mongoose = require('mongoose')
-require('dotenv').config({ path: './config.env' })
 require('../db/conn') // Connect to MongoDB
 
 /**
@@ -24,7 +25,8 @@ async function runCompleteWorkflow(options = {}) {
     maxSources = null, // Limit sources (null = all 16)
     maxProcessing = 100, // Max seeds to process
     skipScraping = false, // Skip scraping (only process existing)
-    skipProcessing = false, // Skip processing (only scrape)
+    skipProcessing = false, // Skip content processing
+    skipQuiz = false, // Skip quiz generation
   } = options
 
   console.log('\n' + '='.repeat(80))
@@ -35,6 +37,7 @@ async function runCompleteWorkflow(options = {}) {
   const workflowResults = {
     scraping: null,
     processing: null,
+    quiz: null,
     totalTime: 0,
     success: false,
   }
@@ -93,45 +96,104 @@ async function runCompleteWorkflow(options = {}) {
     }
 
     // ========================================================================
-    // PHASE 2: PROCESS SEEDS
+    // PHASE 2: BATCH PROCESSING (OPENAI BATCH API)
     // ========================================================================
 
     if (!skipProcessing) {
       console.log('='.repeat(80))
-      console.log('🔄 PHASE 2: SEED PROCESSING')
+      console.log('🔄 PHASE 2: BATCH PROCESSING')
       console.log('='.repeat(80))
-      console.log(`Processing up to ${maxProcessing} pending seeds...\n`)
 
-      const processStartTime = Date.now()
-      const processResult = await processPendingSeeds(maxProcessing)
-      const processTime = Date.now() - processStartTime
+      const { prepareBatch, checkAndProcessBatch } = require('../services/batchContentWorkflow')
+      const BatchJob = require('../model/batchJobSchema')
 
-      workflowResults.processing = {
-        ...processResult,
-        timeSeconds: Math.round(processTime / 1000),
+      // Check for active batch
+      const activeJob = await BatchJob.findOne({
+        status: { $in: ['submitted', 'processing'] },
+        jobType: { $ne: 'quiz_generation' } // Exclude quiz jobs
+      }).sort({ createdAt: -1 })
+
+      if (activeJob) {
+        console.log(`\n🔄 Found active batch (ID: ${activeJob.batchId})`)
+        console.log(`   Submitted at: ${activeJob.createdAt.toLocaleString()}`)
+        console.log('   Checking status with OpenAI...')
+
+        await checkAndProcessBatch()
+
+        // Refetch to see if it completed just now
+        const updatedJob = await BatchJob.findById(activeJob._id)
+        if (updatedJob.status === 'completed') {
+           workflowResults.processing = {
+             status: 'completed',
+             processed: updatedJob.processedCount,
+             batchId: updatedJob.batchId
+           }
+        } else {
+           workflowResults.processing = {
+             status: 'in_progress',
+             batchId: updatedJob.batchId,
+             openaiStatus: updatedJob.openaiStatus
+           }
+        }
+
+      } else {
+        console.log('\n🆕 No active batch. Preparing new batch from pending seeds...')
+        const newJob = await prepareBatch()
+
+        if (newJob) {
+          workflowResults.processing = {
+            status: 'submitted',
+            batchId: newJob.batchId,
+            requestCount: newJob.requestCount
+          }
+        } else {
+          console.log('   No pending seeds to process.')
+          workflowResults.processing = { status: 'skipped', reason: 'no_seeds' }
+        }
       }
 
       console.log('\n' + '-'.repeat(80))
-      console.log('✅ PROCESSING COMPLETE')
-      console.log('-'.repeat(80))
-      console.log(`Total processed:    ${processResult.total}`)
-      console.log(`Accepted:           ${processResult.accepted}`)
-      console.log(`Rejected:           ${processResult.rejected}`)
-      console.log(`Failed:             ${processResult.failed}`)
-      console.log(`Time:               ${Math.round(processTime / 1000)}s`)
-
-      if (Object.keys(processResult.reasons).length > 0) {
-        console.log('\nTop rejection reasons:')
-        Object.entries(processResult.reasons)
-          .sort(([, a], [, b]) => b - a)
-          .slice(0, 5)
-          .forEach(([reason, count]) => {
-            console.log(`  - ${reason}: ${count}`)
-          })
-      }
+      console.log('✅ BATCH PHASE COMPLETE')
       console.log('-'.repeat(80))
     } else {
       console.log('\n⏭️  PHASE 2: SKIPPED (skipProcessing = true)\n')
+    }
+
+    // ========================================================================
+    // PHASE 3: QUIZ BATCH PROCESSING
+    // ========================================================================
+
+    if (!skipQuiz) {
+      console.log('\n' + '='.repeat(80))
+      console.log('🔄 PHASE 3: QUIZ BATCH PROCESSING')
+      console.log('='.repeat(80))
+
+      const { prepareQuizBatch, checkAndProcessQuizBatch } = require('../services/batchQuizWorkflow')
+      const BatchJob = require('../model/batchJobSchema')
+
+      // 1. Check for active quiz batch
+      const activeQuizBatch = await BatchJob.findOne({
+        status: { $in: ['submitted', 'processing'] },
+        jobType: 'quiz_generation'
+      })
+
+      if (activeQuizBatch) {
+        console.log(`\n🔄 Found active QUIZ batch (ID: ${activeQuizBatch.batchId})`)
+        console.log(`   Submitted at: ${activeQuizBatch.createdAt.toLocaleString()}`)
+        console.log('   Checking status with OpenAI...')
+        await checkAndProcessQuizBatch()
+      } else {
+        console.log('\n🆕 No active quiz batch. Checking for draft articles...')
+        const quizBatchJob = await prepareQuizBatch()
+
+        if (quizBatchJob) {
+          console.log(`✅ Quiz Batch Submitted! Job ID: ${quizBatchJob._id}`)
+        }
+      }
+
+      console.log('\n' + '-'.repeat(80))
+      console.log('✅ QUIZ PHASE COMPLETE')
+      console.log('-'.repeat(80))
     }
 
     // ========================================================================
@@ -157,19 +219,24 @@ async function runCompleteWorkflow(options = {}) {
 
     if (workflowResults.processing) {
       console.log('\n🔄 Processing Results:')
-      console.log(
-        `   Forge articles:      ${workflowResults.processing.accepted}`,
-      )
-      console.log(
-        `   Rejected:            ${workflowResults.processing.rejected}`,
-      )
-      console.log(
-        `   Success rate:        ${(
-          (workflowResults.processing.accepted /
-            workflowResults.processing.total) *
-          100
-        ).toFixed(1)}%`,
-      )
+
+      if (workflowResults.processing.status === 'completed') {
+        console.log(`   Status:              Completed`)
+        console.log(`   Forge articles:      ${workflowResults.processing.processed}`)
+        console.log(`   Batch ID:            ${workflowResults.processing.batchId}`)
+      } else if (workflowResults.processing.status === 'submitted') {
+        console.log(`   Status:              Submitted (Processing in background)`)
+        console.log(`   Requests queued:     ${workflowResults.processing.requestCount}`)
+        console.log(`   Batch ID:            ${workflowResults.processing.batchId}`)
+        console.log(`   Note:                Results will be available in ~24h`)
+      } else if (workflowResults.processing.status === 'in_progress') {
+        console.log(`   Status:              In Progress (OpenAI is working)`)
+        console.log(`   OpenAI Status:       ${workflowResults.processing.openaiStatus}`)
+        console.log(`   Batch ID:            ${workflowResults.processing.batchId}`)
+      } else if (workflowResults.processing.status === 'skipped') {
+        console.log(`   Status:              Skipped`)
+        console.log(`   Reason:              ${workflowResults.processing.reason}`)
+      }
     }
 
     console.log(
@@ -213,6 +280,7 @@ async function main() {
     maxProcessing: 100,
     skipScraping: false,
     skipProcessing: false,
+    skipQuiz: false,
   }
 
   args.forEach(arg => {
@@ -224,6 +292,8 @@ async function main() {
       options.skipScraping = true
     } else if (arg === '--skip-processing') {
       options.skipProcessing = true
+    } else if (arg === '--skip-quiz') {
+      options.skipQuiz = true
     } else if (arg === '--help' || arg === '-h') {
       console.log(`
 Forge Complete Workflow Runner
