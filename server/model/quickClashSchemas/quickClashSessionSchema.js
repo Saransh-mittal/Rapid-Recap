@@ -195,7 +195,28 @@ const quickClashSessionSchema = new mongoose.Schema({
     speedBonus: Number,
     accuracyBonus: Number,
     total: Number,
+    forgeScore: Number,
+    precisionBonus: Number,
+    scoreSurgeBonus: Number,
   },
+  // Powerups for this session
+  activePowerups: [
+    {
+      powerupId: String,
+      type: { type: String }, // 'active', 'passive'
+      cost: Number,
+      phase: String, // 'forge', 'quiz', 'both'
+      used: {
+        type: Boolean,
+        default: false,
+      },
+      usedAt: Date,
+      effectApplied: {
+        type: Boolean,
+        default: false,
+      },
+    },
+  ],
   createdAt: {
     type: Date,
     default: Date.now,

@@ -250,6 +250,7 @@ const QuickClashSession = () => {
   const [timeLeft, setTimeLeft] = useState(120) // 2 minutes for reading
   const [quizTimeLeft, setQuizTimeLeft] = useState(50) // 50 seconds for quiz
   const [score, setScore] = useState(0)
+  const [scoreDetails, setScoreDetails] = useState(null)
   const [phaseProgress, setPhaseProgress] = useState(0)
   const [completeReadingLoading, setCompleteReadingLoading] = useState(false)
 
@@ -383,6 +384,12 @@ const QuickClashSession = () => {
       if (challenge?.betting?.enabled !== false) {
         setPhase('betting')
       } else {
+        // Check for Time Warp (Passive)
+        const hasTimeWarp = session?.activePowerups?.some(p => p.powerupId === 'TIME_WARP' && (p.phase?.toLowerCase() === 'quiz' || p.phase?.toLowerCase() === 'both'))
+        if (hasTimeWarp) {
+          setQuizTimeLeft(65)
+          toast({ title: 'Time Warp Active!', description: '+15s added to quiz timer', status: 'info', duration: 3000 })
+        }
         setPhase('quiz')
       }
       setPhaseProgress(0)
@@ -404,14 +411,21 @@ const QuickClashSession = () => {
 
   // NEW: Betting Completion Logic
   const handleBettingComplete = useCallback(() => {
+    // Check for Time Warp (Passive)
+    const hasTimeWarp = session?.activePowerups?.some(p => p.powerupId === 'TIME_WARP' && (p.phase?.toLowerCase() === 'quiz' || p.phase?.toLowerCase() === 'both'))
+    if (hasTimeWarp) {
+      setQuizTimeLeft(65)
+      toast({ title: 'Time Warp Active!', description: '+15s added to quiz timer', status: 'info', duration: 3000 })
+    }
     setPhase('quiz')
     setPhaseProgress(0)
-  }, [])
+  }, [session?.activePowerups, toast])
 
   // ORIGINAL QUIZ COMPLETION LOGIC - PRESERVED
   const handleQuizComplete = useCallback(
     result => {
       setScore(result.RQM_score)
+      setScoreDetails(result)
       setPhase('completed')
       openResults()
       dispatch(fetchActiveChallenges())
@@ -689,6 +703,7 @@ const QuickClashSession = () => {
                 <ForgeReadingPhase
                   sessionId={session?._id}
                   category={challenge?.category}
+                  activePowerups={session?.activePowerups || []}
                   onComplete={handleReadingComplete}
                   onError={error => {
                     setError(error)
@@ -731,6 +746,7 @@ const QuickClashSession = () => {
             <Suspense fallback={<LoadingFallback />}>
               <GamifiedQuiz
                 sessionId={session?._id}
+                activePowerups={session?.activePowerups || []}
                 onComplete={handleQuizComplete}
                 setStopTimerOnQuizSubmit={NO_OP}
                 quizTimeLeft={quizTimeLeft}
@@ -744,6 +760,7 @@ const QuickClashSession = () => {
             isOpen={isResultsOpen}
             onClose={closeResults}
             score={score}
+            scoreDetails={scoreDetails}
             navigateToList={confirmNavigation}
             challenge={challenge}
             user={user}

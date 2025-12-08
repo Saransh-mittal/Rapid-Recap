@@ -12,36 +12,39 @@ const MotionBox = motion(Box)
 const useScoreCalculations = quizData => {
   return useMemo(() => {
     const baseScore = quizData?.baseRQM || quizData?.finalRQM
-    const withPerformance = quizData?.performanceBonus
-      ? parseInt((baseScore * quizData?.performanceBonus).toFixed(0))
-      : baseScore
+    const precisionBonus = quizData?.precisionBonus || 0
+    const scoreSurgeBonus = quizData?.scoreSurgeBonus || 0
+    const forgeScore = quizData?.forgeScore || 0
+
+    const withPrecision = baseScore + precisionBonus
+    const withSurge = withPrecision + scoreSurgeBonus
+    const withForge = withSurge + forgeScore
     const finalScore = quizData?.finalRQM
 
-    return { baseScore, withPerformance, finalScore }
-  }, [quizData?.baseRQM, quizData?.finalRQM, quizData?.performanceBonus])
+    return { baseScore, precisionBonus, scoreSurgeBonus, forgeScore, withPrecision, withSurge, withForge, finalScore }
+  }, [quizData?.baseRQM, quizData?.finalRQM, quizData?.precisionBonus, quizData?.scoreSurgeBonus, quizData?.forgeScore])
 }
 
 // Memoized label calculations
-const useScoreLabels = (baseScore, withPerformance, quizData, t) => {
+const useScoreLabels = (baseScore, withPrecision, withSurge, withForge, quizData, t) => {
   return useMemo(() => {
-    const performanceLabel =
-      baseScore < withPerformance
-        ? t('performanceBonus', {
-            bonus: ((parseFloat(quizData?.performanceBonus) - 1) * 100).toFixed(
-              0,
-            ),
-          })
-        : null
+    const precisionLabel = quizData?.precisionBonus > 0 ? "Precision Protocol Bonus!" : null
+    const surgeLabel = quizData?.scoreSurgeBonus > 0 ? "Score Surge Activated!" : null
+    const forgeLabel = quizData?.forgeScore > 0 ? "Forge Mode Bonus!" : null
 
     const boostLabel = quizData?.isBoost
       ? t('quizBoost', { boost: ((quizData?.boost - 1) * 100).toFixed(0) })
       : null
 
-    return { performanceLabel, boostLabel }
+    return { precisionLabel, surgeLabel, forgeLabel, boostLabel }
   }, [
     baseScore,
-    withPerformance,
-    quizData?.performanceBonus,
+    withPrecision,
+    withSurge,
+    withForge,
+    quizData?.precisionBonus,
+    quizData?.scoreSurgeBonus,
+    quizData?.forgeScore,
     quizData?.isBoost,
     quizData?.boost,
     t,
@@ -161,11 +164,13 @@ const RQMScoreCard = React.memo(
     const [rqmStep, setRqmStep] = useState(0)
 
     // Memoized calculations
-    const { baseScore, withPerformance, finalScore } =
+    const { baseScore, withPrecision, withSurge, withForge, finalScore } =
       useScoreCalculations(quizData)
-    const { performanceLabel, boostLabel } = useScoreLabels(
+    const { precisionLabel, surgeLabel, forgeLabel, boostLabel } = useScoreLabels(
       baseScore,
-      withPerformance,
+      withPrecision,
+      withSurge,
+      withForge,
       quizData,
       t,
     )
@@ -180,14 +185,14 @@ const RQMScoreCard = React.memo(
         const updateStep = timestamp => {
           if (timestamp - lastStepTime >= stepInterval) {
             setRqmStep(prev => {
-              if (prev < 3) {
+              if (prev < 5) { // Increased steps to 5
                 lastStepTime = timestamp
                 return prev + 1
               }
               return prev
             })
           }
-          if (rqmStep < 3) {
+          if (rqmStep < 5) {
             frameId = requestAnimationFrame(updateStep)
           }
         }
@@ -195,11 +200,11 @@ const RQMScoreCard = React.memo(
         frameId = requestAnimationFrame(updateStep)
         return () => cancelAnimationFrame(frameId)
       }
-    }, [step])
+    }, [step, rqmStep])
 
     // Memoized render function
-    const renderRQMScore = useCallback(() => {
-      switch (rqmStep) {
+    const renderRQMScore = useCallback((stepOverride = rqmStep) => {
+      switch (stepOverride) {
         case 0:
           return (
             <Text
@@ -217,19 +222,56 @@ const RQMScoreCard = React.memo(
             </Text>
           )
         case 1:
-          return (
+           // Show Precision Bonus if exists
+           if (withPrecision === baseScore) return renderRQMScore(2)
+           return (
             <CountingNumber
               from={baseScore}
-              to={withPerformance}
+              to={withPrecision}
               duration={2}
-              label={performanceLabel}
-              color="green.400"
+              label={precisionLabel}
+              color="cyan.400"
             />
           )
         case 2:
+           // Show Surge Bonus
+           if (withSurge === withPrecision) return renderRQMScore(3)
+           return (
+            <CountingNumber
+              from={withPrecision}
+              to={withSurge}
+              duration={2}
+              label={surgeLabel}
+              color="orange.400"
+            />
+          )
+        case 3:
+           // Show Forge Bonus
+           if (withForge === withSurge) return renderRQMScore(4)
+           return (
+            <CountingNumber
+              from={withSurge}
+              to={withForge}
+              duration={2}
+              label={forgeLabel}
+              color="pink.400"
+            />
+           )
+        case 4:
+          // Final Boost (if any) or Final Score
+          if (finalScore === withForge) {
+             return (
+                <FinalScoreDisplay
+                  finalScore={finalScore}
+                  timeDilationBoosted={quizData?.timeDilationBoosted}
+                  isTournament={isTournament}
+                  t={t}
+                />
+              )
+          }
           return (
             <CountingNumber
-              from={withPerformance}
+              from={withForge}
               to={finalScore}
               duration={3}
               label={boostLabel}
@@ -249,11 +291,17 @@ const RQMScoreCard = React.memo(
     }, [
       rqmStep,
       baseScore,
-      withPerformance,
+      withPrecision,
+      withSurge,
+      withForge,
       finalScore,
-      performanceLabel,
+      precisionLabel,
+      surgeLabel,
+      forgeLabel,
       boostLabel,
       isTournament,
+      t,
+      quizData
     ])
 
     if (step < 2) return null

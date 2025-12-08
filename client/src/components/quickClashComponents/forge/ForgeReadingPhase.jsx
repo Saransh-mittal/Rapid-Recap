@@ -59,10 +59,11 @@ import { getCategoryInfo } from '../team/teamBattlePageComponents/categoriesSect
  * Props:
  * @param {string} sessionId - Quick Clash session ID
  * @param {string} category - Article category for theming
+ * @param {Array} activePowerups - List of active powerups for this session
  * @param {function} onComplete - Callback when forge mode completes
  * @param {function} onError - Callback for error handling
  */
-const ForgeReadingPhase = ({ sessionId, category, onComplete, onError }) => {
+const ForgeReadingPhase = ({ sessionId, category, activePowerups = [], onComplete, onError }) => {
   const { t } = useTranslation('QuickClash')
   const toast = useToast()
 
@@ -106,49 +107,61 @@ const ForgeReadingPhase = ({ sessionId, category, onComplete, onError }) => {
   // Timer for reading phase (seconds)
   const [readingTimer, setReadingTimer] = useState(24)
 
-  // Timer for question phase (counting up) with 10s auto-submit
+  // Timer for question phase (counting up) with dynamic auto-submit
   const [questionTimer, setQuestionTimer] = useState(0)
+  const [maxQuestionTime, setMaxQuestionTime] = useState(10) // Default 10s
+  const [maxReadingTime, setMaxReadingTime] = useState(12) // Default 12s
   const questionTimeoutRef = useRef(null)
+
+  // Powerup State
+  const [usedPowerups, setUsedPowerups] = useState({}) // { powerupId: true }
+  const [activeEffects, setActiveEffects] = useState({
+    scoreSurge: false,
+  })
+  const [disabledOptions, setDisabledOptions] = useState([]) // Array of indices
+  const [highlightedAnswer, setHighlightedAnswer] = useState(null) // Index
+
+  // Filter available powerups for Forge
+  const forgePowerups = activePowerups.filter(p =>
+    (p.phase === 'forge' || p.phase === 'both') && !p.used
+  )
 
   useEffect(() => {
     let interval
     if (phase === 'question') {
-      setQuestionTimer(0)
-
-      // Clear any existing timeout
-      if (questionTimeoutRef.current) {
-        clearTimeout(questionTimeoutRef.current)
-      }
+      // Don't reset timer here if it's already running (e.g. from previous render),
+      // but we do want to reset it when *entering* the phase.
+      // We can rely on the fact that we setQuestionTimer(0) in moveToNextSection or init.
+      // But to be safe, let's leave the reset logic in the transition functions
+      // and just handle the interval here.
 
       interval = setInterval(() => {
         setQuestionTimer(prev => prev + 1)
       }, 1000)
-
-      // Set timeout for auto-submit at 10 seconds
-      questionTimeoutRef.current = setTimeout(() => {
-        if (!selectedAnswer && phase === 'question') {
-          setIsTimeout(true) // Mark as timeout
-          toast({
-            title: 'Time Up!',
-            description: 'Moving to content...',
-            status: 'warning',
-            duration: 2000, // Show toast longer
-          })
-          // Give user time to see the timeout message (1.5s)
-          setTimeout(() => {
-            handleAnswerSubmit(null) // Submit null to indicate timeout
-          }, 1500)
-        }
-      }, 10000)
     }
 
     return () => {
       clearInterval(interval)
-      if (questionTimeoutRef.current) {
-        clearTimeout(questionTimeoutRef.current)
-      }
     }
   }, [phase])
+
+  // New: State-based Timeout Check
+  useEffect(() => {
+    if (phase === 'question' && questionTimer >= maxQuestionTime) {
+      if (!selectedAnswer && !isTimeout) {
+        setIsTimeout(true)
+        toast({
+          title: 'Time Up!',
+          description: 'Moving to content...',
+          status: 'warning',
+          duration: 2000,
+        })
+        setTimeout(() => {
+          handleAnswerSubmit(null)
+        }, 1500)
+      }
+    }
+  }, [questionTimer, maxQuestionTime, phase, selectedAnswer, isTimeout])
 
   // Loading and error states
   const [loading, setLoading] = useState(false)
@@ -211,6 +224,7 @@ const ForgeReadingPhase = ({ sessionId, category, onComplete, onError }) => {
       }))
 
       setPhase('question')
+      setQuestionTimer(0) // Ensure timer starts at 0
       questionStartTime.current = Date.now()
     } catch (err) {
       console.error('Error initializing forge mode:', err)
@@ -251,6 +265,8 @@ const ForgeReadingPhase = ({ sessionId, category, onComplete, onError }) => {
 
     // If timeout (null index), we don't select any answer visually
     if (answerIndex !== null) {
+      // Double check if we already timed out (race condition safety)
+      if (isTimeout) return
       setSelectedAnswer(answerIndex)
     }
 
@@ -265,6 +281,9 @@ const ForgeReadingPhase = ({ sessionId, category, onComplete, onError }) => {
         // For timeout, send -1 or any invalid index to backend
         answerIndex: answerIndex !== null ? answerIndex : -1,
         timeSpent,
+        powerups: {
+          scoreSurge: activeEffects.scoreSurge
+        }
       })
 
       if (response.success) {
@@ -379,6 +398,12 @@ const ForgeReadingPhase = ({ sessionId, category, onComplete, onError }) => {
         setReadingContent(null)
         setIsTimeout(false) // Reset timeout flag
         setPhase('question')
+        setActiveEffects({ scoreSurge: false }) // Reset per-question effects
+        setDisabledOptions([])
+        setHighlightedAnswer(null)
+        setMaxQuestionTime(10) // Reset max time
+        setMaxReadingTime(12) // Reset max time
+        setQuestionTimer(0) // Reset timer
         questionStartTime.current = Date.now()
       }
     } catch (err) {
@@ -412,6 +437,63 @@ const ForgeReadingPhase = ({ sessionId, category, onComplete, onError }) => {
    */
   const handleManualContinue = () => {
     moveToNextSection()
+  }
+
+  // Powerup Handlers
+  const handlePowerupClick = async (powerup) => {
+    if (usedPowerups[powerup.powerupId]) return
+
+    try {
+      // Mark locally as used immediately to prevent double clicks
+      setUsedPowerups(prev => ({ ...prev, [powerup.powerupId]: true }))
+
+      // Call API to mark as used on server
+      // We do this for ALL powerups now to ensure consistency
+      const response = await forgeService.usePowerup(sessionId, powerup.powerupId)
+
+      if (!response.success) {
+         throw new Error('Failed to activate powerup')
+      }
+
+      // Apply Client-Side Effects
+      switch (powerup.powerupId) {
+        case 'TIME_WARP':
+          if (phase === 'question') {
+            // Update Max Time ONLY
+            // We do NOT rewind the timer anymore. We just extend the finish line.
+            setMaxQuestionTime(prev => prev + 15)
+          } else if (phase === 'reading') {
+            setMaxReadingTime(prev => prev + 15) // Increase max reading time
+            // Reading timer counts DOWN. So we just add to it.
+            setReadingTimer(prev => prev + 15)
+          }
+          toast({ title: 'Time Warp Activated!', status: 'info', duration: 2000 })
+          break
+        case 'SCORE_SURGE':
+          setActiveEffects(prev => ({ ...prev, scoreSurge: true }))
+          toast({ title: 'Score Surge Active!', description: '2x Points for this question', status: 'warning', duration: 2000 })
+          break
+        case 'ORACLES_EYE':
+          // Effects returned from server
+          const effect = response.effect
+          if (effect.type === 'REMOVE_OPTIONS') {
+            setDisabledOptions(prev => [...prev, ...effect.optionsToRemove])
+            toast({ title: "Oracle's Eye Activated", description: "Two incorrect options removed!", status: "success" })
+          }
+          break
+        default:
+          break
+      }
+    } catch (err) {
+      console.error('Error using powerup:', err)
+      toast({ title: 'Powerup Failed', description: 'Could not activate powerup', status: 'error' })
+      // Revert used state if failed
+      setUsedPowerups(prev => {
+        const newState = { ...prev }
+        delete newState[powerup.powerupId]
+        return newState
+      })
+    }
   }
 
   // ============================================================================
@@ -561,9 +643,9 @@ const ForgeReadingPhase = ({ sessionId, category, onComplete, onError }) => {
                 {t('forge.time', 'Time')}
               </span>
               <span className={`text-2xl font-black tabular-nums tracking-tight leading-none ${
-                questionTimer > 7 ? 'text-red-400' : 'text-white'
+                questionTimer > (maxQuestionTime - 3) ? 'text-red-400' : 'text-white'
               }`}>
-                {Math.max(0, 10 - questionTimer)}s
+                {Math.max(0, maxQuestionTime - questionTimer)}s
               </span>
             </div>
           ) : null}
@@ -578,6 +660,8 @@ const ForgeReadingPhase = ({ sessionId, category, onComplete, onError }) => {
           compact={true}
         />
       </div>
+
+      {/* Powerups moved to footer dock - removed floating bar */}
 
       {/* Scrollable Main Content */}
       <div className="flex-1 overflow-y-auto px-3 md:px-0">
@@ -608,8 +692,8 @@ const ForgeReadingPhase = ({ sessionId, category, onComplete, onError }) => {
                   animate={{
                     width:
                       phase === 'question'
-                        ? `${Math.max(0, 100 - (questionTimer / 10) * 100)}%`
-                        : `${(readingTimer / 12) * 100}%`,
+                        ? `${Math.max(0, 100 - (questionTimer / maxQuestionTime) * 100)}%`
+                        : `${(readingTimer / maxReadingTime) * 100}%`,
                   }}
                   transition={{ duration: 0.5, ease: 'linear' }}
                 />
@@ -617,7 +701,7 @@ const ForgeReadingPhase = ({ sessionId, category, onComplete, onError }) => {
               <div className="flex justify-between items-center mt-1 text-xs text-white/50">
                 <span>
                   {phase === 'question'
-                    ? `${Math.max(0, 10 - questionTimer)}s remaining`
+                    ? `${Math.max(0, maxQuestionTime - questionTimer)}s remaining`
                     : `${readingTimer}s remaining`}
                 </span>
                 <span>
@@ -710,7 +794,17 @@ const ForgeReadingPhase = ({ sessionId, category, onComplete, onError }) => {
                       // Determine button state
                       let buttonBg = 'bg-white/8'
                       let buttonBorder = 'border-white/15'
-                      let buttonHover = 'hover:bg-white/12 hover:border-white/25 hover:shadow-lg hover:-translate-y-1'
+
+
+
+                      // Disabled Options (Oracle's Eye)
+                      const isEliminated = disabledOptions.includes(index)
+                      if (isEliminated) {
+                        buttonBg = 'bg-white/5 opacity-50'
+                        buttonBorder = 'border-white/5'
+                      }
+
+                      let buttonHover = !isEliminated ? 'hover:bg-white/12 hover:border-white/25 hover:shadow-lg hover:-translate-y-1' : ''
                       let buttonIcon = null
                       let buttonShadow = ''
                       let buttonOpacity = ''
@@ -749,26 +843,25 @@ const ForgeReadingPhase = ({ sessionId, category, onComplete, onError }) => {
                       return (
                         <motion.button
                           key={index}
-                          onClick={() => handleAnswerSubmit(index)}
-                          disabled={selectedAnswer !== null || loading}
-                          whileHover={!showResult ? { scale: 1.05, y: -4 } : {}}
-                          whileTap={!showResult ? { scale: 0.92, rotate: [0, -1, 1, 0] } : {}}
+                          onClick={() => !isEliminated && handleAnswerSubmit(index)}
+                          disabled={loading || phase === 'feedback' || isEliminated}
+                          className={`
+                            relative w-full text-left p-4 rounded-xl border transition-all duration-300 group flex items-center gap-5 cursor-pointer
+                            ${buttonBg} ${buttonBorder} ${buttonHover} ${buttonShadow} ${buttonOpacity}
+                            ${isEliminated ? 'cursor-not-allowed grayscale opacity-50' : ''}
+                          `}
+                          whileHover={!loading && phase !== 'feedback' && !isEliminated ? { scale: 1.01 } : {}}
+                          whileTap={!loading && phase !== 'feedback' && !isEliminated ? { scale: 0.99 } : {}}
                           animate={showResult && isCorrectAnswer ? {
                             scale: [1, 1.08, 1],
                             rotate: [0, 2, -2, 0],
-                            boxShadow: [`0 0 0px ${accentColor}`, `0 0 30px ${accentColor}`, `0 0 0px ${accentColor}`]
                           } : {}}
                           transition={{ duration: 0.5, ease: "easeInOut" }}
-                          className={`
-                            relative overflow-hidden p-4 rounded-xl border-2 text-left transition-all duration-300 ease-out
-                            flex items-center gap-5 group cursor-pointer
-                            ${buttonBg} ${buttonBorder} ${buttonHover} ${buttonShadow} ${buttonOpacity}
-                          `}
                         >
                           {/* Ripple effect on hover */}
                           {!showResult && (
                             <motion.div
-                              className="absolute inset-0 bg-gradient-to-r from-white/0 via-white/10 to-white/0"
+                              className="absolute inset-0 bg-gradient-to-r from-white/0 via-white/10 to-white/0 pointer-events-none"
                               initial={{ x: '-100%' }}
                               whileHover={{ x: '100%' }}
                               transition={{ duration: 0.6, ease: "easeInOut" }}
@@ -901,9 +994,69 @@ const ForgeReadingPhase = ({ sessionId, category, onComplete, onError }) => {
         </div>
       </div>
 
-      {/* Fixed Footer (Actions) */}
-      <div className="flex-none p-3 md:p-4 border-t border-white/15 bg-black/15 backdrop-blur-3xl z-20 shadow-[0_-4px_16px_rgba(0,0,0,0.2)]">
-        <div className="max-w-4xl mx-auto w-full flex items-center justify-between gap-4">
+      {/* Fixed Footer (Actions + Powerups) */}
+      <div className="flex-none p-3 md:p-4 border-t border-white/15 bg-black/30 backdrop-blur-3xl z-20 shadow-[0_-4px_16px_rgba(0,0,0,0.3)]">
+        <div className="max-w-4xl mx-auto w-full">
+          {/* Premium Powerup Dock - shown during question phase */}
+          {phase === 'question' && forgePowerups.length > 0 && (
+            <motion.div
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ type: 'spring', damping: 25 }}
+              className="mb-4"
+            >
+              <div className="flex items-center justify-center gap-3 flex-wrap">
+                {forgePowerups.map((p, i) => {
+                  const isUsed = usedPowerups[p.powerupId]
+                  // Color schemes matching the page theme better
+                  const colorSchemes = {
+                    TIME_WARP: { bg: 'from-cyan-500/90 to-cyan-600/90', border: 'border-cyan-400/50', text: 'Time Warp', icon: '⏳' },
+                    SCORE_SURGE: { bg: 'from-amber-500/90 to-amber-600/90', border: 'border-amber-400/50', text: 'Score 2x', icon: '⚡' },
+                    ORACLES_EYE: { bg: 'from-fuchsia-500/90 to-fuchsia-600/90', border: 'border-fuchsia-400/50', text: "Oracle's Eye", icon: '🔮' },
+                    STREAK_SHIELD: { bg: 'from-emerald-500/90 to-emerald-600/90', border: 'border-emerald-400/50', text: 'Shield', icon: '🛡️' },
+                  }
+                  const scheme = colorSchemes[p.powerupId] || colorSchemes.ORACLES_EYE
+
+                  return (
+                    <motion.button
+                      key={i}
+                      initial={{ scale: 0, y: 10 }}
+                      animate={{ scale: 1, y: 0 }}
+                      transition={{ delay: i * 0.08, type: 'spring', stiffness: 400 }}
+                      whileHover={!isUsed ? { scale: 1.1, y: -3 } : {}}
+                      whileTap={!isUsed ? { scale: 0.9 } : {}}
+                      onClick={() => handlePowerupClick(p)}
+                      disabled={isUsed}
+                      className={`
+                        relative flex items-center gap-2 px-4 py-3 rounded-2xl border-2 transition-all duration-200
+                        shadow-lg backdrop-blur-sm
+                        ${isUsed
+                          ? 'bg-slate-700/40 border-slate-500/30 opacity-50'
+                          : `bg-gradient-to-br ${scheme.bg} ${scheme.border} hover:shadow-xl`}
+                      `}
+                    >
+                      <span className="text-2xl drop-shadow-md">{scheme.icon}</span>
+                      <span className={`text-sm font-bold ${isUsed ? 'text-slate-400' : 'text-white drop-shadow-md'}`}>
+                        {scheme.text}
+                      </span>
+
+                      {isUsed && (
+                        <motion.span
+                          initial={{ scale: 0 }}
+                          animate={{ scale: 1 }}
+                          className="absolute -top-1 -right-1 w-5 h-5 bg-emerald-500 rounded-full flex items-center justify-center text-white text-xs font-bold shadow-md"
+                        >
+                          ✓
+                        </motion.span>
+                      )}
+                    </motion.button>
+                  )
+                })}
+              </div>
+            </motion.div>
+          )}
+
+          {/* Reading phase actions */}
           {phase === 'reading' ? (
             <div className="w-full flex items-center gap-4">
               <div className="flex-1 hidden md:block">
@@ -943,11 +1096,11 @@ const ForgeReadingPhase = ({ sessionId, category, onComplete, onError }) => {
                 )}
               </motion.button>
             </div>
-          ) : (
+          ) : phase === 'question' && forgePowerups.length === 0 ? (
             <div className="w-full flex justify-center">
-              {/* Removed unnecessary prompt */}
+              <p className="text-xs text-white/30">Select an answer above</p>
             </div>
-          )}
+          ) : null}
         </div>
       </div>
     </div>
@@ -955,4 +1108,3 @@ const ForgeReadingPhase = ({ sessionId, category, onComplete, onError }) => {
 }
 
 export default ForgeReadingPhase
-

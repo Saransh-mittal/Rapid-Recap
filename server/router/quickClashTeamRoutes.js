@@ -82,4 +82,19 @@ router.post(
 )
 router.get('/team/invitations/pending', getPendingInvitationsController)
 
+const {
+  donatePowerupController,
+  equipPowerupController,
+  unequipPowerupController,
+  getPowerupDefinitions,
+  getUserInventory,
+} = require('../controllers/quickClashPowerupController')
+
+// Powerup Routes
+router.post('/team-battle/:battleId/powerup/donate', donatePowerupController)
+router.post('/team-battle/:battleId/powerup/equip', equipPowerupController)
+router.post('/team-battle/:battleId/powerup/unequip', unequipPowerupController)
+router.get('/powerups/definitions', getPowerupDefinitions)
+router.get('/powerups/inventory', getUserInventory)
+
 module.exports = router

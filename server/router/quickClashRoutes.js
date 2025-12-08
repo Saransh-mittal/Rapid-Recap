@@ -51,6 +51,9 @@ const {
 } = require('../controllers/quickClashGlobalMatchmakingController')
 const teamRoutes = require('./quickClashTeamRoutes')
 const analysisRoutes = require('./quickClashAnalysisRoutes')
+const {
+  usePowerupController
+} = require('../controllers/quickClashPowerupController')
 
 const router = express.Router()
 const dailyTaskRoutes = require('./quickClashDailyTaskRoutes')
@@ -104,6 +107,7 @@ router.post('/session/:sessionId/reading/start', startReadingPhase)
 router.post('/session/:sessionId/reading/complete', completeReadingPhase)
 router.post('/session/:sessionId/quiz/submit', submitQuizAnswers)
 router.get('/session/:sessionId/report', getSessionQuizReport)
+router.post('/session/:sessionId/powerup/use', usePowerupController)
 
 // Challenge analysis routes
 router.post('/analysis/:challengeId/generate', generateAnalysis)

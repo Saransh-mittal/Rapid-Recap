@@ -1114,7 +1114,7 @@ const startForgeSession = asyncHandler(async (req, res) => {
  */
 const submitForgeSectionAnswer = asyncHandler(async (req, res) => {
   const { sessionId } = req.params
-  const { sectionNumber, userAnswer, timeSpent } = req.body
+  const { sectionNumber, userAnswer, timeSpent, powerups } = req.body
 
   // Validate input
   if (
@@ -1142,6 +1142,7 @@ const submitForgeSectionAnswer = asyncHandler(async (req, res) => {
       sectionNumber,
       userAnswer,
       timeSpent,
+      powerups: powerups || {},
     })
 
     res.status(200).json({

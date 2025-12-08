@@ -177,6 +177,22 @@ const quickClashTeamBattleSchema = new mongoose.Schema(
           type: Number,
           default: 0,
         },
+        // Powerup Loadout
+        loadout: {
+          items: [
+            {
+              powerupId: String, // e.g., 'TIME_WARP'
+              type: { type: String }, // 'active', 'passive'
+              cost: Number,
+              phase: String, // 'forge', 'quiz', 'both'
+            },
+          ],
+          housingUsed: {
+            type: Number,
+            default: 0,
+            max: 30,
+          },
+        },
       },
     ],
     teamBMembers: [
@@ -232,8 +248,71 @@ const quickClashTeamBattleSchema = new mongoose.Schema(
           type: Number,
           default: 0,
         },
+        // Powerup Loadout
+        loadout: {
+          items: [
+            {
+              powerupId: String, // e.g., 'TIME_WARP'
+              type: { type: String }, // 'active', 'passive'
+              cost: Number,
+              phase: String, // 'forge', 'quiz', 'both'
+            },
+          ],
+          housingUsed: {
+            type: Number,
+            default: 0,
+            max: 30,
+          },
+        },
       },
     ],
+    // Team Powerup Pools
+    teamAPool: {
+      items: [
+        {
+          powerupId: String,
+          type: { type: String },
+          cost: Number,
+          phase: String,
+          donatedBy: {
+            type: mongoose.Schema.Types.ObjectId,
+            ref: 'USER',
+          },
+          donatedAt: {
+            type: Date,
+            default: Date.now,
+          },
+        },
+      ],
+      housingUsed: {
+        type: Number,
+        default: 0,
+        max: 150,
+      },
+    },
+    teamBPool: {
+      items: [
+        {
+          powerupId: String,
+          type: { type: String },
+          cost: Number,
+          phase: String,
+          donatedBy: {
+            type: mongoose.Schema.Types.ObjectId,
+            ref: 'USER',
+          },
+          donatedAt: {
+            type: Date,
+            default: Date.now,
+          },
+        },
+      ],
+      housingUsed: {
+        type: Number,
+        default: 0,
+        max: 150,
+      },
+    },
     // Win Probability Data (Team Mode)
     winProbability: {
       teamA: {

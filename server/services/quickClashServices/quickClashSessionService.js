@@ -2,6 +2,7 @@
 const QuickClashSession = require('../../model/quickClashSchemas/quickClashSessionSchema')
 const QuickClashQuiz = require('../../model/quickClashSchemas/quickClashQuizSchema')
 const QuickClashChallenge = require('../../model/quickClashSchemas/quickClashChallengeSchema')
+const QuickClashTeamBattle = require('../../model/quickClashSchemas/quickClashTeamBattleSchema')
 const ForgeArticle = require('../../model/quickClashSchemas/forgeArticleSchema')
 const {
   getQuickClashHighlights,
@@ -124,6 +125,34 @@ const createSession = async ({ challengeId, userId, language }) => {
         language: preferredLanguage,
         expiresAt: new Date(Date.now() + SESSION_EXPIRY),
       })
+
+      // NEW: Inject Powerups if from Team Battle
+      if (challenge.fromTeamBattle && challenge.teamBattle) {
+        const teamBattle = await QuickClashTeamBattle.findById(
+          challenge.teamBattle,
+        ).session(session)
+
+        if (teamBattle) {
+          const teamAMember = teamBattle.teamAMembers.find(
+            m => m.user.toString() === userId.toString(),
+          )
+          const teamBMember = teamBattle.teamBMembers.find(
+            m => m.user.toString() === userId.toString(),
+          )
+          const member = teamAMember || teamBMember
+
+          if (member && member.loadout && member.loadout.items.length > 0) {
+            quizSession.activePowerups = member.loadout.items.map(item => ({
+              powerupId: item.powerupId,
+              type: item.type,
+              cost: item.cost,
+              phase: item.phase,
+              used: false,
+              effectApplied: false,
+            }))
+          }
+        }
+      }
 
       await quizSession.save({ session })
 
@@ -361,20 +390,48 @@ const completeQuiz = async ({ sessionId, responses }) => {
       quizSession.quizAttempt.endTime = now
       quizSession.phase = 'completed'
 
-      const RQM_score = calculateRQMScore({
+      const RQM_score_base = calculateRQMScore({
         responses: validatedResponses,
         timeSpent: quizTimeSpent,
         difficulty: quizSession.quiz.overallDifficulty,
         questionCount: quizSession.quiz.questions.length,
       })
 
+      // --- POWERUP BONUSES ---
+      let final_RQM_score = RQM_score_base
+      let precisionBonus = 0
+      let scoreSurgeBonus = 0
+
+      const activePowerups = quizSession.activePowerups || []
+      const isPerfectScore = validatedResponses.filter(r => r.isCorrect).length === quizSession.quiz.questions.length
+
+      // 1. Precision Protocol (Quiz): +50 RQM if 100% Accuracy
+    const precisionProtocol = activePowerups.find(p => p.powerupId === 'PRECISION_PROTOCOL' && (p.phase?.toLowerCase() === 'quiz' || p.phase?.toLowerCase() === 'both'))
+    const isPerfect = validatedResponses.every(r => r.isCorrect)
+    if (precisionProtocol && isPerfect) {
+      precisionBonus = 50
+      final_RQM_score += precisionBonus
+      precisionProtocol.used = true
+      precisionProtocol.effectApplied = true
+    }
+
+    // 2. Score Surge (Quiz): 1.1x Multiplier
+    const scoreSurge = activePowerups.find(p => p.powerupId === 'SCORE_SURGE' && (p.phase?.toLowerCase() === 'quiz' || p.phase?.toLowerCase() === 'both'))
+    if (scoreSurge) {
+      const surgedScore = Math.round(final_RQM_score * 1.1)
+      scoreSurgeBonus = surgedScore - final_RQM_score
+      final_RQM_score = surgedScore
+      scoreSurge.used = true
+      scoreSurge.effectApplied = true
+    }
       quizSession.score = {
-        RQM_score,
+        RQM_score: final_RQM_score,
+        baseRQM: RQM_score_base, // Store base for breakdown
         speedBonus: quizTimeSpent < quizSession.quiz.questions.length * 15,
-        accuracyBonus:
-          validatedResponses.filter(r => r.isCorrect).length ===
-          quizSession.quiz.questions.length,
-        total: RQM_score,
+        accuracyBonus: isPerfectScore,
+        precisionBonus,
+        scoreSurgeBonus,
+        total: final_RQM_score,
       }
 
       await quizSession.save({ session })
@@ -502,6 +559,7 @@ const submitForgeAnswer = async ({
   sectionNumber,
   userAnswer,
   timeSpent,
+  powerups = {}, // { scoreSurge: boolean }
 }) => {
   const mongoSession = await mongoose.startSession()
   try {
@@ -567,7 +625,23 @@ const submitForgeAnswer = async ({
         quizSession.forgeProgress.correctAnswers =
           (quizSession.forgeProgress.correctAnswers || 0) + 1
       } else {
-        currentStreak = 0
+        // Apply Powerup: Streak Shield (Passive - auto-check from activePowerups)
+        const activePowerups = quizSession.activePowerups || []
+        const streakShield = activePowerups.find(
+          p => p.powerupId === 'STREAK_SHIELD' &&
+          (p.phase?.toLowerCase() === 'forge' || p.phase?.toLowerCase() === 'both') &&
+          !p.used
+        )
+
+        if (streakShield) {
+          // Do not reset streak - Streak Shield protects it
+          currentStreak = currentStreak // Keep existing streak
+          // Mark the powerup as used
+          streakShield.used = true
+          streakShield.effectApplied = true
+        } else {
+          currentStreak = 0
+        }
       }
       quizSession.forgeProgress.streak = currentStreak
       quizSession.forgeProgress.maxStreak = Math.max(
@@ -601,6 +675,11 @@ const submitForgeAnswer = async ({
         streakBonus = currentStreak * FORGE_SCORING.STREAK_BONUS
 
         questionScore += speedBonus + streakBonus
+
+        // Apply Powerup: Score Surge
+        if (powerups.scoreSurge) {
+          questionScore *= 2
+        }
       }
 
       // Update score tracking

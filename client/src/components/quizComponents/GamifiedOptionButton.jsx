@@ -11,19 +11,20 @@ const GamifiedOptionButton = ({
   isSelected,
   onSelect,
   isDisabled,
+  isEliminated,
 }) => {
   return (
     <MotionBox
       as="button"
-      onClick={() => !isDisabled && onSelect(optionKey)}
-      disabled={isDisabled}
+      onClick={() => !isDisabled && !isEliminated && onSelect(optionKey)}
+      disabled={isDisabled || isEliminated}
       width="100%"
       position="relative"
       overflow="hidden"
       initial={{ opacity: 0, y: 20 }}
-      animate={{ opacity: 1, y: 0 }}
-      whileHover={!isDisabled ? { scale: 1.02 } : {}}
-      whileTap={!isDisabled ? { scale: 0.98 } : {}}
+      animate={{ opacity: isEliminated ? 0.3 : 1, y: 0 }}
+      whileHover={!isDisabled && !isEliminated ? { scale: 1.02 } : {}}
+      whileTap={!isDisabled && !isEliminated ? { scale: 0.98 } : {}}
       transition={{ duration: 0.2 }}
       p={4}
       borderRadius="xl"
@@ -71,6 +72,7 @@ const GamifiedOptionButton = ({
         fontSize={{ base: 'md', md: 'lg' }}
         fontWeight={isSelected ? 'bold' : 'medium'}
         flex="1"
+        textDecoration={isEliminated ? 'line-through' : 'none'}
       >
         {optionText}
       </Text>

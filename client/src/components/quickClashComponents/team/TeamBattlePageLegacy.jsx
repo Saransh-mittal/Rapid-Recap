@@ -18,6 +18,9 @@ import TeamBattleHeader from './teamBattlePageComponents/TeamBattleHeader'
 import TeamsGrid from './teamBattlePageComponents/TeamsGrid'
 import CategoriesSection from './teamBattlePageComponents/CategoriesSection'
 import BattleResultsSection from './teamBattlePageComponents/BattleResultsSection'
+import PowerupsSection from './teamBattlePageComponents/PowerupsSection'
+import PowerupDonationModal from '../powerups/PowerupDonationModal'
+import PowerupSelectionModal from '../powerups/PowerupSelectionModal'
 
 // Lazy load report modal
 const QuizReportModal = React.lazy(() => import('../QuizReportModal'))
@@ -40,6 +43,10 @@ const TeamBattlePage = React.memo(() => {
   const [selectedSessionId, setSelectedSessionId] = useState(null)
   const [reportModalLoading, setReportModalLoading] = useState(false)
   const [isReportOpen, setIsReportOpen] = useState(false)
+
+  // Powerup Modals State
+  const [isDonationOpen, setIsDonationOpen] = useState(false)
+  const [isSelectionOpen, setIsSelectionOpen] = useState(false)
 
   // Custom hook for team battles (unchanged)
   const {
@@ -312,6 +319,19 @@ const TeamBattlePage = React.memo(() => {
         {/* Header */}
         <TeamBattleHeader battle={currentBattle} onGoBack={handleGoBack} />
 
+        {/* Powerups Section */}
+        {currentBattle.status === 'active' && userTeam && (
+          <PowerupsSection
+            currentBattle={currentBattle}
+            userTeam={userTeam}
+            userId={user?._id}
+            onOpenDonation={() => setIsDonationOpen(true)}
+            onOpenSelection={() => setIsSelectionOpen(true)}
+          />
+        )}
+
+        {/* Teams Section */}
+
         {/* Teams Section */}
         <TeamsGrid
           currentBattle={currentBattle}
@@ -384,6 +404,24 @@ const TeamBattlePage = React.memo(() => {
           </React.Suspense>
         )}
       </AnimatePresence>
+
+      {/* Powerup Modals */}
+      {currentBattle && userTeam && (
+        <>
+          <PowerupDonationModal
+            isOpen={isDonationOpen}
+            onClose={() => setIsDonationOpen(false)}
+            battleId={currentBattle._id}
+            teamId={userTeam === 'teamA' ? currentBattle.teamA._id : currentBattle.teamB._id}
+          />
+          <PowerupSelectionModal
+            isOpen={isSelectionOpen}
+            onClose={() => setIsSelectionOpen(false)}
+            battleId={currentBattle._id}
+            teamId={userTeam === 'teamA' ? currentBattle.teamA._id : currentBattle.teamB._id}
+          />
+        </>
+      )}
     </div>
   )
 })

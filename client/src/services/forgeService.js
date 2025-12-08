@@ -52,14 +52,29 @@ export const forgeService = {
    * Security Note: Server validates the answer and only returns content if correct
    * This prevents client-side manipulation
    */
-  submitAnswer: async (sessionId, { sectionNumber, answerIndex, timeSpent }) => {
+  submitAnswer: async (sessionId, { sectionNumber, answerIndex, timeSpent, powerups }) => {
     const response = await axios.post(
       `${BASE_URL}/session/${sessionId}/forge/answer`,
       {
         sectionNumber,
         userAnswer: answerIndex, // Backend expects 'userAnswer' not 'answerIndex'
         timeSpent,
+        powerups,
       },
+    )
+    return response.data
+  },
+
+  /**
+   * Use a powerup in Forge Mode
+   * @param {string} sessionId
+   * @param {string} powerupId
+   * @returns {Promise<Object>} Powerup effect
+   */
+  usePowerup: async (sessionId, powerupId) => {
+    const response = await axios.post(
+      `${BASE_URL}/session/${sessionId}/powerup/use`,
+      { powerupId }
     )
     return response.data
   },

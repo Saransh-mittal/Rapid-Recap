@@ -1,5 +1,5 @@
 // components/quickClashComponents/team/teamBattlePageComponents/TeamsGrid.jsx
-import React, { memo, useMemo } from 'react'
+import React, { memo, useMemo, useState, useCallback } from 'react'
 import { motion } from 'framer-motion'
 import { useTranslation } from 'react-i18next'
 import { Trophy, Users, CheckCircle, Clock, Star } from 'lucide-react'
@@ -13,6 +13,7 @@ import {
   PopoverTrigger,
 } from '@/components/ui/popover'
 import { Button } from '@/components/ui/button'
+import TeamMemberInfoModal from './TeamMemberInfoModal'
 
 /**
  * Professional Teams Grid - Clear Comparison
@@ -26,6 +27,18 @@ import { Button } from '@/components/ui/button'
  */
 const TeamsGrid = memo(({ currentBattle, userTeam, userId }) => {
   const { t } = useTranslation('QuickClash')
+  const [selectedMemberId, setSelectedMemberId] = useState(null)
+  const [isModalOpen, setIsModalOpen] = useState(false)
+
+  const handleMemberClick = useCallback((memberId) => {
+    setSelectedMemberId(memberId)
+    setIsModalOpen(true)
+  }, [])
+
+  const handleCloseModal = useCallback(() => {
+    setIsModalOpen(false)
+    setSelectedMemberId(null)
+  }, [])
 
   const { leftTeam, rightTeam } = useMemo(() => {
     if (!currentBattle) return { leftTeam: null, rightTeam: null }
@@ -62,7 +75,12 @@ const TeamsGrid = memo(({ currentBattle, userTeam, userId }) => {
     <div className="px-4 mb-4 sm:px-6 sm:mb-5">
       <div className="grid grid-cols-1 md:grid-cols-[1fr_auto_1fr] gap-3 md:gap-4 items-center">
         {/* Left Team (User's Team) */}
-        <TeamCard team={leftTeam} side="left" userId={userId} />
+        <TeamCard
+          team={leftTeam}
+          side="left"
+          userId={userId}
+          onMemberClick={handleMemberClick}
+        />
 
         {/* VS Divider */}
         <div className="flex items-center justify-center md:flex-col gap-2 md:gap-3 py-2 md:py-0">
@@ -80,8 +98,20 @@ const TeamsGrid = memo(({ currentBattle, userTeam, userId }) => {
         </div>
 
         {/* Right Team (Opponent) */}
-        <TeamCard team={rightTeam} side="right" userId={userId} />
+        <TeamCard
+          team={rightTeam}
+          side="right"
+          userId={userId}
+          onMemberClick={handleMemberClick}
+        />
       </div>
+
+      {/* Member Info Modal */}
+      <TeamMemberInfoModal
+        userId={selectedMemberId}
+        isOpen={isModalOpen}
+        onClose={handleCloseModal}
+      />
     </div>
   )
 })
@@ -89,7 +119,7 @@ const TeamsGrid = memo(({ currentBattle, userTeam, userId }) => {
 /**
  * Clean Team Card - No garish colors
  */
-const TeamCard = memo(({ team, side, userId }) => {
+const TeamCard = memo(({ team, side, userId, onMemberClick }) => {
   const { t } = useTranslation('QuickClash')
   const isUserTeam = team.isUserTeam
   const completedCount = team.members.filter(m => m.completed).length
@@ -148,13 +178,14 @@ const TeamCard = memo(({ team, side, userId }) => {
             {team.members?.slice(0, 4).map(member => (
               <Avatar
                 key={member.user._id}
-                className={`w-9 h-9 border-2 ${
+                className={`w-9 h-9 border-2 cursor-pointer transition-transform hover:scale-110 hover:z-10 ${
                   member.user._id === userId
                     ? 'border-cyan-400 ring-2 ring-cyan-400/50'
                     : member.completed
                     ? 'border-green-400'
                     : 'border-white/30'
                 }`}
+                onClick={() => onMemberClick(member.user._id)}
               >
                 <AvatarImage src={member.user.pic} />
                 <AvatarFallback className="bg-slate-700 text-white text-xs font-bold">
@@ -185,7 +216,11 @@ const TeamCard = memo(({ team, side, userId }) => {
                 </Button>
               </PopoverTrigger>
               <PopoverContent className="w-72 bg-slate-800/95 backdrop-blur-xl border-slate-700">
-                <TeamMembersPopover members={team.members} userId={userId} />
+                <TeamMembersPopover
+                  members={team.members}
+                  userId={userId}
+                  onMemberClick={onMemberClick}
+                />
               </PopoverContent>
             </Popover>
           )}
@@ -203,7 +238,7 @@ const TeamCard = memo(({ team, side, userId }) => {
 /**
  * Team Members Popover
  */
-const TeamMembersPopover = memo(({ members, userId }) => {
+const TeamMembersPopover = memo(({ members, userId, onMemberClick }) => {
   const { t } = useTranslation('QuickClash')
 
   return (
@@ -215,11 +250,12 @@ const TeamMembersPopover = memo(({ members, userId }) => {
       {members.map(member => (
         <div
           key={member.user._id}
-          className={`flex items-center gap-2 p-2 rounded-lg text-xs ${
+          className={`flex items-center gap-2 p-2 rounded-lg text-xs cursor-pointer transition-colors hover:bg-white/10 ${
             member.user._id === userId
               ? 'bg-cyan-500/20 border border-cyan-500/30'
               : 'bg-slate-700/50'
           }`}
+          onClick={() => onMemberClick(member.user._id)}
         >
           <Avatar className="w-7 h-7">
             <AvatarImage src={member.user.pic} />

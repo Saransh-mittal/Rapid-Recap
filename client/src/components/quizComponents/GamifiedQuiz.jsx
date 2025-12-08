@@ -16,6 +16,7 @@ import {
   Progress,
   Center,
   Spinner,
+  Badge,
 } from '@chakra-ui/react'
 import { motion, AnimatePresence } from 'framer-motion'
 import {
@@ -43,6 +44,7 @@ const GamifiedQuiz = ({
   quizTimeLeft,
   setQuizTimeLeft,
   setLoadingQuiz,
+  activePowerups = [],
 }) => {
   const { t } = useTranslation('QuickClash')
   const toast = useToast()
@@ -57,6 +59,31 @@ const GamifiedQuiz = ({
   const [submitLoading, setSubmitLoading] = useState(false)
   const [result, setResult] = useState(null)
   const [quizReady, setQuizReady] = useState(false)
+
+  // Powerup State
+  const [disabledOptions, setDisabledOptions] = useState({}) // { questionIndex: ['a', 'c'] }
+  const [usedPowerups, setUsedPowerups] = useState({}) // { powerupId: true }
+  const [powerupLoading, setPowerupLoading] = useState(false)
+
+  // Filter available powerups for Quiz
+  // Active Powerups (Clickable)
+  const quizPowerups = activePowerups.filter(p =>
+    (p.phase?.toLowerCase() === 'quiz' || p.phase?.toLowerCase() === 'both') &&
+    !p.used &&
+    p.type !== 'PASSIVE' && // Exclude passives from clickable list
+    ['ORACLES_EYE'].includes(p.powerupId) // Whitelist supported active powerups
+  )
+
+  // Passive Powerups (Visual Only) - Show as active buffs
+  // These apply automatically during Quiz phase
+  const passivePowerups = activePowerups.filter(p =>
+    (p.phase?.toLowerCase() === 'quiz' || p.phase?.toLowerCase() === 'both') &&
+    !p.used && // Only show if not already used
+    (p.type === 'PASSIVE' ||
+     p.powerupId === 'PRECISION_PROTOCOL' ||
+     p.powerupId === 'TIME_WARP' ||
+     p.powerupId === 'SCORE_SURGE') // Score Surge gives 1.1x RQM in Quiz
+  )
 
   // Refs
   const switchingQuestionRef = useRef(false)
@@ -83,8 +110,36 @@ const GamifiedQuiz = ({
         })
 
         setQuizReady(true)
-        // Reset timer in parent
-        setQuizTimeLeft(50)
+        setQuizReady(true)
+        // Reset timer in parent, checking for Time Warp
+        // FIX: Check if it's NOT used
+        const timeWarpPowerup = activePowerups.find(p =>
+          p.powerupId === 'TIME_WARP' &&
+          (p.phase?.toLowerCase() === 'quiz' || p.phase?.toLowerCase() === 'both') &&
+          !p.used
+        )
+
+        const hasTimeWarp = !!timeWarpPowerup
+        setQuizTimeLeft(hasTimeWarp ? 65 : 50)
+
+        if (hasTimeWarp) {
+             toast({
+                title: "Time Warp Active!",
+                description: "+15s added to quiz timer",
+                status: "info",
+                duration: 3000,
+                isClosable: true,
+              })
+
+             // Mark as used in backend
+             try {
+               await axios.post(`/api/quickClash/session/${sessionId}/powerup/use`, {
+                 powerupId: 'TIME_WARP'
+               })
+             } catch (err) {
+               console.error("Failed to mark Time Warp as used", err)
+             }
+        }
       } catch (error) {
         console.error('Error fetching questions:', error)
         toast({
@@ -233,6 +288,54 @@ const GamifiedQuiz = ({
       }
   }, [quizTimeLeft, submitted, submitLoading, quizReady, handleSubmit])
 
+  // Powerup Handler
+  const handleUsePowerup = async (powerup) => {
+    if (usedPowerups[powerup.powerupId] || powerupLoading) return
+
+    try {
+      setPowerupLoading(true)
+      const currentQuestion = questions[currentQuestionIndex]
+
+      const response = await axios.post(`/api/quickClash/session/${sessionId}/powerup/use`, {
+        powerupId: powerup.powerupId,
+        questionId: currentQuestion._id
+      })
+
+      if (response.data.success) {
+        const effect = response.data.effect
+
+        if (effect.type === 'REMOVE_OPTIONS') {
+          setDisabledOptions(prev => ({
+            ...prev,
+            [currentQuestionIndex]: [
+              ...(prev[currentQuestionIndex] || []),
+              ...effect.optionsToRemove
+            ]
+          }))
+
+          toast({
+            title: "Oracle's Eye Activated",
+            description: "Two incorrect options have been removed!",
+            status: "success",
+            duration: 3000,
+          })
+        }
+
+        // Mark as used
+        setUsedPowerups(prev => ({ ...prev, [powerup.powerupId]: true }))
+      }
+    } catch (error) {
+      console.error('Error using powerup:', error)
+      toast({
+        title: "Powerup Failed",
+        description: error.response?.data?.message || "Could not use powerup",
+        status: "error",
+      })
+    } finally {
+      setPowerupLoading(false)
+    }
+  }
+
   // --- Render Helpers ---
 
   const currentQuestion = questions[currentQuestionIndex]
@@ -330,6 +433,48 @@ const GamifiedQuiz = ({
           </HStack>
         </Flex>
 
+        {/* Active Buffs (Passive Powerups) */}
+        {passivePowerups.length > 0 && (
+          <HStack spacing={2} mb={4} px={1} flexWrap="wrap" justify="center">
+            {passivePowerups.map((p, i) => {
+              // Color and icon for each powerup type
+              const buffStyles = {
+                PRECISION_PROTOCOL: { color: 'pink', icon: '🎯', label: 'Precision Active' },
+                TIME_WARP: { color: 'cyan', icon: '⏳', label: '+15s Active' },
+                SCORE_SURGE: { color: 'yellow', icon: '⚡', label: '1.1x RQM Active' },
+              }
+              const style = buffStyles[p.powerupId] || { color: 'purple', icon: '✨', label: p.powerupId.replace('_', ' ') }
+
+              return (
+                <Badge
+                  key={i}
+                  as={motion.div}
+                  initial={{ scale: 0, y: -10 }}
+                  animate={{ scale: 1, y: 0 }}
+                  colorScheme={style.color}
+                  variant="solid"
+                  borderRadius="full"
+                  px={3}
+                  py={1.5}
+                  display="flex"
+                  alignItems="center"
+                  gap={2}
+                  boxShadow={`0 0 15px ${style.color === 'yellow' ? 'rgba(236, 201, 75, 0.4)' :
+                             style.color === 'cyan' ? 'rgba(6, 182, 212, 0.4)' :
+                             style.color === 'pink' ? 'rgba(236, 72, 153, 0.4)' :
+                             'rgba(128, 90, 213, 0.4)'}`}
+                  fontSize="xs"
+                  fontWeight="bold"
+                >
+                  <Text fontSize="sm">{style.icon}</Text>
+                  <Text>{style.label}</Text>
+                </Badge>
+              )
+            })}
+          </HStack>
+        )}
+
+
         {/* Progress Bar */}
         <Box mb={4} position="relative">
           <Box h="4px" bg="whiteAlpha.100" borderRadius="full" overflow="hidden">
@@ -346,6 +491,8 @@ const GamifiedQuiz = ({
           </Box>
         </Box>
       </Box>
+
+      {/* Powerups moved to footer dock - removed floating bar */}
 
       {/* Scrollable Content Area */}
       <Box
@@ -392,6 +539,7 @@ const GamifiedQuiz = ({
                   isSelected={userAnswers[currentQuestionIndex] === key}
                   onSelect={handleAnswer}
                   isDisabled={submitted}
+                  isEliminated={disabledOptions[currentQuestionIndex]?.includes(key)}
                 />
               ))}
             </VStack>
@@ -399,51 +547,111 @@ const GamifiedQuiz = ({
         </AnimatePresence>
       </Box>
 
-      {/* Footer Controls (Fixed) */}
-      <Flex justify="flex-end" mt={2} pt={4} pb={2} flexShrink={0} borderTop="1px solid" borderColor="whiteAlpha.100">
-        {currentQuestionIndex < questions.length - 1 ? (
-          <Button
-            size="lg"
-            height="56px"
-            px={8}
-            rightIcon={<ArrowRight />}
-            colorScheme="purple"
-            variant="solid"
-            bgGradient="linear(to-r, purple.500, blue.500)"
-            _hover={{
-                bgGradient: "linear(to-r, purple.400, blue.400)",
-                transform: "translateY(-2px)",
-                boxShadow: "0 10px 20px rgba(0,0,0,0.2)"
-            }}
-            _active={{ transform: "translateY(0)" }}
-            onClick={handleNext}
-            isDisabled={!userAnswers[currentQuestionIndex]}
-            borderRadius="xl"
+      {/* Footer Controls (Fixed) + Powerups Dock */}
+      <Box flexShrink={0} pt={4} pb={2} borderTop="1px solid" borderColor="whiteAlpha.100">
+        {/* Premium Powerup Dock - shown when not submitted */}
+        {!submitted && quizPowerups.length > 0 && (
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ type: 'spring', damping: 25 }}
+            className="mb-4"
           >
-            {t('Next Question')}
-          </Button>
-        ) : (
-          <Button
-            size="lg"
-            height="56px"
-            px={8}
-            rightIcon={<CheckCircle />}
-            colorScheme="green"
-            bgGradient="linear(to-r, green.400, teal.500)"
-             _hover={{
-                bgGradient: "linear(to-r, green.300, teal.400)",
-                transform: "translateY(-2px)",
-                boxShadow: "0 10px 20px rgba(0,0,0,0.2)"
-            }}
-            onClick={handleSubmit}
-            isLoading={submitLoading}
-            isDisabled={!userAnswers[currentQuestionIndex]}
-            borderRadius="xl"
-          >
-            {t('Submit Quiz')}
-          </Button>
+            <Flex justify="center" gap={3} wrap="wrap" align="center">
+              {quizPowerups.map((p, i) => {
+                const isUsed = usedPowerups[p.powerupId] || powerupLoading
+                const colorSchemes = {
+                  TIME_WARP: { bg: 'from-cyan-500/90 to-cyan-600/90', border: 'border-cyan-400/50', text: 'Time Warp', icon: '⏳' },
+                  SCORE_SURGE: { bg: 'from-amber-500/90 to-amber-600/90', border: 'border-amber-400/50', text: 'Score 1.1x', icon: '⚡' },
+                  ORACLES_EYE: { bg: 'from-fuchsia-500/90 to-fuchsia-600/90', border: 'border-fuchsia-400/50', text: "Oracle's Eye", icon: '🔮' },
+                  PRECISION_PROTOCOL: { bg: 'from-rose-500/90 to-rose-600/90', border: 'border-rose-400/50', text: 'Precision', icon: '🎯' },
+                }
+                const scheme = colorSchemes[p.powerupId] || colorSchemes.ORACLES_EYE
+
+                return (
+                  <motion.button
+                    key={i}
+                    initial={{ scale: 0, y: 10 }}
+                    animate={{ scale: 1, y: 0 }}
+                    transition={{ delay: i * 0.08, type: 'spring', stiffness: 400 }}
+                    whileHover={!isUsed ? { scale: 1.1, y: -3 } : {}}
+                    whileTap={!isUsed ? { scale: 0.9 } : {}}
+                    onClick={() => handleUsePowerup(p)}
+                    disabled={isUsed}
+                    className={`
+                      relative flex items-center gap-2 px-4 py-3 rounded-2xl border-2 transition-all duration-200
+                      shadow-lg backdrop-blur-sm
+                      ${isUsed
+                        ? 'bg-slate-700/40 border-slate-500/30 opacity-50'
+                        : `bg-gradient-to-br ${scheme.bg} ${scheme.border} hover:shadow-xl`}
+                    `}
+                  >
+                    <span className="text-2xl drop-shadow-md">{scheme.icon}</span>
+                    <span className={`text-sm font-bold ${isUsed ? 'text-slate-400' : 'text-white drop-shadow-md'}`}>
+                      {scheme.text}
+                    </span>
+
+                    {isUsed && (
+                      <motion.span
+                        initial={{ scale: 0 }}
+                        animate={{ scale: 1 }}
+                        className="absolute -top-1 -right-1 w-5 h-5 bg-emerald-500 rounded-full flex items-center justify-center text-white text-xs font-bold shadow-md"
+                      >
+                        ✓
+                      </motion.span>
+                    )}
+                  </motion.button>
+                )
+              })}
+            </Flex>
+          </motion.div>
         )}
-      </Flex>
+
+        <Flex justify="flex-end" mt={2}>
+          {currentQuestionIndex < questions.length - 1 ? (
+            <Button
+              size="lg"
+              height="56px"
+              px={8}
+              rightIcon={<ArrowRight />}
+              colorScheme="purple"
+              variant="solid"
+              bgGradient="linear(to-r, purple.500, blue.500)"
+              _hover={{
+                  bgGradient: "linear(to-r, purple.400, blue.400)",
+                  transform: "translateY(-2px)",
+                  boxShadow: "0 10px 20px rgba(0,0,0,0.2)"
+              }}
+              _active={{ transform: "translateY(0)" }}
+              onClick={handleNext}
+              isDisabled={!userAnswers[currentQuestionIndex]}
+              borderRadius="xl"
+            >
+              {t('Next Question')}
+            </Button>
+          ) : (
+            <Button
+              size="lg"
+              height="56px"
+              px={8}
+              rightIcon={<CheckCircle />}
+              colorScheme="green"
+              bgGradient="linear(to-r, green.400, teal.500)"
+               _hover={{
+                  bgGradient: "linear(to-r, green.300, teal.400)",
+                  transform: "translateY(-2px)",
+                  boxShadow: "0 10px 20px rgba(0,0,0,0.2)"
+              }}
+              onClick={handleSubmit}
+              isLoading={submitLoading}
+              isDisabled={!userAnswers[currentQuestionIndex]}
+              borderRadius="xl"
+            >
+              {t('Submit Quiz')}
+            </Button>
+          )}
+        </Flex>
+      </Box>
 
       <style>{`
         @keyframes pulse {

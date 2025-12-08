@@ -17,6 +17,7 @@ import {
   AlertTitle,
   AlertDescription,
   Box,
+  Badge,
 } from '@chakra-ui/react'
 import { motion } from 'framer-motion'
 import { useTranslation } from 'react-i18next'
@@ -24,7 +25,7 @@ import { Trophy, ArrowLeft } from 'lucide-react'
 
 const MotionBox = motion(Box)
 
-const ResultsModal = ({ isOpen, onClose, score, navigateToList, challenge, user }) => {
+const ResultsModal = ({ isOpen, onClose, score, scoreDetails, navigateToList, challenge, user }) => {
   const { t } = useTranslation('QuickClash')
 
   // Determine betting info
@@ -94,6 +95,38 @@ const ResultsModal = ({ isOpen, onClose, score, navigateToList, challenge, user 
                   >
                     {score}
                   </Text>
+
+                  {/* Score Breakdown Badges */}
+                  {scoreDetails && (
+                    <VStack spacing={2} mt={1}>
+                      {scoreDetails.precisionBonus > 0 && (
+                        <Badge
+                          colorScheme="cyan"
+                          variant="solid"
+                          px={3}
+                          py={1}
+                          borderRadius="full"
+                          fontSize="xs"
+                          boxShadow="0 0 10px rgba(0, 255, 255, 0.3)"
+                        >
+                          +{scoreDetails.precisionBonus} Precision Protocol
+                        </Badge>
+                      )}
+                      {scoreDetails.scoreSurgeBonus > 0 && (
+                        <Badge
+                          colorScheme="orange"
+                          variant="solid"
+                          px={3}
+                          py={1}
+                          borderRadius="full"
+                          fontSize="xs"
+                          boxShadow="0 0 10px rgba(255, 165, 0, 0.3)"
+                        >
+                          +{scoreDetails.scoreSurgeBonus} Score Surge
+                        </Badge>
+                      )}
+                    </VStack>
+                  )}
                 </VStack>
               </motion.div>
             </MotionBox>

@@ -1,5 +1,5 @@
 import React, { useMemo } from 'react'
-import { Box, Container, Flex, VStack, Text } from '@chakra-ui/react'
+import { Box, Container, Flex, VStack } from '@chakra-ui/react'
 import { motion } from 'framer-motion'
 import { useTranslation } from 'react-i18next'
 import PageTitle from './submittedQuizInterface/PageTitle'
@@ -11,7 +11,6 @@ import ScoreSection from './submittedQuizInterface/ScoreSection'
 import ProgressSection from './submittedQuizInterface/ProgressSection'
 import { ANIMATION_DELAYS } from '../../models/submittedQuizInterfaceConstants'
 import TechnicalErrorMessage from './submittedQuizInterface/TechnicalErrorMessage'
-import AbilitiesBreakdown from './submittedQuizInterface/AbilitiesBreakdown'
 
 const MotionBox = motion(Box)
 
@@ -65,7 +64,8 @@ const SubmittedQuizInterface = React.memo(
         </LoadingState>
       )
     }
-
+    // console.log('quizData', quizData)
+    console.log(technicalError, 'technicalError')
     return (
       <QuizContainer>
         <Container maxW="2xl" height="100%" w={'100%'}>
@@ -99,11 +99,6 @@ const SubmittedQuizInterface = React.memo(
                 iqDelay={ANIMATION_DELAYS?.IQ_SCORE}
                 openedFromQuickClash={openedFromQuickClash}
               />
-
-              {/* New Abilities Breakdown Section */}
-              {quizData?.activePowerups && quizData.activePowerups.length > 0 && (
-                 <AbilitiesBreakdown activePowerups={quizData.activePowerups} />
-              )}
 
               <ProgressSection
                 step={step}

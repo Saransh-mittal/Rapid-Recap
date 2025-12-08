@@ -45,7 +45,7 @@ const OnboardingProcess = lazy(() => import('../screens/OnboardingProcess'))
 const DemotionSummary = lazy(() => import('../screens/DemotionSummary'))
 const PrivacyPolicy = lazy(() => import('../screens/PrivacyPolicy'))
 const TeamBattlePage = lazy(() =>
-  import('../components/quickClashComponents/team/TeamBattlePage'),
+  import('../components/quickClashComponents/team/TeamBattlePageV2'),
 )
 const TeamBattleAnalysisPage = lazy(() =>
   import('../screens/TeamBattleAnalysisPage'),
