@@ -80,6 +80,13 @@ const PowerupSelectionModal = ({ isOpen, onClose, battleId, teamId }) => {
 
   const poolItems = Object.values(groupedPool || {})
 
+  // Helper to check if a passive powerup is already equipped
+  const isPassiveAlreadyEquipped = (powerupId) => {
+    const item = groupedPool?.[powerupId]
+    if (!item || item.type !== 'passive') return false
+    return loadout.items.some(equipped => equipped.powerupId === powerupId)
+  }
+
   if (!isOpen) return null
 
   return ReactDOM.createPortal(
@@ -243,10 +250,18 @@ const PowerupSelectionModal = ({ isOpen, onClose, battleId, teamId }) => {
                         <PowerupCard
                           powerup={item}
                           onClick={() => handleEquip(item)}
-                          isDisabled={processing || loadoutHousingUsed + item.cost > MAX_LOADOUT_HOUSING}
+                          isDisabled={processing || loadoutHousingUsed + item.cost > MAX_LOADOUT_HOUSING || isPassiveAlreadyEquipped(item.powerupId)}
                           showPhase={true}
                           showType={true}
                         />
+                        {/* Indicator for already-equipped passive */}
+                        {isPassiveAlreadyEquipped(item.powerupId) && (
+                          <div className="absolute inset-0 bg-slate-900/60 backdrop-blur-[2px] rounded-2xl flex items-center justify-center">
+                            <span className="text-xs font-semibold text-emerald-400 bg-emerald-500/20 px-3 py-1.5 rounded-full border border-emerald-500/30">
+                              ✓ Already Equipped
+                            </span>
+                          </div>
+                        )}
                         <Badge className="absolute -top-2 -right-2 w-6 h-6 flex items-center justify-center rounded-full bg-gradient-to-br from-blue-500 to-cyan-500 text-white text-xs font-bold border-2 border-slate-900">
                           {item.count}
                         </Badge>

@@ -121,9 +121,18 @@ const ForgeReadingPhase = ({ sessionId, category, activePowerups = [], onComplet
   const [disabledOptions, setDisabledOptions] = useState([]) // Array of indices
   const [highlightedAnswer, setHighlightedAnswer] = useState(null) // Index
 
-  // Filter available powerups for Forge
+  // Filter available powerups for Forge - only ACTIVE powerups (passive auto-apply)
   const forgePowerups = activePowerups.filter(p =>
-    (p.phase === 'forge' || p.phase === 'both') && !p.used
+    (p.phase === 'forge' || p.phase === 'both') &&
+    !p.used &&
+    p.type?.toLowerCase() !== 'passive' // Exclude passive powerups - they auto-activate on conditions
+  )
+
+  // Passive powerups for Forge - display only (auto-activate on conditions)
+  const passiveForgePowerups = activePowerups.filter(p =>
+    (p.phase === 'forge' || p.phase === 'both') &&
+    !p.used &&
+    p.type?.toLowerCase() === 'passive'
   )
 
   useEffect(() => {
@@ -710,6 +719,44 @@ const ForgeReadingPhase = ({ sessionId, category, activePowerups = [], onComplet
                     : 'Read carefully'}
                 </span>
               </div>
+            </motion.div>
+          )}
+
+          {/* Passive Powerup Indicators - shown during question phase */}
+          {phase === 'question' && passiveForgePowerups.length > 0 && (
+            <motion.div
+              initial={{ opacity: 0, y: -10 }}
+              animate={{ opacity: 1, y: 0 }}
+              className="flex items-center justify-center gap-2 flex-wrap mb-4"
+            >
+              {passiveForgePowerups.map((p, i) => {
+                const buffStyles = {
+                  STREAK_SHIELD: {
+                    color: 'bg-emerald-500/20 border-emerald-500/40 text-emerald-300',
+                    icon: '🛡️',
+                    label: 'Streak Shield Active',
+                    description: 'Auto-protects streak'
+                  },
+                }
+                const style = buffStyles[p.powerupId] || {
+                  color: 'bg-purple-500/20 border-purple-500/40 text-purple-300',
+                  icon: '✨',
+                  label: p.powerupId?.replace('_', ' ')
+                }
+
+                return (
+                  <motion.div
+                    key={i}
+                    initial={{ scale: 0, y: -10 }}
+                    animate={{ scale: 1, y: 0 }}
+                    transition={{ delay: i * 0.1 }}
+                    className={`flex items-center gap-2 px-3 py-1.5 rounded-full border text-xs font-semibold ${style.color}`}
+                  >
+                    <span className="text-sm">{style.icon}</span>
+                    <span>{style.label}</span>
+                  </motion.div>
+                )
+              })}
             </motion.div>
           )}
 

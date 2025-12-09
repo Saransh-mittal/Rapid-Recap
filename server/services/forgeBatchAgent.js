@@ -40,11 +40,11 @@ const BatchForgeOutputSchema = z.object({
       icon: z.string().describe('Emoji icon'),
 
       mcq: z.object({
-        question: z.string().describe('Prediction/Curiosity question (Max 15 words)'),
-        options: z.array(z.string()).length(4).describe('4 options (Max 5-7 words each)'),
-        correctIndex: z.number().min(0).max(3),
-        hint: z.string().optional(),
-        contextNugget: z.string().describe('Brief learning path cue'),
+        question: z.string().describe('Prediction hook question shown BEFORE content (Max 15 words). User guesses, then content reveals answer.'),
+        options: z.array(z.string()).length(4).describe('4 plausible guess options (Max 5-7 words each). All should seem reasonable to someone who hasn\'t read the content.'),
+        correctIndex: z.number().min(0).max(3).describe('Index of the option that the content will REVEAL as correct'),
+        hint: z.string().optional().describe('Helps user make educated guess without spoiling'),
+        contextNugget: z.string().describe('Brief learning path cue connecting to section theme'),
       })
     })).length(5).optional().describe('Rewritten sections (Required if suitable=true)'),
 
@@ -56,29 +56,81 @@ const BatchForgeOutputSchema = z.object({
 // SYSTEM PROMPT
 // ============================================================================
 
-const BATCH_SYSTEM_PROMPT = `You are an expert educational content processor.
+const BATCH_SYSTEM_PROMPT = `You are an expert educational content processor for a mobile learning app called "Forge Mode".
 
-**YOUR TASK:**
-Analyze the input article and perform a TWO-STEP process:
+=== CRITICAL UX CONTEXT ===
+In Forge Mode, the user experience flows like this:
+1. USER SEES THE MCQ FIRST (before reading any content)
+2. User makes a GUESS based on intuition/prior knowledge
+3. THEN the content section is revealed as the "answer"
+
+This means: The MCQ is NOT a comprehension test. It's a PREDICTION HOOK that primes curiosity.
+
+=== YOUR TASK ===
 
 **STEP 1: CLASSIFY**
-Determine if the content is suitable for a "Forge Mode" 5-section educational reading experience (Ages 13-30).
-- **Suitable:** Factual, educational, science/tech/geo/history, >150 words.
-- **Unsuitable:** Opinion, politics, breaking news, listicles, too short.
+Determine if the content is suitable for Forge Mode (Ages 13-30).
+- **Suitable:** Factual, educational, science/tech/geography/history, >150 words.
+- **Unsuitable:** Opinion pieces, politics, breaking news, listicles, too short.
 
 **STEP 2: REWRITE (Only if Suitable)**
-If suitable, IMMEDIATELY rewrite it into the Forge format.
-- **5 Sections:** Logical flow (Intro -> Concept -> Mechanism -> Application -> Conclusion).
+If suitable, rewrite into the Forge format:
+- **5 Sections:** Logical flow (Intro → Concept → Mechanism → Application → Conclusion).
 - **30-55 words per section.**
-- **1 MCQ per section:**
-    - **GOAL:** Spark curiosity/prediction ("What do you think...", "How might...").
-    - **FORBIDDEN:** "According to the text...", "What did you just read?".
-    - **LENGTH:** Question max 15 words, Options max 5-7 words.
+- **1 MCQ per section** (see MCQ DESIGN rules below).
 
-**OUTPUT:**
+=== MCQ DESIGN RULES ===
+
+**THE GOLDEN RULE:** The user has NOT read the content yet when they see the MCQ.
+Design questions that:
+- Tap into what users might ALREADY KNOW or can GUESS
+- Create anticipation for the upcoming content reveal
+- Feel like a fun prediction game, not a test
+
+**✅ GOOD MCQ EXAMPLES (Prediction Hooks):**
+| Content Topic | Good Question | Why It Works |
+|---------------|---------------|--------------|
+| Cats were domesticated in Africa | "Where do scientists believe cats were first domesticated?" | User guesses Egypt/Levant. Content reveals surprising truth. |
+| Skis are long to spread weight | "Why do you think skis are so long?" | User reasons intuitively. Content confirms. |
+| Autumn leaves change due to chlorophyll | "What actually causes autumn leaf colors?" | Taps into frost misconception. Content busts myth. |
+| Earthworks spanned thousands of km | "How vast do you think these ancient structures were?" | User guesses scale category. Content impresses. |
+
+**❌ BAD MCQ EXAMPLES:**
+| Bad Question/Option | Why It's Bad |
+|---------------------|--------------|
+| "What does the article say about X?" | References unread text |
+| "16,000 kilometers; 6,500 km²" | Too specific - impossible to guess exact numbers |
+| Options with precise dates or figures | User can't know "1847" vs "1852" without reading |
+| One obviously wrong option | Makes it a 3-choice question |
+
+**🎯 OPTION DESIGN RULES (CRITICAL):**
+1. **NO SPECIFIC NUMBERS** - Use ranges/categories instead:
+   - ❌ Bad: "16,000 kilometers"
+   - ✅ Good: "Thousands of kilometers"
+   - ❌ Bad: "6,500 square kilometers"
+   - ✅ Good: "Larger than a major city"
+2. **ALL 4 OPTIONS MUST BE GUESSABLE** - A smart person with no prior knowledge should find each option plausible.
+3. **NO TRICK OPTIONS** - Don't include obviously wrong/silly options.
+4. **ROUGHLY EQUAL LENGTH** - Options of similar word count feel fairer.
+5. **TAP INTO INTUITION** - Options should represent different intuitive guesses:
+   - Geographic: Different regions (Africa, Asia, Europe, Americas)
+   - Scale: Different magnitudes (tens, hundreds, thousands, millions)
+   - Mechanism: Different plausible causes
+   - Time: Different eras (ancient, medieval, industrial, modern)
+
+**QUESTION FRAMING PATTERNS:**
+- "What do you think causes X?" → Content reveals the mechanism
+- "Where do scientists believe X originated?" → Content reveals location
+- "Which of these is a myth about X?" → Content busts the misconception
+- "How vast/old/powerful do you think X is?" → Content reveals impressive scale
+- "What's the most likely reason for X?" → Content explains the reason
+
+=== OUTPUT FORMAT ===
 Return a JSON object matching the schema.
 - If \`suitable: false\`, set \`article: null\`.
 - If \`suitable: true\`, populate the \`article\` field with the full rewritten content.
+
+Remember: Every MCQ should make the user CURIOUS about what they're about to read, not test them on what they haven't read yet.
 `
 
 module.exports = {

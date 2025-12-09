@@ -7,6 +7,7 @@ const BatchJob = require('../model/batchJobSchema')
 const batchService = require('./batchService')
 const { BatchForgeOutputSchema, BATCH_SYSTEM_PROMPT } = require('./forgeBatchAgent')
 const { processSeed } = require('./contentProcessingService') // Reuse pre-processing logic if possible, or adapt
+const { CostTracker } = require('../utils/costTracker')
 
 // ============================================================================
 // CONFIGURATION
@@ -61,7 +62,7 @@ async function prepareBatch() {
       method: 'POST',
       url: '/v1/chat/completions',
       body: {
-        model: 'gpt-5-nano', // Supports Structured Outputs
+        model: 'gpt-5-mini', // Supports Structured Outputs
         messages: [
           { role: 'system', content: BATCH_SYSTEM_PROMPT },
           { role: 'user', content: `TITLE: ${seed.title}\n\nBODY: ${seed.mainText.substring(0, 3000)}` }
@@ -154,7 +155,8 @@ async function checkAndProcessBatch() {
 
   if (batchStatus.status === 'completed') {
     console.log('🎉 Batch Completed! Processing results...')
-    await processBatchResults(activeJob, batchStatus.output_file_id)
+    const costData = await processBatchResults(activeJob, batchStatus.output_file_id)
+    return costData // Return cost data for aggregation
   } else if (batchStatus.status === 'failed' || batchStatus.status === 'expired' || batchStatus.status === 'cancelled') {
     console.error(`❌ Batch Failed/Expired: ${batchStatus.status}`)
     activeJob.status = 'failed'
@@ -165,6 +167,8 @@ async function checkAndProcessBatch() {
 }
 
 async function processBatchResults(job, outputFileId) {
+  const costTracker = new CostTracker('Content Batch')
+
   try {
     const jsonlContent = await batchService.downloadBatchResults(outputFileId)
     const lines = jsonlContent.trim().split('\n')
@@ -177,6 +181,11 @@ async function processBatchResults(job, outputFileId) {
       const result = JSON.parse(line)
       const customId = result.custom_id // This is the Seed Article ID
       const responseBody = result.response.body
+
+      // Track token usage from this response
+      if (responseBody.usage) {
+        costTracker.addUsage(responseBody.usage, responseBody.model || 'gpt-5-mini')
+      }
 
       // Parse the structured output
       const content = JSON.parse(responseBody.choices[0].message.content)
@@ -194,7 +203,7 @@ async function processBatchResults(job, outputFileId) {
           status: 'draft', // Wait for Quiz Generation
           // publishedAt: new Date(), // Set in Quiz Phase
           llmMetadata: {
-            model: 'gpt-5-nano',
+            model: 'gpt-5-mini',
             promptVersion: 'batch-v1',
             generatedAt: new Date()
           }
@@ -226,7 +235,12 @@ async function processBatchResults(job, outputFileId) {
     job.completedAt = new Date()
     await job.save()
 
+    // Print cost summary
+    const costData = costTracker.printSummary()
+
     console.log('✅ Batch Results Processed Successfully!')
+
+    return costData
 
   } catch (error) {
     console.error('❌ Error processing batch results:', error)

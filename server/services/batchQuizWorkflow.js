@@ -5,6 +5,7 @@ const ForgeArticle = require('../model/quickClashSchemas/forgeArticleSchema')
 const BatchJob = require('../model/batchJobSchema')
 const batchService = require('./batchService')
 const { BatchQuizOutputSchema, BATCH_QUIZ_SYSTEM_PROMPT } = require('./forgeBatchQuizAgent')
+const { CostTracker } = require('../utils/costTracker')
 
 // ============================================================================
 // CONFIGURATION
@@ -140,7 +141,8 @@ async function checkAndProcessQuizBatch() {
 
   if (batchStatus.status === 'completed') {
     console.log('🎉 Quiz Batch Completed! Processing results...')
-    await processQuizResults(activeJob, batchStatus.output_file_id)
+    const costData = await processQuizResults(activeJob, batchStatus.output_file_id)
+    return costData // Return cost data for aggregation
   } else if (['failed', 'expired', 'cancelled'].includes(batchStatus.status)) {
     console.error(`❌ Quiz Batch Failed: ${batchStatus.status}`)
     activeJob.status = 'failed'
@@ -151,6 +153,8 @@ async function checkAndProcessQuizBatch() {
 }
 
 async function processQuizResults(job, outputFileId) {
+  const costTracker = new CostTracker('Quiz Batch')
+
   try {
     const jsonlContent = await batchService.downloadBatchResults(outputFileId)
     const lines = jsonlContent.trim().split('\n')
@@ -162,6 +166,12 @@ async function processQuizResults(job, outputFileId) {
       const result = JSON.parse(line)
       const articleId = result.custom_id
       const responseBody = result.response.body
+
+      // Track token usage from this response
+      if (responseBody.usage) {
+        costTracker.addUsage(responseBody.usage, responseBody.model || 'gpt-5-nano')
+      }
+
       const content = JSON.parse(responseBody.choices[0].message.content)
 
       if (content.questions) {
@@ -184,7 +194,12 @@ async function processQuizResults(job, outputFileId) {
     job.completedAt = new Date()
     await job.save()
 
+    // Print cost summary
+    const costData = costTracker.printSummary()
+
     console.log('✅ Quiz Batch Results Processed!')
+
+    return costData
 
   } catch (error) {
     console.error('❌ Error processing quiz results:', error)

@@ -4,6 +4,7 @@ require('dotenv').config({ path: path.join(__dirname, '../config.env') })
 const { runForgeScraper } = require('./runForgeScraper')
 const mongoose = require('mongoose')
 require('../db/conn') // Connect to MongoDB
+const { WorkflowCostAggregator } = require('../utils/costTracker')
 
 /**
  * Complete Forge Workflow Orchestrator
@@ -20,6 +21,61 @@ require('../db/conn') // Connect to MongoDB
  * 3. Process pending seeds → Generate ForgeArticles
  * 4. Report combined results
  */
+// ============================================================================
+// POLLING HELPER (for --wait flag)
+// ============================================================================
+
+/**
+ * Polls OpenAI until batch completes or times out
+ * @param {string} batchId - The OpenAI batch ID
+ * @param {number} pollInterval - Milliseconds between checks (default: 30s)
+ * @param {number} maxWait - Maximum wait time in milliseconds (default: 2h)
+ */
+async function waitForBatchCompletion(batchId, pollInterval = 30000, maxWait = 7200000) {
+  const batchService = require('../services/batchService')
+  const startTime = Date.now()
+  let checkCount = 0
+
+  console.log(`\n⏳ Waiting for batch completion (polling every ${pollInterval/1000}s, timeout: ${maxWait/60000}min)...`)
+
+  while (Date.now() - startTime < maxWait) {
+    checkCount++
+    const elapsed = Math.round((Date.now() - startTime) / 1000)
+
+    try {
+      const status = await batchService.getBatchStatus(batchId)
+
+      console.log(`   [${elapsed}s] Check #${checkCount}: ${status.status}`)
+
+      if (status.status === 'completed') {
+        console.log('\n🎉 Batch completed!')
+        return { completed: true, status: status }
+      }
+
+      if (['failed', 'expired', 'cancelled'].includes(status.status)) {
+        console.log(`\n❌ Batch ${status.status}!`)
+        return { completed: false, status: status, error: status.status }
+      }
+
+      // Still in progress, wait and try again
+      await new Promise(resolve => setTimeout(resolve, pollInterval))
+
+    } catch (error) {
+      console.error(`   [${elapsed}s] Error checking status:`, error.message)
+      // Don't fail immediately, try again
+      await new Promise(resolve => setTimeout(resolve, pollInterval))
+    }
+  }
+
+  // Timeout reached
+  console.log('\n⚠️  Timeout reached. Batch still processing.')
+  return { completed: false, error: 'timeout' }
+}
+
+// ============================================================================
+// MAIN WORKFLOW
+// ============================================================================
+
 async function runCompleteWorkflow(options = {}) {
   const {
     maxSources = null, // Limit sources (null = all 16)
@@ -27,6 +83,7 @@ async function runCompleteWorkflow(options = {}) {
     skipScraping = false, // Skip scraping (only process existing)
     skipProcessing = false, // Skip content processing
     skipQuiz = false, // Skip quiz generation
+    waitForCompletion = false, // Wait for batch to complete (polling)
   } = options
 
   console.log('\n' + '='.repeat(80))
@@ -38,10 +95,12 @@ async function runCompleteWorkflow(options = {}) {
     scraping: null,
     processing: null,
     quiz: null,
+    costs: null,
     totalTime: 0,
     success: false,
   }
 
+  const costAggregator = new WorkflowCostAggregator()
   const startTime = Date.now()
 
   try {
@@ -141,10 +200,41 @@ async function runCompleteWorkflow(options = {}) {
         const newJob = await prepareBatch()
 
         if (newJob) {
-          workflowResults.processing = {
-            status: 'submitted',
-            batchId: newJob.batchId,
-            requestCount: newJob.requestCount
+          // If --wait flag is set, poll until completion
+          if (waitForCompletion) {
+            const pollResult = await waitForBatchCompletion(newJob.batchId)
+
+            if (pollResult.completed) {
+              // Process the results now
+              console.log('\n📥 Downloading and processing results...')
+              const contentCostData = await checkAndProcessBatch()
+
+              // Add to cost aggregator if we got cost data
+              if (contentCostData) {
+                costAggregator.addPhase('Content Batch', { calculateCost: () => contentCostData })
+              }
+
+              const completedJob = await BatchJob.findById(newJob._id)
+              workflowResults.processing = {
+                status: 'completed',
+                processed: completedJob.processedCount,
+                batchId: completedJob.batchId,
+                cost: contentCostData?.costs?.total || 0
+              }
+            } else {
+              workflowResults.processing = {
+                status: pollResult.error === 'timeout' ? 'timeout' : 'failed',
+                batchId: newJob.batchId,
+                error: pollResult.error
+              }
+            }
+          } else {
+            // Original behavior: submit and exit
+            workflowResults.processing = {
+              status: 'submitted',
+              batchId: newJob.batchId,
+              requestCount: newJob.requestCount
+            }
           }
         } else {
           console.log('   No pending seeds to process.')
@@ -197,6 +287,15 @@ async function runCompleteWorkflow(options = {}) {
     }
 
     // ========================================================================
+    // COST SUMMARY
+    // ========================================================================
+
+    if (Object.keys(costAggregator.phases).length > 0) {
+      const costSummary = costAggregator.printWorkflowSummary()
+      workflowResults.costs = costSummary
+    }
+
+    // ========================================================================
     // FINAL SUMMARY
     // ========================================================================
 
@@ -224,6 +323,9 @@ async function runCompleteWorkflow(options = {}) {
         console.log(`   Status:              Completed`)
         console.log(`   Forge articles:      ${workflowResults.processing.processed}`)
         console.log(`   Batch ID:            ${workflowResults.processing.batchId}`)
+        if (workflowResults.processing.cost) {
+          console.log(`   Cost:                $${workflowResults.processing.cost.toFixed(4)}`)
+        }
       } else if (workflowResults.processing.status === 'submitted') {
         console.log(`   Status:              Submitted (Processing in background)`)
         console.log(`   Requests queued:     ${workflowResults.processing.requestCount}`)
@@ -281,6 +383,7 @@ async function main() {
     skipScraping: false,
     skipProcessing: false,
     skipQuiz: false,
+    waitForCompletion: false,
   }
 
   args.forEach(arg => {
@@ -294,6 +397,8 @@ async function main() {
       options.skipProcessing = true
     } else if (arg === '--skip-quiz') {
       options.skipQuiz = true
+    } else if (arg === '--wait') {
+      options.waitForCompletion = true
     } else if (arg === '--help' || arg === '-h') {
       console.log(`
 Forge Complete Workflow Runner
@@ -306,6 +411,7 @@ OPTIONS:
   --max-processing=N      Process max N seeds (default: 100)
   --skip-scraping         Skip scraping phase (only process)
   --skip-processing       Skip processing phase (only scrape)
+  --wait                  Wait for batch to complete (polls every 30s)
   --help, -h              Show this help message
 
 EXAMPLES:
@@ -320,6 +426,9 @@ EXAMPLES:
 
   # Only process existing pending seeds
   node scripts/runCompleteForgeWorkflow.js --skip-scraping
+
+  # Process and WAIT for batch to complete
+  node scripts/runCompleteForgeWorkflow.js --skip-scraping --wait
 
   # Quick test (scrape 2 sources, process 10 seeds)
   node scripts/runCompleteForgeWorkflow.js --sources=2 --max-processing=10
