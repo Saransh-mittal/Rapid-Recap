@@ -12,7 +12,7 @@ const globalEmitter = require('./eventEmitter')
 const {
   setupQuickClashSocketHandlers,
   setupQuickClashGlobalEvents,
-} = require('./utils/quickClashSocket.utils')
+} = require('./utils/quickClashSocket')
 const {
   setupFriendsSocketHandlers,
   setupFriendsGlobalEvents,
