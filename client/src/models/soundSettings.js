@@ -8,6 +8,7 @@ export const SOUND_TYPES = {
   MILESTONE: 'Milestone',
   CLICK: 'Click',
   QUIZ_SOUNDS: 'Quiz',
+  GAME_FEEDBACK: 'GameFeedback', // New: Quiz result sounds, score sounds
 }
 
 export const SOUND_FILES = {
@@ -20,4 +21,5 @@ export const DEFAULT_SOUND_SETTINGS = {
   [SOUND_TYPES.MILESTONE]: true,
   [SOUND_TYPES.CLICK]: true,
   [SOUND_TYPES.QUIZ_SOUNDS]: true,
+  [SOUND_TYPES.GAME_FEEDBACK]: true,
 }

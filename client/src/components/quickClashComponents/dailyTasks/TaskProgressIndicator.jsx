@@ -79,34 +79,34 @@ const TaskProgressIndicator = ({ onViewTasks, size = 'md' }) => {
     task => task.completed && !task.rewardClaimed,
   ).length
 
-  // Size mappings - EXACTLY as original
+  // Size mappings - Optimized for header uniformity
   const sizeMap = {
     sm: {
-      container: 42,
+      container: 36,
+      outerContainer: 40,
+      thickness: 3,
+      icon: 16,
+      badge: 16,
+      badgeFont: 9,
+      badgeOffset: -4,
+    },
+    md: {
+      container: 40,
       outerContainer: 46,
       thickness: 4,
       icon: 18,
       badge: 18,
       badgeFont: 10,
-      badgeOffset: -5,
+      badgeOffset: -6,
     },
-    md: {
+    lg: {
       container: 48,
       outerContainer: 56,
       thickness: 5,
       icon: 22,
-      badge: 22,
+      badge: 20,
       badgeFont: 12,
-      badgeOffset: -8,
-    },
-    lg: {
-      container: 56,
-      outerContainer: 64,
-      thickness: 6,
-      icon: 26,
-      badge: 24,
-      badgeFont: 14,
-      badgeOffset: -8,
+      badgeOffset: -7,
     },
   }
 

@@ -12,6 +12,7 @@ const {
   updateTeamMemberStatus,
   getMyTeams,
   removeMemberFromTeam,
+  transferLeadershipController,
   joinTeamMatchmakingController,
   leaveTeamMatchmakingController,
   getTeamMatchmakingStatusController,
@@ -42,6 +43,7 @@ router.post('/team/:teamId/leave', leaveTeamController)
 router.post('/team/:teamId/status', updateTeamMemberStatus)
 router.get('/teams', getMyTeams)
 router.post('/team/:teamId/remove', removeMemberFromTeam)
+router.post('/team/:teamId/transfer-leadership', transferLeadershipController)
 
 // Team matchmaking routes
 router.post('/team/:teamId/matchmaking/join', joinTeamMatchmakingController)

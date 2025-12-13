@@ -17,6 +17,12 @@ import { Button } from '@/components/ui/button'
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar'
 import { getCategoryInfo } from './teamBattlePageComponents/categoriesSection/categoryUtils'
 
+// Haptic feedback for gaming interactions
+import { haptics } from '../../../utils/haptics'
+
+// Audio feedback for game sounds
+import { quizAudioService } from '../../../services/quizAudioService'
+
 const QuizReportModal = React.lazy(() => import('../QuizReportModal'))
 import PowerupDonationModal from '../powerups/PowerupDonationModal'
 import PowerupSelectionModal from '../powerups/PowerupSelectionModal'
@@ -547,10 +553,17 @@ const TeamBattlePageV2 = React.memo(() => {
   useEffect(() => { setupTeamBattleSocketListeners(); return cleanupSocketListeners }, [setupTeamBattleSocketListeners, cleanupSocketListeners])
   useEffect(() => { return () => resetOperationState() }, [resetOperationState])
 
-  const goBack = useCallback(() => navigate('/quickclash#active/4v4'), [navigate])
+  const goBack = useCallback(() => {
+    haptics.light()
+    navigate('/quickclash#active/4v4')
+  }, [navigate])
 
   const selectCat = useCallback(async (c) => {
     if (!currentBattle || localProcessingCategory) return
+
+    // Haptic feedback on category selection
+    haptics.selection()
+    quizAudioService.playSubmit() // Audio for category selection
 
     // Set local loading immediately to block interactions
     setLocalProcessingCategory(c)
@@ -590,7 +603,11 @@ const TeamBattlePageV2 = React.memo(() => {
     }
     setLocalProcessingCategory(null)
   }, [currentBattle, deselectCategory, localProcessingCategory, userStatus.category])
-  const startChallenge = useCallback(() => currentBattle && beginChallenge(currentBattle._id), [currentBattle, beginChallenge])
+  const startChallenge = useCallback(() => {
+    haptics.impact() // Haptic for starting a challenge
+    quizAudioService.playQuizStart() // Audio for starting battle
+    currentBattle && beginChallenge(currentBattle._id)
+  }, [currentBattle, beginChallenge])
   const viewReport = useCallback(async id => {
     if (!id) return
     setReportLoading(true)

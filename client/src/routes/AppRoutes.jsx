@@ -23,6 +23,9 @@ const ContactLayout = lazy(() =>
 const RuleBook = lazy(() => import('../screens/RuleBook'))
 const HallOfChampions = lazy(() => import('../screens/HallOfChampions'))
 const QuickClash = lazy(() => import('../screens/QuickClash'))
+const QuickClashLayoutV2 = lazy(() =>
+  import('../components/quickClashComponents/v2/QuickClashLayoutV2')
+)
 const QuickClashSession = lazy(() => import('../screens/QuickClashSession'))
 
 // GameHub components
@@ -144,6 +147,10 @@ const AppRoutes = ({ isToken, needsOnboarding, setIsGuestLoggedin }) => {
               <Route
                 path="/quickclash"
                 element={isToken ? <QuickClash /> : <Navigate to="/" replace />}
+              />
+              <Route
+                path="/quickclash-v2/*"
+                element={isToken ? <QuickClashLayoutV2 /> : <Navigate to="/" replace />}
               />
               <Route
                 path="/quickclash/teamBattle/:battleId"

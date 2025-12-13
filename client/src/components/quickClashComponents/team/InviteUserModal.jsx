@@ -296,7 +296,6 @@ const InviteUserModal = ({ isOpen, onClose, teamId, teamName, onInvite }) => {
           ${QUICK_CLASH_CLASSES.shadowBlue}
           backdrop-brightness-115
         `}
-        asChild
       >
         <MotionDiv
           variants={modalVariants}

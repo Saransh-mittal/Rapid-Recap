@@ -53,6 +53,10 @@ import {
 // Category utilities for theming
 import { getCategoryInfo } from '../team/teamBattlePageComponents/categoriesSection/categoryUtils'
 
+// Haptic and audio feedback
+import { haptics } from '../../../utils/haptics'
+import { quizAudioService } from '../../../services/quizAudioService'
+
 /**
  * Main Forge Reading Phase Component
  *
@@ -312,6 +316,15 @@ const ForgeReadingPhase = ({ sessionId, category, activePowerups = [], onComplet
         // Show feedback phase
         setPhase('feedback')
 
+        // Play audio feedback based on result
+        if (result.isCorrect) {
+          quizAudioService.playCorrectRevealed()
+          haptics.correctAnswer()
+        } else {
+          quizAudioService.playWrongRevealed()
+          haptics.wrongAnswer()
+        }
+
         // ALWAYS show reading content after answer (correct OR incorrect OR timeout)
         setTimeout(() => {
           if (result.readingContent) {
@@ -390,10 +403,14 @@ const ForgeReadingPhase = ({ sessionId, category, activePowerups = [], onComplet
 
       if (data.completed) {
         // Instead of completing immediately, show transition screen
+        quizAudioService.playQuizComplete() // Audio for forge completion
+        haptics.success()
         setIsPhaseComplete(true)
         setPhase('complete')
       } else {
         // Load next question
+        quizAudioService.playNewQuestion() // Audio for next section
+        haptics.selection()
         setCurrentQuestion(data)
         setProgress(prev => ({
           ...prev,

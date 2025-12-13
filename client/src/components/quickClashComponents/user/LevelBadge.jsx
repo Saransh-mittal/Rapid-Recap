@@ -162,7 +162,7 @@ const LevelBadge = () => {
 
       {/* Animated star icon */}
       <MotionDiv
-        className="relative z-10 mr-1.5"
+        className="relative z-10 mr-1"
         animate={{
           rotate: [0, 10, 0],
           scale: [1, 1.1, 1],
@@ -180,7 +180,7 @@ const LevelBadge = () => {
       </MotionDiv>
 
       {/* Level text */}
-      <span className="text-white font-bold text-lg z-10">{level}</span>
+      <span className="text-white font-bold text-base z-10">{level}</span>
     </MotionDiv>
   )
 

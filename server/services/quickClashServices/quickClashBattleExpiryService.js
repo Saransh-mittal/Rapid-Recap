@@ -80,7 +80,10 @@ const processExpiredBattle = makeRetryable(
         const event = await QuickClashBattleExpiryEvent.findOneAndUpdate(
           {
             _id: eventId,
-            status: 'pending',
+            $or: [
+              { status: 'pending' },
+              { status: 'failed' },
+            ],
           },
           {
             status: 'processing',
@@ -301,7 +304,10 @@ const processPendingExpiryEvents = async () => {
 
     const pendingEvents = await QuickClashBattleExpiryEvent.find({
       executeAt: { $lte: bufferTime },
-      status: 'pending',
+      $or: [
+        { status: 'pending' },
+        { status: 'failed' },
+      ],
     })
       .sort({ executeAt: 1 })
       .limit(10) // Process max 10 at a time to avoid overwhelming the system

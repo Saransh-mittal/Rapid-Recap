@@ -79,7 +79,6 @@ const GlobalMatchmakingButton = React.memo(
         prev.battleReady === next.battleReady &&
         prev.loading === next.loading,
     )
-
     const buttonState = useMemo(() => {
       if (matchmakingState.battleReady) return 'ready'
       if (matchmakingState.inMatchmaking) return 'searching'

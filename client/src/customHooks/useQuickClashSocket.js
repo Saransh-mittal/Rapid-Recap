@@ -826,7 +826,8 @@ const useQuickClashSocket = () => {
 
         dispatch(setBattleReady(data))
         dispatch(setTeamBattleReady(data))
-        dispatch(fetchTeamBattles())
+        // Explicitly refresh active battles when a new team battle is ready
+        dispatch(fetchTeamBattles({ status: 'active', page: 1 }))
       },
     )
     cleanupFunctions.push(cleanupTeamBattleReady)

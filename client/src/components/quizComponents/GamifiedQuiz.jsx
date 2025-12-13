@@ -34,6 +34,12 @@ import { useTranslation } from 'react-i18next'
 import GamifiedOptionButton from './GamifiedOptionButton'
 import SubmittedQuizInterface from './SubmittedQuizInterface'
 
+// Haptic feedback for gaming interactions
+import { haptics } from '../../utils/haptics'
+
+// Audio feedback for game sounds
+import { quizAudioService } from '../../services/quizAudioService'
+
 const MotionBox = motion(Box)
 const MotionFlex = motion(Flex)
 
@@ -59,6 +65,7 @@ const GamifiedQuiz = ({
   const [submitLoading, setSubmitLoading] = useState(false)
   const [result, setResult] = useState(null)
   const [quizReady, setQuizReady] = useState(false)
+  const [timeWarningPlayed, setTimeWarningPlayed] = useState(false)
 
   // Powerup State
   const [disabledOptions, setDisabledOptions] = useState({}) // { questionIndex: ['a', 'c'] }
@@ -178,12 +185,24 @@ const GamifiedQuiz = ({
     return () => clearInterval(timer)
   }, [quizReady, submitted, submitLoading, setQuizTimeLeft])
 
+  // Time Warning Sound (plays once at 15 seconds)
+  useEffect(() => {
+    if (quizTimeLeft === 15 && !timeWarningPlayed && quizReady && !submitted) {
+      quizAudioService.playTimeWarning()
+      haptics.timeWarning()
+      setTimeWarningPlayed(true)
+    }
+  }, [quizTimeLeft, timeWarningPlayed, quizReady, submitted])
+
 
 
 
   const handleAnswer = useCallback(
     (answer) => {
       if (switchingQuestionRef.current || submitted) return
+
+      haptics.selection() // Haptic on answer selection
+      quizAudioService.playOptionClick() // Audio on answer selection
 
       setUserAnswers((prev) => ({
         ...prev,
@@ -195,6 +214,8 @@ const GamifiedQuiz = ({
 
   const handleNext = useCallback(() => {
     if (currentQuestionIndex < questions.length - 1) {
+      haptics.light() // Haptic on next question
+      quizAudioService.playNewQuestion() // Audio for next question
       switchingQuestionRef.current = true
 
       // Record time
@@ -228,6 +249,8 @@ const GamifiedQuiz = ({
     try {
       setSubmitLoading(true)
       setStopTimerOnQuizSubmit(true)
+      haptics.success() // Haptic on quiz submit
+      quizAudioService.playQuizComplete() // Audio for quiz completion
 
       // Finalize time for current question
       const now = Date.now()
@@ -302,6 +325,7 @@ const GamifiedQuiz = ({
       })
 
       if (response.data.success) {
+        haptics.success() // Haptic on powerup activation
         const effect = response.data.effect
 
         if (effect.type === 'REMOVE_OPTIONS') {

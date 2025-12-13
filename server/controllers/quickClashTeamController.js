@@ -13,6 +13,7 @@ const {
   updateMemberStatus,
   getUserTeams,
   removeMember,
+  transferLeadership,
 } = require('../services/quickClashServices/quickClashTeamService')
 
 const {
@@ -419,6 +420,40 @@ const removeMemberFromTeam = asyncHandler(async (req, res) => {
     res.status(400).json({
       success: false,
       message: error.message || 'Failed to remove member',
+    })
+  }
+})
+
+/**
+ * @desc    Transfer team leadership to another member
+ * @route   POST /api/quickClash/team/:teamId/transfer-leadership
+ * @access  Private
+ */
+const transferLeadershipController = asyncHandler(async (req, res) => {
+  const { teamId } = req.params
+  const { newLeaderId } = req.body
+  const currentLeaderId = req.user._id
+
+  try {
+    const team = await transferLeadership({ teamId, currentLeaderId, newLeaderId })
+
+    res.status(200).json({
+      success: true,
+      message: 'Leadership transferred successfully',
+      team,
+    })
+  } catch (error) {
+    console.log('Error transferring leadership:', error.message)
+
+    // Handle write conflicts
+    const conflictResponse = handleWriteConflictError(error, 'transfer leadership')
+    if (conflictResponse) {
+      return res.status(503).json(conflictResponse)
+    }
+
+    res.status(400).json({
+      success: false,
+      message: error.message || 'Failed to transfer leadership',
     })
   }
 })
@@ -1504,6 +1539,7 @@ module.exports = {
   updateTeamMemberStatus,
   getMyTeams,
   removeMemberFromTeam,
+  transferLeadershipController,
   joinTeamMatchmakingController,
   leaveTeamMatchmakingController,
   getTeamMatchmakingStatusController,

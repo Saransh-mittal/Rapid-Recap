@@ -488,14 +488,14 @@ const TrophyDisplay = memo(() => {
       {/* Optimized trophy icon */}
       <TrophyIcon
         shouldReduceMotion={shouldReduceMotion}
-        iconSize={responsiveConfig.trophyIconSize}
+        iconSize={3}
         iconColor={responsiveConfig.iconColor}
       />
 
       {/* Trophy count with responsive animation */}
       <MotionSpan
         ref={trophyCountRef}
-        className={`text-white font-bold ${responsiveConfig.fontSize} z-10`}
+        className={`text-white font-bold text-base z-10`}
         animate={trophyControls}
       >
         {userTrophies}

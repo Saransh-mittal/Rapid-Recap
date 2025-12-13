@@ -725,6 +725,108 @@ const inviteToTeam = async ({ teamId, inviterId, inviteeId }) => {
   }
 }
 
+/**
+ * Transfer team leadership to another member
+ * @param {Object} params - Parameters
+ * @param {string} params.teamId - Team ID
+ * @param {string} params.currentLeaderId - Current leader user ID
+ * @param {string} params.newLeaderId - New leader user ID
+ * @returns {Promise<Object>} Updated team
+ */
+const transferLeadership = async ({ teamId, currentLeaderId, newLeaderId }) => {
+  const session = await mongoose.startSession()
+
+  try {
+    return await session.withTransaction(async () => {
+      // Find the team
+      const team = await QuickClashTeam.findById(teamId).session(session)
+      if (!team) {
+        throw new Error('Team not found')
+      }
+
+      // Verify current user is team leader
+      const currentLeaderMember = team.members.find(
+        member =>
+          member.user.toString() === currentLeaderId.toString() &&
+          member.role === 'leader',
+      )
+
+      if (!currentLeaderMember) {
+        throw new Error('Only the team leader can transfer leadership')
+      }
+
+      // Prevent transferring to self
+      if (currentLeaderId.toString() === newLeaderId.toString()) {
+        throw new Error('Cannot transfer leadership to yourself')
+      }
+
+      // Prevent transferring while in a match
+      if (team.isInMatch) {
+        throw new Error('Cannot transfer leadership while in a match')
+      }
+
+      // Find the new leader
+      const newLeaderMember = team.members.find(
+        member => member.user.toString() === newLeaderId.toString(),
+      )
+
+      if (!newLeaderMember) {
+        throw new Error('New leader is not a member of this team')
+      }
+
+      // Swap roles
+      currentLeaderMember.role = 'member'
+      newLeaderMember.role = 'leader'
+
+      // Update last active timestamp
+      team.lastActive = new Date()
+
+      await team.save({ session })
+
+      // Get user details for notifications
+      const [oldLeader, newLeader] = await Promise.all([
+        User.findById(currentLeaderId).session(session).select('_id name inGameName'),
+        User.findById(newLeaderId).session(session).select('_id name inGameName'),
+      ])
+
+      // Emit event for real-time updates
+      setTimeout(async () => {
+        globalEmitter.emit('quickClash:teamLeadershipTransferred', {
+          team: team._id,
+          teamName: team.name,
+          oldLeaderId: currentLeaderId,
+          newLeaderId: newLeaderId,
+          oldLeaderName: oldLeader?.inGameName || oldLeader?.name,
+          newLeaderName: newLeader?.inGameName || newLeader?.name,
+        })
+
+        // Notify team members
+        try {
+          const teamWithMembers = await QuickClashTeam.findById(team._id)
+            .populate('members.user', '_id name inGameName')
+            .lean()
+
+          if (teamWithMembers && teamWithMembers.members) {
+            // Notification logic can be added here if needed
+            console.log(
+              `[TEAM] Leadership transferred in ${team.name}: ${oldLeader?.name} → ${newLeader?.name}`,
+            )
+          }
+        } catch (notificationError) {
+          console.error(
+            'Error sending leadership transfer notifications:',
+            notificationError,
+          )
+        }
+      }, 0)
+
+      return team
+    })
+  } finally {
+    session.endSession()
+  }
+}
+
 module.exports = {
   createTeam,
   getTeamById,
@@ -737,4 +839,5 @@ module.exports = {
   getUserTeams,
   updateTeamMatchStatus,
   removeMember,
+  transferLeadership,
 }

@@ -37,24 +37,20 @@ import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar'
 
+// Haptic feedback
+import { haptics } from '../../../utils/haptics'
+
 const MotionDiv = motion.div
 
-// Reduced animation variants for better performance
+// NO staggered animations - causes stutter on tab switch
 const containerVariants = {
-  hidden: { opacity: 0 },
-  visible: {
-    opacity: 1,
-    transition: { staggerChildren: 0.05, duration: 0.3 },
-  },
+  hidden: { opacity: 1 },
+  visible: { opacity: 1 },
 }
 
 const itemVariants = {
-  hidden: { opacity: 0, y: 10 },
-  visible: {
-    opacity: 1,
-    y: 0,
-    transition: { duration: 0.3, ease: 'easeOut' },
-  },
+  hidden: { opacity: 1, y: 0 },
+  visible: { opacity: 1, y: 0 },
 }
 
 /**
@@ -83,16 +79,25 @@ const TeamCard = memo(
       [team.maxMembers, teamMembers.length],
     )
 
-    // Memoized event handlers - EXACTLY as original
+    // Memoized event handlers - EXACTLY as original + haptics
     const handleCopyCode = useCallback(
-      () => onCopyTeamCode(team.teamCode),
+      () => {
+        haptics.selection() // Tactile feedback
+        onCopyTeamCode(team.teamCode)
+      },
       [onCopyTeamCode, team.teamCode],
     )
     const handleLeave = useCallback(
-      () => onLeave(team._id),
-      [onLeave, team._id],
+      () => {
+        haptics.warning() // Tactile feedback for leaving
+        onLeave(team?._id)
+      },
+      [onLeave, team?._id],
     )
-    const handleInvite = useCallback(() => onInvite(), [onInvite])
+    const handleInvite = useCallback(() => {
+      haptics.light() // Tactile feedback
+      onInvite()
+    }, [onInvite])
 
     return (
       <div
@@ -452,12 +457,13 @@ const TeamDashboard = () => {
     }
   }, [])
 
-  // State - EXACTLY as original
+  // State - FIXED: loading starts FALSE, use ref to track first load
   const [teams, setTeams] = useState([])
-  const [loading, setLoading] = useState(true)
+  const [loading, setLoading] = useState(false)  // Start FALSE
   const [error, setError] = useState(null)
   const [selectedTeam, setSelectedTeam] = useState(null)
   const [refreshing, setRefreshing] = useState(false)
+  const initialLoadDone = React.useRef(false)  // Track if we've loaded
 
   // Modal states
   const [isCreateModalOpen, setIsCreateModalOpen] = useState(false)
@@ -470,13 +476,17 @@ const TeamDashboard = () => {
   // ALL ORIGINAL FUNCTIONS PRESERVED EXACTLY
 
   // Memoized function to fetch teams
-  const fetchTeams = useCallback(async () => {
+  const fetchTeams = useCallback(async (force = false) => {
+    // Skip if already loaded (unless forced)
+    if (initialLoadDone.current && !force) return
+
     try {
       setLoading(true)
       setError(null)
 
       const response = await axios.get('/api/quickClash/teams')
       setTeams(response.data.teams || [])
+      initialLoadDone.current = true
     } catch (error) {
       console.error('Error fetching teams:', error)
       const errorMessage =
@@ -514,10 +524,11 @@ const TeamDashboard = () => {
     fetchTeams()
   }, [fetchTeams])
 
-  // Memoized handlers - EXACTLY as original
+  // Memoized handlers - EXACTLY as original + haptics
   const handleRefresh = useCallback(async () => {
+    haptics.light() // Tactile feedback on refresh
     setRefreshing(true)
-    await fetchTeams()
+    await fetchTeams(true)  // Force refresh
     setRefreshing(false)
   }, [fetchTeams])
 
@@ -626,10 +637,10 @@ const TeamDashboard = () => {
   const isUserTeamLeader = useCallback(
     team => {
       return team?.members.some(
-        member => member.user._id === user._id && member.role === 'leader',
+        member => member?.user?._id === user?._id && member?.role === 'leader',
       )
     },
-    [user._id],
+    [user?._id],
   )
 
   // Memoized team card handlers
@@ -647,8 +658,8 @@ const TeamDashboard = () => {
     [handleLeaveTeam, handleRemoveMember, copyTeamCode],
   )
 
-  // Loading state
-  if (loading && !refreshing) {
+  // Loading state - ONLY on first load when no data
+  if (loading && !refreshing && teams.length === 0) {
     return (
       <div className="flex items-center justify-center h-96">
         <div className="flex flex-col items-center space-y-4">

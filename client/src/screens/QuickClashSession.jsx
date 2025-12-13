@@ -40,6 +40,12 @@ import { getCategoryInfo } from '../components/quickClashComponents/team/teamBat
 import CategoryIcon from '../components/quickClashComponents/team/teamBattlePageComponents/categoriesSection/CategoryIcon'
 import { fetchActiveChallenges } from '../redux/quickClashSlice'
 
+// Haptic feedback for gaming interactions
+import { haptics } from '../utils/haptics'
+
+// Audio feedback for game sounds
+import { quizAudioService } from '../services/quizAudioService'
+
 // Lazy-loaded components with loading fallbacks
 const ReadingPhase = lazy(() =>
   import('../components/quickClashComponents/legacy/ReadingPhase'),
@@ -319,6 +325,8 @@ const QuickClashSession = () => {
       if (fetchedChallenge.forgeArticle) {
         // This is Forge Mode - skip article initialization
         console.log('🔨 Forge Mode detected - using interactive reading')
+        quizAudioService.playQuizStart() // Audio for session start
+        haptics.quizStart() // Haptic for session start
         setPhase('reading') // Will use ForgeReadingPhase component
       } else {
         // Traditional mode - initialize article as before
@@ -341,6 +349,8 @@ const QuickClashSession = () => {
         )
 
         // Move to reading phase after loading
+        quizAudioService.playQuizStart() // Audio for session start
+        haptics.quizStart() // Haptic for session start
         setPhase('reading')
         readingStartTimeRef.current = Date.now()
 
@@ -382,6 +392,7 @@ const QuickClashSession = () => {
 
       // Check if betting is enabled for this challenge
       if (challenge?.betting?.enabled !== false) {
+        haptics.notification() // Haptic for phase transition
         setPhase('betting')
       } else {
         // Check for Time Warp (Passive)
@@ -417,6 +428,7 @@ const QuickClashSession = () => {
       setQuizTimeLeft(65)
       toast({ title: 'Time Warp Active!', description: '+15s added to quiz timer', status: 'info', duration: 3000 })
     }
+    haptics.notification() // Haptic for phase transition
     setPhase('quiz')
     setPhaseProgress(0)
   }, [session?.activePowerups, toast])
@@ -424,6 +436,7 @@ const QuickClashSession = () => {
   // ORIGINAL QUIZ COMPLETION LOGIC - PRESERVED
   const handleQuizComplete = useCallback(
     result => {
+      haptics.success() // Haptic for quiz completion
       setScore(result.RQM_score)
       setScoreDetails(result)
       setPhase('completed')
