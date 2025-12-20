@@ -33,6 +33,20 @@ const pageTransitionVariants = {
 const PageTransitionWrapper = ({ children }) => {
   const location = useLocation()
 
+
+
+  // Skip transitions for quickclash routes to avoid blank screen issues
+  const isQuickClashRoute = location.pathname.startsWith('/quickclash')
+
+  if (isQuickClashRoute) {
+    // No animation for quickclash routes
+    return (
+      <div className="w-full h-full">
+        {children}
+      </div>
+    )
+  }
+
   return (
     <AnimatePresence mode="wait" initial={false}>
       <motion.div

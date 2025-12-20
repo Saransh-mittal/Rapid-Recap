@@ -4,6 +4,9 @@ import { motion } from 'framer-motion'
 import { useTranslation } from 'react-i18next'
 import { Users, Shield } from 'lucide-react'
 
+// Audio feedback
+import { quizAudioService } from '../../../services/quizAudioService'
+
 // Import centralized color scheme
 import { QUICK_CLASH_CLASSES } from '../utils/quickClashColors'
 
@@ -62,6 +65,7 @@ const CreateTeamModal = ({ isOpen, onClose, onCreate }) => {
 
     if (!name.trim()) return
 
+    quizAudioService.playGoButton() // Energetic sound for creating team
     setLoading(true)
 
     try {
@@ -77,6 +81,7 @@ const CreateTeamModal = ({ isOpen, onClose, onCreate }) => {
 
   // Handle close - EXACTLY as original
   const handleClose = () => {
+    quizAudioService.playDismiss() // Sound for closing modal
     setName('')
     onClose()
   }

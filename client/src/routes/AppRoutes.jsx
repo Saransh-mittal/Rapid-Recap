@@ -145,12 +145,12 @@ const AppRoutes = ({ isToken, needsOnboarding, setIsGuestLoggedin }) => {
                 />
               )}
               <Route
-                path="/quickclash"
-                element={isToken ? <QuickClash /> : <Navigate to="/" replace />}
+                path="/quickclash/*"
+                element={isToken ? <QuickClashLayoutV2 /> : <Navigate to="/" replace />}
               />
               <Route
-                path="/quickclash-v2/*"
-                element={isToken ? <QuickClashLayoutV2 /> : <Navigate to="/" replace />}
+                path="/quickclash-legacy"
+                element={isToken ? <QuickClash /> : <Navigate to="/" replace />}
               />
               <Route
                 path="/quickclash/teamBattle/:battleId"

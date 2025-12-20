@@ -12,7 +12,8 @@ import { Swords, Trophy, Users } from 'lucide-react'
 // Haptic feedback
 import { haptics } from '../../../utils/haptics'
 
-// Data actions
+// Audio feedback
+import { quizAudioService } from '../../../services/quizAudioService'
 import { fetchTeamBattles } from '../../../redux/quickClashTeamBattleSlice'
 
 // Tab content
@@ -188,17 +189,34 @@ const BottomNav = memo(({ activeTab, onTabChange }) => {
 BottomNav.displayName = 'BottomNav'
 
 // ============================================================================
-// TAB CONTENT WRAPPER - Subtle fade animation
+// TAB CONTENT WRAPPER - Uses z-index stacking to keep tabs mounted & visible
 // ============================================================================
 
-const TabContent = memo(({ isActive, children }) => {
-  return (
-    <div
-      style={{
-        display: isActive ? 'block' : 'none',
+const TabContent = memo(({ isActive, children, tabName }) => {
+
+
+  // Active tab: relative position, visible, in normal flow, on top
+  // Hidden tabs: absolute position (stacked in container), invisible, lower z-index
+  const styles = isActive
+    ? {
+        position: 'relative',
+        visibility: 'visible',
         opacity: 1,
-      }}
-    >
+        zIndex: 1,
+      }
+    : {
+        position: 'absolute',
+        top: 0,
+        left: 0,
+        right: 0,
+        visibility: 'hidden',
+        opacity: 0,
+        pointerEvents: 'none',
+        zIndex: 0,
+      }
+
+  return (
+    <div style={styles} aria-hidden={!isActive}>
       {children}
     </div>
   )
@@ -217,22 +235,39 @@ const getTabFromPath = (path) => {
 
 const QuickClashLayoutV2 = () => {
   const location = useLocation()
-  const [activeTab, setActiveTab] = useState(() => getTabFromPath(location.pathname))
+  // Use window.location.pathname directly for initialization - always accurate
+  const [activeTab, setActiveTab] = useState(() => getTabFromPath(window.location.pathname))
+
+  // Track the last location.key to detect real navigation vs replaceState
+  const lastLocationKey = useRef(location.key)
+
 
   const handleTabChange = useCallback((tabId) => {
     if (tabId === activeTab) return
 
     haptics.selection() // Tactile feedback on tab switch
+    quizAudioService.playButtonClick() // Audio feedback on tab switch
     setActiveTab(tabId)
 
-    // Update URL silently
+    // Update URL silently (doesn't change location.key)
     const paths = {
-      battles: '/quickclash-v2',
-      history: '/quickclash-v2/history',
-      teams: '/quickclash-v2/teams'
+      battles: '/quickclash',
+      history: '/quickclash/history',
+      teams: '/quickclash/teams'
     }
     window.history.replaceState(null, '', paths[tabId])
   }, [activeTab])
+
+  // Sync activeTab when location.key changes (real navigation, not replaceState)
+  // This handles navigation BACK from TeamBattlePage
+  useEffect(() => {
+    // If location.key changed, this is a real navigation (not replaceState)
+    if (location.key !== lastLocationKey.current) {
+      lastLocationKey.current = location.key
+      const expectedTab = getTabFromPath(location.pathname)
+      setActiveTab(expectedTab)
+    }
+  }, [location.key, location.pathname])
 
   // Handle browser back/forward
   useEffect(() => {
@@ -248,16 +283,19 @@ const QuickClashLayoutV2 = () => {
       {/* Background data refresh on tab change */}
       <DataManager activeTab={activeTab} />
 
-      {/* All tabs stay mounted */}
-      <TabContent isActive={activeTab === 'battles'}>
-        <QuickClashV2 />
-      </TabContent>
-      <TabContent isActive={activeTab === 'history'}>
-        <BattleHistoryV2 />
-      </TabContent>
-      <TabContent isActive={activeTab === 'teams'}>
-        <TeamsPageV2 />
-      </TabContent>
+      {/* Tab content container with proper stacking context */}
+      <div style={{ position: 'relative', minHeight: '100vh' }}>
+        {/* Active tab content - conditionally rendered for proper remounting */}
+        <TabContent isActive={activeTab === 'battles'} tabName="battles">
+          <QuickClashV2 />
+        </TabContent>
+        <TabContent isActive={activeTab === 'history'} tabName="history">
+          <BattleHistoryV2 />
+        </TabContent>
+        <TabContent isActive={activeTab === 'teams'} tabName="teams">
+          <TeamsPageV2 />
+        </TabContent>
+      </div>
 
       <BottomNav activeTab={activeTab} onTabChange={handleTabChange} />
     </>

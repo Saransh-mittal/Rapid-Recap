@@ -8,6 +8,7 @@ import { Bolt, Loader2, Package, CheckCircle2, AlertCircle, Shield, X } from 'lu
 import PowerupCard from './PowerupCard'
 import { fetchTeamBattleDetails } from '../../../redux/quickClashTeamBattleSlice'
 import { cn } from '@/lib/utils'
+import { quizAudioService } from '../../../services/quizAudioService'
 
 const MAX_LOADOUT_HOUSING = 30
 
@@ -43,6 +44,7 @@ const PowerupSelectionModal = ({ isOpen, onClose, battleId, teamId }) => {
       })
 
       setMessage({ type: 'success', text: 'Equipped! ⚡' })
+      quizAudioService.playEquip()
       dispatch(fetchTeamBattleDetails(battleId))
     } catch (error) {
       setMessage({ type: 'error', text: error.response?.data?.message || 'Equip Failed' })
@@ -61,6 +63,7 @@ const PowerupSelectionModal = ({ isOpen, onClose, battleId, teamId }) => {
       })
 
       setMessage({ type: 'success', text: 'Unequipped!' })
+      quizAudioService.playUnequip()
       dispatch(fetchTeamBattleDetails(battleId))
     } catch (error) {
       setMessage({ type: 'error', text: error.response?.data?.message || 'Unequip Failed' })
@@ -123,7 +126,10 @@ const PowerupSelectionModal = ({ isOpen, onClose, battleId, teamId }) => {
                 </div>
               </div>
               <motion.button
-                onClick={onClose}
+                onClick={() => {
+                  quizAudioService.playDismiss()
+                  onClose()
+                }}
                 whileHover={{ scale: 1.1 }}
                 whileTap={{ scale: 0.9 }}
                 className="w-8 h-8 rounded-lg bg-white/5 hover:bg-white/10 flex items-center justify-center transition-colors"

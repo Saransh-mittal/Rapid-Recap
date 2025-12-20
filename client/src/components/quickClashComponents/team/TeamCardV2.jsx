@@ -2,7 +2,7 @@
 // Premium Team Card with Accordion Style + Member Actions
 
 import React, { memo, useMemo, useCallback, useState } from 'react'
-import { motion, AnimatePresence } from 'framer-motion'
+import { motion } from 'framer-motion'
 import { useTranslation } from 'react-i18next'
 import {
   Users,
@@ -299,19 +299,15 @@ const TeamCardV2 = memo(({
   }, [onLeave, team?._id])
   const handleInvite = useCallback(() => {
     haptics.light() // Tactile feedback on invite
-    onInvite()
-  }, [onInvite])
+    onInvite(team)
+  }, [onInvite, team])
 
   return (
     <Collapsible open={isOpen} onOpenChange={(open) => {
       haptics.selection() // Tactile feedback on accordion toggle
       setIsOpen(open)
     }}>
-      <motion.div
-        initial={{ opacity: 0, y: 10 }}
-        animate={{ opacity: 1, y: 0 }}
-        className="w-full rounded-xl overflow-hidden bg-gradient-to-br from-slate-900/60 to-slate-950/70 backdrop-blur-lg border border-white/10 shadow-lg"
-      >
+      <div className="w-full rounded-xl overflow-hidden bg-gradient-to-br from-slate-900/60 to-slate-950/70 backdrop-blur-lg border border-white/10 shadow-lg">
         {/* ===== ACCORDION HEADER (Always Visible) ===== */}
         <CollapsibleTrigger asChild>
           <div className="flex items-center justify-between gap-2 px-3 py-2.5 cursor-pointer hover:bg-white/[0.02] transition-colors">
@@ -367,62 +363,53 @@ const TeamCardV2 = memo(({
 
         {/* ===== COLLAPSIBLE CONTENT ===== */}
         <CollapsibleContent>
-          <AnimatePresence>
-            {isOpen && (
-              <motion.div
-                initial={{ opacity: 0, height: 0 }}
-                animate={{ opacity: 1, height: 'auto' }}
-                exit={{ opacity: 0, height: 0 }}
-                transition={{ duration: 0.2 }}
+          <div>
+            {/* Members Table */}
+            <div className="border-t border-white/5 px-1 py-1">
+              {teamMembers.map((member) => (
+                <MemberRow
+                  key={member.user._id}
+                  member={member}
+                  userId={userId}
+                  isLeader={isLeader}
+                  isInMatch={team.isInMatch}
+                  onRemove={(memberId) => onRemoveMember(team._id, memberId)}
+                  onTransferLeadership={(newLeaderId) => onTransferLeadership(team._id, newLeaderId)}
+                />
+              ))}
+              {!isTeamFull && Array.from({ length: emptySlots }).map((_, i) => (
+                <EmptySlot key={`empty-${i}`} isLeader={isLeader} onInvite={handleInvite} />
+              ))}
+            </div>
+
+            {/* Footer Actions */}
+            <div className="border-t border-white/5 px-3 py-2 flex items-center justify-between">
+              {/* Copy Code */}
+              <Button
+                size="sm"
+                variant="ghost"
+                onClick={handleCopyCode}
+                className="h-7 px-2 text-xs text-white/60 hover:text-white hover:bg-white/5"
               >
-                {/* Members Table */}
-                <div className="border-t border-white/5 px-1 py-1">
-                  {teamMembers.map((member) => (
-                    <MemberRow
-                      key={member.user._id}
-                      member={member}
-                      userId={userId}
-                      isLeader={isLeader}
-                      isInMatch={team.isInMatch}
-                      onRemove={onRemoveMember}
-                      onTransferLeadership={onTransferLeadership}
-                    />
-                  ))}
-                  {!isTeamFull && Array.from({ length: emptySlots }).map((_, i) => (
-                    <EmptySlot key={`empty-${i}`} isLeader={isLeader} onInvite={handleInvite} />
-                  ))}
-                </div>
+                {copied ? <Check className="w-3 h-3 text-green-400 mr-1" /> : <Copy className="w-3 h-3 mr-1" />}
+                {copied ? 'Copied' : 'Copy Code'}
+              </Button>
 
-                {/* Footer Actions */}
-                <div className="border-t border-white/5 px-3 py-2 flex items-center justify-between">
-                  {/* Copy Code */}
-                  <Button
-                    size="sm"
-                    variant="ghost"
-                    onClick={handleCopyCode}
-                    className="h-7 px-2 text-xs text-white/60 hover:text-white hover:bg-white/5"
-                  >
-                    {copied ? <Check className="w-3 h-3 text-green-400 mr-1" /> : <Copy className="w-3 h-3 mr-1" />}
-                    {copied ? 'Copied' : 'Copy Code'}
-                  </Button>
-
-                  {/* Leave */}
-                  <Button
-                    size="sm"
-                    variant="ghost"
-                    onClick={handleLeave}
-                    disabled={team.isInMatch}
-                    className="h-7 px-2 text-xs text-red-400/60 hover:text-red-300 hover:bg-red-500/10"
-                  >
-                    <LogOut className="w-3 h-3 mr-1" />
-                    Leave
-                  </Button>
-                </div>
-              </motion.div>
-            )}
-          </AnimatePresence>
+              {/* Leave */}
+              <Button
+                size="sm"
+                variant="ghost"
+                onClick={handleLeave}
+                disabled={team.isInMatch}
+                className="h-7 px-2 text-xs text-red-400/60 hover:text-red-300 hover:bg-red-500/10"
+              >
+                <LogOut className="w-3 h-3 mr-1" />
+                Leave
+              </Button>
+            </div>
+          </div>
         </CollapsibleContent>
-      </motion.div>
+      </div>
     </Collapsible>
   )
 })

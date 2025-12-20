@@ -1,8 +1,8 @@
 // components/quickClashComponents/team/TeamDashboardV2.jsx
 // Premium Team Dashboard with enterprise-level gaming UI/UX
 
-import React, { useState, useEffect, useCallback, useMemo, memo, useRef } from 'react'
-import { motion, AnimatePresence } from 'framer-motion'
+import React, { useState, useEffect, useCallback, memo, useRef } from 'react'
+import { motion } from 'framer-motion'
 import { useTranslation } from 'react-i18next'
 import axios from 'axios'
 import { useSelector } from 'react-redux'
@@ -29,6 +29,9 @@ import InviteUserModal from './InviteUserModal'
 // Import custom hooks
 import useQuickClashTeamBattle from '../../../customHooks/useQuickClashTeamBattle'
 import { useSocket } from '../../../customHooks/useSocket'
+
+// Audio feedback
+import { quizAudioService } from '../../../services/quizAudioService'
 
 // ============================================================================
 // LOADING SKELETON
@@ -211,6 +214,7 @@ const TeamDashboardV2 = () => {
   }, [fetchTeams])
 
   const copyTeamCode = useCallback(async code => {
+    quizAudioService.playButtonClick() // Sound for copy action
     try {
       if (navigator.clipboard && window.isSecureContext) {
         await navigator.clipboard.writeText(code)
@@ -237,17 +241,11 @@ const TeamDashboardV2 = () => {
     )
   }, [user?._id])
 
-  // Memoized handlers for team cards
-  const teamCardHandlers = useMemo(() => ({
-    onLeave: handleLeaveTeam,
-    onRemoveMember: teamId => memberId => handleRemoveMember(teamId, memberId),
-    onTransferLeadership: teamId => newLeaderId => handleTransferLeadership(teamId, newLeaderId),
-    onInvite: team => () => {
-      setSelectedTeam(team)
-      setIsInviteModalOpen(true)
-    },
-    onCopyTeamCode: copyTeamCode,
-  }), [handleLeaveTeam, handleRemoveMember, handleTransferLeadership, copyTeamCode])
+  // Stable handler for opening invite modal
+  const handleInviteClick = useCallback((team) => {
+    setSelectedTeam(team)
+    setIsInviteModalOpen(true)
+  }, [])
 
   // Loading state - only on first load
   if (loading && !refreshing && teams.length === 0) {
@@ -303,11 +301,7 @@ const TeamDashboardV2 = () => {
   }
 
   return (
-    <motion.div
-      initial={{ opacity: 0 }}
-      animate={{ opacity: 1 }}
-      className="w-full px-3 md:px-4 pt-2 pb-4"
-    >
+    <div className="w-full px-3 md:px-4 pt-2 pb-4">
       {/* ===== HEADER ===== */}
       <div className="flex items-center justify-between mb-5">
         <div className="flex items-center gap-3">
@@ -337,75 +331,51 @@ const TeamDashboardV2 = () => {
 
       {/* ===== ACTION BUTTONS ===== */}
       <div className="flex gap-3 mb-6">
-        <motion.div className="flex-1" whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.98 }}>
+        <div className="flex-1">
           <Button
-            onClick={() => setIsCreateModalOpen(true)}
-            className="w-full h-11 bg-gradient-to-r from-cyan-500 to-cyan-600 hover:from-cyan-400 hover:to-cyan-500 text-white font-semibold shadow-lg shadow-cyan-500/20"
+            onClick={() => { quizAudioService.playButtonClick(); setIsCreateModalOpen(true) }}
+            className="w-full h-11 bg-gradient-to-r from-cyan-500 to-cyan-600 hover:from-cyan-400 hover:to-cyan-500 text-white font-semibold shadow-lg shadow-cyan-500/20 active:scale-95 transition-transform"
           >
             <PlusCircle className="w-4 h-4 mr-2" />
             {t('Create Team')}
           </Button>
-        </motion.div>
+        </div>
 
-        <motion.div className="flex-1" whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.98 }}>
+        <div className="flex-1">
           <Button
-            onClick={() => setIsJoinModalOpen(true)}
+            onClick={() => { quizAudioService.playButtonClick(); setIsJoinModalOpen(true) }}
             variant="outline"
-            className="w-full h-11 bg-transparent border-blue-500/50 text-blue-300 hover:bg-blue-500/10 hover:border-blue-400 font-semibold"
+            className="w-full h-11 bg-transparent border-blue-500/50 text-blue-300 hover:bg-blue-500/10 hover:border-blue-400 font-semibold active:scale-95 transition-transform"
           >
             <UserPlus className="w-4 h-4 mr-2" />
             {t('Join Team')}
           </Button>
-        </motion.div>
+        </div>
       </div>
 
       {/* ===== TEAMS CONTENT ===== */}
-      <AnimatePresence mode="wait">
-        {teams.length === 0 ? (
-          <motion.div
-            key="empty"
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            exit={{ opacity: 0, y: -20 }}
-          >
-            <EmptyTeamState
-              onCreateTeam={() => setIsCreateModalOpen(true)}
-              onJoinTeam={() => setIsJoinModalOpen(true)}
+      {teams.length === 0 ? (
+        <EmptyTeamState
+          onCreateTeam={() => setIsCreateModalOpen(true)}
+          onJoinTeam={() => setIsJoinModalOpen(true)}
+        />
+      ) : (
+        <div className="grid gap-4 grid-cols-1 md:grid-cols-2 lg:grid-cols-2">
+          {teams.map((team) => (
+            <TeamCardV2
+              key={team._id}
+              team={team}
+              isLeader={isUserTeamLeader(team)}
+              userId={user._id}
+              onLeave={handleLeaveTeam}
+              onRemoveMember={handleRemoveMember}
+              onTransferLeadership={handleTransferLeadership}
+              onInvite={handleInviteClick}
+              onCopyTeamCode={copyTeamCode}
             />
-          </motion.div>
-        ) : (
-          <motion.div
-            key="teams"
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            exit={{ opacity: 0 }}
-            className="grid gap-4 grid-cols-1 md:grid-cols-2 lg:grid-cols-2"
-          >
-            {teams.map((team, index) => (
-              <motion.div
-                key={team._id}
-                initial={{ opacity: 0, y: 20 }}
-                animate={{
-                  opacity: 1,
-                  y: 0,
-                  transition: { delay: index * 0.1 }
-                }}
-              >
-                <TeamCardV2
-                  team={team}
-                  isLeader={isUserTeamLeader(team)}
-                  userId={user._id}
-                  onLeave={teamCardHandlers.onLeave}
-                  onRemoveMember={teamCardHandlers.onRemoveMember(team._id)}
-                  onTransferLeadership={teamCardHandlers.onTransferLeadership(team._id)}
-                  onInvite={teamCardHandlers.onInvite(team)}
-                  onCopyTeamCode={teamCardHandlers.onCopyTeamCode}
-                />
-              </motion.div>
-            ))}
-          </motion.div>
-        )}
-      </AnimatePresence>
+          ))}
+        </div>
+      )}
 
       {/* ===== MODALS ===== */}
       <CreateTeamModal
@@ -429,7 +399,7 @@ const TeamDashboardV2 = () => {
           onInvite={inviteeId => handleInviteUser(selectedTeam._id, inviteeId)}
         />
       )}
-    </motion.div>
+    </div>
   )
 }
 

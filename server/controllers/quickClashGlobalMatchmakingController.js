@@ -331,30 +331,43 @@ const getGlobalMatchmakingStatusDetailed = asyncHandler(async (req, res) => {
 
     // Check if any battle is ready for this user
     for (const battle of userTeamBattles) {
-      // Check if this battle has all challenges (battle is ready)
+      // Check if this user is part of this battle
+      const isTeamAMember = battle.teamAMembers.some(
+        m => m.user._id.toString() === userId.toString(),
+      )
+      const isTeamBMember = battle.teamBMembers.some(
+        m => m.user._id.toString() === userId.toString(),
+      )
+
+      if (!isTeamAMember && !isTeamBMember) continue
+
+      // Check if this battle has all challenges (battle is fully ready)
       if (
         battle.challenges &&
         battle.challenges.length === battle.categories.length
       ) {
-        // Check if this user is part of this battle
-        const isTeamAMember = battle.teamAMembers.some(
-          m => m.user._id.toString() === userId.toString(),
-        )
-        const isTeamBMember = battle.teamBMembers.some(
-          m => m.user._id.toString() === userId.toString(),
-        )
-
-        if (isTeamAMember || isTeamBMember) {
-          return res.json({
-            success: true,
-            inMatchmaking: false,
-            status: 'battleReady',
-            battleId: battle._id,
-            teamId: isTeamAMember ? battle.teamA._id : battle.teamB._id,
-            teamA: battle.teamA._id,
-            teamB: battle.teamB._id,
-          })
-        }
+        return res.json({
+          success: true,
+          inMatchmaking: false,
+          status: 'battleReady',
+          battleId: battle._id,
+          teamId: isTeamAMember ? battle.teamA._id : battle.teamB._id,
+          teamA: battle.teamA._id,
+          teamB: battle.teamB._id,
+          winProbability: battle.winProbability || null,
+        })
+      } else {
+        // Battle exists but not all challenges ready yet - still being created
+        // This is the fallback status for when socket event was missed
+        return res.json({
+          success: true,
+          inMatchmaking: false,
+          status: 'battleCreating',
+          battleId: battle._id,
+          teamId: isTeamAMember ? battle.teamA._id : battle.teamB._id,
+          teamA: battle.teamA._id,
+          teamB: battle.teamB._id,
+        })
       }
     }
 

@@ -298,6 +298,230 @@ export const quizAudioService = {
    * Check if audio is supported
    */
   isSupported: () => isClient && Howler.usingWebAudio,
+
+  // ══════════════════════════════════════════════════════
+  // Synthetic Sounds (Web Audio API - no files needed)
+  // ══════════════════════════════════════════════════════
+
+  /**
+   * Play donate sound - ascending chime for successful donation
+   * Usage: PowerupDonationModal after successful donation
+   */
+  playDonate: () => playSyntheticSound('donate'),
+
+  /**
+   * Play equip sound - power-up snap for equipping
+   * Usage: PowerupSelectionModal after successful equip
+   */
+  playEquip: () => playSyntheticSound('equip'),
+
+  /**
+   * Play unequip sound - soft release
+   * Usage: PowerupSelectionModal after unequipping
+   */
+  playUnequip: () => playSyntheticSound('unequip'),
+
+  /**
+   * Play Go button sound - energetic launch
+   * Usage: "Let's Go!" button in TeamBattlePageV2
+   */
+  playGoButton: () => playSyntheticSound('goButton'),
+
+  /**
+   * Play dismiss sound - quick pop for closing modals
+   * Usage: Close/X buttons on modals
+   */
+  playDismiss: () => playSyntheticSound('dismiss'),
+
+  /**
+   * Play default button click - subtle tick
+   * Usage: Global default for buttons without dedicated sounds
+   */
+  playButtonClick: () => playSyntheticSound('buttonClick'),
+}
+
+// ══════════════════════════════════════════════════════
+// Web Audio API Synthetic Sound Generator
+// ══════════════════════════════════════════════════════
+
+let audioContext = null
+
+/**
+ * Get or create AudioContext (lazy initialization)
+ */
+const getAudioContext = () => {
+  if (!isClient) return null
+  if (!audioContext) {
+    audioContext = new (window.AudioContext || window.webkitAudioContext)()
+  }
+  // Resume if suspended (autoplay policy)
+  if (audioContext.state === 'suspended') {
+    audioContext.resume()
+  }
+  return audioContext
+}
+
+/**
+ * Synthetic sound definitions
+ */
+const SYNTHETIC_SOUNDS = {
+  // Ascending chime - magical donation feel
+  donate: (ctx, now) => {
+    const osc1 = ctx.createOscillator()
+    const osc2 = ctx.createOscillator()
+    const gain = ctx.createGain()
+
+    osc1.type = 'sine'
+    osc2.type = 'triangle'
+    osc1.frequency.setValueAtTime(523, now) // C5
+    osc1.frequency.exponentialRampToValueAtTime(784, now + 0.15) // G5
+    osc2.frequency.setValueAtTime(659, now) // E5
+    osc2.frequency.exponentialRampToValueAtTime(1047, now + 0.15) // C6
+
+    gain.gain.setValueAtTime(0.15, now)
+    gain.gain.exponentialRampToValueAtTime(0.01, now + 0.3)
+
+    osc1.connect(gain)
+    osc2.connect(gain)
+    gain.connect(ctx.destination)
+
+    osc1.start(now)
+    osc2.start(now)
+    osc1.stop(now + 0.3)
+    osc2.stop(now + 0.3)
+  },
+
+  // Power-up snap - energetic equip
+  equip: (ctx, now) => {
+    const osc = ctx.createOscillator()
+    const gain = ctx.createGain()
+
+    osc.type = 'square'
+    osc.frequency.setValueAtTime(200, now)
+    osc.frequency.exponentialRampToValueAtTime(800, now + 0.05)
+    osc.frequency.exponentialRampToValueAtTime(600, now + 0.1)
+
+    gain.gain.setValueAtTime(0.12, now)
+    gain.gain.exponentialRampToValueAtTime(0.01, now + 0.15)
+
+    osc.connect(gain)
+    gain.connect(ctx.destination)
+
+    osc.start(now)
+    osc.stop(now + 0.15)
+  },
+
+  // Soft release - gentle unequip
+  unequip: (ctx, now) => {
+    const osc = ctx.createOscillator()
+    const gain = ctx.createGain()
+
+    osc.type = 'sine'
+    osc.frequency.setValueAtTime(500, now)
+    osc.frequency.exponentialRampToValueAtTime(200, now + 0.12)
+
+    gain.gain.setValueAtTime(0.1, now)
+    gain.gain.exponentialRampToValueAtTime(0.01, now + 0.12)
+
+    osc.connect(gain)
+    gain.connect(ctx.destination)
+
+    osc.start(now)
+    osc.stop(now + 0.12)
+  },
+
+  // Energetic launch - Go button
+  goButton: (ctx, now) => {
+    const osc1 = ctx.createOscillator()
+    const osc2 = ctx.createOscillator()
+    const gain = ctx.createGain()
+
+    osc1.type = 'sawtooth'
+    osc2.type = 'sine'
+    osc1.frequency.setValueAtTime(200, now)
+    osc1.frequency.exponentialRampToValueAtTime(600, now + 0.1)
+    osc2.frequency.setValueAtTime(400, now)
+    osc2.frequency.exponentialRampToValueAtTime(800, now + 0.15)
+
+    gain.gain.setValueAtTime(0.12, now)
+    gain.gain.exponentialRampToValueAtTime(0.01, now + 0.2)
+
+    osc1.connect(gain)
+    osc2.connect(gain)
+    gain.connect(ctx.destination)
+
+    osc1.start(now)
+    osc2.start(now)
+    osc1.stop(now + 0.2)
+    osc2.stop(now + 0.2)
+  },
+
+  // Quick pop - dismiss/close
+  dismiss: (ctx, now) => {
+    const osc = ctx.createOscillator()
+    const gain = ctx.createGain()
+
+    osc.type = 'sine'
+    osc.frequency.setValueAtTime(400, now)
+    osc.frequency.exponentialRampToValueAtTime(150, now + 0.08)
+
+    gain.gain.setValueAtTime(0.08, now)
+    gain.gain.exponentialRampToValueAtTime(0.01, now + 0.08)
+
+    osc.connect(gain)
+    gain.connect(ctx.destination)
+
+    osc.start(now)
+    osc.stop(now + 0.08)
+  },
+
+  // Subtle tick - default button click
+  buttonClick: (ctx, now) => {
+    const osc = ctx.createOscillator()
+    const gain = ctx.createGain()
+
+    osc.type = 'sine'
+    osc.frequency.setValueAtTime(1200, now)
+    osc.frequency.exponentialRampToValueAtTime(800, now + 0.03)
+
+    gain.gain.setValueAtTime(0.06, now)
+    gain.gain.exponentialRampToValueAtTime(0.01, now + 0.05)
+
+    osc.connect(gain)
+    gain.connect(ctx.destination)
+
+    osc.start(now)
+    osc.stop(now + 0.05)
+  },
+}
+
+// Debounce for synthetic sounds
+let lastSyntheticPlayTime = {}
+const SYNTHETIC_DEBOUNCE_MS = 30
+
+/**
+ * Play a synthetic sound
+ */
+const playSyntheticSound = (soundKey) => {
+  if (!isClient) return
+
+  const now = Date.now()
+  if (lastSyntheticPlayTime[soundKey] && now - lastSyntheticPlayTime[soundKey] < SYNTHETIC_DEBOUNCE_MS) {
+    return
+  }
+  lastSyntheticPlayTime[soundKey] = now
+
+  const ctx = getAudioContext()
+  if (!ctx) return
+
+  const soundFn = SYNTHETIC_SOUNDS[soundKey]
+  if (!soundFn) return
+
+  try {
+    soundFn(ctx, ctx.currentTime)
+  } catch (error) {
+    console.debug('[QuizAudio] Synthetic sound failed:', soundKey, error)
+  }
 }
 
 export default quizAudioService

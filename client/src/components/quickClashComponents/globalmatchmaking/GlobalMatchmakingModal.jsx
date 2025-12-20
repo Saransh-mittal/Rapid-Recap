@@ -18,6 +18,9 @@ import {
 } from 'lucide-react'
 import axios from 'axios'
 
+// Audio feedback
+import { quizAudioService } from '../../../services/quizAudioService'
+
 import {
   QUICK_CLASH_CLASSES,
   QUICK_CLASH_COLORS,
@@ -34,6 +37,7 @@ import {
   setShouldRefetchTeams,
   setToastNotification,
   clearToastNotification,
+  setBattleCreationError,
 } from '../../../redux/quickClashGlobalMatchmakingSlice'
 
 // Sub-components
@@ -91,6 +95,30 @@ const MODAL_STATES = {
     title: 'Battle Creation Failed',
   },
 }
+
+// Performance: Extracted animation configs outside component
+const ANIMATION_CONFIGS = {
+  ready: {
+    scale: [1, 1.2, 1],
+    rotate: [0, 10, -10, 0],
+  },
+  searching: { rotate: 360 },
+  idle: {},
+}
+
+const TRANSITION_CONFIGS = {
+  ready: { duration: 1, repeat: 2, ease: 'easeInOut' },
+  searching: { duration: 2, repeat: Infinity, ease: 'easeInOut' },
+  idle: { duration: 0 },
+}
+
+// Performance: Static style objects extracted to prevent recreation
+const SCROLL_CONTAINER_STYLE = { WebkitOverflowScrolling: 'touch' }
+const DIALOG_Z_INDEX_STYLE = { zIndex: 10000 }
+
+// Performance: Reduced confetti count and pre-calculated positions
+const CONFETTI_COLORS = ['text-cyan-400', 'text-yellow-400', 'text-purple-400']
+const CONFETTI_COUNT = 10 // Reduced from 20
 
 /**
  * GlobalMatchmakingModal - FIXED VERSION
@@ -218,37 +246,21 @@ const GlobalMatchmakingModal = React.memo(
       }
     }, [isOpen, user, checkMatchmakingStatus, fetchMyTeams, dispatch])
 
-    // Poll for matchmaking status
+    // Poll for matchmaking status updates only (battle ready comes from socket)
     useEffect(() => {
-      if (inMatchmaking && isOpen) {
+      // Don't poll if battle is already ready (socket delivered it)
+      if (inMatchmaking && isOpen && !battleReady) {
         pollingIntervalRef.current = setInterval(async () => {
           try {
             const statusData = await pollMatchmakingStatus()
-            if (statusData?.status === 'battleReady') {
-              dispatch(
-                setBattleReady({
-                  battleId: statusData?.battleId,
-                  teamId: statusData?.teamId,
-                  teamA: statusData?.teamA,
-                  teamB: statusData?.teamB,
-                  winProbability: statusData?.winProbability,
-                }),
-              )
 
+            // If battle is ready, socket will handle it - just stop polling
+            if (statusData?.status === 'battleReady') {
               if (pollingIntervalRef.current) {
                 clearInterval(pollingIntervalRef.current)
                 pollingIntervalRef.current = null
               }
-
-              const timeElapsed = Math.floor(
-                (Date.now() - mountTimeRef.current) / 1000,
-              )
-              dispatch(
-                addStatusUpdate({
-                  message: t('Battle is ready! You can now enter the battle.'),
-                  time: timeElapsed,
-                }),
-              )
+              // Don't dispatch setBattleReady here - socket is authoritative
               return
             }
 
@@ -299,9 +311,73 @@ const GlobalMatchmakingModal = React.memo(
           }
         }
       }
-    }, [inMatchmaking, isOpen, pollMatchmakingStatus, t, dispatch])
+    }, [inMatchmaking, isOpen, battleReady, pollMatchmakingStatus, t, dispatch])
+
+    // Fallback polling during battle creation phase (catches missed socket events)
+    useEffect(() => {
+      // Only poll when battle is being created - socket may have failed to deliver event
+      if (battleCreationStatus === 'creating' && isOpen && !battleReady) {
+        const creationPollingInterval = setInterval(async () => {
+          try {
+            const statusData = await pollMatchmakingStatus()
+
+            // If battle is ready but socket missed it - update state
+            if (statusData?.status === 'battleReady') {
+              console.log(
+                '[FALLBACK_POLL] Socket missed battleReady event - updating from poll',
+              )
+              dispatch(
+                setBattleReady({
+                  battleId: statusData.battleId,
+                  teamId: statusData.teamId,
+                  teamA: statusData.teamA,
+                  teamB: statusData.teamB,
+                  winProbability: statusData.winProbability,
+                }),
+              )
+              clearInterval(creationPollingInterval)
+              return
+            }
+
+            // Still creating - backend confirms battle is in progress
+            if (statusData?.status === 'battleCreating') {
+              console.log('[FALLBACK_POLL] Battle still being created...')
+              return
+            }
+
+            // If user is no longer in matchmaking and no battle - creation may have failed silently
+            if (statusData?.status === null && !statusData?.inMatchmaking) {
+              console.log(
+                '[FALLBACK_POLL] Detected possible silent failure - no battle, not in matchmaking',
+              )
+              dispatch(
+                setBattleCreationError(
+                  t(
+                    'Battle creation may have failed. Please try joining matchmaking again.',
+                  ),
+                ),
+              )
+              clearInterval(creationPollingInterval)
+              return
+            }
+          } catch (error) {
+            console.error('[FALLBACK_POLL] Error during fallback poll:', error)
+          }
+        }, 15000) // Poll every 15 seconds
+
+        return () => clearInterval(creationPollingInterval)
+      }
+    }, [
+      battleCreationStatus,
+      isOpen,
+      battleReady,
+      pollMatchmakingStatus,
+      dispatch,
+      t,
+    ])
 
     const handleJoinMatchmaking = useCallback(async () => {
+      quizAudioService.playGoButton() // Energetic sound for starting matchmaking
       try {
         mountTimeRef.current = Date.now()
         dispatch(
@@ -332,6 +408,7 @@ const GlobalMatchmakingModal = React.memo(
       const canLeave = await checkCanLeaveMatchmaking()
       if (!canLeave) return
 
+      quizAudioService.playDismiss() // Dismiss sound for leaving
       try {
         await leaveMatchmaking()
         dispatch(clearStatusUpdates())
@@ -356,6 +433,7 @@ const GlobalMatchmakingModal = React.memo(
     }, [retryAfterFailure, dispatch])
 
     const handleClose = useCallback(() => {
+      quizAudioService.playDismiss() // Dismiss sound for closing modal
       if (battleReady) clearBattleReady()
       if (battleCreationStatus === 'failed')
         dispatch(clearBattleCreationState())
@@ -382,24 +460,18 @@ const GlobalMatchmakingModal = React.memo(
                 <motion.div
                   animate={
                     modalState === MODAL_STATES.ready
-                      ? {
-                          scale: [1, 1.2, 1],
-                          rotate: [0, 10, -10, 0],
-                        }
+                      ? ANIMATION_CONFIGS.ready
                       : modalState === MODAL_STATES.searching
-                      ? { rotate: 360 }
-                      : {}
+                      ? ANIMATION_CONFIGS.searching
+                      : ANIMATION_CONFIGS.idle
                   }
-                  transition={{
-                    duration: modalState === MODAL_STATES.ready ? 1 : 2,
-                    repeat:
-                      modalState === MODAL_STATES.searching
-                        ? Infinity
-                        : modalState === MODAL_STATES.ready
-                        ? 2
-                        : 0,
-                    ease: 'easeInOut',
-                  }}
+                  transition={
+                    modalState === MODAL_STATES.ready
+                      ? TRANSITION_CONFIGS.ready
+                      : modalState === MODAL_STATES.searching
+                      ? TRANSITION_CONFIGS.searching
+                      : TRANSITION_CONFIGS.idle
+                  }
                 >
                   <HeaderIcon className={`w-6 h-6 ${modalState.iconColor}`} />
                 </motion.div>
@@ -439,25 +511,6 @@ const GlobalMatchmakingModal = React.memo(
                 <X className="w-4 h-4" />
               </Button>
             </div>
-
-            {/* Progress bar for matchmaking */}
-            {inMatchmaking && !battleReady && (
-              <motion.div
-                initial={{ opacity: 0, y: -10 }}
-                animate={{ opacity: 1, y: 0 }}
-                className="mt-4"
-              >
-                <Progress
-                  value={Math.min((matchmakingTime / 60) * 100, 100)}
-                  className="h-2 bg-white/10"
-                />
-                <p
-                  className={`${QUICK_CLASH_CLASSES.textMuted} text-xs mt-2 text-center`}
-                >
-                  {t('Searching')} • {formatMatchmakingTime(matchmakingTime)}
-                </p>
-              </motion.div>
-            )}
           </DialogHeader>
         )}
 
@@ -470,10 +523,7 @@ const GlobalMatchmakingModal = React.memo(
             md:max-h-[calc(85vh-180px)]
             px-6 py-6
           "
-          style={{
-            // Ensure smooth scrolling
-            WebkitOverflowScrolling: 'touch',
-          }}
+          style={SCROLL_CONTAINER_STYLE}
         >
           <div className="space-y-6">
             {/* Main status display */}
@@ -499,73 +549,6 @@ const GlobalMatchmakingModal = React.memo(
                 />
               </motion.div>
             </AnimatePresence>
-
-            {/* Win Probability Display */}
-            {battleReady && winProbability && (
-              <motion.div
-                initial={{ opacity: 0, scale: 0.9 }}
-                animate={{ opacity: 1, scale: 1 }}
-                transition={{ delay: 0.2 }}
-                className={`
-                  ${QUICK_CLASH_CLASSES.glassLight}
-                  rounded-2xl p-5
-                  border-2 ${modalState.borderColor}
-                  shadow-xl
-                  relative overflow-hidden
-                `}
-              >
-                {/* Animated background glow */}
-                <motion.div
-                  className={`absolute inset-0 bg-gradient-to-br ${modalState.gradientFrom} to-transparent`}
-                  animate={{
-                    opacity: [0.3, 0.6, 0.3],
-                  }}
-                  transition={{ duration: 2, repeat: Infinity }}
-                />
-
-                <div className="relative z-10 space-y-4">
-                  <div className="flex items-center justify-between">
-                    <h3
-                      className={`${QUICK_CLASH_CLASSES.textPrimary} text-base font-bold flex items-center gap-2`}
-                    >
-                      <Target className="w-5 h-5 text-cyan-400" />
-                      {t('Initial Win Probability')}
-                    </h3>
-                    <Badge className="bg-cyan-500/20 text-cyan-300 border border-cyan-400/40">
-                      {t('Pre-Battle')}
-                    </Badge>
-                  </div>
-
-                  <TeamWinProbabilityDisplay
-                    currentProbability={winProbability.currentProbability}
-                    initialProbability={winProbability.initialProbability}
-                    certaintyScore={winProbability.certaintyScore}
-                    completedChallenges={winProbability.completedChallenges}
-                    totalChallenges={winProbability.totalChallenges}
-                    size="lg"
-                    showTrend={false}
-                    showCertainty={false}
-                  />
-
-                  <div
-                    className={`
-                      ${QUICK_CLASH_CLASSES.glassLight}
-                      rounded-lg p-3
-                      border border-cyan-400/20
-                    `}
-                  >
-                    <p
-                      className={`${QUICK_CLASH_CLASSES.textMuted} text-xs text-center leading-relaxed`}
-                    >
-                      <Sparkles className="w-3 h-3 inline mr-1 text-cyan-400" />
-                      {t(
-                        'This probability will update dynamically as your team completes challenges',
-                      )}
-                    </p>
-                  </div>
-                </div>
-              </motion.div>
-            )}
 
             {/* Team Selection Panel */}
             {!inMatchmaking &&
@@ -717,42 +700,32 @@ const GlobalMatchmakingModal = React.memo(
           )}
         </DialogFooter>
 
-        {/* Celebration confetti effect */}
+        {/* Celebration confetti effect - Performance: Reduced to 10 particles */}
         <AnimatePresence>
           {showCelebration && battleReady && (
             <>
-              {[...Array(20)].map((_, i) => (
+              {[...Array(CONFETTI_COUNT)].map((_, i) => (
                 <motion.div
                   key={i}
                   initial={{
                     opacity: 1,
                     y: 0,
-                    x: `${Math.random() * 100}%`,
-                    scale: Math.random() * 0.5 + 0.5,
+                    x: `${(i * 10) % 100}%`,
+                    scale: 0.5 + (i % 3) * 0.25,
                   }}
                   animate={{
                     opacity: 0,
-                    y: window.innerHeight,
-                    rotate: Math.random() * 360,
+                    y: 400,
+                    rotate: 180 + i * 36,
                   }}
                   transition={{
-                    duration: Math.random() * 2 + 2,
+                    duration: 2 + (i % 3),
                     ease: 'easeIn',
                   }}
                   className="absolute top-0 z-50 pointer-events-none"
-                  style={{
-                    left: `${Math.random() * 100}%`,
-                  }}
+                  style={{ left: `${(i * 10) % 100}%` }}
                 >
-                  <Sparkles
-                    className={`w-4 h-4 ${
-                      i % 3 === 0
-                        ? 'text-cyan-400'
-                        : i % 3 === 1
-                        ? 'text-yellow-400'
-                        : 'text-purple-400'
-                    }`}
-                  />
+                  <Sparkles className={`w-4 h-4 ${CONFETTI_COLORS[i % 3]}`} />
                 </motion.div>
               ))}
             </>
@@ -777,57 +750,42 @@ const GlobalMatchmakingModal = React.memo(
       >
         <DialogContent
           className={`
-            ${QUICK_CLASH_CLASSES.glassMedium}
-            border-2 ${modalState.borderColor}
+            bg-gradient-to-b from-slate-900/95 to-slate-950/98
+            backdrop-blur-2xl
+            border ${modalState.borderColor}
             shadow-2xl
             ${
               modalState === MODAL_STATES.ready
-                ? 'shadow-cyan-500/40'
+                ? 'shadow-cyan-500/30'
                 : modalState === MODAL_STATES.searching
-                ? 'shadow-emerald-500/30'
+                ? 'shadow-emerald-500/20'
                 : modalState === MODAL_STATES.failed
-                ? 'shadow-red-500/40'
-                : 'shadow-teal-500/30'
+                ? 'shadow-red-500/30'
+                : 'shadow-cyan-500/20'
             }
             rounded-2xl
-            max-w-2xl
+            max-w-md
             w-[95vw]
             sm:w-[90vw]
             md:w-full
             max-h-[90vh]
             p-0
             overflow-hidden
-            backdrop-brightness-110
             flex
             flex-col
           `}
-          style={{
-            // FIXED: Higher z-index than FloatingActionMenu (9999)
-            zIndex: 10000,
-          }}
+          style={DIALOG_Z_INDEX_STYLE}
         >
-          {/* Animated background gradient */}
+          {/* Subtle gradient overlay */}
           <div
             className={`
               absolute inset-0
               bg-gradient-to-br
               ${modalState.gradientFrom}
               to-transparent
-              opacity-70
+              opacity-50
               pointer-events-none
             `}
-          />
-
-          {/* Subtle animated grid pattern */}
-          <div
-            className="absolute inset-0 opacity-5 pointer-events-none"
-            style={{
-              backgroundImage: `
-                linear-gradient(${QUICK_CLASH_COLORS.primary[500]} 1px, transparent 1px),
-                linear-gradient(90deg, ${QUICK_CLASH_COLORS.primary[500]} 1px, transparent 1px)
-              `,
-              backgroundSize: '20px 20px',
-            }}
           />
 
           {content}

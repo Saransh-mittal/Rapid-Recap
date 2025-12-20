@@ -18,6 +18,9 @@ import {
 import axios from 'axios'
 import { debounce } from 'lodash'
 
+// Audio feedback
+import { quizAudioService } from '../../../services/quizAudioService'
+
 // Import centralized color scheme
 import { QUICK_CLASH_CLASSES } from '../utils/quickClashColors'
 
@@ -262,6 +265,7 @@ const InviteUserModal = ({ isOpen, onClose, teamId, teamName, onInvite }) => {
   const handleInviteUser = async () => {
     if (!selectedUser) return
 
+    quizAudioService.playDonate() // Positive sound for invitation
     setInviting(true)
 
     try {
@@ -476,7 +480,7 @@ const InviteUserModal = ({ isOpen, onClose, teamId, teamName, onInvite }) => {
             <Button
               type="button"
               variant="ghost"
-              onClick={onClose}
+              onClick={() => { quizAudioService.playDismiss(); onClose() }}
               className={`
                 ${QUICK_CLASH_CLASSES.glassMedium}
                 border border-white/20 text-white/80 hover:text-white

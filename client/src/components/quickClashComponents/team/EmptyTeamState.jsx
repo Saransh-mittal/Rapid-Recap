@@ -1,5 +1,5 @@
-// components/quickClashComponents/team/EmptyTeamState.jsx - FAITHFUL CONVERSION to Tailwind CSS
-import React from 'react'
+// components/quickClashComponents/team/EmptyTeamState.jsx - Optimized for performance
+import React, { memo } from 'react'
 import { motion } from 'framer-motion'
 import { useTranslation } from 'react-i18next'
 import { Users, UserPlus, PlusCircle } from 'lucide-react'
@@ -11,8 +11,35 @@ import { QUICK_CLASH_CLASSES } from '../utils/quickClashColors'
 // npx shadcn-ui@latest add button
 import { Button } from '@/components/ui/button'
 
+// Animation variants - defined outside component for stable references
+const containerVariants = {
+  initial: { opacity: 0, y: 20 },
+  animate: {
+    opacity: 1,
+    y: 0,
+    transition: {
+      type: 'spring',
+      stiffness: 100,
+      damping: 15,
+      staggerChildren: 0.1,
+    },
+  },
+}
+
+const itemVariants = {
+  initial: { opacity: 0, y: 15 },
+  animate: {
+    opacity: 1,
+    y: 0,
+    transition: {
+      type: 'spring',
+      stiffness: 100,
+      damping: 15,
+    },
+  },
+}
+
 const MotionDiv = motion.div
-const MotionButton = motion.button
 
 /**
  * Enhanced Empty Team State - Converted to Tailwind CSS with blue-cyan theme
@@ -25,36 +52,8 @@ const MotionButton = motion.button
  * - Improved responsive design with better mobile experience
  * - Enhanced visual hierarchy and call-to-action buttons
  */
-const EmptyTeamState = ({ onCreateTeam, onJoinTeam }) => {
+const EmptyTeamState = memo(({ onCreateTeam, onJoinTeam }) => {
   const { t } = useTranslation('QuickClash')
-
-  // Animation variants - EXACTLY as original
-  const containerVariants = {
-    initial: { opacity: 0, y: 20 },
-    animate: {
-      opacity: 1,
-      y: 0,
-      transition: {
-        type: 'spring',
-        stiffness: 100,
-        damping: 15,
-        staggerChildren: 0.15,
-      },
-    },
-  }
-
-  const itemVariants = {
-    initial: { opacity: 0, y: 20 },
-    animate: {
-      opacity: 1,
-      y: 0,
-      transition: {
-        type: 'spring',
-        stiffness: 100,
-        damping: 15,
-      },
-    },
-  }
 
   return (
     <MotionDiv
@@ -72,7 +71,7 @@ const EmptyTeamState = ({ onCreateTeam, onJoinTeam }) => {
     >
       <div className="flex justify-center">
         <div className="flex flex-col items-center space-y-6 max-w-md text-center">
-          {/* Animated Icon */}
+          {/* Icon */}
           <MotionDiv
             variants={itemVariants}
             className={`
@@ -82,18 +81,6 @@ const EmptyTeamState = ({ onCreateTeam, onJoinTeam }) => {
               ${QUICK_CLASH_CLASSES.shadowCyan}
               backdrop-brightness-115
             `}
-            whileHover={{
-              scale: 1.05,
-              boxShadow: '0 0 25px rgba(6, 182, 212, 0.4)',
-            }}
-            animate={{
-              y: [-2, 2, -2],
-              transition: {
-                duration: 4,
-                repeat: Infinity,
-                ease: 'easeInOut',
-              },
-            }}
           >
             <Users className="w-10 h-10 text-cyan-400" />
           </MotionDiv>
@@ -117,10 +104,9 @@ const EmptyTeamState = ({ onCreateTeam, onJoinTeam }) => {
             </p>
           </MotionDiv>
 
-          {/* Action Buttons */}
           <MotionDiv variants={itemVariants} className="w-full">
             <div className="flex flex-col sm:flex-row gap-4 justify-center items-center w-full">
-              <MotionButton
+              <button
                 onClick={onCreateTeam}
                 className={`
                   ${QUICK_CLASH_CLASSES.btnPrimary}
@@ -131,15 +117,14 @@ const EmptyTeamState = ({ onCreateTeam, onJoinTeam }) => {
                   transition-all duration-200
                   flex items-center gap-3
                   w-full sm:w-auto
+                  active:scale-95
                 `}
-                whileHover={{ scale: 1.05 }}
-                whileTap={{ scale: 0.95 }}
               >
                 <PlusCircle className="w-5 h-5" />
                 {t('Create Team')}
-              </MotionButton>
+              </button>
 
-              <MotionButton
+              <button
                 onClick={onJoinTeam}
                 className={`
                   ${QUICK_CLASH_CLASSES.glassMedium}
@@ -152,13 +137,12 @@ const EmptyTeamState = ({ onCreateTeam, onJoinTeam }) => {
                   transition-all duration-200
                   flex items-center gap-3
                   w-full sm:w-auto
+                  active:scale-95
                 `}
-                whileHover={{ scale: 1.05 }}
-                whileTap={{ scale: 0.95 }}
               >
                 <UserPlus className="w-5 h-5" />
                 {t('Join Team')}
-              </MotionButton>
+              </button>
             </div>
           </MotionDiv>
 
@@ -185,6 +169,8 @@ const EmptyTeamState = ({ onCreateTeam, onJoinTeam }) => {
       </div>
     </MotionDiv>
   )
-}
+})
+
+EmptyTeamState.displayName = 'EmptyTeamState'
 
 export default EmptyTeamState

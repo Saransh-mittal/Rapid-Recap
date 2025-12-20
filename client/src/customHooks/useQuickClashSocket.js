@@ -6,6 +6,7 @@ import { useToast } from '@chakra-ui/react'
 import { useTranslation } from 'react-i18next'
 import { useNavigate } from 'react-router-dom'
 import { v4 as uuidv4 } from 'uuid'
+import axios from 'axios'
 
 // Redux imports
 import {
@@ -58,6 +59,7 @@ import {
   handleTeamJoinedMatchmaking,
   setShouldRefetchTeams,
   setShouldCheckStatus,
+  addStatusUpdate,
 } from '../redux/quickClashGlobalMatchmakingSlice'
 
 // Team battle Redux imports
@@ -820,12 +822,37 @@ const useQuickClashSocket = () => {
 
     const cleanupTeamBattleReady = addEventListener(
       'quickClash:teamBattleReady',
-      data => {
+      async data => {
         if (!isComponentMountedRef.current) return
         logSocketEvent('team_battle_ready', data)
 
+        // Dispatch battle ready immediately
         dispatch(setBattleReady(data))
         dispatch(setTeamBattleReady(data))
+
+        // Fetch additional details (win probability) if not included
+        if (!data.winProbability) {
+          try {
+            const response = await axios.get(
+              '/api/quickClash/global-matchmaking-status-detailed'
+            )
+            if (response.data?.winProbability && isComponentMountedRef.current) {
+              dispatch(setBattleReady({
+                ...data,
+                winProbability: response.data.winProbability,
+              }))
+            }
+          } catch (error) {
+            console.warn('[QC_SOCKET] Failed to fetch win probability:', error)
+          }
+        }
+
+        // Add status update for battle ready
+        dispatch(addStatusUpdate({
+          message: 'Battle is ready! You can now enter the battle.',
+          time: 0,
+        }))
+
         // Explicitly refresh active battles when a new team battle is ready
         dispatch(fetchTeamBattles({ status: 'active', page: 1 }))
       },

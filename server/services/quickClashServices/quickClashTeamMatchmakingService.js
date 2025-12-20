@@ -2100,7 +2100,7 @@ const processTeamMatchmaking = async providedSession => {
           })
 
           if (teamBattle) {
-            // Progress update
+            // Progress update - include winProbability for immediate client display
             globalEmitter.emit('quickClash:teamBattleReady', {
               battleId: teamBattle._id.toString(),
               teamA: team._id.toString(),
@@ -2114,6 +2114,7 @@ const processTeamMatchmaking = async providedSession => {
                 name: m.user.name || m.user.inGameName,
               })),
               categories: battleCategories,
+              winProbability: teamBattle.winProbability || null,
             })
 
             // Remove both teams from matchmaking
@@ -2347,6 +2348,7 @@ const checkForTeamMatch = async ({ teamId }) => {
               name: m.user.name || m.user.inGameName,
             })),
             categories: battleCategories,
+            winProbability: teamBattle.winProbability || null,
           })
 
           // Remove both teams from matchmaking

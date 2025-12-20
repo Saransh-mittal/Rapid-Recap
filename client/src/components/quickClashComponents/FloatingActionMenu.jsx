@@ -8,6 +8,9 @@ import { useSelector, useDispatch } from 'react-redux'
 import { setIsNotifDrawerOpen } from '../../redux/appSlice'
 import { useNavigate } from 'react-router-dom'
 
+// Audio feedback
+import { quizAudioService } from '../../services/quizAudioService'
+
 // Import centralized color scheme
 import { QUICK_CLASH_CLASSES } from './utils/quickClashColors'
 
@@ -402,24 +405,28 @@ const FloatingActionMenu = ({ onNewChallenge }) => {
     })
   }, [toast, t, getBoundaries, x, y])
 
-  // Click handlers
+  // Click handlers with sounds
   const clickHandlers = useMemo(
     () => ({
       newChallenge: () => {
+        quizAudioService.playButtonClick()
         onNewChallenge()
         onClose()
       },
       profile: () => {
+        quizAudioService.playButtonClick()
         navigate(`/profile/${user?.inGameName}`, {
           state: { showQuickClash: true },
         })
         onClose()
       },
       inbox: () => {
+        quizAudioService.playButtonClick()
         dispatch(setIsNotifDrawerOpen(true))
         onClose()
       },
       leaderboard: () => {
+        quizAudioService.playButtonClick()
         setIsLeaderboardOpen(true)
         onClose()
       },
@@ -518,7 +525,7 @@ const FloatingActionMenu = ({ onNewChallenge }) => {
               ? '0 12px 30px rgba(0,0,0,0.5)'
               : '0 5px 15px rgba(0,0,0,0.3)',
           }}
-          onClick={onToggle}
+          onClick={() => { isOpen ? quizAudioService.playDismiss() : quizAudioService.playButtonClick(); onToggle() }}
           variants={mainButtonVariants}
           animate={isOpen ? 'open' : 'closed'}
           whileHover={!isDragging ? { scale: 1.05 } : {}}

@@ -249,7 +249,7 @@ const useQuickClashAnalysis = () => {
       })
     }
     window.scrollTo(0, 0)
-    navigate('/quickclash#active/4v4')
+    navigate('/quickclash')
   }, [navigate])
 
   // Memoized section handlers

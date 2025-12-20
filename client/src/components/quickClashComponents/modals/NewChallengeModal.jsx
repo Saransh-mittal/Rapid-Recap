@@ -29,9 +29,11 @@ import {
 
 // Import hooks
 import useQuickClash from '../../../customHooks/useQuickClash'
-
 import useDailyTasks from '../../../customHooks/useDailyTasks'
 import { setChallengeCreating } from '../../../redux/quickClashSlice'
+
+// Audio feedback
+import { quizAudioService } from '../../../services/quizAudioService'
 
 const NewChallengeModal = ({ isOpen, onClose, preSelectedUser = null }) => {
   const { t } = useTranslation('QuickClash')
@@ -75,6 +77,7 @@ const NewChallengeModal = ({ isOpen, onClose, preSelectedUser = null }) => {
 
   // Reset form on close
   const handleClose = useCallback(() => {
+    quizAudioService.playDismiss() // Sound for closing modal
     // If animation is showing, we can simply close without resetting state
     // to allow the background processing to continue
     setShowAnimation(false)
@@ -121,11 +124,13 @@ const NewChallengeModal = ({ isOpen, onClose, preSelectedUser = null }) => {
       })
       return
     }
+    quizAudioService.playButtonClick() // Sound for next step
     setStep(2)
   }, [step, selectedUser, t, toast])
 
   // Go back to previous step
   const goToPreviousStep = useCallback(() => {
+    quizAudioService.playButtonClick() // Sound for back step
     setStep(1)
   }, [])
 
@@ -145,6 +150,7 @@ const NewChallengeModal = ({ isOpen, onClose, preSelectedUser = null }) => {
     }
 
     // Show animation before making API call
+    quizAudioService.playGoButton() // Energetic sound for creating challenge
     setShowAnimation(true)
 
     try {

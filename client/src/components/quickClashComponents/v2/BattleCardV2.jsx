@@ -19,6 +19,9 @@ import {
 // Haptic feedback
 import { haptics } from '../../../utils/haptics'
 
+// Audio feedback
+import { quizAudioService } from '../../../services/quizAudioService'
+
 const MotionDiv = motion.div
 
 // ============================================================================
@@ -269,6 +272,7 @@ const BattleCardV2 = ({ battle, onClick }) => {
   // Handle click
   const handleClick = useCallback(() => {
     haptics.light() // Tactile feedback on tap
+    quizAudioService.playButtonClick() // Audio feedback on tap
     if (onClick) {
       onClick(battle)
     } else if (battleData?.id) {

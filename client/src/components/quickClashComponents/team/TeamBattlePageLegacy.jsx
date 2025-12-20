@@ -150,7 +150,7 @@ const TeamBattlePage = React.memo(() => {
 
   // Event handlers (unchanged logic)
   const handleGoBack = useCallback(() => {
-    navigate('/quickclash#active/4v4')
+    navigate('/quickclash')
   }, [navigate])
 
   const handleCategorySelect = useCallback(

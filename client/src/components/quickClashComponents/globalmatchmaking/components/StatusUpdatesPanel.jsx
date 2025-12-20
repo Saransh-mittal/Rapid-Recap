@@ -47,6 +47,7 @@ const StatusUpdatesPanel = React.memo(({ statusUpdates }) => {
           </p>
         </div>
         <div className="flex items-center gap-1">
+          {/* Performance: Reduced animation frequency */}
           <MotionDiv
             className="w-2 h-2 rounded-full bg-emerald-400"
             animate={{
@@ -54,7 +55,7 @@ const StatusUpdatesPanel = React.memo(({ statusUpdates }) => {
               opacity: [1, 0.5, 1],
             }}
             transition={{
-              duration: 2,
+              duration: 3,
               repeat: Infinity,
             }}
           />
@@ -64,9 +65,9 @@ const StatusUpdatesPanel = React.memo(({ statusUpdates }) => {
         </div>
       </div>
 
-      {/* Updates list */}
+      {/* Updates list - Performance: Changed mode from popLayout to sync */}
       <div className="space-y-2 max-h-32 overflow-y-auto custom-scrollbar">
-        <AnimatePresence mode="popLayout">
+        <AnimatePresence mode="sync">
           {recentUpdates.map((update, index) => (
             <MotionDiv
               key={update.id}

@@ -4,6 +4,9 @@ import { motion } from 'framer-motion'
 import { useTranslation } from 'react-i18next'
 import { UserPlus, Users, Key, Zap, Crown, Star, X } from 'lucide-react'
 
+// Audio feedback
+import { quizAudioService } from '../../../services/quizAudioService'
+
 // Import centralized color scheme
 import { QUICK_CLASH_CLASSES } from '../utils/quickClashColors'
 
@@ -165,6 +168,7 @@ const JoinTeamModal = ({ isOpen, onClose, onJoin }) => {
     if (e) e.preventDefault()
     if (teamCode.length !== 6 || loading) return
 
+    quizAudioService.playGoButton() // Energetic sound for joining team
     setLoading(true)
     try {
       await onJoin(teamCode)
@@ -176,6 +180,7 @@ const JoinTeamModal = ({ isOpen, onClose, onJoin }) => {
   }
 
   const handleClose = () => {
+    quizAudioService.playDismiss() // Sound for closing modal
     setTeamCode('')
     onClose()
   }

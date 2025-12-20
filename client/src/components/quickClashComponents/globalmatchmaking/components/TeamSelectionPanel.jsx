@@ -38,14 +38,13 @@ const SelectionOption = React.memo(({ option, isSelected, onSelectTeam }) => {
         rounded-xl p-4
         border-2 transition-all duration-200
         cursor-pointer
+        hover:scale-[1.01] active:scale-[0.99]
         ${
           isSelected
             ? 'border-cyan-400/60 bg-cyan-500/10 shadow-lg shadow-cyan-500/20'
             : 'border-white/10 hover:border-white/20 hover:bg-white/5'
         }
       `}
-      whileHover={{ scale: 1.02 }}
-      whileTap={{ scale: 0.98 }}
     >
       <div className="flex items-center justify-between">
         {/* Left side - Icon and name */}

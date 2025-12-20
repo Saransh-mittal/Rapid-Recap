@@ -64,7 +64,7 @@ const Header = ({ battle, onGoBack, t }) => {
     <div className="px-5 pt-5 pb-2">
       <div className="flex items-center justify-between">
         <motion.button
-          onClick={onGoBack}
+          onClick={() => { quizAudioService.playButtonClick(); onGoBack() }}
           whileTap={{ scale: 0.95 }}
           className="flex items-center gap-1.5 text-white/50 hover:text-white transition-colors text-sm px-2 py-1 -ml-2 rounded-lg hover:bg-white/5"
         >
@@ -195,7 +195,7 @@ const TeamRow = ({ members, userId, isUserTeam, teamScore, onMemberClick, t }) =
             transition={{ delay: i * 0.05 }}
             whileHover={{ scale: 1.08, y: -2 }}
             whileTap={{ scale: 0.95 }}
-            onClick={() => onMemberClick(m.user._id)}
+            onClick={() => { quizAudioService.playButtonClick(); onMemberClick(m.user._id) }}
             className="flex-shrink-0 cursor-pointer"
           >
             <div className={`relative p-0.5 rounded-xl ${
@@ -273,7 +273,7 @@ const CategoryCard = ({ challenge, onSelect, onDeselect, onBegin, onReport, load
       animate={{ opacity: 1, y: 0 }}
       whileHover={state === 'available' ? { scale: 1.02, y: -2 } : {}}
       whileTap={state === 'available' ? { scale: 0.98 } : {}}
-      onClick={() => state === 'available' && !challenge.isDisabled && !challenge.isLoading && onSelect(challenge.category)}
+      onClick={() => { if (state === 'available' && !challenge.isDisabled && !challenge.isLoading) { quizAudioService.playEquip(); onSelect(challenge.category) } }}
       className={`relative overflow-hidden rounded-xl transition-all cursor-pointer ${
         state === 'locked' ? 'opacity-40' : ''
       }`}
@@ -353,7 +353,7 @@ const CategoryCard = ({ challenge, onSelect, onDeselect, onBegin, onReport, load
           <div className="flex-shrink-0" onClick={e => e.stopPropagation()}>
             {state === 'done' && (
               <motion.button
-                onClick={() => onReport(challenge.challenge?._id)}
+                onClick={() => { quizAudioService.playButtonClick(); onReport(challenge.challenge?._id) }}
                 disabled={loading}
                 whileTap={{ scale: 0.9 }}
                 className="p-2.5 rounded-xl bg-emerald-500/20 hover:bg-emerald-500/30 transition-colors"
@@ -364,14 +364,14 @@ const CategoryCard = ({ challenge, onSelect, onDeselect, onBegin, onReport, load
             {state === 'selected' && (
               <div className="flex items-center gap-2">
                 <motion.button
-                  onClick={onDeselect}
+                  onClick={() => { quizAudioService.playDismiss(); onDeselect() }}
                   whileTap={{ scale: 0.9 }}
                   className="p-2 rounded-lg hover:bg-white/10"
                 >
                   <X className="w-4 h-4 text-white/40" />
                 </motion.button>
                 <motion.button
-                  onClick={onBegin}
+                  onClick={() => { quizAudioService.playGoButton(); onBegin() }}
                   whileTap={{ scale: 0.95 }}
                   className="px-4 py-2 rounded-xl bg-gradient-to-r from-emerald-500 to-green-500 hover:from-emerald-400 hover:to-green-400 text-white text-sm font-bold flex items-center gap-1.5 shadow-lg shadow-emerald-500/25"
                 >
@@ -555,7 +555,7 @@ const TeamBattlePageV2 = React.memo(() => {
 
   const goBack = useCallback(() => {
     haptics.light()
-    navigate('/quickclash#active/4v4')
+    navigate('/quickclash')
   }, [navigate])
 
   const selectCat = useCallback(async (c) => {
@@ -593,6 +593,8 @@ const TeamBattlePageV2 = React.memo(() => {
   const deselectCat = useCallback(async () => {
     if (!currentBattle || localProcessingCategory || !userStatus.category) return
 
+    // Sound for deselecting
+    quizAudioService.playUnequip()
     setLocalProcessingCategory(userStatus.category)
 
     try {
@@ -638,7 +640,7 @@ const TeamBattlePageV2 = React.memo(() => {
             <AlertCircle className="w-8 h-8 text-red-400" />
           </div>
           <p className="text-white/50 mb-4">{battleDetailsError || t('Battle not found')}</p>
-          <Button onClick={goBack} className="bg-gradient-to-r from-cyan-500 to-blue-500 text-white">
+          <Button onClick={() => { quizAudioService.playButtonClick(); goBack() }} className="bg-gradient-to-r from-cyan-500 to-blue-500 text-white">
             <ArrowLeft className="w-4 h-4 mr-2" />{t('Back')}
           </Button>
         </div>
@@ -681,10 +683,10 @@ const TeamBattlePageV2 = React.memo(() => {
                 </div>
               </div>
               <div className="flex gap-2">
-                <motion.button whileTap={{ scale: 0.9 }} onClick={() => setIsDonationOpen(true)} className="p-2.5 rounded-xl bg-white/10 hover:bg-white/15 transition-colors">
+                <motion.button whileTap={{ scale: 0.9 }} onClick={() => { quizAudioService.playButtonClick(); setIsDonationOpen(true) }} className="p-2.5 rounded-xl bg-white/10 hover:bg-white/15 transition-colors">
                   <Gift className="w-4 h-4 text-purple-300" />
                 </motion.button>
-                <motion.button whileTap={{ scale: 0.9 }} onClick={() => setIsSelectionOpen(true)} className="px-3 py-2 rounded-xl bg-purple-500 hover:bg-purple-400 text-white text-sm font-semibold flex items-center gap-1.5">
+                <motion.button whileTap={{ scale: 0.9 }} onClick={() => { quizAudioService.playButtonClick(); setIsSelectionOpen(true) }} className="px-3 py-2 rounded-xl bg-purple-500 hover:bg-purple-400 text-white text-sm font-semibold flex items-center gap-1.5">
                   <Bolt className="w-4 h-4" /> Equip
                 </motion.button>
               </div>
@@ -736,7 +738,7 @@ const TeamBattlePageV2 = React.memo(() => {
         animate={{ y: 0, opacity: 1 }}
         className="fixed bottom-4 left-4 right-4 md:static md:px-5 md:pt-4 z-20"
       >
-        <Button onClick={goBack} className="w-full md:w-auto bg-white/10 hover:bg-white/15 backdrop-blur-xl border border-white/10 text-white">
+        <Button onClick={() => { quizAudioService.playButtonClick(); goBack() }} className="w-full md:w-auto bg-white/10 hover:bg-white/15 backdrop-blur-xl border border-white/10 text-white">
           <ArrowLeft className="w-4 h-4 mr-2" />{t('Back to Battles')}
         </Button>
       </motion.div>
@@ -759,9 +761,9 @@ const TeamBattlePageV2 = React.memo(() => {
                 <p className="text-sm text-white/50">{t('No going back once you start!')}</p>
               </div>
               <div className="flex gap-3">
-                <Button onClick={() => setShowConfirm(false)} variant="outline" className="flex-1 border-white/20 text-white/70">{t('Wait')}</Button>
+                <Button onClick={() => { quizAudioService.playDismiss(); setShowConfirm(false) }} variant="outline" className="flex-1 border-white/20 text-white/70">{t('Wait')}</Button>
                 <motion.button
-                  onClick={() => { setShowConfirm(false); startChallenge() }}
+                  onClick={() => { quizAudioService.playGoButton(); setShowConfirm(false); startChallenge() }}
                   whileTap={{ scale: 0.95 }}
                   className="flex-1 px-4 py-2.5 rounded-xl bg-gradient-to-r from-emerald-500 to-green-500 hover:from-emerald-400 hover:to-green-400 text-white font-bold flex items-center justify-center gap-2 shadow-lg shadow-emerald-500/25"
                 >

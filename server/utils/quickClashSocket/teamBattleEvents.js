@@ -71,6 +71,7 @@ const setupTeamBattleEvents = (io, notifyUser) => {
       teamAMembers,
       teamBMembers,
       userId,
+      winProbability,
     }) => {
       console.log(
         `[QC_BATTLE] SOCKET: Team battle ${battleId} ready between teams ${
@@ -89,6 +90,7 @@ const setupTeamBattleEvents = (io, notifyUser) => {
           teamA,
           teamB,
           isSoloPlayer: true,
+          winProbability,
         })
         console.log(
           `[QC_BATTLE] Team battle ready sent to solo player ${userId}: ${success}`
@@ -106,6 +108,7 @@ const setupTeamBattleEvents = (io, notifyUser) => {
           teamId: teamA,
           teamA,
           teamB,
+          winProbability,
         })
       }
 
@@ -118,10 +121,12 @@ const setupTeamBattleEvents = (io, notifyUser) => {
           teamId: teamB,
           teamA,
           teamB,
+          winProbability,
         })
       }
     }
   )
+
 
   // ==========================================
   // BATTLE CREATION EVENTS
