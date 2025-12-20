@@ -1,4 +1,5 @@
 // scripts/analyzeProvidedArticles.js
+//
 require('dotenv').config()
 const mongoose = require('mongoose')
 const { analyzeRelatedArticles } = require('../utils/articleAnalysis')

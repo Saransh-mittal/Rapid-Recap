@@ -26,3 +26,5 @@ jspm_packages/
 Thumbs.db
 
 scraper_log.txt
+
+package-lock.json
