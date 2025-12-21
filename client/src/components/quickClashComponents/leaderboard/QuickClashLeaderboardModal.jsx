@@ -24,6 +24,9 @@ import { Trophy } from 'lucide-react'
 import axios from 'axios'
 import { useSelector } from 'react-redux'
 
+// Audio feedback
+import { quizAudioService } from '../../../services/quizAudioService'
+
 // Import custom components
 import LeaderboardCard from './components/LeaderboardCard'
 import SearchBar from './components/SearchBar'
@@ -167,11 +170,18 @@ const QuickClashLeaderboardModal = ({ isOpen, onClose }) => {
   // Handle view profile
   const handleViewProfile = useCallback(
     inGameName => {
+      quizAudioService.playButtonClick() // Sound for profile click
       navigate(`/profile/${inGameName}`)
       onClose()
     },
     [navigate, onClose],
   )
+
+  // Handle close with sound
+  const handleClose = useCallback(() => {
+    quizAudioService.playDismiss()
+    onClose()
+  }, [onClose])
 
   // Handle retry on error
   const handleRetry = useCallback(() => {
@@ -265,7 +275,7 @@ const QuickClashLeaderboardModal = ({ isOpen, onClose }) => {
   return (
     <Modal
       isOpen={isOpen}
-      onClose={onClose}
+      onClose={handleClose}
       size={{ base: 'full', md: 'lg' }}
       motionPreset="none"
       isCentered={false}
@@ -337,7 +347,7 @@ const QuickClashLeaderboardModal = ({ isOpen, onClose }) => {
             {t('Quick Clash Leaderboard')}
           </MotionText>
 
-          <ModalCloseButton color="white" size="md" mt={0.5} mr={1} />
+          <ModalCloseButton color="white" size="md" mt={0.5} mr={1} onClick={handleClose} />
         </ModalHeader>
 
         {/* Search Bar */}

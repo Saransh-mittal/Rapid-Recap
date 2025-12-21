@@ -65,9 +65,10 @@ import { quizAudioService } from '../../../services/quizAudioService'
  * @param {string} category - Article category for theming
  * @param {Array} activePowerups - List of active powerups for this session
  * @param {function} onComplete - Callback when forge mode completes
+ * @param {function} onPowerupUsed - Callback when a powerup is used (receives powerupId)
  * @param {function} onError - Callback for error handling
  */
-const ForgeReadingPhase = ({ sessionId, category, activePowerups = [], onComplete, onError }) => {
+const ForgeReadingPhase = ({ sessionId, category, activePowerups = [], onComplete, onPowerupUsed, onError }) => {
   const { t } = useTranslation('QuickClash')
   const toast = useToast()
 
@@ -116,6 +117,9 @@ const ForgeReadingPhase = ({ sessionId, category, activePowerups = [], onComplet
   const [maxQuestionTime, setMaxQuestionTime] = useState(10) // Default 10s
   const [maxReadingTime, setMaxReadingTime] = useState(12) // Default 12s
   const questionTimeoutRef = useRef(null)
+
+  // Transition guard to prevent double moveToNextSection calls
+  const isTransitioningRef = useRef(false)
 
   // Powerup State
   const [usedPowerups, setUsedPowerups] = useState({}) // { powerupId: true }
@@ -395,6 +399,13 @@ const ForgeReadingPhase = ({ sessionId, category, activePowerups = [], onComplet
    * 3. Load next question or show completion
    */
   const moveToNextSection = async () => {
+    // Guard against double calls (race condition when timer expires + user clicks continue)
+    if (isTransitioningRef.current) {
+      console.log('moveToNextSection: Already transitioning, skipping duplicate call')
+      return
+    }
+    isTransitioningRef.current = true
+
     try {
       setLoading(true)
 
@@ -408,8 +419,7 @@ const ForgeReadingPhase = ({ sessionId, category, activePowerups = [], onComplet
         setIsPhaseComplete(true)
         setPhase('complete')
       } else {
-        // Load next question
-        quizAudioService.playNewQuestion() // Audio for next section
+        // Load next question (sound already played by Continue button)
         haptics.selection()
         setCurrentQuestion(data)
         setProgress(prev => ({
@@ -423,6 +433,7 @@ const ForgeReadingPhase = ({ sessionId, category, activePowerups = [], onComplet
         setAnswerResult(null)
         setReadingContent(null)
         setIsTimeout(false) // Reset timeout flag
+        setContinueLoading(false) // Reset continue button loading state
         setPhase('question')
         setActiveEffects({ scoreSurge: false }) // Reset per-question effects
         setDisabledOptions([])
@@ -431,6 +442,9 @@ const ForgeReadingPhase = ({ sessionId, category, activePowerups = [], onComplet
         setMaxReadingTime(12) // Reset max time
         setQuestionTimer(0) // Reset timer
         questionStartTime.current = Date.now()
+
+        // Reset transition guard for next section
+        isTransitioningRef.current = false
       }
     } catch (err) {
       console.error('Error moving to next section:', err)
@@ -444,6 +458,9 @@ const ForgeReadingPhase = ({ sessionId, category, activePowerups = [], onComplet
         duration: 3000,
         isClosable: true,
       })
+
+      // Reset transition guard on error so user can retry
+      isTransitioningRef.current = false
     } finally {
       setLoading(false)
     }
@@ -458,10 +475,19 @@ const ForgeReadingPhase = ({ sessionId, category, activePowerups = [], onComplet
     moveToNextSection()
   }, [])
 
+  // Continue button loading state for engaging animation
+  const [continueLoading, setContinueLoading] = useState(false)
+
   /**
    * Handle manual continue (no minimum time required)
+   * Plays quick sound and instantly transitions to next section
    */
   const handleManualContinue = () => {
+    if (continueLoading) return // Prevent double clicks
+    setContinueLoading(true)
+    haptics.selection()
+    // Play quick 200ms sound (no wait - instant transition)
+    quizAudioService.playSubmitFull()
     moveToNextSection()
   }
 
@@ -481,9 +507,10 @@ const ForgeReadingPhase = ({ sessionId, category, activePowerups = [], onComplet
          throw new Error('Failed to activate powerup')
       }
 
-      // Apply Client-Side Effects
+      // Apply Client-Side Effects with appropriate sounds
       switch (powerup.powerupId) {
         case 'TIME_WARP':
+          quizAudioService.playTimeWarp() // Time rewind swoosh
           if (phase === 'question') {
             // Update Max Time ONLY
             // We do NOT rewind the timer anymore. We just extend the finish line.
@@ -496,10 +523,12 @@ const ForgeReadingPhase = ({ sessionId, category, activePowerups = [], onComplet
           toast({ title: 'Time Warp Activated!', status: 'info', duration: 2000 })
           break
         case 'SCORE_SURGE':
+          quizAudioService.playScoreSurge() // Power boost whoosh
           setActiveEffects(prev => ({ ...prev, scoreSurge: true }))
           toast({ title: 'Score Surge Active!', description: '2x Points for this question', status: 'warning', duration: 2000 })
           break
         case 'ORACLES_EYE':
+          quizAudioService.playOraclesEye() // Mystical reveal chime
           // Effects returned from server
           const effect = response.effect
           if (effect.type === 'REMOVE_OPTIONS') {
@@ -508,8 +537,12 @@ const ForgeReadingPhase = ({ sessionId, category, activePowerups = [], onComplet
           }
           break
         default:
+          quizAudioService.playEquip() // Fallback for unknown powerups
           break
       }
+
+      // Notify parent that powerup was used
+      onPowerupUsed?.(powerup.powerupId)
     } catch (err) {
       console.error('Error using powerup:', err)
       toast({ title: 'Powerup Failed', description: 'Could not activate powerup', status: 'error' })
@@ -1134,23 +1167,44 @@ const ForgeReadingPhase = ({ sessionId, category, activePowerups = [], onComplet
                 </div>
               </div>
               <motion.button
-                whileHover={readingTimer <= 14 ? { scale: 1.05 } : {}}
-                whileTap={readingTimer <= 14 ? { scale: 0.95 } : {}}
+                whileHover={readingTimer <= 14 && !continueLoading ? { scale: 1.05 } : {}}
+                whileTap={readingTimer <= 14 && !continueLoading ? { scale: 0.95 } : {}}
                 onClick={handleManualContinue}
-                disabled={readingTimer > 14}
+                disabled={readingTimer > 14 || continueLoading}
                 className={`
                   w-full md:w-auto px-8 py-4 rounded-2xl font-bold text-white shadow-lg transition-all
-                  flex items-center justify-center gap-3 text-lg
+                  flex items-center justify-center gap-3 text-lg relative overflow-hidden
                   ${readingTimer > 14
                     ? 'bg-white/10 cursor-not-allowed opacity-50'
+                    : continueLoading
+                    ? 'bg-gradient-to-r from-emerald-600 to-cyan-600 shadow-emerald-500/40 cursor-wait'
                     : 'bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-500 hover:to-indigo-500 shadow-blue-500/30'
                   }
                 `}
               >
+                {/* Animated shimmer effect during loading */}
+                {continueLoading && (
+                  <motion.div
+                    className="absolute inset-0 bg-gradient-to-r from-transparent via-white/20 to-transparent"
+                    initial={{ x: '-100%' }}
+                    animate={{ x: '100%' }}
+                    transition={{ duration: 0.5, ease: 'easeInOut' }}
+                  />
+                )}
                 {readingTimer > 14 ? (
                   <>
                     <Loader2 className="w-5 h-5 animate-spin" />
                     <span>Reading... {readingTimer - 14}s</span>
+                  </>
+                ) : continueLoading ? (
+                  <>
+                    <motion.div
+                      animate={{ rotate: 360 }}
+                      transition={{ duration: 0.5, repeat: Infinity, ease: 'linear' }}
+                    >
+                      <Sparkles className="w-5 h-5" />
+                    </motion.div>
+                    <span>Loading...</span>
                   </>
                 ) : (
                   <>

@@ -8,6 +8,9 @@ import { useTranslation } from 'react-i18next'
 // Import centralized color scheme
 import { QUICK_CLASH_CLASSES } from '../utils/quickClashColors'
 
+// Audio feedback
+import { quizAudioService } from '../../../services/quizAudioService'
+
 const MotionDiv = motion.div
 
 // Custom Circular Progress Component
@@ -126,7 +129,7 @@ const TaskProgressIndicator = ({ onViewTasks, size = 'md' }) => {
 
   return (
     <MotionDiv
-      onClick={onViewTasks}
+      onClick={() => { quizAudioService.playButtonClick(); onViewTasks && onViewTasks() }}
       className={`
         relative ${onViewTasks ? 'cursor-pointer' : 'cursor-default'}
         rounded-full flex items-center justify-center transition-all duration-200

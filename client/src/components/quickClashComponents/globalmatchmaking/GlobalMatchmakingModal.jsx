@@ -141,6 +141,7 @@ const GlobalMatchmakingModal = React.memo(
 
     const pollingIntervalRef = useRef(null)
     const mountTimeRef = useRef(Date.now())
+    const matchFoundSoundPlayedRef = useRef(false) // Track if sound was played
 
     const {
       inMatchmaking,
@@ -199,7 +200,16 @@ const GlobalMatchmakingModal = React.memo(
     useEffect(() => {
       if (battleReady && !showCelebration) {
         setShowCelebration(true)
+        // Only play sound once per battleReady
+        if (!matchFoundSoundPlayedRef.current) {
+          quizAudioService.playMatchFound()
+          matchFoundSoundPlayedRef.current = true
+        }
         setTimeout(() => setShowCelebration(false), 3000)
+      }
+      // Reset sound played flag when battle is no longer ready
+      if (!battleReady) {
+        matchFoundSoundPlayedRef.current = false
       }
     }, [battleReady, showCelebration])
 
@@ -607,7 +617,7 @@ const GlobalMatchmakingModal = React.memo(
             >
               <Button
                 size="lg"
-                onClick={enterBattle}
+                onClick={() => { quizAudioService.playGoButton(); enterBattle() }}
                 className={`
                   w-full
                   bg-gradient-to-r from-cyan-500 via-cyan-600 to-blue-600

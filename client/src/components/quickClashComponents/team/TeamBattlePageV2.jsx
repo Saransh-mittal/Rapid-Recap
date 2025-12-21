@@ -9,6 +9,7 @@ import {
   TrendingUp, TrendingDown, Award, ChevronRight, Flame,
 } from 'lucide-react'
 import { useTranslation } from 'react-i18next'
+import { useToast } from '@chakra-ui/react'
 import { differenceInSeconds, differenceInMinutes, differenceInHours } from 'date-fns'
 
 import useQuickClashTeamBattle from '../../../customHooks/useQuickClashTeamBattle'
@@ -343,8 +344,14 @@ const CategoryCard = ({ challenge, onSelect, onDeselect, onBegin, onReport, load
               <div className="flex items-center gap-2 mt-0.5">
                 <span className="text-xs font-bold text-emerald-400">{challenge.userScore ?? '?'}</span>
                 <span className="text-xs text-white/30">vs</span>
-                <span className="text-xs font-bold text-red-400">{challenge.opponentScore ?? '?'}</span>
-                {challenge.userScore > challenge.opponentScore && <span className="text-xs">🎉</span>}
+                {challenge.opponentCompleted ? (
+                  <>
+                    <span className="text-xs font-bold text-red-400">{challenge.opponentScore ?? '?'}</span>
+                    {challenge.userScore > challenge.opponentScore && <span className="text-xs">🎉</span>}
+                  </>
+                ) : (
+                  <span className="text-xs text-amber-400/70 italic">⏳ Waiting...</span>
+                )}
               </div>
             )}
           </div>
@@ -473,6 +480,8 @@ const TeamBattlePageV2 = React.memo(() => {
   const [selectedMember, setSelectedMember] = useState(null)
   const [isMemberOpen, setIsMemberOpen] = useState(false)
 
+  const toast = useToast()
+
   // Local state to bridge the gap between click and API/Socket update
   const [localProcessingCategory, setLocalProcessingCategory] = useState(null)
 
@@ -543,7 +552,9 @@ const TeamBattlePageV2 = React.memo(() => {
         ...ch, isAvailable: available, isCompleted: userCompleted, isSelectedButNotStarted: selectedByUser && !assigned && !(userAssigned && me?.participated),
         isSelectedByTeammate: selectedByTeammate, isCompletedByTeammate: completedByTeammate, isLocked: locked, isLoading: loading,
         isDisabled: disabled, userScore: userTeam === 'teamA' ? ch.teamAScore : ch.teamBScore,
-        opponentScore: userTeam === 'teamA' ? ch.teamBScore : ch.teamAScore, teammateInfo: teammate ? { name: teammate.user.name, inGameName: teammate.user.inGameName } : null,
+        opponentScore: userTeam === 'teamA' ? ch.teamBScore : ch.teamAScore,
+        opponentCompleted: userTeam === 'teamA' ? ch.teamBCompleted : ch.teamACompleted,
+        teammateInfo: teammate ? { name: teammate.user.name, inGameName: teammate.user.inGameName } : null,
       }
     })
   }, [currentBattle, userTeam, user, categoryOperationLoading, selectedCategoryForOperation, userStatus, localProcessingCategory])
@@ -679,14 +690,39 @@ const TeamBattlePageV2 = React.memo(() => {
                 </div>
                 <div>
                   <span className="text-sm font-semibold text-white">{t('Powerups')}</span>
-                  <span className="text-xs text-white/40 ml-2">{loadout.housingUsed}/30</span>
+                  {/* Hide housing space after participation */}
+                  {!userStatus.participated && (
+                    <span className="text-xs text-white/40 ml-2">{loadout.housingUsed}/30</span>
+                  )}
                 </div>
               </div>
               <div className="flex gap-2">
                 <motion.button whileTap={{ scale: 0.9 }} onClick={() => { quizAudioService.playButtonClick(); setIsDonationOpen(true) }} className="p-2.5 rounded-xl bg-white/10 hover:bg-white/15 transition-colors">
                   <Gift className="w-4 h-4 text-purple-300" />
                 </motion.button>
-                <motion.button whileTap={{ scale: 0.9 }} onClick={() => { quizAudioService.playButtonClick(); setIsSelectionOpen(true) }} className="px-3 py-2 rounded-xl bg-purple-500 hover:bg-purple-400 text-white text-sm font-semibold flex items-center gap-1.5">
+                <motion.button
+                  whileTap={!userStatus.participated ? { scale: 0.9 } : {}}
+                  onClick={() => {
+                    quizAudioService.playButtonClick()
+                    if (userStatus.participated) {
+                      toast({
+                        title: 'Already Participated',
+                        description: 'You have already played in this battle. Powerups cannot be changed.',
+                        status: 'info',
+                        duration: 3000,
+                        isClosable: true,
+                        position: 'top',
+                      })
+                    } else {
+                      setIsSelectionOpen(true)
+                    }
+                  }}
+                  className={`px-3 py-2 rounded-xl text-white text-sm font-semibold flex items-center gap-1.5 ${
+                    userStatus.participated
+                      ? 'bg-gray-500/50 cursor-not-allowed opacity-60'
+                      : 'bg-purple-500 hover:bg-purple-400'
+                  }`}
+                >
                   <Bolt className="w-4 h-4" /> Equip
                 </motion.button>
               </div>

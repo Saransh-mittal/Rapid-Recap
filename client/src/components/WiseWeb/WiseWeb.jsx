@@ -22,6 +22,9 @@ import useFriends from '../../customHooks/useFriends'
 import { QUICK_CLASH_CLASSES } from '../quickClashComponents/utils/quickClashColors'
 import './styles/WiseWebChat.css'
 
+// Audio feedback
+import { quizAudioService } from '../../services/quizAudioService'
+
 // Lazy loaded components for better performance
 const FriendCard = lazy(() => import('./components/FriendCard'))
 const FriendRequestCard = lazy(() => import('./components/FriendRequestCard'))
@@ -51,7 +54,7 @@ const SkeletonCard = () => (
 const TabButton = React.memo(
   ({ isActive, onClick, icon: Icon, children, badge = 0 }) => (
     <button
-      onClick={onClick}
+      onClick={() => { quizAudioService.playButtonClick(); onClick() }}
       className={`
       relative flex items-center justify-center gap-2 px-4 py-3 rounded-lg font-medium
       transition-all duration-200 flex-1
@@ -251,6 +254,7 @@ const WiseWebModal = React.memo(({ isOpen, onClose }) => {
   }, [activeTab, clearSearch])
 
   const handleClose = useCallback(() => {
+    quizAudioService.playDismiss() // Sound for closing modal
     closeWiseWeb()
     onClose()
   }, [closeWiseWeb, onClose])
@@ -585,7 +589,7 @@ const WiseWebModal = React.memo(({ isOpen, onClose }) => {
               <div className="flex items-center gap-2">
                 {/* Chat button */}
                 <button
-                  onClick={() => setIsChatOpen(true)}
+                  onClick={() => { quizAudioService.playButtonClick(); setIsChatOpen(true) }}
                   className="w-10 h-10 rounded-lg flex items-center justify-center hover:bg-slate-700/50 transition-colors"
                   title={t('Open Chat')}
                 >
@@ -595,7 +599,7 @@ const WiseWebModal = React.memo(({ isOpen, onClose }) => {
                 {/* Refresh button */}
                 {(error.friends || error.requests) && (
                   <button
-                    onClick={refreshData}
+                    onClick={() => { quizAudioService.playButtonClick(); refreshData() }}
                     className="w-10 h-10 rounded-lg flex items-center justify-center hover:bg-slate-700/50 transition-colors"
                     title={t('Refresh')}
                   >

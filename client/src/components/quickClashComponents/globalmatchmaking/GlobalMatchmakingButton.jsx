@@ -9,6 +9,9 @@ import { Shield, Zap, Users, Sparkles, TrendingUp } from 'lucide-react'
 import { QUICK_CLASH_CLASSES } from '../utils/quickClashColors'
 import GlobalMatchmakingModal from './GlobalMatchmakingModal'
 
+// Audio feedback
+import { quizAudioService } from '../../../services/quizAudioService'
+
 const MotionButton = motion.button
 
 /**
@@ -87,7 +90,10 @@ const GlobalMatchmakingButton = React.memo(
 
     const config = BUTTON_STATES[buttonState]
 
-    const handleOpenModal = useCallback(() => setIsModalOpen(true), [])
+    const handleOpenModal = useCallback(() => {
+      quizAudioService.playButtonClick() // Sound for opening modal
+      setIsModalOpen(true)
+    }, [])
     const handleCloseModal = useCallback(() => {
       setIsModalOpen(false)
       onModalClose?.()

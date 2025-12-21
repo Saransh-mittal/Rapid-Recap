@@ -21,6 +21,9 @@ import { useDispatch, useSelector } from 'react-redux'
 import axios from 'axios'
 import { setUpdates } from '../../../../redux/appSlice'
 
+// Audio feedback
+import { quizAudioService } from '../../../../services/quizAudioService'
+
 // Import the team invitation component
 import TeamInvitationNotification from '../../../quickClashComponents/team/TeamInvitationNotification'
 
@@ -71,6 +74,7 @@ const NotificationModal = ({
   }, [selectedNotificationId])
 
   const handleModalClose = useCallback(() => {
+    quizAudioService.playDismiss() // Sound for closing modal
     setIsModalOpen && setIsModalOpen(false)
     setIsDrawerOpen && setIsDrawerOpen(true)
     onClose()
@@ -193,6 +197,7 @@ const NotificationModal = ({
           size="lg"
           color="whiteAlpha.700"
           _hover={{ color: 'white' }}
+          onClick={handleModalClose}
         />
 
         <ModalBody px={6} pb={6}>

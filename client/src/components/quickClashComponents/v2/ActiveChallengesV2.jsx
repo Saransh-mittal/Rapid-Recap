@@ -29,6 +29,9 @@ import useQuickClashTeamBattle from '../../../customHooks/useQuickClashTeamBattl
 // Haptic feedback
 import { haptics } from '../../../utils/haptics'
 
+// Audio feedback
+import { quizAudioService } from '../../../services/quizAudioService'
+
 const MotionDiv = motion.div
 
 // ============================================================================
@@ -76,7 +79,7 @@ const SectionHeader = memo(({
     {/* Refresh button */}
     {onRefresh && (
       <motion.button
-        onClick={onRefresh}
+        onClick={() => { quizAudioService.playButtonClick(); onRefresh() }}
         disabled={isRefreshing}
         className="p-2 rounded-xl bg-white/5 hover:bg-white/10 border border-white/10 hover:border-cyan-500/30 transition-all duration-200 disabled:opacity-50 group"
         whileTap={{ scale: 0.9 }}

@@ -138,6 +138,34 @@
       "current affairs": "current affairs"
     }
   },
+  "components.HallOfChampions.ChampionDetailsModal": {
+    "Rank": "Rank",
+    "Exp Level": "Exp Level",
+    "Submissions": "Submissions",
+    "RQM Score": "RQM Score",
+    "Quiz Performance": "Quiz Performance",
+    "Total Quizzes": "Total Quizzes",
+    "Perfect Scores": "Perfect Scores",
+    "Success Rate": "Success Rate",
+    "League": "League",
+    "Top 3 Champion": "Top 3 Champion",
+    "IQ Elite": "IQ Elite",
+    "Dedicated Solver": "Dedicated Solver",
+    "Quiz Master": "Quiz Master",
+    "High RQM Achiever": "High RQM Achiever",
+    "Achievements": "Achievements",
+    "IQ Growth Rate": "IQ Growth Rate",
+    "Quiz Success Rate": "Quiz Success Rate",
+    "Performance Insights": "Performance Insights"
+  },
+  "components.Notifications.NotificationSubscription": {
+    "enableNotifications": "Enable Notifications for Rapid Recap",
+    "browserSupport": "Browser Supports Notifications",
+    "browserEnabled": "Browser Notifications Enabled",
+    "sitePermission": "Site Permission Granted",
+    "backendSubscribed": "Subscribed to Backend",
+    "checking": "(Checking...)"
+  },
   "components.articleComponents.ArticleHeader": {
     "fetchErrorTitle": "Error fetching article details",
     "updateSuccessTitle": "Article updated successfully",
@@ -405,6 +433,10 @@
     "giveFeedback": "Give Feedback About the Application and Chatting Experience through contact us.",
     "selectChatToStart": " Get Started by Selecting a Chat or searching user...."
   },
+  "components.chatComponent.UserListItem": {
+    "IQScore": "IQ Score",
+    "InGameName": "InGameName"
+  },
   "components.chatComponent.userChats": {
     "Chats": "Chats",
     "requests": "Requests",
@@ -419,10 +451,6 @@
     "you": "You",
     "errorTitle": "Error Occurred",
     "errorDescription": "Failed to load the chats"
-  },
-  "components.chatComponent.UserListItem": {
-    "IQScore": "IQ Score",
-    "InGameName": "InGameName"
   },
   "components.contactComponents.FeedbackModal": {
     "Feedback": "Feedback",
@@ -875,26 +903,6 @@
       "gameChallengeCompleted": "Game Challenge Completed"
     }
   },
-  "components.HallOfChampions.ChampionDetailsModal": {
-    "Rank": "Rank",
-    "Exp Level": "Exp Level",
-    "Submissions": "Submissions",
-    "RQM Score": "RQM Score",
-    "Quiz Performance": "Quiz Performance",
-    "Total Quizzes": "Total Quizzes",
-    "Perfect Scores": "Perfect Scores",
-    "Success Rate": "Success Rate",
-    "League": "League",
-    "Top 3 Champion": "Top 3 Champion",
-    "IQ Elite": "IQ Elite",
-    "Dedicated Solver": "Dedicated Solver",
-    "Quiz Master": "Quiz Master",
-    "High RQM Achiever": "High RQM Achiever",
-    "Achievements": "Achievements",
-    "IQ Growth Rate": "IQ Growth Rate",
-    "Quiz Success Rate": "Quiz Success Rate",
-    "Performance Insights": "Performance Insights"
-  },
   "components.headerFooter.HamburgerModal": {
     "modalHeader": "Menu",
     "dashboard": "Dashboard",
@@ -921,6 +929,9 @@
   },
   "components.headerFooter.LogoutButton": {
     "LogOut": "Log Out"
+  },
+  "components.headerFooter.NavBrand": {
+    "rr": "Rapid Recap"
   },
   "components.headerFooter.Navbar": {
     "tournament": "Tournament",
@@ -957,9 +968,6 @@
     "Dashboard": "Dashboard",
     "Season": "Season",
     "New": "New"
-  },
-  "components.headerFooter.NavBrand": {
-    "rr": "Rapid Recap"
   },
   "components.headerFooter.NotificationDrawer": {
     "inbox": "Inbox",
@@ -1099,14 +1107,6 @@
     "easy": "Easy",
     "medium": "Medium",
     "hard": "Hard"
-  },
-  "components.miscellaneous.milestones": {
-    "milestones": {
-      "QUIN_BOOST": {
-        "name": "Quin Boost",
-        "description": "Successfully completed 6 quizzes and strategically applied a 1.5x score boost to maximize the score on the current quiz."
-      }
-    }
   },
   "components.miscellaneous.NoteMessageQueue": {
     "newMessage": "You have {{number}} new messages."
@@ -1267,13 +1267,13 @@
     "levelUpTitle": "Experience Level",
     "epicLevelUpAchieved": "Epic Level Up Achieved!"
   },
-  "components.Notifications.NotificationSubscription": {
-    "enableNotifications": "Enable Notifications for Rapid Recap",
-    "browserSupport": "Browser Supports Notifications",
-    "browserEnabled": "Browser Notifications Enabled",
-    "sitePermission": "Site Permission Granted",
-    "backendSubscribed": "Subscribed to Backend",
-    "checking": "(Checking...)"
+  "components.miscellaneous.milestones": {
+    "milestones": {
+      "QUIN_BOOST": {
+        "name": "Quin Boost",
+        "description": "Successfully completed 6 quizzes and strategically applied a 1.5x score boost to maximize the score on the current quiz."
+      }
+    }
   },
   "components.profileComponents.Bookmarks": {
     "yourBookmarks": "Your Bookmarks",
@@ -2160,6 +2160,9 @@
     ],
     "knowMore": "Know More"
   },
+  "components.tournamentComponents.LeaderCard": {
+    "Rank": "Rank:"
+  },
   "components.tournamentComponents.LeaderboardSearch": {
     "searchPlayer": "Search Player....",
     "No players found": "No players found",
@@ -2178,9 +2181,6 @@
     "Player": "Player",
     "Score": "Score",
     "LoadingUserStats": "Loading User Stats..."
-  },
-  "components.tournamentComponents.LeaderCard": {
-    "Rank": "Rank:"
   },
   "components.tournamentComponents.PreviousTournamentLeaderboard": {
     "heading": "Previous Tournament Leaderboard",
@@ -3639,6 +3639,59 @@
     "meta_og_title": "Register - Rapid Recap",
     "meta_og_description": "Join Rapid Recap today! Register now to stay updated with the latest news and articles, and participate in engaging quizzes to track your Information Quotient (IQ) score."
   },
+  "screens.Signin": {
+    "signin_title": "Sign-In",
+    "submit_button": "Submit",
+    "create_account_button": "Create an account",
+    "forgot_password_button": "Forgot Password?",
+    "login_success": "Login Successful",
+    "login_failed": "Login Failed",
+    "enter_in_game_name": "Enter In-Game-Name",
+    "email_or_in_game_name_placeholder": "Email / In-Game-Name",
+    "enter_password": "Enter Password",
+    "enter_in_game_name_message": "Please enter your In-Game-Name to continue",
+    "email_not_verified": "Email not verified",
+    "verify_email_message": "Please verify your email before continuing",
+    "otp_sent": "OTP sent to your email",
+    "or_text": "OR",
+    "close_button": "Close",
+    "meta_title": "Signin - Rapid Recap",
+    "meta_description": "Sign in to Rapid Recap and stay updated with the latest news, quizzes, and your Information Quotient (IQ) score.",
+    "meta_keywords": "Sign in, Rapid Recap, news, quizzes, IQ score",
+    "meta_og_title": "Signin - Rapid Recap",
+    "meta_og_description": "Sign in to Rapid Recap and stay updated with the latest news, quizzes, and your Information Quotient (IQ) score."
+  },
+  "screens.Tournament": {
+    "noTournamentData": {
+      "title": "No Tournament Data Available",
+      "description": "Stay tuned for upcoming tournaments!"
+    },
+    "tournamentNumber": "Tournament #{{number}}",
+    "tournament": "Tournament",
+    "current": "Current",
+    "previous": "Previous",
+    "curr": "Curr.",
+    "prev": "Prev.",
+    "tournamentStatus": {
+      "notRegistered": "You are not registered for this tournament. Registration is closed, but you can still view the leaderboard."
+    },
+    "registrationSuccess": {
+      "title": "Tournament Registration Successful"
+    },
+    "errorMessages": {
+      "fetchData": "Failed to fetch tournament data.",
+      "registerError": "Failed to register for the tournament."
+    },
+    "errorOccurred": "An error occurred",
+    "bufferPeriod": {
+      "title": "Preparing for Next Tournament",
+      "message": "Tournament #{{tournamentNumber}} has concluded. We're preparing for the next exciting event!",
+      "nextTournamentPrompt": "The next tournament will be announced soon. Stay tuned!",
+      "viewPreviousResults": "View Previous Tournament Results",
+      "hidePreviousResults": "Hide Previous Tournament Results"
+    },
+    "loading": "Loading..."
+  },
   "screens.rulebook": {
     "meta": {
       "title": "Player's Manual | Rapid Recap",
@@ -3930,59 +3983,6 @@
         }
       }
     }
-  },
-  "screens.Signin": {
-    "signin_title": "Sign-In",
-    "submit_button": "Submit",
-    "create_account_button": "Create an account",
-    "forgot_password_button": "Forgot Password?",
-    "login_success": "Login Successful",
-    "login_failed": "Login Failed",
-    "enter_in_game_name": "Enter In-Game-Name",
-    "email_or_in_game_name_placeholder": "Email / In-Game-Name",
-    "enter_password": "Enter Password",
-    "enter_in_game_name_message": "Please enter your In-Game-Name to continue",
-    "email_not_verified": "Email not verified",
-    "verify_email_message": "Please verify your email before continuing",
-    "otp_sent": "OTP sent to your email",
-    "or_text": "OR",
-    "close_button": "Close",
-    "meta_title": "Signin - Rapid Recap",
-    "meta_description": "Sign in to Rapid Recap and stay updated with the latest news, quizzes, and your Information Quotient (IQ) score.",
-    "meta_keywords": "Sign in, Rapid Recap, news, quizzes, IQ score",
-    "meta_og_title": "Signin - Rapid Recap",
-    "meta_og_description": "Sign in to Rapid Recap and stay updated with the latest news, quizzes, and your Information Quotient (IQ) score."
-  },
-  "screens.Tournament": {
-    "noTournamentData": {
-      "title": "No Tournament Data Available",
-      "description": "Stay tuned for upcoming tournaments!"
-    },
-    "tournamentNumber": "Tournament #{{number}}",
-    "tournament": "Tournament",
-    "current": "Current",
-    "previous": "Previous",
-    "curr": "Curr.",
-    "prev": "Prev.",
-    "tournamentStatus": {
-      "notRegistered": "You are not registered for this tournament. Registration is closed, but you can still view the leaderboard."
-    },
-    "registrationSuccess": {
-      "title": "Tournament Registration Successful"
-    },
-    "errorMessages": {
-      "fetchData": "Failed to fetch tournament data.",
-      "registerError": "Failed to register for the tournament."
-    },
-    "errorOccurred": "An error occurred",
-    "bufferPeriod": {
-      "title": "Preparing for Next Tournament",
-      "message": "Tournament #{{tournamentNumber}} has concluded. We're preparing for the next exciting event!",
-      "nextTournamentPrompt": "The next tournament will be announced soon. Stay tuned!",
-      "viewPreviousResults": "View Previous Tournament Results",
-      "hidePreviousResults": "Hide Previous Tournament Results"
-    },
-    "loading": "Loading..."
   },
   "utils.formatDate": {
     "today": "Today",

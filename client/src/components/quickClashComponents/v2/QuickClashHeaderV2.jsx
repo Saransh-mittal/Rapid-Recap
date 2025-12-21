@@ -19,6 +19,9 @@ import { setIsNotifDrawerOpen } from '../../../redux/appSlice'
 import { fetchUserTrophies } from '../../../redux/quickClashSlice'
 import useFriends from '../../../customHooks/useFriends'
 
+// Audio feedback
+import { quizAudioService } from '../../../services/quizAudioService'
+
 // Lazy load
 const WiseWeb = lazy(() => import('../../WiseWeb/WiseWeb'))
 const TaskPopup = lazy(() => import('../dailyTasks/TaskPopup'))
@@ -33,7 +36,7 @@ const MotionButton = motion.button
 // Notification Bell
 const NotificationBell = memo(({ count = 0, onClick }) => (
   <button
-    onClick={onClick}
+    onClick={() => { quizAudioService.playButtonClick(); onClick() }}
     className="relative flex items-center justify-center w-9 h-9 rounded-full bg-white/5 hover:bg-white/10 border border-white/10 transition-colors"
   >
     <Bell className="w-4 h-4 text-white/70" />
@@ -49,7 +52,7 @@ NotificationBell.displayName = 'NotificationBell'
 // Friends Button (WiseWeb trigger)
 const FriendsButton = memo(({ onClick, totalRequests = 0, onlineCount = 0, loading }) => (
   <button
-    onClick={onClick}
+    onClick={() => { quizAudioService.playButtonClick(); onClick() }}
     disabled={loading}
     className="relative flex items-center justify-center w-9 h-9 rounded-full bg-white/5 hover:bg-white/10 border border-white/10 transition-colors disabled:opacity-50"
   >
@@ -81,7 +84,7 @@ HomeButton.displayName = 'HomeButton'
 // Leaderboard Button (compact for mobile header)
 const LeaderboardButton = memo(({ onClick }) => (
   <button
-    onClick={onClick}
+    onClick={() => { quizAudioService.playButtonClick(); onClick() }}
     className="flex items-center justify-center w-9 h-9 rounded-full bg-amber-500/20 hover:bg-amber-500/30 border border-amber-400/30 transition-colors"
   >
     <Trophy className="w-4 h-4 text-amber-400" />

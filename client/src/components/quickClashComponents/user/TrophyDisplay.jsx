@@ -30,6 +30,9 @@ import TrophyAnimation from '../animations/TrophyAnimation'
 // Import centralized color scheme
 import { QUICK_CLASH_CLASSES } from '../utils/quickClashColors'
 
+// Audio feedback
+import { quizAudioService } from '../../../services/quizAudioService'
+
 const MotionDiv = motion.div
 const MotionSpan = motion.span
 
@@ -156,7 +159,7 @@ const CustomPopover = ({
 
               {/* Close button */}
               <button
-                onClick={onClose}
+                onClick={() => { quizAudioService.playDismiss(); onClose() }}
                 className={`
                   absolute ${
                     isMobile ? 'top-3 right-3 w-8 h-8' : 'top-2 right-2 w-6 h-6'
@@ -437,6 +440,7 @@ const TrophyDisplay = memo(() => {
 
   // Optimized popover open handler - EXACTLY as original
   const handlePopoverOpen = useCallback(() => {
+    quizAudioService.playButtonClick() // Sound for opening popover
     setIsPopoverOpen(true)
     dispatch(fetchCombinedTrophyHistory({ limit: 10 }))
   }, [dispatch])

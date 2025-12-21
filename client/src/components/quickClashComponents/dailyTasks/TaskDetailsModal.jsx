@@ -22,6 +22,9 @@ import { format, formatDistanceToNow } from 'date-fns'
 // Import centralized color scheme
 import { QUICK_CLASH_CLASSES } from '../utils/quickClashColors'
 
+// Audio feedback
+import { quizAudioService } from '../../../services/quizAudioService'
+
 // You'll need to install these components:
 // npx shadcn-ui@latest add dialog
 // npx shadcn-ui@latest add button
@@ -140,6 +143,7 @@ const TaskDetailsModal = ({ isOpen, onClose, task }) => {
   const handleClaimReward = useCallback(() => {
     if (!task) return
 
+    quizAudioService.playDonate() // Sound for claiming reward
     dispatch(claimTaskReward(task._id))
       .unwrap()
       .then(result => {
@@ -150,6 +154,12 @@ const TaskDetailsModal = ({ isOpen, onClose, task }) => {
         console.error(error || t('Failed to claim reward'))
       })
   }, [dispatch, task, t, onClose])
+
+  // Handle close with sound
+  const handleClose = useCallback(() => {
+    quizAudioService.playDismiss()
+    onClose()
+  }, [onClose])
 
   // Calculate progress percentage - EXACTLY as original
   const progressPercentage = useMemo(() => {
@@ -288,7 +298,7 @@ const TaskDetailsModal = ({ isOpen, onClose, task }) => {
   const taskColors = colorMap[taskTypeDetails.color] || colorMap.cyan
 
   return (
-    <Dialog open={isOpen} onOpenChange={onClose}>
+    <Dialog open={isOpen} onOpenChange={(open) => !open && handleClose()}>
       <DialogContent
         className={`
           max-w-full md:max-w-2xl max-h-[95vh] overflow-y-auto
@@ -593,7 +603,7 @@ const TaskDetailsModal = ({ isOpen, onClose, task }) => {
               </Button>
             ) : (
               <Button
-                onClick={onClose}
+                onClick={handleClose}
                 variant="outline"
                 className={`
                   ${QUICK_CLASH_CLASSES.glassMedium}

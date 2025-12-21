@@ -8,6 +8,9 @@ import { useSelector } from 'react-redux'
 // Import centralized color scheme
 import { QUICK_CLASH_CLASSES } from '../utils/quickClashColors'
 
+// Audio feedback
+import { quizAudioService } from '../../../services/quizAudioService'
+
 const MotionDiv = motion.div
 
 // Custom Popover Component
@@ -93,7 +96,7 @@ const CustomPopover = ({ isOpen, onClose, children, trigger }) => {
 
               {/* Close button */}
               <button
-                onClick={onClose}
+                onClick={() => { quizAudioService.playDismiss(); onClose() }}
                 className="absolute top-2 right-2 z-10 w-6 h-6 flex items-center justify-center text-white/70 hover:text-white rounded-full hover:bg-white/10 transition-colors"
               >
                 ×
@@ -129,6 +132,7 @@ const LevelBadge = () => {
   )
 
   const handleClick = () => {
+    quizAudioService.playButtonClick() // Sound for opening popover
     setIsPopoverOpen(!isPopoverOpen)
   }
 

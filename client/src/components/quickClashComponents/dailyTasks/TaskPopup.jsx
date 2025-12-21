@@ -24,6 +24,9 @@ import {
 // Import centralized color scheme
 import { QUICK_CLASH_CLASSES } from '../utils/quickClashColors'
 
+// Audio feedback
+import { quizAudioService } from '../../../services/quizAudioService'
+
 // Import RewardAnimation (assuming it exists)
 import RewardAnimation from './RewardAnimation'
 
@@ -551,7 +554,7 @@ const TaskPopup = ({ onViewAllTasks, isOpen, onClose }) => {
                 </MotionButton>
 
                 <button
-                  onClick={onClose}
+                  onClick={() => { quizAudioService.playDismiss(); onClose() }}
                   className="p-1 rounded hover:bg-white/10 text-white/70 hover:text-white transition-colors"
                 >
                   <X className="w-4 h-4" />

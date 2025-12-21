@@ -260,6 +260,23 @@ const QuickClashSession = () => {
   const [phaseProgress, setPhaseProgress] = useState(0)
   const [completeReadingLoading, setCompleteReadingLoading] = useState(false)
 
+  // Track powerups used during forge phase to filter them out in quiz
+  const [usedPowerupIds, setUsedPowerupIds] = useState(new Set())
+
+  // Callback to track when a powerup is used in forge mode
+  const handlePowerupUsed = useCallback((powerupId) => {
+    setUsedPowerupIds(prev => new Set([...prev, powerupId]))
+  }, [])
+
+  // Compute active powerups with used ones filtered out
+  const filteredActivePowerups = useMemo(() => {
+    const powerups = session?.activePowerups || []
+    return powerups.map(p => ({
+      ...p,
+      used: p.used || usedPowerupIds.has(p.powerupId)
+    }))
+  }, [session?.activePowerups, usedPowerupIds])
+
   // Results modal control
   const {
     isOpen: isResultsOpen,
@@ -395,9 +412,14 @@ const QuickClashSession = () => {
         haptics.notification() // Haptic for phase transition
         setPhase('betting')
       } else {
-        // Check for Time Warp (Passive)
-        const hasTimeWarp = session?.activePowerups?.some(p => p.powerupId === 'TIME_WARP' && (p.phase?.toLowerCase() === 'quiz' || p.phase?.toLowerCase() === 'both'))
+        // Check for Time Warp (only if not already used in forge phase)
+        const hasTimeWarp = filteredActivePowerups.some(p =>
+          p.powerupId === 'TIME_WARP' &&
+          (p.phase?.toLowerCase() === 'quiz' || p.phase?.toLowerCase() === 'both') &&
+          !p.used
+        )
         if (hasTimeWarp) {
+          quizAudioService.playTimeWarp() // Play Time Warp sound
           setQuizTimeLeft(65)
           toast({ title: 'Time Warp Active!', description: '+15s added to quiz timer', status: 'info', duration: 3000 })
         }
@@ -422,16 +444,21 @@ const QuickClashSession = () => {
 
   // NEW: Betting Completion Logic
   const handleBettingComplete = useCallback(() => {
-    // Check for Time Warp (Passive)
-    const hasTimeWarp = session?.activePowerups?.some(p => p.powerupId === 'TIME_WARP' && (p.phase?.toLowerCase() === 'quiz' || p.phase?.toLowerCase() === 'both'))
+    // Check for Time Warp (only if not already used in forge phase)
+    const hasTimeWarp = filteredActivePowerups.some(p =>
+      p.powerupId === 'TIME_WARP' &&
+      (p.phase?.toLowerCase() === 'quiz' || p.phase?.toLowerCase() === 'both') &&
+      !p.used
+    )
     if (hasTimeWarp) {
+      quizAudioService.playTimeWarp() // Play Time Warp sound
       setQuizTimeLeft(65)
       toast({ title: 'Time Warp Active!', description: '+15s added to quiz timer', status: 'info', duration: 3000 })
     }
     haptics.notification() // Haptic for phase transition
     setPhase('quiz')
     setPhaseProgress(0)
-  }, [session?.activePowerups, toast])
+  }, [filteredActivePowerups, toast])
 
   // ORIGINAL QUIZ COMPLETION LOGIC - PRESERVED
   const handleQuizComplete = useCallback(
@@ -716,8 +743,9 @@ const QuickClashSession = () => {
                 <ForgeReadingPhase
                   sessionId={session?._id}
                   category={challenge?.category}
-                  activePowerups={session?.activePowerups || []}
+                  activePowerups={filteredActivePowerups}
                   onComplete={handleReadingComplete}
+                  onPowerupUsed={handlePowerupUsed}
                   onError={error => {
                     setError(error)
                     toast({
@@ -759,7 +787,7 @@ const QuickClashSession = () => {
             <Suspense fallback={<LoadingFallback />}>
               <GamifiedQuiz
                 sessionId={session?._id}
-                activePowerups={session?.activePowerups || []}
+                activePowerups={filteredActivePowerups}
                 onComplete={handleQuizComplete}
                 setStopTimerOnQuizSubmit={NO_OP}
                 quizTimeLeft={quizTimeLeft}

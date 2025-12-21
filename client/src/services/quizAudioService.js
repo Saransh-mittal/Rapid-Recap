@@ -95,6 +95,13 @@ const initializeSounds = () => {
       sprite: SPRITES.submit,
       preload: true,
     }),
+    // Quick submit sound for Continue buttons (200ms)
+    submitFull: new Howl({
+      src: [submitSound],
+      volume: VOLUMES.submit,
+      sprite: { half: [0, 200] },  // Play first 200ms
+      preload: true,
+    }),
 
     // Result reveal sounds
     correctRevealed: new Howl({
@@ -210,7 +217,35 @@ export const quizAudioService = {
    * Play when user submits/confirms
    * Usage: Submit button, Next button, confirmation
    */
-  playSubmit: () => playSound('submit', 'short'),
+  playSubmit: () => playSound('submit'),
+
+  /**
+   * Play short submit sound and wait for completion
+   * Usage: Continue button where transition should wait for sound to finish
+   * @returns {Promise} Resolves when sound finishes playing (~500ms)
+   */
+  playSubmitFull: () => {
+    return new Promise((resolve) => {
+      if (!isClient) {
+        resolve()
+        return
+      }
+      const soundInstances = initializeSounds()
+      if (!soundInstances || !soundInstances.submitFull) {
+        resolve()
+        return
+      }
+      try {
+        const id = soundInstances.submitFull.play('half')
+        soundInstances.submitFull.once('end', resolve, id)
+        // Fallback timeout in case 'end' event doesn't fire
+        setTimeout(resolve, 600)
+      } catch (error) {
+        console.debug('[QuizAudio] Play failed: submitFull', error)
+        resolve()
+      }
+    })
+  },
 
   // ══════════════════════════════════════════════════════
   // Result Reveal Sounds
@@ -338,6 +373,30 @@ export const quizAudioService = {
    * Usage: Global default for buttons without dedicated sounds
    */
   playButtonClick: () => playSyntheticSound('buttonClick'),
+
+  /**
+   * Play match found fanfare - triumphant ascending arpeggio
+   * Usage: When a battle match is found in global matchmaking
+   */
+  playMatchFound: () => playSyntheticSound('matchFound'),
+
+  /**
+   * Play Time Warp sound - clock rewind/slow-mo effect
+   * Usage: Time Warp powerup activation
+   */
+  playTimeWarp: () => playSyntheticSound('timeWarp'),
+
+  /**
+   * Play Score Surge sound - power boost whoosh
+   * Usage: Score Surge (2x multiplier) powerup activation
+   */
+  playScoreSurge: () => playSyntheticSound('scoreSurge'),
+
+  /**
+   * Play Oracle's Eye sound - mystical reveal chime
+   * Usage: Oracle's Eye (eliminate options) powerup activation
+   */
+  playOraclesEye: () => playSyntheticSound('oraclesEye'),
 }
 
 // ══════════════════════════════════════════════════════
@@ -409,6 +468,143 @@ const SYNTHETIC_SOUNDS = {
 
     osc.start(now)
     osc.stop(now + 0.15)
+  },
+
+  // Time Warp - clock-like rewind swoosh with descending pitch
+  timeWarp: (ctx, now) => {
+    // Create layered time-warping effect
+    const osc1 = ctx.createOscillator()
+    const osc2 = ctx.createOscillator()
+    const lfo = ctx.createOscillator()
+    const lfoGain = ctx.createGain()
+    const mainGain = ctx.createGain()
+
+    // Main oscillator - descending sweep (rewind feel)
+    osc1.type = 'sine'
+    osc1.frequency.setValueAtTime(1200, now)
+    osc1.frequency.exponentialRampToValueAtTime(300, now + 0.4)
+
+    // Secondary oscillator - harmonic layer
+    osc2.type = 'triangle'
+    osc2.frequency.setValueAtTime(800, now)
+    osc2.frequency.exponentialRampToValueAtTime(200, now + 0.4)
+
+    // LFO for wobble effect (time distortion)
+    lfo.type = 'sine'
+    lfo.frequency.setValueAtTime(15, now)
+    lfoGain.gain.setValueAtTime(50, now)
+
+    lfo.connect(lfoGain)
+    lfoGain.connect(osc1.frequency)
+
+    // Envelope
+    mainGain.gain.setValueAtTime(0.15, now)
+    mainGain.gain.exponentialRampToValueAtTime(0.01, now + 0.5)
+
+    osc1.connect(mainGain)
+    osc2.connect(mainGain)
+    mainGain.connect(ctx.destination)
+
+    osc1.start(now)
+    osc2.start(now)
+    lfo.start(now)
+    osc1.stop(now + 0.5)
+    osc2.stop(now + 0.5)
+    lfo.stop(now + 0.5)
+  },
+
+  // Score Surge - energetic power-up burst with ascending notes
+  scoreSurge: (ctx, now) => {
+    // Rapid ascending power burst
+    const frequencies = [392, 523, 659, 784, 1047] // G4, C5, E5, G5, C6
+
+    frequencies.forEach((freq, i) => {
+      const osc = ctx.createOscillator()
+      const gain = ctx.createGain()
+
+      osc.type = 'sawtooth'
+      osc.frequency.setValueAtTime(freq, now + i * 0.05)
+
+      gain.gain.setValueAtTime(0, now + i * 0.05)
+      gain.gain.linearRampToValueAtTime(0.12, now + i * 0.05 + 0.02)
+      gain.gain.exponentialRampToValueAtTime(0.01, now + i * 0.05 + 0.12)
+
+      osc.connect(gain)
+      gain.connect(ctx.destination)
+
+      osc.start(now + i * 0.05)
+      osc.stop(now + i * 0.05 + 0.15)
+    })
+
+    // Final power surge
+    const finalOsc = ctx.createOscillator()
+    const finalGain = ctx.createGain()
+
+    finalOsc.type = 'sine'
+    finalOsc.frequency.setValueAtTime(1047, now + 0.25)
+    finalOsc.frequency.exponentialRampToValueAtTime(1319, now + 0.35) // E6
+
+    finalGain.gain.setValueAtTime(0.18, now + 0.25)
+    finalGain.gain.exponentialRampToValueAtTime(0.01, now + 0.5)
+
+    finalOsc.connect(finalGain)
+    finalGain.connect(ctx.destination)
+
+    finalOsc.start(now + 0.25)
+    finalOsc.stop(now + 0.5)
+  },
+
+  // Oracle's Eye - mystical reveal with ethereal chime
+  oraclesEye: (ctx, now) => {
+    // Ethereal shimmer effect
+    const notes = [
+      { freq: 880, delay: 0 },      // A5
+      { freq: 1109, delay: 0.08 },  // C#6
+      { freq: 1319, delay: 0.16 },  // E6
+      { freq: 1760, delay: 0.24 },  // A6 (octave up)
+    ]
+
+    notes.forEach(({ freq, delay }) => {
+      const osc1 = ctx.createOscillator()
+      const osc2 = ctx.createOscillator()
+      const gain = ctx.createGain()
+
+      // Crystal-like tone
+      osc1.type = 'sine'
+      osc2.type = 'triangle'
+      osc1.frequency.setValueAtTime(freq, now + delay)
+      osc2.frequency.setValueAtTime(freq * 1.5, now + delay) // Perfect fifth
+
+      gain.gain.setValueAtTime(0, now + delay)
+      gain.gain.linearRampToValueAtTime(0.1, now + delay + 0.02)
+      gain.gain.exponentialRampToValueAtTime(0.01, now + delay + 0.25)
+
+      osc1.connect(gain)
+      osc2.connect(gain)
+      gain.connect(ctx.destination)
+
+      osc1.start(now + delay)
+      osc2.start(now + delay)
+      osc1.stop(now + delay + 0.3)
+      osc2.stop(now + delay + 0.3)
+    })
+
+    // Mystical "reveal" sweep
+    const sweepOsc = ctx.createOscillator()
+    const sweepGain = ctx.createGain()
+
+    sweepOsc.type = 'sine'
+    sweepOsc.frequency.setValueAtTime(2000, now + 0.3)
+    sweepOsc.frequency.exponentialRampToValueAtTime(4000, now + 0.45)
+
+    sweepGain.gain.setValueAtTime(0.05, now + 0.3)
+    sweepGain.gain.exponentialRampToValueAtTime(0.01, now + 0.5)
+
+    sweepOsc.connect(sweepGain)
+    sweepGain.connect(ctx.destination)
+
+    sweepOsc.start(now + 0.3)
+    sweepOsc.stop(now + 0.5)
   },
 
   // Soft release - gentle unequip
@@ -492,6 +688,46 @@ const SYNTHETIC_SOUNDS = {
 
     osc.start(now)
     osc.stop(now + 0.05)
+  },
+
+  // Match Found Fanfare - triumphant ascending arpeggio
+  matchFound: (ctx, now) => {
+    // Create a triumphant 4-note ascending fanfare
+    const notes = [
+      { freq: 523, delay: 0 },      // C5
+      { freq: 659, delay: 0.1 },    // E5
+      { freq: 784, delay: 0.2 },    // G5
+      { freq: 1047, delay: 0.35 },  // C6 (held longer)
+    ]
+
+    notes.forEach(({ freq, delay }) => {
+      const osc = ctx.createOscillator()
+      const osc2 = ctx.createOscillator()
+      const gain = ctx.createGain()
+
+      // Rich sound with harmonics
+      osc.type = 'sine'
+      osc2.type = 'triangle'
+      osc.frequency.setValueAtTime(freq, now + delay)
+      osc2.frequency.setValueAtTime(freq * 2, now + delay) // Octave harmonic
+
+      const isLastNote = delay === 0.35
+      const duration = isLastNote ? 0.4 : 0.15
+      const volume = isLastNote ? 0.2 : 0.12
+
+      gain.gain.setValueAtTime(0, now + delay)
+      gain.gain.linearRampToValueAtTime(volume, now + delay + 0.02)
+      gain.gain.exponentialRampToValueAtTime(0.01, now + delay + duration)
+
+      osc.connect(gain)
+      osc2.connect(gain)
+      gain.connect(ctx.destination)
+
+      osc.start(now + delay)
+      osc2.start(now + delay)
+      osc.stop(now + delay + duration)
+      osc2.stop(now + delay + duration)
+    })
   },
 }
 

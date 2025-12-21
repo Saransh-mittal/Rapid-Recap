@@ -67,7 +67,7 @@ const BottomNavContent = memo(({ activeTab, onTabChange }) => {
         bottom: 0,
         left: 0,
         right: 0,
-        zIndex: 9999,
+        zIndex: 999,
       }}
       className="md:hidden"
     >
@@ -193,30 +193,18 @@ BottomNav.displayName = 'BottomNav'
 // ============================================================================
 
 const TabContent = memo(({ isActive, children, tabName }) => {
-
-
-  // Active tab: relative position, visible, in normal flow, on top
-  // Hidden tabs: absolute position (stacked in container), invisible, lower z-index
-  const styles = isActive
-    ? {
-        position: 'relative',
-        visibility: 'visible',
-        opacity: 1,
-        zIndex: 1,
-      }
-    : {
-        position: 'absolute',
-        top: 0,
-        left: 0,
-        right: 0,
-        visibility: 'hidden',
-        opacity: 0,
-        pointerEvents: 'none',
-        zIndex: 0,
-      }
+  // Active tab: visible in normal flow
+  // Hidden tabs: use display:none to completely remove from layout (fixes scroll issue)
+  if (!isActive) {
+    return (
+      <div style={{ display: 'none' }} aria-hidden="true">
+        {children}
+      </div>
+    )
+  }
 
   return (
-    <div style={styles} aria-hidden={!isActive}>
+    <div style={{ position: 'relative' }} aria-hidden={false}>
       {children}
     </div>
   )
@@ -284,7 +272,7 @@ const QuickClashLayoutV2 = () => {
       <DataManager activeTab={activeTab} />
 
       {/* Tab content container with proper stacking context */}
-      <div style={{ position: 'relative', minHeight: '100vh' }}>
+      <div style={{ position: 'relative' }}>
         {/* Active tab content - conditionally rendered for proper remounting */}
         <TabContent isActive={activeTab === 'battles'} tabName="battles">
           <QuickClashV2 />

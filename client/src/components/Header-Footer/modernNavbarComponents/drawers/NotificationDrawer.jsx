@@ -34,8 +34,9 @@ import axios from 'axios'
 import { useDispatch, useSelector } from 'react-redux'
 import { setUpdates } from '../../../../redux/appSlice'
 import { useTranslation } from 'react-i18next'
-import useSafeSound from '../../../../customHooks/useSafeSound'
-import { useFeatureDetection } from '../../../../utils/featureDetection'
+
+// Audio feedback
+import { quizAudioService } from '../../../../services/quizAudioService'
 
 //SSR image optimization
 const Rapid_recap = '/images/rrlogo.webp'
@@ -258,11 +259,6 @@ const NotificationDrawer = ({
   setIsHamburgerOpen,
 }) => {
   const { t } = useTranslation('NotificationDrawer')
-  const features = useFeatureDetection()
-  const { playClick } = useSafeSound({
-    enabled: features.hasAudioSupport,
-    volume: 0.5,
-  })
   const dispatch = useDispatch()
   const toast = useToast()
   const isScreenSmallerThan48em = useMediaQuery('(max-width: 48em)')[0]
@@ -312,30 +308,30 @@ const NotificationDrawer = ({
   // Notification handlers
   const handleNotificationClick = useCallback(
     notification => {
-      playClick()
+      quizAudioService.playButtonClick()
       setSelectedNotification(notification)
       setIsModalOpen(true)
       setIsDrawerOpen(false)
     },
-    [setIsModalOpen, setIsDrawerOpen, playClick],
+    [setIsModalOpen, setIsDrawerOpen],
   )
 
   const handleDeleteClick = useCallback(
     notification => {
-      playClick()
+      quizAudioService.playButtonClick()
       setModalState(prev => ({
         ...prev,
         isDeleteModalOpen: true,
         notificationToDelete: notification,
       }))
     },
-    [playClick],
+    [],
   )
 
   const handleRemoveAllClick = useCallback(() => {
-    playClick()
+    quizAudioService.playButtonClick()
     setModalState(prev => ({ ...prev, removeAllModalOpen: true }))
-  }, [playClick])
+  }, [])
 
   // API operations
   const setReadUpdate = useCallback(
@@ -422,6 +418,7 @@ const NotificationDrawer = ({
 
   // Handle drawer close
   const handleDrawerClose = useCallback(() => {
+    quizAudioService.playDismiss()
     if (isScreenSmallerThan48em) {
       setIsHamburgerOpen(true)
     }

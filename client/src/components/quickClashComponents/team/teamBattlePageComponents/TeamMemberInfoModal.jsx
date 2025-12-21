@@ -208,20 +208,20 @@ const TeamMemberInfoModal = ({ userId, isOpen, onClose }) => {
                       </div>
 
                       <div className="grid grid-cols-2 gap-2">
-                        {/* 1v1 Stats */}
+                        {/* Avg Score (Last 10) */}
                         <div className="p-2.5 rounded-xl bg-cyan-500/5 border border-cyan-500/10">
                           <div className="flex items-center gap-1 mb-1.5">
                             <div className="w-1.5 h-1.5 rounded-full bg-cyan-400" />
-                            <span className="text-[10px] font-semibold text-cyan-400">1v1 Duels</span>
+                            <span className="text-[10px] font-semibold text-cyan-400">{t('Avg Score')}</span>
                           </div>
                           <div className="flex justify-between items-end">
                             <div>
-                              <p className="text-lg font-bold text-white">{profile.statistics?.oneVsOne?.winRate || 0}%</p>
-                              <p className="text-[9px] text-white/30">Win Rate</p>
+                              <p className="text-lg font-bold text-white">{profile.statistics?.teamBattle?.avgScoreLast10 || 0}</p>
+                              <p className="text-[9px] text-white/30">{t('Points')}</p>
                             </div>
                             <div className="text-right">
-                              <p className="text-sm font-semibold text-white/70">{profile.statistics?.oneVsOne?.totalMatches || 0}</p>
-                              <p className="text-[9px] text-white/30">Matches</p>
+                              <p className="text-sm font-semibold text-white/70">{profile.statistics?.teamBattle?.matchesForAvg || 0}</p>
+                              <p className="text-[9px] text-white/30">{t('Last Matches')}</p>
                             </div>
                           </div>
                         </div>
@@ -234,11 +234,11 @@ const TeamMemberInfoModal = ({ userId, isOpen, onClose }) => {
                           </div>
                           <div className="flex justify-between items-end">
                             <div>
-                              <p className="text-lg font-bold text-white">{profile.statistics?.team?.winRate || 0}%</p>
+                              <p className="text-lg font-bold text-white">{profile.statistics?.teamBattle?.winRate || 0}%</p>
                               <p className="text-[9px] text-white/30">Win Rate</p>
                             </div>
                             <div className="text-right">
-                              <p className="text-sm font-semibold text-white/70">{profile.statistics?.team?.totalMatches || 0}</p>
+                              <p className="text-sm font-semibold text-white/70">{profile.statistics?.teamBattle?.totalMatches || 0}</p>
                               <p className="text-[9px] text-white/30">Matches</p>
                             </div>
                           </div>

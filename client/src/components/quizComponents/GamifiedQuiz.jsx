@@ -130,14 +130,7 @@ const GamifiedQuiz = ({
         setQuizTimeLeft(hasTimeWarp ? 65 : 50)
 
         if (hasTimeWarp) {
-             toast({
-                title: "Time Warp Active!",
-                description: "+15s added to quiz timer",
-                status: "info",
-                duration: 3000,
-                isClosable: true,
-              })
-
+             // Toast is shown by parent (QuickClashSession) - just mark as used
              // Mark as used in backend
              try {
                await axios.post(`/api/quickClash/session/${sessionId}/powerup/use`, {
@@ -329,6 +322,7 @@ const GamifiedQuiz = ({
         const effect = response.data.effect
 
         if (effect.type === 'REMOVE_OPTIONS') {
+          quizAudioService.playOraclesEye() // Play Oracle's Eye sound
           setDisabledOptions(prev => ({
             ...prev,
             [currentQuestionIndex]: [

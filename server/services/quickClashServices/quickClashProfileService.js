@@ -296,6 +296,7 @@ const getTeamBattleStats = async userId => {
   const userObjectId =
     typeof userId === 'string' ? new mongoose.Types.ObjectId(userId) : userId
 
+  // Get overall stats
   const stats = await QuickClashTeamTrophyHistory.aggregate([
     { $match: { user: userObjectId, userParticipated: true } },
     {
@@ -323,6 +324,25 @@ const getTeamBattleStats = async userId => {
     },
   ])
 
+  // Get average score from last 10 matches
+  const last10Matches = await QuickClashTeamTrophyHistory.find({
+    user: userObjectId,
+    userParticipated: true,
+    userScore: { $exists: true, $gt: 0 },
+  })
+    .sort({ createdAt: -1 })
+    .limit(10)
+    .select('userScore')
+    .lean()
+
+  const avgScoreLast10 =
+    last10Matches.length > 0
+      ? Math.round(
+          last10Matches.reduce((sum, m) => sum + (m.userScore || 0), 0) /
+            last10Matches.length,
+        )
+      : 0
+
   const result = stats[0] || {
     totalMatches: 0,
     wins: 0,
@@ -336,6 +356,10 @@ const getTeamBattleStats = async userId => {
     result.totalMatches > 0
       ? parseFloat(((result.wins / result.totalMatches) * 100).toFixed(1))
       : 0
+
+  // Add average score from last 10 matches
+  result.avgScoreLast10 = avgScoreLast10
+  result.matchesForAvg = last10Matches.length
 
   return result
 }
