@@ -462,12 +462,29 @@ const updateTrophiesAfterChallenge = async ({
     // Winner gets: Battle Win + Bet Winnings
     // Loser gets: Battle Loss (already calculated newLoserTrophies)
 
+    // Calculate winner's new trophies
+    const winnerData = isWinnerChallenger ? challengerData : opponentData
+    const winnerTrophies = isWinnerChallenger
+      ? challengerTrophies
+      : opponentTrophies
+    const newWinnerTrophies = winnerTrophies + winnerChange + winnerBetChange
+    const winnerCurrentPeak =
+      winnerData?.quickClashStats?.peakTrophies || winnerTrophies
+
+    // Build winner update object
+    const winnerUpdateObj = {
+      $inc: { quickClashTrophies: winnerChange + winnerBetChange },
+    }
+
+    // Update peakTrophies if new trophies exceed current peak
+    if (newWinnerTrophies > winnerCurrentPeak) {
+      winnerUpdateObj.$set = {
+        'quickClashStats.peakTrophies': newWinnerTrophies,
+      }
+    }
+
     await Promise.all([
-      User.findByIdAndUpdate(
-        winnerId,
-        { $inc: { quickClashTrophies: winnerChange + winnerBetChange } },
-        { session },
-      ),
+      User.findByIdAndUpdate(winnerId, winnerUpdateObj, { session }),
       User.findByIdAndUpdate(
         loserId,
         { $set: { quickClashTrophies: newLoserTrophies } }, // Betting loss already deducted

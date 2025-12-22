@@ -370,12 +370,24 @@ const calculateFinalTrophies = async (battle, session) => {
       member.trophyChange = perPlayerAmount
       member.newTrophies = member.previousTrophies + perPlayerAmount
 
+      // Get current user to check peak trophies
+      const currentUser = await User.findById(member.user)
+        .select('quickClashStats')
+        .session(session)
+        .lean()
+
+      const currentPeak =
+        currentUser?.quickClashStats?.peakTrophies || member.previousTrophies
+
       // Update user trophies in database
-      await User.findByIdAndUpdate(
-        member.user,
-        { $inc: { quickClashTrophies: perPlayerAmount } },
-        { session },
-      )
+      const updateObj = { $inc: { quickClashTrophies: perPlayerAmount } }
+
+      // Update peakTrophies if new trophies exceed current peak
+      if (member.newTrophies > currentPeak) {
+        updateObj.$set = { 'quickClashStats.peakTrophies': member.newTrophies }
+      }
+
+      await User.findByIdAndUpdate(member.user, updateObj, { session })
 
       // Create trophy history entry
       await new QuickClashTeamTrophyHistory({
@@ -442,12 +454,24 @@ const calculateFinalTrophies = async (battle, session) => {
       member.trophyChange = perPlayerAmount
       member.newTrophies = member.previousTrophies + perPlayerAmount
 
+      // Get current user to check peak trophies
+      const currentUser = await User.findById(member.user)
+        .select('quickClashStats')
+        .session(session)
+        .lean()
+
+      const currentPeak =
+        currentUser?.quickClashStats?.peakTrophies || member.previousTrophies
+
       // Update user trophies in database
-      await User.findByIdAndUpdate(
-        member.user,
-        { $inc: { quickClashTrophies: perPlayerAmount } },
-        { session },
-      )
+      const updateObj = { $inc: { quickClashTrophies: perPlayerAmount } }
+
+      // Update peakTrophies if new trophies exceed current peak
+      if (member.newTrophies > currentPeak) {
+        updateObj.$set = { 'quickClashStats.peakTrophies': member.newTrophies }
+      }
+
+      await User.findByIdAndUpdate(member.user, updateObj, { session })
 
       // Create trophy history entry
       await new QuickClashTeamTrophyHistory({

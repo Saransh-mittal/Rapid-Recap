@@ -451,7 +451,7 @@ const TaskPopup = ({ onViewAllTasks, isOpen, onClose }) => {
       <AnimatePresence>
         <MotionDiv
           className={`
-            fixed bottom-5 right-5 z-[101] overflow-hidden rounded-xl border
+            fixed bottom-5 right-5 z-[1000] overflow-hidden rounded-xl border
             w-[calc(100%-40px)] md:w-[350px] ${QUICK_CLASH_CLASSES.glassMedium}
             backdrop-blur-[10px] shadow-2xl shadow-black/40 border-cyan-500/50
           `}
