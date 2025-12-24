@@ -193,6 +193,39 @@ const quickClashTeamBattleSchema = new mongoose.Schema(
             max: 30,
           },
         },
+        // Powerup Rewards earned from battle completion
+        powerupReward: {
+          housingSpaceEarned: {
+            type: Number,
+            default: 0,
+          },
+          individualWins: {
+            type: Number,
+            default: 0,
+          },
+          powerupsAwarded: [
+            {
+              powerupId: String, // e.g., 'TIME_WARP'
+              cost: Number,
+              awardedAt: {
+                type: Date,
+                default: Date.now,
+              },
+            },
+          ],
+          claimed: {
+            type: Boolean,
+            default: false,
+          },
+          claimedAt: {
+            type: Date,
+            default: null,
+          },
+          viewedAt: {
+            type: Date,
+            default: null,
+          },
+        },
       },
     ],
     teamBMembers: [
@@ -262,6 +295,39 @@ const quickClashTeamBattleSchema = new mongoose.Schema(
             type: Number,
             default: 0,
             max: 30,
+          },
+        },
+        // Powerup Rewards earned from battle completion
+        powerupReward: {
+          housingSpaceEarned: {
+            type: Number,
+            default: 0,
+          },
+          individualWins: {
+            type: Number,
+            default: 0,
+          },
+          powerupsAwarded: [
+            {
+              powerupId: String, // e.g., 'TIME_WARP'
+              cost: Number,
+              awardedAt: {
+                type: Date,
+                default: Date.now,
+              },
+            },
+          ],
+          claimed: {
+            type: Boolean,
+            default: false,
+          },
+          claimedAt: {
+            type: Date,
+            default: null,
+          },
+          viewedAt: {
+            type: Date,
+            default: null,
           },
         },
       },

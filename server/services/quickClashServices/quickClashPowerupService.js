@@ -9,7 +9,7 @@ const POWERUPS = {
   TIME_WARP: {
     id: 'TIME_WARP',
     name: 'Time Warp',
-    cost: 10,
+    cost: 12, // Increased: Quiz time bonus is huge (+25-35 RQM)
     type: 'active', // Forge: Active, Quiz: Passive
     phase: 'both',
     description: 'Forge: +15s Active | Quiz: +15s Passive',
@@ -17,7 +17,7 @@ const POWERUPS = {
   SCORE_SURGE: {
     id: 'SCORE_SURGE',
     name: 'Score Surge',
-    cost: 25,
+    cost: 10, // Reduced: Forge nerfed, single-use per session
     type: 'active', // Forge: Active, Quiz: Passive
     phase: 'both',
     description: 'Forge: 2x Points Active | Quiz: 1.1x RQM Passive',
@@ -25,7 +25,7 @@ const POWERUPS = {
   ORACLES_EYE: {
     id: 'ORACLES_EYE',
     name: "Oracle's Eye",
-    cost: 20,
+    cost: 8, // Reduced: Indirect impact, skill-dependent
     type: 'active',
     phase: 'both',
     description: 'Remove 2 wrong options',
@@ -34,7 +34,7 @@ const POWERUPS = {
   STREAK_SHIELD: {
     id: 'STREAK_SHIELD',
     name: 'Streak Shield',
-    cost: 15,
+    cost: 5, // Reduced: Situational, Forge nerfed
     type: 'passive',
     phase: 'forge',
     description: 'Prevent streak reset on error',
@@ -42,15 +42,16 @@ const POWERUPS = {
   PRECISION_PROTOCOL: {
     id: 'PRECISION_PROTOCOL',
     name: 'Precision Protocol',
-    cost: 15,
+    cost: 12, // Reduced: High ceiling but requires skill
     type: 'passive',
     phase: 'quiz',
     description: '+50 RQM if 100% Accuracy',
   },
 }
 
-const MAX_POOL_HOUSING = 150
+const MAX_POOL_HOUSING = 80 // Reduced from 150 for tighter economy
 const MAX_LOADOUT_HOUSING = 30
+const MAX_USER_DONATION = 20 // New constant for donation limit
 
 /**
  * Donate a powerup from user inventory to team pool
@@ -84,8 +85,8 @@ const donatePowerup = async ({
     .filter(i => i.donatedBy && i.donatedBy.toString() === userId.toString())
     .reduce((sum, i) => sum + i.cost, 0)
 
-  if (userDonatedTotal + powerupDef.cost > 30) {
-    throw new Error('You can only donate up to 30 housing worth of powerups!')
+  if (userDonatedTotal + powerupDef.cost > MAX_USER_DONATION) {
+    throw new Error(`You can only donate up to ${MAX_USER_DONATION} housing worth of powerups!`)
   }
 
   // Remove from User Inventory

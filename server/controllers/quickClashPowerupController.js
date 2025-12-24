@@ -7,6 +7,12 @@ const {
   unequipPowerup,
   POWERUPS,
 } = require('../services/quickClashServices/quickClashPowerupService')
+const {
+  claimPowerupReward,
+  getUnclaimedBattles,
+  markBattleViewed,
+  POWERUP_POOL,
+} = require('../services/quickClashServices/quickClashPowerupRewardService')
 const QuickClashSession = require('../model/quickClashSchemas/quickClashSessionSchema')
 
 /**
@@ -279,6 +285,94 @@ const getUserInventory = asyncHandler(async (req, res) => {
   })
 })
 
+/**
+ * @desc    Claim powerup reward from a completed battle
+ * @route   POST /api/quickClash/powerup/claim-reward
+ * @access  Private
+ */
+const claimRewardController = asyncHandler(async (req, res) => {
+  const { battleId } = req.body
+  const userId = req.user._id
+
+  if (!battleId) {
+    res.status(400)
+    throw new Error('Battle ID is required')
+  }
+
+  try {
+    const result = await claimPowerupReward({ battleId, userId })
+
+    res.status(200).json({
+      success: true,
+      message: result.message,
+      powerupsAdded: result.powerupsAdded,
+      housingSpaceEarned: result.housingSpaceEarned,
+      individualWins: result.individualWins,
+    })
+  } catch (error) {
+    console.error('Error claiming powerup reward:', error)
+    res.status(400).json({
+      success: false,
+      message: error.message || 'Failed to claim reward',
+    })
+  }
+})
+
+/**
+ * @desc    Get unclaimed battles with powerup rewards
+ * @route   GET /api/quickClash/powerup/unclaimed-battles
+ * @access  Private
+ */
+const getUnclaimedBattlesController = asyncHandler(async (req, res) => {
+  const userId = req.user._id
+
+  try {
+    const battles = await getUnclaimedBattles(userId)
+
+    res.status(200).json({
+      success: true,
+      count: battles.length,
+      battles,
+    })
+  } catch (error) {
+    console.error('Error getting unclaimed battles:', error)
+    res.status(400).json({
+      success: false,
+      message: error.message || 'Failed to get unclaimed battles',
+    })
+  }
+})
+
+/**
+ * @desc    Mark a battle as viewed (for popup dismissal)
+ * @route   POST /api/quickClash/powerup/mark-viewed
+ * @access  Private
+ */
+const markBattleViewedController = asyncHandler(async (req, res) => {
+  const { battleId } = req.body
+  const userId = req.user._id
+
+  if (!battleId) {
+    res.status(400)
+    throw new Error('Battle ID is required')
+  }
+
+  try {
+    const result = await markBattleViewed({ battleId, userId })
+
+    res.status(200).json({
+      success: true,
+      viewedAt: result.viewedAt,
+    })
+  } catch (error) {
+    console.error('Error marking battle as viewed:', error)
+    res.status(400).json({
+      success: false,
+      message: error.message || 'Failed to mark battle as viewed',
+    })
+  }
+})
+
 module.exports = {
   donatePowerupController,
   equipPowerupController,
@@ -286,6 +380,9 @@ module.exports = {
   getPowerupDefinitions,
   usePowerupController,
   getUserInventory,
+  claimRewardController,
+  getUnclaimedBattlesController,
+  markBattleViewedController,
 }
 
 

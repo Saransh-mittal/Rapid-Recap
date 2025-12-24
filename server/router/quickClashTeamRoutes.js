@@ -90,6 +90,9 @@ const {
   unequipPowerupController,
   getPowerupDefinitions,
   getUserInventory,
+  claimRewardController,
+  getUnclaimedBattlesController,
+  markBattleViewedController,
 } = require('../controllers/quickClashPowerupController')
 
 // Powerup Routes
@@ -98,5 +101,10 @@ router.post('/team-battle/:battleId/powerup/equip', equipPowerupController)
 router.post('/team-battle/:battleId/powerup/unequip', unequipPowerupController)
 router.get('/powerups/definitions', getPowerupDefinitions)
 router.get('/powerups/inventory', getUserInventory)
+
+// Powerup Reward Routes
+router.post('/powerup/claim-reward', claimRewardController)
+router.get('/powerup/unclaimed-battles', getUnclaimedBattlesController)
+router.post('/powerup/mark-viewed', markBattleViewedController)
 
 module.exports = router

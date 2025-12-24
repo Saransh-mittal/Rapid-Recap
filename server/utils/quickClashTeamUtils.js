@@ -8,6 +8,9 @@ const QuickClashTeamTrophyHistory = require('../model/quickClashSchemas/quickCla
 const {
   notifyTeamBattleCompleted,
 } = require('../services/quickClashServices/quickClashNotificationService')
+const {
+  awardPowerupsToMember,
+} = require('../services/quickClashServices/quickClashPowerupRewardService')
 
 // Constants
 const MATCHMAKING_EXPIRY = 30 * 60 * 1000 // 30 minutes
@@ -582,6 +585,21 @@ const calculateFinalTrophies = async (battle, session) => {
         userScore: member.score,
       }).save({ session })
     }
+  }
+
+  // Award powerup rewards based on team and individual performance
+  console.log(`[POWERUP_REWARD] Awarding powerup rewards for battle ${battle._id}`)
+  try {
+    for (const member of battle.teamAMembers) {
+      await awardPowerupsToMember(battle, member.user, 'teamA', session)
+    }
+    for (const member of battle.teamBMembers) {
+      await awardPowerupsToMember(battle, member.user, 'teamB', session)
+    }
+    console.log(`[POWERUP_REWARD] Completed awarding powerup rewards for battle ${battle._id}`)
+  } catch (rewardError) {
+    // Don't fail trophy calculation if reward fails
+    console.error(`[POWERUP_REWARD] Error awarding powerups for battle ${battle._id}:`, rewardError)
   }
 
   // Send battle completion notifications to all participants

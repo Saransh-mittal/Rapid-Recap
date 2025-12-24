@@ -10,7 +10,8 @@ import { fetchTeamBattleDetails } from '../../../redux/quickClashTeamBattleSlice
 import { cn } from '@/lib/utils'
 import { quizAudioService } from '../../../services/quizAudioService'
 
-const MAX_POOL_HOUSING = 150
+const MAX_POOL_HOUSING = 80
+const MAX_USER_DONATION = 20
 
 const PowerupDonationModal = ({ isOpen, onClose, battleId, teamId }) => {
   const [inventory, setInventory] = useState([])
@@ -60,8 +61,8 @@ const PowerupDonationModal = ({ isOpen, onClose, battleId, teamId }) => {
       return
     }
 
-    if (userDonatedTotal + powerup.cost > 30) {
-      setMessage({ type: 'error', text: 'Donation limit reached (Max 30)' })
+    if (userDonatedTotal + powerup.cost > MAX_USER_DONATION) {
+      setMessage({ type: 'error', text: `Donation limit reached (Max ${MAX_USER_DONATION})` })
       return
     }
 
@@ -170,8 +171,8 @@ const PowerupDonationModal = ({ isOpen, onClose, battleId, teamId }) => {
 
                 <div className="flex justify-between mt-2 text-xs">
                   <span className="text-white/40">{pool?.items?.length || 0} items</span>
-                  <span className={cn("font-medium", userDonatedTotal >= 30 ? 'text-red-400' : 'text-purple-300')}>
-                    Your: {userDonatedTotal}/30
+                  <span className={cn("font-medium", userDonatedTotal >= MAX_USER_DONATION ? 'text-red-400' : 'text-purple-300')}>
+                    Your: {userDonatedTotal}/{MAX_USER_DONATION}
                   </span>
                 </div>
               </div>
@@ -231,7 +232,7 @@ const PowerupDonationModal = ({ isOpen, onClose, battleId, teamId }) => {
                         <PowerupCard
                           powerup={item}
                           onClick={() => handleDonate(item)}
-                          isDisabled={donating || poolHousingUsed + item.cost > MAX_POOL_HOUSING || userDonatedTotal + item.cost > 30}
+                          isDisabled={donating || poolHousingUsed + item.cost > MAX_POOL_HOUSING || userDonatedTotal + item.cost > MAX_USER_DONATION}
                         />
                         <Badge className="absolute -top-2 -right-2 w-6 h-6 flex items-center justify-center rounded-full bg-gradient-to-br from-purple-500 to-indigo-500 text-white text-xs font-bold border-2 border-slate-900">
                           {item.count}

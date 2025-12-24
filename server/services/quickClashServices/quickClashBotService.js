@@ -582,17 +582,25 @@ const addBotsToMatchmaking = async () => {
 
     console.log(`[BOT_MATCHMAKING] Adding ${botsToAdd} bots to matchmaking`)
 
-    // Add bots
-    const addBotPromises = []
+    // Add bots SEQUENTIALLY (not in parallel) to avoid transaction conflicts
+    // Each bot join triggers database operations, so we serialize them
+    let successfulAdds = 0
     for (let i = 0; i < botsToAdd; i++) {
-      addBotPromises.push(addSingleBotToMatchmaking())
+      try {
+        await addSingleBotToMatchmaking()
+        successfulAdds++
+
+        // Add a small delay between bot additions to reduce contention
+        if (i < botsToAdd - 1) {
+          await new Promise(resolve => setTimeout(resolve, 500))
+        }
+      } catch (err) {
+        console.error(`[BOT_MATCHMAKING] Failed to add bot ${i + 1}:`, err.message)
+      }
     }
 
-    const results = await Promise.allSettled(addBotPromises)
-    const successful = results.filter(r => r.status === 'fulfilled').length
-
     console.log(
-      `[BOT_MATCHMAKING] Successfully added ${successful}/${botsToAdd} bots to matchmaking`,
+      `[BOT_MATCHMAKING] Successfully added ${successfulAdds}/${botsToAdd} bots to matchmaking`,
     )
   } catch (error) {
     console.error('[BOT_MATCHMAKING] Error adding bots to matchmaking:', error)

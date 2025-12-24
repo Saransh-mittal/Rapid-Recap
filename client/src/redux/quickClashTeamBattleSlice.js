@@ -155,6 +155,59 @@ export const deselectBattleCategory = createAsyncThunk(
   },
 )
 
+// Powerup Reward Thunks
+export const fetchUnclaimedBattles = createAsyncThunk(
+  'quickClashTeamBattle/fetchUnclaimedBattles',
+  async (_, { rejectWithValue }) => {
+    try {
+      const response = await axios.get('/api/quickClash/powerup/unclaimed-battles')
+      return response.data.battles || []
+    } catch (error) {
+      return rejectWithValue(
+        error.response?.data?.message || 'Failed to fetch unclaimed battles',
+      )
+    }
+  },
+)
+
+export const claimPowerupReward = createAsyncThunk(
+  'quickClashTeamBattle/claimPowerupReward',
+  async (battleId, { rejectWithValue }) => {
+    try {
+      const response = await axios.post('/api/quickClash/powerup/claim-reward', {
+        battleId,
+      })
+      return {
+        battleId,
+        ...response.data,
+      }
+    } catch (error) {
+      return rejectWithValue(
+        error.response?.data?.message || 'Failed to claim reward',
+      )
+    }
+  },
+)
+
+export const markBattleViewed = createAsyncThunk(
+  'quickClashTeamBattle/markBattleViewed',
+  async (battleId, { rejectWithValue }) => {
+    try {
+      const response = await axios.post('/api/quickClash/powerup/mark-viewed', {
+        battleId,
+      })
+      return {
+        battleId,
+        viewedAt: response.data.viewedAt,
+      }
+    } catch (error) {
+      return rejectWithValue(
+        error.response?.data?.message || 'Failed to mark battle as viewed',
+      )
+    }
+  },
+)
+
 // Slice definition
 const initialState = {
   // Active team battles
@@ -199,6 +252,13 @@ const initialState = {
 
   // Battle ready
   battleReady: null,
+
+  // Unclaimed battle rewards
+  unclaimedBattles: [],
+  unclaimedBattlesLoading: false,
+  unclaimedBattlesError: null,
+  claimingRewardLoading: false,
+  claimingRewardError: null,
 }
 
 const quickClashTeamBattleSlice = createSlice({
@@ -387,6 +447,47 @@ const quickClashTeamBattleSlice = createSlice({
       .addCase(getTeamMatchmakingStatus.rejected, (state, action) => {
         state.matchmakingLoading = false
         state.matchmakingError = action.payload
+      })
+
+      // Fetch unclaimed battles for rewards
+      .addCase(fetchUnclaimedBattles.pending, state => {
+        state.unclaimedBattlesLoading = true
+        state.unclaimedBattlesError = null
+      })
+      .addCase(fetchUnclaimedBattles.fulfilled, (state, action) => {
+        state.unclaimedBattles = action.payload
+        state.unclaimedBattlesLoading = false
+      })
+      .addCase(fetchUnclaimedBattles.rejected, (state, action) => {
+        state.unclaimedBattlesLoading = false
+        state.unclaimedBattlesError = action.payload
+      })
+
+      // Claim powerup reward
+      .addCase(claimPowerupReward.pending, state => {
+        state.claimingRewardLoading = true
+        state.claimingRewardError = null
+      })
+      .addCase(claimPowerupReward.fulfilled, (state, action) => {
+        state.claimingRewardLoading = false
+        // Remove claimed battle from unclaimed list
+        state.unclaimedBattles = state.unclaimedBattles.filter(
+          b => b._id !== action.payload.battleId
+        )
+      })
+      .addCase(claimPowerupReward.rejected, (state, action) => {
+        state.claimingRewardLoading = false
+        state.claimingRewardError = action.payload
+      })
+
+      // Mark battle as viewed
+      .addCase(markBattleViewed.fulfilled, (state, action) => {
+        const battle = state.unclaimedBattles.find(
+          b => b._id === action.payload.battleId
+        )
+        if (battle) {
+          battle.isViewed = true
+        }
       })
   },
 })

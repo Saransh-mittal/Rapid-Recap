@@ -14,6 +14,7 @@ import {
   Swords,
   Shield,
   Zap,
+  Gift,
 } from 'lucide-react'
 
 // Haptic feedback
@@ -179,7 +180,7 @@ VSDivider.displayName = 'VSDivider'
 // MAIN COMPONENT
 // ============================================================================
 
-const BattleCardV2 = ({ battle, onClick }) => {
+const BattleCardV2 = ({ battle, onClick, onClaimReward }) => {
   const { t } = useTranslation('QuickClash')
   const navigate = useNavigate()
   const { user } = useSelector((state) => state.auth)
@@ -237,11 +238,19 @@ const BattleCardV2 = ({ battle, onClick }) => {
 
     // Get trophy change for the user
     let trophyChange = 0
+    let hasUnclaimedReward = false
+    let powerupRewardSpace = 0
     const userMembership = isInTeamA
       ? battle.teamAMembers?.find(m => (m.user?._id || m.user) === user._id)
       : battle.teamBMembers?.find(m => (m.user?._id || m.user) === user._id)
     if (userMembership) {
       trophyChange = userMembership.trophyChange || 0
+      // Check for unclaimed powerup rewards
+      if (userMembership.powerupReward) {
+        hasUnclaimedReward = !userMembership.powerupReward.claimed &&
+          (userMembership.powerupReward.housingSpaceEarned || 0) > 0
+        powerupRewardSpace = userMembership.powerupReward.housingSpaceEarned || 0
+      }
     }
 
     // Battle end time for completed battles
@@ -266,6 +275,8 @@ const BattleCardV2 = ({ battle, onClick }) => {
       category: battle.category || null,
       trophyChange,
       endedTime,
+      hasUnclaimedReward,
+      powerupRewardSpace,
     }
   }, [battle, user])
 
@@ -279,6 +290,16 @@ const BattleCardV2 = ({ battle, onClick }) => {
       navigate(`/quickclash/teamBattle/${battleData.id}`)
     }
   }, [battle, battleData, navigate, onClick])
+
+  // Handle claim reward click
+  const handleClaimReward = useCallback((e) => {
+    e.stopPropagation() // Prevent card click
+    haptics.medium()
+    quizAudioService.playButtonClick()
+    if (onClaimReward && battle) {
+      onClaimReward(battle)
+    }
+  }, [battle, onClaimReward])
 
   if (!battleData) return null
 
@@ -396,6 +417,24 @@ const BattleCardV2 = ({ battle, onClick }) => {
       {/* Footer */}
       <div className="flex items-center justify-between px-4 py-2.5 border-t border-white/5 bg-white/[0.02] group-hover:bg-white/[0.04] transition-colors">
         <span className="text-white/40 text-xs font-medium">4v4</span>
+
+        {/* Unclaimed reward indicator for completed battles */}
+        {!isActive && battleData.hasUnclaimedReward && (
+          <motion.button
+            onClick={handleClaimReward}
+            className="flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-yellow-500/15 border border-yellow-500/30 hover:bg-yellow-500/25 active:scale-95 transition-all"
+            animate={{ opacity: [1, 0.8, 1] }}
+            transition={{ repeat: Infinity, duration: 1.5 }}
+            whileHover={{ scale: 1.05 }}
+            whileTap={{ scale: 0.95 }}
+          >
+            <Gift className="w-3.5 h-3.5 text-yellow-400" />
+            <span className="text-yellow-400 text-[11px] font-bold">
+              Claim Reward
+            </span>
+          </motion.button>
+        )}
+
         <motion.div
           className="flex items-center gap-1.5 text-cyan-400 text-xs font-semibold"
           whileHover={{ x: 3 }}

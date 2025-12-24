@@ -11,6 +11,7 @@ const { getCategories } = require('../../data/categories')
 const { createTeamBattle } = require('./quickClashTeamBattleService')
 const { updateTeamMatchStatus } = require('./quickClashTeamService')
 const { makeRetryable } = require('../../utils/retryUtils') // ADD: Import retry utility
+const { matchmakingMutex } = require('../../utils/asyncMutex') // ADD: Import mutex for concurrency control
 
 // Constants
 const MATCHMAKING_EXPIRY = 30 * 60 * 1000 // 30 minutes
@@ -394,12 +395,10 @@ const joinGlobalMatchmaking = async ({ userId }) => {
       // Add to pending solo players state
       teamFormationState.pendingSoloPlayers.add(userId.toString())
 
-      // Try to find a match right away (async) - MODIFY: Use retryable process
-      setTimeout(() => {
-        processGlobalMatchmakingWithRetry().catch(err => {
-          console.error('Error processing global matchmaking:', err)
-        })
-      }, 100)
+      // NOTE: Removed immediate processGlobalMatchmakingWithRetry() call
+      // to reduce concurrent transaction conflicts. Let the periodic
+      // processing (cron job) handle matchmaking instead.
+      // This significantly reduces WriteConflict errors.
 
       return matchmakingEntry
     })
@@ -1053,37 +1052,52 @@ const getGlobalMatchmakingStatus = async ({ userId }) => {
 }
 
 // Debounce function to prevent excessive processing
-const DEBOUNCE_INTERVAL = 3000 // 3 seconds
+const DEBOUNCE_INTERVAL = 5000 // 5 seconds (increased from 3s to reduce contention)
 
 /**
  * Process the global matchmaking queue to form teams and create battles
  * @returns {Promise<void>}
  */
 const processGlobalMatchmaking = async () => {
-  // Debounce mechanism to prevent excessive processing
+  // Early debounce check before acquiring mutex (reduces lock contention)
   const now = Date.now()
-  if (
-    teamFormationState.isCurrentlyProcessing ||
-    now - teamFormationState.lastProcessingTime < DEBOUNCE_INTERVAL
-  ) {
+  if (now - teamFormationState.lastProcessingTime < DEBOUNCE_INTERVAL) {
     console.log(
-      'Matchmaking processing already in progress or too soon. Skipping.',
+      'Matchmaking processing too soon since last run. Skipping.',
     )
     return
   }
 
-  try {
-    // Mark as processing and update timestamp
-    teamFormationState.isCurrentlyProcessing = true
-    teamFormationState.lastProcessingTime = now
+  // Use mutex to ensure only one matchmaking process runs at a time
+  // This prevents WriteConflict errors from concurrent transactions
+  return matchmakingMutex.withLock(async () => {
+    // Re-check timing after acquiring lock (another process may have just finished)
+    const currentTime = Date.now()
+    if (
+      teamFormationState.isCurrentlyProcessing ||
+      currentTime - teamFormationState.lastProcessingTime < DEBOUNCE_INTERVAL
+    ) {
+      console.log(
+        'Matchmaking processing already completed by another process. Skipping.',
+      )
+      return
+    }
 
-    await performMatchmaking()
-  } catch (error) {
-    console.error('Error processing global matchmaking:', error)
-  } finally {
-    // Always release the processing lock
-    teamFormationState.isCurrentlyProcessing = false
-  }
+    try {
+      // Mark as processing and update timestamp
+      teamFormationState.isCurrentlyProcessing = true
+      teamFormationState.lastProcessingTime = currentTime
+
+      console.log('[MATCHMAKING] Starting matchmaking processing with mutex lock')
+      await performMatchmaking()
+      console.log('[MATCHMAKING] Completed matchmaking processing')
+    } catch (error) {
+      console.error('Error processing global matchmaking:', error)
+    } finally {
+      // Always release the processing lock
+      teamFormationState.isCurrentlyProcessing = false
+    }
+  })
 }
 
 /**
@@ -1340,15 +1354,33 @@ const cleanupAutoFormedTeam = async ({
  * @returns {Promise<void>}
  */
 const performMatchmaking = async providedSession => {
-  const session = providedSession || (await mongoose.startSession())
-  let startedTransaction = false
+  // If a session is provided, use it directly (already in a transaction)
+  if (providedSession) {
+    return await performMatchmakingLogic(providedSession)
+  }
 
+  // Otherwise, create a new session and use withTransaction for auto-retry
+  const session = await mongoose.startSession()
   try {
-    if (!providedSession) {
-      startedTransaction = true
-      await session.startTransaction()
-    }
+    // withTransaction automatically retries on TransientTransactionError (WriteConflict)
+    await session.withTransaction(async () => {
+      await performMatchmakingLogic(session)
+    }, {
+      readConcern: { level: 'snapshot' },
+      writeConcern: { w: 'majority' },
+      maxCommitTimeMS: 30000,
+    })
+  } finally {
+    session.endSession()
+  }
+}
 
+/**
+ * Internal matchmaking logic - separated for use with withTransaction
+ * @param {mongoose.ClientSession} session - Mongoose session (required)
+ */
+const performMatchmakingLogic = async session => {
+  try {
     console.log('Processing global matchmaking queue')
 
     // Get all available solo players in matchmaking
@@ -1890,20 +1922,10 @@ const performMatchmaking = async providedSession => {
     console.log(
       `After processing: ${teamFormationState.pendingSoloPlayers.size} pending solo players, ${teamFormationState.pendingPartialTeams.size} pending partial teams`,
     )
-
-    if (startedTransaction) {
-      await session.commitTransaction()
-    }
+    // Transaction will be auto-committed by withTransaction
   } catch (error) {
     console.error('Error in matchmaking transaction:', error)
-    if (startedTransaction) {
-      await session.abortTransaction()
-    }
-    throw error // Re-throw for caller to handle
-  } finally {
-    if (!providedSession) {
-      session.endSession()
-    }
+    throw error // Re-throw for withTransaction to handle retry or abort
   }
 }
 
