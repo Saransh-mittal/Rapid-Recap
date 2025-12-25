@@ -22,11 +22,19 @@ const TeamContributionHeader = React.memo(
         alignItems="center"
         cursor="pointer"
         onClick={onToggle}
-        borderBottom="1px solid rgba(255,255,255,0.08)"
-        _hover={{ bg: 'rgba(255, 255, 255, 0.03)' }}
+        borderBottom="1px solid rgba(6, 182, 212, 0.2)"
+        _hover={{ bg: 'rgba(6, 182, 212, 0.05)' }}
+        position="relative"
+        zIndex={1}
       >
         <HStack spacing={3}>
-          <Icon as={Users} color="purple.300" boxSize={config.headerIconSize} />
+          <Box
+            p={2}
+            borderRadius="lg"
+            bg="rgba(168, 85, 247, 0.2)"
+          >
+            <Icon as={Users} color="purple.400" boxSize={config.headerIconSize} />
+          </Box>
           <VStack align="flex-start" spacing={0}>
             <Heading
               size={config.headingSize}
@@ -40,11 +48,11 @@ const TeamContributionHeader = React.memo(
             </Text>
           </VStack>
         </HStack>
-        <motion.div // Use motion.div for framer-motion specific props
+        <motion.div
           animate={{ rotate: isExpanded ? 180 : 0 }}
           transition={{ duration: 0.3 }}
         >
-          <Icon as={ChevronDown} color="whiteAlpha.700" boxSize={5} />
+          <Icon as={ChevronDown} color="cyan.400" boxSize={5} />
         </motion.div>
       </Flex>
     )

@@ -6,7 +6,6 @@ const {
   getTeamBattleAnalysis,
   getUserBattleAnalysis,
   submitInsightFeedback,
-  answerFollowUpQuestion,
   trackEngagement,
   getFeedbackAnalytics,
   triggerFeedbackAnalysis,
@@ -53,24 +52,7 @@ router.get(
   }),
 )
 
-// Progressive Q&A routes with feedback tracking
-router.post(
-  '/answer-question',
-  trackUserAction('question_answer'),
-  makeRetryable(answerFollowUpQuestion, {
-    maxRetries: 3,
-    operationName: 'AnswerFollowUpQuestion',
-    onRetry: (error, attempt) => {
-      console.log(
-        `Retrying question answer generation, attempt ${attempt}: ${error.message}`,
-      )
-    },
-    onAllRetriesFailed: async (error, params) => {
-      console.error('Failed to generate answer after all retries:', error)
-      // Could implement fallback logic here, like storing failed attempts for manual review
-    },
-  }),
-)
+
 
 // Enhanced feedback routes
 router.post(
@@ -122,10 +104,8 @@ router.get('/health', (req, res) => {
     version: '3.2.0',
     features: {
       feedbackTracking: true,
-      aiPersonalization: true,
-      automaticAnalysis: true,
       engagementTracking: true,
-      authorizationProtected: true, // NEW: Indicates this is now protected
+      authorizationProtected: true,
     },
   })
 })

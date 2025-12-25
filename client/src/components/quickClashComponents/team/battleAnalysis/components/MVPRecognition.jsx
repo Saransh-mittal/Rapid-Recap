@@ -178,48 +178,77 @@ const MVPRecognition = ({ mvpAwards, userTeam, isExpanded, onToggle }) => {
         whileHover={
           config.isMobile
             ? {}
-            : { y: -3, boxShadow: `0 12px 25px ${mvpConfig.glowColor}` }
+            : { y: -5, boxShadow: `0 20px 40px ${mvpConfig.glowColor}` }
         }
         h="100%"
       >
         <Box
           position="relative"
           overflow="hidden"
-          borderRadius="xl"
-          bg="rgba(10, 5, 20, 0.9)"
-          backdropFilter={config.isMobile ? 'none' : 'blur(15px)'}
+          borderRadius="2xl"
+          bgGradient={`linear(to-br, ${mvpConfig.color}.900, ${mvpConfig.color}.800, rgba(15, 23, 42, 0.95))`}
+          backdropFilter={config.isMobile ? 'none' : 'blur(16px)'}
           border="2px solid"
-          borderColor={mvpConfig.borderColor}
-          p={4}
-          boxShadow={`0 8px 20px ${mvpConfig.glowColor}`}
+          borderColor={`${mvpConfig.color}.400`}
+          p={5}
+          boxShadow={`0 0 30px ${mvpConfig.glowColor}, 0 0 60px ${mvpConfig.glowColor}, inset 0 1px 0 rgba(255,255,255,0.15)`}
           h="100%"
           display="flex"
           flexDirection="column"
+          _before={{
+            content: '""',
+            position: 'absolute',
+            top: 0,
+            left: 0,
+            right: 0,
+            height: '120px',
+            background: `linear-gradient(180deg, ${mvpConfig.glowColor} 0%, transparent 100%)`,
+            opacity: 0.4,
+            borderRadius: '2xl 2xl 0 0',
+            pointerEvents: 'none',
+          }}
+          _after={{
+            content: '""',
+            position: 'absolute',
+            bottom: 0,
+            left: 0,
+            right: 0,
+            height: '2px',
+            bgGradient: mvpConfig.gradient,
+            opacity: 0.8,
+          }}
         >
-          {/* Enhanced animated background */}
+          {/* Animated shimmer effect */}
           {!config.isMobile && (
             <MotionBox
               position="absolute"
               inset={0}
-              bgGradient={mvpConfig.bgGradient}
+              bgGradient={`linear(135deg, transparent 20%, ${mvpConfig.glowColor} 50%, transparent 80%)`}
               opacity={0.15}
-              animate={{ opacity: [0.1, 0.2, 0.1] }}
+              animate={{
+                x: ['-100%', '200%'],
+                opacity: [0.1, 0.25, 0.1]
+              }}
               transition={{ duration: 3, repeat: Infinity, ease: 'easeInOut' }}
+              borderRadius="2xl"
             />
           )}
 
-          {/* Tier badge */}
+          {/* Tier badge with glow */}
           <Badge
             position="absolute"
-            top={2}
-            right={2}
+            top={3}
+            right={3}
             bgGradient={mvpConfig.gradient}
             color="white"
-            px={2}
-            py={1}
+            px={3}
+            py={1.5}
             borderRadius="full"
-            fontSize="xs"
-            fontWeight="bold"
+            fontSize="sm"
+            fontWeight="extrabold"
+            boxShadow={`0 0 15px ${mvpConfig.glowColor}`}
+            textTransform="uppercase"
+            letterSpacing="wider"
           >
             {mvpConfig.tier}
           </Badge>
@@ -253,18 +282,23 @@ const MVPRecognition = ({ mvpAwards, userTeam, isExpanded, onToggle }) => {
             {/* Header Section */}
             <VStack spacing={2}>
               <Circle
-                size="60px"
+                size="70px"
                 bgGradient={mvpConfig.gradient}
-                boxShadow={`0 0 25px ${mvpConfig.glowColor}`}
+                boxShadow={`0 0 20px ${mvpConfig.glowColor}, 0 0 40px ${mvpConfig.glowColor}, inset 0 2px 10px rgba(255,255,255,0.3)`}
+                border="3px solid"
+                borderColor={`${mvpConfig.color}.300`}
               >
-                <Icon as={mvpConfig.icon} color="white" boxSize={7} />
+                <Icon as={mvpConfig.icon} color="white" boxSize={8} filter="drop-shadow(0 2px 4px rgba(0,0,0,0.3))" />
               </Circle>
               <Text
-                color={`${mvpConfig.color}.300`}
-                fontSize="md"
-                fontWeight="bold"
+                bgGradient={`linear(to-r, ${mvpConfig.color}.200, ${mvpConfig.color}.400)`}
+                bgClip="text"
+                fontSize="lg"
+                fontWeight="extrabold"
                 textAlign="center"
                 noOfLines={1}
+                textTransform="uppercase"
+                letterSpacing="wide"
               >
                 {t(mvpConfig.title)}
               </Text>
@@ -350,15 +384,27 @@ const MVPRecognition = ({ mvpAwards, userTeam, isExpanded, onToggle }) => {
 
             {/* Enhanced Description Section */}
             <Box
-              bg="rgba(255,255,255,0.06)"
-              borderRadius="md"
-              p={3}
+              bgGradient={`linear(to-r, ${mvpConfig.color}.900, rgba(15, 23, 42, 0.8))`}
+              borderRadius="xl"
+              p={4}
               w="100%"
               border="1px solid"
-              borderColor="rgba(255,255,255,0.1)"
+              borderColor={`${mvpConfig.color}.600`}
               minH="60px"
               display="flex"
               alignItems="center"
+              boxShadow={`inset 0 2px 10px rgba(0,0,0,0.2), 0 0 10px ${mvpConfig.glowColor}`}
+              position="relative"
+              overflow="hidden"
+              _before={{
+                content: '""',
+                position: 'absolute',
+                top: 0,
+                left: 0,
+                width: '4px',
+                height: '100%',
+                bgGradient: mvpConfig.gradient,
+              }}
             >
               <Text
                 color="whiteAlpha.800"
@@ -379,15 +425,24 @@ const MVPRecognition = ({ mvpAwards, userTeam, isExpanded, onToggle }) => {
 
   return (
     <MotionBox
-      bg="rgba(20, 15, 35, 0.9)"
-      backdropFilter={config.isMobile ? 'none' : 'blur(15px)'}
-      borderRadius="2xl"
-      boxShadow="0 10px 30px rgba(0, 0, 0, 0.3)"
+      bg="transparent"
+      backdropFilter={config.isMobile ? 'none' : 'blur(8px)'}
+      borderRadius="xl"
+      boxShadow="0 0 40px rgba(6, 182, 212, 0.08), inset 0 1px 0 rgba(255,255,255,0.05)"
       overflow="hidden"
       borderWidth="1px"
-      borderColor="rgba(255, 255, 255, 0.15)"
+      borderColor="rgba(6, 182, 212, 0.25)"
+      position="relative"
       initial={{ opacity: 0, y: 15 }}
       animate={controls}
+      _before={{
+        content: '""',
+        position: 'absolute',
+        inset: 0,
+        background: 'linear-gradient(135deg, rgba(168, 85, 247, 0.03) 0%, transparent 50%, rgba(6, 182, 212, 0.03) 100%)',
+        borderRadius: 'xl',
+        pointerEvents: 'none',
+      }}
     >
       <Flex
         px={config.padding}
@@ -565,11 +620,24 @@ const MVPRecognition = ({ mvpAwards, userTeam, isExpanded, onToggle }) => {
                 </HStack>
 
                 <Box
-                  bg="rgba(168, 85, 247, 0.15)"
-                  borderRadius="xl"
-                  p={4}
-                  border="1px solid"
-                  borderColor="purple.500"
+                  bgGradient="linear(to-br, purple.900, purple.800, rgba(15, 23, 42, 0.95))"
+                  borderRadius="2xl"
+                  p={5}
+                  border="2px solid"
+                  borderColor="purple.400"
+                  boxShadow="0 0 25px rgba(168, 85, 247, 0.3), 0 0 50px rgba(168, 85, 247, 0.15), inset 0 1px 0 rgba(255,255,255,0.1)"
+                  position="relative"
+                  overflow="hidden"
+                  _before={{
+                    content: '""',
+                    position: 'absolute',
+                    top: 0,
+                    left: 0,
+                    right: 0,
+                    height: '80px',
+                    background: 'linear-gradient(180deg, rgba(168, 85, 247, 0.3) 0%, transparent 100%)',
+                    pointerEvents: 'none',
+                  }}
                 >
                   <VStack spacing={3}>
                     {legendaryPerformers.map((performer, index) => (
@@ -582,12 +650,21 @@ const MVPRecognition = ({ mvpAwards, userTeam, isExpanded, onToggle }) => {
                       >
                         <HStack
                           spacing={4}
-                          bg="rgba(255,255,255,0.08)"
-                          p={3}
-                          borderRadius="lg"
+                          bgGradient="linear(to-r, purple.800, rgba(88, 28, 135, 0.6))"
+                          p={4}
+                          borderRadius="xl"
                           border="1px solid"
-                          borderColor="rgba(255,255,255,0.15)"
+                          borderColor="purple.400"
                           w="100%"
+                          boxShadow="0 0 15px rgba(168, 85, 247, 0.2), inset 0 1px 0 rgba(255,255,255,0.1)"
+                          _hover={{
+                            bg: 'purple.700',
+                            borderColor: 'purple.300',
+                            boxShadow: '0 0 25px rgba(168, 85, 247, 0.4)',
+                            transform: 'translateX(5px)'
+                          }}
+                          transition="all 0.3s ease"
+                          cursor="pointer"
                         >
                           <Avatar
                             size="md"
@@ -668,10 +745,11 @@ const MVPRecognition = ({ mvpAwards, userTeam, isExpanded, onToggle }) => {
             <Box
               mt={3}
               p={4}
-              bg="rgba(255,255,255,0.03)"
+              bg="rgba(6, 182, 212, 0.02)"
               borderRadius="xl"
               border="1px solid"
-              borderColor="rgba(255,255,255,0.1)"
+              borderColor="rgba(6, 182, 212, 0.15)"
+              boxShadow="inset 0 1px 0 rgba(255,255,255,0.03)"
             >
               <VStack spacing={3}>
                 <HStack

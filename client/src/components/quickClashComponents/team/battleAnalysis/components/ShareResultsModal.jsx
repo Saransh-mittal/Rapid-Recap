@@ -434,7 +434,7 @@ const ShareResultsModal = ({ isOpen, onClose, battle, userTeam }) => {
                         bottom={1.5} // Reduced position
                         right={2.5}
                       >
-                        Rapid Recap by BattleSage AI
+                        Rapid Recap
                       </Text>
                     </VStack>
                   </Box>

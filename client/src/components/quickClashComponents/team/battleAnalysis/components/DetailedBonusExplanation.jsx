@@ -110,18 +110,14 @@ const DetailedBonusExplanation = ({ trophyExchange, isExpanded, onToggle }) => {
 
   return (
     <MotionBox
-      bg="rgba(20, 15, 35, 0.7)"
-      backdropFilter={config.isMobile ? 'none' : 'blur(10px)'} // No blur on mobile
-      borderRadius="2xl"
-      boxShadow={
-        config.isMobile
-          ? '0 6px 20px rgba(0, 0, 0, 0.2)'
-          : '0 8px 25px rgba(0, 0, 0, 0.25)' // Reduced shadow
-      }
+      bg="rgba(15, 23, 42, 0.3)"
+      backdropFilter={config.isMobile ? 'none' : 'blur(12px)'}
+      borderRadius="xl"
+      boxShadow="0 4px 20px rgba(0, 0, 0, 0.2)"
       overflow="hidden"
       borderWidth="1px"
-      borderColor="yellow.500"
-      initial={{ opacity: 0, y: 15 }} // Reduced movement
+      borderColor="rgba(6, 182, 212, 0.4)"
+      initial={{ opacity: 0, y: 15 }}
       animate={controls}
     >
       <Flex

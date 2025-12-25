@@ -38,15 +38,22 @@ const TeamMemberList = React.memo(
       <GridItem w="full">
         <VStack spacing={3} align="stretch">
           <HStack justify="space-between">
-            <Heading size={{ base: 'sm', md: 'md' }} color={`${teamColor}.300`}>
+            <Heading
+              size={{ base: 'sm', md: 'md' }}
+              bgGradient={teamColor === 'blue' ? 'linear(to-r, cyan.300, blue.300)' : 'linear(to-r, red.300, orange.300)'}
+              bgClip="text"
+              fontWeight="bold"
+            >
               {t(titleKey)}
             </Heading>
             <Badge
-              colorScheme={teamColor}
-              variant="outline"
+              bgGradient={teamColor === 'blue' ? 'linear(to-r, cyan.600, blue.600)' : 'linear(to-r, red.600, orange.600)'}
+              color="white"
               fontSize="xs"
-              px={2}
-              py={0.5}
+              px={3}
+              py={1}
+              borderRadius="full"
+              fontWeight="bold"
             >
               {members.length} {t('Members')}
             </Badge>

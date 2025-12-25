@@ -149,7 +149,7 @@ const TeamBattleAnalysisInner = React.memo(() => {
   // Battle not found state - optimized
   if (!battle || !userTeam) {
     return (
-      <Box minH="100vh" position="relative" bg="gray.900">
+      <Box minH="100vh" position="relative" bg="transparent">
         <Center minH="100vh" p={4}>
           <VStack spacing={6} textAlign="center" maxW="md">
             <MotionBox variants={floatVariants} animate="animate">
@@ -206,7 +206,7 @@ const TeamBattleAnalysisInner = React.memo(() => {
       minH="100vh"
       position="relative"
       overflowX="hidden"
-      bg="gray.900"
+      bg="transparent"
       pb={2}
     >
       {/* Simplified background elements - only for desktop and fewer elements */}
@@ -227,7 +227,7 @@ const TeamBattleAnalysisInner = React.memo(() => {
             left="8%"
             w="100px" // Reduced from 120px
             h="100px"
-            bg="purple.700"
+            bg="cyan.700"
             borderRadius="full"
             opacity={0.06} // Reduced from 0.08
             filter="blur(30px)" // Reduced from 40px
