@@ -120,39 +120,54 @@ const OptimizedMemberCard = React.memo(
         <Box
           bg={
             isSelf
-              ? 'rgba(139, 92, 246, 0.12)'
+              ? 'rgba(139, 92, 246, 0.15)'
               : isMVP
-              ? `rgba(${getMVPBgColor(mvpStatus.config.color)},0.08)`
-              : 'rgba(255, 255, 255, 0.03)'
+              ? `rgba(${getMVPBgColor(mvpStatus.config.color)},0.12)`
+              : 'rgba(6, 182, 212, 0.05)'
           }
           backdropFilter={isMobile ? 'none' : 'blur(8px)'}
           borderRadius="xl"
-          border="2px solid"
+          border="1px solid"
           borderColor={
             isSelf
-              ? 'purple.500'
+              ? 'purple.400'
               : isMVP
-              ? `${mvpStatus.config.color}.500`
+              ? `${mvpStatus.config.color}.400`
               : isSelected && canClick
-              ? `${performance.color}.400`
-              : 'rgba(255, 255, 255, 0.1)'
+              ? 'cyan.400'
+              : 'rgba(6, 182, 212, 0.3)'
           }
-          p={3}
+          p={4}
           position="relative"
           overflow="hidden"
-          transition="all 0.2s ease-out"
+          transition="all 0.3s ease-out"
           boxShadow={
             isMVP && !isMobile
-              ? `0 0 15px rgba(${getMVPBgColor(mvpStatus.config.color)},0.3)`
-              : isSelected && canClick && !isMobile
-              ? `0 0 12px rgba(${getPerformanceBgColor(
-                  performance.color,
-                )},0.25)`
-              : 'sm'
+              ? `0 0 20px rgba(${getMVPBgColor(mvpStatus.config.color)},0.3), inset 0 1px 0 rgba(255,255,255,0.1)`
+              : isSelf && !isMobile
+              ? '0 0 20px rgba(139, 92, 246, 0.25), inset 0 1px 0 rgba(255,255,255,0.1)'
+              : 'inset 0 1px 0 rgba(255,255,255,0.05)'
           }
           cursor={canClick ? 'pointer' : 'default'}
           onClick={canClick ? () => onMemberClick(member.user._id) : undefined}
           w="full"
+          _hover={canClick ? {
+            borderColor: 'cyan.400',
+            transform: 'translateY(-3px)',
+            boxShadow: '0 8px 25px rgba(6, 182, 212, 0.2), inset 0 1px 0 rgba(255,255,255,0.1)',
+            bg: isSelf ? 'rgba(139, 92, 246, 0.2)' : 'rgba(6, 182, 212, 0.1)'
+          } : {}}
+          _before={{
+            content: '""',
+            position: 'absolute',
+            top: 0,
+            left: 0,
+            right: 0,
+            height: '40%',
+            background: 'linear-gradient(180deg, rgba(255,255,255,0.05) 0%, transparent 100%)',
+            borderRadius: 'xl xl 0 0',
+            pointerEvents: 'none',
+          }}
         >
           {/* MVP Badge */}
           {isMVP && (
@@ -181,17 +196,20 @@ const OptimizedMemberCard = React.memo(
           {/* Performance Grade Badge */}
           <Badge
             position="absolute"
-            top={isMVP ? 6 : 2}
-            right={2}
+            top={isMVP ? 7 : 3}
+            right={3}
             bgGradient={performance.gradient}
             color="white"
             px={3}
-            py={1}
+            py={1.5}
             borderRadius="full"
             fontSize="xs"
             fontWeight="bold"
             textTransform="uppercase"
             zIndex={2}
+            boxShadow="0 2px 8px rgba(0,0,0,0.3)"
+            border="1px solid"
+            borderColor="whiteAlpha.300"
           >
             {t('GRADE')}: {performance.tier}
           </Badge>

@@ -214,16 +214,12 @@ const TrophyExchangeSummary = ({
     <Box
       position="relative"
       overflow="hidden"
-      bg="rgba(20, 15, 35, 0.7)"
-      backdropFilter={config.isMobile ? 'none' : 'blur(10px)'} // No blur on mobile
-      borderRadius="2xl"
-      boxShadow={
-        config.isMobile
-          ? '0 6px 20px rgba(0, 0, 0, 0.2)'
-          : '0 8px 25px rgba(0, 0, 0, 0.25)' // Reduced shadow
-      }
+      bg="rgba(15, 23, 42, 0.3)"
+      backdropFilter={config.isMobile ? 'none' : 'blur(12px)'}
+      borderRadius="xl"
+      boxShadow="0 4px 20px rgba(0, 0, 0, 0.2)"
       border="1px solid"
-      borderColor="rgba(255,255,255,0.1)"
+      borderColor="rgba(6, 182, 212, 0.4)"
     >
       <Flex
         px={config.padding}

@@ -35,26 +35,7 @@ export const fetchUserBattleHistory = createAsyncThunk(
   },
 )
 
-export const answerFollowUpQuestion = createAsyncThunk(
-  'quickClashAnalysis/answerFollowUpQuestion',
-  async ({ battleId, questionId, questionText }, { rejectWithValue }) => {
-    try {
-      const response = await axios.post(
-        '/api/quickClash/analysis/answer-question',
-        {
-          battleId,
-          questionId,
-          questionText,
-        },
-      )
-      return response.data
-    } catch (error) {
-      return rejectWithValue(
-        error.response?.data?.message || 'Failed to get answer',
-      )
-    }
-  },
-)
+
 
 const initialState = {
   currentBattleAnalysis: null,
@@ -383,109 +364,6 @@ const quickClashAnalysisSlice = createSlice({
           },
           enhancedMemberPerformance: false,
         })
-      })
-
-      .addCase(answerFollowUpQuestion.pending, (state, action) => {
-        state.questionAnswerLoading = true
-        state.questionAnswerError = null
-        const { questionId } = action.meta.arg
-
-        // NEW: Track which question is currently being processed
-        state.currentlyProcessingQuestionId = questionId
-        state.waitingForNextQuestion = true
-
-        state.typewriterStates[questionId] = {
-          isTyping: true,
-          currentText: '',
-          isComplete: false,
-        }
-      })
-      .addCase(answerFollowUpQuestion.fulfilled, (state, action) => {
-        state.questionAnswerLoading = false
-        if (action.payload.success) {
-          const { questionId, answer, nextQuestion, progression } =
-            action.payload
-
-          const allQuestionIndex = state.allQuestions.findIndex(
-            q => q.id === questionId,
-          )
-          if (allQuestionIndex !== -1) {
-            state.allQuestions[allQuestionIndex] = {
-              ...state.allQuestions[allQuestionIndex],
-              answered: true,
-              answer: {
-                ...answer,
-                answeredAt: new Date().toISOString(),
-              },
-              isActive: false,
-            }
-          }
-
-          // Current active question (followUpQuestions) should be updated/cleared
-          state.followUpQuestions = state.followUpQuestions.filter(
-            q => q.id !== questionId,
-          )
-
-          if (nextQuestion) {
-            const newQuestionPayload = {
-              ...nextQuestion, // Backend should provide all necessary fields including id, questionIndex, category, etc.
-              isActive: true,
-              answered: false,
-              answer: null,
-            }
-            // Add to allQuestions if not already there (idempotency check)
-            if (!state.allQuestions.find(q => q.id === newQuestionPayload.id)) {
-              state.allQuestions.push(newQuestionPayload)
-            } else {
-              // If it exists (e.g. due to race condition or retry), update it
-              const existingNextQuestionIndex = state.allQuestions.findIndex(
-                q => q.id === newQuestionPayload.id,
-              )
-              state.allQuestions[existingNextQuestionIndex] = {
-                ...state.allQuestions[existingNextQuestionIndex],
-                ...newQuestionPayload, // Ensure it's marked active
-              }
-            }
-
-            // NEW: Don't immediately show next question - wait for typewriter to complete
-            // The next question will be shown after typewriter animation completes
-            setTimeout(() => {
-              state.followUpQuestions = [newQuestionPayload]
-            }, 100) // Small delay to ensure smooth transition
-          } else {
-            // No next question - this means we're done with all questions
-            // Ensure the progression reflects completion
-            if (state.questionProgression) {
-              state.questionProgression.isComplete = true
-            }
-          }
-
-          if (progression) {
-            // Backend now sends the authoritative progression
-            state.questionProgression = progression
-          }
-        } else {
-          state.questionAnswerError =
-            action.payload.message || 'Failed to get answer'
-          const { questionId } = action.meta.arg
-          state.currentlyProcessingQuestionId = null
-          state.waitingForNextQuestion = false
-          if (state.typewriterStates[questionId]) {
-            state.typewriterStates[questionId].isTyping = false
-            state.typewriterStates[questionId].isComplete = true // Mark as complete to stop animation
-          }
-        }
-      })
-      .addCase(answerFollowUpQuestion.rejected, (state, action) => {
-        state.questionAnswerLoading = false
-        state.questionAnswerError = action.payload
-        const { questionId } = action.meta.arg
-        state.currentlyProcessingQuestionId = null
-        state.waitingForNextQuestion = false
-        if (state.typewriterStates[questionId]) {
-          state.typewriterStates[questionId].isTyping = false
-          state.typewriterStates[questionId].isComplete = true
-        }
       })
 
       .addCase(fetchUserBattleHistory.pending, state => {

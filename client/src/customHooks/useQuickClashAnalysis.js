@@ -7,19 +7,12 @@ import { useNavigate } from 'react-router-dom'
 import {
   fetchBattleAnalysis,
   fetchUserBattleHistory,
-  answerFollowUpQuestion,
   clearCurrentAnalysis,
   selectInsight,
   toggleSection,
   expandAllSections,
   collapseAllSections,
   setAnalysisId,
-  startTypewriter,
-  updateTypewriterText,
-  skipTypewriter,
-  updateQuestionInPlace,
-  completeTypewriterAndShowNext,
-  setWaitingForNextQuestion,
 } from '../redux/quickClashAnalysisSlice'
 import axios from 'axios'
 
@@ -75,11 +68,6 @@ const useQuickClashAnalysis = () => {
     () => ({
       currentBattleAnalysis: analysisState.currentBattleAnalysis,
       userTeam: analysisState.userTeam,
-      aiInsights: analysisState.aiInsights,
-      battleRecap: analysisState.battleRecap,
-      followUpQuestions: analysisState.followUpQuestions,
-      allQuestions: analysisState.allQuestions,
-      questionProgression: analysisState.questionProgression,
       trophyHistory: analysisState.trophyHistory,
       userBattleHistory: analysisState.userBattleHistory,
       userBattleStats: analysisState.userBattleStats,
@@ -87,10 +75,6 @@ const useQuickClashAnalysis = () => {
       mvpAwards: analysisState.mvpAwards,
       simplifiedTrophyData: analysisState.simplifiedTrophyData,
       enhancedMemberPerformance: analysisState.enhancedMemberPerformance,
-      // NEW: Add the new state properties
-      currentlyProcessingQuestionId:
-        analysisState.currentlyProcessingQuestionId,
-      waitingForNextQuestion: analysisState.waitingForNextQuestion,
     }),
     [analysisState],
   )
@@ -120,29 +104,13 @@ const useQuickClashAnalysis = () => {
     () => ({
       selectedInsightIndex: analysisState.selectedInsightIndex,
       expandedSections: analysisState.expandedSections,
-      typewriterStates: analysisState.typewriterStates,
     }),
     [
       analysisState.selectedInsightIndex,
       analysisState.expandedSections,
-      analysisState.typewriterStates,
     ],
   )
 
-  // NEW: Helper function to check if a question is clickable
-  const isQuestionClickable = useCallback(
-    questionId => {
-      return (
-        !analysisState.questionAnswerLoading &&
-        !analysisState.currentlyProcessingQuestionId &&
-        questionId !== analysisState.currentlyProcessingQuestionId
-      )
-    },
-    [
-      analysisState.questionAnswerLoading,
-      analysisState.currentlyProcessingQuestionId,
-    ],
-  )
 
   // Optimized battle analysis fetcher with caching
   const getBattleAnalysis = useCallback(
@@ -293,101 +261,6 @@ const useQuickClashAnalysis = () => {
     dispatch(clearCurrentAnalysis())
   }, [dispatch])
 
-  // Optimized answer question function with better loading management
-  const answerQuestion = useCallback(
-    async ({ battleId, questionId, questionText }) => {
-      // Prevent duplicate submissions and check if question is clickable
-      if (!isQuestionClickable(questionId)) {
-        return
-      }
-
-      const submissionKey = `${questionId}-${Date.now()}`
-      if (performanceRef.current.lastSubmission === submissionKey) return
-      performanceRef.current.lastSubmission = submissionKey
-
-      try {
-        trackInteractionDebounced('question_answer_start', {
-          questionId,
-          questionText,
-        })
-
-        const result = await dispatch(
-          answerFollowUpQuestion({ battleId, questionId, questionText }),
-        ).unwrap()
-
-        trackInteractionDebounced('question_answer_success', {
-          questionId,
-          hasNextQuestion: !!result.nextQuestion,
-        })
-
-        return result
-      } catch (error) {
-        trackInteractionDebounced('question_answer_error', {
-          questionId,
-          error: error.message,
-        })
-
-        const errorMessage = getErrorMessage(error, t)
-        toast({
-          title: t('Answer Generation Failed', 'Answer Generation Failed'),
-          description: errorMessage,
-          status: 'error',
-          duration: 5000,
-          isClosable: true,
-          position: 'top',
-        })
-        throw error
-      }
-    },
-    [dispatch, toast, t, isQuestionClickable, trackInteractionDebounced],
-  )
-
-  // Optimized typewriter functions
-  const startTypewriterEffect = useCallback(
-    questionId => {
-      trackInteractionDebounced('typewriter_start', { questionId })
-      dispatch(startTypewriter({ questionId }))
-    },
-    [dispatch, trackInteractionDebounced],
-  )
-
-  const updateTypewriterState = useCallback(
-    ({ questionId, text, isComplete }) => {
-      dispatch(updateTypewriterText({ questionId, text, isComplete }))
-
-      if (isComplete) {
-        trackInteractionDebounced('typewriter_complete', {
-          questionId,
-          textLength: text.length,
-        })
-      }
-    },
-    [dispatch, trackInteractionDebounced],
-  )
-
-  const skipTypewriterEffect = useCallback(
-    ({ questionId, fullText }) => {
-      trackInteractionDebounced('typewriter_skip', { questionId })
-      dispatch(skipTypewriter({ questionId, fullText }))
-    },
-    [dispatch, trackInteractionDebounced],
-  )
-
-  // NEW: Complete typewriter and show next question
-  const completeTypewriterAndShowNextQuestion = useCallback(
-    ({ questionId }) => {
-      dispatch(completeTypewriterAndShowNext({ questionId }))
-    },
-    [dispatch],
-  )
-
-  // NEW: Set waiting state
-  const setWaitingState = useCallback(
-    waiting => {
-      dispatch(setWaitingForNextQuestion(waiting))
-    },
-    [dispatch],
-  )
 
   // Optimized feedback submission
   const submitInsightFeedbackToServer = useCallback(
@@ -513,17 +386,6 @@ const useQuickClashAnalysis = () => {
     handleCollapseAll,
     clearAnalysis,
     submitInsightFeedbackToServer,
-
-    // Progressive Q&A functions
-    answerQuestion,
-    startTypewriterEffect,
-    updateTypewriterState,
-    skipTypewriterEffect,
-    completeTypewriterAndShowNextQuestion,
-    setWaitingState,
-
-    // NEW: Question state helper
-    isQuestionClickable,
 
     // Performance tracking
     trackInteraction: trackInteractionDebounced,

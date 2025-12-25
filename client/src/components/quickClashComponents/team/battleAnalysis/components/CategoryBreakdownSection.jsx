@@ -136,18 +136,22 @@ const CategoryBreakdownSection = ({
         <Box
           bg={
             isUserCategory
-              ? 'rgba(128, 90, 213, 0.08)' // Reduced opacity
-              : 'rgba(255, 255, 255, 0.02)' // Reduced opacity
+              ? 'rgba(168, 85, 247, 0.1)'
+              : 'transparent'
           }
           borderRadius="xl"
-          p={3} // Reduced padding
+          p={3}
           borderWidth="1px"
-          borderColor={isUserCategory ? 'purple.500' : 'whiteAlpha.200'}
+          borderColor={isUserCategory ? 'purple.500' : 'rgba(6, 182, 212, 0.3)'}
           transition="all 0.2s ease-out"
           h="full"
           display="flex"
           flexDirection="column"
           justifyContent="space-between"
+          _hover={{
+            borderColor: isUserCategory ? 'purple.400' : 'cyan.400',
+            bg: isUserCategory ? 'rgba(168, 85, 247, 0.15)' : 'rgba(6, 182, 212, 0.05)',
+          }}
         >
           <VStack spacing={2.5} align="stretch" flexGrow={1}>
             {' '}
@@ -275,19 +279,23 @@ const CategoryBreakdownSection = ({
 
   return (
     <MotionBox
-      bg="rgba(20, 15, 35, 0.7)"
-      backdropFilter={config.isMobile ? 'none' : 'blur(10px)'} // No blur on mobile
-      borderRadius="2xl"
-      boxShadow={
-        config.isMobile
-          ? '0 6px 20px rgba(0, 0, 0, 0.2)'
-          : '0 8px 25px rgba(0, 0, 0, 0.25)' // Reduced shadow
-      }
+      bg="transparent"
+      backdropFilter={config.isMobile ? 'none' : 'blur(8px)'}
+      borderRadius="xl"
       overflow="hidden"
       borderWidth="1px"
-      borderColor="rgba(255, 255, 255, 0.1)"
-      initial={{ opacity: 0, y: 15 }} // Reduced movement
+      borderColor="rgba(6, 182, 212, 0.3)"
+      position="relative"
+      initial={{ opacity: 0, y: 15 }}
       animate={controls}
+      _before={{
+        content: '""',
+        position: 'absolute',
+        inset: 0,
+        bgGradient: 'linear(135deg, rgba(6, 182, 212, 0.05) 0%, transparent 50%, rgba(168, 85, 247, 0.03) 100%)',
+        borderRadius: 'xl',
+        pointerEvents: 'none',
+      }}
     >
       <Flex
         bg="transparent"
@@ -298,15 +306,23 @@ const CategoryBreakdownSection = ({
         cursor="pointer"
         onClick={onToggle}
         borderBottom="1px solid"
-        borderColor="rgba(255,255,255,0.08)"
-        _hover={{ bg: 'rgba(255, 255, 255, 0.03)' }}
+        borderColor="rgba(6, 182, 212, 0.2)"
+        _hover={{ bg: 'rgba(6, 182, 212, 0.05)' }}
+        position="relative"
+        zIndex={1}
       >
         <HStack spacing={3}>
-          <Icon
-            as={BookOpen}
-            color="purple.300"
-            boxSize={config.headerIconSize}
-          />
+          <Box
+            p={2}
+            borderRadius="lg"
+            bg="rgba(168, 85, 247, 0.2)"
+          >
+            <Icon
+              as={BookOpen}
+              color="purple.400"
+              boxSize={config.headerIconSize}
+            />
+          </Box>
           <Heading
             size={config.headingSize}
             color="white"
@@ -319,7 +335,7 @@ const CategoryBreakdownSection = ({
           animate={{ rotate: isExpanded ? 180 : 0 }}
           transition={{ duration: 0.3 }}
         >
-          <Icon as={ChevronDown} color="whiteAlpha.700" boxSize={5} />
+          <Icon as={ChevronDown} color="cyan.400" boxSize={5} />
         </MotionBox>
       </Flex>
 
@@ -335,7 +351,7 @@ const CategoryBreakdownSection = ({
         transition="padding 0.3s ease-out"
       >
         <HStack spacing={3}>
-          <Icon as={BookOpen} color="purple.300" boxSize={4} />
+          <Icon as={BookOpen} color="purple.400" boxSize={4} />
           <Text color="white" fontSize="sm">
             {battle.challenges.length} {t('Categories Played')}
           </Text>

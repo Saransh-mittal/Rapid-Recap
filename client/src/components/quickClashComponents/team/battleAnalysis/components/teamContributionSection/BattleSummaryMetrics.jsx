@@ -9,11 +9,11 @@ import {
   VStack,
   Grid,
   Badge,
+  Flex,
 } from '@chakra-ui/react'
 import { Award, TrendingUp, Users, Target } from 'lucide-react'
 
 const BattleSummaryMetrics = React.memo(({ userTeamStats, t }) => {
-  // UPDATED: Calculate team grade based on overall performance
   const getTeamGrade = rating => {
     if (rating >= 90) return { grade: 'S+', color: 'purple' }
     if (rating >= 80) return { grade: 'S', color: 'green' }
@@ -28,27 +28,34 @@ const BattleSummaryMetrics = React.memo(({ userTeamStats, t }) => {
     {
       labelKey: 'Team Rating',
       value: `${Math.round(userTeamStats.rating)}%`,
-      color: 'purple.300',
+      color: 'purple',
+      borderColor: 'rgba(168, 85, 247, 0.5)',
+      iconBg: 'rgba(168, 85, 247, 0.2)',
       icon: Award,
       grade: teamGrade.grade,
-      gradeColor: teamGrade.color,
     },
     {
       labelKey: 'Teamwork',
       value: `${Math.round(userTeamStats.teamwork)}%`,
-      color: 'green.300',
+      color: 'green',
+      borderColor: 'rgba(34, 197, 94, 0.5)',
+      iconBg: 'rgba(34, 197, 94, 0.2)',
       icon: Users,
     },
     {
       labelKey: 'Consistency',
       value: `${Math.round(userTeamStats.consistency)}%`,
-      color: 'blue.300',
+      color: 'blue',
+      borderColor: 'rgba(59, 130, 246, 0.5)',
+      iconBg: 'rgba(59, 130, 246, 0.2)',
       icon: Target,
     },
     {
       labelKey: 'Avg Score',
       value: `${Math.round(userTeamStats.avgScore)}`,
-      color: 'yellow.300',
+      color: 'yellow',
+      borderColor: 'rgba(234, 179, 8, 0.5)',
+      iconBg: 'rgba(234, 179, 8, 0.2)',
       icon: TrendingUp,
     },
   ]
@@ -57,21 +64,41 @@ const BattleSummaryMetrics = React.memo(({ userTeamStats, t }) => {
     <Box
       mt={6}
       p={4}
-      bg="rgba(139, 92, 246, 0.08)"
+      bg="transparent"
       borderRadius="xl"
-      border="1px solid rgba(139, 92, 246, 0.2)"
+      border="1px solid"
+      borderColor="rgba(6, 182, 212, 0.3)"
+      position="relative"
+      overflow="hidden"
     >
-      <VStack spacing={4}>
-        <HStack spacing={2}>
-          <Icon as={Award} color="purple.300" boxSize={5} />
-          <Heading size={{ base: 'sm', md: 'md' }} color="whiteAlpha.900">
-            {t('Team Battle Summary')}
-          </Heading>
-          {/* UPDATED: Show overall team grade */}
+      {/* Subtle gradient overlay synced with background */}
+      <Box
+        position="absolute"
+        inset={0}
+        bgGradient="linear(135deg, rgba(6, 182, 212, 0.05) 0%, transparent 50%, rgba(168, 85, 247, 0.03) 100%)"
+        pointerEvents="none"
+        borderRadius="xl"
+      />
+
+      <VStack spacing={4} position="relative" zIndex={1}>
+        {/* Header */}
+        <Flex
+          justify="space-between"
+          align="center"
+          w="full"
+          wrap="wrap"
+          gap={2}
+        >
+          <HStack spacing={2}>
+            <Icon as={Award} color="purple.400" boxSize={5} />
+            <Heading size={{ base: 'sm', md: 'md' }} color="white">
+              {t('Team Battle Summary')}
+            </Heading>
+          </HStack>
           <Badge
             colorScheme={teamGrade.color}
             variant="solid"
-            fontSize="sm"
+            fontSize="xs"
             px={3}
             py={1}
             borderRadius="full"
@@ -79,12 +106,12 @@ const BattleSummaryMetrics = React.memo(({ userTeamStats, t }) => {
           >
             {t('Team Grade')}: {teamGrade.grade}
           </Badge>
-        </HStack>
+        </Flex>
 
+        {/* Metrics Grid - Fixed 2x2 on mobile, 4 columns on desktop */}
         <Grid
           templateColumns={{
-            base: '1fr',
-            sm: 'repeat(2, 1fr)',
+            base: 'repeat(2, 1fr)',
             md: 'repeat(4, 1fr)',
           }}
           gap={3}
@@ -93,22 +120,31 @@ const BattleSummaryMetrics = React.memo(({ userTeamStats, t }) => {
           {metrics.map(item => (
             <VStack
               key={item.labelKey}
-              bg="whiteAlpha.50"
+              bg="transparent"
               p={3}
               borderRadius="lg"
-              minH="80px"
-              justifyContent="center"
               border="1px solid"
-              borderColor="whiteAlpha.100"
+              borderColor={item.borderColor}
+              spacing={2}
               _hover={{
-                bg: 'whiteAlpha.100',
-                transform: 'translateY(-1px)',
+                bg: 'rgba(255,255,255,0.03)',
+                borderColor: `${item.color}.400`,
               }}
               transition="all 0.2s ease"
             >
-              <Icon as={item.icon} color={item.color} boxSize={6} />
+              <Box
+                p={2}
+                borderRadius="lg"
+                bg={item.iconBg}
+              >
+                <Icon
+                  as={item.icon}
+                  color={`${item.color}.400`}
+                  boxSize={5}
+                />
+              </Box>
               <Text
-                color={item.color}
+                color={`${item.color}.300`}
                 fontSize={{ base: 'lg', sm: 'xl' }}
                 fontWeight="bold"
               >
@@ -122,45 +158,40 @@ const BattleSummaryMetrics = React.memo(({ userTeamStats, t }) => {
               >
                 {t(item.labelKey)}
               </Text>
-              {/* UPDATED: Show individual metric grade for team rating */}
               {item.grade && (
                 <Badge
-                  colorScheme={item.gradeColor}
+                  colorScheme={teamGrade.color}
                   variant="outline"
-                  fontSize="xs"
+                  fontSize="2xs"
                   px={2}
                   py={0.5}
                 >
-                  {t('Grade')}: {item.grade}
+                  {item.grade}
                 </Badge>
               )}
             </VStack>
           ))}
         </Grid>
 
-        {/* UPDATED: Add grade explanation */}
+        {/* Grading System - Compact horizontal layout */}
         <Box
           w="full"
           p={3}
-          bg="blackAlpha.200"
-          borderRadius="md"
+          bg="rgba(6, 182, 212, 0.03)"
+          borderRadius="lg"
           border="1px solid"
-          borderColor="whiteAlpha.100"
+          borderColor="rgba(6, 182, 212, 0.2)"
         >
           <VStack spacing={2}>
             <Text
-              color="whiteAlpha.900"
-              fontSize="sm"
+              color="whiteAlpha.800"
+              fontSize="xs"
               fontWeight="bold"
               textAlign="center"
             >
               {t('Grading System')}
             </Text>
-            <Grid
-              templateColumns={{ base: 'repeat(3, 1fr)', md: 'repeat(5, 1fr)' }}
-              gap={2}
-              w="full"
-            >
+            <HStack spacing={2} wrap="wrap" justify="center">
               {[
                 { grade: 'S+', range: '90-100%', color: 'purple' },
                 { grade: 'S', range: '80-89%', color: 'green' },
@@ -172,16 +203,15 @@ const BattleSummaryMetrics = React.memo(({ userTeamStats, t }) => {
                   key={grade}
                   colorScheme={color}
                   variant="subtle"
-                  fontSize="xs"
+                  fontSize="2xs"
                   px={2}
                   py={1}
-                  textAlign="center"
                   borderRadius="md"
                 >
                   {grade}: {range}
                 </Badge>
               ))}
-            </Grid>
+            </HStack>
           </VStack>
         </Box>
       </VStack>

@@ -38,7 +38,7 @@ const LoadingScreen = React.memo(() => {
       { step: t('Connecting to battle data...'), progress: 20 },
       { step: t('Loading team performance metrics...'), progress: 40 },
       { step: t('Analyzing battle patterns...'), progress: 60 },
-      { step: t('Generating BattleSage AI insights...'), progress: 80 },
+      { step: t('Preparing your results...'), progress: 80 },
       { step: t('Finalizing analysis...'), progress: 100 },
     ],
     [t],
@@ -184,7 +184,7 @@ const LoadingScreen = React.memo(() => {
                 <Icon as={Sparkles} color="purple.400" boxSize={4} />{' '}
                 {/* Reduced size */}
                 <Text fontSize="sm" color="whiteAlpha.800">
-                  {t('BattleSage AI is preparing personalized insights')}
+                  {t('Preparing personalized insights')}
                 </Text>
               </HStack>
             </Box>

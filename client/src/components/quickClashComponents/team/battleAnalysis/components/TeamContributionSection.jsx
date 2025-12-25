@@ -269,15 +269,18 @@ const TeamContributionSection = React.memo(
       <Box
         position="relative"
         overflow="hidden"
-        borderRadius="2xl"
-        bg="rgba(20, 15, 35, 0.7)"
-        backdropFilter={config.isMobile ? 'none' : 'blur(10px)'}
-        border="1px solid rgba(255, 255, 255, 0.1)"
-        boxShadow={
-          config.isMobile
-            ? '0 6px 20px rgba(0, 0, 0, 0.2)'
-            : '0 8px 25px rgba(0, 0, 0, 0.25)'
-        }
+        borderRadius="xl"
+        bg="transparent"
+        backdropFilter={config.isMobile ? 'none' : 'blur(8px)'}
+        border="1px solid rgba(6, 182, 212, 0.3)"
+        _before={{
+          content: '""',
+          position: 'absolute',
+          inset: 0,
+          bgGradient: 'linear(135deg, rgba(6, 182, 212, 0.05) 0%, transparent 50%, rgba(168, 85, 247, 0.03) 100%)',
+          borderRadius: 'xl',
+          pointerEvents: 'none',
+        }}
       >
         <TeamContributionHeader
           isExpanded={isExpanded}
