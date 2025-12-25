@@ -84,7 +84,14 @@ const TeamBattleHeader = ({ battle, onGoBack }) => {
             <Clock className="w-3.5 h-3.5 text-white" />
             <span className="text-sm font-bold text-white tabular-nums">
               {timeRemaining.expired ? (
-                t('Expired')
+                battle.status === 'active' ? (
+                  <span className="flex items-center gap-2">
+                    <span className="animate-spin w-3 h-3 border-2 border-white border-t-transparent rounded-full" />
+                    {t('Calculating...')}
+                  </span>
+                ) : (
+                  t('Expired')
+                )
               ) : (
                 <>
                   {timeRemaining.hours > 0 && `${timeRemaining.hours}:`}

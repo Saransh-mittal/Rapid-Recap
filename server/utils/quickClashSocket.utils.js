@@ -1471,9 +1471,9 @@ const setupQuickClashGlobalEvents = (io, utils = {}) => {
   // Listen for team battle completed
   globalEmitter.on(
     'quickClash:teamBattleCompleted',
-    ({ battleId, winner, teamA, teamB }) => {
+    ({ battleId, winner, teamA, teamB, powerupRewards = {} }) => {
       console.log(
-        `[QC_BATTLE] SOCKET: Team battle ${battleId} completed. Winner: ${winner}`,
+        `[QC_BATTLE] SOCKET: Team battle ${battleId} completed. Winner: ${winner}, Powerup rewards: ${Object.keys(powerupRewards).length}`,
       )
 
       // FIXED: Notify only the team members involved in this battle
@@ -1484,6 +1484,7 @@ const setupQuickClashGlobalEvents = (io, utils = {}) => {
           teamA,
           teamB,
           isTeamA: true,
+          powerupRewards,
         })
       }
 
@@ -1494,6 +1495,7 @@ const setupQuickClashGlobalEvents = (io, utils = {}) => {
           teamA,
           teamB,
           isTeamA: false,
+          powerupRewards,
         })
       }
     },

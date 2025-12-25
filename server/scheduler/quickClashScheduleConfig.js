@@ -75,10 +75,10 @@ const quickClashSchedules = [
     cronPattern: '*/5 * * * *', // Every 5 minutes
     task: cleanupExpiredSessions,
   },
-  // NEW: Process battle expiry events every minute for precise timing
+  // Process battle expiry events - now fallback only (in-memory timers handle most cases)
   {
     name: 'process-battle-expiry-events',
-    cronPattern: '*/1 * * * *', // Every minute
+    cronPattern: '*/5 * * * *', // Every 5 minutes (fallback for missed timers)
     task: processBattleExpiryEvents,
   },
   // NEW: Cleanup failed battle expiry events every 30 minutes

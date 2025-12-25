@@ -6,6 +6,152 @@ const QuickClashTeamBattle = require('../../model/quickClashSchemas/quickClashTe
 const { makeRetryable } = require('../../utils/retryUtils')
 const { calculateFinalTrophies } = require('../../utils/quickClashTeamUtils')
 const { updateTeamMatchStatus } = require('./quickClashTeamService')
+const globalEmitter = require('../../eventEmitter')
+
+// ============================================================================
+// IN-MEMORY TIMER AND LOCK MANAGEMENT
+// ============================================================================
+
+// Track battle expiry timers: battleId -> timerId
+const battleExpiryTimers = new Map()
+
+// Track battles currently being processed to prevent duplicate processing
+const battleProcessingLocks = new Set()
+
+/**
+ * Acquire lock for battle processing
+ * @param {string} battleId - Battle ID
+ * @returns {boolean} True if lock acquired, false if already locked
+ */
+const acquireBattleLock = (battleId) => {
+  const lockKey = battleId.toString()
+  if (battleProcessingLocks.has(lockKey)) {
+    console.log(`[BattleExpiry] Lock already held for battle ${lockKey}`)
+    return false
+  }
+  battleProcessingLocks.add(lockKey)
+  console.log(`[BattleExpiry] Lock acquired for battle ${lockKey}`)
+  return true
+}
+
+/**
+ * Release lock after battle processing
+ * @param {string} battleId - Battle ID
+ */
+const releaseBattleLock = (battleId) => {
+  const lockKey = battleId.toString()
+  battleProcessingLocks.delete(lockKey)
+  console.log(`[BattleExpiry] Lock released for battle ${lockKey}`)
+}
+
+/**
+ * Check if a battle is currently locked for processing
+ * @param {string} battleId - Battle ID
+ * @returns {boolean} True if locked
+ */
+const isBattleLocked = (battleId) => {
+  return battleProcessingLocks.has(battleId.toString())
+}
+
+/**
+ * Schedule a timer for battle completion at exact expiry time
+ * @param {Object} params - Parameters
+ * @param {string} params.battleId - Battle ID
+ * @param {Date} params.expiresAt - Exact expiry time
+ */
+const scheduleBattleCompletion = async ({ battleId, expiresAt }) => {
+  const battleIdStr = battleId.toString()
+
+  // Clear any existing timer for this battle
+  if (battleExpiryTimers.has(battleIdStr)) {
+    clearTimeout(battleExpiryTimers.get(battleIdStr))
+  }
+
+  const now = Date.now()
+  const delay = new Date(expiresAt).getTime() - now
+
+  if (delay <= 0) {
+    // Already expired - process immediately with lock
+    if (acquireBattleLock(battleIdStr)) {
+      try {
+        await processExpiredBattleById(battleIdStr)
+      } catch (error) {
+        console.error(`[BattleExpiry] Immediate processing error for ${battleIdStr}:`, error)
+      } finally {
+        releaseBattleLock(battleIdStr)
+      }
+    }
+    return
+  }
+
+  // Schedule timer for exact expiry
+  const timerId = setTimeout(async () => {
+    battleExpiryTimers.delete(battleIdStr)
+
+    // Try to acquire lock
+    if (!acquireBattleLock(battleIdStr)) {
+      return
+    }
+
+    try {
+      await processExpiredBattleById(battleIdStr)
+    } catch (error) {
+      console.error(`[BattleExpiry] Timer error for ${battleIdStr}:`, error)
+      // Lock released, cron will catch as fallback
+    } finally {
+      releaseBattleLock(battleIdStr)
+    }
+  }, delay)
+
+  battleExpiryTimers.set(battleIdStr, timerId)
+  console.log(`[BattleExpiry] Timer scheduled for battle ${battleIdStr} in ${Math.round(delay / 1000)}s`)
+}
+
+/**
+ * Cancel a scheduled battle timer (when battle completes early)
+ * @param {string} battleId - Battle ID
+ */
+const cancelBattleTimer = (battleId) => {
+  const battleIdStr = battleId.toString()
+  if (battleExpiryTimers.has(battleIdStr)) {
+    clearTimeout(battleExpiryTimers.get(battleIdStr))
+    battleExpiryTimers.delete(battleIdStr)
+    console.log(`[BattleExpiry] Timer cancelled for battle ${battleIdStr}`)
+  }
+}
+
+/**
+ * Process expired battle by ID (helper for timer-based processing)
+ * @param {string} battleId - Battle ID
+ */
+const processExpiredBattleById = async (battleId) => {
+  // Find the expiry event for this battle
+  const event = await QuickClashBattleExpiryEvent.findOne({
+    battleId,
+    status: { $in: ['pending', 'failed'] },
+  })
+
+  if (event) {
+    await processExpiredBattle({ eventId: event._id.toString() })
+  } else {
+    // Fallback: process battle directly if no event found
+    const battle = await QuickClashTeamBattle.findById(battleId)
+
+    if (battle && battle.status === 'active') {
+      const session = await mongoose.startSession()
+      try {
+        await session.withTransaction(async () => {
+          await completeBattleOnExpiry({ battle, session })
+        })
+      } catch (directError) {
+        console.error(`[BattleExpiry] Direct battle completion failed:`, directError)
+        throw directError
+      } finally {
+        session.endSession()
+      }
+    }
+  }
+}
 
 /**
  * Create a battle expiry event when team battle is created
@@ -44,6 +190,12 @@ const createBattleExpiryEvent = async ({
     console.log(
       `[BattleExpiry] Created expiry event for battle ${battleId} at ${expiresAt}`,
     )
+
+    // Schedule in-memory timer for precise expiry (non-blocking)
+    scheduleBattleCompletion({ battleId, expiresAt }).catch(err => {
+      console.error(`[BattleExpiry] Failed to schedule timer for battle ${battleId}:`, err)
+    })
+
     return expiryEvent
   } catch (error) {
     if (startedTransaction) {
@@ -290,6 +442,38 @@ const completeBattleOnExpiry = async ({ battle, session }) => {
 
   // Save the completed battle
   await battle.save({ session })
+
+  // Extract powerup rewards for socket notification
+  const powerupRewards = {}
+  for (const member of [...battle.teamAMembers, ...battle.teamBMembers]) {
+    const userId = member.user.toString()
+
+    // Debug log for reward calculation
+    console.log(`[BattleExpiry] Member ${userId} powerupReward:`, JSON.stringify(member.powerupReward))
+
+    // Include reward if housingSpaceEarned > 0 (not just if powerupsAwarded.length > 0)
+    if (member.powerupReward && member.powerupReward.housingSpaceEarned > 0) {
+      powerupRewards[userId] = {
+        housingSpaceEarned: member.powerupReward.housingSpaceEarned,
+        powerupsAwarded: member.powerupReward.powerupsAwarded || [],
+        individualWins: member.powerupReward.individualWins || 0,
+      }
+    }
+  }
+
+  console.log(`[BattleExpiry] Powerup rewards payload:`, JSON.stringify(powerupRewards))
+
+  // Emit completion event with powerup rewards (async, non-blocking)
+  setTimeout(() => {
+    globalEmitter.emit('quickClash:teamBattleCompleted', {
+      battleId: battle._id,
+      winner: battle.winner,
+      teamA: battle.teamA,
+      teamB: battle.teamB,
+      powerupRewards,
+    })
+    console.log(`[BattleExpiry] Emitted teamBattleCompleted for battle ${battle._id} with ${Object.keys(powerupRewards).length} powerup rewards`)
+  }, 0)
 }
 
 /**
@@ -316,16 +500,34 @@ const processPendingExpiryEvents = async () => {
       `[BattleExpiry] Found ${pendingEvents.length} pending events to process`,
     )
 
-    // Process events in parallel (but limited)
-    const promises = pendingEvents.map(event =>
-      processExpiredBattle({ eventId: event._id.toString() }).catch(error => {
+    // Process events in parallel (but limited), with lock checking
+    const promises = pendingEvents.map(async event => {
+      const battleIdStr = event.battleId.toString()
+
+      // Skip if timer is already handling this battle
+      if (isBattleLocked(battleIdStr)) {
+        console.log(`[BattleExpiry] Cron skipping locked battle ${battleIdStr}`)
+        return
+      }
+
+      // Try to acquire lock
+      if (!acquireBattleLock(battleIdStr)) {
+        console.log(`[BattleExpiry] Cron failed to acquire lock for ${battleIdStr}`)
+        return
+      }
+
+      try {
+        await processExpiredBattle({ eventId: event._id.toString() })
+      } catch (error) {
         console.error(
           `[BattleExpiry] Failed to process event ${event._id}:`,
           error,
         )
         // Don't let one failure stop others
-      }),
-    )
+      } finally {
+        releaseBattleLock(battleIdStr)
+      }
+    })
 
     await Promise.all(promises)
     console.log(`[BattleExpiry] Completed processing pending events`)
@@ -382,4 +584,8 @@ module.exports = {
   processPendingExpiryEvents,
   cleanupFailedEvents,
   processExpiredBattle,
+  // Timer management exports
+  scheduleBattleCompletion,
+  cancelBattleTimer,
+  isBattleLocked,
 }

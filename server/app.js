@@ -237,6 +237,31 @@ async function initializeApp() {
     // Add error handlers AFTER static middleware
     app.use(notFoundHandler)
     app.use(globalErrorHandler)
+
+    // Initialize battle expiry timers for pending battles (recover from restart)
+    try {
+      const QuickClashBattleExpiryEvent = require('./model/quickClashSchemas/quickClashBattleExpiryEventSchema')
+      const { scheduleBattleCompletion } = require('./services/quickClashServices/quickClashBattleExpiryService')
+
+      const pendingEvents = await QuickClashBattleExpiryEvent.find({
+        status: { $in: ['pending', 'failed'] },
+        executeAt: { $gt: new Date() },
+      })
+
+      for (const event of pendingEvents) {
+        await scheduleBattleCompletion({
+          battleId: event.battleId,
+          expiresAt: event.executeAt,
+        })
+      }
+
+      if (pendingEvents.length > 0) {
+        console.log(`[STARTUP] Scheduled ${pendingEvents.length} battle expiry timers`)
+      }
+    } catch (timerError) {
+      console.error('[STARTUP] Failed to initialize battle expiry timers:', timerError)
+      // Non-blocking: cron will catch any missed battles
+    }
   } catch (err) {
     console.error('Failed to initialize app:', err)
   }

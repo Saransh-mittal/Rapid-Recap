@@ -66,6 +66,7 @@ import {
 import {
   fetchTeamBattles,
   fetchTeamBattleDetails,
+  fetchUnclaimedBattles,
   setBattleReady as setTeamBattleReady,
   setInMatchmaking as setTeamInMatchmaking,
 } from '../redux/quickClashTeamBattleSlice'
@@ -916,15 +917,26 @@ const useQuickClashSocket = () => {
         if (!isComponentMountedRef.current) return
         logSocketEvent('team_battle_completed', data)
 
+        // Get current user to check for their powerup rewards
+        const currentState = getCurrentState()
+        const currentUserId = currentState.authState?.user?._id
+
+        // Check if current user has powerup rewards in the socket payload
+        const userRewards = data.powerupRewards?.[currentUserId]
+        const hasRewards = userRewards?.housingSpaceEarned > 0
+
         toast({
-          title: t('Battle Completed!'),
-          description: t('Your team battle has been completed.'),
-          status: 'info',
+          title: hasRewards ? t('Battle Completed! 🎁') : t('Battle Completed!'),
+          description: hasRewards
+            ? t('You earned {{space}} housing space in powerups!', {
+                space: userRewards.housingSpaceEarned,
+              })
+            : t('Your team battle has been completed.'),
+          status: hasRewards ? 'success' : 'info',
           duration: 5000,
           isClosable: true,
         })
 
-        const currentState = getCurrentState()
         const currentTeamBattleState = currentState.teamBattleState
 
         if (
@@ -933,6 +945,9 @@ const useQuickClashSocket = () => {
         ) {
           dispatch(fetchTeamBattleDetails(data.battleId))
         }
+
+        // Refresh unclaimed battles list to show the new reward immediately
+        dispatch(fetchUnclaimedBattles())
       },
     )
     cleanupFunctions.push(cleanupTeamBattleCompleted)

@@ -24,10 +24,14 @@ import { haptics } from '../../../utils/haptics'
 // Audio feedback for game sounds
 import { quizAudioService } from '../../../services/quizAudioService'
 
+// CSRF token for API calls
+import { getCsrfToken } from '../../../services/csrfService'
+
 const QuizReportModal = React.lazy(() => import('../QuizReportModal'))
 import PowerupDonationModal from '../powerups/PowerupDonationModal'
 import PowerupSelectionModal from '../powerups/PowerupSelectionModal'
 import TeamMemberInfoModal from './teamBattlePageComponents/TeamMemberInfoModal'
+import ClaimRewardsModal from '../powerups/ClaimRewardsModal'
 
 // ═══════════════════════════════════════════════════════════════
 // GLASS CARD WITH OPTIONAL COLOR ACCENT
@@ -42,7 +46,7 @@ const GlassCard = ({ children, className = '', accent = null }) => (
 // ═══════════════════════════════════════════════════════════════
 // HEADER WITH LIVE BADGE
 // ═══════════════════════════════════════════════════════════════
-const Header = ({ battle, onGoBack, t }) => {
+const Header = ({ battle, onGoBack, t, onExpiredChange }) => {
   const [time, setTime] = useState(null)
 
   useEffect(() => {
@@ -58,8 +62,16 @@ const Header = ({ battle, onGoBack, t }) => {
     return () => clearInterval(i)
   }, [battle?.expiresAt])
 
+  // Notify parent of expired state change
+  useEffect(() => {
+    if (onExpiredChange) {
+      onExpiredChange(time?.expired && battle.status === 'active')
+    }
+  }, [time?.expired, battle.status, onExpiredChange])
+
   const urgent = time?.sec < 300
   const warning = time?.sec < 1800
+  const isCalculating = time?.expired && battle.status === 'active'
 
   return (
     <div className="px-5 pt-5 pb-2">
@@ -73,6 +85,7 @@ const Header = ({ battle, onGoBack, t }) => {
           <span className="hidden sm:inline">{t('Back')}</span>
         </motion.button>
 
+        {/* Timer badge - show calculating state when expired but still active */}
         {time && !time.expired && (
           <motion.div
             className={`flex items-center gap-2 px-3 py-1.5 rounded-full border ${
@@ -88,7 +101,23 @@ const Header = ({ battle, onGoBack, t }) => {
           </motion.div>
         )}
 
-        {battle.status === 'active' ? (
+        {/* Calculating badge when expired but battle still active */}
+        {isCalculating && (
+          <motion.div
+            className="flex items-center gap-2 px-3 py-1.5 rounded-full bg-purple-500/20 border border-purple-500/30"
+            animate={{ opacity: [1, 0.7, 1] }}
+            transition={{ duration: 1, repeat: Infinity }}
+          >
+            <motion.div
+              className="w-3 h-3 border-2 border-purple-400 border-t-transparent rounded-full"
+              animate={{ rotate: 360 }}
+              transition={{ duration: 1, repeat: Infinity, ease: 'linear' }}
+            />
+            <span className="text-sm font-semibold text-purple-400">{t('Calculating...')}</span>
+          </motion.div>
+        )}
+
+        {battle.status === 'active' && !isCalculating ? (
           <div className="flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-emerald-500/20 border border-emerald-500/30">
             <motion.div
               className="w-2 h-2 rounded-full bg-emerald-400"
@@ -97,9 +126,9 @@ const Header = ({ battle, onGoBack, t }) => {
             />
             <span className="text-xs font-semibold text-emerald-400">LIVE</span>
           </div>
-        ) : (
+        ) : battle.status === 'completed' ? (
           <div className="px-2.5 py-1 rounded-full bg-white/10 text-white/50 text-xs font-medium">Ended</div>
-        )}
+        ) : null}
       </div>
 
       {/* Title with emoji */}
@@ -403,59 +432,380 @@ const CategoryCard = ({ challenge, onSelect, onDeselect, onBegin, onReport, load
 }
 
 // ═══════════════════════════════════════════════════════════════
-// RESULTS - Celebration with colors
+// ENHANCED BATTLE RESULTS - Tabbed interface with detailed breakdown
 // ═══════════════════════════════════════════════════════════════
-const ResultsCard = ({ battle, userTeam, t }) => {
+const EnhancedBattleResults = ({ battle, userTeam, powerupReward, onClaimRewards, onViewReport, navigate, user, t }) => {
+  const [activeTab, setActiveTab] = useState('overview')
+
   const isWin = battle.winner === userTeam
   const isTie = battle.winner === 'tie'
   const userWins = userTeam === 'teamA' ? battle.teamAWins : battle.teamBWins
   const oppWins = userTeam === 'teamA' ? battle.teamBWins : battle.teamAWins
+  const userTotalScore = userTeam === 'teamA' ? battle.teamATotalScore : battle.teamBTotalScore
+  const oppTotalScore = userTeam === 'teamA' ? battle.teamBTotalScore : battle.teamATotalScore
   const trophyChange = battle.trophyExchange ? Math.round((battle.trophyExchange.finalAmount * (isWin ? 1.25 : isTie ? 0.1 : -0.75)) / 4) : 0
+  const hasUnclaimedRewards = powerupReward && powerupReward.housingSpaceEarned > 0 && !powerupReward.claimed
+
+  // Get user's member data
+  const userMembers = userTeam === 'teamA' ? battle.teamAMembers : battle.teamBMembers
+  const oppMembers = userTeam === 'teamA' ? battle.teamBMembers : battle.teamAMembers
+  const userMemberData = userMembers.find(m => m.user._id === user?._id) || userMembers[0]
+
+  // Calculate user's personal stats
+  const userScore = userMemberData?.score || 0
+  const userRank = [...userMembers].sort((a, b) => (b.score || 0) - (a.score || 0)).findIndex(m => m.user._id === userMemberData?.user._id) + 1
+  const userCategory = battle.challenges.find(c =>
+    (userTeam === 'teamA' ? c.teamAPlayer : c.teamBPlayer) === userMemberData?.user._id
+  )
+  const teamAvgScore = userTotalScore / (userMembers.filter(m => m.completed).length || 1)
+  const scoreContribution = userTotalScore > 0 ? Math.round((userScore / userTotalScore) * 100) : 0
+
+  const tabs = [
+    { id: 'overview', label: '🏆 Overview', icon: Trophy },
+    { id: 'categories', label: '📊 Categories', icon: Target },
+    { id: 'report', label: '📋 Report', icon: FileText },
+  ]
 
   return (
     <div className="px-5 mb-4">
       <GlassCard
-        className="p-6 text-center"
+        className="overflow-hidden"
         accent={isWin ? 'from-amber-500 via-yellow-500 to-orange-500' : isTie ? 'from-purple-500 to-pink-500' : 'from-slate-500 to-slate-600'}
       >
-        <motion.div
-          initial={{ scale: 0, rotate: -180 }}
-          animate={{ scale: 1, rotate: 0 }}
-          transition={{ type: 'spring', delay: 0.2 }}
-        >
-          {isWin ? (
-            <motion.div animate={{ y: [0, -5, 0] }} transition={{ duration: 1.5, repeat: Infinity }}>
-              <Crown className="w-14 h-14 mx-auto text-amber-400 mb-2" />
-            </motion.div>
-          ) : isTie ? (
-            <Award className="w-14 h-14 mx-auto text-purple-400 mb-2" />
-          ) : (
-            <Target className="w-14 h-14 mx-auto text-white/40 mb-2" />
-          )}
-        </motion.div>
-
-        <h2 className={`text-2xl font-bold mb-1 ${isWin ? 'text-amber-400' : isTie ? 'text-purple-400' : 'text-white/50'}`}>
-          {isWin ? '🎉 Victory!' : isTie ? '🤝 Draw!' : '💪 Next Time!'}
-        </h2>
-
-        <div className="flex justify-center items-baseline gap-4 my-4">
-          <span className="text-5xl font-bold text-cyan-400">{userWins}</span>
-          <span className="text-xl text-white/30">:</span>
-          <span className="text-5xl font-bold text-pink-400/60">{oppWins}</span>
+        {/* Tab Navigation */}
+        <div className="flex border-b border-white/10">
+          {tabs.map(tab => (
+            <motion.button
+              key={tab.id}
+              onClick={() => { quizAudioService.playButtonClick(); setActiveTab(tab.id) }}
+              className={`flex-1 py-3 px-2 text-xs sm:text-sm font-medium transition-all relative ${
+                activeTab === tab.id
+                  ? 'text-white'
+                  : 'text-white/40 hover:text-white/60'
+              }`}
+              whileTap={{ scale: 0.98 }}
+            >
+              {tab.label}
+              {activeTab === tab.id && (
+                <motion.div
+                  layoutId="activeTabIndicator"
+                  className="absolute bottom-0 left-0 right-0 h-0.5 bg-gradient-to-r from-cyan-400 to-purple-400"
+                />
+              )}
+            </motion.button>
+          ))}
         </div>
 
-        <motion.div
-          className={`inline-flex items-center gap-2 px-4 py-2 rounded-full text-sm font-bold ${
-            trophyChange >= 0 ? 'bg-emerald-500/20 text-emerald-400' : 'bg-red-500/20 text-red-400'
-          }`}
-          initial={{ scale: 0 }}
-          animate={{ scale: 1 }}
-          transition={{ delay: 0.5, type: 'spring' }}
-        >
-          <Trophy className="w-4 h-4" />
-          {trophyChange >= 0 ? '+' : ''}{trophyChange} trophies
-          {trophyChange > 0 && <Sparkles className="w-4 h-4" />}
-        </motion.div>
+        {/* Tab Content */}
+        <AnimatePresence mode="wait">
+          {/* Overview Tab */}
+          {activeTab === 'overview' && (
+            <motion.div
+              key="overview"
+              initial={{ opacity: 0, x: -20 }}
+              animate={{ opacity: 1, x: 0 }}
+              exit={{ opacity: 0, x: 20 }}
+              transition={{ duration: 0.2 }}
+              className="p-4"
+            >
+              {/* Compact Header Row */}
+              <div className="flex items-center justify-center gap-2 mb-4">
+                <motion.div
+                  initial={{ scale: 0 }}
+                  animate={{ scale: 1 }}
+                  transition={{ type: 'spring', damping: 15 }}
+                  className={`p-2 rounded-xl ${
+                    isWin ? 'bg-amber-500/20' : isTie ? 'bg-purple-500/20' : 'bg-slate-500/20'
+                  }`}
+                >
+                  {isWin ? (
+                    <Crown className="w-6 h-6 text-amber-400" />
+                  ) : isTie ? (
+                    <Award className="w-6 h-6 text-purple-400" />
+                  ) : (
+                    <Target className="w-6 h-6 text-white/40" />
+                  )}
+                </motion.div>
+                <h2 className={`text-xl font-bold ${
+                  isWin ? 'text-amber-400' : isTie ? 'text-purple-400' : 'text-white/50'
+                }`}>
+                  {isWin ? 'Victory!' : isTie ? 'Draw!' : 'Defeat'}
+                </h2>
+                <div className={`ml-2 px-3 py-1 rounded-full flex items-center gap-1.5 text-sm font-bold ${
+                  trophyChange >= 0
+                    ? 'bg-emerald-500/15 text-emerald-400 border border-emerald-500/20'
+                    : 'bg-red-500/15 text-red-400 border border-red-500/20'
+                }`}>
+                  <Trophy className="w-3.5 h-3.5" />
+                  {trophyChange >= 0 ? '+' : ''}{trophyChange}
+                </div>
+              </div>
+
+              {/* Score Row - Compact horizontal layout */}
+              <motion.div
+                initial={{ opacity: 0, y: 10 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ delay: 0.1 }}
+                className="flex items-center justify-center gap-4 mb-4 py-3 px-4 rounded-xl bg-white/5 border border-white/5"
+              >
+                {/* Your Team */}
+                <div className="flex items-center gap-2">
+                  <div className="w-2 h-2 rounded-full bg-cyan-400" />
+                  <span className="text-xs text-white/50">You</span>
+                  <span className="text-2xl font-bold text-cyan-400">{userWins}</span>
+                </div>
+
+                {/* VS Divider */}
+                <div className="flex flex-col items-center">
+                  <span className="text-xs text-white/30 font-medium">VS</span>
+                </div>
+
+                {/* Opponent */}
+                <div className="flex items-center gap-2">
+                  <span className="text-2xl font-bold text-pink-400">{oppWins}</span>
+                  <span className="text-xs text-white/50">Opp</span>
+                  <div className="w-2 h-2 rounded-full bg-pink-400" />
+                </div>
+
+                {/* Score Divider */}
+                <div className="h-6 w-px bg-white/10" />
+
+                {/* Points */}
+                <div className="text-center">
+                  <div className="flex items-baseline gap-1">
+                    <span className="text-lg font-semibold text-cyan-400">{userTotalScore}</span>
+                    <span className="text-white/20">-</span>
+                    <span className="text-lg font-semibold text-pink-400">{oppTotalScore}</span>
+                  </div>
+                  <span className="text-[10px] text-white/40">points</span>
+                </div>
+              </motion.div>
+
+              {/* Action Buttons */}
+              <div className="space-y-2">
+                {/* Claim Rewards Button */}
+                {hasUnclaimedRewards && (
+                  <motion.button
+                    initial={{ opacity: 0, y: 10 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    transition={{ delay: 0.2 }}
+                    onClick={() => { quizAudioService.playButtonClick(); onClaimRewards() }}
+                    whileHover={{ scale: 1.01 }}
+                    whileTap={{ scale: 0.99 }}
+                    className="w-full py-3 rounded-xl font-semibold text-white bg-gradient-to-r from-yellow-500 to-orange-500 shadow-md shadow-orange-500/20 flex items-center justify-center gap-2 text-sm"
+                  >
+                    <Gift className="w-4 h-4" />
+                    Claim {powerupReward.housingSpaceEarned} Housing Space
+                  </motion.button>
+                )}
+
+                {/* Already Claimed */}
+                {powerupReward?.claimed && (
+                  <motion.div
+                    initial={{ opacity: 0 }}
+                    animate={{ opacity: 1 }}
+                    className="flex items-center justify-center gap-2 py-2 text-emerald-400 text-sm"
+                  >
+                    <CheckCircle2 className="w-4 h-4" />
+                    <span>Rewards Claimed</span>
+                  </motion.div>
+                )}
+
+                {/* View Details */}
+                <motion.button
+                  initial={{ opacity: 0 }}
+                  animate={{ opacity: 1 }}
+                  transition={{ delay: 0.3 }}
+                  onClick={() => { quizAudioService.playButtonClick(); navigate(`/battle-analysis/${battle._id}`) }}
+                  className="w-full py-2.5 rounded-xl text-sm text-white/60 hover:text-white bg-white/5 hover:bg-white/10 border border-white/10 transition-all flex items-center justify-center gap-2"
+                >
+                  <FileText className="w-4 h-4" />
+                  View Details
+                  <ChevronRight className="w-4 h-4" />
+                </motion.button>
+              </div>
+            </motion.div>
+          )}
+
+          {/* Categories Tab */}
+          {activeTab === 'categories' && (
+            <motion.div
+              key="categories"
+              initial={{ opacity: 0, x: -20 }}
+              animate={{ opacity: 1, x: 0 }}
+              exit={{ opacity: 0, x: 20 }}
+              transition={{ duration: 0.2 }}
+              className="p-4"
+            >
+              <div className="mb-3 text-center">
+                <p className="text-xs text-white/50">{battle.challenges.length} Categories • {userWins} Won • {oppWins} Lost</p>
+              </div>
+
+              <div className="space-y-2 max-h-64 overflow-y-auto scrollbar-hide">
+                {battle.challenges.map((challenge, index) => {
+                  const info = getCategoryInfo(challenge.category)
+                  const userScore = userTeam === 'teamA' ? challenge.teamAScore : challenge.teamBScore
+                  const oppScore = userTeam === 'teamA' ? challenge.teamBScore : challenge.teamAScore
+                  const categoryWin = challenge.winner === userTeam
+                  const categoryTie = challenge.winner === 'tie'
+                  const isUserCategory = (userTeam === 'teamA' ? challenge.teamAPlayer : challenge.teamBPlayer) === userMemberData?.user._id
+
+                  // Get players for this category
+                  const userPlayer = userMembers.find(m => m.user._id === (userTeam === 'teamA' ? challenge.teamAPlayer : challenge.teamBPlayer))
+                  const oppPlayer = oppMembers.find(m => m.user._id === (userTeam === 'teamA' ? challenge.teamBPlayer : challenge.teamAPlayer))
+
+                  return (
+                    <motion.div
+                      key={challenge._id || index}
+                      initial={{ opacity: 0, y: 10 }}
+                      animate={{ opacity: 1, y: 0 }}
+                      transition={{ delay: index * 0.05 }}
+                      className={`p-3 rounded-xl border ${
+                        isUserCategory
+                          ? 'bg-purple-500/10 border-purple-500/30'
+                          : 'bg-white/[0.02] border-white/[0.06]'
+                      }`}
+                    >
+                      <div className="flex items-center justify-between mb-2">
+                        <div className="flex items-center gap-2">
+                          <div
+                            className="w-8 h-8 rounded-lg flex items-center justify-center"
+                            style={{ background: `linear-gradient(135deg, ${info.primaryColor}, ${info.secondaryColor})` }}
+                          >
+                            {React.createElement(info.iconComponent, { className: 'w-4 h-4 text-white' })}
+                          </div>
+                          <div>
+                            <span className="text-sm font-medium text-white capitalize">{challenge.category}</span>
+                            {isUserCategory && (
+                              <span className="text-[10px] text-purple-400 ml-2">Your Category</span>
+                            )}
+                          </div>
+                        </div>
+                        <div className={`px-2 py-0.5 rounded-full text-xs font-bold ${
+                          categoryWin ? 'bg-emerald-500/20 text-emerald-400' :
+                          categoryTie ? 'bg-amber-500/20 text-amber-400' :
+                          'bg-red-500/20 text-red-400'
+                        }`}>
+                          {categoryWin ? 'Won' : categoryTie ? 'Tie' : 'Lost'}
+                        </div>
+                      </div>
+
+                      <div className="flex items-center justify-between">
+                        <div className="flex items-center gap-2">
+                          {userPlayer && (
+                            <Avatar className="w-5 h-5 border border-cyan-500/50">
+                              <AvatarImage src={userPlayer.user.pic} />
+                              <AvatarFallback className="text-[8px] bg-cyan-900">{(userPlayer.user.name || 'U')[0]}</AvatarFallback>
+                            </Avatar>
+                          )}
+                          <span className="text-sm font-bold text-cyan-400">{userScore}</span>
+                        </div>
+                        <span className="text-xs text-white/30">vs</span>
+                        <div className="flex items-center gap-2">
+                          <span className="text-sm font-bold text-pink-400">{oppScore}</span>
+                          {oppPlayer && (
+                            <Avatar className="w-5 h-5 border border-pink-500/50">
+                              <AvatarImage src={oppPlayer.user.pic} />
+                              <AvatarFallback className="text-[8px] bg-pink-900">{(oppPlayer.user.name || 'U')[0]}</AvatarFallback>
+                            </Avatar>
+                          )}
+                        </div>
+                      </div>
+                    </motion.div>
+                  )
+                })}
+              </div>
+            </motion.div>
+          )}
+
+          {/* Report Card Tab */}
+          {activeTab === 'report' && (
+            <motion.div
+              key="report"
+              initial={{ opacity: 0, x: -20 }}
+              animate={{ opacity: 1, x: 0 }}
+              exit={{ opacity: 0, x: 20 }}
+              transition={{ duration: 0.2 }}
+              className="p-4"
+            >
+              {/* Personal Performance Header */}
+              <div className="text-center mb-4">
+                <div className="flex items-center justify-center gap-2 mb-1">
+                  <Avatar className="w-10 h-10 border-2 border-cyan-500/50">
+                    <AvatarImage src={userMemberData?.user?.pic} />
+                    <AvatarFallback className="bg-cyan-900 text-white">{(userMemberData?.user?.name || 'U')[0]}</AvatarFallback>
+                  </Avatar>
+                  <div className="text-left">
+                    <p className="text-sm font-semibold text-white">{userMemberData?.user?.inGameName || userMemberData?.user?.name || 'You'}</p>
+                    <p className="text-xs text-white/40">Personal Stats</p>
+                  </div>
+                </div>
+              </div>
+
+              {/* Stats Grid */}
+              <div className="grid grid-cols-2 gap-3">
+                {/* Your Score */}
+                <div className="p-3 rounded-xl bg-white/[0.03] border border-white/[0.06]">
+                  <div className="flex items-center gap-2 mb-1">
+                    <Star className="w-4 h-4 text-amber-400" />
+                    <span className="text-xs text-white/50">Your Score</span>
+                  </div>
+                  <span className="text-xl font-bold text-amber-400">{userScore}</span>
+                </div>
+
+                {/* Team Rank */}
+                <div className="p-3 rounded-xl bg-white/[0.03] border border-white/[0.06]">
+                  <div className="flex items-center gap-2 mb-1">
+                    <TrendingUp className="w-4 h-4 text-cyan-400" />
+                    <span className="text-xs text-white/50">Team Rank</span>
+                  </div>
+                  <div className="flex items-baseline gap-1">
+                    <span className="text-xl font-bold text-cyan-400">#{userRank}</span>
+                    <span className="text-xs text-white/30">of {userMembers.length}</span>
+                  </div>
+                </div>
+
+                {/* Category Result - Full width to avoid cutoff */}
+                <div className="col-span-2 p-3 rounded-xl bg-white/[0.03] border border-white/[0.06]">
+                  <div className="flex items-center justify-between">
+                    <div className="flex items-center gap-2">
+                      <Target className="w-4 h-4 text-purple-400" />
+                      <span className="text-xs text-white/50">Your Category</span>
+                    </div>
+                    {userCategory ? (
+                      <div className="flex items-center gap-2">
+                        <span className="text-sm font-medium text-purple-400 capitalize">{userCategory.category}</span>
+                        <span className={`text-xs px-1.5 py-0.5 rounded ${
+                          userCategory.winner === userTeam ? 'bg-emerald-500/20 text-emerald-400' :
+                          userCategory.winner === 'tie' ? 'bg-amber-500/20 text-amber-400' :
+                          'bg-red-500/20 text-red-400'
+                        }`}>
+                          {userCategory.winner === userTeam ? 'Won' : userCategory.winner === 'tie' ? 'Tie' : 'Lost'}
+                        </span>
+                      </div>
+                    ) : (
+                      <span className="text-sm text-white/30">—</span>
+                    )}
+                  </div>
+                </div>
+              </div>
+
+              {/* View Quiz Report Button */}
+              {userCategory?.challenge?._id && (
+                <motion.button
+                  initial={{ opacity: 0 }}
+                  animate={{ opacity: 1 }}
+                  transition={{ delay: 0.4 }}
+                  onClick={() => { quizAudioService.playButtonClick(); onViewReport(userCategory.challenge._id) }}
+                  className="mt-4 w-full py-2.5 rounded-xl text-sm text-purple-400 hover:text-purple-300 border border-purple-500/30 hover:border-purple-500/50 transition-all flex items-center justify-center gap-2"
+                >
+                  <FileText className="w-4 h-4" />
+                  View Quiz Report
+                </motion.button>
+              )}
+            </motion.div>
+          )}
+        </AnimatePresence>
       </GlassCard>
     </div>
   )
@@ -479,6 +829,8 @@ const TeamBattlePageV2 = React.memo(() => {
   const [showConfirm, setShowConfirm] = useState(false)
   const [selectedMember, setSelectedMember] = useState(null)
   const [isMemberOpen, setIsMemberOpen] = useState(false)
+  const [isCalculatingResults, setIsCalculatingResults] = useState(false)
+  const [isClaimModalOpen, setIsClaimModalOpen] = useState(false)
 
   const toast = useToast()
 
@@ -526,6 +878,14 @@ const TeamBattlePageV2 = React.memo(() => {
     const me = members.find(m => m.user._id === user._id)
     if (!me) return {}
     return { participated: me.participated || me.completed, completed: me.completed, exited: me.participated && !me.completed, selected: !!me.category, category: me.category }
+  }, [currentBattle, userTeam, user])
+
+  // Extract current user's powerup reward from battle members
+  const userPowerupReward = useMemo(() => {
+    if (!currentBattle || !userTeam || !user) return null
+    const members = userTeam === 'teamA' ? currentBattle.teamAMembers : currentBattle.teamBMembers
+    const me = members.find(m => m.user._id === user._id)
+    return me?.powerupReward || null
   }, [currentBattle, userTeam, user])
 
   const challenges = useMemo(() => {
@@ -663,8 +1023,36 @@ const TeamBattlePageV2 = React.memo(() => {
   const loadout = teams?.user.members.find(m => m.user._id === user?._id)?.loadout || { housingUsed: 0 }
 
   return (
-    <div className="min-h-screen pb-24 md:pb-8">
-      <Header battle={currentBattle} onGoBack={goBack} t={t} />
+    <div className="min-h-screen pb-24 md:pb-8 relative">
+      {/* Full-screen calculating overlay when timer expires but battle still active */}
+      <AnimatePresence>
+        {isCalculatingResults && (
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            className="fixed inset-0 z-50 bg-slate-950/90 backdrop-blur-md flex items-center justify-center"
+          >
+            <div className="text-center">
+              <motion.div
+                className="w-20 h-20 mx-auto mb-6 rounded-2xl bg-gradient-to-br from-purple-500/30 to-pink-500/30 border border-purple-500/30 flex items-center justify-center"
+                animate={{ scale: [1, 1.05, 1], rotate: [0, 5, -5, 0] }}
+                transition={{ duration: 2, repeat: Infinity }}
+              >
+                <motion.div
+                  className="w-10 h-10 border-4 border-purple-400 border-t-transparent rounded-full"
+                  animate={{ rotate: 360 }}
+                  transition={{ duration: 1, repeat: Infinity, ease: 'linear' }}
+                />
+              </motion.div>
+              <h2 className="text-xl font-bold text-white mb-2">🎯 {t('Calculating Results...')}</h2>
+              <p className="text-sm text-white/50">{t('Please wait while we tally the scores')}</p>
+            </div>
+          </motion.div>
+        )}
+      </AnimatePresence>
+
+      <Header battle={currentBattle} onGoBack={goBack} t={t} onExpiredChange={setIsCalculatingResults} />
 
       <ScoreDisplay
         left={teams?.user.wins || 0}
@@ -766,7 +1154,18 @@ const TeamBattlePageV2 = React.memo(() => {
       )}
 
       {/* Results */}
-      {currentBattle.status === 'completed' && <ResultsCard battle={currentBattle} userTeam={userTeam} t={t} />}
+      {currentBattle.status === 'completed' && (
+        <EnhancedBattleResults
+          battle={currentBattle}
+          userTeam={userTeam}
+          powerupReward={userPowerupReward}
+          onClaimRewards={() => setIsClaimModalOpen(true)}
+          onViewReport={viewReport}
+          navigate={navigate}
+          user={user}
+          t={t}
+        />
+      )}
 
       {/* Back Button */}
       <motion.div
@@ -826,6 +1225,37 @@ const TeamBattlePageV2 = React.memo(() => {
         </>
       )}
       <TeamMemberInfoModal userId={selectedMember} isOpen={isMemberOpen} onClose={() => { setIsMemberOpen(false); setSelectedMember(null) }} />
+
+      {/* Claim Rewards Modal */}
+      {currentBattle && userPowerupReward && (
+        <ClaimRewardsModal
+          isOpen={isClaimModalOpen}
+          onClose={() => setIsClaimModalOpen(false)}
+          battleResult={{
+            _id: currentBattle._id,
+            teamWon: currentBattle.winner === userTeam,
+            trophyChange: currentBattle.trophyExchange ?
+              Math.round((currentBattle.trophyExchange.finalAmount * (currentBattle.winner === userTeam ? 1.25 : currentBattle.winner === 'tie' ? 0.1 : -0.75)) / 4) : 0,
+            powerupReward: userPowerupReward,
+            userTeamKey: userTeam,
+          }}
+          onClaim={async (battleId) => {
+            const csrfToken = getCsrfToken()
+            const response = await fetch('/api/quickClash/powerup/claim-reward', {
+              method: 'POST',
+              headers: {
+                'Content-Type': 'application/json',
+                ...(csrfToken && { 'X-CSRF-Token': csrfToken }),
+              },
+              credentials: 'include',
+              body: JSON.stringify({ battleId }),
+            })
+            if (!response.ok) throw new Error('Failed to claim rewards')
+            // Refresh battle details to update claim status
+            getBattleDetails(battleId)
+          }}
+        />
+      )}
     </div>
   )
 })

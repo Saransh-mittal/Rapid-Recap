@@ -79,6 +79,9 @@ const ClaimRewardsModal = ({
   const [isClaiming, setIsClaiming] = useState(false)
   const [claimSuccess, setClaimSuccess] = useState(false)
 
+  // Check if already claimed (from server data)
+  const alreadyClaimed = battleResult?.powerupReward?.claimed || false
+
   const handleClose = useCallback(() => {
     haptics.light()
     quizAudioService.playButtonClick()
@@ -86,7 +89,7 @@ const ClaimRewardsModal = ({
   }, [onClose])
 
   const handleClaim = useCallback(async () => {
-    if (isClaiming || claimSuccess) return
+    if (isClaiming || claimSuccess || alreadyClaimed) return
 
     haptics.medium()
     setIsClaiming(true)
@@ -107,7 +110,7 @@ const ClaimRewardsModal = ({
     } finally {
       setIsClaiming(false)
     }
-  }, [battleResult, isClaiming, claimSuccess, onClaim, onClose])
+  }, [battleResult, isClaiming, claimSuccess, alreadyClaimed, onClaim, onClose])
 
   if (!battleResult) return null
 
@@ -194,14 +197,13 @@ const ClaimRewardsModal = ({
                 </div>
               </motion.div>
 
-              {/* Title */}
               <motion.h2
                 initial={{ opacity: 0, y: 10 }}
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ delay: 0.3 }}
                 className="text-xl font-bold text-white text-center mb-1"
               >
-                {claimSuccess ? '🎉 Claimed!' : '🎁 Battle Rewards'}
+                {claimSuccess || alreadyClaimed ? '🎉 Claimed!' : '🎁 Battle Rewards'}
               </motion.h2>
 
               {/* Outcome */}
@@ -296,7 +298,7 @@ const ClaimRewardsModal = ({
               )}
 
               {/* Claim button */}
-              {!claimSuccess && (
+              {!claimSuccess && !alreadyClaimed && (
                 <motion.button
                   initial={{ opacity: 0, y: 10 }}
                   animate={{ opacity: 1, y: 0 }}
@@ -322,7 +324,7 @@ const ClaimRewardsModal = ({
               )}
 
               {/* Success state */}
-              {claimSuccess && (
+              {(claimSuccess || alreadyClaimed) && (
                 <motion.div
                   initial={{ scale: 0 }}
                   animate={{ scale: 1 }}
@@ -330,13 +332,13 @@ const ClaimRewardsModal = ({
                 >
                   <motion.div
                     animate={{ scale: [1, 1.2, 1] }}
-                    transition={{ repeat: 2, duration: 0.3 }}
+                    transition={{ repeat: alreadyClaimed ? 0 : 2, duration: 0.3 }}
                     className="text-4xl mb-2"
                   >
                     ✨
                   </motion.div>
                   <span className="text-emerald-400 font-bold">
-                    Added to Inventory!
+                    {alreadyClaimed ? 'Already in Inventory!' : 'Added to Inventory!'}
                   </span>
                 </motion.div>
               )}
