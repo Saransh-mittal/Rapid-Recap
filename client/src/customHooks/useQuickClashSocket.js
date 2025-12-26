@@ -69,6 +69,8 @@ import {
   fetchUnclaimedBattles,
   setBattleReady as setTeamBattleReady,
   setInMatchmaking as setTeamInMatchmaking,
+  setBattleEnding,
+  clearBattleEnding,
 } from '../redux/quickClashTeamBattleSlice'
 
 /**
@@ -948,9 +950,33 @@ const useQuickClashSocket = () => {
 
         // Refresh unclaimed battles list to show the new reward immediately
         dispatch(fetchUnclaimedBattles())
+
+        // Clear battle ending state when battle completes
+        dispatch(clearBattleEnding(data.battleId))
       },
     )
     cleanupFunctions.push(cleanupTeamBattleCompleted)
+
+    // Battle ending notification (timer expired, waiting for active sessions)
+    const cleanupBattleEnding = addEventListener(
+      'quickClash:battleEnding',
+      data => {
+        if (!isComponentMountedRef.current) return
+        logSocketEvent('battle_ending', data)
+
+        // Mark battle as ending in Redux
+        dispatch(setBattleEnding({ battleId: data.battleId, isEnding: true }))
+
+        toast({
+          title: t('Battle Ending'),
+          description: t('Time expired. Calculating results...'),
+          status: 'info',
+          duration: null,
+          isClosable: false,
+        })
+      },
+    )
+    cleanupFunctions.push(cleanupBattleEnding)
 
     // ... [Continue with other event listeners - truncated for brevity]
 

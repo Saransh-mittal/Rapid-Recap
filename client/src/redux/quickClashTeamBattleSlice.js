@@ -259,6 +259,9 @@ const initialState = {
   unclaimedBattlesError: null,
   claimingRewardLoading: false,
   claimingRewardError: null,
+
+  // Battles in ending state (timer expired, waiting for completion)
+  battlesEnding: [], // Array of battleIds currently ending
 }
 
 const quickClashTeamBattleSlice = createSlice({
@@ -296,6 +299,19 @@ const quickClashTeamBattleSlice = createSlice({
       state.categoryOperationType = null
       state.categoryOperationError = null
       state.selectedCategoryForOperation = null
+    },
+    // Battle ending state management
+    setBattleEnding: (state, action) => {
+      const { battleId, isEnding } = action.payload
+      if (isEnding && !state.battlesEnding.includes(battleId)) {
+        state.battlesEnding.push(battleId)
+      } else if (!isEnding) {
+        state.battlesEnding = state.battlesEnding.filter(id => id !== battleId)
+      }
+    },
+    clearBattleEnding: (state, action) => {
+      const battleId = action.payload
+      state.battlesEnding = state.battlesEnding.filter(id => id !== battleId)
     },
   },
   extraReducers: builder => {
@@ -502,6 +518,9 @@ export const {
   setInMatchmaking,
   clearCategoryOperationError,
   resetCategoryOperationState,
+  setBattleEnding,
+  clearBattleEnding,
 } = quickClashTeamBattleSlice.actions
 
 export default quickClashTeamBattleSlice.reducer
+

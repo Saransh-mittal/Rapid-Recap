@@ -18,6 +18,129 @@ const battleExpiryTimers = new Map()
 // Track battles currently being processed to prevent duplicate processing
 const battleProcessingLocks = new Set()
 
+// ============================================================================
+// ACTIVE SESSION TRACKING (for deferred completion)
+// ============================================================================
+
+// Track active sessions: battleId -> Set<userId>
+const battleActiveSessions = new Map()
+
+// Track battles in "ending" state (blocks new sessions)
+const battlesEnding = new Set()
+
+// Track deferred battles: battleId -> deferredAt timestamp
+const deferredBattles = new Map()
+
+// Max wait time for active sessions (185 seconds)
+const MAX_DEFERRAL_TIME = 185 * 1000
+
+/**
+ * Register a user as actively playing in a battle
+ */
+const registerActiveSession = (battleId, userId) => {
+  const key = battleId.toString()
+  if (!battleActiveSessions.has(key)) {
+    battleActiveSessions.set(key, new Set())
+  }
+  battleActiveSessions.get(key).add(userId.toString())
+  console.log(`[BattleExpiry] Registered active session: battle=${key}, user=${userId}`)
+}
+
+/**
+ * Unregister a user when they complete their session
+ */
+const unregisterActiveSession = (battleId, userId) => {
+  const key = battleId.toString()
+  if (battleActiveSessions.has(key)) {
+    battleActiveSessions.get(key).delete(userId.toString())
+    console.log(`[BattleExpiry] Unregistered active session: battle=${key}, user=${userId}`)
+    if (battleActiveSessions.get(key).size === 0) {
+      battleActiveSessions.delete(key)
+      checkDeferredBattleCompletion(key)
+    }
+  }
+}
+
+/**
+ * Check if a battle has any active sessions
+ */
+const hasActiveSessions = (battleId) => {
+  const key = battleId.toString()
+  return battleActiveSessions.has(key) && battleActiveSessions.get(key).size > 0
+}
+
+/**
+ * Mark battle as ending (blocks new sessions)
+ */
+const markBattleEnding = (battleId) => {
+  const key = battleId.toString()
+  if (!battlesEnding.has(key)) {
+    battlesEnding.add(key)
+    console.log(`[BattleExpiry] Battle ${key} marked as ENDING`)
+    globalEmitter.emit('quickClash:battleEnding', { battleId: key })
+  }
+}
+
+/**
+ * Check if battle is in ending state
+ */
+const isBattleEnding = (battleId) => battlesEnding.has(battleId.toString())
+
+/**
+ * Clear battle ending state
+ */
+const clearBattleEnding = (battleId) => battlesEnding.delete(battleId.toString())
+
+/**
+ * Defer battle completion due to active sessions
+ */
+const deferBattleCompletion = (battleId) => {
+  const key = battleId.toString()
+  if (!deferredBattles.has(key)) {
+    deferredBattles.set(key, Date.now())
+    console.log(`[BattleExpiry] Battle ${key} DEFERRED - waiting for active sessions`)
+  }
+}
+
+/**
+ * Check if deferred battle should complete (called when session ends)
+ */
+const checkDeferredBattleCompletion = async (battleId) => {
+  const key = battleId.toString()
+  const deferredAt = deferredBattles.get(key)
+  if (!deferredAt) return
+
+  // Skip if battle is no longer in ending state (completed naturally by updateBattleWithQuizResults)
+  if (!battlesEnding.has(key)) {
+    console.log(`[BattleExpiry] Deferred battle ${key} already completed naturally, skipping`)
+    deferredBattles.delete(key)
+    return
+  }
+
+  const elapsed = Date.now() - deferredAt
+  if (elapsed > MAX_DEFERRAL_TIME) {
+    console.log(`[BattleExpiry] Battle ${key} exceeded max wait (${Math.round(elapsed/1000)}s) - forcing completion`)
+    battleActiveSessions.delete(key)
+  }
+
+  if (!hasActiveSessions(key)) {
+    console.log(`[BattleExpiry] Deferred battle ${key} ready to complete`)
+    deferredBattles.delete(key)
+    if (acquireBattleLock(key)) {
+      try {
+        await processExpiredBattleById(key)
+      } catch (error) {
+        console.error(`[BattleExpiry] Deferred completion error:`, error)
+      } finally {
+        releaseBattleLock(key)
+        clearBattleEnding(key)
+      }
+
+    }
+  }
+}
+
+
 /**
  * Acquire lock for battle processing
  * @param {string} battleId - Battle ID
@@ -88,6 +211,16 @@ const scheduleBattleCompletion = async ({ battleId, expiresAt }) => {
   const timerId = setTimeout(async () => {
     battleExpiryTimers.delete(battleIdStr)
 
+    // Mark battle as ending FIRST (blocks new sessions from starting)
+    markBattleEnding(battleIdStr)
+
+    // Check for active sessions - if any, defer completion
+    if (hasActiveSessions(battleIdStr)) {
+      console.log(`[BattleExpiry] Battle ${battleIdStr} has active sessions - deferring completion`)
+      deferBattleCompletion(battleIdStr)
+      return
+    }
+
     // Try to acquire lock
     if (!acquireBattleLock(battleIdStr)) {
       return
@@ -100,8 +233,10 @@ const scheduleBattleCompletion = async ({ battleId, expiresAt }) => {
       // Lock released, cron will catch as fallback
     } finally {
       releaseBattleLock(battleIdStr)
+      clearBattleEnding(battleIdStr)
     }
   }, delay)
+
 
   battleExpiryTimers.set(battleIdStr, timerId)
   console.log(`[BattleExpiry] Timer scheduled for battle ${battleIdStr} in ${Math.round(delay / 1000)}s`)
@@ -504,6 +639,12 @@ const processPendingExpiryEvents = async () => {
     const promises = pendingEvents.map(async event => {
       const battleIdStr = event.battleId.toString()
 
+      // Skip if battle has active sessions (will be handled when sessions complete)
+      if (hasActiveSessions(battleIdStr)) {
+        console.log(`[BattleExpiry] Cron skipping battle ${battleIdStr} - has active sessions`)
+        return
+      }
+
       // Skip if timer is already handling this battle
       if (isBattleLocked(battleIdStr)) {
         console.log(`[BattleExpiry] Cron skipping locked battle ${battleIdStr}`)
@@ -588,4 +729,13 @@ module.exports = {
   scheduleBattleCompletion,
   cancelBattleTimer,
   isBattleLocked,
+  // Active session tracking exports
+  registerActiveSession,
+  unregisterActiveSession,
+  hasActiveSessions,
+  // Battle ending state exports
+  isBattleEnding,
+  markBattleEnding,
+  clearBattleEnding,
 }
+

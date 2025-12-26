@@ -1547,6 +1547,13 @@ const beginCategoryChallenge = async ({ battleId, userId }) => {
     `[BEGIN_CHALLENGE] User ${userId} beginning challenge for battle ${battleId}`,
   )
 
+  // Check if battle is in ending process - block new sessions
+  const { isBattleEnding } = require('./quickClashBattleExpiryService')
+  if (isBattleEnding(battleId)) {
+    console.log(`[BEGIN_CHALLENGE] BLOCKED - Battle ${battleId} is ending`)
+    throw new Error('Battle is ending. Please wait for results.')
+  }
+
   const session = await mongoose.startSession()
 
   try {
@@ -1563,6 +1570,7 @@ const beginCategoryChallenge = async ({ battleId, userId }) => {
         if (!battle || battle.status !== 'active') {
           throw new Error('Team battle not found or not active')
         }
+
 
         // STEP 2: Find user and their category
         const teamAMemberIndex = battle.teamAMembers.findIndex(
@@ -1686,6 +1694,12 @@ const beginCategoryChallenge = async ({ battleId, userId }) => {
           `[BEGIN_CHALLENGE] SUCCESS! User ${userId} assigned to challenge ${challengeId}`,
         )
 
+        // CRITICAL: Register active session IMMEDIATELY to prevent race condition
+        // This must happen before timer can fire and check for active sessions
+        const { registerActiveSession } = require('./quickClashBattleExpiryService')
+        registerActiveSession(updatedBattle._id, userId)
+        console.log(`[BEGIN_CHALLENGE] Registered active session for user ${userId} in battle ${updatedBattle._id}`)
+
         // STEP 7: Emit success event
         setTimeout(() => {
           globalEmitter.emit('quickClash:teamMemberBeganChallenge', {
@@ -1704,6 +1718,7 @@ const beginCategoryChallenge = async ({ battleId, userId }) => {
           sessionInfo,
         }
       },
+
       {
         // FIXED: Proper transaction-level options
         readConcern: { level: 'majority' },
@@ -1853,6 +1868,10 @@ const markUserAsParticipated = async ({ challengeId, userId }) => {
       if (updated) {
         await battle.save({ session })
 
+        // Register this user as having an active session (for deferred battle completion)
+        const { registerActiveSession } = require('./quickClashBattleExpiryService')
+        registerActiveSession(battle._id, userId)
+
         // Emit event to notify that user started the challenge
         setTimeout(() => {
           globalEmitter.emit('quickClash:teamMemberStartedChallenge', {
@@ -1865,6 +1884,7 @@ const markUserAsParticipated = async ({ challengeId, userId }) => {
       }
 
       return battle
+
     })
   } catch (error) {
     console.error('Error marking user as participated:', error)
@@ -2201,6 +2221,10 @@ const updateBattleWithQuizResults = makeRetryable(
           battle.challenges[challengeIndex].teamBCompleted = true
         }
 
+        // NOTE: unregisterActiveSession is called AFTER battle.save() to prevent
+        // deferred completion from running before user's score is saved
+
+
         // If both teams completed this challenge, determine the winner
         if (
           battle.challenges[challengeIndex].teamACompleted &&
@@ -2438,6 +2462,19 @@ const updateBattleWithQuizResults = makeRetryable(
         }
 
         await battle.save({ session })
+
+        // IMPORTANT: Unregister active session AFTER save to prevent race condition
+        // where deferred completion runs before user's score is persisted
+        const { unregisterActiveSession, clearBattleEnding } = require('./quickClashBattleExpiryService')
+
+        // If battle completed naturally (all players finished), clear deferred state
+        // to prevent duplicate completion from deferred logic
+        if (shouldComplete) {
+          clearBattleEnding(battleId)
+        }
+
+        // Unregister session (only triggers deferred completion if battle NOT completed yet)
+        unregisterActiveSession(battleId, userId)
 
         console.log(
           `[updateBattleWithQuizResults] Successfully updated battle with quiz results`,
