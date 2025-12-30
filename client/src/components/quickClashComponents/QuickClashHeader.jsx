@@ -10,7 +10,7 @@ import React, {
 } from 'react'
 import { motion } from 'framer-motion'
 import { FiZap, FiHome } from 'react-icons/fi'
-import { Target, Zap as ZapIconLucide, Bell, User, Users } from 'lucide-react'
+import { Target, Zap as ZapIconLucide, Bell, Users } from 'lucide-react'
 import { useTranslation } from 'react-i18next'
 import { useNavigate } from 'react-router-dom'
 import { useDispatch, useSelector } from 'react-redux'
@@ -176,11 +176,7 @@ const QuickClashHeader = ({ onNewChallenge }) => {
 
   const handleBackToHome = useCallback(() => navigate('/home'), [navigate])
 
-  const handleProfileClick = useCallback(() => {
-    navigate(`/profile/${user?.inGameName}`, {
-      state: { showQuickClash: true },
-    })
-  }, [navigate, user?.inGameName])
+
 
   const handleViewTasksClick = useCallback(() => setShowTaskPopup(true), [])
   const handleCloseTaskPopup = useCallback(() => setShowTaskPopup(false), [])
@@ -402,23 +398,6 @@ const QuickClashHeader = ({ onNewChallenge }) => {
             {t('Home')}
           </MotionButton>
 
-          <MotionButton
-            onClick={handleProfileClick}
-            className={`
-              flex items-center gap-2 px-3 py-2
-              ${QUICK_CLASH_CLASSES.hoverCyan} hover:bg-cyan-500/10
-              text-white/90 hover:text-cyan-300 rounded-full
-              transition-all duration-200 hover:-translate-y-0.5
-              focus:outline-none focus:ring-2 focus:ring-cyan-400/50
-            `}
-            variants={homeButtonVariants}
-            whileHover="hover"
-            whileTap="tap"
-            aria-label={t('Open Quick Clash Profile')}
-          >
-            <User size={20} />
-            {t('Profile')}
-          </MotionButton>
         </div>
 
         <div className="flex items-center gap-3">

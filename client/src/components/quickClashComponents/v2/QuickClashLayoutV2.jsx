@@ -3,11 +3,11 @@
 
 import React, { memo, useEffect, useState, useCallback, useRef } from 'react'
 import { createPortal } from 'react-dom'
-import { useLocation } from 'react-router-dom'
+import { useLocation, useNavigate } from 'react-router-dom'
 import { useTranslation } from 'react-i18next'
 import { useDispatch, useSelector } from 'react-redux'
 import { motion, AnimatePresence } from 'framer-motion'
-import { Swords, Trophy, Users } from 'lucide-react'
+import { Swords, Trophy, Users, User } from 'lucide-react'
 
 // Haptic feedback
 import { haptics } from '../../../utils/haptics'
@@ -20,6 +20,9 @@ import { fetchTeamBattles } from '../../../redux/quickClashTeamBattleSlice'
 import QuickClashV2 from '../../../screens/QuickClashV2'
 import BattleHistoryV2 from '../../../screens/BattleHistoryV2'
 import TeamsPageV2 from '../../../screens/TeamsPageV2'
+
+// Lazy load QuickClash Profile
+const QuickClashProfile = React.lazy(() => import('../profile/QuickClashProfile'))
 
 // ============================================================================
 // DATA MANAGER - Prefetch & background refresh
@@ -53,12 +56,20 @@ DataManager.displayName = 'DataManager'
 
 const BottomNavContent = memo(({ activeTab, onTabChange }) => {
   const { t } = useTranslation('QuickClash')
+  const navigate = useNavigate()
+  const { user } = useSelector((state) => state.auth)
 
   const tabs = [
     { id: 'battles', icon: Swords, label: t('Battles'), color: '#22d3ee', glowColor: 'rgba(34, 211, 238, 0.4)' },
     { id: 'history', icon: Trophy, label: t('History'), color: '#facc15', glowColor: 'rgba(250, 204, 21, 0.4)' },
     { id: 'teams', icon: Users, label: t('Teams'), color: '#a78bfa', glowColor: 'rgba(167, 139, 250, 0.4)' },
+    { id: 'profile', icon: User, label: t('Profile'), color: '#34d399', glowColor: 'rgba(52, 211, 153, 0.4)' },
   ]
+
+  const handleTabClick = useCallback((tabId) => {
+    // All tabs now use the same handler - profile is a real tab
+    onTabChange(tabId)
+  }, [onTabChange])
 
   return (
     <div
@@ -102,7 +113,7 @@ const BottomNavContent = memo(({ activeTab, onTabChange }) => {
             return (
               <motion.button
                 key={tab.id}
-                onClick={() => onTabChange(tab.id)}
+                onClick={() => handleTabClick(tab.id)}
                 style={{
                   flex: 1,
                   display: 'flex',
@@ -218,6 +229,7 @@ TabContent.displayName = 'TabContent'
 const getTabFromPath = (path) => {
   if (path.includes('/history')) return 'history'
   if (path.includes('/teams')) return 'teams'
+  if (path.includes('/profile')) return 'profile'
   return 'battles'
 }
 
@@ -241,7 +253,8 @@ const QuickClashLayoutV2 = () => {
     const paths = {
       battles: '/quickclash',
       history: '/quickclash/history',
-      teams: '/quickclash/teams'
+      teams: '/quickclash/teams',
+      profile: '/quickclash/profile'
     }
     window.history.replaceState(null, '', paths[tabId])
   }, [activeTab])
@@ -282,6 +295,17 @@ const QuickClashLayoutV2 = () => {
         </TabContent>
         <TabContent isActive={activeTab === 'teams'} tabName="teams">
           <TeamsPageV2 />
+        </TabContent>
+        <TabContent isActive={activeTab === 'profile'} tabName="profile">
+          <React.Suspense fallback={
+            <div className="flex items-center justify-center min-h-[60vh]">
+              <div className="w-8 h-8 border-2 border-cyan-400/30 border-t-cyan-400 rounded-full animate-spin" />
+            </div>
+          }>
+            <div className="pb-20 md:pb-4">
+              <QuickClashProfile />
+            </div>
+          </React.Suspense>
         </TabContent>
       </div>
 

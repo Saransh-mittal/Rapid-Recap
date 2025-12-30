@@ -6,7 +6,7 @@ import { motion } from 'framer-motion'
 import { useSelector, useDispatch } from 'react-redux'
 import { useNavigate } from 'react-router-dom'
 import { useTranslation } from 'react-i18next'
-import { Bell, Home, ChevronRight, Target, Trophy } from 'lucide-react'
+import { Bell, Home, ChevronRight, Target, Trophy, UserCircle } from 'lucide-react'
 
 // REUSE existing V1 components for data consistency
 import TrophyDisplay from '../user/TrophyDisplay'
@@ -92,6 +92,17 @@ const LeaderboardButton = memo(({ onClick }) => (
 ))
 LeaderboardButton.displayName = 'LeaderboardButton'
 
+// Profile Button (QuickClash Profile)
+const ProfileButton = memo(({ onClick }) => (
+  <button
+    onClick={() => { quizAudioService.playButtonClick(); onClick() }}
+    className="flex items-center justify-center w-9 h-9 rounded-full bg-gradient-to-br from-purple-500/30 to-pink-500/30 hover:from-purple-500/50 hover:to-pink-500/50 border border-purple-400/40 transition-all hover:scale-105"
+  >
+    <UserCircle className="w-5 h-5 text-purple-300" />
+  </button>
+))
+ProfileButton.displayName = 'ProfileButton'
+
 // ============================================================================
 // MAIN COMPONENT
 // ============================================================================
@@ -160,6 +171,13 @@ const QuickClashHeaderV2 = () => {
 
   const handleLeaderboardClick = useCallback(() => setShowLeaderboard(true), [])
   const handleLeaderboardClose = useCallback(() => setShowLeaderboard(false), [])
+
+  // Profile navigation - goes to QuickClash profile
+  const handleProfileClick = useCallback(() => {
+    navigate(`/profile/${user?.inGameName}`, {
+      state: { showQuickClash: true },
+    })
+  }, [navigate, user?.inGameName])
 
   return (
     <>

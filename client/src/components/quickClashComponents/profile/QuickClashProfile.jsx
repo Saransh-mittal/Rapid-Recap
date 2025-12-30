@@ -500,124 +500,122 @@ const QuickClashProfile = ({ userId: propUserId }) => {
                         transition={{ delay: 0.2, duration: 0.4 }}
                       >
                         <Box
-                          bg="rgba(255, 255, 255, 0.06)"
-                          backdropFilter="blur(15px)"
-                          rounded="xl"
+                          bg="linear-gradient(135deg, rgba(15, 23, 42, 0.95), rgba(30, 41, 59, 0.9))"
+                          rounded="2xl"
                           p={3}
-                          border="1px solid"
-                          borderColor="rgba(255, 255, 255, 0.1)"
-                          boxShadow="0 4px 15px rgba(0, 0, 0, 0.1)"
+                          border="2px solid"
+                          borderColor="rgba(6, 182, 212, 0.4)"
+                          boxShadow="0 0 25px rgba(6, 182, 212, 0.2), inset 0 1px 0 rgba(255, 255, 255, 0.1)"
                         >
-                          <SimpleGrid
-                            columns={3}
-                            spacing={4}
-                            divider={
-                              <Box w="1px" bg="whiteAlpha.200" h="40px" />
-                            }
-                          >
+                          <SimpleGrid columns={3} spacing={2}>
                             {/* Current Trophies */}
-                            <VStack spacing={1} textAlign="center">
-                              <Icon as={Trophy} color="#FFD700" boxSize={5} />
-                              <Text
-                                fontSize="lg"
-                                fontWeight="black"
-                                color="#FFD700"
-                              >
-                                {profile.trophies.current.toLocaleString()}
-                              </Text>
-                              <Text
-                                fontSize="xs"
-                                color="whiteAlpha.800"
-                                fontWeight="medium"
-                              >
-                                Current Trophies
-                              </Text>
-                              <Badge
-                                bg="rgba(255, 215, 0, 0.15)"
-                                color="#FFD700"
-                                px={2}
-                                py={0.5}
-                                rounded="md"
-                                fontSize="xs"
-                                fontWeight="bold"
-                              >
-                                Elite Status
-                              </Badge>
-                            </VStack>
+                            <Box
+                              bg="rgba(255, 215, 0, 0.08)"
+                              rounded="xl"
+                              p={3}
+                              textAlign="center"
+                              border="1px solid"
+                              borderColor="rgba(255, 215, 0, 0.25)"
+                            >
+                              <VStack spacing={1}>
+                                <Circle size="36px" bg="rgba(255, 215, 0, 0.2)">
+                                  <Icon as={Trophy} color="#FFD700" boxSize={5} />
+                                </Circle>
+                                <Text fontSize="xl" fontWeight="black" color="#FFD700">
+                                  {profile.trophies.current.toLocaleString()}
+                                </Text>
+                                <Text fontSize="2xs" color="whiteAlpha.700" fontWeight="semibold" textTransform="uppercase">
+                                  Trophies
+                                </Text>
+                              </VStack>
+                            </Box>
 
                             {/* Global Rank */}
-                            <VStack spacing={1} textAlign="center">
-                              <Icon
-                                as={getRankIcon(profile.trophies.rank)}
-                                color={getRankColor(profile.trophies.rank)}
-                                boxSize={5}
-                              />
-                              <Text
-                                fontSize="lg"
-                                fontWeight="black"
-                                color={getRankColor(profile.trophies.rank)}
-                              >
-                                #{profile.trophies.rank}
-                              </Text>
-                              <Text
-                                fontSize="xs"
-                                color="whiteAlpha.800"
-                                fontWeight="medium"
-                              >
-                                Global Rank
-                              </Text>
-                              <Badge
-                                bg={`${getRankColor(profile.trophies.rank)}20`}
-                                color={getRankColor(profile.trophies.rank)}
-                                px={2}
-                                py={0.5}
-                                rounded="md"
-                                fontSize="xs"
-                                fontWeight="bold"
-                              >
-                                Top{' '}
-                                {(
-                                  (profile.trophies.rank /
-                                    profile.trophies.totalPlayers) *
-                                  100
-                                ).toFixed(1)}
-                                %
-                              </Badge>
-                            </VStack>
+                            <Box
+                              bg="rgba(139, 92, 246, 0.08)"
+                              rounded="xl"
+                              p={3}
+                              textAlign="center"
+                              border="1px solid"
+                              borderColor="rgba(139, 92, 246, 0.25)"
+                            >
+                              <VStack spacing={1}>
+                                <Circle size="36px" bg="rgba(139, 92, 246, 0.2)">
+                                  <Icon as={getRankIcon(profile.trophies.rank)} color="#A78BFA" boxSize={5} />
+                                </Circle>
+                                <Text fontSize="xl" fontWeight="black" color="#A78BFA">
+                                  #{profile.trophies.rank}
+                                </Text>
+                                <Text fontSize="2xs" color="whiteAlpha.700" fontWeight="semibold" textTransform="uppercase">
+                                  Rank
+                                </Text>
+                              </VStack>
+                            </Box>
 
                             {/* Peak Trophies */}
-                            <VStack spacing={1} textAlign="center">
-                              <Icon
-                                as={TrendingUp}
-                                color="#10B981"
-                                boxSize={5}
-                              />
-                              <Text
-                                fontSize="lg"
-                                fontWeight="black"
-                                color="#10B981"
-                              >
-                                {profile.trophies.peak.toLocaleString()}
-                              </Text>
-                              <Text
-                                fontSize="xs"
-                                color="whiteAlpha.800"
-                                fontWeight="medium"
-                              >
-                                Peak Trophies
-                              </Text>
+                            <Box
+                              bg="rgba(16, 185, 129, 0.08)"
+                              rounded="xl"
+                              p={3}
+                              textAlign="center"
+                              border="1px solid"
+                              borderColor="rgba(16, 185, 129, 0.25)"
+                            >
+                              <VStack spacing={1}>
+                                <Circle size="36px" bg="rgba(16, 185, 129, 0.2)">
+                                  <Icon as={TrendingUp} color="#10B981" boxSize={5} />
+                                </Circle>
+                                <Text fontSize="xl" fontWeight="black" color="#10B981">
+                                  {profile.trophies.peak.toLocaleString()}
+                                </Text>
+                                <Text fontSize="2xs" color="whiteAlpha.700" fontWeight="semibold" textTransform="uppercase">
+                                  Peak
+                                </Text>
+                              </VStack>
+                            </Box>
+                          </SimpleGrid>
+
+                          {/* Badges Row - Separate for symmetry */}
+                          <SimpleGrid columns={3} spacing={2} mt={2}>
+                            <Center>
                               <Badge
-                                bg="rgba(16, 185, 129, 0.15)"
+                                bg="rgba(255, 215, 0, 0.2)"
+                                color="#FFD700"
+                                px={2}
+                                py={0.5}
+                                rounded="full"
+                                fontSize="2xs"
+                                fontWeight="bold"
+                              >
+                                ⭐ ELITE
+                              </Badge>
+                            </Center>
+                            <Center>
+                              <Badge
+                                bg="rgba(139, 92, 246, 0.2)"
+                                color="#A78BFA"
+                                px={2}
+                                py={0.5}
+                                rounded="full"
+                                fontSize="2xs"
+                                fontWeight="bold"
+                              >
+                                TOP {((profile.trophies.rank / profile.trophies.totalPlayers) * 100).toFixed(1)}%
+                              </Badge>
+                            </Center>
+                            <Center>
+                              <Badge
+                                bg="rgba(16, 185, 129, 0.2)"
                                 color="#10B981"
                                 px={2}
                                 py={0.5}
-                                rounded="md"
-                                fontSize="xs"
+                                rounded="full"
+                                fontSize="2xs"
                                 fontWeight="bold"
                               >
-                                All-Time High
+                                🏆 BEST
                               </Badge>
-                            </VStack>
+                            </Center>
                           </SimpleGrid>
                         </Box>
                       </MotionBox>
@@ -642,48 +640,7 @@ const QuickClashProfile = ({ userId: propUserId }) => {
               </Box>
             </MotionBox>
 
-            {/* NEW: AI Insights Section */}
-            {profile.aiInsights &&
-              (profile.aiInsights.recentInsight ||
-                profile.aiInsights.topRecommendation ||
-                profile.aiInsights.learningFocus.length > 0) && (
-                <MotionBox variants={itemVariants}>
-                  <CompactSection
-                    icon={Sparkles}
-                    iconColor="#F97316"
-                    title="AI Insights"
-                    badge="Powered by Analysis"
-                    badgeColor="#F97316"
-                    isExpanded={expandedSections.aiInsights}
-                    onToggle={() => toggleSection('aiInsights')}
-                  >
-                    <VStack spacing={2} align="stretch">
-                      {/* Recent High-Rated Insight */}
-                      {profile.aiInsights.recentInsight && (
-                        <AIInsightCard
-                          insight={profile.aiInsights.recentInsight}
-                        />
-                      )}
-
-                      {/* Top Recommendation */}
-                      {profile.aiInsights.topRecommendation && (
-                        <AIRecommendationCard
-                          recommendation={profile.aiInsights.topRecommendation}
-                          performanceTrend={profile.aiInsights.performanceTrend}
-                        />
-                      )}
-
-                      {/* Learning Focus Areas */}
-                      {profile.aiInsights.learningFocus.length > 0 && (
-                        <AILearningFocusCard
-                          focusAreas={profile.aiInsights.learningFocus}
-                        />
-                      )}
-                    </VStack>
-                  </CompactSection>
-                </MotionBox>
-              )}
-
+            {/* Quick Stats - Vibrant Gaming Style */}
             {/* Sleek Quick Stats */}
             <MotionBox variants={itemVariants}>
               <SimpleGrid columns={{ base: 2, md: 3 }} spacing={2}>
@@ -717,13 +674,13 @@ const QuickClashProfile = ({ userId: propUserId }) => {
             {/* Ultra-Thin Battle Performance */}
             <MotionBox variants={itemVariants}>
               <Box
-                bg="rgba(255, 255, 255, 0.04)"
-                backdropFilter="blur(20px)"
+                bg="rgba(15, 23, 42, 0.6)"
+                backdropFilter="blur(16px)"
                 rounded="xl"
                 p={{ base: 3, md: 3 }}
                 border="1px solid"
-                borderColor="rgba(255, 255, 255, 0.08)"
-                boxShadow="0 4px 15px rgba(0, 0, 0, 0.1)"
+                borderColor="rgba(59, 130, 246, 0.2)"
+                boxShadow="0 4px 20px rgba(0, 0, 0, 0.25)"
               >
                 <HStack mb={2} spacing={2} justify="space-between">
                   <HStack spacing={2}>
@@ -748,12 +705,12 @@ const QuickClashProfile = ({ userId: propUserId }) => {
                 <SimpleGrid columns={{ base: 1, lg: 2 }} spacing={2}>
                   {/* 1v1 Performance */}
                   <Box
-                    bg="rgba(239, 68, 68, 0.04)"
-                    backdropFilter="blur(10px)"
+                    bg="rgba(239, 68, 68, 0.08)"
+                    backdropFilter="blur(12px)"
                     rounded="lg"
                     p={2.5}
                     border="1px solid"
-                    borderColor="rgba(239, 68, 68, 0.15)"
+                    borderColor="rgba(239, 68, 68, 0.25)"
                   >
                     <HStack mb={2} spacing={2} justify="space-between">
                       <HStack spacing={1.5}>
@@ -778,7 +735,7 @@ const QuickClashProfile = ({ userId: propUserId }) => {
                     <SimpleGrid columns={2} spacing={2}>
                       <Box
                         p={2}
-                        bg="rgba(255, 255, 255, 0.04)"
+                        bg="rgba(15, 23, 42, 0.5)"
                         rounded="md"
                         textAlign="center"
                       >
@@ -791,7 +748,7 @@ const QuickClashProfile = ({ userId: propUserId }) => {
                       </Box>
                       <Box
                         p={2}
-                        bg="rgba(255, 255, 255, 0.04)"
+                        bg="rgba(15, 23, 42, 0.5)"
                         rounded="md"
                         textAlign="center"
                       >
@@ -804,7 +761,7 @@ const QuickClashProfile = ({ userId: propUserId }) => {
                       </Box>
                       <Box
                         p={2}
-                        bg="rgba(255, 255, 255, 0.04)"
+                        bg="rgba(15, 23, 42, 0.5)"
                         rounded="md"
                         textAlign="center"
                       >
@@ -817,7 +774,7 @@ const QuickClashProfile = ({ userId: propUserId }) => {
                       </Box>
                       <Box
                         p={2}
-                        bg="rgba(255, 255, 255, 0.04)"
+                        bg="rgba(15, 23, 42, 0.5)"
                         rounded="md"
                         textAlign="center"
                       >
@@ -833,12 +790,12 @@ const QuickClashProfile = ({ userId: propUserId }) => {
 
                   {/* Team Battle Performance */}
                   <Box
-                    bg="rgba(59, 130, 246, 0.04)"
-                    backdropFilter="blur(10px)"
+                    bg="rgba(59, 130, 246, 0.08)"
+                    backdropFilter="blur(12px)"
                     rounded="lg"
                     p={2.5}
                     border="1px solid"
-                    borderColor="rgba(59, 130, 246, 0.15)"
+                    borderColor="rgba(59, 130, 246, 0.25)"
                   >
                     <HStack mb={2} spacing={2} justify="space-between">
                       <HStack spacing={1.5}>
@@ -863,7 +820,7 @@ const QuickClashProfile = ({ userId: propUserId }) => {
                     <SimpleGrid columns={2} spacing={2}>
                       <Box
                         p={2}
-                        bg="rgba(255, 255, 255, 0.04)"
+                        bg="rgba(15, 23, 42, 0.5)"
                         rounded="md"
                         textAlign="center"
                       >
@@ -876,7 +833,7 @@ const QuickClashProfile = ({ userId: propUserId }) => {
                       </Box>
                       <Box
                         p={2}
-                        bg="rgba(255, 255, 255, 0.04)"
+                        bg="rgba(15, 23, 42, 0.5)"
                         rounded="md"
                         textAlign="center"
                       >
@@ -889,7 +846,7 @@ const QuickClashProfile = ({ userId: propUserId }) => {
                       </Box>
                       <Box
                         p={2}
-                        bg="rgba(255, 255, 255, 0.04)"
+                        bg="rgba(15, 23, 42, 0.5)"
                         rounded="md"
                         textAlign="center"
                       >
@@ -902,7 +859,7 @@ const QuickClashProfile = ({ userId: propUserId }) => {
                       </Box>
                       <Box
                         p={2}
-                        bg="rgba(255, 255, 255, 0.04)"
+                        bg="rgba(15, 23, 42, 0.5)"
                         rounded="md"
                         textAlign="center"
                       >
@@ -961,13 +918,11 @@ const QuickClashProfile = ({ userId: propUserId }) => {
                     isExpanded={expandedSections.categories}
                     onToggle={() => toggleSection('categories')}
                   >
-                    <Wrap spacing={1.5}>
+                    <SimpleGrid columns={{ base: 2, md: 3 }} spacing={2}>
                       {profile.favoriteCategories.map((cat, index) => (
-                        <WrapItem key={cat.category}>
-                          <CompactCategoryCard category={cat} />
-                        </WrapItem>
+                        <CompactCategoryCard key={cat.category} category={cat} />
                       ))}
-                    </Wrap>
+                    </SimpleGrid>
                   </CompactSection>
                 </MotionBox>
               )}
@@ -1303,13 +1258,13 @@ const CompactSection = ({
 }) => {
   return (
     <Box
-      bg="rgba(255, 255, 255, 0.04)"
-      backdropFilter="blur(20px)"
+      bg="rgba(15, 23, 42, 0.6)"
+      backdropFilter="blur(16px)"
       rounded="xl"
       p={2.5}
       border="1px solid"
-      borderColor="rgba(255, 255, 255, 0.08)"
-      boxShadow="0 4px 15px rgba(0, 0, 0, 0.1)"
+      borderColor="rgba(6, 182, 212, 0.2)"
+      boxShadow="0 4px 20px rgba(0, 0, 0, 0.3)"
     >
       <HStack mb={2} spacing={2} justify="space-between">
         <HStack spacing={1.5}>
@@ -1367,28 +1322,35 @@ const SlimQuickStatCard = ({
 }) => {
   return (
     <MotionBox
-      bg="rgba(255, 255, 255, 0.04)"
-      backdropFilter="blur(15px)"
+      bg="linear-gradient(135deg, rgba(15, 23, 42, 0.95), rgba(30, 41, 59, 0.9))"
       rounded="xl"
-      p={3}
-      border="1px solid"
-      borderColor="rgba(255, 255, 255, 0.08)"
+      p={4}
+      border="2px solid"
+      borderColor={`${iconColor}40`}
       textAlign="center"
       whileHover={{
-        scale: 1.03,
-        y: -2,
-        boxShadow: `0 8px 20px ${iconColor}20`,
+        scale: 1.05,
+        y: -3,
+        boxShadow: `0 0 35px ${iconColor}50`,
+        borderColor: `${iconColor}70`,
       }}
       transition={{ type: 'spring', stiffness: 400 }}
-      boxShadow="0 2px 8px rgba(0, 0, 0, 0.1)"
+      boxShadow={`0 0 20px ${iconColor}20, inset 0 1px 0 rgba(255, 255, 255, 0.1)`}
       cursor="pointer"
     >
       <VStack spacing={2}>
-        <Icon as={IconComponent} color={iconColor} boxSize={6} />
-        <Text fontSize="xl" fontWeight="black" color="white">
+        <Box
+          p={2}
+          bg={`${iconColor}20`}
+          rounded="lg"
+          boxShadow={`0 0 15px ${iconColor}30`}
+        >
+          <Icon as={IconComponent} color={iconColor} boxSize={7} />
+        </Box>
+        <Text fontSize="2xl" fontWeight="black" color="white" letterSpacing="-0.5px">
           {typeof value === 'number' ? value.toLocaleString() : value}
         </Text>
-        <Text fontSize="xs" color="whiteAlpha.700" fontWeight="medium">
+        <Text fontSize="xs" color="whiteAlpha.800" fontWeight="semibold" textTransform="uppercase" letterSpacing="0.5px">
           {label}
         </Text>
       </VStack>
@@ -1427,11 +1389,12 @@ const CompactStreakCard = ({ icon, iconColor, value, label, subtitle }) => {
   return (
     <Box
       p={2.5}
-      bg="rgba(255, 255, 255, 0.04)"
+      bg="rgba(15, 23, 42, 0.7)"
       rounded="lg"
       textAlign="center"
       border="1px solid"
-      borderColor={`${iconColor}15`}
+      borderColor={`${iconColor}25`}
+      boxShadow={`0 4px 15px rgba(0, 0, 0, 0.2), inset 0 1px 0 ${iconColor}10`}
     >
       <Icon as={icon} color={iconColor} boxSize={4} mb={2} />
       <Text fontSize="xl" fontWeight="black" color={iconColor}>
@@ -1453,11 +1416,12 @@ const CompactActivityCard = ({ activity }) => {
     <HStack
       w="100%"
       p={2.5}
-      bg="rgba(255, 255, 255, 0.04)"
+      bg="rgba(15, 23, 42, 0.6)"
       rounded="lg"
       justify="space-between"
       border="1px solid"
-      borderColor="rgba(255, 255, 255, 0.06)"
+      borderColor="rgba(6, 182, 212, 0.15)"
+      boxShadow="0 2px 10px rgba(0, 0, 0, 0.2)"
     >
       <HStack spacing={2.5}>
         <Circle
@@ -1530,33 +1494,44 @@ const CompactActivityCard = ({ activity }) => {
   )
 }
 
-// Compact Category Card
+// Compact Category Card - Vibrant Gamer Style
 const CompactCategoryCard = ({ category }) => {
+  // Dynamic color based on win rate
+  const winRateColor = category.winRate >= 70 ? '#22D3EE' : category.winRate >= 50 ? '#10B981' : '#F59E0B'
+
   return (
     <Box
-      p={2.5}
-      bg="rgba(255, 255, 255, 0.04)"
-      rounded="lg"
-      minW="110px"
+      p={3}
+      bg="linear-gradient(135deg, rgba(15, 23, 42, 0.9), rgba(30, 41, 59, 0.85))"
+      rounded="xl"
+      w="100%"
       textAlign="center"
-      border="1px solid"
-      borderColor="rgba(255, 255, 255, 0.08)"
+      border="2px solid"
+      borderColor="rgba(255, 215, 0, 0.35)"
+      boxShadow="0 0 20px rgba(255, 215, 0, 0.15), inset 0 1px 0 rgba(255, 255, 255, 0.1)"
+      _hover={{
+        borderColor: 'rgba(255, 215, 0, 0.6)',
+        boxShadow: '0 0 30px rgba(255, 215, 0, 0.25)',
+        transform: 'translateY(-2px)',
+      }}
+      transition="all 0.2s"
     >
       <VStack spacing={1.5}>
-        <Icon as={Brain} color="#FFD700" boxSize={4} />
+        <Icon as={Brain} color="#FFD700" boxSize={5} />
         <Text
           fontSize="sm"
           fontWeight="bold"
           color="white"
           textTransform="capitalize"
+          noOfLines={1}
         >
           {category.category}
         </Text>
         <VStack spacing={0}>
-          <Text fontSize="xs" color="whiteAlpha.600">
+          <Text fontSize="xs" color="whiteAlpha.700">
             {category.matches} battles
           </Text>
-          <Text fontSize="xs" color="#10B981" fontWeight="bold">
+          <Text fontSize="sm" color={winRateColor} fontWeight="black">
             {category.winRate}% win rate
           </Text>
         </VStack>
