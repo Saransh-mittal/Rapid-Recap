@@ -559,20 +559,38 @@ const completeBattleOnExpiry = async ({ battle, session }) => {
   // Calculate final trophies (reuse existing logic)
   await calculateFinalTrophies(battle, session)
 
+  // Update team match status - gracefully handle missing teams
+  // Teams may have been auto-formed and cleaned up, or disbanded by users
   if (battle.teamA) {
-    await updateTeamMatchStatus({
-      teamId: battle.teamA,
-      isInMatch: false,
-      session,
-    })
+    try {
+      await updateTeamMatchStatus({
+        teamId: battle.teamA,
+        isInMatch: false,
+        session,
+      })
+    } catch (teamError) {
+      if (teamError.message === 'Team not found') {
+        console.log(`[BattleExpiry] Team A (${battle.teamA}) not found - may have been auto-formed or disbanded`)
+      } else {
+        throw teamError
+      }
+    }
   }
 
   if (battle.teamB) {
-    await updateTeamMatchStatus({
-      teamId: battle.teamB,
-      isInMatch: false,
-      session,
-    })
+    try {
+      await updateTeamMatchStatus({
+        teamId: battle.teamB,
+        isInMatch: false,
+        session,
+      })
+    } catch (teamError) {
+      if (teamError.message === 'Team not found') {
+        console.log(`[BattleExpiry] Team B (${battle.teamB}) not found - may have been auto-formed or disbanded`)
+      } else {
+        throw teamError
+      }
+    }
   }
 
   // Save the completed battle
