@@ -12,7 +12,6 @@ import {
   Text,
   Flex,
   Icon,
-  useToast,
   Center,
   Spinner,
   Divider,
@@ -23,6 +22,7 @@ import { useTranslation } from 'react-i18next'
 import { Trophy } from 'lucide-react'
 import axios from 'axios'
 import { useSelector } from 'react-redux'
+import { notificationManager } from '../../../utils/notifications'
 
 // Audio feedback
 import { quizAudioService } from '../../../services/quizAudioService'
@@ -42,7 +42,6 @@ const MotionText = motion(Text)
 
 const QuickClashLeaderboardModal = ({ isOpen, onClose }) => {
   const { t } = useTranslation('QuickClash')
-  const toast = useToast()
   const navigate = useNavigate()
   const { user } = useSelector(state => state.auth)
   const currentUserId = user?._id
@@ -102,21 +101,17 @@ const QuickClashLeaderboardModal = ({ isOpen, onClose }) => {
         setError(
           error.response?.data?.message || t('Failed to load leaderboard'),
         )
-        toast({
-          title: t('Error'),
-          description:
-            error.response?.data?.message || t('Failed to load leaderboard'),
-          status: 'error',
-          duration: 3000,
-          isClosable: true,
-        })
+        notificationManager.error(
+          t('Error'),
+          error.response?.data?.message || t('Failed to load leaderboard')
+        )
       } finally {
         setLoading(false)
         setNextPageLoading(false)
         setBackgroundFetching(false)
       }
     },
-    [pagination.limit, searchDebounce, toast, t],
+    [pagination.limit, searchDebounce, t],
   )
 
   // Handle search with debounce

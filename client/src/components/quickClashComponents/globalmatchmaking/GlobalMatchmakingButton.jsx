@@ -8,6 +8,9 @@ import { Shield, Zap, Users, Sparkles, TrendingUp } from 'lucide-react'
 
 import { QUICK_CLASH_CLASSES } from '../utils/quickClashColors'
 import GlobalMatchmakingModal from './GlobalMatchmakingModal'
+import { useNavigate } from 'react-router-dom'
+import { useDispatch } from 'react-redux'
+import { clearBattleReady } from '../../../redux/quickClashGlobalMatchmakingSlice'
 
 // Audio feedback
 import { quizAudioService } from '../../../services/quizAudioService'
@@ -60,6 +63,8 @@ const GlobalMatchmakingButton = React.memo(
     ...otherProps
   }) => {
     const { t } = useTranslation('QuickClash')
+    const navigate = useNavigate()
+    const dispatch = useDispatch()
     const [isModalOpen, setIsModalOpen] = useState(false)
     const [isMobile, setIsMobile] = useState(false)
 
@@ -90,10 +95,21 @@ const GlobalMatchmakingButton = React.memo(
 
     const config = BUTTON_STATES[buttonState]
 
+    // When battle is ready, navigate directly to battle instead of opening modal
     const handleOpenModal = useCallback(() => {
-      quizAudioService.playButtonClick() // Sound for opening modal
+      quizAudioService.playButtonClick()
+
+      // If battle is ready, navigate directly to the battle
+      if (matchmakingState.battleReady && matchmakingState.battleReady.battleId) {
+        quizAudioService.playGoButton()
+        navigate(`/quickclash/teamBattle/${matchmakingState.battleReady.battleId}`)
+        dispatch(clearBattleReady())
+        return // Don't open modal
+      }
+
+      // Otherwise open the modal normally
       setIsModalOpen(true)
-    }, [])
+    }, [matchmakingState.battleReady, navigate, dispatch])
     const handleCloseModal = useCallback(() => {
       setIsModalOpen(false)
       onModalClose?.()

@@ -96,7 +96,7 @@ const ClaimRewardsModal = ({
 
     try {
       await onClaim(battleResult._id)
-      quizAudioService.playCorrectAnswer() // Victory sound
+      quizAudioService.playHighScore() // Victory sound
       haptics.success()
       setClaimSuccess(true)
 
@@ -338,7 +338,7 @@ const ClaimRewardsModal = ({
                     ✨
                   </motion.div>
                   <span className="text-emerald-400 font-bold">
-                    {alreadyClaimed ? 'Already in Inventory!' : 'Added to Inventory!'}
+                    {claimSuccess ? 'Added to Inventory!' : 'Already in Inventory!'}
                   </span>
                 </motion.div>
               )}

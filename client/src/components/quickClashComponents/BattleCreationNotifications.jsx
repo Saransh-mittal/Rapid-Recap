@@ -1,6 +1,6 @@
 // components/quickClashComponents/BattleCreationNotifications.jsx
 import React, { useEffect } from 'react'
-import { useToast } from '@chakra-ui/react'
+import { notificationManager } from '../../utils/notifications'
 import { useTranslation } from 'react-i18next'
 import { useSocket } from '../../customHooks/useSocket'
 
@@ -10,7 +10,6 @@ import { useSocket } from '../../customHooks/useSocket'
  */
 const BattleCreationNotifications = () => {
   const { getSocket } = useSocket()
-  const toast = useToast()
   const { t } = useTranslation('QuickClash')
 
   useEffect(() => {
@@ -19,21 +18,17 @@ const BattleCreationNotifications = () => {
 
     // Handle cleanup after all retries fail
     socket.on('quickClash:battleCreationCleanedUp', data => {
-      toast({
-        title: t('Battle Creation Failed'),
-        description:
-          data.message ||
-          t('All retry attempts failed. Please join matchmaking again.'),
-        status: 'error',
-        duration: 8000,
-        isClosable: true,
-      })
+      notificationManager.error(
+        t('Battle Creation Failed'),
+        data.message || t('All retry attempts failed. Please join matchmaking again.'),
+        { duration: 8000 }
+      )
     })
 
     return () => {
       socket.off('quickClash:battleCreationCleanedUp')
     }
-  }, [getSocket, toast, t])
+  }, [getSocket, t])
 
   // This component doesn't render anything visible
   return null

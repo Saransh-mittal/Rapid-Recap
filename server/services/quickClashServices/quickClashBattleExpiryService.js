@@ -578,15 +578,21 @@ const completeBattleOnExpiry = async ({ battle, session }) => {
   // Save the completed battle
   await battle.save({ session })
 
-  // Extract powerup rewards for socket notification
+  // Extract powerup rewards and trophy changes for socket notification
   const powerupRewards = {}
-  for (const member of [...battle.teamAMembers, ...battle.teamBMembers]) {
+  const trophyChanges = {}
+
+  for (const member of battle.teamAMembers) {
     const userId = member.user.toString()
 
-    // Debug log for reward calculation
-    console.log(`[BattleExpiry] Member ${userId} powerupReward:`, JSON.stringify(member.powerupReward))
+    // Always include trophy change for each member
+    trophyChanges[userId] = {
+      trophyChange: member.trophyChange || 0,
+      isWinner: battle.winner === 'teamA',
+      isTie: battle.winner === 'tie',
+    }
 
-    // Include reward if housingSpaceEarned > 0 (not just if powerupsAwarded.length > 0)
+    // Include powerup reward if housingSpaceEarned > 0
     if (member.powerupReward && member.powerupReward.housingSpaceEarned > 0) {
       powerupRewards[userId] = {
         housingSpaceEarned: member.powerupReward.housingSpaceEarned,
@@ -596,9 +602,30 @@ const completeBattleOnExpiry = async ({ battle, session }) => {
     }
   }
 
+  for (const member of battle.teamBMembers) {
+    const userId = member.user.toString()
+
+    // Always include trophy change for each member
+    trophyChanges[userId] = {
+      trophyChange: member.trophyChange || 0,
+      isWinner: battle.winner === 'teamB',
+      isTie: battle.winner === 'tie',
+    }
+
+    // Include powerup reward if housingSpaceEarned > 0
+    if (member.powerupReward && member.powerupReward.housingSpaceEarned > 0) {
+      powerupRewards[userId] = {
+        housingSpaceEarned: member.powerupReward.housingSpaceEarned,
+        powerupsAwarded: member.powerupReward.powerupsAwarded || [],
+        individualWins: member.powerupReward.individualWins || 0,
+      }
+    }
+  }
+
+  console.log(`[BattleExpiry] Trophy changes payload:`, JSON.stringify(trophyChanges))
   console.log(`[BattleExpiry] Powerup rewards payload:`, JSON.stringify(powerupRewards))
 
-  // Emit completion event with powerup rewards (async, non-blocking)
+  // Emit completion event with powerup rewards and trophy changes (async, non-blocking)
   setTimeout(() => {
     globalEmitter.emit('quickClash:teamBattleCompleted', {
       battleId: battle._id,
@@ -606,8 +633,9 @@ const completeBattleOnExpiry = async ({ battle, session }) => {
       teamA: battle.teamA,
       teamB: battle.teamB,
       powerupRewards,
+      trophyChanges,
     })
-    console.log(`[BattleExpiry] Emitted teamBattleCompleted for battle ${battle._id} with ${Object.keys(powerupRewards).length} powerup rewards`)
+    console.log(`[BattleExpiry] Emitted teamBattleCompleted for battle ${battle._id} with ${Object.keys(trophyChanges).length} trophy changes`)
   }, 0)
 }
 

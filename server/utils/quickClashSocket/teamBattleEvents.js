@@ -409,9 +409,9 @@ const setupTeamBattleEvents = (io, notifyUser) => {
 
   globalEmitter.on(
     'quickClash:teamBattleCompleted',
-    ({ battleId, winner, teamA, teamB, powerupRewards = {} }) => {
+    ({ battleId, winner, teamA, teamB, powerupRewards = {}, trophyChanges = {} }) => {
       console.log(
-        `[QC_BATTLE] SOCKET: Team battle ${battleId} completed. Winner: ${winner}, Powerup rewards: ${Object.keys(powerupRewards).length}`
+        `[QC_BATTLE] SOCKET: Team battle ${battleId} completed. Winner: ${winner}, Trophy changes: ${Object.keys(trophyChanges).length}, Powerup rewards: ${Object.keys(powerupRewards).length}`
       )
 
       if (teamA) {
@@ -422,6 +422,7 @@ const setupTeamBattleEvents = (io, notifyUser) => {
           teamB,
           isTeamA: true,
           powerupRewards,
+          trophyChanges,
         })
       }
 
@@ -433,6 +434,7 @@ const setupTeamBattleEvents = (io, notifyUser) => {
           teamB,
           isTeamA: false,
           powerupRewards,
+          trophyChanges,
         })
       }
     }

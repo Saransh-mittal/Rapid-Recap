@@ -81,18 +81,13 @@ const NewBattleResultsPopup = ({ isOpen, onClose }) => {
   const handleConfirmClaim = useCallback(async (battleId) => {
     try {
       await dispatch(claimPowerupReward(battleId)).unwrap()
-      setClaimModalOpen(false)
-      setSelectedBattle(null)
-
-      // If no more battles, close popup
-      if (unclaimedBattles.length <= 1) {
-        setTimeout(() => onClose(), 500)
-      }
+      // Don't close modal here - let it show success animation and auto-close
+      // The modal's onClose will be triggered after success animation
     } catch (error) {
       console.error('Failed to claim:', error)
       throw error // Re-throw for modal to handle
     }
-  }, [dispatch, unclaimedBattles.length, onClose])
+  }, [dispatch])
 
   const handleClaimAll = useCallback(async () => {
     if (claimingAll) return
@@ -106,7 +101,7 @@ const NewBattleResultsPopup = ({ isOpen, onClose }) => {
           await dispatch(claimPowerupReward(battle._id)).unwrap()
         }
       }
-      quizAudioService.playCorrectAnswer()
+      quizAudioService.playHighScore()
       haptics.success()
       setTimeout(() => onClose(), 500)
     } catch (error) {
@@ -312,6 +307,10 @@ const NewBattleResultsPopup = ({ isOpen, onClose }) => {
         onClose={() => {
           setClaimModalOpen(false)
           setSelectedBattle(null)
+          // Refresh unclaimed battles
+          dispatch(fetchUnclaimedBattles())
+          // Close popup if no more battles (we'll check after refresh)
+          // Note: The current check uses stale data, so we just always refresh
         }}
         battleResult={selectedBattle}
         onClaim={handleConfirmClaim}

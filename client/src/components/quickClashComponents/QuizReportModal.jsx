@@ -1,4 +1,3 @@
-// components/quickClashComponents/QuizReportModal.jsx
 import React, { useState, useEffect } from 'react'
 import {
   Modal,
@@ -6,13 +5,13 @@ import {
   ModalContent,
   Spinner,
   Center,
-  useToast,
   Text,
   ModalCloseButton,
 } from '@chakra-ui/react'
 import { motion, AnimatePresence } from 'framer-motion'
 import axios from 'axios'
 import { useTranslation } from 'react-i18next'
+import { notificationManager } from '../../utils/notifications'
 import SubmittedQuizInterface from '../quizComponents/SubmittedQuizInterface'
 import FixedBackground from '../miscellaneous/FixedBackground'
 import QuizGivenSummary from '../quizComponents/QuizGivenSummary'
@@ -24,7 +23,6 @@ const QuizReportModal = ({ isOpen, onClose, sessionId }) => {
   const [error, setError] = useState(null)
   const [report, setReport] = useState(null)
   const [showSummary, setShowSummary] = useState(false)
-  const toast = useToast()
 
   useEffect(() => {
     const fetchReport = async () => {
@@ -68,21 +66,17 @@ const QuizReportModal = ({ isOpen, onClose, sessionId }) => {
       } catch (err) {
         console.error('Error fetching quiz report:', err)
         setError(err.response?.data?.message || 'Failed to load quiz report')
-        toast({
-          title: t('Error'),
-          description:
-            err.response?.data?.message || t('Failed to load quiz report'),
-          status: 'error',
-          duration: 3000,
-          isClosable: true,
-        })
+        notificationManager.error(
+          t('Error'),
+          err.response?.data?.message || t('Failed to load quiz report')
+        )
       } finally {
         setLoading(false)
       }
     }
 
     fetchReport()
-  }, [isOpen, sessionId, toast, t])
+  }, [isOpen, sessionId, t])
 
   if (!isOpen) return null
 

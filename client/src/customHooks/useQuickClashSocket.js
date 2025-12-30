@@ -2,7 +2,7 @@
 import { useCallback, useEffect, useRef } from 'react'
 import { useSocket } from './useSocket'
 import { useDispatch, useSelector, useStore } from 'react-redux'
-import { useToast } from '@chakra-ui/react'
+import { notificationManager } from '../utils/notifications'
 import { useTranslation } from 'react-i18next'
 import { useNavigate } from 'react-router-dom'
 import { v4 as uuidv4 } from 'uuid'
@@ -98,7 +98,6 @@ const useQuickClashSocket = () => {
   const dispatch = useDispatch()
   const store = useStore()
   const navigate = useNavigate()
-  const toast = useToast()
   const { t } = useTranslation('QuickClash')
 
   // Refs for managing lifecycle
@@ -262,18 +261,11 @@ const useQuickClashSocket = () => {
     dispatch(clearChallengeError())
     dispatch(clearMatchmakingError())
 
-    // 5. Show reconnection success toast
-    toast({
-      title: t('Reconnected'),
-      description: t('Successfully reconnected to server'),
-      status: 'success',
-      duration: 3000,
-      isClosable: true,
-      position: 'top',
-    })
+    // 5. Show reconnection success notification
+    notificationManager.success(t('Reconnected'), t('Successfully reconnected to server'))
 
     console.log('[QC_SOCKET] ✅ Reconnection state fully restored')
-  }, [dispatch, joinRoom, toast, t])
+  }, [dispatch, joinRoom, t])
 
   /**
    * RELIABLE RECONNECTION DETECTION
@@ -443,21 +435,15 @@ const useQuickClashSocket = () => {
 
         dispatch(fetchActiveChallenges())
 
-        toast({
-          title: t('New Challenge!'),
-          description: t(
-            '{{challenger}} has challenged you to a Quick Clash!',
-            {
-              challenger:
-                data.challenger?.inGameName ||
-                data.challenger?.name ||
-                'Someone',
-            },
-          ),
-          status: 'info',
-          duration: 5000,
-          isClosable: true,
-        })
+        notificationManager.battle(
+          t('New Challenge!'),
+          t('{{challenger}} has challenged you to a Quick Clash!', {
+            challenger:
+              data.challenger?.inGameName ||
+              data.challenger?.name ||
+              'Someone',
+          })
+        )
       },
     )
     cleanupFunctions.push(cleanupNewChallenge)
@@ -494,13 +480,10 @@ const useQuickClashSocket = () => {
             }),
           )
 
-          toast({
-            title: t('Challenge Failed'),
-            description: data.errorMessage || t('Failed to create challenge'),
-            status: 'error',
-            duration: 5000,
-            isClosable: true,
-          })
+          notificationManager.error(
+            t('Challenge Failed'),
+            data.errorMessage || t('Failed to create challenge')
+          )
         }
 
         dispatch(fetchActiveChallenges())
@@ -525,18 +508,15 @@ const useQuickClashSocket = () => {
           }),
         )
 
-        toast({
-          title: t('Challenge Accepted!'),
-          description: t('{{opponent}} has accepted your challenge!', {
+        notificationManager.success(
+          t('Challenge Accepted!'),
+          t('{{opponent}} has accepted your challenge!', {
             opponent:
               data.opponent?.inGameName ||
               data.opponent?.name ||
               'Your opponent',
-          }),
-          status: 'success',
-          duration: 5000,
-          isClosable: true,
-        })
+          })
+        )
 
         dispatch(fetchActiveChallenges())
       },
@@ -560,18 +540,15 @@ const useQuickClashSocket = () => {
           }),
         )
 
-        toast({
-          title: t('Challenge Rejected'),
-          description: t('{{opponent}} has declined your challenge', {
+        notificationManager.warning(
+          t('Challenge Rejected'),
+          t('{{opponent}} has declined your challenge', {
             opponent:
               data.opponent?.inGameName ||
               data.opponent?.name ||
               'Your opponent',
-          }),
-          status: 'warning',
-          duration: 5000,
-          isClosable: true,
-        })
+          })
+        )
 
         dispatch(fetchActiveChallenges())
       },
@@ -624,27 +601,43 @@ const useQuickClashSocket = () => {
           const userWon = data.userScore > data.opponentScore
           const isTie = data.userScore === data.opponentScore
 
-          toast({
-            title: isTie
-              ? t('Challenge Tied!')
-              : userWon
-              ? t('Challenge Won!')
-              : t('Challenge Lost!'),
-            description: t(
-              'Final score: You {{userScore}} - {{opponentScore}} {{opponent}}',
-              {
+          if (isTie) {
+            notificationManager.info(
+              t('Challenge Tied!'),
+              t('Final score: You {{userScore}} - {{opponentScore}} {{opponent}}', {
                 userScore: data.userScore,
                 opponentScore: data.opponentScore,
                 opponent:
                   data.opponent?.inGameName ||
                   data.opponent?.name ||
                   'Opponent',
-              },
-            ),
-            status: isTie ? 'info' : userWon ? 'success' : 'warning',
-            duration: 8000,
-            isClosable: true,
-          })
+              })
+            )
+          } else if (userWon) {
+            notificationManager.victory(
+              t('Challenge Won!'),
+              t('Final score: You {{userScore}} - {{opponentScore}} {{opponent}}', {
+                userScore: data.userScore,
+                opponentScore: data.opponentScore,
+                opponent:
+                  data.opponent?.inGameName ||
+                  data.opponent?.name ||
+                  'Opponent',
+              })
+            )
+          } else {
+            notificationManager.defeat(
+              t('Challenge Lost!'),
+              t('Final score: You {{userScore}} - {{opponentScore}} {{opponent}}', {
+                userScore: data.userScore,
+                opponentScore: data.opponentScore,
+                opponent:
+                  data.opponent?.inGameName ||
+                  data.opponent?.name ||
+                  'Opponent',
+              })
+            )
+          }
 
           dispatch(fetchActiveChallenges())
           dispatch(fetchUserTrophies())
@@ -682,13 +675,10 @@ const useQuickClashSocket = () => {
           }),
         )
 
-        toast({
-          title: t('Analysis Ready!'),
-          description: t('Your challenge analysis is ready to view'),
-          status: 'success',
-          duration: 5000,
-          isClosable: true,
-        })
+        notificationManager.success(
+          t('Analysis Ready!'),
+          t('Your challenge analysis is ready to view')
+        )
 
         dispatch(
           setChallengeAnalysisLoading({
@@ -779,15 +769,10 @@ const useQuickClashSocket = () => {
 
         dispatch(resetMatchmakingState())
 
-        toast({
-          title: t('Challenge Creation Failed'),
-          description: t(
-            'Something went wrong while creating your challenge. Please try again.',
-          ),
-          status: 'error',
-          duration: 5000,
-          isClosable: true,
-        })
+        notificationManager.error(
+          t('Challenge Creation Failed'),
+          t('Something went wrong while creating your challenge. Please try again.')
+        )
       },
     )
     cleanupFunctions.push(cleanupMatchCreationFailed)
@@ -879,13 +864,10 @@ const useQuickClashSocket = () => {
         logSocketEvent('battle_creation_failed', data)
 
         dispatch(setBattleCreationError(data.error || 'Battle creation failed'))
-        toast({
-          title: t('Battle Creation Failed'),
-          description: t('Something went wrong. Please try again.'),
-          status: 'error',
-          duration: 5000,
-          isClosable: true,
-        })
+        notificationManager.error(
+          t('Battle Creation Failed'),
+          t('Something went wrong. Please try again.')
+        )
       },
     )
     cleanupFunctions.push(cleanupBattleCreationFailed)
@@ -899,16 +881,10 @@ const useQuickClashSocket = () => {
         dispatch(setTeamInMatchmaking(false))
         dispatch(setBattleCreationStatus('failed'))
 
-        toast({
-          title: t('Battle Creation Failed'),
-          description: t(
-            'There was an issue creating your battle. Please try joining matchmaking again.',
-          ),
-          status: 'error',
-          duration: 6000,
-          isClosable: true,
-          position: 'top',
-        })
+        notificationManager.error(
+          t('Battle Creation Failed'),
+          t('There was an issue creating your battle. Please try joining matchmaking again.')
+        )
       },
     )
     cleanupFunctions.push(cleanupBattleCreationCleanedUp)
@@ -919,25 +895,70 @@ const useQuickClashSocket = () => {
         if (!isComponentMountedRef.current) return
         logSocketEvent('team_battle_completed', data)
 
-        // Get current user to check for their powerup rewards
+        // Get current user to check for their results
         const currentState = getCurrentState()
-        const currentUserId = currentState.authState?.user?._id
+        const currentUserId = currentState.authState?.user?._id?.toString()
 
-        // Check if current user has powerup rewards in the socket payload
+        console.log('[QC_SOCKET] Battle completed - checking results for user:', currentUserId)
+        console.log('[QC_SOCKET] Trophy changes received:', data.trophyChanges)
+
+        // Get trophy change and powerup rewards for current user (keys are string user IDs)
+        const userTrophyData = data.trophyChanges?.[currentUserId]
+        const trophyChange = userTrophyData?.trophyChange || 0
+        const isWinner = userTrophyData?.isWinner || false
+        const isTie = userTrophyData?.isTie || false
+
+        console.log('[QC_SOCKET] User trophy data:', { trophyChange, isWinner, isTie })
+
         const userRewards = data.powerupRewards?.[currentUserId]
         const hasRewards = userRewards?.housingSpaceEarned > 0
 
-        toast({
-          title: hasRewards ? t('Battle Completed! 🎁') : t('Battle Completed!'),
-          description: hasRewards
-            ? t('You earned {{space}} housing space in powerups!', {
+        // Show notification based on result
+        if (isWinner && trophyChange > 0) {
+          // Victory notification with trophy gain
+          if (hasRewards) {
+            notificationManager.victory(
+              t('Battle Won! 🏆'),
+              t('+{{trophies}} trophies • {{space}} housing space earned!', {
+                trophies: trophyChange,
                 space: userRewards.housingSpaceEarned,
               })
-            : t('Your team battle has been completed.'),
-          status: hasRewards ? 'success' : 'info',
-          duration: 5000,
-          isClosable: true,
-        })
+            )
+          } else {
+            notificationManager.victory(
+              t('Battle Won! 🏆'),
+              t('+{{trophies}} trophies!', { trophies: trophyChange })
+            )
+          }
+        } else if (!isWinner && !isTie && trophyChange < 0) {
+          // Defeat notification with trophy loss
+          notificationManager.defeat(
+            t('Battle Lost'),
+            t('{{trophies}} trophies', { trophies: trophyChange })
+          )
+        } else if (isTie) {
+          // Tie notification
+          notificationManager.battle(
+            t('Battle Tied!'),
+            trophyChange !== 0
+              ? t('{{trophies}} trophies', { trophies: trophyChange > 0 ? `+${trophyChange}` : trophyChange })
+              : t('No trophy change')
+          )
+        } else if (hasRewards) {
+          // Fallback for rewards without clear win/loss
+          notificationManager.victory(
+            t('Battle Completed! 🎁'),
+            t('You earned {{space}} housing space in powerups!', {
+              space: userRewards.housingSpaceEarned,
+            })
+          )
+        } else {
+          // Generic completion notification
+          notificationManager.battle(
+            t('Battle Completed!'),
+            t('Your team battle has been completed.')
+          )
+        }
 
         const currentTeamBattleState = currentState.teamBattleState
 
@@ -948,8 +969,15 @@ const useQuickClashSocket = () => {
           dispatch(fetchTeamBattleDetails(data.battleId))
         }
 
+        // Refresh battle lists for real-time UI updates
+        dispatch(fetchTeamBattles({ status: 'active', page: 1 }))
+        dispatch(fetchTeamBattles({ status: 'completed', page: 1 }))
+
         // Refresh unclaimed battles list to show the new reward immediately
         dispatch(fetchUnclaimedBattles())
+
+        // Refresh user trophies in header/profile
+        dispatch(fetchUserTrophies())
 
         // Clear battle ending state when battle completes
         dispatch(clearBattleEnding(data.battleId))
@@ -967,18 +995,162 @@ const useQuickClashSocket = () => {
         // Mark battle as ending in Redux
         dispatch(setBattleEnding({ battleId: data.battleId, isEnding: true }))
 
-        toast({
-          title: t('Battle Ending'),
-          description: t('Time expired. Calculating results...'),
-          status: 'info',
-          duration: null,
-          isClosable: false,
-        })
+        notificationManager.info(
+          t('Battle Ending'),
+          t('Time expired. Calculating results...')
+        )
       },
     )
     cleanupFunctions.push(cleanupBattleEnding)
 
-    // ... [Continue with other event listeners - truncated for brevity]
+    // ==========================================
+    // TEAM MATCHMAKING EVENTS
+    // ==========================================
+
+    // Team joined matchmaking - notify all team members
+    const cleanupTeamJoinedMatchmaking = addEventListener(
+      'quickClash:teamJoinedMatchmaking',
+      data => {
+        if (!isComponentMountedRef.current) return
+        logSocketEvent('team_joined_matchmaking', data)
+
+        console.log('[QC_SOCKET] Team joined matchmaking:', data)
+
+        // Update Redux state - this now sets inMatchmaking, matchmakingType, step, teamId, teamName
+        dispatch(handleTeamJoinedMatchmaking(data))
+
+        // Add status update for UI
+        dispatch(addStatusUpdate({
+          message: data.teamName
+            ? t('Team {{teamName}} joined matchmaking', { teamName: data.teamName })
+            : t('Team joined matchmaking'),
+          time: 0,
+        }))
+
+        // Show notification for other team members
+        const currentState = getCurrentState()
+        const currentUserId = currentState.authState?.user?._id
+
+        // Only show notification if we're not the one who initiated
+        if (data.teamMembers && currentUserId) {
+          const isInitiator = data.teamMembers.some(member => {
+            const memberId = member.userId || member.user
+            return memberId === currentUserId.toString()
+          })
+
+          // Show notification to inform user their team is now in matchmaking
+          if (!isInitiator || data.memberCount > 1) {
+            notificationManager.battle(
+              t('Team Matchmaking'),
+              t('Your team is now searching for opponents')
+            )
+          }
+        }
+      },
+    )
+    cleanupFunctions.push(cleanupTeamJoinedMatchmaking)
+
+    // Team left matchmaking - notify all team members
+    const cleanupTeamLeftMatchmaking = addEventListener(
+      'quickClash:teamLeftMatchmaking',
+      data => {
+        if (!isComponentMountedRef.current) return
+        logSocketEvent('team_left_matchmaking', data)
+
+        console.log('[QC_SOCKET] Team left matchmaking:', data)
+
+        // Update Redux state - this now sets inMatchmaking to false and clears other state
+        dispatch(handleTeamLeftMatchmaking(data))
+
+        // Determine notification message based on reason
+        let notificationTitle = t('Matchmaking Cancelled')
+        let notificationMessage = t('Your team is no longer searching for opponents')
+
+        if (data.reason === 'memberLeft') {
+          notificationTitle = t('Matchmaking Cancelled')
+          notificationMessage = data.memberName
+            ? t('{{name}} left, matchmaking cancelled', { name: data.memberName })
+            : t('A team member left, matchmaking cancelled')
+        } else if (data.reason === 'battleCreationFailed') {
+          notificationTitle = t('Battle Creation Failed')
+          notificationMessage = t('Unable to create battle, please try again')
+        } else if (data.reason === 'teamDisbanded') {
+          notificationTitle = t('Team Disbanded')
+          notificationMessage = t('Your matchmaking team has been disbanded')
+        }
+
+        notificationManager.warning(notificationTitle, notificationMessage)
+      },
+    )
+    cleanupFunctions.push(cleanupTeamLeftMatchmaking)
+
+    // Team returned to matchmaking after failed battle creation
+    const cleanupTeamReturnedToMatchmaking = addEventListener(
+      'quickClash:teamReturnedToMatchmaking',
+      data => {
+        if (!isComponentMountedRef.current) return
+        logSocketEvent('team_returned_to_matchmaking', data)
+
+        console.log('[QC_SOCKET] Team returned to matchmaking:', data)
+
+        // Update Redux state - this now sets inMatchmaking to true and step to searching
+        dispatch(handleTeamReturnedToMatchmaking(data))
+
+        // Add status update
+        dispatch(addStatusUpdate({
+          message: t('Returned to matchmaking queue'),
+          time: data.startTime ? Math.floor((Date.now() - data.startTime) / 1000) : 0,
+        }))
+
+        notificationManager.info(
+          t('Back in Queue'),
+          t('Your team has returned to the matchmaking queue')
+        )
+      },
+    )
+    cleanupFunctions.push(cleanupTeamReturnedToMatchmaking)
+
+    // Matchmaking locked - potential match found
+    const cleanupMatchmakingLocked = addEventListener(
+      'quickClash:matchmakingLocked',
+      data => {
+        if (!isComponentMountedRef.current) return
+        logSocketEvent('matchmaking_locked', data)
+
+        console.log('[QC_SOCKET] Matchmaking locked - potential match:', data)
+
+        // Add status update indicating match preparation
+        dispatch(addStatusUpdate({
+          message: t('Match found! Preparing battle...'),
+          time: 0,
+        }))
+
+        // Update battle creation status to show progress
+        dispatch(setBattleCreationStatus('creating'))
+      },
+    )
+    cleanupFunctions.push(cleanupMatchmakingLocked)
+
+    // Matchmaking unlocked - match fell through
+    const cleanupMatchmakingUnlocked = addEventListener(
+      'quickClash:matchmakingUnlocked',
+      data => {
+        if (!isComponentMountedRef.current) return
+        logSocketEvent('matchmaking_unlocked', data)
+
+        console.log('[QC_SOCKET] Matchmaking unlocked - match fell through:', data)
+
+        // Clear battle creation status
+        dispatch(setBattleCreationStatus(null))
+
+        // Add status update
+        dispatch(addStatusUpdate({
+          message: t('Still searching for opponents...'),
+          time: 0,
+        }))
+      },
+    )
+    cleanupFunctions.push(cleanupMatchmakingUnlocked)
 
     // ==========================================
     // GLOBAL SOCKET EVENTS
@@ -991,13 +1163,10 @@ const useQuickClashSocket = () => {
       dispatch(setSocketError(data.message || 'An error occurred'))
       dispatch(setMatchmakingError(data.message || 'An error occurred'))
 
-      toast({
-        title: t('Socket Error'),
-        description: data.message || t('An error occurred'),
-        status: 'error',
-        duration: 5000,
-        isClosable: true,
-      })
+      notificationManager.error(
+        t('Socket Error'),
+        data.message || t('An error occurred')
+      )
     })
     cleanupFunctions.push(cleanupSocketError)
 
@@ -1017,7 +1186,6 @@ const useQuickClashSocket = () => {
     addEventListener,
     joinRoom,
     logSocketEvent,
-    toast,
     t,
     navigate,
     getCurrentState,
@@ -1115,14 +1283,11 @@ const useQuickClashSocket = () => {
     reconnectionHandledRef.current = false
 
     // The next connection detection will trigger re-establishment
-    toast({
-      title: t('Reconnecting...'),
-      description: t('Attempting to reconnect to server'),
-      status: 'info',
-      duration: 3000,
-      isClosable: true,
-    })
-  }, [toast, t])
+    notificationManager.info(
+      t('Reconnecting...'),
+      t('Attempting to reconnect to server')
+    )
+  }, [t])
 
   // Auto-initialize when conditions are met
   useEffect(() => {

@@ -13,7 +13,6 @@ import {
   Text,
   Badge,
   Icon,
-  useToast,
   Flex,
   IconButton,
   Tooltip,
@@ -23,6 +22,7 @@ import { Users, Swords, Clock, History } from 'lucide-react'
 import { motion, AnimatePresence } from 'framer-motion'
 import axios from 'axios'
 import { useTranslation } from 'react-i18next'
+import { notificationManager } from '../../../../utils/notifications'
 
 const MotionBox = motion(Box)
 
@@ -48,7 +48,6 @@ const UserSearchStep = ({
   setStep,
 }) => {
   const { t } = useTranslation('QuickClash')
-  const toast = useToast()
   const [searchTerm, setSearchTerm] = useState('')
   const [searchResults, setSearchResults] = useState([])
   const [isSearching, setIsSearching] = useState(false)
@@ -136,18 +135,12 @@ const UserSearchStep = ({
         setSearchResults(response.data || [])
       } catch (error) {
         console.error('Error searching users:', error)
-        toast({
-          title: t('Search failed'),
-          status: 'error',
-          duration: 3000,
-          isClosable: true,
-          position: 'top',
-        })
+        notificationManager.error(t('Search failed'))
       } finally {
         setIsSearching(false)
       }
     }, 500) // 500ms debounce
-  }, [searchTerm, toast, t])
+  }, [searchTerm, t])
 
   // Execute debounced search when searchTerm changes
   useEffect(() => {
@@ -244,14 +237,8 @@ const UserSearchStep = ({
     // Update state to reflect empty history
     setSearchHistory([])
 
-    toast({
-      title: t('Search history cleared'),
-      status: 'info',
-      duration: 2000,
-      isClosable: true,
-      position: 'top',
-    })
-  }, [t, toast])
+    notificationManager.info(t('Search history cleared'))
+  }, [t])
 
   // Select user handler
   const handleUserSelect = useCallback(

@@ -8,9 +8,10 @@ import React, {
 } from 'react'
 import { createPortal } from 'react-dom'
 import { motion, AnimatePresence } from 'framer-motion'
-import { X, CheckCircle, AlertCircle, Info, AlertTriangle } from 'lucide-react'
+import { X, CheckCircle, AlertCircle, Info, AlertTriangle, Swords, Trophy, Skull, Zap, Users, Flame } from 'lucide-react'
 
 // Refined, subtle notification types with professional styling
+// Includes gamified types for Quick Clash gaming UX
 const NOTIFICATION_TYPES = {
   success: {
     icon: CheckCircle,
@@ -59,6 +60,79 @@ const NOTIFICATION_TYPES = {
     progressBg: 'bg-cyan-400/15',
     progressBar: 'bg-cyan-400',
     accent: 'border-l-4 border-l-cyan-400',
+  },
+  // Gamified notification types for Quick Clash V2
+  battle: {
+    icon: Swords,
+    gradient: 'from-slate-700/95 via-slate-800/95 to-slate-900/95',
+    border: 'border-orange-400/30',
+    glow: 'shadow-orange-400/20',
+    iconColor: 'text-orange-400',
+    titleColor: 'text-slate-100',
+    descColor: 'text-slate-300',
+    progressBg: 'bg-orange-400/15',
+    progressBar: 'bg-orange-400',
+    accent: 'border-l-4 border-l-orange-400',
+  },
+  victory: {
+    icon: Trophy,
+    gradient: 'from-slate-700/95 via-slate-800/95 to-slate-900/95',
+    border: 'border-amber-400/30',
+    glow: 'shadow-amber-400/30',
+    iconColor: 'text-amber-400',
+    titleColor: 'text-slate-100',
+    descColor: 'text-slate-300',
+    progressBg: 'bg-amber-400/15',
+    progressBar: 'bg-gradient-to-r from-amber-400 to-yellow-300',
+    accent: 'border-l-4 border-l-amber-400',
+  },
+  defeat: {
+    icon: Skull,
+    gradient: 'from-slate-700/95 via-slate-800/95 to-slate-900/95',
+    border: 'border-slate-500/30',
+    glow: 'shadow-slate-400/10',
+    iconColor: 'text-slate-400',
+    titleColor: 'text-slate-100',
+    descColor: 'text-slate-300',
+    progressBg: 'bg-slate-400/15',
+    progressBar: 'bg-slate-400',
+    accent: 'border-l-4 border-l-slate-400',
+  },
+  powerup: {
+    icon: Zap,
+    gradient: 'from-slate-700/95 via-purple-900/50 to-slate-900/95',
+    border: 'border-purple-400/30',
+    glow: 'shadow-purple-400/25',
+    iconColor: 'text-purple-400',
+    titleColor: 'text-slate-100',
+    descColor: 'text-slate-300',
+    progressBg: 'bg-purple-400/15',
+    progressBar: 'bg-gradient-to-r from-purple-400 to-pink-400',
+    accent: 'border-l-4 border-l-purple-400',
+  },
+  matchmaking: {
+    icon: Users,
+    gradient: 'from-slate-700/95 via-slate-800/95 to-slate-900/95',
+    border: 'border-cyan-400/30',
+    glow: 'shadow-cyan-400/20',
+    iconColor: 'text-cyan-400',
+    titleColor: 'text-slate-100',
+    descColor: 'text-slate-300',
+    progressBg: 'bg-cyan-400/15',
+    progressBar: 'bg-gradient-to-r from-cyan-400 to-blue-400',
+    accent: 'border-l-4 border-l-cyan-400',
+  },
+  combo: {
+    icon: Flame,
+    gradient: 'from-slate-700/95 via-orange-900/30 to-slate-900/95',
+    border: 'border-orange-500/30',
+    glow: 'shadow-orange-500/25',
+    iconColor: 'text-orange-500',
+    titleColor: 'text-slate-100',
+    descColor: 'text-slate-300',
+    progressBg: 'bg-orange-500/15',
+    progressBar: 'bg-gradient-to-r from-orange-500 to-red-500',
+    accent: 'border-l-4 border-l-orange-500',
   },
 }
 
@@ -361,6 +435,21 @@ export const NotificationProvider = React.memo(({ children }) => {
     [notifications],
   )
 
+  // Subscribe to global notificationManager to display notifications from imperative calls
+  React.useEffect(() => {
+    const unsubscribe = notificationManager.subscribe((managerNotifications) => {
+      // When the manager has new notifications, sync them to local state
+      managerNotifications.forEach(notification => {
+        // Check if this notification ID already exists in our state
+        const alreadyExists = notifications.some(n => n.id === notification.id)
+        if (!alreadyExists) {
+          dispatch({ type: 'ADD_NOTIFICATION', payload: notification })
+        }
+      })
+    })
+    return unsubscribe
+  }, [notifications])
+
   const removeNotification = useCallback(id => {
     dispatch({ type: 'REMOVE_NOTIFICATION', payload: id })
   }, [])
@@ -584,6 +673,67 @@ class NotificationManager {
       title,
       description,
       duration: 3500,
+      ...options,
+    })
+  }
+
+  // Gamified convenience methods for Quick Clash V2
+  battle(title, description, options = {}) {
+    return this.notify({
+      type: 'battle',
+      title,
+      description,
+      duration: 3000,
+      ...options,
+    })
+  }
+
+  victory(title, description, options = {}) {
+    return this.notify({
+      type: 'victory',
+      title,
+      description,
+      duration: 4000,
+      ...options,
+    })
+  }
+
+  defeat(title, description, options = {}) {
+    return this.notify({
+      type: 'defeat',
+      title,
+      description,
+      duration: 3500,
+      ...options,
+    })
+  }
+
+  powerup(title, description, options = {}) {
+    return this.notify({
+      type: 'powerup',
+      title,
+      description,
+      duration: 2500,
+      ...options,
+    })
+  }
+
+  matchmaking(title, description, options = {}) {
+    return this.notify({
+      type: 'matchmaking',
+      title,
+      description,
+      duration: 3000,
+      ...options,
+    })
+  }
+
+  combo(title, description, options = {}) {
+    return this.notify({
+      type: 'combo',
+      title,
+      description,
+      duration: 2000,
       ...options,
     })
   }

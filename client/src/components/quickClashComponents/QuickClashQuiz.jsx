@@ -14,7 +14,6 @@ import {
   Text,
   Progress,
   Button,
-  useToast,
   Badge,
   Spinner,
   Center,
@@ -26,6 +25,7 @@ import { useNavigate } from 'react-router-dom'
 import { useTranslation } from 'react-i18next'
 import { ArrowLeft, ArrowRight, CheckCircle } from 'lucide-react'
 import axios from 'axios'
+import { notificationManager } from '../../utils/notifications'
 
 // Lazy loaded components
 const QuizInterface = lazy(() => import('../quizComponents/QuizInterface'))
@@ -146,7 +146,6 @@ const QuickClashQuiz = ({
 }) => {
   const { t } = useTranslation('QuickClash')
   const navigate = useNavigate()
-  const toast = useToast()
 
   // ORIGINAL STATE STRUCTURE - PRESERVED
   const [loading, setLoading] = useState(true)
@@ -188,15 +187,10 @@ const QuickClashQuiz = ({
         setRemainingTime(50)
       } catch (error) {
         console.error('Error fetching questions:', error)
-        toast({
-          title: t('Error'),
-          description:
-            error.response?.data?.message ||
-            t('Failed to fetch quiz questions'),
-          status: 'error',
-          duration: 3000,
-          isClosable: true,
-        })
+        notificationManager.error(
+          t('Error'),
+          error.response?.data?.message || t('Failed to fetch quiz questions')
+        )
       } finally {
         setLoading(false)
         setLoadingQuiz(false)
@@ -204,7 +198,7 @@ const QuickClashQuiz = ({
     }
 
     fetchQuestions()
-  }, [sessionId, toast, navigate, t])
+  }, [sessionId, navigate, t])
 
   // ORIGINAL ANSWER INITIALIZATION LOGIC - PRESERVED
   useEffect(() => {
@@ -282,14 +276,10 @@ const QuickClashQuiz = ({
       }
     } catch (error) {
       console.error('Error submitting quiz:', error)
-      toast({
-        title: t('Error'),
-        description:
-          error.response?.data?.message || t('Failed to submit quiz'),
-        status: 'error',
-        duration: 3000,
-        isClosable: true,
-      })
+      notificationManager.error(
+        t('Error'),
+        error.response?.data?.message || t('Failed to submit quiz')
+      )
     } finally {
       setSubmitLoading(false)
     }
@@ -300,7 +290,6 @@ const QuickClashQuiz = ({
     sessionId,
     submitLoading,
     submitted,
-    toast,
     t,
     currentQuestionIndex,
     onComplete,

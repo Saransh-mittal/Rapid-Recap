@@ -7,7 +7,6 @@ import {
   Button,
   HStack,
   Icon,
-  useToast,
   Flex,
   Badge,
   Progress,
@@ -16,6 +15,7 @@ import { FaTrophy, FaLock, FaClock } from 'react-icons/fa'
 import { motion, AnimatePresence } from 'framer-motion'
 import { useTranslation } from 'react-i18next'
 import axios from 'axios'
+import { notificationManager } from '../../utils/notifications'
 
 const MotionBox = motion(Box)
 const MotionButton = motion(Button)
@@ -27,7 +27,6 @@ const BettingScreen = ({
   user,
 }) => {
   const { t } = useTranslation('QuickClash')
-  const toast = useToast()
   const [selectedBet, setSelectedBet] = useState(null)
   const [timeLeft, setTimeLeft] = useState(30)
   const [isSubmitting, setIsSubmitting] = useState(false)
@@ -69,13 +68,10 @@ const BettingScreen = ({
         amount,
       })
 
-      toast({
-        title: t('Bet Placed'),
-        description: t('You bet {{amount}} trophies', { amount }),
-        status: 'success',
-        duration: 2000,
-        isClosable: true,
-      })
+      notificationManager.success(
+        t('Bet Placed'),
+        t('You bet {{amount}} trophies', { amount })
+      )
 
       // Proceed to next phase
       onComplete(amount)
@@ -84,13 +80,10 @@ const BettingScreen = ({
 
       // If error (e.g., insufficient funds), try placing 0 bet as fallback
       if (amount > 0) {
-        toast({
-          title: t('Bet Failed'),
-          description: t('Insufficient trophies or error. Defaulting to 0.'),
-          status: 'warning',
-          duration: 3000,
-          isClosable: true,
-        })
+        notificationManager.warning(
+          t('Bet Failed'),
+          t('Insufficient trophies or error. Defaulting to 0.')
+        )
         try {
             await axios.post(`/api/quickClash/challenge/${challengeId}/bet`, {
                 amount: 0,

@@ -1,7 +1,7 @@
 // customHooks/useQuickClashGlobalMatchmaking.js - COMPLETE SIMPLIFIED VERSION
 import { useCallback, useState, useRef, useEffect } from 'react'
 import { useDispatch, useSelector } from 'react-redux'
-import { useToast } from '@chakra-ui/react'
+import { notificationManager } from '../utils/notifications'
 import { useTranslation } from 'react-i18next'
 import { useNavigate } from 'react-router-dom'
 import {
@@ -28,7 +28,6 @@ import axios from 'axios'
 const useQuickClashGlobalMatchmaking = () => {
   const dispatch = useDispatch()
   const navigate = useNavigate()
-  const toast = useToast()
   const { t } = useTranslation('QuickClash')
 
   const socketState = useSelector(state => state.quickClashSocket)
@@ -204,19 +203,13 @@ const useQuickClashGlobalMatchmaking = () => {
       matchmakingStartTimeRef.current = Date.now()
       setLocalMatchmakingTime(0)
       const result = await dispatch(joinGlobalMatchmaking()).unwrap()
-      toast({
-        title: t('Joined 4v4 Matchmaking'),
-        description: t('Looking for team members and opponents...'),
-        status: 'info',
-        duration: 3000,
-        isClosable: true,
-      })
+      notificationManager.matchmaking(t('Joined 4v4 Matchmaking'), t('Looking for team members and opponents...'))
       return result
     } catch (error) {
       console.error('Error joining solo matchmaking:', error)
       throw error
     }
-  }, [dispatch, toast, t])
+  }, [dispatch, t])
 
   // Join with team
   const joinWithTeam = useCallback(
@@ -244,20 +237,14 @@ const useQuickClashGlobalMatchmaking = () => {
         const result = await dispatch(
           joinTeamMatchmaking({ teamId, teamName: currentTeamName }),
         ).unwrap()
-        toast({
-          title: t('Team Joined Matchmaking'),
-          description: t('Looking for opponents...'),
-          status: 'info',
-          duration: 3000,
-          isClosable: true,
-        })
+        notificationManager.matchmaking(t('Team Joined Matchmaking'), t('Looking for opponents...'))
         return { ...result, teamName: currentTeamName }
       } catch (error) {
         console.error('Error joining with team:', error)
         throw error
       }
     },
-    [dispatch, toast, t],
+    [dispatch, t],
   )
 
   // Leave matchmaking
@@ -281,19 +268,13 @@ const useQuickClashGlobalMatchmaking = () => {
         await dispatch(leaveGlobalMatchmaking()).unwrap()
       }
 
-      toast({
-        title: t('Left Matchmaking'),
-        status: 'info',
-        duration: 3000,
-        isClosable: true,
-      })
+      notificationManager.info(t('Left Matchmaking'))
     } catch (error) {
       console.error('Error leaving matchmaking:', error)
       throw error
     }
   }, [
     dispatch,
-    toast,
     t,
     globalMatchmakingState.matchmakingType,
     globalMatchmakingState.selectedTeamId,
@@ -317,15 +298,9 @@ const useQuickClashGlobalMatchmaking = () => {
       dispatch(clearBattleReady())
     } else {
       console.warn('Enter battle called but no battleId found')
-      toast({
-        title: t('Battle Not Ready'),
-        description: t('The battle is not ready or an error occurred.'),
-        status: 'warning',
-        duration: 3000,
-        isClosable: true,
-      })
+      notificationManager.warning(t('Battle Not Ready'), t('The battle is not ready or an error occurred.'))
     }
-  }, [navigate, dispatch, globalMatchmakingState.battleReady, toast, t])
+  }, [navigate, dispatch, globalMatchmakingState.battleReady, t])
 
   // Format matchmaking time
   const formatMatchmakingTime = useCallback(seconds => {
@@ -338,17 +313,11 @@ const useQuickClashGlobalMatchmaking = () => {
   const retryAfterFailure = useCallback(async () => {
     try {
       dispatch(clearBattleCreationState())
-      toast({
-        title: t('Ready to Try Again'),
-        description: t('You can now join matchmaking again.'),
-        status: 'info',
-        duration: 3000,
-        isClosable: true,
-      })
+      notificationManager.info(t('Ready to Try Again'), t('You can now join matchmaking again.'))
     } catch (error) {
       console.error('Error resetting after failure:', error)
     }
-  }, [dispatch, toast, t])
+  }, [dispatch, t])
 
   return {
     // State

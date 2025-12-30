@@ -9,7 +9,6 @@ import {
   Badge,
   Divider,
   Icon,
-  useToast,
   Alert,
   AlertIcon,
   AlertDescription,
@@ -19,6 +18,7 @@ import { motion } from 'framer-motion'
 import { useTranslation } from 'react-i18next'
 import { Users, Check, X, Clock } from 'lucide-react'
 import axios from 'axios'
+import { notificationManager } from '../../../utils/notifications'
 
 const MotionBox = motion(Box)
 const MotionButton = motion(Button)
@@ -32,7 +32,6 @@ const TeamInvitationNotification = ({
   onClose,
 }) => {
   const { t } = useTranslation('QuickClash')
-  const toast = useToast()
   const [loading, setLoading] = useState(false)
   const [actionType, setActionType] = useState(null) // 'accept' or 'reject'
 
@@ -51,13 +50,10 @@ const TeamInvitationNotification = ({
         `/api/quickClash/team/invitation/${notification._id}/accept`,
       )
 
-      toast({
-        title: t('Invitation Accepted'),
-        description: t('You have successfully joined the team!'),
-        status: 'success',
-        duration: 4000,
-        isClosable: true,
-      })
+      notificationManager.success(
+        t('Invitation Accepted'),
+        t('You have successfully joined the team!')
+      )
 
       // Call the callback to refresh notifications and close modal
       if (onInvitationHandled) {
@@ -69,14 +65,10 @@ const TeamInvitationNotification = ({
         if (onClose) onClose()
       }, 1500)
     } catch (error) {
-      toast({
-        title: t('Error'),
-        description:
-          error.response?.data?.message || t('Failed to accept invitation'),
-        status: 'error',
-        duration: 4000,
-        isClosable: true,
-      })
+      notificationManager.error(
+        t('Error'),
+        error.response?.data?.message || t('Failed to accept invitation')
+      )
     } finally {
       setLoading(false)
       setActionType(null)
@@ -93,13 +85,10 @@ const TeamInvitationNotification = ({
         `/api/quickClash/team/invitation/${notification._id}/reject`,
       )
 
-      toast({
-        title: t('Invitation Rejected'),
-        description: t('You have declined the team invitation'),
-        status: 'info',
-        duration: 3000,
-        isClosable: true,
-      })
+      notificationManager.info(
+        t('Invitation Rejected'),
+        t('You have declined the team invitation')
+      )
 
       // Call the callback to refresh notifications
       if (onInvitationHandled) {
@@ -111,14 +100,10 @@ const TeamInvitationNotification = ({
         if (onClose) onClose()
       }, 1500)
     } catch (error) {
-      toast({
-        title: t('Error'),
-        description:
-          error.response?.data?.message || t('Failed to reject invitation'),
-        status: 'error',
-        duration: 4000,
-        isClosable: true,
-      })
+      notificationManager.error(
+        t('Error'),
+        error.response?.data?.message || t('Failed to reject invitation')
+      )
     } finally {
       setLoading(false)
       setActionType(null)

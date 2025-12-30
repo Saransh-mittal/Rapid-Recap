@@ -8,7 +8,7 @@ import React, {
   useRef,
   memo,
 } from 'react'
-import { useToast } from '@chakra-ui/react'
+import { notificationManager } from '../../utils/notifications'
 import { useTranslation } from 'react-i18next'
 import { useNavigate } from 'react-router-dom'
 import { useSelector } from 'react-redux'
@@ -80,7 +80,6 @@ ActiveChallengesSkeleton.displayName = 'ActiveChallengesSkeleton'
  */
 const ActiveChallenges = () => {
   const { t } = useTranslation('QuickClash')
-  const toast = useToast()
   const navigate = useNavigate()
 
   // State management for 4v4 only
@@ -160,18 +159,11 @@ const ActiveChallenges = () => {
     try {
       await loadMoreTeamBattles()
     } catch (err) {
-      toast({
-        title: t('Error'),
-        description: t('Failed to load more battles'),
-        status: 'error',
-        duration: 3000,
-        isClosable: true,
-        position: 'top-right',
-      })
+      notificationManager.error(t('Error'), t('Failed to load more battles'))
     } finally {
       setNextPageLoading(false)
     }
-  }, [nextPageLoading, activeBattlesHasMore, loadMoreTeamBattles, toast, t])
+  }, [nextPageLoading, activeBattlesHasMore, loadMoreTeamBattles, t])
 
   // Confirmation dialog handlers
   const closeConfirmDialog = useCallback(() => {

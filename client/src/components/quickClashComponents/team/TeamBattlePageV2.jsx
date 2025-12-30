@@ -9,7 +9,7 @@ import {
   TrendingUp, TrendingDown, Award, ChevronRight, Flame,
 } from 'lucide-react'
 import { useTranslation } from 'react-i18next'
-import { useToast } from '@chakra-ui/react'
+import { notificationManager } from '../../../utils/notifications'
 import { differenceInSeconds, differenceInMinutes, differenceInHours } from 'date-fns'
 
 import useQuickClashTeamBattle from '../../../customHooks/useQuickClashTeamBattle'
@@ -832,7 +832,7 @@ const TeamBattlePageV2 = React.memo(() => {
   const [isCalculatingResults, setIsCalculatingResults] = useState(false)
   const [isClaimModalOpen, setIsClaimModalOpen] = useState(false)
 
-  const toast = useToast()
+
 
   // Local state to bridge the gap between click and API/Socket update
   const [localProcessingCategory, setLocalProcessingCategory] = useState(null)
@@ -1093,14 +1093,7 @@ const TeamBattlePageV2 = React.memo(() => {
                   onClick={() => {
                     quizAudioService.playButtonClick()
                     if (userStatus.participated) {
-                      toast({
-                        title: 'Already Participated',
-                        description: 'You have already played in this battle. Powerups cannot be changed.',
-                        status: 'info',
-                        duration: 3000,
-                        isClosable: true,
-                        position: 'top',
-                      })
+                      notificationManager.info('Already Participated', 'You have already played in this battle. Powerups cannot be changed.')
                     } else {
                       setIsSelectionOpen(true)
                     }
@@ -1230,7 +1223,7 @@ const TeamBattlePageV2 = React.memo(() => {
       {currentBattle && userPowerupReward && (
         <ClaimRewardsModal
           isOpen={isClaimModalOpen}
-          onClose={() => setIsClaimModalOpen(false)}
+          onClose={() => { setIsClaimModalOpen(false); getBattleDetails(currentBattle._id) }}
           battleResult={{
             _id: currentBattle._id,
             teamWon: currentBattle.winner === userTeam,
@@ -1251,8 +1244,11 @@ const TeamBattlePageV2 = React.memo(() => {
               body: JSON.stringify({ battleId }),
             })
             if (!response.ok) throw new Error('Failed to claim rewards')
-            // Refresh battle details to update claim status
-            getBattleDetails(battleId)
+            const data = await response.json()
+            if (!data.success) throw new Error(data.message || 'Failed to claim rewards')
+            // Return data - don't refresh battle details yet to avoid race condition
+            // The modal will show success animation, then we'll refresh after it closes
+            return data
           }}
         />
       )}

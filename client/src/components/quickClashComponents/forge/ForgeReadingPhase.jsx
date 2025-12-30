@@ -25,7 +25,7 @@
 import React, { useState, useEffect, useCallback, useRef } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
 import { useTranslation } from 'react-i18next'
-import { useToast } from '@chakra-ui/react'
+import { notificationManager } from '../../../utils/notifications'
 import {
   Sparkles,
   BookOpen,
@@ -70,7 +70,6 @@ import { quizAudioService } from '../../../services/quizAudioService'
  */
 const ForgeReadingPhase = ({ sessionId, category, activePowerups = [], onComplete, onPowerupUsed, onError }) => {
   const { t } = useTranslation('QuickClash')
-  const toast = useToast()
 
   // Get category-based accent color for theming
   const categoryInfo = getCategoryInfo(category || 'Science')
@@ -167,12 +166,7 @@ const ForgeReadingPhase = ({ sessionId, category, activePowerups = [], onComplet
     if (phase === 'question' && questionTimer >= maxQuestionTime) {
       if (!selectedAnswer && !isTimeout) {
         setIsTimeout(true)
-        toast({
-          title: 'Time Up!',
-          description: 'Moving to content...',
-          status: 'warning',
-          duration: 2000,
-        })
+        notificationManager.warning('Time Up!', 'Moving to content...')
         setTimeout(() => {
           handleAnswerSubmit(null)
         }, 1500)
@@ -250,13 +244,7 @@ const ForgeReadingPhase = ({ sessionId, category, activePowerups = [], onComplet
       setError(errorMessage)
       onError?.(errorMessage)
 
-      toast({
-        title: t('Error'),
-        description: errorMessage,
-        status: 'error',
-        duration: 5000,
-        isClosable: true,
-      })
+      notificationManager.error(t('Error'), errorMessage)
     } finally {
       setLoading(false)
     }
@@ -346,13 +334,7 @@ const ForgeReadingPhase = ({ sessionId, category, activePowerups = [], onComplet
       const errorMessage =
         err.response?.data?.message || 'Failed to submit answer'
 
-      toast({
-        title: t('Error'),
-        description: errorMessage,
-        status: 'error',
-        duration: 3000,
-        isClosable: true,
-      })
+      notificationManager.error(t('Error'), errorMessage)
 
       // Reset for retry
       setSelectedAnswer(null)
@@ -451,13 +433,7 @@ const ForgeReadingPhase = ({ sessionId, category, activePowerups = [], onComplet
       const errorMessage =
         err.response?.data?.message || 'Failed to load next section'
 
-      toast({
-        title: t('Error'),
-        description: errorMessage,
-        status: 'error',
-        duration: 3000,
-        isClosable: true,
-      })
+      notificationManager.error(t('Error'), errorMessage)
 
       // Reset transition guard on error so user can retry
       isTransitioningRef.current = false
@@ -520,12 +496,12 @@ const ForgeReadingPhase = ({ sessionId, category, activePowerups = [], onComplet
             // Reading timer counts DOWN. So we just add to it.
             setReadingTimer(prev => prev + 15)
           }
-          toast({ title: 'Time Warp Activated!', status: 'info', duration: 2000 })
+          notificationManager.powerup('Time Warp Activated!')
           break
         case 'SCORE_SURGE':
           quizAudioService.playScoreSurge() // Power boost whoosh
           setActiveEffects(prev => ({ ...prev, scoreSurge: true }))
-          toast({ title: 'Score Surge Active!', description: '2x Points for this question', status: 'warning', duration: 2000 })
+          notificationManager.powerup('Score Surge Active!', '2x Points for this question')
           break
         case 'ORACLES_EYE':
           quizAudioService.playOraclesEye() // Mystical reveal chime
@@ -533,7 +509,7 @@ const ForgeReadingPhase = ({ sessionId, category, activePowerups = [], onComplet
           const effect = response.effect
           if (effect.type === 'REMOVE_OPTIONS') {
             setDisabledOptions(prev => [...prev, ...effect.optionsToRemove])
-            toast({ title: "Oracle's Eye Activated", description: "Two incorrect options removed!", status: "success" })
+            notificationManager.powerup("Oracle's Eye Activated", "Two incorrect options removed!")
           }
           break
         default:
@@ -545,7 +521,7 @@ const ForgeReadingPhase = ({ sessionId, category, activePowerups = [], onComplet
       onPowerupUsed?.(powerup.powerupId)
     } catch (err) {
       console.error('Error using powerup:', err)
-      toast({ title: 'Powerup Failed', description: 'Could not activate powerup', status: 'error' })
+      notificationManager.error('Powerup Failed', 'Could not activate powerup')
       // Revert used state if failed
       setUsedPowerups(prev => {
         const newState = { ...prev }

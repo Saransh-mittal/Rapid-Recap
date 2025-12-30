@@ -48,7 +48,7 @@ const ForgeArticle = require('../../model/quickClashSchemas/forgeArticleSchema')
 
 // Constants
 // const TEAM_BATTLE_EXPIRY = 4 * 60 * 60 * 1000 // 4 hours same as regular challenges
-const TEAM_BATTLE_EXPIRY = 10 * 60 * 1000
+const TEAM_BATTLE_EXPIRY = 1 * 60 * 1000
 const BASE_TROPHIES = 120 // Base trophies for 4v4 mode
 const TROPHY_K_FACTOR = 0.8 // From trophy formula
 

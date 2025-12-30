@@ -8,10 +8,10 @@ import {
   ModalFooter,
   ModalCloseButton,
   useBreakpointValue,
-  useToast,
 } from '@chakra-ui/react'
 import { useTranslation } from 'react-i18next'
 import { useDispatch } from 'react-redux'
+import { notificationManager } from '../../../utils/notifications'
 
 // Import utility functions
 import { processCategories } from '../../../utils/categoryUtils'
@@ -37,7 +37,6 @@ import { quizAudioService } from '../../../services/quizAudioService'
 
 const NewChallengeModal = ({ isOpen, onClose, preSelectedUser = null }) => {
   const { t } = useTranslation('QuickClash')
-  const toast = useToast()
   const dispatch = useDispatch()
 
   const { createChallenge, challengeCreating: isSubmitting } = useQuickClash()
@@ -115,18 +114,12 @@ const NewChallengeModal = ({ isOpen, onClose, preSelectedUser = null }) => {
   // Go to next step
   const goToNextStep = useCallback(() => {
     if (step === 1 && !selectedUser) {
-      toast({
-        title: t('Please select an opponent'),
-        status: 'warning',
-        duration: 2000,
-        isClosable: true,
-        position: 'top',
-      })
+      notificationManager.warning(t('Please select an opponent'))
       return
     }
     quizAudioService.playButtonClick() // Sound for next step
     setStep(2)
-  }, [step, selectedUser, t, toast])
+  }, [step, selectedUser, t])
 
   // Go back to previous step
   const goToPreviousStep = useCallback(() => {
@@ -138,14 +131,10 @@ const NewChallengeModal = ({ isOpen, onClose, preSelectedUser = null }) => {
   const handleSubmit = useCallback(async () => {
     // Requires exactly 1 category
     if (!selectedUser || selectedCategories.length !== 1) {
-      toast({
-        title: t('Incomplete selection'),
-        description: t('Please select an opponent and a category'),
-        status: 'warning',
-        duration: 3000,
-        isClosable: true,
-        position: 'top',
-      })
+      notificationManager.warning(
+        t('Incomplete selection'),
+        t('Please select an opponent and a category')
+      )
       return
     }
 
@@ -177,7 +166,6 @@ const NewChallengeModal = ({ isOpen, onClose, preSelectedUser = null }) => {
   }, [
     selectedUser,
     selectedCategories,
-    toast,
     t,
     createChallenge,
 

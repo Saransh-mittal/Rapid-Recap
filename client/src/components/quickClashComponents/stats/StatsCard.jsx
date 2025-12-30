@@ -4,22 +4,21 @@ import {
   Box,
   Flex,
   Text,
-  useToast,
   Skeleton,
   Grid,
   GridItem,
 } from '@chakra-ui/react'
 import { motion } from 'framer-motion'
-import { Trophy, Award, Users, Sparkles } from 'lucide-react' // Changed Clock to Award
+import { Trophy, Award, Users, Sparkles } from 'lucide-react'
 import { useTranslation } from 'react-i18next'
 import useQuickClash from '../../../customHooks/useQuickClash'
+import { notificationManager } from '../../../utils/notifications'
 
 const MotionBox = motion(Box)
 const MotionFlex = motion(Flex)
 
 const StatsCard = () => {
   const { t } = useTranslation('QuickClash')
-  const toast = useToast()
   const {
     userStats: stats,
     userStatsLoading: loading,
@@ -29,15 +28,9 @@ const StatsCard = () => {
   // Fetch stats on component mount
   useEffect(() => {
     loadUserStats().catch(error => {
-      toast({
-        title: t('Error'),
-        description: error || t('Failed to load statistics'),
-        status: 'error',
-        duration: 3000,
-        isClosable: true,
-      })
+      notificationManager.error(t('Error'), error || t('Failed to load statistics'))
     })
-  }, [loadUserStats, toast, t])
+  }, [loadUserStats, t])
 
   // Get best category
   const bestCategory = useMemo(() => {

@@ -307,7 +307,22 @@ const quickClashGlobalMatchmakingSlice = createSlice({
     },
 
     handleTeamReturnedToMatchmaking: (state, action) => {
-      const { startTime } = action.payload || {}
+      const { teamId, teamName, startTime } = action.payload || {}
+
+      // Re-enable matchmaking state since team is back in queue
+      state.inMatchmaking = true
+      state.step = 'searching'
+      state.battleCreationStatus = null
+      state.battleCreationError = null
+
+      // Update team info if provided
+      if (teamId) {
+        state.selectedTeamId = teamId
+      }
+      if (teamName) {
+        state.teamName = teamName
+      }
+
       state.shouldRefetchTeams = true
 
       // Add status update
@@ -325,9 +340,24 @@ const quickClashGlobalMatchmakingSlice = createSlice({
     },
 
     handleTeamJoinedMatchmaking: (state, action) => {
-      const { startTime } = action.payload || {}
+      const { teamId, teamName, startTime, memberCount, teamMembers, avgTrophies } = action.payload || {}
+
+      // Set core matchmaking state - this is what the button reads
+      state.inMatchmaking = true
+      state.matchmakingType = 'team'
+      state.step = 'searching'
+
+      // Set team details
+      if (teamId) {
+        state.selectedTeamId = teamId
+      }
+      if (teamName) {
+        state.teamName = teamName
+      }
+
+      // Trigger refetch and status check
       state.shouldRefetchTeams = true
-      state.shouldCheckStatus = true // Trigger status check
+      state.shouldCheckStatus = true
 
       // Add status update
       const currentTime = startTime

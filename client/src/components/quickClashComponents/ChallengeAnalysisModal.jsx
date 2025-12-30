@@ -23,7 +23,6 @@ import {
   Button,
   Flex,
   IconButton,
-  useToast,
 } from '@chakra-ui/react'
 import { motion } from 'framer-motion'
 import { Brain, XCircle, ArrowLeft } from 'lucide-react'
@@ -31,6 +30,7 @@ import axios from 'axios'
 import { useTranslation } from 'react-i18next'
 import { useSelector } from 'react-redux'
 import useDailyTasks from '../../customHooks/useDailyTasks'
+import { notificationManager } from '../../utils/notifications'
 
 // Lazy loaded tab components
 const PerformanceTab = lazy(() => import('./analysisComponents/PerformanceTab'))
@@ -51,7 +51,6 @@ const ChallengeAnalysisModal = ({ isOpen, onClose, challengeId }) => {
   const [error, setError] = useState(null)
   const [analysis, setAnalysis] = useState(null)
   const [activeTab, setActiveTab] = useState(0)
-  const toast = useToast()
   const { trackAnalysisView } = useDailyTasks()
 
   // Background colors - more soothing gradient
@@ -83,13 +82,10 @@ const ChallengeAnalysisModal = ({ isOpen, onClose, challengeId }) => {
 
         // If no analysis exists, generate one
         if (!response.data.analysis) {
-          toast({
-            title: t('Generating analysis'),
-            description: t('Please wait while we analyze your battle...'),
-            status: 'info',
-            duration: 3000,
-            isClosable: true,
-          })
+          notificationManager.info(
+            t('Generating analysis'),
+            t('Please wait while we analyze your battle...')
+          )
 
           response = await axios.post(
             `/api/quickClash/analysis/${challengeId}/generate`,
@@ -110,7 +106,7 @@ const ChallengeAnalysisModal = ({ isOpen, onClose, challengeId }) => {
     }
 
     fetchAnalysis()
-  }, [isOpen, challengeId, toast, t])
+  }, [isOpen, challengeId, t])
   useEffect(() => {
     if (analysis) {
       // Track when user views an analysis

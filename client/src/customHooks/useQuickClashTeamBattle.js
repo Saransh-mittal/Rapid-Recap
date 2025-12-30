@@ -1,7 +1,7 @@
 // customHooks/useQuickClashTeamBattle.js - COMPLETE SIMPLIFIED VERSION
 import { useCallback } from 'react'
 import { useDispatch, useSelector } from 'react-redux'
-import { useToast } from '@chakra-ui/react'
+import { notificationManager } from '../utils/notifications'
 import { useTranslation } from 'react-i18next'
 import { useNavigate } from 'react-router-dom'
 import {
@@ -26,7 +26,6 @@ import {
 const useQuickClashTeamBattle = () => {
   const dispatch = useDispatch()
   const navigate = useNavigate()
-  const toast = useToast()
   const { t } = useTranslation('QuickClash')
 
   const socketState = useSelector(state => state.quickClashSocket)
@@ -72,17 +71,11 @@ const useQuickClashTeamBattle = () => {
         .unwrap()
         .then(result => result)
         .catch(error => {
-          toast({
-            title: t('Error'),
-            description: error || t('Failed to select category'),
-            status: 'error',
-            duration: 3000,
-            isClosable: true,
-          })
+          notificationManager.error(t('Error'), error || t('Failed to select category'))
           throw error
         })
     },
-    [dispatch, toast, t],
+    [dispatch, t],
   )
 
   // Deselect category
@@ -92,17 +85,11 @@ const useQuickClashTeamBattle = () => {
         .unwrap()
         .then(result => result)
         .catch(error => {
-          toast({
-            title: t('Error'),
-            description: error || t('Failed to deselect category'),
-            status: 'error',
-            duration: 3000,
-            isClosable: true,
-          })
+          notificationManager.error(t('Error'), error || t('Failed to deselect category'))
           throw error
         })
     },
-    [dispatch, toast, t],
+    [dispatch, t],
   )
 
   // Begin challenge
@@ -126,17 +113,11 @@ const useQuickClashTeamBattle = () => {
           return result
         })
         .catch(error => {
-          toast({
-            title: t('Error'),
-            description: error || t('Failed to start challenge'),
-            status: 'error',
-            duration: 3000,
-            isClosable: true,
-          })
+          notificationManager.error(t('Error'), error || t('Failed to start challenge'))
           throw error
         })
     },
-    [dispatch, navigate, toast, t, user?._id],
+    [dispatch, navigate, t, user?._id],
   )
 
   // Join matchmaking
@@ -145,13 +126,7 @@ const useQuickClashTeamBattle = () => {
       return dispatch(joinTeamMatchmaking({ teamId }))
         .unwrap()
         .then(result => {
-          toast({
-            title: t('Joined Matchmaking'),
-            description: t('Looking for opponents...'),
-            status: 'info',
-            duration: 3000,
-            isClosable: true,
-          })
+          notificationManager.matchmaking(t('Joined Matchmaking'), t('Looking for opponents...'))
           return result
         })
         .catch(error => {
@@ -160,32 +135,20 @@ const useQuickClashTeamBattle = () => {
             if (error.memberName) {
               title = t(`${error.memberName} Already in Matchmaking`)
             }
-            toast({
-              title: title,
-              description:
-                error.reason ||
-                error.message ||
-                t('A team member is already in an active matchmaking queue'),
-              status: 'warning',
-              duration: 5000,
-              isClosable: true,
-            })
+            notificationManager.warning(
+              title,
+              error.reason || error.message || t('A team member is already in an active matchmaking queue')
+            )
           } else {
-            toast({
-              title: t('Error'),
-              description:
-                error.reason ||
-                error.message ||
-                t('Failed to join matchmaking'),
-              status: 'error',
-              duration: 5000,
-              isClosable: true,
-            })
+            notificationManager.error(
+              t('Error'),
+              error.reason || error.message || t('Failed to join matchmaking')
+            )
           }
           throw error
         })
     },
-    [dispatch, toast, t],
+    [dispatch, t],
   )
 
   // Leave matchmaking
@@ -194,26 +157,15 @@ const useQuickClashTeamBattle = () => {
       return dispatch(leaveTeamMatchmaking(teamId))
         .unwrap()
         .then(result => {
-          toast({
-            title: t('Left Matchmaking'),
-            status: 'info',
-            duration: 3000,
-            isClosable: true,
-          })
+          notificationManager.info(t('Left Matchmaking'))
           return result
         })
         .catch(error => {
-          toast({
-            title: t('Error'),
-            description: error || t('Failed to leave matchmaking'),
-            status: 'error',
-            duration: 3000,
-            isClosable: true,
-          })
+          notificationManager.error(t('Error'), error || t('Failed to leave matchmaking'))
           throw error
         })
     },
-    [dispatch, toast, t],
+    [dispatch, t],
   )
 
   // Check matchmaking status

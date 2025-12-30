@@ -120,15 +120,13 @@ const BattleHistoryV2 = () => {
   const handleConfirmClaim = useCallback(async (battleId) => {
     try {
       await dispatch(claimPowerupReward(battleId)).unwrap()
-      setClaimModalOpen(false)
-      setSelectedBattle(null)
-      // Refresh the list to update card state
-      await loadTeamBattles('completed')
+      // Don't close modal here - let it show success animation and auto-close
+      // The modal's onClose will be triggered after success animation
     } catch (error) {
       console.error('Failed to claim reward:', error)
       throw error // Re-throw for modal to handle
     }
-  }, [dispatch, loadTeamBattles])
+  }, [dispatch])
 
   // Derived - only show loading on FIRST load when no data
   const loadedCount = completedBattles?.length || 0
@@ -246,6 +244,8 @@ const BattleHistoryV2 = () => {
         onClose={() => {
           setClaimModalOpen(false)
           setSelectedBattle(null)
+          // Refresh the list to update card state
+          loadTeamBattles('completed')
         }}
         battleResult={selectedBattle}
         onClaim={handleConfirmClaim}

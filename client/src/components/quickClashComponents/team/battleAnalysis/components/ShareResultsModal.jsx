@@ -1,4 +1,3 @@
-// components/quickClashComponents/team/battleAnalysis/components/ShareResultsModal.jsx
 import React, { useState, useRef, useMemo } from 'react'
 import {
   Modal,
@@ -25,10 +24,10 @@ import {
   TabPanels,
   Tab,
   TabPanel,
-  useToast,
   Textarea,
 } from '@chakra-ui/react'
 import { useTranslation } from 'react-i18next'
+import { notificationManager } from '../../../../../utils/notifications'
 import {
   Share2,
   Copy,
@@ -46,7 +45,6 @@ import html2canvas from 'html2canvas'
 
 const ShareResultsModal = ({ isOpen, onClose, battle, userTeam }) => {
   const { t } = useTranslation('QuickClash')
-  const toast = useToast()
   const [isGeneratingImage, setIsGeneratingImage] = useState(false)
   const [showTrophies, setShowTrophies] = useState(true)
   const [showPersonalScore, setShowPersonalScore] = useState(true)
@@ -152,23 +150,10 @@ const ShareResultsModal = ({ isOpen, onClose, battle, userTeam }) => {
       document.body.appendChild(link)
       link.click()
       document.body.removeChild(link)
-      toast({
-        title: t('Image Downloaded'),
-        status: 'success',
-        duration: 3000,
-        isClosable: true,
-        position: 'top',
-      })
+      notificationManager.success(t('Image Downloaded'))
     } catch (error) {
       console.error('Error generating image:', error)
-      toast({
-        title: t('Image Generation Failed'),
-        description: error.message,
-        status: 'error',
-        duration: 5000,
-        isClosable: true,
-        position: 'top',
-      })
+      notificationManager.error(t('Image Generation Failed'), error.message)
     } finally {
       setIsGeneratingImage(false)
     }
@@ -188,21 +173,9 @@ const ShareResultsModal = ({ isOpen, onClose, battle, userTeam }) => {
     shareText += `\n#QuickClash #RapidRecap`
     try {
       await navigator.clipboard.writeText(shareText)
-      toast({
-        title: t('Text Copied'),
-        status: 'success',
-        duration: 3000,
-        isClosable: true,
-        position: 'top',
-      })
+      notificationManager.success(t('Text Copied'))
     } catch (error) {
-      toast({
-        title: t('Copy Failed'),
-        status: 'error',
-        duration: 3000,
-        isClosable: true,
-        position: 'top',
-      })
+      notificationManager.error(t('Copy Failed'))
     }
   }
 
