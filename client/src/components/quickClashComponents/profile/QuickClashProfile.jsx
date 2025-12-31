@@ -62,9 +62,14 @@ import {
   Lightbulb,
   BookOpen,
   Wand2,
+  LogOut,
 } from 'lucide-react'
-import { useParams } from 'react-router-dom'
-import { useSelector } from 'react-redux'
+import { useParams, useNavigate } from 'react-router-dom'
+import { useSelector, useDispatch } from 'react-redux'
+import { logoutAuth } from '../../../redux/authSlice'
+import { logoutApp, resetLoadingFlags, resetAllState } from '../../../redux/appSlice'
+import { useTranslation } from 'react-i18next'
+import i18n from 'i18next'
 import axios from 'axios'
 import moment from 'moment'
 
@@ -114,10 +119,15 @@ const subtleGlowVariants = {
 
 const QuickClashProfile = ({ userId: propUserId }) => {
   const { inGameName } = useParams()
+  const navigate = useNavigate()
+  const dispatch = useDispatch()
+  const { t } = useTranslation('QuickClash')
   const { user } = useSelector(state => state.auth)
   const [profile, setProfile] = useState(null)
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState(null)
+  const [logoutLoading, setLogoutLoading] = useState(false)
+  const [showLogoutConfirm, setShowLogoutConfirm] = useState(false)
   const [expandedSections, setExpandedSections] = useState({
     achievements: true,
     activity: true,
@@ -129,9 +139,10 @@ const QuickClashProfile = ({ userId: propUserId }) => {
   const containerMaxW = useBreakpointValue({ base: 'full', lg: 'container.xl' })
 
   // Determine if this is the current user's profile
+  // If no propUserId and no inGameName in params, this is accessed from the Quick Clash Profile tab (own profile)
   const isOwnProfile = propUserId
     ? propUserId === user?._id
-    : inGameName === user?.inGameName
+    : !inGameName || inGameName === user?.inGameName
 
   const targetUserId = propUserId || user?._id
 
@@ -215,6 +226,42 @@ const QuickClashProfile = ({ userId: propUserId }) => {
       [section]: !prev[section],
     }))
   }, [])
+
+  // Logout handler
+  const handleLogout = useCallback(async () => {
+    setLogoutLoading(true)
+    try {
+      const response = await axios.post('/api/user/logout')
+      if (response.status === 200 || response.status === 201) {
+        await i18n.changeLanguage('en')
+        localStorage.removeItem('token')
+        localStorage.removeItem('role')
+        dispatch(logoutAuth())
+        dispatch(logoutApp())
+        dispatch(resetLoadingFlags())
+        dispatch(resetAllState())
+        navigate('/')
+      }
+    } catch (error) {
+      console.error('Logout failed:', error)
+    } finally {
+      setLogoutLoading(false)
+    }
+  }, [dispatch, navigate])
+
+  // Guest logout confirmation handler
+  const handleLogoutClick = useCallback(() => {
+    if (user?.role === 'guest') {
+      setShowLogoutConfirm(true)
+    } else {
+      handleLogout()
+    }
+  }, [user?.role, handleLogout])
+
+  const handleConfirmGuestLogout = useCallback(() => {
+    setShowLogoutConfirm(false)
+    handleLogout()
+  }, [handleLogout])
 
   // Memoized calculations
   const userLevel = useMemo(() => profile?.user?.level || 0, [profile])
@@ -1014,6 +1061,111 @@ const QuickClashProfile = ({ userId: propUserId }) => {
                 </VStack>
               </CompactSection>
             </MotionBox>
+
+            {/* Logout Section - Only show on own profile */}
+            {isOwnProfile && (
+              <MotionBox variants={itemVariants} w="100%" mt={4}>
+                <Box
+                  bg="rgba(239, 68, 68, 0.06)"
+                  backdropFilter="blur(16px)"
+                  rounded="xl"
+                  p={4}
+                  border="1px solid"
+                  borderColor="rgba(239, 68, 68, 0.2)"
+                >
+                  <Button
+                    onClick={handleLogoutClick}
+                    isLoading={logoutLoading}
+                    loadingText="Logging out..."
+                    w="100%"
+                    size="lg"
+                    bg="rgba(239, 68, 68, 0.15)"
+                    color="#EF4444"
+                    border="1px solid"
+                    borderColor="rgba(239, 68, 68, 0.3)"
+                    _hover={{
+                      bg: 'rgba(239, 68, 68, 0.25)',
+                      borderColor: 'rgba(239, 68, 68, 0.5)',
+                    }}
+                    _active={{
+                      bg: 'rgba(239, 68, 68, 0.3)',
+                    }}
+                    leftIcon={<Icon as={LogOut} boxSize={5} />}
+                    fontWeight="bold"
+                  >
+                    Logout
+                  </Button>
+                </Box>
+              </MotionBox>
+            )}
+
+            {/* Guest Logout Confirmation Modal */}
+            {showLogoutConfirm && (
+              <Box
+                position="fixed"
+                top={0}
+                left={0}
+                right={0}
+                bottom={0}
+                bg="rgba(0, 0, 0, 0.7)"
+                backdropFilter="blur(8px)"
+                zIndex={9999}
+                display="flex"
+                alignItems="center"
+                justifyContent="center"
+                p={4}
+              >
+                <MotionBox
+                  initial={{ opacity: 0, scale: 0.9 }}
+                  animate={{ opacity: 1, scale: 1 }}
+                  bg="linear-gradient(135deg, #1a1527 0%, #0e0c16 100%)"
+                  rounded="2xl"
+                  p={6}
+                  maxW="400px"
+                  w="100%"
+                  border="1px solid"
+                  borderColor="rgba(239, 68, 68, 0.3)"
+                  boxShadow="0 10px 40px rgba(0, 0, 0, 0.5)"
+                >
+                  <VStack spacing={4} align="stretch">
+                    <HStack spacing={3}>
+                      <Circle size="40px" bg="rgba(239, 68, 68, 0.2)">
+                        <Icon as={LogOut} color="#EF4444" boxSize={5} />
+                      </Circle>
+                      <Text fontSize="xl" fontWeight="bold" color="white">
+                        Confirm Logout
+                      </Text>
+                    </HStack>
+                    <Text color="whiteAlpha.700" fontSize="sm">
+                      As a guest user, your progress and account may be lost if you log out. Are you sure you want to proceed?
+                    </Text>
+                    <HStack spacing={3} pt={2}>
+                      <Button
+                        flex={1}
+                        variant="ghost"
+                        color="whiteAlpha.700"
+                        onClick={() => setShowLogoutConfirm(false)}
+                        _hover={{ bg: 'whiteAlpha.100' }}
+                      >
+                        Cancel
+                      </Button>
+                      <Button
+                        flex={1}
+                        bg="rgba(239, 68, 68, 0.2)"
+                        color="#EF4444"
+                        border="1px solid"
+                        borderColor="rgba(239, 68, 68, 0.4)"
+                        onClick={handleConfirmGuestLogout}
+                        isLoading={logoutLoading}
+                        _hover={{ bg: 'rgba(239, 68, 68, 0.3)' }}
+                      >
+                        Confirm Logout
+                      </Button>
+                    </HStack>
+                  </VStack>
+                </MotionBox>
+              </Box>
+            )}
           </VStack>
         </MotionBox>
       </Container>

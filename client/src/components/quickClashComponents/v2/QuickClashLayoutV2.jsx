@@ -22,7 +22,7 @@ import BattleHistoryV2 from '../../../screens/BattleHistoryV2'
 import TeamsPageV2 from '../../../screens/TeamsPageV2'
 
 // Lazy load QuickClash Profile
-const QuickClashProfile = React.lazy(() => import('../profile/QuickClashProfile'))
+const QuickClashProfile = React.lazy(() => import('../profile/QuickClashProfileV2'))
 
 // ============================================================================
 // DATA MANAGER - Prefetch & background refresh
