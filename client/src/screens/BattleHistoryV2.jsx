@@ -1,5 +1,6 @@
 // screens/BattleHistoryV2.jsx
 // V2 Battle History - Uses Redux state, no loading if data exists
+// Now supports both authenticated users AND session players
 
 import React, { useState, useEffect, useCallback, useRef, memo, useMemo } from 'react'
 import { useTranslation } from 'react-i18next'
@@ -12,6 +13,8 @@ import {
   RefreshCw,
   Loader2,
   Calendar,
+  AlertCircle,
+  Sparkles,
 } from 'lucide-react'
 
 // V2 Components
@@ -19,6 +22,9 @@ import BattleCardV2 from '../components/quickClashComponents/v2/BattleCardV2'
 import { EmptyCompletedV2 } from '../components/quickClashComponents/v2/EmptyStateV2'
 import { BattleListSkeletonV2 } from '../components/quickClashComponents/v2/LoadingSkeletonV2'
 import ClaimRewardsModal from '../components/quickClashComponents/powerups/ClaimRewardsModal'
+
+// Player hook (works for both auth and session players)
+import usePlayer from '../hooks/usePlayer'
 
 // Custom hooks
 import useQuickClashTeamBattle from '../customHooks/useQuickClashTeamBattle'
@@ -34,6 +40,9 @@ const BattleHistoryV2 = () => {
   const { t } = useTranslation('QuickClash')
   const navigate = useNavigate()
   const dispatch = useDispatch()
+
+  // Get player info (works for both auth users and session players)
+  const { isSession, isAuthenticated, player, playerId } = usePlayer()
 
   const [isRefreshing, setIsRefreshing] = useState(false)
   const [selectedBattle, setSelectedBattle] = useState(null)
@@ -59,13 +68,14 @@ const BattleHistoryV2 = () => {
     triggerOnce: false,
   })
 
-  // Only load if no data exists yet
+  // Only load if no data exists yet (works for both auth users and session players)
   useEffect(() => {
-    if (user?._id && !initialLoadDone.current && completedBattles.length === 0) {
+    // Session players can also load battles now
+    if ((user?._id || isSession) && !initialLoadDone.current && completedBattles.length === 0) {
       loadTeamBattles('completed')
       initialLoadDone.current = true
     }
-  }, [user, loadTeamBattles, completedBattles.length])
+  }, [user, isSession, loadTeamBattles, completedBattles.length])
 
   // Load more on scroll
   useEffect(() => {
@@ -91,7 +101,22 @@ const BattleHistoryV2 = () => {
   }, [navigate])
 
   const handleClaimReward = useCallback((battle) => {
-    if (!battle || !user) return
+    if (!battle) return
+
+    // Session players need to sign up to claim rewards
+    if (isSession) {
+      // Navigate to conversion/signup with context about why they need to sign up
+      navigate('/play', {
+        state: {
+          intent: 'createAccount',
+          reason: 'claimReward',
+          message: 'Create an account to claim your powerup rewards and keep them forever!'
+        }
+      })
+      return
+    }
+
+    if (!user) return
 
     // Find user's membership in the battle to get their powerupReward
     const userMemberA = battle.teamAMembers?.find(
@@ -115,7 +140,7 @@ const BattleHistoryV2 = () => {
 
     setSelectedBattle(battleResult)
     setClaimModalOpen(true)
-  }, [user])
+  }, [user, isSession, navigate])
 
   const handleConfirmClaim = useCallback(async (battleId) => {
     try {
@@ -195,6 +220,24 @@ const BattleHistoryV2 = () => {
             <RefreshCw className={`w-4 h-4 text-white/60 ${isRefreshing ? 'animate-spin' : ''}`} />
           </button>
         </div>
+
+        {/* Session Player Notice */}
+        {isSession && (
+          <div className="mb-4 p-3 rounded-xl bg-amber-500/10 border border-amber-500/20">
+            <div className="flex items-center gap-2">
+              <AlertCircle className="w-4 h-4 text-amber-400 flex-shrink-0" />
+              <p className="text-xs text-amber-300">
+                History only saved for this session.
+                <button
+                  onClick={() => navigate('/play', { state: { intent: 'createAccount' } })}
+                  className="ml-1 underline hover:text-amber-200 transition-colors"
+                >
+                  Create an account
+                </button> to keep it permanently.
+              </p>
+            </div>
+          </div>
+        )}
 
         {/* Content */}
         {showSkeleton ? (

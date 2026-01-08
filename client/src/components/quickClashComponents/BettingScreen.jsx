@@ -11,7 +11,7 @@ import {
   Badge,
   Progress,
 } from '@chakra-ui/react'
-import { FaTrophy, FaLock, FaClock } from 'react-icons/fa'
+import { FaTrophy, FaLock, FaClock, FaUserCircle } from 'react-icons/fa'
 import { motion, AnimatePresence } from 'framer-motion'
 import { useTranslation } from 'react-i18next'
 import axios from 'axios'
@@ -25,10 +25,11 @@ const BettingScreen = ({
   currentTrophies,
   onComplete,
   user,
+  isSessionPlayer = false,
 }) => {
   const { t } = useTranslation('QuickClash')
   const [selectedBet, setSelectedBet] = useState(null)
-  const [timeLeft, setTimeLeft] = useState(30)
+  const [timeLeft, setTimeLeft] = useState(isSessionPlayer ? 5 : 30) // Session players get shorter timer
   const [isSubmitting, setIsSubmitting] = useState(false)
 
   // Bet options
@@ -49,6 +50,12 @@ const BettingScreen = ({
   }, [timeLeft])
 
   const handleAutoSubmit = async () => {
+    // Session players just skip betting
+    if (isSessionPlayer) {
+      onComplete(0)
+      return
+    }
+
     // If time runs out and no bet selected, default to 0
     if (selectedBet === null) {
       await handlePlaceBet(0)
@@ -103,6 +110,124 @@ const BettingScreen = ({
     }
   }
 
+  // Session player UI - Show them what they're missing
+  if (isSessionPlayer) {
+    return (
+      <Flex
+        direction="column"
+        align="center"
+        justify="center"
+        h="100%"
+        w="100%"
+        p={4}
+        position="relative"
+      >
+        <VStack spacing={6} w="100%" maxW="md">
+          {/* Countdown */}
+          <HStack
+            bg="whiteAlpha.200"
+            px={4}
+            py={2}
+            borderRadius="full"
+            border="1px solid"
+            borderColor="whiteAlpha.300"
+          >
+            <Icon as={FaClock} color="blue.400" />
+            <Text fontWeight="bold" color="white" fontSize="lg">
+              {t('Starting quiz in {{seconds}}s', { seconds: timeLeft })}
+            </Text>
+          </HStack>
+
+          {/* Info Card */}
+          <MotionBox
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            bg="whiteAlpha.100"
+            p={6}
+            borderRadius="2xl"
+            border="1px solid"
+            borderColor="whiteAlpha.200"
+            w="100%"
+          >
+            <VStack spacing={4}>
+              <Icon as={FaTrophy} color="yellow.400" boxSize={12} />
+              <Text fontSize="xl" fontWeight="bold" color="white" textAlign="center">
+                {t('Betting Phase')}
+              </Text>
+              <Text color="whiteAlpha.800" textAlign="center">
+                {t('Logged in players can bet trophies to double their winnings!')}
+              </Text>
+
+              {/* Sample bet options (disabled) */}
+              <HStack spacing={3} opacity={0.5}>
+                {[1, 2, 5].map(amount => (
+                  <Box
+                    key={amount}
+                    bg="whiteAlpha.100"
+                    px={4}
+                    py={2}
+                    borderRadius="xl"
+                    border="1px solid"
+                    borderColor="whiteAlpha.200"
+                  >
+                    <HStack>
+                      <Icon as={FaTrophy} color="yellow.500" boxSize={4} />
+                      <Text color="whiteAlpha.700" fontWeight="bold">{amount}</Text>
+                    </HStack>
+                  </Box>
+                ))}
+              </HStack>
+
+              {/* Sign up CTA */}
+              <Box
+                bg="purple.900"
+                px={6}
+                py={4}
+                borderRadius="xl"
+                border="1px solid"
+                borderColor="purple.500"
+                w="100%"
+              >
+                <VStack spacing={2}>
+                  <Icon as={FaUserCircle} color="purple.300" boxSize={8} />
+                  <Text fontSize="sm" color="whiteAlpha.900" textAlign="center">
+                    {t('Create an account to unlock betting, earn trophies, and climb the leaderboard!')}
+                  </Text>
+                </VStack>
+              </Box>
+            </VStack>
+          </MotionBox>
+
+          {/* Skip Button */}
+          <Button
+            w="100%"
+            size="lg"
+            colorScheme="blue"
+            onClick={() => onComplete(0)}
+            bgGradient="linear(to-r, blue.500, purple.500)"
+            _hover={{
+              bgGradient: 'linear(to-r, blue.600, purple.600)',
+            }}
+          >
+            {t('Skip to Quiz')}
+          </Button>
+
+          {/* Progress Bar */}
+          <Box w="100%">
+            <Progress
+              value={(timeLeft / 5) * 100}
+              size="xs"
+              colorScheme="blue"
+              borderRadius="full"
+              bg="whiteAlpha.100"
+            />
+          </Box>
+        </VStack>
+      </Flex>
+    )
+  }
+
+  // Regular user betting UI
   return (
     <Flex
       direction="column"
@@ -276,3 +401,4 @@ const BettingScreen = ({
 }
 
 export default BettingScreen
+

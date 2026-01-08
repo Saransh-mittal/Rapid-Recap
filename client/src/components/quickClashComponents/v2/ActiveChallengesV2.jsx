@@ -25,6 +25,7 @@ import { BattleListSkeletonV2 } from './LoadingSkeletonV2'
 
 // Custom hooks
 import useQuickClashTeamBattle from '../../../customHooks/useQuickClashTeamBattle'
+import usePlayer from '../../../hooks/usePlayer'
 
 // Haptic feedback
 import { haptics } from '../../../utils/haptics'
@@ -101,6 +102,9 @@ const ActiveChallengesV2 = () => {
   const [isRefreshing, setIsRefreshing] = useState(false)
   const initialLoadDone = useRef(false)
 
+  // Get player info (works for both auth users and session players)
+  const { playerId, isSession, isAuthenticated } = usePlayer()
+
   // Redux
   const { user } = useSelector((state) => state.auth)
   const userId = useMemo(() => user?._id, [user])
@@ -118,13 +122,14 @@ const ActiveChallengesV2 = () => {
     goToBattle,
   } = useQuickClashTeamBattle()
 
-  // Only load if no data exists
+  // Load battles for authenticated users OR session players
   useEffect(() => {
-    if (userId && !initialLoadDone.current && activeBattles.length === 0) {
+    const hasPlayer = userId || isSession
+    if (hasPlayer && !initialLoadDone.current && activeBattles.length === 0) {
       loadTeamBattles('active')
       initialLoadDone.current = true
     }
-  }, [userId, loadTeamBattles, activeBattles.length])
+  }, [userId, isSession, loadTeamBattles, activeBattles.length])
 
   // Auto-refresh when a new battle becomes ready (match found)
   const prevBattleReadyRef = useRef(null)

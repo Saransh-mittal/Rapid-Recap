@@ -51,9 +51,13 @@ const GamifiedQuiz = ({
   setQuizTimeLeft,
   setLoadingQuiz,
   activePowerups = [],
+  isSessionPlayer = false,
 }) => {
   const { t } = useTranslation('QuickClash')
   const toast = useToast()
+
+  // Helper to get correct API base URL
+  const apiBase = isSessionPlayer ? '/api/play' : '/api/quickClash'
 
   // State
   const [loading, setLoading] = useState(true)
@@ -105,7 +109,7 @@ const GamifiedQuiz = ({
         setLoadingQuiz(true)
 
         const response = await axios.get(
-          `/api/quickClash/session/${sessionId}/quiz`,
+          `${apiBase}/session/${sessionId}/quiz`,
         )
         setQuestions(response.data.questions || [])
         setUserAnswers({})
@@ -133,7 +137,7 @@ const GamifiedQuiz = ({
              // Toast is shown by parent (QuickClashSession) - just mark as used
              // Mark as used in backend
              try {
-               await axios.post(`/api/quickClash/session/${sessionId}/powerup/use`, {
+               await axios.post(`${apiBase}/session/${sessionId}/powerup/use`, {
                  powerupId: 'TIME_WARP'
                })
              } catch (err) {
@@ -261,7 +265,7 @@ const GamifiedQuiz = ({
       }))
 
       const response = await axios.post(
-        `/api/quickClash/session/${sessionId}/quiz/submit`,
+        `${apiBase}/session/${sessionId}/quiz/submit`,
         { responses: formattedResponses }
       )
 
@@ -312,7 +316,7 @@ const GamifiedQuiz = ({
       setPowerupLoading(true)
       const currentQuestion = questions[currentQuestionIndex]
 
-      const response = await axios.post(`/api/quickClash/session/${sessionId}/powerup/use`, {
+      const response = await axios.post(`${apiBase}/session/${sessionId}/powerup/use`, {
         powerupId: powerup.powerupId,
         questionId: currentQuestion._id
       })

@@ -74,6 +74,7 @@ const getTeamById = async ({ teamId }) => {
   const team = await QuickClashTeam.findById(teamId)
     .populate('creator', '_id name inGameName pic quickClashTrophies')
     .populate('members.user', '_id name inGameName pic quickClashTrophies')
+    .populate('members.sessionPlayer', '_id inGameName trophies')
 
   if (!team) {
     throw new Error('Team not found')
@@ -92,6 +93,7 @@ const getTeamByCode = async ({ teamCode }) => {
   const team = await QuickClashTeam.findOne({ teamCode })
     .populate('creator', '_id name inGameName pic quickClashTrophies')
     .populate('members.user', '_id name inGameName pic quickClashTrophies')
+    .populate('members.sessionPlayer', '_id inGameName trophies')
 
   if (!team) {
     throw new Error('Team not found')
@@ -476,6 +478,7 @@ const getUserTeams = async ({ userId }) => {
   })
     .populate('creator', '_id name inGameName pic')
     .populate('members.user', '_id name inGameName pic quickClashTrophies')
+    .populate('members.sessionPlayer', '_id inGameName trophies')
     .sort({ lastActive: -1 })
 
   return teams

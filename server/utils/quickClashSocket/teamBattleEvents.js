@@ -7,6 +7,7 @@
 
 const globalEmitter = require('../../eventEmitter')
 const QuickClashTeam = require('../../model/quickClashSchemas/quickClashTeamSchema')
+const { getMemberPlayerId } = require('../sessionPlayerUtils')
 
 /**
  * Setup team battle global event handlers
@@ -41,7 +42,8 @@ const setupTeamBattleEvents = (io, notifyUser) => {
       const excludeSet = new Set(excludeUserIds.map(id => id.toString()))
 
       for (const member of team.members) {
-        const userId = member.user.toString()
+        const userId = getMemberPlayerId(member)
+        if (!userId) continue // Skip members without valid user/sessionPlayer
         if (excludeSet.has(userId)) continue
 
         const success = notifyUser(userId, event, {

@@ -7,6 +7,7 @@
 
 const globalEmitter = require('../../eventEmitter')
 const QuickClashTeam = require('../../model/quickClashSchemas/quickClashTeamSchema')
+const { getMemberPlayerId } = require('../sessionPlayerUtils')
 
 /**
  * Setup team matchmaking global event handlers
@@ -22,34 +23,24 @@ const setupTeamMatchmakingEvents = (io, notifyUser, notifyUserAllDevices = null)
   // Helper function to notify all team members
   async function notifyTeamMembers(teamId, event, data, excludeUserIds = []) {
     try {
-      if (!teamId) {
-        console.error('notifyTeamMembers: teamId is required')
-        return
-      }
+      if (!teamId) return
 
       const team = await QuickClashTeam.findById(teamId)
         .select('members name')
         .lean()
 
-      if (!team || !team.members || !Array.isArray(team.members)) {
-        console.error(
-          `Cannot notify team members: Team ${teamId} not found or has no members`
-        )
-        return
-      }
+      if (!team?.members?.length) return
 
-      let notifiedCount = 0
       const excludeSet = new Set(excludeUserIds.map(id => id.toString()))
 
       for (const member of team.members) {
-        const userId = member.user.toString()
-        if (excludeSet.has(userId)) continue
+        const userId = getMemberPlayerId(member)
+        if (!userId || excludeSet.has(userId)) continue
 
-        const success = notifyUser(userId, event, {
+        notifyUser(userId, event, {
           ...data,
           teamName: team.name,
         })
-        if (success) notifiedCount++
       }
     } catch (error) {
       console.error(`Error notifying team members for team ${teamId}:`, error)
@@ -302,6 +293,51 @@ const setupTeamMatchmakingEvents = (io, notifyUser, notifyUserAllDevices = null)
         )
       }
     }
+  })
+
+  // ==========================================
+  // BATTLE EVENTS
+  // ==========================================
+
+  // Listen for team battle ready events
+  globalEmitter.on('quickClash:teamBattleReady', (data) => {
+    const { battleId, teamA, teamB, teamAMembers, teamBMembers, categories, winProbability } = data
+
+    console.log(`[QC_MM] Battle ready: ${battleId}, Team A: ${teamA}, Team B: ${teamB}`)
+
+    // Notify Team A
+    notifyTeamMembers(teamA, 'quickClash:matchFound', {
+      battleId,
+      team: { _id: teamA, members: teamAMembers },
+      opponent: { _id: teamB, members: teamBMembers },
+      categories,
+      winProbability,
+    })
+
+    // Notify Team B
+    notifyTeamMembers(teamB, 'quickClash:matchFound', {
+      battleId,
+      team: { _id: teamB, members: teamBMembers },
+      opponent: { _id: teamA, members: teamAMembers },
+      categories,
+      winProbability,
+    })
+  })
+
+  // Listen for battle creation failed events
+  globalEmitter.on('quickClash:battleCreationFailed', (data) => {
+    const { teamA, teamB, error } = data
+    const payload = { error: error || 'Battle creation failed. Please try again.' }
+
+    if (teamA) notifyTeamMembers(teamA, 'quickClash:matchmakingError', payload)
+    if (teamB) notifyTeamMembers(teamB, 'quickClash:matchmakingError', payload)
+  })
+
+  // Listen for team updates (joins/leaves)
+  globalEmitter.on('quickClash:teamUpdated', data => {
+    if (!data.teamId) return
+    console.log(`[QC_MM] Team ${data.teamId} updated, notifying members`)
+    notifyTeamMembers(data.teamId, 'quickClash:teamUpdated', data)
   })
 }
 

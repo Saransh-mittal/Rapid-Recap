@@ -232,15 +232,42 @@ const GlobalMatchmakingModal = React.memo(
       }
     }, [shouldRefetchTeams, dispatch])
 
-    // Fetch user's teams
+    // Fetch user's teams (supports both authenticated users and session players)
     const fetchMyTeams = useCallback(async () => {
-      if (!user?._id) return
       try {
         setLoadingTeams(true)
-        const response = await axios.get('/api/quickClash/teams')
-        setMyTeams(response.data?.teams || [])
+
+        // Check if session player
+        const sessionId = localStorage.getItem('playSessionId')
+
+        if (sessionId) {
+          // Session player - fetch their team from play API
+          const response = await axios.get('/api/play/my-team', {
+            headers: { 'X-Session-Id': sessionId }
+          })
+          if (response.data?.success && response.data?.team) {
+            // Transform to match the expected teams array format
+            setMyTeams([{
+              _id: response.data.team._id,
+              name: response.data.team.name || 'Your Team',
+              teamCode: response.data.team.teamCode,
+              memberCount: response.data.team.memberCount || response.data.team.members?.length || 1,
+              members: response.data.team.members || [],
+              isSessionPlayerTeam: true,
+            }])
+          } else {
+            setMyTeams([])
+          }
+        } else if (user?._id) {
+          // Authenticated user - use standard teams endpoint
+          const response = await axios.get('/api/quickClash/teams')
+          setMyTeams(response.data?.teams || [])
+        } else {
+          setMyTeams([])
+        }
       } catch (error) {
         console.error('Error fetching teams:', error)
+        setMyTeams([])
       } finally {
         setLoadingTeams(false)
       }
@@ -397,18 +424,29 @@ const GlobalMatchmakingModal = React.memo(
           }),
         )
 
+        let result
         if (selectedTeamId) {
-          await joinWithTeam(selectedTeamId)
+          result = await joinWithTeam(selectedTeamId)
         } else {
-          await joinSoloMatchmaking()
+          result = await joinSoloMatchmaking()
         }
 
-        dispatch(
-          addStatusUpdate({
-            message: t('Successfully joined matchmaking'),
-            time: Math.floor((Date.now() - mountTimeRef.current) / 1000),
-          }),
-        )
+        // If we were already in matchmaking, don't show success - the hook already updated state
+        if (result?.alreadyInMatchmaking) {
+          dispatch(
+            addStatusUpdate({
+              message: t('Resuming matchmaking search...'),
+              time: Math.floor((Date.now() - mountTimeRef.current) / 1000),
+            }),
+          )
+        } else {
+          dispatch(
+            addStatusUpdate({
+              message: t('Successfully joined matchmaking'),
+              time: Math.floor((Date.now() - mountTimeRef.current) / 1000),
+            }),
+          )
+        }
       } catch (error) {
         console.error('Error joining matchmaking:', error)
       }
@@ -420,11 +458,19 @@ const GlobalMatchmakingModal = React.memo(
 
       quizAudioService.playDismiss() // Dismiss sound for leaving
       try {
-        await leaveMatchmaking()
-        dispatch(clearStatusUpdates())
-        onClose()
+        const result = await leaveMatchmaking()
+
+        // Only close modal if leave was successful or user is already out
+        if (result?.success || result?.reason === 'ALREADY_LEFT') {
+          dispatch(clearStatusUpdates())
+          onClose()
+        }
+
+        // If match was found, don't close - the battleReady state will update the UI
+        // If system busy/network error, don't close - user can retry
       } catch (error) {
         console.error('Error leaving matchmaking:', error)
+        // Error already handled by hook with notification
       }
     }, [checkCanLeaveMatchmaking, leaveMatchmaking, onClose, dispatch])
 

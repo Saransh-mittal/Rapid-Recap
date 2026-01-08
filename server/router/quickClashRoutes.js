@@ -68,7 +68,39 @@ const {
   getGlobalRQMStats,
 } = require('../controllers/quickClashProfileController')
 
-// All routes need authentication first
+// Import flexAuth for session-player-compatible routes
+const { flexAuth } = require('../middleware/flexAuth')
+const {
+  joinTeamMatchmakingController,
+  leaveTeamMatchmakingController,
+  getTeamMatchmakingInfo,
+  getTeam,
+} = require('../controllers/quickClashTeamController')
+
+// ============================================================
+// SESSION-COMPATIBLE ROUTES (must be BEFORE global Authenticate)
+// These routes work for BOTH authenticated users AND session players
+// ============================================================
+
+// Team routes (session-compatible)
+router.get('/team/:teamId', flexAuth, getTeam)
+
+// Team matchmaking routes (session-compatible)
+router.post('/team/:teamId/matchmaking/join', flexAuth, joinTeamMatchmakingController)
+router.post('/team/:teamId/matchmaking/leave', flexAuth, leaveTeamMatchmakingController)
+router.get('/team/:teamId/matchmaking-info', flexAuth, getTeamMatchmakingInfo)
+
+// Global matchmaking routes (session-compatible)
+router.post('/global-matchmaking/join', flexAuth, joinGlobalMatchmakingQueue)
+router.post('/global-matchmaking/leave', flexAuth, leaveGlobalMatchmakingQueue)
+router.get('/global-matchmaking/status', flexAuth, getGlobalMatchmakingStatusController)
+router.get('/global-matchmaking-status-detailed', flexAuth, getGlobalMatchmakingStatusDetailed)
+router.get('/can-leave-matchmaking', flexAuth, canLeaveMatchmakingController)
+
+// ============================================================
+// AUTHENTICATED-ONLY ROUTES (require JWT token)
+// ============================================================
+// All remaining routes need authentication first
 router.use(Authenticate)
 
 // IMPORTANT: Apply QuickClash authorization to ALL routes
@@ -78,7 +110,7 @@ router.use(Authenticate)
 // Mount daily task routes
 router.use('/dailyTasks', dailyTaskRoutes)
 
-// Mount team routes
+// Mount team routes (matchmaking already handled above)
 router.use('/', teamRoutes)
 
 // Mount analysis routes

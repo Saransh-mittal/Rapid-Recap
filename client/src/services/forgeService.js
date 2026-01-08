@@ -8,33 +8,42 @@
  * - Submitting answers with validation
  * - Progressing through sections
  * - Fetching session summaries
+ *
+ * Session Player Support:
+ * - Pass isSessionPlayer: true to use /api/play/* endpoints
+ * - Default uses /api/quickClash/* for authenticated users
  */
 
 import axios from 'axios'
 
-const BASE_URL = '/api/quickClash'
+const BASE_URL_QUICK_CLASH = '/api/quickClash'
+const BASE_URL_PLAY = '/api/play'
+
+// Helper to get the correct base URL
+const getBaseUrl = (isSessionPlayer = false) =>
+  isSessionPlayer ? BASE_URL_PLAY : BASE_URL_QUICK_CLASH
 
 /**
  * Forge Mode Service
  *
  * Architecture Note: This service uses async/await with try-catch at the calling component level
  * to allow for granular error handling and user feedback
+ *
+ * Session Player Support: All methods now accept an options object with isSessionPlayer flag
  */
 export const forgeService = {
   /**
    * Initialize Forge Mode and get the first question
    *
    * @param {string} sessionId - The Quick Clash session ID
+   * @param {Object} options - Optional parameters
+   * @param {boolean} options.isSessionPlayer - Use session player endpoints
    * @returns {Promise<Object>} First section question data
-   *
-   * Usage Pattern:
-   * - Call this immediately after detecting forgeArticle in challenge
-   * - Response includes question WITHOUT correct answer (security)
-   * - Store questionStartTime for timeSpent calculation
    */
-  start: async sessionId => {
+  start: async (sessionId, { isSessionPlayer = false } = {}) => {
+    const baseUrl = getBaseUrl(isSessionPlayer)
     const response = await axios.post(
-      `${BASE_URL}/session/${sessionId}/forge/start`,
+      `${baseUrl}/session/${sessionId}/forge/start`,
     )
     return response.data
   },
@@ -47,14 +56,13 @@ export const forgeService = {
    * @param {number} answerData.sectionNumber - Current section index (0-4)
    * @param {number} answerData.answerIndex - Selected option index (0-3)
    * @param {number} answerData.timeSpent - Milliseconds spent on question
+   * @param {boolean} answerData.isSessionPlayer - Use session player endpoints
    * @returns {Promise<Object>} Answer validation result and reading content if correct
-   *
-   * Security Note: Server validates the answer and only returns content if correct
-   * This prevents client-side manipulation
    */
-  submitAnswer: async (sessionId, { sectionNumber, answerIndex, timeSpent, powerups }) => {
+  submitAnswer: async (sessionId, { sectionNumber, answerIndex, timeSpent, powerups, isSessionPlayer = false }) => {
+    const baseUrl = getBaseUrl(isSessionPlayer)
     const response = await axios.post(
-      `${BASE_URL}/session/${sessionId}/forge/answer`,
+      `${baseUrl}/session/${sessionId}/forge/answer`,
       {
         sectionNumber,
         userAnswer: answerIndex, // Backend expects 'userAnswer' not 'answerIndex'
@@ -69,11 +77,14 @@ export const forgeService = {
    * Use a powerup in Forge Mode
    * @param {string} sessionId
    * @param {string} powerupId
+   * @param {Object} options - Optional parameters
+   * @param {boolean} options.isSessionPlayer - Use session player endpoints
    * @returns {Promise<Object>} Powerup effect
    */
-  usePowerup: async (sessionId, powerupId) => {
+  usePowerup: async (sessionId, powerupId, { isSessionPlayer = false } = {}) => {
+    const baseUrl = getBaseUrl(isSessionPlayer)
     const response = await axios.post(
-      `${BASE_URL}/session/${sessionId}/powerup/use`,
+      `${baseUrl}/session/${sessionId}/powerup/use`,
       { powerupId }
     )
     return response.data
@@ -83,15 +94,14 @@ export const forgeService = {
    * Move to next section after reading current content
    *
    * @param {string} sessionId - The Quick Clash session ID
+   * @param {Object} options - Optional parameters
+   * @param {boolean} options.isSessionPlayer - Use session player endpoints
    * @returns {Promise<Object>} Next section question or completion status
-   *
-   * Flow Decision: Returns different data based on completion:
-   * - If more sections: Returns next question
-   * - If complete: Returns completion stats and nextPhase: 'quiz'
    */
-  moveNext: async sessionId => {
+  moveNext: async (sessionId, { isSessionPlayer = false } = {}) => {
+    const baseUrl = getBaseUrl(isSessionPlayer)
     const response = await axios.post(
-      `${BASE_URL}/session/${sessionId}/forge/next`,
+      `${baseUrl}/session/${sessionId}/forge/next`,
     )
     return response.data
   },
@@ -100,16 +110,14 @@ export const forgeService = {
    * Get complete session summary
    *
    * @param {string} sessionId - The Quick Clash session ID
+   * @param {Object} options - Optional parameters
+   * @param {boolean} options.isSessionPlayer - Use session player endpoints
    * @returns {Promise<Object>} Complete progress and unlocked sections
-   *
-   * Use Cases:
-   * - Resume interrupted sessions
-   * - Display recap/review screen
-   * - Show complete article after forge completion
    */
-  getSummary: async sessionId => {
+  getSummary: async (sessionId, { isSessionPlayer = false } = {}) => {
+    const baseUrl = getBaseUrl(isSessionPlayer)
     const response = await axios.get(
-      `${BASE_URL}/session/${sessionId}/forge/summary`,
+      `${baseUrl}/session/${sessionId}/forge/summary`,
     )
     return response.data
   },
@@ -118,16 +126,14 @@ export const forgeService = {
    * Get forge review - Full article after completion
    *
    * @param {string} sessionId - The Quick Clash session ID
+   * @param {Object} options - Optional parameters
+   * @param {boolean} options.isSessionPlayer - Use session player endpoints
    * @returns {Promise<Object>} Full article with all sections and stats
-   *
-   * Use Cases:
-   * - Post-completion article review
-   * - Show all sections (locked + unlocked)
-   * - Display final score breakdown
    */
-  getReview: async sessionId => {
+  getReview: async (sessionId, { isSessionPlayer = false } = {}) => {
+    const baseUrl = getBaseUrl(isSessionPlayer)
     const response = await axios.get(
-      `${BASE_URL}/session/${sessionId}/forge/review`,
+      `${baseUrl}/session/${sessionId}/forge/review`,
     )
     return response.data
   },

@@ -4,6 +4,7 @@ const QuickClashTeam = require('../model/quickClashSchemas/quickClashTeamSchema'
 const QuickClashGlobalMatchmaking = require('../model/quickClashSchemas/quickClashGlobalMatchmakingSchema')
 const globalEmitter = require('../eventEmitter')
 const User = require('../model/userSchema')
+const SessionPlayer = require('../model/quickClashSchemas/playSessionSchema')
 const QuickClashTeamTrophyHistory = require('../model/quickClashSchemas/quickClashTeamTrophyHistorySchema')
 const {
   notifyTeamBattleCompleted,
@@ -12,9 +13,28 @@ const {
   awardPowerupsToMember,
 } = require('../services/quickClashServices/quickClashPowerupRewardService')
 
+
 // Constants
 const MATCHMAKING_EXPIRY = 30 * 60 * 1000 // 30 minutes
 const MATCHMAKING_LOCKED_EXPIRY = 2 * 60 * 1000 // 2 minutes
+
+/**
+ * Helper to get member ID for both user and session player members
+ * @param {Object} member - Team member object
+ * @returns {string|null} Member ID as string or null if not found
+ */
+const getMemberId = (member) => {
+  if (!member) return null
+  if (member.user) {
+    return member.user._id ? member.user._id.toString() : member.user.toString()
+  }
+  if (member.sessionPlayer) {
+    return member.sessionPlayer._id
+      ? member.sessionPlayer._id.toString()
+      : member.sessionPlayer.toString()
+  }
+  return null
+}
 
 /**
  * Lock teams in matchmaking to prevent leaving during battle creation
@@ -74,20 +94,17 @@ const lockTeamsInMatchmaking = async ({
         .session(session),
     ])
 
-    // Extract member IDs
+    // Extract member IDs - handle both users and session players
     const teamAMemberIds =
-      teamA?.members?.map(m =>
-        m.user.toString ? m.user.toString() : m.user,
-      ) || []
+      teamA?.members?.map(m => getMemberId(m)).filter(Boolean) || []
 
     const teamBMemberIds =
-      teamB?.members?.map(m =>
-        m.user.toString ? m.user.toString() : m.user,
-      ) || []
+      teamB?.members?.map(m => getMemberId(m)).filter(Boolean) || []
 
-    // Also lock individual players
+    // Also lock individual players (only for users, not session players)
     if (teamA && teamA.members) {
       for (const member of teamA.members) {
+        if (!member.user) continue // Skip session players
         const userId = member.user.toString
           ? member.user.toString()
           : member.user
@@ -106,6 +123,7 @@ const lockTeamsInMatchmaking = async ({
 
     if (teamB && teamB.members) {
       for (const member of teamB.members) {
+        if (!member.user) continue // Skip session players
         const userId = member.user.toString
           ? member.user.toString()
           : member.user
@@ -228,6 +246,7 @@ const unlockTeamsInMatchmaking = async ({
 
       if (teamA && teamA.members) {
         for (const member of teamA.members) {
+          if (!member.user) continue // Skip session players
           const userId = member.user._id || member.user
           memberIdsToProcess.push(userId.toString())
 
@@ -245,6 +264,7 @@ const unlockTeamsInMatchmaking = async ({
 
       if (teamB && teamB.members) {
         for (const member of teamB.members) {
+          if (!member.user) continue // Skip session players
           const userId = member.user._id || member.user
           memberIdsToProcess.push(userId.toString())
 
@@ -365,22 +385,65 @@ const calculateFinalTrophies = async (battle, session) => {
   // Calculate per-player amounts (NO MULTIPLIERS)
   const perPlayerAmount = Math.round(adjustedFinalAmount / 4) // Divide by 4 players per team
 
-  if (battle.winner === 'teamA') {
-    // Team A won - they gain trophies, Team B loses trophies
+  /**
+   * Helper to check if member is a session player
+   */
+  const isSessionPlayer = (member) => {
+    return !member.user && member.sessionPlayer
+  }
 
-    // Update team A members (winners)
-    for (const member of battle.teamAMembers) {
-      member.trophyChange = perPlayerAmount
-      member.newTrophies = member.previousTrophies + perPlayerAmount
+  /**
+   * Helper to get member identifier (user ID or session player ID)
+   */
+  const getMemberIdentifier = (member) => {
+    if (member.user) {
+      return member.user._id || member.user
+    }
+    if (member.sessionPlayer) {
+      return member.sessionPlayer._id || member.sessionPlayer
+    }
+    return null
+  }
 
-      // Get current user to check peak trophies
+  /**
+   * Update trophies for a winning member (user or session player)
+   */
+  const processWinningMember = async (member, teamId, opponentTeamId, opponentAvgTrophies, bonusesApplied) => {
+    member.trophyChange = perPlayerAmount
+    member.newTrophies = member.previousTrophies + perPlayerAmount
+
+    if (isSessionPlayer(member)) {
+      // Session player - update SessionPlayer model
+      const sessionPlayerId = getMemberIdentifier(member)
+      await SessionPlayer.findByIdAndUpdate(
+        sessionPlayerId,
+        { $inc: { trophies: perPlayerAmount } },
+        { session }
+      )
+
+      // Create trophy history entry for session player
+      await new QuickClashTeamTrophyHistory({
+        sessionPlayer: sessionPlayerId,
+        team: teamId,
+        teamBattle: battle._id,
+        trophiesChange: perPlayerAmount,
+        trophiesAfter: member.newTrophies,
+        opponentTeam: opponentTeamId,
+        opponentTeamAvgTrophies: opponentAvgTrophies,
+        result: 'win',
+        bonusesApplied: bonusesApplied,
+        userParticipated: member.participated,
+        userCompleted: member.completed,
+        userScore: member.score,
+      }).save({ session })
+    } else {
+      // Regular user - update User model
       const currentUser = await User.findById(member.user)
         .select('quickClashStats')
         .session(session)
         .lean()
 
-      const currentPeak =
-        currentUser?.quickClashStats?.peakTrophies || member.previousTrophies
+      const currentPeak = currentUser?.quickClashStats?.peakTrophies || member.previousTrophies
 
       // Update user trophies in database
       const updateObj = { $inc: { quickClashTrophies: perPlayerAmount } }
@@ -392,194 +455,17 @@ const calculateFinalTrophies = async (battle, session) => {
 
       await User.findByIdAndUpdate(member.user, updateObj, { session })
 
-      // Create trophy history entry
+      // Create trophy history entry for user
       await new QuickClashTeamTrophyHistory({
         user: member.user,
-        team: battle.teamA,
+        team: teamId,
         teamBattle: battle._id,
         trophiesChange: perPlayerAmount,
         trophiesAfter: member.newTrophies,
-        opponentTeam: battle.teamB,
-        opponentTeamAvgTrophies: teamBAvgTrophies,
+        opponentTeam: opponentTeamId,
+        opponentTeamAvgTrophies: opponentAvgTrophies,
         result: 'win',
-        bonusesApplied: {
-          strongerTeam: bonuses.strongerTeam.applied,
-          allWins: bonuses.allWins.applied,
-        },
-        userParticipated: member.participated,
-        userCompleted: member.completed,
-        userScore: member.score,
-      }).save({ session })
-    }
-
-    // Update team B members (losers)
-    for (const member of battle.teamBMembers) {
-      member.trophyChange = -perPlayerAmount
-      member.newTrophies = Math.max(
-        0,
-        member.previousTrophies - perPlayerAmount,
-      )
-
-      // Calculate actual trophy change (in case of floor protection)
-      const actualChange = member.newTrophies - member.previousTrophies
-
-      // Update user trophies in database
-      await User.findByIdAndUpdate(
-        member.user,
-        { $set: { quickClashTrophies: member.newTrophies } },
-        { session },
-      )
-
-      // Create trophy history entry
-      await new QuickClashTeamTrophyHistory({
-        user: member.user,
-        team: battle.teamB,
-        teamBattle: battle._id,
-        trophiesChange: actualChange,
-        trophiesAfter: member.newTrophies,
-        opponentTeam: battle.teamA,
-        opponentTeamAvgTrophies: teamAAvgTrophies,
-        result: 'loss',
-        bonusesApplied: {
-          strongerTeam: false,
-          allWins: false,
-        },
-        userParticipated: member.participated,
-        userCompleted: member.completed,
-        userScore: member.score,
-      }).save({ session })
-    }
-  } else if (battle.winner === 'teamB') {
-    // Team B won - they gain trophies, Team A loses trophies
-
-    // Update team B members (winners)
-    for (const member of battle.teamBMembers) {
-      member.trophyChange = perPlayerAmount
-      member.newTrophies = member.previousTrophies + perPlayerAmount
-
-      // Get current user to check peak trophies
-      const currentUser = await User.findById(member.user)
-        .select('quickClashStats')
-        .session(session)
-        .lean()
-
-      const currentPeak =
-        currentUser?.quickClashStats?.peakTrophies || member.previousTrophies
-
-      // Update user trophies in database
-      const updateObj = { $inc: { quickClashTrophies: perPlayerAmount } }
-
-      // Update peakTrophies if new trophies exceed current peak
-      if (member.newTrophies > currentPeak) {
-        updateObj.$set = { 'quickClashStats.peakTrophies': member.newTrophies }
-      }
-
-      await User.findByIdAndUpdate(member.user, updateObj, { session })
-
-      // Create trophy history entry
-      await new QuickClashTeamTrophyHistory({
-        user: member.user,
-        team: battle.teamB,
-        teamBattle: battle._id,
-        trophiesChange: perPlayerAmount,
-        trophiesAfter: member.newTrophies,
-        opponentTeam: battle.teamA,
-        opponentTeamAvgTrophies: teamAAvgTrophies,
-        result: 'win',
-        bonusesApplied: {
-          strongerTeam: false, // Only Team A gets bonuses in current system
-          allWins: false,
-        },
-        userParticipated: member.participated,
-        userCompleted: member.completed,
-        userScore: member.score,
-      }).save({ session })
-    }
-
-    // Update team A members (losers)
-    for (const member of battle.teamAMembers) {
-      member.trophyChange = -perPlayerAmount
-      member.newTrophies = Math.max(
-        0,
-        member.previousTrophies - perPlayerAmount,
-      )
-
-      // Calculate actual trophy change (in case of floor protection)
-      const actualChange = member.newTrophies - member.previousTrophies
-
-      // Update user trophies in database
-      await User.findByIdAndUpdate(
-        member.user,
-        { $set: { quickClashTrophies: member.newTrophies } },
-        { session },
-      )
-
-      // Create trophy history entry
-      await new QuickClashTeamTrophyHistory({
-        user: member.user,
-        team: battle.teamA,
-        teamBattle: battle._id,
-        trophiesChange: actualChange,
-        trophiesAfter: member.newTrophies,
-        opponentTeam: battle.teamB,
-        opponentTeamAvgTrophies: teamBAvgTrophies,
-        result: 'loss',
-        bonusesApplied: {
-          strongerTeam: bonuses.strongerTeam.applied,
-          allWins: bonuses.allWins.applied,
-        },
-        userParticipated: member.participated,
-        userCompleted: member.completed,
-        userScore: member.score,
-      }).save({ session })
-    }
-  } else {
-    // Tie - no trophies awarded (as per previous change)
-
-    // Update team A members - no trophy change
-    for (const member of battle.teamAMembers) {
-      member.trophyChange = 0
-      member.newTrophies = member.previousTrophies
-
-      // Create trophy history entry for record keeping
-      await new QuickClashTeamTrophyHistory({
-        user: member.user,
-        team: battle.teamA,
-        teamBattle: battle._id,
-        trophiesChange: 0,
-        trophiesAfter: member.newTrophies,
-        opponentTeam: battle.teamB,
-        opponentTeamAvgTrophies: teamBAvgTrophies,
-        result: 'tie',
-        bonusesApplied: {
-          strongerTeam: bonuses.strongerTeam.applied,
-          allWins: bonuses.allWins.applied,
-        },
-        userParticipated: member.participated,
-        userCompleted: member.completed,
-        userScore: member.score,
-      }).save({ session })
-    }
-
-    // Update team B members - no trophy change
-    for (const member of battle.teamBMembers) {
-      member.trophyChange = 0
-      member.newTrophies = member.previousTrophies
-
-      // Create trophy history entry for record keeping
-      await new QuickClashTeamTrophyHistory({
-        user: member.user,
-        team: battle.teamB,
-        teamBattle: battle._id,
-        trophiesChange: 0,
-        trophiesAfter: member.newTrophies,
-        opponentTeam: battle.teamA,
-        opponentTeamAvgTrophies: teamAAvgTrophies,
-        result: 'tie',
-        bonusesApplied: {
-          strongerTeam: false,
-          allWins: false,
-        },
+        bonusesApplied: bonusesApplied,
         userParticipated: member.participated,
         userCompleted: member.completed,
         userScore: member.score,
@@ -587,14 +473,208 @@ const calculateFinalTrophies = async (battle, session) => {
     }
   }
 
+  /**
+   * Update trophies for a losing member (user or session player)
+   */
+  const processLosingMember = async (member, teamId, opponentTeamId, opponentAvgTrophies, bonusesApplied) => {
+    member.trophyChange = -perPlayerAmount
+    member.newTrophies = Math.max(0, member.previousTrophies - perPlayerAmount)
+
+    // Calculate actual trophy change (in case of floor protection)
+    const actualChange = member.newTrophies - member.previousTrophies
+
+    if (isSessionPlayer(member)) {
+      // Session player - update SessionPlayer model
+      const sessionPlayerId = getMemberIdentifier(member)
+      await SessionPlayer.findByIdAndUpdate(
+        sessionPlayerId,
+        { $set: { trophies: member.newTrophies } },
+        { session }
+      )
+
+      // Create trophy history entry for session player
+      await new QuickClashTeamTrophyHistory({
+        sessionPlayer: sessionPlayerId,
+        team: teamId,
+        teamBattle: battle._id,
+        trophiesChange: actualChange,
+        trophiesAfter: member.newTrophies,
+        opponentTeam: opponentTeamId,
+        opponentTeamAvgTrophies: opponentAvgTrophies,
+        result: 'loss',
+        bonusesApplied: bonusesApplied,
+        userParticipated: member.participated,
+        userCompleted: member.completed,
+        userScore: member.score,
+      }).save({ session })
+    } else {
+      // Regular user - update User model
+      await User.findByIdAndUpdate(
+        member.user,
+        { $set: { quickClashTrophies: member.newTrophies } },
+        { session }
+      )
+
+      // Create trophy history entry for user
+      await new QuickClashTeamTrophyHistory({
+        user: member.user,
+        team: teamId,
+        teamBattle: battle._id,
+        trophiesChange: actualChange,
+        trophiesAfter: member.newTrophies,
+        opponentTeam: opponentTeamId,
+        opponentTeamAvgTrophies: opponentAvgTrophies,
+        result: 'loss',
+        bonusesApplied: bonusesApplied,
+        userParticipated: member.participated,
+        userCompleted: member.completed,
+        userScore: member.score,
+      }).save({ session })
+    }
+  }
+
+  /**
+   * Create tie trophy history for a member (no trophy change)
+   */
+  const processTieMember = async (member, teamId, opponentTeamId, opponentAvgTrophies, bonusesApplied) => {
+    member.trophyChange = 0
+    member.newTrophies = member.previousTrophies
+
+    if (isSessionPlayer(member)) {
+      // Session player
+      const sessionPlayerId = getMemberIdentifier(member)
+      await new QuickClashTeamTrophyHistory({
+        sessionPlayer: sessionPlayerId,
+        team: teamId,
+        teamBattle: battle._id,
+        trophiesChange: 0,
+        trophiesAfter: member.newTrophies,
+        opponentTeam: opponentTeamId,
+        opponentTeamAvgTrophies: opponentAvgTrophies,
+        result: 'tie',
+        bonusesApplied: bonusesApplied,
+        userParticipated: member.participated,
+        userCompleted: member.completed,
+        userScore: member.score,
+      }).save({ session })
+    } else {
+      // Regular user
+      await new QuickClashTeamTrophyHistory({
+        user: member.user,
+        team: teamId,
+        teamBattle: battle._id,
+        trophiesChange: 0,
+        trophiesAfter: member.newTrophies,
+        opponentTeam: opponentTeamId,
+        opponentTeamAvgTrophies: opponentAvgTrophies,
+        result: 'tie',
+        bonusesApplied: bonusesApplied,
+        userParticipated: member.participated,
+        userCompleted: member.completed,
+        userScore: member.score,
+      }).save({ session })
+    }
+  }
+
+  if (battle.winner === 'teamA') {
+    // Team A won - they gain trophies, Team B loses trophies
+
+    // Update team A members (winners)
+    for (const member of battle.teamAMembers) {
+      await processWinningMember(
+        member,
+        battle.teamA,
+        battle.teamB,
+        teamBAvgTrophies,
+        { strongerTeam: bonuses.strongerTeam.applied, allWins: bonuses.allWins.applied }
+      )
+    }
+
+    // Update team B members (losers)
+    for (const member of battle.teamBMembers) {
+      await processLosingMember(
+        member,
+        battle.teamB,
+        battle.teamA,
+        teamAAvgTrophies,
+        { strongerTeam: false, allWins: false }
+      )
+    }
+  } else if (battle.winner === 'teamB') {
+    // Team B won - they gain trophies, Team A loses trophies
+
+    // Update team B members (winners)
+    for (const member of battle.teamBMembers) {
+      await processWinningMember(
+        member,
+        battle.teamB,
+        battle.teamA,
+        teamAAvgTrophies,
+        { strongerTeam: false, allWins: false }
+      )
+    }
+
+    // Update team A members (losers)
+    for (const member of battle.teamAMembers) {
+      await processLosingMember(
+        member,
+        battle.teamA,
+        battle.teamB,
+        teamBAvgTrophies,
+        { strongerTeam: bonuses.strongerTeam.applied, allWins: bonuses.allWins.applied }
+      )
+    }
+  } else {
+    // Tie - no trophies awarded (as per previous change)
+
+    // Update team A members - no trophy change
+    for (const member of battle.teamAMembers) {
+      await processTieMember(
+        member,
+        battle.teamA,
+        battle.teamB,
+        teamBAvgTrophies,
+        { strongerTeam: bonuses.strongerTeam.applied, allWins: bonuses.allWins.applied }
+      )
+    }
+
+    // Update team B members - no trophy change
+    for (const member of battle.teamBMembers) {
+      await processTieMember(
+        member,
+        battle.teamB,
+        battle.teamA,
+        teamAAvgTrophies,
+        { strongerTeam: false, allWins: false }
+      )
+    }
+  }
+
   // Award powerup rewards based on team and individual performance
+  // NOTE: Only authenticated users receive powerup rewards, session players are skipped
   console.log(`[POWERUP_REWARD] Awarding powerup rewards for battle ${battle._id}`)
   try {
     for (const member of battle.teamAMembers) {
-      await awardPowerupsToMember(battle, member.user, 'teamA', session)
+      // Skip session players - they don't get powerup rewards
+      if (isSessionPlayer(member)) {
+        console.log(`[POWERUP_REWARD] Skipping session player in teamA - powerups only for registered users`)
+        continue
+      }
+      const memberId = getMemberIdentifier(member)
+      if (memberId) {
+        await awardPowerupsToMember(battle, memberId, 'teamA', session)
+      }
     }
     for (const member of battle.teamBMembers) {
-      await awardPowerupsToMember(battle, member.user, 'teamB', session)
+      // Skip session players - they don't get powerup rewards
+      if (isSessionPlayer(member)) {
+        console.log(`[POWERUP_REWARD] Skipping session player in teamB - powerups only for registered users`)
+        continue
+      }
+      const memberId = getMemberIdentifier(member)
+      if (memberId) {
+        await awardPowerupsToMember(battle, memberId, 'teamB', session)
+      }
     }
     console.log(`[POWERUP_REWARD] Completed awarding powerup rewards for battle ${battle._id}`)
   } catch (rewardError) {

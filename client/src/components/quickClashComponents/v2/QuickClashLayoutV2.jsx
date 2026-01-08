@@ -1,13 +1,14 @@
 // components/quickClashComponents/v2/QuickClashLayoutV2.jsx
 // V2 Layout - Premium UI with smooth animations & background refresh
+// Now supports both authenticated users AND session players
 
-import React, { memo, useEffect, useState, useCallback, useRef } from 'react'
+import React, { memo, useEffect, useState, useCallback, useRef, lazy, Suspense } from 'react'
 import { createPortal } from 'react-dom'
 import { useLocation, useNavigate } from 'react-router-dom'
 import { useTranslation } from 'react-i18next'
 import { useDispatch, useSelector } from 'react-redux'
 import { motion, AnimatePresence } from 'framer-motion'
-import { Swords, Trophy, Users, User } from 'lucide-react'
+import { Swords, Trophy, Users, User, Lock } from 'lucide-react'
 
 // Haptic feedback
 import { haptics } from '../../../utils/haptics'
@@ -16,10 +17,20 @@ import { haptics } from '../../../utils/haptics'
 import { quizAudioService } from '../../../services/quizAudioService'
 import { fetchTeamBattles } from '../../../redux/quickClashTeamBattleSlice'
 
+// Player hook (works for both auth and session players)
+import usePlayer from '../../../hooks/usePlayer'
+
 // Tab content
 import QuickClashV2 from '../../../screens/QuickClashV2'
 import BattleHistoryV2 from '../../../screens/BattleHistoryV2'
 import TeamsPageV2 from '../../../screens/TeamsPageV2'
+
+// Session player components
+import SessionPlayerBanner from './SessionPlayerBanner'
+const SessionWelcomeModal = lazy(() => import('./SessionWelcomeModal'))
+const LockedTabTeaser = lazy(() => import('./LockedTabTeaser'))
+const SessionSignupPanel = lazy(() => import('./SessionSignupPanel'))
+const SessionTeamDashboard = lazy(() => import('../team/SessionTeamDashboard'))
 
 // Lazy load QuickClash Profile
 const QuickClashProfile = React.lazy(() => import('../profile/QuickClashProfileV2'))
@@ -28,14 +39,16 @@ const QuickClashProfile = React.lazy(() => import('../profile/QuickClashProfileV
 // DATA MANAGER - Prefetch & background refresh
 // ============================================================================
 
-const DataManager = memo(({ activeTab }) => {
+const DataManager = memo(({ activeTab, isSession }) => {
   const dispatch = useDispatch()
   const { user } = useSelector((state) => state.auth)
   const initialLoadRef = useRef({ battles: false, history: false, teams: false })
 
   // Background refresh when switching tabs
   useEffect(() => {
-    if (!user?._id) return
+    // For session players, we still try to fetch (the API will use session ID)
+    // For authenticated users, we need user._id
+    if (!user?._id && !isSession) return
 
     // On tab change, refresh that tab's data in background
     if (activeTab === 'history') {
@@ -44,30 +57,31 @@ const DataManager = memo(({ activeTab }) => {
       dispatch(fetchTeamBattles({ status: 'active', page: 1 }))
     }
     // Teams refresh is handled by TeamDashboard internally
-  }, [activeTab, dispatch, user])
+    // Profile refresh is handled internally
+  }, [activeTab, dispatch, user, isSession])
 
   return null
 })
 DataManager.displayName = 'DataManager'
 
 // ============================================================================
-// BOTTOM NAVIGATION - Premium with animations
+// BOTTOM NAVIGATION - Premium with animations + lock icons for session players
 // ============================================================================
 
-const BottomNavContent = memo(({ activeTab, onTabChange }) => {
+const BottomNavContent = memo(({ activeTab, onTabChange, isSession }) => {
   const { t } = useTranslation('QuickClash')
   const navigate = useNavigate()
-  const { user } = useSelector((state) => state.auth)
 
+  // Tab configuration with lock status for session players
   const tabs = [
-    { id: 'battles', icon: Swords, label: t('Battles'), color: '#22d3ee', glowColor: 'rgba(34, 211, 238, 0.4)' },
-    { id: 'history', icon: Trophy, label: t('History'), color: '#facc15', glowColor: 'rgba(250, 204, 21, 0.4)' },
-    { id: 'teams', icon: Users, label: t('Teams'), color: '#a78bfa', glowColor: 'rgba(167, 139, 250, 0.4)' },
-    { id: 'profile', icon: User, label: t('Profile'), color: '#34d399', glowColor: 'rgba(52, 211, 153, 0.4)' },
+    { id: 'battles', icon: Swords, label: t('Battles'), color: '#22d3ee', glowColor: 'rgba(34, 211, 238, 0.4)', locked: false },
+    { id: 'history', icon: Trophy, label: t('History'), color: '#facc15', glowColor: 'rgba(250, 204, 21, 0.4)', locked: false },
+    { id: 'teams', icon: Users, label: t('Teams'), color: '#a78bfa', glowColor: 'rgba(167, 139, 250, 0.4)', locked: isSession }, // Show lock but still accessible
+    { id: 'profile', icon: User, label: t('Profile'), color: '#34d399', glowColor: 'rgba(52, 211, 153, 0.4)', locked: isSession },
   ]
 
   const handleTabClick = useCallback((tabId) => {
-    // All tabs now use the same handler - profile is a real tab
+    // All tabs now use the same handler - including locked tabs (they show teaser content)
     onTabChange(tabId)
   }, [onTabChange])
 
@@ -142,29 +156,53 @@ const BottomNavContent = memo(({ activeTab, onTabChange }) => {
                       marginRight: 'auto',
                       width: 32,
                       height: 3,
-                      backgroundColor: tab.color,
+                      backgroundColor: tab.locked ? 'rgba(255,255,255,0.3)' : tab.color,
                       borderRadius: 2,
                     }}
                     transition={{ type: 'spring', stiffness: 500, damping: 35 }}
                   />
                 )}
 
-                {/* Icon */}
+                {/* Icon with lock badge for locked tabs */}
                 <motion.div
                   animate={{
-                    color: isActive ? tab.color : 'rgba(255, 255, 255, 0.4)',
+                    color: tab.locked
+                      ? 'rgba(255, 255, 255, 0.3)'
+                      : isActive ? tab.color : 'rgba(255, 255, 255, 0.4)',
                     scale: isActive ? 1.15 : 1,
                   }}
                   transition={{ duration: 0.2 }}
                   style={{ position: 'relative' }}
                 >
                   <Icon style={{ width: 24, height: 24 }} />
+                  {/* Lock badge */}
+                  {tab.locked && (
+                    <div
+                      style={{
+                        position: 'absolute',
+                        top: -4,
+                        right: -6,
+                        width: 12,
+                        height: 12,
+                        borderRadius: '50%',
+                        backgroundColor: 'rgba(15, 23, 42, 0.9)',
+                        display: 'flex',
+                        alignItems: 'center',
+                        justifyContent: 'center',
+                        border: '1px solid rgba(255, 255, 255, 0.2)',
+                      }}
+                    >
+                      <Lock style={{ width: 7, height: 7, color: 'rgba(255,255,255,0.5)' }} />
+                    </div>
+                  )}
                 </motion.div>
 
                 {/* Label */}
                 <motion.span
                   animate={{
-                    color: isActive ? tab.color : 'rgba(255, 255, 255, 0.4)',
+                    color: tab.locked
+                      ? 'rgba(255, 255, 255, 0.3)'
+                      : isActive ? tab.color : 'rgba(255, 255, 255, 0.4)',
                     fontWeight: isActive ? 700 : 500,
                   }}
                   transition={{ duration: 0.2 }}
@@ -182,7 +220,7 @@ const BottomNavContent = memo(({ activeTab, onTabChange }) => {
 })
 BottomNavContent.displayName = 'BottomNavContent'
 
-const BottomNav = memo(({ activeTab, onTabChange }) => {
+const BottomNav = memo(({ activeTab, onTabChange, isSession }) => {
   const [mounted, setMounted] = useState(false)
 
   useEffect(() => {
@@ -193,7 +231,7 @@ const BottomNav = memo(({ activeTab, onTabChange }) => {
   if (!mounted) return null
 
   return createPortal(
-    <BottomNavContent activeTab={activeTab} onTabChange={onTabChange} />,
+    <BottomNavContent activeTab={activeTab} onTabChange={onTabChange} isSession={isSession} />,
     document.body
   )
 })
@@ -233,14 +271,44 @@ const getTabFromPath = (path) => {
   return 'battles'
 }
 
+// Key for localStorage to track if welcome modal has been shown
+const WELCOME_SHOWN_KEY = 'qc_session_welcome_shown'
+
 const QuickClashLayoutV2 = () => {
   const location = useLocation()
+  const navigate = useNavigate()
+
+  // Get player info (works for both auth users and session players)
+  const { isSession, isAuthenticated, player } = usePlayer()
+
   // Use window.location.pathname directly for initialization - always accurate
   const [activeTab, setActiveTab] = useState(() => getTabFromPath(window.location.pathname))
+
+  // Welcome modal state (for session players)
+  const [showWelcomeModal, setShowWelcomeModal] = useState(false)
+
+  // Signup panel state (for session player account creation)
+  const [showSignupPanel, setShowSignupPanel] = useState(false)
 
   // Track the last location.key to detect real navigation vs replaceState
   const lastLocationKey = useRef(location.key)
 
+  // Check if welcome modal should be shown for session players
+  useEffect(() => {
+    if (isSession) {
+      const hasSeenWelcome = localStorage.getItem(WELCOME_SHOWN_KEY)
+      const showWelcomeFromNav = location.state?.showWelcome
+
+      if (!hasSeenWelcome || showWelcomeFromNav) {
+        // Delay modal to let the UI load first
+        const timer = setTimeout(() => {
+          setShowWelcomeModal(true)
+          localStorage.setItem(WELCOME_SHOWN_KEY, 'true')
+        }, 500)
+        return () => clearTimeout(timer)
+      }
+    }
+  }, [isSession, location.state])
 
   const handleTabChange = useCallback((tabId) => {
     if (tabId === activeTab) return
@@ -279,37 +347,104 @@ const QuickClashLayoutV2 = () => {
     return () => window.removeEventListener('popstate', handlePopState)
   }, [])
 
+  // Handler for "Create Account" actions - opens signup panel
+  const handleCreateAccount = useCallback(() => {
+    haptics.impact()
+    quizAudioService.playSubmit()
+    // Open the signup slide-over panel
+    setShowSignupPanel(true)
+  }, [])
+
+  // Check if a tab is locked for session players
+  const isTabLocked = useCallback((tabId) => {
+    if (!isSession) return false
+    return tabId === 'teams' || tabId === 'profile'
+  }, [isSession])
+
   return (
     <>
       {/* Background data refresh on tab change */}
-      <DataManager activeTab={activeTab} />
+      <DataManager activeTab={activeTab} isSession={isSession} />
+
+      {/* Session Player Banner (only for session players) */}
+      {isSession && player && (
+        <SessionPlayerBanner player={player} onCreateAccount={handleCreateAccount} />
+      )}
 
       {/* Tab content container with proper stacking context */}
       <div style={{ position: 'relative' }}>
-        {/* Active tab content - conditionally rendered for proper remounting */}
+        {/* Battles Tab - Available for all */}
         <TabContent isActive={activeTab === 'battles'} tabName="battles">
           <QuickClashV2 />
         </TabContent>
+
+        {/* History Tab - Available for all (with session notice for session players) */}
         <TabContent isActive={activeTab === 'history'} tabName="history">
           <BattleHistoryV2 />
         </TabContent>
+
+        {/* Teams Tab - Session players get view-only team dashboard */}
         <TabContent isActive={activeTab === 'teams'} tabName="teams">
-          <TeamsPageV2 />
+          {isSession ? (
+            <Suspense fallback={
+              <div className="flex items-center justify-center min-h-[60vh]">
+                <div className="w-8 h-8 border-2 border-purple-400/30 border-t-purple-400 rounded-full animate-spin" />
+              </div>
+            }>
+              <SessionTeamDashboard onCreateAccount={handleCreateAccount} />
+            </Suspense>
+          ) : (
+            <TeamsPageV2 />
+          )}
         </TabContent>
+
+        {/* Profile Tab - Locked for session players */}
         <TabContent isActive={activeTab === 'profile'} tabName="profile">
-          <React.Suspense fallback={
-            <div className="flex items-center justify-center min-h-[60vh]">
-              <div className="w-8 h-8 border-2 border-cyan-400/30 border-t-cyan-400 rounded-full animate-spin" />
-            </div>
-          }>
-            <div className="pb-20 md:pb-4">
-              <QuickClashProfile />
-            </div>
-          </React.Suspense>
+          {isSession ? (
+            <Suspense fallback={
+              <div className="flex items-center justify-center min-h-[60vh]">
+                <div className="w-8 h-8 border-2 border-emerald-400/30 border-t-emerald-400 rounded-full animate-spin" />
+              </div>
+            }>
+              <LockedTabTeaser tabType="profile" onCreateAccount={handleCreateAccount} />
+            </Suspense>
+          ) : (
+            <React.Suspense fallback={
+              <div className="flex items-center justify-center min-h-[60vh]">
+                <div className="w-8 h-8 border-2 border-cyan-400/30 border-t-cyan-400 rounded-full animate-spin" />
+              </div>
+            }>
+              <div className="pb-20 md:pb-4">
+                <QuickClashProfile />
+              </div>
+            </React.Suspense>
+          )}
         </TabContent>
       </div>
 
-      <BottomNav activeTab={activeTab} onTabChange={handleTabChange} />
+      <BottomNav activeTab={activeTab} onTabChange={handleTabChange} isSession={isSession} />
+
+      {/* Session Player Welcome Modal */}
+      {isSession && (
+        <Suspense fallback={null}>
+          <SessionWelcomeModal
+            isOpen={showWelcomeModal}
+            onClose={() => setShowWelcomeModal(false)}
+            onCreateAccount={handleCreateAccount}
+          />
+        </Suspense>
+      )}
+
+      {/* Session Player Signup Panel - Slide-over for account creation */}
+      {isSession && (
+        <Suspense fallback={null}>
+          <SessionSignupPanel
+            isOpen={showSignupPanel}
+            onClose={() => setShowSignupPanel(false)}
+            sessionPlayer={player}
+          />
+        </Suspense>
+      )}
     </>
   )
 }

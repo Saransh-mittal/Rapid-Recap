@@ -30,7 +30,13 @@ const useQuickClashTeamBattle = () => {
 
   const socketState = useSelector(state => state.quickClashSocket)
   const teamBattleState = useSelector(state => state.quickClashTeamBattle)
-  const { user } = useSelector(state => state.auth)
+  const authState = useSelector(state => state.auth)
+
+  // Support both authenticated users and session players
+  const sessionId = typeof window !== 'undefined' ? localStorage.getItem('playSessionId') : null
+  const user = authState.user
+  const isSession = !user && !!sessionId
+  const playerId = user?._id || sessionId
 
   // Load team battles
   const loadTeamBattles = useCallback(
@@ -103,12 +109,18 @@ const useQuickClashTeamBattle = () => {
             localStorage.setItem(
               `challenge_${sessionInfo.challengeId}`,
               JSON.stringify({
-                userId: user?._id,
+                playerId: playerId,
                 battleId: battleId,
                 timestamp: Date.now(),
+                isSession: isSession,
               }),
             )
-            navigate(`/quickclash/session/${sessionInfo.challengeId}`)
+            // Use different route for session players
+            if (isSession) {
+              navigate(`/play/session/${sessionInfo.challengeId}`)
+            } else {
+              navigate(`/quickclash/session/${sessionInfo.challengeId}`)
+            }
           }
           return result
         })
@@ -117,7 +129,7 @@ const useQuickClashTeamBattle = () => {
           throw error
         })
     },
-    [dispatch, navigate, t, user?._id],
+    [dispatch, navigate, t, playerId, isSession],
   )
 
   // Join matchmaking
@@ -234,7 +246,7 @@ const useQuickClashTeamBattle = () => {
     leaveMatchmaking,
     checkMatchmakingStatus,
     clearBattle: () => dispatch(clearCurrentBattle()),
-    goToBattle: battleId => navigate(`/quickclash/teamBattle/${battleId}`),
+    goToBattle: battleId => navigate(isSession ? `/play/battle/${battleId}` : `/quickclash/teamBattle/${battleId}`),
     clearBattleReadyNotification: () => dispatch(clearBattleReady()),
 
     // Dummy socket management functions for backward compatibility

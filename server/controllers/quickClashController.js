@@ -291,11 +291,12 @@ const completeReadingPhase = asyncHandler(async (req, res) => {
 const submitQuizAnswers = asyncHandler(async (req, res) => {
   const { sessionId } = req.params
   const { responses } = req.body
-  const userId = req.user._id
+  // Support both authenticated users (req.user) and session players (req.player)
+  const userId = req.user?._id || req.player?._id
 
   try {
     console.log(
-      `[submitQuizAnswers] Processing quiz submission for session: ${sessionId}`,
+      `[submitQuizAnswers] Processing quiz submission for session: ${sessionId}, userId: ${userId}`,
     )
 
     const result = await submitQuizAnswersService({

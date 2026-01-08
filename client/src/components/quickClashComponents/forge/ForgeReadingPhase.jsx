@@ -64,11 +64,12 @@ import { quizAudioService } from '../../../services/quizAudioService'
  * @param {string} sessionId - Quick Clash session ID
  * @param {string} category - Article category for theming
  * @param {Array} activePowerups - List of active powerups for this session
+ * @param {boolean} isSessionPlayer - Whether user is a session player (uses /api/play endpoints)
  * @param {function} onComplete - Callback when forge mode completes
  * @param {function} onPowerupUsed - Callback when a powerup is used (receives powerupId)
  * @param {function} onError - Callback for error handling
  */
-const ForgeReadingPhase = ({ sessionId, category, activePowerups = [], onComplete, onPowerupUsed, onError }) => {
+const ForgeReadingPhase = ({ sessionId, category, activePowerups = [], isSessionPlayer = false, onComplete, onPowerupUsed, onError }) => {
   const { t } = useTranslation('QuickClash')
 
   // Get category-based accent color for theming
@@ -213,16 +214,32 @@ const ForgeReadingPhase = ({ sessionId, category, activePowerups = [], onComplet
    * 3. Display question to user
    */
   useEffect(() => {
-    initializeForgeMode()
+    // Only initialize when we have a valid sessionId
+    if (sessionId) {
+      console.log('[FORGE] Initializing with sessionId:', sessionId)
+      initializeForgeMode()
+    } else {
+      console.log('[FORGE] Skipping initialization - no sessionId yet')
+    }
   }, [sessionId])
 
   const initializeForgeMode = async () => {
+    // Double-check sessionId is valid
+    if (!sessionId) {
+      console.error('[FORGE] Cannot initialize - sessionId is undefined')
+      return
+    }
+
     try {
       setLoading(true)
       setPhase('loading')
 
+      console.log('[FORGE] Calling forgeService.start for session:', sessionId)
+
       // Initialize session
-      const response = await forgeService.start(sessionId)
+      const response = await forgeService.start(sessionId, { isSessionPlayer })
+
+      console.log('[FORGE] Response received:', response)
 
       // response.data contains the actual question data
       const questionData = response.data || response
@@ -288,7 +305,8 @@ const ForgeReadingPhase = ({ sessionId, category, activePowerups = [], onComplet
         timeSpent,
         powerups: {
           scoreSurge: activeEffects.scoreSurge
-        }
+        },
+        isSessionPlayer,
       })
 
       if (response.success) {
@@ -391,7 +409,7 @@ const ForgeReadingPhase = ({ sessionId, category, activePowerups = [], onComplet
     try {
       setLoading(true)
 
-      const response = await forgeService.moveNext(sessionId)
+      const response = await forgeService.moveNext(sessionId, { isSessionPlayer })
       const data = response.data || response
 
       if (data.completed) {
@@ -477,7 +495,7 @@ const ForgeReadingPhase = ({ sessionId, category, activePowerups = [], onComplet
 
       // Call API to mark as used on server
       // We do this for ALL powerups now to ensure consistency
-      const response = await forgeService.usePowerup(sessionId, powerup.powerupId)
+      const response = await forgeService.usePowerup(sessionId, powerup.powerupId, { isSessionPlayer })
 
       if (!response.success) {
          throw new Error('Failed to activate powerup')

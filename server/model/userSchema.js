@@ -449,6 +449,12 @@ const userSchema = new mongoose.Schema(
       default: 1000, // Default starting trophies
     },
     quickClashStats: {
+      wins: { type: Number, default: 0 },
+      losses: { type: Number, default: 0 },
+      draws: { type: Number, default: 0 },
+      totalMatches: { type: Number, default: 0 },
+      totalScore: { type: Number, default: 0 },
+      avgScore: { type: Number, default: 0 },
       currentWinStreak: {
         type: Number,
         default: 0,

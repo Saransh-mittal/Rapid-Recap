@@ -23,20 +23,32 @@ const useDailyTasks = () => {
     statisticsLoading,
   } = useSelector(state => state.quickClashDailyTasks)
 
-  // Load tasks if they haven't been loaded yet
+  // Check if user is authenticated (not a session player)
+  const { user } = useSelector(state => state.auth)
+  const isAuthenticated = !!user
+
+  // Load tasks if they haven't been loaded yet - ONLY for authenticated users
+  // Don't retry if there was an error (prevents infinite loop on 401)
   useEffect(() => {
-    if (tasks.length === 0 && !tasksLoading) {
+    if (isAuthenticated && tasks.length === 0 && !tasksLoading && !tasksError) {
       dispatch(fetchDailyTasks())
       dispatch(fetchTaskStatistics())
     }
-  }, [dispatch, tasks.length, tasksLoading])
+  }, [dispatch, tasks.length, tasksLoading, tasksError, isAuthenticated])
 
   /**
    * Track individual challenge completion (called when a user completes their part)
    * Only updates non-win related tasks as winner is not determined yet
+   * NOTE: Only runs for authenticated users, not session players
    */
   const trackChallengeCompletion = useCallback(
     async params => {
+      // Skip for session players - they don't have daily tasks
+      if (!isAuthenticated) {
+        console.log('Skipping daily task tracking for session player')
+        return
+      }
+
       try {
         const { score, fromMatchmaking, readingTime, category, challengeId } =
           params
@@ -110,7 +122,7 @@ const useDailyTasks = () => {
         console.error('Error tracking challenge completion:', error)
       }
     },
-    [dispatch],
+    [dispatch, isAuthenticated],
   )
 
   /**

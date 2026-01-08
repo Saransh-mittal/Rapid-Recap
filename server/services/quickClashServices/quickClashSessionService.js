@@ -133,12 +133,15 @@ const createSession = async ({ challengeId, userId, language }) => {
         ).session(session)
 
         if (teamBattle) {
-          const teamAMember = teamBattle.teamAMembers.find(
-            m => m.user.toString() === userId.toString(),
-          )
-          const teamBMember = teamBattle.teamBMembers.find(
-            m => m.user.toString() === userId.toString(),
-          )
+          // Helper to check if a member matches the userId (handles both user and sessionPlayer)
+          const memberMatchesUser = (m) => {
+            if (m.user) return m.user.toString() === userId.toString()
+            if (m.sessionPlayer) return m.sessionPlayer.toString() === userId.toString()
+            return false
+          }
+
+          const teamAMember = teamBattle.teamAMembers.find(memberMatchesUser)
+          const teamBMember = teamBattle.teamBMembers.find(memberMatchesUser)
           const member = teamAMember || teamBMember
 
           if (member && member.loadout && member.loadout.items.length > 0) {

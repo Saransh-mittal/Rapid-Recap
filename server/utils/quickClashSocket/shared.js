@@ -6,6 +6,7 @@
  */
 
 const QuickClashTeam = require('../../model/quickClashSchemas/quickClashTeamSchema')
+const { getMemberPlayerId } = require('../sessionPlayerUtils')
 
 // ==========================================
 // ROOM MEMBERSHIP TRACKING
@@ -188,66 +189,59 @@ const isUserInRoom = (userId, roomType) => {
  */
 const createNotifyUser = (io, notifyUserAllDevices) => {
   /**
-   * Enhanced helper function to notify user with better debugging and fallback handling
-   * @param {string} userId - User ID to notify
+   * Notify user via socket - handles both authenticated users and session players
+   * @param {string|ObjectId} userId - User ID or Session Player ID to notify
    * @param {string} event - Event name
    * @param {Object} data - Event data
    * @returns {boolean} True if notification was sent successfully
    */
   return (userId, event, data) => {
-    if (!userId) {
-      console.error(`[NOTIFY] Invalid userId provided for event ${event}`)
-      return false
-    }
+    if (!userId) return false
 
-    // Try enhanced device-aware notification first
+    // Ensure userId is a string (it might be an ObjectId)
+    const userIdStr = userId.toString()
+
+    // Try device-aware notification first (for authenticated users)
     if (notifyUserAllDevices && typeof notifyUserAllDevices === 'function') {
       try {
-        const success = notifyUserAllDevices(userId, event, data)
-        if (success) {
-          return true
-        }
+        if (notifyUserAllDevices(userId, event, data)) return true
       } catch (error) {
-        console.error(
-          `[NOTIFY] Error in device-aware notification for user ${userId}:`,
-          error
-        )
+        // Fall through to room-based notification
       }
     }
 
-    // Enhanced fallback to room-based notification
-    if (!io || !io.sockets || !io.sockets.adapter) {
-      console.error(`[NOTIFY] Socket.io not properly initialized`)
-      return false
-    }
+    // Fallback to room-based notification
+    if (!io?.sockets?.adapter) return false
 
-    // Try QuickClash room first
-    const userRoom = `quickClash:${userId}`
+    // Try QuickClash room (main room for both authenticated and session players)
+    const userRoom = `quickClash:${userIdStr}`
     const room = io.sockets.adapter.rooms.get(userRoom)
-
-    if (room && room.size > 0) {
-      try {
-        io.to(userRoom).emit(event, data)
-        return true
-      } catch (error) {
-        console.error(`[NOTIFY] Error emitting to room ${userRoom}:`, error)
-      }
+    if (room?.size > 0) {
+      io.to(userRoom).emit(event, data)
+      return true
     }
 
-    // Try the basic user room as well
-    const basicUserRoom = userId
-    const basicRoom = io.sockets.adapter.rooms.get(basicUserRoom)
+    // Try basic user room
+    const basicRoom = io.sockets.adapter.rooms.get(userIdStr)
+    if (basicRoom?.size > 0) {
+      io.to(userIdStr).emit(event, data)
+      return true
+    }
 
-    if (basicRoom && basicRoom.size > 0) {
-      try {
-        io.to(basicUserRoom).emit(event, data)
-        return true
-      } catch (error) {
-        console.error(
-          `[NOTIFY] Error emitting to basic room ${basicUserRoom}:`,
-          error
-        )
-      }
+    // Try spark session room
+    const sparkRoom = `spark:session:${userIdStr}`
+    const sparkRoomObj = io.sockets.adapter.rooms.get(sparkRoom)
+    if (sparkRoomObj?.size > 0) {
+      io.to(sparkRoom).emit(event, data)
+      return true
+    }
+
+    // Try player room
+    const playerRoom = `player:${userIdStr}`
+    const playerRoomObj = io.sockets.adapter.rooms.get(playerRoom)
+    if (playerRoomObj?.size > 0) {
+      io.to(playerRoom).emit(event, data)
+      return true
     }
 
     return false
@@ -296,7 +290,8 @@ const notifyTeamMembers = async (
 
     // Send event to each team member (excluding any specified exclusions)
     for (const member of team.members) {
-      const userId = member.user.toString()
+      const userId = getMemberPlayerId(member)
+      if (!userId) continue // Skip members without valid user/sessionPlayer
 
       // Skip if user is in exclude list
       if (excludeSet.has(userId)) {

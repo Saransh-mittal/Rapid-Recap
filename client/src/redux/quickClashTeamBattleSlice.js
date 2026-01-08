@@ -2,6 +2,20 @@
 import { createSlice, createAsyncThunk } from '@reduxjs/toolkit'
 import axios from 'axios'
 
+// Helper to check if user is a session player (no JWT auth)
+const isSessionPlayer = () => {
+  if (typeof window === 'undefined') return false
+  const sessionId = localStorage.getItem('playSessionId')
+  // Check if we have a session ID but no user in Redux (we can't access Redux state here directly)
+  // The axios interceptor will add X-Session-Id header if sessionId exists
+  return !!sessionId
+}
+
+// Helper to get the appropriate API base path
+const getApiPath = (authPath, sessionPath) => {
+  return isSessionPlayer() ? sessionPath : authPath
+}
+
 // Async thunks
 export const fetchTeamBattles = createAsyncThunk(
   'quickClashTeamBattle/fetchTeamBattles',
@@ -10,7 +24,9 @@ export const fetchTeamBattles = createAsyncThunk(
     { rejectWithValue },
   ) => {
     try {
-      const response = await axios.get('/api/quickClash/team-battles', {
+      // Use session API path for session players
+      const endpoint = getApiPath('/api/quickClash/team-battles', '/api/play/team-battles')
+      const response = await axios.get(endpoint, {
         params: { status, page, limit },
       })
 
@@ -34,11 +50,18 @@ export const fetchTeamBattles = createAsyncThunk(
 
 export const fetchTeamBattleDetails = createAsyncThunk(
   'quickClashTeamBattle/fetchTeamBattleDetails',
-  async (battleId, { rejectWithValue }) => {
+  async (battleId, { rejectWithValue, getState }) => {
     try {
-      const response = await axios.get(
-        `/api/quickClash/team-battle/${battleId}`,
-      )
+      // Check if user is authenticated via Redux
+      const { auth } = getState()
+      const hasUser = !!auth?.user
+
+      // Use session endpoint if no authenticated user
+      const endpoint = hasUser
+        ? `/api/quickClash/team-battle/${battleId}`
+        : `/api/play/battle/${battleId}`
+
+      const response = await axios.get(endpoint)
       return response.data.battle
     } catch (error) {
       return rejectWithValue(
@@ -100,12 +123,17 @@ export const getTeamMatchmakingStatus = createAsyncThunk(
 
 export const selectBattleCategory = createAsyncThunk(
   'quickClashTeamBattle/selectBattleCategory',
-  async ({ battleId, category }, { rejectWithValue }) => {
+  async ({ battleId, category }, { rejectWithValue, getState }) => {
     try {
-      const response = await axios.post(
-        `/api/quickClash/team-battle/${battleId}/select-category`,
-        { category },
-      )
+      // Check if user is authenticated via Redux
+      const { auth } = getState()
+      const hasUser = !!auth?.user
+
+      const endpoint = hasUser
+        ? `/api/quickClash/team-battle/${battleId}/select-category`
+        : `/api/play/battle/${battleId}/select-category`
+
+      const response = await axios.post(endpoint, { category })
       return {
         battle: response.data.battle,
         category,
@@ -120,11 +148,17 @@ export const selectBattleCategory = createAsyncThunk(
 
 export const beginBattleChallenge = createAsyncThunk(
   'quickClashTeamBattle/beginBattleChallenge',
-  async ({ battleId }, { rejectWithValue }) => {
+  async ({ battleId }, { rejectWithValue, getState }) => {
     try {
-      const response = await axios.post(
-        `/api/quickClash/team-battle/${battleId}/begin-challenge`,
-      )
+      // Check if user is authenticated via Redux
+      const { auth } = getState()
+      const hasUser = !!auth?.user
+
+      const endpoint = hasUser
+        ? `/api/quickClash/team-battle/${battleId}/begin-challenge`
+        : `/api/play/battle/${battleId}/begin-challenge`
+
+      const response = await axios.post(endpoint)
       return {
         battle: response.data.battle,
         sessionInfo: response.data.sessionInfo,
@@ -139,11 +173,17 @@ export const beginBattleChallenge = createAsyncThunk(
 
 export const deselectBattleCategory = createAsyncThunk(
   'quickClashTeamBattle/deselectBattleCategory',
-  async ({ battleId }, { rejectWithValue }) => {
+  async ({ battleId }, { rejectWithValue, getState }) => {
     try {
-      const response = await axios.post(
-        `/api/quickClash/team-battle/${battleId}/deselect-category`,
-      )
+      // Check if user is authenticated via Redux
+      const { auth } = getState()
+      const hasUser = !!auth?.user
+
+      const endpoint = hasUser
+        ? `/api/quickClash/team-battle/${battleId}/deselect-category`
+        : `/api/play/battle/${battleId}/deselect-category`
+
+      const response = await axios.post(endpoint)
       return {
         battle: response.data.battle,
       }

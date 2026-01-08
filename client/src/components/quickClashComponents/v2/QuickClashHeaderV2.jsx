@@ -1,5 +1,6 @@
 // components/quickClashComponents/v2/QuickClashHeaderV2.jsx
 // V2 Header - Mobile-First, Reuses existing V1 components for data consistency
+// Session-aware: hides mobile header for session players (they use SessionPlayerBanner)
 
 import React, { memo, useState, useCallback, lazy, Suspense, useEffect } from 'react'
 import { motion } from 'framer-motion'
@@ -18,6 +19,7 @@ import QuickClashLeaderboardModal from '../leaderboard/QuickClashLeaderboardModa
 import { setIsNotifDrawerOpen } from '../../../redux/appSlice'
 import { fetchUserTrophies } from '../../../redux/quickClashSlice'
 import useFriends from '../../../customHooks/useFriends'
+import usePlayer from '../../../hooks/usePlayer'
 
 // Audio feedback
 import { quizAudioService } from '../../../services/quizAudioService'
@@ -117,6 +119,9 @@ const QuickClashHeaderV2 = () => {
   const [isDesktop, setIsDesktop] = useState(false)
   const [showLeaderboard, setShowLeaderboard] = useState(false)
 
+  // Session player detection
+  const { isSession } = usePlayer()
+
   // Redux selectors
   const { user } = useSelector((state) => state.auth)
   const { updates, unreadFriendRequests, notification } = useSelector((state) => state.app)
@@ -143,10 +148,12 @@ const QuickClashHeaderV2 = () => {
     return unreadUpdates + friendRequests + notificationItems
   }, [updates, unreadFriendRequests, notification])
 
-  // Effects (same as V1)
+  // Effects (same as V1) - only for authenticated users
   useEffect(() => {
-    dispatch(fetchUserTrophies())
-  }, [dispatch])
+    if (!isSession) {
+      dispatch(fetchUserTrophies())
+    }
+  }, [dispatch, isSession])
 
   useEffect(() => {
     const checkDesktop = () => setIsDesktop(window.innerWidth >= 768)
@@ -181,34 +188,37 @@ const QuickClashHeaderV2 = () => {
 
   return (
     <>
-      {/* ====== MOBILE HEADER (Fixed Top) ====== */}
-      <MotionDiv
-        className="fixed top-3 left-3 right-3 z-[1000] flex md:hidden justify-between items-center"
-        initial={{ opacity: 0, y: -10 }}
-        animate={{ opacity: 1, y: 0 }}
-      >
-        {/* Left: Stats */}
-        <div className="flex items-center gap-2">
-          <TrophyDisplay />
-          <LevelBadge />
-        </div>
+      {/* ====== MOBILE HEADER (Fixed Top) - Only for authenticated users ====== */}
+      {/* Session players use SessionPlayerBanner instead */}
+      {!isSession && (
+        <MotionDiv
+          className="fixed top-3 left-3 right-3 z-[1000] flex md:hidden justify-between items-center"
+          initial={{ opacity: 0, y: -10 }}
+          animate={{ opacity: 1, y: 0 }}
+        >
+          {/* Left: Stats */}
+          <div className="flex items-center gap-2">
+            <TrophyDisplay />
+            <LevelBadge />
+          </div>
 
-        {/* Right: Action Buttons */}
-        <div className="flex items-center gap-2">
-          <FriendsButton
-            onClick={openWiseWeb}
-            totalRequests={totalRequests}
-            onlineCount={onlineCount}
-            loading={loading.friends && loading.requests}
-          />
-          <NotificationBell
-            count={notificationCount}
-            onClick={handleNotificationClick}
-          />
-          <LeaderboardButton onClick={handleLeaderboardClick} />
-          <TaskProgressIndicator onViewTasks={handleViewTasksClick} size="sm" />
-        </div>
-      </MotionDiv>
+          {/* Right: Action Buttons */}
+          <div className="flex items-center gap-2">
+            <FriendsButton
+              onClick={openWiseWeb}
+              totalRequests={totalRequests}
+              onlineCount={onlineCount}
+              loading={loading.friends && loading.requests}
+            />
+            <NotificationBell
+              count={notificationCount}
+              onClick={handleNotificationClick}
+            />
+            <LeaderboardButton onClick={handleLeaderboardClick} />
+            <TaskProgressIndicator onViewTasks={handleViewTasksClick} size="sm" />
+          </div>
+        </MotionDiv>
+      )}
 
       {/* ====== DESKTOP HEADER ====== */}
       <MotionDiv
@@ -266,7 +276,9 @@ const QuickClashHeaderV2 = () => {
       </MotionDiv>
 
       {/* ====== MOBILE TITLE (Below fixed header) ====== */}
-      <div className="md:hidden mt-16 mb-4 text-center">
+      {/* For authenticated users: needs mt-16 to account for fixed header */}
+      {/* For session players: no margin needed, title shown below SessionPlayerBanner */}
+      <div className={`md:hidden mb-4 text-center ${isSession ? 'mt-2' : 'mt-16'}`}>
         <h1
           className="text-lg font-bold text-cyan-300 flex items-center justify-center"
         >

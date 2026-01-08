@@ -6,6 +6,7 @@ const QuickClashTeamMatchmaking = require('../../model/quickClashSchemas/quickCl
 const QuickClashTeam = require('../../model/quickClashSchemas/quickClashTeamSchema')
 const QuickClashGlobalMatchmaking = require('../../model/quickClashSchemas/quickClashGlobalMatchmakingSchema')
 const User = require('../../model/userSchema')
+const PlaySession = require('../../model/quickClashSchemas/playSessionSchema')
 const globalEmitter = require('../../eventEmitter')
 const { getCategories } = require('../../data/categories')
 const { createTeamBattle } = require('./quickClashTeamBattleService')
@@ -18,6 +19,51 @@ const MATCHMAKING_EXPIRY = 30 * 60 * 1000 // 30 minutes
 const TROPHY_RANGE_INITIAL = 200 // Initial trophy range for matching
 const TROPHY_RANGE_INCREMENT = 100 // How much to increase range each check
 const MAX_TROPHY_RANGE = 1000 // Maximum trophy range difference
+
+/**
+ * Helper to get member ID for both user and session player members
+ * @param {Object} member - Team member object
+ * @returns {string|null} Member ID as string or null if not found
+ */
+const getMemberId = (member) => {
+  if (!member) return null
+  if (member.user) {
+    return member.user._id ? member.user._id.toString() : member.user.toString()
+  }
+  if (member.sessionPlayer) {
+    return member.sessionPlayer._id
+      ? member.sessionPlayer._id.toString()
+      : member.sessionPlayer.toString()
+  }
+  return null
+}
+
+/**
+ * Helper to get player ID from matchmaking entry
+ * Handles both regular users (populated) and session players (null after populate)
+ * @param {Object} matchmakingEntry - Global matchmaking entry with user field
+ * @returns {string|null} Player ID as string or null if not found
+ */
+const getPlayerIdFromMatchmaking = (matchmakingEntry) => {
+  if (!matchmakingEntry) return null
+
+  // If user is populated and has _id
+  if (matchmakingEntry.user?._id) {
+    return matchmakingEntry.user._id.toString()
+  }
+
+  // If user is a raw ObjectId (not populated or session player)
+  if (matchmakingEntry.user) {
+    return matchmakingEntry.user.toString()
+  }
+
+  // Fallback to raw document field
+  if (matchmakingEntry._doc?.user) {
+    return matchmakingEntry._doc.user.toString()
+  }
+
+  return null
+}
 
 // Module-level variables for state management between function calls
 const teamFormationState = {
@@ -53,9 +99,10 @@ const joinTeamMatchmaking = async ({
 
     console.log(`Team ${teamId} joining matchmaking queue`)
 
-    // Check if team exists
+    // Check if team exists - populate BOTH user and sessionPlayer
     const team = await QuickClashTeam.findById(teamId)
       .populate('members.user', 'name inGameName quickClashTrophies')
+      .populate('members.sessionPlayer', 'inGameName trophies')
       .session(session)
 
     if (!team) {
@@ -74,16 +121,23 @@ const joinTeamMatchmaking = async ({
     if (!isAutoFormed && !team.formationInfo?.isAutoFormed) {
       // Check if any team member is already in matchmaking
       for (const member of team.members) {
-        const userId = member.user._id || member.user
+        // Use getMemberId for safe access to both user and session player IDs
+        const memberId = getMemberId(member)
+        if (!memberId) {
+          console.warn('Member has no user or sessionPlayer ID, skipping matchmaking check')
+          continue
+        }
+
         const matchmakingStatus = await checkUserInMatchmaking({
-          userId,
+          userId: memberId,
           session,
         })
 
         if (matchmakingStatus.isInMatchmaking) {
-          // Get a proper name for the user
+          // Get a proper name for the member (works for both user and session player)
           const memberName =
-            member.user.name || member.user.inGameName || 'A player'
+            member.user?.name || member.user?.inGameName ||
+            member.sessionPlayer?.inGameName || 'A player'
 
           // Check if they're in the same team
           if (matchmakingStatus.type === 'team') {
@@ -108,10 +162,11 @@ const joinTeamMatchmaking = async ({
       )
     }
 
-    // Calculate team's average trophies
+    // Calculate team's average trophies (handle both users and session players)
     let totalTrophies = 0
     team.members.forEach(member => {
-      totalTrophies += member.user.quickClashTrophies || 1000
+      // Get trophies from either user or sessionPlayer
+      totalTrophies += member.user?.quickClashTrophies || member.sessionPlayer?.trophies || 1000
     })
     const avgTrophies = Math.round(totalTrophies / team.members.length)
 
@@ -151,23 +206,26 @@ const joinTeamMatchmaking = async ({
       // MODIFY: Use retryable matchmaking process
       await performMatchmakingWithRetry(session)
 
+      // Emit for authenticated user sockets
       globalEmitter.emit('quickClash:teamJoinedMatchmaking', {
         teamId: team._id.toString(),
         teamName: team.name,
         avgTrophies: avgTrophies,
         memberCount: team.members.length,
-        // ADD THESE NEW FIELDS:
         isAutoFormed: team.formationInfo?.isAutoFormed || false,
         teamMembers: team.members.map(member => ({
-          userId: member.user._id
-            ? member.user._id.toString()
-            : member.user.toString(),
-          name: member.user.name || member.user.inGameName,
+          // Handle both user and session player members
+          id: getMemberId(member),
+          userId: member.user?._id ? member.user._id.toString() : (member.user || getMemberId(member)),
+          sessionPlayerId: member.sessionPlayer?._id?.toString() || member.sessionPlayer?.toString(),
+          name: member.user?.name || member.user?.inGameName || member.sessionPlayer?.inGameName || 'Player',
+          isSessionPlayer: !!member.sessionPlayer,
           sourceTeam: member.sourceTeam,
-          originalTeam: member.originalTeam, // If available
+          originalTeam: member.originalTeam,
         })),
         formationInfo: team.formationInfo,
         timestamp: new Date(),
+        matchmakingId: matchmakingEntry._id.toString(),
       })
     } else {
       // Emit event for real-time updates
@@ -177,13 +235,17 @@ const joinTeamMatchmaking = async ({
         avgTrophies: avgTrophies,
         memberCount: team.members.length,
         teamMembers: team.members.map(member => ({
-          userId: member.user._id
-            ? member.user._id.toString()
-            : member.user.toString(),
-          name: member.user.name || member.user.inGameName,
+          // Handle both user and session player members
+          id: getMemberId(member),
+          userId: member.user?._id ? member.user._id.toString() : (member.user || getMemberId(member)),
+          sessionPlayerId: member.sessionPlayer?._id?.toString() || member.sessionPlayer?.toString(),
+          name: member.user?.name || member.user?.inGameName || member.sessionPlayer?.inGameName || 'Player',
+          isSessionPlayer: !!member.sessionPlayer,
         })),
-        preferredCategories: [], // Can be added if implemented
+        preferredCategories: [],
+        preferredCategories: [],
         timestamp: new Date(),
+        matchmakingId: matchmakingEntry._id.toString(),
       })
 
       // Try to find a match right away (async)
@@ -282,9 +344,12 @@ const checkUserInMatchmaking = async ({ userId, session: providedSession }) => {
       }
     }
 
-    // Check if user is in any team that's in matchmaking
+    // Check if user/session player is in any team that's in matchmaking
     const userTeams = await QuickClashTeam.find({
-      'members.user': userId,
+      $or: [
+        { 'members.user': userId },
+        { 'members.sessionPlayer': userId }
+      ]
     }).session(session)
 
     if (userTeams.length > 0) {
@@ -337,7 +402,7 @@ const checkUserInMatchmaking = async ({ userId, session: providedSession }) => {
 /**
  * Join global matchmaking queue as a solo player
  * @param {Object} params - Parameters
- * @param {string} params.userId - User ID
+ * @param {string} params.userId - User ID or Session Player ID
  * @returns {Promise<Object>} Matchmaking entry
  */
 const joinGlobalMatchmaking = async ({ userId }) => {
@@ -345,7 +410,7 @@ const joinGlobalMatchmaking = async ({ userId }) => {
 
   try {
     return await session.withTransaction(async () => {
-      console.log(`User ${userId} joining global matchmaking queue`)
+      console.log(`User/SessionPlayer ${userId} joining global matchmaking queue`)
 
       // First check if user is already in any matchmaking
       const matchmakingStatus = await checkUserInMatchmaking({
@@ -362,10 +427,21 @@ const joinGlobalMatchmaking = async ({ userId }) => {
         }
       }
 
-      // Check if user exists
-      const user = await User.findById(userId).session(session)
-      if (!user) {
-        throw new Error('User not found')
+      // Check if user exists (try User first, then PlaySession for session players)
+      let player = await User.findById(userId).session(session)
+      let isSessionPlayer = false
+      let trophies = 1000
+
+      if (!player) {
+        // Try to find as session player
+        player = await PlaySession.findById(userId).session(session)
+        if (!player) {
+          throw new Error('User not found')
+        }
+        isSessionPlayer = true
+        trophies = player.trophies || 1000
+      } else {
+        trophies = player.quickClashTrophies || 1000
       }
 
       // Check if user is already in matchmaking
@@ -378,15 +454,17 @@ const joinGlobalMatchmaking = async ({ userId }) => {
         matchmakingEntry.status = 'available'
         matchmakingEntry.lastActive = new Date()
         matchmakingEntry.expiresAt = new Date(Date.now() + MATCHMAKING_EXPIRY)
-        matchmakingEntry.trophies = user.quickClashTrophies || 1000
+        matchmakingEntry.trophies = trophies
+        matchmakingEntry.isSessionPlayer = isSessionPlayer
 
         await matchmakingEntry.save({ session })
       } else {
         // Create new entry
         matchmakingEntry = new QuickClashGlobalMatchmaking({
           user: userId,
-          trophies: user.quickClashTrophies || 1000,
+          trophies: trophies,
           expiresAt: new Date(Date.now() + MATCHMAKING_EXPIRY),
+          isSessionPlayer: isSessionPlayer,
         })
 
         await matchmakingEntry.save({ session })
@@ -572,9 +650,12 @@ const leaveTeamMatchmaking = async ({ teamId, userId = null }) => {
             })
           }
 
-          // Check if user is part of any other team matchmaking
+          // Check if user/session player is part of any other team matchmaking
           const userTeams = await QuickClashTeam.find({
-            'members.user': userId,
+            $or: [
+              { 'members.user': userId },
+              { 'members.sessionPlayer': userId }
+            ]
           }).session(session)
 
           if (userTeams.length > 0) {
@@ -703,31 +784,51 @@ const leaveTeamMatchmaking = async ({ teamId, userId = null }) => {
             // Get initiator name if available
             let initiatorName = 'A team member'
             if (userId) {
-              const initiatorMember = team.members.find(
-                member => member.user.toString() === userId.toString(),
-              )
-              if (initiatorMember && initiatorMember.user) {
-                // Try to get user's name
-                const initiator = await User.findById(userId)
-                  .select('name inGameName')
-                  .session(session)
+              // Find initiator - handle both user and session player members
+              const initiatorMember = team.members.find(member => {
+                const memberId = member.user?._id?.toString() || member.user?.toString() ||
+                                member.sessionPlayer?._id?.toString() || member.sessionPlayer?.toString()
+                return memberId === userId.toString()
+              })
 
-                if (initiator) {
-                  initiatorName =
-                    initiator.name || initiator.inGameName || 'A team member'
+              if (initiatorMember) {
+                if (initiatorMember.user) {
+                  // Try to get user's name
+                  const initiator = await User.findById(userId)
+                    .select('name inGameName')
+                    .session(session)
+
+                  if (initiator) {
+                    initiatorName =
+                      initiator.name || initiator.inGameName || 'A team member'
+                  }
+                } else if (initiatorMember.sessionPlayer) {
+                  // Session player - try to get their name
+                  const sessionPlayer = await PlaySession.findById(userId)
+                    .select('inGameName')
+                    .session(session)
+                  if (sessionPlayer) {
+                    initiatorName = sessionPlayer.inGameName || 'A player'
+                  }
                 }
               }
             }
 
             // Notify all other team members that someone left matchmaking
             for (const member of team.members) {
-              if (userId && member.user.toString() !== userId.toString()) {
+              // Get member ID safely
+              const memberId = member.user?._id?.toString() || member.user?.toString() ||
+                              member.sessionPlayer?._id?.toString() || member.sessionPlayer?.toString()
+
+              // Only notify if it's not the initiator and member has an ID
+              if (userId && memberId && memberId !== userId.toString()) {
                 globalEmitter.emit('quickClash:teamLeftMatchmaking', {
-                  userId: member.user,
+                  userId: member.user || member.sessionPlayer,
                   teamId: teamId.toString(),
                   teamName: team?.name,
                   reason: 'memberLeft',
                   memberName: initiatorName,
+                  isSessionPlayer: !!member.sessionPlayer,
                 })
               }
             }
@@ -1398,7 +1499,10 @@ const performMatchmakingLogic = async session => {
     for (const player of soloPlayersAvailable) {
       player.status = 'processing'
       await player.save({ session })
-      teamFormationState.pendingSoloPlayers.add(player.user._id.toString())
+      const playerId = getPlayerIdFromMatchmaking(player)
+      if (playerId) {
+        teamFormationState.pendingSoloPlayers.add(playerId)
+      }
     }
 
     // Find all partial teams - only look for teams with 'available' status
@@ -1556,28 +1660,27 @@ const performMatchmakingLogic = async session => {
         const tentativePlayers = []
 
         for (const player of soloPlayersAvailable) {
-          if (assignedPlayerIds.has(player.user._id.toString())) continue
+          const playerId = getPlayerIdFromMatchmaking(player)
+          if (!playerId || assignedPlayerIds.has(playerId)) continue
 
           newMembers.push({
-            user: player.user._id,
+            user: playerId, // Use extracted ID instead of player.user._id
             role: 'member',
             status: 'ready',
             sourceTeam: null, // No source team for solo players
           })
 
           // Track this solo player for origin info
-          soloPlayers.push(player.user._id)
+          soloPlayers.push(playerId)
 
           // Track for potential rollback
-          tentativePlayerIds.push(player.user._id.toString())
+          tentativePlayerIds.push(playerId)
           tentativePlayers.push(player)
 
           // Temporarily mark as assigned but don't update status yet
-          assignedPlayerIds.add(player.user._id.toString())
+          assignedPlayerIds.add(playerId)
           // Remove from pending solo players temporarily
-          teamFormationState.pendingSoloPlayers.delete(
-            player.user._id.toString(),
-          )
+          teamFormationState.pendingSoloPlayers.delete(playerId)
 
           addedCount++
 
@@ -1728,9 +1831,10 @@ const performMatchmakingLogic = async session => {
     }
 
     // Second phase: Create teams from remaining solo players
-    const remainingSoloPlayers = soloPlayersAvailable.filter(
-      player => !assignedPlayerIds.has(player.user._id.toString()),
-    )
+    const remainingSoloPlayers = soloPlayersAvailable.filter(player => {
+      const playerId = getPlayerIdFromMatchmaking(player)
+      return playerId && !assignedPlayerIds.has(playerId)
+    })
 
     console.log(
       `Found ${remainingSoloPlayers.length} remaining solo players for team formation`,
@@ -1741,7 +1845,7 @@ const performMatchmakingLogic = async session => {
       // Make sure we have 4 players for this team
       if (i + 3 < remainingSoloPlayers.length) {
         const teamPlayers = remainingSoloPlayers.slice(i, i + 4)
-        const soloPlayerIds = teamPlayers.map(player => player.user._id)
+        const soloPlayerIds = teamPlayers.map(player => getPlayerIdFromMatchmaking(player))
 
         // Create the new team
         const newTeam = new QuickClashTeam({
@@ -1767,8 +1871,9 @@ const performMatchmakingLogic = async session => {
 
         // Add the other members
         for (let j = 1; j < 4; j++) {
+          const otherPlayerId = getPlayerIdFromMatchmaking(teamPlayers[j])
           newTeam.members.push({
-            user: teamPlayers[j].user._id,
+            user: otherPlayerId,
             role: 'member',
             status: 'ready',
             sourceTeam: null, // No source team for solo players
@@ -1790,12 +1895,12 @@ const performMatchmakingLogic = async session => {
           await player.save({ session })
 
           // Mark as assigned
-          assignedPlayerIds.add(player.user._id.toString())
-
-          // Remove from pending solo players
-          teamFormationState.pendingSoloPlayers.delete(
-            player.user._id.toString(),
-          )
+          const playerId = getPlayerIdFromMatchmaking(player)
+          if (playerId) {
+            assignedPlayerIds.add(playerId)
+            // Remove from pending solo players
+            teamFormationState.pendingSoloPlayers.delete(playerId)
+          }
         }
       }
     }
@@ -1883,7 +1988,8 @@ const performMatchmakingLogic = async session => {
           // If from a source team, don't need to do anything special
           // If solo player, reset their entry to available
           if (!member.sourceTeam) {
-            const userId = member.user._id || member.user
+            const userId = getMemberId(member)
+            if (!userId) continue
 
             // Create a new entry for this solo player
             const newEntry = new QuickClashGlobalMatchmaking({
@@ -1895,7 +2001,7 @@ const performMatchmakingLogic = async session => {
             await newEntry.save({ session })
 
             // Add back to pending solo players
-            teamFormationState.pendingSoloPlayers.add(userId.toString())
+            teamFormationState.pendingSoloPlayers.add(userId)
           }
         }
       }
@@ -1905,9 +2011,10 @@ const performMatchmakingLogic = async session => {
     await processTeamMatchmaking(session)
 
     // Reset unassigned players back to 'available' status
-    const unassignedPlayers = soloPlayersAvailable.filter(
-      player => !assignedPlayerIds.has(player.user._id.toString()),
-    )
+    const unassignedPlayers = soloPlayersAvailable.filter(player => {
+      const playerId = getPlayerIdFromMatchmaking(player)
+      return playerId && !assignedPlayerIds.has(playerId)
+    })
 
     console.log(
       `Resetting status for ${unassignedPlayers.length} unassigned players back to available`,
@@ -2023,8 +2130,9 @@ const processTeamMatchmaking = async providedSession => {
         }
 
         // Check for duplicate users between teams - this is critical for auto-formed teams
-        const teamAUserIds = team.members.map(m => m.user._id.toString())
-        const teamBUserIds = matchedTeam.members.map(m => m.user._id.toString())
+        // Use getMemberId to support both users and session players
+        const teamAUserIds = team.members.map(m => getMemberId(m)).filter(Boolean)
+        const teamBUserIds = matchedTeam.members.map(m => getMemberId(m)).filter(Boolean)
 
         // Check for overlap (duplicate users)
         const duplicateUsers = teamAUserIds.filter(id =>
@@ -2089,29 +2197,34 @@ const processTeamMatchmaking = async providedSession => {
           ])
 
           // Clean up all individual matchmaking entries for both teams
+          // Note: Session players don't have entries in QuickClashGlobalMatchmaking
           await Promise.all([
-            // Team A members
-            ...team.members.map(member => {
-              const userId = member.user._id || member.user
-              return QuickClashGlobalMatchmaking.findOneAndDelete(
-                { user: userId },
-                { session },
-              ).then(() => {
-                // Clean up each player's state
-                cleanupPlayerState(userId)
-              })
-            }),
-            // Team B members
-            ...matchedTeam.members.map(member => {
-              const userId = member.user._id || member.user
-              return QuickClashGlobalMatchmaking.findOneAndDelete(
-                { user: userId },
-                { session },
-              ).then(() => {
-                // Clean up each player's state
-                cleanupPlayerState(userId)
-              })
-            }),
+            // Team A members (only users, not session players)
+            ...team.members
+              .filter(member => member.user) // Only process user members
+              .map(member => {
+                const userId = member.user._id || member.user
+                return QuickClashGlobalMatchmaking.findOneAndDelete(
+                  { user: userId },
+                  { session },
+                ).then(() => {
+                  // Clean up each player's state
+                  cleanupPlayerState(userId)
+                })
+              }),
+            // Team B members (only users, not session players)
+            ...matchedTeam.members
+              .filter(member => member.user) // Only process user members
+              .map(member => {
+                const userId = member.user._id || member.user
+                return QuickClashGlobalMatchmaking.findOneAndDelete(
+                  { user: userId },
+                  { session },
+                ).then(() => {
+                  // Clean up each player's state
+                  cleanupPlayerState(userId)
+                })
+              }),
           ])
 
           const teamBattle = await createTeamBattle({
@@ -2128,12 +2241,14 @@ const processTeamMatchmaking = async providedSession => {
               teamA: team._id.toString(),
               teamB: matchedTeam._id.toString(),
               teamAMembers: team.members.map(m => ({
-                userId: m.user._id.toString(),
-                name: m.user.name || m.user.inGameName,
+                memberId: getMemberId(m),
+                name: m.user?.name || m.user?.inGameName || 'Session Player',
+                isSession: !!m.sessionPlayer,
               })),
               teamBMembers: matchedTeam.members.map(m => ({
-                userId: m.user._id.toString(),
-                name: m.user.name || m.user.inGameName,
+                memberId: getMemberId(m),
+                name: m.user?.name || m.user?.inGameName || 'Session Player',
+                isSession: !!m.sessionPlayer,
               })),
               categories: battleCategories,
               winProbability: teamBattle.winProbability || null,
@@ -2262,11 +2377,9 @@ const checkForTeamMatch = async ({ teamId }) => {
             continue
           }
 
-          // Check for duplicate users between teams
-          const teamAUserIds = team.members.map(m => m.user._id.toString())
-          const teamBUserIds = matchedTeam.members.map(m =>
-            m.user._id.toString(),
-          )
+          // Check for duplicate users between teams - use getMemberId for session player support
+          const teamAUserIds = team.members.map(m => getMemberId(m)).filter(Boolean)
+          const teamBUserIds = matchedTeam.members.map(m => getMemberId(m)).filter(Boolean)
 
           // Check for overlap (duplicate users)
           const duplicateUsers = teamAUserIds.filter(id =>
@@ -2324,27 +2437,32 @@ const checkForTeamMatch = async ({ teamId }) => {
           }),
         ])
 
+        // Clean up global matchmaking entries (only for users, not session players)
         await Promise.all(
-          team.members.map(member =>
-            QuickClashGlobalMatchmaking.findOneAndDelete(
-              { user: member.user._id },
-              { session },
-            ).then(() => {
-              // Clean up each player's state
-              cleanupPlayerState(member.user._id)
-            }),
-          ),
+          team.members
+            .filter(member => member.user) // Only process user members
+            .map(member =>
+              QuickClashGlobalMatchmaking.findOneAndDelete(
+                { user: member.user._id },
+                { session },
+              ).then(() => {
+                // Clean up each player's state
+                cleanupPlayerState(member.user._id)
+              }),
+            ),
         )
         await Promise.all(
-          matchedTeam.members.map(member =>
-            QuickClashGlobalMatchmaking.findOneAndDelete(
-              { user: member.user._id },
-              { session },
-            ).then(() => {
-              // Clean up each player's state
-              cleanupPlayerState(member.user._id)
-            }),
-          ),
+          matchedTeam.members
+            .filter(member => member.user) // Only process user members
+            .map(member =>
+              QuickClashGlobalMatchmaking.findOneAndDelete(
+                { user: member.user._id },
+                { session },
+              ).then(() => {
+                // Clean up each player's state
+                cleanupPlayerState(member.user._id)
+              }),
+            ),
         )
 
         // Create team battle between the two teams
@@ -2362,12 +2480,14 @@ const checkForTeamMatch = async ({ teamId }) => {
             teamA: teamId.toString(),
             teamB: matchedTeam._id.toString(),
             teamAMembers: team.members.map(m => ({
-              userId: m.user._id.toString(),
-              name: m.user.name || m.user.inGameName,
+              memberId: getMemberId(m),
+              name: m.user?.name || m.user?.inGameName || 'Session Player',
+              isSession: !!m.sessionPlayer,
             })),
             teamBMembers: matchedTeam.members.map(m => ({
-              userId: m.user._id.toString(),
-              name: m.user.name || m.user.inGameName,
+              memberId: getMemberId(m),
+              name: m.user?.name || m.user?.inGameName || 'Session Player',
+              isSession: !!m.sessionPlayer,
             })),
             categories: battleCategories,
             winProbability: teamBattle.winProbability || null,
