@@ -1,5 +1,6 @@
 // screens/QuickClashV2.jsx
 // V2 Quick Clash - Battles Tab - NO lazy loading for instant render
+// Now supports both authenticated users AND session players
 
 import React, { useCallback, useState, useEffect, memo, lazy, Suspense, useRef } from 'react'
 import { useToast } from '@chakra-ui/react'
@@ -11,6 +12,9 @@ import { useSelector, useDispatch } from 'react-redux'
 import QuickClashHeaderV2 from '../components/quickClashComponents/v2/QuickClashHeaderV2'
 import ActiveChallengesV2 from '../components/quickClashComponents/v2/ActiveChallengesV2'
 import GlobalMatchmakingButton from '../components/quickClashComponents/globalmatchmaking/GlobalMatchmakingButton'
+
+// Player hook (works for both auth and session players)
+import usePlayer from '../hooks/usePlayer'
 
 // Redux actions
 import {
@@ -49,6 +53,9 @@ const QuickClashV2 = () => {
   const dispatch = useDispatch()
   const toast = useToast()
 
+  // Get player info (works for both auth users and session players)
+  const { isSession, isAuthenticated, player, playerId } = usePlayer()
+
   // Refs to prevent re-running effects
   const authCheckedRef = useRef(false)
   const updatesLoadedRef = useRef(false)
@@ -59,7 +66,7 @@ const QuickClashV2 = () => {
   const [comingSoonData, setComingSoonData] = useState(null)
   const [selectedNotification, setSelectedNotification] = useState(null)
 
-  // Redux
+  // Redux (still need for notifications etc)
   const { loginCheckStatus, user } = useSelector((state) => state.auth)
   const { updatesLoading, isNotifModalOpen, isNotifDrawerOpen } = useSelector(
     (state) => state.app
@@ -69,9 +76,17 @@ const QuickClashV2 = () => {
   const { checkMatchmakingStatus } = useQuickClashGlobalMatchmaking()
 
   // Background authorization check - only once
+  // Skip for session players (they don't need auth check)
   const checkAuthorization = useCallback(async () => {
     if (authCheckedRef.current) return
     authCheckedRef.current = true
+
+    // Session players bypass authorization check
+    if (isSession) {
+      setIsAuthorized(true)
+      setAuthChecked(true)
+      return
+    }
 
     try {
       await axios.get('/api/quickClash/stats')
@@ -84,30 +99,33 @@ const QuickClashV2 = () => {
     } finally {
       setAuthChecked(true)
     }
-  }, [])
+  }, [isSession])
 
   useEffect(() => {
-    if (user && loginCheckStatus === 'fulfilled') {
+    // Run authorization check for authenticated users OR session players
+    if ((user && loginCheckStatus === 'fulfilled') || isSession) {
       checkAuthorization()
     }
-  }, [user, loginCheckStatus, checkAuthorization])
+  }, [user, loginCheckStatus, checkAuthorization, isSession])
 
   useEffect(() => {
-    if (loginCheckStatus === 'fulfilled' && isAuthorized && !updatesLoadedRef.current) {
+    // Fetch app updates only for authenticated users
+    if (loginCheckStatus === 'fulfilled' && isAuthorized && !updatesLoadedRef.current && !isSession) {
       updatesLoadedRef.current = true
       dispatch(fetchAppUpdates())
     }
-  }, [loginCheckStatus, isAuthorized, dispatch])
+  }, [loginCheckStatus, isAuthorized, dispatch, isSession])
 
   useEffect(() => {
-    if (isAuthorized && loginCheckStatus === 'fulfilled') {
+    // Check matchmaking status for both auth users and session players
+    if (isAuthorized && ((loginCheckStatus === 'fulfilled') || isSession)) {
       checkMatchmakingStatus()
     }
   // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [loginCheckStatus, isAuthorized])
+  }, [loginCheckStatus, isAuthorized, isSession])
 
-  // Coming soon
-  if (authChecked && !isAuthorized) {
+  // Coming soon - only applicable for authenticated users
+  if (authChecked && !isAuthorized && !isSession) {
     return (
       <Suspense fallback={null}>
         <QuickClashComingSoon comingSoonData={comingSoonData} />

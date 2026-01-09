@@ -46,6 +46,9 @@ import { haptics } from '../utils/haptics'
 // Audio feedback for game sounds
 import { quizAudioService } from '../services/quizAudioService'
 
+// Session player support
+import usePlayer from '../hooks/usePlayer'
+
 // Lazy-loaded components with loading fallbacks
 const ReadingPhase = lazy(() =>
   import('../components/quickClashComponents/legacy/ReadingPhase'),
@@ -220,11 +223,16 @@ TimerHeader.displayName = 'TimerHeader'
 // but we want the network request to happen exactly once per challengeId
 const activeSessionPromises = {}
 
+// Module-level session cache for session players
+// This is used to store the session synchronously and bypass React's state batching issues
+// Key: challengeId, Value: session object
+const sessionCacheForSessionPlayers = {}
+
 // Stable no-op function to prevent re-renders
 const NO_OP = () => {}
 
 // Main component with optimization but preserved logic
-const QuickClashSession = () => {
+const QuickClashSession = ({ isSessionPlayer = false }) => {
   const { t } = useTranslation('QuickClash')
   const { t: catTranslate } = useTranslation('categories')
   const { challengeId } = useParams()
@@ -232,17 +240,36 @@ const QuickClashSession = () => {
   const toast = useToast()
   const dispatch = useDispatch()
 
-  // Memoize selectors
+  // Use unified player context for session player support
+  const { playerId, isAuthenticated, sessionPlayer } = usePlayer()
+
+  // For authenticated users, use Redux auth; for session players, use session data
   const { user } = useSelector(state => state.auth)
+  const effectiveUser = isSessionPlayer ? null : user
 
   // Custom hooks
   const {
     startSession,
     setActiveChallenge,
     endSession,
-    currentSession: session,
+    currentSession: reduxSession,
     sessionError: reduxSessionError,
   } = useQuickClash()
+
+  // Local session state for session players (Redux not available for them)
+  const [localSession, setLocalSession] = useState(null)
+
+  // Ref for synchronous session access (avoids React state batching issues)
+  const sessionRef = useRef(null)
+
+  // Force update counter to ensure re-render when session changes
+  const [, forceUpdate] = useState(0)
+
+  // Use Redux session for authenticated users, local session for session players
+  const session = isSessionPlayer ? localSession : reduxSession
+
+  // Helper to get session ID from either state or ref (ref is updated synchronously)
+  const getSessionId = () => session?._id || sessionRef.current?._id
 
   const { trackChallengeCompletion } = useDailyTasks()
   const params = useParams()
@@ -304,10 +331,13 @@ const QuickClashSession = () => {
       setLoading(true)
       setPhase('loading')
 
+      // Use session-aware endpoint for session players
+      const challengeEndpoint = isSessionPlayer
+        ? `/api/play/challenge/${challengeId}`
+        : `/api/quickClash/challenge/${challengeId}`
+
       // First get the challenge details
-      const challengeResponse = await axios.get(
-        `/api/quickClash/challenge/${challengeId}`,
-      )
+      const challengeResponse = await axios.get(challengeEndpoint)
       const fetchedChallenge = challengeResponse.data.challenge
       setChallenge(fetchedChallenge)
       setActiveChallenge(fetchedChallenge)
@@ -322,21 +352,43 @@ const QuickClashSession = () => {
       } else {
         // Create a new promise and cache it
         console.log('Creating new session promise for', challengeId)
-        const sessionPromise = startSession(
-          challengeId,
-          user?.userLanguage || 'en',
-        )
+
+        // For session players, use session-aware session creation
+        const sessionPromise = isSessionPlayer
+          ? axios.post('/api/play/session/start', { challengeId }).then(r => r.data.session)
+          : startSession(challengeId, effectiveUser?.userLanguage || 'en')
 
         activeSessionPromises[challengeId] = sessionPromise
 
         try {
           currentSession = await sessionPromise
+          // For session players, save to multiple places to ensure availability
+          if (isSessionPlayer && currentSession) {
+            console.log('[SESSION] Setting local session for session player:', currentSession._id)
+            // 1. Update MODULE-LEVEL CACHE (always accessible, no React lifecycle issues)
+            sessionCacheForSessionPlayers[challengeId] = currentSession
+            // 2. Update ref (should be synchronous but has StrictMode issues)
+            sessionRef.current = currentSession
+            // 3. Update state for React re-render
+            setLocalSession(currentSession)
+            // 4. Force a re-render to pick up the new session
+            forceUpdate(n => n + 1)
+            console.log('[SESSION] Session stored in all locations, cache:', sessionCacheForSessionPlayers[challengeId]?._id)
+          }
         } catch (err) {
           // If it fails, remove from cache so we can try again
           delete activeSessionPromises[challengeId]
           throw err
         }
       }
+
+      // Verify we have a valid session before proceeding
+      const sessionId = currentSession?._id
+      if (!sessionId) {
+        console.error('[SESSION] Session ID is undefined after session creation!')
+        throw new Error('Failed to create session - session ID is undefined')
+      }
+      console.log('[SESSION] Valid session ID:', sessionId)
 
       // NEW: Check if this is a forge mode challenge
       if (fetchedChallenge.forgeArticle) {
@@ -347,8 +399,10 @@ const QuickClashSession = () => {
         setPhase('reading') // Will use ForgeReadingPhase component
       } else {
         // Traditional mode - initialize article as before
+        // Session players default to English
+        const userLang = effectiveUser?.userLanguage || 'en'
         setArticle(
-          user?.userLanguage === 'en' || !user?.userLanguage
+          userLang === 'en'
             ? {
                 title: fetchedChallenge.article.title.english,
                 content: fetchedChallenge.article.content.english,
@@ -372,9 +426,10 @@ const QuickClashSession = () => {
         readingStartTimeRef.current = Date.now()
 
         // Start reading phase on the server (traditional mode only)
-        await axios.post(
-          `/api/quickClash/session/${currentSession._id}/reading/start`,
-        )
+        const readingStartEndpoint = isSessionPlayer
+          ? `/api/play/session/${currentSession._id}/reading/start`
+          : `/api/quickClash/session/${currentSession._id}/reading/start`
+        await axios.post(readingStartEndpoint)
       }
 
       setError(null)
@@ -390,11 +445,12 @@ const QuickClashSession = () => {
     }
   }, [
     challengeId,
-    user?.userLanguage,
+    effectiveUser?.userLanguage,
     setActiveChallenge,
     startSession,
     reduxSessionError,
     session,
+    isSessionPlayer,
   ])
 
   // MODIFIED READING COMPLETION LOGIC - HANDLES BOTH MODES
@@ -403,9 +459,21 @@ const QuickClashSession = () => {
     try {
       // Call the API to mark reading as complete and switch phase to 'betting'
       // This works for both Traditional and Forge modes
-      await axios.post(
-        `/api/quickClash/session/${session?._id}/reading/complete`,
-      )
+      // For session players, use module-level cache to get session ID
+      const sessionId = isSessionPlayer
+        ? (sessionCacheForSessionPlayers[challengeId]?._id || session?._id)
+        : session?._id
+
+      if (!sessionId) {
+        console.error('[handleReadingComplete] Session ID is undefined! Cache:', sessionCacheForSessionPlayers[challengeId])
+        throw new Error('Session ID is undefined')
+      }
+
+      // Use session-aware endpoint for session players
+      const readingCompleteEndpoint = isSessionPlayer
+        ? `/api/play/session/${sessionId}/reading/complete`
+        : `/api/quickClash/session/${sessionId}/reading/complete`
+      await axios.post(readingCompleteEndpoint)
 
       // Check if betting is enabled for this challenge
       if (challenge?.betting?.enabled !== false) {
@@ -440,7 +508,7 @@ const QuickClashSession = () => {
     } finally {
       setCompleteReadingLoading(false)
     }
-  }, [session?._id, toast, t, challenge?.betting?.enabled])
+  }, [session?._id, toast, t, challenge?.betting?.enabled, isSessionPlayer])
 
   // NEW: Betting Completion Logic
   const handleBettingComplete = useCallback(() => {
@@ -468,7 +536,11 @@ const QuickClashSession = () => {
       setScoreDetails(result)
       setPhase('completed')
       openResults()
-      dispatch(fetchActiveChallenges())
+
+      // Only fetch challenges for authenticated users (session players don't have challenges)
+      if (!isSessionPlayer) {
+        dispatch(fetchActiveChallenges())
+      }
 
       trackChallengeCompletion({
         score: result.RQM_score,
@@ -478,21 +550,40 @@ const QuickClashSession = () => {
         challengeId: challenge?._id,
       })
     },
-    [openResults, dispatch, trackChallengeCompletion, challenge, timeLeft],
+    [openResults, dispatch, trackChallengeCompletion, challenge, timeLeft, isSessionPlayer],
   )
 
-  // ORIGINAL NAVIGATION LOGIC - PRESERVED
+  // ORIGINAL NAVIGATION LOGIC - UPDATED FOR SESSION PLAYERS
+  // Session players are now redirected to /quickclash (upgraded experience) after battle completion
   const confirmNavigation = useCallback(() => {
     // Mark QuickClash for refresh when we return to it
     if (typeof window.markQuickClashForRefresh === 'function') {
       window.markQuickClashForRefresh()
     }
 
+    // For session players, set the sparkUpgraded flag
+    // This ensures they go directly to /quickclash on future visits
+    if (isSessionPlayer) {
+      localStorage.setItem('sparkUpgraded', 'true')
+    }
+
     // Navigate to appropriate screen
     if (challenge?.fromTeamBattle) {
-      navigate(`/quickclash/teamBattle/${challenge.teamBattle.toString()}`)
+      // For battles from team matchmaking, go to the battle page
+      // Session players can now access /quickclash/* routes
+      const battleRoute = `/quickclash/teamBattle/${challenge.teamBattle.toString()}`
+      navigate(battleRoute)
     } else {
-      navigate('/quickclash')
+      // Return to main Quick Clash UI (both session players and auth users)
+      // Check if this is session player's first time seeing the upgraded UI
+      const hasSeenUpgrade = localStorage.getItem('qc_session_welcome_shown')
+
+      if (isSessionPlayer && !hasSeenUpgrade) {
+        // First completion - show welcome modal
+        navigate('/quickclash', { state: { showWelcome: true } })
+      } else {
+        navigate('/quickclash')
+      }
 
       // Additional fallback: trigger immediate refresh if function is available
       setTimeout(() => {
@@ -501,7 +592,7 @@ const QuickClashSession = () => {
         }
       }, 100)
     }
-  }, [challenge, navigate])
+  }, [challenge, navigate, isSessionPlayer])
 
   // Effect for redux error handling
   useEffect(() => {
@@ -523,8 +614,11 @@ const QuickClashSession = () => {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [])
 
-  // Effect for authorization check
+  // Effect for authorization check (skip for session players - they use different auth)
   useEffect(() => {
+    // Session players don't use localStorage authorization - they use X-Session-Id
+    if (isSessionPlayer) return
+
     const challengeId = params.challengeId
     const storedAssignment = localStorage.getItem(`challenge_${challengeId}`)
 
@@ -546,7 +640,7 @@ const QuickClashSession = () => {
         return
       }
     }
-  }, [params.challengeId, user?._id, navigate, toast])
+  }, [params.challengeId, user?._id, navigate, toast, isSessionPlayer])
 
   // MODIFIED READING TIMER LOGIC - SKIP FOR FORGE MODE
   useEffect(() => {
@@ -740,23 +834,37 @@ const QuickClashSession = () => {
             <Suspense fallback={<LoadingFallback />}>
               {challenge?.forgeArticle ? (
                 // NEW: Forge Mode - Interactive Reading
-                <ForgeReadingPhase
-                  sessionId={session?._id}
-                  category={challenge?.category}
-                  activePowerups={filteredActivePowerups}
-                  onComplete={handleReadingComplete}
-                  onPowerupUsed={handlePowerupUsed}
-                  onError={error => {
-                    setError(error)
-                    toast({
-                      title: t('Error'),
-                      description: error,
-                      status: 'error',
-                      duration: 5000,
-                      isClosable: true,
-                    })
-                  }}
-                />
+                // Use module-level cache for session players (bypasses all React lifecycle issues)
+                (() => {
+                  // For session players, use the module-level cache which is always accessible
+                  // For authenticated users, use Redux session
+                  const sessionId = isSessionPlayer
+                    ? (sessionCacheForSessionPlayers[challengeId]?._id || sessionRef.current?._id || session?._id)
+                    : session?._id
+                  console.log('[RENDER] ForgeReadingPhase check - sessionId:', sessionId, 'isSessionPlayer:', isSessionPlayer, 'cache:', sessionCacheForSessionPlayers[challengeId]?._id)
+                  return sessionId ? (
+                    <ForgeReadingPhase
+                      sessionId={sessionId}
+                      category={challenge?.category}
+                      activePowerups={filteredActivePowerups}
+                      isSessionPlayer={isSessionPlayer}
+                      onComplete={handleReadingComplete}
+                      onPowerupUsed={handlePowerupUsed}
+                      onError={error => {
+                        setError(error)
+                        toast({
+                          title: t('Error'),
+                          description: error,
+                          status: 'error',
+                          duration: 5000,
+                          isClosable: true,
+                        })
+                      }}
+                    />
+                  ) : (
+                    <LoadingFallback />
+                  )
+                })()
               ) : (
                 // EXISTING: Traditional Reading Phase
                 article && (
@@ -779,23 +887,37 @@ const QuickClashSession = () => {
                 currentTrophies={user?.quickClashTrophies || 0}
                 onComplete={handleBettingComplete}
                 user={user}
+                isSessionPlayer={isSessionPlayer}
               />
             </Suspense>
           )}
 
-          {phase === 'quiz' && session && (
-            <Suspense fallback={<LoadingFallback />}>
-              <GamifiedQuiz
-                sessionId={session?._id}
-                activePowerups={filteredActivePowerups}
-                onComplete={handleQuizComplete}
-                setStopTimerOnQuizSubmit={NO_OP}
-                quizTimeLeft={quizTimeLeft}
-                setQuizTimeLeft={setQuizTimeLeft}
-                setLoadingQuiz={NO_OP}
-              />
-            </Suspense>
-          )}
+          {phase === 'quiz' && (() => {
+            // For session players, use module-level cache to get session ID
+            const quizSessionId = isSessionPlayer
+              ? (sessionCacheForSessionPlayers[challengeId]?._id || session?._id)
+              : session?._id
+
+            if (!quizSessionId) {
+              console.log('[QUIZ] Waiting for session ID...')
+              return <LoadingFallback />
+            }
+
+            return (
+              <Suspense fallback={<LoadingFallback />}>
+                <GamifiedQuiz
+                  sessionId={quizSessionId}
+                  activePowerups={filteredActivePowerups}
+                  isSessionPlayer={isSessionPlayer}
+                  onComplete={handleQuizComplete}
+                  setStopTimerOnQuizSubmit={NO_OP}
+                  quizTimeLeft={quizTimeLeft}
+                  setQuizTimeLeft={setQuizTimeLeft}
+                  setLoadingQuiz={NO_OP}
+                />
+              </Suspense>
+            )
+          })()}
 
           <ResultsModal
             isOpen={isResultsOpen}

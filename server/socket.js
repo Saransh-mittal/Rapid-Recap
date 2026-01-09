@@ -32,6 +32,7 @@ function getAllowedOrigins() {
 
   if (process.env.NODE_ENV === 'production') {
     origins.push('https://rapidrecap.ai')
+    origins.push('https://rapid-recap.onrender.com')
   } else {
     // Development origins
     origins.push('http://localhost:5173')
@@ -148,10 +149,86 @@ function initializeSocket(server) {
     console.log('')
   }
 
-  io.on('connection', socket => {
+  io.on('connection', async socket => {
     console.log(
       `New socket connection: ${socket.id} from ${socket.handshake.address}`,
     )
+
+    // Check if this is a Spark session player connection
+    const authType = socket.handshake?.auth?.type
+    const sessionId = socket.handshake?.auth?.sessionId
+    const authDeviceFingerprint = socket.handshake?.auth?.deviceFingerprint
+
+    if (authType === 'spark' && sessionId) {
+      // Look up the PlaySession to get its _id (teams store member.sessionPlayer as _id, not sessionId)
+      const PlaySession = require('./model/quickClashSchemas/playSessionSchema')
+      const playSession = await PlaySession.findOne({ sessionId }).lean()
+
+      if (!playSession) {
+        console.error(`[SPARK] PlaySession not found for sessionId: ${sessionId}`)
+        socket.emit('error', { message: 'Session not found' })
+        return
+      }
+
+      const playSessionObjectId = playSession._id.toString()
+
+      // Set player identification using the MongoDB _id (teams store member.sessionPlayer = _id)
+      socket.playerId = playSessionObjectId
+      socket.userId = playSessionObjectId
+      socket.playerType = 'session'
+      socket.sparkSessionId = sessionId
+      socket.deviceFingerprint = authDeviceFingerprint
+
+      // Join all rooms using _id (to match team member lookup)
+      socket.join(playSessionObjectId)
+      socket.join(`quickClash:${playSessionObjectId}`)
+      socket.join(`spark:session:${playSessionObjectId}`)
+      socket.join(`player:${playSessionObjectId}`)
+
+      // QuickClash room join handlers
+      socket.on('quickClash:join', () => {
+        socket.join('quickClash')
+        socket.emit('quickClash:joined', { success: true, playerId: playSessionObjectId })
+      })
+
+      socket.on('quickClash:joinTeamsRoom', () => {
+        socket.join('quickClash:teams')
+      })
+
+      socket.on('quickClash:joinMatchmakingRoom', () => {
+        socket.join('quickClash:matchmaking')
+      })
+
+      socket.on('quickClash:registerDevice', ({ deviceFingerprint }) => {
+        socket.deviceFingerprint = deviceFingerprint
+        socket.emit('quickClash:deviceRegistered', { deviceFingerprint })
+      })
+
+      // Spark-specific events (for team room joining)
+      socket.on('spark:joinMatchmaking', ({ teamId, matchmakingId }) => {
+        socket.join(`spark:team:${teamId}`)
+        socket.sparkTeamId = teamId
+        socket.emit('spark:matchmakingJoined', { success: true, teamId, matchmakingId })
+      })
+
+      socket.on('spark:joinTeamLobby', ({ teamId }) => {
+        socket.join(`spark:team:${teamId}`)
+        socket.sparkTeamId = teamId
+        socket.emit('spark:teamLobbyJoined', { success: true, teamId })
+      })
+
+      socket.on('spark:leaveMatchmaking', () => {
+        if (socket.sparkTeamId) {
+          socket.leave(`spark:team:${socket.sparkTeamId}`)
+        }
+        socket.sparkTeamId = null
+      })
+
+      // Emit connected events
+      socket.emit('spark:connected', { sessionId })
+      socket.emit('connected')
+      return // Session players don't go through authenticated user setup
+    }
 
     // Enhanced setup with device fingerprinting
     socket.on('setup', async userData => {
@@ -871,6 +948,8 @@ function initializeSocket(server) {
       )
     },
   )
+
+
 
   // Set up periodic heartbeat checking
   const HEARTBEAT_CHECK_INTERVAL = 60000

@@ -103,11 +103,19 @@ const useQuickClashGlobalMatchmaking = () => {
         let statusDetailPayload = {}
 
         if (globalStatus.inMatchmaking && globalStatus.matchmaking?.team) {
-          const teamId = passedTeamId || globalStatus.matchmaking.team
+          // Handle case where team could be a populated object or just an ID string
+          const rawTeamId = passedTeamId || globalStatus.matchmaking.team
+          const teamId = typeof rawTeamId === 'object' ? (rawTeamId._id || rawTeamId) : rawTeamId
+
           inAnyMatchmaking = true
           try {
+            // Check if session player and add header
+            const sessionId = localStorage.getItem('playSessionId')
+            const headers = sessionId ? { 'X-Session-Id': sessionId } : {}
+
             const teamResponse = await axios.get(
               `/api/quickClash/team/${teamId}/matchmaking-info`,
+              { headers }
             )
             if (teamResponse.data?.success) {
               const teamData = teamResponse.data.team
@@ -207,6 +215,30 @@ const useQuickClashGlobalMatchmaking = () => {
       return result
     } catch (error) {
       console.error('Error joining solo matchmaking:', error)
+
+      // Handle "already in matchmaking" with actionable toast
+      const errorData = error.response?.data || error
+      if (errorData.code === 'ALREADY_IN_MATCHMAKING' || errorData.message?.includes('already in')) {
+        // Update state to show we're in matchmaking
+        dispatch(updateMatchmakingState({
+          inMatchmaking: true,
+          matchmakingType: 'solo',
+          step: 'searching'
+        }))
+
+        notificationManager.matchmaking(
+          t('Already Searching'),
+          t('You\'re already in matchmaking. Use "Leave Queue" to exit.'),
+        )
+
+        // Don't throw - we're actually in matchmaking
+        return { alreadyInMatchmaking: true }
+      }
+
+      notificationManager.error(
+        t('Error'),
+        errorData.reason || errorData.message || t('Failed to join matchmaking')
+      )
       throw error
     }
   }, [dispatch, t])
@@ -224,8 +256,12 @@ const useQuickClashGlobalMatchmaking = () => {
         let currentTeamName = teamName
         if (!currentTeamName) {
           try {
+            // Add session header for session players
+            const sessionId = localStorage.getItem('playSessionId')
+            const headers = sessionId ? { 'X-Session-Id': sessionId } : {}
             const teamResponse = await axios.get(
               `/api/quickClash/team/${teamId}`,
+              { headers }
             )
             if (teamResponse.data?.team)
               currentTeamName = teamResponse.data.team.name || 'Team'
@@ -241,6 +277,41 @@ const useQuickClashGlobalMatchmaking = () => {
         return { ...result, teamName: currentTeamName }
       } catch (error) {
         console.error('Error joining with team:', error)
+
+        // Handle "already in matchmaking" with actionable toast
+        const errorData = error.response?.data || error
+        if (errorData.code === 'ALREADY_IN_MATCHMAKING' || errorData.message?.includes('already in')) {
+          // Check if it's a team member issue
+          const memberName = errorData.memberName
+
+          if (memberName) {
+            notificationManager.warning(
+              t('Team Member in Matchmaking'),
+              t(`${memberName} is already in a matchmaking queue. They need to leave before joining with this team.`),
+            )
+          } else {
+            // Update state to show we're in matchmaking
+            dispatch(updateMatchmakingState({
+              inMatchmaking: true,
+              matchmakingType: 'team',
+              selectedTeamId: teamId,
+              step: 'searching'
+            }))
+
+            notificationManager.warning(
+              t('Already in Matchmaking'),
+              errorData.reason || errorData.message || t('You are already in a matchmaking queue'),
+            )
+
+            // Don't throw - we're actually in matchmaking
+            return { alreadyInMatchmaking: true, teamName: currentTeamName }
+          }
+        } else {
+          notificationManager.error(
+            t('Error'),
+            errorData.reason || errorData.message || t('Failed to join matchmaking')
+          )
+        }
         throw error
       }
     },
@@ -269,8 +340,64 @@ const useQuickClashGlobalMatchmaking = () => {
       }
 
       notificationManager.info(t('Left Matchmaking'))
+      return { success: true }
     } catch (error) {
       console.error('Error leaving matchmaking:', error)
+
+      // Extract error details
+      const errorMessage = error?.message || error?.toString() || ''
+      const errorCode = error?.code || ''
+      const httpStatus = error?.status
+
+      // Handle "not in matchmaking" - likely a match was found or state desync
+      if (
+        errorMessage.toLowerCase().includes('not in matchmaking') ||
+        errorCode === 'NOT_IN_MATCHMAKING'
+      ) {
+        // Check if a battle was actually found
+        const status = await checkMatchmakingStatus()
+
+        if (status?.battleReady || status?.step === 'battleReady') {
+          // Match was found! Show celebratory notification
+          notificationManager.matchmaking(
+            t('Match Found!'),
+            t('A match was found while you were trying to leave. Get ready!'),
+          )
+          return { success: false, reason: 'MATCH_FOUND' }
+        } else {
+          // State desync - team was already removed from matchmaking
+          dispatch(resetGlobalMatchmakingState())
+          notificationManager.info(
+            t('Already Left'),
+            t('You are no longer in the matchmaking queue.'),
+          )
+          return { success: true, reason: 'ALREADY_LEFT' }
+        }
+      }
+
+      // Handle temporary system errors (503)
+      if (httpStatus === 503 || errorCode.includes('BUSY') || errorCode.includes('CONFLICT')) {
+        notificationManager.warning(
+          t('System Busy'),
+          t('Unable to leave matchmaking right now. Please try again in a moment.'),
+        )
+        return { success: false, reason: 'SYSTEM_BUSY', canRetry: true }
+      }
+
+      // Handle network errors
+      if (errorCode === 'NETWORK_ERROR' || errorMessage.toLowerCase().includes('network')) {
+        notificationManager.warning(
+          t('Connection Issue'),
+          t('Please check your internet connection and try again.'),
+        )
+        return { success: false, reason: 'NETWORK_ERROR', canRetry: true }
+      }
+
+      // Unknown error - show generic message
+      notificationManager.error(
+        t('Error'),
+        t('Unable to leave matchmaking. Please try again.'),
+      )
       throw error
     }
   }, [
@@ -279,6 +406,7 @@ const useQuickClashGlobalMatchmaking = () => {
     globalMatchmakingState.matchmakingType,
     globalMatchmakingState.selectedTeamId,
     checkCanLeaveMatchmaking,
+    checkMatchmakingStatus,
   ])
 
   // Select team

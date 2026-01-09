@@ -1,11 +1,15 @@
 // customHooks/useSocket.js - FINAL FIX: Prevents duplicate socket creation during reconnection
-import { useCallback, useEffect, useRef } from 'react'
+import { useCallback, useEffect, useRef, useState } from 'react'
 import { useSelector } from 'react-redux'
 import { useSocketContext } from '../contextAPI/SocketContext'
 import socketManager from '../services/socketInitManager'
 
 /**
  * FINAL FIXED: Enhanced custom hook that properly handles reconnection
+ *
+ * UPDATED: Now supports both authenticated users AND session players
+ * - Authenticated users: Uses user object for auth
+ * - Session players: Uses sessionId from localStorage for auth
  *
  * Critical Fix:
  * - Only initialize socket if it doesn't exist at all
@@ -27,12 +31,21 @@ export const useSocket = () => {
   const initializationAttempted = useRef(false)
   const initializationPromise = useRef(null)
 
+  // Track session ID for session players
+  const [sessionId] = useState(() => {
+    return typeof window !== 'undefined' ? localStorage.getItem('playSessionId') : null
+  })
+
+  // Determine if we have valid auth (user OR session)
+  const hasAuth = !!(user && Object.keys(user).length) || !!sessionId
+
   /**
    * Initialize socket - Socket.IO will handle reconnection automatically
+   * Now supports both authenticated users and session players
    */
   const initializeWithReconnection = useCallback(async () => {
-    // Skip if no user
-    if (!user || !Object.keys(user).length) {
+    // Skip if no auth available (no user AND no sessionId)
+    if (!hasAuth) {
       return null
     }
 
@@ -54,12 +67,14 @@ export const useSocket = () => {
     // Mark as attempted to prevent duplicate calls
     initializationAttempted.current = true
 
+    const authType = user ? 'authenticated' : 'session'
     console.log(
-      '[useSocket] Starting initialization (Socket.IO handles reconnection)',
+      `[useSocket] Starting initialization as ${authType} (Socket.IO handles reconnection)`,
     )
 
     try {
-      initializationPromise.current = socketManager.initializeSocket(user)
+      // Pass user if available, otherwise socketManager will use sessionId
+      initializationPromise.current = socketManager.initializeSocket(user || null)
       const socket = await initializationPromise.current
 
       console.log('[useSocket] ✅ Initialization completed')
@@ -72,7 +87,7 @@ export const useSocket = () => {
     } finally {
       initializationPromise.current = null
     }
-  }, [user])
+  }, [user, hasAuth])
 
   /**
    * Manual reconnection function for UI controls (if needed)
@@ -111,10 +126,14 @@ export const useSocket = () => {
   }, [])
 
   // CRITICAL FIX: Auto-initialize ONLY when socket doesn't exist at all
+  // UPDATED: Now also initializes for session players
   useEffect(() => {
+    const authType = user ? 'user' : (sessionId ? 'session' : 'none')
     console.log(
       '[useSocket] Auth state - User:',
       !!user,
+      'SessionId:',
+      !!sessionId,
       'Connected:',
       isConnected,
     )
@@ -123,12 +142,12 @@ export const useSocket = () => {
     const socketExists = socketManager.getSocket() !== null
 
     // Only initialize if:
-    // 1. User exists
+    // 1. Auth exists (user OR sessionId)
     // 2. Not currently connected
     // 3. Socket instance doesn't exist (prevents re-initialization during reconnection)
-    if (user && Object.keys(user).length && !isConnected && !socketExists) {
+    if (hasAuth && !isConnected && !socketExists) {
       console.log(
-        '[useSocket] Starting auto-initialization (no socket exists)...',
+        `[useSocket] Starting auto-initialization as ${authType} (no socket exists)...`,
       )
       initializeWithReconnection()
     } else if (socketExists && !isConnected) {
@@ -138,18 +157,21 @@ export const useSocket = () => {
     }
 
     return () => {
-      // Reset flags when user changes (login/logout)
-      if (!user || !Object.keys(user).length) {
+      // Reset flags when auth changes (login/logout)
+      if (!hasAuth) {
         initializationAttempted.current = false
         initializationPromise.current = null
       }
     }
-  }, [user, isConnected, initializeWithReconnection])
+  }, [user, sessionId, hasAuth, isConnected, initializeWithReconnection])
 
   // Reset initialization flag when user changes
   useEffect(() => {
     if (!user || !Object.keys(user).length) {
-      console.log('[useSocket] User logged out, resetting state')
+      // Only log if we had a user before (actual logout)
+      if (initializationAttempted.current) {
+        console.log('[useSocket] User logged out, resetting state')
+      }
       initializationAttempted.current = false
       initializationPromise.current = null
     }

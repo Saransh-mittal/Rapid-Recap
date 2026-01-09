@@ -10,14 +10,21 @@ const quickClashTeamSchema = new mongoose.Schema(
     creator: {
       type: mongoose.Schema.Types.ObjectId,
       ref: 'USER',
-      required: true,
+      default: null, // Null for session-only teams (Spark Engine)
     },
     members: [
       {
+        // Either user or sessionPlayer must be set (not both)
         user: {
           type: mongoose.Schema.Types.ObjectId,
           ref: 'USER',
-          required: true,
+          default: null,
+        },
+        // Spark Engine - session player (for viral invite flow)
+        sessionPlayer: {
+          type: mongoose.Schema.Types.ObjectId,
+          ref: 'PLAY_SESSION',
+          default: null,
         },
         role: {
           type: String,
@@ -138,8 +145,13 @@ quickClashTeamSchema.pre('save', async function (next) {
 // Calculate average trophies before saving
 quickClashTeamSchema.pre('save', async function (next) {
   if (this.members && this.members.length > 0) {
-    // Get user IDs of all team members
-    const userIds = this.members.map(member => member.user)
+    // Separate user IDs and session player IDs
+    const userIds = this.members
+      .filter(member => member.user)
+      .map(member => member.user)
+    const sessionPlayerIds = this.members
+      .filter(member => member.sessionPlayer)
+      .map(member => member.sessionPlayer)
 
     // Fetch user trophies from the database
     const User = mongoose.model('USER')
@@ -147,6 +159,16 @@ quickClashTeamSchema.pre('save', async function (next) {
       { _id: { $in: userIds } },
       'quickClashTrophies',
     )
+
+    // Fetch session player trophies
+    let sessionPlayers = []
+    if (sessionPlayerIds.length > 0) {
+      const PlaySession = mongoose.model('PLAY_SESSION')
+      sessionPlayers = await PlaySession.find(
+        { _id: { $in: sessionPlayerIds } },
+        'trophies',
+      )
+    }
 
     // Calculate average trophies
     let totalTrophies = 0
@@ -166,6 +188,17 @@ quickClashTeamSchema.pre('save', async function (next) {
       }
     })
 
+    // Include session players in the calculation
+    sessionPlayers.forEach(sp => {
+      if (sp.trophies !== undefined && sp.trophies !== null) {
+        totalTrophies += sp.trophies
+        count++
+      } else {
+        totalTrophies += 1000
+        count++
+      }
+    })
+
     this.avgTrophies = count > 0 ? Math.round(totalTrophies / count) : 0
   }
   next()
@@ -175,6 +208,7 @@ quickClashTeamSchema.pre('save', async function (next) {
 quickClashTeamSchema.index({ creator: 1 })
 quickClashTeamSchema.index({ teamCode: 1 })
 quickClashTeamSchema.index({ 'members.user': 1 })
+quickClashTeamSchema.index({ 'members.sessionPlayer': 1 }) // Spark Engine index
 quickClashTeamSchema.index({ isInMatch: 1, avgTrophies: 1 })
 quickClashTeamSchema.index({ lastActive: -1 })
 quickClashTeamSchema.index({ 'formationInfo.isAutoFormed': 1 }) // Index for auto-formed teams
@@ -183,3 +217,4 @@ quickClashTeamSchema.index({ 'formationInfo.sourceTeams': 1 }) // Index for sour
 const QuickClashTeam = mongoose.model('QUICK_CLASH_TEAM', quickClashTeamSchema)
 
 module.exports = QuickClashTeam
+

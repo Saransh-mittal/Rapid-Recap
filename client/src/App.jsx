@@ -693,7 +693,8 @@ const App = () => {
         />
       </Suspense>
       <NavbarProvider>
-        {showNavbar &&
+        {/* Navbar completely hidden for Spark Engine - all navigation is in-app */}
+        {false && showNavbar &&
           ((!(summary && isVisible) &&
             !(
               location.pathname.startsWith('/quickclash') ||

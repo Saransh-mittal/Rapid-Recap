@@ -5,6 +5,7 @@ const mongoose = require('mongoose')
 const QuickClashTeamBattle = require('../../model/quickClashSchemas/quickClashTeamBattleSchema')
 const Inventory = require('../../model/inventorySchema')
 const Ability = require('../../model/abilitySchema')
+const { findMemberByUserId } = require('../../utils/sessionPlayerUtils')
 
 // ============================================================================
 // CONSTANTS
@@ -220,9 +221,7 @@ const awardPowerupsToMember = async (battle, memberId, teamKey, session) => {
   const membersKey = teamKey === 'teamA' ? 'teamAMembers' : 'teamBMembers'
 
   // Find the member in the battle
-  const member = battle[membersKey].find(
-    m => m.user.toString() === memberIdStr
-  )
+  const member = findMemberByUserId(battle[membersKey], memberId)
 
   if (!member) {
     console.error(`[POWERUP_REWARD] Member ${memberId} not found in ${teamKey}`)
@@ -294,16 +293,12 @@ const claimPowerupReward = async ({ battleId, userId }) => {
     let member = null
     let teamKey = null
 
-    const teamAMember = battle.teamAMembers.find(
-      m => m.user.toString() === userIdStr
-    )
+    const teamAMember = findMemberByUserId(battle.teamAMembers, userId)
     if (teamAMember) {
       member = teamAMember
       teamKey = 'teamA'
     } else {
-      const teamBMember = battle.teamBMembers.find(
-        m => m.user.toString() === userIdStr
-      )
+      const teamBMember = findMemberByUserId(battle.teamBMembers, userId)
       if (teamBMember) {
         member = teamBMember
         teamKey = 'teamB'
@@ -464,16 +459,12 @@ const getUnclaimedBattles = async (userId) => {
     let teamKey = null
     let member = null
 
-    const teamAMember = battle.teamAMembers?.find(
-      m => m.user.toString() === userIdStr
-    )
+    const teamAMember = findMemberByUserId(battle.teamAMembers, userId)
     if (teamAMember) {
       member = teamAMember
       teamKey = 'teamA'
     } else {
-      const teamBMember = battle.teamBMembers?.find(
-        m => m.user.toString() === userIdStr
-      )
+      const teamBMember = findMemberByUserId(battle.teamBMembers, userId)
       if (teamBMember) {
         member = teamBMember
         teamKey = 'teamB'

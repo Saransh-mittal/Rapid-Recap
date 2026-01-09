@@ -57,13 +57,15 @@ const TeamAvatars = memo(({ members = [], limit = 3, side = 'user' }) => {
   return (
     <div className="flex items-center -space-x-2">
       {displayMembers.map((member, index) => {
-        const userData = member.user || member
+        // Handle both regular users and session players
+        const userData = member.user || member.sessionPlayer || member
         const avatarUrl = userData.pic || userData.picture || userData.avatar || DEFAULT_AVATAR
         const name = userData.name || userData.inGameName || 'Player'
+        const memberId = userData._id || userData.sessionId || index
 
         return (
           <motion.div
-            key={userData._id || index}
+            key={memberId}
             className={`relative w-8 h-8 rounded-full overflow-hidden border-2 bg-slate-800 ${ringConfig.border} ring-2 ${ringConfig.ring} ${ringConfig.glow}`}
             style={{ zIndex: limit - index }}
             whileHover={{ scale: 1.1, zIndex: 10 }}
@@ -185,14 +187,42 @@ const BattleCardV2 = ({ battle, onClick, onClaimReward }) => {
   const navigate = useNavigate()
   const { user } = useSelector((state) => state.auth)
 
+  // Get session player info for session players
+  const sessionId = typeof window !== 'undefined' ? localStorage.getItem('playSessionId') : null
+  const isSessionPlayer = !user && !!sessionId
+
   // Determine which team the user is on and battle data
   const battleData = useMemo(() => {
-    if (!battle || !user) return null
+    if (!battle) return null
 
-    // Determine user's team
-    const isInTeamA = battle.teamAMembers?.some(
-      member => (member.user?._id || member._id) === user._id
-    )
+    // For session players, we need to check sessionPlayer field
+    // For authenticated users, we check user field
+    let isInTeamA = false
+
+    if (user) {
+      // Authenticated user - check user field
+      isInTeamA = battle.teamAMembers?.some(
+        member => (member.user?._id || member.user) === user._id
+      )
+    } else if (sessionId) {
+      // Session player - check sessionPlayer field by sessionId
+      isInTeamA = battle.teamAMembers?.some(
+        member => member.sessionPlayer?.sessionId === sessionId || member.sessionPlayer?._id === sessionId
+      )
+      // Also check if not in teamA, then check teamB to confirm player is in battle
+      const isInTeamB = battle.teamBMembers?.some(
+        member => member.sessionPlayer?.sessionId === sessionId || member.sessionPlayer?._id === sessionId
+      )
+      // If neither, player not in this battle (shouldn't happen but safety check)
+      if (!isInTeamA && !isInTeamB) {
+        // Default to teamA perspective if player not found (for viewing other battles)
+        isInTeamA = true
+      }
+    } else {
+      // No player context - default to teamA perspective
+      isInTeamA = true
+    }
+
     const userTeamKey = isInTeamA ? 'teamA' : 'teamB'
     const opponentTeamKey = isInTeamA ? 'teamB' : 'teamA'
 
@@ -236,13 +266,24 @@ const BattleCardV2 = ({ battle, onClick, onClaimReward }) => {
       }
     }
 
-    // Get trophy change for the user
+    // Get trophy change for the user/session player
     let trophyChange = 0
     let hasUnclaimedReward = false
     let powerupRewardSpace = 0
-    const userMembership = isInTeamA
-      ? battle.teamAMembers?.find(m => (m.user?._id || m.user) === user._id)
-      : battle.teamBMembers?.find(m => (m.user?._id || m.user) === user._id)
+
+    let userMembership = null
+    if (user) {
+      // Find membership by user ID
+      userMembership = isInTeamA
+        ? battle.teamAMembers?.find(m => (m.user?._id || m.user) === user._id)
+        : battle.teamBMembers?.find(m => (m.user?._id || m.user) === user._id)
+    } else if (sessionId) {
+      // Find membership by session ID
+      userMembership = isInTeamA
+        ? battle.teamAMembers?.find(m => m.sessionPlayer?.sessionId === sessionId || m.sessionPlayer?._id === sessionId)
+        : battle.teamBMembers?.find(m => m.sessionPlayer?.sessionId === sessionId || m.sessionPlayer?._id === sessionId)
+    }
+
     if (userMembership) {
       trophyChange = userMembership.trophyChange || 0
       // Check for unclaimed powerup rewards
@@ -278,7 +319,7 @@ const BattleCardV2 = ({ battle, onClick, onClaimReward }) => {
       hasUnclaimedReward,
       powerupRewardSpace,
     }
-  }, [battle, user])
+  }, [battle, user, sessionId])
 
   // Handle click
   const handleClick = useCallback(() => {

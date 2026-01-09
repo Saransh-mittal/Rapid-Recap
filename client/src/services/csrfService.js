@@ -33,7 +33,7 @@ export const initializeCsrf = () => {
   // Set up axios interceptor to include token in every request
   axios.interceptors.request.use(
     async config => {
-      // Only include for state-changing methods
+      // Only include CSRF for state-changing methods
       if (!['get', 'head', 'options'].includes(config.method)) {
         // If we don't have a token yet, fetch one
         if (!csrfToken) {
@@ -45,6 +45,14 @@ export const initializeCsrf = () => {
           config.headers['X-CSRF-Token'] = csrfToken
         }
       }
+
+      // Add X-Session-Id header for session players (Spark Engine)
+      // This enables session players to make API calls without JWT auth
+      const sessionId = localStorage.getItem('playSessionId')
+      if (sessionId) {
+        config.headers['X-Session-Id'] = sessionId
+      }
+
       return config
     },
     error => {

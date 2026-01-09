@@ -23,7 +23,7 @@ const PowerupSelectionModal = ({ isOpen, onClose, battleId, teamId }) => {
   const isTeamA = currentBattle?.teamA?._id === teamId || currentBattle?.teamA === teamId
   const pool = isTeamA ? currentBattle?.teamAPool : currentBattle?.teamBPool
   const members = isTeamA ? currentBattle?.teamAMembers : currentBattle?.teamBMembers
-  const member = members?.find(m => m.user._id === user._id || m.user === user._id)
+  const member = members?.find(m => m?.user?._id === user?._id || m.user === user?._id)
 
   const loadout = member?.loadout || { items: [], housingUsed: 0 }
   const loadoutHousingUsed = loadout.housingUsed || 0

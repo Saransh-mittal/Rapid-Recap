@@ -594,15 +594,23 @@ const getLongestWinStreak = async userId => {
   const userObjectId =
     typeof userId === 'string' ? new mongoose.Types.ObjectId(userId) : userId
 
-  const history = await QuickClashTrophyHistory.find({ user: userObjectId })
+  // Get Team Battle matches
+  const teamHistory = await QuickClashTeamTrophyHistory.find({
+    user: userObjectId,
+    userParticipated: true
+  })
     .select('result createdAt')
     .sort({ createdAt: 1 })
     .lean()
 
+  // Merge and sort all matches chronologically
+  const allHistory = [...teamHistory]
+    .sort((a, b) => new Date(a.createdAt) - new Date(b.createdAt))
+
   let longestStreak = 0
   let currentStreak = 0
 
-  for (const match of history) {
+  for (const match of allHistory) {
     if (match.result === 'win') {
       currentStreak++
       longestStreak = Math.max(longestStreak, currentStreak)

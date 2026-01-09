@@ -22,6 +22,7 @@ const tournamentRoutes = require('./router/tournamentRoutes')
 const leaderboardRoutes = require('./router/leaderboardRoutes')
 const abilityRoutes = require('./router/abilityRoutes')
 const quickClashRoutes = require('./router/quickClashRoutes')
+const playRoutes = require('./router/playRoutes')
 const publicSpecialCategoryRoutes = require('./router/publicSpecialCategoryRoutes')
 const authRouter = express.Router()
 const webpush = require('web-push')
@@ -224,6 +225,9 @@ authRouter.use('/abilities', abilityRoutes)
 authRouter.use('/quickClash', quickClashRoutes)
 authRouter.use('/special-categories', publicSpecialCategoryRoutes)
 app.use('/api', authRouter)
+
+// Spark Engine - Public routes (no auth required)
+app.use('/api/play', playRoutes)
 
 
 

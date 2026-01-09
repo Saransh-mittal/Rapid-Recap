@@ -117,6 +117,13 @@ const useQuickClashSocket = () => {
   const { user } = useSelector(state => state.auth)
   const userId = user?._id
 
+  // Support session players - check for sessionId in localStorage
+  const sessionId = typeof window !== 'undefined' ? localStorage.getItem('playSessionId') : null
+
+  // playerId is either userId (authenticated) or sessionId (session player)
+  const playerId = userId || sessionId
+  const isSessionPlayer = !userId && !!sessionId
+
   // Component lifecycle
   useEffect(() => {
     isComponentMountedRef.current = true
@@ -278,8 +285,8 @@ const useQuickClashSocket = () => {
    * - Then it's a reconnection (not initial connection)
    */
   useEffect(() => {
-    // Only run if we have a user and socket is ready
-    if (!userId || !isSocketReady()) return
+    // Only run if we have a player (user or session) and socket is ready
+    if (!playerId || !isSocketReady()) return
 
     const isCurrentlyConnected = socketConnected
 
@@ -316,7 +323,7 @@ const useQuickClashSocket = () => {
     previousConnectionStateRef.current = isCurrentlyConnected
   }, [
     socketConnected,
-    userId,
+    playerId,
     isSocketReady,
     reestablishStateAfterReconnection,
   ])
@@ -328,7 +335,7 @@ const useQuickClashSocket = () => {
    * This catches any edge cases where events might be missed
    */
   useEffect(() => {
-    if (!userId) return
+    if (!playerId) return
 
     // Clear any existing interval
     if (connectionCheckIntervalRef.current) {
@@ -360,10 +367,11 @@ const useQuickClashSocket = () => {
         clearInterval(connectionCheckIntervalRef.current)
       }
     }
-  }, [userId, getSocket, socketState.isConnected, dispatch])
+  }, [playerId, getSocket, socketState.isConnected, dispatch])
 
   /**
    * Setup all Quick Clash socket listeners (called once)
+   * UPDATED: Now supports both authenticated users and session players
    */
   const setupAllSocketListeners = useCallback(() => {
     if (!isSocketReady()) {
@@ -372,11 +380,8 @@ const useQuickClashSocket = () => {
     }
 
     if (isInitializedRef.current) {
-      console.log('[QC_SOCKET] Already initialized, skipping')
       return true
     }
-
-    console.log('[QC_SOCKET] Setting up ALL Quick Clash socket listeners')
 
     cleanupSocketListeners()
 
@@ -394,17 +399,15 @@ const useQuickClashSocket = () => {
     joinRoom('matchmaking', 'quickClash:joinMatchmakingRoom')
 
     // ==========================================
-    // CONNECTION STATE LISTENERS (For redundancy)
+    // CONNECTION STATE LISTENERS
     // ==========================================
 
     const cleanupConnect = addEventListener('connect', () => {
-      console.log('[QC_SOCKET] Socket connect event received')
       dispatch(setSocketConnected(true))
     })
     cleanupFunctions.push(cleanupConnect)
 
     const cleanupDisconnect = addEventListener('disconnect', () => {
-      console.log('[QC_SOCKET] Socket disconnect event received')
       dispatch(setSocketConnected(false))
       dispatch(setSocketListening(false))
       dispatch(setMatchmakingSocketConnected(false))
@@ -1206,13 +1209,13 @@ const useQuickClashSocket = () => {
       return false
     }
 
-    if (!userId) {
-      console.warn('[QC_SOCKET] No user ID available for initialization')
+    if (!playerId) {
+      console.warn('[QC_SOCKET] No player ID (user or session) available for initialization')
       return false
     }
 
     console.log(
-      '[QC_SOCKET] Initializing Quick Clash socket (single connection)',
+      `[QC_SOCKET] Initializing Quick Clash socket (${isSessionPlayer ? 'session player' : 'authenticated user'})`,
     )
 
     dispatch(clearErrors())
@@ -1220,7 +1223,7 @@ const useQuickClashSocket = () => {
     return setupAllSocketListeners()
   }, [
     isSocketReady,
-    userId,
+    playerId,
     socketState.isInitialized,
     dispatch,
     setupAllSocketListeners,
@@ -1291,12 +1294,12 @@ const useQuickClashSocket = () => {
 
   // Auto-initialize when conditions are met
   useEffect(() => {
-    if (userId && isSocketReady() && !socketState.isInitialized) {
-      console.log('[QC_SOCKET] Auto-initializing Quick Clash socket')
+    if (playerId && isSocketReady() && !socketState.isInitialized) {
       initializeQuickClashSocket()
     }
   }, [
-    userId,
+    playerId,
+    socketConnected,
     isSocketReady,
     socketState.isInitialized,
     initializeQuickClashSocket,

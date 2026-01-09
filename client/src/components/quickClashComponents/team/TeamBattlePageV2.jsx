@@ -1,7 +1,7 @@
 // TeamBattlePageV2.jsx - Premium + Colorful + Dopamine Design
 import React, { useState, useEffect, useCallback, useMemo } from 'react'
 import { useNavigate, useParams } from 'react-router-dom'
-import { useSelector } from 'react-redux'
+import { usePlayer } from '../../../hooks/usePlayer'
 import { motion, AnimatePresence } from 'framer-motion'
 import {
   ArrowLeft, Loader2, Clock, Trophy, Users, Target, Play, CheckCircle2,
@@ -200,84 +200,111 @@ const ScoreDisplay = ({ left, right, leftName, rightName, isUserLeft }) => (
 // ═══════════════════════════════════════════════════════════════
 // TEAM MEMBERS - Colorful with status rings
 // ═══════════════════════════════════════════════════════════════
-const TeamRow = ({ members, userId, isUserTeam, teamScore, onMemberClick, t }) => (
-  <div className="px-5 mb-3">
-    <GlassCard className="p-4" accent={isUserTeam ? 'from-cyan-500 to-blue-500' : 'from-pink-500 to-red-500'}>
-      <div className="flex items-center justify-between mb-3">
-        <div className="flex items-center gap-2">
-          <div className={`w-2 h-2 rounded-full ${isUserTeam ? 'bg-cyan-400' : 'bg-pink-400'}`} />
-          <span className={`text-sm font-semibold ${isUserTeam ? 'text-cyan-400' : 'text-pink-400'}`}>
-            {isUserTeam ? '🏠 Your Team' : '⚔️ Opponents'}
-          </span>
-        </div>
-        <div className="flex items-center gap-2">
-          <Star className={`w-3.5 h-3.5 ${isUserTeam ? 'text-cyan-400' : 'text-pink-400'}`} />
-          <span className={`text-sm font-bold ${isUserTeam ? 'text-cyan-400' : 'text-pink-400'}`}>{teamScore || 0}</span>
-        </div>
-      </div>
+const TeamRow = ({ members, userId, isUserTeam, teamScore, onMemberClick, t }) => {
+  // Helper to get member info from either user or sessionPlayer
+  const getMemberInfo = (m) => {
+    if (m?.user) {
+      return {
+        id: m.user._id,
+        name: m.user.name,
+        inGameName: m.user.inGameName,
+        pic: m.user.pic,
+      }
+    }
+    if (m?.sessionPlayer) {
+      return {
+        id: m.sessionPlayer._id,
+        name: m.sessionPlayer.inGameName,
+        inGameName: m.sessionPlayer.inGameName,
+        pic: null, // Session players don't have profile pics
+      }
+    }
+    return { id: null, name: 'Player', inGameName: 'Player', pic: null }
+  }
 
-      <div className="flex gap-3 overflow-x-auto pb-1 scrollbar-hide">
-        {members.map((m, i) => (
-          <motion.div
-            key={m.user._id}
-            initial={{ opacity: 0, y: 10 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: i * 0.05 }}
-            whileHover={{ scale: 1.08, y: -2 }}
-            whileTap={{ scale: 0.95 }}
-            onClick={() => { quizAudioService.playButtonClick(); onMemberClick(m.user._id) }}
-            className="flex-shrink-0 cursor-pointer"
-          >
-            <div className={`relative p-0.5 rounded-xl ${
-              m.user._id === userId ? 'bg-gradient-to-br from-cyan-400 to-blue-500' :
-              m.completed ? 'bg-gradient-to-br from-emerald-400 to-green-500' :
-              m.participated ? 'bg-gradient-to-br from-amber-400 to-orange-500' :
-              'bg-white/20'
-            }`}>
-              <Avatar className="w-12 h-12 border-2 border-slate-900">
-                <AvatarImage src={m.user.pic} />
-                <AvatarFallback className="bg-slate-800 text-white/70 text-sm font-bold">
-                  {(m.user.name || m.user.inGameName || 'U')[0]}
-                </AvatarFallback>
-              </Avatar>
-              {m.completed && (
-                <motion.div
-                  className="absolute -bottom-1 -right-1 w-5 h-5 bg-emerald-500 rounded-full flex items-center justify-center border-2 border-slate-900"
-                  initial={{ scale: 0 }}
-                  animate={{ scale: 1 }}
-                  transition={{ type: 'spring' }}
-                >
-                  <CheckCircle2 className="w-3 h-3 text-white" />
-                </motion.div>
-              )}
-              {m.participated && !m.completed && (
-                <motion.div
-                  className="absolute -bottom-1 -right-1 w-5 h-5 bg-amber-500 rounded-full flex items-center justify-center border-2 border-slate-900"
-                  animate={{ scale: [1, 1.1, 1] }}
-                  transition={{ duration: 1, repeat: Infinity }}
-                >
-                  <Flame className="w-3 h-3 text-white" />
-                </motion.div>
-              )}
-            </div>
-            <p className="text-[10px] text-white/40 text-center mt-1.5 w-12 truncate">
-              {m.user._id === userId ? '👤 You' : (m.user.inGameName || m.user.name?.split(' ')[0] || 'Player')}
-            </p>
-            {m.score > 0 && (
-              <p className="text-[10px] text-emerald-400 text-center font-semibold">+{m.score}</p>
-            )}
-          </motion.div>
-        ))}
-      </div>
-
-      {/* Progress bar */}
-      <div className="mt-3">
-        <div className="flex justify-between text-xs text-white/30 mb-1">
-          <span>{members.filter(m => m.completed).length}/{members.length} finished</span>
+  return (
+    <div className="px-5 mb-3">
+      <GlassCard className="p-4" accent={isUserTeam ? 'from-cyan-500 to-blue-500' : 'from-pink-500 to-red-500'}>
+        <div className="flex items-center justify-between mb-3">
+          <div className="flex items-center gap-2">
+            <div className={`w-2 h-2 rounded-full ${isUserTeam ? 'bg-cyan-400' : 'bg-pink-400'}`} />
+            <span className={`text-sm font-semibold ${isUserTeam ? 'text-cyan-400' : 'text-pink-400'}`}>
+              {isUserTeam ? '🏠 Your Team' : '⚔️ Opponents'}
+            </span>
+          </div>
+          <div className="flex items-center gap-2">
+            <Star className={`w-3.5 h-3.5 ${isUserTeam ? 'text-cyan-400' : 'text-pink-400'}`} />
+            <span className={`text-sm font-bold ${isUserTeam ? 'text-cyan-400' : 'text-pink-400'}`}>{teamScore || 0}</span>
+          </div>
         </div>
-        <div className="h-1.5 bg-white/10 rounded-full overflow-hidden">
-          <motion.div
-            className={`h-full ${isUserTeam ? 'bg-gradient-to-r from-cyan-500 to-blue-500' : 'bg-gradient-to-r from-pink-500 to-red-500'}`}
+
+        <div className="flex gap-3 overflow-x-auto pb-1 scrollbar-hide">
+          {members.map((m, i) => {
+            const memberInfo = getMemberInfo(m)
+            const isCurrentUser = memberInfo.id === userId
+
+            return (
+              <motion.div
+                key={memberInfo.id || i}
+                initial={{ opacity: 0, y: 10 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ delay: i * 0.05 }}
+                whileHover={{ scale: 1.08, y: -2 }}
+                whileTap={{ scale: 0.95 }}
+                onClick={() => { quizAudioService.playButtonClick(); onMemberClick(memberInfo.id) }}
+                className="flex-shrink-0 cursor-pointer"
+              >
+                <div className={`relative p-0.5 rounded-xl ${
+                  isCurrentUser ? 'bg-gradient-to-br from-cyan-400 to-blue-500' :
+                  m.completed ? 'bg-gradient-to-br from-emerald-400 to-green-500' :
+                  m.participated ? 'bg-gradient-to-br from-amber-400 to-orange-500' :
+                  'bg-white/20'
+                }`}>
+                  <Avatar className="w-12 h-12 border-2 border-slate-900">
+                    <AvatarImage src={memberInfo.pic} />
+                    <AvatarFallback className="bg-slate-800 text-white/70 text-sm font-bold">
+                      {(memberInfo.inGameName || memberInfo.name || 'U')[0]}
+                    </AvatarFallback>
+                  </Avatar>
+                  {m.completed && (
+                    <motion.div
+                      className="absolute -bottom-1 -right-1 w-5 h-5 bg-emerald-500 rounded-full flex items-center justify-center border-2 border-slate-900"
+                      initial={{ scale: 0 }}
+                      animate={{ scale: 1 }}
+                      transition={{ type: 'spring' }}
+                    >
+                      <CheckCircle2 className="w-3 h-3 text-white" />
+                    </motion.div>
+                  )}
+                  {m.participated && !m.completed && (
+                    <motion.div
+                      className="absolute -bottom-1 -right-1 w-5 h-5 bg-amber-500 rounded-full flex items-center justify-center border-2 border-slate-900"
+                      animate={{ scale: [1, 1.1, 1] }}
+                      transition={{ duration: 1, repeat: Infinity }}
+                    >
+                      <Flame className="w-3 h-3 text-white" />
+                    </motion.div>
+                  )}
+                </div>
+                <p className="text-[10px] text-white/40 text-center mt-1.5 w-12 truncate">
+                  {isCurrentUser ? '👤 You' : (memberInfo.inGameName || memberInfo.name?.split(' ')[0] || 'Player')}
+                </p>
+                {m.score > 0 && (
+                  <p className="text-[10px] text-emerald-400 text-center font-semibold">+{m.score}</p>
+                )}
+              </motion.div>
+            )
+          })}
+        </div>
+
+        {/* Progress bar */}
+        <div className="mt-3">
+          <div className="flex justify-between text-xs text-white/30 mb-1">
+            <span>{members.filter(m => m?.completed).length}/{members.length} finished</span>
+          </div>
+          <div className="h-1.5 bg-white/10 rounded-full overflow-hidden">
+            <motion.div
+              className={`h-full ${isUserTeam ? 'bg-gradient-to-r from-cyan-500 to-blue-500' : 'bg-gradient-to-r from-pink-500 to-red-500'}`}
             initial={{ width: 0 }}
             animate={{ width: `${(members.filter(m => m.completed).length / members.length) * 100}%` }}
             transition={{ duration: 0.5, ease: 'easeOut' }}
@@ -286,7 +313,8 @@ const TeamRow = ({ members, userId, isUserTeam, teamScore, onMemberClick, t }) =
       </div>
     </GlassCard>
   </div>
-)
+  )
+}
 
 // ═══════════════════════════════════════════════════════════════
 // COLORFUL CATEGORY CARD
@@ -434,7 +462,7 @@ const CategoryCard = ({ challenge, onSelect, onDeselect, onBegin, onReport, load
 // ═══════════════════════════════════════════════════════════════
 // ENHANCED BATTLE RESULTS - Tabbed interface with detailed breakdown
 // ═══════════════════════════════════════════════════════════════
-const EnhancedBattleResults = ({ battle, userTeam, powerupReward, onClaimRewards, onViewReport, navigate, user, t }) => {
+const EnhancedBattleResults = ({ battle, userTeam, powerupReward, onClaimRewards, onViewReport, navigate, user, t, isSession = false }) => {
   const [activeTab, setActiveTab] = useState('overview')
 
   const isWin = battle.winner === userTeam
@@ -449,13 +477,13 @@ const EnhancedBattleResults = ({ battle, userTeam, powerupReward, onClaimRewards
   // Get user's member data
   const userMembers = userTeam === 'teamA' ? battle.teamAMembers : battle.teamBMembers
   const oppMembers = userTeam === 'teamA' ? battle.teamBMembers : battle.teamAMembers
-  const userMemberData = userMembers.find(m => m.user._id === user?._id) || userMembers[0]
+  const userMemberData = userMembers.find(m => m?.user?._id === user?._id) || userMembers[0]
 
   // Calculate user's personal stats
   const userScore = userMemberData?.score || 0
-  const userRank = [...userMembers].sort((a, b) => (b.score || 0) - (a.score || 0)).findIndex(m => m.user._id === userMemberData?.user._id) + 1
+  const userRank = [...userMembers].sort((a, b) => (b.score || 0) - (a.score || 0)).findIndex(m => m?.user?._id === userMemberData?.user?._id) + 1
   const userCategory = battle.challenges.find(c =>
-    (userTeam === 'teamA' ? c.teamAPlayer : c.teamBPlayer) === userMemberData?.user._id
+    (userTeam === 'teamA' ? c.teamAPlayer : c.teamBPlayer) === userMemberData?.user?._id
   )
   const teamAvgScore = userTotalScore / (userMembers.filter(m => m.completed).length || 1)
   const scoreContribution = userTotalScore > 0 ? Math.round((userScore / userTotalScore) * 100) : 0
@@ -583,8 +611,21 @@ const EnhancedBattleResults = ({ battle, userTeam, powerupReward, onClaimRewards
 
               {/* Action Buttons */}
               <div className="space-y-2">
-                {/* Claim Rewards Button */}
-                {hasUnclaimedRewards && (
+                {/* Session Player Notice - No powerup rewards */}
+                {isSession && (
+                  <motion.div
+                    initial={{ opacity: 0, y: 10 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    transition={{ delay: 0.2 }}
+                    className="w-full py-3 px-4 rounded-xl bg-white/5 border border-white/10 flex items-center justify-center gap-2 text-sm text-white/50"
+                  >
+                    <Lock className="w-4 h-4" />
+                    <span>Create an account to earn powerup rewards</span>
+                  </motion.div>
+                )}
+
+                {/* Claim Rewards Button - Only for authenticated users */}
+                {!isSession && hasUnclaimedRewards && (
                   <motion.button
                     initial={{ opacity: 0, y: 10 }}
                     animate={{ opacity: 1, y: 0 }}
@@ -599,8 +640,8 @@ const EnhancedBattleResults = ({ battle, userTeam, powerupReward, onClaimRewards
                   </motion.button>
                 )}
 
-                {/* Already Claimed */}
-                {powerupReward?.claimed && (
+                {/* Already Claimed - Only for authenticated users */}
+                {!isSession && powerupReward?.claimed && (
                   <motion.div
                     initial={{ opacity: 0 }}
                     animate={{ opacity: 1 }}
@@ -648,11 +689,11 @@ const EnhancedBattleResults = ({ battle, userTeam, powerupReward, onClaimRewards
                   const oppScore = userTeam === 'teamA' ? challenge.teamBScore : challenge.teamAScore
                   const categoryWin = challenge.winner === userTeam
                   const categoryTie = challenge.winner === 'tie'
-                  const isUserCategory = (userTeam === 'teamA' ? challenge.teamAPlayer : challenge.teamBPlayer) === userMemberData?.user._id
+                  const isUserCategory = (userTeam === 'teamA' ? challenge.teamAPlayer : challenge.teamBPlayer) === userMemberData?.user?._id
 
                   // Get players for this category
-                  const userPlayer = userMembers.find(m => m.user._id === (userTeam === 'teamA' ? challenge.teamAPlayer : challenge.teamBPlayer))
-                  const oppPlayer = oppMembers.find(m => m.user._id === (userTeam === 'teamA' ? challenge.teamBPlayer : challenge.teamAPlayer))
+                  const userPlayer = userMembers.find(m => m?.user?._id === (userTeam === 'teamA' ? challenge.teamAPlayer : challenge.teamBPlayer))
+                  const oppPlayer = oppMembers.find(m => m?.user?._id === (userTeam === 'teamA' ? challenge.teamBPlayer : challenge.teamAPlayer))
 
                   return (
                     <motion.div
@@ -694,8 +735,8 @@ const EnhancedBattleResults = ({ battle, userTeam, powerupReward, onClaimRewards
                         <div className="flex items-center gap-2">
                           {userPlayer && (
                             <Avatar className="w-5 h-5 border border-cyan-500/50">
-                              <AvatarImage src={userPlayer.user.pic} />
-                              <AvatarFallback className="text-[8px] bg-cyan-900">{(userPlayer.user.name || 'U')[0]}</AvatarFallback>
+                              <AvatarImage src={userPlayer?.user?.pic} />
+                              <AvatarFallback className="text-[8px] bg-cyan-900">{(userPlayer?.user?.name || 'U')[0]}</AvatarFallback>
                             </Avatar>
                           )}
                           <span className="text-sm font-bold text-cyan-400">{userScore}</span>
@@ -705,8 +746,8 @@ const EnhancedBattleResults = ({ battle, userTeam, powerupReward, onClaimRewards
                           <span className="text-sm font-bold text-pink-400">{oppScore}</span>
                           {oppPlayer && (
                             <Avatar className="w-5 h-5 border border-pink-500/50">
-                              <AvatarImage src={oppPlayer.user.pic} />
-                              <AvatarFallback className="text-[8px] bg-pink-900">{(oppPlayer.user.name || 'U')[0]}</AvatarFallback>
+                              <AvatarImage src={oppPlayer?.user?.pic} />
+                              <AvatarFallback className="text-[8px] bg-pink-900">{(oppPlayer?.user?.name || 'U')[0]}</AvatarFallback>
                             </Avatar>
                           )}
                         </div>
@@ -818,7 +859,8 @@ const TeamBattlePageV2 = React.memo(() => {
   const { t } = useTranslation('QuickClash')
   const navigate = useNavigate()
   const { battleId } = useParams()
-  const { user } = useSelector(state => state.auth)
+  const { player, playerId, isSession } = usePlayer()
+  const user = player // Alias for backward compatibility
   const { getSocket } = useSocket()
 
   const [selectedSessionId, setSelectedSessionId] = useState(null)
@@ -851,12 +893,49 @@ const TeamBattlePageV2 = React.memo(() => {
     }
   }, [currentBattle?._id, categoryOperationError, clearOperationError])
 
-  const userTeam = useMemo(() => {
-    if (!currentBattle || !user) return null
-    if (currentBattle.teamAMembers.some(m => m.user._id === user._id || m.user === user._id)) return 'teamA'
-    if (currentBattle.teamBMembers.some(m => m.user._id === user._id || m.user === user._id)) return 'teamB'
+  // Helper to get the ID from a battle member (handles both user and sessionPlayer)
+  const getMemberId = useCallback((member) => {
+    if (!member) return null
+    // Session players have user: null and sessionPlayer object
+    // Regular users have user object and sessionPlayer: null
+    if (member.sessionPlayer?._id) return member.sessionPlayer._id
+    if (member.user?._id) return member.user._id
+    // Fallback for unpopulated refs
+    if (typeof member.sessionPlayer === 'string') return member.sessionPlayer
+    if (typeof member.user === 'string') return member.user
     return null
-  }, [currentBattle, user?._id])
+  }, [])
+
+  // Helper to check if a battle member matches the current player (user or session)
+  const isMemberCurrentPlayer = useCallback((member) => {
+    if (!member || !playerId) return false
+
+    // For session players, we need to check both _id and sessionId
+    // because localStorage stores sessionId but battle might have _id
+    if (member.sessionPlayer) {
+      const sp = member.sessionPlayer
+      // Check sessionId first (preferred, stored in localStorage)
+      if (sp.sessionId && sp.sessionId === playerId) return true
+      // Also check _id as fallback (converted to string for comparison)
+      if (sp._id && String(sp._id) === String(playerId)) return true
+      return false
+    }
+
+    // For regular users, compare _id
+    if (member.user) {
+      const uid = member.user._id || member.user
+      return String(uid) === String(playerId)
+    }
+
+    return false
+  }, [playerId])
+
+  const userTeam = useMemo(() => {
+    if (!currentBattle || !playerId) return null
+    if (currentBattle.teamAMembers.some(m => isMemberCurrentPlayer(m))) return 'teamA'
+    if (currentBattle.teamBMembers.some(m => isMemberCurrentPlayer(m))) return 'teamB'
+    return null
+  }, [currentBattle, playerId, isMemberCurrentPlayer])
 
   const teams = useMemo(() => {
     if (!currentBattle) return null
@@ -873,32 +952,43 @@ const TeamBattlePageV2 = React.memo(() => {
   }, [currentBattle])
 
   const userStatus = useMemo(() => {
-    if (!currentBattle || !userTeam || !user) return {}
+    if (!currentBattle || !userTeam || !playerId) return {}
     const members = userTeam === 'teamA' ? currentBattle.teamAMembers : currentBattle.teamBMembers
-    const me = members.find(m => m.user._id === user._id)
+    const me = members.find(m => isMemberCurrentPlayer(m))
     if (!me) return {}
     return { participated: me.participated || me.completed, completed: me.completed, exited: me.participated && !me.completed, selected: !!me.category, category: me.category }
-  }, [currentBattle, userTeam, user])
+  }, [currentBattle, userTeam, playerId, isMemberCurrentPlayer])
 
   // Extract current user's powerup reward from battle members
   const userPowerupReward = useMemo(() => {
-    if (!currentBattle || !userTeam || !user) return null
+    if (!currentBattle || !userTeam || !playerId) return null
     const members = userTeam === 'teamA' ? currentBattle.teamAMembers : currentBattle.teamBMembers
-    const me = members.find(m => m.user._id === user._id)
+    const me = members.find(m => isMemberCurrentPlayer(m))
     return me?.powerupReward || null
-  }, [currentBattle, userTeam, user])
+  }, [currentBattle, userTeam, playerId, isMemberCurrentPlayer])
 
   const challenges = useMemo(() => {
-    if (!currentBattle || !userTeam || !user) return []
+    if (!currentBattle || !userTeam || !playerId) return []
     return currentBattle.challenges.map(ch => {
       const field = userTeam === 'teamA' ? 'teamAPlayer' : 'teamBPlayer'
+      const completeField = userTeam === 'teamA' ? 'teamACompleted' : 'teamBCompleted'
       const members = userTeam === 'teamA' ? currentBattle.teamAMembers : currentBattle.teamBMembers
-      const me = members.find(m => m.user._id === user._id)
-      const assigned = ch[field] !== null, userAssigned = ch[field] === user._id
-      const selectedByUser = me?.category === ch.category, userCompleted = userAssigned && me?.completed
-      const teammate = members.find(m => m.user._id !== user._id && m.category === ch.category)
+      const me = members.find(m => isMemberCurrentPlayer(m))
+      const assigned = ch[field] !== null
+
+      // Fix: For session players, compare via member's challenge assignment, not direct ID comparison
+      // ch[field] contains MongoDB _id, but playerId may be sessionId - so use the member's challenge field
+      const userAssigned = me?.challenge && (
+        String(me.challenge) === String(ch.challenge) ||
+        String(me.challenge) === String(ch.challenge?._id)
+      )
+
+      const selectedByUser = me?.category === ch.category
+      // Fix: userCompleted should also check if the user's team side of this challenge is completed
+      const userCompleted = userAssigned && (me?.completed || ch[completeField])
+      const teammate = members.find(m => !isMemberCurrentPlayer(m) && m.category === ch.category)
       const selectedByTeammate = !!teammate && !assigned
-      const completedByTeammate = !!members.find(m => m.user._id !== user._id && m.category === ch.category && m.completed) && !userAssigned && !userCompleted
+      const completedByTeammate = !!members.find(m => !isMemberCurrentPlayer(m) && m.category === ch.category && m.completed) && !userAssigned && !userCompleted
       const available = !selectedByUser && !selectedByTeammate && !assigned && !userStatus.participated && !userStatus.exited && !userStatus.selected && !completedByTeammate
       const locked = (userStatus.selected && ch.category !== userStatus.category) || (userStatus.exited)
 
@@ -914,15 +1004,88 @@ const TeamBattlePageV2 = React.memo(() => {
         isDisabled: disabled, userScore: userTeam === 'teamA' ? ch.teamAScore : ch.teamBScore,
         opponentScore: userTeam === 'teamA' ? ch.teamBScore : ch.teamAScore,
         opponentCompleted: userTeam === 'teamA' ? ch.teamBCompleted : ch.teamACompleted,
-        teammateInfo: teammate ? { name: teammate.user.name, inGameName: teammate.user.inGameName } : null,
+        teammateInfo: teammate ? { name: teammate?.user?.name || teammate?.sessionPlayer?.inGameName, inGameName: teammate?.user?.inGameName || teammate?.sessionPlayer?.inGameName } : null,
       }
     })
-  }, [currentBattle, userTeam, user, categoryOperationLoading, selectedCategoryForOperation, userStatus, localProcessingCategory])
+  }, [currentBattle, userTeam, user, categoryOperationLoading, selectedCategoryForOperation, userStatus, localProcessingCategory, playerId, isMemberCurrentPlayer])
 
   useEffect(() => { const s = getSocket(); if (s) s.emit('quickClash:viewTeamBattles') }, [getSocket])
   useEffect(() => { if (battleId) getBattleDetails(battleId) }, [battleId, getBattleDetails])
   useEffect(() => { setupTeamBattleSocketListeners(); return cleanupSocketListeners }, [setupTeamBattleSocketListeners, cleanupSocketListeners])
   useEffect(() => { return () => resetOperationState() }, [resetOperationState])
+
+  // Timer-based isCalculatingResults trigger when battle expires
+  // This ensures the overlay appears even for session players who don't receive socket events
+  useEffect(() => {
+    if (!currentBattle?.expiresAt || currentBattle?.status === 'completed') {
+      if (currentBattle?.status === 'completed' && isCalculatingResults) {
+        setIsCalculatingResults(false)
+      }
+      return
+    }
+
+    const expiresAt = new Date(currentBattle.expiresAt).getTime()
+    const now = Date.now()
+
+    // If already expired, set calculating state immediately
+    if (expiresAt <= now) {
+      if (!isCalculatingResults) {
+        setIsCalculatingResults(true)
+      }
+      return
+    }
+
+    // Set up timeout to trigger when timer expires
+    const timeout = setTimeout(() => {
+      setIsCalculatingResults(true)
+    }, expiresAt - now)
+
+    return () => clearTimeout(timeout)
+  }, [currentBattle?.expiresAt, currentBattle?.status, isCalculatingResults])
+
+  // Fallback API polling for session players OR missed socket events
+  // Session players have no socket connection, so we must poll for results
+  useEffect(() => {
+    // Skip if battle is completed or we're not in calculating state
+    if (!isCalculatingResults || currentBattle?.status === 'completed' || !battleId) return
+
+    let cancelled = false
+    const delays = [10000, 15000, 20000] // Exponential backoff: 10s, 15s, 20s
+
+    const poll = async (attempt) => {
+      if (cancelled || attempt >= 3) {
+        console.log(`[TeamBattlePage] Fallback polling stopped: cancelled=${cancelled}, attempts=${attempt}`)
+        return
+      }
+
+      await new Promise(r => setTimeout(r, delays[attempt]))
+
+      // Double-check if we should still poll
+      if (cancelled) return
+
+      console.log(`[TeamBattlePage] Fallback poll attempt ${attempt + 1} for battle ${battleId}`)
+
+      try {
+        await getBattleDetails(battleId)
+      } catch (error) {
+        console.error('[TeamBattlePage] Fallback poll error:', error)
+      }
+
+      // If still not completed after fetch, schedule next attempt
+      // Note: We rely on the component re-rendering with updated state
+      if (!cancelled) {
+        poll(attempt + 1)
+      }
+    }
+
+    console.log(`[TeamBattlePage] Starting fallback polling for battle ${battleId} (isSession: ${isSession})`)
+    poll(0)
+
+    return () => {
+      cancelled = true
+      console.log(`[TeamBattlePage] Fallback polling cleanup for battle ${battleId}`)
+    }
+  }, [isCalculatingResults, currentBattle?.status, battleId, getBattleDetails, isSession])
 
   const goBack = useCallback(() => {
     haptics.light()
@@ -984,7 +1147,7 @@ const TeamBattlePageV2 = React.memo(() => {
   const viewReport = useCallback(async id => {
     if (!id) return
     setReportLoading(true)
-    try { const r = await fetch(`/api/quickClash/challenge/${id}/sessions?userId=${user._id}`); const d = await r.json(); if (d?.sessionId) { setSelectedSessionId(d.sessionId); setIsReportOpen(true) } }
+    try { const r = await fetch(`/api/quickClash/challenge/${id}/sessions?userId=${user?._id}`); const d = await r.json(); if (d?.sessionId) { setSelectedSessionId(d.sessionId); setIsReportOpen(true) } }
     finally { setReportLoading(false) }
   }, [user])
 
@@ -1020,7 +1183,7 @@ const TeamBattlePageV2 = React.memo(() => {
   }
 
   const teamId = userTeam === 'teamA' ? currentBattle.teamA?._id : currentBattle.teamB?._id
-  const loadout = teams?.user.members.find(m => m.user._id === user?._id)?.loadout || { housingUsed: 0 }
+  const loadout = teams?.user?.members?.find(m => m?.user?._id === user?._id)?.loadout || { housingUsed: 0 }
 
   return (
     <div className="min-h-screen pb-24 md:pb-8 relative">
@@ -1055,16 +1218,16 @@ const TeamBattlePageV2 = React.memo(() => {
       <Header battle={currentBattle} onGoBack={goBack} t={t} onExpiredChange={setIsCalculatingResults} />
 
       <ScoreDisplay
-        left={teams?.user.wins || 0}
-        right={teams?.opp.wins || 0}
-        leftName={teams?.user.name || 'Your Team'}
-        rightName={teams?.opp.name || 'Opponents'}
+        left={teams?.user?.wins || 0}
+        right={teams?.opp?.wins || 0}
+        leftName={teams?.user?.name || 'Your Team'}
+        rightName={teams?.opp?.name || 'Opponents'}
         isUserLeft={true}
       />
 
-      <TeamRow members={teams?.user.members || []} userId={user?._id} isUserTeam={true} teamScore={teams?.user.score}
+      <TeamRow members={teams?.user?.members || []} userId={user?._id} isUserTeam={true} teamScore={teams?.user?.score}
         onMemberClick={id => { setSelectedMember(id); setIsMemberOpen(true) }} t={t} />
-      <TeamRow members={teams?.opp.members || []} userId={user?._id} isUserTeam={false} teamScore={teams?.opp.score}
+      <TeamRow members={teams?.opp?.members || []} userId={user?._id} isUserTeam={false} teamScore={teams?.opp?.score}
         onMemberClick={id => { setSelectedMember(id); setIsMemberOpen(true) }} t={t} />
 
       {/* Powerups */}
@@ -1078,34 +1241,55 @@ const TeamBattlePageV2 = React.memo(() => {
                 </div>
                 <div>
                   <span className="text-sm font-semibold text-white">{t('Powerups')}</span>
-                  {/* Hide housing space after participation */}
-                  {!userStatus.participated && (
+                  {/* Hide housing space after participation or for session players */}
+                  {!userStatus.participated && !isSession && (
                     <span className="text-xs text-white/40 ml-2">{loadout.housingUsed}/30</span>
                   )}
                 </div>
               </div>
               <div className="flex gap-2">
-                <motion.button whileTap={{ scale: 0.9 }} onClick={() => { quizAudioService.playButtonClick(); setIsDonationOpen(true) }} className="p-2.5 rounded-xl bg-white/10 hover:bg-white/15 transition-colors">
-                  <Gift className="w-4 h-4 text-purple-300" />
-                </motion.button>
-                <motion.button
-                  whileTap={!userStatus.participated ? { scale: 0.9 } : {}}
-                  onClick={() => {
-                    quizAudioService.playButtonClick()
-                    if (userStatus.participated) {
-                      notificationManager.info('Already Participated', 'You have already played in this battle. Powerups cannot be changed.')
-                    } else {
-                      setIsSelectionOpen(true)
-                    }
-                  }}
-                  className={`px-3 py-2 rounded-xl text-white text-sm font-semibold flex items-center gap-1.5 ${
-                    userStatus.participated
-                      ? 'bg-gray-500/50 cursor-not-allowed opacity-60'
-                      : 'bg-purple-500 hover:bg-purple-400'
-                  }`}
-                >
-                  <Bolt className="w-4 h-4" /> Equip
-                </motion.button>
+                {isSession ? (
+                  /* Session Player - Show locked state */
+                  <motion.button
+                    whileTap={{ scale: 0.9 }}
+                    onClick={() => {
+                      quizAudioService.playButtonClick()
+                      notificationManager.info(
+                        'Create Account to Use Powerups',
+                        'Powerups are available for registered users. Create an account to equip and use powerups in battles!'
+                      )
+                    }}
+                    className="px-3 py-2 rounded-xl text-white/70 text-sm font-semibold flex items-center gap-1.5 bg-gray-500/30 border border-white/10"
+                  >
+                    <Lock className="w-4 h-4" />
+                    <span>Login to Use</span>
+                  </motion.button>
+                ) : (
+                  /* Authenticated User - Full powerup controls */
+                  <>
+                    <motion.button whileTap={{ scale: 0.9 }} onClick={() => { quizAudioService.playButtonClick(); setIsDonationOpen(true) }} className="p-2.5 rounded-xl bg-white/10 hover:bg-white/15 transition-colors">
+                      <Gift className="w-4 h-4 text-purple-300" />
+                    </motion.button>
+                    <motion.button
+                      whileTap={!userStatus.participated ? { scale: 0.9 } : {}}
+                      onClick={() => {
+                        quizAudioService.playButtonClick()
+                        if (userStatus.participated) {
+                          notificationManager.info('Already Participated', 'You have already played in this battle. Powerups cannot be changed.')
+                        } else {
+                          setIsSelectionOpen(true)
+                        }
+                      }}
+                      className={`px-3 py-2 rounded-xl text-white text-sm font-semibold flex items-center gap-1.5 ${
+                        userStatus.participated
+                          ? 'bg-gray-500/50 cursor-not-allowed opacity-60'
+                          : 'bg-purple-500 hover:bg-purple-400'
+                      }`}
+                    >
+                      <Bolt className="w-4 h-4" /> Equip
+                    </motion.button>
+                  </>
+                )}
               </div>
             </div>
           </GlassCard>
@@ -1157,6 +1341,7 @@ const TeamBattlePageV2 = React.memo(() => {
           navigate={navigate}
           user={user}
           t={t}
+          isSession={isSession}
         />
       )}
 

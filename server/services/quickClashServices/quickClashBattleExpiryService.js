@@ -7,6 +7,7 @@ const { makeRetryable } = require('../../utils/retryUtils')
 const { calculateFinalTrophies } = require('../../utils/quickClashTeamUtils')
 const { updateTeamMatchStatus } = require('./quickClashTeamService')
 const globalEmitter = require('../../eventEmitter')
+const { getMemberPlayerId } = require('../../utils/sessionPlayerUtils')
 
 // ============================================================================
 // IN-MEMORY TIMER AND LOCK MANAGEMENT
@@ -601,7 +602,8 @@ const completeBattleOnExpiry = async ({ battle, session }) => {
   const trophyChanges = {}
 
   for (const member of battle.teamAMembers) {
-    const userId = member.user.toString()
+    const userId = getMemberPlayerId(member)
+    if (!userId) continue // Skip members without valid user/sessionPlayer
 
     // Always include trophy change for each member
     trophyChanges[userId] = {
@@ -621,7 +623,8 @@ const completeBattleOnExpiry = async ({ battle, session }) => {
   }
 
   for (const member of battle.teamBMembers) {
-    const userId = member.user.toString()
+    const userId = getMemberPlayerId(member)
+    if (!userId) continue // Skip members without valid user/sessionPlayer
 
     // Always include trophy change for each member
     trophyChanges[userId] = {

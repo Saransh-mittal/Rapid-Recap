@@ -1,6 +1,7 @@
 // routes/quickClashTeamRoutes.js
 const express = require('express')
 const { Authenticate } = require('../middleware/authenticate')
+// NOTE: flexAuth routes (join/leave matchmaking) are now in parent quickClashRoutes.js
 const {
   createNewTeam,
   getTeam,
@@ -46,8 +47,8 @@ router.post('/team/:teamId/remove', removeMemberFromTeam)
 router.post('/team/:teamId/transfer-leadership', transferLeadershipController)
 
 // Team matchmaking routes
-router.post('/team/:teamId/matchmaking/join', joinTeamMatchmakingController)
-router.post('/team/:teamId/matchmaking/leave', leaveTeamMatchmakingController)
+// NOTE: join/leave routes are handled in parent quickClashRoutes.js with flexAuth (before Authenticate)
+// This allows both authenticated users AND session players to use those routes
 router.get(
   '/team/:teamId/matchmaking/status',
   getTeamMatchmakingStatusController,

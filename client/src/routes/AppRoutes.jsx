@@ -59,6 +59,31 @@ const QuickClashSocketTest =
     : React.lazy(() => import('../screens/testing/QuickClashSocketTest'))
 const AppStartScreen = lazy(() => import('../screens/AppStartScreen'))
 
+// Spark Engine - Viral invite system
+const PlayLanding = lazy(() => import('../screens/PlayLanding'))
+const SparkLobby = lazy(() =>
+  import('../components/quickClashComponents/lobby/SparkLobby')
+)
+const SparkMatchmaking = lazy(() =>
+  import('../components/quickClashComponents/lobby/SparkMatchmaking')
+)
+const SparkBattlePage = lazy(() =>
+  import('../components/quickClashComponents/lobby/SparkBattlePage')
+)
+
+// Helper to check if a session player exists (for route guards)
+const hasSessionPlayer = () => {
+  if (typeof window === 'undefined') return false
+  return !!localStorage.getItem('playSessionId')
+}
+
+// Helper to check if session player has been upgraded to V2 UI
+// (i.e., has completed first battle or visited /quickclash)
+const hasUpgradedSessionPlayer = () => {
+  if (typeof window === 'undefined') return false
+  return localStorage.getItem('sparkUpgraded') === 'true' && hasSessionPlayer()
+}
+
 // Enhanced loading component with glassmorphic design
 const EnhancedLoading = () => (
   <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-slate-900 to-slate-800">
@@ -134,9 +159,49 @@ const AppRoutes = ({ isToken, needsOnboarding, setIsGuestLoggedin }) => {
             </>
           ) : (
             <>
+              {/* Root route: logged-in -> AppStartScreen, new users -> PlayLanding */}
               <Route
                 path="/"
-                element={isToken ? <AppStartScreen /> : <GetStarted />}
+                element={isToken ? <AppStartScreen /> : <PlayLanding />}
+              />
+
+              {/* Spark Engine - Routes with auth handling */}
+              {/* /play: Authenticated users → /quickclash, Upgraded session players → /quickclash, New players → PlayLanding */}
+              <Route
+                path="/play"
+                element={
+                  isToken
+                    ? <Navigate to="/quickclash" replace />
+                    : hasUpgradedSessionPlayer()
+                      ? <Navigate to="/quickclash" replace />
+                      : <PlayLanding />
+                }
+              />
+              <Route
+                path="/play/join/:teamCode"
+                element={
+                  isToken
+                    ? <Navigate to="/quickclash" replace />
+                    : hasUpgradedSessionPlayer()
+                      ? <Navigate to="/quickclash" replace />
+                      : <PlayLanding />
+                }
+              />
+              <Route
+                path="/play/lobby"
+                element={<SparkLobby />}
+              />
+              <Route
+                path="/play/matchmaking"
+                element={<SparkMatchmaking />}
+              />
+              <Route
+                path="/play/session/:challengeId"
+                element={<QuickClashSession isSessionPlayer={true} />}
+              />
+              <Route
+                path="/play/battle/:battleId"
+                element={<TeamBattlePage />}
               />
               {process.env.NODE_ENV != 'production' && (
                 <Route
@@ -146,7 +211,7 @@ const AppRoutes = ({ isToken, needsOnboarding, setIsGuestLoggedin }) => {
               )}
               <Route
                 path="/quickclash/*"
-                element={isToken ? <QuickClashLayoutV2 /> : <Navigate to="/" replace />}
+                element={(isToken || hasSessionPlayer()) ? <QuickClashLayoutV2 /> : <Navigate to="/" replace />}
               />
               <Route
                 path="/quickclash-legacy"
@@ -155,7 +220,7 @@ const AppRoutes = ({ isToken, needsOnboarding, setIsGuestLoggedin }) => {
               <Route
                 path="/quickclash/teamBattle/:battleId"
                 element={
-                  isToken ? <TeamBattlePage /> : <Navigate to="/" replace />
+                  (isToken || hasSessionPlayer()) ? <TeamBattlePage /> : <Navigate to="/" replace />
                 }
               />
               <Route

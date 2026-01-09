@@ -461,18 +461,27 @@ const transferLeadershipController = asyncHandler(async (req, res) => {
 /**
  * @desc    Join team matchmaking
  * @route   POST /api/quickClash/team/:teamId/matchmaking/join
- * @access  Private
+ * @access  Private (supports both authenticated users and session players via flexAuth)
  */
 const joinTeamMatchmakingController = asyncHandler(async (req, res) => {
   const { teamId } = req.params
-  const userId = req.user._id
+
+  // Support both authenticated users (req.user) and session players (req.sessionPlayer)
+  const playerId = req.user?._id || req.sessionPlayer?._id
+  const isSessionPlayer = !!req.sessionPlayer && !req.user
+
+  if (!playerId) {
+    return res.status(401).json({
+      success: false,
+      message: 'Authentication required',
+    })
+  }
 
   try {
-    // Verify user is team leader and get team details for notifications
-    const team = await QuickClashTeam.findById(teamId).populate(
-      'members.user',
-      '_id name inGameName',
-    ) // ADD: Populate user details for notifications
+    // Verify user/session is team leader and get team details for notifications
+    const team = await QuickClashTeam.findById(teamId)
+      .populate('members.user', '_id name inGameName')
+      .populate('members.sessionPlayer', '_id inGameName trophies')
 
     if (!team) {
       return res.status(404).json({
@@ -481,12 +490,16 @@ const joinTeamMatchmakingController = asyncHandler(async (req, res) => {
       })
     }
 
-    // Check if the user is a leader of this team
-    const isLeader = team.members.some(
-      member =>
-        member.user._id.toString() === userId.toString() &&
-        member.role === 'leader',
-    )
+    // Check if the player is a leader of this team (supports both user and session player)
+    const isLeader = team.members.some(member => {
+      if (isSessionPlayer && member.sessionPlayer) {
+        return member.sessionPlayer._id.toString() === playerId.toString() && member.role === 'leader'
+      }
+      if (!isSessionPlayer && member.user) {
+        return member.user._id.toString() === playerId.toString() && member.role === 'leader'
+      }
+      return false
+    })
 
     if (!isLeader) {
       return res.status(403).json({
@@ -496,30 +509,53 @@ const joinTeamMatchmakingController = asyncHandler(async (req, res) => {
       })
     }
 
+    // For session player teams, auto-set all members to ready (they don't have ready UI)
+    if (isSessionPlayer) {
+      const hasSessionMembers = team.members.some(m => m.sessionPlayer)
+      if (hasSessionMembers) {
+        for (const member of team.members) {
+          member.status = 'ready'
+        }
+        await team.save()
+      }
+    }
+
     const matchmaking = await joinTeamMatchmaking({ teamId })
 
-    // ADD: Send engaging notifications to offline teammates after successful matchmaking join
+    // Send notifications to offline teammates (only for real users, not session players)
     try {
-      // Get leader's name for notification
-      const leader = team.members.find(
-        member => member.user._id.toString() === userId.toString(),
-      )
-      const leaderName =
-        leader?.user?.inGameName || leader?.user?.name || 'Team Leader'
+      // Filter to only user members (session players don't have push notifications)
+      const userMembers = team.members.filter(m => m.user && !m.sessionPlayer)
 
-      // Send notifications to offline teammates
-      const notificationResult = await notifyTeamMatchmakingStarted({
-        teamId: team._id.toString(),
-        teamName: team.name || 'Your Squad',
-        leaderName,
-        teamMembers: team.members,
-        leaderId: userId.toString(),
-      })
+      if (userMembers.length > 0) {
+        // Get leader's name for notification
+        let leaderName = 'Team Leader'
+        if (isSessionPlayer) {
+          const leaderMember = team.members.find(m =>
+            m.sessionPlayer?._id.toString() === playerId.toString()
+          )
+          leaderName = leaderMember?.sessionPlayer?.inGameName || 'Team Leader'
+        } else {
+          const leaderMember = team.members.find(m =>
+            m.user?._id.toString() === playerId.toString()
+          )
+          leaderName = leaderMember?.user?.inGameName || leaderMember?.user?.name || 'Team Leader'
+        }
 
-      console.log(
-        `[TEAM_MATCHMAKING] Notification result for team "${team.name}":`,
-        notificationResult,
-      )
+        // Send notifications only to user members
+        const notificationResult = await notifyTeamMatchmakingStarted({
+          teamId: team._id.toString(),
+          teamName: team.name || 'Your Squad',
+          leaderName,
+          teamMembers: userMembers,
+          leaderId: playerId.toString(),
+        })
+
+        console.log(
+          `[TEAM_MATCHMAKING] Notification result for team "${team.name}":`,
+          notificationResult,
+        )
+      }
     } catch (notificationError) {
       // Don't fail the matchmaking join if notifications fail
       console.error(
@@ -588,17 +624,26 @@ const joinTeamMatchmakingController = asyncHandler(async (req, res) => {
 /**
  * @desc    Leave team matchmaking
  * @route   POST /api/quickClash/team/:teamId/matchmaking/leave
- * @access  Private
+ * @access  Private (supports both authenticated users and session players via flexAuth)
  */
 const leaveTeamMatchmakingController = asyncHandler(async (req, res) => {
   const { teamId } = req.params
-  const userId = req.user._id
+
+  // Support both authenticated users (req.user) and session players (req.sessionPlayer)
+  const playerId = req.user?._id || req.sessionPlayer?._id
+
+  if (!playerId) {
+    return res.status(401).json({
+      success: false,
+      message: 'Authentication required',
+    })
+  }
 
   try {
-    // Pass the user ID to the service for better notifications
+    // Pass the player ID to the service for better notifications
     const success = await leaveTeamMatchmaking({
       teamId,
-      userId, // Pass the user ID who initiated the leave action
+      userId: playerId, // Pass the player ID who initiated the leave action
     })
 
     res.status(200).json({
@@ -846,16 +891,27 @@ const getTeamBattle = asyncHandler(async (req, res) => {
 /**
  * @desc    Get team info for matchmaking
  * @route   GET /api/quickClash/team/:teamId/matchmaking-info
- * @access  Private
+ * @access  Private (supports both authenticated users and session players via flexAuth)
  */
 const getTeamMatchmakingInfo = asyncHandler(async (req, res) => {
   const { teamId } = req.params
-  const userId = req.user._id
+
+  // Support both authenticated users and session players
+  const playerId = req.user?._id || req.sessionPlayer?._id
+  const isSessionPlayer = !!req.sessionPlayer && !req.user
+
+  if (!playerId) {
+    return res.status(401).json({
+      success: false,
+      message: 'Authentication required',
+    })
+  }
 
   try {
-    // Find the team
+    // Find the team - populate both user and sessionPlayer
     let team = await QuickClashTeam.findById(teamId)
       .populate('members.user', '_id name inGameName pic')
+      .populate('members.sessionPlayer', '_id inGameName trophies')
       .populate('formationInfo.sourceTeams', 'name members')
 
     if (!team) {
@@ -865,10 +921,18 @@ const getTeamMatchmakingInfo = asyncHandler(async (req, res) => {
       })
     }
 
-    // Check if user is a member of the team
-    const isMember = team.members.some(
-      member => member.user._id.toString() === userId.toString(),
-    )
+    // Check if player is a member of the team (supports both user and session player)
+    const isMember = team.members.some(member => {
+      if (isSessionPlayer && member.sessionPlayer) {
+        return member.sessionPlayer._id?.toString() === playerId.toString() ||
+               member.sessionPlayer.toString() === playerId.toString()
+      }
+      if (!isSessionPlayer && member.user) {
+        return member.user._id?.toString() === playerId.toString() ||
+               member.user.toString() === playerId.toString()
+      }
+      return false
+    })
 
     if (!isMember) {
       return res.status(403).json({
@@ -889,25 +953,28 @@ const getTeamMatchmakingInfo = asyncHandler(async (req, res) => {
       team.formationInfo &&
       team.formationInfo.isAutoFormed
     ) {
-      // Check if the user was originally a solo player
+      // Check if the player was originally a solo player
       if (
         team.formationInfo.soloPlayers &&
         team.formationInfo.soloPlayers.length > 0 &&
         team.formationInfo.soloPlayers.some(
-          playerId => playerId.toString() === userId.toString(),
+          soloPlayerId => soloPlayerId.toString() === playerId.toString(),
         )
       ) {
         joinType = 'solo'
       }
-      // Check if the user was originally from a source team
+      // Check if the player was originally from a source team
       else if (
         team.formationInfo.sourceTeams &&
         team.formationInfo.sourceTeams.length > 0
       ) {
         // Find the member in the current team to get their sourceTeam info
-        const teamMember = team.members.find(
-          member => member.user._id.toString() === userId.toString(),
-        )
+        const teamMember = team.members.find(member => {
+          if (isSessionPlayer && member.sessionPlayer) {
+            return member.sessionPlayer._id?.toString() === playerId.toString()
+          }
+          return member.user?._id?.toString() === playerId.toString()
+        })
 
         if (teamMember && teamMember.sourceTeam) {
           joinType = 'sourceTeam'
@@ -935,10 +1002,11 @@ const getTeamMatchmakingInfo = asyncHandler(async (req, res) => {
         _id: team._id,
         name: team.name,
         members: team.members.map(member => ({
-          _id: member.user._id,
-          name: member.user.name || member.user.inGameName,
-          pic: member.user.pic,
+          _id: member.user?._id || member.sessionPlayer?._id,
+          name: member.user?.name || member.user?.inGameName || member.sessionPlayer?.inGameName || 'Player',
+          pic: member.user?.pic || null,
           role: member.role,
+          isSessionPlayer: !!member.sessionPlayer,
         })),
         isInMatch: team.isInMatch,
       },

@@ -7,16 +7,24 @@ export const joinGlobalMatchmaking = createAsyncThunk(
   'quickClashGlobalMatchmaking/join',
   async (_, { rejectWithValue }) => {
     try {
+      // Check if user is a session player
+      const sessionId = localStorage.getItem('playSessionId')
+      const headers = sessionId ? { 'X-Session-Id': sessionId } : {}
+
       const response = await axios.post(
         '/api/quickClash/global-matchmaking/join',
+        {},
+        { headers }
       )
       return response.data
     } catch (error) {
-      return rejectWithValue(
-        error.response?.data?.reason ||
-          error.response?.data?.message ||
-          'Failed to join global matchmaking',
-      )
+      // Return full error object so hook can check error.code
+      const errorData = error.response?.data || {}
+      return rejectWithValue({
+        code: errorData.code,
+        message: errorData.message || errorData.reason || 'Failed to join global matchmaking',
+        reason: errorData.reason,
+      })
     }
   },
 )
@@ -41,10 +49,22 @@ export const getGlobalMatchmakingStatus = createAsyncThunk(
   'quickClashGlobalMatchmaking/getStatus',
   async (_, { rejectWithValue }) => {
     try {
-      const response = await axios.get(
-        '/api/quickClash/global-matchmaking/status',
-      )
-      return response.data
+      // Check if user is a session player (has sessionId in localStorage)
+      const sessionId = localStorage.getItem('playSessionId')
+
+      if (sessionId) {
+        // Session player - use play API endpoint with session header
+        const response = await axios.get('/api/play/matchmaking/status', {
+          headers: { 'X-Session-Id': sessionId }
+        })
+        return response.data
+      } else {
+        // Authenticated user - use standard endpoint
+        const response = await axios.get(
+          '/api/quickClash/global-matchmaking/status',
+        )
+        return response.data
+      }
     } catch (error) {
       return rejectWithValue(
         error.response?.data?.message || 'Failed to get matchmaking status',
@@ -57,8 +77,14 @@ export const joinTeamMatchmaking = createAsyncThunk(
   'quickClashGlobalMatchmaking/joinTeam',
   async ({ teamId, teamName }, { rejectWithValue }) => {
     try {
+      // Check if user is a session player
+      const sessionId = localStorage.getItem('playSessionId')
+      const headers = sessionId ? { 'X-Session-Id': sessionId } : {}
+
       const response = await axios.post(
         `/api/quickClash/team/${teamId}/matchmaking/join`,
+        {},
+        { headers }
       )
       return { ...response.data, teamId, teamName }
     } catch (error) {
@@ -75,14 +101,32 @@ export const leaveTeamMatchmaking = createAsyncThunk(
   'quickClashGlobalMatchmaking/leaveTeam',
   async (teamId, { rejectWithValue }) => {
     try {
+      // Check if user is a session player
+      const sessionId = localStorage.getItem('playSessionId')
+      const headers = sessionId ? { 'X-Session-Id': sessionId } : {}
+
       const response = await axios.post(
         `/api/quickClash/team/${teamId}/matchmaking/leave`,
+        {},
+        { headers }
       )
+
+      // Handle "success: false" response (team not in matchmaking - e.g. match was found)
+      if (response.data.success === false) {
+        return rejectWithValue({
+          message: response.data.message,
+          code: 'NOT_IN_MATCHMAKING',
+          isGraceful: true, // Flag to indicate this isn't a fatal error
+        })
+      }
+
       return { ...response.data, teamId }
     } catch (error) {
-      return rejectWithValue(
-        error.response?.data?.message || 'Failed to leave team matchmaking',
-      )
+      return rejectWithValue({
+        message: error.response?.data?.message || 'Failed to leave team matchmaking',
+        code: error.response?.data?.code || 'UNKNOWN_ERROR',
+        status: error.response?.status,
+      })
     }
   },
 )

@@ -3,6 +3,7 @@ const mongoose = require('mongoose')
 const QuickClashTeamBattle = require('../../model/quickClashSchemas/quickClashTeamBattleSchema')
 const Inventory = require('../../model/inventorySchema')
 const Ability = require('../../model/abilitySchema')
+const { findMemberByUserId } = require('../../utils/sessionPlayerUtils')
 
 // Powerup Constants
 const POWERUPS = {
@@ -150,7 +151,7 @@ const equipPowerup = async ({
   const membersKey = isTeamA ? 'teamAMembers' : 'teamBMembers'
 
   const pool = battle[poolKey]
-  const member = battle[membersKey].find(m => m.user.toString() === userId.toString())
+  const member = findMemberByUserId(battle[membersKey], userId)
 
   if (!member) throw new Error('User not in team')
 
@@ -210,7 +211,7 @@ const unequipPowerup = async ({
     const membersKey = isTeamA ? 'teamAMembers' : 'teamBMembers'
 
     const pool = battle[poolKey]
-    const member = battle[membersKey].find(m => m.user.toString() === userId.toString())
+    const member = findMemberByUserId(battle[membersKey], userId)
 
     // Find item in loadout
     const itemIndex = member.loadout.items.findIndex(item => item.powerupId === powerupType)

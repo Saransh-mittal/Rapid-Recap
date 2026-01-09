@@ -48,9 +48,24 @@ const ForgeArticle = require('../../model/quickClashSchemas/forgeArticleSchema')
 
 // Constants
 // const TEAM_BATTLE_EXPIRY = 4 * 60 * 60 * 1000 // 4 hours same as regular challenges
-const TEAM_BATTLE_EXPIRY = 1 * 60 * 1000
+const TEAM_BATTLE_EXPIRY = 10 * 60 * 1000
 const BASE_TROPHIES = 120 // Base trophies for 4v4 mode
 const TROPHY_K_FACTOR = 0.8 // From trophy formula
+
+// Helper to get member ID from either user or sessionPlayer (for session player support)
+const getMemberPlayerId = (member) => {
+  if (!member) return null
+  if (member.user) return member.user._id?.toString() || member.user.toString()
+  if (member.sessionPlayer) return member.sessionPlayer._id?.toString() || member.sessionPlayer.toString()
+  return null
+}
+
+// Helper to check if a member matches a given userId (handles both users and session players)
+const memberMatchesUserId = (member, userId) => {
+  if (!member || !userId) return false
+  const memberId = getMemberPlayerId(member)
+  return memberId === userId.toString()
+}
 
 /**
  * Clean up all matchmaking entries when battle creation fails completely
@@ -74,13 +89,13 @@ const cleanupFailedBattleMatchmaking = async ({
       QuickClashTeam.findById(teamBId).populate('members.user', '_id').lean(),
     ])
 
-    // Extract all member IDs
+    // Extract all member IDs (only users, not session players)
     const allMemberIds = []
     if (teamA && teamA.members) {
-      allMemberIds.push(...teamA.members.map(m => m.user._id))
+      allMemberIds.push(...teamA.members.filter(m => m.user).map(m => m.user._id))
     }
     if (teamB && teamB.members) {
-      allMemberIds.push(...teamB.members.map(m => m.user._id))
+      allMemberIds.push(...teamB.members.filter(m => m.user).map(m => m.user._id))
     }
 
     console.log(
@@ -293,11 +308,11 @@ const createTeamBattle = makeRetryable(
           .session(session),
       ])
 
-      // Extract member IDs for each team
+      // Extract member IDs for each team (only users, not session players)
       const teamAMemberIds =
-        teamAData?.members?.map(m => m.user._id.toString()) || []
+        teamAData?.members?.filter(m => m.user).map(m => m.user._id?.toString() || m.user.toString()) || []
       const teamBMemberIds =
-        teamBData?.members?.map(m => m.user._id.toString()) || []
+        teamBData?.members?.filter(m => m.user).map(m => m.user._id?.toString() || m.user.toString()) || []
 
       // Combined list of all involved members
       const allMemberIds = [...teamAMemberIds, ...teamBMemberIds]
@@ -399,33 +414,43 @@ const createTeamBattle = makeRetryable(
       // ======= PROGRESS: PROCESSING ARTICLES (45%) =======
       console.log(`[TeamBattle] PHASE 5: Processing articles (45%)`)
 
-      // Extract team member data
+      // Extract team member data - handle both users and session players
       console.log(`[TeamBattle] Extracting team member data`)
-      const teamAMembers = teamA.members.map(member => ({
-        user: member.user._id,
-        category: null,
-        challenge: null,
-        participated: false,
-        completed: false,
-        score: 0,
-        previousTrophies:
-          member.user.quickClashTrophies || DEFAULT_STARTING_TROPHIES,
-        newTrophies: 0,
-        trophyChange: 0,
-      }))
+      const teamAMembers = teamA.members.map(member => {
+        const isSessionPlayer = !member.user && member.sessionPlayer
+        return {
+          user: member.user?._id || null,
+          sessionPlayer: member.sessionPlayer || null,
+          category: null,
+          challenge: null,
+          participated: false,
+          completed: false,
+          score: 0,
+          previousTrophies: isSessionPlayer
+            ? DEFAULT_STARTING_TROPHIES
+            : (member.user?.quickClashTrophies || DEFAULT_STARTING_TROPHIES),
+          newTrophies: 0,
+          trophyChange: 0,
+        }
+      })
 
-      const teamBMembers = teamB.members.map(member => ({
-        user: member.user._id,
-        category: null,
-        challenge: null,
-        participated: false,
-        completed: false,
-        score: 0,
-        previousTrophies:
-          member.user.quickClashTrophies || DEFAULT_STARTING_TROPHIES,
-        newTrophies: 0,
-        trophyChange: 0,
-      }))
+      const teamBMembers = teamB.members.map(member => {
+        const isSessionPlayer = !member.user && member.sessionPlayer
+        return {
+          user: member.user?._id || null,
+          sessionPlayer: member.sessionPlayer || null,
+          category: null,
+          challenge: null,
+          participated: false,
+          completed: false,
+          score: 0,
+          previousTrophies: isSessionPlayer
+            ? DEFAULT_STARTING_TROPHIES
+            : (member.user?.quickClashTrophies || DEFAULT_STARTING_TROPHIES),
+          newTrophies: 0,
+          trophyChange: 0,
+        }
+      })
 
       // ======= PROGRESS: BATTLE SETUP (55%) =======
       console.log(`[TeamBattle] PHASE 6: Battle setup (55%)`)
@@ -449,6 +474,35 @@ const createTeamBattle = makeRetryable(
           probError,
         )
       }
+
+      // Ensure winProbability has valid defaults if calculation failed
+      if (!winProbability || !winProbability.teamA || !winProbability.teamB) {
+        console.log('[WIN_PROB] Using default win probability (50/50)')
+        winProbability = {
+          teamA: {
+            initial: 0.5,
+            current: 0.5,
+            initialEffectiveRating: teamAAvgTrophies || 1000,
+            initialComponents: { trophyBase: 0.5, performanceMod: 0, synergyMod: 0 },
+            isEstablishedTeam: false,
+            battleCount: 0,
+            history: [],
+          },
+          teamB: {
+            initial: 0.5,
+            current: 0.5,
+            initialEffectiveRating: teamBAvgTrophies || 1000,
+            initialComponents: { trophyBase: 0.5, performanceMod: 0, synergyMod: 0 },
+            isEstablishedTeam: false,
+            battleCount: 0,
+            history: [],
+          },
+          calculatedAt: new Date(),
+          lastUpdatedAt: new Date(),
+          totalUpdates: 0,
+        }
+      }
+
       // Create the team battle
       console.log(`[TeamBattle] Creating team battle object`)
       const teamBattle = new QuickClashTeamBattle({
@@ -1100,11 +1154,11 @@ const createTeamBattle = makeRetryable(
             .session(session),
         ])
 
-        // Extract member IDs for each team
+        // Extract member IDs for each team (only users, not session players)
         const teamAMemberIds =
-          teamAData?.members?.map(m => m.user._id.toString()) || []
+          teamAData?.members?.filter(m => m.user).map(m => m.user._id?.toString() || m.user.toString()) || []
         const teamBMemberIds =
-          teamBData?.members?.map(m => m.user._id.toString()) || []
+          teamBData?.members?.filter(m => m.user).map(m => m.user._id?.toString() || m.user.toString()) || []
 
         // Combined list of all involved members
         const allMemberIds = [...teamAMemberIds, ...teamBMemberIds]
@@ -1214,12 +1268,19 @@ const selectCategoryForUser = async ({ battleId, userId, category }) => {
     }
 
     // Determine team membership
-    isTeamAUser = battle.teamAMembers.some(
-      m => m.user.toString() === userId.toString(),
-    )
-    isTeamBUser = battle.teamBMembers.some(
-      m => m.user.toString() === userId.toString(),
-    )
+    // Helper to check if a member matches the userId (handles both user and sessionPlayer)
+    const memberMatchesUser = (m) => {
+      if (m.user) {
+        return m.user.toString() === userId.toString()
+      }
+      if (m.sessionPlayer) {
+        return m.sessionPlayer.toString() === userId.toString()
+      }
+      return false
+    }
+
+    isTeamAUser = battle.teamAMembers.some(memberMatchesUser)
+    isTeamBUser = battle.teamBMembers.some(memberMatchesUser)
 
     if (!isTeamAUser && !isTeamBUser) {
       throw new Error('User is not a member of either team')
@@ -1313,12 +1374,8 @@ const performCategorySelection = async ({
 
             // STEP 3: Get member info based on pre-determined team membership
             const memberIndex = isTeamAUser
-              ? battle.teamAMembers.findIndex(
-                  m => m.user.toString() === userId.toString(),
-                )
-              : battle.teamBMembers.findIndex(
-                  m => m.user.toString() === userId.toString(),
-                )
+              ? battle.teamAMembers.findIndex(m => memberMatchesUserId(m, userId))
+              : battle.teamBMembers.findIndex(m => memberMatchesUserId(m, userId))
 
             if (memberIndex === -1) {
               throw new Error('User not found in expected team')
@@ -1351,6 +1408,14 @@ const performCategorySelection = async ({
                 .populate(
                   'teamBMembers.user',
                   '_id name inGameName pic quickClashTrophies',
+                )
+                .populate(
+                  'teamAMembers.sessionPlayer',
+                  'sessionId inGameName trophies',
+                )
+                .populate(
+                  'teamBMembers.sessionPlayer',
+                  'sessionId inGameName trophies',
                 )
                 .populate({
                   path: 'challenges.challenge',
@@ -1455,6 +1520,14 @@ const performCategorySelection = async ({
               .populate(
                 'teamBMembers.user',
                 '_id name inGameName pic quickClashTrophies',
+              )
+              .populate(
+                'teamAMembers.sessionPlayer',
+                'sessionId inGameName trophies',
+              )
+              .populate(
+                'teamBMembers.sessionPlayer',
+                'sessionId inGameName trophies',
               )
               .populate({
                 path: 'challenges.challenge',
@@ -1573,12 +1646,8 @@ const beginCategoryChallenge = async ({ battleId, userId }) => {
 
 
         // STEP 2: Find user and their category
-        const teamAMemberIndex = battle.teamAMembers.findIndex(
-          m => m.user.toString() === userId.toString(),
-        )
-        const teamBMemberIndex = battle.teamBMembers.findIndex(
-          m => m.user.toString() === userId.toString(),
-        )
+        const teamAMemberIndex = battle.teamAMembers.findIndex(m => memberMatchesUserId(m, userId))
+        const teamBMemberIndex = battle.teamBMembers.findIndex(m => memberMatchesUserId(m, userId))
 
         if (teamAMemberIndex === -1 && teamBMemberIndex === -1) {
           throw new Error('User is not a member of either team')
@@ -1678,6 +1747,14 @@ const beginCategoryChallenge = async ({ battleId, userId }) => {
             'teamBMembers.user',
             '_id name inGameName pic quickClashTrophies',
           )
+          .populate(
+            'teamAMembers.sessionPlayer',
+            'sessionId inGameName trophies',
+          )
+          .populate(
+            'teamBMembers.sessionPlayer',
+            'sessionId inGameName trophies',
+          )
           .populate({
             path: 'challenges.challenge',
             select: 'category article status expiresAt',
@@ -1754,12 +1831,8 @@ const checkUserParticipationStatus = (battle, userId) => {
     }
   }
 
-  const teamAMember = battle.teamAMembers.find(
-    m => m.user.toString() === userId.toString(),
-  )
-  const teamBMember = battle.teamBMembers.find(
-    m => m.user.toString() === userId.toString(),
-  )
+  const teamAMember = battle.teamAMembers.find(m => memberMatchesUserId(m, userId))
+  const teamBMember = battle.teamBMembers.find(m => memberMatchesUserId(m, userId))
 
   const userMember = teamAMember || teamBMember
 
@@ -1805,7 +1878,8 @@ const calculateTeamAverageTrophies = team => {
   let count = 0
 
   team.members.forEach(member => {
-    const trophies = member.user.quickClashTrophies || DEFAULT_STARTING_TROPHIES
+    // Handle session players (no user) - use default trophies
+    const trophies = member.user?.quickClashTrophies || DEFAULT_STARTING_TROPHIES
     totalTrophies += trophies
     count++
   })
@@ -1847,13 +1921,9 @@ const markUserAsParticipated = async ({ challengeId, userId }) => {
       }
 
       // Find the user in team A or B and mark as participated
-      const teamAMemberIndex = battle.teamAMembers.findIndex(
-        m => m.user.toString() === userId.toString(),
-      )
+      const teamAMemberIndex = battle.teamAMembers.findIndex(m => memberMatchesUserId(m, userId))
 
-      const teamBMemberIndex = battle.teamBMembers.findIndex(
-        m => m.user.toString() === userId.toString(),
-      )
+      const teamBMemberIndex = battle.teamBMembers.findIndex(m => memberMatchesUserId(m, userId))
 
       let updated = false
 
@@ -1921,12 +1991,8 @@ const deselectCategoryForUser = async ({ battleId, userId }) => {
       }
 
       // Find the user in team A or B
-      const isTeamAUser = battle.teamAMembers.some(
-        m => m.user.toString() === userId.toString(),
-      )
-      const isTeamBUser = battle.teamBMembers.some(
-        m => m.user.toString() === userId.toString(),
-      )
+      const isTeamAUser = battle.teamAMembers.some(m => memberMatchesUserId(m, userId))
+      const isTeamBUser = battle.teamBMembers.some(m => memberMatchesUserId(m, userId))
 
       if (!isTeamAUser && !isTeamBUser) {
         throw new Error('User is not a member of either team')
@@ -1935,9 +2001,7 @@ const deselectCategoryForUser = async ({ battleId, userId }) => {
       let oldCategory = null
 
       if (isTeamAUser) {
-        const memberIndex = battle.teamAMembers.findIndex(
-          m => m.user.toString() === userId.toString(),
-        )
+        const memberIndex = battle.teamAMembers.findIndex(m => memberMatchesUserId(m, userId))
 
         // Check if user has already started (participated in) their challenge
         if (battle.teamAMembers[memberIndex].participated) {
@@ -1952,9 +2016,7 @@ const deselectCategoryForUser = async ({ battleId, userId }) => {
         battle.teamAMembers[memberIndex].category = null
         battle.teamAMembers[memberIndex].challenge = null
       } else {
-        const memberIndex = battle.teamBMembers.findIndex(
-          m => m.user.toString() === userId.toString(),
-        )
+        const memberIndex = battle.teamBMembers.findIndex(m => memberMatchesUserId(m, userId))
 
         // Check if user has already started (participated in) their challenge
         if (battle.teamBMembers[memberIndex].participated) {
@@ -1987,6 +2049,14 @@ const deselectCategoryForUser = async ({ battleId, userId }) => {
         .populate(
           'teamBMembers.user',
           '_id name inGameName pic quickClashTrophies',
+        )
+        .populate(
+          'teamAMembers.sessionPlayer',
+          'sessionId inGameName trophies',
+        )
+        .populate(
+          'teamBMembers.sessionPlayer',
+          'sessionId inGameName trophies',
         )
         .populate({
           path: 'challenges.challenge',
@@ -2072,11 +2142,12 @@ const validateUserChallengeAssignment = async ({
     }
 
     // Additional check: verify user is actually a member of the corresponding team
+    // Use memberMatchesUserId to handle both regular users and session players
     const isTeamAMember = teamBattle.teamAMembers.some(
-      m => m.user.toString() === userId.toString(),
+      m => memberMatchesUserId(m, userId),
     )
     const isTeamBMember = teamBattle.teamBMembers.some(
-      m => m.user.toString() === userId.toString(),
+      m => memberMatchesUserId(m, userId),
     )
 
     // User must be teamAPlayer AND teamAMember, OR teamBPlayer AND teamBMember
@@ -2140,10 +2211,10 @@ const updateBattleWithQuizResults = makeRetryable(
 
         // Find if user is in team A or B
         const isTeamAUser = battle.teamAMembers.some(
-          m => m.user.toString() === userId.toString(),
+          m => memberMatchesUserId(m, userId),
         )
         const isTeamBUser = battle.teamBMembers.some(
-          m => m.user.toString() === userId.toString(),
+          m => memberMatchesUserId(m, userId),
         )
 
         if (!isTeamAUser && !isTeamBUser) {
@@ -2186,7 +2257,7 @@ const updateBattleWithQuizResults = makeRetryable(
         if (isTeamAUser) {
           // Update team A member
           const memberIndex = battle.teamAMembers.findIndex(
-            m => m.user.toString() === userId.toString(),
+            m => memberMatchesUserId(m, userId),
           )
 
           if (memberIndex !== -1) {
@@ -2204,7 +2275,7 @@ const updateBattleWithQuizResults = makeRetryable(
         } else {
           // Update team B member
           const memberIndex = battle.teamBMembers.findIndex(
-            m => m.user.toString() === userId.toString(),
+            m => memberMatchesUserId(m, userId),
           )
 
           if (memberIndex !== -1) {
@@ -2454,8 +2525,8 @@ const updateBattleWithQuizResults = makeRetryable(
               score: score,
               challengeId: challengeId,
               allTeamMembers: [
-                ...battle.teamAMembers.map(member => member.user.toString()),
-                ...battle.teamBMembers.map(member => member.user.toString()),
+                ...battle.teamAMembers.filter(m => m.user).map(member => member.user.toString()),
+                ...battle.teamBMembers.filter(m => m.user).map(member => member.user.toString()),
               ],
             })
           }, 100)
@@ -2562,9 +2633,10 @@ const updateBattleWithQuizResults = makeRetryable(
 )
 
 /**
- * Get user's active team battles
+ * Get player's team battles (supports both users and session players)
  * @param {Object} params - Parameters
- * @param {string} params.userId - User ID
+ * @param {string} [params.userId] - User ID for authenticated users
+ * @param {string} [params.sessionPlayerId] - Session player ID for session players
  * @param {string} [params.status='active'] - Battle status to filter by
  * @param {number} [params.page=1] - Page number
  * @param {number} [params.limit=10] - Results per page
@@ -2572,6 +2644,7 @@ const updateBattleWithQuizResults = makeRetryable(
  */
 const getUserTeamBattles = async ({
   userId,
+  sessionPlayerId,
   status = 'active',
   page = 1,
   limit = 10,
@@ -2579,9 +2652,23 @@ const getUserTeamBattles = async ({
   // Calculate skip value for pagination
   const skip = (page - 1) * limit
 
-  // Build query based on user membership in either team
-  const query = {
-    $or: [{ 'teamAMembers.user': userId }, { 'teamBMembers.user': userId }],
+  // Build query based on player membership in either team
+  let query = {}
+
+  if (userId) {
+    // Query for authenticated users
+    query.$or = [
+      { 'teamAMembers.user': userId },
+      { 'teamBMembers.user': userId },
+    ]
+  } else if (sessionPlayerId) {
+    // Query for session players
+    query.$or = [
+      { 'teamAMembers.sessionPlayer': sessionPlayerId },
+      { 'teamBMembers.sessionPlayer': sessionPlayerId },
+    ]
+  } else {
+    throw new Error('Either userId or sessionPlayerId is required')
   }
 
   // Add status filter if provided
@@ -2598,6 +2685,8 @@ const getUserTeamBattles = async ({
     .populate('teamB', 'name avgTrophies')
     .populate('teamAMembers.user', '_id name inGameName pic')
     .populate('teamBMembers.user', '_id name inGameName pic')
+    .populate('teamAMembers.sessionPlayer', 'sessionId inGameName trophies')
+    .populate('teamBMembers.sessionPlayer', 'sessionId inGameName trophies')
     .sort({ createdAt: -1 })
     .skip(skip)
     .limit(limit)
@@ -2626,6 +2715,8 @@ const getTeamBattleDetails = async ({ battleId }) => {
     .populate('teamB', 'name avgTrophies formationInfo')
     .populate('teamAMembers.user', '_id name inGameName pic quickClashTrophies')
     .populate('teamBMembers.user', '_id name inGameName pic quickClashTrophies')
+    .populate('teamAMembers.sessionPlayer', 'sessionId inGameName trophies')
+    .populate('teamBMembers.sessionPlayer', 'sessionId inGameName trophies')
     .populate({
       path: 'challenges.challenge',
       select: 'category article status expiresAt',
@@ -2669,8 +2760,9 @@ const cleanupMatchmakingEntries = async ({ teamAId, teamBId, session }) => {
       // Add team to cleanup list
       teamsToProcess.push(team._id)
 
-      // Add all team members to user cleanup list
+      // Add all team members to user cleanup list (only users, not session players)
       team.members.forEach(member => {
+        if (!member.user) return // Skip session players
         const userId = member.user._id || member.user
         usersToCleanup.add(userId.toString())
       })

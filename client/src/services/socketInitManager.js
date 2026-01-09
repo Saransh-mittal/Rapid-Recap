@@ -30,10 +30,18 @@ class SocketInitManager {
 
     // Track reconnection state from Socket.IO
     this._isReconnecting = false
+
+    // Track current auth type for reconnection detection
+    this._currentAuthType = null
   }
 
   _determineEndpoint() {
     if (process.env.NODE_ENV === 'production') {
+      // In production, use the current origin (supports both rapidrecap.ai and rapid-recap.onrender.com)
+      if (typeof window !== 'undefined' && window.location.origin) {
+        return window.location.origin
+      }
+      // Fallback to primary domain
       return 'https://rapidrecap.ai'
     }
 
@@ -123,12 +131,32 @@ class SocketInitManager {
     }
   }
 
-  async initializeSocket(user) {
-    // Return existing socket if already connected
+  async initializeSocket(user = null) {
+    // Determine auth type: authenticated user or session player
+    const sessionId = typeof window !== 'undefined' ? localStorage.getItem('playSessionId') : null
+    const newAuthType = user ? 'authenticated' : (sessionId ? 'session' : null)
+
+    // If no auth available, cannot connect
+    if (!newAuthType) {
+      console.warn('[SocketManager] No auth available (no user or sessionId)')
+      return null
+    }
+
+    // Detect auth type change (session → authenticated on upgrade)
+    if (this._currentAuthType && this._currentAuthType !== newAuthType && this._socket) {
+      console.log(`[SocketManager] 🔄 Auth type changed from ${this._currentAuthType} to ${newAuthType}, reconnecting...`)
+      this.forceDisconnect()
+    }
+    this._currentAuthType = newAuthType
+
+    // Return existing socket if already connected with same auth
     if (this._socket && this._socket.connected) {
       console.log('[SocketManager] Using existing connected socket')
       const metadata = this._socket._userData
-      if (metadata && metadata._id === user._id) {
+      if (user && metadata && metadata._id === user._id) {
+        return this._socket
+      }
+      if (!user && sessionId && this._socket._sessionId === sessionId) {
         return this._socket
       }
     }
@@ -165,7 +193,7 @@ class SocketInitManager {
       `[SocketManager] Using device fingerprint: ${deviceFingerprint.substring(
         0,
         8,
-      )}... connecting to ${this._endpoint}`,
+      )}... connecting to ${this._endpoint} as ${newAuthType}`,
     )
 
     // Update state for new connection
@@ -181,18 +209,22 @@ class SocketInitManager {
       this._socket = null
     }
 
-    // CRITICAL FIX: Enable Socket.IO's built-in reconnection
-    console.log(
-      `[SocketManager] Creating socket with built-in reconnection enabled`,
-    )
+    // Build auth payload based on auth type
+    const auth = user
+      ? { type: 'authenticated', userId: user._id, deviceFingerprint }
+      : { type: 'spark', sessionId, deviceFingerprint }
+
+    console.log(`[SocketManager] Creating socket with auth type: ${auth.type}`)
+
     this._socket = io(this._endpoint, {
+      auth, // Pass auth payload to server
       transports: ['websocket', 'polling'],
 
-      // CHANGED: Enable built-in reconnection to prevent infinite loops
-      reconnection: true, // Enable automatic reconnection
-      reconnectionAttempts: 5, // Limit reconnection attempts
-      reconnectionDelay: 1000, // Start with 1 second delay
-      reconnectionDelayMax: 5000, // Maximum 5 seconds between attempts
+      // Enable built-in reconnection
+      reconnection: true,
+      reconnectionAttempts: 5,
+      reconnectionDelay: 1000,
+      reconnectionDelayMax: 5000,
 
       timeout: 10000,
       withCredentials: true,
@@ -201,13 +233,18 @@ class SocketInitManager {
       },
     })
 
+    // Track session ID for reconnection detection
+    if (sessionId) {
+      this._socket._sessionId = sessionId
+    }
+
     // Set up socket event listeners
-    this._setupSocketListeners(user, deviceFingerprint)
+    this._setupSocketListeners(user, deviceFingerprint, sessionId)
 
     return this._socket
   }
 
-  _setupSocketListeners(user, deviceFingerprint) {
+  _setupSocketListeners(user, deviceFingerprint, sessionId = null) {
     if (!this._socket) return
 
     // ========================================
@@ -215,8 +252,9 @@ class SocketInitManager {
     // ========================================
 
     this._socket.on('connect', () => {
+      const authType = user ? 'authenticated' : (sessionId ? 'session' : 'unknown')
       console.log(
-        `[SocketManager] ✅ Socket connected to ${this._endpoint}, ID: ${this._socket.id}`,
+        `[SocketManager] ✅ Socket connected to ${this._endpoint}, ID: ${this._socket.id}, auth: ${authType}`,
       )
 
       this._hasEverConnected = true
@@ -224,6 +262,7 @@ class SocketInitManager {
         socketId: this._socket.id,
         endpoint: this._endpoint,
         deviceFingerprint: deviceFingerprint?.substring(0, 8) + '...',
+        authType,
       })
 
       this._connecting = false

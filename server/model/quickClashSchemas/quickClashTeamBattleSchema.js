@@ -129,7 +129,12 @@ const quickClashTeamBattleSchema = new mongoose.Schema(
         user: {
           type: mongoose.Schema.Types.ObjectId,
           ref: 'USER',
-          required: true,
+          default: null, // Made optional for session players
+        },
+        sessionPlayer: {
+          type: mongoose.Schema.Types.ObjectId,
+          ref: 'PLAY_SESSION',
+          default: null, // For session-only players
         },
         category: {
           type: String,
@@ -233,7 +238,12 @@ const quickClashTeamBattleSchema = new mongoose.Schema(
         user: {
           type: mongoose.Schema.Types.ObjectId,
           ref: 'USER',
-          required: true,
+          default: null, // Made optional for session players
+        },
+        sessionPlayer: {
+          type: mongoose.Schema.Types.ObjectId,
+          ref: 'PLAY_SESSION',
+          default: null, // For session-only players
         },
         category: {
           type: String,

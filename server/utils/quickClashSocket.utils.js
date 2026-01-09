@@ -11,6 +11,7 @@ const {
   updateMatchmakingStatus,
 } = require('../services/quickClashServices/quickClashMatchmakingService')
 const QuickClashMatchmaking = require('../model/quickClashSchemas/quickClashMatchmakingSchema')
+const { getMemberPlayerId } = require('./sessionPlayerUtils')
 
 /**
  * Team room membership tracking (separate from device tracking)
@@ -528,7 +529,8 @@ const setupQuickClashGlobalEvents = (io, utils = {}) => {
   const { notifyUserAllDevices, getUserActiveDevices } = utils
   /**
    * Enhanced helper function to notify user with better debugging and fallback handling
-   * @param {string} userId - User ID to notify
+   * UPDATED: Now supports both authenticated users AND session players (Spark)
+   * @param {string} userId - User ID or Session Player ID to notify
    * @param {string} event - Event name
    * @param {Object} data - Event data
    * @returns {boolean} True if notification was sent successfully
@@ -539,26 +541,18 @@ const setupQuickClashGlobalEvents = (io, utils = {}) => {
       return false
     }
 
-    // console.log(
-    //   `[NOTIFY] Attempting to notify user ${userId} with event ${event}`,
-    // )
-    // console.log(
-    //   `[NOTIFY] notifyUserAllDevices function available: ${!!notifyUserAllDevices}`,
-    // )
-    // console.log(`[NOTIFY] io object available: ${!!io}`)
+    let notified = false
 
-    // Try enhanced device-aware notification first
+    // DEBUG: Log notification attempt
+    console.log(`[NOTIFY_DEBUG] Attempting ${event} to ${userId.toString().substring(0, 12)}...`)
+
+    // Try enhanced device-aware notification first (for authenticated users)
     if (notifyUserAllDevices && typeof notifyUserAllDevices === 'function') {
-      // console.log(
-      //   `[NOTIFY] Trying device-aware notification for user ${userId}`,
-      // )
       try {
         const success = notifyUserAllDevices(userId, event, data)
-        // console.log(
-        //   `[NOTIFY] Device-aware notification result for user ${userId}: ${success}`,
-        // )
         if (success) {
-          return true
+          notified = true
+          console.log(`[NOTIFY_DEBUG] ✅ Device-aware notification succeeded`)
         }
       } catch (error) {
         console.error(
@@ -566,38 +560,32 @@ const setupQuickClashGlobalEvents = (io, utils = {}) => {
           error,
         )
       }
-
-      // console.log(
-      //   `[NOTIFY] Device-aware notification failed for user ${userId}, trying room-based fallback`,
-      // )
-    } else {
-      // console.log(
-      //   `[NOTIFY] No notifyUserAllDevices function available, using room-based notification`,
-      // )
     }
 
     // Enhanced fallback to room-based notification
     if (!io || !io.sockets || !io.sockets.adapter) {
       console.error(`[NOTIFY] Socket.io not properly initialized`)
-      return false
+      return notified
     }
+
+    // ==========================================
+    // Try authenticated user rooms
+    // ==========================================
 
     // Try QuickClash room first
     const userRoom = `quickClash:${userId}`
     const room = io.sockets.adapter.rooms.get(userRoom)
 
     if (room && room.size > 0) {
-      // console.log(
-      //   `[NOTIFY] Fallback: Using room ${userRoom} with ${room.size} socket(s)`,
-      // )
       try {
         io.to(userRoom).emit(event, data)
-        return true
+        notified = true
+        console.log(`[NOTIFY_DEBUG] ✅ Emitted to quickClash:${userId.toString().substring(0, 8)}... (${room.size} sockets)`)
       } catch (error) {
         console.error(`[NOTIFY] Error emitting to room ${userRoom}:`, error)
       }
     } else {
-      // console.log(`[NOTIFY] QuickClash room ${userRoom} not found or empty`)
+      console.log(`[NOTIFY_DEBUG] ❌ Room quickClash:${userId.toString().substring(0, 8)}... not found`)
     }
 
     // Try the basic user room as well
@@ -605,12 +593,10 @@ const setupQuickClashGlobalEvents = (io, utils = {}) => {
     const basicRoom = io.sockets.adapter.rooms.get(basicUserRoom)
 
     if (basicRoom && basicRoom.size > 0) {
-      // console.log(
-      //   `[NOTIFY] Fallback: Using basic room ${basicUserRoom} with ${basicRoom.size} socket(s)`,
-      // )
       try {
         io.to(basicUserRoom).emit(event, data)
-        return true
+        notified = true
+        console.log(`[NOTIFY_DEBUG] ✅ Emitted to basic room (${basicRoom.size} sockets)`)
       } catch (error) {
         console.error(
           `[NOTIFY] Error emitting to basic room ${basicUserRoom}:`,
@@ -618,11 +604,51 @@ const setupQuickClashGlobalEvents = (io, utils = {}) => {
         )
       }
     } else {
-      // console.log(`[NOTIFY] Basic room ${basicUserRoom} not found or empty`)
+      console.log(`[NOTIFY_DEBUG] ❌ Basic room not found`)
     }
 
-    // console.log(`[NOTIFY] All notification methods failed for user ${userId}`)
-    return false
+    // ==========================================
+    // Try Spark session player rooms
+    // ==========================================
+
+    // Try spark session room (for session players)
+    const sparkSessionRoom = `spark:session:${userId}`
+    const sparkRoom = io.sockets.adapter.rooms.get(sparkSessionRoom)
+
+    if (sparkRoom && sparkRoom.size > 0) {
+      try {
+        // Emit the event with spark prefix for session players
+        io.to(sparkSessionRoom).emit(event, data)
+        // Also emit with spark: prefix for spark-specific handlers
+        io.to(sparkSessionRoom).emit(`spark:${event.replace('quickClash:', '')}`, data)
+        notified = true
+        console.log(`[NOTIFY_DEBUG] ✅ Emitted to spark:session:${userId.toString().substring(0, 8)}... (${sparkRoom.size} sockets)`)
+      } catch (error) {
+        console.error(`[NOTIFY] Error emitting to spark room ${sparkSessionRoom}:`, error)
+      }
+    } else {
+      console.log(`[NOTIFY_DEBUG] ❌ Spark room spark:session:${userId.toString().substring(0, 8)}... not found`)
+    }
+
+    // Try player room (unified room for both types)
+    const playerRoom = `player:${userId}`
+    const unifiedRoom = io.sockets.adapter.rooms.get(playerRoom)
+
+    if (unifiedRoom && unifiedRoom.size > 0) {
+      try {
+        io.to(playerRoom).emit(event, data)
+        notified = true
+        console.log(`[NOTIFY_DEBUG] ✅ Emitted to player:${userId.toString().substring(0, 8)}... (${unifiedRoom.size} sockets)`)
+      } catch (error) {
+        console.error(`[NOTIFY] Error emitting to player room ${playerRoom}:`, error)
+      }
+    } else {
+      console.log(`[NOTIFY_DEBUG] ❌ Player room player:${userId.toString().substring(0, 8)}... not found`)
+    }
+
+    console.log(`[NOTIFY_DEBUG] Final result for ${userId.toString().substring(0, 8)}...: notified=${notified}`)
+
+    return notified
   }
 
   // ==========================================
@@ -1204,52 +1230,25 @@ const setupQuickClashGlobalEvents = (io, utils = {}) => {
   // Also sends push notifications to offline members
   async function notifyTeamMembers(teamId, event, data, excludeUserIds = []) {
     try {
-      if (!teamId) {
-        console.error('notifyTeamMembers: teamId is required')
-        return
-      }
+      if (!teamId) return
 
-      // Fetch team members from the database
       const team = await QuickClashTeam.findById(teamId)
         .select('members name')
         .lean()
 
-      if (!team || !team.members || !Array.isArray(team.members)) {
-        console.error(
-          `Cannot notify team members: Team ${teamId} not found or has no members`,
-        )
-        return
-      }
+      if (!team?.members?.length) return
 
-      let notifiedCount = 0
-      let offlineCount = 0
       const excludeSet = new Set(excludeUserIds.map(id => id.toString()))
 
-      // Send event to each team member (excluding any specified exclusions)
       for (const member of team.members) {
-        const userId = member.user.toString()
+        const userId = getMemberPlayerId(member)
+        if (!userId || excludeSet.has(userId)) continue
 
-        // Skip if user is in exclude list
-        if (excludeSet.has(userId)) {
-          continue
-        }
-
-        // Use enhanced notification system
-        const success = notifyUser(userId, event, {
+        notifyUser(userId, event, {
           ...data,
-          teamName: team.name, // Include team name for context
+          teamName: team.name,
         })
-
-        if (success) {
-          notifiedCount++
-        } else {
-          offlineCount++
-        }
       }
-
-      // console.log(
-      //   `[QC_TEAM] notifyTeamMembers: Sent ${event} to ${notifiedCount}/${team.members.length} members of team ${teamId} (${team.name}). ${offlineCount} offline members.`,
-      // )
     } catch (error) {
       console.error(`Error notifying team members for team ${teamId}:`, error)
     }
