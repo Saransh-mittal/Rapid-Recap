@@ -32,6 +32,7 @@ function getAllowedOrigins() {
 
   if (process.env.NODE_ENV === 'production') {
     origins.push('https://rapidrecap.ai')
+    origins.push('https://rapid-recap.onrender.com')
   } else {
     // Development origins
     origins.push('http://localhost:5173')

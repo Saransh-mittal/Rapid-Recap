@@ -9,6 +9,11 @@ import { io } from 'socket.io-client'
 // Determine socket endpoint
 const getSocketEndpoint = () => {
   if (import.meta.env.PROD) {
+    // In production, use current origin (supports both rapidrecap.ai and rapid-recap.onrender.com)
+    if (typeof window !== 'undefined' && window.location.origin) {
+      return window.location.origin
+    }
+    // Fallback to primary domain
     return 'https://rapidrecap.ai'
   }
   const hostname = window.location.hostname

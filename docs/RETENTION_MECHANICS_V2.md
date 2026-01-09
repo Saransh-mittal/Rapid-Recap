@@ -4,17 +4,268 @@
 
 ---
 
-## Table of Contents
+## 🚀 MVP MUST-HAVES FOR PRODUCTION LAUNCH
 
-1. [🚨 Critical UX Gap: Session Player vs Authenticated User](#-critical-ux-gap-session-player-vs-authenticated-user)
-2. [The Retention Gap](#the-retention-gap)
-3. [First-Time User Journey Analysis](#first-time-user-journey-analysis)
-4. [The Psychology of Return](#the-psychology-of-return)
-5. [Proposed Retention Mechanics](#proposed-retention-mechanics)
-6. [Implementation Priority](#implementation-priority)
-7. [Metrics to Track](#metrics-to-track)
+> **Goal**: Ship fast, but with reliable retention and organic growth potential.
+> **Timeline**: 8-12 days total implementation.
+
+### ⚡ TIER 1: ABSOLUTELY REQUIRED (Can't Launch Without)
+
+These are non-negotiable. Without these, users churn immediately.
+
+| # | Feature | Why It's Required | Effort | Status |
+|---|---------|-------------------|--------|--------|
+| 1 | **⏱️ Battle Timer → 45 min** | 4 hours is too long to remember. 45 min is "wait or play another" | 1 hour | ❌ TODO |
+| 2 | **🔥 Streak System** | Creates loss aversion. "Day 1 started" → "Can't lose Day 7!" | 2-3 days | ❌ TODO |
+| 3 | **🎉 Post-Session Reward Screen** | Without celebration, 3 min of work feels unrewarded | 1-2 days | ❌ TODO |
+| 4 | **📤 Share Battle Result** | Zero viral acquisition without this. Shareable image + invite link | 1-2 days | ❌ TODO |
+| 5 | **💰 Coins + Simple Powerup Shop** | Coins need a PURPOSE. Buy powerups = tangible reward | 2-3 days | ❌ TODO |
+| 6 | **🚀 Viral Boost Mechanics** | Boost K-factor from 0.3 to 0.6+ with smart prompts (no forced blocks) | 1-2 days | ❌ TODO |
+
+**Total Tier 1 Effort: 9-12 days**
 
 ---
+
+#### 📋 TIER 1 Implementation Checklist:
+
+**1. Battle Timer (1 hour)**
+```
+[ ] Change TEAM_BATTLE_EXPIRY to 45 * 60 * 1000 in quickClashTeamBattleService.js
+```
+
+**2. Streak System (2-3 days)**
+```
+[ ] Add to PlaySession schema:
+    - dayStreak: Number (default: 0)
+    - lastPlayedDate: Date
+    - longestStreak: Number (default: 0)
+[ ] Add streak calculation logic in session completion
+[ ] Add streak display to SessionPlayerBanner header ("🔥 Day 3")
+[ ] Add streak milestone messages (Day 4 = 1.5x, Day 7 = 2x, Day 30 = 3x)
+[ ] Add streak display to User schema for authenticated users
+```
+
+**3. Post-Session Reward Screen (1-2 days)**
+```
+[ ] Create PostSessionRewardScreen.jsx component
+[ ] Show after QuickClashSession completion (replace/enhance current flow)
+[ ] Display:
+    - Score + performance rank ("520 pts - TOP 18%!")
+    - Coins earned breakdown (base + accuracy bonus)
+    - Streak progress ("Day 3 🔥 - Day 4 for 1.5x bonus!")
+    - Battle result ETA ("Results in ~25 min")
+    - [Share Result] + [Play Again] CTAs
+[ ] Add confetti/celebration animation for high scores
+```
+
+**4. Share Battle Result (1-2 days)**
+```
+[ ] Create ShareBattleResult.jsx component
+[ ] Generate shareable image with:
+    - Player name + score
+    - "Beat my score! Join my team" challenge text
+    - Team invite link (not just game link)
+[ ] Integrate Web Share API (navigator.share)
+[ ] Fallback: Copy link button for desktop
+[ ] Track share events in analytics
+```
+
+**5. Coins + Simple Powerup Shop (2-3 days)**
+```
+[ ] Add to PlaySession schema:
+    - coins: Number (default: 0)
+[ ] Add to User schema (for authenticated users):
+    - coins: Number (default: 0)
+[ ] Calculate coin rewards after session:
+    - Base: 15 coins per session
+    - Accuracy bonus: +5 coins per correct quiz answer (max +25)
+    - Streak multiplier: Day 4+ = 1.5x, Day 7+ = 2x
+    - Win bonus: +25 coins when battle result is WIN
+[ ] Create PowerupShop.jsx component:
+    - Display available powerups with coin prices
+    - Oracle's Eye: 50 coins
+    - Time Warp: 40 coins
+    - Score Surge: 60 coins
+    - Streak Shield: 100 coins
+[ ] Create purchase API endpoint
+[ ] Add purchased powerups to user's inventory (existing system)
+[ ] Show coin balance in header (SessionPlayerBanner + QuickClashHeaderV2)
+```
+
+**6. Viral Boost Mechanics (1-2 days)**
+
+> ⚠️ **IMPORTANT**: All viral prompts must have easy skip/dismiss options. Never block gameplay behind invites.
+
+```
+[ ] PROMPTED TEAM INVITE (after team creation):
+    - Show modal: "Want to invite friends to your team?"
+    - Options: [Invite Friends] [Skip & Play Now]  ← Skip is prominent
+    - Only show once per team, not every battle
+
+[ ] EMPTY SLOT REMINDER (on dashboard when team has <4):
+    - Subtle banner: "Your team has 2 empty slots"
+    - [Invite Friends] button
+    - Dismissible, not blocking
+
+[ ] POST-BATTLE TEAM INVITE (after session completion):
+    - If team has empty slots, show in reward screen:
+    - "Play with friends? Your team has room for 2 more"
+    - [Invite] [Maybe Later]
+
+[ ] POWERUP UNLOCK VIA INVITE (in Powerup Shop):
+    - "🔮 Get Oracle's Eye FREE - Invite 1 friend"
+    - Alternative: "Or buy for 50 coins"
+    - Choice, not forced
+
+[ ] SHARE = TEAM INVITE (already in #4):
+    - Every share includes team invite link
+    - "Beat my score! Join my team → [LINK]"
+```
+
+**Key Principle**: Users can always skip invites. First battle is friction-free.
+
+---
+
+### 🔶 TIER 2: STRONGLY RECOMMENDED (Add within 1 week of launch)
+
+These significantly improve retention but don't block initial launch.
+
+| # | Feature | Why It Matters | Effort | Status |
+|---|---------|----------------|--------|--------|
+| 6 | **🔔 Web Push Notifications** | Reminds users about streaks + battle results when app is closed | 2-3 days | ❌ TODO |
+| 7 | **🎁 Referral Rewards** | "Friend joined from your link! +50 coins" - closes viral loop | 1-2 days | ❌ TODO |
+
+**TIER 2 Implementation Checklist:**
+```
+[ ] Implement Web Push (service worker + Push API + VAPID keys)
+[ ] Notification triggers:
+    - Battle result ready
+    - Streak about to expire (4 hours before midnight)
+    - Team needs you (waiting for your category pick)
+[ ] Connect referral system to coins:
+    - Referrer gets +50 coins when friend plays first battle
+    - Show "Invited by [Name]" on friend's first reward screen
+```
+
+---
+
+### 🔷 TIER 3: GROWTH ENHANCERS (Week 2-3)
+
+Nice to have. Build based on user feedback after launch.
+
+| # | Feature | Impact | Effort |
+|---|---------|--------|--------|
+| 8 | **🎯 Daily Challenges** | Multi-battle goals: "Play 3 battles today" | 3-4 days |
+| 9 | **⚒️ Powerup Forge** | Timed powerup creation (upgrade from instant shop) | 3-4 days |
+| 10 | **🏆 Weekly League** | Competitive ranking with promotion/relegation | 3-4 days |
+| 11 | **🎫 Battle Pass** | Premium progression track | 5-7 days |
+
+---
+
+### 📊 MVP Launch Criteria
+
+**Ready to soft launch (10-15 friends/family) when:**
+- [ ] All 5 Tier 1 features complete
+- [ ] 10+ ForgeArticles published per category (40+ total)
+- [ ] Tested full flow end-to-end (play → reward → share → buy powerup)
+- [ ] Share link works on mobile
+
+**Ready for 50+ organic users when:**
+- [ ] Soft launch feedback incorporated
+- [ ] Push notifications working (Tier 2.1)
+- [ ] Content pipeline confirmed sustainable
+
+---
+
+### 🎯 User Journey with Complete Tier 1
+
+```
+1. PLAY SESSION (3 min)
+   Forge → Quiz → Score: 520
+
+2. POST-SESSION REWARD SCREEN 🎉
+   ┌────────────────────────────────────────┐
+   │  🎉 BATTLE COMPLETE!                   │
+   │                                        │
+   │  520 POINTS - TOP 18% TODAY ⭐         │
+   │                                        │
+   │  💰 COINS EARNED                       │
+   │  Base:      +15                        │
+   │  Accuracy:  +20 (4/5 correct)          │
+   │  Streak:    x1.5 (Day 5!)              │
+   │  ─────────────────────                 │
+   │  TOTAL:     52 coins ✅                │
+   │                                        │
+   │  🔥 STREAK: Day 5                      │
+   │  Day 7 = 2x coin bonus!                │
+   │                                        │
+   │  ⏳ Battle result in ~25 min           │
+   │                                        │
+   │  [📤 Share Result]  [🎮 Play Again]    │
+   └────────────────────────────────────────┘
+
+3. SHARE (if tapped)
+   → Image generated with score
+   → Sent to WhatsApp/Twitter
+   → Friend joins via invite link
+
+4. POWERUP SHOP (anytime)
+   ┌────────────────────────────────────────┐
+   │  💰 Your coins: 127                    │
+   │                                        │
+   │  ┌──────────────────────────────────┐  │
+   │  │ 🔮 Oracle's Eye        50 coins  │  │
+   │  │ Remove 2 wrong options           │  │
+   │  │                        [BUY]     │  │
+   │  └──────────────────────────────────┘  │
+   │  ┌──────────────────────────────────┐  │
+   │  │ ⏱️ Time Warp          40 coins  │  │
+   │  │ +15 seconds on timer             │  │
+   │  │                        [BUY]     │  │
+   │  └──────────────────────────────────┘  │
+   └────────────────────────────────────────┘
+
+5. RETURN NEXT DAY
+   "Day 6! 🔥 One more day for 2x coins!"
+
+6. CONVERT (eventually)
+   "Your 127 coins and 6-day streak will be lost!"
+   "Create account to save progress"
+   [Continue as Guest] [Create Account]
+```
+
+---
+
+### 💡 Why This Tier 1 Works
+
+| Feature | Retention Effect | Acquisition Effect |
+|---------|------------------|-------------------|
+| **Streaks** | "Can't lose Day 7!" | - |
+| **Coins** | Tangible progress | - |
+| **Powerup Shop** | Coins have purpose | - |
+| **Reward Screen** | Celebration moment | - |
+| **Share** | - | Friends join via shared results |
+
+**Complete loop**: Play → Earn → Spend → Share → Return → Repeat
+
+---
+
+## Table of Contents
+
+1. [🚀 MVP MUST-HAVES FOR PRODUCTION LAUNCH](#-mvp-must-haves-for-production-launch)
+2. [🚨 Critical UX Gap: Session Player vs Authenticated User](#-critical-ux-gap-session-player-vs-authenticated-user)
+3. [The Retention Gap](#the-retention-gap)
+4. [First-Time User Journey Analysis](#first-time-user-journey-analysis)
+5. [The Psychology of Return](#the-psychology-of-return)
+6. [Proposed Retention Mechanics](#proposed-retention-mechanics)
+7. [Implementation Priority](#implementation-priority)
+8. [Metrics to Track](#metrics-to-track)
+
+---
+
+
+
+
 
 ## 🚨 Critical UX Gap: Session Player vs Authenticated User
 

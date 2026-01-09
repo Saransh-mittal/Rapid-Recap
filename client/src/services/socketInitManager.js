@@ -37,6 +37,11 @@ class SocketInitManager {
 
   _determineEndpoint() {
     if (process.env.NODE_ENV === 'production') {
+      // In production, use the current origin (supports both rapidrecap.ai and rapid-recap.onrender.com)
+      if (typeof window !== 'undefined' && window.location.origin) {
+        return window.location.origin
+      }
+      // Fallback to primary domain
       return 'https://rapidrecap.ai'
     }
 
