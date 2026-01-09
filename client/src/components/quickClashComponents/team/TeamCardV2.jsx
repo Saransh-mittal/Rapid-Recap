@@ -55,29 +55,33 @@ const DEFAULT_AVATAR = "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/
 
 const MemberRow = memo(({ member, userId, isLeader, isInMatch, onRemove, onTransferLeadership }) => {
   const { t } = useTranslation('QuickClash')
-  const isCurrentUser = member.user._id === userId
-  const isMemberLeader = member.role === 'leader'
+  const isCurrentUser = member?.user?._id === userId
+  const isMemberLeader = member?.role === 'leader'
+
+  // Determine if this is a session player or a user
+  const userData = member?.user || member?.sessionPlayer
+  const isSessionPlayer = !member?.user && !!member?.sessionPlayer
 
   // Confirmation dialogs
   const [showRemoveDialog, setShowRemoveDialog] = useState(false)
   const [showTransferDialog, setShowTransferDialog] = useState(false)
 
-  const avatarUrl = member.user.pic || member.user.picture || DEFAULT_AVATAR
-  const displayName = member.user.name || member.user.inGameName || 'Player'
-  const memberTrophies = member.user.quickClashTrophies || 1000
+  const avatarUrl = userData?.pic || userData?.picture || DEFAULT_AVATAR
+  const displayName = userData?.name || userData?.inGameName || 'Player'
+  const memberTrophies = userData?.quickClashTrophies || userData?.trophies || 1000
 
   // Show action menu only for leaders viewing other members (not themselves, not other leaders)
   const showActionMenu = isLeader && !isCurrentUser && !isMemberLeader && !isInMatch
 
   const handleRemove = useCallback(() => {
-    onRemove(member.user._id)
+    onRemove(userData?._id)
     setShowRemoveDialog(false)
-  }, [onRemove, member.user._id])
+  }, [onRemove, userData?._id])
 
   const handleTransfer = useCallback(() => {
-    onTransferLeadership(member.user._id)
+    onTransferLeadership(userData?._id)
     setShowTransferDialog(false)
-  }, [onTransferLeadership, member.user._id])
+  }, [onTransferLeadership, userData?._id])
 
   return (
     <>
@@ -165,6 +169,11 @@ const MemberRow = memo(({ member, userId, isLeader, isInMatch, onRemove, onTrans
             {isCurrentUser && (
               <Badge className="bg-cyan-500/25 text-cyan-300 border-0 text-[8px] px-1 py-0 h-3.5 font-semibold">
                 YOU
+              </Badge>
+            )}
+            {isSessionPlayer && (
+              <Badge className="bg-purple-500/25 text-purple-300 border-0 text-[8px] px-1 py-0 h-3.5 font-semibold">
+                GUEST
               </Badge>
             )}
             {isMemberLeader && (
@@ -368,7 +377,7 @@ const TeamCardV2 = memo(({
             <div className="border-t border-white/5 px-1 py-1">
               {teamMembers.map((member) => (
                 <MemberRow
-                  key={member.user._id}
+                  key={member?._id || member?.user?._id || member?.sessionPlayer?._id}
                   member={member}
                   userId={userId}
                   isLeader={isLeader}

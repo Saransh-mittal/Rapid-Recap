@@ -138,34 +138,6 @@
       "current affairs": "वर्तमान मामले"
     }
   },
-  "components.HallOfChampions.ChampionDetailsModal": {
-    "Rank": "रैंक",
-    "Exp Level": "अनुभव स्तर",
-    "Submissions": "सबमिशन",
-    "RQM Score": "RQM स्कोर",
-    "Quiz Performance": "क्विज प्रदर्शन",
-    "Total Quizzes": "कुल क्विज",
-    "Perfect Scores": "परफेक्ट स्कोर",
-    "Success Rate": "सफलता दर",
-    "League": "लीग",
-    "Top 3 Champion": "शीर्ष 3 चैंपियन",
-    "IQ Elite": "आईक्यू एलीट",
-    "Dedicated Solver": "समर्पित सॉल्वर",
-    "Quiz Master": "क्विज मास्टर",
-    "High RQM Achiever": "उच्च RQM अचीवर",
-    "Achievements": "उपलब्धियां",
-    "IQ Growth Rate": "आईक्यू वृद्धि दर",
-    "Quiz Success Rate": "क्विज सफलता दर",
-    "Performance Insights": "प्रदर्शन इंसाइट्स"
-  },
-  "components.Notifications.NotificationSubscription": {
-    "enableNotifications": "रैपिड रीकैप के लिए सूचनाएं सक्षम करें",
-    "browserSupport": "ब्राउज़र अधिसूचनाओं का समर्थन करता है",
-    "browserEnabled": "ब्राउज़र अधिसूचनाएं सक्षम हैं",
-    "sitePermission": "साइट अनुमति दी गई",
-    "backendSubscribed": "बैकएंड पर सदस्यता ली गई",
-    "checking": "(जांच हो रही है...)"
-  },
   "components.articleComponents.ArticleHeader": {
     "fetchErrorTitle": "लेख विवरण लाने में त्रुटि",
     "updateSuccessTitle": "लेख सफलतापूर्वक अपडेट किया गया",
@@ -433,10 +405,6 @@
     "giveFeedback": "आवेदन और चैटिंग अनुभव के बारे में प्रतिक्रिया देने के लिए हमसे संपर्क करें।",
     "selectChatToStart": "एक चैट का चयन करके शुरू करें या उपयोगकर्ता को खोजें...."
   },
-  "components.chatComponent.UserListItem": {
-    "IQScore": "IQ स्कोर",
-    "InGameName": "इनगेम नाम"
-  },
   "components.chatComponent.userChats": {
     "Chats": "चैट्स",
     "requests": "अनुरोध",
@@ -451,6 +419,10 @@
     "you": "आप",
     "errorTitle": "त्रुटि हुई",
     "errorDescription": "चैट्स लोड करने में विफल"
+  },
+  "components.chatComponent.UserListItem": {
+    "IQScore": "IQ स्कोर",
+    "InGameName": "इनगेम नाम"
   },
   "components.contactComponents.FeedbackModal": {
     "Feedback": "प्रतिपुष्टि",
@@ -902,6 +874,26 @@
       "gameChallengeCompleted": "गेम चुनौती पूरी हुई"
     }
   },
+  "components.HallOfChampions.ChampionDetailsModal": {
+    "Rank": "रैंक",
+    "Exp Level": "अनुभव स्तर",
+    "Submissions": "सबमिशन",
+    "RQM Score": "RQM स्कोर",
+    "Quiz Performance": "क्विज प्रदर्शन",
+    "Total Quizzes": "कुल क्विज",
+    "Perfect Scores": "परफेक्ट स्कोर",
+    "Success Rate": "सफलता दर",
+    "League": "लीग",
+    "Top 3 Champion": "शीर्ष 3 चैंपियन",
+    "IQ Elite": "आईक्यू एलीट",
+    "Dedicated Solver": "समर्पित सॉल्वर",
+    "Quiz Master": "क्विज मास्टर",
+    "High RQM Achiever": "उच्च RQM अचीवर",
+    "Achievements": "उपलब्धियां",
+    "IQ Growth Rate": "आईक्यू वृद्धि दर",
+    "Quiz Success Rate": "क्विज सफलता दर",
+    "Performance Insights": "प्रदर्शन इंसाइट्स"
+  },
   "components.headerFooter.HamburgerModal": {
     "modalHeader": "मेनू",
     "dashboard": "डैशबोर्ड",
@@ -928,9 +920,6 @@
   },
   "components.headerFooter.LogoutButton": {
     "LogOut": "लॉग आउट"
-  },
-  "components.headerFooter.NavBrand": {
-    "rr": "रैपिड रीकैप"
   },
   "components.headerFooter.Navbar": {
     "tournament": "टूर्नामेंट",
@@ -967,6 +956,9 @@
     "Dashboard": "डैशबोर्ड",
     "Season": "मौसम",
     "New": "नया"
+  },
+  "components.headerFooter.NavBrand": {
+    "rr": "रैपिड रीकैप"
   },
   "components.headerFooter.NotificationDrawer": {
     "inbox": "इनबॉक्स",
@@ -1105,6 +1097,14 @@
     "easy": "आसान",
     "medium": "मध्यम",
     "hard": "कठिन"
+  },
+  "components.miscellaneous.milestones": {
+    "milestones": {
+      "QUIN_BOOST": {
+        "name": "क्विन बूस्ट",
+        "description": "सफलतापूर्वक 6 क्विज़ पूरे किए और वर्तमान क्विज़ पर स्कोर को अधिकतम करने के लिए 1.5x स्कोर बूस्ट को रणनीतिक रूप से लागू किया।"
+      }
+    }
   },
   "components.miscellaneous.NoteMessageQueue": {
     "newMessage": "आपके पास {{number}} नए संदेश हैं।"
@@ -1266,13 +1266,13 @@
     "levelUpTitle": "अनुभव स्तर",
     "epicLevelUpAchieved": "एपिक स्तर अप प्राप्त हुआ!"
   },
-  "components.miscellaneous.milestones": {
-    "milestones": {
-      "QUIN_BOOST": {
-        "name": "क्विन बूस्ट",
-        "description": "सफलतापूर्वक 6 क्विज़ पूरे किए और वर्तमान क्विज़ पर स्कोर को अधिकतम करने के लिए 1.5x स्कोर बूस्ट को रणनीतिक रूप से लागू किया।"
-      }
-    }
+  "components.Notifications.NotificationSubscription": {
+    "enableNotifications": "रैपिड रीकैप के लिए सूचनाएं सक्षम करें",
+    "browserSupport": "ब्राउज़र अधिसूचनाओं का समर्थन करता है",
+    "browserEnabled": "ब्राउज़र अधिसूचनाएं सक्षम हैं",
+    "sitePermission": "साइट अनुमति दी गई",
+    "backendSubscribed": "बैकएंड पर सदस्यता ली गई",
+    "checking": "(जांच हो रही है...)"
   },
   "components.profileComponents.Bookmarks": {
     "yourBookmarks": "आपके बुकमार्क्स",
@@ -2161,9 +2161,6 @@
     ],
     "knowMore": "और जानें"
   },
-  "components.tournamentComponents.LeaderCard": {
-    "Rank": "रैंक:"
-  },
   "components.tournamentComponents.LeaderboardSearch": {
     "searchPlayer": "खिलाड़ी खोजें....",
     "No players found": "कोई खिलाड़ी नहीं मिला",
@@ -2182,6 +2179,9 @@
     "Player": "खिलाड़ी",
     "Score": "स्कोर",
     "LoadingUserStats": "उपयोगकर्ता आँकड़े लोड हो रहे हैं..."
+  },
+  "components.tournamentComponents.LeaderCard": {
+    "Rank": "रैंक:"
   },
   "components.tournamentComponents.PreviousTournamentLeaderboard": {
     "heading": "पिछली प्रतियोगिता की लीडरबोर्ड",
@@ -3602,59 +3602,6 @@
     "meta_og_title": "रजिस्टर - रैपिड रिकैप",
     "meta_og_description": "आज ही रैपिड रिकैप से जुड़ें! नवीनतम समाचारों और लेखों के साथ अद्यतित रहने के लिए अभी पंजीकरण करें, और अपनी जानकारी भागफल (IQ) स्कोर को ट्रैक करने के लिए आकर्षक प्रश्नोत्तरी में भाग लें।"
   },
-  "screens.Signin": {
-    "signin_title": "साइन-इन",
-    "submit_button": "सबमिट करें",
-    "create_account_button": "खाता बनाएं",
-    "forgot_password_button": "पासवर्ड भूल गए?",
-    "login_success": "साइन-इन सफल",
-    "login_failed": "साइन-इन विफल",
-    "enter_in_game_name": "इन-गेम नाम दर्ज करें",
-    "enter_password": "पासवर्ड दर्ज करें",
-    "enter_in_game_name_message": "कृपया जारी रखने के लिए अपना इन-गेम नाम दर्ज करें",
-    "email_not_verified": "ईमेल सत्यापित नहीं है",
-    "verify_email_message": "कृपया जारी रखने से पहले अपना ईमेल सत्यापित करें",
-    "otp_sent": "आपके ईमेल पर ओटीपी भेजा गया है",
-    "or_text": "या",
-    "close_button": "बंद करें",
-    "email_or_in_game_name_placeholder": "ईमेल / इन-गेम नाम",
-    "meta_title": "साइन-इन - रैपिड रिकैप",
-    "meta_description": "रैपिड रिकैप में साइन इन करें और नवीनतम समाचार, प्रश्नोत्तरी और अपने जानकारी भागफल (IQ) स्कोर से अद्यतित रहें।",
-    "meta_keywords": "साइन इन करें, रैपिड रिकैप, समाचार, प्रश्नोत्तरी, IQ स्कोर",
-    "meta_og_title": "साइन-इन - रैपिड रिकैप",
-    "meta_og_description": "रैपिड रिकैप में साइन इन करें और नवीनतम समाचार, प्रश्नोत्तरी और अपने जानकारी भागफल (IQ) स्कोर से अद्यतित रहें।"
-  },
-  "screens.Tournament": {
-    "noTournamentData": {
-      "title": "कोई टूर्नामेंट डेटा उपलब्ध नहीं है",
-      "description": "आने वाले टूर्नामेंट के लिए बने रहें!"
-    },
-    "tournamentNumber": "टूर्नामेंट #{{number}}",
-    "tournament": "टूर्नामेंट",
-    "current": "वर्तमान",
-    "previous": "पिछला",
-    "curr": "वर्तमान",
-    "prev": "पिछला",
-    "tournamentStatus": {
-      "notRegistered": "आप इस टूर्नामेंट के लिए पंजीकृत नहीं हैं। पंजीकरण बंद है, लेकिन आप अभी भी लीडरबोर्ड देख सकते हैं।"
-    },
-    "registrationSuccess": {
-      "title": "टूर्नामेंट पंजीकरण सफल"
-    },
-    "errorMessages": {
-      "fetchData": "टूर्नामेंट डेटा प्राप्त करने में विफल।",
-      "registerError": "टूर्नामेंट के लिए पंजीकरण विफल।"
-    },
-    "errorOccurred": "कोई त्रुटि हुई",
-    "bufferPeriod": {
-      "title": "अगले टूर्नामेंट के लिए तैयारी कर रहे हैं",
-      "message": "टूर्नामेंट #{{tournamentNumber}} समाप्त हो गया है। हम अगली रोमांचक घटना के लिए तैयारी कर रहे हैं!",
-      "nextTournamentPrompt": "अगला टूर्नामेंट जल्द ही घोषित किया जाएगा। बने रहें!",
-      "viewPreviousResults": "पिछले टूर्नामेंट के परिणाम देखें",
-      "hidePreviousResults": "पिछले टूर्नामेंट के परिणाम छुपाएं"
-    },
-    "loading": "लोड हो रहा है..."
-  },
   "screens.rulebook": {
     "meta": {
       "title": "खिलाड़ी मैनुअल | रैपिड रीकैप",
@@ -3951,6 +3898,59 @@
         }
       }
     }
+  },
+  "screens.Signin": {
+    "signin_title": "साइन-इन",
+    "submit_button": "सबमिट करें",
+    "create_account_button": "खाता बनाएं",
+    "forgot_password_button": "पासवर्ड भूल गए?",
+    "login_success": "साइन-इन सफल",
+    "login_failed": "साइन-इन विफल",
+    "enter_in_game_name": "इन-गेम नाम दर्ज करें",
+    "enter_password": "पासवर्ड दर्ज करें",
+    "enter_in_game_name_message": "कृपया जारी रखने के लिए अपना इन-गेम नाम दर्ज करें",
+    "email_not_verified": "ईमेल सत्यापित नहीं है",
+    "verify_email_message": "कृपया जारी रखने से पहले अपना ईमेल सत्यापित करें",
+    "otp_sent": "आपके ईमेल पर ओटीपी भेजा गया है",
+    "or_text": "या",
+    "close_button": "बंद करें",
+    "email_or_in_game_name_placeholder": "ईमेल / इन-गेम नाम",
+    "meta_title": "साइन-इन - रैपिड रिकैप",
+    "meta_description": "रैपिड रिकैप में साइन इन करें और नवीनतम समाचार, प्रश्नोत्तरी और अपने जानकारी भागफल (IQ) स्कोर से अद्यतित रहें।",
+    "meta_keywords": "साइन इन करें, रैपिड रिकैप, समाचार, प्रश्नोत्तरी, IQ स्कोर",
+    "meta_og_title": "साइन-इन - रैपिड रिकैप",
+    "meta_og_description": "रैपिड रिकैप में साइन इन करें और नवीनतम समाचार, प्रश्नोत्तरी और अपने जानकारी भागफल (IQ) स्कोर से अद्यतित रहें।"
+  },
+  "screens.Tournament": {
+    "noTournamentData": {
+      "title": "कोई टूर्नामेंट डेटा उपलब्ध नहीं है",
+      "description": "आने वाले टूर्नामेंट के लिए बने रहें!"
+    },
+    "tournamentNumber": "टूर्नामेंट #{{number}}",
+    "tournament": "टूर्नामेंट",
+    "current": "वर्तमान",
+    "previous": "पिछला",
+    "curr": "वर्तमान",
+    "prev": "पिछला",
+    "tournamentStatus": {
+      "notRegistered": "आप इस टूर्नामेंट के लिए पंजीकृत नहीं हैं। पंजीकरण बंद है, लेकिन आप अभी भी लीडरबोर्ड देख सकते हैं।"
+    },
+    "registrationSuccess": {
+      "title": "टूर्नामेंट पंजीकरण सफल"
+    },
+    "errorMessages": {
+      "fetchData": "टूर्नामेंट डेटा प्राप्त करने में विफल।",
+      "registerError": "टूर्नामेंट के लिए पंजीकरण विफल।"
+    },
+    "errorOccurred": "कोई त्रुटि हुई",
+    "bufferPeriod": {
+      "title": "अगले टूर्नामेंट के लिए तैयारी कर रहे हैं",
+      "message": "टूर्नामेंट #{{tournamentNumber}} समाप्त हो गया है। हम अगली रोमांचक घटना के लिए तैयारी कर रहे हैं!",
+      "nextTournamentPrompt": "अगला टूर्नामेंट जल्द ही घोषित किया जाएगा। बने रहें!",
+      "viewPreviousResults": "पिछले टूर्नामेंट के परिणाम देखें",
+      "hidePreviousResults": "पिछले टूर्नामेंट के परिणाम छुपाएं"
+    },
+    "loading": "लोड हो रहा है..."
   },
   "utils.formatDate": {
     "today": "आज",
