@@ -162,7 +162,7 @@ const notificationReducer = (state, action) => {
 const NotificationContext = createContext(null)
 
 // Enhanced notification item with visible timer progress
-const NotificationItem = React.memo(({ notification, onRemove, index }) => {
+const NotificationItem = React.memo(React.forwardRef(({ notification, onRemove, index }, ref) => {
   const { id, type, title, description, duration, isClosable } = notification
   const typeConfig = NOTIFICATION_TYPES[type] || NOTIFICATION_TYPES.info
   const IconComponent = typeConfig.icon
@@ -232,6 +232,7 @@ const NotificationItem = React.memo(({ notification, onRemove, index }) => {
 
   return (
     <motion.div
+      ref={ref}
       layout
       variants={itemVariants}
       initial="initial"
@@ -340,16 +341,9 @@ const NotificationItem = React.memo(({ notification, onRemove, index }) => {
           />
         </div>
       )}
-
-      {/* Pause progress on hover */}
-      <style jsx>{`
-        .group:hover .progress-bar {
-          animation-play-state: paused;
-        }
-      `}</style>
     </motion.div>
   )
-})
+}))
 
 // Mobile-responsive notifications container
 const NotificationsContainer = React.memo(({ notifications, onRemove }) => {

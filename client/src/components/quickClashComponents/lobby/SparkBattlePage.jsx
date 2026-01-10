@@ -4,24 +4,7 @@ import React, { useState, useEffect, useCallback, useMemo } from 'react'
 import { useNavigate, useParams, useLocation } from 'react-router-dom'
 import { motion, AnimatePresence } from 'framer-motion'
 import axios from 'axios'
-import { io } from 'socket.io-client'
-
-// Determine socket endpoint
-const getSocketEndpoint = () => {
-  if (import.meta.env.PROD) {
-    // In production, use current origin (supports both rapidrecap.ai and rapid-recap.onrender.com)
-    if (typeof window !== 'undefined' && window.location.origin) {
-      return window.location.origin
-    }
-    // Fallback to primary domain
-    return 'https://rapidrecap.ai'
-  }
-  const hostname = window.location.hostname
-  if (hostname === 'localhost' || hostname === '127.0.0.1') {
-    return 'http://localhost:3000'
-  }
-  return `${window.location.protocol}//${hostname}:3000`
-}
+import useSparkSocket from '../../../customHooks/useSparkSocket'
 
 // Session-aware API client
 const sessionApi = {
@@ -58,7 +41,6 @@ const SparkBattlePage = () => {
   const [battle, setBattle] = useState(null)
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState('')
-  const [socket, setSocket] = useState(null)
   const [currentView, setCurrentView] = useState('battle') // battle, reading, quiz
   const [selectedChallenge, setSelectedChallenge] = useState(null)
 
@@ -87,42 +69,35 @@ const SparkBattlePage = () => {
     fetchBattle()
   }, [battleId, sessionId])
 
-  // Socket connection for real-time updates
+  // Use shared socket from SparkLayout
+  const { addEventListener, getSocket, emit } = useSparkSocket()
+
+  // Socket event listeners for real-time updates
   useEffect(() => {
     if (!battleId || !sessionId) return
 
-    const endpoint = getSocketEndpoint()
-    const newSocket = io(endpoint, {
-      auth: { sessionId, type: 'spark' },
-      transports: ['websocket', 'polling'],
-      withCredentials: true,
-    })
+    // Join battle room
+    emit('spark:joinBattle', { battleId })
 
-    setSocket(newSocket)
-
-    newSocket.on('connect', () => {
-      console.log('[SparkBattle] Socket connected:', newSocket.id)
-      newSocket.emit('spark:joinBattle', { battleId })
-    })
-
-    newSocket.on('spark:battleUpdated', (data) => {
-      console.log('[SparkBattle] Battle updated:', data)
+    // Listen for battle updates
+    const cleanupUpdated = addEventListener('spark:battleUpdated', (data) => {
       if (data.battle) {
         setBattle(data.battle)
       }
     })
 
-    newSocket.on('spark:battleCompleted', (data) => {
-      console.log('[SparkBattle] Battle completed:', data)
+    // Listen for battle completion
+    const cleanupCompleted = addEventListener('spark:battleCompleted', (data) => {
       if (data.battle) {
         setBattle(data.battle)
       }
     })
 
     return () => {
-      newSocket.disconnect()
+      cleanupUpdated()
+      cleanupCompleted()
     }
-  }, [battleId, sessionId])
+  }, [battleId, sessionId, addEventListener, emit])
 
   // Handle selecting a category/challenge to read
   const handleSelectChallenge = useCallback(async (challenge) => {

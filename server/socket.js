@@ -17,6 +17,10 @@ const {
   setupFriendsSocketHandlers,
   setupFriendsGlobalEvents,
 } = require('./utils/friendsSocket.utils')
+const {
+  leaveTeamMatchmaking,
+} = require('./services/quickClashServices/quickClashTeamMatchmakingService')
+
 
 // Enhanced tracking maps for device-aware connections
 const userDeviceConnections = new Map() // userId -> Map(deviceFingerprint -> Set(socketIds))
@@ -222,6 +226,25 @@ function initializeSocket(server) {
           socket.leave(`spark:team:${socket.sparkTeamId}`)
         }
         socket.sparkTeamId = null
+      })
+
+      // Session player disconnect handler - clean up matchmaking
+      socket.on('disconnect', async () => {
+        console.log(`[SOCKET] Session player ${playSessionObjectId} disconnected`)
+
+        if (socket.sparkTeamId) {
+          console.log(`[SOCKET] Cleaning up matchmaking for team ${socket.sparkTeamId}`)
+          try {
+            // Pass userId so notifications are sent to teammates
+            await leaveTeamMatchmaking({ teamId: socket.sparkTeamId, userId: playSessionObjectId })
+            console.log(`[SOCKET] Successfully removed team ${socket.sparkTeamId} from matchmaking`)
+          } catch (error) {
+            // Ignore errors - team may not be in matchmaking
+            if (!error.message?.includes('not in matchmaking')) {
+              console.error(`[SOCKET] Error cleaning up matchmaking:`, error.message)
+            }
+          }
+        }
       })
 
       // Emit connected events
@@ -565,7 +588,7 @@ function initializeSocket(server) {
 
     // Enhanced disconnect handling
     socket.on('disconnect', () => {
-      handleSocketDisconnection(socket.id)
+      handleSocketDisconnection(socket)
     })
 
     // Online status checker
@@ -721,9 +744,26 @@ function initializeSocket(server) {
 
   /**
    * Handle socket disconnection with device awareness
+   * Also handles matchmaking cleanup for session players
    */
-  function handleSocketDisconnection(socketId) {
+  async function handleSocketDisconnection(socket) {
+    const socketId = socket.id
     const metadata = socketMetadata.get(socketId)
+
+    // Handle session player matchmaking cleanup
+    // This runs even if no metadata - session players may disconnect without full tracking
+    if (socket.sparkTeamId) {
+      console.log(`[SOCKET] Session player disconnected with team ${socket.sparkTeamId}, cleaning up matchmaking`)
+      try {
+        await leaveTeamMatchmaking({ teamId: socket.sparkTeamId })
+        console.log(`[SOCKET] Successfully removed team ${socket.sparkTeamId} from matchmaking on disconnect`)
+      } catch (error) {
+        // Ignore errors - team may not be in matchmaking or already removed
+        if (!error.message?.includes('not in matchmaking')) {
+          console.error(`[SOCKET] Error cleaning up matchmaking on disconnect:`, error.message)
+        }
+      }
+    }
 
     if (!metadata) {
       console.log(`No tracking info found for disconnected socket ${socketId}`)

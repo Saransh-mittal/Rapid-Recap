@@ -2,7 +2,6 @@
 import { createSlice, createAsyncThunk } from '@reduxjs/toolkit'
 import axios from 'axios'
 import { setUser } from './authSlice'
-import { store } from './store'
 
 // Async thunks for fetching and updating tasks
 export const fetchDailyTasks = createAsyncThunk(
@@ -52,7 +51,7 @@ export const updateTaskProgress = createAsyncThunk(
 
 export const claimTaskReward = createAsyncThunk(
   'quickClashDailyTasks/claimReward',
-  async (taskId, { rejectWithValue, dispatch }) => {
+  async (taskId, { rejectWithValue, dispatch, getState }) => {
     try {
       const response = await axios.post(
         `/api/quickClash/dailyTasks/${taskId}/claim`,
@@ -60,9 +59,10 @@ export const claimTaskReward = createAsyncThunk(
 
       // Update user XP and level in the auth state
       if (response.data.levelInfo) {
+        const currentUser = getState().auth.user
         dispatch(
           setUser({
-            ...store.getState().auth.user,
+            ...currentUser,
             xp: response.data.newTotals.xp,
             level: response.data.levelInfo.currentLevel,
           }),

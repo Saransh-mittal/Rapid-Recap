@@ -36,7 +36,7 @@ const PageTransitionWrapper = ({ children }) => {
 
 
   // Skip transitions for quickclash routes to avoid blank screen issues
-  const isQuickClashRoute = location.pathname.startsWith('/quickclash')
+  const isQuickClashRoute = location.pathname.startsWith('/quickclash') || location.pathname.startsWith('/play')
 
   if (isQuickClashRoute) {
     // No animation for quickclash routes

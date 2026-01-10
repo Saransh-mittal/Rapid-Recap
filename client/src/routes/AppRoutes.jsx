@@ -70,6 +70,9 @@ const SparkMatchmaking = lazy(() =>
 const SparkBattlePage = lazy(() =>
   import('../components/quickClashComponents/lobby/SparkBattlePage')
 )
+const SparkLayout = lazy(() =>
+  import('../components/quickClashComponents/lobby/SparkLayout')
+)
 
 // Helper to check if a session player exists (for route guards)
 const hasSessionPlayer = () => {
@@ -187,22 +190,25 @@ const AppRoutes = ({ isToken, needsOnboarding, setIsGuestLoggedin }) => {
                       : <PlayLanding />
                 }
               />
-              <Route
-                path="/play/lobby"
-                element={<SparkLobby />}
-              />
-              <Route
-                path="/play/matchmaking"
-                element={<SparkMatchmaking />}
-              />
-              <Route
-                path="/play/session/:challengeId"
-                element={<QuickClashSession isSessionPlayer={true} />}
-              />
-              <Route
-                path="/play/battle/:battleId"
-                element={<TeamBattlePage />}
-              />
+              {/* Spark Engine - Nested routes with shared socket */}
+              <Route element={<SparkLayout />}>
+                <Route
+                  path="/play/lobby"
+                  element={<SparkLobby />}
+                />
+                <Route
+                  path="/play/matchmaking"
+                  element={<SparkMatchmaking />}
+                />
+                <Route
+                  path="/play/session/:challengeId"
+                  element={<QuickClashSession isSessionPlayer={true} />}
+                />
+                <Route
+                  path="/play/battle/:battleId"
+                  element={<TeamBattlePage />}
+                />
+              </Route>
               {process.env.NODE_ENV != 'production' && (
                 <Route
                   path="/quickclash/test-socket"

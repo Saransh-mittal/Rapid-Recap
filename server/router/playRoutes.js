@@ -32,6 +32,8 @@ const {
   // Matchmaking status
   getMatchmakingStatus,
   fixBattleHistory,
+  // Team member management
+  removeTeamMember,
 } = require('../controllers/playSessionController')
 
 // Import forge controllers from quickClashController
@@ -76,6 +78,9 @@ router.get('/me', flexAuth, getSessionInfo)
 
 // Session player's current team (view-only mode)
 router.get('/my-team', flexAuth, getMyTeam)
+
+// Team member management (leader only)
+router.post('/team/:teamId/remove', removeTeamMember)
 
 // Quick Clash session routes for session players (require flexAuth)
 router.get('/challenge/:challengeId', flexAuth, getChallenge)

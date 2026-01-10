@@ -703,6 +703,19 @@ const useQuickClashSocket = () => {
         if (!isComponentMountedRef.current) return
         logSocketEvent('match_found', data)
 
+        // Navigate session players on /play/* routes to battle page
+        if (window.location.pathname.startsWith('/play/') && data.battleId) {
+          navigate(`/play/battle/${data.battleId}`, {
+            state: {
+              battleId: data.battleId,
+              team: data.team,
+              opponent: data.opponent,
+            },
+          })
+          return
+        }
+
+        // For authenticated users not on /play routes, update Redux state
         const properPreparationData = {
           opponent: data?.opponent,
           tempChallengeId: data.tempChallengeId,
@@ -1030,7 +1043,28 @@ const useQuickClashSocket = () => {
           time: 0,
         }))
 
-        // Show notification for other team members
+        // Navigate session players on /play/lobby to matchmaking page
+        // This consolidates navigation for both authenticated users and session players
+        if (window.location.pathname === '/play/lobby') {
+          // Construct team object from socket event data
+          // Socket sends: {teamId, teamName, avgTrophies, memberCount, etc.}
+          const teamForNav = data.team || {
+            _id: data.teamId,
+            name: data.teamName,
+            avgTrophies: data.avgTrophies,
+            memberCount: data.memberCount,
+          }
+          console.log('[useQuickClashSocket] Navigating to /play/matchmaking, team:', teamForNav._id)
+          navigate('/play/matchmaking', {
+            state: {
+              team: teamForNav,
+              matchmakingId: data.matchmakingId,
+            },
+          })
+          return // Skip notification if navigating
+        }
+
+        // Show notification for other team members (not on /play routes)
         const currentState = getCurrentState()
         const currentUserId = currentState.authState?.user?._id
 
@@ -1065,7 +1099,26 @@ const useQuickClashSocket = () => {
         // Update Redux state - this now sets inMatchmaking to false and clears other state
         dispatch(handleTeamLeftMatchmaking(data))
 
-        // Determine notification message based on reason
+        // Session player navigation - navigate to /play/lobby if on /play/* routes
+        // Check if current route is a /play/* route (SparkMatchmaking, SparkBattle, etc.)
+        const currentPath = window.location.pathname
+        if (currentPath.startsWith('/play/') && currentPath !== '/play/lobby') {
+          console.log('[QC_SOCKET] Session player on /play/* route, navigating to lobby')
+          // Get team code from localStorage for navigation state
+          const teamCode = localStorage.getItem('sparkTeamCode')
+          const storedSessionId = localStorage.getItem('playSessionId')
+
+          navigate('/play/lobby', {
+            state: {
+              session: { sessionId: storedSessionId },
+              teamCode: teamCode,
+              leftMatchmakingReason: data.reason || 'A teammate left matchmaking',
+            },
+          })
+          return // Skip notification for session players since they're navigating
+        }
+
+        // Determine notification message based on reason (for non-session players)
         let notificationTitle = t('Matchmaking Cancelled')
         let notificationMessage = t('Your team is no longer searching for opponents')
 

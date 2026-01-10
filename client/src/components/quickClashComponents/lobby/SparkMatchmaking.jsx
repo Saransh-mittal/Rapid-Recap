@@ -4,7 +4,7 @@
 import { useState, useEffect, useCallback, useRef } from 'react'
 import { useNavigate, useLocation } from 'react-router-dom'
 import { motion, AnimatePresence } from 'framer-motion'
-import { io } from 'socket.io-client'
+import useSparkSocket from '../../../customHooks/useSparkSocket'
 import { useTranslation } from 'react-i18next'
 import { Sparkles, Loader2, Swords } from 'lucide-react'
 import axios from 'axios'
@@ -69,26 +69,7 @@ const CONFETTI_COUNT = 10
 // Countdown duration (5 seconds)
 const COUNTDOWN_SECONDS = 5
 
-// Determine socket endpoint (same logic as socketInitManager)
-const getSocketEndpoint = () => {
-  if (import.meta.env.PROD) {
-    // In production, use current origin (supports both rapidrecap.ai and rapid-recap.onrender.com)
-    if (typeof window !== 'undefined' && window.location.origin) {
-      return window.location.origin
-    }
-    // Fallback to primary domain
-    return 'https://rapidrecap.ai'
-  }
-  const hostname = window.location.hostname
-  const protocol = window.location.protocol
-  if (import.meta.env.VITE_SOCKET_ENDPOINT) {
-    return import.meta.env.VITE_SOCKET_ENDPOINT
-  }
-  if (hostname === 'localhost' || hostname === '127.0.0.1') {
-    return 'http://localhost:3000'
-  }
-  return `${protocol}//${hostname}:3000`
-}
+
 
 const SparkMatchmaking = () => {
   const navigate = useNavigate()
@@ -105,10 +86,17 @@ const SparkMatchmaking = () => {
   const [countdown, setCountdown] = useState(COUNTDOWN_SECONDS)
 
   const matchFoundSoundPlayedRef = useRef(false)
-  const mountTimeRef = useRef(Date.now())
-  const socketRef = useRef(null)
   const hasLeftMatchmakingRef = useRef(false)
   const stateRef = useRef(state)
+  const mountTimeRef = useRef(Date.now())
+
+  // === DEBUG: Log navigation state on mount/unmount ===
+  useEffect(() => {
+    console.log('[SparkMatchmaking] MOUNT - history:', window.history.length, 'team:', team?._id)
+    return () => {
+      console.log('[SparkMatchmaking] UNMOUNT - URL:', window.location.href, 'history:', window.history.length)
+    }
+  }, [])
 
   // Keep stateRef in sync
   useEffect(() => {
@@ -122,43 +110,74 @@ const SparkMatchmaking = () => {
     return `${mins}:${secs.toString().padStart(2, '0')}`
   }, [])
 
-  // Initialize socket connection
+  // Use shared socket from SparkLayout
+  const { addEventListener, isConnected, emit } = useSparkSocket()
+
+  // Initialize socket event listeners
   useEffect(() => {
-    if (!team || !matchmakingId) {
-      navigate('/play/lobby')
-      return
+    // Check matchmaking status on mount - handles page refresh
+    // NOTE: Must ALWAYS check, because browser preserves location.state on refresh
+    // but team may no longer be in matchmaking on backend
+    const checkMatchmakingStatus = async () => {
+      try {
+        const sessionId = localStorage.getItem('playSessionId')
+        const response = await axios.get('/api/play/matchmaking/status', {
+          headers: { 'X-Session-Id': sessionId }
+        })
+
+        if (!response.data.success || !response.data.inMatchmaking) {
+          // Not in matchmaking - redirect to lobby
+          console.log('[SparkMatchmaking] Not in matchmaking, redirecting to lobby')
+          navigate('/play/lobby', {
+            state: {
+              session: { sessionId },
+              teamCode: localStorage.getItem('sparkTeamCode'),
+            },
+            replace: true,
+          })
+          return false
+        }
+
+        // If battle is ready, redirect to battle
+        if (response.data.status === 'battleReady' && response.data.battleId) {
+          navigate(`/play/battle/${response.data.battleId}`, {
+            state: { battleId: response.data.battleId },
+            replace: true,
+          })
+          return false
+        }
+
+        return true // Still in matchmaking
+      } catch (error) {
+        console.error('Matchmaking status check failed:', error)
+        return true // Continue if check fails
+      }
     }
 
-    const endpoint = getSocketEndpoint()
-    console.log('[SparkMatchmaking] Connecting to:', endpoint, 'with sessionId:', localStorage.getItem('playSessionId'))
+    // Always check matchmaking status on mount
+    // This handles refresh where browser preserves state but backend state changed
+    checkMatchmakingStatus().then(inMatchmaking => {
+      if (!inMatchmaking) return
 
-    const newSocket = io(endpoint, {
-      auth: {
-        sessionId: localStorage.getItem('playSessionId'),
-        type: 'spark',
-      },
-      transports: ['websocket', 'polling'],
-      withCredentials: true,
+      // If no team/matchmakingId from state (shouldn't happen normally), redirect to lobby
+      if (!team || !matchmakingId) {
+        navigate('/play/lobby', { replace: true })
+      }
     })
 
-    socketRef.current = newSocket
-
-    // Connection events
-    newSocket.on('connect', () => {
-      console.log('[SparkMatchmaking] Socket connected:', newSocket.id)
-    })
+    // Register with server for disconnect cleanup
+    // This sets socket.sparkTeamId on server so it can clean up matchmaking if we disconnect
+    emit('spark:joinMatchmaking', { teamId: team._id, matchmakingId })
 
     // Listen for matchmaking locked (creating battle)
-    newSocket.on('quickClash:matchmakingLocked', (data) => {
-      console.log('[SparkMatchmaking] Locked - Creating battle:', data)
+    const cleanupLocked = addEventListener('quickClash:matchmakingLocked', (data) => {
       if (data.status === 'creating_battle') {
         setState(STATES.CREATING)
       }
     })
 
     // Listen for match found
-    newSocket.on('quickClash:matchFound', (data) => {
-      console.log('[SparkMatchmaking] Match found:', data)
+    const cleanupMatchFound = addEventListener('quickClash:matchFound', (data) => {
       setState(STATES.FOUND)
       setBattleReady({
         battleId: data.battleId,
@@ -180,39 +199,42 @@ const SparkMatchmaking = () => {
       }
     })
 
+    // Note: quickClash:teamLeftMatchmaking is now handled centrally in useQuickClashSocket.js
+    // which navigates session players on /play/* routes to /play/lobby automatically
+
     // Listen for errors
-    newSocket.on('quickClash:matchmakingError', (data) => {
-      console.log('[SparkMatchmaking] Error:', data)
+    const cleanupError = addEventListener('quickClash:matchmakingError', (data) => {
       setState(STATES.ERROR)
       setError(data.error)
     })
 
-    newSocket.on('disconnect', () => {
-      console.log('[SparkMatchmaking] Socket disconnected')
-    })
-
     return () => {
-      // Leave matchmaking when component unmounts (user navigates away)
-      // Use stateRef to get latest state value without adding state to deps
-      if (!hasLeftMatchmakingRef.current && stateRef.current !== STATES.ENTERING && stateRef.current !== STATES.FOUND) {
-        console.log('[SparkMatchmaking] Leaving matchmaking on unmount via API')
+      cleanupLocked()
+      cleanupMatchFound()
+      cleanupError()
 
-        // Use API call (same as GlobalMatchmakingModal) - fire and forget
+      // Leave matchmaking on unmount if user navigates away (intentional leave)
+      const mountDuration = Date.now() - mountTimeRef.current
+      const MIN_MOUNT_DURATION_MS = 2000
+
+      if (mountDuration < MIN_MOUNT_DURATION_MS) return
+
+      if (!hasLeftMatchmakingRef.current && stateRef.current !== STATES.ENTERING && stateRef.current !== STATES.FOUND) {
         const sessionId = localStorage.getItem('playSessionId')
         if (sessionId && team?._id) {
+          // Set flag so SparkLobby doesn't redirect back (race condition prevention)
+          sessionStorage.setItem('sparkLeftMatchmaking', 'true')
+
           axios.post(
             `/api/quickClash/team/${team._id}/matchmaking/leave`,
             {},
             { headers: { 'X-Session-Id': sessionId } }
-          ).catch(err => console.error('[SparkMatchmaking] Error leaving matchmaking:', err))
+          ).catch(() => {/* ignore */})
         }
-
         hasLeftMatchmakingRef.current = true
       }
-      newSocket.disconnect()
-      socketRef.current = null
     }
-  }, [team, matchmakingId, navigate])
+  }, [team, matchmakingId, navigate, addEventListener])
 
   // Handle browser close/refresh - leave matchmaking
   useEffect(() => {

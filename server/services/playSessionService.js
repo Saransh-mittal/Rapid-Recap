@@ -248,6 +248,7 @@ const getPublicTeamInfo = async ({ teamCode }) => {
     members: team.members.map(m => {
       if (m.user) {
         return {
+          _id: m.user._id, // Include _id for member management
           type: 'user',
           inGameName: m.user.inGameName,
           pic: m.user.pic,
@@ -257,6 +258,7 @@ const getPublicTeamInfo = async ({ teamCode }) => {
       } else if (m.sessionPlayer) {
         const sp = sessionPlayerMap.get(m.sessionPlayer.toString())
         return {
+          _id: m.sessionPlayer.toString(), // Include sessionPlayer ObjectId for removal
           type: 'session',
           sessionId: sp?.sessionId, // Include sessionId to identify current user
           inGameName: sp?.inGameName || 'Player',
@@ -796,6 +798,94 @@ const migrateSessionTeams = async (sessionId, userId) => {
   }
 }
 
+/**
+ * Remove a team member as session player leader
+ * @param {Object} params
+ * @param {string} params.teamId - Team ID
+ * @param {string} params.leaderSessionId - Leader's sessionId (not _id)
+ * @param {string} params.memberSessionPlayerId - Member's sessionPlayer _id to remove
+ * @returns {Promise<Object>} Updated team info
+ */
+const removeMemberAsSession = async ({ teamId, leaderSessionId, memberSessionPlayerId }) => {
+  const globalEmitter = require('../eventEmitter')
+
+  // Validate leader session exists
+  const leaderSession = await PlaySession.findOne({ sessionId: leaderSessionId, convertedToUser: null })
+  if (!leaderSession) {
+    throw new Error('Leader session not found')
+  }
+
+  // Find the team
+  const team = await QuickClashTeam.findById(teamId)
+  if (!team) {
+    throw new Error('Team not found')
+  }
+
+  // Verify the leader is actually a leader of this team
+  const isLeader = team.members.some(
+    m => m.sessionPlayer?.toString() === leaderSession._id.toString() && m.role === 'leader'
+  )
+  if (!isLeader) {
+    throw new Error('Only the team leader can remove members')
+  }
+
+  // Prevent removing self
+  if (leaderSession._id.toString() === memberSessionPlayerId) {
+    throw new Error('Cannot remove yourself, use leave team instead')
+  }
+
+  // Prevent removing members if team is in a match
+  if (team.isInMatch) {
+    throw new Error('Cannot remove members while in a match')
+  }
+
+  // Find the member to remove
+  const memberIndex = team.members.findIndex(
+    m => m.sessionPlayer?.toString() === memberSessionPlayerId
+  )
+  if (memberIndex === -1) {
+    throw new Error('Member not found in team')
+  }
+
+  // Get removed member info before removal
+  const removedMemberData = team.members[memberIndex]
+  const removedSession = await PlaySession.findById(memberSessionPlayerId)
+  const removedMemberName = removedSession?.inGameName || 'Player'
+
+  // Remove member
+  team.members.splice(memberIndex, 1)
+  team.lastActive = new Date()
+  await team.save()
+
+  // Clear removed member's currentTeamId
+  if (removedSession) {
+    removedSession.currentTeamId = null
+    removedSession.lastActiveAt = new Date()
+    await removedSession.save()
+  }
+
+  // Get updated team info for response
+  const teamInfo = await getPublicTeamInfo({ teamCode: team.teamCode })
+
+  // Emit teamMemberRemoved event for the removed player
+  globalEmitter.emit('quickClash:teamMemberRemoved', {
+    team: team._id.toString(),
+    leader: leaderSession._id.toString(),
+    removedMember: memberSessionPlayerId,
+    teamName: team.name,
+    removedMemberName,
+    removedMemberInGameName: removedMemberName,
+  })
+
+  // Emit teamUpdated for remaining members to refresh their UI
+  globalEmitter.emit('quickClash:teamUpdated', {
+    teamId: team._id.toString(),
+    team: teamInfo,
+  })
+
+  return teamInfo
+}
+
 module.exports = {
   createSession,
   createTeamForSession,
@@ -810,4 +900,5 @@ module.exports = {
   migrateSessionBattles,
   migrateSessionTeams,
   recalculateUserStats,
+  removeMemberAsSession,
 }

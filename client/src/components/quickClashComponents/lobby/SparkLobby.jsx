@@ -4,7 +4,7 @@ import React, { useState, useEffect, useCallback, useRef } from 'react'
 import { useNavigate, useLocation } from 'react-router-dom'
 import { motion, AnimatePresence } from 'framer-motion'
 import axios from 'axios'
-import { io } from 'socket.io-client'
+import useSparkSocket from '../../../customHooks/useSparkSocket'
 import SlotInviteModal from './SlotInviteModal'
 
 // API calls
@@ -27,35 +27,18 @@ const lobbyAPI = {
 const gradientPurple = 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)'
 const gradientGold = 'linear-gradient(135deg, #f093fb 0%, #f5576c 100%)'
 
-// Determine socket endpoint (same logic as socketInitManager)
-const getSocketEndpoint = () => {
-  if (import.meta.env.PROD) {
-    // In production, use current origin (supports both rapidrecap.ai and rapid-recap.onrender.com)
-    if (typeof window !== 'undefined' && window.location.origin) {
-      return window.location.origin
-    }
-    // Fallback to primary domain
-    return 'https://rapidrecap.ai'
-  }
-  const hostname = window.location.hostname
-  const protocol = window.location.protocol
-  if (import.meta.env.VITE_SOCKET_ENDPOINT) {
-    return import.meta.env.VITE_SOCKET_ENDPOINT
-  }
-  if (hostname === 'localhost' || hostname === '127.0.0.1') {
-    return 'http://localhost:3000'
-  }
-  return `${protocol}//${hostname}:3000`
-}
+
 
 const SparkLobby = () => {
   const navigate = useNavigate()
   const location = useLocation()
-  const { session, teamCode: initialTeamCode } = location.state || {}
+  const { session, teamCode: initialTeamCode, leftMatchmakingReason } = location.state || {}
 
   const [team, setTeam] = useState(null)
   const [isLoading, setIsLoading] = useState(true)
   const [isJoiningMatchmaking, setIsJoiningMatchmaking] = useState(false)
+  const [isRemoving, setIsRemoving] = useState(null) // Track which member is being removed
+  const [memberToRemove, setMemberToRemove] = useState(null) // For confirmation modal
   const [error, setError] = useState('')
   const [showInviteModal, setShowInviteModal] = useState(false)
   const [inviteUrl, setInviteUrl] = useState('')
@@ -71,21 +54,83 @@ const SparkLobby = () => {
 
     const initializeLobby = async () => {
       try {
-        if (initialTeamCode && initialTeamCode !== 'NEW') {
+        // Priority for teamCode:
+        // 1. From navigation state (when redirected from matchmaking or invited)
+        // 2. From localStorage (when pressing browser back)
+        const teamCodeToUse = initialTeamCode || localStorage.getItem('sparkTeamCode')
+        let teamData
+
+        if (teamCodeToUse && teamCodeToUse !== 'NEW') {
           // Fetch existing team
-          const { team: teamData } = await lobbyAPI.getTeamInfo(initialTeamCode)
-          setTeam(teamData)
+          const response = await lobbyAPI.getTeamInfo(teamCodeToUse)
+          teamData = response.team
+          // Ensure teamCode is saved for future back navigations
+          localStorage.setItem('sparkTeamCode', teamData.teamCode)
         } else {
           // Create a new team for session player
           const sessionId = session?.sessionId || storedSessionId
           const { team: newTeam } = await lobbyAPI.createTeam(sessionId)
 
+          // Save teamCode to localStorage for back navigation
+          localStorage.setItem('sparkTeamCode', newTeam.teamCode)
+
           // Fetch full team info for display
-          const { team: teamData } = await lobbyAPI.getTeamInfo(newTeam.teamCode)
-          setTeam(teamData)
+          const response = await lobbyAPI.getTeamInfo(newTeam.teamCode)
+          teamData = response.team
         }
+
+        // Check matchmaking status ONLY if on lobby route and no leftMatchmakingReason
+        // (leftMatchmakingReason means we intentionally left matchmaking)
+        // Also skip if we just came from matchmaking page (back button) to avoid race condition
+        // where the leave API hasn't completed yet
+        const cameFromMatchmaking = document.referrer?.includes('/play/matchmaking') ||
+          sessionStorage.getItem('sparkLeftMatchmaking') === 'true'
+
+        if (window.location.pathname === '/play/lobby' && !leftMatchmakingReason && !cameFromMatchmaking) {
+          try {
+            const sessionId = localStorage.getItem('playSessionId')
+            const statusResponse = await axios.get('/api/play/matchmaking/status', {
+              headers: { 'X-Session-Id': sessionId }
+            })
+
+            if (statusResponse.data.success && statusResponse.data.inMatchmaking) {
+              // Team is in matchmaking - redirect accordingly
+              if (statusResponse.data.status === 'battleReady' && statusResponse.data.battleId) {
+                // Battle is ready - go directly to battle
+                navigate(`/play/battle/${statusResponse.data.battleId}`, {
+                  state: {
+                    battleId: statusResponse.data.battleId,
+                    team: teamData,
+                  },
+                  replace: true,
+                })
+                return
+              } else {
+                // Still searching - go to matchmaking page
+                navigate('/play/matchmaking', {
+                  state: {
+                    team: teamData,
+                    matchmakingId: statusResponse.data.matchmaking?._id,
+                  },
+                  replace: true,
+                })
+                return
+              }
+            }
+          } catch (statusError) {
+            // If status check fails, just continue to lobby
+            console.error('Matchmaking status check failed:', statusError)
+          }
+        }
+
+        // Clear the flag after use
+        sessionStorage.removeItem('sparkLeftMatchmaking')
+
+        setTeam(teamData)
       } catch (err) {
         console.error('Lobby init error:', err)
+        // Clear saved team code on error
+        localStorage.removeItem('sparkTeamCode')
         // If team creation fails, navigate back
         navigate('/play')
       } finally {
@@ -94,81 +139,39 @@ const SparkLobby = () => {
     }
 
     initializeLobby()
-  }, [session, initialTeamCode, navigate])
+  }, [session, initialTeamCode, navigate, leftMatchmakingReason])
 
-  // Socket connection for real-time updates
-  const socketRef = useRef(null)
+  // Use shared socket from SparkLayout
+  const { addEventListener, isConnected, cleanupEventListeners } = useSparkSocket()
 
+  // Socket event listeners for real-time updates
   useEffect(() => {
     if (!team?._id) return
 
-    const sessionId = localStorage.getItem('playSessionId')
-    if (!sessionId) return
-
-    const endpoint = getSocketEndpoint()
-    console.log('[SparkLobby] Connecting socket to:', endpoint, 'for team:', team._id, 'sessionId:', sessionId)
-
-    const socket = io(endpoint, {
-      auth: {
-        sessionId,
-        type: 'spark',
-      },
-      transports: ['websocket', 'polling'],
-      withCredentials: true,
-    })
-
-    socketRef.current = socket
-
-    socket.on('connect', () => {
-      console.log('[SparkLobby] Socket connected:', socket.id)
-    })
-
-    socket.on('connect_error', (error) => {
-      console.error('[SparkLobby] Socket connection error:', error.message)
-    })
-
     // Listen for team member updates
-    socket.on('quickClash:teamUpdated', (data) => {
-      console.log('[SparkLobby] Team updated:', data)
+    const cleanupTeamUpdated = addEventListener('quickClash:teamUpdated', (data) => {
       if (data.team) {
         setTeam(data.team)
       }
     })
 
-    // Listen for matchmaking started (when leader starts matchmaking)
-    socket.on('quickClash:teamJoinedMatchmaking', (data) => {
-      console.log('[SparkLobby] Matchmaking started by leader:', data)
-      // Navigate ALL team members to matchmaking screen
-      navigate('/play/matchmaking', {
-        state: {
-          team: data.team || team,
-          matchmakingId: data.matchmakingId,
-        },
-      })
-    })
-
-    // Listen for match found (if still in lobby when match is found)
-    socket.on('quickClash:matchFound', (data) => {
-      console.log('[SparkLobby] Match found:', data)
-      navigate(`/play/battle/${data.battleId}`, {
-        state: {
-          battleId: data.battleId,
-          team: data.team,
-          opponent: data.opponent,
-        },
-      })
-    })
-
-    socket.on('disconnect', (reason) => {
-      console.log('[SparkLobby] Socket disconnected:', reason)
+    // Listen for being removed from team
+    const cleanupMemberRemoved = addEventListener('quickClash:teamMemberRemoved', (data) => {
+      if (data.isCurrentUser) {
+        // Current player was removed from the team
+        localStorage.removeItem('sparkTeamCode')
+        navigate('/play', {
+          state: { message: 'You were removed from the team' },
+          replace: true,
+        })
+      }
     })
 
     return () => {
-      console.log('[SparkLobby] Cleaning up socket')
-      socket.disconnect()
-      socketRef.current = null
+      cleanupTeamUpdated()
+      cleanupMemberRemoved()
     }
-  }, [team?._id, navigate, team])
+  }, [team?._id, addEventListener, navigate])
 
   const handleSlotClick = useCallback((slotIndex) => {
     setSelectedSlot(slotIndex)
@@ -198,6 +201,7 @@ const SparkLobby = () => {
       })
 
       // Navigate to matchmaking screen with team and matchmaking info
+      console.log('[SparkLobby] Navigating to /play/matchmaking, history length:', window.history.length)
       navigate('/play/matchmaking', {
         state: {
           team,
@@ -221,9 +225,43 @@ const SparkLobby = () => {
     m => m.type === 'session' && m.sessionId === currentSessionId && m.role === 'leader'
   )
 
+  // Handle removing a team member - show confirmation modal
+  const handleRemoveMember = useCallback((member, e) => {
+    e.stopPropagation() // Prevent slot click
+    if (!isLeader || !team?._id) return
+    setMemberToRemove(member)
+  }, [isLeader, team?._id])
+
+  // Confirm removal
+  const confirmRemoveMember = useCallback(async () => {
+    if (!memberToRemove || !team?._id) return
+
+    setIsRemoving(memberToRemove.sessionId)
+    setError('')
+
+    try {
+      const sessionId = localStorage.getItem('playSessionId')
+      const response = await axios.post(
+        `/api/play/team/${team._id}/remove`,
+        { memberSessionPlayerId: memberToRemove._id },
+        { headers: { 'X-Session-Id': sessionId } }
+      )
+
+      if (response.data.success && response.data.team) {
+        setTeam(response.data.team)
+      }
+    } catch (err) {
+      const errorMsg = err.response?.data?.error || 'Failed to remove member'
+      setError(errorMsg)
+    } finally {
+      setIsRemoving(null)
+      setMemberToRemove(null)
+    }
+  }, [memberToRemove, team?._id])
+
   if (isLoading) {
     return (
-      <div style={styles.container}>
+      <div style={styles.container} className='sparkLobby-loading'>
         <motion.div
           animate={{ rotate: 360 }}
           transition={{ duration: 1, repeat: Infinity, ease: 'linear' }}
@@ -250,7 +288,7 @@ const SparkLobby = () => {
   }
 
   return (
-    <div style={styles.container}>
+    <div style={styles.container} className='sparkLobby'>
       {/* Background */}
       <div style={styles.bgGradient} />
 
@@ -273,7 +311,9 @@ const SparkLobby = () => {
           {[...Array(4)].map((_, index) => {
             const member = team?.members?.[index]
             const isFilled = !!member
-            const isLeader = member?.role === 'leader'
+            const isMemberLeader = member?.role === 'leader'
+            const isCurrentUser = member?.type === 'session' && member?.sessionId === currentSessionId
+            const canRemove = isLeader && isFilled && !isMemberLeader && !isCurrentUser
 
             return (
               <motion.div
@@ -291,6 +331,18 @@ const SparkLobby = () => {
               >
                 {isFilled ? (
                   <>
+                    {/* Remove Button */}
+                    {canRemove && (
+                      <motion.button
+                        onClick={(e) => handleRemoveMember(member, e)}
+                        style={styles.removeButton}
+                        whileHover={{ scale: 1.1, backgroundColor: 'rgba(239, 68, 68, 0.3)' }}
+                        whileTap={{ scale: 0.9 }}
+                        disabled={isRemoving === member.sessionId}
+                      >
+                        {isRemoving === member.sessionId ? '...' : '✕'}
+                      </motion.button>
+                    )}
                     {/* Player Avatar */}
                     <div style={styles.avatar}>
                       {member.pic ? (
@@ -300,7 +352,7 @@ const SparkLobby = () => {
                           {member.type === 'session' ? '⚡' : '👤'}
                         </span>
                       )}
-                      {isLeader && <div style={styles.leaderBadge}>👑</div>}
+                      {isMemberLeader && <div style={styles.leaderBadge}>👑</div>}
                     </div>
                     {/* Player Name */}
                     <div style={styles.playerName}>{member.inGameName}</div>
@@ -385,6 +437,52 @@ const SparkLobby = () => {
           />
         )}
       </AnimatePresence>
+
+      {/* Remove Member Confirmation Modal */}
+      <AnimatePresence>
+        {memberToRemove && (
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            style={styles.modalOverlay}
+            onClick={() => setMemberToRemove(null)}
+          >
+            <motion.div
+              initial={{ opacity: 0, scale: 0.9, y: 20 }}
+              animate={{ opacity: 1, scale: 1, y: 0 }}
+              exit={{ opacity: 0, scale: 0.9, y: 20 }}
+              style={styles.confirmModal}
+              onClick={(e) => e.stopPropagation()}
+            >
+              <div style={styles.confirmIcon}>🚫</div>
+              <h3 style={styles.confirmTitle}>Remove Player</h3>
+              <p style={styles.confirmText}>
+                Remove <strong>{memberToRemove.inGameName}</strong> from the team?
+              </p>
+              <div style={styles.confirmButtons}>
+                <motion.button
+                  style={styles.cancelButton}
+                  onClick={() => setMemberToRemove(null)}
+                  whileHover={{ scale: 1.02 }}
+                  whileTap={{ scale: 0.98 }}
+                >
+                  Cancel
+                </motion.button>
+                <motion.button
+                  style={styles.removeConfirmButton}
+                  onClick={confirmRemoveMember}
+                  disabled={isRemoving}
+                  whileHover={{ scale: 1.02 }}
+                  whileTap={{ scale: 0.98 }}
+                >
+                  {isRemoving ? 'Removing...' : 'Remove'}
+                </motion.button>
+              </div>
+            </motion.div>
+          </motion.div>
+        )}
+      </AnimatePresence>
     </div>
   )
 }
@@ -451,6 +549,7 @@ const styles = {
     marginBottom: 24,
   },
   slot: {
+    position: 'relative', // For absolute positioned remove button
     aspectRatio: '1',
     borderRadius: 20,
     display: 'flex',
@@ -493,6 +592,24 @@ const styles = {
     top: -4,
     right: -4,
     fontSize: 16,
+  },
+  removeButton: {
+    position: 'absolute',
+    top: 8,
+    right: 8,
+    width: 24,
+    height: 24,
+    borderRadius: '50%',
+    border: 'none',
+    background: 'rgba(239, 68, 68, 0.2)',
+    color: '#ef4444',
+    fontSize: 14,
+    fontWeight: 600,
+    cursor: 'pointer',
+    display: 'flex',
+    alignItems: 'center',
+    justifyContent: 'center',
+    transition: 'all 0.2s ease',
   },
   playerName: {
     fontSize: 14,
@@ -575,6 +692,72 @@ const styles = {
     color: '#ef4444',
     textAlign: 'center',
     marginBottom: 12,
+  },
+  // Confirmation Modal Styles
+  modalOverlay: {
+    position: 'fixed',
+    inset: 0,
+    background: 'rgba(0, 0, 0, 0.8)',
+    backdropFilter: 'blur(8px)',
+    display: 'flex',
+    alignItems: 'center',
+    justifyContent: 'center',
+    zIndex: 1000,
+    padding: 20,
+  },
+  confirmModal: {
+    background: 'linear-gradient(145deg, #1a1a2e 0%, #16162e 100%)',
+    borderRadius: 24,
+    padding: 32,
+    maxWidth: 340,
+    width: '100%',
+    textAlign: 'center',
+    border: '1px solid rgba(255, 255, 255, 0.1)',
+    boxShadow: '0 20px 60px rgba(0, 0, 0, 0.5)',
+  },
+  confirmIcon: {
+    fontSize: 48,
+    marginBottom: 16,
+  },
+  confirmTitle: {
+    fontSize: 20,
+    fontWeight: 700,
+    color: '#fff',
+    margin: '0 0 8px 0',
+  },
+  confirmText: {
+    fontSize: 14,
+    color: 'rgba(255, 255, 255, 0.6)',
+    margin: '0 0 24px 0',
+    lineHeight: 1.5,
+  },
+  confirmButtons: {
+    display: 'flex',
+    gap: 12,
+  },
+  cancelButton: {
+    flex: 1,
+    padding: '14px 20px',
+    fontSize: 14,
+    fontWeight: 600,
+    border: 'none',
+    borderRadius: 12,
+    cursor: 'pointer',
+    background: 'rgba(255, 255, 255, 0.1)',
+    color: '#fff',
+    transition: 'all 0.2s ease',
+  },
+  removeConfirmButton: {
+    flex: 1,
+    padding: '14px 20px',
+    fontSize: 14,
+    fontWeight: 600,
+    border: 'none',
+    borderRadius: 12,
+    cursor: 'pointer',
+    background: 'linear-gradient(135deg, #ef4444 0%, #dc2626 100%)',
+    color: '#fff',
+    transition: 'all 0.2s ease',
   },
 }
 

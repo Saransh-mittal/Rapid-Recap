@@ -1083,6 +1083,45 @@ const fixBattleHistory = asyncHandler(async (req, res) => {
   res.json({ success: true, message: 'History migrated successfully' })
 })
 
+/**
+ * @desc    Remove a team member (leader only)
+ * @route   POST /api/play/team/:teamId/remove
+ * @access  Requires X-Session-Id header
+ */
+const removeTeamMember = asyncHandler(async (req, res) => {
+  const { teamId } = req.params
+  const { memberSessionPlayerId } = req.body
+  const sessionId = req.headers['x-session-id']
+
+  if (!sessionId) {
+    return res.status(400).json({ error: 'Session ID is required in X-Session-Id header' })
+  }
+
+  if (!memberSessionPlayerId) {
+    return res.status(400).json({ error: 'Member session player ID is required' })
+  }
+
+  try {
+    const team = await playSessionService.removeMemberAsSession({
+      teamId,
+      leaderSessionId: sessionId,
+      memberSessionPlayerId,
+    })
+
+    res.status(200).json({
+      success: true,
+      message: 'Member removed successfully',
+      team,
+    })
+  } catch (error) {
+    console.error('Remove team member error:', error)
+    res.status(400).json({
+      success: false,
+      error: error.message || 'Failed to remove member',
+    })
+  }
+})
+
 module.exports = {
   createSession,
   createTeam,
@@ -1113,5 +1152,7 @@ module.exports = {
   // Matchmaking status for session players
   getMatchmakingStatus,
   fixBattleHistory,
+  // Team member management
+  removeTeamMember,
 }
 
