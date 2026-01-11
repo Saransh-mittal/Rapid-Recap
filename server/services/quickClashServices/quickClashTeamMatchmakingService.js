@@ -699,9 +699,10 @@ const leaveTeamMatchmaking = async ({ teamId, userId = null }) => {
                 // Notify other team members
                 if (teamInEntry) {
                   for (const member of teamInEntry.members) {
-                    if (member.user.toString() !== userId.toString()) {
+                    const memberId = getMemberId(member)
+                    if (memberId && memberId !== userId.toString()) {
                       globalEmitter.emit('quickClash:teamLeftMatchmaking', {
-                        userId: member.user,
+                        userId: memberId,
                         teamId: entry.team.toString(),
                         teamName: teamInEntry.name,
                         reason: 'memberLeft',
@@ -894,9 +895,7 @@ const leaveGlobalMatchmaking = async ({ userId }) => {
 
           // Check if the user is from a source team
           const memberFromSourceTeam = team.members.find(member => {
-            const memberId = member.user._id
-              ? member.user._id.toString()
-              : member.user.toString()
+            const memberId = getMemberId(member)
             return memberId === userId.toString() && member.sourceTeam
           })
 
@@ -1085,11 +1084,10 @@ const getGlobalMatchmakingStatus = async ({ userId }) => {
           }
           // Check if user was from a source team
           else {
-            const userMember = team.members.find(
-              member =>
-                (member.user._id || member.user).toString() ===
-                userId.toString(),
-            )
+            const userMember = team.members.find(member => {
+              const memberId = getMemberId(member)
+              return memberId === userId.toString()
+            })
 
             if (userMember && userMember.sourceTeam) {
               joinType = 'sourceTeam'
@@ -1255,6 +1253,7 @@ const cleanupAutoFormedTeam = async ({
   // Get the auto-formed team
   const team = await QuickClashTeam.findById(teamId)
     .populate('members.user', '_id name inGameName')
+    .populate('members.sessionPlayer', '_id inGameName trophies')
     .session(session)
 
   if (!team || !team.formationInfo || !team.formationInfo.isAutoFormed) {
@@ -1277,17 +1276,17 @@ const cleanupAutoFormedTeam = async ({
   let initiatorName = 'A team member'
 
   if (initiatorUserId) {
-    const initiatorMember = team.members.find(
-      member =>
-        member.user._id &&
-        member.user._id.toString() === initiatorUserId.toString(),
-    )
+    const initiatorMember = team.members.find(member => {
+      const memberId = getMemberId(member)
+      return memberId && memberId.toString() === initiatorUserId.toString()
+    })
 
     if (initiatorMember) {
       initiatorSourceTeamId = initiatorMember.sourceTeam
       initiatorName =
-        initiatorMember.user.name ||
-        initiatorMember.user.inGameName ||
+        initiatorMember.user?.name ||
+        initiatorMember.user?.inGameName ||
+        initiatorMember.sessionPlayer?.inGameName ||
         'A team member'
     }
   }
@@ -1298,12 +1297,14 @@ const cleanupAutoFormedTeam = async ({
 
   // 2. Reset all members to available or delete their entries
   for (const member of team.members) {
-    const userId = member.user._id || member.user
-    const memberIdStr = userId.toString()
+    const memberId = getMemberId(member)
+    if (!memberId) continue
+
+    const memberIdStr = memberId.toString()
 
     // Get the user's matchmaking entry
     const entry = await QuickClashGlobalMatchmaking.findOne({
-      user: userId,
+      user: memberId,
     }).session(session)
 
     if (entry) {
@@ -1355,9 +1356,7 @@ const cleanupAutoFormedTeam = async ({
     cleanupPlayerState(userId)
   }
 
-  const teamMemberIds = team.members.map(member =>
-    member.user._id ? member.user._id.toString() : member.user.toString(),
-  )
+  const teamMemberIds = team.members.map(member => getMemberId(member)).filter(id => id !== null)
 
   // 3. Process source teams
   if (
@@ -1523,6 +1522,7 @@ const performMatchmakingLogic = async session => {
     })
       .sort({ lastActive: -1 })
       .populate('members.user', '_id name inGameName quickClashTrophies')
+      .populate('members.sessionPlayer', '_id inGameName trophies')
       .session(session)
 
     console.log(`Found ${partialTeams.length} partial teams`)
@@ -1556,14 +1556,18 @@ const performMatchmakingLogic = async session => {
 
       // Mark team members as used
       team.members.forEach(member => {
-        usedPlayerIds.add(member.user._id.toString())
+        const memberId = getMemberId(member)
+        if (memberId) {
+          usedPlayerIds.add(memberId)
+        }
       })
 
       // Create a new team with these members as the base
       let newMembers = team.members.map(member => {
         // Extract only the data we need from the Mongoose document
         return {
-          user: member.user, // Keep the reference intact
+          user: member.user || null, // Keep the user reference if present
+          sessionPlayer: member.sessionPlayer || null, // Keep sessionPlayer reference if present
           role: member.role || 'member',
           status: member.status || 'ready',
           joinedAt: member.joinedAt || new Date(),
@@ -1585,15 +1589,17 @@ const performMatchmakingLogic = async session => {
         // Check if combining would make a team of exactly 4
         if (newMembers.length + otherTeam.members.length === 4) {
           // Perfect match! Check for duplicate members
-          const hasDuplicates = otherTeam.members.some(m =>
-            usedPlayerIds.has(m.user._id.toString()),
-          )
+          const hasDuplicates = otherTeam.members.some(m => {
+            const mId = getMemberId(m)
+            return mId && usedPlayerIds.has(mId)
+          })
 
           if (!hasDuplicates) {
             // We can merge these teams perfectly
             otherTeam.members.forEach(member => {
               newMembers.push({
-                user: member.user,
+                user: member.user || null,
+                sessionPlayer: member.sessionPlayer || null,
                 role: member.role || 'member',
                 status: member.status || 'ready',
                 joinedAt: member.joinedAt || new Date(),
@@ -1601,8 +1607,9 @@ const performMatchmakingLogic = async session => {
                 sourceTeam: otherTeam._id, // Track original team for each member
               })
 
-              if (member.user && member.user._id) {
-                usedPlayerIds.add(member.user._id.toString())
+              const memberId = getMemberId(member)
+              if (memberId) {
+                usedPlayerIds.add(memberId)
               }
             })
 
@@ -1618,15 +1625,17 @@ const performMatchmakingLogic = async session => {
         }
         // If adding would keep us under 4 members, consider it
         else if (newMembers.length + otherTeam.members.length < 4) {
-          const hasDuplicates = otherTeam.members.some(m =>
-            usedPlayerIds.has(m.user._id.toString()),
-          )
+          const hasDuplicates = otherTeam.members.some(m => {
+            const mId = getMemberId(m)
+            return mId && usedPlayerIds.has(mId)
+          })
 
           if (!hasDuplicates) {
             // Add these members
             otherTeam.members.forEach(member => {
               newMembers.push({
-                user: member.user,
+                user: member.user || null,
+                sessionPlayer: member.sessionPlayer || null,
                 role: member.role || 'member',
                 status: member.status || 'ready',
                 joinedAt: member.joinedAt || new Date(),
@@ -1634,8 +1643,9 @@ const performMatchmakingLogic = async session => {
                 sourceTeam: otherTeam._id, // Track original team for each member
               })
 
-              if (member.user && member.user._id) {
-                usedPlayerIds.add(member.user._id.toString())
+              const memberId = getMemberId(member)
+              if (memberId) {
+                usedPlayerIds.add(memberId)
               }
             })
 
@@ -1720,22 +1730,34 @@ const performMatchmakingLogic = async session => {
       // If we have exactly 4 members now, create the team
       if (newMembers.length === 4) {
         // Create the new team
+        const creatorId = getMemberId(newMembers[0])
         const newTeam = new QuickClashTeam({
           name: '', // Will be set later
-          creator: newMembers[0].user._id || newMembers[0].user,
+          creator: creatorId,
           teamType: 'auto', // Mark as auto-formed team
           members: newMembers
             .map((member, idx) => {
-              const userId =
-                member.user && member.user._id ? member.user._id : member.user
-              return {
-                user: userId,
+              // Handle both user and sessionPlayer members
+              const memberId = getMemberId(member)
+              if (!memberId) return null
+
+              // Build member object with appropriate reference
+              const memberObj = {
                 role: idx === 0 ? 'leader' : 'member',
                 status: 'ready',
                 sourceTeam: member.sourceTeam,
               }
+
+              // Set either user or sessionPlayer based on what's present
+              if (member.user) {
+                memberObj.user = member.user._id || member.user
+              } else if (member.sessionPlayer) {
+                memberObj.sessionPlayer = member.sessionPlayer._id || member.sessionPlayer
+              }
+
+              return memberObj
             })
-            .filter(m => m.user),
+            .filter(m => m !== null && (m.user || m.sessionPlayer)),
           // Add formation info for tracking origin
           formationInfo: {
             isAutoFormed: true,
@@ -1778,9 +1800,9 @@ const performMatchmakingLogic = async session => {
             if (sourceTeam && sourceTeam.members) {
               // Remove individual matchmaking entries for all team members
               for (const member of sourceTeam.members) {
-                const memberId = member.user.toString
-                  ? member.user.toString()
-                  : member.user
+                const memberId = getMemberId(member)
+                if (!memberId) continue
+
                 // Delete any existing global matchmaking entry for this user
                 await QuickClashGlobalMatchmaking.deleteOne({
                   user: memberId,
@@ -1799,8 +1821,10 @@ const performMatchmakingLogic = async session => {
 
         // Update all players' matchmaking status for the new team
         for (const member of newMembers) {
-          const userId = member.user._id || member.user
-          const memberIdStr = userId.toString()
+          const memberId = getMemberId(member)
+          if (!memberId) continue
+
+          const memberIdStr = memberId.toString()
 
           // Make sure they're removed from the pending solo players
           teamFormationState.pendingSoloPlayers.delete(memberIdStr)
@@ -1808,7 +1832,7 @@ const performMatchmakingLogic = async session => {
 
           // Update or create a new matchmaking entry for this player in the new team
           const existingEntry = await QuickClashGlobalMatchmaking.findOne({
-            user: userId,
+            user: memberId,
           }).session(session)
 
           if (existingEntry) {
@@ -1819,7 +1843,7 @@ const performMatchmakingLogic = async session => {
           } else {
             // Create new entry
             const newEntry = new QuickClashGlobalMatchmaking({
-              user: userId,
+              user: memberId,
               team: newTeam._id,
               status: 'matched',
               expiresAt: new Date(Date.now() + MATCHMAKING_EXPIRY),
@@ -1913,34 +1937,38 @@ const performMatchmakingLogic = async session => {
       // FIRST: Ensure that ALL individual member matchmaking entries are cleared
       // This must be done BEFORE we try to join the team to matchmaking
       for (const member of team.members) {
-        const userId = member.user._id || member.user
-        const userIdStr = userId.toString()
+        const memberId = getMemberId(member)
+        if (!memberId) continue
+
+        const memberIdStr = memberId.toString()
 
         console.log(
-          `Ensuring global matchmaking entry is cleaned up for team member ${userIdStr}`,
+          `Ensuring global matchmaking entry is cleaned up for team member ${memberIdStr}`,
         )
 
         // Delete any existing global matchmaking entry directly
         await QuickClashGlobalMatchmaking.deleteOne({
-          user: userId,
+          user: memberId,
         }).session(session)
 
         // Clean up from pending solo players if needed
-        teamFormationState.pendingSoloPlayers.delete(userIdStr)
+        teamFormationState.pendingSoloPlayers.delete(memberIdStr)
       }
 
       // SECOND: Create new matchmaking entries for each member with the new team ID
       for (const member of team.members) {
-        const userId = member.user._id || member.user
-        const userIdStr = userId.toString()
+        const memberId = getMemberId(member)
+        if (!memberId) continue
+
+        const memberIdStr = memberId.toString()
 
         console.log(
-          `Creating new matchmaking entry for team member ${userIdStr} with team ${team._id}`,
+          `Creating new matchmaking entry for team member ${memberIdStr} with team ${team._id}`,
         )
 
         // Create a new entry linking the user to the new team
         const newEntry = new QuickClashGlobalMatchmaking({
-          user: userId,
+          user: memberId,
           team: team._id,
           status: 'matched',
           expiresAt: new Date(Date.now() + MATCHMAKING_EXPIRY),
@@ -1974,8 +2002,9 @@ const performMatchmakingLogic = async session => {
 
         // Delete all member matchmaking entries
         for (const member of team.members) {
-          const userId = member.user._id || member.user
-          await QuickClashGlobalMatchmaking.deleteOne({ user: userId }).session(
+          const memberId = getMemberId(member)
+          if (!memberId) continue
+          await QuickClashGlobalMatchmaking.deleteOne({ user: memberId }).session(
             session,
           )
         }
@@ -2199,30 +2228,30 @@ const processTeamMatchmaking = async providedSession => {
           // Clean up all individual matchmaking entries for both teams
           // Note: Session players don't have entries in QuickClashGlobalMatchmaking
           await Promise.all([
-            // Team A members (only users, not session players)
+            // Team A members
             ...team.members
-              .filter(member => member.user) // Only process user members
               .map(member => {
-                const userId = member.user._id || member.user
+                const memberId = getMemberId(member)
+                if (!memberId) return Promise.resolve()
                 return QuickClashGlobalMatchmaking.findOneAndDelete(
-                  { user: userId },
+                  { user: memberId },
                   { session },
                 ).then(() => {
                   // Clean up each player's state
-                  cleanupPlayerState(userId)
+                  cleanupPlayerState(memberId)
                 })
               }),
-            // Team B members (only users, not session players)
+            // Team B members
             ...matchedTeam.members
-              .filter(member => member.user) // Only process user members
               .map(member => {
-                const userId = member.user._id || member.user
+                const memberId = getMemberId(member)
+                if (!memberId) return Promise.resolve()
                 return QuickClashGlobalMatchmaking.findOneAndDelete(
-                  { user: userId },
+                  { user: memberId },
                   { session },
                 ).then(() => {
                   // Clean up each player's state
-                  cleanupPlayerState(userId)
+                  cleanupPlayerState(memberId)
                 })
               }),
           ])
@@ -2440,29 +2469,31 @@ const checkForTeamMatch = async ({ teamId }) => {
         // Clean up global matchmaking entries (only for users, not session players)
         await Promise.all(
           team.members
-            .filter(member => member.user) // Only process user members
-            .map(member =>
-              QuickClashGlobalMatchmaking.findOneAndDelete(
-                { user: member.user._id },
+            .map(member => {
+              const memberId = getMemberId(member)
+              if (!memberId) return Promise.resolve()
+              return QuickClashGlobalMatchmaking.findOneAndDelete(
+                { user: memberId },
                 { session },
               ).then(() => {
                 // Clean up each player's state
-                cleanupPlayerState(member.user._id)
-              }),
-            ),
+                cleanupPlayerState(memberId)
+              })
+            }),
         )
         await Promise.all(
           matchedTeam.members
-            .filter(member => member.user) // Only process user members
-            .map(member =>
-              QuickClashGlobalMatchmaking.findOneAndDelete(
-                { user: member.user._id },
+            .map(member => {
+              const memberId = getMemberId(member)
+              if (!memberId) return Promise.resolve()
+              return QuickClashGlobalMatchmaking.findOneAndDelete(
+                { user: memberId },
                 { session },
               ).then(() => {
                 // Clean up each player's state
-                cleanupPlayerState(member.user._id)
-              }),
-            ),
+                cleanupPlayerState(memberId)
+              })
+            }),
         )
 
         // Create team battle between the two teams

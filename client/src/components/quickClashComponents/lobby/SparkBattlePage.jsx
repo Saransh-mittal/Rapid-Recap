@@ -46,7 +46,7 @@ const SparkBattlePage = () => {
 
   const sessionId = localStorage.getItem('playSessionId')
 
-  // Fetch battle data
+  // Fetch battle data with retry logic for transaction timing issues
   useEffect(() => {
     if (!battleId || !sessionId) {
       setError('Battle or session not found')
@@ -54,14 +54,26 @@ const SparkBattlePage = () => {
       return
     }
 
-    const fetchBattle = async () => {
+    const fetchBattle = async (retryCount = 0) => {
+      const MAX_RETRIES = 5
+      const RETRY_DELAY = 1000 // 1 second between retries
+
       try {
         const data = await sessionApi.getBattle(battleId, sessionId)
         setBattle(data.battle)
+        setLoading(false)
       } catch (err) {
-        console.error('Failed to fetch battle:', err)
-        setError(err.response?.data?.message || 'Failed to load battle')
-      } finally {
+        console.error(`Failed to fetch battle (attempt ${retryCount + 1}/${MAX_RETRIES + 1}):`, err)
+
+        // If battle not found (404) and we haven't exhausted retries, retry after delay
+        // This handles the race condition where transaction may not have committed yet
+        if (err.response?.status === 404 && retryCount < MAX_RETRIES) {
+          console.log(`Battle not found, retrying in ${RETRY_DELAY}ms...`)
+          await new Promise(resolve => setTimeout(resolve, RETRY_DELAY))
+          return fetchBattle(retryCount + 1)
+        }
+
+        setError(err.response?.data?.message || err.response?.data?.error || 'Failed to load battle')
         setLoading(false)
       }
     }

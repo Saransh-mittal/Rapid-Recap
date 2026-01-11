@@ -212,6 +212,7 @@ const calculateTeamEffectiveRating = async ({ teamId, session = null }) => {
   // Step 1: Get team with members
   const team = await QuickClashTeam.findById(teamId)
     .populate('members.user', '_id quickClashTrophies')
+    .populate('members.sessionPlayer', '_id trophies')
     .session(session)
 
   if (!team) {
@@ -227,9 +228,17 @@ const calculateTeamEffectiveRating = async ({ teamId, session = null }) => {
 
   // Get last 10 RQM scores for each member
   // CORRECTED: Query uses score.RQM_score
+  // FIXED: Handle both user and sessionPlayer members
   for (const member of team.members) {
+    // Get member ID - either from user or sessionPlayer
+    const memberId = member.user?._id || member.user || member.sessionPlayer?._id || member.sessionPlayer
+    if (!memberId) {
+      memberRQMs.push(BASELINE_RQM)
+      continue
+    }
+
     const memberSessions = await QuickClashSession.find({
-      user: member.user._id,
+      user: memberId,
       phase: 'completed',
       'score.RQM_score': { $exists: true, $ne: null }, // FIXED: Correct field path
     })

@@ -51,18 +51,36 @@ export const fetchTeamBattles = createAsyncThunk(
 export const fetchTeamBattleDetails = createAsyncThunk(
   'quickClashTeamBattle/fetchTeamBattleDetails',
   async (battleId, { rejectWithValue, getState }) => {
+    const MAX_RETRIES = 5
+    const RETRY_DELAY = 1000 // 1 second between retries
+
+    const attemptFetch = async (retryCount = 0) => {
+      try {
+        // Check if user is authenticated via Redux
+        const { auth } = getState()
+        const hasUser = !!auth?.user
+
+        // Use session endpoint if no authenticated user
+        const endpoint = hasUser
+          ? `/api/quickClash/team-battle/${battleId}`
+          : `/api/play/battle/${battleId}`
+
+        const response = await axios.get(endpoint)
+        return response.data.battle
+      } catch (error) {
+        // If battle not found (404) and we haven't exhausted retries, retry after delay
+        // This handles the race condition where transaction may not have committed yet
+        if (error.response?.status === 404 && retryCount < MAX_RETRIES) {
+          console.log(`Battle ${battleId} not found, retrying in ${RETRY_DELAY}ms (attempt ${retryCount + 1}/${MAX_RETRIES})...`)
+          await new Promise(resolve => setTimeout(resolve, RETRY_DELAY))
+          return attemptFetch(retryCount + 1)
+        }
+        throw error
+      }
+    }
+
     try {
-      // Check if user is authenticated via Redux
-      const { auth } = getState()
-      const hasUser = !!auth?.user
-
-      // Use session endpoint if no authenticated user
-      const endpoint = hasUser
-        ? `/api/quickClash/team-battle/${battleId}`
-        : `/api/play/battle/${battleId}`
-
-      const response = await axios.get(endpoint)
-      return response.data.battle
+      return await attemptFetch()
     } catch (error) {
       return rejectWithValue(
         error.response?.data?.message || 'Failed to fetch team battle details',
