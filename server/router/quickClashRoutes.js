@@ -56,7 +56,8 @@ const {
 } = require('../controllers/quickClashPowerupController')
 
 const router = express.Router()
-const dailyTaskRoutes = require('./quickClashDailyTaskRoutes')
+// TEMPORARILY DISABLED - Daily Tasks feature
+// const dailyTaskRoutes = require('./quickClashDailyTaskRoutes')
 const {
   getCurrentUserProfile,
   getUserProfile,
@@ -107,8 +108,8 @@ router.use(Authenticate)
 // This middleware will return a 403 with coming soon data for unauthorized users
 // router.use(checkQuickClashAuthorization)
 
-// Mount daily task routes
-router.use('/dailyTasks', dailyTaskRoutes)
+// TEMPORARILY DISABLED - Daily Tasks feature
+// router.use('/dailyTasks', dailyTaskRoutes)
 
 // Mount team routes (matchmaking already handled above)
 router.use('/', teamRoutes)

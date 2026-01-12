@@ -30,9 +30,10 @@ const NotificationDrawer = lazy(() =>
 const NotificationModal = lazy(() =>
   import('../components/Header-Footer/modernNavbarComponents/modals/NotificationModal.jsx')
 )
-const TaskCompletionHandler = lazy(() =>
-  import('../components/quickClashComponents/dailyTasks/TaskCompletionHandler.jsx')
-)
+// TEMPORARILY DISABLED - Daily Tasks feature
+// const TaskCompletionHandler = lazy(() =>
+//   import('../components/quickClashComponents/dailyTasks/TaskCompletionHandler.jsx')
+// )
 const BattleCreationNotifications = lazy(() =>
   import('../components/quickClashComponents/BattleCreationNotifications.jsx')
 )
@@ -151,10 +152,11 @@ const QuickClashV2 = ({ forceOpenMatchmaking = false, onForceOpenReset }) => {
         {/* Active Battles */}
         <ActiveChallengesV2 />
 
-        {/* Background handlers */}
+        {/* TEMPORARILY DISABLED - Daily Tasks feature
         <Suspense fallback={null}>
           <TaskCompletionHandler />
         </Suspense>
+        */}
       </div>
 
       {/* Notifications - only when needed */}

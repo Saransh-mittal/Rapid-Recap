@@ -13,7 +13,8 @@ import { Bell, Home, ChevronRight, Target, Trophy, UserCircle } from 'lucide-rea
 import TrophyDisplay from '../user/TrophyDisplay'
 import LevelBadge from '../user/LevelBadge'
 import StreakDisplay from '../user/StreakDisplay'
-import TaskProgressIndicator from '../dailyTasks/TaskProgressIndicator'
+// TEMPORARILY DISABLED - Daily Tasks feature
+// import TaskProgressIndicator from '../dailyTasks/TaskProgressIndicator'
 import QuickClashLeaderboardButton from '../leaderboard/QuickClashLeaderboardButton'
 import QuickClashLeaderboardModal from '../leaderboard/QuickClashLeaderboardModal'
 
@@ -27,7 +28,8 @@ import { quizAudioService } from '../../../services/quizAudioService'
 
 // Lazy load
 const WiseWeb = lazy(() => import('../../WiseWeb/WiseWeb'))
-const TaskPopup = lazy(() => import('../dailyTasks/TaskPopup'))
+// TEMPORARILY DISABLED - Daily Tasks feature
+// const TaskPopup = lazy(() => import('../dailyTasks/TaskPopup'))
 
 const MotionDiv = motion.div
 const MotionButton = motion.button
@@ -212,12 +214,16 @@ const QuickClashHeaderV2 = () => {
               onlineCount={onlineCount}
               loading={loading.friends && loading.requests}
             />
+            <LeaderboardButton onClick={handleLeaderboardClick} />
+            {/* MOVED TO PROFILE TAB - Notification bell removed from header
             <NotificationBell
               count={notificationCount}
               onClick={handleNotificationClick}
             />
-            <LeaderboardButton onClick={handleLeaderboardClick} />
+            */}
+            {/* TEMPORARILY DISABLED - Daily Tasks feature
             <TaskProgressIndicator onViewTasks={handleViewTasksClick} size="sm" />
+            */}
           </div>
         </MotionDiv>
       )}
@@ -250,11 +256,15 @@ const QuickClashHeaderV2 = () => {
               onlineCount={onlineCount}
               loading={loading.friends && loading.requests}
             />
+            {/* MOVED TO PROFILE TAB - Notification bell removed from header
             <NotificationBell
               count={notificationCount}
               onClick={handleNotificationClick}
             />
+            */}
+            {/* TEMPORARILY DISABLED - Daily Tasks feature
             <TaskProgressIndicator onViewTasks={handleViewTasksClick} size="sm" />
+            */}
           </div>
         </div>
 
@@ -290,7 +300,7 @@ const QuickClashHeaderV2 = () => {
         </h1>
       </div>
 
-      {/* Task Popup */}
+      {/* TEMPORARILY DISABLED - Task Popup (Daily Tasks feature)
       {showTaskPopup && (
         <Suspense fallback={null}>
           <TaskPopup
@@ -300,6 +310,7 @@ const QuickClashHeaderV2 = () => {
           />
         </Suspense>
       )}
+      */}
 
       {/* WiseWeb */}
       <Suspense fallback={null}>

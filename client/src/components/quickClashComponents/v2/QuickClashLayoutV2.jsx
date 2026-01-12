@@ -75,12 +75,21 @@ const BottomNavContent = memo(({ activeTab, onTabChange, isSession }) => {
   const { t } = useTranslation('QuickClash')
   const navigate = useNavigate()
 
+  // Get notification count from Redux for Profile tab badge
+  const { updates, unreadFriendRequests, notification } = useSelector((state) => state.app)
+  const notificationCount = React.useMemo(() => {
+    const unreadUpdates = updates?.filter(u => !u.read).length || 0
+    const friendRequests = unreadFriendRequests || 0
+    const notificationItems = Array.isArray(notification) ? notification.length : 0
+    return unreadUpdates + friendRequests + notificationItems
+  }, [updates, unreadFriendRequests, notification])
+
   // Tab configuration with lock status for session players
   const tabs = [
-    { id: 'battles', icon: Swords, label: t('Battles'), color: '#22d3ee', glowColor: 'rgba(34, 211, 238, 0.4)', locked: false },
-    { id: 'history', icon: Trophy, label: t('History'), color: '#facc15', glowColor: 'rgba(250, 204, 21, 0.4)', locked: false },
-    { id: 'teams', icon: Users, label: t('Teams'), color: '#a78bfa', glowColor: 'rgba(167, 139, 250, 0.4)', locked: isSession }, // Show lock but still accessible
-    { id: 'profile', icon: User, label: t('Profile'), color: '#34d399', glowColor: 'rgba(52, 211, 153, 0.4)', locked: isSession },
+    { id: 'battles', icon: Swords, label: t('Battles'), color: '#22d3ee', glowColor: 'rgba(34, 211, 238, 0.4)', locked: false, badge: 0 },
+    { id: 'history', icon: Trophy, label: t('History'), color: '#facc15', glowColor: 'rgba(250, 204, 21, 0.4)', locked: false, badge: 0 },
+    { id: 'teams', icon: Users, label: t('Teams'), color: '#a78bfa', glowColor: 'rgba(167, 139, 250, 0.4)', locked: isSession, badge: 0 },
+    { id: 'profile', icon: User, label: t('Profile'), color: '#34d399', glowColor: 'rgba(52, 211, 153, 0.4)', locked: isSession, badge: isSession ? 0 : notificationCount },
   ]
 
   const handleTabClick = useCallback((tabId) => {
@@ -178,7 +187,6 @@ const BottomNavContent = memo(({ activeTab, onTabChange, isSession }) => {
                   style={{ position: 'relative' }}
                 >
                   <Icon style={{ width: 24, height: 24 }} />
-                  {/* Lock badge */}
                   {tab.locked && (
                     <div
                       style={{
@@ -197,6 +205,21 @@ const BottomNavContent = memo(({ activeTab, onTabChange, isSession }) => {
                     >
                       <Lock style={{ width: 7, height: 7, color: 'rgba(255,255,255,0.5)' }} />
                     </div>
+                  )}
+                  {/* Notification red dot for Profile tab */}
+                  {tab.badge > 0 && !tab.locked && (
+                    <div
+                      style={{
+                        position: 'absolute',
+                        top: -2,
+                        right: -2,
+                        width: 8,
+                        height: 8,
+                        borderRadius: '50%',
+                        backgroundColor: '#ef4444',
+                        border: '1.5px solid rgba(15, 23, 42, 0.95)',
+                      }}
+                    />
                   )}
                 </motion.div>
 

@@ -26,11 +26,13 @@ import {
   BarChart2,
   Clock,
   Award,
+  Bell,
+  ChevronRight,
 } from 'lucide-react'
 import { useNavigate } from 'react-router-dom'
 import { useSelector, useDispatch } from 'react-redux'
 import { logoutAuth } from '../../../redux/authSlice'
-import { logoutApp, resetLoadingFlags, resetAllState } from '../../../redux/appSlice'
+import { logoutApp, resetLoadingFlags, resetAllState, setIsNotifDrawerOpen } from '../../../redux/appSlice'
 import i18n from 'i18next'
 import axios from 'axios'
 import moment from 'moment'
@@ -74,6 +76,15 @@ const QuickClashProfileV2 = ({ userId: propUserId }) => {
   const [error, setError] = useState(null)
   const [logoutLoading, setLogoutLoading] = useState(false)
 
+  // Get notification count from Redux
+  const { updates, unreadFriendRequests, notification } = useSelector(state => state.app)
+  const notificationCount = React.useMemo(() => {
+    const unreadUpdates = updates?.filter(u => !u.read).length || 0
+    const friendRequests = unreadFriendRequests || 0
+    const notificationItems = Array.isArray(notification) ? notification.length : 0
+    return unreadUpdates + friendRequests + notificationItems
+  }, [updates, unreadFriendRequests, notification])
+
   const isOwnProfile = !propUserId || propUserId === user?._id
   const targetUserId = propUserId || user?._id
 
@@ -115,6 +126,11 @@ const QuickClashProfileV2 = ({ userId: propUserId }) => {
       setLogoutLoading(false)
     }
   }, [dispatch, navigate])
+
+  // Open notification drawer
+  const handleOpenNotifications = useCallback(() => {
+    dispatch(setIsNotifDrawerOpen(true))
+  }, [dispatch])
 
   if (loading) {
     return (
@@ -207,6 +223,69 @@ const QuickClashProfileV2 = ({ userId: propUserId }) => {
           </Text>
         </VStack>
       </Flex>
+
+      {/* ═══════════════════════════════════════════════════════════════ */}
+      {/* NOTIFICATIONS CARD */}
+      {/* ═══════════════════════════════════════════════════════════════ */}
+      {isOwnProfile && (
+        <Box
+          as="button"
+          onClick={handleOpenNotifications}
+          bg="rgba(255,255,255,0.03)"
+          borderRadius="12px"
+          p={3}
+          mb={3}
+          border="1px solid"
+          borderColor={notificationCount > 0 ? 'rgba(239, 68, 68, 0.4)' : 'rgba(255,255,255,0.06)'}
+          w="100%"
+          textAlign="left"
+          cursor="pointer"
+          transition="all 0.2s"
+          _hover={{ bg: 'rgba(255,255,255,0.05)', borderColor: notificationCount > 0 ? 'rgba(239, 68, 68, 0.6)' : 'rgba(255,255,255,0.1)' }}
+          _active={{ transform: 'scale(0.98)' }}
+        >
+          <Flex align="center" justify="space-between">
+            <HStack spacing={3}>
+              <Flex
+                w="36px"
+                h="36px"
+                borderRadius="10px"
+                bg={notificationCount > 0 ? 'rgba(239, 68, 68, 0.15)' : 'rgba(255,255,255,0.05)'}
+                align="center"
+                justify="center"
+              >
+                <Icon as={Bell} boxSize={4} color={notificationCount > 0 ? '#ef4444' : 'rgba(255,255,255,0.5)'} />
+              </Flex>
+              <Box>
+                <Text fontSize="sm" fontWeight="semibold" color="white">
+                  Notifications
+                </Text>
+                <Text fontSize="xs" color="rgba(255,255,255,0.4)">
+                  {notificationCount > 0 ? `${notificationCount} unread` : 'All caught up'}
+                </Text>
+              </Box>
+            </HStack>
+            <HStack spacing={2}>
+              {notificationCount > 0 && (
+                <Flex
+                  minW="20px"
+                  h="20px"
+                  px={1.5}
+                  borderRadius="full"
+                  bg="#ef4444"
+                  align="center"
+                  justify="center"
+                >
+                  <Text fontSize="xs" fontWeight="bold" color="white">
+                    {notificationCount > 99 ? '99+' : notificationCount}
+                  </Text>
+                </Flex>
+              )}
+              <Icon as={ChevronRight} boxSize={4} color="rgba(255,255,255,0.3)" />
+            </HStack>
+          </Flex>
+        </Box>
+      )}
 
       {/* ═══════════════════════════════════════════════════════════════ */}
       {/* STATS GRID - 2x2 essential stats */}
