@@ -68,6 +68,12 @@ const playSessionSchema = new mongoose.Schema(
       ref: 'PLAY_SESSION',
       default: null,
     },
+    // Streak tracking for daily return habit
+    streak: {
+      dayStreak: { type: Number, default: 0 },
+      lastPlayedDate: { type: Date, default: null },
+      longestStreak: { type: Number, default: 0 },
+    },
   },
   {
     timestamps: true,

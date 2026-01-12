@@ -408,7 +408,7 @@ const getGlobalMatchmakingStatusDetailed = asyncHandler(async (req, res) => {
 
     // Check if user is in global matchmaking
     const matchmakingEntry = await QuickClashGlobalMatchmaking.findOne({
-      user: userId,
+      user: playerId,
       status: { $ne: 'in_battle' },
     })
 

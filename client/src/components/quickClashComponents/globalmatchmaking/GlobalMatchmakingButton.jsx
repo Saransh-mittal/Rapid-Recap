@@ -60,6 +60,8 @@ const GlobalMatchmakingButton = React.memo(
     buttonWidth = { base: '100%', md: '240px' },
     buttonHeight = { base: '48px', md: '56px' },
     buttonMinWidth = { base: '140px', md: '240px' },
+    forceOpenModal = false, // External control to open modal
+    onForceOpenReset, // Callback to reset the forceOpenModal prop
     ...otherProps
   }) => {
     const { t } = useTranslation('QuickClash')
@@ -67,6 +69,16 @@ const GlobalMatchmakingButton = React.memo(
     const dispatch = useDispatch()
     const [isModalOpen, setIsModalOpen] = useState(false)
     const [isMobile, setIsMobile] = useState(false)
+
+    // Handle external trigger to open modal
+    useEffect(() => {
+      if (forceOpenModal && !isModalOpen) {
+        quizAudioService.playButtonClick()
+        setIsModalOpen(true)
+        // Reset the external trigger
+        onForceOpenReset?.()
+      }
+    }, [forceOpenModal, isModalOpen, onForceOpenReset])
 
     useEffect(() => {
       const checkMobile = () => setIsMobile(window.innerWidth < 768)

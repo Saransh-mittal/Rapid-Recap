@@ -48,7 +48,7 @@ import { ModalLoader } from '../components/Header-Footer/modernNavbarComponents/
 // MAIN COMPONENT
 // ============================================================================
 
-const QuickClashV2 = () => {
+const QuickClashV2 = ({ forceOpenMatchmaking = false, onForceOpenReset }) => {
   const { t } = useTranslation('QuickClash')
   const dispatch = useDispatch()
   const toast = useToast()
@@ -142,7 +142,10 @@ const QuickClashV2 = () => {
 
         {/* Matchmaking - DIRECT import, no Suspense */}
         <div className="mt-4 mb-4">
-          <GlobalMatchmakingButton />
+          <GlobalMatchmakingButton
+            forceOpenModal={forceOpenMatchmaking}
+            onForceOpenReset={onForceOpenReset}
+          />
         </div>
 
         {/* Active Battles */}

@@ -467,6 +467,10 @@ const userSchema = new mongoose.Schema(
         type: Number,
         default: 1000, // Same as starting trophies
       },
+      // Streak tracking for daily return habit
+      dayStreak: { type: Number, default: 0 },
+      lastPlayedDate: { type: Date, default: null },
+      longestStreak: { type: Number, default: 0 },
       // We'll use createdAt for the 2-week activity protection period
     },
     earlyAdopterCode: {

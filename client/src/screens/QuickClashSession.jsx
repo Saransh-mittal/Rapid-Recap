@@ -49,6 +49,11 @@ import { quizAudioService } from '../services/quizAudioService'
 // Session player support
 import usePlayer from '../hooks/usePlayer'
 
+// Streak celebration popup
+const StreakIncreasedPopup = lazy(() =>
+  import('../components/quickClashComponents/v2/StreakIncreasedPopup'),
+)
+
 // Lazy-loaded components with loading fallbacks
 const ReadingPhase = lazy(() =>
   import('../components/quickClashComponents/legacy/ReadingPhase'),
@@ -290,6 +295,10 @@ const QuickClashSession = ({ isSessionPlayer = false }) => {
   // Track powerups used during forge phase to filter them out in quiz
   const [usedPowerupIds, setUsedPowerupIds] = useState(new Set())
 
+  // Streak popup state
+  const [showStreakPopup, setShowStreakPopup] = useState(false)
+  const [streakResult, setStreakResult] = useState(null)
+
   // Callback to track when a powerup is used in forge mode
   const handlePowerupUsed = useCallback((powerupId) => {
     setUsedPowerupIds(prev => new Set([...prev, powerupId]))
@@ -528,7 +537,7 @@ const QuickClashSession = ({ isSessionPlayer = false }) => {
     setPhaseProgress(0)
   }, [filteredActivePowerups, toast])
 
-  // ORIGINAL QUIZ COMPLETION LOGIC - PRESERVED
+  // ORIGINAL QUIZ COMPLETION LOGIC - WITH STREAK POPUP
   const handleQuizComplete = useCallback(
     result => {
       haptics.success() // Haptic for quiz completion
@@ -540,6 +549,12 @@ const QuickClashSession = ({ isSessionPlayer = false }) => {
       // Only fetch challenges for authenticated users (session players don't have challenges)
       if (!isSessionPlayer) {
         dispatch(fetchActiveChallenges())
+      }
+
+      // Store streak result in localStorage for TeamBattlePage to display
+      // This ensures the popup shows after navigation completes
+      if (result.streakResult && result.streakResult.newStreak > 0) {
+        localStorage.setItem('pendingStreakPopup', JSON.stringify(result.streakResult))
       }
 
       trackChallengeCompletion({
@@ -619,14 +634,21 @@ const QuickClashSession = ({ isSessionPlayer = false }) => {
     // Session players don't use localStorage authorization - they use X-Session-Id
     if (isSessionPlayer) return
 
+    // Wait for user to be loaded before checking authorization
+    // This prevents false "Unauthorized Access" errors when auth state hasn't hydrated yet
+    if (!user?._id) return
+
     const challengeId = params.challengeId
     const storedAssignment = localStorage.getItem(`challenge_${challengeId}`)
 
     if (storedAssignment) {
       const assignment = JSON.parse(storedAssignment)
 
+      // Check for both 'playerId' (new format from useQuickClashTeamBattle) and 'userId' (legacy format)
+      const storedPlayerId = assignment.playerId || assignment.userId
+
       if (
-        assignment.userId !== user?._id ||
+        storedPlayerId !== user?._id ||
         Date.now() - assignment.timestamp > 30 * 60 * 1000
       ) {
         navigate('/quickclash')
@@ -942,6 +964,20 @@ const QuickClashSession = ({ isSessionPlayer = false }) => {
             cancelText={t('Continue Challenge')}
             isDangerous={true}
           />
+
+          {/* Streak Increased Popup */}
+          <Suspense fallback={null}>
+            <StreakIncreasedPopup
+              isOpen={showStreakPopup}
+              onClose={() => setShowStreakPopup(false)}
+              streakResult={streakResult}
+              isSessionPlayer={isSessionPlayer}
+              onCreateAccount={() => {
+                // Navigate to signup (for session players)
+                navigate('/quickclash', { state: { showSignup: true } })
+              }}
+            />
+          </Suspense>
         </VStack>
       </Container>
     </Flex>

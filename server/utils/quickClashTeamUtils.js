@@ -682,6 +682,9 @@ const calculateFinalTrophies = async (battle, session) => {
     console.error(`[POWERUP_REWARD] Error awarding powerups for battle ${battle._id}:`, rewardError)
   }
 
+  // NOTE: Streak updates were moved to updateBattleWithQuizResults in quickClashTeamBattleService.js
+  // to provide instant feedback when user completes their quiz, instead of waiting for battle to end
+
   // Send battle completion notifications to all participants
   try {
     // Fetch team details from database to get team names

@@ -904,12 +904,21 @@ const placeBet = async ({ challengeId, userId, amount }) => {
       }
 
       // Determine if user is challenger or opponent
+      // Add null checks to prevent "Cannot read properties of null" errors
       let isChallenger = false
-      if (challenge.challenger.toString() === userId.toString()) {
+      const challengerId = challenge.challenger?.toString()
+      const opponentId = challenge.opponent?.toString()
+      const userIdStr = userId.toString()
+
+      if (challengerId && challengerId === userIdStr) {
         isChallenger = true
-      } else if (challenge.opponent.toString() === userId.toString()) {
+      } else if (opponentId && opponentId === userIdStr) {
         isChallenger = false
       } else {
+        // For team battles, challenger/opponent may be null - betting not supported
+        if (challenge.fromTeamBattle) {
+          throw new Error('Betting is not supported for team battle challenges')
+        }
         throw new Error('User is not a participant in this challenge')
       }
 

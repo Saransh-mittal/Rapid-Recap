@@ -50,11 +50,26 @@ const SessionPlayerBanner = memo(({ player, onCreateAccount }) => {
         </div>
 
         {/* Player Info - Takes available space, fully visible */}
-        <div className="flex-1 min-w-0 flex items-center gap-3">
-          <span className="text-sm font-semibold text-white">
+        <div className="flex-1 min-w-0 flex items-center gap-2">
+          <span className="text-sm font-semibold text-white truncate">
             {playerName}
           </span>
-          <div className="flex items-center gap-1">
+          {/* Streak display - only show if streak exists */}
+          {player.streak?.dayStreak > 0 && (
+            <div
+              className="flex items-center gap-1 px-1.5 py-0.5 rounded-full flex-shrink-0"
+              style={{
+                background: 'linear-gradient(135deg, rgba(249, 115, 22, 0.25) 0%, rgba(234, 88, 12, 0.25) 100%)',
+                border: '1px solid rgba(249, 115, 22, 0.4)',
+              }}
+            >
+              <span className="text-xs">🔥</span>
+              <span className="text-xs text-orange-400 font-bold">
+                {player.streak.dayStreak}
+              </span>
+            </div>
+          )}
+          <div className="flex items-center gap-1 flex-shrink-0">
             <Trophy className="w-3.5 h-3.5 text-yellow-400" />
             <span className="text-xs text-yellow-400 font-semibold">{trophies}</span>
           </div>

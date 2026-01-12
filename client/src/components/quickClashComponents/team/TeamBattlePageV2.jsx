@@ -28,6 +28,7 @@ import { quizAudioService } from '../../../services/quizAudioService'
 import { getCsrfToken } from '../../../services/csrfService'
 
 const QuizReportModal = React.lazy(() => import('../QuizReportModal'))
+const StreakIncreasedPopup = React.lazy(() => import('../v2/StreakIncreasedPopup'))
 import PowerupDonationModal from '../powerups/PowerupDonationModal'
 import PowerupSelectionModal from '../powerups/PowerupSelectionModal'
 import TeamMemberInfoModal from './teamBattlePageComponents/TeamMemberInfoModal'
@@ -874,6 +875,10 @@ const TeamBattlePageV2 = React.memo(() => {
   const [isCalculatingResults, setIsCalculatingResults] = useState(false)
   const [isClaimModalOpen, setIsClaimModalOpen] = useState(false)
 
+  // Streak popup state - triggered when returning from quiz completion
+  const [showStreakPopup, setShowStreakPopup] = useState(false)
+  const [streakResult, setStreakResult] = useState(null)
+
 
 
   // Local state to bridge the gap between click and API/Socket update
@@ -1013,6 +1018,26 @@ const TeamBattlePageV2 = React.memo(() => {
   useEffect(() => { if (battleId) getBattleDetails(battleId) }, [battleId, getBattleDetails])
   useEffect(() => { setupTeamBattleSocketListeners(); return cleanupSocketListeners }, [setupTeamBattleSocketListeners, cleanupSocketListeners])
   useEffect(() => { return () => resetOperationState() }, [resetOperationState])
+
+  // Check for pending streak popup on mount (user returning from quiz completion)
+  useEffect(() => {
+    const pendingStreak = localStorage.getItem('pendingStreakPopup')
+    if (pendingStreak) {
+      try {
+        const parsed = JSON.parse(pendingStreak)
+        setStreakResult(parsed)
+        // Delay slightly to let the page render first
+        setTimeout(() => {
+          setShowStreakPopup(true)
+        }, 800)
+        // Clear from localStorage
+        localStorage.removeItem('pendingStreakPopup')
+      } catch (e) {
+        console.error('Error parsing streak popup data:', e)
+        localStorage.removeItem('pendingStreakPopup')
+      }
+    }
+  }, [])
 
   // Timer-based isCalculatingResults trigger when battle expires
   // This ensures the overlay appears even for session players who don't receive socket events
@@ -1437,6 +1462,19 @@ const TeamBattlePageV2 = React.memo(() => {
           }}
         />
       )}
+
+      {/* Streak Increased Popup - Shows when returning from quiz completion */}
+      <React.Suspense fallback={null}>
+        <StreakIncreasedPopup
+          isOpen={showStreakPopup}
+          onClose={() => setShowStreakPopup(false)}
+          streakResult={streakResult}
+          isSessionPlayer={isSession}
+          onCreateAccount={() => {
+            navigate('/quickclash', { state: { showSignup: true } })
+          }}
+        />
+      </React.Suspense>
     </div>
   )
 })

@@ -795,6 +795,7 @@ const getSessionInfo = asyncHandler(async (req, res) => {
         currentTeamId: session.currentTeamId,
         createdAt: session.createdAt,
         lastActiveAt: session.lastActiveAt,
+        streak: session.streak, // Streak data for frontend display
       },
     })
   } catch (error) {
@@ -1122,6 +1123,49 @@ const removeTeamMember = asyncHandler(async (req, res) => {
   }
 })
 
+/**
+ * @desc    Get current streak info for session player
+ * @route   GET /api/play/streak
+ * @access  Private (requires flexAuth - session token)
+ */
+const getStreak = asyncHandler(async (req, res) => {
+  const player = req.player
+
+  if (!player || !player.isSession) {
+    return res.status(401).json({
+      success: false,
+      message: 'Session authentication required',
+    })
+  }
+
+  try {
+    const { getPlayerStreak } = require('../services/quickClashServices/quickClashStreakService')
+
+    // Get timezone from request header (sent by frontend) or default to IST
+    const timezone = req.headers['x-timezone'] || 'Asia/Kolkata'
+
+    const streakInfo = await getPlayerStreak(player._id, true, timezone)
+
+    if (!streakInfo) {
+      return res.status(404).json({
+        success: false,
+        message: 'Session not found',
+      })
+    }
+
+    res.status(200).json({
+      success: true,
+      streak: streakInfo,
+    })
+  } catch (error) {
+    console.error('Get streak error:', error)
+    res.status(400).json({
+      success: false,
+      error: error.message || 'Failed to get streak info',
+    })
+  }
+})
+
 module.exports = {
   createSession,
   createTeam,
@@ -1154,5 +1198,7 @@ module.exports = {
   fixBattleHistory,
   // Team member management
   removeTeamMember,
+  // Streak info
+  getStreak,
 }
 

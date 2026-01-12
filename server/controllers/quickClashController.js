@@ -327,12 +327,13 @@ const submitQuizAnswers = asyncHandler(async (req, res) => {
     // Check if the challenge is from a team battle
     if (challenge.fromTeamBattle && challenge.teamBattle) {
       // Update the team battle with the quiz results
+      let battleUpdateResult = null
       try {
         console.log(
           `[submitQuizAnswers] Updating team battle with quiz results`,
         )
 
-        await updateBattleWithQuizResults({
+        battleUpdateResult = await updateBattleWithQuizResults({
           battleId: challenge.teamBattle,
           challengeId: challenge._id,
           userId: userId,
@@ -380,6 +381,16 @@ const submitQuizAnswers = asyncHandler(async (req, res) => {
           )
         }
       }
+
+      // Include streak result in response for frontend popup
+      const streakResult = battleUpdateResult?.streakResult || null
+      return res.status(200).json({
+        success: true,
+        message: 'Quiz completed successfully',
+        challengeId: session.challenge.toString(),
+        streakResult, // Include streak data for frontend popup
+        ...result,
+      })
     } else {
       // Regular challenge completion logic
       // If both users have submitted their quizzes, the challenge is completed

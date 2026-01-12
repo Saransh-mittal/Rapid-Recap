@@ -32,6 +32,9 @@ const LockedTabTeaser = lazy(() => import('./LockedTabTeaser'))
 const SessionSignupPanel = lazy(() => import('./SessionSignupPanel'))
 const SessionTeamDashboard = lazy(() => import('../team/SessionTeamDashboard'))
 
+// Streak popup - shown on first daily visit for all players
+const StreakPopup = lazy(() => import('./StreakPopup'))
+
 // Lazy load QuickClash Profile
 const QuickClashProfile = React.lazy(() => import('../profile/QuickClashProfileV2'))
 
@@ -274,6 +277,17 @@ const getTabFromPath = (path) => {
 // Key for localStorage to track if welcome modal has been shown
 const WELCOME_SHOWN_KEY = 'qc_session_welcome_shown'
 
+// Key for localStorage to track last streak popup date
+const STREAK_POPUP_DATE_KEY = 'qc_streak_popup_date'
+
+// Check if streak popup should be shown today
+const shouldShowStreakPopup = () => {
+  if (typeof window === 'undefined') return false
+  const lastShownDate = localStorage.getItem(STREAK_POPUP_DATE_KEY)
+  const today = new Date().toLocaleDateString('en-US', { timeZone: Intl.DateTimeFormat().resolvedOptions().timeZone })
+  return lastShownDate !== today
+}
+
 const QuickClashLayoutV2 = () => {
   const location = useLocation()
   const navigate = useNavigate()
@@ -289,6 +303,12 @@ const QuickClashLayoutV2 = () => {
 
   // Signup panel state (for session player account creation)
   const [showSignupPanel, setShowSignupPanel] = useState(false)
+
+  // Streak popup state (for daily streak reminder)
+  const [showStreakPopup, setShowStreakPopup] = useState(false)
+
+  // State to trigger opening the GlobalMatchmaking modal externally
+  const [forceOpenMatchmaking, setForceOpenMatchmaking] = useState(false)
 
   // Track the last location.key to detect real navigation vs replaceState
   const lastLocationKey = useRef(location.key)
@@ -309,6 +329,31 @@ const QuickClashLayoutV2 = () => {
       }
     }
   }, [isSession, location.state])
+
+  // Check if streak popup should be shown on daily first visit
+  useEffect(() => {
+    // Only show if player data is loaded
+    if (!player) return
+
+    // Check if already shown today
+    if (!shouldShowStreakPopup()) return
+
+    // For session players, show after welcome modal is dismissed
+    // For authenticated users, show immediately
+    const delay = isSession ? 1500 : 800
+
+    const timer = setTimeout(() => {
+      // Don't show streak popup if welcome modal is open
+      if (showWelcomeModal) return
+
+      setShowStreakPopup(true)
+      // Mark as shown today
+      const today = new Date().toLocaleDateString('en-US', { timeZone: Intl.DateTimeFormat().resolvedOptions().timeZone })
+      localStorage.setItem(STREAK_POPUP_DATE_KEY, today)
+    }, delay)
+
+    return () => clearTimeout(timer)
+  }, [player, isSession, showWelcomeModal])
 
   const handleTabChange = useCallback((tabId) => {
     if (tabId === activeTab) return
@@ -375,7 +420,10 @@ const QuickClashLayoutV2 = () => {
       <div style={{ position: 'relative' }}>
         {/* Battles Tab - Available for all */}
         <TabContent isActive={activeTab === 'battles'} tabName="battles">
-          <QuickClashV2 />
+          <QuickClashV2
+            forceOpenMatchmaking={forceOpenMatchmaking}
+            onForceOpenReset={() => setForceOpenMatchmaking(false)}
+          />
         </TabContent>
 
         {/* History Tab - Available for all (with session notice for session players) */}
@@ -445,6 +493,25 @@ const QuickClashLayoutV2 = () => {
           />
         </Suspense>
       )}
+
+      {/* Daily Streak Popup - for all players (session + authenticated) */}
+      <Suspense fallback={null}>
+        <StreakPopup
+          isOpen={showStreakPopup}
+          onClose={() => setShowStreakPopup(false)}
+          onPlayBattle={() => {
+            // Navigate to battles tab if not already there
+            if (activeTab !== 'battles') {
+              handleTabChange('battles')
+            }
+            // Open the GlobalMatchmaking modal
+            setForceOpenMatchmaking(true)
+          }}
+          onCreateAccount={isSession ? handleCreateAccount : undefined}
+          streak={player?.streak}
+          isSessionPlayer={isSession}
+        />
+      </Suspense>
     </>
   )
 }

@@ -12,6 +12,7 @@ import { Bell, Home, ChevronRight, Target, Trophy, UserCircle } from 'lucide-rea
 // REUSE existing V1 components for data consistency
 import TrophyDisplay from '../user/TrophyDisplay'
 import LevelBadge from '../user/LevelBadge'
+import StreakDisplay from '../user/StreakDisplay'
 import TaskProgressIndicator from '../dailyTasks/TaskProgressIndicator'
 import QuickClashLeaderboardButton from '../leaderboard/QuickClashLeaderboardButton'
 import QuickClashLeaderboardModal from '../leaderboard/QuickClashLeaderboardModal'
@@ -199,6 +200,7 @@ const QuickClashHeaderV2 = () => {
           {/* Left: Stats */}
           <div className="flex items-center gap-2">
             <TrophyDisplay />
+            <StreakDisplay />
             <LevelBadge />
           </div>
 
@@ -240,6 +242,7 @@ const QuickClashHeaderV2 = () => {
 
           <div className="flex items-center gap-3">
             <TrophyDisplay />
+            <StreakDisplay />
             <LevelBadge />
             <FriendsButton
               onClick={openWiseWeb}

@@ -44,6 +44,9 @@ const {
   calculateTeamWinProbability,
   calculateLiveTeamWinProbability,
 } = require('./quickClashWinProbabilityService')
+const {
+  updateStreakOnBattleComplete,
+} = require('./quickClashStreakService')
 const ForgeArticle = require('../../model/quickClashSchemas/forgeArticleSchema')
 
 // Constants
@@ -2254,6 +2257,7 @@ const updateBattleWithQuizResults = makeRetryable(
         }
 
         // Update the member and challenge data
+        let isUserSessionPlayer = false
         if (isTeamAUser) {
           // Update team A member
           const memberIndex = battle.teamAMembers.findIndex(
@@ -2267,6 +2271,8 @@ const updateBattleWithQuizResults = makeRetryable(
             battle.teamAMembers[memberIndex].betAmount = userBetInfo.betAmount
             battle.teamAMembers[memberIndex].betResult = userBetInfo.betResult
             battle.teamAMembers[memberIndex].betTrophyChange = userBetInfo.betTrophyChange
+            // Check if session player for streak tracking
+            isUserSessionPlayer = !!battle.teamAMembers[memberIndex].sessionPlayer
           }
 
           // Update challenge
@@ -2285,11 +2291,30 @@ const updateBattleWithQuizResults = makeRetryable(
             battle.teamBMembers[memberIndex].betAmount = userBetInfo.betAmount
             battle.teamBMembers[memberIndex].betResult = userBetInfo.betResult
             battle.teamBMembers[memberIndex].betTrophyChange = userBetInfo.betTrophyChange
+            // Check if session player for streak tracking
+            isUserSessionPlayer = !!battle.teamBMembers[memberIndex].sessionPlayer
           }
 
           // Update challenge
           battle.challenges[challengeIndex].teamBScore = score
           battle.challenges[challengeIndex].teamBCompleted = true
+        }
+
+        // Update streak immediately when user completes quiz (instant feedback)
+        // This is non-blocking and won't fail the quiz submission if it errors
+        let streakResult = null
+        try {
+          streakResult = await updateStreakOnBattleComplete({
+            playerId: userId,
+            isSessionPlayer: isUserSessionPlayer,
+            session,
+          })
+          if (streakResult) {
+            console.log(`[STREAK] Updated streak for ${userId}: Day ${streakResult.dayStreak}`)
+          }
+        } catch (streakError) {
+          // Don't fail quiz submission if streak update fails
+          console.error(`[STREAK] Error updating streak for ${userId}:`, streakError)
         }
 
         // NOTE: unregisterActiveSession is called AFTER battle.save() to prevent
@@ -2550,7 +2575,8 @@ const updateBattleWithQuizResults = makeRetryable(
         console.log(
           `[updateBattleWithQuizResults] Successfully updated battle with quiz results`,
         )
-        return battle
+        // Return battle and streak result for frontend popup
+        return { battle, streakResult }
       })
     } catch (error) {
       console.error('Error updating battle with quiz results:', error)

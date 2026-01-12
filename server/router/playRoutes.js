@@ -34,6 +34,8 @@ const {
   fixBattleHistory,
   // Team member management
   removeTeamMember,
+  // Streak info
+  getStreak,
 } = require('../controllers/playSessionController')
 
 // Import forge controllers from quickClashController
@@ -75,6 +77,9 @@ router.get('/team-battles', flexAuth, getTeamBattles)
 
 // Session player info endpoint (require flexAuth)
 router.get('/me', flexAuth, getSessionInfo)
+
+// Session player streak info (require flexAuth)
+router.get('/streak', flexAuth, getStreak)
 
 // Session player's current team (view-only mode)
 router.get('/my-team', flexAuth, getMyTeam)
