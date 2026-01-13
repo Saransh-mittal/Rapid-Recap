@@ -31,28 +31,125 @@ const getNextTier = (dayStreak) => {
   return null
 }
 
-// Fire particle animation
-const FireParticle = ({ delay }) => (
+// Fire ember particle - glowing orange/red embers that float upward
+const FireEmber = ({ delay, startX, size = 'md' }) => {
+  const sizes = {
+    sm: { width: 4, height: 4, blur: 2 },
+    md: { width: 6, height: 6, blur: 4 },
+    lg: { width: 8, height: 8, blur: 6 },
+  }
+  const s = sizes[size]
+
+  return (
+    <motion.div
+      className="absolute rounded-full"
+      style={{
+        width: s.width,
+        height: s.height,
+        left: startX,
+        top: '140px',
+        background: 'radial-gradient(circle, #fbbf24 0%, #f97316 50%, #dc2626 100%)',
+        boxShadow: `0 0 ${s.blur}px #f97316, 0 0 ${s.blur * 2}px #dc2626`,
+      }}
+      initial={{ y: 0, opacity: 0.9, scale: 1 }}
+      animate={{
+        y: [-10, -70],
+        opacity: [0.9, 0.7, 0],
+        scale: [1, 0.8, 0.3],
+        x: [0, (Math.random() - 0.5) * 50],
+      }}
+      transition={{
+        duration: 1.5,
+        delay,
+        repeat: Infinity,
+        repeatDelay: Math.random() * 0.5,
+        ease: 'easeOut',
+      }}
+    />
+  )
+}
+
+// Sparkle particle - bright yellow/white sparks
+const Sparkle = ({ delay, startX }) => (
   <motion.div
-    className="absolute w-2 h-2 rounded-full"
+    className="absolute"
     style={{
-      background: 'linear-gradient(135deg, #f97316, #dc2626)',
-      left: `${45 + Math.random() * 10}%`,
+      width: 3,
+      height: 3,
+      left: startX,
+      top: '130px',
+      background: '#fff',
+      borderRadius: '50%',
+      boxShadow: '0 0 4px #fef08a, 0 0 8px #fbbf24',
     }}
     initial={{ y: 0, opacity: 1, scale: 1 }}
     animate={{
-      y: -80,
-      opacity: 0,
-      scale: 0.3,
+      y: -60,
+      opacity: [1, 0.8, 0],
+      scale: [1, 1.2, 0],
       x: (Math.random() - 0.5) * 40,
     }}
     transition={{
-      duration: 1.2,
+      duration: 0.8,
+      delay,
+      repeat: Infinity,
+      repeatDelay: 0.6,
+      ease: 'easeOut',
+    }}
+  />
+)
+
+// Floating glow orbs - larger, softer ambient particles
+const GlowOrb = ({ delay, startX }) => (
+  <motion.div
+    className="absolute rounded-full"
+    style={{
+      width: 12,
+      height: 12,
+      left: startX,
+      top: '150px',
+      background: 'radial-gradient(circle, rgba(249, 115, 22, 0.6) 0%, rgba(249, 115, 22, 0) 70%)',
+    }}
+    initial={{ y: 0, opacity: 0.6, scale: 1 }}
+    animate={{
+      y: -80,
+      opacity: [0.6, 0.4, 0],
+      scale: [1, 1.5, 0.5],
+      x: (Math.random() - 0.5) * 60,
+    }}
+    transition={{
+      duration: 2.5,
       delay,
       repeat: Infinity,
       repeatDelay: 0.3,
+      ease: 'easeOut',
     }}
   />
+)
+
+// Combined fire animation component
+const FireAnimation = () => (
+  <div className="absolute inset-0 overflow-hidden pointer-events-none">
+    {/* Main embers - center cluster */}
+    <FireEmber delay={0} startX="46%" size="lg" />
+    <FireEmber delay={0.2} startX="50%" size="md" />
+    <FireEmber delay={0.4} startX="54%" size="lg" />
+    <FireEmber delay={0.6} startX="48%" size="sm" />
+    <FireEmber delay={0.8} startX="52%" size="md" />
+    <FireEmber delay={1.0} startX="45%" size="sm" />
+    <FireEmber delay={1.2} startX="55%" size="sm" />
+
+    {/* Sparkles - bright accents */}
+    <Sparkle delay={0.1} startX="47%" />
+    <Sparkle delay={0.5} startX="53%" />
+    <Sparkle delay={0.9} startX="49%" />
+    <Sparkle delay={1.3} startX="51%" />
+
+    {/* Glow orbs - ambient background */}
+    <GlowOrb delay={0.3} startX="44%" />
+    <GlowOrb delay={0.8} startX="56%" />
+    <GlowOrb delay={1.4} startX="50%" />
+  </div>
 )
 
 const StreakIncreasedPopup = memo(({
@@ -146,12 +243,8 @@ const StreakIncreasedPopup = memo(({
               <X className="w-4 h-4 text-white/60" />
             </button>
 
-            {/* Fire particles */}
-            <div className="absolute inset-0 overflow-hidden pointer-events-none">
-              {[...Array(8)].map((_, i) => (
-                <FireParticle key={i} delay={i * 0.15} />
-              ))}
-            </div>
+            {/* Fire animation - embers, sparkles, and glow orbs */}
+            <FireAnimation />
 
             {/* Header with flame animation */}
             <div className="pt-8 pb-4 px-6 text-center relative">
@@ -175,7 +268,7 @@ const StreakIncreasedPopup = memo(({
               >
                 {/* Fire emoji - positioned above the number */}
                 <motion.div
-                  className="text-4xl mb-1"
+                  className="text-4xl mb-1 mt-2"
                   animate={{
                     rotate: [0, 10, -10, 0],
                     scale: [1, 1.1, 1],

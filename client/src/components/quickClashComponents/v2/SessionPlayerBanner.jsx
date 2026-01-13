@@ -1,9 +1,9 @@
 // components/quickClashComponents/v2/SessionPlayerBanner.jsx
-// Sleek, compact banner for session players - balanced spacing
+// Premium banner - fully clickable, polished stats display
 
 import React, { memo } from 'react'
 import { motion } from 'framer-motion'
-import { User, Trophy, Sparkles, ChevronRight } from 'lucide-react'
+import { UserPlus, Trophy, Sparkles } from 'lucide-react'
 import { useNavigate } from 'react-router-dom'
 
 // Audio and haptics
@@ -27,6 +27,7 @@ const SessionPlayerBanner = memo(({ player, onCreateAccount }) => {
 
   const playerName = player.inGameName || player.name || 'Player'
   const trophies = player.trophies ?? 1000
+  const streak = player.streak?.dayStreak || 0
 
   return (
     <motion.div
@@ -34,63 +35,63 @@ const SessionPlayerBanner = memo(({ player, onCreateAccount }) => {
       animate={{ opacity: 1, y: 0 }}
       className="mx-3 mb-3 mt-3"
     >
-      {/* Sleek compact card */}
-      <div
-        className="flex items-center gap-3 px-3 py-2.5 rounded-xl"
+      {/* Entire banner is clickable */}
+      <motion.button
+        onClick={handleCreateAccount}
+        whileTap={{ scale: 0.98 }}
+        className="w-full flex items-center gap-2.5 px-3 py-2.5 rounded-xl text-left cursor-pointer"
         style={{
           background: 'linear-gradient(135deg, rgba(147, 51, 234, 0.18) 0%, rgba(236, 72, 153, 0.18) 100%)',
           border: '1px solid rgba(147, 51, 234, 0.35)',
         }}
       >
-        {/* Avatar - Compact with subtle glow */}
-        <div className="relative flex-shrink-0">
-          <div className="w-9 h-9 rounded-full bg-gradient-to-br from-purple-500 to-pink-500 flex items-center justify-center shadow-lg shadow-purple-500/20">
-            <Sparkles className="w-4 h-4 text-white" />
-          </div>
+        {/* Avatar */}
+        <div className="w-9 h-9 rounded-full bg-gradient-to-br from-purple-500 to-pink-500 flex items-center justify-center flex-shrink-0 shadow-lg shadow-purple-500/20">
+          <Sparkles className="w-4 h-4 text-white" />
         </div>
 
-        {/* Player Info - Takes available space, fully visible */}
-        <div className="flex-1 min-w-0 flex items-center gap-2">
-          <span className="text-sm font-semibold text-white truncate">
-            {playerName}
-          </span>
-          {/* Streak display - only show if streak exists */}
-          {player.streak?.dayStreak > 0 && (
-            <div
-              className="flex items-center gap-1 px-1.5 py-0.5 rounded-full flex-shrink-0"
-              style={{
-                background: 'linear-gradient(135deg, rgba(249, 115, 22, 0.25) 0%, rgba(234, 88, 12, 0.25) 100%)',
-                border: '1px solid rgba(249, 115, 22, 0.4)',
-              }}
-            >
-              <span className="text-xs">🔥</span>
-              <span className="text-xs text-orange-400 font-bold">
-                {player.streak.dayStreak}
-              </span>
-            </div>
-          )}
-          <div className="flex items-center gap-1 flex-shrink-0">
-            <Trophy className="w-3.5 h-3.5 text-yellow-400" />
-            <span className="text-xs text-yellow-400 font-semibold">{trophies}</span>
-          </div>
-        </div>
+        {/* Name - gets all flex space */}
+        <span className="text-sm font-bold text-white flex-1 truncate min-w-0">
+          {playerName}
+        </span>
 
-        {/* CTA Button - Sleek */}
-        <motion.button
-          onClick={handleCreateAccount}
-          whileHover={{ scale: 1.02 }}
-          whileTap={{ scale: 0.98 }}
-          className="flex-shrink-0 flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold text-white"
+        {/* Streak - original pill badge */}
+        {streak > 0 && (
+          <div
+            className="flex items-center gap-1 px-1.5 py-0.5 rounded-full flex-shrink-0"
+            style={{
+              background: 'linear-gradient(135deg, rgba(249, 115, 22, 0.25) 0%, rgba(234, 88, 12, 0.25) 100%)',
+              border: '1px solid rgba(249, 115, 22, 0.4)',
+            }}
+          >
+            <span className="text-xs">🔥</span>
+            <span className="text-xs font-bold text-orange-400">{streak}</span>
+          </div>
+        )}
+
+        {/* Trophies - original pill badge */}
+        <div
+          className="flex items-center gap-1 px-1.5 py-0.5 rounded-full flex-shrink-0"
           style={{
-            background: 'linear-gradient(135deg, #a855f7 0%, #ec4899 100%)',
-            boxShadow: '0 2px 10px rgba(168, 85, 247, 0.35)',
+            background: 'linear-gradient(135deg, rgba(250, 204, 21, 0.2) 0%, rgba(234, 179, 8, 0.2) 100%)',
+            border: '1px solid rgba(250, 204, 21, 0.35)',
           }}
         >
-          <User className="w-3 h-3" />
-          <span>Sign Up</span>
-          <ChevronRight className="w-3 h-3" />
-        </motion.button>
-      </div>
+          <Trophy className="w-3 h-3 text-yellow-400" />
+          <span className="text-xs font-bold text-yellow-400">{trophies}</span>
+        </div>
+
+        {/* Signup indicator - matching pill badge style */}
+        <div
+          className="flex items-center justify-center px-2 py-1 rounded-full flex-shrink-0"
+          style={{
+            background: 'linear-gradient(135deg, rgba(168, 85, 247, 0.3) 0%, rgba(236, 72, 153, 0.3) 100%)',
+            border: '1px solid rgba(168, 85, 247, 0.5)',
+          }}
+        >
+          <UserPlus className="w-3.5 h-3.5 text-purple-300" />
+        </div>
+      </motion.button>
     </motion.div>
   )
 })

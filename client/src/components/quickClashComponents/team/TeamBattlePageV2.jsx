@@ -1466,9 +1466,9 @@ const TeamBattlePageV2 = React.memo(() => {
       {/* Streak Increased Popup - Shows when returning from quiz completion */}
       <React.Suspense fallback={null}>
         <StreakIncreasedPopup
-          isOpen={showStreakPopup}
+          isOpen={showStreakPopup ||true}
           onClose={() => setShowStreakPopup(false)}
-          streakResult={streakResult}
+          streakResult={streakResult || {newStreak:2, longestStreak:2, previousStreak:1, tierLabel:'Tier 1', tierEmoji:'Tier 1', nextTier:'Tier 2'}}
           isSessionPlayer={isSession}
           onCreateAccount={() => {
             navigate('/quickclash', { state: { showSignup: true } })

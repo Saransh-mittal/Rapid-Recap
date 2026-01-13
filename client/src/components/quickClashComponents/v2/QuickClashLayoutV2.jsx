@@ -353,6 +353,19 @@ const QuickClashLayoutV2 = () => {
     }
   }, [isSession, location.state])
 
+  // Check if signup panel should be opened (from "Save Streak Forever" etc.)
+  useEffect(() => {
+    if (isSession && location.state?.showSignup) {
+      // Delay slightly to let the page render
+      const timer = setTimeout(() => {
+        setShowSignupPanel(true)
+        // Clear the state to prevent re-opening on refresh
+        navigate(location.pathname, { replace: true, state: {} })
+      }, 300)
+      return () => clearTimeout(timer)
+    }
+  }, [isSession, location.state?.showSignup, location.pathname, navigate])
+
   // Check if streak popup should be shown on daily first visit
   useEffect(() => {
     // Only show if player data is loaded
