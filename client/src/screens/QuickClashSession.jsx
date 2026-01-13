@@ -537,7 +537,7 @@ const QuickClashSession = ({ isSessionPlayer = false }) => {
     setPhaseProgress(0)
   }, [filteredActivePowerups, toast])
 
-  // ORIGINAL QUIZ COMPLETION LOGIC - WITH STREAK POPUP
+  // ORIGINAL QUIZ COMPLETION LOGIC - WITH REWARD SCREEN
   const handleQuizComplete = useCallback(
     result => {
       haptics.success() // Haptic for quiz completion
@@ -551,10 +551,102 @@ const QuickClashSession = ({ isSessionPlayer = false }) => {
         dispatch(fetchActiveChallenges())
       }
 
-      // Store streak result in localStorage for TeamBattlePage to display
-      // This ensures the popup shows after navigation completes
-      if (result.streakResult && result.streakResult.newStreak > 0) {
-        localStorage.setItem('pendingStreakPopup', JSON.stringify(result.streakResult))
+      // Calculate coin reward data for the reward screen
+      const correctAnswers = result.correctAnswers || 0
+      const totalQuestions = result.totalQuestions || 5
+      const streakData = result.streakResult || {}
+      const streakDays = streakData.newStreak || 0
+
+      // Coin calculation (matches backend quickClashCoinService)
+      const BASE_COINS = 15
+      const ACCURACY_BONUS_PER_CORRECT = 5
+      const baseCoins = BASE_COINS
+      const accuracyBonus = correctAnswers * ACCURACY_BONUS_PER_CORRECT
+
+      // Streak multiplier tiers (matching backend STREAK_TIERS)
+      let streakMultiplier = 1.0
+      if (streakDays >= 30) streakMultiplier = 3.0
+      else if (streakDays >= 15) streakMultiplier = 2.5
+      else if (streakDays >= 8) streakMultiplier = 2.0
+      else if (streakDays >= 4) streakMultiplier = 1.5
+      else streakMultiplier = 1.0
+
+      const totalCoins = Math.round((baseCoins + accuracyBonus) * streakMultiplier)
+
+      // Mock percentile based on score (encouraging ranks)
+      const score = result.RQM_score || 0
+      let percentileRank = 35
+      if (score >= 95) percentileRank = Math.floor(Math.random() * 5) + 1
+      else if (score >= 85) percentileRank = Math.floor(Math.random() * 10) + 5
+      else if (score >= 70) percentileRank = Math.floor(Math.random() * 15) + 15
+      else if (score >= 50) percentileRank = Math.floor(Math.random() * 20) + 25
+
+      // Calculate battle result ETA (battles usually last 45 minutes from creation)
+      const battleResultETA = challenge?.teamBattle ? 25 : 0 // Rough estimate
+
+      // Next milestone calculation
+      let nextMilestoneDay = 4
+      let nextMilestoneMultiplier = '1.5x'
+      if (streakDays >= 30) {
+        nextMilestoneDay = streakDays + 1
+        nextMilestoneMultiplier = '3.0x (max!)'
+      } else if (streakDays >= 15) {
+        nextMilestoneDay = 30
+        nextMilestoneMultiplier = '3.0x'
+      } else if (streakDays >= 8) {
+        nextMilestoneDay = 15
+        nextMilestoneMultiplier = '2.5x'
+      } else if (streakDays >= 4) {
+        nextMilestoneDay = 8
+        nextMilestoneMultiplier = '2.0x'
+      }
+
+      // Store reward screen data in localStorage for TeamBattlePage to display
+      const rewardScreenData = {
+        score: result.RQM_score,
+        // Dual-phase accuracy breakdown
+        forgeAccuracy: result.forgeAccuracy || {
+          correct: 0,
+          total: 5,
+          percentage: 0
+        },
+        quizAccuracy: result.quizAccuracy || {
+          correct: correctAnswers,
+          total: totalQuestions,
+          percentage: Math.round((correctAnswers / totalQuestions) * 100)
+        },
+        // Score breakdown
+        forgeScore: result.forgeScore || 0,
+        quizScore: result.quizScore || result.RQM_score,
+        percentileRank,
+        baseCoins,
+        accuracyBonus,
+        streakMultiplier,
+        totalCoins,
+        streakDay: streakDays,
+        nextMilestoneDay,
+        nextMilestoneMultiplier,
+        battleResultETA,
+        category: challenge?.category || 'Quiz',
+        isFirstSession: true, // Flag to enhance CTA for conversion
+      }
+
+      // Only show PostSessionRewardScreen for session player's FIRST quiz completion
+      // This is the key conversion moment - maximize impact
+      const hasSeenFirstReward = localStorage.getItem('qc_first_reward_shown')
+
+      if (isSessionPlayer && !hasSeenFirstReward) {
+        // First time session player completing a quiz - show reward screen
+        localStorage.setItem('pendingRewardScreen', JSON.stringify(rewardScreenData))
+        // Mark that we've shown the first reward screen
+        localStorage.setItem('qc_first_reward_shown', 'true')
+      }
+
+      // For non-first-time session players and authenticated users, use streak popup
+      if (!isSessionPlayer || hasSeenFirstReward) {
+        if (result.streakResult && result.streakResult.newStreak > 0) {
+          localStorage.setItem('pendingStreakPopup', JSON.stringify(result.streakResult))
+        }
       }
 
       trackChallengeCompletion({

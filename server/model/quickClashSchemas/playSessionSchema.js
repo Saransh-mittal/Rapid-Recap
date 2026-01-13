@@ -74,6 +74,11 @@ const playSessionSchema = new mongoose.Schema(
       lastPlayedDate: { type: Date, default: null },
       longestStreak: { type: Number, default: 0 },
     },
+    // Coins - earned from completing quizzes
+    coins: {
+      type: Number,
+      default: 0,
+    },
   },
   {
     timestamps: true,

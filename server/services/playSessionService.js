@@ -7,6 +7,10 @@ const jwt = require('jsonwebtoken')
 const bcrypt = require('bcryptjs')
 const crypto = require('crypto')
 
+// Import coin and streak services for session conversion
+const { transferCoinsToUser } = require('./quickClashServices/quickClashCoinService')
+const { transferStreakToUser } = require('./quickClashServices/quickClashStreakService')
+
 /**
  * Create a new PlaySession
  * @param {Object} params
@@ -334,6 +338,10 @@ const convertToUser = async ({ sessionId, userData }) => {
   // Transfer all session battles to the user
   await migrateSessionBattles(session._id, user._id)
 
+  // Transfer coins and streak from session to user
+  await transferCoinsToUser(session._id, user._id)
+  await transferStreakToUser(session._id, user._id)
+
   // Generate auth token (Using ACCESS_TOKEN_SECRET to match authenticate middleware)
   const token = jwt.sign(
     { _id: user._id, role: user.role },
@@ -551,6 +559,10 @@ const convertWithGoogle = async ({ sessionId, googleUserInfo }) => {
 
   // Transfer all session battles to the user
   await migrateSessionBattles(session._id, user._id)
+
+  // Transfer coins and streak from session to user
+  await transferCoinsToUser(session._id, user._id)
+  await transferStreakToUser(session._id, user._id)
 
   // Generate auth token (Using ACCESS_TOKEN_SECRET to match authenticate middleware)
   const token = jwt.sign(

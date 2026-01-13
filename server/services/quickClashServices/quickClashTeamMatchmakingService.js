@@ -47,6 +47,11 @@ const getMemberId = (member) => {
 const getPlayerIdFromMatchmaking = (matchmakingEntry) => {
   if (!matchmakingEntry) return null
 
+  // Check manually populated field first
+  if (matchmakingEntry.populatedUser?._id) {
+    return matchmakingEntry.populatedUser._id.toString()
+  }
+
   // If user is populated and has _id
   if (matchmakingEntry.user?._id) {
     return matchmakingEntry.user._id.toString()
@@ -1489,7 +1494,6 @@ const performMatchmakingLogic = async session => {
       team: null,
     })
       .sort({ createdAt: 1 })
-      .populate('user', '_id name inGameName quickClashTrophies')
       .session(session)
 
     console.log(`Found ${soloPlayersAvailable.length} available solo players`)
@@ -1501,6 +1505,62 @@ const performMatchmakingLogic = async session => {
       const playerId = getPlayerIdFromMatchmaking(player)
       if (playerId) {
         teamFormationState.pendingSoloPlayers.add(playerId)
+      }
+    }
+
+    // Manual population of user/sessionPlayer data
+    // This is necessary because 'user' field can contain IDs from either User or PlaySession collection
+    // but the schema ref is strictly set to 'USER', causing populate() to fail for session players
+    const userIdsToCheck = []
+
+    // Collect all IDs
+    for (const player of soloPlayersAvailable) {
+      if (player.user) userIdsToCheck.push(player.user)
+    }
+
+    if (userIdsToCheck.length > 0) {
+      // 1. Fetch from User collection
+      const users = await User.find({
+        _id: { $in: userIdsToCheck }
+      })
+      .select('_id name inGameName quickClashTrophies')
+      .session(session)
+
+      const userMap = new Map(users.map(u => [u._id.toString(), u]))
+
+      // 2. Identify missing IDs (Session Players)
+      const missingIds = userIdsToCheck.filter(id => !userMap.has(id.toString()))
+
+      let sessionMap = new Map()
+      if (missingIds.length > 0) {
+        // Fetch from PlaySession collection
+        const sessionPlayers = await PlaySession.find({
+          _id: { $in: missingIds }
+        })
+        .select('_id inGameName trophies')
+        .session(session)
+
+        sessionMap = new Map(sessionPlayers.map(s => [s._id.toString(), s]))
+      }
+
+      // 3. Attach populated data to player objects
+      for (const player of soloPlayersAvailable) {
+        if (!player.user) continue
+
+        const idStr = player.user.toString()
+        if (userMap.has(idStr)) {
+          player.populatedUser = userMap.get(idStr)
+        } else if (sessionMap.has(idStr)) {
+          const sp = sessionMap.get(idStr)
+          // Normalize session player to look like user for downstream compatibility
+          player.populatedUser = {
+            _id: sp._id,
+            name: sp.inGameName || 'Session Player',
+            inGameName: sp.inGameName,
+            quickClashTrophies: sp.trophies || 1000,
+            isSessionPlayer: true
+          }
+        }
       }
     }
 
@@ -1872,13 +1932,17 @@ const performMatchmakingLogic = async session => {
         const soloPlayerIds = teamPlayers.map(player => getPlayerIdFromMatchmaking(player))
 
         // Create the new team
+        // Create the new team
+        const leader = teamPlayers[0].populatedUser
+
         const newTeam = new QuickClashTeam({
           name: '',
-          creator: teamPlayers[0].user._id,
+          creator: leader.isSessionPlayer ? null : leader._id,
           teamType: 'auto', // Mark as auto-formed team
           members: [
             {
-              user: teamPlayers[0].user._id,
+              user: leader.isSessionPlayer ? null : leader._id,
+              sessionPlayer: leader.isSessionPlayer ? leader._id : null,
               role: 'leader',
               status: 'ready',
               sourceTeam: null, // No source team for solo players
@@ -1895,9 +1959,11 @@ const performMatchmakingLogic = async session => {
 
         // Add the other members
         for (let j = 1; j < 4; j++) {
-          const otherPlayerId = getPlayerIdFromMatchmaking(teamPlayers[j])
+          const otherPlayer = teamPlayers[j].populatedUser
+
           newTeam.members.push({
-            user: otherPlayerId,
+            user: otherPlayer.isSessionPlayer ? null : otherPlayer._id,
+            sessionPlayer: otherPlayer.isSessionPlayer ? otherPlayer._id : null,
             role: 'member',
             status: 'ready',
             sourceTeam: null, // No source team for solo players

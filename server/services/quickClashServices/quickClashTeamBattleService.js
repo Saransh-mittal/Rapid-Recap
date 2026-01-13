@@ -46,12 +46,17 @@ const {
 } = require('./quickClashWinProbabilityService')
 const {
   updateStreakOnBattleComplete,
+  getStreakTier,
 } = require('./quickClashStreakService')
+const {
+  calculateQuizReward,
+  awardCoins,
+} = require('./quickClashCoinService')
 const ForgeArticle = require('../../model/quickClashSchemas/forgeArticleSchema')
 
 // Constants
-// const TEAM_BATTLE_EXPIRY = 4 * 60 * 60 * 1000 // 4 hours same as regular challenges
-const TEAM_BATTLE_EXPIRY = 10 * 60 * 1000
+const TEAM_BATTLE_EXPIRY = 45 * 60 * 1000 // 45 min same as regular challenges
+// const TEAM_BATTLE_EXPIRY = 10 * 60 * 1000
 const BASE_TROPHIES = 120 // Base trophies for 4v4 mode
 const TROPHY_K_FACTOR = 0.8 // From trophy formula
 
@@ -2303,6 +2308,7 @@ const updateBattleWithQuizResults = makeRetryable(
         // Update streak immediately when user completes quiz (instant feedback)
         // This is non-blocking and won't fail the quiz submission if it errors
         let streakResult = null
+        let coinResult = null
         try {
           streakResult = await updateStreakOnBattleComplete({
             playerId: userId,
@@ -2310,11 +2316,35 @@ const updateBattleWithQuizResults = makeRetryable(
             session,
           })
           if (streakResult) {
-            console.log(`[STREAK] Updated streak for ${userId}: Day ${streakResult.dayStreak}`)
+            console.log(`[STREAK] Updated streak for ${userId}: Day ${streakResult.newStreak}`)
+
+            // Award coins based on quiz performance
+            // Calculate coins: base 15 + 5 per correct answer (score is out of 100, so estimate correct = score/20)
+            const estimatedCorrect = Math.round(score / 20) // Rough estimate: 100 score = 5 correct
+            const streakDays = streakResult.newStreak || 0
+
+            const coinReward = calculateQuizReward({
+              correctAnswers: Math.min(5, Math.max(0, estimatedCorrect)),
+              totalQuestions: 5,
+              streakDays,
+            })
+
+            // Award coins to player
+            coinResult = await awardCoins({
+              playerId: userId,
+              isSessionPlayer: isUserSessionPlayer,
+              amount: coinReward.totalCoins,
+              reason: 'quiz_completion',
+              session,
+            })
+
+            if (coinResult) {
+              console.log(`[COINS] Awarded ${coinReward.totalCoins} coins to ${userId} (base: ${coinReward.baseCoins}, accuracy: ${coinReward.accuracyBonus}, multiplier: ${coinReward.streakMultiplier}x)`)
+            }
           }
         } catch (streakError) {
-          // Don't fail quiz submission if streak update fails
-          console.error(`[STREAK] Error updating streak for ${userId}:`, streakError)
+          // Don't fail quiz submission if streak/coin update fails
+          console.error(`[STREAK/COINS] Error updating for ${userId}:`, streakError)
         }
 
         // NOTE: unregisterActiveSession is called AFTER battle.save() to prevent

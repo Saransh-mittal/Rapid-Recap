@@ -29,6 +29,7 @@ import { getCsrfToken } from '../../../services/csrfService'
 
 const QuizReportModal = React.lazy(() => import('../QuizReportModal'))
 const StreakIncreasedPopup = React.lazy(() => import('../v2/StreakIncreasedPopup'))
+const PostSessionRewardScreen = React.lazy(() => import('../v2/PostSessionRewardScreen'))
 import PowerupDonationModal from '../powerups/PowerupDonationModal'
 import PowerupSelectionModal from '../powerups/PowerupSelectionModal'
 import TeamMemberInfoModal from './teamBattlePageComponents/TeamMemberInfoModal'
@@ -879,6 +880,10 @@ const TeamBattlePageV2 = React.memo(() => {
   const [showStreakPopup, setShowStreakPopup] = useState(false)
   const [streakResult, setStreakResult] = useState(null)
 
+  // Post-session reward screen state - shows after quiz completion for all players
+  const [showRewardScreen, setShowRewardScreen] = useState(false)
+  const [rewardData, setRewardData] = useState(null)
+
 
 
   // Local state to bridge the gap between click and API/Socket update
@@ -1019,8 +1024,30 @@ const TeamBattlePageV2 = React.memo(() => {
   useEffect(() => { setupTeamBattleSocketListeners(); return cleanupSocketListeners }, [setupTeamBattleSocketListeners, cleanupSocketListeners])
   useEffect(() => { return () => resetOperationState() }, [resetOperationState])
 
-  // Check for pending streak popup on mount (user returning from quiz completion)
+  // Check for pending reward screen or streak popup on mount (user returning from quiz completion)
   useEffect(() => {
+    // Check for new reward screen data first (preferred)
+    const pendingReward = localStorage.getItem('pendingRewardScreen')
+    if (pendingReward) {
+      try {
+        const parsed = JSON.parse(pendingReward)
+        setRewardData(parsed)
+        // Delay slightly to let the page render first
+        setTimeout(() => {
+          setShowRewardScreen(true)
+        }, 800)
+        // Clear from localStorage
+        localStorage.removeItem('pendingRewardScreen')
+        // Also clear any old streak popup data to avoid double popups
+        localStorage.removeItem('pendingStreakPopup')
+      } catch (e) {
+        console.error('Error parsing reward screen data:', e)
+        localStorage.removeItem('pendingRewardScreen')
+      }
+      return // Don't check streak popup if we have reward screen
+    }
+
+    // Fallback: Check for legacy streak popup data
     const pendingStreak = localStorage.getItem('pendingStreakPopup')
     if (pendingStreak) {
       try {
@@ -1463,12 +1490,31 @@ const TeamBattlePageV2 = React.memo(() => {
         />
       )}
 
-      {/* Streak Increased Popup - Shows when returning from quiz completion */}
+      {/* Post-Session Reward Screen - Shows after quiz completion for all players */}
+      <React.Suspense fallback={null}>
+        <PostSessionRewardScreen
+          isOpen={showRewardScreen}
+          onClose={() => setShowRewardScreen(false)}
+          onPlayAgain={() => {
+            setShowRewardScreen(false)
+            // Stay on battle page - user can pick another category if available
+          }}
+          onShare={() => {
+            // TODO: Implement share functionality
+            console.log('Share result clicked')
+          }}
+          rewardData={rewardData}
+          isSessionPlayer={isSession}
+          battleExpiresAt={currentBattle?.expiresAt}
+        />
+      </React.Suspense>
+
+      {/* Legacy Streak Increased Popup - Fallback for old data format */}
       <React.Suspense fallback={null}>
         <StreakIncreasedPopup
-          isOpen={showStreakPopup ||true}
+          isOpen={showStreakPopup}
           onClose={() => setShowStreakPopup(false)}
-          streakResult={streakResult || {newStreak:2, longestStreak:2, previousStreak:1, tierLabel:'Tier 1', tierEmoji:'Tier 1', nextTier:'Tier 2'}}
+          streakResult={streakResult}
           isSessionPlayer={isSession}
           onCreateAccount={() => {
             navigate('/quickclash', { state: { showSignup: true } })

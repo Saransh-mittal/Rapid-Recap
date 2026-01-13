@@ -448,6 +448,11 @@ const userSchema = new mongoose.Schema(
       type: Number,
       default: 1000, // Default starting trophies
     },
+    // Quick Clash coins - earned from completing quizzes
+    quickClashCoins: {
+      type: Number,
+      default: 0,
+    },
     quickClashStats: {
       wins: { type: Number, default: 0 },
       losses: { type: Number, default: 0 },

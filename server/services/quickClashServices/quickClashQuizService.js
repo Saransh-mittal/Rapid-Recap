@@ -353,6 +353,11 @@ const submitQuizAnswersService = makeRetryable(
       const totalCount = validatedResponses.length
       const scoreString = `${correctCount}/${totalCount}`
 
+      // Calculate Forge accuracy from forge progress responses
+      const forgeResponses = quizSession.forgeProgress?.responses || []
+      const forgeCorrectCount = forgeResponses.filter(r => r.isCorrect).length
+      const forgeTotalCount = forgeResponses.length || 5 // Default to 5 if no responses
+
       // Calculate difficulty level based on the quiz's overall difficulty
       const difficulty =
         quizSession.quiz.overallDifficulty < 0.5
@@ -367,6 +372,17 @@ const submitQuizAnswersService = makeRetryable(
         RQM_score: totalScore, // Return TOTAL score as the main score for display
         quizScore: RQM_score, // Original quiz score
         forgeScore,
+        // Dual-phase accuracy breakdown for PostSessionRewardScreen
+        forgeAccuracy: {
+          correct: forgeCorrectCount,
+          total: forgeTotalCount,
+          percentage: forgeTotalCount > 0 ? Math.round((forgeCorrectCount / forgeTotalCount) * 100) : 0
+        },
+        quizAccuracy: {
+          correct: correctCount,
+          total: totalCount,
+          percentage: totalCount > 0 ? Math.round((correctCount / totalCount) * 100) : 0
+        },
         nonBoostedRQM: totalScore, // Use total score
         baseRQM_score,
         precisionBonus,
