@@ -54,6 +54,11 @@ const analysisRoutes = require('./quickClashAnalysisRoutes')
 const {
   usePowerupController
 } = require('../controllers/quickClashPowerupController')
+const {
+  getShopPowerups,
+  purchasePowerupController,
+  getBalance,
+} = require('../controllers/quickClashShopController')
 
 const router = express.Router()
 // TEMPORARILY DISABLED - Daily Tasks feature
@@ -116,6 +121,11 @@ router.use('/', teamRoutes)
 
 // Mount analysis routes
 router.use('/analysis', analysisRoutes)
+
+// Shop routes (authenticated users only - session players cannot purchase)
+router.get('/shop/powerups', getShopPowerups)
+router.post('/shop/purchase', purchasePowerupController)
+router.get('/shop/balance', getBalance)
 
 // Challenge management routes
 router.post('/challenge/create', createNewChallenge)

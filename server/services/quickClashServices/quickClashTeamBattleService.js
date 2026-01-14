@@ -49,9 +49,11 @@ const {
   getStreakTier,
 } = require('./quickClashStreakService')
 const {
-  calculateQuizReward,
+  calculateSessionReward,
   awardCoins,
+  COIN_CONFIG,
 } = require('./quickClashCoinService')
+const QuickClashSession = require('../../model/quickClashSchemas/quickClashSessionSchema')
 const ForgeArticle = require('../../model/quickClashSchemas/forgeArticleSchema')
 
 // Constants
@@ -2318,15 +2320,28 @@ const updateBattleWithQuizResults = makeRetryable(
           if (streakResult) {
             console.log(`[STREAK] Updated streak for ${userId}: Day ${streakResult.newStreak}`)
 
-            // Award coins based on quiz performance
-            // Calculate coins: base 15 + 5 per correct answer (score is out of 100, so estimate correct = score/20)
-            const estimatedCorrect = Math.round(score / 20) // Rough estimate: 100 score = 5 correct
+            // Award coins based on two-phase performance (Forge + Quiz)
+            // Fetch session to get actual forge and quiz accuracy
+            const userSession = await QuickClashSession.findOne({
+              challenge: challengeId,
+              user: userId,
+            }).select('forgeProgress quizAttempt').session(session)
+
+            // Get forge accuracy (correct answers from forge phase)
+            const forgeCorrect = userSession?.forgeProgress?.correctAnswers || 0
+
+            // Get quiz accuracy (correct answers from quiz phase)
+            const quizResponses = userSession?.quizAttempt?.responses || []
+            const quizCorrect = quizResponses.filter(r => r.isCorrect).length
+
             const streakDays = streakResult.newStreak || 0
 
-            const coinReward = calculateQuizReward({
-              correctAnswers: Math.min(5, Math.max(0, estimatedCorrect)),
-              totalQuestions: 5,
+            // Calculate coin reward with two-phase accuracy (win bonus awarded after battle completes)
+            const coinReward = calculateSessionReward({
+              forgeCorrect: Math.min(5, Math.max(0, forgeCorrect)),
+              quizCorrect: Math.min(5, Math.max(0, quizCorrect)),
               streakDays,
+              isWin: false, // Win bonus awarded separately after battle completion
             })
 
             // Award coins to player
@@ -2334,12 +2349,12 @@ const updateBattleWithQuizResults = makeRetryable(
               playerId: userId,
               isSessionPlayer: isUserSessionPlayer,
               amount: coinReward.totalCoins,
-              reason: 'quiz_completion',
+              reason: 'session_completion',
               session,
             })
 
             if (coinResult) {
-              console.log(`[COINS] Awarded ${coinReward.totalCoins} coins to ${userId} (base: ${coinReward.baseCoins}, accuracy: ${coinReward.accuracyBonus}, multiplier: ${coinReward.streakMultiplier}x)`)
+              console.log(`[COINS] Awarded ${coinReward.totalCoins} coins to ${userId} (base: ${coinReward.baseCoins}, forge: ${coinReward.forgeAccuracyBonus}, quiz: ${coinReward.quizAccuracyBonus}, multiplier: ${coinReward.streakMultiplier}x)`)
             }
           }
         } catch (streakError) {
@@ -2508,6 +2523,41 @@ const updateBattleWithQuizResults = makeRetryable(
               battle.winner = 'teamB'
             } else {
               battle.winner = 'tie'
+            }
+          }
+
+          // Award WIN BONUS coins to all winning team members
+          if (battle.winner && battle.winner !== 'tie') {
+            const winningTeamMembers = battle.winner === 'teamA'
+              ? battle.teamAMembers
+              : battle.teamBMembers
+
+            console.log(`[WIN_BONUS] Awarding win bonus to ${winningTeamMembers.length} members of ${battle.winner}`)
+
+            for (const member of winningTeamMembers) {
+              try {
+                const memberId = getMemberPlayerId(member)
+                if (!memberId) continue
+
+                const isSessionPlayer = !!member.sessionPlayer
+
+                // Award just the win bonus (streak multiplier applied inside awardCoins is not needed here,
+                // so we calculate it ourselves for consistency)
+                const winBonusAmount = COIN_CONFIG.WIN_BONUS // 25 coins flat
+
+                await awardCoins({
+                  playerId: memberId,
+                  isSessionPlayer,
+                  amount: winBonusAmount,
+                  reason: 'battle_win',
+                  session,
+                })
+
+                console.log(`[WIN_BONUS] Awarded ${winBonusAmount} win bonus to ${memberId}`)
+              } catch (winBonusError) {
+                // Don't fail battle completion if win bonus fails
+                console.error(`[WIN_BONUS] Error awarding to member:`, winBonusError)
+              }
             }
           }
 

@@ -12,7 +12,7 @@ const User = require('../../model/userSchema')
 const STREAK_TIERS = [
   { minDays: 30, multiplier: 3.0, label: 'Legendary', emoji: '🏆' },
   { minDays: 15, multiplier: 2.5, label: 'Master', emoji: '⭐' },
-  { minDays: 8, multiplier: 2.0, label: 'Expert', emoji: '💪' },
+  { minDays: 7, multiplier: 2.0, label: 'Expert', emoji: '💪' },
   { minDays: 4, multiplier: 1.5, label: 'Rising', emoji: '🔥' },
   { minDays: 1, multiplier: 1.0, label: 'Started', emoji: '✨' },
 ]

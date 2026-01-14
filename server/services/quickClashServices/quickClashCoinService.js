@@ -11,9 +11,13 @@ const { getStreakTier, STREAK_TIERS } = require('./quickClashStreakService')
 // ============================================================================
 
 const COIN_CONFIG = {
-  BASE_COINS: 15,           // Fixed coins for completing a quiz
-  ACCURACY_BONUS_PER_CORRECT: 5,  // Bonus coins per correct answer (0-5 correct = 0-25 bonus)
-  MAX_QUESTIONS: 5,         // Total questions per quiz
+  BASE_COINS: 15,                    // Fixed coins for completing a session
+  FORGE_ACCURACY_PER_CORRECT: 2,     // +2 coins per correct forge answer (max +10)
+  QUIZ_ACCURACY_PER_CORRECT: 3,      // +3 coins per correct quiz answer (max +15)
+  WIN_BONUS: 25,                     // +25 coins when battle result is WIN
+  // Legacy support
+  ACCURACY_BONUS_PER_CORRECT: 5,     // Old single-phase bonus (deprecated)
+  MAX_QUESTIONS: 5,
 }
 
 // ============================================================================
@@ -21,40 +25,81 @@ const COIN_CONFIG = {
 // ============================================================================
 
 /**
- * Calculate coins earned for a quiz completion
+ * Calculate coins earned for a session completion (two-phase: Forge + Quiz)
  * @param {Object} params
- * @param {number} params.correctAnswers - Number of correct answers (0-5)
- * @param {number} params.totalQuestions - Total questions (usually 5)
+ * @param {number} params.forgeCorrect - Number of correct forge answers (0-5)
+ * @param {number} params.quizCorrect - Number of correct quiz answers (0-5)
  * @param {number} params.streakDays - Current streak days for multiplier
- * @returns {Object} { baseCoins, accuracyBonus, streakMultiplier, totalCoins, breakdown }
+ * @param {boolean} params.isWin - Whether the player's team won the battle
+ * @returns {Object} Complete breakdown of coin calculation
  */
-const calculateQuizReward = ({ correctAnswers, totalQuestions = COIN_CONFIG.MAX_QUESTIONS, streakDays = 0 }) => {
-  // Base coins for completing
+const calculateSessionReward = ({ forgeCorrect = 0, quizCorrect = 0, streakDays = 0, isWin = false }) => {
+  // Base coins for completing session
   const baseCoins = COIN_CONFIG.BASE_COINS
 
-  // Accuracy bonus (5 coins per correct answer)
-  const accuracyBonus = correctAnswers * COIN_CONFIG.ACCURACY_BONUS_PER_CORRECT
+  // Two-phase accuracy bonuses
+  const forgeAccuracyBonus = Math.min(5, Math.max(0, forgeCorrect)) * COIN_CONFIG.FORGE_ACCURACY_PER_CORRECT
+  const quizAccuracyBonus = Math.min(5, Math.max(0, quizCorrect)) * COIN_CONFIG.QUIZ_ACCURACY_PER_CORRECT
+
+  // Win bonus
+  const winBonus = isWin ? COIN_CONFIG.WIN_BONUS : 0
+
+  // Subtotal before multiplier
+  const subtotal = baseCoins + forgeAccuracyBonus + quizAccuracyBonus + winBonus
 
   // Streak multiplier from tier
   const tierInfo = getStreakTier(streakDays)
   const streakMultiplier = tierInfo.multiplier
 
   // Calculate total with multiplier
-  const subtotal = baseCoins + accuracyBonus
   const totalCoins = Math.round(subtotal * streakMultiplier)
 
   return {
     baseCoins,
-    accuracyBonus,
+    forgeAccuracyBonus,
+    quizAccuracyBonus,
+    winBonus,
     streakMultiplier,
     totalCoins,
     breakdown: {
       base: baseCoins,
-      accuracy: accuracyBonus,
+      forge: forgeAccuracyBonus,
+      quiz: quizAccuracyBonus,
+      win: winBonus,
       subtotal,
       multiplier: streakMultiplier,
       multiplierLabel: tierInfo.label,
       final: totalCoins,
+    }
+  }
+}
+
+/**
+ * @deprecated Use calculateSessionReward for two-phase calculation
+ * Legacy function for backward compatibility
+ */
+const calculateQuizReward = ({ correctAnswers, totalQuestions = COIN_CONFIG.MAX_QUESTIONS, streakDays = 0 }) => {
+  // Map old signature to new function (treat as quiz-only for backward compat)
+  const result = calculateSessionReward({
+    forgeCorrect: 0,
+    quizCorrect: correctAnswers,
+    streakDays,
+    isWin: false,
+  })
+
+  // Return in legacy format
+  return {
+    baseCoins: result.baseCoins,
+    accuracyBonus: result.quizAccuracyBonus,
+    streakMultiplier: result.streakMultiplier,
+    totalCoins: result.totalCoins,
+    breakdown: {
+      base: result.baseCoins,
+      accuracy: result.quizAccuracyBonus,
+      subtotal: result.breakdown.subtotal,
+      multiplier: result.streakMultiplier,
+      multiplierLabel: result.breakdown.multiplierLabel,
+      final: result.totalCoins,
     }
   }
 }
@@ -234,7 +279,8 @@ const getEstimatedResultTime = (battleCreatedAt, battleDurationMinutes = 45) => 
 
 module.exports = {
   COIN_CONFIG,
-  calculateQuizReward,
+  calculateSessionReward,
+  calculateQuizReward, // Legacy, deprecated
   awardCoins,
   getPlayerCoins,
   transferCoinsToUser,
