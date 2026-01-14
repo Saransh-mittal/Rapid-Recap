@@ -1,4 +1,4 @@
-const VERSION = 'v10.2' // Increment version to force update
+const VERSION = 'v10.3' // Increment version to force update - Added Google OAuth bypass
 const CACHE_NAME = `rapid-recap-${VERSION}`
 const OFFLINE_CACHE = `offline-${VERSION}`
 const DYNAMIC_CACHE = `dynamic-${VERSION}`
@@ -14,6 +14,11 @@ const NEVER_CACHE_DOMAINS = [
   'analytics.google.com',
   'www.googletagmanager.com',
   'stats.g.doubleclick.net',
+  // Google OAuth - must bypass service worker completely
+  'accounts.google.com',
+  'apis.google.com',
+  'oauth2.googleapis.com',
+  'www.googleapis.com',
 ]
 
 // Assets that should be handled by Cloudflare
@@ -218,6 +223,18 @@ self.addEventListener('fetch', event => {
   if (IS_DEVELOPMENT) return
 
   const url = event.request.url
+
+  // CRITICAL: Bypass service worker completely for external domains
+  // This prevents CSP violations for Google OAuth and other third-party services
+  try {
+    const requestURL = new URL(url)
+    if (NEVER_CACHE_DOMAINS.includes(requestURL.hostname)) {
+      return // Let the browser handle this request directly
+    }
+  } catch (err) {
+    // If URL parsing fails, let the browser handle it
+    return
+  }
 
   // Special handling for locale files - always network first
   if (url.includes('/locales/')) {
