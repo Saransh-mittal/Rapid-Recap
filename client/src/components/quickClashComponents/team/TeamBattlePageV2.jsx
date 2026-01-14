@@ -1497,7 +1497,12 @@ const TeamBattlePageV2 = React.memo(() => {
           onClose={() => setShowRewardScreen(false)}
           onPlayAgain={() => {
             setShowRewardScreen(false)
-            // Stay on battle page - user can pick another category if available
+            // Session players: navigate to /quickclash with autoMatchmaking flag
+            // This will show welcome modal (if first time) then open matchmaking
+            if (isSession) {
+              navigate('/quickclash', { state: { showWelcome: true, autoMatchmaking: true } })
+            }
+            // Authenticated users: stay on battle page - can pick another category
           }}
           onShare={() => {
             // TODO: Implement share functionality

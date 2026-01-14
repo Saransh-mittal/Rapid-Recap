@@ -333,6 +333,9 @@ const QuickClashLayoutV2 = () => {
   // State to trigger opening the GlobalMatchmaking modal externally
   const [forceOpenMatchmaking, setForceOpenMatchmaking] = useState(false)
 
+  // Pending matchmaking flag - waits for welcome modal to close
+  const [pendingAutoMatchmaking, setPendingAutoMatchmaking] = useState(false)
+
   // Track the last location.key to detect real navigation vs replaceState
   const lastLocationKey = useRef(location.key)
 
@@ -341,17 +344,30 @@ const QuickClashLayoutV2 = () => {
     if (isSession) {
       const hasSeenWelcome = localStorage.getItem(WELCOME_SHOWN_KEY)
       const showWelcomeFromNav = location.state?.showWelcome
+      const autoMatchmaking = location.state?.autoMatchmaking
 
       if (!hasSeenWelcome || showWelcomeFromNav) {
         // Delay modal to let the UI load first
         const timer = setTimeout(() => {
           setShowWelcomeModal(true)
           localStorage.setItem(WELCOME_SHOWN_KEY, 'true')
+          // Queue auto-matchmaking for after welcome modal closes
+          if (autoMatchmaking) {
+            setPendingAutoMatchmaking(true)
+          }
         }, 500)
+        return () => clearTimeout(timer)
+      } else if (autoMatchmaking) {
+        // No welcome modal needed, directly open matchmaking
+        const timer = setTimeout(() => {
+          setForceOpenMatchmaking(true)
+          // Clear the navigation state to prevent re-triggering
+          navigate(location.pathname, { replace: true, state: {} })
+        }, 300)
         return () => clearTimeout(timer)
       }
     }
-  }, [isSession, location.state])
+  }, [isSession, location.state, location.pathname, navigate])
 
   // Check if signup panel should be opened (from "Save Streak Forever" etc.)
   useEffect(() => {
@@ -513,7 +529,19 @@ const QuickClashLayoutV2 = () => {
         <Suspense fallback={null}>
           <SessionWelcomeModal
             isOpen={showWelcomeModal}
-            onClose={() => setShowWelcomeModal(false)}
+            onClose={() => {
+              setShowWelcomeModal(false)
+              // Trigger matchmaking if it was pending (from Play Next Match flow)
+              if (pendingAutoMatchmaking) {
+                setPendingAutoMatchmaking(false)
+                // Small delay to let the modal animate out
+                setTimeout(() => {
+                  setForceOpenMatchmaking(true)
+                  // Clear navigation state
+                  navigate(location.pathname, { replace: true, state: {} })
+                }, 300)
+              }
+            }}
             onCreateAccount={handleCreateAccount}
           />
         </Suspense>
