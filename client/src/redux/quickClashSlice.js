@@ -152,7 +152,10 @@ export const fetchUserTrophies = createAsyncThunk(
   async (_, { rejectWithValue }) => {
     try {
       const response = await axios.get('/api/quickClash/trophies')
-      return response.data.trophies || 0
+      return {
+        trophies: response.data.trophies || 0,
+        coins: response.data.coins ?? 0,
+      }
     } catch (error) {
       return rejectWithValue(
         error.response?.data?.message || 'Failed to fetch trophies',
@@ -245,6 +248,7 @@ const initialState = {
   challengeAnalysesError: {},
 
   userTrophies: 0,
+  userCoins: 0,
   userTrophiesLoading: false,
   userTrophiesError: null,
 
@@ -378,7 +382,8 @@ const quickClashSlice = createSlice({
         state.userTrophiesError = null
       })
       .addCase(fetchUserTrophies.fulfilled, (state, action) => {
-        state.userTrophies = action.payload
+        state.userTrophies = action.payload.trophies
+        state.userCoins = action.payload.coins
         state.userTrophiesLoading = false
       })
       .addCase(fetchUserTrophies.rejected, (state, action) => {

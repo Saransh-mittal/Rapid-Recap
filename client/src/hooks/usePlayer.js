@@ -73,6 +73,7 @@ export const usePlayer = () => {
           stats: session.stats,
           currentTeamId: session.currentTeamId,
           streak: session.streak, // Streak data from backend
+          coins: session.coins ?? 0, // Coins from backend
         }
         setSessionPlayer(playerData)
 
@@ -152,6 +153,7 @@ export const usePlayer = () => {
         stats: sessionPlayer.stats,
         currentTeamId: sessionPlayer.currentTeamId,
         streak: sessionPlayer.streak, // Streak data
+        coins: sessionPlayer.coins ?? 0, // Coins data
       },
       playerId: sessionPlayer.sessionId,
       type: 'session',

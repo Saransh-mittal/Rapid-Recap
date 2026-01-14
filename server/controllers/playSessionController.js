@@ -796,6 +796,7 @@ const getSessionInfo = asyncHandler(async (req, res) => {
         createdAt: session.createdAt,
         lastActiveAt: session.lastActiveAt,
         streak: session.streak, // Streak data for frontend display
+        coins: session.coins ?? 0, // Coins for frontend display
       },
     })
   } catch (error) {

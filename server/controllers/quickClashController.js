@@ -866,7 +866,7 @@ const markChallengeRevenge = asyncHandler(async (req, res) => {
 })
 
 /**
- * @desc    Get a user's current trophy count
+ * @desc    Get a user's current trophy count and coins
  * @route   GET /api/quickClash/trophies
  * @access  Private
  */
@@ -876,9 +876,15 @@ const getUserTrophiesController = asyncHandler(async (req, res) => {
   try {
     const trophies = await getUserTrophies({ userId })
 
+    // Also fetch coins for the user
+    const User = require('../model/userSchema')
+    const user = await User.findById(userId).select('quickClashCoins').lean()
+    const coins = user?.quickClashCoins ?? 0
+
     res.status(200).json({
       success: true,
       trophies,
+      coins,
     })
   } catch (error) {
     console.error('Error getting user trophies:', error)
@@ -888,6 +894,7 @@ const getUserTrophiesController = asyncHandler(async (req, res) => {
     })
   }
 })
+
 
 /**
  * @desc    Get a user's combined trophy history (both individual and team battles)
