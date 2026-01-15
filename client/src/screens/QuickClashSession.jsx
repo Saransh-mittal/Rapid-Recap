@@ -551,27 +551,22 @@ const QuickClashSession = ({ isSessionPlayer = false }) => {
         dispatch(fetchActiveChallenges())
       }
 
-      // Calculate coin reward data for the reward screen
-      const correctAnswers = result.correctAnswers || 0
-      const totalQuestions = result.totalQuestions || 5
+      // Get coin and streak data from backend response (single source of truth)
+      const coinRewardData = result.coinReward || {}
       const streakData = result.streakResult || {}
       const streakDays = streakData.newStreak || 0
 
-      // Coin calculation (matches backend quickClashCoinService)
-      const BASE_COINS = 15
-      const ACCURACY_BONUS_PER_CORRECT = 5
-      const baseCoins = BASE_COINS
-      const accuracyBonus = correctAnswers * ACCURACY_BONUS_PER_CORRECT
+      // Use backend-calculated coin values (no frontend duplication)
+      const baseCoins = coinRewardData.baseCoins || 15
+      const accuracyBonus = (coinRewardData.forgeAccuracyBonus || 0) + (coinRewardData.quizAccuracyBonus || 0)
+      const streakMultiplier = coinRewardData.streakMultiplier || 1.0
+      const totalCoins = coinRewardData.totalCoins || baseCoins
 
-      // Streak multiplier tiers (matching backend STREAK_TIERS)
-      let streakMultiplier = 1.0
-      if (streakDays >= 30) streakMultiplier = 3.0
-      else if (streakDays >= 15) streakMultiplier = 2.5
-      else if (streakDays >= 8) streakMultiplier = 2.0
-      else if (streakDays >= 4) streakMultiplier = 1.5
-      else streakMultiplier = 1.0
-
-      const totalCoins = Math.round((baseCoins + accuracyBonus) * streakMultiplier)
+      // Get two-phase accuracy data for display
+      const forgeAccuracyData = result.forgeAccuracy || { correct: 0, total: 5 }
+      const quizAccuracyData = result.quizAccuracy || { correct: result.correctAnswers || 0, total: 5 }
+      const quizCorrect = quizAccuracyData.correct || result.correctAnswers || 0
+      const totalQuestions = 5
 
       // Mock percentile based on score (encouraging ranks)
       const score = result.RQM_score || 0
@@ -611,14 +606,15 @@ const QuickClashSession = ({ isSessionPlayer = false }) => {
           percentage: 0
         },
         quizAccuracy: result.quizAccuracy || {
-          correct: correctAnswers,
+          correct: quizCorrect,
           total: totalQuestions,
-          percentage: Math.round((correctAnswers / totalQuestions) * 100)
+          percentage: Math.round((quizCorrect / totalQuestions) * 100)
         },
         // Score breakdown
         forgeScore: result.forgeScore || 0,
         quizScore: result.quizScore || result.RQM_score,
         percentileRank,
+        // Use backend coin values (single source of truth)
         baseCoins,
         accuracyBonus,
         streakMultiplier,
@@ -631,22 +627,27 @@ const QuickClashSession = ({ isSessionPlayer = false }) => {
         isFirstSession: true, // Flag to enhance CTA for conversion
       }
 
-      // Only show PostSessionRewardScreen for session player's FIRST quiz completion
-      // This is the key conversion moment - maximize impact
+      // Show PostSessionRewardScreen for ALL quiz completions (both session players and auth users)
+      // Use isFirstSession flag to differentiate first-time (conversion focus) vs returning (retention)
       const hasSeenFirstReward = localStorage.getItem('qc_first_reward_shown')
 
+      // Determine if this is the first session for enhanced UI
+      const isFirstSession = isSessionPlayer && !hasSeenFirstReward
+
+      // Update rewardScreenData with correct isFirstSession value
+      rewardScreenData.isFirstSession = isFirstSession
+
+      // Always store reward screen data for all players
+      localStorage.setItem('pendingRewardScreen', JSON.stringify(rewardScreenData))
+
+      // Mark first reward as shown for session players (for future reference)
       if (isSessionPlayer && !hasSeenFirstReward) {
-        // First time session player completing a quiz - show reward screen
-        localStorage.setItem('pendingRewardScreen', JSON.stringify(rewardScreenData))
-        // Mark that we've shown the first reward screen
         localStorage.setItem('qc_first_reward_shown', 'true')
       }
 
-      // For non-first-time session players and authenticated users, use streak popup
-      if (!isSessionPlayer || hasSeenFirstReward) {
-        if (result.streakResult && result.streakResult.newStreak > 0) {
-          localStorage.setItem('pendingStreakPopup', JSON.stringify(result.streakResult))
-        }
+      // Store streak data separately - will be shown AFTER reward screen closes
+      if (result.streakResult && result.streakResult.newStreak > 0) {
+        localStorage.setItem('pendingStreakPopup', JSON.stringify(result.streakResult))
       }
 
       trackChallengeCompletion({

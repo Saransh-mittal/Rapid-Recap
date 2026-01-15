@@ -103,6 +103,12 @@ router.get('/global-matchmaking/status', flexAuth, getGlobalMatchmakingStatusCon
 router.get('/global-matchmaking-status-detailed', flexAuth, getGlobalMatchmakingStatusDetailed)
 router.get('/can-leave-matchmaking', flexAuth, canLeaveMatchmakingController)
 
+// Profile routes (session-compatible - allows session players to view profiles)
+router.get('/profile/:userId', flexAuth, getUserProfile)
+router.get('/profile/:userId/achievements', flexAuth, getUserAchievements)
+router.get('/profile/:userId/matches', flexAuth, getUserRecentMatches)
+router.get('/profile/:userId/statistics', flexAuth, getUserStatistics)
+
 // ============================================================
 // AUTHENTICATED-ONLY ROUTES (require JWT token)
 // ============================================================
@@ -188,12 +194,8 @@ router.get(
 // Add this route with other trophy routes
 router.get('/trophies/history/combined', getUserCombinedTrophyHistoryController)
 
-// Profile routes
+// Profile routes (authenticated only)
 router.get('/profile', getCurrentUserProfile)
-router.get('/profile/:userId', getUserProfile)
-router.get('/profile/:userId/achievements', getUserAchievements)
-router.get('/profile/:userId/matches', getUserRecentMatches)
-router.get('/profile/:userId/statistics', getUserStatistics)
 router.get('/battle-stats', getBattleStatsForLanding)
 
 // NEW: Detailed RQM analysis route

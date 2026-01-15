@@ -56,14 +56,22 @@ export const fetchTeamBattleDetails = createAsyncThunk(
 
     const attemptFetch = async (retryCount = 0) => {
       try {
-        // Check if user is authenticated via Redux
+        // Check if user is authenticated via Redux OR localStorage token
+        // This handles cases where Redux state hasn't loaded yet but user has a token
         const { auth } = getState()
         const hasUser = !!auth?.user
+        const hasToken = !!localStorage.getItem('token')
+        const hasSessionId = !!localStorage.getItem('playSessionId')
 
-        // Use session endpoint if no authenticated user
-        const endpoint = hasUser
-          ? `/api/quickClash/team-battle/${battleId}`
-          : `/api/play/battle/${battleId}`
+        // User is authenticated if they have a token OR are in Redux state
+        // Only use session endpoint if they have a session ID AND no token
+        const isAuthenticatedUser = hasUser || hasToken
+        const isSessionPlayer = hasSessionId && !hasToken
+
+        // Use session endpoint only if explicitly a session player
+        const endpoint = isSessionPlayer
+          ? `/api/play/battle/${battleId}`
+          : `/api/quickClash/team-battle/${battleId}`
 
         const response = await axios.get(endpoint)
         return response.data.battle
@@ -143,13 +151,16 @@ export const selectBattleCategory = createAsyncThunk(
   'quickClashTeamBattle/selectBattleCategory',
   async ({ battleId, category }, { rejectWithValue, getState }) => {
     try {
-      // Check if user is authenticated via Redux
+      // Check if user is authenticated via Redux OR localStorage token
       const { auth } = getState()
       const hasUser = !!auth?.user
+      const hasToken = !!localStorage.getItem('token')
+      const hasSessionId = !!localStorage.getItem('playSessionId')
+      const isSessionPlayer = hasSessionId && !hasToken
 
-      const endpoint = hasUser
-        ? `/api/quickClash/team-battle/${battleId}/select-category`
-        : `/api/play/battle/${battleId}/select-category`
+      const endpoint = isSessionPlayer
+        ? `/api/play/battle/${battleId}/select-category`
+        : `/api/quickClash/team-battle/${battleId}/select-category`
 
       const response = await axios.post(endpoint, { category })
       return {
@@ -168,13 +179,16 @@ export const beginBattleChallenge = createAsyncThunk(
   'quickClashTeamBattle/beginBattleChallenge',
   async ({ battleId }, { rejectWithValue, getState }) => {
     try {
-      // Check if user is authenticated via Redux
+      // Check if user is authenticated via Redux OR localStorage token
       const { auth } = getState()
       const hasUser = !!auth?.user
+      const hasToken = !!localStorage.getItem('token')
+      const hasSessionId = !!localStorage.getItem('playSessionId')
+      const isSessionPlayer = hasSessionId && !hasToken
 
-      const endpoint = hasUser
-        ? `/api/quickClash/team-battle/${battleId}/begin-challenge`
-        : `/api/play/battle/${battleId}/begin-challenge`
+      const endpoint = isSessionPlayer
+        ? `/api/play/battle/${battleId}/begin-challenge`
+        : `/api/quickClash/team-battle/${battleId}/begin-challenge`
 
       const response = await axios.post(endpoint)
       return {
@@ -193,13 +207,16 @@ export const deselectBattleCategory = createAsyncThunk(
   'quickClashTeamBattle/deselectBattleCategory',
   async ({ battleId }, { rejectWithValue, getState }) => {
     try {
-      // Check if user is authenticated via Redux
+      // Check if user is authenticated via Redux OR localStorage token
       const { auth } = getState()
       const hasUser = !!auth?.user
+      const hasToken = !!localStorage.getItem('token')
+      const hasSessionId = !!localStorage.getItem('playSessionId')
+      const isSessionPlayer = hasSessionId && !hasToken
 
-      const endpoint = hasUser
-        ? `/api/quickClash/team-battle/${battleId}/deselect-category`
-        : `/api/play/battle/${battleId}/deselect-category`
+      const endpoint = isSessionPlayer
+        ? `/api/play/battle/${battleId}/deselect-category`
+        : `/api/quickClash/team-battle/${battleId}/deselect-category`
 
       const response = await axios.post(endpoint)
       return {

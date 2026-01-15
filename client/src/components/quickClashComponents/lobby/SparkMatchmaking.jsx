@@ -179,6 +179,13 @@ const SparkMatchmaking = () => {
     // Listen for match found
     const cleanupMatchFound = addEventListener('quickClash:matchFound', (data) => {
       setState(STATES.FOUND)
+
+      // Store battleId for non-upgraded session players so they can return to battle
+      // if they close/reopen the app before completing the quiz
+      if (localStorage.getItem('sparkUpgraded') !== 'true') {
+        localStorage.setItem('sparkActiveBattleId', data.battleId)
+      }
+
       setBattleReady({
         battleId: data.battleId,
         teamId: team._id,

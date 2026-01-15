@@ -2311,6 +2311,7 @@ const updateBattleWithQuizResults = makeRetryable(
         // This is non-blocking and won't fail the quiz submission if it errors
         let streakResult = null
         let coinResult = null
+        let coinReward = null // Coin calculation breakdown for frontend display
         try {
           streakResult = await updateStreakOnBattleComplete({
             playerId: userId,
@@ -2337,7 +2338,7 @@ const updateBattleWithQuizResults = makeRetryable(
             const streakDays = streakResult.newStreak || 0
 
             // Calculate coin reward with two-phase accuracy (win bonus awarded after battle completes)
-            const coinReward = calculateSessionReward({
+            coinReward = calculateSessionReward({
               forgeCorrect: Math.min(5, Math.max(0, forgeCorrect)),
               quizCorrect: Math.min(5, Math.max(0, quizCorrect)),
               streakDays,
@@ -2655,8 +2656,8 @@ const updateBattleWithQuizResults = makeRetryable(
         console.log(
           `[updateBattleWithQuizResults] Successfully updated battle with quiz results`,
         )
-        // Return battle and streak result for frontend popup
-        return { battle, streakResult }
+        // Return battle, streak result, and coin reward for frontend popup
+        return { battle, streakResult, coinReward }
       })
     } catch (error) {
       console.error('Error updating battle with quiz results:', error)

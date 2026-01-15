@@ -54,6 +54,30 @@ const SparkLobby = () => {
 
     const initializeLobby = async () => {
       try {
+        const sessionId = localStorage.getItem('playSessionId')
+
+        // Check for active battle restoration (for non-upgraded session players)
+        // This handles the case where a session player closed the app during an active battle
+        const activeBattleId = localStorage.getItem('sparkActiveBattleId')
+        if (activeBattleId) {
+          try {
+            const battleResponse = await axios.get(`/api/play/battle/${activeBattleId}`, {
+              headers: { 'X-Session-Id': sessionId }
+            })
+            if (battleResponse.data.battle && battleResponse.data.battle.status !== 'completed') {
+              // Battle is still active - redirect to it
+              console.log('[SparkLobby] Found active battle, redirecting:', activeBattleId)
+              navigate(`/play/battle/${activeBattleId}`, { replace: true })
+              return
+            }
+          } catch (err) {
+            // Battle not found or error - clear stale battleId
+            console.log('[SparkLobby] Active battle not found or error, clearing:', err.message)
+          }
+          // Clear stale battleId
+          localStorage.removeItem('sparkActiveBattleId')
+        }
+
         // Priority for teamCode:
         // 1. From navigation state (when redirected from matchmaking or invited)
         // 2. From localStorage (when pressing browser back)

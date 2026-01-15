@@ -1,6 +1,7 @@
 // services/quickClashServices/quickClashProfileService.js
 const mongoose = require('mongoose')
 const User = require('../../model/userSchema')
+const PlaySession = require('../../model/quickClashSchemas/playSessionSchema')
 const QuickClashTrophyHistory = require('../../model/quickClashSchemas/quickClashTrophyHistorySchema')
 const QuickClashTeamTrophyHistory = require('../../model/quickClashSchemas/quickClashTeamTrophyHistorySchema')
 const QuickClashChallenge = require('../../model/quickClashSchemas/quickClashChallengeSchema')
@@ -141,8 +142,18 @@ const getQuickClashProfile = async ({ userId }) => {
       )
       .lean()
 
+    // If user not found, try to find a session player
     if (!user) {
-      throw new Error('User not found')
+      const sessionPlayer = await PlaySession.findById(userObjectId)
+        .select('_id sessionId inGameName trophies stats streak coins createdAt lastActiveAt')
+        .lean()
+
+      if (!sessionPlayer) {
+        throw new Error('User not found')
+      }
+
+      // Return simplified profile for session player
+      return getSessionPlayerProfile(sessionPlayer)
     }
 
     // Get trophy history to calculate rank
@@ -232,6 +243,299 @@ const getQuickClashProfile = async ({ userId }) => {
     console.error('Error getting Quick Clash profile:', error)
     throw error
   }
+}
+
+/**
+ * Get profile data for a session player (simplified version)
+ * @param {Object} sessionPlayer - Session player document
+ * @returns {Object} Profile data for session player
+ */
+const getSessionPlayerProfile = async (sessionPlayer) => {
+  const sessionPlayerId = sessionPlayer._id
+
+  // Get team battle stats for session player from trophy history
+  const teamBattleStats = await getSessionPlayerTeamBattleStats(sessionPlayerId)
+
+  // Use team battle stats for overall stats (session players only do team battles)
+  // The PlaySession.stats field is not actively maintained, so we use trophy history
+  const totalMatches = teamBattleStats.totalMatches || 0
+  const totalWins = teamBattleStats.wins || 0
+  const totalLosses = teamBattleStats.losses || 0
+  const ties = teamBattleStats.ties || 0
+  const overallWinRate = teamBattleStats.winRate || 0
+
+  // Calculate peak trophies - if current trophies are higher than starting, that's their peak
+  const currentTrophies = sessionPlayer.trophies || DEFAULT_STARTING_TROPHIES
+  const peakTrophies = Math.max(currentTrophies, DEFAULT_STARTING_TROPHIES)
+
+  // Get recent activity for session player
+  const recentActivity = await getSessionPlayerRecentActivity(sessionPlayerId)
+
+  // Calculate simple achievements for session player
+  const achievements = calculateSessionPlayerAchievements({
+    totalMatches,
+    totalWins,
+    currentTrophies,
+    currentWinStreak: sessionPlayer.streak?.dayStreak || 0,
+    peakTrophies,
+  })
+
+  return {
+    isSessionPlayer: true, // Flag to indicate this is a session player
+    user: {
+      id: sessionPlayer._id,
+      name: sessionPlayer.inGameName,
+      inGameName: sessionPlayer.inGameName,
+      picture: null, // Session players don't have profile pictures
+      level: 0,
+      xp: 0,
+      joinedAt: sessionPlayer.createdAt,
+      coins: sessionPlayer.coins || 0,
+    },
+    trophies: {
+      current: currentTrophies,
+      peak: peakTrophies,
+      rank: null, // Session players don't appear in leaderboard
+      totalPlayers: null,
+    },
+    statistics: {
+      overall: {
+        totalMatches,
+        wins: totalWins,
+        losses: totalLosses,
+        ties,
+        winRate: parseFloat(overallWinRate),
+      },
+      oneVsOne: {
+        totalMatches: 0,
+        wins: 0,
+        losses: 0,
+        ties: 0,
+        winRate: 0,
+        totalTrophiesGained: 0,
+        totalTrophiesLost: 0,
+      },
+      teamBattle: teamBattleStats,
+    },
+    streaks: {
+      current: sessionPlayer.streak?.dayStreak || 0,
+      longest: sessionPlayer.streak?.longestStreak || 0,
+      protectionAvailable: false,
+    },
+    achievements,
+    favoriteCategories: [],
+    recentActivity,
+    aiInsights: {
+      recentInsight: null,
+      topRecommendation: null,
+      learningFocus: [],
+      performanceTrend: null,
+    },
+  }
+}
+
+/**
+ * Get team battle stats for a session player
+ * @param {mongoose.Types.ObjectId} sessionPlayerId - Session player ObjectId
+ */
+const getSessionPlayerTeamBattleStats = async (sessionPlayerId) => {
+  // Ensure sessionPlayerId is a proper ObjectId for aggregation
+  const sessionPlayerObjectId =
+    typeof sessionPlayerId === 'string'
+      ? new mongoose.Types.ObjectId(sessionPlayerId)
+      : sessionPlayerId
+
+  // Note: Session player trophy records may have userParticipated: false
+  // so we don't filter by that field
+  const stats = await QuickClashTeamTrophyHistory.aggregate([
+    { $match: { sessionPlayer: sessionPlayerObjectId } },
+    {
+      $group: {
+        _id: null,
+        totalMatches: { $sum: 1 },
+        wins: { $sum: { $cond: [{ $eq: ['$result', 'win'] }, 1, 0] } },
+        losses: { $sum: { $cond: [{ $eq: ['$result', 'loss'] }, 1, 0] } },
+        ties: { $sum: { $cond: [{ $eq: ['$result', 'tie'] }, 1, 0] } },
+        totalTrophiesGained: {
+          $sum: {
+            $cond: [{ $gt: ['$trophiesChange', 0] }, '$trophiesChange', 0],
+          },
+        },
+        totalTrophiesLost: {
+          $sum: {
+            $cond: [
+              { $lt: ['$trophiesChange', 0] },
+              { $abs: '$trophiesChange' },
+              0,
+            ],
+          },
+        },
+        // Also calculate average score here
+        avgScore: { $avg: '$userScore' },
+      },
+    },
+  ])
+
+  // Get average score from last 10 matches
+  const last10Matches = await QuickClashTeamTrophyHistory.find({
+    sessionPlayer: sessionPlayerObjectId,
+    userScore: { $exists: true, $gt: 0 },
+  })
+    .sort({ createdAt: -1 })
+    .limit(10)
+    .select('userScore')
+    .lean()
+
+  const avgScoreLast10 =
+    last10Matches.length > 0
+      ? Math.round(
+          last10Matches.reduce((sum, m) => sum + (m.userScore || 0), 0) /
+            last10Matches.length,
+        )
+      : 0
+
+  const result = stats[0] || {
+    totalMatches: 0,
+    wins: 0,
+    losses: 0,
+    ties: 0,
+    totalTrophiesGained: 0,
+    totalTrophiesLost: 0,
+  }
+
+  result.winRate =
+    result.totalMatches > 0
+      ? parseFloat(((result.wins / result.totalMatches) * 100).toFixed(1))
+      : 0
+
+  // Add average score from last 10 matches
+  result.avgScoreLast10 = avgScoreLast10
+  result.matchesForAvg = last10Matches.length
+
+  return result
+}
+
+/**
+ * Get recent activity for a session player
+ * @param {mongoose.Types.ObjectId} sessionPlayerId - Session player ObjectId
+ */
+const getSessionPlayerRecentActivity = async (sessionPlayerId) => {
+  const recentTeamBattles = await QuickClashTeamTrophyHistory.find({
+    sessionPlayer: sessionPlayerId,
+  })
+    .populate('teamBattle', 'createdAt categories')
+    .populate('opponentTeam', 'name')
+    .sort({ createdAt: -1 })
+    .limit(10)
+    .lean()
+
+  return recentTeamBattles.map(battle => ({
+    type: 'team',
+    id: battle._id,
+    result: battle.result,
+    trophyChange: battle.trophiesChange,
+    opponentTeam: battle.opponentTeam,
+    categories: battle.teamBattle?.categories,
+    date: battle.createdAt,
+  }))
+}
+
+/**
+ * Calculate simple achievements for session player
+ * @param {Object} stats - Session player statistics
+ */
+const calculateSessionPlayerAchievements = (stats) => {
+  const achievements = []
+
+  // Trophy milestones
+  if (stats.currentTrophies >= 2000)
+    achievements.push({
+      id: 'trophy_master',
+      name: 'Trophy Master',
+      description: 'Reach 2000 trophies',
+      icon: '🏆',
+      unlocked: true,
+    })
+  if (stats.currentTrophies >= 1500)
+    achievements.push({
+      id: 'trophy_hunter',
+      name: 'Trophy Hunter',
+      description: 'Reach 1500 trophies',
+      icon: '🎯',
+      unlocked: true,
+    })
+  if (stats.currentTrophies >= 1200)
+    achievements.push({
+      id: 'rising_star',
+      name: 'Rising Star',
+      description: 'Reach 1200 trophies',
+      icon: '⭐',
+      unlocked: true,
+    })
+
+  // Match milestones
+  if (stats.totalMatches >= 100)
+    achievements.push({
+      id: 'veteran',
+      name: 'Veteran Player',
+      description: 'Play 100 matches',
+      icon: '🎖️',
+      unlocked: true,
+    })
+  if (stats.totalMatches >= 50)
+    achievements.push({
+      id: 'experienced',
+      name: 'Experienced',
+      description: 'Play 50 matches',
+      icon: '🥉',
+      unlocked: true,
+    })
+  if (stats.totalMatches >= 10)
+    achievements.push({
+      id: 'getting_started',
+      name: 'Getting Started',
+      description: 'Play 10 matches',
+      icon: '🚀',
+      unlocked: true,
+    })
+
+  // Win streaks
+  if (stats.currentWinStreak >= 10)
+    achievements.push({
+      id: 'unstoppable',
+      name: 'Unstoppable',
+      description: 'Win 10 matches in a row',
+      icon: '🔥',
+      unlocked: true,
+    })
+  if (stats.currentWinStreak >= 5)
+    achievements.push({
+      id: 'hot_streak',
+      name: 'Hot Streak',
+      description: 'Win 5 matches in a row',
+      icon: '🔥',
+      unlocked: true,
+    })
+
+  // Win count milestones
+  if (stats.totalWins >= 50)
+    achievements.push({
+      id: 'champion',
+      name: 'Champion',
+      description: 'Win 50 matches',
+      icon: '👑',
+      unlocked: true,
+    })
+  if (stats.totalWins >= 25)
+    achievements.push({
+      id: 'winner',
+      name: 'Winner',
+      description: 'Win 25 matches',
+      icon: '🏅',
+      unlocked: true,
+    })
+
+  return achievements
 }
 
 /**

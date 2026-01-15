@@ -382,13 +382,15 @@ const submitQuizAnswers = asyncHandler(async (req, res) => {
         }
       }
 
-      // Include streak result in response for frontend popup
+      // Include streak result and coin reward in response for frontend display
       const streakResult = battleUpdateResult?.streakResult || null
+      const coinReward = battleUpdateResult?.coinReward || null
       return res.status(200).json({
         success: true,
         message: 'Quiz completed successfully',
         challengeId: session.challenge.toString(),
         streakResult, // Include streak data for frontend popup
+        coinReward,   // Include coin breakdown for reward screen
         ...result,
       })
     } else {

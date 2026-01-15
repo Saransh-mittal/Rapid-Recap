@@ -1024,31 +1024,51 @@ const TeamBattlePageV2 = React.memo(() => {
   useEffect(() => { setupTeamBattleSocketListeners(); return cleanupSocketListeners }, [setupTeamBattleSocketListeners, cleanupSocketListeners])
   useEffect(() => { return () => resetOperationState() }, [resetOperationState])
 
+  // Clear sparkActiveBattleId when battle is completed (cleanup for non-upgraded session players)
+  useEffect(() => {
+    if (currentBattle?.status === 'completed') {
+      localStorage.removeItem('sparkActiveBattleId')
+    }
+  }, [currentBattle?.status])
+
   // Check for pending reward screen or streak popup on mount (user returning from quiz completion)
   useEffect(() => {
-    // Check for new reward screen data first (preferred)
+    // Check for reward screen data
     const pendingReward = localStorage.getItem('pendingRewardScreen')
+    // Also check for streak popup data (to be shown after reward screen)
+    const pendingStreak = localStorage.getItem('pendingStreakPopup')
+
     if (pendingReward) {
       try {
         const parsed = JSON.parse(pendingReward)
         setRewardData(parsed)
+        // Clear reward from localStorage immediately
+        localStorage.removeItem('pendingRewardScreen')
+
+        // Also load streak data (but DON'T show it yet - wait for reward screen close)
+        if (pendingStreak) {
+          try {
+            const streakParsed = JSON.parse(pendingStreak)
+            setStreakResult(streakParsed)
+            // Note: We don't clear or show streak popup yet - handled in onClose
+          } catch (e) {
+            console.error('Error parsing streak popup data:', e)
+            localStorage.removeItem('pendingStreakPopup')
+          }
+        }
+
         // Delay slightly to let the page render first
         setTimeout(() => {
           setShowRewardScreen(true)
         }, 800)
-        // Clear from localStorage
-        localStorage.removeItem('pendingRewardScreen')
-        // Also clear any old streak popup data to avoid double popups
-        localStorage.removeItem('pendingStreakPopup')
       } catch (e) {
         console.error('Error parsing reward screen data:', e)
         localStorage.removeItem('pendingRewardScreen')
       }
-      return // Don't check streak popup if we have reward screen
+      return // Don't show streak popup directly if we have reward screen
     }
 
-    // Fallback: Check for legacy streak popup data
-    const pendingStreak = localStorage.getItem('pendingStreakPopup')
+    // No reward screen - check for standalone streak popup (legacy flow)
     if (pendingStreak) {
       try {
         const parsed = JSON.parse(pendingStreak)
@@ -1494,9 +1514,28 @@ const TeamBattlePageV2 = React.memo(() => {
       <React.Suspense fallback={null}>
         <PostSessionRewardScreen
           isOpen={showRewardScreen}
-          onClose={() => setShowRewardScreen(false)}
+          onClose={() => {
+            setShowRewardScreen(false)
+            // Show streak popup after reward screen closes (if streak data exists)
+            if (streakResult && streakResult.newStreak > 0) {
+              localStorage.removeItem('pendingStreakPopup') // Clear now that we're showing it
+              setTimeout(() => {
+                setShowStreakPopup(true)
+              }, 300) // Small delay for smooth transition
+            }
+          }}
           onPlayAgain={() => {
             setShowRewardScreen(false)
+            // Show streak popup first if exists, then proceed
+            if (streakResult && streakResult.newStreak > 0) {
+              localStorage.removeItem('pendingStreakPopup')
+              setTimeout(() => {
+                setShowStreakPopup(true)
+              }, 300)
+              // Note: Navigation will happen after streak popup closes
+              return
+            }
+            // No streak popup - proceed directly
             // Session players: navigate to /quickclash with autoMatchmaking flag
             // This will show welcome modal (if first time) then open matchmaking
             if (isSession) {

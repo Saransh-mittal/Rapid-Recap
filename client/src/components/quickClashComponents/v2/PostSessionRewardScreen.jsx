@@ -171,6 +171,7 @@ const PostSessionRewardScreen = memo(({
     nextMilestoneMultiplier = '1.5x',
     battleResultETA = 25,
     category = 'Quiz',
+    isFirstSession = false, // Flag to distinguish first-time vs returning users
   } = rewardData || {}
 
   const [timeRemaining, setTimeRemaining] = useState('')
@@ -362,18 +363,22 @@ const PostSessionRewardScreen = memo(({
                         animate={{ rotate: [0, 10, -10, 0], scale: [1, 1.2, 1] }}
                         transition={{ duration: 0.6, delay: 0.3 }}
                       >
-                        🎉
+                        {isFirstSession ? '🎉' : '⚡'}
                       </motion.span>
-                      <h2 className="text-2xl font-black text-white tracking-tight">FIRST WIN!</h2>
+                      <h2 className="text-2xl font-black text-white tracking-tight">
+                        {isFirstSession ? 'FIRST WIN!' : 'GREAT MATCH!'}
+                      </h2>
                       <motion.span
                         className="text-3xl"
                         animate={{ rotate: [0, -10, 10, 0], scale: [1, 1.2, 1] }}
                         transition={{ duration: 0.6, delay: 0.4 }}
                       >
-                        🎉
+                        {isFirstSession ? '🎉' : '⚡'}
                       </motion.span>
                     </div>
-                    <p className="text-sm text-white/60">You're crushing it!</p>
+                    <p className="text-sm text-white/60">
+                      {isFirstSession ? "You're crushing it!" : 'Keep the momentum!'}
+                    </p>
                   </motion.div>
 
                   {/* Score Display */}

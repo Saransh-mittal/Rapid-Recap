@@ -208,8 +208,15 @@ const joinTeamMatchmaking = async ({
         teamId.toString(),
         team.members.length,
       )
-      // MODIFY: Use retryable matchmaking process
-      await performMatchmakingWithRetry(session)
+      // FIX: Trigger matchmaking asynchronously AFTER the current transaction commits
+      // This prevents WriteConflict errors from nested transactions competing with
+      // the bot scheduler's processGlobalMatchmaking calls
+      // (Same pattern used for full teams at line 257-261)
+      setTimeout(() => {
+        processGlobalMatchmaking().catch(err => {
+          console.error('Error in async matchmaking after partial team join:', err)
+        })
+      }, 100)
 
       // Emit for authenticated user sockets
       globalEmitter.emit('quickClash:teamJoinedMatchmaking', {
@@ -1156,7 +1163,7 @@ const getGlobalMatchmakingStatus = async ({ userId }) => {
 }
 
 // Debounce function to prevent excessive processing
-const DEBOUNCE_INTERVAL = 5000 // 5 seconds (increased from 3s to reduce contention)
+const DEBOUNCE_INTERVAL = 8000 // 8 seconds (increased to reduce contention with async triggers)
 
 /**
  * Process the global matchmaking queue to form teams and create battles

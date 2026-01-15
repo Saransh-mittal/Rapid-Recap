@@ -291,13 +291,26 @@ const GlobalMatchmakingModal = React.memo(
           try {
             const statusData = await pollMatchmakingStatus()
 
-            // If battle is ready, socket will handle it - just stop polling
+            // If battle is ready - update state from polling as socket may have been blocked/missed
             if (statusData?.status === 'battleReady') {
               if (pollingIntervalRef.current) {
                 clearInterval(pollingIntervalRef.current)
                 pollingIntervalRef.current = null
               }
-              // Don't dispatch setBattleReady here - socket is authoritative
+              // Socket is authoritative BUT if socket was blocked/missed, we need to update state from polling
+              // This is a fallback in case socket event didn't come through
+              console.log('[POLL] Battle ready detected via HTTP polling - updating state as fallback')
+              dispatch(
+                setBattleReady({
+                  battleId: statusData.battleId,
+                  teamId: statusData.teamId,
+                  teamA: statusData.teamA,
+                  teamB: statusData.teamB,
+                  teamAMembers: statusData.teamAMembers,
+                  teamBMembers: statusData.teamBMembers,
+                  winProbability: statusData.winProbability,
+                }),
+              )
               return
             }
 
