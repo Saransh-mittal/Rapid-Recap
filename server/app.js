@@ -85,8 +85,9 @@ app.use(
     // Google Sign-In requires communication between parent window and popup
     // which is blocked by restrictive CSP policies
     contentSecurityPolicy: false,
-    // Keep other security headers enabled
-    crossOriginEmbedderPolicy: false, // Required for Google OAuth popups
+    // Required for Google OAuth popups to communicate via postMessage
+    crossOriginEmbedderPolicy: false,
+    crossOriginOpenerPolicy: false, // CRITICAL: Allows popup window to postMessage back to opener
   }),
 )
 
