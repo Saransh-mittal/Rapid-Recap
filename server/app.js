@@ -81,38 +81,12 @@ app.use(
 )
 app.use(
   helmet({
-    contentSecurityPolicy: {
-      directives: {
-        defaultSrc: ["'self'"],
-        scriptSrc: [
-          "'self'",
-          "'unsafe-inline'",
-          "'unsafe-eval'",
-          'https://accounts.google.com',
-          'https://apis.google.com',
-        ],
-        styleSrc: ["'self'", "'unsafe-inline'", 'https://accounts.google.com'],
-        frameSrc: [
-          "'self'",
-          'https://accounts.google.com',
-          'https://www.google.com',
-        ],
-        connectSrc: [
-          "'self'",
-          'https://accounts.google.com',
-          'https://oauth2.googleapis.com',
-          'https://www.googleapis.com',
-        ],
-        imgSrc: [
-          "'self'",
-          'data:',
-          'blob:',
-          'https://lh3.googleusercontent.com',
-          'https://*.googleusercontent.com',
-        ],
-        fontSrc: ["'self'", 'https://fonts.gstatic.com'],
-      },
-    },
+    // Disable CSP to allow Google OAuth popup flow to work properly
+    // Google Sign-In requires communication between parent window and popup
+    // which is blocked by restrictive CSP policies
+    contentSecurityPolicy: false,
+    // Keep other security headers enabled
+    crossOriginEmbedderPolicy: false, // Required for Google OAuth popups
   }),
 )
 
