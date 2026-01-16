@@ -96,7 +96,6 @@ const CreateTeamModal = ({ isOpen, onClose, onCreate }) => {
           ${QUICK_CLASH_CLASSES.shadowCyan}
           backdrop-brightness-115
         `}
-        asChild
       >
         <MotionDiv
           variants={modalVariants}

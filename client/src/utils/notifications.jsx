@@ -360,7 +360,7 @@ const NotificationsContainer = React.memo(({ notifications, onRemove }) => {
         left: 0;
         bottom: 0;
         pointer-events: none;
-        z-index: 10000;
+        z-index: 10100;
       `
       document.body.appendChild(container)
     }
@@ -368,7 +368,7 @@ const NotificationsContainer = React.memo(({ notifications, onRemove }) => {
   }, [])
 
   return createPortal(
-    <div className="fixed top-3 left-3 right-3 sm:top-4 sm:left-auto sm:right-4 z-[10000] flex flex-col gap-2 sm:gap-3 pointer-events-none sm:max-w-sm sm:w-full">
+    <div className="fixed top-3 left-3 right-3 sm:top-4 sm:left-auto sm:right-4 z-[10100] flex flex-col gap-2 sm:gap-3 pointer-events-none sm:max-w-sm sm:w-full">
       <AnimatePresence mode="popLayout">
         {notifications.map((notification, index) => (
           <NotificationItem

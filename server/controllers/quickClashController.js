@@ -878,15 +878,25 @@ const getUserTrophiesController = asyncHandler(async (req, res) => {
   try {
     const trophies = await getUserTrophies({ userId })
 
-    // Also fetch coins for the user
+    // Also fetch coins and streak data for the user
     const User = require('../model/userSchema')
-    const user = await User.findById(userId).select('quickClashCoins').lean()
+    const user = await User.findById(userId).select('quickClashCoins quickClashStats').lean()
     const coins = user?.quickClashCoins ?? 0
+
+    // Get streak info using the streak service for accurate "isActive" calculation
+    const { getPlayerStreak } = require('../services/quickClashServices/quickClashStreakService')
+    const streakInfo = await getPlayerStreak(userId, false) // false = not session player
 
     res.status(200).json({
       success: true,
       trophies,
       coins,
+      streak: streakInfo || {
+        dayStreak: 0,
+        longestStreak: 0,
+        isActive: false,
+        needsPlayToday: true,
+      },
     })
   } catch (error) {
     console.error('Error getting user trophies:', error)

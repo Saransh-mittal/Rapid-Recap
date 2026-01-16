@@ -420,10 +420,12 @@ const useQuickClashGlobalMatchmaking = () => {
   // Enter battle
   const enterBattle = useCallback(() => {
     if (globalMatchmakingState.battleReady?.battleId) {
-      navigate(
-        `/quickclash/teamBattle/${globalMatchmakingState.battleReady.battleId}`,
-      )
+      // IMPORTANT: Capture the battleId before clearing state to avoid race conditions
+      // We must clear battleReady BEFORE navigating to prevent stale state issues
+      // if the component unmounts during navigation
+      const battleIdToNavigate = globalMatchmakingState.battleReady.battleId
       dispatch(clearBattleReady())
+      navigate(`/quickclash/teamBattle/${battleIdToNavigate}`)
     } else {
       console.warn('Enter battle called but no battleId found')
       notificationManager.warning(t('Battle Not Ready'), t('The battle is not ready or an error occurred.'))

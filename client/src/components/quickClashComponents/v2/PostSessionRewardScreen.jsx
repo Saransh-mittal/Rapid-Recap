@@ -149,6 +149,7 @@ const PostSessionRewardScreen = memo(({
   rewardData,
   isSessionPlayer = false,
   battleExpiresAt,
+  userTeams = [],
 }) => {
   const [showContent, setShowContent] = useState(false)
   const [showShareModal, setShowShareModal] = useState(false)
@@ -574,6 +575,7 @@ const PostSessionRewardScreen = memo(({
               isOpen={showShareModal}
               onClose={handleCloseShareModal}
               rewardData={rewardData}
+              userTeams={userTeams}
             />
           </Suspense>
         </motion.div>

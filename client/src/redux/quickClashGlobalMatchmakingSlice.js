@@ -474,6 +474,11 @@ const quickClashGlobalMatchmakingSlice = createSlice({
         state.matchmakingType = 'solo'
         state.step = 'searching'
         state.matchmakingTime = 0
+        // IMPORTANT: Clear any stale battleReady state from previous sessions
+        // This prevents the bug where old battleId is used if clearBattleReady was missed
+        state.battleReady = null
+        state.battleCreationStatus = null
+        state.battleCreationError = null
       })
       .addCase(joinGlobalMatchmaking.rejected, (state, action) => {
         state.loading = false
@@ -528,6 +533,11 @@ const quickClashGlobalMatchmakingSlice = createSlice({
         }
         state.step = 'searching'
         state.matchmakingTime = 0
+        // IMPORTANT: Clear any stale battleReady state from previous sessions
+        // This prevents the bug where old battleId is used if clearBattleReady was missed
+        state.battleReady = null
+        state.battleCreationStatus = null
+        state.battleCreationError = null
       })
       .addCase(joinTeamMatchmaking.rejected, (state, action) => {
         state.loading = false

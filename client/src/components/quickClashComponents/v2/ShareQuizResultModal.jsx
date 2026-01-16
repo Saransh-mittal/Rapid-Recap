@@ -373,32 +373,46 @@ PreviewCard.displayName = 'PreviewCard'
 // ═══════════════════════════════════════════════════════════════
 // SHARE MODAL COMPONENT
 // ═══════════════════════════════════════════════════════════════
-const ShareQuizResultModal = memo(({ isOpen, onClose, rewardData }) => {
+const ShareQuizResultModal = memo(({ isOpen, onClose, rewardData, userTeams = [] }) => {
   const [isGenerating, setIsGenerating] = useState(false)
   const [imageDataUrl, setImageDataUrl] = useState(null)
   const [copied, setCopied] = useState(false)
   const [linkCopied, setLinkCopied] = useState(false)
 
-  // Generate share link
-  const getShareLink = useCallback(() => {
-    // Use the production URL or current origin
-    const baseUrl = window.location.origin.includes('localhost')
+  // Find a team with empty slots (< 4 members) for invite link
+  const teamWithEmptySlots = userTeams?.find(t => (t.members?.length || 0) < 4)
+
+  // Generate base URL
+  const getBaseUrl = useCallback(() => {
+    return window.location.origin.includes('localhost')
       ? 'https://rapidrecap.ai'
       : window.location.origin
-    return `${baseUrl}/play`
   }, [])
+
+  // Generate share link - includes team invite if available
+  const getShareLink = useCallback(() => {
+    const baseUrl = getBaseUrl()
+    if (teamWithEmptySlots?.teamCode) {
+      return `${baseUrl}/play/join/${teamWithEmptySlots.teamCode}`
+    }
+    return `${baseUrl}/play`
+  }, [getBaseUrl, teamWithEmptySlots])
 
   // Generate share text
   const getShareText = useCallback(() => {
-    const { score, forgeAccuracy, quizAccuracy, category, streakDay } = rewardData || {}
-    let text = `🎯 I scored ${score} RQM in ${category}!`
-    text += `\n⚒️ Forge: ${forgeAccuracy?.correct || 0}/${forgeAccuracy?.total || 5}`
-    text += `\n❓ Quiz: ${quizAccuracy?.correct || 0}/${quizAccuracy?.total || 5}`
-    if (streakDay > 0) text += `\n🔥 ${streakDay} day streak!`
-    text += `\n\nChallenge me on Rapid Recap! 🚀`
-    text += `\n${getShareLink()}`
+    const { score } = rewardData || {}
+    let text = `I scored ${score} points! 🔥`
+
+    if (teamWithEmptySlots) {
+      // Has team with empty slots - encourage joining
+      text += `\nJoin my team and let's rise together → ${getShareLink()}`
+    } else {
+      // No team or full team - generic invite
+      text += `\nJoin me on Rapid Recap → ${getShareLink()}`
+    }
+    text += `\n#RapidRecap`
     return text
-  }, [rewardData, getShareLink])
+  }, [rewardData, teamWithEmptySlots, getShareLink])
 
   // Generate image using Canvas API
   const generateImage = useCallback(async () => {

@@ -30,10 +30,19 @@ import { getCsrfToken } from '../../../services/csrfService'
 const QuizReportModal = React.lazy(() => import('../QuizReportModal'))
 const StreakIncreasedPopup = React.lazy(() => import('../v2/StreakIncreasedPopup'))
 const PostSessionRewardScreen = React.lazy(() => import('../v2/PostSessionRewardScreen'))
+const TeamInvitePromptModal = React.lazy(() => import('../v2/TeamInvitePromptModal'))
 import PowerupDonationModal from '../powerups/PowerupDonationModal'
 import PowerupSelectionModal from '../powerups/PowerupSelectionModal'
 import TeamMemberInfoModal from './teamBattlePageComponents/TeamMemberInfoModal'
 import ClaimRewardsModal from '../powerups/ClaimRewardsModal'
+import SlotInviteModal from '../lobby/SlotInviteModal'
+import InviteUserModal from './InviteUserModal'
+import {
+  shouldShowTeamInvitePopup,
+  recordPopupShown,
+  recordPopupDismissed,
+  recordPopupInviteClicked,
+} from '../../../utils/teamInvitePopupUtils'
 
 // ═══════════════════════════════════════════════════════════════
 // GLASS CARD WITH OPTIONAL COLOR ACCENT
@@ -884,6 +893,13 @@ const TeamBattlePageV2 = React.memo(() => {
   const [showRewardScreen, setShowRewardScreen] = useState(false)
   const [rewardData, setRewardData] = useState(null)
 
+  // Team invite prompt modal state - shows occasionally after reward screen
+  const [showTeamInvitePrompt, setShowTeamInvitePrompt] = useState(false)
+  const [invitePromptTeam, setInvitePromptTeam] = useState(null)
+  const [showSlotInviteModal, setShowSlotInviteModal] = useState(false)
+  const [showInAppInviteModal, setShowInAppInviteModal] = useState(false)
+  const [userPersonalTeams, setUserPersonalTeams] = useState([]) // User's actual teams (not battle teams)
+
 
 
   // Local state to bridge the gap between click and API/Socket update
@@ -902,6 +918,28 @@ const TeamBattlePageV2 = React.memo(() => {
       clearOperationError()
     }
   }, [currentBattle?._id, categoryOperationError, clearOperationError])
+
+  // Fetch user's personal teams for invite popup (only for non-session players)
+  useEffect(() => {
+    const fetchUserTeams = async () => {
+      if (isSession) return // Session players don't have personal teams
+      try {
+        const response = await fetch('/api/quickClash/teams', {
+          credentials: 'include',
+        })
+        if (response.ok) {
+          const data = await response.json()
+          setUserPersonalTeams(data.teams || [])
+        }
+      } catch (err) {
+        console.warn('[TeamInvitePopup] Failed to fetch teams:', err)
+      }
+    }
+    // Fetch when battle loads
+    if (currentBattle && !isSession) {
+      fetchUserTeams()
+    }
+  }, [currentBattle?._id, isSession])
 
   // Helper to get the ID from a battle member (handles both user and sessionPlayer)
   const getMemberId = useCallback((member) => {
@@ -976,6 +1014,14 @@ const TeamBattlePageV2 = React.memo(() => {
     const me = members.find(m => isMemberCurrentPlayer(m))
     return me?.powerupReward || null
   }, [currentBattle, userTeam, playerId, isMemberCurrentPlayer])
+
+  // Extract user's team object for share modal (includes teamCode and members)
+  const userTeamObject = useMemo(() => {
+    if (!currentBattle || !userTeam) return null
+    const team = userTeam === 'teamA' ? currentBattle.teamA : currentBattle.teamB
+    const members = userTeam === 'teamA' ? currentBattle.teamAMembers : currentBattle.teamBMembers
+    return team ? { ...team, members } : null
+  }, [currentBattle, userTeam])
 
   const challenges = useMemo(() => {
     if (!currentBattle || !userTeam || !playerId) return []
@@ -1516,12 +1562,30 @@ const TeamBattlePageV2 = React.memo(() => {
           isOpen={showRewardScreen}
           onClose={() => {
             setShowRewardScreen(false)
-            // Show streak popup after reward screen closes (if streak data exists)
-            if (streakResult && streakResult.newStreak > 0) {
+
+            // Show streak popup ONLY on first play of the day (isFirstPlayToday)
+            const shouldShowStreak = streakResult && streakResult.isFirstPlayToday && streakResult.newStreak > 0
+
+            if (shouldShowStreak) {
               localStorage.removeItem('pendingStreakPopup') // Clear now that we're showing it
               setTimeout(() => {
                 setShowStreakPopup(true)
               }, 300) // Small delay for smooth transition
+            } else {
+              // If streak popup won't show, check for team invite popup
+              // Uses user's personal teams (not battle teams) - these have teamCode
+              const { show, team } = shouldShowTeamInvitePopup(
+                userPersonalTeams,
+                isSession
+              )
+
+              if (show && team) {
+                recordPopupShown(team._id)
+                setInvitePromptTeam(team)
+                setTimeout(() => {
+                  setShowTeamInvitePrompt(true)
+                }, 500)
+              }
             }
           }}
           onPlayAgain={() => {
@@ -1550,6 +1614,7 @@ const TeamBattlePageV2 = React.memo(() => {
           rewardData={rewardData}
           isSessionPlayer={isSession}
           battleExpiresAt={currentBattle?.expiresAt}
+          userTeams={userTeamObject ? [userTeamObject] : []}
         />
       </React.Suspense>
 
@@ -1565,6 +1630,65 @@ const TeamBattlePageV2 = React.memo(() => {
           }}
         />
       </React.Suspense>
+
+      {/* Team Invite Prompt Modal - Shows occasionally after reward screen for normal users */}
+      <React.Suspense fallback={null}>
+        <TeamInvitePromptModal
+          isOpen={showTeamInvitePrompt}
+          onClose={() => {
+            recordPopupDismissed()
+            setShowTeamInvitePrompt(false)
+            setInvitePromptTeam(null)
+          }}
+          onInviteViaLink={() => {
+            recordPopupInviteClicked()
+            setShowTeamInvitePrompt(false)
+            setShowSlotInviteModal(true)
+          }}
+          onInviteInApp={() => {
+            recordPopupInviteClicked()
+            setShowTeamInvitePrompt(false)
+            setShowInAppInviteModal(true)
+          }}
+          team={invitePromptTeam}
+        />
+      </React.Suspense>
+
+      {/* Slot Invite Modal - Opens when user clicks invite from team invite prompt */}
+      {showSlotInviteModal && invitePromptTeam && (
+        <SlotInviteModal
+          inviteUrl={`${window.location.origin}/play/join/${invitePromptTeam.teamCode}`}
+          teamCode={invitePromptTeam.teamCode}
+          onClose={() => {
+            setShowSlotInviteModal(false)
+            setInvitePromptTeam(null)
+          }}
+        />
+      )}
+
+      {/* In-App Invite User Modal - Opens when user clicks "Find & Invite Players" */}
+      {showInAppInviteModal && invitePromptTeam && (
+        <InviteUserModal
+          isOpen={showInAppInviteModal}
+          onClose={() => {
+            setShowInAppInviteModal(false)
+            setInvitePromptTeam(null)
+          }}
+          teamId={invitePromptTeam._id}
+          teamName={invitePromptTeam.name}
+          onInvite={async (userId) => {
+            try {
+              await axios.post(`/api/quickClash/team/${invitePromptTeam._id}/invite`, {
+                inviteeId: userId
+              })
+              // InviteUserModal handles success internally
+            } catch (err) {
+              console.error('Failed to invite user:', err)
+              throw err // Re-throw to let InviteUserModal handle error
+            }
+          }}
+        />
+      )}
     </div>
   )
 })

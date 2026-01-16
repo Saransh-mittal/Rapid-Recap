@@ -37,6 +37,8 @@ const getInitialSession = () => {
  */
 export const usePlayer = () => {
   const { user } = useSelector(state => state.auth || {})
+  // Get streak data from quickClash slice for authenticated users
+  const { userStreak } = useSelector(state => state.quickClash || {})
 
   // Initialize with localStorage data for immediate render
   const [sessionPlayer, setSessionPlayer] = useState(getInitialSession)
@@ -130,6 +132,13 @@ export const usePlayer = () => {
         inGameName: user.inGameName || user.name,
         pic: user.pic,
         trophies: user.quickClashTrophies,
+        // Include streak data from Redux quickClash slice
+        streak: userStreak ? {
+          dayStreak: userStreak.dayStreak || 0,
+          longestStreak: userStreak.longestStreak || 0,
+          isActive: userStreak.isActive || false,
+          needsPlayToday: userStreak.needsPlayToday || true,
+        } : null,
       },
       playerId: user._id,
       type: 'user',

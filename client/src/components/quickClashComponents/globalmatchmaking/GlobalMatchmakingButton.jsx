@@ -114,8 +114,12 @@ const GlobalMatchmakingButton = React.memo(
       // If battle is ready, navigate directly to the battle
       if (matchmakingState.battleReady && matchmakingState.battleReady.battleId) {
         quizAudioService.playGoButton()
-        navigate(`/quickclash/teamBattle/${matchmakingState.battleReady.battleId}`)
+        // IMPORTANT: Capture the battleId before clearing state to avoid race conditions
+        // We must clear battleReady BEFORE navigating to prevent stale state issues
+        // if the component unmounts during navigation
+        const battleIdToNavigate = matchmakingState.battleReady.battleId
         dispatch(clearBattleReady())
+        navigate(`/quickclash/teamBattle/${battleIdToNavigate}`)
         return // Don't open modal
       }
 

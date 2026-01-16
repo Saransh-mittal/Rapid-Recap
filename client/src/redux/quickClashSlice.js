@@ -155,6 +155,7 @@ export const fetchUserTrophies = createAsyncThunk(
       return {
         trophies: response.data.trophies || 0,
         coins: response.data.coins ?? 0,
+        streak: response.data.streak || null,
       }
     } catch (error) {
       return rejectWithValue(
@@ -249,6 +250,7 @@ const initialState = {
 
   userTrophies: 0,
   userCoins: 0,
+  userStreak: null, // Streak data: { dayStreak, longestStreak, isActive, needsPlayToday, etc. }
   userTrophiesLoading: false,
   userTrophiesError: null,
 
@@ -384,6 +386,7 @@ const quickClashSlice = createSlice({
       .addCase(fetchUserTrophies.fulfilled, (state, action) => {
         state.userTrophies = action.payload.trophies
         state.userCoins = action.payload.coins
+        state.userStreak = action.payload.streak
         state.userTrophiesLoading = false
       })
       .addCase(fetchUserTrophies.rejected, (state, action) => {

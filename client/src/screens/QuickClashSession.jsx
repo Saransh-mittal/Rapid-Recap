@@ -646,7 +646,8 @@ const QuickClashSession = ({ isSessionPlayer = false }) => {
       }
 
       // Store streak data separately - will be shown AFTER reward screen closes
-      if (result.streakResult && result.streakResult.newStreak > 0) {
+      // Only show streak popup on FIRST play of the day (when streak increments)
+      if (result.streakResult && result.streakResult.newStreak > 0 && result.streakResult.isFirstPlayToday) {
         localStorage.setItem('pendingStreakPopup', JSON.stringify(result.streakResult))
       }
 
