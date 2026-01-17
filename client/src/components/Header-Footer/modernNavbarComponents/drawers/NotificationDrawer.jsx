@@ -273,8 +273,12 @@ const NotificationDrawer = ({
   const [drawerMounted, setDrawerMounted] = useState(false)
   const notificationListRef = useRef(null)
 
-  // Optimized selector
-  const updates = useSelector(state => state.app.updates)
+  // Optimized selector - filter out team invitations (they're shown in Teams tab)
+  const allUpdates = useSelector(state => state.app.updates)
+  const updates = useMemo(() =>
+    allUpdates?.filter(u => u.type !== 'teamInvitation') || [],
+    [allUpdates]
+  )
 
   // API call handler
   const apiCall = useCallback(async (endpoint, method = 'put', data = null) => {

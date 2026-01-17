@@ -73,11 +73,15 @@ const getPlayerIdFromMatchmaking = (matchmakingEntry) => {
 // Module-level variables for state management between function calls
 const teamFormationState = {
   lastProcessingTime: 0,
+  lastProcessingStartTime: 0, // Track when processing started for stuck detection
   isCurrentlyProcessing: false,
   pendingPartialTeams: new Set(), // Teams waiting to be completed
   pendingSoloPlayers: new Set(), // Solo players waiting to be assigned
   formingTeamCache: new Map(), // Cache of teams being formed (key: teamId, value: member count)
 }
+
+// Safety timeout for stuck processing detection (60 seconds)
+const MAX_PROCESSING_TIME = 60000
 
 /**
  * Join team matchmaking queue with existing team
@@ -356,11 +360,24 @@ const checkUserInMatchmaking = async ({ userId, session: providedSession }) => {
       }
     }
 
-    // Check if user/session player is in any team that's in matchmaking
+    // Check if user/session player is in any REAL team (not auto-formed) that's in matchmaking
+    // Auto-formed teams are temporary and shouldn't block new matchmaking
     const userTeams = await QuickClashTeam.find({
-      $or: [
-        { 'members.user': userId },
-        { 'members.sessionPlayer': userId }
+      $and: [
+        // User must be a member
+        {
+          $or: [
+            { 'members.user': userId },
+            { 'members.sessionPlayer': userId }
+          ]
+        },
+        // Must NOT be auto-formed (either no formationInfo or isAutoFormed != true)
+        {
+          $or: [
+            { 'formationInfo.isAutoFormed': { $ne: true } },
+            { 'formationInfo': { $exists: false } }
+          ]
+        }
       ]
     }).session(session)
 
@@ -1170,46 +1187,88 @@ const DEBOUNCE_INTERVAL = 8000 // 8 seconds (increased to reduce contention with
  * @returns {Promise<void>}
  */
 const processGlobalMatchmaking = async () => {
-  // Early debounce check before acquiring mutex (reduces lock contention)
   const now = Date.now()
-  if (now - teamFormationState.lastProcessingTime < DEBOUNCE_INTERVAL) {
-    console.log(
-      'Matchmaking processing too soon since last run. Skipping.',
+
+  // Safety check: Force release mutex if it's been locked too long (stuck lock)
+  const lockAge = matchmakingMutex.getLockAge()
+  if (lockAge && lockAge > 60000) {
+    console.warn(
+      `[MATCHMAKING] Mutex locked for ${Math.round(lockAge / 1000)}s with queue ${matchmakingMutex.queueLength()}. Force releasing!`,
     )
+    matchmakingMutex.forceRelease()
+  }
+
+  // Safety check: Reset stuck processing flag if it's been too long
+  if (
+    teamFormationState.isCurrentlyProcessing &&
+    teamFormationState.lastProcessingStartTime > 0 &&
+    now - teamFormationState.lastProcessingStartTime > MAX_PROCESSING_TIME
+  ) {
+    console.warn(
+      `[MATCHMAKING] Detected stuck processing state (started ${Math.round((now - teamFormationState.lastProcessingStartTime) / 1000)}s ago). Force resetting.`,
+    )
+    teamFormationState.isCurrentlyProcessing = false
+    teamFormationState.lastProcessingStartTime = 0
+  }
+
+  // Early debounce check before acquiring mutex (reduces lock contention)
+  if (now - teamFormationState.lastProcessingTime < DEBOUNCE_INTERVAL) {
+    // Only log occasionally to reduce noise
     return
   }
 
-  // Use mutex to ensure only one matchmaking process runs at a time
-  // This prevents WriteConflict errors from concurrent transactions
-  return matchmakingMutex.withLock(async () => {
-    // Re-check timing after acquiring lock (another process may have just finished)
-    const currentTime = Date.now()
-    if (
-      teamFormationState.isCurrentlyProcessing ||
-      currentTime - teamFormationState.lastProcessingTime < DEBOUNCE_INTERVAL
-    ) {
-      console.log(
-        'Matchmaking processing already completed by another process. Skipping.',
-      )
-      return
-    }
+  // Check mutex state for debugging (only if locked or has queue)
+  if (matchmakingMutex.isLocked() || matchmakingMutex.queueLength() > 0) {
+    console.log(
+      `[MATCHMAKING] Mutex status - locked: ${matchmakingMutex.isLocked()}, queue: ${matchmakingMutex.queueLength()}, age: ${matchmakingMutex.getLockAge()}ms`,
+    )
+  }
 
-    try {
-      // Mark as processing and update timestamp
-      teamFormationState.isCurrentlyProcessing = true
-      teamFormationState.lastProcessingTime = currentTime
+  try {
+    // Use mutex to ensure only one matchmaking process runs at a time
+    // This prevents WriteConflict errors from concurrent transactions
+    // The mutex now has a 30s timeout to prevent permanent deadlocks
+    await matchmakingMutex.withLock(async () => {
+      // Re-check timing after acquiring lock (another process may have just finished)
+      const currentTime = Date.now()
+      if (
+        teamFormationState.isCurrentlyProcessing ||
+        currentTime - teamFormationState.lastProcessingTime < DEBOUNCE_INTERVAL
+      ) {
+        console.log(
+          'Matchmaking processing already completed by another process. Skipping.',
+        )
+        return
+      }
 
-      console.log('[MATCHMAKING] Starting matchmaking processing with mutex lock')
-      await performMatchmaking()
-      console.log('[MATCHMAKING] Completed matchmaking processing')
-    } catch (error) {
-      console.error('Error processing global matchmaking:', error)
-    } finally {
-      // Always release the processing lock
-      teamFormationState.isCurrentlyProcessing = false
+      try {
+        // Mark as processing and update timestamps
+        teamFormationState.isCurrentlyProcessing = true
+        teamFormationState.lastProcessingTime = currentTime
+        teamFormationState.lastProcessingStartTime = currentTime
+
+        console.log('[MATCHMAKING] Starting matchmaking processing with mutex lock')
+        await performMatchmaking()
+        console.log('[MATCHMAKING] Completed matchmaking processing')
+      } catch (error) {
+        console.error('Error processing global matchmaking:', error)
+      } finally {
+        // Always release the processing lock and reset start time
+        teamFormationState.isCurrentlyProcessing = false
+        teamFormationState.lastProcessingStartTime = 0
+      }
+    }, 30000) // 30 second timeout
+  } catch (error) {
+    // Handle mutex timeout errors gracefully
+    if (error.message && error.message.includes('timed out')) {
+      console.error('[MATCHMAKING] Mutex acquisition timed out - will retry on next cycle')
+    } else {
+      console.error('[MATCHMAKING] Error in processGlobalMatchmaking:', error)
     }
-  })
+  }
 }
+
+
 
 /**
  * Helper to clean up team state when a team is removed from matchmaking

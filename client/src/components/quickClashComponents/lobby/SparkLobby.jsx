@@ -6,6 +6,7 @@ import { motion, AnimatePresence } from 'framer-motion'
 import axios from 'axios'
 import useSparkSocket from '../../../customHooks/useSparkSocket'
 import SlotInviteModal from './SlotInviteModal'
+import { notificationManager } from '../../../utils/notifications'
 
 // API calls
 const lobbyAPI = {
@@ -179,10 +180,23 @@ const SparkLobby = () => {
       }
     })
 
+    // Listen for new team members joining - show toast notification
+    const cleanupMemberJoined = addEventListener('quickClash:teamMemberJoined', (data) => {
+      const playerName = data.userInGameName || data.userName || 'A player'
+      notificationManager.matchmaking(
+        'New Teammate!',
+        `${playerName} joined your squad`
+      )
+    })
+
     // Listen for being removed from team
     const cleanupMemberRemoved = addEventListener('quickClash:teamMemberRemoved', (data) => {
       if (data.isCurrentUser) {
-        // Current player was removed from the team
+        // Current player was removed from the team - show toast notification
+        notificationManager.error(
+          'Removed from Team',
+          data.teamName ? `You were removed from ${data.teamName}` : 'You were removed from the team'
+        )
         localStorage.removeItem('sparkTeamCode')
         navigate('/play', {
           state: { message: 'You were removed from the team' },
@@ -193,6 +207,7 @@ const SparkLobby = () => {
 
     return () => {
       cleanupTeamUpdated()
+      cleanupMemberJoined()
       cleanupMemberRemoved()
     }
   }, [team?._id, addEventListener, navigate])

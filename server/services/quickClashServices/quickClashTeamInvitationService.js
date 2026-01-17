@@ -87,6 +87,8 @@ const createTeamInvitationNotification = async ({
         inviterName: inviter.name || inviter.inGameName,
         inviterId,
         status: 'pending',
+        memberCount: team.members.length,
+        maxMembers: team.maxMembers,
       },
     })
 

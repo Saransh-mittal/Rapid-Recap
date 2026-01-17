@@ -73,6 +73,9 @@ const SparkBattlePage = lazy(() =>
 const SparkLayout = lazy(() =>
   import('../components/quickClashComponents/lobby/SparkLayout')
 )
+const TeamJoinRedirect = lazy(() =>
+  import('../components/quickClashComponents/TeamJoinRedirect')
+)
 
 // Helper to check if a session player exists (for route guards)
 const hasSessionPlayer = () => {
@@ -184,9 +187,9 @@ const AppRoutes = ({ isToken, needsOnboarding, setIsGuestLoggedin }) => {
                 path="/play/join/:teamCode"
                 element={
                   isToken
-                    ? <Navigate to="/quickclash" replace />
+                    ? <TeamJoinRedirect />
                     : hasUpgradedSessionPlayer()
-                      ? <Navigate to="/quickclash" replace />
+                      ? <TeamJoinRedirect />
                       : <PlayLanding />
                 }
               />

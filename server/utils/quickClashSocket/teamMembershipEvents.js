@@ -283,6 +283,42 @@ const setupTeamMembershipEvents = (io, notifyUser) => {
 
     notifyTeamMembers(data.teamId, 'quickClash:teamMemberStatusChanged', data)
   })
+
+  // Team leadership transferred
+  globalEmitter.on(
+    'quickClash:teamLeadershipTransferred',
+    ({
+      team,
+      teamName,
+      oldLeaderId,
+      newLeaderId,
+      oldLeaderName,
+      newLeaderName,
+    }) => {
+      if (!team || !newLeaderId) {
+        console.error('Invalid data in quickClash:teamLeadershipTransferred event')
+        return
+      }
+
+      console.log(
+        `[QC_TEAM] SOCKET: Leadership transferred in team ${team} from ${oldLeaderName} to ${newLeaderName}`
+      )
+
+      // Notify all team members about the leadership change
+      notifyTeamMembers(
+        team,
+        'quickClash:teamLeadershipTransferred',
+        {
+          teamId: team,
+          teamName,
+          oldLeaderId,
+          newLeaderId,
+          oldLeaderName,
+          newLeaderName,
+        }
+      )
+    }
+  )
 }
 
 module.exports = {

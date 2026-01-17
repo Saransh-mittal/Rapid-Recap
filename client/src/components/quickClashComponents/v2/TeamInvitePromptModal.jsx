@@ -22,14 +22,14 @@ const TeamInvitePromptModal = memo(({
     haptics.impact()
     quizAudioService.playButtonClick()
     onInviteViaLink?.()
-    onClose?.()
+    // Don't call onClose here - parent handles modal visibility
   }
 
   const handleInviteInApp = () => {
     haptics.impact()
     quizAudioService.playButtonClick()
     onInviteInApp?.()
-    onClose?.()
+    // Don't call onClose here - parent handles modal visibility
   }
 
   const handleDismiss = () => {

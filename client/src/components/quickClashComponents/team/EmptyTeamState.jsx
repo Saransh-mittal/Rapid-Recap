@@ -61,111 +61,89 @@ const EmptyTeamState = memo(({ onCreateTeam, onJoinTeam }) => {
       initial="initial"
       animate="animate"
       className={`
-        py-12 px-6 rounded-2xl border-2 border-dashed border-white/20
+        py-8 px-5 rounded-xl border border-dashed border-white/15
         ${QUICK_CLASH_CLASSES.glassMedium}
-        ${QUICK_CLASH_CLASSES.shadowSoft}
-        backdrop-brightness-110
         transition-all duration-300
-        hover:border-cyan-400/30 hover:shadow-xl
+        hover:border-cyan-400/25
       `}
     >
-      <div className="flex justify-center">
-        <div className="flex flex-col items-center space-y-6 max-w-md text-center">
-          {/* Icon */}
-          <MotionDiv
-            variants={itemVariants}
+      <div className="flex flex-col items-center space-y-4 max-w-sm mx-auto text-center">
+        {/* Icon - smaller */}
+        <MotionDiv
+          variants={itemVariants}
+          className={`
+            p-3.5 rounded-full
+            ${QUICK_CLASH_CLASSES.glassMedium}
+            border border-cyan-500/25
+          `}
+        >
+          <Users className="w-7 h-7 text-cyan-400" />
+        </MotionDiv>
+
+        {/* Title and Description - compact */}
+        <MotionDiv variants={itemVariants} className="space-y-1.5">
+          <h3
             className={`
-              p-5 rounded-full
-              ${QUICK_CLASH_CLASSES.glassMedium}
-              border-2 border-cyan-500/30
-              ${QUICK_CLASH_CLASSES.shadowCyan}
-              backdrop-brightness-115
-            `}
+            text-lg font-bold
+            ${QUICK_CLASH_CLASSES.textGradientCyan}
+          `}
           >
-            <Users className="w-10 h-10 text-cyan-400" />
-          </MotionDiv>
+            {t('No Teams Yet')}
+          </h3>
+          <p
+            className={`text-sm ${QUICK_CLASH_CLASSES.textSecondary} leading-relaxed`}
+          >
+            {t(
+              'Create a team to challenge other players or join an existing team with your friends',
+            )}
+          </p>
+        </MotionDiv>
 
-          {/* Title and Description */}
-          <MotionDiv variants={itemVariants} className="space-y-3">
-            <h3
+        {/* Buttons - inline, compact */}
+        <MotionDiv variants={itemVariants}>
+          <div className="flex gap-2 justify-center items-center">
+            <button
+              onClick={onCreateTeam}
               className={`
-              text-2xl font-bold mb-2
-              ${QUICK_CLASH_CLASSES.textGradientCyan}
-            `}
+                ${QUICK_CLASH_CLASSES.btnPrimary}
+                px-4 py-2 text-xs font-semibold rounded-lg
+                transition-all duration-200
+                flex items-center gap-1.5
+                active:scale-95
+              `}
             >
-              {t('No Teams Yet')}
-            </h3>
-            <p
-              className={`${QUICK_CLASH_CLASSES.textSecondary} leading-relaxed`}
-            >
-              {t(
-                'Create a team to challenge other players or join an existing team with your friends',
-              )}
-            </p>
-          </MotionDiv>
+              <PlusCircle className="w-3.5 h-3.5" />
+              {t('Create Team')}
+            </button>
 
-          <MotionDiv variants={itemVariants} className="w-full">
-            <div className="flex flex-col sm:flex-row gap-4 justify-center items-center w-full">
-              <button
-                onClick={onCreateTeam}
-                className={`
-                  ${QUICK_CLASH_CLASSES.btnPrimary}
-                  ${QUICK_CLASH_CLASSES.focusRing}
-                  px-8 py-3 text-lg font-bold rounded-xl
-                  ${QUICK_CLASH_CLASSES.shadowCyan}
-                  hover:shadow-cyan-500/60
-                  transition-all duration-200
-                  flex items-center gap-3
-                  w-full sm:w-auto
-                  active:scale-95
-                `}
-              >
-                <PlusCircle className="w-5 h-5" />
-                {t('Create Team')}
-              </button>
-
-              <button
-                onClick={onJoinTeam}
-                className={`
-                  ${QUICK_CLASH_CLASSES.glassMedium}
-                  border-2 border-blue-500/60 text-blue-300
-                  hover:bg-blue-500/10 hover:border-blue-400/80 hover:text-blue-200
-                  ${QUICK_CLASH_CLASSES.focusRing}
-                  px-8 py-3 text-lg font-bold rounded-xl
-                  ${QUICK_CLASH_CLASSES.shadowBlue}
-                  hover:shadow-blue-500/40
-                  transition-all duration-200
-                  flex items-center gap-3
-                  w-full sm:w-auto
-                  active:scale-95
-                `}
-              >
-                <UserPlus className="w-5 h-5" />
-                {t('Join Team')}
-              </button>
-            </div>
-          </MotionDiv>
-
-          {/* Help Text */}
-          <MotionDiv variants={itemVariants}>
-            <div
+            <button
+              onClick={onJoinTeam}
               className={`
-              p-4 rounded-xl
-              ${QUICK_CLASH_CLASSES.glassLight}
-              border border-cyan-500/20
-              backdrop-brightness-105
-            `}
+                bg-transparent
+                border border-blue-500/40 text-blue-300
+                hover:bg-blue-500/10 hover:border-blue-400/60
+                px-4 py-2 text-xs font-semibold rounded-lg
+                transition-all duration-200
+                flex items-center gap-1.5
+                active:scale-95
+              `}
             >
-              <p
-                className={`text-sm ${QUICK_CLASH_CLASSES.textMuted} leading-relaxed`}
-              >
-                {t(
-                  'Teams let you participate in 4v4 battles with your friends against other teams',
-                )}
-              </p>
-            </div>
-          </MotionDiv>
-        </div>
+              <UserPlus className="w-3.5 h-3.5" />
+              {t('Join Team')}
+            </button>
+          </div>
+        </MotionDiv>
+
+        {/* Help Text - minimal */}
+        <MotionDiv variants={itemVariants}>
+          <p
+            className={`text-xs ${QUICK_CLASH_CLASSES.textMuted} leading-relaxed`}
+          >
+            {t(
+              'Teams let you participate in 4v4 battles with your friends against other teams',
+            )}
+          </p>
+        </MotionDiv>
       </div>
     </MotionDiv>
   )

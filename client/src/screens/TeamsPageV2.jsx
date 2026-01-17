@@ -10,11 +10,11 @@ import TeamDashboardV2 from '../components/quickClashComponents/team/TeamDashboa
 // MAIN COMPONENT
 // ============================================================================
 
-const TeamsPageV2 = () => {
+const TeamsPageV2 = ({ isActive = true }) => {
   return (
     <div className="relative z-10 w-full max-w-lg mx-auto pb-20 md:pb-8 md:max-w-4xl">
       {/* Team Dashboard V2 - Premium design with built-in header */}
-      <TeamDashboardV2 />
+      <TeamDashboardV2 isActive={isActive} />
     </div>
   )
 }

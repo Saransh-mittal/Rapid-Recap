@@ -43,6 +43,7 @@ import {
   recordPopupDismissed,
   recordPopupInviteClicked,
 } from '../../../utils/teamInvitePopupUtils'
+import axios from 'axios'
 
 // ═══════════════════════════════════════════════════════════════
 // GLASS CARD WITH OPTIONAL COLOR ACCENT
