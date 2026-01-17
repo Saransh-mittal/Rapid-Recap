@@ -21,6 +21,7 @@ import {
   HelpCircle,
 } from 'lucide-react'
 import confetti from 'canvas-confetti'
+import { Star } from 'lucide-react'
 
 // Audio and haptics
 import { quizAudioService } from '../../../services/quizAudioService'
@@ -173,6 +174,7 @@ const PostSessionRewardScreen = memo(({
     battleResultETA = 25,
     category = 'Quiz',
     isFirstSession = false, // Flag to distinguish first-time vs returning users
+    xpReward = null, // XP reward data for authenticated users
   } = rewardData || {}
 
   const [timeRemaining, setTimeRemaining] = useState('')
@@ -464,6 +466,58 @@ const PostSessionRewardScreen = memo(({
                     </div>
                   </motion.div>
                 </div>
+
+                {/* XP Earned Section - Only for authenticated users */}
+                {xpReward && xpReward.totalXP > 0 && (
+                  <div className="px-6 pb-3">
+                    <motion.div
+                      initial={{ opacity: 0, y: 20 }}
+                      animate={{ opacity: 1, y: 0 }}
+                      transition={{ delay: 0.65 }}
+                      className="p-3 rounded-xl"
+                      style={{
+                        background: 'linear-gradient(135deg, rgba(168, 85, 247, 0.12) 0%, rgba(139, 92, 246, 0.08) 100%)',
+                        border: '1px solid rgba(168, 85, 247, 0.2)',
+                      }}
+                    >
+                      <div className="flex items-center justify-between mb-2">
+                        <div className="flex items-center gap-2">
+                          <Star className="w-5 h-5 text-purple-400" />
+                          <span className="text-sm font-semibold text-purple-400 uppercase tracking-wide">XP Earned</span>
+                          {xpReward.levelUp && (
+                            <motion.span
+                              initial={{ scale: 0 }}
+                              animate={{ scale: 1 }}
+                              className="text-xs font-bold text-yellow-400 px-1.5 py-0.5 rounded bg-yellow-500/20"
+                            >
+                              LEVEL UP! 🎉
+                            </motion.span>
+                          )}
+                        </div>
+                        <div className="flex items-center gap-1">
+                          <span className="text-xl font-black text-purple-400">
+                            +<AnimatedNumber value={xpReward.totalXP} duration={1000} />
+                          </span>
+                        </div>
+                      </div>
+                      {/* XP Progress Bar */}
+                      <div className="mt-2">
+                        <div className="flex items-center justify-between text-xs text-white/50 mb-1">
+                          <span>Level {xpReward.currentLevel}</span>
+                          <span>{xpReward.xpProgress}/{xpReward.xpForNextLevel} XP</span>
+                        </div>
+                        <div className="h-2 bg-white/10 rounded-full overflow-hidden">
+                          <motion.div
+                            className="h-full bg-gradient-to-r from-purple-500 to-violet-400 rounded-full"
+                            initial={{ width: 0 }}
+                            animate={{ width: `${xpReward.xpProgressPercentage}%` }}
+                            transition={{ delay: 0.8, duration: 0.8, ease: 'easeOut' }}
+                          />
+                        </div>
+                      </div>
+                    </motion.div>
+                  </div>
+                )}
 
                 {/* Streak Teaser */}
                 <div className="px-6 pb-3">

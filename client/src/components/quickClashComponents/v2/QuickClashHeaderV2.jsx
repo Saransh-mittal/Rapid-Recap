@@ -60,16 +60,16 @@ const FriendsButton = memo(({ onClick, totalRequests = 0, onlineCount = 0, loadi
   <button
     onClick={() => { quizAudioService.playButtonClick(); onClick() }}
     disabled={loading}
-    className="relative flex items-center justify-center w-9 h-9 rounded-full bg-white/5 hover:bg-white/10 border border-white/10 transition-colors disabled:opacity-50"
+    className="relative flex items-center justify-center w-7 h-7 xs:w-9 xs:h-9 rounded-full bg-white/5 hover:bg-white/10 border border-white/10 transition-colors disabled:opacity-50"
   >
-    <span className="text-sm">👥</span>
+    <span className="text-xs xs:text-sm">👥</span>
     {totalRequests > 0 && (
-      <span className="absolute -top-0.5 -right-0.5 min-w-[16px] h-4 flex items-center justify-center bg-cyan-500 text-white text-[10px] font-bold rounded-full px-1 border border-slate-900">
+      <span className="absolute -top-0.5 -right-0.5 min-w-[14px] xs:min-w-[16px] h-3.5 xs:h-4 flex items-center justify-center bg-cyan-500 text-white text-[9px] xs:text-[10px] font-bold rounded-full px-0.5 xs:px-1 border border-slate-900">
         {totalRequests > 9 ? '9+' : totalRequests}
       </span>
     )}
     {totalRequests === 0 && onlineCount > 0 && (
-      <span className="absolute -top-0.5 -right-0.5 min-w-[16px] h-4 flex items-center justify-center bg-green-500 text-white text-[10px] font-bold rounded-full px-1 border border-slate-900">
+      <span className="absolute -top-0.5 -right-0.5 min-w-[14px] xs:min-w-[16px] h-3.5 xs:h-4 flex items-center justify-center bg-green-500 text-white text-[9px] xs:text-[10px] font-bold rounded-full px-0.5 xs:px-1 border border-slate-900">
         {onlineCount > 9 ? '9+' : onlineCount}
       </span>
     )}
@@ -201,22 +201,22 @@ const QuickClashHeaderV2 = () => {
           animate={{ opacity: 1, y: 0 }}
         >
           {/* Left: Stats */}
-          <div className="flex items-center gap-2">
+          <div className="flex items-center gap-1 xs:gap-2">
             <TrophyDisplay />
             <StreakDisplay />
             <CoinDisplay />
-            <LevelBadge />
           </div>
 
-          {/* Right: Action Buttons */}
-          <div className="flex items-center gap-2">
+          {/* Right: Level + Friends */}
+          <div className="flex items-center gap-1 xs:gap-2">
+            <LevelBadge />
             <FriendsButton
               onClick={openWiseWeb}
               totalRequests={totalRequests}
               onlineCount={onlineCount}
               loading={loading.friends && loading.requests}
             />
-            <LeaderboardButton onClick={handleLeaderboardClick} />
+            {/* Leaderboard button moved to bottom navigation bar */}
             {/* MOVED TO PROFILE TAB - Notification bell removed from header
             <NotificationBell
               count={notificationCount}

@@ -461,7 +461,7 @@ const TrophyDisplay = memo(() => {
   const triggerComponent = (
     <MotionDiv
       className={`
-        flex items-center justify-center py-1.5 px-3 rounded-full cursor-pointer
+        flex items-center justify-center py-1 xs:py-1.5 px-2 xs:px-3 rounded-full cursor-pointer
         ${QUICK_CLASH_CLASSES.glassMedium} backdrop-blur-[8px] border border-yellow-500/30
         shadow-lg shadow-black/20 relative overflow-hidden transition-all duration-200
         hover:border-yellow-400/50 hover:shadow-xl hover:shadow-yellow-500/20
@@ -499,7 +499,7 @@ const TrophyDisplay = memo(() => {
       {/* Trophy count with responsive animation */}
       <MotionSpan
         ref={trophyCountRef}
-        className={`text-white font-bold text-base z-10`}
+        className={`text-white font-bold text-sm xs:text-base z-10`}
         animate={trophyControls}
       >
         {userTrophies}

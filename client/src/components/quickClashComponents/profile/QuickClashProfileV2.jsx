@@ -1,6 +1,6 @@
 // components/quickClashComponents/profile/QuickClashProfileV2.jsx
 // Enterprise-level minimal profile - high density, good contrast
-import React, { useState, useEffect, useCallback } from 'react'
+import React, { useState, useEffect, useCallback, useMemo } from 'react'
 import {
   Box,
   Flex,
@@ -12,7 +12,6 @@ import {
   Button,
   Spinner,
   Grid,
-  GridItem,
 } from '@chakra-ui/react'
 import { motion } from 'framer-motion'
 import {
@@ -29,7 +28,7 @@ import {
   Bell,
   ChevronRight,
 } from 'lucide-react'
-import { useNavigate } from 'react-router-dom'
+import { useNavigate, useLocation } from 'react-router-dom'
 import { useSelector, useDispatch } from 'react-redux'
 import { logoutAuth } from '../../../redux/authSlice'
 import { logoutApp, resetLoadingFlags, resetAllState, setIsNotifDrawerOpen } from '../../../redux/appSlice'
@@ -69,6 +68,7 @@ const StatBlock = ({ label, value, subValue, color = 'white' }) => (
 // ═══════════════════════════════════════════════════════════════
 const QuickClashProfileV2 = ({ userId: propUserId }) => {
   const navigate = useNavigate()
+  const location = useLocation()
   const dispatch = useDispatch()
   const { user } = useSelector(state => state.auth)
   const [profile, setProfile] = useState(null)
@@ -78,22 +78,35 @@ const QuickClashProfileV2 = ({ userId: propUserId }) => {
 
   // Get notification count from Redux
   const { updates, unreadFriendRequests, notification } = useSelector(state => state.app)
-  const notificationCount = React.useMemo(() => {
+  const notificationCount = useMemo(() => {
     const unreadUpdates = updates?.filter(u => !u.read).length || 0
     const friendRequests = unreadFriendRequests || 0
     const notificationItems = Array.isArray(notification) ? notification.length : 0
     return unreadUpdates + friendRequests + notificationItems
   }, [updates, unreadFriendRequests, notification])
 
-  const isOwnProfile = !propUserId || propUserId === user?._id
-  const targetUserId = propUserId || user?._id
+  // Determine if we are viewing another user via URL
+  const urlUserId = useMemo(() => {
+    // Handle specific route formats: /quickclash/profile/:id
+    if (location.pathname.includes('/profile/')) {
+      const parts = location.pathname.split('/profile/')
+      if (parts[1]) {
+        return parts[1].split('/')[0] // Get ID before any other segments
+      }
+    }
+    return null
+  }, [location.pathname])
+
+  const effectiveUserId = propUserId || urlUserId
+  const isOwnProfile = !effectiveUserId || effectiveUserId === user?._id
+  const targetUserId = effectiveUserId || user?._id
 
   useEffect(() => {
     const fetchProfile = async () => {
       try {
         setLoading(true)
-        const endpoint = propUserId
-          ? `/api/quickClash/profile/${propUserId}`
+        const endpoint = effectiveUserId
+          ? `/api/quickClash/profile/${effectiveUserId}`
           : '/api/quickClash/profile'
         const response = await axios.get(endpoint)
         setProfile(response.data.profile)
@@ -104,7 +117,7 @@ const QuickClashProfileV2 = ({ userId: propUserId }) => {
       }
     }
     if (targetUserId) fetchProfile()
-  }, [targetUserId, propUserId])
+  }, [targetUserId, effectiveUserId])
 
   const handleLogout = useCallback(async () => {
     setLogoutLoading(true)

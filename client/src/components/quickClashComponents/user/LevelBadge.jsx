@@ -139,7 +139,7 @@ const LevelBadge = () => {
   const triggerComponent = (
     <MotionDiv
       className={`
-        flex items-center justify-center py-1.5 px-3 rounded-full cursor-pointer
+        flex items-center justify-center py-1 xs:py-1.5 px-2 xs:px-3 rounded-full cursor-pointer
         ${QUICK_CLASH_CLASSES.glassMedium} backdrop-blur-[8px] border border-cyan-500/30
         shadow-lg shadow-black/20 relative overflow-hidden transition-all duration-200
         hover:border-cyan-400/50 hover:shadow-xl hover:shadow-cyan-500/20
@@ -166,7 +166,7 @@ const LevelBadge = () => {
 
       {/* Animated star icon */}
       <MotionDiv
-        className="relative z-10 mr-1"
+        className="relative z-10 mr-0.5 xs:mr-1"
         animate={{
           rotate: [0, 10, 0],
           scale: [1, 1.1, 1],
@@ -180,11 +180,11 @@ const LevelBadge = () => {
           filter: 'drop-shadow(0 0 3px rgba(255, 215, 0, 0.8))',
         }}
       >
-        <Star className="w-4 h-4 text-yellow-400 fill-current" />
+        <Star className="w-3 xs:w-4 h-3 xs:h-4 text-yellow-400 fill-current" />
       </MotionDiv>
 
       {/* Level text */}
-      <span className="text-white font-bold text-base z-10">{level}</span>
+      <span className="text-white font-bold text-sm xs:text-base z-10">{level}</span>
     </MotionDiv>
   )
 

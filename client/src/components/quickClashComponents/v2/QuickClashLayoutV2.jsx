@@ -8,7 +8,7 @@ import { useLocation, useNavigate } from 'react-router-dom'
 import { useTranslation } from 'react-i18next'
 import { useDispatch, useSelector } from 'react-redux'
 import { motion, AnimatePresence } from 'framer-motion'
-import { Swords, Trophy, Users, User, Lock } from 'lucide-react'
+import { Swords, Trophy, Users, User, Lock, Award } from 'lucide-react'
 import axios from 'axios'
 
 // Haptic feedback
@@ -44,6 +44,7 @@ const StreakPopup = lazy(() => import('./StreakPopup'))
 
 // Lazy load QuickClash Profile
 const QuickClashProfile = React.lazy(() => import('../profile/QuickClashProfileV2'))
+const QuickClashLeaderboardTab = React.lazy(() => import('../leaderboard/QuickClashLeaderboardTab'))
 
 // ============================================================================
 // DATA MANAGER - Prefetch & background refresh
@@ -97,6 +98,7 @@ const BottomNavContent = memo(({ activeTab, onTabChange, isSession, pendingInvit
   const tabs = [
     { id: 'battles', icon: Swords, label: t('Battles'), color: '#22d3ee', glowColor: 'rgba(34, 211, 238, 0.4)', locked: false, badge: 0 },
     { id: 'history', icon: Trophy, label: t('History'), color: '#facc15', glowColor: 'rgba(250, 204, 21, 0.4)', locked: false, badge: 0 },
+    { id: 'leaderboard', icon: Award, label: t('Ranks'), color: '#f59e0b', glowColor: 'rgba(245, 158, 11, 0.4)', locked: false, badge: 0 },
     { id: 'teams', icon: Users, label: t('Teams'), color: '#a78bfa', glowColor: 'rgba(167, 139, 250, 0.4)', locked: isSession, badge: isSession ? 0 : pendingInvitationsCount },
     { id: 'profile', icon: User, label: t('Profile'), color: '#34d399', glowColor: 'rgba(52, 211, 153, 0.4)', locked: isSession, badge: isSession ? 0 : notificationCount },
   ]
@@ -301,6 +303,7 @@ TabContent.displayName = 'TabContent'
 
 const getTabFromPath = (path) => {
   if (path.includes('/history')) return 'history'
+  if (path.includes('/leaderboard')) return 'leaderboard'
   if (path.includes('/teams')) return 'teams'
   if (path.includes('/profile')) return 'profile'
   return 'battles'
@@ -506,6 +509,7 @@ const QuickClashLayoutV2 = () => {
     const paths = {
       battles: '/quickclash',
       history: '/quickclash/history',
+      leaderboard: '/quickclash/leaderboard',
       teams: '/quickclash/teams',
       profile: '/quickclash/profile'
     }
@@ -569,6 +573,19 @@ const QuickClashLayoutV2 = () => {
         {/* History Tab - Available for all (with session notice for session players) */}
         <TabContent isActive={activeTab === 'history'} tabName="history">
           <BattleHistoryV2 />
+        </TabContent>
+
+        {/* Leaderboard Tab - Available for all */}
+        <TabContent isActive={activeTab === 'leaderboard'} tabName="leaderboard">
+          <React.Suspense fallback={
+            <div className="flex items-center justify-center min-h-[60vh]">
+              <div className="w-8 h-8 border-2 border-amber-400/30 border-t-amber-400 rounded-full animate-spin" />
+            </div>
+          }>
+            <div className="pb-20 md:pb-4">
+              <QuickClashLeaderboardTab />
+            </div>
+          </React.Suspense>
         </TabContent>
 
         {/* Teams Tab - Session players get view-only team dashboard */}

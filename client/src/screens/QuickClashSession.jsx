@@ -625,6 +625,8 @@ const QuickClashSession = ({ isSessionPlayer = false }) => {
         battleResultETA,
         category: challenge?.category || 'Quiz',
         isFirstSession: true, // Flag to enhance CTA for conversion
+        // XP reward data (only for authenticated users)
+        xpReward: result.xpReward || null,
       }
 
       // Show PostSessionRewardScreen for ALL quiz completions (both session players and auth users)

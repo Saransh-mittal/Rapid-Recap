@@ -53,6 +53,10 @@ const {
   awardCoins,
   COIN_CONFIG,
 } = require('./quickClashCoinService')
+const {
+  calculateSessionXP,
+  awardXP,
+} = require('./quickClashXPService')
 const QuickClashSession = require('../../model/quickClashSchemas/quickClashSessionSchema')
 const ForgeArticle = require('../../model/quickClashSchemas/forgeArticleSchema')
 
@@ -2312,6 +2316,7 @@ const updateBattleWithQuizResults = makeRetryable(
         let streakResult = null
         let coinResult = null
         let coinReward = null // Coin calculation breakdown for frontend display
+        let xpReward = null // XP calculation breakdown for frontend display
         try {
           streakResult = await updateStreakOnBattleComplete({
             playerId: userId,
@@ -2356,6 +2361,39 @@ const updateBattleWithQuizResults = makeRetryable(
 
             if (coinResult) {
               console.log(`[COINS] Awarded ${coinReward.totalCoins} coins to ${userId} (base: ${coinReward.baseCoins}, forge: ${coinReward.forgeAccuracyBonus}, quiz: ${coinReward.quizAccuracyBonus}, multiplier: ${coinReward.streakMultiplier}x)`)
+            }
+
+            // Award XP to authenticated users only (not session players)
+            if (!isUserSessionPlayer) {
+              // Calculate XP reward with two-phase accuracy (win bonus awarded after battle completes)
+              const xpCalculation = calculateSessionXP({
+                forgeCorrect: Math.min(5, Math.max(0, forgeCorrect)),
+                quizCorrect: Math.min(5, Math.max(0, quizCorrect)),
+                isWin: false, // Win bonus awarded separately after battle completion
+              })
+
+              // Award XP to user
+              const xpResult = await awardXP({
+                userId,
+                amount: xpCalculation.totalXP,
+                reason: 'quick_clash_session',
+                session,
+              })
+
+              if (xpResult) {
+                xpReward = {
+                  ...xpCalculation,
+                  previousXP: xpResult.previousXP,
+                  newXP: xpResult.newXP,
+                  previousLevel: xpResult.previousLevel,
+                  currentLevel: xpResult.currentLevel,
+                  levelUp: xpResult.levelUp,
+                  xpProgress: xpResult.xpProgress,
+                  xpForNextLevel: xpResult.xpForNextLevel,
+                  xpProgressPercentage: xpResult.xpProgressPercentage,
+                }
+                console.log(`[XP] Awarded ${xpCalculation.totalXP} XP to ${userId} (base: ${xpCalculation.baseXP}, forge: ${xpCalculation.forgeAccuracyBonus}, quiz: ${xpCalculation.quizAccuracyBonus})${xpResult.levelUp ? ' - LEVEL UP!' : ''}`)
+              }
             }
           }
         } catch (streakError) {
@@ -2656,8 +2694,8 @@ const updateBattleWithQuizResults = makeRetryable(
         console.log(
           `[updateBattleWithQuizResults] Successfully updated battle with quiz results`,
         )
-        // Return battle, streak result, and coin reward for frontend popup
-        return { battle, streakResult, coinReward }
+        // Return battle, streak result, coin reward, and XP reward for frontend popup
+        return { battle, streakResult, coinReward, xpReward }
       })
     } catch (error) {
       console.error('Error updating battle with quiz results:', error)

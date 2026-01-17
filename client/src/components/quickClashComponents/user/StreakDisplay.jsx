@@ -23,14 +23,14 @@ const StreakDisplay = memo(() => {
 
   return (
     <motion.div
-      className={`flex items-center gap-1.5 px-2.5 py-1.5 rounded-full bg-gradient-to-r ${colors.bg} border ${colors.border}`}
+      className={`flex items-center gap-1 xs:gap-1.5 px-2 xs:px-2.5 py-1 xs:py-1.5 rounded-full bg-gradient-to-r ${colors.bg} border ${colors.border}`}
       initial={{ opacity: 0, scale: 0.9 }}
       animate={{ opacity: 1, scale: 1 }}
       transition={{ duration: 0.2 }}
     >
       {/* Fire emoji with subtle animation when streak is active */}
       <motion.span
-        className="text-sm"
+        className="text-xs xs:text-sm"
         animate={dayStreak > 0 ? {
           scale: [1, 1.15, 1],
         } : {}}
@@ -40,7 +40,7 @@ const StreakDisplay = memo(() => {
       </motion.span>
 
       {/* Streak count */}
-      <span className={`text-sm font-bold ${colors.text}`}>
+      <span className={`text-xs xs:text-sm font-bold ${colors.text}`}>
         {dayStreak}
       </span>
     </motion.div>

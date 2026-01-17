@@ -1,20 +1,6 @@
 // components/quickClashComponents/leaderboard/components/LeaderboardCard.jsx
-import React, { useMemo, useState } from 'react'
-import {
-  Box,
-  VStack,
-  Text,
-  Flex,
-  Icon,
-  Avatar,
-  HStack,
-  SimpleGrid,
-  Collapse,
-  Button,
-  Divider,
-  Tooltip,
-} from '@chakra-ui/react'
-import { motion } from 'framer-motion'
+import React, { useMemo, useState, memo } from 'react'
+import { motion, AnimatePresence } from 'framer-motion'
 import { useTranslation } from 'react-i18next'
 import {
   Trophy,
@@ -25,301 +11,168 @@ import {
   Users,
   Percent,
   Target,
-  UserRound,
+  User,
   ArrowRight,
+  ChevronDown,
+  ChevronUp
 } from 'lucide-react'
-import StatItem from './StatItem'
 
-const MotionBox = motion(Box)
+// Stat Item Component
+const StatItem = ({ icon: Icon, label, value, color }) => (
+  <div className="flex flex-col items-center p-2 rounded-lg bg-slate-800/50 border border-slate-700/50">
+    <div className="flex items-center gap-1.5 mb-1">
+      <Icon className="w-3.5 h-3.5" style={{ color }} />
+      <span className="text-[10px] text-slate-400 uppercase font-medium">{label}</span>
+    </div>
+    <span className="text-sm font-bold text-white tracking-wide">{value}</span>
+  </div>
+)
 
-/*
-  NOTE FOR DEVELOPER:
-  If the list of cards is getting cut off at the bottom by a footer, the ideal
-  solution is to add bottom padding to the SCROLLABLE PARENT CONTAINER that
-  maps through and renders these LeaderboardCard components.
+const LeaderboardCard = memo(({ user, currentUserId, rank, onViewProfile }) => {
+  const { t } = useTranslation('QuickClash')
+  const isCurrentUser = user._id === currentUserId
+  const [isStatsExpanded, setIsStatsExpanded] = useState(false)
 
-  For example, in the parent component:
-  <VStack overflowY="auto" pb="80px"> // <-- Add padding-bottom here
-    {users.map(user => <LeaderboardCard ... />)}
-  </VStack>
+  const handleToggleStats = () => setIsStatsExpanded(!isStatsExpanded)
 
-  The `mb` property on MotionBox below is a workaround within this component.
-*/
-
-const LeaderboardCard = React.memo(
-  ({ user, currentUserId, rank, onViewProfile }) => {
-    const { t } = useTranslation('QuickClash')
-    const isCurrentUser = user._id === currentUserId
-
-    const [isStatsExpanded, setIsStatsExpanded] = useState(false)
-
-    const handleToggleStats = () => {
-      setIsStatsExpanded(!isStatsExpanded)
+  // Handle view profile
+  const handleProfileClick = () => {
+    if (onViewProfile) {
+      onViewProfile(user._id)
     }
+  }
 
-    const handleProfileClick = event => {
-      event.stopPropagation()
-      onViewProfile(user.inGameName)
+  const formatStatValue = (value, isPercentage = false) => {
+    if (value === undefined || value === null) return 'N/A'
+    const numValue = parseFloat(value)
+    if (isNaN(numValue)) return 'N/A'
+    return isPercentage ? `${numValue.toFixed(1)}%` : numValue.toFixed(1)
+  }
+
+  const formatStatValueInteger = (value) => {
+    if (value === undefined || value === null) return 'N/A'
+    const numValue = parseInt(value, 10)
+    if (isNaN(numValue)) return 'N/A'
+    return numValue
+  }
+
+  // Styles based on rank (mainly for if top 3 appear in search results, though Podium handles main view)
+  const rankStyles = useMemo(() => {
+    if (rank === 1) return {
+      borderColor: 'border-yellow-500/50',
+      bgGradient: 'bg-gradient-to-r from-yellow-500/10 to-transparent',
+      rankColor: 'text-yellow-400',
+      shadow: 'shadow-yellow-500/10',
+      icon: Crown
     }
-
-    const rankStyle = useMemo(() => {
-      const base = {
-        textColor: 'whiteAlpha.900',
-        iconColor: 'whiteAlpha.700',
-        rankIconContainerBg: 'rgba(255, 255, 255, 0.05)',
-        rankIconContainerBorder: 'rgba(255, 255, 255, 0.1)',
-        cardBg: isCurrentUser
-          ? 'linear-gradient(140deg, rgba(138, 75, 255, 0.22) 0%, rgba(138, 75, 255, 0.1) 100%)'
-          : 'linear-gradient(140deg, rgba(45, 55, 72, 0.5) 0%, rgba(30, 35, 45, 0.5) 100%)',
-        cardBorder: isCurrentUser ? 'purple.400' : 'rgba(255, 255, 255, 0.06)',
-        cardShadow: isCurrentUser
-          ? '0 0 10px rgba(138, 75, 255, 0.15)'
-          : '0 2px 6px rgba(0,0,0,0.1)',
-        trophyTextColor: 'yellow.400',
-        nameColor: 'whiteAlpha.900',
-      }
-
-      if (rank === 1)
-        return {
-          ...base,
-          iconColor: 'yellow.400',
-          rankIcon: Crown,
-          rankIconContainerBg: 'rgba(255, 215, 0, 0.15)',
-          rankIconContainerBorder: 'rgba(255, 215, 0, 0.5)',
-          cardBg:
-            'linear-gradient(140deg, rgba(255, 215, 0, 0.2) 0%, rgba(255, 215, 0, 0.08) 100%)',
-          cardBorder: 'yellow.400',
-          cardShadow:
-            '0 0 15px rgba(255, 215, 0, 0.25), 0 0 0 1px rgba(255,215,0,0.4)',
-          trophyTextColor: 'yellow.300',
-          nameColor: 'yellow.400',
-        }
-      if (rank === 2)
-        return {
-          ...base,
-          iconColor: 'gray.200',
-          rankIcon: Medal,
-          rankIconContainerBg: 'rgba(192, 192, 192, 0.15)',
-          rankIconContainerBorder: 'rgba(192, 192, 192, 0.5)',
-          cardBg:
-            'linear-gradient(140deg, rgba(192, 192, 192, 0.2) 0%, rgba(192, 192, 192, 0.08) 100%)',
-          cardBorder: 'gray.300',
-          cardShadow:
-            '0 0 15px rgba(192,192,192,0.2), 0 0 0 1px rgba(192,192,192,0.35)',
-          trophyTextColor: 'gray.100',
-          nameColor: 'gray.200',
-        }
-      if (rank === 3)
-        return {
-          ...base,
-          iconColor: 'orange.300',
-          rankIcon: Medal,
-          rankIconContainerBg: 'rgba(205, 127, 50, 0.15)',
-          rankIconContainerBorder: 'rgba(205, 127, 50, 0.5)',
-          cardBg:
-            'linear-gradient(140deg, rgba(205, 127, 50, 0.2) 0%, rgba(205, 127, 50, 0.08) 100%)',
-          cardBorder: 'orange.400',
-          cardShadow:
-            '0 0 15px rgba(205,127,50,0.25), 0 0 0 1px rgba(205,127,50,0.35)',
-          trophyTextColor: 'orange.200',
-          nameColor: 'orange.300',
-        }
-      return base
-    }, [rank, t, isCurrentUser])
-
-    // FIX: Moved cardVariants into its own useMemo and added defensive checks
-    const cardVariants = useMemo(() => {
-      let hoverShadow = '0 3px 10px rgba(0,0,0,0.15)' // Default for rank > 3
-
-      // Defensively check for cardShadow before trying to use .replace on it
-      if (rank <= 3 && rankStyle.cardShadow) {
-        hoverShadow = rankStyle.cardShadow
-          .replace('15px', '18px')
-          .replace(
-            /0\.\d+\)/,
-            match => `${parseFloat(match.slice(0, -1)) + 0.05})`,
-          )
-      }
-
-      return {
-        hidden: { opacity: 0, y: 15, scale: 0.98 },
-        visible: {
-          opacity: 1,
-          y: 0,
-          scale: 1,
-          transition: {
-            type: 'spring',
-            stiffness: 300,
-            damping: 25,
-            duration: 0.25,
-          },
-        },
-        hover: {
-          scale: 1.005,
-          boxShadow: hoverShadow,
-          borderColor:
-            rank <= 3 ? rankStyle.borderColor : 'rgba(255,255,255,0.1)',
-          transition: { type: 'spring', stiffness: 350, damping: 15 },
-        },
-        tap: {
-          scale: 0.995,
-          transition: { type: 'spring', stiffness: 380, damping: 12 },
-        },
-      }
-    }, [rank, rankStyle]) // Dependencies for this memo
-
-    const formatStatValue = (value, isPercentage = false) => {
-      if (value === undefined || value === null) return 'N/A'
-      const numValue = parseFloat(value)
-      if (isNaN(numValue)) return 'N/A'
-      return isPercentage ? `${numValue.toFixed(1)}%` : numValue.toFixed(1)
+    if (rank === 2) return {
+      borderColor: 'border-gray-400/50',
+      bgGradient: 'bg-gradient-to-r from-gray-400/10 to-transparent',
+      rankColor: 'text-gray-300',
+      shadow: 'shadow-gray-400/10',
+      icon: Medal
     }
-
-    const formatStatValueInteger = value => {
-      if (value === undefined || value === null) return 'N/A'
-      const numValue = parseInt(value, 10)
-      if (isNaN(numValue)) return 'N/A'
-      return numValue
+    if (rank === 3) return {
+      borderColor: 'border-orange-500/50',
+      bgGradient: 'bg-gradient-to-r from-orange-500/10 to-transparent',
+      rankColor: 'text-orange-400',
+      shadow: 'shadow-orange-500/10',
+      icon: Medal
     }
+    return {
+      borderColor: isCurrentUser ? 'border-purple-500/50' : 'border-white/5',
+      bgGradient: isCurrentUser ? 'bg-purple-500/10' : 'bg-white/5',
+      rankColor: isCurrentUser ? 'text-purple-400' : 'text-slate-400',
+      shadow: isCurrentUser ? 'shadow-purple-500/10' : '',
+      icon: null
+    }
+  }, [rank, isCurrentUser])
 
-    return (
-      <Box px={{ base: 0.5, md: 1 }}>
-        <MotionBox
-          variants={cardVariants}
-          initial="hidden"
-          animate="visible"
-          whileHover="hover"
-          whileTap="tap"
-          onClick={handleToggleStats}
-          cursor="pointer"
-          position="relative"
-          overflow="hidden"
-          bg={rankStyle.cardBg}
-          borderRadius="md"
-          px={2.5}
-          py={2}
-          mt={1}
-          mb={2}
-          borderWidth="1px"
-          borderColor={isStatsExpanded ? 'purple.300' : rankStyle.cardBorder}
-          boxShadow={rankStyle.cardShadow}
-          transition="border-color 0.2s ease-out, background 0.2s ease-out"
-        >
-          <HStack spacing={1.5} alignItems="center" width="100%">
-            <Flex
-              w="30px"
-              h="30px"
-              flexShrink={0}
-              bg={rankStyle.rankIconContainerBg}
-              borderRadius="sm"
-              alignItems="center"
-              justifyContent="center"
-              border="1px solid"
-              borderColor={rankStyle.rankIconContainerBorder}
-            >
-              {rank <= 3 ? (
-                <Icon
-                  as={rankStyle.rankIcon}
-                  color={rankStyle.iconColor}
-                  boxSize={'16px'}
-                />
-              ) : (
-                <Text
-                  fontWeight="semibold"
-                  fontSize="sm"
-                  color={rankStyle.textColor}
-                  lineHeight="1"
-                >
-                  {rank}
-                </Text>
-              )}
-            </Flex>
+  return (
+    <motion.div
+      layout
+      initial={{ opacity: 0, y: 10 }}
+      animate={{ opacity: 1, y: 0 }}
+      className={`
+        relative mb-3 rounded-xl border ${rankStyles.borderColor} ${rankStyles.bgGradient}
+        backdrop-blur-sm overflow-hidden transition-all duration-200
+        ${rankStyles.shadow ? `shadow-lg ${rankStyles.shadow}` : ''}
+        hover:bg-white/10
+      `}
+    >
+      {/* Main Row */}
+      <div
+        onClick={handleToggleStats}
+        className="flex items-center p-3 cursor-pointer"
+      >
+        {/* Rank */}
+        <div className="w-8 flex justify-center mr-3 font-mono font-bold text-lg">
+          {rankStyles.icon ? (
+            <rankStyles.icon className={`w-5 h-5 ${rankStyles.rankColor}`} />
+          ) : (
+            <span className={rankStyles.rankColor}>{rank}</span>
+          )}
+        </div>
 
-            <Avatar
-              size="xs"
-              name={user.name}
-              src={user.pic}
-              borderWidth="1px"
-              flexShrink={0}
-              borderColor={
-                rank <= 3
-                  ? rankStyle.borderColor
-                  : isCurrentUser
-                  ? 'purple.300'
-                  : 'transparent'
-              }
-              boxShadow={
-                rank <= 3
-                  ? `0 0 3px ${rankStyle.iconColor}33`
-                  : isCurrentUser
-                  ? '0 0 3px rgba(138,75,255,0.3)'
-                  : 'none'
-              }
-            />
+        {/* Avatar */}
+        <div className={`
+          relative w-10 h-10 rounded-full overflow-hidden bg-slate-800 border
+          ${isCurrentUser ? 'border-purple-500' : 'border-white/10'} mr-3
+        `}>
+          {user.pic ? (
+            <img src={user.pic} alt={user.name} className="w-full h-full object-cover" />
+          ) : (
+            <div className="w-full h-full flex items-center justify-center bg-slate-700 text-white font-bold">
+              {user.name?.charAt(0)}
+            </div>
+          )}
+        </div>
 
-            <VStack
-              align="start"
-              spacing={0}
-              flexGrow={1}
-              minWidth={0}
-              overflow="hidden"
-            >
-              <Tooltip
-                label={user.inGameName || user.name}
-                placement="top-start"
-                hasArrow
-                bg="gray.800"
-                color="whiteAlpha.900"
-                fontSize="xs"
-                px={2}
-                py={1}
-                borderRadius="md"
-                openDelay={400}
-                isDisabled={isStatsExpanded}
-              >
-                <Text
-                  fontWeight="semibold"
-                  color={rankStyle.nameColor}
-                  fontSize="sm"
-                  lineHeight="1.2"
-                  noOfLines={1}
-                >
-                  {user.inGameName || user.name}
-                </Text>
-              </Tooltip>
-              <Text
-                fontSize="2xs"
-                color={isCurrentUser ? 'purple.300' : 'whiteAlpha.500'}
-                fontWeight="medium"
-                lineHeight="1"
-              >
-                {isCurrentUser ? t('You') : null}
-              </Text>
-            </VStack>
+        {/* Name & Badge */}
+        <div className="flex-1 min-w-0">
+          <div className="flex items-center gap-2">
+            <h3 className={`font-bold text-sm truncate ${isCurrentUser ? 'text-purple-300' : 'text-white'}`}>
+              {user.inGameName || user.name}
+            </h3>
+            {isCurrentUser && (
+              <span className="px-1.5 py-0.5 rounded text-[10px] font-bold bg-purple-500/20 text-purple-300 border border-purple-500/30">
+                YOU
+              </span>
+            )}
+          </div>
+          <div className="flex items-center gap-1.5 text-xs text-slate-400">
+            <span className="capitalize">{t('Level')} 1</span> {/* Placeholder if no level data */}
+          </div>
+        </div>
 
-            <HStack spacing={1} alignItems="center" flexShrink={0}>
-              <Icon as={Trophy} color={rankStyle.trophyTextColor} boxSize={4} />
-              <Text
-                fontSize="sm"
-                fontWeight="bold"
-                color={rankStyle.trophyTextColor}
-                lineHeight="1"
-              >
-                {user.trophies || 0}
-              </Text>
-            </HStack>
-          </HStack>
+        {/* Trophies */}
+        <div className="flex items-center gap-1.5 px-3 py-1 rounded-full bg-yellow-500/10 border border-yellow-500/20">
+          <Trophy className="w-3.5 h-3.5 text-yellow-500" />
+          <span className="font-bold text-yellow-500 text-sm">{user.trophies || 0}</span>
+        </div>
 
-          <Collapse in={isStatsExpanded} animateOpacity unmountOnExit>
-            <VStack align="stretch" spacing={3} mt={3} pb={1}>
-              <Divider borderColor="whiteAlpha.200" />
-              <SimpleGrid columns={2} spacingX={2} spacingY={2}>
+        {/* Expand Icon */}
+        <div className="ml-2 text-slate-500">
+          {isStatsExpanded ? <ChevronUp className="w-4 h-4" /> : <ChevronDown className="w-4 h-4" />}
+        </div>
+      </div>
+
+      {/* Expanded Stats */}
+      <AnimatePresence>
+        {isStatsExpanded && (
+          <motion.div
+            initial={{ height: 0, opacity: 0 }}
+            animate={{ height: 'auto', opacity: 1 }}
+            exit={{ height: 0, opacity: 0 }}
+            transition={{ duration: 0.2 }}
+            className="border-t border-white/5 bg-black/20"
+          >
+            <div className="p-3">
+              <div className="grid grid-cols-2 gap-2 mb-3">
                 <StatItem
                   icon={Trophy}
                   label={t('1v1 Wins')}
-                  value={formatStatValueInteger(
-                    user.wins1v1 !== undefined ? user.wins1v1 : user.wins,
-                  )}
+                  value={formatStatValueInteger(user.wins1v1 !== undefined ? user.wins1v1 : user.wins)}
                   color="#58D68D"
                 />
                 <StatItem
@@ -331,12 +184,7 @@ const LeaderboardCard = React.memo(
                 <StatItem
                   icon={TrendingUp}
                   label={t('1v1 Win %')}
-                  value={formatStatValue(
-                    user.winRate1v1 !== undefined
-                      ? user.winRate1v1
-                      : user.winRate,
-                    true,
-                  )}
+                  value={formatStatValue(user.winRate1v1 !== undefined ? user.winRate1v1 : user.winRate, true)}
                   color="#5DADE2"
                 />
                 <StatItem
@@ -345,51 +193,23 @@ const LeaderboardCard = React.memo(
                   value={formatStatValue(user.winRate4v4, true)}
                   color="#3498DB"
                 />
-                <StatItem
-                  icon={Award}
-                  label={t('1v1 Avg Score')}
-                  value={formatStatValue(
-                    user.avgScore1v1 !== undefined
-                      ? user.avgScore1v1
-                      : user.avgScore,
-                  )}
-                  color="#AF7AC5"
-                />
-                <StatItem
-                  icon={Target}
-                  label={t('4v4 Avg Score')}
-                  value={formatStatValue(user.avgScore4v4)}
-                  color="#1ABC9C"
-                />
-              </SimpleGrid>
+              </div>
 
-              <Button
-                mt={1}
-                size="sm"
-                width="full"
-                variant="outline"
-                borderColor="whiteAlpha.300"
-                color="whiteAlpha.800"
-                fontWeight="medium"
+              <button
                 onClick={handleProfileClick}
-                leftIcon={<Icon as={UserRound} boxSize="14px" />}
-                rightIcon={<Icon as={ArrowRight} boxSize="14px" />}
-                _hover={{
-                  bg: 'whiteAlpha.200',
-                  borderColor: 'purple.300',
-                  color: 'white',
-                }}
-                _active={{ bg: 'whiteAlpha.300' }}
+                className="w-full py-2 flex items-center justify-center gap-2 rounded-lg border border-white/10 hover:bg-white/5 transition-colors text-sm font-medium text-slate-300"
               >
+                <User className="w-3.5 h-3.5" />
                 {t('View Profile')}
-              </Button>
-            </VStack>
-          </Collapse>
-        </MotionBox>
-      </Box>
-    )
-  },
-)
+                <ArrowRight className="w-3.5 h-3.5 opacity-50" />
+              </button>
+            </div>
+          </motion.div>
+        )}
+      </AnimatePresence>
+    </motion.div>
+  )
+})
 
 LeaderboardCard.displayName = 'LeaderboardCard'
 export default LeaderboardCard
