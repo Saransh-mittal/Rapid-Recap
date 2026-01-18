@@ -165,26 +165,15 @@ const FriendRequestCard = ({ request, onAccept, onReject, loading }) => {
       </div>
 
       {/* Gaming Performance Highlight */}
-      {(quickClashStats?.currentWinStreak >= 3 ||
-        quickClashTrophies >= 1500) && (
+      {quickClashStats?.currentWinStreak >= 3 && (
         <div className="mb-3 p-2 rounded-lg bg-gradient-to-r from-blue-500/10 to-purple-500/10 border border-blue-500/20">
           <div className="flex items-center gap-2 text-xs">
-            {quickClashStats?.currentWinStreak >= 3 && (
-              <div className="flex items-center gap-1">
-                <Zap className="w-3 h-3 text-blue-400" />
-                <span className="text-blue-300 font-medium">
-                  {quickClashStats.currentWinStreak} Win Streak
-                </span>
-              </div>
-            )}
-            {quickClashTrophies >= 1500 && (
-              <div className="flex items-center gap-1">
-                <Trophy className="w-3 h-3 text-yellow-400" />
-                <span className="text-yellow-300 font-medium">
-                  Elite Player
-                </span>
-              </div>
-            )}
+            <div className="flex items-center gap-1">
+              <Zap className="w-3 h-3 text-blue-400" />
+              <span className="text-blue-300 font-medium">
+                {quickClashStats.currentWinStreak} Win Streak
+              </span>
+            </div>
           </div>
         </div>
       )}

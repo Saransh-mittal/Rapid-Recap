@@ -143,6 +143,26 @@ const ForgeReadingPhase = ({ sessionId, category, activePowerups = [], isSession
     p.type?.toLowerCase() === 'passive'
   )
 
+  // Shuffle options when question changes
+  const shuffledOptions = React.useMemo(() => {
+    if (!currentQuestion?.options) return []
+
+    // Create array of objects with original index
+    const optionsWithIndex = currentQuestion.options.map((opt, i) => ({
+      text: opt,
+      originalIndex: i
+    }))
+
+    // Shuffle using Fisher-Yates algorithm
+    for (let i = optionsWithIndex.length - 1; i > 0; i--) {
+      const j = Math.floor(Math.random() * (i + 1));
+      [optionsWithIndex[i], optionsWithIndex[j]] = [optionsWithIndex[j], optionsWithIndex[i]];
+    }
+
+    return optionsWithIndex
+  }, [currentQuestion?.sectionNumber, currentQuestion?.question]) // Re-shuffle when question changes
+
+
   useEffect(() => {
     let interval
     if (phase === 'question') {
@@ -876,20 +896,20 @@ const ForgeReadingPhase = ({ sessionId, category, activePowerups = [], isSession
 
                   {/* Options Grid */}
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-3 relative z-10">
-                    {currentQuestion.options.map((option, index) => {
-                      const isSelected = selectedAnswer === index
-                      const isCorrectAnswer = answerResult?.correctAnswer === index
+                    {shuffledOptions.map((optionObj, visualIndex) => {
+                      const { text: optionText, originalIndex } = optionObj
+                      const isSelected = selectedAnswer === originalIndex
+                      const isCorrectAnswer = answerResult?.correctAnswer === originalIndex
                       const showResult = phase === 'feedback'
-                      const isTimeout = phase === 'feedback' && selectedAnswer === null && answerResult === null; // Assuming isTimeout is true if feedback phase and no answer was selected
+                      const isTimeout = phase === 'feedback' && selectedAnswer === null && answerResult === null;
 
                       // Determine button state
                       let buttonBg = 'bg-white/8'
                       let buttonBorder = 'border-white/15'
 
-
-
                       // Disabled Options (Oracle's Eye)
-                      const isEliminated = disabledOptions.includes(index)
+                      // Check against ORIGINAL index
+                      const isEliminated = disabledOptions.includes(originalIndex)
                       if (isEliminated) {
                         buttonBg = 'bg-white/5 opacity-50'
                         buttonBorder = 'border-white/5'
@@ -933,8 +953,8 @@ const ForgeReadingPhase = ({ sessionId, category, activePowerups = [], isSession
 
                       return (
                         <motion.button
-                          key={index}
-                          onClick={() => !isEliminated && handleAnswerSubmit(index)}
+                          key={visualIndex}
+                          onClick={() => !isEliminated && handleAnswerSubmit(originalIndex)}
                           disabled={loading || phase === 'feedback' || isEliminated}
                           className={`
                             relative w-full text-left p-4 rounded-xl border transition-all duration-300 group flex items-center gap-5 cursor-pointer
@@ -959,7 +979,7 @@ const ForgeReadingPhase = ({ sessionId, category, activePowerups = [], isSession
                             />
                           )}
 
-                          {/* Option Label */}
+                          {/* Option Label - uses VISUAL index (A, B, C...) */}
                           <div
                             className={`
                               w-10 h-10 md:w-12 md:h-12 rounded-xl flex items-center justify-center font-bold shrink-0 transition-all
@@ -971,13 +991,13 @@ const ForgeReadingPhase = ({ sessionId, category, activePowerups = [], isSession
                               }
                             `}
                           >
-                            {String.fromCharCode(65 + index)}
+                            {String.fromCharCode(65 + visualIndex)}
                           </div>
 
                           {/* Option Text */}
                           <div className="flex-1">
                             <span className="text-white font-medium text-base md:text-lg">
-                              {option}
+                              {optionText}
                             </span>
                           </div>
 

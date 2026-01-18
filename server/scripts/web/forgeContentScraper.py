@@ -63,6 +63,36 @@ SOURCES = {
                 "type": "rss",
                 "url": "https://www.sciencedaily.com/rss/all.xml",
                 "subtype": "How Things Work"
+            },
+            {
+                "name": "Mental Floss",
+                "type": "rss",
+                "url": "https://www.mentalfloss.com/rss.xml",
+                "subtype": "Curious Facts"
+            },
+            {
+                "name": "Atlas Obscura",
+                "type": "rss",
+                "url": "https://www.atlasobscura.com/feeds/latest",
+                "subtype": "Hidden Wonders"
+            },
+            {
+                "name": "History Extra",
+                "type": "rss",
+                "url": "https://www.historyextra.com/feed/",
+                "subtype": "Historical Trivia"
+            },
+            {
+                "name": "Smithsonian Smart News",
+                "type": "rss",
+                "url": "https://www.smithsonianmag.com/rss/smart-news/",
+                "subtype": "History & Culture"
+            },
+            {
+                "name": "HistoryNet",
+                "type": "rss",
+                "url": "https://www.historynet.com/feed",
+                "subtype": "War & History"
             }
         ]
     },
@@ -93,6 +123,12 @@ SOURCES = {
                 "type": "rss",
                 "url": "https://www.newscientist.com/feed/home",
                 "subtype": "Science in Daily Life"
+            },
+            {
+                "name": "Phys.org",
+                "type": "rss",
+                "url": "https://phys.org/rss-feed/",
+                "subtype": "Physics & Tech"
             }
         ]
     },
@@ -155,10 +191,22 @@ SOURCES = {
                 "subtype": "Climate & Environment"
             },
             {
-                "name": "National Geographic Environment",
+                "name": "The Guardian Environment",
                 "type": "rss",
-                "url": "https://www.nationalgeographic.com/environment/feed/",
-                "subtype": "Climate & Environment"
+                "url": "https://www.theguardian.com/environment/rss",
+                "subtype": "Global Environment"
+            },
+             {
+                "name": "LiveScience Planet Earth",
+                "type": "rss",
+                "url": "https://www.livescience.com/feeds/planet-earth",
+                "subtype": "Geology & Nature"
+            },
+            {
+                "name": "Mongabay",
+                "type": "rss",
+                "url": "https://news.mongabay.com/feed/",
+                "subtype": "Nature & Conservation"
             }
         ]
     }
@@ -443,7 +491,7 @@ class ForgeScraper:
             'by_category': defaultdict(int)
         }
 
-    def fetch_rss(self, url: str, max_articles: int = 3) -> List[Dict]:
+    def fetch_rss(self, url: str, max_articles: int = 5) -> List[Dict]:
         """Fetch articles from RSS feed"""
         try:
             import socket

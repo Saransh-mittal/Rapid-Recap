@@ -255,25 +255,15 @@ const MiniProfileView = ({
           </div>
 
           {/* Performance Highlights */}
-          {(winStreak >= 3 || quickClashTrophies >= 1500) && (
+          {winStreak >= 3 && (
             <div className="mb-5 p-3 rounded-xl bg-gradient-to-r from-blue-500/10 to-purple-500/10 border border-blue-500/20">
               <div className="flex items-center gap-3 text-sm">
-                {winStreak >= 3 && (
-                  <div className="flex items-center gap-1">
-                    <Zap className="w-4 h-4 text-blue-400" />
-                    <span className="text-blue-300 font-semibold">
-                      {winStreak} Win Streak!
-                    </span>
-                  </div>
-                )}
-                {quickClashTrophies >= 1500 && (
-                  <div className="flex items-center gap-1">
-                    <Trophy className="w-4 h-4 text-yellow-400" />
-                    <span className="text-yellow-300 font-semibold">
-                      Elite Player
-                    </span>
-                  </div>
-                )}
+                <div className="flex items-center gap-1">
+                  <Zap className="w-4 h-4 text-blue-400" />
+                  <span className="text-blue-300 font-semibold">
+                    {winStreak} Win Streak!
+                  </span>
+                </div>
               </div>
             </div>
           )}

@@ -13,7 +13,7 @@ const { CostTracker } = require('../utils/costTracker')
 // CONFIGURATION
 // ============================================================================
 
-const BATCH_SIZE_LIMIT = 100 // Max articles per batch file
+const BATCH_SIZE_LIMIT = 200 // Max articles per batch file
 const TEMP_DIR = path.join(__dirname, '../temp_batch_files')
 
 if (!fs.existsSync(TEMP_DIR)) {

@@ -204,6 +204,7 @@ const QuickClashLeaderboardTab = () => {
           {/* PODIUM SECTION */}
           {showPodium && (
             <LeaderboardPodium
+              key="podium"
               topUsers={podiumUsers}
               currentUserId={currentUserId}
               onViewProfile={handleViewProfile}
@@ -211,10 +212,10 @@ const QuickClashLeaderboardTab = () => {
           )}
 
           {/* LIST SECTION */}
-          <div className="space-y-1">
-            {listUsers.map(user => (
+          <div className="space-y-1" key="list-container">
+            {listUsers.map((user, index) => (
               <LeaderboardCard
-                key={user._id}
+                key={user._id || `user-rank-${user.rank}-${index}`}
                 user={user}
                 currentUserId={currentUserId}
                 rank={user.rank}
@@ -225,7 +226,7 @@ const QuickClashLeaderboardTab = () => {
 
           {/* Next page loading indicator / Sentinel */}
           {(nextPageLoading || pagination.hasMore) && (
-            <div ref={loadMoreRef} className="flex justify-center py-6 min-h-[50px]">
+            <div key="loader-sentinel" ref={loadMoreRef} className="flex justify-center py-6 min-h-[50px]">
               {nextPageLoading && <Loader2 className="w-6 h-6 text-amber-500 animate-spin" />}
             </div>
           )}
@@ -233,6 +234,7 @@ const QuickClashLeaderboardTab = () => {
           {/* End message */}
           {!pagination.hasMore && leaderboardData.length > 0 && (
             <motion.div
+              key="end-message"
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
               transition={{ delay: 0.2, duration: 0.5 }}

@@ -253,40 +253,70 @@ const setupFriendsSocketHandlers = (io, socket, user) => {
         }`,
       )
 
-      // Only join if not already in the room
+      // ALWAYS join the rooms for this specific socket
+      socket.join('friends:global')
+      socket.join(`friends:${userId}`)
+
+      // Only perform global status updates if not already tracked as "in room"
+      // (Optimization to avoid unnecessary DB writes)
       if (!isUserInFriendsRoom(userId)) {
-        // Join the general friends room
-        socket.join('friends:global')
-
-        // Join user-specific friends room
-        socket.join(`friends:${userId}`)
-
         setFriendsRoomMembership(userId, true)
 
         console.log(`[FRIENDS_SOCKET] User ${userId} joined friends rooms`)
 
-        // Emit confirmation
-        socket.emit('friends:roomJoined', {
-          userId,
-          rooms: ['friends:global', `friends:${userId}`],
-          deviceFingerprint: deviceFingerprint
-            ? deviceFingerprint.substring(0, 8) + '...'
-            : null,
-        })
-
         // Update user's online status for friends
         await updateUserOnlineStatusForFriends(userId, true)
       } else {
-        console.log(`[FRIENDS_SOCKET] User ${userId} already in friends rooms`)
-        // Still emit confirmation for client state consistency
-        socket.emit('friends:roomJoined', {
-          userId,
-          rooms: ['friends:global', `friends:${userId}`],
-          deviceFingerprint: deviceFingerprint
-            ? deviceFingerprint.substring(0, 8) + '...'
-            : null,
-          alreadyJoined: true,
+        console.log(`[FRIENDS_SOCKET] User ${userId} already in friends rooms (secondary connection)`)
+      }
+
+      // Always emit confirmation for this socket
+      socket.emit('friends:roomJoined', {
+        userId,
+        rooms: ['friends:global', `friends:${userId}`],
+        deviceFingerprint: deviceFingerprint
+          ? deviceFingerprint.substring(0, 8) + '...'
+          : null,
+        alreadyJoined: isUserInFriendsRoom(userId),
+      })
+
+      // AUTOMATIC STATUS SYNC:
+      // When user joins/reconnects, immediately send them the live status of their friends.
+      // This fixes the "refresh" issue where the user loads stale DB data and misses the live state.
+      const userWithFriends = await User.findById(userId).select('friends').lean()
+
+      if (userWithFriends && userWithFriends.friends && userWithFriends.friends.length > 0) {
+        // Limit initial sync to 100 friends to prevent massive payload/delay
+        const friendIds = userWithFriends.friends.slice(0, 100).map(id => id.toString())
+        const onlineStatuses = {}
+
+        // Check status for each friend
+        // We use Promise.all for parallelism but with a small batch if needed
+        // (here we just map all 100 which is fine for in-memory checks)
+        await Promise.all(friendIds.map(async (friendId) => {
+          try {
+             // Use the robust check we already have
+             const isOnline = await isUserReallyOnline(friendId, io)
+             // Only send if online (to save bandwidth) or if we want to force correct state?
+             // Best to send the truth for all.
+             onlineStatuses[friendId] = {
+               isOnline,
+               lastChecked: new Date().toISOString()
+             }
+          } catch (err) {
+            console.error(`[FRIENDS_SOCKET] Error checking status for ${friendId}:`, err)
+          }
+        }))
+
+        // Emit the statuses back to the user
+        socket.emit('friends:onlineStatusResponse', {
+           userId,
+           statuses: onlineStatuses,
+           timestamp: new Date().toISOString(),
+           isInitialSync: true
         })
+
+        console.log(`[FRIENDS_SOCKET] Synced online status of ${friendIds.length} friends for user ${userId}`)
       }
     } catch (error) {
       console.error(`[FRIENDS_SOCKET] Error in joinRoom:`, error)
@@ -406,11 +436,21 @@ const setupFriendsSocketHandlers = (io, socket, user) => {
   // Handle disconnect - cleanup friends room membership
   socket.on('disconnect', async () => {
     try {
-      setFriendsRoomMembership(userId, false)
-      await updateUserOnlineStatusForFriends(userId, false)
-      console.log(
-        `[FRIENDS_SOCKET] Socket ${socketId} disconnected from friends for user ${userId}`,
-      )
+      // Check if user has other active sockets in friends room
+      const friendsRoom = io.sockets.adapter.rooms.get(`friends:${userId}`)
+      const hasRemainingConnections = friendsRoom && friendsRoom.size > 0
+
+      if (!hasRemainingConnections) {
+        setFriendsRoomMembership(userId, false)
+        await updateUserOnlineStatusForFriends(userId, false)
+        console.log(
+          `[FRIENDS_SOCKET] Socket ${socketId} disconnected. User ${userId} goes offline (no remaining connections).`,
+        )
+      } else {
+        console.log(
+          `[FRIENDS_SOCKET] Socket ${socketId} disconnected. User ${userId} stays online (${friendsRoom.size} connections remaining).`,
+        )
+      }
     } catch (error) {
       console.error(`[FRIENDS_SOCKET] Error handling disconnect:`, error)
     }

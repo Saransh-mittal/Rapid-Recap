@@ -286,24 +286,15 @@ const SearchUserCard = ({
       </div>
 
       {/* Performance Highlight for Elite Users */}
-      {(user.quickClashStats?.currentWinStreak >= 3 ||
-        user.quickClashTrophies >= 1500) && (
+      {(user.quickClashStats?.currentWinStreak >= 3) && (
         <div className="mt-3 pt-2 border-t border-slate-700/30">
           <div className="flex items-center gap-2 text-xs">
-            {user.quickClashStats?.currentWinStreak >= 3 && (
-              <div className="flex items-center gap-1 px-2 py-0.5 bg-blue-500/10 text-blue-400 rounded border border-blue-500/20">
-                <Zap className="w-3 h-3" />
-                <span className="font-medium">
-                  {user.quickClashStats.currentWinStreak} Win Streak
-                </span>
-              </div>
-            )}
-            {user.quickClashTrophies >= 1500 && (
-              <div className="flex items-center gap-1 px-2 py-0.5 bg-yellow-500/10 text-yellow-400 rounded border border-yellow-500/20">
-                <Trophy className="w-3 h-3" />
-                <span className="font-medium">Elite Player</span>
-              </div>
-            )}
+            <div className="flex items-center gap-1 px-2 py-0.5 bg-blue-500/10 text-blue-400 rounded border border-blue-500/20">
+              <Zap className="w-3 h-3" />
+              <span className="font-medium">
+                {user.quickClashStats.currentWinStreak} Win Streak
+              </span>
+            </div>
           </div>
         </div>
       )}
