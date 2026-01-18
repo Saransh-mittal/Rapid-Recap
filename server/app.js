@@ -207,7 +207,7 @@ app.use(errorHandler)
 // const { runCompleteWorkflow } = require('./scripts/runCompleteForgeWorkflow')
 // runCompleteWorkflow({waitForCompletion:true,skipScraping:false,skipProcessing:false})
 // require('./utils/deletion.utils/removeForgeData.del')
-// require('./scheduler/setupCronJobs')
+require('./scheduler/setupCronJobs')
 
 const PORT = process.env.PORT
 authRouter.use(cookieParser())
