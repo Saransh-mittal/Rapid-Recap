@@ -449,6 +449,47 @@ const getBattle = asyncHandler(async (req, res) => {
 })
 
 /**
+ * @desc    Get active battle for current player (user or session)
+ * @route   GET /api/play/battle/active
+ * @access  Public (requires flexAuth for session/user context)
+ */
+const getActiveBattle = asyncHandler(async (req, res) => {
+  // Support both authenticated users (req.user) and session players (req.sessionPlayer)
+  const userId = req.user?._id
+  const sessionId = req.headers['x-session-id'] // Using raw header for sessionId instead of req.sessionPlayer if needed, or rely on service logic
+
+  if (!userId && !sessionId) {
+    return res.status(401).json({ error: 'Authentication required' })
+  }
+
+  try {
+    const activeBattle = await playSessionService.getActiveBattleForPlayer({
+      userId,
+      sessionId,
+    })
+
+    if (activeBattle) {
+      res.status(200).json({
+        success: true,
+        battleId: activeBattle.battleId,
+        teamA: activeBattle.teamA,
+        teamB: activeBattle.teamB,
+        status: activeBattle.status,
+      })
+    } else {
+      res.status(200).json({
+        success: true,
+        active: false,
+        message: 'No active battle found',
+      })
+    }
+  } catch (error) {
+    console.error('Get active battle error:', error)
+    res.status(500).json({ error: error.message })
+  }
+})
+
+/**
  * @desc    Select category for battle (session-aware)
  * @route   POST /api/play/battle/:battleId/select-category
  * @access  Requires flexAuth
@@ -1176,6 +1217,7 @@ module.exports = {
   joinMatchmaking,
   getTeamInfo,
   getBattle,
+  getActiveBattle,
   selectCategory,
   deselectCategory,
   beginChallenge,
@@ -1201,5 +1243,6 @@ module.exports = {
   removeTeamMember,
   // Streak info
   getStreak,
+  getActiveBattle,
 }
 

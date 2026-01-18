@@ -205,9 +205,17 @@ const cleanupFailedBattleMatchmaking = async ({
  */
 const getForgeArticle = async ({ category, session }) => {
   try {
-    // Find published forge articles for this category
+    // Find published forge articles for this category that have ALL required content:
+    // 1. Status is published
+    // 2. Has at least 5 content sections (full article) -> 'sections.4' exists
+    // 3. Has normal quizzes (MCQs) in sections -> Check first section as proxy or rely on validation
+    // 4. Has Quick Clash quiz with at least 5 questions -> 'quickClashQuiz.questions.4' exists
     const forgeArticles = await ForgeArticle.find({
       category: category,
+      status: 'published',
+      'sections.4': { $exists: true }, // Ensure 5 sections
+      'sections.0.mcq.question': { $exists: true }, // Ensure normal quiz exists
+      'quickClashQuiz.questions.4': { $exists: true } // Ensure 5 QC questions
     }).session(session)
 
     // If no forge articles available, return null
@@ -1130,6 +1138,23 @@ const createTeamBattle = makeRetryable(
 
         // Emit event after transaction is complete
         console.log(`[TeamBattle] Setting up event emission`)
+
+        // Emit battle ready event to all members
+        // This ensures teammates get the "Battle Ready" screen
+        setTimeout(() => {
+          globalEmitter.emit('quickClash:teamBattleReady', {
+            battleId: teamBattle._id,
+            teamA: teamAId,
+            teamB: teamBId,
+            winProbability: teamBattle.winProbability,
+            teamAMembers: teamAMemberIds,
+            teamBMembers: teamBMemberIds,
+            allMembers: allMemberIds,
+          })
+          console.log(
+            `[TeamBattle] Emitted quickClash:teamBattleReady to ${allMemberIds.length} members`,
+          )
+        }, 0)
 
         console.log(
           `[TeamBattle] ===== TEAM BATTLE CREATION COMPLETED SUCCESSFULLY =====`,

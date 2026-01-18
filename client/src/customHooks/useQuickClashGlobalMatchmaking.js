@@ -273,7 +273,7 @@ const useQuickClashGlobalMatchmaking = () => {
         const result = await dispatch(
           joinTeamMatchmaking({ teamId, teamName: currentTeamName }),
         ).unwrap()
-        notificationManager.matchmaking(t('Team Joined Matchmaking'), t('Looking for opponents...'))
+        notificationManager.matchmaking(t('Team Joined Matchmaking'), t('Your team is searching for opponents'))
         return { ...result, teamName: currentTeamName }
       } catch (error) {
         console.error('Error joining with team:', error)
@@ -289,6 +289,8 @@ const useQuickClashGlobalMatchmaking = () => {
               t('Team Member in Matchmaking'),
               t(`${memberName} is already in a matchmaking queue. They need to leave before joining with this team.`),
             )
+            // Fix: Return early to avoid falling through to the throw error
+            return { alreadyInMatchmaking: true, teamName: currentTeamName, memberName }
           } else {
             // Update state to show we're in matchmaking
             dispatch(updateMatchmakingState({

@@ -3,6 +3,8 @@
 const PlaySession = require('../model/quickClashSchemas/playSessionSchema')
 const QuickClashTeam = require('../model/quickClashSchemas/quickClashTeamSchema')
 const User = require('../model/userSchema')
+const quickClashTeamController = require('../controllers/quickClashTeamController')
+const quickClashTeamBattleService = require('./quickClashServices/quickClashTeamBattleService')
 const jwt = require('jsonwebtoken')
 const bcrypt = require('bcryptjs')
 const crypto = require('crypto')
@@ -898,6 +900,49 @@ const removeMemberAsSession = async ({ teamId, leaderSessionId, memberSessionPla
   return teamInfo
 }
 
+/**
+ * Get active battle for player (user or session player)
+ * @param {Object} params
+ * @param {string} [params.userId]
+ * @param {string} [params.sessionId]
+ * @returns {Promise<Object|null>} Active battle ID and team info or null
+ */
+const getActiveBattleForPlayer = async ({ userId, sessionId }) => {
+  let sessionPlayerId = null
+
+  if (sessionId) {
+    const session = await PlaySession.findOne({ sessionId })
+    if (session) {
+      sessionPlayerId = session._id
+    }
+  }
+
+  if (!userId && !sessionPlayerId) {
+    return null
+  }
+
+  // Reuse the existing service to find active battles
+  // We only need the first one if multiple exist (though ideally only one active battle per user)
+  const { battles } = await quickClashTeamBattleService.getUserTeamBattles({
+    userId,
+    sessionPlayerId,
+    status: 'active',
+    limit: 1,
+  })
+
+  if (battles && battles.length > 0) {
+    const battle = battles[0]
+    return {
+      battleId: battle._id,
+      teamA: battle.teamA,
+      teamB: battle.teamB,
+      status: battle.status,
+    }
+  }
+
+  return null
+}
+
 module.exports = {
   createSession,
   createTeamForSession,
@@ -913,4 +958,5 @@ module.exports = {
   migrateSessionTeams,
   recalculateUserStats,
   removeMemberAsSession,
+  getActiveBattleForPlayer,
 }

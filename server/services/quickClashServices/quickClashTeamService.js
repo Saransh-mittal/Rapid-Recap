@@ -126,8 +126,9 @@ const joinTeamByCode = async ({ teamCode, userId }) => {
       }
 
       // Check if user is already in the team
+      // Guard: member.user may be null for session player members
       const existingMember = team.members.find(
-        member => member.user.toString() === userId.toString(),
+        member => member.user && member.user.toString() === userId.toString(),
       )
       if (existingMember) {
         throw new Error('You are already a member of this team')
@@ -319,10 +320,11 @@ const respondToInvitation = async ({ teamId, userId, accept }) => {
  * Leave team
  * @param {Object} params - Parameters
  * @param {string} params.teamId - Team ID
- * @param {string} params.userId - User ID
+ * @param {string} params.playerId - Player ID (user or session player)
+ * @param {boolean} params.isSessionPlayer - Whether the player is a session player
  * @returns {Promise<Object>} Updated team or null if dissolved
  */
-const leaveTeam = async ({ teamId, userId }) => {
+const leaveTeam = async ({ teamId, playerId, isSessionPlayer = false }) => {
   const session = await mongoose.startSession()
 
   try {
@@ -338,10 +340,17 @@ const leaveTeam = async ({ teamId, userId }) => {
         throw new Error('Cannot leave team while in a match')
       }
 
-      // Find the member
-      const memberIndex = team.members.findIndex(
-        member => member.user.toString() === userId.toString(),
-      )
+      // Find the member - check both user and sessionPlayer fields
+      let memberIndex = -1
+      if (isSessionPlayer) {
+        memberIndex = team.members.findIndex(
+          member => member.sessionPlayer && member.sessionPlayer.toString() === playerId.toString(),
+        )
+      } else {
+        memberIndex = team.members.findIndex(
+          member => member.user && member.user.toString() === playerId.toString(),
+        )
+      }
 
       if (memberIndex === -1) {
         throw new Error('Not a member of this team')
@@ -376,20 +385,36 @@ const leaveTeam = async ({ teamId, userId }) => {
 
       await team.save({ session })
 
-      const user = await User.findById(userId).select('_id name inGameName ')
-      if (!user) {
-        throw new Error('User not found')
+      // Get player info for events/notifications
+      let playerName = 'Player'
+      let playerInGameName = 'Player'
+
+      if (isSessionPlayer) {
+        // For session players, get info from the SessionPlayer model
+        const SessionPlayer = require('../../model/quickClashSchemas/sessionPlayerSchema')
+        const sessionPlayer = await SessionPlayer.findById(playerId).select('_id inGameName').session(session)
+        if (sessionPlayer) {
+          playerName = sessionPlayer.inGameName || 'Session Player'
+          playerInGameName = sessionPlayer.inGameName || 'Session Player'
+        }
+      } else {
+        const user = await User.findById(playerId).select('_id name inGameName').session(session)
+        if (user) {
+          playerName = user.name
+          playerInGameName = user.inGameName
+        }
       }
+
       // Emit event
       setTimeout(async () => {
         globalEmitter.emit('quickClash:teamMemberLeft', {
           team: team._id,
-          user: userId,
-          userName: user.name,
-          userInGameName: user.inGameName,
+          user: playerId,
+          userName: playerName,
+          userInGameName: playerInGameName,
         })
 
-        // Send notifications to remaining team members
+        // Send notifications to remaining team members (only for real users, not session players)
         try {
           const teamWithMembers = await QuickClashTeam.findById(team._id)
             .populate('members.user', '_id name inGameName')
@@ -398,9 +423,9 @@ const leaveTeam = async ({ teamId, userId }) => {
           if (teamWithMembers && teamWithMembers.members) {
             await notifyTeamMemberLeft({
               teamId: team._id,
-              userId: userId.toString(),
-              userName: user.name,
-              userInGameName: user.inGameName,
+              userId: playerId.toString(),
+              userName: playerName,
+              userInGameName: playerInGameName,
               teamName: team.name || 'Your Squad',
               teamMembers: teamWithMembers.members,
             })

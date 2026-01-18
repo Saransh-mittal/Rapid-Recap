@@ -9,7 +9,7 @@ const {
   joinTeam,
   inviteUserToTeam,
   respondToTeamInvitation,
-  leaveTeamController,
+  // NOTE: leaveTeamController is now handled in parent quickClashRoutes.js with flexAuth
   updateTeamMemberStatus,
   getMyTeams,
   removeMemberFromTeam,
@@ -40,7 +40,7 @@ router.get('/team/code/:teamCode', getTeamByCodeController)
 router.post('/team/join', joinTeam)
 router.post('/team/:teamId/invite', inviteUserToTeam)
 router.post('/team/:teamId/respond', respondToTeamInvitation)
-router.post('/team/:teamId/leave', leaveTeamController)
+// NOTE: /team/:teamId/leave is now handled in parent quickClashRoutes.js with flexAuth (session-compatible)
 router.post('/team/:teamId/status', updateTeamMemberStatus)
 router.get('/teams', getMyTeams)
 router.post('/team/:teamId/remove', removeMemberFromTeam)

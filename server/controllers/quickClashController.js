@@ -771,10 +771,19 @@ const getQuickClashLeaderboard = asyncHandler(async (req, res) => {
   const { page = 1, limit = 20, search = '' } = req.query
 
   try {
+    // Get current user ID if authenticated
+    let currentUserId = null
+    if (req.user && req.user._id) {
+      currentUserId = req.user._id
+    } else if (req.sessionPlayer && req.sessionPlayer.userId) {
+      currentUserId = req.sessionPlayer.userId
+    }
+
     const leaderboardData = await getLeaderboard({
       page: parseInt(page),
       limit: parseInt(limit),
       searchQuery: search,
+      currentUserId,
     })
 
     res.status(200).json({

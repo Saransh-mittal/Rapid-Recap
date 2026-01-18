@@ -406,6 +406,34 @@ const setupTeamBattleEvents = (io, notifyUser) => {
   )
 
   // ==========================================
+  // POWERUP EVENTS
+  // ==========================================
+
+  globalEmitter.on('quickClash:powerupDonated', data => {
+    if (!data.teamId) return
+    console.log(
+      `[QC_BATTLE] SOCKET: Powerup donated by ${data.userId} in team ${data.teamId}`
+    )
+    notifyTeamMembers(data.teamId, 'quickClash:powerupDonated', data)
+  })
+
+  globalEmitter.on('quickClash:powerupEquipped', data => {
+    if (!data.teamId) return
+    console.log(
+      `[QC_BATTLE] SOCKET: Powerup equipped by ${data.userId} in team ${data.teamId}`
+    )
+    notifyTeamMembers(data.teamId, 'quickClash:powerupEquipped', data)
+  })
+
+  globalEmitter.on('quickClash:powerupUnequipped', data => {
+    if (!data.teamId) return
+    console.log(
+      `[QC_BATTLE] SOCKET: Powerup unequipped by ${data.userId} in team ${data.teamId}`
+    )
+    notifyTeamMembers(data.teamId, 'quickClash:powerupUnequipped', data)
+  })
+
+  // ==========================================
   // BATTLE COMPLETION EVENTS
   // ==========================================
 

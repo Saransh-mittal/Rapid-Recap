@@ -238,6 +238,7 @@ const joinTeamMatchmaking = async ({
           isSessionPlayer: !!member.sessionPlayer,
           sourceTeam: member.sourceTeam,
           originalTeam: member.originalTeam,
+          role: member.role // Added role for client-side leader checks
         })),
         formationInfo: team.formationInfo,
         timestamp: new Date(),
@@ -257,6 +258,7 @@ const joinTeamMatchmaking = async ({
           sessionPlayerId: member.sessionPlayer?._id?.toString() || member.sessionPlayer?.toString(),
           name: member.user?.name || member.user?.inGameName || member.sessionPlayer?.inGameName || 'Player',
           isSessionPlayer: !!member.sessionPlayer,
+          role: member.role // Added role for client-side leader checks
         })),
         preferredCategories: [],
         preferredCategories: [],
@@ -1400,7 +1402,7 @@ const cleanupAutoFormedTeam = async ({
 
         // Delete the matchmaking entry in any case
         await QuickClashGlobalMatchmaking.findOneAndDelete({
-          user: userId,
+          user: memberId,
         }).session(session)
       }
       // If they were a solo player, reset them to available
@@ -1424,7 +1426,7 @@ const cleanupAutoFormedTeam = async ({
     }
 
     // Clean up player state
-    cleanupPlayerState(userId)
+    cleanupPlayerState(memberId)
   }
 
   const teamMemberIds = team.members.map(member => getMemberId(member)).filter(id => id !== null)

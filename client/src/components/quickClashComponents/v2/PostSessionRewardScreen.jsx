@@ -305,16 +305,17 @@ const PostSessionRewardScreen = memo(({
             ))}
           </div>
 
-          <motion.div
+            <motion.div
             initial={{ scale: 0.6, opacity: 0, y: 60 }}
             animate={{ scale: 1, opacity: 1, y: 0 }}
             exit={{ scale: 0.6, opacity: 0, y: 60 }}
             transition={{ type: 'spring', damping: 22, stiffness: 350 }}
-            className="relative w-full max-w-sm rounded-3xl overflow-hidden"
+            className="relative w-full max-w-sm rounded-3xl overflow-hidden flex flex-col"
             style={{
               background: 'linear-gradient(165deg, rgba(15, 23, 42, 0.98) 0%, rgba(30, 27, 75, 0.98) 50%, rgba(20, 20, 50, 0.98) 100%)',
               border: '1px solid rgba(255, 255, 255, 0.15)',
               boxShadow: '0 30px 80px -15px rgba(0, 0, 0, 0.7), 0 0 120px rgba(251, 191, 36, 0.15), inset 0 1px 0 rgba(255, 255, 255, 0.1)',
+              maxHeight: '90vh',
             }}
             onClick={(e) => e.stopPropagation()}
           >
@@ -341,8 +342,10 @@ const PostSessionRewardScreen = memo(({
 
             {showContent && (
               <>
+                {/* Scrollable Content Area */}
+                <div className="flex-1 overflow-y-auto overflow-x-hidden" style={{ scrollbarWidth: 'none', msOverflowStyle: 'none', WebkitOverflowScrolling: 'touch' }}>
                 {/* Header - First Win Celebration */}
-                <div className="pt-8 pb-3 px-6 text-center relative">
+                <div className="pt-5 pb-2 px-6 text-center relative">
                   {/* Background glow effect */}
                   <motion.div
                     className="absolute inset-0"
@@ -358,28 +361,28 @@ const PostSessionRewardScreen = memo(({
                     initial={{ y: -30, opacity: 0 }}
                     animate={{ y: 0, opacity: 1 }}
                     transition={{ delay: 0.1, type: 'spring' }}
-                    className="mb-4"
+                    className="mb-2"
                   >
-                    <div className="flex items-center justify-center gap-2 mb-1">
+                    <div className="flex items-center justify-center gap-2 mb-0.5">
                       <motion.span
-                        className="text-3xl"
+                        className="text-2xl"
                         animate={{ rotate: [0, 10, -10, 0], scale: [1, 1.2, 1] }}
                         transition={{ duration: 0.6, delay: 0.3 }}
                       >
                         {isFirstSession ? '🎉' : '⚡'}
                       </motion.span>
-                      <h2 className="text-2xl font-black text-white tracking-tight">
+                      <h2 className="text-xl font-black text-white tracking-tight">
                         {isFirstSession ? 'FIRST WIN!' : 'GREAT MATCH!'}
                       </h2>
                       <motion.span
-                        className="text-3xl"
+                        className="text-2xl"
                         animate={{ rotate: [0, -10, 10, 0], scale: [1, 1.2, 1] }}
                         transition={{ duration: 0.6, delay: 0.4 }}
                       >
                         {isFirstSession ? '🎉' : '⚡'}
                       </motion.span>
                     </div>
-                    <p className="text-sm text-white/60">
+                    <p className="text-xs text-white/60">
                       {isFirstSession ? "You're crushing it!" : 'Keep the momentum!'}
                     </p>
                   </motion.div>
@@ -391,20 +394,20 @@ const PostSessionRewardScreen = memo(({
                     transition={{ delay: 0.2, type: 'spring', damping: 12 }}
                     className="relative"
                   >
-                    <div className="text-7xl font-black bg-gradient-to-br from-amber-300 via-amber-400 to-orange-500 bg-clip-text text-transparent drop-shadow-lg">
+                    <div className="text-5xl font-black bg-gradient-to-br from-amber-300 via-amber-400 to-orange-500 bg-clip-text text-transparent drop-shadow-lg">
                       {score}
                     </div>
-                    <p className="text-sm text-white/40 mt-0.5">points scored</p>
+                    <p className="text-xs text-white/40 mt-0.5">points scored</p>
 
                     {/* Percentile Badge */}
                     <motion.div
                       initial={{ opacity: 0, scale: 0.8 }}
                       animate={{ opacity: 1, scale: 1 }}
                       transition={{ delay: 0.5, type: 'spring' }}
-                      className="inline-flex items-center gap-1.5 mt-3 px-4 py-2 rounded-full bg-gradient-to-r from-amber-500/20 to-orange-500/20 border border-amber-500/30"
+                      className="inline-flex items-center gap-1.5 mt-2 px-3 py-1.5 rounded-full bg-gradient-to-r from-amber-500/20 to-orange-500/20 border border-amber-500/30"
                     >
-                      <TrendingUp className="w-4 h-4 text-amber-400" />
-                      <span className="text-sm font-bold text-amber-400">
+                      <TrendingUp className="w-3.5 h-3.5 text-amber-400" />
+                      <span className="text-xs font-bold text-amber-400">
                         TOP {percentileRank}% 🔥
                       </span>
                     </motion.div>
@@ -412,12 +415,12 @@ const PostSessionRewardScreen = memo(({
                 </div>
 
                 {/* Dual-Phase Accuracy Rings */}
-                <div className="px-6 pb-3">
+                <div className="px-6 pb-2">
                   <motion.div
                     initial={{ opacity: 0, y: 20 }}
                     animate={{ opacity: 1, y: 0 }}
                     transition={{ delay: 0.5 }}
-                    className="flex justify-center gap-8"
+                    className="flex justify-center gap-6"
                   >
                     <AccuracyRing
                       label="Forge"
@@ -426,7 +429,7 @@ const PostSessionRewardScreen = memo(({
                       percentage={forgeAccuracy.percentage}
                       color="#f59e0b"
                       icon={Hammer}
-                      size={64}
+                      size={52}
                     />
                     <AccuracyRing
                       label="Quiz"
@@ -435,141 +438,107 @@ const PostSessionRewardScreen = memo(({
                       percentage={quizAccuracy.percentage}
                       color="#06b6d4"
                       icon={HelpCircle}
-                      size={64}
+                      size={52}
                     />
                   </motion.div>
                 </div>
 
-                {/* Coins Earned - Compact */}
-                <div className="px-6 pb-3">
-                  <motion.div
-                    initial={{ opacity: 0, y: 20 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    transition={{ delay: 0.6 }}
-                    className="p-3 rounded-xl flex items-center justify-between"
-                    style={{
-                      background: 'linear-gradient(135deg, rgba(251, 191, 36, 0.12) 0%, rgba(245, 158, 11, 0.08) 100%)',
-                      border: '1px solid rgba(251, 191, 36, 0.2)',
-                    }}
-                  >
-                    <div className="flex items-center gap-2">
-                      <Coins className="w-5 h-5 text-amber-400" />
-                      <span className="text-sm font-semibold text-amber-400 uppercase tracking-wide">Coins Earned</span>
-                      {streakMultiplier > 1 && (
-                        <span className="text-xs font-bold text-orange-400 px-1.5 py-0.5 rounded bg-orange-500/20">×{streakMultiplier}</span>
-                      )}
-                    </div>
-                    <div className="flex items-center gap-1">
-                      <span className="text-xl font-black text-amber-400">
-                        <AnimatedNumber value={totalCoins} duration={1000} />
-                      </span>
-                    </div>
-                  </motion.div>
-                </div>
-
-                {/* XP Earned Section - Only for authenticated users */}
-                {xpReward && xpReward.totalXP > 0 && (
-                  <div className="px-6 pb-3">
+                {/* Merged Stats Zone */}
+                <div className="px-6 pb-2 space-y-2">
+                  {/* Rewards Grid */}
+                  <div className="grid grid-cols-2 gap-2">
+                    {/* Coins */}
                     <motion.div
                       initial={{ opacity: 0, y: 20 }}
                       animate={{ opacity: 1, y: 0 }}
-                      transition={{ delay: 0.65 }}
-                      className="p-3 rounded-xl"
+                      transition={{ delay: 0.6 }}
+                      className={`p-2.5 rounded-xl flex flex-col justify-center items-center text-center ${!xpReward || xpReward.totalXP === 0 ? 'col-span-2 flex-row gap-4' : ''}`}
                       style={{
-                        background: 'linear-gradient(135deg, rgba(168, 85, 247, 0.12) 0%, rgba(139, 92, 246, 0.08) 100%)',
-                        border: '1px solid rgba(168, 85, 247, 0.2)',
+                        background: 'linear-gradient(135deg, rgba(251, 191, 36, 0.12) 0%, rgba(245, 158, 11, 0.08) 100%)',
+                        border: '1px solid rgba(251, 191, 36, 0.2)',
                       }}
                     >
-                      <div className="flex items-center justify-between mb-2">
-                        <div className="flex items-center gap-2">
-                          <Star className="w-5 h-5 text-purple-400" />
-                          <span className="text-sm font-semibold text-purple-400 uppercase tracking-wide">XP Earned</span>
-                          {xpReward.levelUp && (
-                            <motion.span
-                              initial={{ scale: 0 }}
-                              animate={{ scale: 1 }}
-                              className="text-xs font-bold text-yellow-400 px-1.5 py-0.5 rounded bg-yellow-500/20"
-                            >
-                              LEVEL UP! 🎉
-                            </motion.span>
-                          )}
-                        </div>
-                        <div className="flex items-center gap-1">
-                          <span className="text-xl font-black text-purple-400">
-                            +<AnimatedNumber value={xpReward.totalXP} duration={1000} />
-                          </span>
-                        </div>
+                      <div className="flex items-center gap-1.5 mb-1">
+                        <Coins className="w-4 h-4 text-amber-400" />
+                        <span className="text-xs font-semibold text-amber-400 uppercase">Coins</span>
+                        {streakMultiplier > 1 && (
+                          <span className="text-[10px] font-bold text-orange-400 px-1 py-0.5 rounded bg-orange-500/20">×{streakMultiplier}</span>
+                        )}
                       </div>
-                      {/* XP Progress Bar */}
-                      <div className="mt-2">
-                        <div className="flex items-center justify-between text-xs text-white/50 mb-1">
-                          <span>Level {xpReward.currentLevel}</span>
-                          <span>{xpReward.xpProgress}/{xpReward.xpForNextLevel} XP</span>
-                        </div>
-                        <div className="h-2 bg-white/10 rounded-full overflow-hidden">
-                          <motion.div
-                            className="h-full bg-gradient-to-r from-purple-500 to-violet-400 rounded-full"
-                            initial={{ width: 0 }}
-                            animate={{ width: `${xpReward.xpProgressPercentage}%` }}
-                            transition={{ delay: 0.8, duration: 0.8, ease: 'easeOut' }}
-                          />
-                        </div>
-                      </div>
+                      <span className="text-2xl font-black text-amber-400 leading-none">
+                        <AnimatedNumber value={totalCoins} duration={1000} />
+                      </span>
                     </motion.div>
-                  </div>
-                )}
 
-                {/* Streak Teaser */}
-                <div className="px-6 pb-3">
+                    {/* XP - only if exists */}
+                    {xpReward && xpReward.totalXP > 0 && (
+                      <motion.div
+                        initial={{ opacity: 0, y: 20 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        transition={{ delay: 0.65 }}
+                        className="p-2.5 rounded-xl flex flex-col justify-center gap-1"
+                        style={{
+                          background: 'linear-gradient(135deg, rgba(168, 85, 247, 0.12) 0%, rgba(139, 92, 246, 0.08) 100%)',
+                          border: '1px solid rgba(168, 85, 247, 0.2)',
+                        }}
+                      >
+                         <div className="flex items-center justify-between">
+                            <div className="flex items-center gap-1.5">
+                              <Star className="w-3.5 h-3.5 text-purple-400" />
+                              <span className="text-xs font-semibold text-purple-400 uppercase">XP</span>
+                            </div>
+                            <span className="text-lg font-black text-purple-400">+<AnimatedNumber value={xpReward.totalXP} duration={1000} /></span>
+                         </div>
+                         {/* Mini Progress */}
+                         <div className="w-full h-1.5 bg-white/10 rounded-full overflow-hidden">
+                            <motion.div
+                              className="h-full bg-gradient-to-r from-purple-500 to-violet-400"
+                              initial={{ width: 0 }}
+                              animate={{ width: `${xpReward.xpProgressPercentage}%` }}
+                              transition={{ delay: 0.8, duration: 0.8 }}
+                            />
+                         </div>
+                      </motion.div>
+                    )}
+                  </div>
+
+                  {/* Merged Streak + Timer Footer */}
                   <motion.div
-                    initial={{ opacity: 0, x: -20 }}
-                    animate={{ opacity: 1, x: 0 }}
+                    initial={{ opacity: 0, y: 10 }}
+                    animate={{ opacity: 1, y: 0 }}
                     transition={{ delay: 0.8 }}
-                    className="p-3 rounded-xl flex items-center gap-3"
-                    style={{
-                      background: 'linear-gradient(135deg, rgba(249, 115, 22, 0.12) 0%, rgba(234, 88, 12, 0.08) 100%)',
-                      border: '1px solid rgba(249, 115, 22, 0.2)',
-                    }}
+                    className="flex items-center justify-between p-2.5 rounded-xl bg-white/5 border border-white/5"
                   >
-                    <motion.div
-                      className="w-10 h-10 rounded-full bg-orange-500/20 flex items-center justify-center"
-                      animate={{ scale: [1, 1.1, 1] }}
-                      transition={{ duration: 1.5, repeat: Infinity }}
-                    >
-                      <span className="text-xl">🔥</span>
-                    </motion.div>
-                    <div className="flex-1">
-                      <span className="text-sm font-bold text-orange-400">Day {streakDay} Streak Started!</span>
-                      <p className="text-xs text-white/50">
-                        Play tomorrow for {nextMilestoneMultiplier} coin bonus
-                      </p>
+                    {/* Streak Compact */}
+                    <div className="flex items-center gap-2.5">
+                      <div className="w-8 h-8 rounded-full bg-orange-500/20 flex items-center justify-center shrink-0">
+                         <span className="text-base">🔥</span>
+                      </div>
+                      <div className="flex flex-col">
+                        <span className="text-xs font-bold text-orange-400">Day {streakDay}</span>
+                        <span className="text-[10px] text-white/50">Next: {nextMilestoneMultiplier} bonus</span>
+                      </div>
                     </div>
-                    <Gift className="w-5 h-5 text-orange-400/50" />
+
+                    {/* Timer Compact */}
+                    {timeRemaining && (
+                       <div className="flex items-center gap-2 pl-3 border-l border-white/10">
+                          <div className="relative flex items-center justify-center w-2 h-2">
+                             <div className="absolute w-full h-full bg-red-500 rounded-full animate-ping opacity-75"></div>
+                             <div className="relative w-1.5 h-1.5 bg-red-500 rounded-full"></div>
+                          </div>
+                          <div className="flex flex-col items-end">
+                             <span className="text-[10px] text-white/40 uppercase font-bold tracking-wider">Ends in</span>
+                             <span className="text-xs font-bold text-white tabular-nums">{timeRemaining}</span>
+                          </div>
+                       </div>
+                    )}
                   </motion.div>
                 </div>
+                </div>
 
-                {/* Battle ETA - Updated Design */}
-                {timeRemaining && (
-                  <motion.div
-                    initial={{ opacity: 0 }}
-                    animate={{ opacity: 1 }}
-                    transition={{ delay: 1.0 }}
-                    className="px-6 pb-2"
-                  >
-                     <div className="flex items-center justify-center gap-2 p-2 rounded-lg bg-white/5 border border-white/5">
-                        <div className="relative flex items-center justify-center w-2 h-2">
-                           <div className="absolute w-full h-full bg-red-500 rounded-full animate-ping opacity-75"></div>
-                           <div className="relative w-1.5 h-1.5 bg-red-500 rounded-full"></div>
-                        </div>
-                        <span className="text-xs text-white/80 font-medium">
-                          Battle ending in <span className="text-white font-bold">{timeRemaining}</span>
-                        </span>
-                     </div>
-                  </motion.div>
-                )}
-
-                {/* CTA Buttons - Play Again is PRIMARY */}
-                <div className="px-6 pb-6 pt-2 space-y-2.5">
+                {/* CTA Buttons - Play Again is PRIMARY - Fixed at bottom */}
+                <div className="flex-shrink-0 px-6 pb-5 pt-2 space-y-2" style={{ background: 'linear-gradient(to top, rgba(15, 23, 42, 0.98) 70%, transparent)' }}>
                   {/* Play Next Match - PRIMARY CTA (Conversion Focus) */}
                   <motion.button
                     initial={{ opacity: 0, y: 30 }}
@@ -578,7 +547,7 @@ const PostSessionRewardScreen = memo(({
                     onClick={handlePlayAgain}
                     whileHover={{ scale: 1.03, y: -2 }}
                     whileTap={{ scale: 0.97 }}
-                    className="w-full py-4 rounded-2xl font-bold text-white text-lg flex items-center justify-center gap-3 relative overflow-hidden"
+                    className="w-full py-3.5 rounded-2xl font-bold text-white text-lg flex items-center justify-center gap-3 relative overflow-hidden"
                     style={{
                       background: 'linear-gradient(135deg, #22c55e 0%, #16a34a 50%, #15803d 100%)',
                       boxShadow: '0 8px 30px rgba(34, 197, 94, 0.4), inset 0 1px 0 rgba(255, 255, 255, 0.2)',
@@ -596,7 +565,7 @@ const PostSessionRewardScreen = memo(({
                       }}
                       transition={{ duration: 2, repeat: Infinity, repeatDelay: 1 }}
                     />
-                    <Swords className="w-6 h-6" />
+                    <Swords className="w-5 h-5" />
                     <span>Play Next Match!</span>
                     <ChevronRight className="w-5 h-5" />
                   </motion.button>
@@ -609,14 +578,14 @@ const PostSessionRewardScreen = memo(({
                     onClick={handleShare}
                     whileHover={{ scale: 1.02 }}
                     whileTap={{ scale: 0.98 }}
-                    className="w-full py-3 rounded-xl font-semibold text-white/70 hover:text-white flex items-center justify-center gap-2 transition-colors"
+                    className="w-full py-2.5 rounded-xl font-semibold text-white/70 hover:text-white flex items-center justify-center gap-2 transition-colors"
                     style={{
                       background: 'rgba(255, 255, 255, 0.06)',
                       border: '1px solid rgba(255, 255, 255, 0.1)',
                     }}
                   >
-                    <Share2 className="w-4 h-4" />
-                    <span>Share with Friends</span>
+                    <Share2 className="w-3.5 h-3.5" />
+                    <span className="text-sm">Share with Friends</span>
                   </motion.button>
                 </div>
               </>

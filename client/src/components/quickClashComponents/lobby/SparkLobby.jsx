@@ -57,27 +57,27 @@ const SparkLobby = () => {
       try {
         const sessionId = localStorage.getItem('playSessionId')
 
-        // Check for active battle restoration (for non-upgraded session players)
-        // This handles the case where a session player closed the app during an active battle
-        const activeBattleId = localStorage.getItem('sparkActiveBattleId')
-        if (activeBattleId) {
-          try {
-            const battleResponse = await axios.get(`/api/play/battle/${activeBattleId}`, {
-              headers: { 'X-Session-Id': sessionId }
-            })
-            if (battleResponse.data.battle && battleResponse.data.battle.status !== 'completed') {
-              // Battle is still active - redirect to it
-              console.log('[SparkLobby] Found active battle, redirecting:', activeBattleId)
-              navigate(`/play/battle/${activeBattleId}`, { replace: true })
-              return
-            }
-          } catch (err) {
-            // Battle not found or error - clear stale battleId
-            console.log('[SparkLobby] Active battle not found or error, clearing:', err.message)
+        // Check for active battle restoration via server API (session-aware)
+        try {
+          const activeBattleResponse = await axios.get('/api/play/battle/active', {
+            headers: { 'X-Session-Id': sessionId }
+          })
+
+          if (activeBattleResponse.data.success && activeBattleResponse.data.battleId) {
+             const { battleId, status } = activeBattleResponse.data
+             // Only redirect if battle is active or pending, not completed/expired
+             if (status === 'active' || status === 'pending') {
+               console.log('[SparkLobby] Found server-side active battle, redirecting:', battleId)
+               navigate(`/play/battle/${battleId}`, { replace: true })
+               return
+             }
           }
-          // Clear stale battleId
-          localStorage.removeItem('sparkActiveBattleId')
+        } catch (err) {
+          console.log('[SparkLobby] Server active battle check failed, falling back or continuing:', err.message)
         }
+
+        // Remove stale local storage if any (legacy cleanup)
+        localStorage.removeItem('sparkActiveBattleId')
 
         // Priority for teamCode:
         // 1. From navigation state (when redirected from matchmaking or invited)

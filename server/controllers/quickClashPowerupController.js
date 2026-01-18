@@ -1,6 +1,8 @@
 // controllers/quickClashPowerupController.js
 const asyncHandler = require('express-async-handler')
 const mongoose = require('mongoose')
+const User = require('../model/userSchema')
+const PlaySession = require('../model/quickClashSchemas/playSessionSchema')
 const {
   donatePowerup,
   equipPowerup,
@@ -14,6 +16,28 @@ const {
   POWERUP_POOL,
 } = require('../services/quickClashServices/quickClashPowerupRewardService')
 const QuickClashSession = require('../model/quickClashSchemas/quickClashSessionSchema')
+const globalEmitter = require('../eventEmitter')
+
+// Helper to resolve player name
+const getPlayerName = async userId => {
+  if (!userId) return 'Teammate'
+  try {
+    // Try finding User
+    const user = await User.findById(userId).select('name inGameName').lean()
+    if (user) return user.inGameName || user.name || 'Teammate'
+
+    // Try finding PlaySession
+    const session = await PlaySession.findById(userId)
+      .select('inGameName')
+      .lean()
+    if (session) return session.inGameName || 'Teammate'
+
+    return 'Teammate'
+  } catch (err) {
+    console.error('Error fetching player name:', err)
+    return 'Teammate'
+  }
+}
 
 /**
  * @desc    Donate a powerup to the team pool
@@ -36,10 +60,21 @@ const donatePowerupController = asyncHandler(async (req, res) => {
         session,
       })
 
+      const donorName = await getPlayerName(userId)
+
       res.status(200).json({
         success: true,
         message: 'Powerup donated successfully',
         battle,
+      })
+
+      // Emit socket event for real-time updates
+      globalEmitter.emit('quickClash:powerupDonated', {
+        battleId,
+        teamId,
+        userId,
+        powerupId,
+        donatedBy: donorName,
       })
     })
   } catch (error) {
@@ -74,10 +109,21 @@ const equipPowerupController = asyncHandler(async (req, res) => {
         session,
       })
 
+      const equipperName = await getPlayerName(userId)
+
       res.status(200).json({
         success: true,
         message: 'Powerup equipped successfully',
         battle,
+      })
+
+      // Emit socket event for real-time updates
+      globalEmitter.emit('quickClash:powerupEquipped', {
+        battleId,
+        teamId,
+        userId,
+        powerupType,
+        equippedBy: equipperName,
       })
     })
   } catch (error) {
@@ -112,10 +158,21 @@ const unequipPowerupController = asyncHandler(async (req, res) => {
         session,
       })
 
+      const unequipperName = await getPlayerName(userId)
+
       res.status(200).json({
         success: true,
         message: 'Powerup unequipped successfully',
         battle,
+      })
+
+      // Emit socket event for real-time updates
+      globalEmitter.emit('quickClash:powerupUnequipped', {
+        battleId,
+        teamId,
+        userId,
+        powerupType,
+        unequippedBy: unequipperName,
       })
     })
   } catch (error) {

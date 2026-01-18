@@ -81,6 +81,7 @@ const {
   leaveTeamMatchmakingController,
   getTeamMatchmakingInfo,
   getTeam,
+  leaveTeamController,
 } = require('../controllers/quickClashTeamController')
 
 // ============================================================
@@ -90,6 +91,7 @@ const {
 
 // Team routes (session-compatible)
 router.get('/team/:teamId', flexAuth, getTeam)
+router.post('/team/:teamId/leave', flexAuth, leaveTeamController)
 
 // Team matchmaking routes (session-compatible)
 router.post('/team/:teamId/matchmaking/join', flexAuth, joinTeamMatchmakingController)
@@ -108,6 +110,9 @@ router.get('/profile/:userId', flexAuth, getUserProfile)
 router.get('/profile/:userId/achievements', flexAuth, getUserAchievements)
 router.get('/profile/:userId/matches', flexAuth, getUserRecentMatches)
 router.get('/profile/:userId/statistics', flexAuth, getUserStatistics)
+
+// Leaderboard routes (session-compatible)
+router.get('/leaderboard', flexAuth, getQuickClashLeaderboard)
 
 // ============================================================
 // AUTHENTICATED-ONLY ROUTES (require JWT token)
@@ -181,8 +186,7 @@ router.get(
 )
 router.get('/can-leave-matchmaking', canLeaveMatchmakingController)
 
-// Leaderboard routes
-router.get('/leaderboard', getQuickClashLeaderboard)
+
 
 // Trophy routes
 router.get('/trophies', getUserTrophiesController)

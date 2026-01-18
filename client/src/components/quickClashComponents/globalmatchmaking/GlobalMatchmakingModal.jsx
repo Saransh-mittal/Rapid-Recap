@@ -246,22 +246,35 @@ const GlobalMatchmakingModal = React.memo(
             headers: { 'X-Session-Id': sessionId }
           })
           if (response.data?.success && response.data?.team) {
-            // Transform to match the expected teams array format
-            setMyTeams([{
-              _id: response.data.team._id,
-              name: response.data.team.name || 'Your Team',
-              teamCode: response.data.team.teamCode,
-              memberCount: response.data.team.memberCount || response.data.team.members?.length || 1,
-              members: response.data.team.members || [],
-              isSessionPlayerTeam: true,
-            }])
+            // Only show team if session player is leader
+            if (response.data.playerRole === 'leader') {
+              // Transform to match the expected teams array format
+              setMyTeams([{
+                _id: response.data.team._id,
+                name: response.data.team.name || 'Your Team',
+                teamCode: response.data.team.teamCode,
+                memberCount: response.data.team.memberCount || response.data.team.members?.length || 1,
+                members: response.data.team.members || [],
+                isSessionPlayerTeam: true,
+              }])
+            } else {
+              setMyTeams([])
+            }
           } else {
             setMyTeams([])
           }
         } else if (user?._id) {
           // Authenticated user - use standard teams endpoint
           const response = await axios.get('/api/quickClash/teams')
-          setMyTeams(response.data?.teams || [])
+
+          // Filter to only show teams where user is leader
+          const allTeams = response.data?.teams || []
+          const leaderTeams = allTeams.filter(team => {
+            const member = team.members.find(m => m.user && m.user._id === user._id)
+            return member && member.role === 'leader'
+          })
+
+          setMyTeams(leaderTeams)
         } else {
           setMyTeams([])
         }
@@ -594,39 +607,15 @@ const GlobalMatchmakingModal = React.memo(
           "
           style={SCROLL_CONTAINER_STYLE}
         >
-          <div className="space-y-6">
-            {/* Main status display */}
-            <AnimatePresence mode="wait">
-              <motion.div
-                key={`${battleReady}-${inMatchmaking}-${battleCreationStatus}`}
-                initial={{ opacity: 0, y: 20 }}
-                animate={{ opacity: 1, y: 0 }}
-                exit={{ opacity: 0, y: -20 }}
-                transition={{ duration: 0.3 }}
-              >
-                <MatchmakingStatusDisplay
-                  inMatchmaking={inMatchmaking}
-                  battleReady={battleReady}
-                  battleCreationStatus={battleCreationStatus}
-                  battleCreationError={battleCreationError}
-                  matchmakingTime={matchmakingTime}
-                  teamName={teamName}
-                  joinType={joinType}
-                  originalTeam={originalTeam}
-                  statusUpdates={statusUpdates}
-                  formatMatchmakingTime={formatMatchmakingTime}
-                />
-              </motion.div>
-            </AnimatePresence>
-
-            {/* Team Selection Panel */}
+          <div className="space-y-5">
+            {/* Entry Selection Panel - PRIMARY FOCUS (shown at top) */}
             {!inMatchmaking &&
               !battleReady &&
               battleCreationStatus !== 'failed' && (
                 <motion.div
                   initial={{ opacity: 0, y: 20 }}
                   animate={{ opacity: 1, y: 0 }}
-                  transition={{ delay: 0.1 }}
+                  transition={{ duration: 0.3 }}
                 >
                   <TeamSelectionPanel
                     myTeams={myTeams}
@@ -636,6 +625,32 @@ const GlobalMatchmakingModal = React.memo(
                   />
                 </motion.div>
               )}
+
+            {/* Matchmaking status display - shown when in matchmaking or battle ready */}
+            <AnimatePresence mode="wait">
+              {(inMatchmaking || battleReady || battleCreationStatus === 'failed' || battleCreationStatus === 'creating') && (
+                <motion.div
+                  key={`${battleReady}-${inMatchmaking}-${battleCreationStatus}`}
+                  initial={{ opacity: 0, y: 20 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  exit={{ opacity: 0, y: -20 }}
+                  transition={{ duration: 0.3 }}
+                >
+                  <MatchmakingStatusDisplay
+                    inMatchmaking={inMatchmaking}
+                    battleReady={battleReady}
+                    battleCreationStatus={battleCreationStatus}
+                    battleCreationError={battleCreationError}
+                    matchmakingTime={matchmakingTime}
+                    teamName={teamName}
+                    joinType={joinType}
+                    originalTeam={originalTeam}
+                    statusUpdates={statusUpdates}
+                    formatMatchmakingTime={formatMatchmakingTime}
+                  />
+                </motion.div>
+              )}
+            </AnimatePresence>
           </div>
         </div>
 

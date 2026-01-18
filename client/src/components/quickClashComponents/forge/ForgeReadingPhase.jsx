@@ -114,8 +114,8 @@ const ForgeReadingPhase = ({ sessionId, category, activePowerups = [], isSession
 
   // Timer for question phase (counting up) with dynamic auto-submit
   const [questionTimer, setQuestionTimer] = useState(0)
-  const [maxQuestionTime, setMaxQuestionTime] = useState(10) // Default 10s
-  const [maxReadingTime, setMaxReadingTime] = useState(12) // Default 12s
+  const [maxQuestionTime, setMaxQuestionTime] = useState(15) // Default 15s
+  const [maxReadingTime, setMaxReadingTime] = useState(30) // Default 30s
   const questionTimeoutRef = useRef(null)
 
   // Transition guard to prevent double moveToNextSection calls
@@ -359,7 +359,7 @@ const ForgeReadingPhase = ({ sessionId, category, activePowerups = [], isSession
         setTimeout(() => {
           if (result.readingContent) {
             setReadingContent(result.readingContent)
-            setReadingTimer(12) // 12 seconds reading time
+            setReadingTimer(30) // 30 seconds reading time
             setPhase('reading')
           } else {
             // If no reading content, move to next question immediately
@@ -458,8 +458,8 @@ const ForgeReadingPhase = ({ sessionId, category, activePowerups = [], isSession
         setActiveEffects({ scoreSurge: false }) // Reset per-question effects
         setDisabledOptions([])
         setHighlightedAnswer(null)
-        setMaxQuestionTime(10) // Reset max time
-        setMaxReadingTime(12) // Reset max time
+        setMaxQuestionTime(15) // Reset max time
+        setMaxReadingTime(30) // Reset max time
         setQuestionTimer(0) // Reset timer
         questionStartTime.current = Date.now()
 

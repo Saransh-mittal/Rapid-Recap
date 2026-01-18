@@ -271,13 +271,49 @@ async function runCompleteWorkflow(options = {}) {
         console.log(`\n🔄 Found active QUIZ batch (ID: ${activeQuizBatch.batchId})`)
         console.log(`   Submitted at: ${activeQuizBatch.createdAt.toLocaleString()}`)
         console.log('   Checking status with OpenAI...')
-        await checkAndProcessQuizBatch()
+
+        // If waitForCompletion, poll until this batch is done
+        if (waitForCompletion) {
+          const pollResult = await waitForBatchCompletion(activeQuizBatch.batchId)
+          if (pollResult.completed) {
+            console.log('\n📥 Quiz batch completed! Processing results...')
+            const quizCostData = await checkAndProcessQuizBatch()
+            if (quizCostData) {
+              costAggregator.addPhase('Quiz Batch', { calculateCost: () => quizCostData })
+            }
+            workflowResults.quiz = { status: 'completed', batchId: activeQuizBatch.batchId }
+          } else {
+            workflowResults.quiz = { status: pollResult.error || 'failed', batchId: activeQuizBatch.batchId }
+          }
+        } else {
+          await checkAndProcessQuizBatch()
+        }
       } else {
         console.log('\n🆕 No active quiz batch. Checking for draft articles...')
         const quizBatchJob = await prepareQuizBatch()
 
         if (quizBatchJob) {
           console.log(`✅ Quiz Batch Submitted! Job ID: ${quizBatchJob._id}`)
+
+          // If waitForCompletion, poll until this new batch is done
+          if (waitForCompletion) {
+            const pollResult = await waitForBatchCompletion(quizBatchJob.batchId)
+            if (pollResult.completed) {
+              console.log('\n📥 Quiz batch completed! Processing results...')
+              const quizCostData = await checkAndProcessQuizBatch()
+              if (quizCostData) {
+                costAggregator.addPhase('Quiz Batch', { calculateCost: () => quizCostData })
+              }
+              workflowResults.quiz = { status: 'completed', batchId: quizBatchJob.batchId }
+            } else {
+              workflowResults.quiz = { status: pollResult.error || 'failed', batchId: quizBatchJob.batchId }
+            }
+          } else {
+            workflowResults.quiz = { status: 'submitted', batchId: quizBatchJob.batchId }
+          }
+        } else {
+          console.log('   No draft articles to generate quizzes for.')
+          workflowResults.quiz = { status: 'skipped', reason: 'no_drafts' }
         }
       }
 
@@ -338,6 +374,26 @@ async function runCompleteWorkflow(options = {}) {
       } else if (workflowResults.processing.status === 'skipped') {
         console.log(`   Status:              Skipped`)
         console.log(`   Reason:              ${workflowResults.processing.reason}`)
+      }
+    }
+
+    if (workflowResults.quiz) {
+      console.log('\n⚔️  Quiz Generation Results:')
+      if (workflowResults.quiz.status === 'completed') {
+        console.log(`   Status:              Completed`)
+        console.log(`   Batch ID:            ${workflowResults.quiz.batchId}`)
+      } else if (workflowResults.quiz.status === 'submitted') {
+        console.log(`   Status:              Submitted (Processing in background)`)
+        console.log(`   Batch ID:            ${workflowResults.quiz.batchId}`)
+        console.log(`   Note:                Results will be available in ~24h`)
+      } else if (workflowResults.quiz.status === 'skipped') {
+        console.log(`   Status:              Skipped`)
+        console.log(`   Reason:              ${workflowResults.quiz.reason}`)
+      } else {
+        console.log(`   Status:              ${workflowResults.quiz.status}`)
+        if (workflowResults.quiz.batchId) {
+          console.log(`   Batch ID:            ${workflowResults.quiz.batchId}`)
+        }
       }
     }
 

@@ -1020,6 +1020,205 @@ const useQuickClashSocket = () => {
     cleanupFunctions.push(cleanupBattleEnding)
 
     // ==========================================
+    // TEAM BATTLE REAL-TIME UPDATE EVENTS
+    // These events keep the battle UI in sync when teammates take actions
+    // ==========================================
+
+    // When a teammate selects a category
+    const cleanupTeamMemberSelectedCategory = addEventListener(
+      'quickClash:teamMemberSelectedCategory',
+      data => {
+        if (!isComponentMountedRef.current) return
+        logSocketEvent('team_member_selected_category', data)
+
+        console.log('[QC_SOCKET] Team member selected category:', data)
+
+        // Refresh battle details to update UI
+        if (data.battleId) {
+          dispatch(fetchTeamBattleDetails(data.battleId))
+        }
+      },
+    )
+    cleanupFunctions.push(cleanupTeamMemberSelectedCategory)
+
+    // When a teammate deselects a category
+    const cleanupTeamMemberDeselectedCategory = addEventListener(
+      'quickClash:teamMemberDeselectedCategory',
+      data => {
+        if (!isComponentMountedRef.current) return
+        logSocketEvent('team_member_deselected_category', data)
+
+        console.log('[QC_SOCKET] Team member deselected category:', data)
+
+        // Refresh battle details to update UI
+        if (data.battleId) {
+          dispatch(fetchTeamBattleDetails(data.battleId))
+        }
+      },
+    )
+    cleanupFunctions.push(cleanupTeamMemberDeselectedCategory)
+
+    // When a teammate begins playing (clicks GO)
+    const cleanupTeamMemberBeganChallenge = addEventListener(
+      'quickClash:teamMemberBeganChallenge',
+      data => {
+        if (!isComponentMountedRef.current) return
+        logSocketEvent('team_member_began_challenge', data)
+
+        console.log('[QC_SOCKET] Team member began challenge:', data)
+
+        // Refresh battle details to update UI
+        if (data.battleId) {
+          dispatch(fetchTeamBattleDetails(data.battleId))
+        }
+      },
+    )
+    cleanupFunctions.push(cleanupTeamMemberBeganChallenge)
+
+    // When a teammate starts their challenge session
+    const cleanupTeamMemberStartedChallenge = addEventListener(
+      'quickClash:teamMemberStartedChallenge',
+      data => {
+        if (!isComponentMountedRef.current) return
+        logSocketEvent('team_member_started_challenge', data)
+
+        console.log('[QC_SOCKET] Team member started challenge:', data)
+
+        // Refresh battle details to update UI
+        if (data.battleId) {
+          dispatch(fetchTeamBattleDetails(data.battleId))
+        }
+      },
+    )
+    cleanupFunctions.push(cleanupTeamMemberStartedChallenge)
+
+    // When a teammate completes their quiz
+    const cleanupTeamBattleQuizCompleted = addEventListener(
+      'quickClash:teamBattleQuizCompleted',
+      data => {
+        if (!isComponentMountedRef.current) return
+        logSocketEvent('team_battle_quiz_completed', data)
+
+        console.log('[QC_SOCKET] Team member completed quiz:', data)
+
+        // Refresh battle details to update UI with new scores
+        if (data.battleId) {
+          dispatch(fetchTeamBattleDetails(data.battleId))
+        }
+
+        // Also refresh trophies in case they changed
+        dispatch(fetchUserTrophies())
+      },
+    )
+    cleanupFunctions.push(cleanupTeamBattleQuizCompleted)
+
+    // When a powerup is donated
+    const cleanupPowerupDonated = addEventListener(
+      'quickClash:powerupDonated',
+      data => {
+        if (!isComponentMountedRef.current) return
+        logSocketEvent('powerup_donated', data)
+
+        console.log('[QC_SOCKET] Powerup donated:', data)
+
+        if (data.battleId) {
+          dispatch(fetchTeamBattleDetails(data.battleId))
+        }
+
+        // Show toast notification
+        const currentState = getCurrentState()
+        const currentUserId = currentState.authState?.user?._id
+
+        // Only show if NOT the donor
+        const isDonor =
+          currentUserId &&
+          data.userId &&
+          currentUserId.toString() === data.userId.toString()
+
+        if (data.donatedBy && !isDonor) {
+          // Map powerupId to name if available, otherwise formatted ID
+          // ideally we'd have a map of IDs to names shared with frontend
+          let powerupName = data.powerupId
+          if (powerupName === 'TIME_WARP') powerupName = 'Time Warp'
+          else if (powerupName === 'SCORE_SURGE') powerupName = 'Score Surge'
+          else if (powerupName === 'ORACLES_EYE') powerupName = "Oracle's Eye"
+          else if (powerupName === 'STREAK_SHIELD') powerupName = 'Streak Shield'
+          else if (powerupName === 'PRECISION_PROTOCOL')
+            powerupName = 'Precision Protocol'
+
+          notificationManager.success(
+            t('Powerup Donated'),
+            t('{{user}} donated {{powerup}}', {
+              user: data.donatedBy,
+              powerup: powerupName,
+            }),
+          )
+        }
+      },
+    )
+    cleanupFunctions.push(cleanupPowerupDonated)
+
+    // When a powerup is equipped
+    const cleanupPowerupEquipped = addEventListener(
+      'quickClash:powerupEquipped',
+      data => {
+        if (!isComponentMountedRef.current) return
+        logSocketEvent('powerup_equipped', data)
+
+        console.log('[QC_SOCKET] Powerup equipped:', data)
+
+        if (data.battleId) {
+          dispatch(fetchTeamBattleDetails(data.battleId))
+        }
+
+        const currentState = getCurrentState()
+        const currentUserId = currentState.authState?.user?._id
+        const isEquipper =
+          currentUserId &&
+          data.userId &&
+          currentUserId.toString() === data.userId.toString()
+
+        if (data.equippedBy && !isEquipper) {
+          notificationManager.info(
+            t('Powerup Equipped'),
+            t('{{user}} equipped a powerup', { user: data.equippedBy }),
+          )
+        }
+      },
+    )
+    cleanupFunctions.push(cleanupPowerupEquipped)
+
+    // When a powerup is unequipped
+    const cleanupPowerupUnequipped = addEventListener(
+      'quickClash:powerupUnequipped',
+      data => {
+        if (!isComponentMountedRef.current) return
+        logSocketEvent('powerup_unequipped', data)
+
+        console.log('[QC_SOCKET] Powerup unequipped:', data)
+
+        if (data.battleId) {
+          dispatch(fetchTeamBattleDetails(data.battleId))
+        }
+
+        const currentState = getCurrentState()
+        const currentUserId = currentState.authState?.user?._id
+        const isUnequipper =
+          currentUserId &&
+          data.userId &&
+          currentUserId.toString() === data.userId.toString()
+
+       if (data.unequippedBy && !isUnequipper) {
+          notificationManager.info(
+            t('Powerup Unequipped'),
+            t('{{user}} unequipped a powerup', { user: data.unequippedBy }),
+          )
+        }
+      },
+    )
+    cleanupFunctions.push(cleanupPowerupUnequipped)
+
+    // ==========================================
     // TEAM MATCHMAKING EVENTS
     // ==========================================
 
@@ -1068,21 +1267,25 @@ const useQuickClashSocket = () => {
         const currentState = getCurrentState()
         const currentUserId = currentState.authState?.user?._id
 
-        // Only show notification if we're not the one who initiated
-        if (data.teamMembers && currentUserId) {
-          const isInitiator = data.teamMembers.some(member => {
-            const memberId = member.userId || member.user
-            return memberId === currentUserId.toString()
-          })
+          // Show notification only for non-leader members (leader sees the button click toast)
+          // Robust check for current user (handles string vs object ID issues)
+          if (data.teamMembers) {
+             const currentUserMember = data.teamMembers.find(member => {
+              const memberId = member.userId || member.user
+              return memberId && currentUserId && memberId.toString() === currentUserId.toString()
+            })
 
-          // Show notification to inform user their team is now in matchmaking
-          if (!isInitiator || data.memberCount > 1) {
-            notificationManager.battle(
-              t('Team Matchmaking'),
-              t('Your team is now searching for opponents')
-            )
+            const isLeader = currentUserMember?.role === 'leader'
+
+            // tailored logic: if I am the leader, I already saw a toast when I clicked the button.
+            // so only show this socket toast if I am NOT the leader.
+            if (!isLeader) {
+              notificationManager.battle(
+                t('Team Matchmaking'),
+                t('Your team is now searching for opponents')
+              )
+            }
           }
-        }
       },
     )
     cleanupFunctions.push(cleanupTeamJoinedMatchmaking)

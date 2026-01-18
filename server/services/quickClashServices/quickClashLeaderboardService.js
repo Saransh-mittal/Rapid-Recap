@@ -16,9 +16,10 @@ const QuickClashTeamBattle = require('../../model/quickClashSchemas/quickClashTe
  * @param {number} params.page - Page number (starting from 1)
  * @param {number} params.limit - Number of items per page
  * @param {string} params.searchQuery - Optional search query for usernames
+ * @param {string} params.currentUserId - Optional user ID to get specific rank for
  * @returns {Promise<Object>} Leaderboard data with pagination info
  */
-const getLeaderboard = async ({ page = 1, limit = 20, searchQuery = '' }) => {
+const getLeaderboard = async ({ page = 1, limit = 20, searchQuery = '', currentUserId = null }) => {
   try {
     page = parseInt(page) || 1
     limit = parseInt(limit) || 20
@@ -275,8 +276,62 @@ const getLeaderboard = async ({ page = 1, limit = 20, searchQuery = '' }) => {
     const totalPages = Math.ceil(totalMatchingUsers / limit)
     const hasMore = page < totalPages
 
+    // === 5. Get Current User Rank Data (if requested) ===
+    let currentUserRank = null
+    if (currentUserId) {
+      const currentUserIdStr = currentUserId.toString()
+      const globalRank = rankMap.get(currentUserIdStr)
+
+      // If user exists in the ranking map (should always be true for valid users)
+      if (globalRank) {
+        // Find user doc (might be in usersFromDB if on this page, otherwise fetch)
+        let userDoc = usersFromDB.find(u => u._id.toString() === currentUserIdStr)
+
+        if (!userDoc) {
+          // User not on current page, fetch basic details
+          userDoc = await User.findById(currentUserId)
+            .select('_id name inGameName pic quickClashTrophies')
+            .lean()
+        }
+
+        if (userDoc) {
+          const stats1v1 = individualStatsMap.get(currentUserIdStr) || {
+            wins1v1: 0,
+            winRate1v1: 0,
+            avgScore1v1: 0,
+          }
+          const stats4v4 = teamStatsMap.get(currentUserIdStr) || {
+            wins4v4: 0,
+            winRate4v4: 0,
+            avgScore4v4: 0,
+          }
+
+          currentUserRank = {
+            _id: userDoc._id.toString(),
+            name: userDoc.name,
+            inGameName: userDoc.inGameName,
+            pic: userDoc.pic,
+            trophies: userDoc.quickClashTrophies || 0,
+            rank: globalRank,
+
+            // Stats
+            wins: stats1v1.wins1v1,
+            winRate: stats1v1.winRate1v1,
+            avgScore: stats1v1.avgScore1v1,
+            wins1v1: stats1v1.wins1v1,
+            winRate1v1: stats1v1.winRate1v1,
+            avgScore1v1: stats1v1.avgScore1v1,
+            wins4v4: stats4v4.wins4v4,
+            winRate4v4: stats4v4.winRate4v4,
+            avgScore4v4: stats4v4.avgScore4v4,
+          }
+        }
+      }
+    }
+
     return {
       users: leaderboardUsers,
+      currentUserRank,
       pagination: {
         page,
         limit,

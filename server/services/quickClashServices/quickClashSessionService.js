@@ -13,7 +13,7 @@ const User = require('../../model/userSchema')
 const { markUserAsParticipated } = require('./quickClashTeamBattleService')
 
 const READING_TIME_LIMIT = 120 // 2 minutes in seconds
-const SESSION_EXPIRY = 5 * 60 * 1000 // 5 minutes
+const SESSION_EXPIRY = 8 * 60 * 1000 // 8 minutes (increased for 30s forge reading)
 
 // Forge Mode Scoring Configuration
 const FORGE_SCORING = {
@@ -21,8 +21,8 @@ const FORGE_SCORING = {
   SPEED_BONUS_MIN: 2, // Minimum speed bonus (5 × 0.35)
   SPEED_BONUS_MAX: 4, // Maximum speed bonus (10 × 0.35)
   STREAK_BONUS: 2, // Bonus per consecutive correct answer (5 × 0.35)
-  MAX_SECTION_TIME: 12000, // 12 seconds max per question (includes 1.5s frontend timeout delay)
-  SECTION_READ_TIME: 12000, // 12 seconds reading time per section
+  MAX_SECTION_TIME: 15000, // 15 seconds max per question
+  SECTION_READ_TIME: 30000, // 30 seconds reading time per section
 }
 
 

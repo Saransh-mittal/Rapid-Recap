@@ -325,12 +325,20 @@ const BattleCardV2 = ({ battle, onClick, onClaimReward }) => {
   const handleClick = useCallback(() => {
     haptics.light() // Tactile feedback on tap
     quizAudioService.playButtonClick() // Audio feedback on tap
+
+    // For session players viewing completed battle details, require signup
+    // Active battles can still be entered/played
+    if (isSessionPlayer && battleData?.status === 'completed') {
+      navigate('/quickclash', { state: { showSignup: true } })
+      return
+    }
+
     if (onClick) {
       onClick(battle)
     } else if (battleData?.id) {
       navigate(`/quickclash/teamBattle/${battleData.id}`)
     }
-  }, [battle, battleData, navigate, onClick])
+  }, [battle, battleData, navigate, onClick, isSessionPlayer])
 
   // Handle claim reward click
   const handleClaimReward = useCallback((e) => {

@@ -100,7 +100,7 @@ const BottomNavContent = memo(({ activeTab, onTabChange, isSession, pendingInvit
     { id: 'history', icon: Trophy, label: t('History'), color: '#facc15', glowColor: 'rgba(250, 204, 21, 0.4)', locked: false, badge: 0 },
     { id: 'leaderboard', icon: Award, label: t('Ranks'), color: '#f59e0b', glowColor: 'rgba(245, 158, 11, 0.4)', locked: false, badge: 0 },
     { id: 'teams', icon: Users, label: t('Teams'), color: '#a78bfa', glowColor: 'rgba(167, 139, 250, 0.4)', locked: isSession, badge: isSession ? 0 : pendingInvitationsCount },
-    { id: 'profile', icon: User, label: t('Profile'), color: '#34d399', glowColor: 'rgba(52, 211, 153, 0.4)', locked: isSession, badge: isSession ? 0 : notificationCount },
+    { id: 'profile', icon: User, label: t('Profile'), color: '#34d399', glowColor: 'rgba(52, 211, 153, 0.4)', locked: isSession, badge: 0 }, // Temporarily hidden notification badge
   ]
 
   const handleTabClick = useCallback((tabId) => {

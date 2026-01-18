@@ -303,14 +303,24 @@ const respondToTeamInvitation = asyncHandler(async (req, res) => {
 /**
  * @desc    Leave a team
  * @route   POST /api/quickClash/team/:teamId/leave
- * @access  Private
+ * @access  Private (supports both authenticated users and session players via flexAuth)
  */
 const leaveTeamController = asyncHandler(async (req, res) => {
   const { teamId } = req.params
-  const userId = req.user._id
+
+  // Support both authenticated users (req.user) and session players (req.sessionPlayer)
+  const playerId = req.user?._id || req.sessionPlayer?._id
+  const isSessionPlayer = !!req.sessionPlayer && !req.user
+
+  if (!playerId) {
+    return res.status(401).json({
+      success: false,
+      message: 'Authentication required',
+    })
+  }
 
   try {
-    const team = await leaveTeam({ teamId, userId })
+    const team = await leaveTeam({ teamId, playerId, isSessionPlayer })
 
     res.status(200).json({
       success: true,

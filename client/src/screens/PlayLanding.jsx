@@ -81,7 +81,12 @@ const theme = {
 }
 
 // Auth buttons component with custom styled Google button overlay
-const AuthButtons = ({ onPlayNow, onGoogleSuccess, onGoogleError, isLoading }) => {
+const AuthButtons = ({ onPlayNow, onGoogleSuccess, onGoogleError, isLoading, lastLoggedInName }) => {
+  // Determine button text based on whether there's a previously logged-in user
+  const googleButtonText = lastLoggedInName
+    ? `Continue as ${lastLoggedInName}`
+    : 'Sign in with Google'
+
   return (
     <motion.div
       initial={{ opacity: 0 }}
@@ -102,7 +107,7 @@ const AuthButtons = ({ onPlayNow, onGoogleSuccess, onGoogleError, isLoading }) =
 
       <div style={authStyles.orDivider}>
         <span style={authStyles.orLine} />
-        <span style={authStyles.orText}>already have an account?</span>
+        <span style={authStyles.orText}>{lastLoggedInName ? 'welcome back!' : 'already have an account?'}</span>
         <span style={authStyles.orLine} />
       </div>
 
@@ -116,7 +121,7 @@ const AuthButtons = ({ onPlayNow, onGoogleSuccess, onGoogleError, isLoading }) =
             <path fill="#FBBC05" d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z"/>
             <path fill="#EA4335" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z"/>
           </svg>
-          Sign in with Google
+          {googleButtonText}
         </div>
         {/* Invisible GoogleLogin overlay - actually handles the click */}
         <div style={authStyles.googleOverlay}>
@@ -232,6 +237,15 @@ const PlayLanding = () => {
   const [teamInfo, setTeamInfo] = useState(null)
   const [isRestoringSession, setIsRestoringSession] = useState(true)
   const [showNameInput, setShowNameInput] = useState(false)
+  const [lastLoggedInName, setLastLoggedInName] = useState('')
+
+  // Check for previously logged-in player name on mount
+  useEffect(() => {
+    const savedName = localStorage.getItem('lastLoggedInPlayerName')
+    if (savedName) {
+      setLastLoggedInName(savedName)
+    }
+  }, [])
 
   // Check for existing session on mount
   useEffect(() => {
@@ -498,6 +512,7 @@ const PlayLanding = () => {
               onGoogleSuccess={handleGoogleSuccess}
               onGoogleError={() => setError('Google login failed')}
               isLoading={isLoading}
+              lastLoggedInName={lastLoggedInName}
             />
           </GoogleOAuthProvider>
         )}

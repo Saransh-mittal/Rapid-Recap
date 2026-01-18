@@ -8,8 +8,6 @@ import {
   Users,
   Trophy,
   Crown,
-  Copy,
-  Check,
   UserPlus,
   LogOut,
   ChevronDown,
@@ -285,22 +283,15 @@ const TeamCardV2 = memo(({
   onRemoveMember,
   onTransferLeadership,
   onInvite,
-  onCopyTeamCode,
 }) => {
   const { t } = useTranslation('QuickClash')
   const [isOpen, setIsOpen] = useState(false) // Default closed
-  const [copied, setCopied] = useState(false)
 
   const teamMembers = useMemo(() => team.members || [], [team.members])
   const isTeamFull = useMemo(() => teamMembers.length >= team.maxMembers, [teamMembers.length, team.maxMembers])
   const emptySlots = useMemo(() => team.maxMembers - teamMembers.length, [team.maxMembers, teamMembers.length])
 
-  const handleCopyCode = useCallback(async () => {
-    haptics.selection() // Tactile feedback on copy
-    await onCopyTeamCode(team.teamCode)
-    setCopied(true)
-    setTimeout(() => setCopied(false), 2000)
-  }, [onCopyTeamCode, team.teamCode])
+
 
   const handleLeave = useCallback(() => {
     haptics.warning() // Tactile feedback for leave action
@@ -392,18 +383,7 @@ const TeamCardV2 = memo(({
             </div>
 
             {/* Footer Actions */}
-            <div className="border-t border-white/5 px-3 py-2 flex items-center justify-between">
-              {/* Copy Code */}
-              <Button
-                size="sm"
-                variant="ghost"
-                onClick={handleCopyCode}
-                className="h-7 px-2 text-xs text-white/60 hover:text-white hover:bg-white/5"
-              >
-                {copied ? <Check className="w-3 h-3 text-green-400 mr-1" /> : <Copy className="w-3 h-3 mr-1" />}
-                {copied ? 'Copied' : 'Copy Code'}
-              </Button>
-
+            <div className="border-t border-white/5 px-3 py-2 flex items-center justify-end">
               {/* Leave */}
               <Button
                 size="sm"

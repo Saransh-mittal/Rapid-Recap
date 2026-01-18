@@ -21,7 +21,7 @@ const MotionDiv = motion.div
  * Individual selection option component
  * Design Philosophy: Clear visual indication of selection state
  */
-const SelectionOption = React.memo(({ option, isSelected, onSelectTeam }) => {
+const SelectionOption = React.memo(({ option, isSelected, onSelectTeam, isRecommended = false }) => {
   const { t } = useTranslation('QuickClash')
 
   const handleSelect = useCallback(() => {
@@ -33,15 +33,19 @@ const SelectionOption = React.memo(({ option, isSelected, onSelectTeam }) => {
   return (
     <MotionDiv
       onClick={handleSelect}
+      whileHover={{ scale: 1.01 }}
+      whileTap={{ scale: 0.99 }}
       className={`
         ${QUICK_CLASH_CLASSES.glassLight}
         rounded-xl p-4
         border-2 transition-all duration-200
         cursor-pointer
-        hover:scale-[1.01] active:scale-[0.99]
+        relative
         ${
           isSelected
             ? 'border-cyan-400/60 bg-cyan-500/10 shadow-lg shadow-cyan-500/20'
+            : option.isSolo
+            ? 'border-teal-400/30 bg-teal-500/5 hover:border-teal-400/50 hover:bg-teal-500/10'
             : 'border-white/10 hover:border-white/20 hover:bg-white/5'
         }
       `}
@@ -56,7 +60,11 @@ const SelectionOption = React.memo(({ option, isSelected, onSelectTeam }) => {
               flex items-center justify-center
               border transition-all
               ${
-                isSelected
+                option.isSolo
+                  ? isSelected
+                    ? 'bg-gradient-to-br from-cyan-500/30 to-teal-500/20 border-cyan-400/50'
+                    : 'bg-gradient-to-br from-teal-500/20 to-cyan-500/10 border-teal-400/40'
+                  : isSelected
                   ? 'bg-cyan-500/20 border-cyan-400/50'
                   : 'bg-white/5 border-white/10'
               }
@@ -64,7 +72,11 @@ const SelectionOption = React.memo(({ option, isSelected, onSelectTeam }) => {
           >
             <IconComponent
               className={`w-6 h-6 ${
-                isSelected ? 'text-cyan-300' : 'text-white/70'
+                option.isSolo
+                  ? 'text-teal-300'
+                  : isSelected
+                  ? 'text-cyan-300'
+                  : 'text-white/70'
               }`}
             />
           </div>
@@ -77,6 +89,8 @@ const SelectionOption = React.memo(({ option, isSelected, onSelectTeam }) => {
                 ${
                   isSelected
                     ? QUICK_CLASH_CLASSES.textPrimary
+                    : option.isSolo
+                    ? 'text-teal-100'
                     : QUICK_CLASH_CLASSES.textSecondary
                 }
               `}
@@ -170,23 +184,30 @@ const TeamSelectionPanel = React.memo(
 
     return (
       <div className="space-y-4">
-        {/* Header */}
-        <div className="flex items-center justify-between">
-          <div className="flex items-center gap-2">
-            <Shield className="w-5 h-5 text-cyan-400" />
-            <h3
-              className={`${QUICK_CLASH_CLASSES.textPrimary} font-bold text-base`}
-            >
-              {t('Choose Your Entry')}
-            </h3>
+        {/* Enhanced Header - Primary Focus */}
+        <div className="flex flex-col gap-2">
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-3">
+              <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-cyan-500/20 to-teal-500/10 border border-cyan-400/40 flex items-center justify-center">
+                <Shield className="w-5 h-5 text-cyan-400" />
+              </div>
+              <div>
+                <h3
+                  className={`${QUICK_CLASH_CLASSES.textPrimary} font-bold text-lg`}
+                >
+                  {t('Choose Your Entry')}
+                </h3>
+                <p className={`${QUICK_CLASH_CLASSES.textMuted} text-xs`}>
+                  {t('Solo players get auto-matched into teams')}
+                </p>
+              </div>
+            </div>
+            {!loadingTeams && myTeams?.length > 0 && (
+              <Badge className="bg-cyan-500/15 text-cyan-300 border-cyan-400/30 text-xs">
+                {myTeams.length} {t('teams')}
+              </Badge>
+            )}
           </div>
-          {!loadingTeams && (
-            <Badge className="bg-white/10 text-white/70 border-white/20">
-              {myTeams?.length
-                ? `${myTeams.length} ${t('teams')}`
-                : t('No teams')}
-            </Badge>
-          )}
         </div>
 
         {/* Loading state */}
@@ -298,7 +319,7 @@ const TeamSelectionPanel = React.memo(
         )}
 
         {/* Custom scrollbar */}
-        <style jsx>{`
+        <style>{`
           .custom-scrollbar::-webkit-scrollbar {
             width: 6px;
           }

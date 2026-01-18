@@ -125,6 +125,10 @@ const QuickClashProfileV2 = ({ userId: propUserId }) => {
       const response = await axios.post('/api/user/logout')
       if (response.status === 200 || response.status === 201) {
         await i18n.changeLanguage('en')
+        // Save user info for "Continue as" feature on login page
+        if (profile?.user?.inGameName || profile?.user?.name) {
+          localStorage.setItem('lastLoggedInPlayerName', profile.user.inGameName || profile.user.name)
+        }
         localStorage.removeItem('token')
         localStorage.removeItem('role')
         dispatch(logoutAuth())
@@ -138,7 +142,7 @@ const QuickClashProfileV2 = ({ userId: propUserId }) => {
     } finally {
       setLogoutLoading(false)
     }
-  }, [dispatch, navigate])
+  }, [dispatch, navigate, profile])
 
   // Open notification drawer
   const handleOpenNotifications = useCallback(() => {
@@ -238,9 +242,9 @@ const QuickClashProfileV2 = ({ userId: propUserId }) => {
       </Flex>
 
       {/* ═══════════════════════════════════════════════════════════════ */}
-      {/* NOTIFICATIONS CARD */}
+      {/* NOTIFICATIONS CARD - TEMPORARILY HIDDEN */}
       {/* ═══════════════════════════════════════════════════════════════ */}
-      {isOwnProfile && (
+      {/* {isOwnProfile && (
         <Box
           as="button"
           onClick={handleOpenNotifications}
@@ -298,7 +302,7 @@ const QuickClashProfileV2 = ({ userId: propUserId }) => {
             </HStack>
           </Flex>
         </Box>
-      )}
+      )} */}
 
       {/* ═══════════════════════════════════════════════════════════════ */}
       {/* STATS GRID - 2x2 essential stats */}

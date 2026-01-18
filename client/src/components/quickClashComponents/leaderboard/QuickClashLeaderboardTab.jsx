@@ -23,6 +23,7 @@ import LoadingState from './components/LoadingState'
 import ErrorState from './components/ErrorState'
 import EmptyState from './components/EmptyState'
 import PaginationInfo from './components/PaginationInfo'
+import UserRankCard from './components/UserRankCard'
 
 const QuickClashLeaderboardTab = () => {
   const { t } = useTranslation('QuickClash')
@@ -45,6 +46,7 @@ const QuickClashLeaderboardTab = () => {
     totalPages: 0,
     hasMore: false,
   })
+  const [currentUserRank, setCurrentUserRank] = useState(null)
   const [loading, setLoading] = useState(true)
   const [nextPageLoading, setNextPageLoading] = useState(false)
   const [error, setError] = useState(null)
@@ -75,11 +77,16 @@ const QuickClashLeaderboardTab = () => {
         if (response.data.success) {
           if (replace) {
             setLeaderboardData(response.data.users || [])
+            // Set current user rank from response (only needed on first page load usually, but safe to update)
+            if (response.data.currentUserRank) {
+              setCurrentUserRank(response.data.currentUserRank)
+            }
           } else {
             setLeaderboardData(prev => [
               ...prev,
               ...(response.data.users || []),
             ])
+            // Do not update currentUserRank on pagination to avoid flickering if it wasn't returned
           }
           setPagination(response.data.pagination || pagination)
         } else {
@@ -277,6 +284,17 @@ const QuickClashLeaderboardTab = () => {
         setSearchQuery={setSearchQuery}
         handleClearSearch={handleClearSearch}
       />
+
+
+
+      {/* User Rank Card (Sticky) - Only show if not searching and we have data */}
+      {!isSearching && currentUserRank && (
+        <UserRankCard
+          user={currentUserRank}
+          rank={currentUserRank.rank}
+          onViewProfile={handleViewProfile}
+        />
+      )}
 
       {/* Content */}
       {renderContent()}

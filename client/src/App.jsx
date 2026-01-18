@@ -550,14 +550,14 @@ const App = () => {
       !user?.needsOnboarding
     ) {
       changeLanguage('en', null, null)
-      dispatch(
-        addNoteMessageIfAllowed({
-          title: t('Please select your language from profile'), // Added translation
-          duration: null,
-          width: '300px',
-          actions: [{ actionType: 'LANGUAGE' }], // Added translation
-        }),
-      )
+      // dispatch(
+      //   addNoteMessageIfAllowed({
+      //     title: t('Please select your language from profile'), // Added translation
+      //     duration: null,
+      //     width: '300px',
+      //     actions: [{ actionType: 'LANGUAGE' }], // Added translation
+      //   }),
+      // )
     }
     if (isAuthenticated && user?.needsOnboarding) {
       dispatch(setTaskProgress({ task: 'navbarLoad', progress: 100 }))
