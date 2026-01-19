@@ -820,7 +820,7 @@ const migrateSessionTeams = async (sessionId, userId) => {
  * @param {string} params.memberSessionPlayerId - Member's sessionPlayer _id to remove
  * @returns {Promise<Object>} Updated team info
  */
-const removeMemberAsSession = async ({ teamId, leaderSessionId, memberSessionPlayerId }) => {
+const removeMemberAsSession = async ({ teamId, leaderSessionId, memberId }) => {
   const globalEmitter = require('../eventEmitter')
 
   // Validate leader session exists
@@ -844,7 +844,7 @@ const removeMemberAsSession = async ({ teamId, leaderSessionId, memberSessionPla
   }
 
   // Prevent removing self
-  if (leaderSession._id.toString() === memberSessionPlayerId) {
+  if (leaderSession._id.toString() === memberId) {
     throw new Error('Cannot remove yourself, use leave team instead')
   }
 
@@ -853,52 +853,71 @@ const removeMemberAsSession = async ({ teamId, leaderSessionId, memberSessionPla
     throw new Error('Cannot remove members while in a match')
   }
 
-  // Find the member to remove
+  // Find the member to remove (check both sessionPlayer and user)
   const memberIndex = team.members.findIndex(
-    m => m.sessionPlayer?.toString() === memberSessionPlayerId
+    m => (m.sessionPlayer && m.sessionPlayer.toString() === memberId) ||
+         (m.user && m.user.toString() === memberId)
   )
+
   if (memberIndex === -1) {
     throw new Error('Member not found in team')
   }
 
   // Get removed member info before removal
   const removedMemberData = team.members[memberIndex]
-  const removedSession = await PlaySession.findById(memberSessionPlayerId)
-  const removedMemberName = removedSession?.inGameName || 'Player'
+  let removedMemberName = 'Player'
+  let removedMemberInGameName = 'Player'
+  let removedMemberId = memberId
+
+  // Clean up if it was a session player
+  if (removedMemberData.sessionPlayer) {
+    const removedSession = await PlaySession.findById(removedMemberData.sessionPlayer)
+    if (removedSession) {
+      removedMemberName = removedSession.inGameName || 'Player'
+      removedMemberInGameName = removedSession.inGameName || 'Player'
+
+      // Clear removed member's currentTeamId
+      removedSession.currentTeamId = null
+      removedSession.lastActiveAt = new Date()
+      await removedSession.save()
+    }
+  } else if (removedMemberData.user) {
+    const removedUser = await User.findById(removedMemberData.user)
+    if (removedUser) {
+      removedMemberName = removedUser.name
+      removedMemberInGameName = removedUser.inGameName || removedUser.name
+    }
+  }
 
   // Remove member
   team.members.splice(memberIndex, 1)
   team.lastActive = new Date()
   await team.save()
 
-  // Clear removed member's currentTeamId
-  if (removedSession) {
-    removedSession.currentTeamId = null
-    removedSession.lastActiveAt = new Date()
-    await removedSession.save()
-  }
+  // Emit event
+  const leaderName = leaderSession.inGameName || 'Leader'
 
-  // Get updated team info for response
-  const teamInfo = await getPublicTeamInfo({ teamCode: team.teamCode })
-
-  // Emit teamMemberRemoved event for the removed player
   globalEmitter.emit('quickClash:teamMemberRemoved', {
-    team: team._id.toString(),
-    leader: leaderSession._id.toString(),
-    removedMember: memberSessionPlayerId,
-    teamName: team.name,
+    team: team._id,
+    leader: leaderSession._id,
+    removedMember: removedMemberId,
+    teamName: team.name || 'Team',
     removedMemberName,
-    removedMemberInGameName: removedMemberName,
+    removedMemberInGameName,
   })
 
-  // Emit teamUpdated for remaining members to refresh their UI
+  // Also emit updated team stats
+  const teamInfo = await getPublicTeamInfo({ teamCode: team.teamCode }) // Reuse existing helper if possible, otherwise similar logic to join
+
   globalEmitter.emit('quickClash:teamUpdated', {
     teamId: team._id.toString(),
-    team: teamInfo,
+    team: teamInfo
   })
 
-  return teamInfo
+  return team
 }
+
+
 
 /**
  * Get active battle for player (user or session player)

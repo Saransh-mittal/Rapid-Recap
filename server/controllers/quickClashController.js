@@ -775,8 +775,6 @@ const getQuickClashLeaderboard = asyncHandler(async (req, res) => {
     let currentUserId = null
     if (req.user && req.user._id) {
       currentUserId = req.user._id
-    } else if (req.sessionPlayer && req.sessionPlayer.userId) {
-      currentUserId = req.sessionPlayer.userId
     }
 
     const leaderboardData = await getLeaderboard({

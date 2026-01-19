@@ -103,13 +103,17 @@ const cleanupFailedBattleMatchmaking = async ({
       QuickClashTeam.findById(teamBId).populate('members.user', '_id').lean(),
     ])
 
-    // Extract all member IDs (only users, not session players)
+    // Extract all member IDs (users and session players)
     const allMemberIds = []
     if (teamA && teamA.members) {
-      allMemberIds.push(...teamA.members.filter(m => m.user).map(m => m.user._id))
+      allMemberIds.push(
+        ...teamA.members.map(getMemberPlayerId).filter(id => id),
+      )
     }
     if (teamB && teamB.members) {
-      allMemberIds.push(...teamB.members.filter(m => m.user).map(m => m.user._id))
+      allMemberIds.push(
+        ...teamB.members.map(getMemberPlayerId).filter(id => id),
+      )
     }
 
     console.log(
@@ -330,11 +334,11 @@ const createTeamBattle = makeRetryable(
           .session(session),
       ])
 
-      // Extract member IDs for each team (only users, not session players)
+      // Extract member IDs for each team (users and session players)
       const teamAMemberIds =
-        teamAData?.members?.filter(m => m.user).map(m => m.user._id?.toString() || m.user.toString()) || []
+        teamAData?.members?.map(getMemberPlayerId).filter(id => id) || []
       const teamBMemberIds =
-        teamBData?.members?.filter(m => m.user).map(m => m.user._id?.toString() || m.user.toString()) || []
+        teamBData?.members?.map(getMemberPlayerId).filter(id => id) || []
 
       // Combined list of all involved members
       const allMemberIds = [...teamAMemberIds, ...teamBMemberIds]
@@ -1193,11 +1197,11 @@ const createTeamBattle = makeRetryable(
             .session(session),
         ])
 
-        // Extract member IDs for each team (only users, not session players)
+        // Extract member IDs for each team (users and session players)
         const teamAMemberIds =
-          teamAData?.members?.filter(m => m.user).map(m => m.user._id?.toString() || m.user.toString()) || []
+          teamAData?.members?.map(getMemberPlayerId).filter(id => id) || []
         const teamBMemberIds =
-          teamBData?.members?.filter(m => m.user).map(m => m.user._id?.toString() || m.user.toString()) || []
+          teamBData?.members?.map(getMemberPlayerId).filter(id => id) || []
 
         // Combined list of all involved members
         const allMemberIds = [...teamAMemberIds, ...teamBMemberIds]

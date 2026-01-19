@@ -125,13 +125,21 @@ const joinTeamByCode = async ({ teamCode, userId }) => {
         throw new Error('Team is full')
       }
 
-      // Check if user is already in the team
-      // Guard: member.user may be null for session player members
+      // Verify user exists and retrieve fresh data
+      const userDoc = await User.findById(userId).session(session)
+      if (!userDoc) {
+          throw new Error(`User ${userId} not found in database`)
+      }
+
+      console.log(`[TEAM_JOIN] Found team ${team._id}, current members: ${team.members.length}`)
+
+      // Check if already a member
       const existingMember = team.members.find(
-        member => member.user && member.user.toString() === userId.toString(),
+        m => (m.user && m.user.toString() === userId.toString())
       )
+
       if (existingMember) {
-        throw new Error('You are already a member of this team')
+        throw new Error('User already in team')
       }
 
       // Check if user exists
@@ -146,7 +154,8 @@ const joinTeamByCode = async ({ teamCode, userId }) => {
       team.members.push({
         user: userId,
         role: 'member',
-        status: 'ready', // Auto-ready since they're explicitly joining
+        status: 'accepted',
+        joinedAt: new Date(),
       })
 
       // Update last active timestamp
@@ -154,14 +163,86 @@ const joinTeamByCode = async ({ teamCode, userId }) => {
 
       await team.save({ session })
 
-      // Emit event
+      // Emit events
       setTimeout(async () => {
-        globalEmitter.emit('quickClash:teamMemberJoined', {
-          team: team._id,
-          user: userId,
-          userName: user.name,
-          userInGameName: user.inGameName,
-        })
+        // 2. Emit team updated event (for real-time list updates)
+        try {
+          // Re-fetch team with populated members to send full update
+          const updatedTeam = await QuickClashTeam.findById(team._id)
+            .populate('members.user', '_id name inGameName pic quickClashTrophies')
+            .lean()
+
+          if (updatedTeam) {
+            // Need to manually populate session players since they are in a different collection
+            const PlaySession = require('../../model/quickClashSchemas/playSessionSchema')
+            const sessionPlayerIds = updatedTeam.members
+              .filter(m => m.sessionPlayer)
+              .map(m => m.sessionPlayer)
+
+            const sessionPlayers = await PlaySession.find({ _id: { $in: sessionPlayerIds } })
+              .select('_id inGameName trophies sessionId') // Added sessionId
+              .lean()
+
+            console.log(`[TEAM_JOIN] Found ${sessionPlayers.length} session players for update`)
+
+            // Filter out nulls
+            const publicMembers = updatedTeam.members.map(m => {
+              if (m.sessionPlayer) {
+                const sp = sessionPlayers.find(sp => sp._id.toString() === m.sessionPlayer.toString())
+                return {
+                  _id: m.sessionPlayer.toString(), // Match getPublicTeamInfo structure
+                  type: 'session',
+                  sessionId: sp?.sessionId, // Include sessionId so client recognizes 'me'
+                  inGameName: sp?.inGameName || 'Player',
+                  trophies: sp?.trophies || 1000,
+                  role: m.role,
+                  status: m.status
+                }
+              } else if (m.user) {
+                if (!m.user.inGameName && !m.user.name) {
+                   console.log('[TEAM_JOIN] Warning: Member user not fully populated', m.user)
+                }
+                return {
+                  _id: m.user._id, // Match getPublicTeamInfo structure
+                  type: 'user',
+                  userId: m.user._id,
+                  inGameName: m.user.inGameName || m.user.name || 'Player',
+                  trophies: m.user.quickClashTrophies || 1000,
+                  role: m.role,
+                  status: m.status,
+                  pic: m.user.pic
+                }
+              }
+              return null
+            }).filter(Boolean)
+
+            console.log('[TEAM_JOIN] Prepared public members:', JSON.stringify(publicMembers.map(m => ({ type: m.type, name: m.inGameName, id: m._id }))))
+
+            const teamInfo = {
+              ...updatedTeam,
+              members: publicMembers,
+              memberCount: publicMembers.length
+            }
+
+            console.log(`[TEAM_JOIN] Emitting teamUpdated for team ${team._id} with ${publicMembers.length} members`)
+            globalEmitter.emit('quickClash:teamUpdated', {
+              teamId: team._id.toString(),
+              team: teamInfo
+            })
+
+            // Also emit teamMemberJoined with team info for reliable state sync
+            globalEmitter.emit('quickClash:teamMemberJoined', {
+              team: team._id,
+              user: userId,
+              userName: user.name,
+              userInGameName: user.inGameName,
+              teamInfo: teamInfo
+            })
+          }
+        } catch (updateError) {
+          console.error('Error emitting team update:', updateError)
+        }
+
         // Send notifications to existing team members
         try {
           const teamWithMembers = await QuickClashTeam.findById(team._id)
@@ -184,7 +265,7 @@ const joinTeamByCode = async ({ teamCode, userId }) => {
             notificationError,
           )
         }
-      }, 0)
+      }, 500)
 
       return team
     })

@@ -8,6 +8,7 @@ import React, {
 } from 'react'
 import { useDispatch, useSelector } from 'react-redux'
 import { useTranslation } from 'react-i18next'
+import { useNavigate } from 'react-router-dom'
 import { GoogleOAuthProvider, GoogleLogin } from '@react-oauth/google'
 import axios from 'axios'
 import {
@@ -80,6 +81,7 @@ const floatAnimation = keyframes`
 
 export default function Signin({ isOpen, onClose, hamburgerOnClose }) {
   const { t } = useTranslation('Signin')
+  const navigate = useNavigate()
   const toast = useToast()
   const dispatch = useDispatch()
   const emailRef = useRef()
@@ -131,6 +133,10 @@ export default function Signin({ isOpen, onClose, hamburgerOnClose }) {
         isClosable: true,
         position: 'top',
       })
+
+      if (response.data.isNewUser) {
+        navigate('/quickclash')
+      }
     }
   }
 

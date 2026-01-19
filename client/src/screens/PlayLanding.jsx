@@ -238,6 +238,7 @@ const PlayLanding = () => {
   const [isRestoringSession, setIsRestoringSession] = useState(true)
   const [showNameInput, setShowNameInput] = useState(false)
   const [lastLoggedInName, setLastLoggedInName] = useState('')
+  const [googleCredentials, setGoogleCredentials] = useState(null)
 
   // Check for previously logged-in player name on mount
   useEffect(() => {
@@ -294,18 +295,23 @@ const PlayLanding = () => {
     checkExistingSession()
   }, [navigate])
 
-  // Fetch team info if joining via invite
+  // Persist invite code and fetch team info
   useEffect(() => {
-    const fetchTeamInfo = async () => {
-      if (!joinCode) return
-      try {
-        const { team } = await playAPI.getTeamInfo(joinCode)
-        setTeamInfo(team)
-      } catch (err) {
-        setError('Team not found or no longer available')
+    if (joinCode) {
+      localStorage.setItem('pendingTeamJoin', joinCode)
+
+      // Fetch team details for UI
+      const fetchTeamInfo = async () => {
+        try {
+          const { team } = await playAPI.getTeamInfo(joinCode)
+          setTeamInfo(team)
+        } catch (err) {
+          console.error('Failed to fetch team info:', err)
+          // Don't show error to user immediately, let them try to join
+        }
       }
+      fetchTeamInfo()
     }
-    fetchTeamInfo()
   }, [joinCode])
 
   // Handle Google Login success (receives credentialResponse from GoogleLogin component)
@@ -320,16 +326,22 @@ const PlayLanding = () => {
 
       if (response.data.EnterInGameName) {
         // User needs to enter in-game name (new user via Google)
-        // For now, show error - they should use Play Now instead
-        setError('New account - please click "Play Now" to start playing!')
+        // Switch to name input mode but keep credentials
+        setGoogleCredentials(credentialResponse)
+        setShowNameInput(true)
+        setError('Please choose a username to complete your account')
         setIsLoading(false)
         return
       }
 
-      // Existing user - dispatch login and redirect
+      // Existing user - set token FIRST to prevent race conditions with subscriptions
+      localStorage.setItem('token', response.data.token)
+      axios.defaults.headers.common['Authorization'] = `Bearer ${response.data.token}`
+
+      // THEN dispatch state update which might trigger other effects
       dispatch(setUser(response.data.user))
       dispatch(setLoginCheckStatus('fulfilled'))
-      localStorage.setItem('token', response.data.token)
+
       navigate('/quickclash')
     } catch (error) {
       setError(error.response?.data?.error || 'Login failed. Please try again.')
@@ -338,7 +350,7 @@ const PlayLanding = () => {
     }
   }
 
-  // Handle session creation with name
+  // Handle session creation OR Google Signup with name
   const handleSubmit = useCallback(async (e) => {
     e.preventDefault()
     if (!name.trim()) {
@@ -350,6 +362,26 @@ const PlayLanding = () => {
     setError('')
 
     try {
+      if (googleCredentials) {
+         // Completing Google Signup
+         const response = await axios.post('/api/user/handleGoogleLogin', {
+            credentialResponse: googleCredentials,
+            inGameName: name.trim()
+         })
+
+         // SUCCESS - Set token FIRST to prevent race conditions
+         localStorage.setItem('token', response.data.token)
+         axios.defaults.headers.common['Authorization'] = `Bearer ${response.data.token}`
+
+         // THEN dispatch state update
+         dispatch(setUser(response.data.user))
+         dispatch(setLoginCheckStatus('fulfilled'))
+
+         navigate('/quickclash')
+         return
+      }
+
+      // Regular Session Creation (Guest)
       const fingerprint = getDeviceFingerprint()
       const { session, token } = await playAPI.createSession(
         name.trim(),
@@ -370,7 +402,7 @@ const PlayLanding = () => {
     } finally {
       setIsLoading(false)
     }
-  }, [name, joinCode, navigate])
+  }, [name, joinCode, navigate, googleCredentials])
 
   if (isRestoringSession) {
     return (
@@ -439,6 +471,7 @@ const PlayLanding = () => {
         </motion.p>
 
         {/* Team Info (if joining) */}
+        {/* Team Info (if joining) */}
         <AnimatePresence>
           {teamInfo && (
             <motion.div
@@ -447,7 +480,35 @@ const PlayLanding = () => {
               exit={{ opacity: 0, height: 0 }}
               style={styles.teamInfo}
             >
+              {/* Invitation Header */}
+              <div style={{
+                textAlign: 'center',
+                fontSize: 13,
+                color: theme.accentCyan,
+                fontWeight: 600,
+                textTransform: 'uppercase',
+                letterSpacing: 1,
+                marginBottom: 8
+              }}>
+                You have been invited to join
+              </div>
+
               <div style={styles.teamName}>{teamInfo.name || 'Team'}</div>
+
+              {/* Creator Info */}
+              {teamInfo.creator && (
+                <div style={{
+                  textAlign: 'center',
+                  fontSize: 14,
+                  color: 'rgba(255, 255, 255, 0.7)',
+                  marginBottom: 16
+                }}>
+                  by <span style={{ color: '#fff', fontWeight: 600 }}>
+                    {teamInfo.creator.inGameName || teamInfo.creator.name || 'Team Leader'}
+                  </span>
+                </div>
+              )}
+
               <div style={styles.teamStats}>
                 <span>{teamInfo.memberCount}/{teamInfo.maxMembers} players</span>
                 <span>🏆 {teamInfo.avgTrophies}</span>

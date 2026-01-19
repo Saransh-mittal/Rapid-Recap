@@ -1076,8 +1076,15 @@ const notifyTeamMemberJoined = async ({
 
     // Send notifications to all existing team members except the new joiner
     for (const member of teamMembers) {
-      const memberId = member.user._id || member.user
-      const memberIdStr = memberId.toString()
+      // Handle both user and session players
+      let memberIdStr
+      if (member.user) {
+        memberIdStr = (member.user._id || member.user).toString()
+      } else if (member.sessionPlayer) {
+        memberIdStr = (member.sessionPlayer._id || member.sessionPlayer).toString()
+      } else {
+        continue // Skip invalid members
+      }
 
       // Skip the user who just joined
       if (memberIdStr === userId.toString()) {

@@ -10,6 +10,15 @@ const { STORES, KEYS } = CACHE_CONFIG
 export const userCacheService = {
   async getUser() {
     try {
+      // CRITICAL: Ensure we have a token before hydrating user
+      // This prevents "ghost logins" where user data exists but no token
+      const token = localStorage.getItem('token')
+      if (!token) {
+        // If no token, user is effectively logged out. Clear any stale cache.
+        await this.deleteUser()
+        return null
+      }
+
       // Check IndexedDB first
       const cachedData = await dbOperations.get(STORES.USER, 'currentUser')
 
@@ -99,6 +108,14 @@ export const userCacheService = {
     dispatch(setLoginCheckStatus('pending'))
 
     try {
+      // Double check token existence before even attempting to get user
+      if (!localStorage.getItem('token')) {
+         dispatch(setUser(null))
+         dispatch(setLoginCheckStatus('fulfilled'))
+         dispatch(setTaskProgress({ task: 'fetchUser', progress: 100 }))
+         return
+      }
+
       const cachedUser = await this.getUser()
 
       if (cachedUser) {

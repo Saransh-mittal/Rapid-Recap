@@ -175,7 +175,9 @@ const SparkLobby = () => {
 
     // Listen for team member updates
     const cleanupTeamUpdated = addEventListener('quickClash:teamUpdated', (data) => {
+      console.log('[SparkLobby] Received teamUpdated:', data)
       if (data.team) {
+        console.log('[SparkLobby] Updating team state with members:', data.team.members.length)
         setTeam(data.team)
       }
     })
@@ -187,6 +189,11 @@ const SparkLobby = () => {
         'New Teammate!',
         `${playerName} joined your squad`
       )
+
+      // Update team state if provided (state sync fallback)
+      if (data.team) {
+         setTeam(data.team)
+      }
     })
 
     // Listen for being removed from team

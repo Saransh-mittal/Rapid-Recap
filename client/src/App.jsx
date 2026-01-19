@@ -8,9 +8,9 @@ import React, {
   useMemo,
   useCallback,
 } from 'react'
-import { useLocation } from 'react-router-dom'
+import { useLocation, useNavigate } from 'react-router-dom'
 // import ReactGA from 'react-ga4'
-import { Box } from '@chakra-ui/react'
+import { Box, useToast } from '@chakra-ui/react'
 import { useDispatch, useSelector } from 'react-redux'
 import { useTranslation } from 'react-i18next'
 
@@ -21,6 +21,7 @@ import {
   hasAuthSignals,
 } from './utils/authStateManager.js'
 import localStorageService from './services/localStorageWrapper.js'
+import { notificationManager } from './utils/notifications.jsx'
 import useFriendsSocket from './customHooks/useFriendsSocket'
 
 const FixedBackground = React.lazy(() =>
@@ -628,6 +629,9 @@ const App = () => {
     }
   }, [navbarLoaded, overallProgress, dispatch])
 
+  // Spark Engine - Handle pending invites
+  useAutoJoin(isAuthenticated, user, useNavigate())
+
   return (
     <MaintenanceHandler>
       {/* {showLoadingScreen && <LoadingScreen progress={overallProgress} />} */}
@@ -750,6 +754,62 @@ const App = () => {
       </Suspense>
     </MaintenanceHandler>
   )
+}
+
+// Spark Engine - Auto-join invite link logic
+import { quickClashTeamService } from './services/quickClashServices/quickClashTeamService'
+
+const useAutoJoin = (isAuthenticated, user, navigate) => {
+  const isJoiningRef = React.useRef(false)
+
+  useEffect(() => {
+    const checkPendingJoin = async () => {
+      const pendingCode = localStorageService.getItem('pendingTeamJoin')
+
+      if (isAuthenticated && pendingCode && !isJoiningRef.current) {
+        isJoiningRef.current = true
+
+        try {
+          // Attempt to join the team
+          const response = await quickClashTeamService.joinTeamByCode(pendingCode)
+
+          // Custom notification with Team Name
+          const teamName = response.team?.name || 'the team'
+          notificationManager.success(
+            `Welcome to ${teamName}! ⚔️`,
+            'You have successfully joined via invite link.'
+          )
+
+          // Clear the pending code
+          localStorageService.removeItem('pendingTeamJoin')
+
+          // Force navigation to Quick Clash to ensure UI update
+          navigate('/quickclash')
+
+        } catch (error) {
+          // If error is "User already in a team", that's fine - just clear code and redirect
+          if (error.response?.data?.message?.includes('already')) {
+             localStorageService.removeItem('pendingTeamJoin')
+             navigate('/quickclash')
+             return
+          }
+
+          notificationManager.error(
+            'Join Failed',
+            error.response?.data?.message || 'Could not join team from invite link.'
+          )
+          // Keep code? Or remove on error? Let's remove to prevent loop
+          localStorageService.removeItem('pendingTeamJoin')
+        } finally {
+          isJoiningRef.current = false
+        }
+      }
+    }
+
+    if (isAuthenticated) {
+      checkPendingJoin()
+    }
+  }, [isAuthenticated, user, navigate])
 }
 
 export default App

@@ -176,7 +176,7 @@ const setupTeamMembershipEvents = (io, notifyUser) => {
   // Team member joined
   globalEmitter.on(
     'quickClash:teamMemberJoined',
-    ({ team, user, userName, userInGameName }) => {
+    ({ team, user, userName, userInGameName, teamInfo }) => {
       if (!team || !user) {
         console.error('Invalid data in quickClash:teamMemberJoined event')
         return
@@ -189,7 +189,8 @@ const setupTeamMembershipEvents = (io, notifyUser) => {
         userId: user,
         userName,
         userInGameName,
-      })
+        team: teamInfo // Pass the full team object
+      }, [user])
     }
   )
 

@@ -37,6 +37,7 @@ const setupTeamMatchmakingEvents = (io, notifyUser, notifyUserAllDevices = null)
         const userId = getMemberPlayerId(member)
         if (!userId || excludeSet.has(userId)) continue
 
+        console.log(`[QC_MM] Sending ${event} to member ${userId}`)
         notifyUser(userId, event, {
           ...data,
           teamName: team.name,
@@ -335,8 +336,9 @@ const setupTeamMatchmakingEvents = (io, notifyUser, notifyUserAllDevices = null)
 
   // Listen for team updates (joins/leaves)
   globalEmitter.on('quickClash:teamUpdated', data => {
-    if (!data.teamId) return
-    console.log(`[QC_MM] Team ${data.teamId} updated, notifying members`)
+    if (!data.teamId) {
+       return
+    }
     notifyTeamMembers(data.teamId, 'quickClash:teamUpdated', data)
   })
 }

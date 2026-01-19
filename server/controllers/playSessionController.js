@@ -1148,7 +1148,7 @@ const removeTeamMember = asyncHandler(async (req, res) => {
     const team = await playSessionService.removeMemberAsSession({
       teamId,
       leaderSessionId: sessionId,
-      memberSessionPlayerId,
+      memberId: memberSessionPlayerId, // This field contains the ID to remove (User or SessionPlayer)
     })
 
     res.status(200).json({

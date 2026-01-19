@@ -496,6 +496,7 @@ const forgotPassword = async (req, res) => {
 const handleGoogleLogin = async (req, res) => {
   const { credentialResponse, inGameName } = req.body
   const credential = credentialResponse.credential
+  let isNewUser = false
 
   try {
     const userInfo = jwt.decode(credential)
@@ -591,8 +592,10 @@ const handleGoogleLogin = async (req, res) => {
         googleId: userInfo.sub,
         googleEmail: userInfo.email,
         verified: true,
+        needsOnboarding: false,
       })
       await user.save()
+      isNewUser = true
     }
 
     // Create tokens
@@ -647,6 +650,7 @@ const handleGoogleLogin = async (req, res) => {
       message: 'Google Login Successful',
       user: { ...user._doc, unClaimedValidBadges, categoryPrivileges },
       token: accessToken, // For backward compatibility
+      isNewUser,
     })
   } catch (error) {
     console.log(error)

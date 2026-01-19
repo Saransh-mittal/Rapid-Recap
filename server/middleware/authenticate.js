@@ -5,7 +5,17 @@ const jwt = require('jsonwebtoken')
  */
 const Authenticate = async (req, res, next) => {
   try {
-    const token = req.cookies.access_token
+    let token = req.cookies.access_token
+
+    // Fallback to Authorization header
+    if (!token && req.headers.authorization && req.headers.authorization.startsWith('Bearer ')) {
+      token = req.headers.authorization.split(' ')[1]
+    }
+
+    // Fallback to x-auth-token header (legacy/alternative)
+    if (!token && req.headers['x-auth-token']) {
+      token = req.headers['x-auth-token']
+    }
 
     if (!token) {
       return res.status(401).json({
