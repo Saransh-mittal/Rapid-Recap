@@ -16,6 +16,8 @@ const {
 } = require('./quickClashTeamBattleService')
 const { getRandomBotUser } = require('../../utils/quickClashUtils')
 const { isBotUser } = require('../../utils/user.utils')
+const { donatePowerup } = require('./quickClashPowerupService')
+const globalEmitter = require('../../eventEmitter')
 
 /**
  * Initiate full bot challenge process - create session, complete reading and quiz
@@ -645,6 +647,311 @@ const addSingleBotToMatchmaking = async () => {
   }
 }
 
+
+// --- NEW TEAM BATTLE BOT LOGIC ---
+
+// Bot Archetypes definitions
+const BOT_ARCHETYPES = {
+  ROOKIE: {
+    id: 'ROOKIE',
+    skillLevel: { min: 0.3, max: 0.5 },
+    accuracy: { min: 0.3, max: 0.6 }, // 30-60% accuracy (widened slightly for variance)
+    reactionTime: { min: 10, max: 20 }, // Slow: 10-20s startup
+    avgScore: { min: 30, max: 60 },
+  },
+  REGULAR: {
+    id: 'REGULAR',
+    skillLevel: { min: 0.5, max: 0.75 },
+    accuracy: { min: 0.5, max: 0.8 }, // 50-80% accuracy
+    reactionTime: { min: 5, max: 12 }, // Normal: 5-12s startup
+    avgScore: { min: 60, max: 120 },
+  },
+  ELITE: {
+    id: 'ELITE',
+    skillLevel: { min: 0.75, max: 0.95 },
+    accuracy: { min: 0.75, max: 0.95 }, // 75-95% accuracy
+    reactionTime: { min: 3, max: 8 }, // Fast: 3-8s startup
+    avgScore: { min: 120, max: 200 },
+  },
+}
+
+/**
+ * Start the bot reflection process for a newly created team battle.
+ * Identifies all bots in the battle and schedules their lifecycle.
+ * @param {string} battleId - The ID of the team battle
+ */
+const startBotReflectingForBattle = async (battleId) => {
+  try {
+    // Retry logic to handle transaction commit delay
+    let battle = null
+    let attempts = 0
+    const maxAttempts = 5
+
+    while (!battle && attempts < maxAttempts) {
+      battle = await QuickClashTeamBattle.findById(battleId)
+        .populate('teamAMembers.user')
+        .populate('teamBMembers.user')
+
+      if (!battle) {
+        attempts++
+        if (attempts < maxAttempts) {
+          console.log(`[BOT_SIM] Battle ${battleId} not found, retrying (${attempts}/${maxAttempts})...`)
+          await new Promise(resolve => setTimeout(resolve, 1000))
+        }
+      }
+    }
+
+    if (!battle) {
+      console.error(`[BOT_SIM] Battle ${battleId} not found after ${maxAttempts} attempts`)
+      return
+    }
+
+    console.log(`[BOT_SIM] Starting bot reflection for battle ${battleId}`)
+
+    const botTasks = []
+
+    // Helper to process a team's bots
+    const processTeamBots = async (members, teamId) => {
+      let botsInTeam = 0
+      for (const member of members) {
+        if (member.user && await isBotUser(member.user._id || member.user)) {
+          botsInTeam++
+          const botId = (member.user._id || member.user).toString()
+
+          // 1. Assign Archetype randomly
+          const rand = Math.random()
+          let archetype = BOT_ARCHETYPES.REGULAR // Default
+          if (rand < 0.3) archetype = BOT_ARCHETYPES.ROOKIE
+          else if (rand > 0.8) archetype = BOT_ARCHETYPES.ELITE
+
+          // 2. Schedule Lifecycle
+          botTasks.push(
+            simulateBotTeamBattleLifecycle({
+              battleId,
+              botId,
+              teamId: teamId.toString(),
+              archetype,
+              botIndexInTeam: botsInTeam, // Used for powerup limiting
+            })
+          )
+        }
+      }
+    }
+
+    await processTeamBots(battle.teamAMembers, battle.teamA)
+    await processTeamBots(battle.teamBMembers, battle.teamB)
+
+    console.log(`[BOT_SIM] Scheduled ${botTasks.length} bots for battle ${battleId}`)
+  } catch (error) {
+    console.error(`[BOT_SIM] Error starting bot reflection for battle ${battleId}:`, error)
+  }
+}
+
+/**
+ * Orchestrates the full lifecycle of a bot in a team battle
+ */
+const simulateBotTeamBattleLifecycle = async ({
+  battleId,
+  botId,
+  teamId,
+  archetype,
+  botIndexInTeam
+}) => {
+  // 1. Initial Reaction Delay
+  const reactionDelay = (Math.random() * (archetype.reactionTime.max - archetype.reactionTime.min) + archetype.reactionTime.min) * 1000
+
+  // Stagger launch
+  setTimeout(async () => {
+    try {
+      console.log(`[BOT_SIM] Bot ${botId} (${archetype.id}) waking up for battle ${battleId}`)
+
+      // Powerup delay
+      // Delay range: 6-15 seconds before deciding to donate
+      const powerupDelay = 6000 + Math.random() * 9000
+      await new Promise(r => setTimeout(r, powerupDelay))
+
+      // 2. Powerup Donation (80% chance - High engagement mode)
+      // Removed strict team limits to ensure the pool feels active.
+      // With 80% chance, 3 bots will average ~2.4 donations which is ideal.
+      if (Math.random() < 0.8) {
+        await simulateBotPowerupDonation(battleId, teamId, botId, archetype)
+      }
+
+      // Increased delay after powerup before category selection
+      // Delay range: 8-20 seconds to give real players a head start
+      const selectionDelay = 8000 + Math.random() * 12000
+      await new Promise(r => setTimeout(r, selectionDelay))
+
+      // 3. Category Selection
+      // Need to require service here to ensure it's loaded and avoid circular dependency issues if any
+      const { selectCategoryForUser, beginCategoryChallenge, updateBattleWithQuizResults } = require('./quickClashTeamBattleService')
+
+
+      // 3. Category Selection Loop
+
+      let categorySelected = false
+      let selectedCategory = null
+      let attempts = 0
+      const MAX_SELECT_ATTEMPTS = 10 // Increased from 3 to 10 for better robustness
+      const failedCategories = new Set() // Track categories we failed to get
+
+      while (!categorySelected && attempts < MAX_SELECT_ATTEMPTS) {
+        // Refresh battle data to see what is currently available
+        const battle = await QuickClashTeamBattle.findById(battleId)
+        if (!battle || battle.status !== 'active') return
+
+        // Filter available categories, EXCLUDING ones we already failed on
+        const availableCategories = battle.challenges
+          .filter(c => !c.teamACompleted && !c.teamBCompleted)
+          .map(c => c.category)
+          .filter(cat => !failedCategories.has(cat))
+
+        if (availableCategories.length === 0) {
+          // If we ran out of options (either truly none left, or we failed on all of them)
+          console.log(`[BOT_SIM] Bot ${botId} found no available categories (checked/failed all options).`)
+          return
+        }
+
+        selectedCategory = availableCategories[Math.floor(Math.random() * availableCategories.length)]
+
+        try {
+          await selectCategoryForUser({
+            battleId,
+            userId: botId,
+            category: selectedCategory
+          })
+          console.log(`[BOT_SIM] Bot ${botId} selected category ${selectedCategory}`)
+          categorySelected = true
+        } catch (err) {
+          attempts++
+          // Mark this category as failed for this bot so we don't try it again immediately
+          failedCategories.add(selectedCategory)
+
+          console.log(`[BOT_SIM] Bot ${botId} failed to select ${selectedCategory} (Attempt ${attempts}): ${err.message}`)
+
+          if (attempts < MAX_SELECT_ATTEMPTS) {
+            // Wait before retry to let other transactions settle
+            await new Promise(r => setTimeout(r, 1500 + Math.random() * 2000))
+          }
+        }
+      }
+
+      // If we couldn't select a category after retries, we must stop here
+      if (!categorySelected) {
+         console.warn(`[BOT_SIM] Bot ${botId} aborted - failed to select category after ${MAX_SELECT_ATTEMPTS} attempts`)
+         return
+      }
+
+
+      // 4. Reading Phase
+      // Simulate reading time: Forge (30s) + Variance
+      const variance = Math.random() * 30 // 0-30s extra
+      const readingTimeMs = (30 + variance) * 1000
+
+      // Mark as challenge begun (In Progress status)
+      await beginCategoryChallenge({ battleId, userId: botId })
+
+      console.log(`[BOT_SIM] Bot ${botId} reading for ${readingTimeMs}ms`)
+      await new Promise(r => setTimeout(r, readingTimeMs))
+
+      // 5. Quiz Phase
+      // Simulate quiz time: 5 questions * 3-15s
+      const quizTimeMs = (5 * (Math.random() * 12 + 3)) * 1000
+      console.log(`[BOT_SIM] Bot ${botId} taking quiz for ${quizTimeMs}ms`)
+      await new Promise(r => setTimeout(r, quizTimeMs))
+
+      // 6. Complete & Submit Score
+      // Calculate score based on Archetype
+      const minScore = archetype.avgScore.min
+      const maxScore = archetype.avgScore.max
+      const score = Math.floor(Math.random() * (maxScore - minScore + 1)) + minScore
+
+      // Find the challenge ID for the selected category
+      // We need to fetch battle again to be sure
+      const updatedBattle = await QuickClashTeamBattle.findById(battleId)
+      const challenge = updatedBattle.challenges.find(c => c.category === selectedCategory)
+
+      if (challenge) {
+         await updateBattleWithQuizResults({
+           battleId,
+           challengeId: challenge.challenge, // The reference ID
+           userId: botId,
+           score
+         })
+         console.log(`[BOT_SIM] Bot ${botId} finished with score ${score}`)
+      }
+
+    } catch (err) {
+      console.error(`[BOT_SIM] Error in bot lifecycle for ${botId}:`, err)
+    }
+  }, reactionDelay)
+}
+
+/**
+ * Simulate a bot donating a powerup to the team.
+ */
+const simulateBotPowerupDonation = async (battleId, teamId, botId, archetype) => {
+  try {
+    // 1. Decide Powerup
+    const rand = Math.random()
+    let powerupId = 'ORACLES_EYE' // 50%
+    if (rand > 0.9) powerupId = 'TIME_WARP' // 10%
+    else if (rand > 0.5) powerupId = 'SCORE_SURGE' // 40%
+
+    // 2. Donate (We need a special internal method or just mock the inventory check)
+    // Since `donatePowerup` checks real inventory, we can't use it directly for bots
+    // unless we give bots inventory.
+    // ALTERNATIVE: Direct DB push for bots to bypass inventory check.
+
+    // We will do a direct DB operation to simulate donation without inventory requirement
+    const battle = await QuickClashTeamBattle.findById(battleId)
+    if (!battle) return
+
+    const isTeamA = battle.teamA.toString() === teamId.toString()
+    const poolKey = isTeamA ? 'teamAPool' : 'teamBPool'
+    const pool = battle[poolKey]
+
+    // Constants from powerup service (duplicated here or exported)
+    const POWERUP_COSTS = { 'TIME_WARP': 12, 'SCORE_SURGE': 10, 'ORACLES_EYE': 8 }
+    const cost = POWERUP_COSTS[powerupId]
+    const type = 'active' // Simplified
+    const phase = 'both'
+
+    pool.items.push({
+      powerupId,
+      type,
+      cost,
+      phase,
+      donatedBy: botId,
+      donatedAt: new Date()
+    })
+    pool.housingUsed += cost
+
+    await battle.save()
+
+    // 3. Emit Socket Event
+    // We need to fetch bot name for the toast
+    const botUser = await User.findById(botId).select('name inGameName')
+    const donorName = botUser ? (botUser.inGameName || botUser.name) : 'Teammate'
+
+    // Find powerup name for toast
+    const powerupNames = { 'TIME_WARP': 'Time Warp', 'SCORE_SURGE': 'Score Surge', 'ORACLES_EYE': "Oracle's Eye" }
+
+    globalEmitter.emit('quickClash:powerupDonated', {
+      battleId,
+      teamId,
+      powerupName: powerupNames[powerupId] || powerupId,
+      poolState: pool, // Simplified
+      donatedBy: donorName
+    })
+
+    console.log(`[BOT_SIM] Bot ${botId} donated ${powerupId}`)
+
+  } catch (err) {
+    console.error(`[BOT_SIM] Error donating powerup for bot ${botId}:`, err)
+  }
+}
+
 module.exports = {
   initiateBotChallenge,
   createBotSession,
@@ -654,4 +961,5 @@ module.exports = {
 
   // New team battle exports
   addBotsToMatchmaking,
+  startBotReflectingForBattle
 }

@@ -353,28 +353,40 @@ const getGlobalMatchmakingStatusDetailed = asyncHandler(async (req, res) => {
       $or: memberQuery,
       status: 'active',
       createdAt: { $gte: new Date(Date.now() - 5 * 60 * 1000) }, // Battle created in last 5 minutes
-    }).populate([
+    }).sort({ createdAt: -1 }) // Prioritize newest battles
+    .populate([
       { path: 'teamA', select: '_id name' },
       { path: 'teamB', select: '_id name' },
     ])
 
     // Check if any battle is ready for this user
     for (const battle of userTeamBattles) {
-      // Check if this user is part of this battle
-      const isTeamAMember = battle.teamAMembers.some(m => {
-        if (isSessionPlayer && m.sessionPlayer) {
-          return m.sessionPlayer._id?.toString() === playerId.toString() || m.sessionPlayer.toString() === playerId.toString()
-        }
-        return m.user?._id?.toString() === playerId.toString() || m.user?.toString() === playerId.toString()
-      })
-      const isTeamBMember = battle.teamBMembers.some(m => {
+      // Find the user's member entry to check completion status
+      const teamAMember = battle.teamAMembers.find(m => {
         if (isSessionPlayer && m.sessionPlayer) {
           return m.sessionPlayer._id?.toString() === playerId.toString() || m.sessionPlayer.toString() === playerId.toString()
         }
         return m.user?._id?.toString() === playerId.toString() || m.user?.toString() === playerId.toString()
       })
 
-      if (!isTeamAMember && !isTeamBMember) continue
+      const teamBMember = battle.teamBMembers.find(m => {
+        if (isSessionPlayer && m.sessionPlayer) {
+          return m.sessionPlayer._id?.toString() === playerId.toString() || m.sessionPlayer.toString() === playerId.toString()
+        }
+        return m.user?._id?.toString() === playerId.toString() || m.user?.toString() === playerId.toString()
+      })
+
+      const userMember = teamAMember || teamBMember
+
+      if (!userMember) continue
+
+      // FIX: If user has already completed this battle, ignore it
+      // This prevents players from being pulled back into a battle they just finished
+      // while it's still active for other players
+      if (userMember.completed) continue
+
+      const isTeamAMember = !!teamAMember
+      const isTeamBMember = !!teamBMember
 
       // Check if this battle has all challenges (battle is fully ready)
       if (

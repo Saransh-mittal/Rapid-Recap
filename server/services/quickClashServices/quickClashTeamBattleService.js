@@ -1103,6 +1103,16 @@ const createTeamBattle = makeRetryable(
           // Health check will eventually pick up any bots that need recovery
         }
 
+        // START BOT SIMULATION (New Logic)
+        try {
+          const { startBotReflectingForBattle } = require('./quickClashBotService')
+          console.log(`[TeamBattle] Initializing advanced bot simulation for battle ${teamBattle._id}`)
+          // Run asynchronously
+          startBotReflectingForBattle(teamBattle._id)
+        } catch (botSimError) {
+           console.error(`[TeamBattle] Failed to start bot simulation:`, botSimError)
+        }
+
         // ======= PROGRESS: BATTLE READY (100%) =======
         console.log(`[TeamBattle] PHASE 12: Battle ready (100%)`)
 

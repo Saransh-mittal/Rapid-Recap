@@ -1136,6 +1136,12 @@ const useQuickClashSocket = () => {
           currentUserId.toString() === data.userId.toString()
 
         if (data.donatedBy && !isDonor) {
+          // Check if user is currently on the battle page for this specific battle
+          // This prevents toasts from appearing globally or on other battle pages
+          if (!window.location.pathname.includes(data.battleId)) {
+             return
+          }
+
           // Map powerupId to name if available, otherwise formatted ID
           // ideally we'd have a map of IDs to names shared with frontend
           let powerupName = data.powerupId
