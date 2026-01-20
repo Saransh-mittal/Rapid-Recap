@@ -50,6 +50,7 @@ const {
   getUserAchievements,
   verifyEarlyAdopterCode,
   applyEarlyAdopterCode,
+  updateTutorialProgress,
 } = require('../controllers/user')
 const { Authenticate } = require('../middleware/authenticate')
 const {
@@ -140,7 +141,10 @@ router
 router.route('/onboarding-progress').get(Authenticate, getOnboardingProgress)
 
 router.route('/verify-early-adopter').get(Authenticate, verifyEarlyAdopterCode)
+router.route('/verify-early-adopter').get(Authenticate, verifyEarlyAdopterCode)
 router.route('/apply-early-adopter').post(Authenticate, applyEarlyAdopterCode)
+
+router.route('/tutorial-progress').post(Authenticate, updateTutorialProgress)
 
 // Guest routes
 router.route('/guestLogin').post(enhancedGuestLogin)

@@ -26,6 +26,7 @@ import usePlayer from '../../../hooks/usePlayer'
 
 // Notification manager for team join feedback
 import { notificationManager } from '../../../utils/notifications'
+import { useTutorial } from './tutorial/TutorialManager'
 
 // Tab content
 import QuickClashV2 from '../../../screens/QuickClashV2'
@@ -357,7 +358,31 @@ const QuickClashLayoutV2 = () => {
   // Track the last location.key to detect real navigation vs replaceState
   const lastLocationKey = useRef(location.key)
 
-  // Fetch pending invitations count on mount and listen for socket events
+  // Tutorial Blocking Logic
+  const { setBlocked } = useTutorial()
+
+  // Block tutorials if any modal is open OR if we are waiting for one to open
+  useEffect(() => {
+    // Check if welcome modal is pending (session player + not seen yet + not currently open)
+    // We check localStorage directly to see if it's "to be shown"
+    const isWelcomePending = isSession &&
+                             typeof window !== 'undefined' &&
+                             !localStorage.getItem(WELCOME_SHOWN_KEY) &&
+                             !showWelcomeModal
+
+    // Check if streak popup is pending (player loaded + should show today + not currently open + welcome not pending/open)
+    const isStreakPending = player &&
+                            shouldShowStreakPopup() &&
+                            !showStreakPopup &&
+                            !showWelcomeModal &&
+                            !isWelcomePending
+
+    const shouldBlock = showWelcomeModal || showStreakPopup || showSignupPanel || isWelcomePending || isStreakPending
+
+    setBlocked(shouldBlock)
+  }, [showWelcomeModal, showStreakPopup, showSignupPanel, setBlocked, isSession, player])
+
+  // Fetch initial count
   useEffect(() => {
     if (isSession) return // Session players don't have invitations
 
@@ -685,5 +710,6 @@ const QuickClashLayoutV2 = () => {
   )
 }
 
+// Direct integration in the component is better
 QuickClashLayoutV2.displayName = 'QuickClashLayoutV2'
 export default memo(QuickClashLayoutV2)

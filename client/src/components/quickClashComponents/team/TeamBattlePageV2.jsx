@@ -44,6 +44,7 @@ import {
   recordPopupInviteClicked,
 } from '../../../utils/teamInvitePopupUtils'
 import axios from 'axios'
+import { useTutorial } from '../v2/tutorial/TutorialManager' // Import hook
 
 // ═══════════════════════════════════════════════════════════════
 // GLASS CARD WITH OPTIONAL COLOR ACCENT
@@ -549,6 +550,7 @@ const EnhancedBattleResults = ({ battle, userTeam, powerupReward, onClaimRewards
               className="p-4"
             >
               {/* Compact Header Row */}
+              {/* Compact Header Row */}
               <div className="flex items-center justify-center gap-2 mb-4">
                 <motion.div
                   initial={{ scale: 0 }}
@@ -868,10 +870,90 @@ const EnhancedBattleResults = ({ battle, userTeam, powerupReward, onClaimRewards
 // MAIN COMPONENT
 // ═══════════════════════════════════════════════════════════════
 const TeamBattlePageV2 = React.memo(() => {
-  const { t } = useTranslation('QuickClash')
-  const navigate = useNavigate()
-  const { battleId } = useParams()
+  const { t } = useTranslation() // Initialize generic translation function
+  const { t: teamTranslation } = useTranslation('teamBattle') // Initialize team translation function
+  const navigate = useNavigate() // Restore navigate
+  const { battleId } = useParams() // Restore battleId
+
+  // Tutorial Hook
+  const { activeTutorial, stepIndex, nextStep, completeTutorial } = useTutorial()
+  const categoriesRef = React.useRef(null) // Ref for scrolling
+  const {
+    currentBattle, battleDetailsLoading, battleDetailsError, categoryOperationLoading,
+    categoryOperationType, categoryOperationError, selectedCategoryForOperation, getBattleDetails,
+    selectCategory, deselectCategory, beginChallenge, resetOperationState,
+    setupTeamBattleSocketListeners, cleanupSocketListeners, clearOperationError
+  } = useQuickClashTeamBattle()
   const { player, playerId, isSession } = usePlayer()
+  // Helper to check if a battle member matches the current player (user or session)
+  const isMemberCurrentPlayer = useCallback((member) => {
+    if (!member || !playerId) return false
+
+    // For session players, we need to check both _id and sessionId
+    // because localStorage stores sessionId but battle might have _id
+    if (member.sessionPlayer) {
+      const sp = member.sessionPlayer
+      // Check sessionId first (preferred, stored in localStorage)
+      if (sp.sessionId && sp.sessionId === playerId) return true
+      // Also check _id as fallback (converted to string for comparison)
+      if (sp._id && String(sp._id) === String(playerId)) return true
+      return false
+    }
+
+    // For regular users, compare _id
+    if (member.user) {
+      const uid = member.user._id || member.user
+      return String(uid) === String(playerId)
+    }
+
+    return false
+  }, [playerId])
+    const userTeam = useMemo(() => {
+    if (!currentBattle || !playerId) return null
+    if (currentBattle.teamAMembers.some(m => isMemberCurrentPlayer(m))) return 'teamA'
+    if (currentBattle.teamBMembers.some(m => isMemberCurrentPlayer(m))) return 'teamB'
+    return null
+  }, [currentBattle, playerId, isMemberCurrentPlayer])
+  const userStatus = useMemo(() => {
+    if (!currentBattle || !userTeam || !playerId) return {}
+    const members = userTeam === 'teamA' ? currentBattle.teamAMembers : currentBattle.teamBMembers
+    const me = members.find(m => isMemberCurrentPlayer(m))
+    if (!me) return {}
+    return { participated: me.participated || me.completed, completed: me.completed, exited: me.participated && !me.completed, selected: !!me.category, category: me.category }
+  }, [currentBattle, userTeam, playerId, isMemberCurrentPlayer])
+
+  // Tutorial Effect: Scroll to categories
+  useEffect(() => {
+    if (activeTutorial === 'battle' && stepIndex === 0 && categoriesRef.current) {
+       categoriesRef.current.scrollIntoView({ behavior: 'smooth', block: 'center' })
+    }
+  }, [activeTutorial, stepIndex])
+
+  // Tutorial Smart Skip: If user already selected a category, skip Step 0
+  useEffect(() => {
+    if (activeTutorial === 'battle') {
+        // Condition 1: Battle is over (completed/cancelled) using safe access
+        if (currentBattle?.status === 'completed' || currentBattle?.status === 'cancelled') {
+            completeTutorial('battle')
+            return
+        }
+
+        // Condition 2: User has already participated or completed the battle
+        if (userStatus?.participated || userStatus?.completed || userStatus?.exited) {
+             completeTutorial('battle')
+             return
+        }
+
+        // Condition 3: User selected a category but hasn't finished (Skip Step 0)
+        if (stepIndex === 0 && userStatus?.selected) {
+            nextStep()
+        }
+    }
+  }, [activeTutorial, stepIndex, userStatus, currentBattle, nextStep, completeTutorial])
+
+  // Refs for haptic feedback prevention (debouncing)
+  const lastHapticTime = React.useRef(0)
+
   const user = player // Alias for backward compatibility
   const { getSocket } = useSocket()
 
@@ -906,12 +988,7 @@ const TeamBattlePageV2 = React.memo(() => {
   // Local state to bridge the gap between click and API/Socket update
   const [localProcessingCategory, setLocalProcessingCategory] = useState(null)
 
-  const {
-    currentBattle, battleDetailsLoading, battleDetailsError, categoryOperationLoading,
-    categoryOperationType, categoryOperationError, selectedCategoryForOperation, getBattleDetails,
-    selectCategory, deselectCategory, beginChallenge, resetOperationState,
-    setupTeamBattleSocketListeners, cleanupSocketListeners, clearOperationError
-  } = useQuickClashTeamBattle()
+
 
   // Clear operation errors when they occur
   useEffect(() => {
@@ -955,36 +1032,9 @@ const TeamBattlePageV2 = React.memo(() => {
     return null
   }, [])
 
-  // Helper to check if a battle member matches the current player (user or session)
-  const isMemberCurrentPlayer = useCallback((member) => {
-    if (!member || !playerId) return false
 
-    // For session players, we need to check both _id and sessionId
-    // because localStorage stores sessionId but battle might have _id
-    if (member.sessionPlayer) {
-      const sp = member.sessionPlayer
-      // Check sessionId first (preferred, stored in localStorage)
-      if (sp.sessionId && sp.sessionId === playerId) return true
-      // Also check _id as fallback (converted to string for comparison)
-      if (sp._id && String(sp._id) === String(playerId)) return true
-      return false
-    }
 
-    // For regular users, compare _id
-    if (member.user) {
-      const uid = member.user._id || member.user
-      return String(uid) === String(playerId)
-    }
 
-    return false
-  }, [playerId])
-
-  const userTeam = useMemo(() => {
-    if (!currentBattle || !playerId) return null
-    if (currentBattle.teamAMembers.some(m => isMemberCurrentPlayer(m))) return 'teamA'
-    if (currentBattle.teamBMembers.some(m => isMemberCurrentPlayer(m))) return 'teamB'
-    return null
-  }, [currentBattle, playerId, isMemberCurrentPlayer])
 
   const teams = useMemo(() => {
     if (!currentBattle) return null
@@ -1000,13 +1050,7 @@ const TeamBattlePageV2 = React.memo(() => {
     return { done, total }
   }, [currentBattle])
 
-  const userStatus = useMemo(() => {
-    if (!currentBattle || !userTeam || !playerId) return {}
-    const members = userTeam === 'teamA' ? currentBattle.teamAMembers : currentBattle.teamBMembers
-    const me = members.find(m => isMemberCurrentPlayer(m))
-    if (!me) return {}
-    return { participated: me.participated || me.completed, completed: me.completed, exited: me.participated && !me.completed, selected: !!me.category, category: me.category }
-  }, [currentBattle, userTeam, playerId, isMemberCurrentPlayer])
+
 
   // Extract current user's powerup reward from battle members
   const userPowerupReward = useMemo(() => {
@@ -1073,6 +1117,7 @@ const TeamBattlePageV2 = React.memo(() => {
 
   // Clear sparkActiveBattleId when battle is completed (cleanup for non-upgraded session players)
   useEffect(() => {
+    // Use currentBattle._id if battleId from params is unavailable (though it should be here)
     if (currentBattle?.status === 'completed') {
       localStorage.removeItem('sparkActiveBattleId')
     }
@@ -1211,7 +1256,7 @@ const TeamBattlePageV2 = React.memo(() => {
     navigate('/quickclash')
   }, [navigate])
 
-  const selectCat = useCallback(async (c) => {
+  const selectCat = useCallback(async (category) => {
     if (!currentBattle || localProcessingCategory) return
 
     // Haptic feedback on category selection
@@ -1219,10 +1264,15 @@ const TeamBattlePageV2 = React.memo(() => {
     quizAudioService.playSubmit() // Audio for category selection
 
     // Set local loading immediately to block interactions
-    setLocalProcessingCategory(c)
+    setLocalProcessingCategory(category)
 
     try {
-      await selectCategory(currentBattle._id, c)
+      // Tutorial Interception
+      if (activeTutorial === 'battle' && stepIndex === 0) {
+          nextStep()
+      }
+
+      await selectCategory(currentBattle._id, category)
     } catch (error) {
       console.error('Error selecting category:', error)
       // On error, we must clear local state so user can try again
@@ -1237,11 +1287,9 @@ const TeamBattlePageV2 = React.memo(() => {
     // But if we clear it, the animation stops before the data update.
     // Compromise: Clear it in a useEffect when currentBattle updates OR simple timeout.
     // Let's go with clearing in finally for safety, the Redux loading state *should* have kicked in by then.
-    // Or better: keep it true until categoryOperationLoading becomes true?
-    // Simple approach: Clear on finally. The Redux state usually updates *before* the promise resolves if dispatch is awaited.
     // If not, there might be a flicker. Let's try clearing in finally.
     setLocalProcessingCategory(null)
-  }, [currentBattle, selectCategory, localProcessingCategory])
+  }, [currentBattle, selectCategory, localProcessingCategory, activeTutorial, stepIndex, nextStep])
 
   const deselectCat = useCallback(async () => {
     if (!currentBattle || localProcessingCategory || !userStatus.category) return
@@ -1305,7 +1353,7 @@ const TeamBattlePageV2 = React.memo(() => {
   const loadout = teams?.user?.members?.find(m => m?.user?._id === user?._id)?.loadout || { housingUsed: 0 }
 
   return (
-    <div className="min-h-screen pb-24 md:pb-8 relative">
+    <div className={`min-h-screen relative ${activeTutorial === 'battle' ? 'pb-96' : 'pb-24 md:pb-8'}`}>
       {/* Full-screen calculating overlay when timer expires but battle still active */}
       <AnimatePresence>
         {isCalculatingResults && (
@@ -1429,7 +1477,7 @@ const TeamBattlePageV2 = React.memo(() => {
               <span className="text-xs text-white/50">{progress.total}</span>
             </div>
           </div>
-          <div className="space-y-2">
+          <div ref={categoriesRef} className="space-y-2">
             {challenges.map((ch, i) => (
               <CategoryCard key={`${ch.category}-${i}`} challenge={ch} onSelect={selectCat} onDeselect={deselectCat}
                 onBegin={() => setShowConfirm(true)} onReport={viewReport} loading={reportLoading} t={t} />
@@ -1489,8 +1537,8 @@ const TeamBattlePageV2 = React.memo(() => {
                 >
                   <Flame className="w-8 h-8 text-amber-400" />
                 </motion.div>
-                <h3 className="text-xl font-bold text-white mb-1">Ready to Battle? ⚔️</h3>
-                <p className="text-sm text-white/50">{t('No going back once you start!')}</p>
+                <h2 className="text-xl font-bold text-white mb-2">Select a Category</h2>
+                <p className="text-sm text-white/50">Choose wisely to maximize your score</p>
               </div>
               <div className="flex gap-3">
                 <Button onClick={() => { quizAudioService.playDismiss(); setShowConfirm(false) }} variant="outline" className="flex-1 border-white/20 text-white/70">{t('Wait')}</Button>

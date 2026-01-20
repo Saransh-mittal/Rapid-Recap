@@ -79,6 +79,11 @@ const playSessionSchema = new mongoose.Schema(
       type: Number,
       default: 0,
     },
+    tutorialProgress: {
+      lobby: { type: Boolean, default: false },
+      battle: { type: Boolean, default: false },
+      squad_intro: { type: Boolean, default: false },
+    },
   },
   {
     timestamps: true,

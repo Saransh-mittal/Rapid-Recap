@@ -37,6 +37,7 @@ const {
   // Streak info
   getStreak,
   getActiveBattle,
+  updateSessionTutorialProgress,
 } = require('../controllers/playSessionController')
 
 // Import forge controllers from quickClashController
@@ -65,6 +66,7 @@ router.post('/convert', convertToUser)
 router.post('/convert/google', convertWithGoogle)
 router.post('/invite', generateInviteUrl)
 router.post('/fix-history', flexAuth, fixBattleHistory)
+router.post('/session/tutorial-progress', flexAuth, updateSessionTutorialProgress)
 
 // Get active battle (authenticated) - for restoration
 router.get('/battle/active', flexAuth, getActiveBattle)

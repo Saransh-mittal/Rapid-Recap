@@ -125,6 +125,15 @@ const SparkMatchmaking = () => {
           headers: { 'X-Session-Id': sessionId }
         })
 
+        // If battle is ready, redirect to battle (Check this FIRST)
+        if (response.data.status === 'battleReady' && response.data.battleId) {
+          navigate(`/play/battle/${response.data.battleId}`, {
+            state: { battleId: response.data.battleId },
+            replace: true,
+          })
+          return false
+        }
+
         if (!response.data.success || !response.data.inMatchmaking) {
           // Not in matchmaking - redirect to lobby
           console.log('[SparkMatchmaking] Not in matchmaking, redirecting to lobby')
@@ -133,15 +142,6 @@ const SparkMatchmaking = () => {
               session: { sessionId },
               teamCode: localStorage.getItem('sparkTeamCode'),
             },
-            replace: true,
-          })
-          return false
-        }
-
-        // If battle is ready, redirect to battle
-        if (response.data.status === 'battleReady' && response.data.battleId) {
-          navigate(`/play/battle/${response.data.battleId}`, {
-            state: { battleId: response.data.battleId },
             replace: true,
           })
           return false
@@ -242,6 +242,66 @@ const SparkMatchmaking = () => {
       }
     }
   }, [team, matchmakingId, navigate, addEventListener])
+
+  // === FALLBACK POLLING during Searching/Creating Battle state ===
+  // Polls every 5 seconds to detect battle readiness if socket event is lost
+  useEffect(() => {
+    if (state !== STATES.CREATING && state !== STATES.SEARCHING) return
+
+    console.log('[SparkMatchmaking] Starting fallback polling during CREATING state')
+
+    const pollStatus = async () => {
+      try {
+        const sessionId = localStorage.getItem('playSessionId')
+        if (!sessionId) return
+
+        const response = await axios.get('/api/play/matchmaking/status', {
+          headers: { 'X-Session-Id': sessionId }
+        })
+
+        if (response.data.status === 'battleReady' && response.data.battleId) {
+          console.log('[SparkMatchmaking] Fallback polling detected battle ready:', response.data.battleId)
+
+          // Transition to FOUND state (same as socket event handler)
+          setState(STATES.FOUND)
+
+          if (localStorage.getItem('sparkUpgraded') !== 'true') {
+            localStorage.setItem('sparkActiveBattleId', response.data.battleId)
+          }
+
+          setBattleReady({
+            battleId: response.data.battleId,
+            teamId: response.data.teamId || team._id,
+            teamA: response.data.teamA,
+            teamB: response.data.teamB,
+            teamAMembers: response.data.teamAMembers || [],
+            teamBMembers: response.data.teamBMembers || [],
+            winProbability: response.data.winProbability,
+            opponent: response.data.opponent,
+          })
+
+          // Play sound and show celebration
+          if (!matchFoundSoundPlayedRef.current) {
+            quizAudioService.playMatchFound()
+            matchFoundSoundPlayedRef.current = true
+            setShowCelebration(true)
+            setTimeout(() => setShowCelebration(false), 3000)
+          }
+        }
+      } catch (error) {
+        console.error('[SparkMatchmaking] Fallback polling error:', error)
+      }
+    }
+
+    // Poll immediately once, then every 5 seconds
+    pollStatus()
+    const pollInterval = setInterval(pollStatus, 5000)
+
+    return () => {
+      console.log('[SparkMatchmaking] Stopping fallback polling')
+      clearInterval(pollInterval)
+    }
+  }, [state, team])
 
   // Handle browser close/refresh - leave matchmaking
   useEffect(() => {

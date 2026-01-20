@@ -6,6 +6,7 @@ const QuickClashTeamBattle = require('../../model/quickClashSchemas/quickClashTe
 const { makeRetryable } = require('../../utils/retryUtils')
 const { calculateFinalTrophies } = require('../../utils/quickClashTeamUtils')
 const { updateTeamMatchStatus } = require('./quickClashTeamService')
+const { notifyTeamBattleCompleted } = require('./quickClashNotificationService')
 const globalEmitter = require('../../eventEmitter')
 const { getMemberPlayerId } = require('../../utils/sessionPlayerUtils')
 
@@ -658,6 +659,17 @@ const completeBattleOnExpiry = async ({ battle, session }) => {
     })
     console.log(`[BattleExpiry] Emitted teamBattleCompleted for battle ${battle._id} with ${Object.keys(trophyChanges).length} trophy changes`)
   }, 0)
+
+  // Send push notifications to offline team members
+  notifyTeamBattleCompleted({
+    battle,
+    teamAMembers: battle.teamAMembers,
+    teamBMembers: battle.teamBMembers,
+    teamA: { _id: battle.teamA, name: 'Team A' }, // Minimal info, full details fetched in service
+    teamB: { _id: battle.teamB, name: 'Team B' },
+  }).catch(err => {
+    console.error(`[BattleExpiry] Error sending battle completed push notifications:`, err)
+  })
 }
 
 /**

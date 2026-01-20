@@ -16,11 +16,20 @@ const getInitialSession = () => {
   if (typeof window === 'undefined') return null
   const sessionId = localStorage.getItem('playSessionId')
   const inGameName = localStorage.getItem('playSessionName')
+  // Try to recover tutorial progress to prevent flash of tutorial
+  let tutorialProgress = null
+  try {
+      tutorialProgress = JSON.parse(localStorage.getItem('playSessionTutorialProgress'))
+  } catch (e) {
+      console.warn('Failed to parse tutorial progress', e)
+  }
+
   if (sessionId) {
     return {
       sessionId,
       inGameName: inGameName || 'Player',
       trophies: null, // Will be fetched from API
+      tutorialProgress: tutorialProgress || null
     }
   }
   return null
@@ -48,6 +57,10 @@ export const usePlayer = () => {
   // Track if we've already fetched to avoid duplicate calls
   const fetchedRef = useRef(false)
 
+  // Module-level cache for the active request to prevent duplicates across components
+  // (Moving this inside the hook logic but using a global outside would be better,
+  // but for now we rely on the component using the data to cache it or we make a global variable)
+
   // Fetch session player info from API
   const fetchSessionInfo = useCallback(async () => {
     const sessionId = getSessionId()
@@ -60,31 +73,42 @@ export const usePlayer = () => {
     setError(null)
 
     try {
-      const response = await axios.get('/api/play/me', {
-        headers: {
-          'X-Session-Id': sessionId,
-        },
-      })
+      // Check if we already have a request in flight globally
+      if (!window.sessionRequestPromise) {
+          window.sessionRequestPromise = axios.get('/api/play/me', {
+            headers: { 'X-Session-Id': sessionId },
+          })
+      }
+
+      const response = await window.sessionRequestPromise
+      // Clear promise after success so future manual refreshes can work (if logic permits)
+      // keeping it cached for short term to prevent duplicate mounts from re-fetching
 
       if (response.data.success && response.data.session) {
         const session = response.data.session
         const playerData = {
           sessionId: session.sessionId,
           inGameName: session.inGameName,
-          trophies: session.trophies,
-          stats: session.stats,
+          trophies: session.trophies || 0,
+          stats: session.stats || {},
           currentTeamId: session.currentTeamId,
           streak: session.streak, // Streak data from backend
-          coins: session.coins ?? 0, // Coins from backend
+          coins: session.coins || 0, // Coins from backend
+          tutorialProgress: session.tutorialProgress,
         }
         setSessionPlayer(playerData)
 
-        // Also update localStorage with latest name
+        // Also update localStorage with latest name and tutorial progress
         localStorage.setItem('playSessionName', session.inGameName)
+        if (session.tutorialProgress) {
+             localStorage.setItem('playSessionTutorialProgress', JSON.stringify(session.tutorialProgress))
+        }
 
         return playerData
       }
     } catch (err) {
+      // Clear promise on error so we can retry
+      window.sessionRequestPromise = null
       console.error('[usePlayer] Failed to fetch session info:', err)
       setError(err.response?.data?.message || 'Failed to fetch session info')
 
@@ -139,6 +163,7 @@ export const usePlayer = () => {
           isActive: userStreak.isActive || false,
           needsPlayToday: userStreak.needsPlayToday || true,
         } : null,
+        tutorialProgress: user.tutorialProgress,
       },
       playerId: user._id,
       type: 'user',
@@ -163,6 +188,7 @@ export const usePlayer = () => {
         currentTeamId: sessionPlayer.currentTeamId,
         streak: sessionPlayer.streak, // Streak data
         coins: sessionPlayer.coins ?? 0, // Coins data
+        tutorialProgress: sessionPlayer.tutorialProgress,
       },
       playerId: sessionPlayer.sessionId,
       type: 'session',

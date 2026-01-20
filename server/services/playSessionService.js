@@ -962,6 +962,37 @@ const getActiveBattleForPlayer = async ({ userId, sessionId }) => {
   return null
 }
 
+/**
+ * Update session tutorial progress
+ * @param {Object} params
+ * @param {string} params.sessionId
+ * @param {string} params.tutorial - 'lobby' or 'battle'
+ * @param {boolean} [params.completed=true]
+ * @returns {Promise<Object>} Updated session
+ */
+const updateSessionTutorialProgress = async ({ sessionId, tutorial, completed = true }) => {
+  // Find session by sessionId string
+  const session = await PlaySession.findOne({ sessionId })
+  if (!session) {
+    throw new Error('Session not found')
+  }
+
+  // Allowed tutorials
+  const validTutorials = ['lobby', 'battle', 'squad_intro']
+  if (!validTutorials.includes(tutorial)) {
+    throw new Error('Invalid tutorial name')
+  }
+
+  if (!session.tutorialProgress) {
+    session.tutorialProgress = { lobby: false, battle: false, squad_intro: false }
+  }
+
+  session.tutorialProgress[tutorial] = completed !== false
+  await session.save()
+
+  return session
+}
+
 module.exports = {
   createSession,
   createTeamForSession,
@@ -978,4 +1009,5 @@ module.exports = {
   recalculateUserStats,
   removeMemberAsSession,
   getActiveBattleForPlayer,
+  updateSessionTutorialProgress,
 }

@@ -11,6 +11,7 @@ const globalEmitter = require('../../eventEmitter')
 const { getCategories } = require('../../data/categories')
 const { createTeamBattle } = require('./quickClashTeamBattleService')
 const { updateTeamMatchStatus } = require('./quickClashTeamService')
+const { notifyTeamMatchmakingStarted } = require('./quickClashNotificationService')
 const { makeRetryable } = require('../../utils/retryUtils') // ADD: Import retry utility
 const { matchmakingMutex } = require('../../utils/asyncMutex') // ADD: Import mutex for concurrency control
 
@@ -272,6 +273,21 @@ const joinTeamMatchmaking = async ({
           console.error('Error checking for team match:', err)
         })
       }, 100)
+
+      // Send push notifications to offline team members
+      const leader = team.members.find(m => m.role === 'leader')
+      const leaderId = getMemberId(leader)
+      const leaderName = leader?.user?.name || leader?.user?.inGameName || leader?.sessionPlayer?.inGameName || 'Your leader'
+
+      notifyTeamMatchmakingStarted({
+        teamId: team._id.toString(),
+        teamName: team.name,
+        leaderName,
+        teamMembers: team.members,
+        leaderId,
+      }).catch(err => {
+        console.error('Error sending team matchmaking push notifications:', err)
+      })
     }
     // Only commit if we started our own transaction
     if (startedTransaction) {
@@ -1045,8 +1061,14 @@ const getTeamMatchmakingStatus = async ({ teamId }) => {
       team: teamId,
     })
 
+    const isBattleReady =
+      matchmaking &&
+      (matchmaking.status === 'battleReady' ||
+        matchmaking.status === 'matched' ||
+        matchmaking.status === 'creating_battle')
+
     return {
-      inMatchmaking: !!matchmaking,
+      inMatchmaking: !!matchmaking && !isBattleReady,
       status: matchmaking ? matchmaking.status : null,
       matchmaking,
     }
@@ -1071,8 +1093,13 @@ const getGlobalMatchmakingStatus = async ({ userId }) => {
     })
 
     if (globalMatchmaking) {
+      const isBattleReady =
+        globalMatchmaking.status === 'battleReady' ||
+        globalMatchmaking.status === 'matched' ||
+        globalMatchmaking.status === 'creating_battle'
+
       return {
-        inMatchmaking: true,
+        inMatchmaking: !isBattleReady,
         status: globalMatchmaking.status,
         matchmaking: globalMatchmaking,
         type: 'global',
@@ -1150,8 +1177,13 @@ const getGlobalMatchmakingStatus = async ({ userId }) => {
           step = 'searching'
         }
 
+        const isBattleReady =
+          teamMatchmaking.status === 'battleReady' ||
+          teamMatchmaking.status === 'matched' ||
+          teamMatchmaking.status === 'creating_battle'
+
         return {
-          inMatchmaking: true,
+          inMatchmaking: !isBattleReady,
           status: teamMatchmaking.status,
           matchmaking: {
             team: team._id,
@@ -1457,12 +1489,17 @@ const cleanupAutoFormedTeam = async ({
         // Notify all members of this source team
         const sourceTeam = await QuickClashTeam.findById(sourceTeamId)
           .populate('members.user', '_id name inGameName')
+          .populate('members.sessionPlayer', '_id inGameName trophies')
           .session(session)
 
         if (sourceTeam) {
           console.log(sourceTeam)
           for (const srcMember of sourceTeam.members) {
-            const srcUserId = srcMember.user._id || srcMember.user
+            const srcUserId =
+              (srcMember.user && (srcMember.user._id || srcMember.user)) ||
+              (srcMember.sessionPlayer &&
+                (srcMember.sessionPlayer._id || srcMember.sessionPlayer))
+
             if (srcUserId.toString() !== initiatorUserId) {
               globalEmitter.emit('quickClash:teamLeftMatchmaking', {
                 userId: srcUserId.toString(),

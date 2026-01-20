@@ -62,6 +62,7 @@ const GlobalMatchmakingButton = React.memo(
     buttonMinWidth = { base: '140px', md: '240px' },
     forceOpenModal = false, // External control to open modal
     onForceOpenReset, // Callback to reset the forceOpenModal prop
+    onSquadClick, // Callback when button is clicked (for tutorial completion)
     ...otherProps
   }) => {
     const { t } = useTranslation('QuickClash')
@@ -111,6 +112,9 @@ const GlobalMatchmakingButton = React.memo(
     const handleOpenModal = useCallback(() => {
       quizAudioService.playButtonClick()
 
+      // Notify parent that squad button was clicked (for tutorial completion)
+      onSquadClick?.()
+
       // If battle is ready, navigate directly to the battle
       if (matchmakingState.battleReady && matchmakingState.battleReady.battleId) {
         quizAudioService.playGoButton()
@@ -125,7 +129,7 @@ const GlobalMatchmakingButton = React.memo(
 
       // Otherwise open the modal normally
       setIsModalOpen(true)
-    }, [matchmakingState.battleReady, navigate, dispatch])
+    }, [matchmakingState.battleReady, navigate, dispatch, onSquadClick])
     const handleCloseModal = useCallback(() => {
       setIsModalOpen(false)
       onModalClose?.()

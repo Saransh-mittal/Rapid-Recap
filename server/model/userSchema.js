@@ -494,6 +494,11 @@ const userSchema = new mongoose.Schema(
       type: Boolean,
       default: null,
     },
+    tutorialProgress: {
+      lobby: { type: Boolean, default: false },
+      battle: { type: Boolean, default: false },
+      squad_intro: { type: Boolean, default: false },
+    },
   },
   { collection: 'Users' },
 )

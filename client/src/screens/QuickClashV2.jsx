@@ -16,6 +16,9 @@ import GlobalMatchmakingButton from '../components/quickClashComponents/globalma
 // Player hook (works for both auth and session players)
 import usePlayer from '../hooks/usePlayer'
 
+// Tutorial hook
+import { useTutorial } from '../components/quickClashComponents/v2/tutorial/TutorialManager'
+
 // Redux actions
 import {
   fetchAppUpdates,
@@ -56,6 +59,9 @@ const QuickClashV2 = ({ forceOpenMatchmaking = false, onForceOpenReset }) => {
 
   // Get player info (works for both auth users and session players)
   const { isSession, isAuthenticated, player, playerId } = usePlayer()
+
+  // Tutorial context for squad_intro completion
+  const tutorialContext = useTutorial()
 
   // Refs to prevent re-running effects
   const authCheckedRef = useRef(false)
@@ -146,6 +152,12 @@ const QuickClashV2 = ({ forceOpenMatchmaking = false, onForceOpenReset }) => {
           <GlobalMatchmakingButton
             forceOpenModal={forceOpenMatchmaking}
             onForceOpenReset={onForceOpenReset}
+            onSquadClick={() => {
+              // Complete squad_intro tutorial when user clicks the button
+              if (tutorialContext?.activeTutorial === 'squad_intro' && tutorialContext?.completeTutorial) {
+                tutorialContext.completeTutorial('squad_intro')
+              }
+            }}
           />
         </div>
 

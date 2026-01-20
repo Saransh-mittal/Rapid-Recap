@@ -114,6 +114,9 @@ const ConnectionStatusIndicator = React.lazy(() =>
   import('./components/connection/ConnectionStatusIndicator.jsx'),
 )
 
+// Import Tutorial Manager
+import { TutorialProvider } from './components/quickClashComponents/v2/tutorial/TutorialManager'
+
 const App = () => {
   // ReactGA.initialize('G-ES5VQ8NW7Z')
   const location = useLocation()
@@ -644,6 +647,10 @@ const App = () => {
         {showPWAPrompt && <PWAPromptStrip onClose={handlePromptClose} />}
       </Suspense>
       <Suspense fallback={null}>
+        {showPWAPrompt && <PWAPromptStrip onClose={handlePromptClose} />}
+      </Suspense>
+      <TutorialProvider>
+      <Suspense fallback={null}>
         <NoteMessageQueue />
       </Suspense>
 
@@ -752,6 +759,7 @@ const App = () => {
       <Suspense fallback={null}>
         <ConnectionStatusIndicator />
       </Suspense>
+      </TutorialProvider>
     </MaintenanceHandler>
   )
 }

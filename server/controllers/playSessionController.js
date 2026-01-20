@@ -831,13 +831,14 @@ const getSessionInfo = asyncHandler(async (req, res) => {
       session: {
         sessionId: session.sessionId,
         inGameName: session.inGameName,
-        trophies: session.trophies,
-        stats: session.stats,
+        trophies: session.trophies || 0,
+        stats: session.stats || {},
         currentTeamId: session.currentTeamId,
         createdAt: session.createdAt,
         lastActiveAt: session.lastActiveAt,
-        streak: session.streak, // Streak data for frontend display
-        coins: session.coins ?? 0, // Coins for frontend display
+        streak: session.streak,
+        coins: session.coins || 0,
+        tutorialProgress: session.tutorialProgress,
       },
     })
   } catch (error) {
@@ -1016,39 +1017,48 @@ const getMatchmakingStatus = asyncHandler(async (req, res) => {
       })
     }
 
-    // Check if any team is in matchmaking
+    // Check if there's a ready battle for any of the player's teams
+    // PRIORITIZE THIS: If a battle is ready, they are "in matchmaking" (battle ready phase)
+    // regardless of whether the matchmaking request entry still exists
     const teamIds = playerTeams.map(t => t._id)
+
+    const readyBattle = await QuickClashTeamBattle.findOne({
+      $or: [{ teamA: { $in: teamIds } }, { teamB: { $in: teamIds } }],
+      status: 'active',
+      createdAt: { $gte: new Date(Date.now() - 5 * 60 * 1000) }
+    }).populate([
+      { path: 'teamA', select: '_id name' },
+      { path: 'teamB', select: '_id name' },
+    ])
+
+    if (readyBattle) {
+      // Find which team is the user's team
+      const userTeamId = teamIds.find(id =>
+        id.toString() === readyBattle.teamA._id.toString() ||
+        id.toString() === readyBattle.teamB._id.toString()
+      )
+
+      return res.status(200).json({
+        success: true,
+        inMatchmaking: false,
+        status: 'battleReady',
+        matchmaking: { status: 'matched', team: userTeamId },
+        teamId: userTeamId,
+        teamName: userTeamId.toString() === readyBattle.teamA._id.toString() ? readyBattle.teamA.name : readyBattle.teamB.name,
+        battleId: readyBattle._id,
+        teamA: readyBattle.teamA._id,
+        teamB: readyBattle.teamB._id,
+        winProbability: readyBattle.winProbability,
+      })
+    }
+
+    // Check if any team is in matchmaking queue
     const matchmakingEntry = await QuickClashTeamMatchmaking.findOne({
       team: { $in: teamIds },
       status: { $in: ['available', 'matching'] }
     }).populate('team')
 
     if (matchmakingEntry) {
-      // Check if there's a ready battle for this team
-      const readyBattle = await QuickClashTeamBattle.findOne({
-        $or: [{ teamA: matchmakingEntry.team._id }, { teamB: matchmakingEntry.team._id }],
-        status: 'active',
-        createdAt: { $gte: new Date(Date.now() - 5 * 60 * 1000) }
-      }).populate([
-        { path: 'teamA', select: '_id name' },
-        { path: 'teamB', select: '_id name' },
-      ])
-
-      if (readyBattle) {
-        return res.status(200).json({
-          success: true,
-          inMatchmaking: true,
-          status: 'battleReady',
-          matchmaking: matchmakingEntry,
-          teamId: matchmakingEntry.team._id,
-          teamName: matchmakingEntry.team.name,
-          battleId: readyBattle._id,
-          teamA: readyBattle.teamA,
-          teamB: readyBattle.teamB,
-          winProbability: readyBattle.winProbability,
-        })
-      }
-
       return res.status(200).json({
         success: true,
         inMatchmaking: true,
@@ -1208,6 +1218,36 @@ const getStreak = asyncHandler(async (req, res) => {
   }
 })
 
+/**
+ * @desc    Update session tutorial progress
+ * @route   POST /api/play/session/tutorial-progress
+ * @access  Private (requires flexAuth or session)
+ */
+const updateSessionTutorialProgress = asyncHandler(async (req, res) => {
+  const { tutorial, completed } = req.body
+  // Support both authenticated users (via session header) and direct session context
+  const sessionId = req.body.sessionId || req.headers['x-session-id'] || req.player?.sessionId
+
+  if (!sessionId) {
+    return res.status(400).json({ error: 'Session ID is required' })
+  }
+
+  try {
+    const session = await playSessionService.updateSessionTutorialProgress({
+      sessionId,
+      tutorial,
+      completed
+    })
+
+    res.status(200).json({
+      message: 'Tutorial progress updated',
+      tutorialProgress: session.tutorialProgress
+    })
+  } catch (error) {
+    res.status(400).json({ error: error.message })
+  }
+})
+
 module.exports = {
   createSession,
   createTeam,
@@ -1244,5 +1284,6 @@ module.exports = {
   // Streak info
   getStreak,
   getActiveBattle,
+  updateSessionTutorialProgress,
 }
 
