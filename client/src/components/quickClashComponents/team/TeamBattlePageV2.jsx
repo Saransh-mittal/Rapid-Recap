@@ -484,13 +484,15 @@ const EnhancedBattleResults = ({ battle, userTeam, powerupReward, onClaimRewards
   const oppWins = userTeam === 'teamA' ? battle.teamBWins : battle.teamAWins
   const userTotalScore = userTeam === 'teamA' ? battle.teamATotalScore : battle.teamBTotalScore
   const oppTotalScore = userTeam === 'teamA' ? battle.teamBTotalScore : battle.teamATotalScore
-  const trophyChange = battle.trophyExchange ? Math.round((battle.trophyExchange.finalAmount * (isWin ? 1.25 : isTie ? 0.1 : -0.75)) / 4) : 0
   const hasUnclaimedRewards = powerupReward && powerupReward.housingSpaceEarned > 0 && !powerupReward.claimed
 
   // Get user's member data
   const userMembers = userTeam === 'teamA' ? battle.teamAMembers : battle.teamBMembers
   const oppMembers = userTeam === 'teamA' ? battle.teamBMembers : battle.teamAMembers
   const userMemberData = userMembers.find(m => m?.user?._id === user?._id) || userMembers[0]
+
+  // Use backend-calculated trophyChange for single source of truth
+  const trophyChange = userMemberData?.trophyChange ?? 0
 
   // Calculate user's personal stats
   const userScore = userMemberData?.score || 0
@@ -876,8 +878,9 @@ const TeamBattlePageV2 = React.memo(() => {
   const { battleId } = useParams() // Restore battleId
 
   // Tutorial Hook
-  const { activeTutorial, stepIndex, nextStep, completeTutorial } = useTutorial()
+  const { activeTutorial, stepIndex, nextStep, goToStep, completeTutorial } = useTutorial()
   const categoriesRef = React.useRef(null) // Ref for scrolling
+  const powerupRef = React.useRef(null) // Ref for powerup section scrolling
   const {
     currentBattle, battleDetailsLoading, battleDetailsError, categoryOperationLoading,
     categoryOperationType, categoryOperationError, selectedCategoryForOperation, getBattleDetails,
@@ -922,14 +925,59 @@ const TeamBattlePageV2 = React.memo(() => {
     return { participated: me.participated || me.completed, completed: me.completed, exited: me.participated && !me.completed, selected: !!me.category, category: me.category }
   }, [currentBattle, userTeam, playerId, isMemberCurrentPlayer])
 
-  // Tutorial Effect: Scroll to categories
+  // Tutorial Effect: Scroll to element based on step with dynamic viewport-relative positioning
   useEffect(() => {
-    if (activeTutorial === 'battle' && stepIndex === 0 && categoriesRef.current) {
-       categoriesRef.current.scrollIntoView({ behavior: 'smooth', block: 'center' })
-    }
-  }, [activeTutorial, stepIndex])
+    if (activeTutorial === 'battle') {
+      const tryScroll = (attempts = 0) => {
+        // Auth users: Step 0 (powerup_intro) and Step 2 (equip_prompt) - scroll to powerup centered
+        if (!isSession && (stepIndex === 0 || stepIndex === 2)) {
+          if (powerupRef.current) {
+            const rect = powerupRef.current.getBoundingClientRect()
+            const scrollTop = window.pageYOffset || document.documentElement.scrollTop
+            const viewportHeight = window.innerHeight
+            // Center the powerup element: element top should be at (viewport/2 - element height/2)
+            const targetOffset = (viewportHeight / 2) - (rect.height / 2)
+            const targetPosition = scrollTop + rect.top - targetOffset
+            window.scrollTo({ top: Math.max(0, targetPosition), behavior: 'smooth' })
+          } else if (attempts < 5) {
+            // Retry if ref not found yet (e.g. initial load)
+            setTimeout(() => tryScroll(attempts + 1), 100)
+          }
+        }
+        // Session players: Step 0 - scroll to categories
+        else if (isSession && stepIndex === 0) {
+           if (categoriesRef.current) {
+            const rect = categoriesRef.current.getBoundingClientRect()
+            const scrollTop = window.pageYOffset || document.documentElement.scrollTop
+            const viewportHeight = window.innerHeight
+            const targetOffset = viewportHeight * 0.15
+            const targetPosition = scrollTop + rect.top - targetOffset
+            window.scrollTo({ top: Math.max(0, targetPosition), behavior: 'smooth' })
+           } else if (attempts < 5) {
+             setTimeout(() => tryScroll(attempts + 1), 100)
+           }
+        }
+        // Auth users: Step 4 (categories) - scroll to categories
+        else if (!isSession && stepIndex === 4) {
+           if (categoriesRef.current) {
+            const rect = categoriesRef.current.getBoundingClientRect()
+            const scrollTop = window.pageYOffset || document.documentElement.scrollTop
+            const viewportHeight = window.innerHeight
+            const targetOffset = viewportHeight * 0.15
+            const targetPosition = scrollTop + rect.top - targetOffset
+            window.scrollTo({ top: Math.max(0, targetPosition), behavior: 'smooth' })
+           } else if (attempts < 5) {
+             setTimeout(() => tryScroll(attempts + 1), 100)
+           }
+        }
+      }
 
-  // Tutorial Smart Skip: If user already selected a category, skip Step 0
+      // Initial call with small delay to allow layout
+      setTimeout(() => tryScroll(), 50)
+    }
+  }, [activeTutorial, stepIndex, isSession])
+
+  // Tutorial Smart Skip: If user already selected a category, skip to appropriate step
   useEffect(() => {
     if (activeTutorial === 'battle') {
         // Condition 1: Battle is over (completed/cancelled) using safe access
@@ -944,12 +992,20 @@ const TeamBattlePageV2 = React.memo(() => {
              return
         }
 
-        // Condition 3: User selected a category but hasn't finished (Skip Step 0)
-        if (stepIndex === 0 && userStatus?.selected) {
-            nextStep()
+        // Condition 3: User selected a category but hasn't finished
+        // For auth users (8 steps): skip powerup steps (0-3) AND category (4) → jump to step 5 (forge)
+        // For session users (4 steps): skip category (0) → jump to step 1 (forge)
+        if (userStatus?.selected) {
+          if (!isSession && stepIndex <= 4) {
+            // Auth users: skip all powerup + category steps, go to forge (step 5)
+            goToStep(5)
+          } else if (isSession && stepIndex === 0) {
+            // Session users: skip category, go to forge (step 1)
+            goToStep(1)
+          }
         }
     }
-  }, [activeTutorial, stepIndex, userStatus, currentBattle, nextStep, completeTutorial])
+  }, [activeTutorial, stepIndex, userStatus, currentBattle, goToStep, completeTutorial, isSession])
 
   // Refs for haptic feedback prevention (debouncing)
   const lastHapticTime = React.useRef(0)
@@ -1399,7 +1455,7 @@ const TeamBattlePageV2 = React.memo(() => {
 
       {/* Powerups */}
       {currentBattle.status === 'active' && userTeam && (
-        <div className="px-5 mb-4">
+        <div ref={powerupRef} className="px-5 mb-4">
           <GlassCard className="p-3" accent="from-purple-500 to-indigo-500">
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-2">
@@ -1434,26 +1490,60 @@ const TeamBattlePageV2 = React.memo(() => {
                 ) : (
                   /* Authenticated User - Full powerup controls */
                   <>
-                    <motion.button whileTap={{ scale: 0.9 }} onClick={() => { quizAudioService.playButtonClick(); setIsDonationOpen(true) }} className="p-2.5 rounded-xl bg-white/10 hover:bg-white/15 transition-colors">
-                      <Gift className="w-4 h-4 text-purple-300" />
+                    <motion.button
+                      whileTap={{ scale: 0.9 }}
+                      animate={activeTutorial === 'battle' && stepIndex === 0 ? { scale: [1, 1.15, 1] } : {}}
+                      transition={activeTutorial === 'battle' && stepIndex === 0 ? { duration: 1, repeat: Infinity } : {}}
+                      onClick={() => {
+                        quizAudioService.playButtonClick()
+                        setIsDonationOpen(true)
+                        // Tutorial: If on step 0 (powerup_intro), advance to step 1 (donation_modal)
+                        if (activeTutorial === 'battle' && stepIndex === 0) {
+                          goToStep(1)
+                        }
+                      }}
+                      className={`p-2.5 rounded-xl transition-colors relative ${
+                        activeTutorial === 'battle' && stepIndex === 0
+                          ? 'bg-purple-500/40 ring-2 ring-purple-400 ring-offset-2 ring-offset-slate-900'
+                          : 'bg-white/10 hover:bg-white/15'
+                      }`}
+                    >
+                      <Gift className={`w-4 h-4 ${activeTutorial === 'battle' && stepIndex === 0 ? 'text-purple-200' : 'text-purple-300'}`} />
+                      {/* Tutorial indicator pulse */}
+                      {activeTutorial === 'battle' && stepIndex === 0 && (
+                        <span className="absolute inset-0 rounded-xl animate-ping bg-purple-400/30" />
+                      )}
                     </motion.button>
                     <motion.button
                       whileTap={!userStatus.participated ? { scale: 0.9 } : {}}
+                      animate={activeTutorial === 'battle' && stepIndex === 2 ? { scale: [1, 1.05, 1] } : {}}
+                      transition={activeTutorial === 'battle' && stepIndex === 2 ? { duration: 1, repeat: Infinity } : {}}
                       onClick={() => {
-                        quizAudioService.playButtonClick()
+                      quizAudioService.playButtonClick()
                         if (userStatus.participated) {
                           notificationManager.info('Already Participated', 'You have already played in this battle. Powerups cannot be changed.')
                         } else {
                           setIsSelectionOpen(true)
+                          // Tutorial: If on step 2 (equip_prompt), advance to step 3 (loadout_modal)
+                          if (activeTutorial === 'battle' && stepIndex === 2) {
+                            goToStep(3)
+                          }
                         }
                       }}
-                      className={`px-3 py-2 rounded-xl text-white text-sm font-semibold flex items-center gap-1.5 ${
+                      className={`px-3 py-2 rounded-xl text-white text-sm font-semibold flex items-center gap-1.5 relative transition-all ${
                         userStatus.participated
                           ? 'bg-gray-500/50 cursor-not-allowed opacity-60'
-                          : 'bg-purple-500 hover:bg-purple-400'
+                          : activeTutorial === 'battle' && stepIndex === 2
+                            ? 'bg-purple-500 ring-2 ring-purple-400 ring-offset-2 ring-offset-slate-900 shadow-[0_0_15px_rgba(168,85,247,0.5)]'
+                            : 'bg-purple-500 hover:bg-purple-400'
                       }`}
                     >
-                      <Bolt className="w-4 h-4" /> Equip
+                      <Bolt className={`w-4 h-4 ${activeTutorial === 'battle' && stepIndex === 2 ? 'animate-pulse' : ''}`} /> Equip
+
+                      {/* Tutorial shine effect */}
+                      {activeTutorial === 'battle' && stepIndex === 2 && (
+                        <span className="absolute inset-0 rounded-xl bg-white/20 animate-pulse" />
+                      )}
                     </motion.button>
                   </>
                 )}
@@ -1565,8 +1655,30 @@ const TeamBattlePageV2 = React.memo(() => {
       </AnimatePresence>
       {currentBattle && userTeam && teamId && (
         <>
-          <PowerupDonationModal isOpen={isDonationOpen} onClose={() => setIsDonationOpen(false)} battleId={currentBattle._id} teamId={teamId} />
-          <PowerupSelectionModal isOpen={isSelectionOpen} onClose={() => setIsSelectionOpen(false)} battleId={currentBattle._id} teamId={teamId} />
+          <PowerupDonationModal
+            isOpen={isDonationOpen}
+            onClose={() => {
+              setIsDonationOpen(false)
+              // Tutorial: If on step 1 (donation_modal), advance to step 2 (equip_prompt)
+              if (activeTutorial === 'battle' && stepIndex === 1) {
+                goToStep(2)
+              }
+            }}
+            battleId={currentBattle._id}
+            teamId={teamId}
+          />
+          <PowerupSelectionModal
+            isOpen={isSelectionOpen}
+            onClose={() => {
+              setIsSelectionOpen(false)
+              // Tutorial: If on step 3 (loadout_modal), advance to step 4 (categories)
+              if (activeTutorial === 'battle' && stepIndex === 3) {
+                goToStep(4)
+              }
+            }}
+            battleId={currentBattle._id}
+            teamId={teamId}
+          />
         </>
       )}
       <TeamMemberInfoModal userId={selectedMember} isOpen={isMemberOpen} onClose={() => { setIsMemberOpen(false); setSelectedMember(null) }} />

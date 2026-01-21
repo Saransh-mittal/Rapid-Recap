@@ -10,6 +10,9 @@ import PowerupShop from '../shop/PowerupShop'
 // Audio feedback
 import { quizAudioService } from '../../../services/quizAudioService'
 
+// Tutorial
+import { useTutorial } from '../v2/tutorial/TutorialManager'
+
 const MotionDiv = motion.div
 const MotionSpan = motion.span
 
@@ -22,8 +25,17 @@ const CoinDisplay = memo(() => {
   const { userCoins, userTrophiesLoading } = useSelector(state => state.quickClash)
   const [isShopOpen, setIsShopOpen] = useState(false)
 
+  // Tutorial context
+  const { activeTutorial, completeTutorial } = useTutorial()
+
   const handleClick = () => {
+    quizAudioService.playButtonClick()
     setIsShopOpen(true)
+
+    // Complete tutorial when user clicks coins
+    if (activeTutorial === 'coins_shop') {
+      completeTutorial('coins_shop')
+    }
   }
 
   // Show loading shimmer if still loading

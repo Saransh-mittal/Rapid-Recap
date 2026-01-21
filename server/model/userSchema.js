@@ -498,6 +498,12 @@ const userSchema = new mongoose.Schema(
       lobby: { type: Boolean, default: false },
       battle: { type: Boolean, default: false },
       squad_intro: { type: Boolean, default: false },
+      coins_shop: { type: Boolean, default: false },
+    },
+    // Flag to track if user received welcome powerups (TIME_WARP + ORACLES_EYE)
+    receivedWelcomePowerups: {
+      type: Boolean,
+      default: false,
     },
   },
   { collection: 'Users' },

@@ -301,8 +301,12 @@ const submitQuizAnswersService = makeRetryable(
         precisionProtocol.effectApplied = true
       }
 
-      // 2. Score Surge (Quiz): 1.1x Multiplier
-      const scoreSurge = activePowerups.find(p => p.powerupId === 'SCORE_SURGE' && (p.phase?.toLowerCase() === 'quiz' || p.phase?.toLowerCase() === 'both'))
+      // 2. Score Surge (Quiz): 1.1x Multiplier - only if not already used in Forge phase
+      const scoreSurge = activePowerups.find(p =>
+        p.powerupId === 'SCORE_SURGE' &&
+        !p.used && // Only apply if not already used in Forge
+        (p.phase?.toLowerCase() === 'quiz' || p.phase?.toLowerCase() === 'both')
+      )
       if (scoreSurge) {
         const surgedScore = Math.round(RQM_score * 1.1)
         scoreSurgeBonus = surgedScore - RQM_score

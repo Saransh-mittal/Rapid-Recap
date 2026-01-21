@@ -145,6 +145,13 @@ const SessionSignupPanel = memo(({ isOpen, onClose, sessionPlayer }) => {
         localStorage.removeItem('playSessionName')
         localStorage.removeItem('sparkUpgraded')
 
+        // Store pending reward for modal display after reload
+        if (response.data.rewardGranted && response.data.rewards) {
+          localStorage.setItem('pendingReward', JSON.stringify({
+            powerups: response.data.rewards.powerups
+          }))
+        }
+
         setSuccessMessage(response.data.isNewUser
           ? 'Account created successfully!'
           : 'Session linked to your account!'

@@ -263,7 +263,7 @@ const convertWithGoogle = asyncHandler(async (req, res) => {
       }
     }
 
-    const { user, token, isNewUser } = await playSessionService.convertWithGoogle({
+    const { user, token, isNewUser, rewardGranted, rewardedPowerups } = await playSessionService.convertWithGoogle({
       sessionId,
       googleUserInfo,
     })
@@ -280,6 +280,11 @@ const convertWithGoogle = asyncHandler(async (req, res) => {
       success: true,
       message: isNewUser ? 'Account created successfully' : 'Session linked to existing account',
       isNewUser,
+      // Include reward data for frontend modal (session conversion)
+      rewardGranted: rewardGranted || false,
+      rewards: rewardGranted ? {
+        powerups: rewardedPowerups || ['TIME_WARP', 'ORACLES_EYE']
+      } : null,
       user: {
         _id: user._id,
         name: user.name,

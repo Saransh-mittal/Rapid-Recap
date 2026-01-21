@@ -122,7 +122,8 @@ const ForgeReadingPhase = ({ sessionId, category, activePowerups = [], isSession
   const isTransitioningRef = useRef(false)
 
   // Powerup State
-  const [usedPowerups, setUsedPowerups] = useState({}) // { powerupId: true }
+  const [usedPowerups, setUsedPowerups] = useState({}) // { powerupId: usedCount } - tracks how many of each type used
+  const [oracleUsedThisQuestion, setOracleUsedThisQuestion] = useState(false) // Oracle Eye: 1 per question
   const [activeEffects, setActiveEffects] = useState({
     scoreSurge: false,
   })
@@ -135,6 +136,17 @@ const ForgeReadingPhase = ({ sessionId, category, activePowerups = [], isSession
     !p.used &&
     p.type?.toLowerCase() !== 'passive' // Exclude passive powerups - they auto-activate on conditions
   )
+
+  // Group powerups by ID with count for UI display
+  const groupedForgePowerups = forgePowerups.reduce((acc, p) => {
+    const existing = acc.find(g => g.powerupId === p.powerupId)
+    if (existing) {
+      existing.total++
+    } else {
+      acc.push({ ...p, total: 1 })
+    }
+    return acc
+  }, [])
 
   // Passive powerups for Forge - display only (auto-activate on conditions)
   const passiveForgePowerups = activePowerups.filter(p =>
@@ -456,6 +468,7 @@ const ForgeReadingPhase = ({ sessionId, category, activePowerups = [], isSession
         setContinueLoading(false) // Reset continue button loading state
         setPhase('question')
         setActiveEffects({ scoreSurge: false }) // Reset per-question effects
+        setOracleUsedThisQuestion(false) // Reset Oracle Eye per-question limit
         setDisabledOptions([])
         setHighlightedAnswer(null)
         setMaxQuestionTime(15) // Reset max time
@@ -507,11 +520,20 @@ const ForgeReadingPhase = ({ sessionId, category, activePowerups = [], isSession
 
   // Powerup Handlers
   const handlePowerupClick = async (powerup) => {
-    if (usedPowerups[powerup.powerupId]) return
+    // Oracle Eye: only 1 per question
+    if (powerup.powerupId === 'ORACLES_EYE' && oracleUsedThisQuestion) return
+
+    // Count check for stackable powerups - check if all are exhausted
+    const totalOfType = activePowerups.filter(p => p.powerupId === powerup.powerupId && !p.used).length
+    const usedOfType = usedPowerups[powerup.powerupId] || 0
+    if (usedOfType >= totalOfType) return
 
     try {
-      // Mark locally as used immediately to prevent double clicks
-      setUsedPowerups(prev => ({ ...prev, [powerup.powerupId]: true }))
+      // Mark locally as used immediately (increment count) to prevent double clicks
+      setUsedPowerups(prev => ({ ...prev, [powerup.powerupId]: (prev[powerup.powerupId] || 0) + 1 }))
+      if (powerup.powerupId === 'ORACLES_EYE') {
+        setOracleUsedThisQuestion(true)
+      }
 
       // Call API to mark as used on server
       // We do this for ALL powerups now to ensure consistency
@@ -534,7 +556,7 @@ const ForgeReadingPhase = ({ sessionId, category, activePowerups = [], isSession
             // Reading timer counts DOWN. So we just add to it.
             setReadingTimer(prev => prev + 15)
           }
-          notificationManager.powerup('Time Warp Activated!')
+          notificationManager.powerup('Time Warp Activated!', '+15 seconds')
           break
         case 'SCORE_SURGE':
           quizAudioService.playScoreSurge() // Power boost whoosh
@@ -560,12 +582,19 @@ const ForgeReadingPhase = ({ sessionId, category, activePowerups = [], isSession
     } catch (err) {
       console.error('Error using powerup:', err)
       notificationManager.error('Powerup Failed', 'Could not activate powerup')
-      // Revert used state if failed
+      // Revert used state if failed (decrement count)
       setUsedPowerups(prev => {
-        const newState = { ...prev }
-        delete newState[powerup.powerupId]
-        return newState
+        const newCount = (prev[powerup.powerupId] || 1) - 1
+        if (newCount <= 0) {
+          const newState = { ...prev }
+          delete newState[powerup.powerupId]
+          return newState
+        }
+        return { ...prev, [powerup.powerupId]: newCount }
       })
+      if (powerup.powerupId === 'ORACLES_EYE') {
+        setOracleUsedThisQuestion(false)
+      }
     }
   }
 
@@ -1109,7 +1138,7 @@ const ForgeReadingPhase = ({ sessionId, category, activePowerups = [], isSession
       <div className="flex-none p-3 md:p-4 border-t border-white/15 bg-black/30 backdrop-blur-3xl z-20 shadow-[0_-4px_16px_rgba(0,0,0,0.3)]">
         <div className="max-w-4xl mx-auto w-full">
           {/* Premium Powerup Dock - shown during question phase */}
-          {phase === 'question' && forgePowerups.length > 0 && (
+          {phase === 'question' && groupedForgePowerups.length > 0 && (
             <motion.div
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
@@ -1117,8 +1146,14 @@ const ForgeReadingPhase = ({ sessionId, category, activePowerups = [], isSession
               className="mb-4"
             >
               <div className="flex items-center justify-center gap-3 flex-wrap">
-                {forgePowerups.map((p, i) => {
-                  const isUsed = usedPowerups[p.powerupId]
+                {groupedForgePowerups.map((p, i) => {
+                  const usedCount = usedPowerups[p.powerupId] || 0
+                  const remaining = p.total - usedCount
+                  const isExhausted = remaining <= 0
+                  // For Oracle Eye, also disable if already used this question
+                  const isDisabledForQuestion = p.powerupId === 'ORACLES_EYE' && oracleUsedThisQuestion
+                  const isDisabled = isExhausted || isDisabledForQuestion
+
                   // Color schemes matching the page theme better
                   const colorSchemes = {
                     TIME_WARP: { bg: 'from-cyan-500/90 to-cyan-600/90', border: 'border-cyan-400/50', text: 'Time Warp', icon: '⏳' },
@@ -1130,28 +1165,42 @@ const ForgeReadingPhase = ({ sessionId, category, activePowerups = [], isSession
 
                   return (
                     <motion.button
-                      key={i}
+                      key={p.powerupId}
                       initial={{ scale: 0, y: 10 }}
                       animate={{ scale: 1, y: 0 }}
                       transition={{ delay: i * 0.08, type: 'spring', stiffness: 400 }}
-                      whileHover={!isUsed ? { scale: 1.1, y: -3 } : {}}
-                      whileTap={!isUsed ? { scale: 0.9 } : {}}
+                      whileHover={!isDisabled ? { scale: 1.1, y: -3 } : {}}
+                      whileTap={!isDisabled ? { scale: 0.9 } : {}}
                       onClick={() => handlePowerupClick(p)}
-                      disabled={isUsed}
+                      disabled={isDisabled}
                       className={`
                         relative flex items-center gap-2 px-4 py-3 rounded-2xl border-2 transition-all duration-200
                         shadow-lg backdrop-blur-sm
-                        ${isUsed
+                        ${isDisabled
                           ? 'bg-slate-700/40 border-slate-500/30 opacity-50'
                           : `bg-gradient-to-br ${scheme.bg} ${scheme.border} hover:shadow-xl`}
                       `}
                     >
                       <span className="text-2xl drop-shadow-md">{scheme.icon}</span>
-                      <span className={`text-sm font-bold ${isUsed ? 'text-slate-400' : 'text-white drop-shadow-md'}`}>
+                      <span className={`text-sm font-bold ${isDisabled ? 'text-slate-400' : 'text-white drop-shadow-md'}`}>
                         {scheme.text}
                       </span>
 
-                      {isUsed && (
+                      {/* Count badge - always show if total > 1 */}
+                      {p.total > 1 && (
+                        <motion.span
+                          initial={{ scale: 0 }}
+                          animate={{ scale: 1 }}
+                          className={`absolute -top-2 -right-2 min-w-[24px] h-6 px-1.5 rounded-full flex items-center justify-center text-xs font-bold shadow-md border-2 border-slate-900 ${
+                            isExhausted ? 'bg-slate-500 text-slate-300' : 'bg-gradient-to-br from-blue-500 to-cyan-500 text-white'
+                          }`}
+                        >
+                          {remaining}/{p.total}
+                        </motion.span>
+                      )}
+
+                      {/* Exhausted checkmark for single powerups */}
+                      {p.total === 1 && isExhausted && (
                         <motion.span
                           initial={{ scale: 0 }}
                           animate={{ scale: 1 }}

@@ -43,6 +43,9 @@ const SessionTeamDashboard = lazy(() => import('../team/SessionTeamDashboard'))
 // Streak popup - shown on first daily visit for all players
 const StreakPopup = lazy(() => import('./StreakPopup'))
 
+// Powerup reward modal - shown after session → Google conversion
+const PowerupRewardModal = lazy(() => import('./PowerupRewardModal'))
+
 // Lazy load QuickClash Profile
 const QuickClashProfile = React.lazy(() => import('../profile/QuickClashProfileV2'))
 const QuickClashLeaderboardTab = React.lazy(() => import('../leaderboard/QuickClashLeaderboardTab'))
@@ -355,6 +358,10 @@ const QuickClashLayoutV2 = () => {
   // Pending team invitations count for Teams tab badge
   const [pendingInvitationsCount, setPendingInvitationsCount] = useState(0)
 
+  // Powerup reward modal state (for session → Google conversion)
+  const [showRewardModal, setShowRewardModal] = useState(false)
+  const [rewardPowerups, setRewardPowerups] = useState(['TIME_WARP', 'ORACLES_EYE'])
+
   // Track the last location.key to detect real navigation vs replaceState
   const lastLocationKey = useRef(location.key)
 
@@ -381,6 +388,27 @@ const QuickClashLayoutV2 = () => {
 
     setBlocked(shouldBlock)
   }, [showWelcomeModal, showStreakPopup, showSignupPanel, setBlocked, isSession, player])
+
+  // Check for pending powerup reward from session conversion
+  useEffect(() => {
+    const pendingReward = localStorage.getItem('pendingReward')
+    if (pendingReward) {
+      try {
+        const rewardData = JSON.parse(pendingReward)
+        if (rewardData.powerups && rewardData.powerups.length > 0) {
+          setRewardPowerups(rewardData.powerups)
+          // Delay showing modal to let UI settle
+          setTimeout(() => {
+            setShowRewardModal(true)
+          }, 800)
+        }
+        localStorage.removeItem('pendingReward')
+      } catch (err) {
+        console.error('[QuickClashLayoutV2] Failed to parse pending reward:', err)
+        localStorage.removeItem('pendingReward')
+      }
+    }
+  }, [])
 
   // Fetch initial count
   useEffect(() => {
@@ -500,11 +528,33 @@ const QuickClashLayoutV2 = () => {
 
   // Check if streak popup should be shown on daily first visit
   useEffect(() => {
+    // Parse query params to checking for newUser flag (fallback for lost state)
+    const searchParams = new URLSearchParams(location.search)
+    const isNewUserQuery = searchParams.get('newUser') === 'true'
+
     // Only show if player data is loaded
     if (!player) return
 
+    // NEW USER SUPPRESSION: If this is a brand new Google login user on their first visit,
+    // silently mark popup as shown but don't display it
+    if (location.state?.isNewUser || isNewUserQuery) {
+      const today = new Date().toLocaleDateString('en-US', { timeZone: Intl.DateTimeFormat().resolvedOptions().timeZone })
+      localStorage.setItem(STREAK_POPUP_DATE_KEY, today)
+
+      // PERSIST NEW USER STATE: Set a session flag so other components (like NotificationReminderModal)
+      // know this is a new user even after we clean the URL.
+      sessionStorage.setItem('isNewUserSession', 'true')
+
+      // Clear the state and query param to prevent re-triggering
+      const newPath = location.pathname
+      navigate(newPath, { replace: true, state: {} })
+      return
+    }
+
     // Check if already shown today
-    if (!shouldShowStreakPopup()) return
+    if (!shouldShowStreakPopup()) {
+       return
+    }
 
     // For session players, show after welcome modal is dismissed
     // For authenticated users, show immediately
@@ -512,7 +562,9 @@ const QuickClashLayoutV2 = () => {
 
     const timer = setTimeout(() => {
       // Don't show streak popup if welcome modal is open
-      if (showWelcomeModal) return
+      if (showWelcomeModal) {
+         return
+      }
 
       setShowStreakPopup(true)
       // Mark as shown today
@@ -521,7 +573,7 @@ const QuickClashLayoutV2 = () => {
     }, delay)
 
     return () => clearTimeout(timer)
-  }, [player, isSession, showWelcomeModal])
+  }, [player, isSession, showWelcomeModal, location.state, location.pathname, location.search, navigate])
 
   const handleTabChange = useCallback((tabId) => {
     if (tabId === activeTab) return
@@ -704,6 +756,15 @@ const QuickClashLayoutV2 = () => {
           onCreateAccount={isSession ? handleCreateAccount : undefined}
           streak={player?.streak}
           isSessionPlayer={isSession}
+        />
+      </Suspense>
+
+      {/* Powerup Reward Modal - shown after session → Google conversion */}
+      <Suspense fallback={null}>
+        <PowerupRewardModal
+          isOpen={showRewardModal}
+          onClose={() => setShowRewardModal(false)}
+          powerups={rewardPowerups}
         />
       </Suspense>
     </>

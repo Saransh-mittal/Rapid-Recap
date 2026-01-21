@@ -418,8 +418,12 @@ const completeQuiz = async ({ sessionId, responses }) => {
       precisionProtocol.effectApplied = true
     }
 
-    // 2. Score Surge (Quiz): 1.1x Multiplier
-    const scoreSurge = activePowerups.find(p => p.powerupId === 'SCORE_SURGE' && (p.phase?.toLowerCase() === 'quiz' || p.phase?.toLowerCase() === 'both'))
+    // 2. Score Surge (Quiz): 1.1x Multiplier - only if not already used in Forge phase
+    const scoreSurge = activePowerups.find(p =>
+      p.powerupId === 'SCORE_SURGE' &&
+      !p.used && // Only apply if not already used in Forge
+      (p.phase?.toLowerCase() === 'quiz' || p.phase?.toLowerCase() === 'both')
+    )
     if (scoreSurge) {
       const surgedScore = Math.round(final_RQM_score * 1.1)
       scoreSurgeBonus = surgedScore - final_RQM_score
@@ -682,6 +686,15 @@ const submitForgeAnswer = async ({
         // Apply Powerup: Score Surge
         if (powerups.scoreSurge) {
           questionScore *= 2
+
+          // Mark the SCORE_SURGE powerup as used to prevent double application in quiz phase
+          const scoreSurgePowerup = activePowerups.find(
+            p => p.powerupId === 'SCORE_SURGE' && !p.used
+          )
+          if (scoreSurgePowerup) {
+            scoreSurgePowerup.used = true
+            scoreSurgePowerup.effectApplied = true
+          }
         }
       }
 

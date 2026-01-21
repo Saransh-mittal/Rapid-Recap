@@ -9,11 +9,13 @@ import PowerupCard from './PowerupCard'
 import { fetchTeamBattleDetails } from '../../../redux/quickClashTeamBattleSlice'
 import { cn } from '@/lib/utils'
 import { quizAudioService } from '../../../services/quizAudioService'
+import { useTutorial } from '../v2/tutorial/TutorialManager'
 
 const MAX_POOL_HOUSING = 80
 const MAX_USER_DONATION = 20
 
 const PowerupDonationModal = ({ isOpen, onClose, battleId, teamId }) => {
+  const { activeTutorial, stepIndex, goToStep } = useTutorial()
   const [inventory, setInventory] = useState([])
   const [loading, setLoading] = useState(false)
   const [donating, setDonating] = useState(null)
@@ -82,6 +84,15 @@ const PowerupDonationModal = ({ isOpen, onClose, battleId, teamId }) => {
           ? { ...item, count: item.count - 1 }
           : item
       ).filter(item => item.count > 0))
+
+      // Tutorial: If on step 1 (donation_modal), advance to step 2 (equip_prompt)
+      // Small delay to let the user see the success state
+      if (activeTutorial === 'battle' && stepIndex === 1) {
+        setTimeout(() => {
+            onClose() // Close modal automatically
+            goToStep(2)
+        }, 800)
+      }
 
     } catch (error) {
       setMessage({ type: 'error', text: error.response?.data?.message || 'Donation Failed' })
@@ -225,14 +236,18 @@ const PowerupDonationModal = ({ isOpen, onClose, battleId, teamId }) => {
                       <motion.div
                         key={item.powerupId}
                         initial={{ opacity: 0, y: 10 }}
-                        animate={{ opacity: 1, y: 0 }}
-                        transition={{ delay: index * 0.05 }}
+                        animate={activeTutorial === 'battle' && stepIndex === 1 ? { opacity: 1, y: 0, scale: [1, 1.05, 1] } : { opacity: 1, y: 0 }}
+                        transition={activeTutorial === 'battle' && stepIndex === 1 ? {
+                            delay: index * 0.05,
+                            scale: { duration: 1, repeat: Infinity, delay: index * 0.1, ease: "easeInOut" }
+                        } : { delay: index * 0.05 }}
                         className="relative"
                       >
                         <PowerupCard
                           powerup={item}
                           onClick={() => handleDonate(item)}
                           isDisabled={donating || poolHousingUsed + item.cost > MAX_POOL_HOUSING || userDonatedTotal + item.cost > MAX_USER_DONATION}
+                          className={activeTutorial === 'battle' && stepIndex === 1 ? 'ring-2 ring-purple-400 ring-offset-2 ring-offset-slate-900 shadow-[0_0_20px_rgba(168,85,247,0.5)] z-10' : ''}
                         />
                         <Badge className="absolute -top-2 -right-2 w-6 h-6 flex items-center justify-center rounded-full bg-gradient-to-br from-purple-500 to-indigo-500 text-white text-xs font-bold border-2 border-slate-900">
                           {item.count}

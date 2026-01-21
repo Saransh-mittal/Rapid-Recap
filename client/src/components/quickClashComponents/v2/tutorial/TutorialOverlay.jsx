@@ -1,6 +1,6 @@
 import React, { useState } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
-import { X, Users, Zap, BookOpen, Trophy, ArrowRight, MousePointerClick, Swords } from 'lucide-react'
+import { X, Users, Zap, BookOpen, Trophy, ArrowRight, MousePointerClick, Swords, Coins } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 
 const TutorialOverlay = ({ type, isSessionPlayer, stepIndex, onNext, onComplete, onDismiss }) => {
@@ -33,39 +33,97 @@ const TutorialOverlay = ({ type, isSessionPlayer, stepIndex, onNext, onComplete,
           action: null,
           gradient: "from-emerald-500/30 to-cyan-600/30"
         }]
+      case 'coins_shop':
+        return [{
+          title: "💰 You've Got Coins!",
+          description: "Tap the coins in the header to open the Powerup Shop. Grab boosts to dominate your battles!",
+          icon: <Coins className="w-16 h-16 text-amber-400" />,
+          action: "Got it!",
+          gradient: "from-amber-500/30 to-orange-600/30"
+        }]
       case 'battle':
-        const steps = [
+        const steps = []
+
+        // Auth users only: Interactive Powerup Flow (Steps 0-3)
+        if (!isSessionPlayer) {
+          // Step 0: Powerup Overview - Intro
+          steps.push({
+            title: "⚡ Manage Your Powerups",
+            description: "Before battle, donate powerups to your team and equip them for yourself! Tap the pulsing gift icon to start.",
+            icon: <Zap className="w-12 h-12 text-yellow-400" />,
+            action: null,
+            gradient: "from-yellow-500/30 to-amber-600/30",
+            stepType: 'powerup_intro'
+          })
+
+          // Step 1: Inside Donation Modal
+          steps.push({
+            title: "🎁 Donate to Team!",
+            description: "Tap any powerup from your inventory to share it with your team pool. Your teammates can use donated powerups!",
+            icon: <Zap className="w-12 h-12 text-purple-400" />,
+            action: null,
+            gradient: "from-purple-500/30 to-pink-600/30",
+            stepType: 'donation_modal'
+          })
+
+          // Step 2: Prompt to Open Equip
+          steps.push({
+            title: "🛡️ Equip for Battle!",
+            description: "Now tap the pulsing 'Equip' button to load powerups from the team pool for yourself!",
+            icon: <Zap className="w-12 h-12 text-cyan-400" />,
+            action: null,
+            gradient: "from-cyan-500/30 to-blue-600/30",
+            stepType: 'equip_prompt'
+          })
+
+          // Step 3: Inside Loadout Modal
+          steps.push({
+            title: "⚔️ Load Your Arsenal!",
+            description: "Tap powerups from the team pool to equip them. They'll be ready to use during battle!",
+            icon: <Zap className="w-12 h-12 text-emerald-400" />,
+            action: "Ready to Battle!",
+            gradient: "from-emerald-500/30 to-teal-600/30",
+            stepType: 'loadout_modal'
+          })
+        }
+
+        // All users: Category Selection, Forge, Quiz
+        steps.push(
           {
             title: "🎯 Choose Your Category",
             description: "Pick a topic you're confident in! Tap any category card above to select it.",
             icon: <MousePointerClick className="w-12 h-12 text-purple-400" />,
             action: null,
-            gradient: "from-purple-500/30 to-pink-600/30"
+            gradient: "from-purple-500/30 to-pink-600/30",
+            stepType: 'category'
           },
           {
             title: "📖 Learn & Answer",
             description: "5 rounds await! Answer a question (15s), then read the context to build your knowledge (30s).",
             icon: <BookOpen className="w-12 h-12 text-blue-400" />,
             action: "Next",
-            gradient: "from-blue-500/30 to-cyan-600/30"
+            gradient: "from-blue-500/30 to-cyan-600/30",
+            stepType: 'forge'
           },
           {
             title: "🏆 The Final Quiz",
             description: "Show what you've learned! 5 rapid-fire questions in 50 seconds. Score big to win!",
             icon: <Trophy className="w-12 h-12 text-amber-400" />,
             action: isSessionPlayer ? "Start Battle!" : "Next",
-            gradient: "from-amber-500/30 to-orange-600/30"
+            gradient: "from-amber-500/30 to-orange-600/30",
+            stepType: 'quiz'
           }
-        ]
+        )
 
-        // Only show Powerup step if NOT a session player
+        // Auth users only: Using Powerups during battle (LAST)
         if (!isSessionPlayer) {
           steps.push({
-            title: "⚡ Use Power-ups!",
-            description: "Stuck on a tough question? Activate powerups like 'Time Warp' or 'Score Surge' to turn the tide!",
+            title: "💥 Activate Power-ups!",
+            description: "Stuck on a tough question? Activate equipped powerups like 'Time Warp' or 'Oracle's Eye' to turn the tide!",
             icon: <Zap className="w-12 h-12 text-yellow-400" />,
             action: "Start Battle!",
-            gradient: "from-yellow-500/30 to-red-600/30"
+            gradient: "from-yellow-500/30 to-red-600/30",
+            stepType: 'activate'
           })
         }
         return steps
@@ -90,17 +148,35 @@ const TutorialOverlay = ({ type, isSessionPlayer, stepIndex, onNext, onComplete,
 
   if (!currentStep) return null
 
+  // Get step type for specialized positioning
+  const stepType = currentStep.stepType || ''
+
   // Special "Dialogue Box" style for Battle (smaller, lower)
   const isDialogueStyle = type === 'battle'
-  // Tooltip style for Squad Intro (positioned near top, pointing at SQUAD button)
-  const isTooltipStyle = type === 'squad_intro'
+  // Tooltip style for Squad Intro and Coins Shop (positioned near top)
+  const isTooltipStyle = type === 'squad_intro' || type === 'coins_shop'
+  // Coins-specific styling (top-left position for coins display area)
+  const isCoinsStyle = type === 'coins_shop'
+  // Powerup intro and equip prompt step - position below centered powerup box
+  const isPowerupStep = stepType === 'powerup_intro' || stepType === 'equip_prompt'
+  // Modal overlay steps - render inside modals with higher z-index
+  const isModalOverlayStep = stepType === 'donation_modal' || stepType === 'loadout_modal'
+
+  // For modal overlay steps, use z-index above modals (z-[200])
+  const zIndex = isModalOverlayStep ? 'z-[200]' : 'z-[9999]'
 
   return (
     <AnimatePresence mode="wait">
-      <div className={`fixed inset-0 z-[9999] flex ${
+      <div className={`fixed inset-0 ${zIndex} flex ${
+        isModalOverlayStep ? 'items-end pb-8 justify-center' :
+        isPowerupStep ? 'justify-center' :
         isDialogueStyle ? 'items-end pb-24 md:pb-32 justify-center' :
+        isCoinsStyle ? 'items-start pt-16 justify-start pl-3' :
         'items-center justify-center'
-      } pointer-events-none`}>
+      } pointer-events-none`}
+      style={isPowerupStep ? { paddingTop: 'calc(50vh + 40px)' } : {}}>
+
+
         {/* Backdrop - only for Lobby (full dark), Squad Intro (lighter) */}
         {type === 'lobby' && (
            <motion.div
@@ -122,7 +198,7 @@ const TutorialOverlay = ({ type, isSessionPlayer, stepIndex, onNext, onComplete,
            transition={{ type: "spring", damping: 25, stiffness: 300 }}
            className={`
              relative pointer-events-auto
-             ${isDialogueStyle ? 'w-[95%] max-w-2xl' :
+             ${isDialogueStyle ? 'w-[95%] max-w-xl' :
                isTooltipStyle ? 'w-[85%] max-w-sm' :
                'w-[90%] max-w-md'}
            `}
@@ -182,11 +258,17 @@ const TutorialOverlay = ({ type, isSessionPlayer, stepIndex, onNext, onComplete,
                       </div>
                    </div>
                 ) : isTooltipStyle ? (
-                   // Tooltip Layout for Squad Intro
+                   // Tooltip Layout for Squad Intro and Coins Shop
                    <div className="flex flex-col items-center gap-3">
-                      {/* Small Icon */}
-                      <div className="bg-emerald-500/20 p-3 rounded-xl border border-emerald-400/30">
-                          {React.cloneElement(currentStep.icon, { className: "w-10 h-10 text-emerald-400" })}
+                      {/* Small Icon - Dynamic color based on type */}
+                      <div className={`p-3 rounded-xl border ${
+                        isCoinsStyle
+                          ? 'bg-amber-500/20 border-amber-400/30'
+                          : 'bg-emerald-500/20 border-emerald-400/30'
+                      }`}>
+                          {React.cloneElement(currentStep.icon, {
+                            className: `w-10 h-10 ${isCoinsStyle ? 'text-amber-400' : 'text-emerald-400'}`
+                          })}
                       </div>
 
                       {/* Text */}
@@ -195,11 +277,29 @@ const TutorialOverlay = ({ type, isSessionPlayer, stepIndex, onNext, onComplete,
                           <p className="text-sm text-slate-300 leading-relaxed">{currentStep.description}</p>
                       </div>
 
-                       {/* Pulsing arrow pointing UP to the SQUAD button */}
-                       <div className="mt-2 flex flex-col items-center animate-bounce">
-                         <div className="w-0 h-0 border-l-8 border-r-8 border-b-8 border-l-transparent border-r-transparent border-b-emerald-400" />
-                         <span className="text-xs text-emerald-400 font-semibold mt-1">Tap above!</span>
-                       </div>
+                      {/* Coins Shop: Arrow pointing UP-LEFT to coins + Action Button */}
+                      {isCoinsStyle ? (
+                        <>
+                          <div className="mt-1 flex flex-col items-center animate-bounce">
+                            <div className="w-0 h-0 border-l-8 border-r-8 border-b-8 border-l-transparent border-r-transparent border-b-amber-400" />
+                            <span className="text-xs text-amber-400 font-semibold mt-1">Tap above!</span>
+                          </div>
+                          {currentStep.action && (
+                            <Button
+                              onClick={handleNext}
+                              className="mt-2 w-full h-10 font-bold bg-gradient-to-r from-amber-500 to-orange-500 hover:from-amber-400 hover:to-orange-400 text-white rounded-xl shadow-lg"
+                            >
+                              {currentStep.action}
+                            </Button>
+                          )}
+                        </>
+                      ) : (
+                        /* Squad Intro: Pulsing arrow pointing UP */
+                        <div className="mt-2 flex flex-col items-center animate-bounce">
+                          <div className="w-0 h-0 border-l-8 border-r-8 border-b-8 border-l-transparent border-r-transparent border-b-emerald-400" />
+                          <span className="text-xs text-emerald-400 font-semibold mt-1">Tap above!</span>
+                        </div>
+                      )}
                    </div>
                 ) : (
                    // Modal Column Layout (Lobby) - Premium centered design

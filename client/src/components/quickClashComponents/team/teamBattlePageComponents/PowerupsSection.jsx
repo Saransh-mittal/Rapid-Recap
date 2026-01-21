@@ -64,9 +64,9 @@ const HousingRing = ({ used, max }) => {
 }
 
 /**
- * Compact powerup chip for horizontal scroll
+ * Compact powerup chip for horizontal scroll - supports count for grouped display
  */
-const PowerupChip = ({ powerup }) => {
+const PowerupChip = ({ powerup, count = 1 }) => {
   const info = POWERUP_INFO[powerup.powerupId] || {}
   const colors = POWERUP_COLORS[powerup.powerupId] || {}
 
@@ -75,7 +75,7 @@ const PowerupChip = ({ powerup }) => {
       initial={{ opacity: 0, scale: 0.9 }}
       animate={{ opacity: 1, scale: 1 }}
       className={cn(
-        "flex items-center gap-2 px-3 py-2 rounded-full border backdrop-blur-sm",
+        "relative flex items-center gap-2 px-3 py-2 rounded-full border backdrop-blur-sm",
         "bg-white/5",
         colors.border || 'border-white/20'
       )}
@@ -95,6 +95,12 @@ const PowerupChip = ({ powerup }) => {
       <span className="text-xs font-semibold text-white/90 whitespace-nowrap">
         {info.name || powerup.powerupId?.replace('_', ' ')}
       </span>
+      {/* Count badge for stacked powerups */}
+      {count > 1 && (
+        <span className="absolute -top-1.5 -right-1.5 min-w-[18px] h-[18px] px-1 rounded-full bg-gradient-to-br from-blue-500 to-cyan-500 text-white text-[10px] font-bold flex items-center justify-center border border-slate-900 shadow">
+          ×{count}
+        </span>
+      )}
     </motion.div>
   )
 }
@@ -210,8 +216,17 @@ const PowerupsSection = ({
             </p>
             {/* Horizontal scrollable chips on mobile, grid on desktop */}
             <div className="flex gap-2 overflow-x-auto pb-2 scrollbar-hide md:flex-wrap">
-              {loadout.items.map((item, index) => (
-                <PowerupChip key={`${item.powerupId}-${index}`} powerup={item} />
+              {/* Group loadout items by powerupId */}
+              {loadout.items.reduce((acc, item) => {
+                const existing = acc.find(g => g.powerupId === item.powerupId)
+                if (existing) {
+                  existing.count++
+                } else {
+                  acc.push({ ...item, count: 1 })
+                }
+                return acc
+              }, []).map((item) => (
+                <PowerupChip key={item.powerupId} powerup={item} count={item.count} />
               ))}
             </div>
           </div>

@@ -27,6 +27,9 @@ import usePlayer from '../../../hooks/usePlayer'
 // Audio feedback
 import { quizAudioService } from '../../../services/quizAudioService'
 
+// Tutorial context
+import { useTutorial } from './tutorial/TutorialManager'
+
 // Lazy load
 const WiseWeb = lazy(() => import('../../WiseWeb/WiseWeb'))
 // TEMPORARILY DISABLED - Daily Tasks feature
@@ -126,6 +129,9 @@ const QuickClashHeaderV2 = () => {
   // Session player detection
   const { isSession } = usePlayer()
 
+  // Tutorial state for coins animation
+  const { activeTutorial } = useTutorial()
+
   // Redux selectors
   const { user } = useSelector((state) => state.auth)
   const { updates, unreadFriendRequests, notification } = useSelector((state) => state.app)
@@ -204,7 +210,14 @@ const QuickClashHeaderV2 = () => {
           <div className="flex items-center gap-1 xs:gap-2">
             <TrophyDisplay />
             <StreakDisplay />
-            <CoinDisplay />
+            {/* CoinDisplay with tutorial animation */}
+            <motion.div
+              animate={activeTutorial === 'coins_shop' ? { scale: [1, 1.1, 1] } : {}}
+              transition={activeTutorial === 'coins_shop' ? { duration: 0.8, repeat: Infinity, ease: 'easeInOut' } : {}}
+              className={activeTutorial === 'coins_shop' ? 'ring-2 ring-amber-400 ring-offset-2 ring-offset-slate-900 rounded-full shadow-[0_0_15px_rgba(251,191,36,0.5)] z-10' : ''}
+            >
+              <CoinDisplay />
+            </motion.div>
           </div>
 
           {/* Right: Level + Friends */}
@@ -251,7 +264,14 @@ const QuickClashHeaderV2 = () => {
           <div className="flex items-center gap-3">
             <TrophyDisplay />
             <StreakDisplay />
-            <CoinDisplay />
+            {/* CoinDisplay with tutorial animation */}
+            <motion.div
+              animate={activeTutorial === 'coins_shop' ? { scale: [1, 1.1, 1] } : {}}
+              transition={activeTutorial === 'coins_shop' ? { duration: 0.8, repeat: Infinity, ease: 'easeInOut' } : {}}
+              className={activeTutorial === 'coins_shop' ? 'ring-2 ring-amber-400 ring-offset-2 ring-offset-slate-900 rounded-full shadow-[0_0_15px_rgba(251,191,36,0.5)] z-10' : ''}
+            >
+              <CoinDisplay />
+            </motion.div>
             <LevelBadge />
             <FriendsButton
               onClick={openWiseWeb}

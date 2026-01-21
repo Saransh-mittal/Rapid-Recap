@@ -118,6 +118,7 @@ export default function Signin({ isOpen, onClose, hamburgerOnClose }) {
 
   // Google Login Response Handler
   const handleGoogleResponse = async response => {
+    console.log('[Signin Debug] Google Response:', response.data)
     if (response.status === 201) {
       localStorage.setItem('token', response.data.token)
       localStorage.setItem('role', response.data.user.role)
@@ -135,7 +136,7 @@ export default function Signin({ isOpen, onClose, hamburgerOnClose }) {
       })
 
       if (response.data.isNewUser) {
-        navigate('/quickclash')
+        navigate('/quickclash?newUser=true', { state: { isNewUser: true } })
       }
     }
   }

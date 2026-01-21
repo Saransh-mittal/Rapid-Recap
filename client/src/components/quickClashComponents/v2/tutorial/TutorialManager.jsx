@@ -1,5 +1,5 @@
 import React, { createContext, useContext, useEffect, useState, useCallback } from 'react'
-import { useDispatch } from 'react-redux'
+import { useDispatch, useSelector } from 'react-redux'
 import { useLocation } from 'react-router-dom'
 import axios from 'axios'
 import TutorialOverlay from './TutorialOverlay'
@@ -22,8 +22,12 @@ export const TutorialProvider = ({ children }) => {
   const [tutorialProgress, setTutorialProgress] = useState({
     lobby: false,
     battle: false,
-    squad_intro: false
+    squad_intro: false,
+    coins_shop: false
   })
+
+  // Get user coins for coins_shop tutorial trigger (auth users only)
+  const { userCoins } = useSelector(state => state.quickClash)
 
   // Blocking mechanism for modals (e.g. Welcome Modal, Streak Popup)
   const [isBlocked, setBlocked] = useState(false)
@@ -52,6 +56,7 @@ export const TutorialProvider = ({ children }) => {
       const isBattleTutorial = activeTutorial === 'battle'
       const isLobbyTutorial = activeTutorial === 'lobby'
       const isSquadIntroTutorial = activeTutorial === 'squad_intro'
+      const isCoinsShopTutorial = activeTutorial === 'coins_shop'
 
       const isOnBattlePage = location.pathname.startsWith('/play/battle/') || location.pathname.startsWith('/quickclash/teamBattle/')
       const isOnLobbyPage = location.pathname === '/play/lobby'
@@ -67,6 +72,10 @@ export const TutorialProvider = ({ children }) => {
         return
       }
       if (isSquadIntroTutorial && !isOnQuickClashPage) {
+        setActiveTutorial(null)
+        return
+      }
+      if (isCoinsShopTutorial && !isOnQuickClashPage) {
         setActiveTutorial(null)
         return
       }
@@ -106,9 +115,20 @@ export const TutorialProvider = ({ children }) => {
              }, 1000) // Slight delay to ensure page is settled
              return () => clearTimeout(timer)
         }
+
+        // 4. Coins Shop Tutorial (Auth users with 70+ coins, after squad_intro is done)
+        if (isAuthenticated && !isSession && userCoins >= 70) {
+          if (tutorialProgress.squad_intro && !tutorialProgress.coins_shop && !activeTutorial) {
+            const timer = setTimeout(() => {
+              setActiveTutorial('coins_shop')
+              setStepIndex(0)
+            }, 1500)
+            return () => clearTimeout(timer)
+          }
+        }
     }
 
-  }, [location.pathname, tutorialProgress, activeTutorial, loading, isBlocked])
+  }, [location.pathname, tutorialProgress, activeTutorial, loading, isBlocked, isAuthenticated, isSession, userCoins])
 
   // Action: Complete Tutorial
   const completeTutorial = useCallback(async (step) => {
@@ -140,15 +160,21 @@ export const TutorialProvider = ({ children }) => {
     }
   }, [isAuthenticated, player, refreshPlayer])
 
+  // Dismiss only skips the CURRENT step, not the entire tutorial
   const dismissTutorial = useCallback(() => {
       if (activeTutorial) {
-          completeTutorial(activeTutorial)
+          setStepIndex(prev => prev + 1) // Just move to next step
       }
-  }, [activeTutorial, completeTutorial])
+  }, [activeTutorial])
 
   // Helper to advance step programmatically
   const nextStep = useCallback(() => {
      setStepIndex(prev => prev + 1)
+  }, [])
+
+  // Helper to go to specific step
+  const goToStep = useCallback((step) => {
+    setStepIndex(step)
   }, [])
 
   return (
@@ -158,6 +184,8 @@ export const TutorialProvider = ({ children }) => {
       tutorialProgress,
       stepIndex,
       nextStep,
+      goToStep, // Go to specific step
+      setStepIndex, // Direct setter for advanced control
       completeTutorial, // Export so overlay can call it on last step
       setBlocked // Expose blocking control
     }}>

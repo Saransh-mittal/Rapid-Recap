@@ -166,14 +166,14 @@ const equipPowerup = async ({
       throw new Error('Loadout capacity exceeded')
   }
 
-  // Prevent duplicate passive powerups - passive powerups should only be equipped once
-  const powerupDef = POWERUPS[powerupType]
-  if (powerupDef && powerupDef.type === 'passive') {
+  // Prevent duplicate single-equip powerups (passive powerups + SCORE_SURGE)
+  const singleEquipPowerups = ['PRECISION_PROTOCOL', 'STREAK_SHIELD', 'SCORE_SURGE']
+  if (singleEquipPowerups.includes(powerupType)) {
     const alreadyEquipped = member.loadout.items.some(
       loadoutItem => loadoutItem.powerupId === powerupType
     )
     if (alreadyEquipped) {
-      throw new Error(`You already have ${powerupDef.name} equipped. Passive powerups can only be equipped once per session.`)
+      throw new Error(`You already have ${powerupDef.name} equipped. This powerup can only be equipped once.`)
     }
   }
 

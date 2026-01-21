@@ -9,10 +9,12 @@ import PowerupCard from './PowerupCard'
 import { fetchTeamBattleDetails } from '../../../redux/quickClashTeamBattleSlice'
 import { cn } from '@/lib/utils'
 import { quizAudioService } from '../../../services/quizAudioService'
+import { useTutorial } from '../v2/tutorial/TutorialManager'
 
 const MAX_LOADOUT_HOUSING = 30
 
 const PowerupSelectionModal = ({ isOpen, onClose, battleId, teamId }) => {
+  const { activeTutorial, stepIndex, goToStep } = useTutorial()
   const [processing, setProcessing] = useState(null)
   const [message, setMessage] = useState(null)
   const dispatch = useDispatch()
@@ -45,7 +47,16 @@ const PowerupSelectionModal = ({ isOpen, onClose, battleId, teamId }) => {
 
       setMessage({ type: 'success', text: 'Equipped! ⚡' })
       quizAudioService.playEquip()
+      quizAudioService.playEquip()
       dispatch(fetchTeamBattleDetails(battleId))
+
+      // Tutorial: If on step 3 (loadout_modal), advance to step 4 (categories)
+      if (activeTutorial === 'battle' && stepIndex === 3) {
+        setTimeout(() => {
+            onClose()
+            goToStep(4)
+        }, 800)
+      }
     } catch (error) {
       setMessage({ type: 'error', text: error.response?.data?.message || 'Equip Failed' })
     } finally {
@@ -83,10 +94,10 @@ const PowerupSelectionModal = ({ isOpen, onClose, battleId, teamId }) => {
 
   const poolItems = Object.values(groupedPool || {})
 
-  // Helper to check if a passive powerup is already equipped
-  const isPassiveAlreadyEquipped = (powerupId) => {
-    const item = groupedPool?.[powerupId]
-    if (!item || item.type !== 'passive') return false
+  // Helper to check if a single-equip powerup is already equipped
+  const isSingleEquipAlreadyEquipped = (powerupId) => {
+    const singleEquipPowerups = ['PRECISION_PROTOCOL', 'STREAK_SHIELD', 'SCORE_SURGE']
+    if (!singleEquipPowerups.includes(powerupId)) return false
     return loadout.items.some(equipped => equipped.powerupId === powerupId)
   }
 
@@ -249,19 +260,23 @@ const PowerupSelectionModal = ({ isOpen, onClose, battleId, teamId }) => {
                       <motion.div
                         key={item.powerupId}
                         initial={{ opacity: 0, y: 10 }}
-                        animate={{ opacity: 1, y: 0 }}
-                        transition={{ delay: index * 0.05 }}
+                        animate={activeTutorial === 'battle' && stepIndex === 3 ? { opacity: 1, y: 0, scale: [1, 1.05, 1] } : { opacity: 1, y: 0 }}
+                        transition={activeTutorial === 'battle' && stepIndex === 3 ? {
+                             delay: index * 0.05,
+                             scale: { duration: 1, repeat: Infinity, delay: index * 0.1, ease: "easeInOut" }
+                        } : { delay: index * 0.05 }}
                         className="relative"
                       >
                         <PowerupCard
                           powerup={item}
                           onClick={() => handleEquip(item)}
-                          isDisabled={processing || loadoutHousingUsed + item.cost > MAX_LOADOUT_HOUSING || isPassiveAlreadyEquipped(item.powerupId)}
+                          isDisabled={processing || loadoutHousingUsed + item.cost > MAX_LOADOUT_HOUSING || isSingleEquipAlreadyEquipped(item.powerupId)}
                           showPhase={true}
                           showType={true}
+                          className={activeTutorial === 'battle' && stepIndex === 3 ? 'ring-2 ring-blue-400 ring-offset-2 ring-offset-slate-900 shadow-[0_0_20px_rgba(56,189,248,0.5)] z-10' : ''}
                         />
                         {/* Indicator for already-equipped passive */}
-                        {isPassiveAlreadyEquipped(item.powerupId) && (
+                        {isSingleEquipAlreadyEquipped(item.powerupId) && (
                           <div className="absolute inset-0 bg-slate-900/60 backdrop-blur-[2px] rounded-2xl flex items-center justify-center">
                             <span className="text-xs font-semibold text-emerald-400 bg-emerald-500/20 px-3 py-1.5 rounded-full border border-emerald-500/30">
                               ✓ Already Equipped

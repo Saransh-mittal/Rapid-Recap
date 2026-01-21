@@ -47,6 +47,14 @@ const NotificationReminderModal = () => {
 
     // Only show reminder if notifications are explicitly blocked
     const checkIfBlocked = () => {
+      // NEW USER SUPPRESSION:
+      // 1. Check query param (immediate first load)
+      // 2. Check session storage (after URL cleanup)
+      const searchParams = new URLSearchParams(window.location.search)
+      if (searchParams.get('newUser') === 'true' || sessionStorage.getItem('isNewUserSession') === 'true') {
+         return
+      }
+
       if (
         typeof Notification !== 'undefined' &&
         Notification.permission === 'denied'

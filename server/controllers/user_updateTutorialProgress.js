@@ -8,7 +8,7 @@ const updateTutorialProgress = asyncHandler(async (req, res) => {
   }
 
   // Allowed tutorials
-  const validTutorials = ['lobby', 'battle', 'squad_intro']
+  const validTutorials = ['lobby', 'battle', 'squad_intro', 'coins_shop']
   if (!validTutorials.includes(tutorial)) {
     return res.status(400).json({ error: 'Invalid tutorial name' })
   }

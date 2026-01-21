@@ -68,6 +68,9 @@ const {
 const {
   createCategoryAbilities,
 } = require('../services/abilityServices/tournamentAbilityService.js')
+const {
+  grantWelcomePowerups,
+} = require('../services/welcomePowerupService.js')
 
 const registerUser = async (req, res) => {
   const { name, email, pic, password, cpassword, inGameName } = req.body
@@ -475,7 +478,7 @@ const updateTutorialProgress = asyncHandler(async (req, res) => {
   }
 
   // Allowed tutorials
-  const validTutorials = ['lobby', 'battle', 'squad_intro']
+  const validTutorials = ['lobby', 'battle', 'squad_intro', 'coins_shop']
   if (!validTutorials.includes(tutorial)) {
     return res.status(400).json({ error: 'Invalid tutorial name' })
   }
@@ -629,6 +632,12 @@ const handleGoogleLogin = async (req, res) => {
       })
       await user.save()
       isNewUser = true
+
+      // Grant welcome powerups silently for new Google users
+      // No modal shown - user will discover powerups in inventory
+      grantWelcomePowerups(user._id).catch(err => {
+        console.error('[GoogleLogin] Failed to grant welcome powerups:', err)
+      })
     }
 
     // Create tokens

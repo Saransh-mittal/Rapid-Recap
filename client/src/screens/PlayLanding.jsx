@@ -342,7 +342,11 @@ const PlayLanding = () => {
       dispatch(setUser(response.data.user))
       dispatch(setLoginCheckStatus('fulfilled'))
 
-      navigate('/quickclash')
+      if (response.data.isNewUser) {
+        navigate('/quickclash?newUser=true', { state: { isNewUser: true } })
+      } else {
+        navigate('/quickclash')
+      }
     } catch (error) {
       setError(error.response?.data?.error || 'Login failed. Please try again.')
     } finally {
@@ -377,7 +381,11 @@ const PlayLanding = () => {
          dispatch(setUser(response.data.user))
          dispatch(setLoginCheckStatus('fulfilled'))
 
-         navigate('/quickclash')
+         if (response.data.isNewUser) {
+           navigate('/quickclash?newUser=true', { state: { isNewUser: true } })
+         } else {
+           navigate('/quickclash')
+         }
          return
       }
 

@@ -12,6 +12,7 @@ const crypto = require('crypto')
 // Import coin and streak services for session conversion
 const { transferCoinsToUser } = require('./quickClashServices/quickClashCoinService')
 const { transferStreakToUser } = require('./quickClashServices/quickClashStreakService')
+const { grantWelcomePowerups } = require('./welcomePowerupService')
 
 /**
  * Create a new PlaySession
@@ -573,7 +574,25 @@ const convertWithGoogle = async ({ sessionId, googleUserInfo }) => {
     { expiresIn: '30m' }
   )
 
-  return { user, token, isNewUser }
+  // Grant welcome powerups for session conversion
+  // This returns reward data for the frontend modal
+  let rewardGranted = false
+  let rewardedPowerups = []
+
+  if (!user.receivedWelcomePowerups) {
+    try {
+      const rewardResult = await grantWelcomePowerups(user._id)
+      if (rewardResult.success) {
+        rewardGranted = true
+        rewardedPowerups = rewardResult.powerups
+        console.log(`[SessionConversion] Granted welcome powerups to user ${user._id}:`, rewardedPowerups)
+      }
+    } catch (err) {
+      console.error('[SessionConversion] Failed to grant welcome powerups:', err)
+    }
+  }
+
+  return { user, token, isNewUser, rewardGranted, rewardedPowerups }
 }
 
 /**
@@ -978,7 +997,7 @@ const updateSessionTutorialProgress = async ({ sessionId, tutorial, completed = 
   }
 
   // Allowed tutorials
-  const validTutorials = ['lobby', 'battle', 'squad_intro']
+  const validTutorials = ['lobby', 'battle', 'squad_intro', 'coins_shop']
   if (!validTutorials.includes(tutorial)) {
     throw new Error('Invalid tutorial name')
   }
