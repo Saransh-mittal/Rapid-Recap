@@ -1,7 +1,7 @@
 // src/customHooks/useFriends.js - Enhanced with performance optimizations and fault tolerance
 import { useCallback, useEffect, useMemo, useRef } from 'react'
 import { useDispatch, useSelector } from 'react-redux'
-import { useToast } from '@chakra-ui/react'
+import { notificationManager } from '../utils/notifications.jsx'
 import { useTranslation } from 'react-i18next'
 import debounce from 'lodash.debounce'
 import {
@@ -109,7 +109,7 @@ const useFriends = ({
   enableAutoRetry = true,
 } = {}) => {
   const dispatch = useDispatch()
-  const toast = useToast()
+
   const { t } = useTranslation('WiseWeb')
 
   // Network status monitoring
@@ -275,13 +275,7 @@ const useFriends = ({
   // Initialize friends data when hook is first used
   const initializeFriends = useCallback(async () => {
     if (networkStatus === 'offline') {
-      toast({
-        title: t('Network Error'),
-        description: t('Please check your internet connection'),
-        status: 'warning',
-        duration: 3000,
-        isClosable: true,
-      })
+      notificationManager.warning(t('Network Error'), t('Please check your internet connection'))
       return
     }
 
@@ -293,7 +287,7 @@ const useFriends = ({
     } catch (error) {
       console.error('[FRIENDS_HOOK] Failed to initialize:', error)
     }
-  }, [dispatch, networkStatus, toast, t])
+  }, [dispatch, networkStatus, t])
 
   useEffect(() => {
     if (autoFetch) initializeFriends()
@@ -321,24 +315,12 @@ const useFriends = ({
   const handleSendFriendRequest = useCallback(
     async toUserId => {
       if (!user?._id) {
-        toast({
-          title: t('Error'),
-          description: t('You must be logged in to send friend requests'),
-          status: 'error',
-          duration: 3000,
-          isClosable: true,
-        })
+        notificationManager.error(t('Error'), t('You must be logged in to send friend requests'))
         return false
       }
 
       if (networkStatus === 'offline') {
-        toast({
-          title: t('Network Error'),
-          description: t('Please check your internet connection'),
-          status: 'warning',
-          duration: 3000,
-          isClosable: true,
-        })
+        notificationManager.warning(t('Network Error'), t('Please check your internet connection'))
         return false
       }
 
@@ -355,13 +337,10 @@ const useFriends = ({
           }),
         ).unwrap()
 
-        toast({
-          title: t('Success'),
-          description: result.message || t('Friend request sent successfully'),
-          status: 'success',
-          duration: 3000,
-          isClosable: true,
-        })
+        notificationManager.success(
+          t('Success'),
+          result.message || t('Friend request sent successfully'),
+        )
 
         return true
       } catch (error) {
@@ -370,30 +349,18 @@ const useFriends = ({
           dispatch(removePendingRequest(toUserId))
         }
 
-        toast({
-          title: t('Error'),
-          description: error || t('Failed to send friend request'),
-          status: 'error',
-          duration: 3000,
-          isClosable: true,
-        })
+        notificationManager.error(t('Error'), error || t('Failed to send friend request'))
 
         return false
       }
     },
-    [dispatch, user, toast, t, networkStatus, enableOptimisticUpdates],
+    [dispatch, user, t, networkStatus, enableOptimisticUpdates],
   )
 
   const handleAcceptFriendRequest = useCallback(
     async requestId => {
       if (networkStatus === 'offline') {
-        toast({
-          title: t('Network Error'),
-          description: t('Please check your internet connection'),
-          status: 'warning',
-          duration: 3000,
-          isClosable: true,
-        })
+        notificationManager.warning(t('Network Error'), t('Please check your internet connection'))
         return false
       }
 
@@ -411,13 +378,10 @@ const useFriends = ({
           acceptFriendRequest({ requestId }),
         ).unwrap()
 
-        toast({
-          title: t('Success'),
-          description: result.message || t('Friend request accepted'),
-          status: 'success',
-          duration: 3000,
-          isClosable: true,
-        })
+        notificationManager.success(
+          t('Success'),
+          result.message || t('Friend request accepted'),
+        )
 
         return true
       } catch (error) {
@@ -431,20 +395,14 @@ const useFriends = ({
           )
         }
 
-        toast({
-          title: t('Error'),
-          description: error || t('Failed to accept friend request'),
-          status: 'error',
-          duration: 3000,
-          isClosable: true,
-        })
+        notificationManager.error(t('Error'), error || t('Failed to accept friend request'))
 
         return false
       }
     },
     [
       dispatch,
-      toast,
+
       t,
       networkStatus,
       enableOptimisticUpdates,
@@ -459,28 +417,19 @@ const useFriends = ({
           rejectFriendRequest({ requestId }),
         ).unwrap()
 
-        toast({
-          title: t('Request Rejected'),
-          description: result.message || t('Friend request rejected'),
-          status: 'info',
-          duration: 3000,
-          isClosable: true,
-        })
+        notificationManager.info(
+          t('Request Rejected'),
+          result.message || t('Friend request rejected'),
+        )
 
         return true
       } catch (error) {
-        toast({
-          title: t('Error'),
-          description: error || t('Failed to reject friend request'),
-          status: 'error',
-          duration: 3000,
-          isClosable: true,
-        })
+        notificationManager.error(t('Error'), error || t('Failed to reject friend request'))
 
         return false
       }
     },
-    [dispatch, toast, t],
+    [dispatch, t],
   )
 
   const handleRemoveFriend = useCallback(
@@ -497,13 +446,10 @@ const useFriends = ({
 
         const result = await dispatch(removeFriend({ friendId })).unwrap()
 
-        toast({
-          title: t('Friend Removed'),
-          description: result.message || t('Friend removed successfully'),
-          status: 'info',
-          duration: 3000,
-          isClosable: true,
-        })
+        notificationManager.info(
+          t('Friend Removed'),
+          result.message || t('Friend removed successfully'),
+        )
 
         return true
       } catch (error) {
@@ -517,20 +463,14 @@ const useFriends = ({
           )
         }
 
-        toast({
-          title: t('Error'),
-          description: error || t('Failed to remove friend'),
-          status: 'error',
-          duration: 3000,
-          isClosable: true,
-        })
+        notificationManager.error(t('Error'), error || t('Failed to remove friend'))
 
         return false
       }
     },
     [
       dispatch,
-      toast,
+
       t,
       enableOptimisticUpdates,
       memoizedSelectors.friendsArray,
@@ -609,13 +549,7 @@ const useFriends = ({
   // Manual refresh function
   const refreshData = useCallback(async () => {
     if (networkStatus === 'offline') {
-      toast({
-        title: t('Network Error'),
-        description: t('Please check your internet connection'),
-        status: 'warning',
-        duration: 3000,
-        isClosable: true,
-      })
+      notificationManager.warning(t('Network Error'), t('Please check your internet connection'))
       return false
     }
 
@@ -629,7 +563,7 @@ const useFriends = ({
       console.error('[FRIENDS_HOOK] Refresh failed:', error)
       return false
     }
-  }, [dispatch, networkStatus, toast, t])
+  }, [dispatch, networkStatus, t])
 
   return {
     // Data - all guaranteed to be arrays with performance optimizations

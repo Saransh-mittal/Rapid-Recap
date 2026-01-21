@@ -815,7 +815,7 @@ const setupFriendsGlobalEvents = (io, utils = {}) => {
   // Friend request accepted
   globalEmitter.on(
     'friends:requestAccepted',
-    ({ fromUser, toUser, requestId }) => {
+    async ({ fromUser, toUser, requestId }) => {
       if (!fromUser || !fromUser._id || !toUser || !toUser._id) {
         console.error('Invalid users in friends:requestAccepted event')
         return
@@ -829,6 +829,27 @@ const setupFriendsGlobalEvents = (io, utils = {}) => {
         `[FRIENDS_EVENT] Friend request accepted: ${fromUser._id} <-> ${toUser._id}`,
       )
 
+      // ENHANCED: Check real-time online status for both users
+      // Pass string IDs to ensure consistent map/room lookups
+      const isFromUserOnline = await isUserReallyOnline(
+        fromUser._id.toString(),
+        io,
+      )
+      const isToUserOnline = await isUserReallyOnline(toUser._id.toString(), io)
+
+      // CRITICAL FIX: Force update DB status to match reality
+      // This ensures that when the client calls fetchFriends() immediately after,
+      // the DB returns the correct online status instead of stale data
+      if (isFromUserOnline) {
+        // Run in background to not block notification
+        updateUserOnlineStatusForFriends(fromUser._id, true).catch(
+          console.error,
+        )
+      }
+      if (isToUserOnline) {
+        updateUserOnlineStatusForFriends(toUser._id, true).catch(console.error)
+      }
+
       // Notify the original sender (don't notify the accepter about their own action)
       const senderSuccess = notifyUser(
         fromUser._id,
@@ -840,7 +861,7 @@ const setupFriendsGlobalEvents = (io, utils = {}) => {
             name: toUser.name,
             inGameName: toUser.inGameName,
             pic: toUser.pic,
-            isOnline: toUser.isOnline || false,
+            isOnline: isToUserOnline,
           },
           timestamp: new Date().toISOString(),
         },
@@ -855,7 +876,7 @@ const setupFriendsGlobalEvents = (io, utils = {}) => {
           name: fromUser.name,
           inGameName: fromUser.inGameName,
           pic: fromUser.pic,
-          isOnline: fromUser.isOnline || false,
+          isOnline: isFromUserOnline,
         },
         timestamp: new Date().toISOString(),
       })

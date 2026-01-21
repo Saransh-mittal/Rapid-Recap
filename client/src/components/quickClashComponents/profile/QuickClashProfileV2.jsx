@@ -27,11 +27,17 @@ import {
   Award,
   Bell,
   ChevronRight,
+  Share2,
+  UserPlus,
+  Check,
+  Copy,
 } from 'lucide-react'
 import { useNavigate, useLocation } from 'react-router-dom'
 import { useSelector, useDispatch } from 'react-redux'
 import { logoutAuth } from '../../../redux/authSlice'
 import { logoutApp, resetLoadingFlags, resetAllState, setIsNotifDrawerOpen } from '../../../redux/appSlice'
+import useFriends from '../../../customHooks/useFriends'
+import { useNotifications } from '../../../utils/notifications.jsx'
 import i18n from 'i18next'
 import axios from 'axios'
 import moment from 'moment'
@@ -75,6 +81,12 @@ const QuickClashProfileV2 = ({ userId: propUserId }) => {
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState(null)
   const [logoutLoading, setLogoutLoading] = useState(false)
+  const [shareLoading, setShareLoading] = useState(false)
+  const [friendRequestLoading, setFriendRequestLoading] = useState(false)
+  const { notify } = useNotifications()
+
+  // Friends hook for relationship status and friend requests
+  const { handleSendFriendRequest, isFriend, hasPendingRequest } = useFriends()
 
   // Get notification count from Redux
   const { updates, unreadFriendRequests, notification } = useSelector(state => state.app)
@@ -148,6 +160,44 @@ const QuickClashProfileV2 = ({ userId: propUserId }) => {
   const handleOpenNotifications = useCallback(() => {
     dispatch(setIsNotifDrawerOpen(true))
   }, [dispatch])
+
+  // Copy profile link handler
+  const handleCopyProfileLink = useCallback(async () => {
+    setShareLoading(true)
+    const profileUrl = `${window.location.origin}/quickclash/profile/${targetUserId}`
+
+    try {
+      await navigator.clipboard.writeText(profileUrl)
+      notify.success('Link Copied!', 'Profile link copied to clipboard')
+    } catch (err) {
+      console.error('Copy failed:', err)
+      notify.error('Copy Failed', 'Could not copy profile link')
+    } finally {
+      setShareLoading(false)
+    }
+  }, [targetUserId, notify])
+
+  // Send friend request handler
+  const handleFriendRequest = useCallback(async () => {
+    if (!targetUserId) return
+    setFriendRequestLoading(true)
+    try {
+      const success = await handleSendFriendRequest(targetUserId)
+      if (!success) {
+        // Error toast is already shown by useFriends hook
+      }
+    } finally {
+      setFriendRequestLoading(false)
+    }
+  }, [targetUserId, handleSendFriendRequest])
+
+  // Get relationship status for the profile being viewed
+  const getRelationshipStatus = useMemo(() => {
+    if (isOwnProfile || !targetUserId) return 'self'
+    if (isFriend(targetUserId)) return 'friend'
+    if (hasPendingRequest(targetUserId)) return 'pending'
+    return 'none'
+  }, [isOwnProfile, targetUserId, isFriend, hasPendingRequest])
 
   if (loading) {
     return (
@@ -240,6 +290,86 @@ const QuickClashProfileV2 = ({ userId: propUserId }) => {
           </Text>
         </VStack>
       </Flex>
+
+      {/* ═══════════════════════════════════════════════════════════════ */}
+      {/* SHARE / FRIEND REQUEST BUTTONS */}
+      {/* ═══════════════════════════════════════════════════════════════ */}
+      {isOwnProfile ? (
+        // Copy Profile Link button for own profile
+        <Button
+          onClick={handleCopyProfileLink}
+          isLoading={shareLoading}
+          size="sm"
+          w="100%"
+          mb={3}
+          bg="rgba(147, 51, 234, 0.15)"
+          color="#A855F7"
+          border="1px solid"
+          borderColor="rgba(147, 51, 234, 0.3)"
+          _hover={{ bg: 'rgba(147, 51, 234, 0.25)', borderColor: 'rgba(147, 51, 234, 0.5)' }}
+          _active={{ transform: 'scale(0.98)' }}
+          leftIcon={<Icon as={Copy} boxSize={4} />}
+        >
+          Copy Profile Link
+        </Button>
+      ) : (
+        // Friend request button for other profiles
+        <Button
+          onClick={handleFriendRequest}
+          isLoading={friendRequestLoading}
+          isDisabled={getRelationshipStatus !== 'none'}
+          size="sm"
+          w="100%"
+          mb={3}
+          bg={
+            getRelationshipStatus === 'friend'
+              ? 'rgba(52, 211, 153, 0.15)'
+              : getRelationshipStatus === 'pending'
+                ? 'rgba(251, 191, 36, 0.15)'
+                : 'rgba(59, 130, 246, 0.15)'
+          }
+          color={
+            getRelationshipStatus === 'friend'
+              ? '#34D399'
+              : getRelationshipStatus === 'pending'
+                ? '#FBBF24'
+                : '#3B82F6'
+          }
+          border="1px solid"
+          borderColor={
+            getRelationshipStatus === 'friend'
+              ? 'rgba(52, 211, 153, 0.3)'
+              : getRelationshipStatus === 'pending'
+                ? 'rgba(251, 191, 36, 0.3)'
+                : 'rgba(59, 130, 246, 0.3)'
+          }
+          _hover={
+            getRelationshipStatus === 'none'
+              ? { bg: 'rgba(59, 130, 246, 0.25)', borderColor: 'rgba(59, 130, 246, 0.5)' }
+              : {}
+          }
+          _active={{ transform: 'scale(0.98)' }}
+          leftIcon={
+            <Icon
+              as={
+                getRelationshipStatus === 'friend'
+                  ? Check
+                  : getRelationshipStatus === 'pending'
+                    ? Clock
+                    : UserPlus
+              }
+              boxSize={4}
+            />
+          }
+          cursor={getRelationshipStatus !== 'none' ? 'default' : 'pointer'}
+        >
+          {getRelationshipStatus === 'friend'
+            ? 'Friends'
+            : getRelationshipStatus === 'pending'
+              ? 'Request Sent'
+              : 'Add Friend'}
+        </Button>
+      )}
 
       {/* ═══════════════════════════════════════════════════════════════ */}
       {/* NOTIFICATIONS CARD - TEMPORARILY HIDDEN */}

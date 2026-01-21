@@ -289,8 +289,9 @@ const AppRoutes = ({ isToken, needsOnboarding, setIsGuestLoggedin }) => {
               <Route path="/manual/:pageId" element={<RuleBook />} />
               <Route path="/hall-of-champions" element={<HallOfChampions />} />
               <Route path="/contact/feedback" element={<ContactLayout />} />
-              <Route path="/home/:category" element={<Home />} />
-              <Route path="/home" element={<Home />} />
+              {/* Legacy routes - redirect to root (Quick Clash v2) */}
+              <Route path="/home/:category" element={<Navigate to="/" replace />} />
+              <Route path="/home" element={<Navigate to="/" replace />} />
               <Route path="/referral" element={<ReferralDashboard />} />
               <Route path="/article/:id/:slug" element={<Article />} />
               <Route path="/article/:id" element={<Article />} />

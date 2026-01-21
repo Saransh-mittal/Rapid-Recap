@@ -8,6 +8,7 @@ import {
   fetchFriendRequests,
   updateFriendOnlineStatus,
   removePendingRequest,
+  handleSocketFriendRequestAccepted,
 } from '../redux/friendsSlice'
 import {
   handleNewMessage,
@@ -91,6 +92,8 @@ const useFriendsSocket = (options = {}) => {
 
     addListener('friends:requestAccepted', data => {
       console.log('[FRIENDS_SOCKET] Friend request accepted:', data)
+      // Optimistic update with real-time status from payload
+      dispatch(handleSocketFriendRequestAccepted(data))
       dispatch(fetchFriends())
       dispatch(fetchFriendRequests())
 
@@ -98,6 +101,25 @@ const useFriendsSocket = (options = {}) => {
         notify.success(
           t('Request Accepted'),
           t('{{name}} accepted your friend request', {
+            name: data.friend.name,
+          }),
+          { duration: 4000 },
+        )
+      }
+    })
+
+    // FIXED: Handle new friend added event (for the accepter)
+    addListener('friends:newFriendAdded', data => {
+      console.log('[FRIENDS_SOCKET] New friend added:', data)
+      // Optimistic update with real-time status from payload
+      dispatch(handleSocketFriendRequestAccepted(data))
+      dispatch(fetchFriends())
+      dispatch(fetchFriendRequests())
+
+      if (enableNotifications) {
+        notify.success(
+          t('New Friend'),
+          t('You are now friends with {{name}}', {
             name: data.friend.name,
           }),
           { duration: 4000 },
