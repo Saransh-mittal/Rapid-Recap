@@ -776,12 +776,12 @@ const inviteToTeam = async ({ teamId, inviterId, inviteeId }) => {
         throw new Error('Team not found')
       }
 
-      // Verify inviter is a team member with appropriate permissions
+      // Verify inviter is a team member (any member can invite friends)
       const inviter = team.members.find(
-        member => member.user.toString() === inviterId.toString(),
+        member => member.user && member.user.toString() === inviterId.toString(),
       )
-      if (!inviter || inviter.role !== 'leader') {
-        throw new Error('Not authorized to invite members')
+      if (!inviter) {
+        throw new Error('Not a member of this team')
       }
 
       // Check if team is full

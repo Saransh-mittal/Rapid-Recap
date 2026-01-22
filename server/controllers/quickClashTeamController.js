@@ -257,6 +257,69 @@ const inviteUserToTeam = asyncHandler(async (req, res) => {
 })
 
 /**
+ * @desc    Invite a friend to team (validates friendship before inviting)
+ * @route   POST /api/quickClash/team/:teamId/invite-friend
+ * @access  Private
+ */
+const inviteFriendToTeam = asyncHandler(async (req, res) => {
+  const { teamId } = req.params
+  const { friendId } = req.body
+  const inviterId = req.user._id
+
+  try {
+    // Validate friendId is provided
+    if (!friendId) {
+      return res.status(400).json({
+        success: false,
+        message: 'Friend ID is required',
+      })
+    }
+
+    // Validate friendship - check if friendId is in inviter's friends list
+    const User = require('../model/userSchema')
+    const inviter = await User.findById(inviterId).select('friends').lean()
+    if (!inviter) {
+      return res.status(404).json({
+        success: false,
+        message: 'User not found',
+      })
+    }
+
+    const isFriend = inviter.friends.some(
+      fId => fId.toString() === friendId.toString()
+    )
+    if (!isFriend) {
+      return res.status(403).json({
+        success: false,
+        message: 'You can only invite your friends to teams',
+      })
+    }
+
+    // Proceed with team invitation
+    const team = await inviteToTeam({ teamId, inviterId, inviteeId: friendId })
+
+    res.status(200).json({
+      success: true,
+      message: 'Friend invited successfully',
+      team,
+    })
+  } catch (error) {
+    console.log('Error inviting friend to team:', error.message)
+
+    // Handle write conflicts
+    const conflictResponse = handleWriteConflictError(error, 'invite friend to team')
+    if (conflictResponse) {
+      return res.status(503).json(conflictResponse)
+    }
+
+    res.status(400).json({
+      success: false,
+      message: error.message || 'Failed to invite friend to team',
+    })
+  }
+})
+
+/**
  * @desc    Respond to team invitation
  * @route   POST /api/quickClash/team/:teamId/respond
  * @access  Private
@@ -1612,6 +1675,7 @@ module.exports = {
   getTeamByCodeController,
   joinTeam,
   inviteUserToTeam,
+  inviteFriendToTeam,
   respondToTeamInvitation,
   leaveTeamController,
   updateTeamMemberStatus,

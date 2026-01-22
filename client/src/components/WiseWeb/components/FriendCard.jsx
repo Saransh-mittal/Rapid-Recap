@@ -11,26 +11,35 @@ import {
   Target,
   TrendingUp,
   MessageCircle,
+  Users,
 } from 'lucide-react'
 import { useTranslation } from 'react-i18next'
 import { useNavigate } from 'react-router-dom'
 import ChatButton from './ChatButton'
+import RemoveFriendModal from './RemoveFriendModal'
 
-const FriendCard = ({ friend, onRemove, onStartChat, isOnline }) => {
+const FriendCard = ({ friend, onRemove, onStartChat, onInviteToTeam, isOnline }) => {
   const { t } = useTranslation('WiseWeb')
   const navigate = useNavigate()
   const [showMenu, setShowMenu] = useState(false)
   const [isRemoving, setIsRemoving] = useState(false)
   const [menuPosition, setMenuPosition] = useState({ top: 0, left: 0 })
+  const [showRemoveModal, setShowRemoveModal] = useState(false)
   const menuButtonRef = useRef(null)
+  const menuRef = useRef(null)
 
-  const handleRemoveFriend = async () => {
+  const handleRemoveFriendClick = () => {
+    setShowRemoveModal(true)
+    setShowMenu(false)
+  }
+
+  const handleConfirmRemoveFriend = async () => {
     setIsRemoving(true)
     try {
       await onRemove(friend._id)
     } finally {
       setIsRemoving(false)
-      setShowMenu(false)
+      setShowRemoveModal(false)
     }
   }
 
@@ -42,6 +51,13 @@ const FriendCard = ({ friend, onRemove, onStartChat, isOnline }) => {
   const handleStartChat = () => {
     if (onStartChat) {
       onStartChat(friend)
+    }
+    setShowMenu(false)
+  }
+
+  const handleInviteToTeam = () => {
+    if (onInviteToTeam) {
+      onInviteToTeam(friend)
     }
     setShowMenu(false)
   }
@@ -64,11 +80,11 @@ const FriendCard = ({ friend, onRemove, onStartChat, isOnline }) => {
   // Close menu when clicking outside
   useEffect(() => {
     const handleClickOutside = event => {
-      if (
-        showMenu &&
-        menuButtonRef.current &&
-        !menuButtonRef.current.contains(event.target)
-      ) {
+      // Check if click is outside BOTH the menu button AND the menu itself
+      const isOutsideButton = menuButtonRef.current && !menuButtonRef.current.contains(event.target)
+      const isOutsideMenu = !menuRef.current || !menuRef.current.contains(event.target)
+
+      if (showMenu && isOutsideButton && isOutsideMenu) {
         setShowMenu(false)
       }
     }
@@ -141,6 +157,7 @@ const FriendCard = ({ friend, onRemove, onStartChat, isOnline }) => {
     return createPortal(
       <AnimatePresence>
         <motion.div
+          ref={menuRef}
           initial={{ opacity: 0, scale: 0.95 }}
           animate={{ opacity: 1, scale: 1 }}
           exit={{ opacity: 0, scale: 0.95 }}
@@ -171,9 +188,20 @@ const FriendCard = ({ friend, onRemove, onStartChat, isOnline }) => {
             </button>
           )}
 
+          {/* Invite to Team - Only show if onInviteToTeam is provided */}
+          {onInviteToTeam && (
+            <button
+              onClick={handleInviteToTeam}
+              className="w-full px-3 py-2.5 text-left text-sm text-emerald-400 hover:text-emerald-300 hover:bg-emerald-500/10 flex items-center gap-2 transition-colors duration-150 border-t border-slate-700/50"
+            >
+              <Users className="w-4 h-4" />
+              {t('Invite to Team')}
+            </button>
+          )}
+
           {/* Remove Friend */}
           <button
-            onClick={handleRemoveFriend}
+            onClick={handleRemoveFriendClick}
             disabled={isRemoving}
             className="w-full px-3 py-2.5 text-left text-sm text-red-400 hover:text-red-300 hover:bg-red-500/10 flex items-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed transition-colors duration-150 border-t border-slate-700/50 rounded-b-lg"
           >
@@ -307,6 +335,14 @@ const FriendCard = ({ friend, onRemove, onStartChat, isOnline }) => {
 
       {/* Portal-rendered Dropdown Menu */}
       <DropdownMenu />
+
+      <RemoveFriendModal
+        isOpen={showRemoveModal}
+        onClose={() => setShowRemoveModal(false)}
+        onConfirm={handleConfirmRemoveFriend}
+        friendName={friend.name}
+        isRemoving={isRemoving}
+      />
     </motion.div>
   )
 }

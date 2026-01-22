@@ -30,6 +30,7 @@ const FriendCard = lazy(() => import('./components/FriendCard'))
 const FriendRequestCard = lazy(() => import('./components/FriendRequestCard'))
 const SearchUserCard = lazy(() => import('./components/SearchUserCard'))
 const WiseWebChat = lazy(() => import('./components/chat/WiseWebChat'))
+const TeamSelectForInviteModal = lazy(() => import('./components/TeamSelectForInviteModal'))
 
 // Simplified loading components
 const LoadingSpinner = () => (
@@ -190,6 +191,8 @@ const WiseWebModal = React.memo(({ isOpen, onClose }) => {
   const [searchQuery, setSearchQuery] = useState('')
   const [isChatOpen, setIsChatOpen] = useState(false)
   const [chatInitialFriendId, setChatInitialFriendId] = useState(null)
+  const [showTeamInviteModal, setShowTeamInviteModal] = useState(false)
+  const [teamInviteFriend, setTeamInviteFriend] = useState(null)
 
   const {
     friends,
@@ -232,6 +235,17 @@ const WiseWebModal = React.memo(({ isOpen, onClose }) => {
   const handleCloseChat = useCallback(() => {
     setIsChatOpen(false)
     setChatInitialFriendId(null)
+  }, [])
+
+  // Team invite handler
+  const handleInviteToTeam = useCallback(friend => {
+    setTeamInviteFriend(friend)
+    setShowTeamInviteModal(true)
+  }, [])
+
+  const handleCloseTeamInviteModal = useCallback(() => {
+    setShowTeamInviteModal(false)
+    setTeamInviteFriend(null)
   }, [])
 
   // Enhanced search handling
@@ -330,6 +344,7 @@ const WiseWebModal = React.memo(({ isOpen, onClose }) => {
                     friend={friend}
                     onRemove={handleRemoveFriend}
                     onStartChat={handleOpenChatWithFriend}
+                    onInviteToTeam={handleInviteToTeam}
                     isOnline={true}
                   />
                 ))}
@@ -354,6 +369,7 @@ const WiseWebModal = React.memo(({ isOpen, onClose }) => {
                     friend={friend}
                     onRemove={handleRemoveFriend}
                     onStartChat={handleOpenChatWithFriend}
+                    onInviteToTeam={handleInviteToTeam}
                     isOnline={false}
                   />
                 ))}
@@ -371,6 +387,7 @@ const WiseWebModal = React.memo(({ isOpen, onClose }) => {
     offlineFriends,
     handleRemoveFriend,
     handleOpenChatWithFriend,
+    handleInviteToTeam,
     refreshData,
     networkStatus,
     t,
@@ -670,6 +687,17 @@ const WiseWebModal = React.memo(({ isOpen, onClose }) => {
           </div>
         </div>
       </div>
+
+      {/* Team Invite Modal */}
+      {showTeamInviteModal && teamInviteFriend && (
+        <Suspense fallback={null}>
+          <TeamSelectForInviteModal
+            isOpen={showTeamInviteModal}
+            onClose={handleCloseTeamInviteModal}
+            friend={teamInviteFriend}
+          />
+        </Suspense>
+      )}
 
       {/* Chat Interface */}
       {isChatOpen && (
