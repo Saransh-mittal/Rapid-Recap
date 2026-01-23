@@ -384,7 +384,6 @@ const StreakIncreasedPopup = memo(({
                 whileTap={{ scale: 0.98 }}
                 className="w-full py-3.5 rounded-xl font-bold text-white flex items-center justify-center gap-2"
                 style={{
-                  background: `linear-gradient(135deg, ${currentTier.bgGlow.replace('0.3', '1')}, ${currentTier.bgGlow.replace('0.3', '0.8').replace('rgba', 'rgba')})`,
                   background: 'linear-gradient(135deg, #f97316 0%, #dc2626 100%)',
                   boxShadow: '0 4px 20px rgba(249, 115, 22, 0.4)',
                 }}
