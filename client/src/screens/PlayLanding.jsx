@@ -219,8 +219,9 @@ const authStyles = {
     left: 0,
     right: 0,
     bottom: 0,
-    opacity: 0,
+    opacity: 0.01, // Slightly non-zero to help some browsers register clicks
     cursor: 'pointer',
+    zIndex: 20, // Ensure it sits on top
   },
 }
 

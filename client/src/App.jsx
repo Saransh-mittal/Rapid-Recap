@@ -638,10 +638,20 @@ const App = () => {
   // Spark Engine - Handle pending invites
   useAutoJoin(isAuthenticated, user, useNavigate())
 
+  // Check for mobile simulation to hide scrollbars
+  const isMobileSim = new URLSearchParams(window.location.search).get('mobile_sim') === 'true'
+  const isAdminRoute = location.pathname.startsWith('/admin')
+
   return (
     <MaintenanceHandler>
-      <MobileRestrictedView />
-      {isMobileSimulation ? (
+      {isMobileSim && (
+        <style>{`
+          ::-webkit-scrollbar { display: none; }
+          * { -ms-overflow-style: none; scrollbar-width: none; }
+        `}</style>
+      )}
+      {!isAdminRoute && <MobileRestrictedView />}
+      {isMobileSimulation && !isAdminRoute ? (
         <MobileSimulatorWrapper>
            {/* {showLoadingScreen && <LoadingScreen progress={overallProgress} />} */}
 
