@@ -24,6 +24,7 @@ const abilityRoutes = require('./router/abilityRoutes')
 const quickClashRoutes = require('./router/quickClashRoutes')
 const playRoutes = require('./router/playRoutes')
 const publicSpecialCategoryRoutes = require('./router/publicSpecialCategoryRoutes')
+const analyticsRoutes = require('./router/analyticsRoutes')
 const authRouter = express.Router()
 const webpush = require('web-push')
 const cookieParser = require('cookie-parser')
@@ -238,6 +239,9 @@ app.use('/api', authRouter)
 
 // Spark Engine - Public routes (no auth required)
 app.use('/api/play', playRoutes)
+
+// Quick Clash Validation Analytics Dashboard (admin only)
+app.use('/api/admin/analytics', analyticsRoutes)
 
 
 

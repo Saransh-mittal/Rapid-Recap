@@ -59,6 +59,9 @@ const QuickClashSocketTest =
     : React.lazy(() => import('../screens/testing/QuickClashSocketTest'))
 const AppStartScreen = lazy(() => import('../screens/AppStartScreen'))
 
+// Admin Analytics Dashboard
+const AnalyticsDashboard = lazy(() => import('../screens/AnalyticsDashboard'))
+
 // Spark Engine - Viral invite system
 const PlayLanding = lazy(() => import('../screens/PlayLanding'))
 const SparkLobby = lazy(() =>
@@ -305,6 +308,15 @@ const AppRoutes = ({ isToken, needsOnboarding, setIsGuestLoggedin }) => {
                 element={
                   <AdminRoute>
                     <Dashboard />
+                  </AdminRoute>
+                }
+              />
+              {/* Admin Analytics Dashboard */}
+              <Route
+                path="/admin/analytics"
+                element={
+                  <AdminRoute>
+                    <AnalyticsDashboard />
                   </AdminRoute>
                 }
               />
