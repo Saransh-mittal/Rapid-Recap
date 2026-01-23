@@ -116,6 +116,8 @@ const ConnectionStatusIndicator = React.lazy(() =>
 
 // Import Tutorial Manager
 import { TutorialProvider } from './components/quickClashComponents/v2/tutorial/TutorialManager'
+import MobileRestrictedView from './components/miscellaneous/MobileRestrictedView.jsx'
+import MobileSimulatorWrapper from './components/miscellaneous/MobileSimulatorWrapper.jsx'
 
 const App = () => {
   // ReactGA.initialize('G-ES5VQ8NW7Z')
@@ -173,6 +175,7 @@ const App = () => {
     showXpLevelModal,
     isNotifInboxModalOpen,
     selectedNotificationId,
+    isMobileSimulation,
   } = useSelector(state => state.app)
   const { isOpen, tournamentQuiz } = useSelector(state => state.quiz)
   const { summary, isVisible } = useSelector(state => state.demotionSummary)
@@ -637,7 +640,10 @@ const App = () => {
 
   return (
     <MaintenanceHandler>
-      {/* {showLoadingScreen && <LoadingScreen progress={overallProgress} />} */}
+      <MobileRestrictedView />
+      {isMobileSimulation ? (
+        <MobileSimulatorWrapper>
+           {/* {showLoadingScreen && <LoadingScreen progress={overallProgress} />} */}
 
       <Suspense fallback={null}>
         {!showLoadingScreen && <FixedBackground forceRender={true} />}
@@ -760,6 +766,134 @@ const App = () => {
         <ConnectionStatusIndicator />
       </Suspense>
       </TutorialProvider>
+      </MobileSimulatorWrapper>
+      ) : (
+        <>
+           {/* {showLoadingScreen && <LoadingScreen progress={overallProgress} />} */}
+
+      <Suspense fallback={null}>
+        {!showLoadingScreen && <FixedBackground forceRender={true} />}
+        {showLoadingScreen && <LoadingScreen screenInfo={screenInfo} />}
+      </Suspense>
+      <Suspense fallback={null}>
+        {showPWAPrompt && <PWAPromptStrip onClose={handlePromptClose} />}
+      </Suspense>
+      <Suspense fallback={null}>
+        {showPWAPrompt && <PWAPromptStrip onClose={handlePromptClose} />}
+      </Suspense>
+      <TutorialProvider>
+      <Suspense fallback={null}>
+        <NoteMessageQueue />
+      </Suspense>
+
+      {showXpLevelModal && (
+        <Suspense fallback={null}>
+          <XPLevelModal
+            setShowXPLevelModal={show => dispatch(setShowXpLevelModal(show))}
+          />
+        </Suspense>
+      )}
+
+      <Suspense fallback={null}>
+        <ButtonGradient />
+      </Suspense>
+      <Suspense fallback={null}>
+        <GuestLoginModal
+          isOpen={isGuestLoggedin}
+          onClose={handleClose}
+          guestName={user?.inGameName}
+          guestPassword={user?.guestTempPassword}
+          guestId={user?._id}
+          onOpen={() => setIsGuestLoggedin(true)}
+          t={GuestLoginModaltranslation}
+        />
+      </Suspense>
+      <Suspense fallback={null}>
+        {isOpen ? tournamentQuiz ? <TournamentQuiz /> : <Quiz /> : null}
+      </Suspense>
+      <Suspense fallback={null}>
+        <Signin
+          isOpen={isSigninOpen}
+          onOpen={() => dispatch(setIsSigninOpen(true))}
+          onClose={() => dispatch(setIsSigninOpen(false))}
+        />
+      </Suspense>
+      <Suspense fallback={null}>
+        {isAuthenticated && USER_IQ > 90 && user.societyUpgradeMessage && (
+          <UpgradeModal
+            isOpen={showUpgradeModal}
+            onClose={() => setShowUpgradeModal(false)}
+            title={t('upgrade_modal_title')}
+            content={t('upgrade_modal_content')}
+          />
+        )}
+      </Suspense>
+      <Suspense fallback={null}>
+        <Register
+          isOpen={isRegisterOpen}
+          onOpen={() => dispatch(setIsRegisterOpen(true))}
+          onClose={() => dispatch(setIsRegisterOpen(false))}
+        />
+      </Suspense>
+      <NavbarProvider>
+        {/* Navbar completely hidden for Spark Engine - all navigation is in-app */}
+        {false && showNavbar &&
+          ((!(summary && isVisible) &&
+            !(
+              location.pathname.startsWith('/quickclash') ||
+              location.pathname.startsWith('/profile')
+            ) &&
+            location.pathname != '/') ||
+            (!location.pathname.startsWith('/quickclash') && !isLoggedIn)) &&
+          !location.pathname.startsWith('/gamehub') && (
+            <Suspense fallback={null}>
+              {/* <Navbar onNavbarLoad={handleNavbarLoad} /> */}
+              <ModernNavbar onNavbarLoad={handleNavbarLoad} />
+            </Suspense>
+          )}
+        <Box
+          position="relative"
+          minHeight="100vh"
+          zIndex={1}
+          overflowX={'hidden'}
+        >
+          <Suspense fallback={null}>
+            <AppRoutes
+              isToken={isToken()}
+              needsOnboarding={user?.needsOnboarding}
+              setIsGuestLoggedin={setIsGuestLoggedin}
+            />
+          </Suspense>
+        </Box>
+      </NavbarProvider>
+      <Suspense fallback={null}>
+        {isNotifInboxModalOpen && (
+          <NotificationModal
+            handleNotifModalClose={handleNotifModalClose}
+            selectedNotificationId={selectedNotificationId}
+            selectedNotification={getLatestWeeklyReportUpdate()}
+          />
+        )}
+      </Suspense>
+      <Suspense fallback={null}>
+        {!isLoadingRewardsModal && (
+          <TournamentRewardsModal
+            isOpen={isOpenRewardsModal}
+            onClose={onClose}
+          />
+        )}
+      </Suspense>
+      <Suspense fallback={null}>
+        <RewardDisplay />
+      </Suspense>
+      <NotificationReminderModal />
+
+      <Suspense fallback={null}>
+        <ConnectionStatusIndicator />
+      </Suspense>
+      </TutorialProvider>
+        </>
+      )}
     </MaintenanceHandler>
   )
 }

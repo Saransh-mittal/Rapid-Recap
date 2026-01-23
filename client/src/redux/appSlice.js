@@ -156,7 +156,9 @@ const initialState = {
   selectedNotificationId: null,
   isWeakDevice: false,
   showIQScoreModal: false,
+  showIQScoreModal: false,
   showDailyStreakModal: false,
+  isMobileSimulation: false,
 }
 
 export const appSlice = createSlice({
@@ -165,6 +167,9 @@ export const appSlice = createSlice({
   reducers: {
     setShowDailyStreakModal: (state, action) => {
       state.showDailyStreakModal = action.payload
+    },
+    setIsMobileSimulation: (state, action) => {
+      state.isMobileSimulation = action.payload
     },
     setShowIQScoreModal: (state, action) => {
       state.showIQScoreModal = action.payload
@@ -412,6 +417,7 @@ export const {
   setShowIQScoreModal,
   setStreak,
   setShowDailyStreakModal,
+  setIsMobileSimulation,
   logout: logoutApp,
 } = appSlice.actions
 

@@ -36,6 +36,7 @@ import {
 
 // Enhanced Responsive Hook (keep existing implementation)
 export const useResponsiveBreakpoints = () => {
+
   const [screenInfo, setScreenInfo] = useState(() => {
     const width = window.innerWidth
     const height = window.innerHeight
