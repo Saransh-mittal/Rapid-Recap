@@ -167,7 +167,9 @@ const SparkMatchmaking = () => {
 
     // Register with server for disconnect cleanup
     // This sets socket.sparkTeamId on server so it can clean up matchmaking if we disconnect
-    emit('spark:joinMatchmaking', { teamId: team._id, matchmakingId })
+    if (team) {
+      emit('spark:joinMatchmaking', { teamId: team._id, matchmakingId })
+    }
 
     // Listen for matchmaking locked (creating battle)
     const cleanupLocked = addEventListener('quickClash:matchmakingLocked', (data) => {

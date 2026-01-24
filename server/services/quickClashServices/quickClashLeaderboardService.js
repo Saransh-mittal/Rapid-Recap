@@ -210,7 +210,12 @@ const getLeaderboard = async ({ page = 1, limit = 20, searchQuery = '', currentU
     if (searchQuery) {
       const searchRegex = new RegExp(searchQuery, 'i')
       // Ensure search targets fields present in the User model
-      userQuery = { $or: [{ name: searchRegex }, { inGameName: searchRegex }] }
+      userQuery = {
+        $or: [{ name: searchRegex }, { inGameName: searchRegex }],
+        'quickClashStats.totalMatches': { $gt: 0 },
+      }
+    } else {
+      userQuery = { 'quickClashStats.totalMatches': { $gt: 0 } }
     }
 
     const totalMatchingUsers = await User.countDocuments(userQuery)
@@ -222,9 +227,11 @@ const getLeaderboard = async ({ page = 1, limit = 20, searchQuery = '', currentU
       .limit(limit)
       .lean()
 
-    // For global ranking: Fetch all users' trophies.
+    // For global ranking: Fetch all active users' trophies.
     // This matches the original implementation for determining global rank.
-    const allUserTrophiesForRanking = await User.find({}) // Fetch all users for global ranking context
+    const allUserTrophiesForRanking = await User.find({
+      'quickClashStats.totalMatches': { $gt: 0 },
+    }) // Fetch all active users for global ranking context
       .select('_id quickClashTrophies')
       .sort({ quickClashTrophies: -1, name: 1 }) // Consistent sort for ranking
       .lean()

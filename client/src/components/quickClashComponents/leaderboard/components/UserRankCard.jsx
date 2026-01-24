@@ -1,12 +1,86 @@
 import React, { memo } from 'react'
 import { motion } from 'framer-motion'
 import { useTranslation } from 'react-i18next'
-import { Trophy, ArrowDown, ChevronRight } from 'lucide-react'
+import { useNavigate } from 'react-router-dom'
+import { Trophy, ArrowDown, ChevronRight, LogIn, Gamepad2 } from 'lucide-react'
 
 const UserRankCard = memo(({ user, rank, onViewProfile }) => {
   const { t } = useTranslation('QuickClash')
+  const navigate = useNavigate()
 
-  if (!user || !rank) return null
+  if (!user) return null
+
+  // CASE 1: Session Player / Guest -> Show Login Prompt
+  // Check both role (if available) and if user object is minimal (session player)
+  // Assuming 'guest' role or missing ID indicates session player in this context
+  const isGuest = user.role === 'guest' || !user._id || (user.type === 'session')
+
+  if (isGuest) {
+    return (
+      <motion.div
+        initial={{ opacity: 0, y: -20 }}
+        animate={{ opacity: 1, y: 0 }}
+        className="sticky top-0 z-20 px-3 pb-3 -mt-2"
+      >
+        <div
+          onClick={() => navigate('/login')}
+          className="
+            relative p-3 rounded-xl
+            bg-gradient-to-r from-slate-800/90 to-slate-900/90
+            backdrop-blur-md border border-slate-700/50
+            shadow-lg cursor-pointer group
+          "
+        >
+          <div className="flex items-center gap-3">
+            <div className="w-10 h-10 rounded-full bg-slate-800 flex items-center justify-center border border-slate-700">
+              <LogIn className="w-5 h-5 text-slate-400" />
+            </div>
+            <div className="flex-1">
+              <h3 className="font-bold text-white text-sm">Login to get ranked</h3>
+              <p className="text-[10px] text-slate-400">Save your progress and compete</p>
+            </div>
+            <div className="bg-purple-600/20 p-1.5 rounded-lg">
+              <ChevronRight className="w-4 h-4 text-purple-400" />
+            </div>
+          </div>
+        </div>
+      </motion.div>
+    )
+  }
+
+  // CASE 2: Registered but Unranked -> Show Play Prompt
+  if (!rank || rank === 0) {
+    return (
+      <motion.div
+        initial={{ opacity: 0, y: -20 }}
+        animate={{ opacity: 1, y: 0 }}
+        className="sticky top-0 z-20 px-3 pb-3 -mt-2"
+      >
+        <div
+          onClick={() => navigate('/quickclash')}
+          className="
+            relative p-3 rounded-xl
+            bg-gradient-to-r from-purple-900/30 to-slate-900/90
+            backdrop-blur-md border border-purple-500/20
+            shadow-lg cursor-pointer group
+          "
+        >
+          <div className="flex items-center gap-3">
+            <div className="w-10 h-10 rounded-full bg-purple-500/10 flex items-center justify-center border border-purple-500/20">
+              <Gamepad2 className="w-5 h-5 text-purple-400" />
+            </div>
+            <div className="flex-1">
+              <h3 className="font-bold text-white text-sm">Play a battle to rank</h3>
+              <p className="text-[10px] text-slate-400">Complete 1 match to join leaderboard</p>
+            </div>
+            <div className="bg-purple-600/20 p-1.5 rounded-lg">
+              <ChevronRight className="w-4 h-4 text-purple-400" />
+            </div>
+          </div>
+        </div>
+      </motion.div>
+    )
+  }
 
   // Format rank with suffix (1st, 2nd, 3rd, 4th)
   // Or just use #Hash format for simplicity and localization ease

@@ -287,11 +287,11 @@ const QuickClashLeaderboardTab = () => {
 
 
 
-      {/* User Rank Card (Sticky) - Only show if not searching and we have data */}
-      {!isSearching && currentUserRank && (
+      {/* User Rank Card (Sticky) - Show if not searching */}
+      {!isSearching && (currentUserRank || user) && (
         <UserRankCard
-          user={currentUserRank}
-          rank={currentUserRank.rank}
+          user={currentUserRank || user}
+          rank={currentUserRank?.rank}
           onViewProfile={handleViewProfile}
         />
       )}
