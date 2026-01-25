@@ -1,6 +1,6 @@
 const { redis } = require('../redis')
 const CryptoJS = require('crypto-js')
-const moment = require('moment')
+const moment = require('moment-timezone')
 const User = require('../model/userSchema')
 
 function binarySearch(arr, target) {
