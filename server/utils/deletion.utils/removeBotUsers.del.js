@@ -8,7 +8,7 @@ async function deleteBotUsers() {
   try {
     // remove user with email email: `dummy${i}@mail.com`
     console.log("Deleting user with email: `dummy${i}@mail.com`...");
-    for (let i = 0; i < 100; i++) {
+    for (let i = 0; i < 1000; i++) {
       const user = await User.findOne({ email: `dummy${i}@mail.com` });
       deleteUserAndRelatedRecords(user._id.toString());
       updateProgress();

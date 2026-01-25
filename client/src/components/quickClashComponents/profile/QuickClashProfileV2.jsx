@@ -235,33 +235,6 @@ const QuickClashProfileV2 = ({ userId: propUserId }) => {
         align="center"
         gap={4}
       >
-        {/* Avatar */}
-        <Box position="relative" flexShrink={0}>
-          <Avatar
-            size="lg"
-            src={profile.user.picture}
-            name={profile.user.name}
-            border="2px solid"
-            borderColor="rgba(255,255,255,0.1)"
-          />
-          <Flex
-            position="absolute"
-            bottom="-2px"
-            right="-2px"
-            w="22px"
-            h="22px"
-            bg="linear-gradient(135deg, #9333EA, #6B21A8)"
-            borderRadius="full"
-            align="center"
-            justify="center"
-            border="2px solid"
-            borderColor="#0f172a"
-          >
-            <Text fontSize="9px" fontWeight="extrabold" color="white">
-              {profile.user.level || 1}
-            </Text>
-          </Flex>
-        </Box>
 
         {/* Name + Rank */}
         <Box flex={1} minW={0}>
