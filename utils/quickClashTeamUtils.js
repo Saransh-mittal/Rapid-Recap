@@ -446,7 +446,14 @@ const calculateFinalTrophies = async (battle, session) => {
       const currentPeak = currentUser?.quickClashStats?.peakTrophies || member.previousTrophies
 
       // Update user trophies in database
-      const updateObj = { $inc: { quickClashTrophies: perPlayerAmount } }
+      const updateObj = {
+        $inc: {
+          quickClashTrophies: perPlayerAmount,
+          'quickClashStats.totalMatches': 1,
+          'quickClashStats.wins': 1,
+          'quickClashStats.totalScore': member.score || 0,
+        },
+      }
 
       // Update peakTrophies if new trophies exceed current peak
       if (member.newTrophies > currentPeak) {
@@ -509,10 +516,18 @@ const calculateFinalTrophies = async (battle, session) => {
       }).save({ session })
     } else {
       // Regular user - update User model
+      // Regular user - update User model
       await User.findByIdAndUpdate(
         member.user,
-        { $set: { quickClashTrophies: member.newTrophies } },
-        { session }
+        {
+          $set: { quickClashTrophies: member.newTrophies },
+          $inc: {
+            'quickClashStats.totalMatches': 1,
+            'quickClashStats.losses': 1,
+            'quickClashStats.totalScore': member.score || 0,
+          },
+        },
+        { session },
       )
 
       // Create trophy history entry for user
@@ -573,6 +588,19 @@ const calculateFinalTrophies = async (battle, session) => {
         userCompleted: member.completed,
         userScore: member.score,
       }).save({ session })
+
+      // Update user stats for tie
+      await User.findByIdAndUpdate(
+        member.user,
+        {
+          $inc: {
+            'quickClashStats.totalMatches': 1,
+            'quickClashStats.draws': 1,
+            'quickClashStats.totalScore': member.score || 0,
+          },
+        },
+        { session },
+      )
     }
   }
 
