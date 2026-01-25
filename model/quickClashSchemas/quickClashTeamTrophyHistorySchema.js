@@ -5,7 +5,13 @@ const quickClashTeamTrophyHistorySchema = new mongoose.Schema({
   user: {
     type: mongoose.Schema.Types.ObjectId,
     ref: 'USER',
-    required: true,
+    required: false, // Not required - can be sessionPlayer instead
+    index: true,
+  },
+  sessionPlayer: {
+    type: mongoose.Schema.Types.ObjectId,
+    ref: 'SESSION_PLAYER',
+    required: false, // Not required - can be user instead
     index: true,
   },
   team: {
@@ -62,8 +68,18 @@ const quickClashTeamTrophyHistorySchema = new mongoose.Schema({
   },
 })
 
+// Pre-validate hook to ensure at least one of user or sessionPlayer is set
+quickClashTeamTrophyHistorySchema.pre('validate', function (next) {
+  if (!this.user && !this.sessionPlayer) {
+    next(new Error('Either user or sessionPlayer is required'))
+  } else {
+    next()
+  }
+})
+
 // Create compound index for efficient lookups
 quickClashTeamTrophyHistorySchema.index({ user: 1, createdAt: -1 })
+quickClashTeamTrophyHistorySchema.index({ sessionPlayer: 1, createdAt: -1 })
 quickClashTeamTrophyHistorySchema.index({ team: 1, createdAt: -1 })
 quickClashTeamTrophyHistorySchema.index({ teamBattle: 1 })
 
@@ -73,3 +89,4 @@ const QuickClashTeamTrophyHistory = mongoose.model(
 )
 
 module.exports = QuickClashTeamTrophyHistory
+

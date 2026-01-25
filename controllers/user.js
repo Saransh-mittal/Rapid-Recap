@@ -68,6 +68,9 @@ const {
 const {
   createCategoryAbilities,
 } = require('../services/abilityServices/tournamentAbilityService.js')
+const {
+  grantWelcomePowerups,
+} = require('../services/welcomePowerupService.js')
 
 const registerUser = async (req, res) => {
   const { name, email, pic, password, cpassword, inGameName } = req.body
@@ -466,6 +469,39 @@ const resendOTP = async (req, res) => {
   }
 }
 
+const updateTutorialProgress = asyncHandler(async (req, res) => {
+  const { tutorial, completed } = req.body
+  const userId = req.user._id
+
+  if (!tutorial) {
+    return res.status(400).json({ error: 'Tutorial name is required' })
+  }
+
+  // Allowed tutorials
+  const validTutorials = ['lobby', 'battle', 'squad_intro', 'coins_shop']
+  if (!validTutorials.includes(tutorial)) {
+    return res.status(400).json({ error: 'Invalid tutorial name' })
+  }
+
+  try {
+    const updateField = `tutorialProgress.${tutorial}`
+
+    const user = await User.findByIdAndUpdate(
+      userId,
+      { [updateField]: completed !== false }, // Default to true if not specified
+      { new: true }
+    ).select('tutorialProgress')
+
+    res.status(200).json({
+      message: 'Tutorial progress updated',
+      tutorialProgress: user.tutorialProgress
+    })
+  } catch (error) {
+    console.error('Update tutorial progress error:', error)
+    res.status(500).json({ error: 'Failed to update tutorial progress' })
+  }
+})
+
 const forgotPassword = async (req, res) => {
   const { email, newPassword } = req.body
   try {
@@ -496,6 +532,7 @@ const forgotPassword = async (req, res) => {
 const handleGoogleLogin = async (req, res) => {
   const { credentialResponse, inGameName } = req.body
   const credential = credentialResponse.credential
+  let isNewUser = false
 
   try {
     const userInfo = jwt.decode(credential)
@@ -591,8 +628,16 @@ const handleGoogleLogin = async (req, res) => {
         googleId: userInfo.sub,
         googleEmail: userInfo.email,
         verified: true,
+        needsOnboarding: false,
       })
       await user.save()
+      isNewUser = true
+
+      // Grant welcome powerups silently for new Google users
+      // No modal shown - user will discover powerups in inventory
+      grantWelcomePowerups(user._id).catch(err => {
+        console.error('[GoogleLogin] Failed to grant welcome powerups:', err)
+      })
     }
 
     // Create tokens
@@ -647,6 +692,7 @@ const handleGoogleLogin = async (req, res) => {
       message: 'Google Login Successful',
       user: { ...user._doc, unClaimedValidBadges, categoryPrivileges },
       token: accessToken, // For backward compatibility
+      isNewUser,
     })
   } catch (error) {
     console.log(error)
@@ -2542,4 +2588,5 @@ module.exports = {
   getUserAchievements,
   verifyEarlyAdopterCode,
   applyEarlyAdopterCode,
+  updateTutorialProgress,
 }

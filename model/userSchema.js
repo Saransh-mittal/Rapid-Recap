@@ -448,7 +448,18 @@ const userSchema = new mongoose.Schema(
       type: Number,
       default: 1000, // Default starting trophies
     },
+    // Quick Clash coins - earned from completing quizzes
+    quickClashCoins: {
+      type: Number,
+      default: 0,
+    },
     quickClashStats: {
+      wins: { type: Number, default: 0 },
+      losses: { type: Number, default: 0 },
+      draws: { type: Number, default: 0 },
+      totalMatches: { type: Number, default: 0 },
+      totalScore: { type: Number, default: 0 },
+      avgScore: { type: Number, default: 0 },
       currentWinStreak: {
         type: Number,
         default: 0,
@@ -461,6 +472,10 @@ const userSchema = new mongoose.Schema(
         type: Number,
         default: 1000, // Same as starting trophies
       },
+      // Streak tracking for daily return habit
+      dayStreak: { type: Number, default: 0 },
+      lastPlayedDate: { type: Date, default: null },
+      longestStreak: { type: Number, default: 0 },
       // We'll use createdAt for the 2-week activity protection period
     },
     earlyAdopterCode: {
@@ -478,6 +493,17 @@ const userSchema = new mongoose.Schema(
     tutorialChoice: {
       type: Boolean,
       default: null,
+    },
+    tutorialProgress: {
+      lobby: { type: Boolean, default: false },
+      battle: { type: Boolean, default: false },
+      squad_intro: { type: Boolean, default: false },
+      coins_shop: { type: Boolean, default: false },
+    },
+    // Flag to track if user received welcome powerups (TIME_WARP + ORACLES_EYE)
+    receivedWelcomePowerups: {
+      type: Boolean,
+      default: false,
     },
   },
   { collection: 'Users' },

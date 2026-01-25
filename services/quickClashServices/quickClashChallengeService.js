@@ -37,6 +37,9 @@ const {
   calculateTrophiesToExchange,
 } = require('./quickClashTrophyService')
 const globalEmitter = require('../../eventEmitter')
+const {
+  calculateSoloWinProbability,
+} = require('./quickClashWinProbabilityService')
 
 const CHALLENGE_EXPIRY = 24 * 60 * 60 * 1000 // 24 hours
 
@@ -211,6 +214,24 @@ const createChallenge = async ({
     }
   }
 
+  // Calculate win probability
+  let winProbability = null
+  try {
+    winProbability = await calculateSoloWinProbability({
+      challengerId,
+      opponentId,
+      session: null,
+    })
+    console.log('[WIN_PROB] Solo challenge probability calculated:', {
+      challenger: winProbability.challenger.probability,
+      opponent: winProbability.opponent.probability,
+    })
+  } catch (probError) {
+    // Non-blocking: if probability calculation fails, continue without it
+    console.error('[WIN_PROB] Error calculating probability:', probError)
+    // Challenge creation continues even if probability fails
+  }
+
   const session = await mongoose.startSession()
 
   try {
@@ -277,6 +298,7 @@ const createChallenge = async ({
               potentialLoss: opponentLoss,
             },
           },
+          winProbability: winProbability,
         })
 
         if (fromMatchMaking) challenge.status = 'active'
@@ -598,24 +620,35 @@ const rejectChallenge = async ({ challengeId, userId }) => {
 const getChallengeDetails = async ({ challengeId }) => {
   const challenge = await QuickClashChallenge.findById(challengeId)
     .populate('challenger opponent')
+    .populate('forgeArticle') // Add forge article population
     .populate({
       path: 'article.sourceArticles',
       select: 'title dateTime category',
     })
 
+  if (!challenge) {
+    throw new Error('Challenge not found')
+  }
+
+  const challengeObj = challenge.toObject()
+
+  // Check if this is a forge challenge
+  if (challengeObj.forgeArticle) {
+    // Forge challenge - no highlights needed
+    // Forge article already populated with all sections
+    return challengeObj
+  }
+
+  // Traditional challenge - get highlights
   const [hindiHighlights, englishHighlights] = await Promise.all([
     getQuickClashHighlights({ challengeId, lang: 'hi' }),
     getQuickClashHighlights({ challengeId, lang: 'en' }),
   ])
 
-  if (!challenge) {
-    throw new Error('Challenge not found')
-  }
   if (!hindiHighlights || !englishHighlights) {
     throw new Error('Highlights not found')
   }
 
-  const challengeObj = challenge.toObject()
   challengeObj.article.hindiImportantSentences =
     hindiHighlights.importantSentences
   challengeObj.article.englishImportantSentences =
@@ -671,8 +704,8 @@ const getUserChallenges = async ({
   const total = await QuickClashChallenge.countDocuments(query)
 
   const challenges = await QuickClashChallenge.find(query)
-    .populate('challenger', '_id name inGameName pic')
-    .populate('opponent', '_id name inGameName pic')
+    .populate('challenger', '_id name inGameName pic quickClashTrophies')
+    .populate('opponent', '_id name inGameName pic quickClashTrophies')
     .sort({ createdAt: -1 })
     .skip(skip)
     .limit(limit)
@@ -727,6 +760,14 @@ const updateChallengeScore = async ({
     } else if (challenge?.opponent?._id.equals(userId)) {
       challenge.opponentScore = score
       challenge.opponentAttempted = true // Mark as attempted regardless of score
+    } else if (challenge.fromTeamBattle) {
+      // For team battles, the user might be a team member but not the direct challenger/opponent
+      // In this case, we don't update the challenge score directly here, but we return the challenge
+      // so the caller can proceed to update the team battle
+      console.log(
+        `[CHALLENGE_SERVICE] User ${userId} is not direct participant in challenge ${challengeId} but it is a team battle. Skipping direct score update.`,
+      )
+      return challenge
     } else {
       throw new Error('User not part of this challenge')
     }
@@ -766,6 +807,10 @@ const updateChallengeScore = async ({
           console.error('Error updating trophies:', trophyError)
           // Continue with challenge completion even if trophy update fails
         }
+      } else {
+        // Handle team battle completion logic here if needed
+        // For now, team battle service handles the overall battle completion
+        // But we might need to update individual challenge status in the team battle
       }
     } else if (
       !isNowComplete &&
@@ -792,26 +837,136 @@ const updateChallengeScore = async ({
           `[CHALLENGE_SERVICE] Challenge score updated, notifying completion: ${challengeId}`,
         )
         notifyChallengeCompleted({
-          challenge: result,
-          completedByUserId: userId,
+          challenge: {
+            _id: challenge._id,
+            category: challenge.category,
+            winner: challenge.winner,
+            challengerScore: challenge.challengerScore,
+            opponentScore: challenge.opponentScore,
+          },
+          challenger: challenge.challenger,
+          opponent: challenge.opponent,
         }).catch(err => {
-          console.error('Error sending challenge completion notification:', err)
+          console.error('Error sending challenge completed notification:', err)
         })
       }, 0)
     }
 
-    return result
+    return challenge
   } catch (error) {
     // If we started the transaction, abort it on error
     if (startedTransaction) {
       await session.abortTransaction()
     }
+    console.error('Error updating challenge score:', error)
     throw error
   } finally {
     // If we started the session, end it
-    if (!providedSession) {
-      session.endSession()
+    if (startedTransaction) {
+      await session.endSession()
     }
+  }
+}
+
+/**
+ * Place a bet on a challenge
+ * @param {Object} params - Parameters
+ * @param {string} params.challengeId - Challenge ID
+ * @param {string} params.userId - User ID placing the bet
+ * @param {number} params.amount - Bet amount (0, 1, 2, 5, 10)
+ * @returns {Promise<Object>} Updated challenge
+ */
+const placeBet = async ({ challengeId, userId, amount }) => {
+  // Validate bet amount
+  const allowedBets = [0, 1, 2, 5, 10]
+  if (!allowedBets.includes(amount)) {
+    throw new Error('Invalid bet amount. Allowed values: 0, 1, 2, 5, 10')
+  }
+
+  const session = await mongoose.startSession()
+  let result
+
+  try {
+    result = await session.withTransaction(async () => {
+      // Get challenge and user
+      const [challenge, user] = await Promise.all([
+        QuickClashChallenge.findById(challengeId).session(session),
+        User.findById(userId).select('quickClashTrophies').session(session),
+      ])
+
+      if (!challenge) {
+        throw new Error('Challenge not found')
+      }
+
+      // Check if betting is enabled
+      if (challenge.betting && challenge.betting.enabled === false) {
+        throw new Error('Betting is disabled for this challenge')
+      }
+
+      // Determine if user is challenger or opponent
+      // Add null checks to prevent "Cannot read properties of null" errors
+      let isChallenger = false
+      const challengerId = challenge.challenger?.toString()
+      const opponentId = challenge.opponent?.toString()
+      const userIdStr = userId.toString()
+
+      if (challengerId && challengerId === userIdStr) {
+        isChallenger = true
+      } else if (opponentId && opponentId === userIdStr) {
+        isChallenger = false
+      } else {
+        // For team battles, challenger/opponent may be null - betting not supported
+        if (challenge.fromTeamBattle) {
+          throw new Error('Betting is not supported for team battle challenges')
+        }
+        throw new Error('User is not a participant in this challenge')
+      }
+
+      // Check if bet already placed
+      const betInfo = isChallenger
+        ? challenge.betting.challenger
+        : challenge.betting.opponent
+
+      if (betInfo.betPlaced) {
+        throw new Error('Bet already placed')
+      }
+
+      // Check user balance
+      const currentTrophies = user.quickClashTrophies || 0
+      if (currentTrophies < amount) {
+        throw new Error('Insufficient trophies for this bet')
+      }
+
+      // Deduct trophies (escrow)
+      if (amount > 0) {
+        user.quickClashTrophies -= amount
+        await user.save({ session })
+      }
+
+      // Update challenge with bet info
+      if (isChallenger) {
+        challenge.betting.challenger.betAmount = amount
+        challenge.betting.challenger.betPlaced = true
+        challenge.betting.challenger.betPlacedAt = new Date()
+        challenge.betting.challenger.trophiesAtBet = currentTrophies
+      } else {
+        challenge.betting.opponent.betAmount = amount
+        challenge.betting.opponent.betPlaced = true
+        challenge.betting.opponent.betPlacedAt = new Date()
+        challenge.betting.opponent.trophiesAtBet = currentTrophies
+      }
+
+      await challenge.save({ session })
+
+      return challenge
+    })
+
+    console.log(
+      `[CHALLENGE_SERVICE] Bet placed: Challenge ${challengeId}, User ${userId}, Amount ${amount}`,
+    )
+    return result
+  } finally {
+    session.endSession()
   }
 }
 
@@ -824,4 +979,6 @@ module.exports = {
   getUserChallenges,
   updateChallengeScore,
   postChallengeCreation,
+  placeBet,
+  placeBet,
 }

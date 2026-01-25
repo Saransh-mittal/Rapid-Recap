@@ -13,7 +13,13 @@ const {
   updateMemberStatus,
   getUserTeams,
   removeMember,
+  transferLeadership,
 } = require('../services/quickClashServices/quickClashTeamService')
+
+const {
+  getCertaintyInfo,
+  getTrendIndicator,
+} = require('../utils/quickClashWinProbabilityHelpers')
 
 const {
   joinTeamMatchmaking,
@@ -251,6 +257,69 @@ const inviteUserToTeam = asyncHandler(async (req, res) => {
 })
 
 /**
+ * @desc    Invite a friend to team (validates friendship before inviting)
+ * @route   POST /api/quickClash/team/:teamId/invite-friend
+ * @access  Private
+ */
+const inviteFriendToTeam = asyncHandler(async (req, res) => {
+  const { teamId } = req.params
+  const { friendId } = req.body
+  const inviterId = req.user._id
+
+  try {
+    // Validate friendId is provided
+    if (!friendId) {
+      return res.status(400).json({
+        success: false,
+        message: 'Friend ID is required',
+      })
+    }
+
+    // Validate friendship - check if friendId is in inviter's friends list
+    const User = require('../model/userSchema')
+    const inviter = await User.findById(inviterId).select('friends').lean()
+    if (!inviter) {
+      return res.status(404).json({
+        success: false,
+        message: 'User not found',
+      })
+    }
+
+    const isFriend = inviter.friends.some(
+      fId => fId.toString() === friendId.toString()
+    )
+    if (!isFriend) {
+      return res.status(403).json({
+        success: false,
+        message: 'You can only invite your friends to teams',
+      })
+    }
+
+    // Proceed with team invitation
+    const team = await inviteToTeam({ teamId, inviterId, inviteeId: friendId })
+
+    res.status(200).json({
+      success: true,
+      message: 'Friend invited successfully',
+      team,
+    })
+  } catch (error) {
+    console.log('Error inviting friend to team:', error.message)
+
+    // Handle write conflicts
+    const conflictResponse = handleWriteConflictError(error, 'invite friend to team')
+    if (conflictResponse) {
+      return res.status(503).json(conflictResponse)
+    }
+
+    res.status(400).json({
+      success: false,
+      message: error.message || 'Failed to invite friend to team',
+    })
+  }
+})
+
+/**
  * @desc    Respond to team invitation
  * @route   POST /api/quickClash/team/:teamId/respond
  * @access  Private
@@ -297,14 +366,24 @@ const respondToTeamInvitation = asyncHandler(async (req, res) => {
 /**
  * @desc    Leave a team
  * @route   POST /api/quickClash/team/:teamId/leave
- * @access  Private
+ * @access  Private (supports both authenticated users and session players via flexAuth)
  */
 const leaveTeamController = asyncHandler(async (req, res) => {
   const { teamId } = req.params
-  const userId = req.user._id
+
+  // Support both authenticated users (req.user) and session players (req.sessionPlayer)
+  const playerId = req.user?._id || req.sessionPlayer?._id
+  const isSessionPlayer = !!req.sessionPlayer && !req.user
+
+  if (!playerId) {
+    return res.status(401).json({
+      success: false,
+      message: 'Authentication required',
+    })
+  }
 
   try {
-    const team = await leaveTeam({ teamId, userId })
+    const team = await leaveTeam({ teamId, playerId, isSessionPlayer })
 
     res.status(200).json({
       success: true,
@@ -419,20 +498,63 @@ const removeMemberFromTeam = asyncHandler(async (req, res) => {
 })
 
 /**
+ * @desc    Transfer team leadership to another member
+ * @route   POST /api/quickClash/team/:teamId/transfer-leadership
+ * @access  Private
+ */
+const transferLeadershipController = asyncHandler(async (req, res) => {
+  const { teamId } = req.params
+  const { newLeaderId } = req.body
+  const currentLeaderId = req.user._id
+
+  try {
+    const team = await transferLeadership({ teamId, currentLeaderId, newLeaderId })
+
+    res.status(200).json({
+      success: true,
+      message: 'Leadership transferred successfully',
+      team,
+    })
+  } catch (error) {
+    console.log('Error transferring leadership:', error.message)
+
+    // Handle write conflicts
+    const conflictResponse = handleWriteConflictError(error, 'transfer leadership')
+    if (conflictResponse) {
+      return res.status(503).json(conflictResponse)
+    }
+
+    res.status(400).json({
+      success: false,
+      message: error.message || 'Failed to transfer leadership',
+    })
+  }
+})
+
+/**
  * @desc    Join team matchmaking
  * @route   POST /api/quickClash/team/:teamId/matchmaking/join
- * @access  Private
+ * @access  Private (supports both authenticated users and session players via flexAuth)
  */
 const joinTeamMatchmakingController = asyncHandler(async (req, res) => {
   const { teamId } = req.params
-  const userId = req.user._id
+
+  // Support both authenticated users (req.user) and session players (req.sessionPlayer)
+  const playerId = req.user?._id || req.sessionPlayer?._id
+  const isSessionPlayer = !!req.sessionPlayer && !req.user
+
+  if (!playerId) {
+    return res.status(401).json({
+      success: false,
+      message: 'Authentication required',
+    })
+  }
 
   try {
-    // Verify user is team leader and get team details for notifications
-    const team = await QuickClashTeam.findById(teamId).populate(
-      'members.user',
-      '_id name inGameName',
-    ) // ADD: Populate user details for notifications
+    // Verify user/session is team leader and get team details for notifications
+    const team = await QuickClashTeam.findById(teamId)
+      .populate('members.user', '_id name inGameName')
+      .populate('members.sessionPlayer', '_id inGameName trophies')
 
     if (!team) {
       return res.status(404).json({
@@ -441,12 +563,16 @@ const joinTeamMatchmakingController = asyncHandler(async (req, res) => {
       })
     }
 
-    // Check if the user is a leader of this team
-    const isLeader = team.members.some(
-      member =>
-        member.user._id.toString() === userId.toString() &&
-        member.role === 'leader',
-    )
+    // Check if the player is a leader of this team (supports both user and session player)
+    const isLeader = team.members.some(member => {
+      if (isSessionPlayer && member.sessionPlayer) {
+        return member.sessionPlayer._id.toString() === playerId.toString() && member.role === 'leader'
+      }
+      if (!isSessionPlayer && member.user) {
+        return member.user._id.toString() === playerId.toString() && member.role === 'leader'
+      }
+      return false
+    })
 
     if (!isLeader) {
       return res.status(403).json({
@@ -456,30 +582,53 @@ const joinTeamMatchmakingController = asyncHandler(async (req, res) => {
       })
     }
 
+    // For session player teams, auto-set all members to ready (they don't have ready UI)
+    if (isSessionPlayer) {
+      const hasSessionMembers = team.members.some(m => m.sessionPlayer)
+      if (hasSessionMembers) {
+        for (const member of team.members) {
+          member.status = 'ready'
+        }
+        await team.save()
+      }
+    }
+
     const matchmaking = await joinTeamMatchmaking({ teamId })
 
-    // ADD: Send engaging notifications to offline teammates after successful matchmaking join
+    // Send notifications to offline teammates (only for real users, not session players)
     try {
-      // Get leader's name for notification
-      const leader = team.members.find(
-        member => member.user._id.toString() === userId.toString(),
-      )
-      const leaderName =
-        leader?.user?.inGameName || leader?.user?.name || 'Team Leader'
+      // Filter to only user members (session players don't have push notifications)
+      const userMembers = team.members.filter(m => m.user && !m.sessionPlayer)
 
-      // Send notifications to offline teammates
-      const notificationResult = await notifyTeamMatchmakingStarted({
-        teamId: team._id.toString(),
-        teamName: team.name || 'Your Squad',
-        leaderName,
-        teamMembers: team.members,
-        leaderId: userId.toString(),
-      })
+      if (userMembers.length > 0) {
+        // Get leader's name for notification
+        let leaderName = 'Team Leader'
+        if (isSessionPlayer) {
+          const leaderMember = team.members.find(m =>
+            m.sessionPlayer?._id.toString() === playerId.toString()
+          )
+          leaderName = leaderMember?.sessionPlayer?.inGameName || 'Team Leader'
+        } else {
+          const leaderMember = team.members.find(m =>
+            m.user?._id.toString() === playerId.toString()
+          )
+          leaderName = leaderMember?.user?.inGameName || leaderMember?.user?.name || 'Team Leader'
+        }
 
-      console.log(
-        `[TEAM_MATCHMAKING] Notification result for team "${team.name}":`,
-        notificationResult,
-      )
+        // Send notifications only to user members
+        const notificationResult = await notifyTeamMatchmakingStarted({
+          teamId: team._id.toString(),
+          teamName: team.name || 'Your Squad',
+          leaderName,
+          teamMembers: userMembers,
+          leaderId: playerId.toString(),
+        })
+
+        console.log(
+          `[TEAM_MATCHMAKING] Notification result for team "${team.name}":`,
+          notificationResult,
+        )
+      }
     } catch (notificationError) {
       // Don't fail the matchmaking join if notifications fail
       console.error(
@@ -548,17 +697,26 @@ const joinTeamMatchmakingController = asyncHandler(async (req, res) => {
 /**
  * @desc    Leave team matchmaking
  * @route   POST /api/quickClash/team/:teamId/matchmaking/leave
- * @access  Private
+ * @access  Private (supports both authenticated users and session players via flexAuth)
  */
 const leaveTeamMatchmakingController = asyncHandler(async (req, res) => {
   const { teamId } = req.params
-  const userId = req.user._id
+
+  // Support both authenticated users (req.user) and session players (req.sessionPlayer)
+  const playerId = req.user?._id || req.sessionPlayer?._id
+
+  if (!playerId) {
+    return res.status(401).json({
+      success: false,
+      message: 'Authentication required',
+    })
+  }
 
   try {
-    // Pass the user ID to the service for better notifications
+    // Pass the player ID to the service for better notifications
     const success = await leaveTeamMatchmaking({
       teamId,
-      userId, // Pass the user ID who initiated the leave action
+      userId: playerId, // Pass the player ID who initiated the leave action
     })
 
     res.status(200).json({
@@ -806,16 +964,27 @@ const getTeamBattle = asyncHandler(async (req, res) => {
 /**
  * @desc    Get team info for matchmaking
  * @route   GET /api/quickClash/team/:teamId/matchmaking-info
- * @access  Private
+ * @access  Private (supports both authenticated users and session players via flexAuth)
  */
 const getTeamMatchmakingInfo = asyncHandler(async (req, res) => {
   const { teamId } = req.params
-  const userId = req.user._id
+
+  // Support both authenticated users and session players
+  const playerId = req.user?._id || req.sessionPlayer?._id
+  const isSessionPlayer = !!req.sessionPlayer && !req.user
+
+  if (!playerId) {
+    return res.status(401).json({
+      success: false,
+      message: 'Authentication required',
+    })
+  }
 
   try {
-    // Find the team
+    // Find the team - populate both user and sessionPlayer
     let team = await QuickClashTeam.findById(teamId)
       .populate('members.user', '_id name inGameName pic')
+      .populate('members.sessionPlayer', '_id inGameName trophies')
       .populate('formationInfo.sourceTeams', 'name members')
 
     if (!team) {
@@ -825,10 +994,18 @@ const getTeamMatchmakingInfo = asyncHandler(async (req, res) => {
       })
     }
 
-    // Check if user is a member of the team
-    const isMember = team.members.some(
-      member => member.user._id.toString() === userId.toString(),
-    )
+    // Check if player is a member of the team (supports both user and session player)
+    const isMember = team.members.some(member => {
+      if (isSessionPlayer && member.sessionPlayer) {
+        return member.sessionPlayer._id?.toString() === playerId.toString() ||
+               member.sessionPlayer.toString() === playerId.toString()
+      }
+      if (!isSessionPlayer && member.user) {
+        return member.user._id?.toString() === playerId.toString() ||
+               member.user.toString() === playerId.toString()
+      }
+      return false
+    })
 
     if (!isMember) {
       return res.status(403).json({
@@ -849,25 +1026,28 @@ const getTeamMatchmakingInfo = asyncHandler(async (req, res) => {
       team.formationInfo &&
       team.formationInfo.isAutoFormed
     ) {
-      // Check if the user was originally a solo player
+      // Check if the player was originally a solo player
       if (
         team.formationInfo.soloPlayers &&
         team.formationInfo.soloPlayers.length > 0 &&
         team.formationInfo.soloPlayers.some(
-          playerId => playerId.toString() === userId.toString(),
+          soloPlayerId => soloPlayerId.toString() === playerId.toString(),
         )
       ) {
         joinType = 'solo'
       }
-      // Check if the user was originally from a source team
+      // Check if the player was originally from a source team
       else if (
         team.formationInfo.sourceTeams &&
         team.formationInfo.sourceTeams.length > 0
       ) {
         // Find the member in the current team to get their sourceTeam info
-        const teamMember = team.members.find(
-          member => member.user._id.toString() === userId.toString(),
-        )
+        const teamMember = team.members.find(member => {
+          if (isSessionPlayer && member.sessionPlayer) {
+            return member.sessionPlayer._id?.toString() === playerId.toString()
+          }
+          return member.user?._id?.toString() === playerId.toString()
+        })
 
         if (teamMember && teamMember.sourceTeam) {
           joinType = 'sourceTeam'
@@ -895,10 +1075,11 @@ const getTeamMatchmakingInfo = asyncHandler(async (req, res) => {
         _id: team._id,
         name: team.name,
         members: team.members.map(member => ({
-          _id: member.user._id,
-          name: member.user.name || member.user.inGameName,
-          pic: member.user.pic,
+          _id: member.user?._id || member.sessionPlayer?._id,
+          name: member.user?.name || member.user?.inGameName || member.sessionPlayer?.inGameName || 'Player',
+          pic: member.user?.pic || null,
           role: member.role,
+          isSessionPlayer: !!member.sessionPlayer,
         })),
         isInMatch: team.isInMatch,
       },
@@ -1264,17 +1445,243 @@ const getPendingInvitationsController = asyncHandler(async (req, res) => {
   }
 })
 
+/**
+ * Get current win probability for a team battle
+ *
+ * @desc    Get live win probability data for a 4v4 team battle
+ * @route   GET /api/quickClash/team-battle/:battleId/win-probability
+ * @access  Private (must be participant)
+ *
+ * RETURNS:
+ * - Current probabilities (updated live)
+ * - Initial probabilities (at battle start)
+ * - Certainty score
+ * - Completed challenges count
+ * - Trend indicator
+ * - Team-specific view
+ */
+const getTeamBattleProbability = asyncHandler(async (req, res) => {
+  const { battleId } = req.params
+  const userId = req.user._id
+
+  // Fetch battle with probability data
+  const battle = await QuickClashTeamBattle.findById(battleId)
+    .select('winProbability teamAMembers teamBMembers challenges')
+    .populate('teamA teamB', 'name')
+
+  if (!battle) {
+    return res.status(404).json({
+      success: false,
+      message: 'Battle not found',
+    })
+  }
+
+  // Verify user is part of this battle
+  const isTeamA = battle.teamAMembers.some(
+    m => m.user.toString() === userId.toString(),
+  )
+  const isTeamB = battle.teamBMembers.some(
+    m => m.user.toString() === userId.toString(),
+  )
+
+  if (!isTeamA && !isTeamB) {
+    return res.status(403).json({
+      success: false,
+      message: 'Not authorized to view this battle',
+    })
+  }
+
+  // Check if probability data exists
+  if (!battle.winProbability) {
+    return res.status(200).json({
+      success: true,
+      available: false,
+      message: 'Win probability not available for this battle',
+    })
+  }
+
+  // Get user's team perspective
+  const myTeamData = isTeamA
+    ? battle.winProbability.teamA
+    : battle.winProbability.teamB
+
+  const opponentTeamData = isTeamA
+    ? battle.winProbability.teamB
+    : battle.winProbability.teamA
+
+  const myTeam = isTeamA ? battle.teamA : battle.teamB
+  const opponentTeam = isTeamA ? battle.teamB : battle.teamA
+
+  // Calculate certainty and other metrics
+  const completedChallenges = battle.challenges.filter(
+    c => c.teamACompleted && c.teamBCompleted,
+  ).length
+
+  const certaintyScore = completedChallenges / 4 // 0.0 to 1.0
+  const certaintyInfo = getCertaintyInfo(certaintyScore)
+
+  // Determine trend
+  const currentProb = myTeamData.current
+  const initialProb = myTeamData.initial
+  let trend = 'stable'
+  if (currentProb > initialProb + 0.05) {
+    trend = 'up'
+  } else if (currentProb < initialProb - 0.05) {
+    trend = 'down'
+  }
+  const trendInfo = getTrendIndicator(trend)
+
+  // Format response
+  res.status(200).json({
+    success: true,
+    available: true,
+    probability: {
+      myTeam: {
+        name: myTeam.name,
+        current: {
+          percentage: formatProbability(currentProb),
+          decimal: currentProb,
+        },
+        initial: {
+          percentage: formatProbability(initialProb),
+          decimal: initialProb,
+        },
+        change: {
+          percentage: formatProbability(Math.abs(currentProb - initialProb)),
+          direction: trend,
+          ...trendInfo,
+        },
+        message: getProbabilityMessage(currentProb, myTeam.name),
+      },
+      opponentTeam: {
+        name: opponentTeam.name,
+        current: {
+          percentage: formatProbability(opponentTeamData.current),
+          decimal: opponentTeamData.current,
+        },
+      },
+      certainty: {
+        score: certaintyScore,
+        ...certaintyInfo,
+      },
+      metadata: {
+        completedChallenges: `${completedChallenges}/4`,
+        totalUpdates: battle.winProbability.totalUpdates,
+        lastUpdated: battle.winProbability.lastUpdatedAt,
+      },
+    },
+    calculatedAt: battle.winProbability.calculatedAt,
+  })
+})
+
+/**
+ * Get probability history for a team battle
+ *
+ * @desc    Get timeline of how probability changed throughout battle
+ * @route   GET /api/quickClash/team-battle/:battleId/win-probability/history
+ * @access  Private (must be participant)
+ *
+ * USEFUL FOR:
+ * - Showing probability graph/chart
+ * - Analyzing how battle unfolded
+ * - Understanding key turning points
+ */
+const getTeamBattleProbabilityHistory = asyncHandler(async (req, res) => {
+  const { battleId } = req.params
+  const userId = req.user._id
+
+  const battle = await QuickClashTeamBattle.findById(battleId)
+    .select('winProbability teamAMembers teamBMembers')
+    .populate('teamA teamB', 'name')
+    .populate({
+      path: 'winProbability.teamA.history.afterUserId',
+      select: 'name inGameName',
+    })
+
+  if (!battle) {
+    return res.status(404).json({
+      success: false,
+      message: 'Battle not found',
+    })
+  }
+
+  // Verify user is participant
+  const isTeamA = battle.teamAMembers.some(
+    m => m.user.toString() === userId.toString(),
+  )
+  const isTeamB = battle.teamBMembers.some(
+    m => m.user.toString() === userId.toString(),
+  )
+
+  if (!isTeamA && !isTeamB) {
+    return res.status(403).json({
+      success: false,
+      message: 'Not authorized',
+    })
+  }
+
+  if (!battle.winProbability) {
+    return res.status(200).json({
+      success: true,
+      available: false,
+      history: [],
+    })
+  }
+
+  // Build timeline
+  const myTeamData = isTeamA
+    ? battle.winProbability.teamA
+    : battle.winProbability.teamB
+
+  const timeline = [
+    // Start point
+    {
+      point: 0,
+      label: 'Battle Start',
+      probability: formatProbability(myTeamData.initial),
+      decimal: myTeamData.initial,
+      timestamp: battle.winProbability.calculatedAt,
+      certainty: 0,
+    },
+    // Update points
+    ...myTeamData.history.map((update, index) => ({
+      point: index + 1,
+      label: `After Challenge ${index + 1}`,
+      probability: formatProbability(update.probability),
+      decimal: update.probability,
+      timestamp: update.timestamp,
+      certainty: update.certaintyScore,
+      projectedWins: update.projectedWins.toFixed(1),
+      playerName: update.afterUserId?.inGameName || update.afterUserId?.name,
+    })),
+  ]
+
+  res.status(200).json({
+    success: true,
+    available: true,
+    battle: {
+      id: battleId,
+      myTeam: isTeamA ? battle.teamA.name : battle.teamB.name,
+      opponentTeam: isTeamA ? battle.teamB.name : battle.teamA.name,
+    },
+    timeline,
+    totalUpdates: myTeamData.history.length,
+  })
+})
+
 module.exports = {
   createNewTeam,
   getTeam,
   getTeamByCodeController,
   joinTeam,
   inviteUserToTeam,
+  inviteFriendToTeam,
   respondToTeamInvitation,
   leaveTeamController,
   updateTeamMemberStatus,
   getMyTeams,
   removeMemberFromTeam,
+  transferLeadershipController,
   joinTeamMatchmakingController,
   leaveTeamMatchmakingController,
   getTeamMatchmakingStatusController,
@@ -1288,4 +1695,6 @@ module.exports = {
   acceptTeamInvitationController,
   rejectTeamInvitationController,
   getPendingInvitationsController,
+  getTeamBattleProbability,
+  getTeamBattleProbabilityHistory,
 }

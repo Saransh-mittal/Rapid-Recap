@@ -4,6 +4,8 @@ const ApplicationUpdates = require('../../model/applicationUpdatesSchema')
 const QuickClashTeam = require('../../model/quickClashSchemas/quickClashTeamSchema')
 const User = require('../../model/userSchema')
 const globalEmitter = require('../../eventEmitter')
+const { sendNotification } = require('../notificationService')
+const { isUserOnline } = require('../../utils/socketUtils')
 
 /**
  * Create a team invitation notification
@@ -87,6 +89,8 @@ const createTeamInvitationNotification = async ({
         inviterName: inviter.name || inviter.inGameName,
         inviterId,
         status: 'pending',
+        memberCount: team.members.length,
+        maxMembers: team.maxMembers,
       },
     })
 
@@ -106,6 +110,35 @@ const createTeamInvitationNotification = async ({
         teamId,
       })
     }, 0)
+
+    // Send push notification only if invitee is offline
+    setTimeout(async () => {
+      try {
+        if (!isUserOnline(inviteeId)) {
+          console.log(
+            `[TEAM_INVITATION] User ${inviteeId} is offline, sending push notification`,
+          )
+          await sendNotification({
+            title: '🎮 Team Invitation!',
+            body: `${inviter.name || inviter.inGameName} invited you to join "${team.name}"`,
+            url: '/quickclash',
+            userId: inviteeId.toString(),
+            messageId: invitation._id.toString(),
+            type: 'quickClash',
+            importance: 'important',
+          })
+        } else {
+          console.log(
+            `[TEAM_INVITATION] User ${inviteeId} is online, skipping push notification`,
+          )
+        }
+      } catch (pushError) {
+        console.error(
+          '[TEAM_INVITATION] Error sending push notification:',
+          pushError,
+        )
+      }
+    }, 100)
 
     return invitation
   } catch (error) {

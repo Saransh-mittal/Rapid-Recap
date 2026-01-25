@@ -1,1 +1,0 @@
-import{p as o,j as r}from"./ui-vendor.4b21f47f.js";const s=o({viewBox:"0 0 14 14",path:r.jsx("g",{fill:"currentColor",children:r.jsx("polygon",{points:"5.5 11.9993304 14 3.49933039 12.5 2 5.5 8.99933039 1.5 4.9968652 0 6.49933039"})})});export{s as C};

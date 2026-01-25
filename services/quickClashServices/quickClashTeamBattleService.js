@@ -40,11 +40,46 @@ const {
   trackAllBotsInBattle,
   stopTrackingAllBotsInBattle,
 } = require('./quickClashBotHealthService')
+const {
+  calculateTeamWinProbability,
+  calculateLiveTeamWinProbability,
+} = require('./quickClashWinProbabilityService')
+const {
+  updateStreakOnBattleComplete,
+  getStreakTier,
+} = require('./quickClashStreakService')
+const {
+  calculateSessionReward,
+  awardCoins,
+  COIN_CONFIG,
+} = require('./quickClashCoinService')
+const {
+  calculateSessionXP,
+  awardXP,
+} = require('./quickClashXPService')
+const QuickClashSession = require('../../model/quickClashSchemas/quickClashSessionSchema')
+const ForgeArticle = require('../../model/quickClashSchemas/forgeArticleSchema')
 
 // Constants
-const TEAM_BATTLE_EXPIRY = 24 * 60 * 60 * 1000 // 24 hours same as regular challenges
+const TEAM_BATTLE_EXPIRY = 45 * 60 * 1000 // 45 min same as regular challenges
+// const TEAM_BATTLE_EXPIRY = 10 * 60 * 1000
 const BASE_TROPHIES = 120 // Base trophies for 4v4 mode
 const TROPHY_K_FACTOR = 0.8 // From trophy formula
+
+// Helper to get member ID from either user or sessionPlayer (for session player support)
+const getMemberPlayerId = (member) => {
+  if (!member) return null
+  if (member.user) return member.user._id?.toString() || member.user.toString()
+  if (member.sessionPlayer) return member.sessionPlayer._id?.toString() || member.sessionPlayer.toString()
+  return null
+}
+
+// Helper to check if a member matches a given userId (handles both users and session players)
+const memberMatchesUserId = (member, userId) => {
+  if (!member || !userId) return false
+  const memberId = getMemberPlayerId(member)
+  return memberId === userId.toString()
+}
 
 /**
  * Clean up all matchmaking entries when battle creation fails completely
@@ -68,13 +103,17 @@ const cleanupFailedBattleMatchmaking = async ({
       QuickClashTeam.findById(teamBId).populate('members.user', '_id').lean(),
     ])
 
-    // Extract all member IDs
+    // Extract all member IDs (users and session players)
     const allMemberIds = []
     if (teamA && teamA.members) {
-      allMemberIds.push(...teamA.members.map(m => m.user._id))
+      allMemberIds.push(
+        ...teamA.members.map(getMemberPlayerId).filter(id => id),
+      )
     }
     if (teamB && teamB.members) {
-      allMemberIds.push(...teamB.members.map(m => m.user._id))
+      allMemberIds.push(
+        ...teamB.members.map(getMemberPlayerId).filter(id => id),
+      )
     }
 
     console.log(
@@ -162,6 +201,94 @@ const cleanupFailedBattleMatchmaking = async ({
 }
 
 /**
+ * Get a forge article for a given category
+ * @param {Object} params - Parameters
+ * @param {string} params.category - Category to filter by
+ * @param {mongoose.ClientSession} [params.session] - Optional session
+ * @returns {Promise<Object|null>} Forge article or null if none available
+ */
+const getForgeArticle = async ({ category, session }) => {
+  try {
+    // Find published forge articles for this category that have ALL required content:
+    // 1. Status is published
+    // 2. Has at least 5 content sections (full article) -> 'sections.4' exists
+    // 3. Has normal quizzes (MCQs) in sections -> Check first section as proxy or rely on validation
+    // 4. Has Quick Clash quiz with at least 5 questions -> 'quickClashQuiz.questions.4' exists
+    const forgeArticles = await ForgeArticle.find({
+      category: category,
+      status: 'published',
+      'sections.4': { $exists: true }, // Ensure 5 sections
+      'sections.0.mcq.question': { $exists: true }, // Ensure normal quiz exists
+      'quickClashQuiz.questions.4': { $exists: true } // Ensure 5 QC questions
+    }).session(session)
+
+    // If no forge articles available, return null
+    if (!forgeArticles || forgeArticles.length === 0) {
+      console.log(
+        `[TeamBattle] No forge articles available for category: ${category}`,
+      )
+      return null
+    }
+
+    // Select a random forge article
+    const randomIndex = Math.floor(Math.random() * forgeArticles.length)
+    const selectedForge = forgeArticles[randomIndex]
+
+    console.log(
+      `[TeamBattle] Selected forge article: ${selectedForge._id} - "${selectedForge.title}"`,
+    )
+    return selectedForge
+  } catch (error) {
+    console.error(`[TeamBattle] Error fetching forge article: ${error.message}`)
+    return null
+  }
+}
+
+/**
+ * Decide whether to use forge article or traditional article for a category
+ * @param {Object} params - Parameters
+ * @param {string} params.category - Category
+ * @param {mongoose.ClientSession} [params.session] - Optional session
+ * @returns {Promise<Object>} { useForge: boolean, data: article or forgeArticle }
+ */
+const selectArticleTypeForCategory = async ({ category, session }) => {
+  // Try to get a forge article
+  const forgeArticle = await getForgeArticle({ category, session })
+  if (!forgeArticle) {
+    // No forge article available, use traditional article
+    console.log(
+      `[TeamBattle] Using traditional article for category: ${category}`,
+    )
+    const article = await getSourceArticle({ category, session })
+    return {
+      useForge: false,
+      data: article,
+      type: 'traditional',
+    }
+  }
+  const useForge = true
+
+  if (useForge) {
+    console.log(`[TeamBattle] Using FORGE article for category: ${category}`)
+    return {
+      useForge: true,
+      data: forgeArticle,
+      type: 'forge',
+    }
+  } else {
+    console.log(
+      `[TeamBattle] Using traditional article for category: ${category}`,
+    )
+    const article = await getSourceArticle({ category, session })
+    return {
+      useForge: false,
+      data: article,
+      type: 'traditional',
+    }
+  }
+}
+
+/**
  * Create a new team battle between two teams
  * @param {Object} params - Parameters
  * @param {string} params.teamAId - Team A ID
@@ -207,11 +334,11 @@ const createTeamBattle = makeRetryable(
           .session(session),
       ])
 
-      // Extract member IDs for each team
+      // Extract member IDs for each team (users and session players)
       const teamAMemberIds =
-        teamAData?.members?.map(m => m.user._id.toString()) || []
+        teamAData?.members?.map(getMemberPlayerId).filter(id => id) || []
       const teamBMemberIds =
-        teamBData?.members?.map(m => m.user._id.toString()) || []
+        teamBData?.members?.map(getMemberPlayerId).filter(id => id) || []
 
       // Combined list of all involved members
       const allMemberIds = [...teamAMemberIds, ...teamBMemberIds]
@@ -313,36 +440,94 @@ const createTeamBattle = makeRetryable(
       // ======= PROGRESS: PROCESSING ARTICLES (45%) =======
       console.log(`[TeamBattle] PHASE 5: Processing articles (45%)`)
 
-      // Extract team member data
+      // Extract team member data - handle both users and session players
       console.log(`[TeamBattle] Extracting team member data`)
-      const teamAMembers = teamA.members.map(member => ({
-        user: member.user._id,
-        category: null,
-        challenge: null,
-        participated: false,
-        completed: false,
-        score: 0,
-        previousTrophies:
-          member.user.quickClashTrophies || DEFAULT_STARTING_TROPHIES,
-        newTrophies: 0,
-        trophyChange: 0,
-      }))
+      const teamAMembers = teamA.members.map(member => {
+        const isSessionPlayer = !member.user && member.sessionPlayer
+        return {
+          user: member.user?._id || null,
+          sessionPlayer: member.sessionPlayer || null,
+          category: null,
+          challenge: null,
+          participated: false,
+          completed: false,
+          score: 0,
+          previousTrophies: isSessionPlayer
+            ? DEFAULT_STARTING_TROPHIES
+            : (member.user?.quickClashTrophies || DEFAULT_STARTING_TROPHIES),
+          newTrophies: 0,
+          trophyChange: 0,
+        }
+      })
 
-      const teamBMembers = teamB.members.map(member => ({
-        user: member.user._id,
-        category: null,
-        challenge: null,
-        participated: false,
-        completed: false,
-        score: 0,
-        previousTrophies:
-          member.user.quickClashTrophies || DEFAULT_STARTING_TROPHIES,
-        newTrophies: 0,
-        trophyChange: 0,
-      }))
+      const teamBMembers = teamB.members.map(member => {
+        const isSessionPlayer = !member.user && member.sessionPlayer
+        return {
+          user: member.user?._id || null,
+          sessionPlayer: member.sessionPlayer || null,
+          category: null,
+          challenge: null,
+          participated: false,
+          completed: false,
+          score: 0,
+          previousTrophies: isSessionPlayer
+            ? DEFAULT_STARTING_TROPHIES
+            : (member.user?.quickClashTrophies || DEFAULT_STARTING_TROPHIES),
+          newTrophies: 0,
+          trophyChange: 0,
+        }
+      })
 
       // ======= PROGRESS: BATTLE SETUP (55%) =======
       console.log(`[TeamBattle] PHASE 6: Battle setup (55%)`)
+      // Calculate initial win probability
+      let winProbability = null
+      try {
+        console.log('[WIN_PROB] Calculating team win probability')
+        winProbability = await calculateTeamWinProbability({
+          teamAId,
+          teamBId,
+          session,
+        })
+        console.log('[WIN_PROB] Team battle probability calculated:', {
+          teamA: winProbability.teamA.initial,
+          teamB: winProbability.teamB.initial,
+        })
+      } catch (probError) {
+        // Non-blocking: battle continues even if probability fails
+        console.error(
+          '[WIN_PROB] Error calculating team probability:',
+          probError,
+        )
+      }
+
+      // Ensure winProbability has valid defaults if calculation failed
+      if (!winProbability || !winProbability.teamA || !winProbability.teamB) {
+        console.log('[WIN_PROB] Using default win probability (50/50)')
+        winProbability = {
+          teamA: {
+            initial: 0.5,
+            current: 0.5,
+            initialEffectiveRating: teamAAvgTrophies || 1000,
+            initialComponents: { trophyBase: 0.5, performanceMod: 0, synergyMod: 0 },
+            isEstablishedTeam: false,
+            battleCount: 0,
+            history: [],
+          },
+          teamB: {
+            initial: 0.5,
+            current: 0.5,
+            initialEffectiveRating: teamBAvgTrophies || 1000,
+            initialComponents: { trophyBase: 0.5, performanceMod: 0, synergyMod: 0 },
+            isEstablishedTeam: false,
+            battleCount: 0,
+            history: [],
+          },
+          calculatedAt: new Date(),
+          lastUpdatedAt: new Date(),
+          totalUpdates: 0,
+        }
+      }
 
       // Create the team battle
       console.log(`[TeamBattle] Creating team battle object`)
@@ -356,6 +541,7 @@ const createTeamBattle = makeRetryable(
         teamBMembers,
         expiresAt: new Date(Date.now() + TEAM_BATTLE_EXPIRY),
         fromMatchmaking: true,
+        winProbability: winProbability,
       })
 
       // Calculate potential trophy exchange
@@ -408,86 +594,125 @@ const createTeamBattle = makeRetryable(
           }: ${category}`,
         )
 
-        // Get a source article for this category
+        // Select article type (forge or traditional)
         console.log(
-          `[TeamBattle] Fetching source article for category: ${category}`,
+          `[TeamBattle] Selecting article type for category: ${category}`,
         )
-        const article = await getSourceArticle({ category })
+        const articleSelection = await selectArticleTypeForCategory({
+          category,
+          session,
+        })
+
+        const useForge = articleSelection.useForge
+        const sourceData = articleSelection.data
+
         console.log(
-          `[TeamBattle] Got article: ${article._id}, Title: ${article.title}`,
+          `[TeamBattle] Article type selected: ${articleSelection.type}`,
         )
 
-        // Check if Hindi translation exists
-        const hasHindiTranslation = !!(
-          article.hindiTitle &&
-          article.hindiMainText &&
-          article.hindiMainText.length > 0
-        )
-        console.log(
-          `[TeamBattle] Article has Hindi translation: ${hasHindiTranslation}`,
-        )
-
-        // Format article data
-        let articleData = {
-          title: {
-            english: article.title,
-            hindi: article.hindiTitle || '',
-          },
-          content: {
-            english: article.mainText,
-            hindi: article.hindiMainText ? article.hindiMainText.join(' ') : '',
-          },
-          sourceArticles: [article._id],
+        // Prepare challenge data based on article type
+        let challengeData = {
+          challenger: null,
+          opponent: null,
+          selectedCategories: [category],
+          category,
+          status: 'active',
+          expiresAt: teamBattle.expiresAt,
+          fromTeamBattle: true,
+          teamBattle: teamBattle._id,
         }
 
-        // Generate Hindi translation if it doesn't exist
-        if (!hasHindiTranslation) {
+        if (useForge) {
+          // FORGE ARTICLE PATH
           console.log(
-            `[TeamBattle] Generating Hindi translation for article ${article._id}`,
+            `[TeamBattle] Using forge article: ${sourceData._id} - "${sourceData.title}"`,
           )
-          try {
-            const hindiTranslation = await generateHindiTranslation({
-              title: article.title,
-              content: article.mainText,
-            })
-            console.log(`[TeamBattle] Hindi translation generated successfully`)
 
-            // Update article data with the new translation
-            articleData.title.hindi = hindiTranslation.title
-            articleData.content.hindi = hindiTranslation.content
+          // Set forge article reference (no Hindi needed)
+          challengeData.forgeArticle = sourceData._id
+          challengeData.article = null // No traditional article
 
-            // Optionally update the original article for future use
-            try {
-              // Convert content string to array format as expected by schema
-              const hindiContentArray = [hindiTranslation.content]
+          console.log(`[TeamBattle] Forge article assigned to challenge`)
+        } else {
+          // TRADITIONAL ARTICLE PATH
+          const article = sourceData
+          console.log(
+            `[TeamBattle] Using traditional article: ${article._id}, Title: ${article.title}`,
+          )
 
-              await Article.findByIdAndUpdate(article._id, {
-                hindiTitle: hindiTranslation.title,
-                hindiMainText: hindiContentArray,
-              })
+          // Check if Hindi translation exists
+          const hasHindiTranslation = !!(
+            article.hindiTitle &&
+            article.hindiMainText &&
+            article.hindiMainText.length > 0
+          )
+          console.log(
+            `[TeamBattle] Article has Hindi translation: ${hasHindiTranslation}`,
+          )
 
-              console.log(
-                `[TeamBattle] Updated article ${article._id} with Hindi translation`,
-              )
-            } catch (updateError) {
-              console.error(
-                `[TeamBattle] Error updating article with Hindi translation: ${updateError.message}`,
-                updateError,
-              )
-              // Continue with the challenge creation even if saving to article fails
-            }
-          } catch (translationError) {
-            console.error(
-              `[TeamBattle] Error generating Hindi translation for team battle: ${translationError.message}`,
-              translationError,
-            )
-            // Continue with empty Hindi content if translation fails
+          // Format article data
+          let articleData = {
+            title: {
+              english: article.title,
+              hindi: article.hindiTitle || '',
+            },
+            content: {
+              english: article.mainText,
+              hindi: article.hindiMainText
+                ? article.hindiMainText.join(' ')
+                : '',
+            },
+            sourceArticles: [article._id],
           }
-        }
 
+          // Generate Hindi translation if it doesn't exist
+          if (!hasHindiTranslation) {
+            console.log(
+              `[TeamBattle] Generating Hindi translation for article ${article._id}`,
+            )
+            try {
+              const hindiTranslation = await generateHindiTranslation({
+                title: article.title,
+                content: article.mainText,
+              })
+              console.log(
+                `[TeamBattle] Hindi translation generated successfully`,
+              )
+
+              // Update article data with the new translation
+              articleData.title.hindi = hindiTranslation.title
+              articleData.content.hindi = hindiTranslation.content
+
+              // Optionally update the original article for future use
+              try {
+                const hindiContentArray = [hindiTranslation.content]
+                await Article.findByIdAndUpdate(article._id, {
+                  hindiTitle: hindiTranslation.title,
+                  hindiMainText: hindiContentArray,
+                })
+                console.log(
+                  `[TeamBattle] Updated article ${article._id} with Hindi translation`,
+                )
+              } catch (updateError) {
+                console.error(
+                  `[TeamBattle] Error updating article with Hindi translation: ${updateError.message}`,
+                  updateError,
+                )
+              }
+            } catch (translationError) {
+              console.error(
+                `[TeamBattle] Error generating Hindi translation: ${translationError.message}`,
+                translationError,
+              )
+            }
+          }
+
+          // Set traditional article data
+          challengeData.article = articleData
+          challengeData.forgeArticle = null // No forge article
+        }
         // ======= PROGRESS: CHALLENGE CREATION (70% + i*5) =======
-        // Update progress as each challenge is created (65% to 85%)
-        const progressPercent = 70 + i * 5 // Will increment from 70% to 85% as i goes from 0 to 3
+        const progressPercent = 70 + i * 5
         console.log(
           `[TeamBattle] Creating challenge ${i + 1}/${
             categories.length
@@ -495,22 +720,29 @@ const createTeamBattle = makeRetryable(
         )
 
         // Create the challenge
-        const challenge = new QuickClashChallenge({
-          challenger: null, // Will be set when a player selects this category
-          opponent: null, // Will be set when a player selects this category
-          selectedCategories: [category],
-          category,
-          status: 'active',
-          article: articleData,
-          expiresAt: teamBattle.expiresAt,
-          fromTeamBattle: true,
-          teamBattle: teamBattle._id,
-        })
+        const challenge = new QuickClashChallenge(challengeData)
 
         console.log(`[TeamBattle] Saving challenge for category: ${category}`)
         await challenge.save({ session })
         console.log(`[TeamBattle] Challenge saved with ID: ${challenge._id}`)
-        createdChallenges.push({ challenge, article, articleData })
+
+        // Store different data based on article type
+        if (useForge) {
+          createdChallenges.push({
+            challenge,
+            article: null,
+            articleData: null,
+            useForge: true,
+            forgeArticle: sourceData,
+          })
+        } else {
+          createdChallenges.push({
+            challenge,
+            article: sourceData,
+            articleData: challengeData.article,
+            useForge: false,
+          })
+        }
 
         // Update the team battle with the challenge ID
         teamBattle.challenges[i].challenge = challenge._id
@@ -552,17 +784,104 @@ const createTeamBattle = makeRetryable(
 
       // Create an array of promises for quiz generation
       const quizGenerationPromises = createdChallenges.map(
-        async ({ challenge, article, articleData }, index) => {
+        async (
+          { challenge, article, articleData, useForge, forgeArticle },
+          index,
+        ) => {
           console.log(
             `[TeamBattle] Starting quiz generation for challenge ${index + 1}/${
               createdChallenges.length
-            }: ${challenge._id} (Category: ${challenge.category})`,
+            }: ${challenge._id} (Category: ${challenge.category}, Type: ${
+              useForge ? 'FORGE' : 'Traditional'
+            })`,
           )
 
           try {
-            // Update progress with more granular steps
             const progressStep = 90 + index * (5 / createdChallenges.length)
 
+            // SKIP QUIZ GENERATION FOR FORGE ARTICLES
+            if (useForge) {
+              console.log(
+                `[TeamBattle] Processing forge article quiz for challenge: ${challenge._id}`,
+              )
+
+              // STEP 1: Validate that forge article has a quiz
+              if (
+                !forgeArticle.quickClashQuiz ||
+                !forgeArticle.quickClashQuiz.questions ||
+                forgeArticle.quickClashQuiz.questions.length === 0
+              ) {
+                console.error(
+                  `[TeamBattle] ERROR: Forge article ${forgeArticle._id} does not have a valid quiz`,
+                )
+                throw new Error(
+                  `Forge article ${forgeArticle._id} missing quickClashQuiz. Run quiz generation service first.`,
+                )
+              }
+
+              console.log(
+                `[TeamBattle] Found ${forgeArticle.quickClashQuiz.questions.length} questions in forge article`,
+              )
+              console.log(
+                `[TeamBattle] Quiz difficulty: ${forgeArticle.quickClashQuiz.overallDifficulty}`,
+              )
+
+              // STEP 2: Create English quiz by COPYING from forge article
+              console.log(
+                `[TeamBattle] Creating English QuickClashQuiz from forge article`,
+              )
+              const englishQuiz = new QuickClashQuiz({
+                challenge: challenge._id,
+                language: 'en',
+                questions: forgeArticle.quickClashQuiz.questions, // Copy questions
+                overallDifficulty:
+                  forgeArticle.quickClashQuiz.overallDifficulty,
+              })
+
+              await englishQuiz.save({ session })
+              console.log(
+                `[TeamBattle] ✅ English quiz copied successfully: ${englishQuiz._id}`,
+              )
+
+              // STEP 3: Create Hindi quiz placeholder
+              // NOTE: For now, we create empty Hindi quiz
+              // TODO: Add Hindi translation for forge article quizzes
+              console.log(`[TeamBattle] Creating Hindi quiz placeholder`)
+              const hindiQuiz = new QuickClashQuiz({
+                challenge: challenge._id,
+                language: 'hi',
+                questions: [], // Empty initially - to be translated later
+                overallDifficulty:
+                  forgeArticle.quickClashQuiz.overallDifficulty,
+                translationStatus: 'pending',
+              })
+
+              await hindiQuiz.save({ session })
+              console.log(
+                `[TeamBattle] ✅ Hindi quiz placeholder created: ${hindiQuiz._id}`,
+              )
+
+              // STEP 4: Skip highlights processing for forge articles
+              // Forge articles use section-based reading, not highlights
+              console.log(
+                `[TeamBattle] Skipping highlights for forge article (section-based reading)`,
+              )
+
+              console.log(
+                `[TeamBattle] ✅ Quiz processing completed for forge challenge`,
+              )
+
+              // Return quiz data
+              return {
+                challenge,
+                englishQuiz,
+                hindiQuiz,
+                useForge: true,
+                forgeArticle, // Include forge article reference
+              }
+            }
+
+            // TRADITIONAL ARTICLE QUIZ GENERATION
             // Generate English quiz
             console.log(
               `[TeamBattle] Generating English quiz for challenge: ${challenge._id}`,
@@ -676,28 +995,37 @@ const createTeamBattle = makeRetryable(
               })(),
             )
 
-            // Wait for highlights to be processed
-            const [englishHighlight, hindiHighlight] = await Promise.all(
-              highlightPromises,
-            )
+            // Wait for all highlights to be processed
+            await Promise.all(highlightPromises)
+
+            // Schedule Hindi quiz translation in background
+            setTimeout(() => {
+              translateQuizBackground({
+                quizId: englishQuiz._id,
+                hindiQuizId: hindiQuiz._id,
+              }).catch(err => {
+                console.error(
+                  `[TeamBattle] Error in background Hindi quiz translation:`,
+                  err,
+                )
+              })
+            }, 100)
+
             console.log(
-              `[TeamBattle] Highlights processing completed for challenge: ${challenge._id}`,
+              `[TeamBattle] Quiz generation completed for challenge: ${challenge._id}`,
             )
 
-            // Return data needed for translation after transaction completes
             return {
-              challengeId: challenge._id,
-              hindiQuizId: hindiQuiz._id,
-              hindiTitle: articleData.title.hindi,
-              hindiMainText: articleData.content.hindi,
+              challenge,
               englishQuiz,
+              hindiQuiz,
+              useForge: false,
             }
           } catch (error) {
             console.error(
-              `[TeamBattle] Error processing challenge ${challenge._id}: ${error.message}`,
+              `[TeamBattle] Error generating quiz for challenge ${challenge._id}:`,
+              error,
             )
-            console.error(`[TeamBattle] Stack: ${error.stack}`)
-            // Rethrow to fail the Promise.all if needed
             throw error
           }
         },
@@ -775,6 +1103,16 @@ const createTeamBattle = makeRetryable(
           // Health check will eventually pick up any bots that need recovery
         }
 
+        // START BOT SIMULATION (New Logic)
+        try {
+          const { startBotReflectingForBattle } = require('./quickClashBotService')
+          console.log(`[TeamBattle] Initializing advanced bot simulation for battle ${teamBattle._id}`)
+          // Run asynchronously
+          startBotReflectingForBattle(teamBattle._id)
+        } catch (botSimError) {
+           console.error(`[TeamBattle] Failed to start bot simulation:`, botSimError)
+        }
+
         // ======= PROGRESS: BATTLE READY (100%) =======
         console.log(`[TeamBattle] PHASE 12: Battle ready (100%)`)
 
@@ -815,6 +1153,23 @@ const createTeamBattle = makeRetryable(
         // Emit event after transaction is complete
         console.log(`[TeamBattle] Setting up event emission`)
 
+        // Emit battle ready event to all members
+        // This ensures teammates get the "Battle Ready" screen
+        setTimeout(() => {
+          globalEmitter.emit('quickClash:teamBattleReady', {
+            battleId: teamBattle._id,
+            teamA: teamAId,
+            teamB: teamBId,
+            winProbability: teamBattle.winProbability,
+            teamAMembers: teamAMemberIds,
+            teamBMembers: teamBMemberIds,
+            allMembers: allMemberIds,
+          })
+          console.log(
+            `[TeamBattle] Emitted quickClash:teamBattleReady to ${allMemberIds.length} members`,
+          )
+        }, 0)
+
         console.log(
           `[TeamBattle] ===== TEAM BATTLE CREATION COMPLETED SUCCESSFULLY =====`,
         )
@@ -852,11 +1207,11 @@ const createTeamBattle = makeRetryable(
             .session(session),
         ])
 
-        // Extract member IDs for each team
+        // Extract member IDs for each team (users and session players)
         const teamAMemberIds =
-          teamAData?.members?.map(m => m.user._id.toString()) || []
+          teamAData?.members?.map(getMemberPlayerId).filter(id => id) || []
         const teamBMemberIds =
-          teamBData?.members?.map(m => m.user._id.toString()) || []
+          teamBData?.members?.map(getMemberPlayerId).filter(id => id) || []
 
         // Combined list of all involved members
         const allMemberIds = [...teamAMemberIds, ...teamBMemberIds]
@@ -966,12 +1321,19 @@ const selectCategoryForUser = async ({ battleId, userId, category }) => {
     }
 
     // Determine team membership
-    isTeamAUser = battle.teamAMembers.some(
-      m => m.user.toString() === userId.toString(),
-    )
-    isTeamBUser = battle.teamBMembers.some(
-      m => m.user.toString() === userId.toString(),
-    )
+    // Helper to check if a member matches the userId (handles both user and sessionPlayer)
+    const memberMatchesUser = (m) => {
+      if (m.user) {
+        return m.user.toString() === userId.toString()
+      }
+      if (m.sessionPlayer) {
+        return m.sessionPlayer.toString() === userId.toString()
+      }
+      return false
+    }
+
+    isTeamAUser = battle.teamAMembers.some(memberMatchesUser)
+    isTeamBUser = battle.teamBMembers.some(memberMatchesUser)
 
     if (!isTeamAUser && !isTeamBUser) {
       throw new Error('User is not a member of either team')
@@ -1065,12 +1427,8 @@ const performCategorySelection = async ({
 
             // STEP 3: Get member info based on pre-determined team membership
             const memberIndex = isTeamAUser
-              ? battle.teamAMembers.findIndex(
-                  m => m.user.toString() === userId.toString(),
-                )
-              : battle.teamBMembers.findIndex(
-                  m => m.user.toString() === userId.toString(),
-                )
+              ? battle.teamAMembers.findIndex(m => memberMatchesUserId(m, userId))
+              : battle.teamBMembers.findIndex(m => memberMatchesUserId(m, userId))
 
             if (memberIndex === -1) {
               throw new Error('User not found in expected team')
@@ -1103,6 +1461,14 @@ const performCategorySelection = async ({
                 .populate(
                   'teamBMembers.user',
                   '_id name inGameName pic quickClashTrophies',
+                )
+                .populate(
+                  'teamAMembers.sessionPlayer',
+                  'sessionId inGameName trophies',
+                )
+                .populate(
+                  'teamBMembers.sessionPlayer',
+                  'sessionId inGameName trophies',
                 )
                 .populate({
                   path: 'challenges.challenge',
@@ -1208,6 +1574,14 @@ const performCategorySelection = async ({
                 'teamBMembers.user',
                 '_id name inGameName pic quickClashTrophies',
               )
+              .populate(
+                'teamAMembers.sessionPlayer',
+                'sessionId inGameName trophies',
+              )
+              .populate(
+                'teamBMembers.sessionPlayer',
+                'sessionId inGameName trophies',
+              )
               .populate({
                 path: 'challenges.challenge',
                 select: 'category article status expiresAt',
@@ -1299,6 +1673,13 @@ const beginCategoryChallenge = async ({ battleId, userId }) => {
     `[BEGIN_CHALLENGE] User ${userId} beginning challenge for battle ${battleId}`,
   )
 
+  // Check if battle is in ending process - block new sessions
+  const { isBattleEnding } = require('./quickClashBattleExpiryService')
+  if (isBattleEnding(battleId)) {
+    console.log(`[BEGIN_CHALLENGE] BLOCKED - Battle ${battleId} is ending`)
+    throw new Error('Battle is ending. Please wait for results.')
+  }
+
   const session = await mongoose.startSession()
 
   try {
@@ -1316,13 +1697,10 @@ const beginCategoryChallenge = async ({ battleId, userId }) => {
           throw new Error('Team battle not found or not active')
         }
 
+
         // STEP 2: Find user and their category
-        const teamAMemberIndex = battle.teamAMembers.findIndex(
-          m => m.user.toString() === userId.toString(),
-        )
-        const teamBMemberIndex = battle.teamBMembers.findIndex(
-          m => m.user.toString() === userId.toString(),
-        )
+        const teamAMemberIndex = battle.teamAMembers.findIndex(m => memberMatchesUserId(m, userId))
+        const teamBMemberIndex = battle.teamBMembers.findIndex(m => memberMatchesUserId(m, userId))
 
         if (teamAMemberIndex === -1 && teamBMemberIndex === -1) {
           throw new Error('User is not a member of either team')
@@ -1422,6 +1800,14 @@ const beginCategoryChallenge = async ({ battleId, userId }) => {
             'teamBMembers.user',
             '_id name inGameName pic quickClashTrophies',
           )
+          .populate(
+            'teamAMembers.sessionPlayer',
+            'sessionId inGameName trophies',
+          )
+          .populate(
+            'teamBMembers.sessionPlayer',
+            'sessionId inGameName trophies',
+          )
           .populate({
             path: 'challenges.challenge',
             select: 'category article status expiresAt',
@@ -1437,6 +1823,12 @@ const beginCategoryChallenge = async ({ battleId, userId }) => {
         console.log(
           `[BEGIN_CHALLENGE] SUCCESS! User ${userId} assigned to challenge ${challengeId}`,
         )
+
+        // CRITICAL: Register active session IMMEDIATELY to prevent race condition
+        // This must happen before timer can fire and check for active sessions
+        const { registerActiveSession } = require('./quickClashBattleExpiryService')
+        registerActiveSession(updatedBattle._id, userId)
+        console.log(`[BEGIN_CHALLENGE] Registered active session for user ${userId} in battle ${updatedBattle._id}`)
 
         // STEP 7: Emit success event
         setTimeout(() => {
@@ -1456,6 +1848,7 @@ const beginCategoryChallenge = async ({ battleId, userId }) => {
           sessionInfo,
         }
       },
+
       {
         // FIXED: Proper transaction-level options
         readConcern: { level: 'majority' },
@@ -1491,12 +1884,8 @@ const checkUserParticipationStatus = (battle, userId) => {
     }
   }
 
-  const teamAMember = battle.teamAMembers.find(
-    m => m.user.toString() === userId.toString(),
-  )
-  const teamBMember = battle.teamBMembers.find(
-    m => m.user.toString() === userId.toString(),
-  )
+  const teamAMember = battle.teamAMembers.find(m => memberMatchesUserId(m, userId))
+  const teamBMember = battle.teamBMembers.find(m => memberMatchesUserId(m, userId))
 
   const userMember = teamAMember || teamBMember
 
@@ -1542,7 +1931,8 @@ const calculateTeamAverageTrophies = team => {
   let count = 0
 
   team.members.forEach(member => {
-    const trophies = member.user.quickClashTrophies || DEFAULT_STARTING_TROPHIES
+    // Handle session players (no user) - use default trophies
+    const trophies = member.user?.quickClashTrophies || DEFAULT_STARTING_TROPHIES
     totalTrophies += trophies
     count++
   })
@@ -1584,13 +1974,9 @@ const markUserAsParticipated = async ({ challengeId, userId }) => {
       }
 
       // Find the user in team A or B and mark as participated
-      const teamAMemberIndex = battle.teamAMembers.findIndex(
-        m => m.user.toString() === userId.toString(),
-      )
+      const teamAMemberIndex = battle.teamAMembers.findIndex(m => memberMatchesUserId(m, userId))
 
-      const teamBMemberIndex = battle.teamBMembers.findIndex(
-        m => m.user.toString() === userId.toString(),
-      )
+      const teamBMemberIndex = battle.teamBMembers.findIndex(m => memberMatchesUserId(m, userId))
 
       let updated = false
 
@@ -1605,6 +1991,10 @@ const markUserAsParticipated = async ({ challengeId, userId }) => {
       if (updated) {
         await battle.save({ session })
 
+        // Register this user as having an active session (for deferred battle completion)
+        const { registerActiveSession } = require('./quickClashBattleExpiryService')
+        registerActiveSession(battle._id, userId)
+
         // Emit event to notify that user started the challenge
         setTimeout(() => {
           globalEmitter.emit('quickClash:teamMemberStartedChallenge', {
@@ -1617,6 +2007,7 @@ const markUserAsParticipated = async ({ challengeId, userId }) => {
       }
 
       return battle
+
     })
   } catch (error) {
     console.error('Error marking user as participated:', error)
@@ -1653,12 +2044,8 @@ const deselectCategoryForUser = async ({ battleId, userId }) => {
       }
 
       // Find the user in team A or B
-      const isTeamAUser = battle.teamAMembers.some(
-        m => m.user.toString() === userId.toString(),
-      )
-      const isTeamBUser = battle.teamBMembers.some(
-        m => m.user.toString() === userId.toString(),
-      )
+      const isTeamAUser = battle.teamAMembers.some(m => memberMatchesUserId(m, userId))
+      const isTeamBUser = battle.teamBMembers.some(m => memberMatchesUserId(m, userId))
 
       if (!isTeamAUser && !isTeamBUser) {
         throw new Error('User is not a member of either team')
@@ -1667,9 +2054,7 @@ const deselectCategoryForUser = async ({ battleId, userId }) => {
       let oldCategory = null
 
       if (isTeamAUser) {
-        const memberIndex = battle.teamAMembers.findIndex(
-          m => m.user.toString() === userId.toString(),
-        )
+        const memberIndex = battle.teamAMembers.findIndex(m => memberMatchesUserId(m, userId))
 
         // Check if user has already started (participated in) their challenge
         if (battle.teamAMembers[memberIndex].participated) {
@@ -1684,9 +2069,7 @@ const deselectCategoryForUser = async ({ battleId, userId }) => {
         battle.teamAMembers[memberIndex].category = null
         battle.teamAMembers[memberIndex].challenge = null
       } else {
-        const memberIndex = battle.teamBMembers.findIndex(
-          m => m.user.toString() === userId.toString(),
-        )
+        const memberIndex = battle.teamBMembers.findIndex(m => memberMatchesUserId(m, userId))
 
         // Check if user has already started (participated in) their challenge
         if (battle.teamBMembers[memberIndex].participated) {
@@ -1719,6 +2102,14 @@ const deselectCategoryForUser = async ({ battleId, userId }) => {
         .populate(
           'teamBMembers.user',
           '_id name inGameName pic quickClashTrophies',
+        )
+        .populate(
+          'teamAMembers.sessionPlayer',
+          'sessionId inGameName trophies',
+        )
+        .populate(
+          'teamBMembers.sessionPlayer',
+          'sessionId inGameName trophies',
         )
         .populate({
           path: 'challenges.challenge',
@@ -1804,11 +2195,12 @@ const validateUserChallengeAssignment = async ({
     }
 
     // Additional check: verify user is actually a member of the corresponding team
+    // Use memberMatchesUserId to handle both regular users and session players
     const isTeamAMember = teamBattle.teamAMembers.some(
-      m => m.user.toString() === userId.toString(),
+      m => memberMatchesUserId(m, userId),
     )
     const isTeamBMember = teamBattle.teamBMembers.some(
-      m => m.user.toString() === userId.toString(),
+      m => memberMatchesUserId(m, userId),
     )
 
     // User must be teamAPlayer AND teamAMember, OR teamBPlayer AND teamBMember
@@ -1872,26 +2264,65 @@ const updateBattleWithQuizResults = makeRetryable(
 
         // Find if user is in team A or B
         const isTeamAUser = battle.teamAMembers.some(
-          m => m.user.toString() === userId.toString(),
+          m => memberMatchesUserId(m, userId),
         )
         const isTeamBUser = battle.teamBMembers.some(
-          m => m.user.toString() === userId.toString(),
+          m => memberMatchesUserId(m, userId),
         )
 
         if (!isTeamAUser && !isTeamBUser) {
           throw new Error('User is not a member of either team')
         }
 
+        // Find the challenge to get betting info
+        const challengeDoc = await QuickClashChallenge.findById(challengeId).session(session)
+
+        // Extract betting info for this user
+        let userBetInfo = {
+          betAmount: 0,
+          betResult: null,
+          betTrophyChange: 0
+        }
+
+        if (challengeDoc && challengeDoc.betting && challengeDoc.betting.enabled) {
+          if (
+            challengeDoc.challenger &&
+            challengeDoc.challenger.toString() === userId.toString()
+          ) {
+            userBetInfo = {
+              betAmount: challengeDoc.betting.challenger.betAmount,
+              betResult: challengeDoc.betting.challenger.betResult,
+              betTrophyChange: challengeDoc.betting.challenger.trophiesGained,
+            }
+          } else if (
+            challengeDoc.opponent &&
+            challengeDoc.opponent.toString() === userId.toString()
+          ) {
+            userBetInfo = {
+              betAmount: challengeDoc.betting.opponent.betAmount,
+              betResult: challengeDoc.betting.opponent.betResult,
+              betTrophyChange: challengeDoc.betting.opponent.trophiesGained,
+            }
+          }
+        }
+
         // Update the member and challenge data
+        let isUserSessionPlayer = false
         if (isTeamAUser) {
           // Update team A member
           const memberIndex = battle.teamAMembers.findIndex(
-            m => m.user.toString() === userId.toString(),
+            m => memberMatchesUserId(m, userId),
           )
 
           if (memberIndex !== -1) {
             battle.teamAMembers[memberIndex].completed = true
             battle.teamAMembers[memberIndex].score = score
+            // Update betting fields
+            battle.teamAMembers[memberIndex].betAmount = userBetInfo.betAmount
+            battle.teamAMembers[memberIndex].betResult = userBetInfo.betResult
+            battle.teamAMembers[memberIndex].betTrophyChange = userBetInfo.betTrophyChange
+            // Check if session player for streak tracking
+            isUserSessionPlayer = !!battle.teamAMembers[memberIndex].sessionPlayer
           }
 
           // Update challenge
@@ -1900,18 +2331,118 @@ const updateBattleWithQuizResults = makeRetryable(
         } else {
           // Update team B member
           const memberIndex = battle.teamBMembers.findIndex(
-            m => m.user.toString() === userId.toString(),
+            m => memberMatchesUserId(m, userId),
           )
 
           if (memberIndex !== -1) {
             battle.teamBMembers[memberIndex].completed = true
             battle.teamBMembers[memberIndex].score = score
+            // Update betting fields
+            battle.teamBMembers[memberIndex].betAmount = userBetInfo.betAmount
+            battle.teamBMembers[memberIndex].betResult = userBetInfo.betResult
+            battle.teamBMembers[memberIndex].betTrophyChange = userBetInfo.betTrophyChange
+            // Check if session player for streak tracking
+            isUserSessionPlayer = !!battle.teamBMembers[memberIndex].sessionPlayer
           }
 
           // Update challenge
           battle.challenges[challengeIndex].teamBScore = score
           battle.challenges[challengeIndex].teamBCompleted = true
         }
+
+        // Update streak immediately when user completes quiz (instant feedback)
+        // This is non-blocking and won't fail the quiz submission if it errors
+        let streakResult = null
+        let coinResult = null
+        let coinReward = null // Coin calculation breakdown for frontend display
+        let xpReward = null // XP calculation breakdown for frontend display
+        try {
+          streakResult = await updateStreakOnBattleComplete({
+            playerId: userId,
+            isSessionPlayer: isUserSessionPlayer,
+            session,
+          })
+          if (streakResult) {
+            console.log(`[STREAK] Updated streak for ${userId}: Day ${streakResult.newStreak}`)
+
+            // Award coins based on two-phase performance (Forge + Quiz)
+            // Fetch session to get actual forge and quiz accuracy
+            const userSession = await QuickClashSession.findOne({
+              challenge: challengeId,
+              user: userId,
+            }).select('forgeProgress quizAttempt').session(session)
+
+            // Get forge accuracy (correct answers from forge phase)
+            const forgeCorrect = userSession?.forgeProgress?.correctAnswers || 0
+
+            // Get quiz accuracy (correct answers from quiz phase)
+            const quizResponses = userSession?.quizAttempt?.responses || []
+            const quizCorrect = quizResponses.filter(r => r.isCorrect).length
+
+            const streakDays = streakResult.newStreak || 0
+
+            // Calculate coin reward with two-phase accuracy (win bonus awarded after battle completes)
+            coinReward = calculateSessionReward({
+              forgeCorrect: Math.min(5, Math.max(0, forgeCorrect)),
+              quizCorrect: Math.min(5, Math.max(0, quizCorrect)),
+              streakDays,
+              isWin: false, // Win bonus awarded separately after battle completion
+            })
+
+            // Award coins to player
+            coinResult = await awardCoins({
+              playerId: userId,
+              isSessionPlayer: isUserSessionPlayer,
+              amount: coinReward.totalCoins,
+              reason: 'session_completion',
+              session,
+            })
+
+            if (coinResult) {
+              console.log(`[COINS] Awarded ${coinReward.totalCoins} coins to ${userId} (base: ${coinReward.baseCoins}, forge: ${coinReward.forgeAccuracyBonus}, quiz: ${coinReward.quizAccuracyBonus}, multiplier: ${coinReward.streakMultiplier}x)`)
+            }
+
+            // Award XP to authenticated users only (not session players)
+            if (!isUserSessionPlayer) {
+              // Calculate XP reward with two-phase accuracy (win bonus awarded after battle completes)
+              const xpCalculation = calculateSessionXP({
+                forgeCorrect: Math.min(5, Math.max(0, forgeCorrect)),
+                quizCorrect: Math.min(5, Math.max(0, quizCorrect)),
+                isWin: false, // Win bonus awarded separately after battle completion
+              })
+
+              // Award XP to user
+              const xpResult = await awardXP({
+                userId,
+                amount: xpCalculation.totalXP,
+                reason: 'quick_clash_session',
+                session,
+              })
+
+              if (xpResult) {
+                xpReward = {
+                  ...xpCalculation,
+                  previousXP: xpResult.previousXP,
+                  newXP: xpResult.newXP,
+                  previousLevel: xpResult.previousLevel,
+                  currentLevel: xpResult.currentLevel,
+                  levelUp: xpResult.levelUp,
+                  xpProgress: xpResult.xpProgress,
+                  xpForNextLevel: xpResult.xpForNextLevel,
+                  xpProgressPercentage: xpResult.xpProgressPercentage,
+                }
+                console.log(`[XP] Awarded ${xpCalculation.totalXP} XP to ${userId} (base: ${xpCalculation.baseXP}, forge: ${xpCalculation.forgeAccuracyBonus}, quiz: ${xpCalculation.quizAccuracyBonus})${xpResult.levelUp ? ' - LEVEL UP!' : ''}`)
+              }
+            }
+          }
+        } catch (streakError) {
+          // Don't fail quiz submission if streak/coin update fails
+          console.error(`[STREAK/COINS] Error updating for ${userId}:`, streakError)
+        }
+
+        // NOTE: unregisterActiveSession is called AFTER battle.save() to prevent
+        // deferred completion from running before user's score is saved
+
 
         // If both teams completed this challenge, determine the winner
         if (
@@ -1944,6 +2475,45 @@ const updateBattleWithQuizResults = makeRetryable(
           0,
         )
 
+        // Calculate live win probability after each player completion
+        if (battle.winProbability) {
+          try {
+            console.log('[WIN_PROB] Calculating live probability update')
+            const updatedProbability = calculateLiveTeamWinProbability(battle)
+
+            // Update current probabilities
+            battle.winProbability.teamA.current = updatedProbability.teamA
+            battle.winProbability.teamB.current = updatedProbability.teamB
+
+            // Track in history
+            battle.winProbability.teamA.history.push({
+              afterUserId: userId,
+              afterChallenge: challengeId,
+              probability: updatedProbability.teamA,
+              timestamp: new Date(),
+              certaintyScore: updatedProbability.certaintyScore,
+              projectedWins: updatedProbability.projection.teamAWins,
+            })
+
+            battle.winProbability.lastUpdatedAt = new Date()
+            battle.winProbability.totalUpdates =
+              (battle.winProbability.totalUpdates || 0) + 1
+
+            console.log('[WIN_PROB] Live probability updated:', {
+              teamA: updatedProbability.teamA,
+              teamB: updatedProbability.teamB,
+              certainty: updatedProbability.certaintyScore,
+              trend: updatedProbability.trend,
+            })
+          } catch (probError) {
+            // Non-blocking: battle continues even if probability update fails
+            console.error(
+              '[WIN_PROB] Error updating live probability:',
+              probError,
+            )
+          }
+        }
+
         // Check if battle is completed (all challenges have a winner or time expired)
         const allChallengesCompleted = battle.challenges.every(
           c => c.teamACompleted && c.teamBCompleted,
@@ -1960,6 +2530,10 @@ const updateBattleWithQuizResults = makeRetryable(
 
         if (shouldComplete) {
           battle.status = 'completed'
+
+          // Cancel any pending expiry timer since battle completed early
+          const { cancelBattleTimer } = require('./quickClashBattleExpiryService')
+          cancelBattleTimer(battle._id.toString())
 
           // UPDATED: Count wins for challenges with only one team completed
           let teamAWins = 0
@@ -2027,6 +2601,41 @@ const updateBattleWithQuizResults = makeRetryable(
               battle.winner = 'teamB'
             } else {
               battle.winner = 'tie'
+            }
+          }
+
+          // Award WIN BONUS coins to all winning team members
+          if (battle.winner && battle.winner !== 'tie') {
+            const winningTeamMembers = battle.winner === 'teamA'
+              ? battle.teamAMembers
+              : battle.teamBMembers
+
+            console.log(`[WIN_BONUS] Awarding win bonus to ${winningTeamMembers.length} members of ${battle.winner}`)
+
+            for (const member of winningTeamMembers) {
+              try {
+                const memberId = getMemberPlayerId(member)
+                if (!memberId) continue
+
+                const isSessionPlayer = !!member.sessionPlayer
+
+                // Award just the win bonus (streak multiplier applied inside awardCoins is not needed here,
+                // so we calculate it ourselves for consistency)
+                const winBonusAmount = COIN_CONFIG.WIN_BONUS // 25 coins flat
+
+                await awardCoins({
+                  playerId: memberId,
+                  isSessionPlayer,
+                  amount: winBonusAmount,
+                  reason: 'battle_win',
+                  session,
+                })
+
+                console.log(`[WIN_BONUS] Awarded ${winBonusAmount} win bonus to ${memberId}`)
+              } catch (winBonusError) {
+                // Don't fail battle completion if win bonus fails
+                console.error(`[WIN_BONUS] Error awarding to member:`, winBonusError)
+              }
             }
           }
 
@@ -2099,8 +2708,8 @@ const updateBattleWithQuizResults = makeRetryable(
               score: score,
               challengeId: challengeId,
               allTeamMembers: [
-                ...battle.teamAMembers.map(member => member.user.toString()),
-                ...battle.teamBMembers.map(member => member.user.toString()),
+                ...battle.teamAMembers.filter(m => m.user).map(member => member.user.toString()),
+                ...battle.teamBMembers.filter(m => m.user).map(member => member.user.toString()),
               ],
             })
           }, 100)
@@ -2108,10 +2717,24 @@ const updateBattleWithQuizResults = makeRetryable(
 
         await battle.save({ session })
 
+        // IMPORTANT: Unregister active session AFTER save to prevent race condition
+        // where deferred completion runs before user's score is persisted
+        const { unregisterActiveSession, clearBattleEnding } = require('./quickClashBattleExpiryService')
+
+        // If battle completed naturally (all players finished), clear deferred state
+        // to prevent duplicate completion from deferred logic
+        if (shouldComplete) {
+          clearBattleEnding(battleId)
+        }
+
+        // Unregister session (only triggers deferred completion if battle NOT completed yet)
+        unregisterActiveSession(battleId, userId)
+
         console.log(
           `[updateBattleWithQuizResults] Successfully updated battle with quiz results`,
         )
-        return battle
+        // Return battle, streak result, coin reward, and XP reward for frontend popup
+        return { battle, streakResult, coinReward, xpReward }
       })
     } catch (error) {
       console.error('Error updating battle with quiz results:', error)
@@ -2194,9 +2817,10 @@ const updateBattleWithQuizResults = makeRetryable(
 )
 
 /**
- * Get user's active team battles
+ * Get player's team battles (supports both users and session players)
  * @param {Object} params - Parameters
- * @param {string} params.userId - User ID
+ * @param {string} [params.userId] - User ID for authenticated users
+ * @param {string} [params.sessionPlayerId] - Session player ID for session players
  * @param {string} [params.status='active'] - Battle status to filter by
  * @param {number} [params.page=1] - Page number
  * @param {number} [params.limit=10] - Results per page
@@ -2204,6 +2828,7 @@ const updateBattleWithQuizResults = makeRetryable(
  */
 const getUserTeamBattles = async ({
   userId,
+  sessionPlayerId,
   status = 'active',
   page = 1,
   limit = 10,
@@ -2211,9 +2836,23 @@ const getUserTeamBattles = async ({
   // Calculate skip value for pagination
   const skip = (page - 1) * limit
 
-  // Build query based on user membership in either team
-  const query = {
-    $or: [{ 'teamAMembers.user': userId }, { 'teamBMembers.user': userId }],
+  // Build query based on player membership in either team
+  let query = {}
+
+  if (userId) {
+    // Query for authenticated users
+    query.$or = [
+      { 'teamAMembers.user': userId },
+      { 'teamBMembers.user': userId },
+    ]
+  } else if (sessionPlayerId) {
+    // Query for session players
+    query.$or = [
+      { 'teamAMembers.sessionPlayer': sessionPlayerId },
+      { 'teamBMembers.sessionPlayer': sessionPlayerId },
+    ]
+  } else {
+    throw new Error('Either userId or sessionPlayerId is required')
   }
 
   // Add status filter if provided
@@ -2230,6 +2869,8 @@ const getUserTeamBattles = async ({
     .populate('teamB', 'name avgTrophies')
     .populate('teamAMembers.user', '_id name inGameName pic')
     .populate('teamBMembers.user', '_id name inGameName pic')
+    .populate('teamAMembers.sessionPlayer', 'sessionId inGameName trophies')
+    .populate('teamBMembers.sessionPlayer', 'sessionId inGameName trophies')
     .sort({ createdAt: -1 })
     .skip(skip)
     .limit(limit)
@@ -2258,6 +2899,8 @@ const getTeamBattleDetails = async ({ battleId }) => {
     .populate('teamB', 'name avgTrophies formationInfo')
     .populate('teamAMembers.user', '_id name inGameName pic quickClashTrophies')
     .populate('teamBMembers.user', '_id name inGameName pic quickClashTrophies')
+    .populate('teamAMembers.sessionPlayer', 'sessionId inGameName trophies')
+    .populate('teamBMembers.sessionPlayer', 'sessionId inGameName trophies')
     .populate({
       path: 'challenges.challenge',
       select: 'category article status expiresAt',
@@ -2301,8 +2944,9 @@ const cleanupMatchmakingEntries = async ({ teamAId, teamBId, session }) => {
       // Add team to cleanup list
       teamsToProcess.push(team._id)
 
-      // Add all team members to user cleanup list
+      // Add all team members to user cleanup list (only users, not session players)
       team.members.forEach(member => {
+        if (!member.user) return // Skip session players
         const userId = member.user._id || member.user
         usersToCleanup.add(userId.toString())
       })
@@ -2380,4 +3024,6 @@ module.exports = {
   getTeamBattleDetails,
   validateUserChallengeAssignment,
   checkUserParticipationStatus,
+  getForgeArticle,
+  selectArticleTypeForCategory,
 }

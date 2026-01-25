@@ -1,5 +1,5 @@
 const Article = require('../model/articleSchema')
-const embeddingService = require('./embeddingService')
+const embeddingService = require('./legacy/embeddingService')
 const DUPLICACY_SETTINGS = require('../config/duplicacyConstants')
 
 const MAX_RETRIES = 3

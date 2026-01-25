@@ -6,11 +6,7 @@ const QuickClashTeamBattleAnalysis = require('../model/quickClashSchemas/quickCl
 const QuickClashInsightFeedback = require('../model/quickClashSchemas/quickClashInsightFeedbackSchema')
 const QuickClashFeedbackAnalyticsService = require('../services/quickClashServices/quickClashFeedbackAnalyticsService')
 const QuickClashPersonalizationService = require('../services/quickClashServices/quickClashPersonalizationService')
-const {
-  generateBattleInsights,
-  generateFollowUpAnswer,
-  generateNextQuestion,
-} = require('../services/quickClashServices/quickClashAIService')
+
 const {
   calculateMVPAwards,
   getSimplifiedTrophyData,
@@ -78,48 +74,11 @@ const getTeamBattleAnalysis = asyncHandler(async (req, res) => {
       user: userId,
     })
 
-    let currentAnalysisId = null
-    let battleRecap = null
-    let followUpQuestions = []
-    let questionProgression = null
 
-    if (
-      existingAnalysis &&
-      existingAnalysis.battleRecap &&
-      existingAnalysis.battleRecap.title &&
-      existingAnalysis.followUpQuestions
-    ) {
-      battleRecap = existingAnalysis.battleRecap
-      followUpQuestions = existingAnalysis.followUpQuestions
-      questionProgression = existingAnalysis.questionProgression
-      currentAnalysisId = existingAnalysis._id
 
+    if (existingAnalysis) {
       console.log(
-        `Using existing analysis (ID: ${currentAnalysisId}) for battle ${battleId}, user ${userId}. Found ${followUpQuestions.length} questions.`,
-      )
-    } else {
-      console.log(
-        `No complete existing analysis found. Generating new analysis for battle ${battleId}, user ${userId}.`,
-      )
-
-      // Generate personalized insights
-      const insights = await generateBattleInsights(
-        battleId,
-        userId,
-        null,
-        false,
-        {
-          personalizationConfig: personalizationConfig.config,
-        },
-      )
-
-      battleRecap = insights.battleRecap
-      followUpQuestions = insights.followUpQuestions
-      questionProgression = insights.questionProgression
-      currentAnalysisId = insights.analysisId
-
-      console.log(
-        `Generated new analysis (ID: ${currentAnalysisId}) for battle ${battleId}, user ${userId}. Initial questions: ${followUpQuestions.length}.`,
+        `Found existing analysis for battle ${battleId}, user ${userId}.`,
       )
     }
 
@@ -211,10 +170,6 @@ const getTeamBattleAnalysis = asyncHandler(async (req, res) => {
         battle: enhancedBattle,
         userTeam,
         trophyHistory,
-        battleRecap,
-        followUpQuestions,
-        questionProgression,
-        analysisId: currentAnalysisId,
         mvpAwards,
         simplifiedTrophyData,
         enhancedMemberPerformance: true,
@@ -233,147 +188,6 @@ const getTeamBattleAnalysis = asyncHandler(async (req, res) => {
   }
 })
 
-/**
- * @desc    Answer a follow-up question with personalization
- * @route   POST /api/quickClash/analysis/answer-question
- * @access  Private
- */
-const answerFollowUpQuestion = asyncHandler(async (req, res) => {
-  const { battleId, questionId, questionText } = req.body
-  const userId = req.user._id
-
-  if (!battleId || !questionId || !questionText) {
-    return res.status(400).json({
-      success: false,
-      message: 'Missing required fields',
-    })
-  }
-
-  try {
-    const analysis = await QuickClashTeamBattleAnalysis.findOne({
-      battle: battleId,
-      user: userId,
-    })
-
-    if (!analysis) {
-      return res.status(404).json({
-        success: false,
-        message: 'Analysis not found',
-      })
-    }
-
-    // Get personalized answer with user preferences
-    const answer = await generateFollowUpAnswer(
-      battleId,
-      userId,
-      questionId,
-      questionText,
-      { usePersonalization: true },
-    )
-
-    let updatedAnalysis = await QuickClashTeamBattleAnalysis.findOneAndUpdate(
-      {
-        _id: analysis._id,
-        'followUpQuestions.id': questionId,
-      },
-      {
-        $set: {
-          'followUpQuestions.$.answered': true,
-          'followUpQuestions.$.answer': {
-            ...answer,
-            answeredAt: new Date(),
-          },
-          'followUpQuestions.$.isActive': false,
-        },
-        $push: {
-          'questionProgression.conversationHistory': {
-            questionId,
-            question: questionText,
-            answer: answer.content,
-            timestamp: new Date(),
-          },
-        },
-      },
-      { new: true },
-    )
-
-    if (!updatedAnalysis) {
-      updatedAnalysis = await QuickClashTeamBattleAnalysis.findById(
-        analysis._id,
-      )
-    }
-
-    let nextQuestion = null
-    const currentQuestionIndex =
-      updatedAnalysis.questionProgression.currentQuestionIndex
-
-    if (currentQuestionIndex < 3) {
-      // Generate personalized next question
-      nextQuestion = await generateNextQuestion({
-        analysisId: updatedAnalysis._id,
-        currentQuestionIndex,
-        conversationHistory:
-          updatedAnalysis.questionProgression.conversationHistory,
-        battleContext: updatedAnalysis.questionProgression.battleContext,
-        userId, // Pass userId for personalization
-      })
-
-      if (nextQuestion) {
-        updatedAnalysis = await QuickClashTeamBattleAnalysis.findByIdAndUpdate(
-          updatedAnalysis._id,
-          {
-            $push: {
-              followUpQuestions: nextQuestion,
-            },
-            $set: {
-              'questionProgression.currentQuestionIndex':
-                nextQuestion.questionIndex,
-              'questionProgression.totalQuestionsGenerated': Math.max(
-                updatedAnalysis.questionProgression.totalQuestionsGenerated,
-                nextQuestion.questionIndex,
-              ),
-            },
-          },
-          { new: true },
-        )
-      } else {
-        updatedAnalysis = await QuickClashTeamBattleAnalysis.findByIdAndUpdate(
-          updatedAnalysis._id,
-          {
-            $set: {
-              'questionProgression.isComplete': true,
-            },
-          },
-          { new: true },
-        )
-      }
-    } else {
-      updatedAnalysis = await QuickClashTeamBattleAnalysis.findByIdAndUpdate(
-        updatedAnalysis._id,
-        {
-          $set: {
-            'questionProgression.isComplete': true,
-          },
-        },
-        { new: true },
-      )
-    }
-
-    res.status(200).json({
-      success: true,
-      answer,
-      nextQuestion,
-      questionId,
-      progression: updatedAnalysis.questionProgression,
-    })
-  } catch (error) {
-    console.error('Error answering follow-up question:', error)
-    res.status(500).json({
-      success: false,
-      message: 'Failed to generate answer',
-    })
-  }
-})
 
 /**
  * @desc    Submit simplified insight feedback with auto-scroll prevention
@@ -948,7 +762,6 @@ module.exports = {
   getTeamBattleAnalysis,
   getUserBattleAnalysis,
   submitInsightFeedback,
-  answerFollowUpQuestion,
   trackEngagement,
   getFeedbackAnalytics,
   triggerFeedbackAnalysis,

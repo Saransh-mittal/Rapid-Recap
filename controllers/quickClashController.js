@@ -7,7 +7,14 @@ const {
   getChallengeDetails,
   getUserChallenges,
   postChallengeCreation,
+  placeBet,
 } = require('../services/quickClashServices/quickClashChallengeService')
+const {
+  formatProbability,
+  getProbabilityMessage,
+  getDataQualityInfo,
+  calculateExpectedTrophyChange,
+} = require('../utils/quickClashWinProbabilityHelpers')
 const {
   createSession,
   startReading,
@@ -53,6 +60,14 @@ const {
 const {
   updateBattleWithQuizResults,
 } = require('../services/quickClashServices/quickClashTeamBattleService')
+
+const {
+  startForgeMode,
+  submitForgeAnswer,
+  advanceToNextSection,
+  getForgeSummary,
+  getForgeReview,
+} = require('../services/quickClashServices/quickClashSessionService')
 
 // Create a new challenge
 const createNewChallenge = asyncHandler(async (req, res) => {
@@ -158,6 +173,7 @@ const handleRejectChallenge = asyncHandler(async (req, res) => {
 })
 
 // Get challenge details
+// /api/quickClash/challenge/:challengeId
 const getChallenge = asyncHandler(async (req, res) => {
   const { challengeId } = req.params
 
@@ -275,11 +291,12 @@ const completeReadingPhase = asyncHandler(async (req, res) => {
 const submitQuizAnswers = asyncHandler(async (req, res) => {
   const { sessionId } = req.params
   const { responses } = req.body
-  const userId = req.user._id
+  // Support both authenticated users (req.user) and session players (req.player)
+  const userId = req.user?._id || req.player?._id
 
   try {
     console.log(
-      `[submitQuizAnswers] Processing quiz submission for session: ${sessionId}`,
+      `[submitQuizAnswers] Processing quiz submission for session: ${sessionId}, userId: ${userId}`,
     )
 
     const result = await submitQuizAnswersService({
@@ -310,12 +327,13 @@ const submitQuizAnswers = asyncHandler(async (req, res) => {
     // Check if the challenge is from a team battle
     if (challenge.fromTeamBattle && challenge.teamBattle) {
       // Update the team battle with the quiz results
+      let battleUpdateResult = null
       try {
         console.log(
           `[submitQuizAnswers] Updating team battle with quiz results`,
         )
 
-        await updateBattleWithQuizResults({
+        battleUpdateResult = await updateBattleWithQuizResults({
           battleId: challenge.teamBattle,
           challengeId: challenge._id,
           userId: userId,
@@ -363,6 +381,20 @@ const submitQuizAnswers = asyncHandler(async (req, res) => {
           )
         }
       }
+
+      // Include streak result, coin reward, and XP reward in response for frontend display
+      const streakResult = battleUpdateResult?.streakResult || null
+      const coinReward = battleUpdateResult?.coinReward || null
+      const xpReward = battleUpdateResult?.xpReward || null
+      return res.status(200).json({
+        success: true,
+        message: 'Quiz completed successfully',
+        challengeId: session.challenge.toString(),
+        streakResult, // Include streak data for frontend popup
+        coinReward,   // Include coin breakdown for reward screen
+        xpReward,     // Include XP breakdown for reward screen
+        ...result,
+      })
     } else {
       // Regular challenge completion logic
       // If both users have submitted their quizzes, the challenge is completed
@@ -739,10 +771,17 @@ const getQuickClashLeaderboard = asyncHandler(async (req, res) => {
   const { page = 1, limit = 20, search = '' } = req.query
 
   try {
+    // Get current user ID if authenticated
+    let currentUserId = null
+    if (req.user && req.user._id) {
+      currentUserId = req.user._id
+    }
+
     const leaderboardData = await getLeaderboard({
       page: parseInt(page),
       limit: parseInt(limit),
       searchQuery: search,
+      currentUserId,
     })
 
     res.status(200).json({
@@ -754,6 +793,37 @@ const getQuickClashLeaderboard = asyncHandler(async (req, res) => {
     res.status(500).json({
       success: false,
       message: error.message || 'Failed to fetch leaderboard data',
+    })
+  }
+})
+
+/**
+ * @desc    Place a bet on a challenge
+ * @route   POST /api/quickClash/challenge/:challengeId/bet
+ * @access  Private
+ */
+const placeBetController = asyncHandler(async (req, res) => {
+  const { challengeId } = req.params
+  const { amount } = req.body
+  const userId = req.user._id
+
+  try {
+    const challenge = await placeBet({
+      challengeId,
+      userId,
+      amount,
+    })
+
+    res.status(200).json({
+      success: true,
+      message: 'Bet placed successfully',
+      challenge,
+    })
+  } catch (error) {
+    console.error('Error placing bet:', error)
+    res.status(400).json({
+      success: false,
+      message: error.message || 'Failed to place bet',
     })
   }
 })
@@ -807,7 +877,7 @@ const markChallengeRevenge = asyncHandler(async (req, res) => {
 })
 
 /**
- * @desc    Get a user's current trophy count
+ * @desc    Get a user's current trophy count and coins
  * @route   GET /api/quickClash/trophies
  * @access  Private
  */
@@ -817,9 +887,25 @@ const getUserTrophiesController = asyncHandler(async (req, res) => {
   try {
     const trophies = await getUserTrophies({ userId })
 
+    // Also fetch coins and streak data for the user
+    const User = require('../model/userSchema')
+    const user = await User.findById(userId).select('quickClashCoins quickClashStats').lean()
+    const coins = user?.quickClashCoins ?? 0
+
+    // Get streak info using the streak service for accurate "isActive" calculation
+    const { getPlayerStreak } = require('../services/quickClashServices/quickClashStreakService')
+    const streakInfo = await getPlayerStreak(userId, false) // false = not session player
+
     res.status(200).json({
       success: true,
       trophies,
+      coins,
+      streak: streakInfo || {
+        dayStreak: 0,
+        longestStreak: 0,
+        isActive: false,
+        needsPlayToday: true,
+      },
     })
   } catch (error) {
     console.error('Error getting user trophies:', error)
@@ -829,6 +915,7 @@ const getUserTrophiesController = asyncHandler(async (req, res) => {
     })
   }
 })
+
 
 /**
  * @desc    Get a user's combined trophy history (both individual and team battles)
@@ -918,6 +1005,278 @@ const calculatePotentialTrophyExchangeController = asyncHandler(
   },
 )
 
+/**
+ * Get win probability explanation for a solo challenge
+ *
+ * @desc    Get detailed win probability data for a 1v1 challenge
+ * @route   GET /api/quickClash/challenge/:challengeId/win-probability
+ * @access  Private (must be participant)
+ *
+ * RETURNS:
+ * - Probability percentages
+ * - Effective ratings
+ * - Component breakdown (trophies, performance, consistency)
+ * - Data quality indicators
+ * - Contextual messages
+ * - Expected trophy changes
+ */
+const getWinProbabilityExplanation = asyncHandler(async (req, res) => {
+  const { challengeId } = req.params
+  const userId = req.user._id
+
+  // Fetch challenge with probability data
+  const challenge = await QuickClashChallenge.findById(challengeId)
+    .select('winProbability challenger opponent trophyPotential')
+    .populate('challenger opponent', 'name inGameName pic')
+
+  if (!challenge) {
+    return res.status(404).json({
+      success: false,
+      message: 'Challenge not found',
+    })
+  }
+
+  // Verify user is part of this challenge
+  const isChallenger = challenge.challenger._id.toString() === userId.toString()
+  const isOpponent = challenge.opponent._id.toString() === userId.toString()
+
+  if (!isChallenger && !isOpponent) {
+    return res.status(403).json({
+      success: false,
+      message: 'Not authorized to view this challenge',
+    })
+  }
+
+  // Check if probability data exists
+  if (!challenge.winProbability) {
+    return res.status(200).json({
+      success: true,
+      available: false,
+      message: 'Win probability not available for this challenge',
+    })
+  }
+
+  // Get user's perspective
+  const myData = isChallenger
+    ? challenge.winProbability.challenger
+    : challenge.winProbability.opponent
+
+  const opponentData = isChallenger
+    ? challenge.winProbability.opponent
+    : challenge.winProbability.challenger
+
+  const opponentUser = isChallenger ? challenge.opponent : challenge.challenger
+
+  // Format data for response
+  const myProbability = myData.probability
+  const opponentProbability = opponentData.probability
+
+  // Get contextual information
+  const dataQuality = getDataQualityInfo(myData.dataQuality)
+  const message = getProbabilityMessage(myProbability, req.user.name)
+
+  // Calculate expected trophy changes
+  const baseTrophies = isChallenger
+    ? challenge.trophyPotential?.challenger?.potentialGain || 30
+    : challenge.trophyPotential?.opponent?.potentialGain || 30
+
+  const trophyExpectation = calculateExpectedTrophyChange(
+    myProbability,
+    baseTrophies,
+  )
+
+  res.status(200).json({
+    success: true,
+    available: true,
+    probability: {
+      mine: {
+        percentage: formatProbability(myProbability),
+        decimal: myProbability,
+        effectiveRating: myData.effectiveRating,
+        components: {
+          trophyBase: myData.components.trophyBase,
+          performanceMod: myData.components.performanceMod,
+          consistencyMod: myData.components.consistencyMod,
+        },
+        dataQuality: {
+          level: myData.dataQuality,
+          ...dataQuality,
+        },
+        sampleSize: myData.sampleSize,
+      },
+      opponent: {
+        name: opponentUser.inGameName || opponentUser.name,
+        percentage: formatProbability(opponentProbability),
+        decimal: opponentProbability,
+        effectiveRating: opponentData.effectiveRating,
+        dataQuality: opponentData.dataQuality,
+      },
+      message,
+      trophyExpectation: {
+        onWin: `+${trophyExpectation.onWin}`,
+        onLoss: `${trophyExpectation.onLoss}`,
+        swingPotential: trophyExpectation.swingPotential,
+      },
+    },
+    calculatedAt: challenge.winProbability.calculatedAt,
+  })
+})
+
+/**
+ * Start forge mode for a session
+ * @route POST /api/quickClash/session/:sessionId/forge/start
+ * @access Private
+ */
+const startForgeSession = asyncHandler(async (req, res) => {
+  const { sessionId } = req.params
+
+  try {
+    const firstSection = await startForgeMode({ sessionId })
+
+    res.status(200).json({
+      success: true,
+      message: 'Forge mode started',
+      data: firstSection,
+    })
+  } catch (error) {
+    console.error('Error starting forge mode:', error)
+    res.status(400).json({
+      success: false,
+      message: error.message || 'Error starting forge mode',
+    })
+  }
+})
+
+/**
+ * Submit answer for current forge section
+ * @route POST /api/quickClash/session/:sessionId/forge/answer
+ * @access Private
+ */
+const submitForgeSectionAnswer = asyncHandler(async (req, res) => {
+  const { sessionId } = req.params
+  const { sectionNumber, userAnswer, timeSpent, powerups } = req.body
+
+  // Validate input
+  if (
+    sectionNumber === undefined ||
+    userAnswer === undefined ||
+    timeSpent === undefined
+  ) {
+    return res.status(400).json({
+      success: false,
+      message: 'Missing required fields: sectionNumber, userAnswer, timeSpent',
+    })
+  }
+
+  // Validate answer is within range (0-3) or -1 for timeout/unanswered
+  if (userAnswer < -1 || userAnswer > 3) {
+    return res.status(400).json({
+      success: false,
+      message: 'Invalid answer: must be between 0 and 3, or -1 for unanswered',
+    })
+  }
+
+  try {
+    const result = await submitForgeAnswer({
+      sessionId,
+      sectionNumber,
+      userAnswer,
+      timeSpent,
+      powerups: powerups || {},
+    })
+
+    res.status(200).json({
+      success: true,
+      message: result.isCorrect
+        ? 'Correct answer! Section unlocked.'
+        : 'Incorrect answer. Try the next section.',
+      data: result,
+    })
+  } catch (error) {
+    console.error('Error submitting forge answer:', error)
+    res.status(400).json({
+      success: false,
+      message: error.message || 'Error submitting answer',
+    })
+  }
+})
+
+/**
+ * Advance to next forge section
+ * Called after user completes reading current section
+ * @route POST /api/quickClash/session/:sessionId/forge/next
+ * @access Private
+ */
+const moveToNextForgeSection = asyncHandler(async (req, res) => {
+  const { sessionId } = req.params
+
+  try {
+    const nextSection = await advanceToNextSection({ sessionId })
+
+    res.status(200).json({
+      success: true,
+      message: nextSection.completed
+        ? 'Forge mode completed! Moving to quiz.'
+        : 'Moved to next section',
+      data: nextSection,
+    })
+  } catch (error) {
+    console.error('Error advancing to next section:', error)
+    res.status(400).json({
+      success: false,
+      message: error.message || 'Error advancing to next section',
+    })
+  }
+})
+
+/**
+ * Get forge session summary
+ * @route GET /api/quickClash/session/:sessionId/forge/summary
+ * @access Private
+ */
+const getForgeSessionSummary = asyncHandler(async (req, res) => {
+  const { sessionId } = req.params
+
+  try {
+    const summary = await getForgeSummary({ sessionId })
+
+    res.status(200).json({
+      success: true,
+      data: summary,
+    })
+  } catch (error) {
+    console.error('Error fetching forge summary:', error)
+    res.status(400).json({
+      success: false,
+      message: error.message || 'Error fetching summary',
+    })
+  }
+})
+
+/**
+ * Get forge review - Full article for post-completion review
+ * @route GET /api/quickClash/session/:sessionId/forge/review
+ * @access Private
+ */
+const getForgeReviewController = asyncHandler(async (req, res) => {
+  const { sessionId } = req.params
+
+  try {
+    const review = await getForgeReview({ sessionId })
+
+    res.status(200).json({
+      success: true,
+      data: review,
+    })
+  } catch (error) {
+    console.error('Error fetching forge review:', error)
+    res.status(400).json({
+      success: false,
+      message: error.message || 'Error fetching review',
+    })
+  }
+})
+
 module.exports = {
   createNewChallenge,
   handleAcceptChallenge,
@@ -942,4 +1301,11 @@ module.exports = {
   getUserTrophyHistoryController,
   calculatePotentialTrophyExchangeController,
   getUserCombinedTrophyHistoryController,
+  getWinProbabilityExplanation,
+  startForgeSession,
+  submitForgeSectionAnswer,
+  moveToNextForgeSection,
+  getForgeSessionSummary,
+  getForgeReviewController,
+  placeBetController,
 }

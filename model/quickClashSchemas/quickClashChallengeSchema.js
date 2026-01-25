@@ -5,12 +5,12 @@ const quickClashChallengeSchema = new mongoose.Schema({
   challenger: {
     type: mongoose.Schema.Types.ObjectId,
     ref: 'USER',
-    required: false, // Changed to false since team battle challenges start without a challenger
+    required: false,
   },
   opponent: {
     type: mongoose.Schema.Types.ObjectId,
     ref: 'USER',
-    required: false, // Changed to false since team battle challenges start without an opponent
+    required: false,
   },
   selectedCategories: [
     {
@@ -27,6 +27,7 @@ const quickClashChallengeSchema = new mongoose.Schema({
     enum: ['pending', 'active', 'completed', 'expired', 'rejected'],
     default: 'pending',
   },
+  // Regular article (for traditional Quick Clash)
   article: {
     title: {
       english: String,
@@ -42,6 +43,13 @@ const quickClashChallengeSchema = new mongoose.Schema({
         ref: 'ARTICLE',
       },
     ],
+  },
+  // NEW: Forge article reference (for active reading mode)
+  // If present, this challenge uses Forge Mode instead of traditional reading
+  forgeArticle: {
+    type: mongoose.Schema.Types.ObjectId,
+    ref: 'FORGE_ARTICLE',
+    default: null,
   },
   winner: {
     type: mongoose.Schema.Types.ObjectId,
@@ -71,7 +79,6 @@ const quickClashChallengeSchema = new mongoose.Schema({
     type: Boolean,
     default: false,
   },
-  // NEW: Team battle related fields
   fromTeamBattle: {
     type: Boolean,
     default: false,
@@ -81,7 +88,6 @@ const quickClashChallengeSchema = new mongoose.Schema({
     ref: 'QUICK_CLASH_TEAM_BATTLE',
     default: null,
   },
-  // Potential trophy exchanges - calculated at challenge creation
   trophyPotential: {
     challenger: {
       currentTrophies: Number,
@@ -94,7 +100,6 @@ const quickClashChallengeSchema = new mongoose.Schema({
       potentialLoss: Number,
     },
   },
-  // Actual trophy updates - added after challenge completion
   trophyUpdates: {
     challenger: {
       previousTrophies: Number,
@@ -114,6 +119,93 @@ const quickClashChallengeSchema = new mongoose.Schema({
       opponent_type: String,
     },
   },
+  // NEW: Betting Mechanism
+  betting: {
+    enabled: {
+      type: Boolean,
+      default: true,
+    },
+    challenger: {
+      betAmount: {
+        type: Number,
+        default: 0,
+        enum: [0, 1, 2, 5, 10],
+      },
+      betPlaced: {
+        type: Boolean,
+        default: false,
+      },
+      betPlacedAt: Date,
+      trophiesAtBet: Number,
+      betResult: {
+        type: String,
+        enum: ['won', 'lost', 'returned'],
+      },
+      trophiesGained: Number,
+    },
+    opponent: {
+      betAmount: {
+        type: Number,
+        default: 0,
+        enum: [0, 1, 2, 5, 10],
+      },
+      betPlaced: {
+        type: Boolean,
+        default: false,
+      },
+      betPlacedAt: Date,
+      trophiesAtBet: Number,
+      betResult: {
+        type: String,
+        enum: ['won', 'lost', 'returned'],
+      },
+      trophiesGained: Number,
+    },
+    settled: {
+      type: Boolean,
+      default: false,
+    },
+    settledAt: Date,
+  },
+  winProbability: {
+    challenger: {
+      probability: {
+        type: Number,
+        min: 0,
+        max: 1,
+      },
+      effectiveRating: Number,
+      components: {
+        trophyBase: Number,
+        performanceMod: Number,
+        consistencyMod: Number,
+      },
+      dataQuality: {
+        type: String,
+        enum: ['low', 'medium', 'high'],
+      },
+      sampleSize: Number,
+    },
+    opponent: {
+      probability: {
+        type: Number,
+        min: 0,
+        max: 1,
+      },
+      effectiveRating: Number,
+      components: {
+        trophyBase: Number,
+        performanceMod: Number,
+        consistencyMod: Number,
+      },
+      dataQuality: {
+        type: String,
+        enum: ['low', 'medium', 'high'],
+      },
+      sampleSize: Number,
+    },
+    calculatedAt: Date,
+  },
   createdAt: {
     type: Date,
     default: Date.now,
@@ -128,7 +220,10 @@ const quickClashChallengeSchema = new mongoose.Schema({
 quickClashChallengeSchema.index({ expiresAt: 1 })
 quickClashChallengeSchema.index({ challenger: 1, status: 1 })
 quickClashChallengeSchema.index({ opponent: 1, status: 1 })
-quickClashChallengeSchema.index({ teamBattle: 1 }) // NEW: Index for team battle lookup
+quickClashChallengeSchema.index({ teamBattle: 1 })
+quickClashChallengeSchema.index({ 'winProbability.calculatedAt': -1 })
+// NEW: Index for forge article lookup
+quickClashChallengeSchema.index({ forgeArticle: 1 })
 
 const QuickClashChallenge = mongoose.model(
   'QUICK_CLASH_CHALLENGE',

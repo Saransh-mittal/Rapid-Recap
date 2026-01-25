@@ -28,6 +28,13 @@ const {
   getUserTrophyHistoryController,
   calculatePotentialTrophyExchangeController,
   getUserCombinedTrophyHistoryController,
+  getWinProbabilityExplanation,
+  startForgeSession,
+  submitForgeSectionAnswer,
+  moveToNextForgeSection,
+  getForgeSessionSummary,
+  getForgeReviewController,
+  placeBetController,
 } = require('../controllers/quickClashController')
 const {
   joinMatchmakingRoom,
@@ -44,32 +51,92 @@ const {
 } = require('../controllers/quickClashGlobalMatchmakingController')
 const teamRoutes = require('./quickClashTeamRoutes')
 const analysisRoutes = require('./quickClashAnalysisRoutes')
+const {
+  usePowerupController
+} = require('../controllers/quickClashPowerupController')
+const {
+  getShopPowerups,
+  purchasePowerupController,
+  getBalance,
+} = require('../controllers/quickClashShopController')
 
 const router = express.Router()
-const dailyTaskRoutes = require('./quickClashDailyTaskRoutes')
+// TEMPORARILY DISABLED - Daily Tasks feature
+// const dailyTaskRoutes = require('./quickClashDailyTaskRoutes')
 const {
   getCurrentUserProfile,
   getUserProfile,
   getUserAchievements,
   getUserRecentMatches,
   getUserStatistics,
+  getBattleStatsForLanding,
+  getDetailedRQMAnalysis,
+  getGlobalRQMStats,
 } = require('../controllers/quickClashProfileController')
 
-// All routes need authentication first
+// Import flexAuth for session-player-compatible routes
+const { flexAuth } = require('../middleware/flexAuth')
+const {
+  joinTeamMatchmakingController,
+  leaveTeamMatchmakingController,
+  getTeamMatchmakingInfo,
+  getTeam,
+  leaveTeamController,
+} = require('../controllers/quickClashTeamController')
+
+// ============================================================
+// SESSION-COMPATIBLE ROUTES (must be BEFORE global Authenticate)
+// These routes work for BOTH authenticated users AND session players
+// ============================================================
+
+// Team routes (session-compatible)
+router.get('/team/:teamId', flexAuth, getTeam)
+router.post('/team/:teamId/leave', flexAuth, leaveTeamController)
+
+// Team matchmaking routes (session-compatible)
+router.post('/team/:teamId/matchmaking/join', flexAuth, joinTeamMatchmakingController)
+router.post('/team/:teamId/matchmaking/leave', flexAuth, leaveTeamMatchmakingController)
+router.get('/team/:teamId/matchmaking-info', flexAuth, getTeamMatchmakingInfo)
+
+// Global matchmaking routes (session-compatible)
+router.post('/global-matchmaking/join', flexAuth, joinGlobalMatchmakingQueue)
+router.post('/global-matchmaking/leave', flexAuth, leaveGlobalMatchmakingQueue)
+router.get('/global-matchmaking/status', flexAuth, getGlobalMatchmakingStatusController)
+router.get('/global-matchmaking-status-detailed', flexAuth, getGlobalMatchmakingStatusDetailed)
+router.get('/can-leave-matchmaking', flexAuth, canLeaveMatchmakingController)
+
+// Profile routes (session-compatible - allows session players to view profiles)
+router.get('/profile/:userId', flexAuth, getUserProfile)
+router.get('/profile/:userId/achievements', flexAuth, getUserAchievements)
+router.get('/profile/:userId/matches', flexAuth, getUserRecentMatches)
+router.get('/profile/:userId/statistics', flexAuth, getUserStatistics)
+
+// Leaderboard routes (session-compatible)
+router.get('/leaderboard', flexAuth, getQuickClashLeaderboard)
+
+// ============================================================
+// AUTHENTICATED-ONLY ROUTES (require JWT token)
+// ============================================================
+// All remaining routes need authentication first
 router.use(Authenticate)
 
 // IMPORTANT: Apply QuickClash authorization to ALL routes
 // This middleware will return a 403 with coming soon data for unauthorized users
 // router.use(checkQuickClashAuthorization)
 
-// Mount daily task routes
-router.use('/dailyTasks', dailyTaskRoutes)
+// TEMPORARILY DISABLED - Daily Tasks feature
+// router.use('/dailyTasks', dailyTaskRoutes)
 
-// Mount team routes
+// Mount team routes (matchmaking already handled above)
 router.use('/', teamRoutes)
 
 // Mount analysis routes
 router.use('/analysis', analysisRoutes)
+
+// Shop routes (authenticated users only - session players cannot purchase)
+router.get('/shop/powerups', getShopPowerups)
+router.post('/shop/purchase', purchasePowerupController)
+router.get('/shop/balance', getBalance)
 
 // Challenge management routes
 router.post('/challenge/create', createNewChallenge)
@@ -78,8 +145,14 @@ router.get('/challenges/completed', getCompletedChallenges)
 router.get('/challenge/:challengeId', getChallenge)
 router.post('/challenge/:challengeId/accept', handleAcceptChallenge)
 router.post('/challenge/:challengeId/reject', handleRejectChallenge)
+// Win probability for solo challenges
+router.get(
+  '/challenge/:challengeId/win-probability',
+  getWinProbabilityExplanation,
+)
 router.get('/challenge/:challengeId/sessions', getSessionIdFromChallenge)
 router.post('/challenge/:challengeId/markRevenge', markChallengeRevenge)
+router.post('/challenge/:challengeId/bet', placeBetController)
 
 // Challenge session routes
 router.post('/session/:challengeId', startChallengeSession)
@@ -88,6 +161,7 @@ router.post('/session/:sessionId/reading/start', startReadingPhase)
 router.post('/session/:sessionId/reading/complete', completeReadingPhase)
 router.post('/session/:sessionId/quiz/submit', submitQuizAnswers)
 router.get('/session/:sessionId/report', getSessionQuizReport)
+router.post('/session/:sessionId/powerup/use', usePowerupController)
 
 // Challenge analysis routes
 router.post('/analysis/:challengeId/generate', generateAnalysis)
@@ -112,8 +186,7 @@ router.get(
 )
 router.get('/can-leave-matchmaking', canLeaveMatchmakingController)
 
-// Leaderboard routes
-router.get('/leaderboard', getQuickClashLeaderboard)
+
 
 // Trophy routes
 router.get('/trophies', getUserTrophiesController)
@@ -125,11 +198,29 @@ router.get(
 // Add this route with other trophy routes
 router.get('/trophies/history/combined', getUserCombinedTrophyHistoryController)
 
-// Profile routes
+// Profile routes (authenticated only)
 router.get('/profile', getCurrentUserProfile)
-router.get('/profile/:userId', getUserProfile)
-router.get('/profile/:userId/achievements', getUserAchievements)
-router.get('/profile/:userId/matches', getUserRecentMatches)
-router.get('/profile/:userId/statistics', getUserStatistics)
+router.get('/battle-stats', getBattleStatsForLanding)
+
+// NEW: Detailed RQM analysis route
+router.get('/rqm-analysis', getDetailedRQMAnalysis)
+
+// NEW: Global RQM statistics route (public data)
+router.get('/global-stats', getGlobalRQMStats)
+
+// Start forge mode for a session
+router.post('/session/:sessionId/forge/start', startForgeSession)
+
+// Submit answer for current forge section
+router.post('/session/:sessionId/forge/answer', submitForgeSectionAnswer)
+
+// Advance to next forge section (after reading)
+router.post('/session/:sessionId/forge/next', moveToNextForgeSection)
+
+// Get forge session summary
+router.get('/session/:sessionId/forge/summary', getForgeSessionSummary)
+
+// Get forge review (full article after completion)
+router.get('/session/:sessionId/forge/review', getForgeReviewController)
 
 module.exports = router

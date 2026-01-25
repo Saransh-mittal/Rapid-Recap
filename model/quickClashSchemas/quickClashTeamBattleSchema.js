@@ -129,7 +129,12 @@ const quickClashTeamBattleSchema = new mongoose.Schema(
         user: {
           type: mongoose.Schema.Types.ObjectId,
           ref: 'USER',
-          required: true,
+          default: null, // Made optional for session players
+        },
+        sessionPlayer: {
+          type: mongoose.Schema.Types.ObjectId,
+          ref: 'PLAY_SESSION',
+          default: null, // For session-only players
         },
         category: {
           type: String,
@@ -163,6 +168,68 @@ const quickClashTeamBattleSchema = new mongoose.Schema(
         trophyChange: {
           type: Number,
           default: 0,
+        },
+        // Betting fields
+        betAmount: {
+          type: Number,
+          default: 0,
+        },
+        betResult: {
+          type: String,
+          enum: ['won', 'lost', 'returned'],
+        },
+        betTrophyChange: {
+          type: Number,
+          default: 0,
+        },
+        // Powerup Loadout
+        loadout: {
+          items: [
+            {
+              powerupId: String, // e.g., 'TIME_WARP'
+              type: { type: String }, // 'active', 'passive'
+              cost: Number,
+              phase: String, // 'forge', 'quiz', 'both'
+            },
+          ],
+          housingUsed: {
+            type: Number,
+            default: 0,
+            max: 30,
+          },
+        },
+        // Powerup Rewards earned from battle completion
+        powerupReward: {
+          housingSpaceEarned: {
+            type: Number,
+            default: 0,
+          },
+          individualWins: {
+            type: Number,
+            default: 0,
+          },
+          powerupsAwarded: [
+            {
+              powerupId: String, // e.g., 'TIME_WARP'
+              cost: Number,
+              awardedAt: {
+                type: Date,
+                default: Date.now,
+              },
+            },
+          ],
+          claimed: {
+            type: Boolean,
+            default: false,
+          },
+          claimedAt: {
+            type: Date,
+            default: null,
+          },
+          viewedAt: {
+            type: Date,
+            default: null,
+          },
         },
       },
     ],
@@ -171,7 +238,12 @@ const quickClashTeamBattleSchema = new mongoose.Schema(
         user: {
           type: mongoose.Schema.Types.ObjectId,
           ref: 'USER',
-          required: true,
+          default: null, // Made optional for session players
+        },
+        sessionPlayer: {
+          type: mongoose.Schema.Types.ObjectId,
+          ref: 'PLAY_SESSION',
+          default: null, // For session-only players
         },
         category: {
           type: String,
@@ -206,8 +278,206 @@ const quickClashTeamBattleSchema = new mongoose.Schema(
           type: Number,
           default: 0,
         },
+        // Betting fields
+        betAmount: {
+          type: Number,
+          default: 0,
+        },
+        betResult: {
+          type: String,
+          enum: ['won', 'lost', 'returned'],
+        },
+        betTrophyChange: {
+          type: Number,
+          default: 0,
+        },
+        // Powerup Loadout
+        loadout: {
+          items: [
+            {
+              powerupId: String, // e.g., 'TIME_WARP'
+              type: { type: String }, // 'active', 'passive'
+              cost: Number,
+              phase: String, // 'forge', 'quiz', 'both'
+            },
+          ],
+          housingUsed: {
+            type: Number,
+            default: 0,
+            max: 30,
+          },
+        },
+        // Powerup Rewards earned from battle completion
+        powerupReward: {
+          housingSpaceEarned: {
+            type: Number,
+            default: 0,
+          },
+          individualWins: {
+            type: Number,
+            default: 0,
+          },
+          powerupsAwarded: [
+            {
+              powerupId: String, // e.g., 'TIME_WARP'
+              cost: Number,
+              awardedAt: {
+                type: Date,
+                default: Date.now,
+              },
+            },
+          ],
+          claimed: {
+            type: Boolean,
+            default: false,
+          },
+          claimedAt: {
+            type: Date,
+            default: null,
+          },
+          viewedAt: {
+            type: Date,
+            default: null,
+          },
+        },
       },
     ],
+    // Team Powerup Pools
+    teamAPool: {
+      items: [
+        {
+          powerupId: String,
+          type: { type: String },
+          cost: Number,
+          phase: String,
+          donatedBy: {
+            type: mongoose.Schema.Types.ObjectId,
+            ref: 'USER',
+          },
+          donatedAt: {
+            type: Date,
+            default: Date.now,
+          },
+        },
+      ],
+      housingUsed: {
+        type: Number,
+        default: 0,
+        max: 150,
+      },
+    },
+    teamBPool: {
+      items: [
+        {
+          powerupId: String,
+          type: { type: String },
+          cost: Number,
+          phase: String,
+          donatedBy: {
+            type: mongoose.Schema.Types.ObjectId,
+            ref: 'USER',
+          },
+          donatedAt: {
+            type: Date,
+            default: Date.now,
+          },
+        },
+      ],
+      housingUsed: {
+        type: Number,
+        default: 0,
+        max: 150,
+      },
+    },
+    // Win Probability Data (Team Mode)
+    winProbability: {
+      teamA: {
+        // Initial calculation (at battle start)
+        initial: {
+          type: Number,
+          min: 0,
+          max: 1,
+          required: true,
+        },
+        initialEffectiveRating: Number,
+        initialComponents: {
+          trophyBase: Number,
+          performanceMod: Number,
+          synergyMod: Number,
+        },
+        isEstablishedTeam: Boolean,
+        battleCount: Number,
+
+        // Live updates (changes as challenges complete)
+        current: {
+          type: Number,
+          min: 0,
+          max: 1,
+          required: true,
+        },
+        // History of probability changes (8 updates max)
+        history: [
+          {
+            afterUserId: {
+              type: mongoose.Schema.Types.ObjectId,
+              ref: 'USER',
+            },
+            afterChallenge: {
+              type: mongoose.Schema.Types.ObjectId,
+              ref: 'QUICK_CLASH_CHALLENGE',
+            },
+            probability: Number,
+            timestamp: Date,
+            certaintyScore: Number,
+            projectedWins: Number,
+          },
+        ],
+      },
+      teamB: {
+        initial: {
+          type: Number,
+          min: 0,
+          max: 1,
+          required: true,
+        },
+        initialEffectiveRating: Number,
+        initialComponents: {
+          trophyBase: Number,
+          performanceMod: Number,
+          synergyMod: Number,
+        },
+        isEstablishedTeam: Boolean,
+        battleCount: Number,
+        current: {
+          type: Number,
+          min: 0,
+          max: 1,
+          required: true,
+        },
+        history: [
+          {
+            afterUserId: {
+              type: mongoose.Schema.Types.ObjectId,
+              ref: 'USER',
+            },
+            afterChallenge: {
+              type: mongoose.Schema.Types.ObjectId,
+              ref: 'QUICK_CLASH_CHALLENGE',
+            },
+            probability: Number,
+            timestamp: Date,
+            certaintyScore: Number,
+            projectedWins: Number,
+          },
+        ],
+      },
+      calculatedAt: Date,
+      lastUpdatedAt: Date,
+      totalUpdates: {
+        type: Number,
+        default: 0,
+      },
+    },
     createdAt: {
       type: Date,
       default: Date.now,
@@ -237,6 +507,15 @@ quickClashTeamBattleSchema.index({ status: 1, expiresAt: 1 })
 quickClashTeamBattleSchema.index({ 'teamAMembers.user': 1 })
 quickClashTeamBattleSchema.index({ 'teamBMembers.user': 1 })
 quickClashTeamBattleSchema.index({ createdAt: -1 })
+quickClashTeamBattleSchema.index({
+  'winProbability.teamA.current': -1,
+})
+quickClashTeamBattleSchema.index({
+  'winProbability.teamB.current': -1,
+})
+quickClashTeamBattleSchema.index({
+  'winProbability.lastUpdatedAt': -1,
+})
 
 const QuickClashTeamBattle = mongoose.model(
   'QUICK_CLASH_TEAM_BATTLE',

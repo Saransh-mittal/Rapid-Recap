@@ -15,3 +15,5 @@ nltk
 feedparser
 nest-asyncio
 requests
+newspaper3k
+lxml

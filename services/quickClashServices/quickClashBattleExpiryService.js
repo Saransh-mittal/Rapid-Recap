@@ -6,6 +6,289 @@ const QuickClashTeamBattle = require('../../model/quickClashSchemas/quickClashTe
 const { makeRetryable } = require('../../utils/retryUtils')
 const { calculateFinalTrophies } = require('../../utils/quickClashTeamUtils')
 const { updateTeamMatchStatus } = require('./quickClashTeamService')
+const { notifyTeamBattleCompleted } = require('./quickClashNotificationService')
+const globalEmitter = require('../../eventEmitter')
+const { getMemberPlayerId } = require('../../utils/sessionPlayerUtils')
+
+// ============================================================================
+// IN-MEMORY TIMER AND LOCK MANAGEMENT
+// ============================================================================
+
+// Track battle expiry timers: battleId -> timerId
+const battleExpiryTimers = new Map()
+
+// Track battles currently being processed to prevent duplicate processing
+const battleProcessingLocks = new Set()
+
+// ============================================================================
+// ACTIVE SESSION TRACKING (for deferred completion)
+// ============================================================================
+
+// Track active sessions: battleId -> Set<userId>
+const battleActiveSessions = new Map()
+
+// Track battles in "ending" state (blocks new sessions)
+const battlesEnding = new Set()
+
+// Track deferred battles: battleId -> deferredAt timestamp
+const deferredBattles = new Map()
+
+// Max wait time for active sessions (185 seconds)
+const MAX_DEFERRAL_TIME = 185 * 1000
+
+/**
+ * Register a user as actively playing in a battle
+ */
+const registerActiveSession = (battleId, userId) => {
+  const key = battleId.toString()
+  if (!battleActiveSessions.has(key)) {
+    battleActiveSessions.set(key, new Set())
+  }
+  battleActiveSessions.get(key).add(userId.toString())
+  console.log(`[BattleExpiry] Registered active session: battle=${key}, user=${userId}`)
+}
+
+/**
+ * Unregister a user when they complete their session
+ */
+const unregisterActiveSession = (battleId, userId) => {
+  const key = battleId.toString()
+  if (battleActiveSessions.has(key)) {
+    battleActiveSessions.get(key).delete(userId.toString())
+    console.log(`[BattleExpiry] Unregistered active session: battle=${key}, user=${userId}`)
+    if (battleActiveSessions.get(key).size === 0) {
+      battleActiveSessions.delete(key)
+      checkDeferredBattleCompletion(key)
+    }
+  }
+}
+
+/**
+ * Check if a battle has any active sessions
+ */
+const hasActiveSessions = (battleId) => {
+  const key = battleId.toString()
+  return battleActiveSessions.has(key) && battleActiveSessions.get(key).size > 0
+}
+
+/**
+ * Mark battle as ending (blocks new sessions)
+ */
+const markBattleEnding = (battleId) => {
+  const key = battleId.toString()
+  if (!battlesEnding.has(key)) {
+    battlesEnding.add(key)
+    console.log(`[BattleExpiry] Battle ${key} marked as ENDING`)
+    globalEmitter.emit('quickClash:battleEnding', { battleId: key })
+  }
+}
+
+/**
+ * Check if battle is in ending state
+ */
+const isBattleEnding = (battleId) => battlesEnding.has(battleId.toString())
+
+/**
+ * Clear battle ending state
+ */
+const clearBattleEnding = (battleId) => battlesEnding.delete(battleId.toString())
+
+/**
+ * Defer battle completion due to active sessions
+ */
+const deferBattleCompletion = (battleId) => {
+  const key = battleId.toString()
+  if (!deferredBattles.has(key)) {
+    deferredBattles.set(key, Date.now())
+    console.log(`[BattleExpiry] Battle ${key} DEFERRED - waiting for active sessions`)
+  }
+}
+
+/**
+ * Check if deferred battle should complete (called when session ends)
+ */
+const checkDeferredBattleCompletion = async (battleId) => {
+  const key = battleId.toString()
+  const deferredAt = deferredBattles.get(key)
+  if (!deferredAt) return
+
+  // Skip if battle is no longer in ending state (completed naturally by updateBattleWithQuizResults)
+  if (!battlesEnding.has(key)) {
+    console.log(`[BattleExpiry] Deferred battle ${key} already completed naturally, skipping`)
+    deferredBattles.delete(key)
+    return
+  }
+
+  const elapsed = Date.now() - deferredAt
+  if (elapsed > MAX_DEFERRAL_TIME) {
+    console.log(`[BattleExpiry] Battle ${key} exceeded max wait (${Math.round(elapsed/1000)}s) - forcing completion`)
+    battleActiveSessions.delete(key)
+  }
+
+  if (!hasActiveSessions(key)) {
+    console.log(`[BattleExpiry] Deferred battle ${key} ready to complete`)
+    deferredBattles.delete(key)
+    if (acquireBattleLock(key)) {
+      try {
+        await processExpiredBattleById(key)
+      } catch (error) {
+        console.error(`[BattleExpiry] Deferred completion error:`, error)
+      } finally {
+        releaseBattleLock(key)
+        clearBattleEnding(key)
+      }
+
+    }
+  }
+}
+
+
+/**
+ * Acquire lock for battle processing
+ * @param {string} battleId - Battle ID
+ * @returns {boolean} True if lock acquired, false if already locked
+ */
+const acquireBattleLock = (battleId) => {
+  const lockKey = battleId.toString()
+  if (battleProcessingLocks.has(lockKey)) {
+    console.log(`[BattleExpiry] Lock already held for battle ${lockKey}`)
+    return false
+  }
+  battleProcessingLocks.add(lockKey)
+  console.log(`[BattleExpiry] Lock acquired for battle ${lockKey}`)
+  return true
+}
+
+/**
+ * Release lock after battle processing
+ * @param {string} battleId - Battle ID
+ */
+const releaseBattleLock = (battleId) => {
+  const lockKey = battleId.toString()
+  battleProcessingLocks.delete(lockKey)
+  console.log(`[BattleExpiry] Lock released for battle ${lockKey}`)
+}
+
+/**
+ * Check if a battle is currently locked for processing
+ * @param {string} battleId - Battle ID
+ * @returns {boolean} True if locked
+ */
+const isBattleLocked = (battleId) => {
+  return battleProcessingLocks.has(battleId.toString())
+}
+
+/**
+ * Schedule a timer for battle completion at exact expiry time
+ * @param {Object} params - Parameters
+ * @param {string} params.battleId - Battle ID
+ * @param {Date} params.expiresAt - Exact expiry time
+ */
+const scheduleBattleCompletion = async ({ battleId, expiresAt }) => {
+  const battleIdStr = battleId.toString()
+
+  // Clear any existing timer for this battle
+  if (battleExpiryTimers.has(battleIdStr)) {
+    clearTimeout(battleExpiryTimers.get(battleIdStr))
+  }
+
+  const now = Date.now()
+  const delay = new Date(expiresAt).getTime() - now
+
+  if (delay <= 0) {
+    // Already expired - process immediately with lock
+    if (acquireBattleLock(battleIdStr)) {
+      try {
+        await processExpiredBattleById(battleIdStr)
+      } catch (error) {
+        console.error(`[BattleExpiry] Immediate processing error for ${battleIdStr}:`, error)
+      } finally {
+        releaseBattleLock(battleIdStr)
+      }
+    }
+    return
+  }
+
+  // Schedule timer for exact expiry
+  const timerId = setTimeout(async () => {
+    battleExpiryTimers.delete(battleIdStr)
+
+    // Mark battle as ending FIRST (blocks new sessions from starting)
+    markBattleEnding(battleIdStr)
+
+    // Check for active sessions - if any, defer completion
+    if (hasActiveSessions(battleIdStr)) {
+      console.log(`[BattleExpiry] Battle ${battleIdStr} has active sessions - deferring completion`)
+      deferBattleCompletion(battleIdStr)
+      return
+    }
+
+    // Try to acquire lock
+    if (!acquireBattleLock(battleIdStr)) {
+      return
+    }
+
+    try {
+      await processExpiredBattleById(battleIdStr)
+    } catch (error) {
+      console.error(`[BattleExpiry] Timer error for ${battleIdStr}:`, error)
+      // Lock released, cron will catch as fallback
+    } finally {
+      releaseBattleLock(battleIdStr)
+      clearBattleEnding(battleIdStr)
+    }
+  }, delay)
+
+
+  battleExpiryTimers.set(battleIdStr, timerId)
+  console.log(`[BattleExpiry] Timer scheduled for battle ${battleIdStr} in ${Math.round(delay / 1000)}s`)
+}
+
+/**
+ * Cancel a scheduled battle timer (when battle completes early)
+ * @param {string} battleId - Battle ID
+ */
+const cancelBattleTimer = (battleId) => {
+  const battleIdStr = battleId.toString()
+  if (battleExpiryTimers.has(battleIdStr)) {
+    clearTimeout(battleExpiryTimers.get(battleIdStr))
+    battleExpiryTimers.delete(battleIdStr)
+    console.log(`[BattleExpiry] Timer cancelled for battle ${battleIdStr}`)
+  }
+}
+
+/**
+ * Process expired battle by ID (helper for timer-based processing)
+ * @param {string} battleId - Battle ID
+ */
+const processExpiredBattleById = async (battleId) => {
+  // Find the expiry event for this battle
+  const event = await QuickClashBattleExpiryEvent.findOne({
+    battleId,
+    status: { $in: ['pending', 'failed'] },
+  })
+
+  if (event) {
+    await processExpiredBattle({ eventId: event._id.toString() })
+  } else {
+    // Fallback: process battle directly if no event found
+    const battle = await QuickClashTeamBattle.findById(battleId)
+
+    if (battle && battle.status === 'active') {
+      const session = await mongoose.startSession()
+      try {
+        await session.withTransaction(async () => {
+          await completeBattleOnExpiry({ battle, session })
+        })
+      } catch (directError) {
+        console.error(`[BattleExpiry] Direct battle completion failed:`, directError)
+        throw directError
+      } finally {
+        session.endSession()
+      }
+    }
+  }
+}
 
 /**
  * Create a battle expiry event when team battle is created
@@ -44,6 +327,12 @@ const createBattleExpiryEvent = async ({
     console.log(
       `[BattleExpiry] Created expiry event for battle ${battleId} at ${expiresAt}`,
     )
+
+    // Schedule in-memory timer for precise expiry (non-blocking)
+    scheduleBattleCompletion({ battleId, expiresAt }).catch(err => {
+      console.error(`[BattleExpiry] Failed to schedule timer for battle ${battleId}:`, err)
+    })
+
     return expiryEvent
   } catch (error) {
     if (startedTransaction) {
@@ -80,7 +369,10 @@ const processExpiredBattle = makeRetryable(
         const event = await QuickClashBattleExpiryEvent.findOneAndUpdate(
           {
             _id: eventId,
-            status: 'pending',
+            $or: [
+              { status: 'pending' },
+              { status: 'failed' },
+            ],
           },
           {
             status: 'processing',
@@ -269,24 +561,115 @@ const completeBattleOnExpiry = async ({ battle, session }) => {
   // Calculate final trophies (reuse existing logic)
   await calculateFinalTrophies(battle, session)
 
+  // Update team match status - gracefully handle missing teams
+  // Teams may have been auto-formed and cleaned up, or disbanded by users
   if (battle.teamA) {
-    await updateTeamMatchStatus({
-      teamId: battle.teamA,
-      isInMatch: false,
-      session,
-    })
+    try {
+      await updateTeamMatchStatus({
+        teamId: battle.teamA,
+        isInMatch: false,
+        session,
+      })
+    } catch (teamError) {
+      if (teamError.message === 'Team not found') {
+        console.log(`[BattleExpiry] Team A (${battle.teamA}) not found - may have been auto-formed or disbanded`)
+      } else {
+        throw teamError
+      }
+    }
   }
 
   if (battle.teamB) {
-    await updateTeamMatchStatus({
-      teamId: battle.teamB,
-      isInMatch: false,
-      session,
-    })
+    try {
+      await updateTeamMatchStatus({
+        teamId: battle.teamB,
+        isInMatch: false,
+        session,
+      })
+    } catch (teamError) {
+      if (teamError.message === 'Team not found') {
+        console.log(`[BattleExpiry] Team B (${battle.teamB}) not found - may have been auto-formed or disbanded`)
+      } else {
+        throw teamError
+      }
+    }
   }
 
   // Save the completed battle
   await battle.save({ session })
+
+  // Extract powerup rewards and trophy changes for socket notification
+  const powerupRewards = {}
+  const trophyChanges = {}
+
+  for (const member of battle.teamAMembers) {
+    const userId = getMemberPlayerId(member)
+    if (!userId) continue // Skip members without valid user/sessionPlayer
+
+    // Always include trophy change for each member
+    trophyChanges[userId] = {
+      trophyChange: member.trophyChange || 0,
+      isWinner: battle.winner === 'teamA',
+      isTie: battle.winner === 'tie',
+    }
+
+    // Include powerup reward if housingSpaceEarned > 0
+    if (member.powerupReward && member.powerupReward.housingSpaceEarned > 0) {
+      powerupRewards[userId] = {
+        housingSpaceEarned: member.powerupReward.housingSpaceEarned,
+        powerupsAwarded: member.powerupReward.powerupsAwarded || [],
+        individualWins: member.powerupReward.individualWins || 0,
+      }
+    }
+  }
+
+  for (const member of battle.teamBMembers) {
+    const userId = getMemberPlayerId(member)
+    if (!userId) continue // Skip members without valid user/sessionPlayer
+
+    // Always include trophy change for each member
+    trophyChanges[userId] = {
+      trophyChange: member.trophyChange || 0,
+      isWinner: battle.winner === 'teamB',
+      isTie: battle.winner === 'tie',
+    }
+
+    // Include powerup reward if housingSpaceEarned > 0
+    if (member.powerupReward && member.powerupReward.housingSpaceEarned > 0) {
+      powerupRewards[userId] = {
+        housingSpaceEarned: member.powerupReward.housingSpaceEarned,
+        powerupsAwarded: member.powerupReward.powerupsAwarded || [],
+        individualWins: member.powerupReward.individualWins || 0,
+      }
+    }
+  }
+
+  console.log(`[BattleExpiry] Trophy changes payload:`, JSON.stringify(trophyChanges))
+  console.log(`[BattleExpiry] Powerup rewards payload:`, JSON.stringify(powerupRewards))
+
+  // Emit completion event with powerup rewards and trophy changes (async, non-blocking)
+  setTimeout(() => {
+    globalEmitter.emit('quickClash:teamBattleCompleted', {
+      battleId: battle._id,
+      winner: battle.winner,
+      teamA: battle.teamA,
+      teamB: battle.teamB,
+      powerupRewards,
+      trophyChanges,
+    })
+    console.log(`[BattleExpiry] Emitted teamBattleCompleted for battle ${battle._id} with ${Object.keys(trophyChanges).length} trophy changes`)
+  }, 0)
+
+  // Send push notifications to offline team members
+  notifyTeamBattleCompleted({
+    battle,
+    teamAMembers: battle.teamAMembers,
+    teamBMembers: battle.teamBMembers,
+    teamA: { _id: battle.teamA, name: 'Team A' }, // Minimal info, full details fetched in service
+    teamB: { _id: battle.teamB, name: 'Team B' },
+  }).catch(err => {
+    console.error(`[BattleExpiry] Error sending battle completed push notifications:`, err)
+  })
 }
 
 /**
@@ -301,7 +684,10 @@ const processPendingExpiryEvents = async () => {
 
     const pendingEvents = await QuickClashBattleExpiryEvent.find({
       executeAt: { $lte: bufferTime },
-      status: 'pending',
+      $or: [
+        { status: 'pending' },
+        { status: 'failed' },
+      ],
     })
       .sort({ executeAt: 1 })
       .limit(10) // Process max 10 at a time to avoid overwhelming the system
@@ -310,16 +696,40 @@ const processPendingExpiryEvents = async () => {
       `[BattleExpiry] Found ${pendingEvents.length} pending events to process`,
     )
 
-    // Process events in parallel (but limited)
-    const promises = pendingEvents.map(event =>
-      processExpiredBattle({ eventId: event._id.toString() }).catch(error => {
+    // Process events in parallel (but limited), with lock checking
+    const promises = pendingEvents.map(async event => {
+      const battleIdStr = event.battleId.toString()
+
+      // Skip if battle has active sessions (will be handled when sessions complete)
+      if (hasActiveSessions(battleIdStr)) {
+        console.log(`[BattleExpiry] Cron skipping battle ${battleIdStr} - has active sessions`)
+        return
+      }
+
+      // Skip if timer is already handling this battle
+      if (isBattleLocked(battleIdStr)) {
+        console.log(`[BattleExpiry] Cron skipping locked battle ${battleIdStr}`)
+        return
+      }
+
+      // Try to acquire lock
+      if (!acquireBattleLock(battleIdStr)) {
+        console.log(`[BattleExpiry] Cron failed to acquire lock for ${battleIdStr}`)
+        return
+      }
+
+      try {
+        await processExpiredBattle({ eventId: event._id.toString() })
+      } catch (error) {
         console.error(
           `[BattleExpiry] Failed to process event ${event._id}:`,
           error,
         )
         // Don't let one failure stop others
-      }),
-    )
+      } finally {
+        releaseBattleLock(battleIdStr)
+      }
+    })
 
     await Promise.all(promises)
     console.log(`[BattleExpiry] Completed processing pending events`)
@@ -376,4 +786,17 @@ module.exports = {
   processPendingExpiryEvents,
   cleanupFailedEvents,
   processExpiredBattle,
+  // Timer management exports
+  scheduleBattleCompletion,
+  cancelBattleTimer,
+  isBattleLocked,
+  // Active session tracking exports
+  registerActiveSession,
+  unregisterActiveSession,
+  hasActiveSessions,
+  // Battle ending state exports
+  isBattleEnding,
+  markBattleEnding,
+  clearBattleEnding,
 }
+

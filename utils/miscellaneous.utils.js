@@ -1,6 +1,6 @@
 const { redis } = require('../redis')
 const CryptoJS = require('crypto-js')
-const moment = require('moment')
+const moment = require('moment-timezone')
 const User = require('../model/userSchema')
 
 function binarySearch(arr, target) {
@@ -120,23 +120,130 @@ const checkUserOnlineStatus = async userId => {
 }
 
 async function checkUserBatch(userIds) {
-  const pipeline = redis.pipeline()
-  userIds.forEach(id => pipeline.get(`user:${id}:lastHeartbeat`))
-  const results = await pipeline.exec()
+  const batchId = Math.random().toString(36).substr(2, 9) // Random ID for this batch
+  console.log(
+    `🔍 [REDIS_BATCH_${batchId}] Starting Redis batch check for ${userIds.length} users`,
+  )
 
-  const offlineUsers = []
+  try {
+    // Create Redis pipeline
+    const pipelineStartTime = Date.now()
+    const pipeline = redis.pipeline()
 
-  results.forEach(([err, lastHeartbeat], index) => {
-    if (err) {
-      console.error(`Error checking heartbeat for user ${userIds[index]}:`, err)
-      return
+    // Add commands to pipeline
+    userIds.forEach((id, index) => {
+      pipeline.get(`user:${id}:lastHeartbeat`)
+      if (index < 5) {
+        // Log first 5 keys being checked
+        console.log(
+          `🔑 [REDIS_KEY] Checking: user:${id
+            .toString()
+            .substring(0, 8)}...:lastHeartbeat`,
+        )
+      } else if (index === 5 && userIds.length > 5) {
+        console.log(`🔑 [REDIS_KEY] ... and ${userIds.length - 5} more keys`)
+      }
+    })
+
+    console.log(
+      `📤 [REDIS_PIPELINE_${batchId}] Executing pipeline with ${userIds.length} GET commands`,
+    )
+
+    // Execute pipeline
+    const results = await pipeline.exec()
+    const pipelineDuration = Date.now() - pipelineStartTime
+
+    console.log(
+      `📥 [REDIS_PIPELINE_${batchId}] Pipeline executed in ${pipelineDuration}ms, processing results...`,
+    )
+
+    if (!results) {
+      console.error(
+        `❌ [REDIS_PIPELINE_${batchId}] Pipeline returned null results`,
+      )
+      return []
     }
-    if (!lastHeartbeat) {
-      offlineUsers.push(userIds[index])
-    }
-  })
 
-  return offlineUsers
+    const offlineUsers = []
+    let validHeartbeats = 0
+    let errorCount = 0
+
+    // Process results
+    results.forEach(([err, lastHeartbeat], index) => {
+      const userId = userIds[index]
+
+      if (err) {
+        errorCount++
+        console.error(
+          `❌ [REDIS_ERROR_${batchId}] Error checking heartbeat for user ${userId
+            .toString()
+            .substring(0, 8)}...:`,
+          err.message,
+        )
+        return
+      }
+
+      if (!lastHeartbeat) {
+        offlineUsers.push(userId)
+      } else {
+        validHeartbeats++
+        // Parse heartbeat timestamp to check staleness
+        const heartbeatTime = parseInt(lastHeartbeat)
+        const timeDiff = Date.now() - heartbeatTime
+
+        if (index < 3) {
+          // Log details for first 3 valid heartbeats
+          console.log(
+            `💓 [HEARTBEAT_${batchId}] User ${userId
+              .toString()
+              .substring(0, 8)}... last seen ${Math.floor(
+              timeDiff / 1000,
+            )}s ago`,
+          )
+        }
+      }
+    })
+
+    console.log(
+      `📋 [REDIS_RESULTS_${batchId}] Processed ${results.length} results:`,
+    )
+    console.log(`   ✅ Valid heartbeats: ${validHeartbeats}`)
+    console.log(`   📴 Offline users: ${offlineUsers.length}`)
+    console.log(`   ❌ Errors: ${errorCount}`)
+
+    // Additional Redis health check
+    if (errorCount > 0) {
+      try {
+        const redisInfo = await redis.info('server')
+        const uptime = redisInfo.match(/uptime_in_seconds:(\d+)/)?.[1]
+        console.log(
+          `ℹ️  [REDIS_HEALTH_${batchId}] Redis uptime: ${
+            uptime ? Math.floor(uptime / 3600) + ' hours' : 'unknown'
+          }`,
+        )
+      } catch (healthError) {
+        console.error(
+          `❌ [REDIS_HEALTH_${batchId}] Could not get Redis health info:`,
+          healthError.message,
+        )
+      }
+    }
+
+    return offlineUsers
+  } catch (error) {
+    console.error(
+      `❌ [REDIS_BATCH_${batchId}] Critical error in Redis batch operation:`,
+      {
+        message: error.message,
+        userCount: userIds.length,
+        redisReady: redis.status,
+        timestamp: new Date().toISOString(),
+      },
+    )
+
+    // Return empty array on error to avoid breaking the heartbeat check
+    return []
+  }
 }
 
 const isEncrypted = str => {

@@ -28,32 +28,32 @@ async function getBotContent(urlType, url, baseUrl) {
         footerContent,
       ] = await Promise.all([
         fs.readFile(
-          path.resolve(__dirname, '../client/dist/bot/components/navbar.html'),
+          path.resolve(__dirname, '../../client/dist/bot/components/navbar.html'),
           'utf-8',
         ),
         fs.readFile(
           path.resolve(
             __dirname,
-            '../client/dist/bot/components/get-started/hero.html',
+            '../../client/dist/bot/components/get-started/hero.html',
           ),
           'utf-8',
         ),
         fs.readFile(
           path.resolve(
             __dirname,
-            '../client/dist/bot/components/get-started/benefits.html',
+            '../../client/dist/bot/components/get-started/benefits.html',
           ),
           'utf-8',
         ),
         fs.readFile(
           path.resolve(
             __dirname,
-            '../client/dist/bot/components/get-started/features.html',
+            '../../client/dist/bot/components/get-started/features.html',
           ),
           'utf-8',
         ),
         fs.readFile(
-          path.resolve(__dirname, '../client/dist/bot/components/footer.html'),
+          path.resolve(__dirname, '../../client/dist/bot/components/footer.html'),
           'utf-8',
         ),
       ])
@@ -68,18 +68,18 @@ async function getBotContent(urlType, url, baseUrl) {
     } else if (urlType === '410') {
       const [navbarContent, errorContent, footerContent] = await Promise.all([
         fs.readFile(
-          path.resolve(__dirname, '../client/dist/bot/components/navbar.html'),
+          path.resolve(__dirname, '../../client/dist/bot/components/navbar.html'),
           'utf-8',
         ),
         fs.readFile(
           path.resolve(
             __dirname,
-            '../client/dist/bot/components/error/410.html',
+            '../../client/dist/bot/components/error/410.html',
           ),
           'utf-8',
         ),
         fs.readFile(
-          path.resolve(__dirname, '../client/dist/bot/components/footer.html'),
+          path.resolve(__dirname, '../../client/dist/bot/components/footer.html'),
           'utf-8',
         ),
       ])
@@ -96,21 +96,21 @@ async function getBotContent(urlType, url, baseUrl) {
           fs.readFile(
             path.resolve(
               __dirname,
-              '../client/dist/bot/components/navbar.html',
+              '../../client/dist/bot/components/navbar.html',
             ),
             'utf-8',
           ),
           fs.readFile(
             path.resolve(
               __dirname,
-              '../client/dist/bot/components/article/article.html',
+              '../../client/dist/bot/components/article/article.html',
             ),
             'utf-8',
           ),
           fs.readFile(
             path.resolve(
               __dirname,
-              '../client/dist/bot/components/footer.html',
+              '../../client/dist/bot/components/footer.html',
             ),
             'utf-8',
           ),
@@ -288,7 +288,7 @@ function isPushPath(url) {
 }
 
 function handleCSSRequest(req, res, next) {
-  const cssPath = path.join(__dirname, '../client/dist', req.path)
+  const cssPath = path.join(__dirname, '../../client/dist', req.path)
 
   // Check if file exists
   if (!fs.existsSync(cssPath)) {
@@ -310,7 +310,7 @@ function handleCSSRequest(req, res, next) {
 }
 
 function setupStaticHandling(app) {
-  const distPath = path.join(__dirname, '../client/dist')
+  const distPath = path.join(__dirname, '../../client/dist')
 
   // Middleware to ensure proper MIME types
   app.use((req, res, next) => {

@@ -22,6 +22,8 @@ const leaderboardRoutes = require('./router/leaderboardRoutes')
 const abilityRoutes = require('./router/abilityRoutes')
 const quickClashRoutes = require('./router/quickClashRoutes')
 const publicSpecialCategoryRoutes = require('./router/publicSpecialCategoryRoutes')
+const playRoutes = require('./router/playRoutes')
+const analyticsRoutes = require('./router/analyticsRoutes')
 const { errorHandler } = require('./middleware/errorMiddleware')
 const webpush = require('web-push')
 const cookieParser = require('cookie-parser')
@@ -441,6 +443,14 @@ async function initializeServer() {
     apiRouter.use('/abilities', abilityRoutes)
     apiRouter.use('/quickClash', quickClashRoutes)
     apiRouter.use('/special-categories', publicSpecialCategoryRoutes)
+    // Spark Engine - Public routes (no auth required)
+    apiRouter.use('/api/play', playRoutes)
+    // Quick Clash Validation Analytics Dashboard (admin only)
+    apiRouter.use('/api/admin/analytics', analyticsRoutes) // Spark Engine - Public routes (no auth required)
+    app.use('/api/play', playRoutes)
+
+    // Quick Clash Validation Analytics Dashboard (admin only)
+    app.use('/api/admin/analytics', analyticsRoutes)
     app.use('/api', apiRouter)
 
     // MODIFY: Initialize SSR middleware AFTER API routes

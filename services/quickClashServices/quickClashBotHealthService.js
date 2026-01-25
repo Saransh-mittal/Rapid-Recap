@@ -139,6 +139,7 @@ const trackAllBotsInBattle = async ({
   teamAMembers,
   teamBMembers,
 }) => {
+  return
   console.log(
     `[BOT_HEALTH] ===== TRACKING ALL BOTS IN BATTLE ${battleId} =====`,
   )

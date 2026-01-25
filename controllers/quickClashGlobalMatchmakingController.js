@@ -16,14 +16,22 @@ const QuickClashTeamMatchmaking = require('../model/quickClashSchemas/quickClash
 /**
  * @desc    Join global matchmaking queue
  * @route   POST /api/quickClash/global-matchmaking/join
- * @access  Private
+ * @access  Private (supports both authenticated users and session players via flexAuth)
  */
 const joinGlobalMatchmakingQueue = asyncHandler(async (req, res) => {
-  const userId = req.user._id
+  // Support both authenticated users and session players
+  const playerId = req.user?._id || req.sessionPlayer?._id
+
+  if (!playerId) {
+    return res.status(401).json({
+      success: false,
+      message: 'Authentication required',
+    })
+  }
 
   try {
-    console.log('Joining global matchmaking for user:', userId)
-    const matchmaking = await joinGlobalMatchmaking({ userId })
+    console.log('Joining global matchmaking for player:', playerId)
+    const matchmaking = await joinGlobalMatchmaking({ userId: playerId })
 
     res.status(200).json({
       success: true,
@@ -146,10 +154,18 @@ const joinGlobalMatchmakingQueue = asyncHandler(async (req, res) => {
  * @access  Private
  */
 const leaveGlobalMatchmakingQueue = asyncHandler(async (req, res) => {
-  const userId = req.user._id
+  // Support both authenticated users and session players
+  const playerId = req.user?._id || req.sessionPlayer?._id
+
+  if (!playerId) {
+    return res.status(401).json({
+      success: false,
+      message: 'Authentication required',
+    })
+  }
 
   try {
-    const success = await leaveGlobalMatchmaking({ userId })
+    const success = await leaveGlobalMatchmaking({ userId: playerId })
 
     res.status(200).json({
       success,
@@ -316,51 +332,95 @@ const processGlobalMatchmakingController = asyncHandler(async (req, res) => {
  * @access  Private
  */
 const getGlobalMatchmakingStatusDetailed = asyncHandler(async (req, res) => {
-  const userId = req.user._id
+  // Support both authenticated users and session players
+  const playerId = req.user?._id || req.sessionPlayer?._id
+  const isSessionPlayer = !!req.sessionPlayer && !req.user
+
+  if (!playerId) {
+    return res.status(401).json({
+      success: false,
+      message: 'Authentication required',
+    })
+  }
 
   try {
-    // Check if user has an active battle ready for them
+    // Check if user/session player has an active battle ready for them
+    const memberQuery = isSessionPlayer
+      ? [{ 'teamAMembers.sessionPlayer': playerId }, { 'teamBMembers.sessionPlayer': playerId }]
+      : [{ 'teamAMembers.user': playerId }, { 'teamBMembers.user': playerId }]
+
     const userTeamBattles = await QuickClashTeamBattle.find({
-      $or: [{ 'teamAMembers.user': userId }, { 'teamBMembers.user': userId }],
+      $or: memberQuery,
       status: 'active',
       createdAt: { $gte: new Date(Date.now() - 5 * 60 * 1000) }, // Battle created in last 5 minutes
-    }).populate([
+    }).sort({ createdAt: -1 }) // Prioritize newest battles
+    .populate([
       { path: 'teamA', select: '_id name' },
       { path: 'teamB', select: '_id name' },
     ])
 
     // Check if any battle is ready for this user
     for (const battle of userTeamBattles) {
-      // Check if this battle has all challenges (battle is ready)
+      // Find the user's member entry to check completion status
+      const teamAMember = battle.teamAMembers.find(m => {
+        if (isSessionPlayer && m.sessionPlayer) {
+          return m.sessionPlayer._id?.toString() === playerId.toString() || m.sessionPlayer.toString() === playerId.toString()
+        }
+        return m.user?._id?.toString() === playerId.toString() || m.user?.toString() === playerId.toString()
+      })
+
+      const teamBMember = battle.teamBMembers.find(m => {
+        if (isSessionPlayer && m.sessionPlayer) {
+          return m.sessionPlayer._id?.toString() === playerId.toString() || m.sessionPlayer.toString() === playerId.toString()
+        }
+        return m.user?._id?.toString() === playerId.toString() || m.user?.toString() === playerId.toString()
+      })
+
+      const userMember = teamAMember || teamBMember
+
+      if (!userMember) continue
+
+      // FIX: If user has already completed this battle, ignore it
+      // This prevents players from being pulled back into a battle they just finished
+      // while it's still active for other players
+      if (userMember.completed) continue
+
+      const isTeamAMember = !!teamAMember
+      const isTeamBMember = !!teamBMember
+
+      // Check if this battle has all challenges (battle is fully ready)
       if (
         battle.challenges &&
         battle.challenges.length === battle.categories.length
       ) {
-        // Check if this user is part of this battle
-        const isTeamAMember = battle.teamAMembers.some(
-          m => m.user._id.toString() === userId.toString(),
-        )
-        const isTeamBMember = battle.teamBMembers.some(
-          m => m.user._id.toString() === userId.toString(),
-        )
-
-        if (isTeamAMember || isTeamBMember) {
-          return res.json({
-            success: true,
-            inMatchmaking: false,
-            status: 'battleReady',
-            battleId: battle._id,
-            teamId: isTeamAMember ? battle.teamA._id : battle.teamB._id,
-            teamA: battle.teamA._id,
-            teamB: battle.teamB._id,
-          })
-        }
+        return res.json({
+          success: true,
+          inMatchmaking: false,
+          status: 'battleReady',
+          battleId: battle._id,
+          teamId: isTeamAMember ? battle.teamA._id : battle.teamB._id,
+          teamA: battle.teamA._id,
+          teamB: battle.teamB._id,
+          winProbability: battle.winProbability || null,
+        })
+      } else {
+        // Battle exists but not all challenges ready yet - still being created
+        // This is the fallback status for when socket event was missed
+        return res.json({
+          success: true,
+          inMatchmaking: false,
+          status: 'battleCreating',
+          battleId: battle._id,
+          teamId: isTeamAMember ? battle.teamA._id : battle.teamB._id,
+          teamA: battle.teamA._id,
+          teamB: battle.teamB._id,
+        })
       }
     }
 
     // Check if user is in global matchmaking
     const matchmakingEntry = await QuickClashGlobalMatchmaking.findOne({
-      user: userId,
+      user: playerId,
       status: { $ne: 'in_battle' },
     })
 
@@ -487,12 +547,21 @@ const getGlobalMatchmakingStatusDetailed = asyncHandler(async (req, res) => {
  * @access  Private
  */
 const canLeaveMatchmakingController = asyncHandler(async (req, res) => {
-  const userId = req.user._id
+  // Support both authenticated users and session players
+  const playerId = req.user?._id || req.sessionPlayer?._id
+  const isSessionPlayer = !!req.sessionPlayer && !req.user
+
+  if (!playerId) {
+    return res.status(401).json({
+      success: false,
+      message: 'Authentication required',
+    })
+  }
 
   try {
-    // Check if user is in global matchmaking
+    // Check if user/session player is in global matchmaking
     const globalEntry = await QuickClashGlobalMatchmaking.findOne({
-      user: userId,
+      user: playerId,
     })
 
     let canLeave = true
@@ -505,10 +574,11 @@ const canLeaveMatchmakingController = asyncHandler(async (req, res) => {
         reason = 'Battle is being created'
       }
     } else {
-      // Check if user is in team matchmaking
-      const userTeam = await QuickClashTeam.findOne({
-        'members.user': userId,
-      })
+      // Check if user/session player is in team matchmaking
+      const teamQuery = isSessionPlayer
+        ? { 'members.sessionPlayer': playerId }
+        : { 'members.user': playerId }
+      const userTeam = await QuickClashTeam.findOne(teamQuery)
 
       if (userTeam) {
         const teamMatchmaking = await QuickClashTeamMatchmaking.findOne({

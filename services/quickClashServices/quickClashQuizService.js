@@ -283,8 +283,41 @@ const submitQuizAnswersService = makeRetryable(
         null, // No boosts in QuickClash
       )
 
-      const RQM_score = rqmResult.RQM_score
+      let RQM_score = rqmResult.RQM_score
       const baseRQM_score = rqmResult.baseRQM_score || RQM_score
+
+      // --- Apply Powerups ---
+      const activePowerups = quizSession.activePowerups || []
+      let precisionBonus = 0
+      let scoreSurgeBonus = 0
+
+      // 1. Precision Protocol (Quiz): +50 RQM if 100% Accuracy
+      const precisionProtocol = activePowerups.find(p => p.powerupId === 'PRECISION_PROTOCOL' && (p.phase?.toLowerCase() === 'quiz' || p.phase?.toLowerCase() === 'both'))
+      const isPerfect = validatedResponses.every(r => r.isCorrect)
+      if (precisionProtocol && isPerfect) {
+        precisionBonus = 50
+        RQM_score += precisionBonus
+        precisionProtocol.used = true
+        precisionProtocol.effectApplied = true
+      }
+
+      // 2. Score Surge (Quiz): 1.1x Multiplier - only if not already used in Forge phase
+      const scoreSurge = activePowerups.find(p =>
+        p.powerupId === 'SCORE_SURGE' &&
+        !p.used && // Only apply if not already used in Forge
+        (p.phase?.toLowerCase() === 'quiz' || p.phase?.toLowerCase() === 'both')
+      )
+      if (scoreSurge) {
+        const surgedScore = Math.round(RQM_score * 1.1)
+        scoreSurgeBonus = surgedScore - RQM_score
+        RQM_score = surgedScore
+        scoreSurge.used = true
+        scoreSurge.effectApplied = true
+      }
+
+      // Get Forge Mode score if applicable
+      const forgeScore = quizSession.forgeProgress?.score || 0
+      const totalScore = RQM_score + forgeScore
 
       // Update session
       quizSession.quizAttempt.responses = validatedResponses
@@ -295,7 +328,10 @@ const submitQuizAnswersService = makeRetryable(
       quizSession.score = {
         RQM_score,
         baseRQM_score,
-        total: RQM_score,
+        forgeScore, // Store forge score separately
+        precisionBonus,
+        scoreSurgeBonus,
+        total: totalScore, // Total is sum of Quiz + Forge
       }
 
       await quizSession.save({ session })
@@ -304,7 +340,7 @@ const submitQuizAnswersService = makeRetryable(
       await updateChallengeScore({
         challengeId: quizSession.challenge,
         userId: quizSession.user,
-        score: RQM_score,
+        score: totalScore, // Use TOTAL score for the challenge
         session,
       })
 
@@ -321,6 +357,11 @@ const submitQuizAnswersService = makeRetryable(
       const totalCount = validatedResponses.length
       const scoreString = `${correctCount}/${totalCount}`
 
+      // Calculate Forge accuracy from forge progress responses
+      const forgeResponses = quizSession.forgeProgress?.responses || []
+      const forgeCorrectCount = forgeResponses.filter(r => r.isCorrect).length
+      const forgeTotalCount = forgeResponses.length || 5 // Default to 5 if no responses
+
       // Calculate difficulty level based on the quiz's overall difficulty
       const difficulty =
         quizSession.quiz.overallDifficulty < 0.5
@@ -332,9 +373,24 @@ const submitQuizAnswersService = makeRetryable(
 
       const result = {
         message: 'Attempt saved successfully',
-        RQM_score,
-        nonBoostedRQM: RQM_score, // Same as RQM_score since no boosts in QuickClash
+        RQM_score: totalScore, // Return TOTAL score as the main score for display
+        quizScore: RQM_score, // Original quiz score
+        forgeScore,
+        // Dual-phase accuracy breakdown for PostSessionRewardScreen
+        forgeAccuracy: {
+          correct: forgeCorrectCount,
+          total: forgeTotalCount,
+          percentage: forgeTotalCount > 0 ? Math.round((forgeCorrectCount / forgeTotalCount) * 100) : 0
+        },
+        quizAccuracy: {
+          correct: correctCount,
+          total: totalCount,
+          percentage: totalCount > 0 ? Math.round((correctCount / totalCount) * 100) : 0
+        },
+        nonBoostedRQM: totalScore, // Use total score
         baseRQM_score,
+        precisionBonus,
+        scoreSurgeBonus,
         boost: 1, // No boosts applied
         isBoosted: false,
         quizDifficulty: difficulty,
@@ -350,6 +406,7 @@ const submitQuizAnswersService = makeRetryable(
         pauseRealTimeIQ: true, // Don't affect real-time IQ in QuickClash
         completed: true,
         responses: validatedResponses,
+        activePowerups: activePowerups, // Return active powerups for breakdown
       }
 
       return result
@@ -514,12 +571,77 @@ const getQuizReport = async ({ sessionId, userId }) => {
     })
 
     // Format the result to match what SubmittedQuizInterface expects
+    // Format the result to match what SubmittedQuizInterface expects
+    const quizScore = quizSession.score?.RQM_score || 0
+    const forgeScore = quizSession.score?.forgeScore || 0
+    const precisionBonus = quizSession.score?.precisionBonus || 0
+    const scoreSurgeBonus = quizSession.score?.scoreSurgeBonus || 0
+
+    // Calculate total score.
+    // If RQM_score in DB is smaller than forgeScore (and forgeScore is significant),
+    // it likely means RQM_score only contains the quiz part.
+    // We want to display the TOTAL score.
+    let totalScore = quizScore
+    if (quizScore < forgeScore && forgeScore > 0) {
+       totalScore = quizScore + forgeScore
+    } else if (quizSession.score?.total) {
+       totalScore = quizSession.score.total
+    }
+
+
+    // Populate forgeArticle to get the questions
+    await quizSession.populate({
+      path: 'challenge',
+      populate: {
+        path: 'forgeArticle',
+        model: 'FORGE_ARTICLE',
+      },
+    })
+
+    // Construct Forge questions report
+    let forgeQuestions = []
+    if (quizSession.challenge?.forgeArticle?.sections && quizSession.forgeProgress?.responses) {
+      const forgeArticle = quizSession.challenge.forgeArticle
+      const forgeResponses = quizSession.forgeProgress.responses
+
+      forgeQuestions = forgeResponses.map(response => {
+        // Find the section corresponding to the response
+        // Note: sectionNumber in response is 0-4 (index based on previous logic) or 1-5?
+        // Let's check the schema. forgeArticleSchema says sectionNumber is 1-5.
+        // quickClashSessionSchema says sectionNumber is Number.
+        // In ForgeReadingPhase.jsx, currentSection is 0-4.
+        // Let's assume response.sectionNumber matches the index in sections array if 0-based, or find by sectionNumber.
+
+        // Actually, looking at ForgeReadingPhase.jsx, it sends the index (0-4).
+        // But forgeArticle.sections might be ordered.
+        // Let's safely find the section.
+        const section = forgeArticle.sections[response.sectionNumber]
+
+        if (!section) return null
+
+        const options = section.mcq.options
+        const userAnswerText = options[response.userAnswer]
+        const correctAnswerText = options[section.mcq.correctIndex]
+
+        return {
+          question: section.mcq.question,
+          options: options, // Array of strings
+          userAnswer: userAnswerText,
+          answer: correctAnswerText,
+          isCorrect: response.isCorrect,
+          score: response.scoreBreakdown?.total || 0,
+          explanation: section.mcq.contextNugget || section.mcq.hint || 'No explanation available',
+          type: 'forge'
+        }
+      }).filter(Boolean)
+    }
+
     const result = {
       message: 'Quiz report loaded successfully',
-      RQM_score: quizSession.score?.RQM_score || 0,
-      nonBoostedRQM: quizSession.score?.RQM_score || 0, // Same in QuickClash
+      RQM_score: totalScore,
+      nonBoostedRQM: totalScore, // Same in QuickClash
       baseRQM_score:
-        quizSession.score?.baseRQM_score || quizSession.score?.RQM_score || 0,
+        quizSession.score?.baseRQM_score || quizScore,
       boost: 1, // No boost in QuickClash
       isBoosted: false,
       quizDifficulty: difficulty,
@@ -535,8 +657,13 @@ const getQuizReport = async ({ sessionId, userId }) => {
       pauseRealTimeIQ: true,
       // Formatted questions with user answers
       questions: questions,
+      forgeQuestions: forgeQuestions, // NEW: Forge questions
       // Additional stats for display
       category: quizSession.challenge.category,
+      forgeScore: forgeScore,
+      precisionBonus: precisionBonus,
+      scoreSurgeBonus: scoreSurgeBonus,
+      activePowerups: quizSession.activePowerups || [],
     }
 
     return result

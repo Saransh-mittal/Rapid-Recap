@@ -1,18 +1,8 @@
 const categories = [
-  'world',
-  'politics',
-  'business',
-  'technology',
-  'sports',
-  'health',
-  'science',
-  'environment',
-  'crime',
-  'education',
-  'entertainment',
-  'food',
-  'lifestyle',
-  'tourism',
+  'GK Prime',
+  'Science Facts Simplified',
+  'Everyday Tech',
+  'Geography',
 ]
 
 // Include extra tournament categories that shouldn't have badge text

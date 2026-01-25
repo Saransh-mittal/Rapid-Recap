@@ -399,10 +399,11 @@ const notifyChallengeCompleted = async ({ challenge, completedByUserId }) => {
         teamBattleParticipantIds = [...teamAMembers, ...teamBMembers]
       } else {
         const isChallenger =
-          completedByUserId.toString() === challenge.challenger._id.toString()
+          completedByUserId.toString() ===
+          (challenge.challenger._id || challenge.challenger).toString()
         const otherPlayerId = isChallenger
-          ? challenge.opponent._id
-          : challenge.challenger._id
+          ? challenge.opponent._id || challenge.opponent
+          : challenge.challenger._id || challenge.challenger
 
         // If it's been a while, this becomes an important notification
         const isImportant = timeSinceCreation > 12 * 3600000 // 12 hours
@@ -410,11 +411,19 @@ const notifyChallengeCompleted = async ({ challenge, completedByUserId }) => {
         // Get user information for both players
         const [completedPlayer, otherPlayer] = await Promise.all([
           isChallenger
-            ? User.findById(challenge.challenger._id).select('name inGameName')
-            : User.findById(challenge.opponent._id).select('name inGameName'),
+            ? User.findById(
+                challenge.challenger._id || challenge.challenger,
+              ).select('name inGameName')
+            : User.findById(challenge.opponent._id || challenge.opponent).select(
+                'name inGameName',
+              ),
           isChallenger
-            ? User.findById(challenge.opponent._id).select('name inGameName')
-            : User.findById(challenge.challenger._id).select('name inGameName'),
+            ? User.findById(challenge.opponent._id || challenge.opponent).select(
+                'name inGameName',
+              )
+            : User.findById(
+                challenge.challenger._id || challenge.challenger,
+              ).select('name inGameName'),
         ])
 
         // Only send notification if other player is offline
@@ -1067,8 +1076,15 @@ const notifyTeamMemberJoined = async ({
 
     // Send notifications to all existing team members except the new joiner
     for (const member of teamMembers) {
-      const memberId = member.user._id || member.user
-      const memberIdStr = memberId.toString()
+      // Handle both user and session players
+      let memberIdStr
+      if (member.user) {
+        memberIdStr = (member.user._id || member.user).toString()
+      } else if (member.sessionPlayer) {
+        memberIdStr = (member.sessionPlayer._id || member.sessionPlayer).toString()
+      } else {
+        continue // Skip invalid members
+      }
 
       // Skip the user who just joined
       if (memberIdStr === userId.toString()) {

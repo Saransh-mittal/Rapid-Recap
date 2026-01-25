@@ -210,6 +210,34 @@ const articleSchema = new mongoose.Schema(
         },
       },
     ],
+    // Forge Mode Pipeline Fields
+    forgeStatus: {
+      type: String,
+      enum: [
+        'not_seed',
+        'pending',
+        'processing',
+        'accepted',
+        'rejected',
+        'failed',
+      ],
+      default: 'not_seed',
+      index: true,
+    },
+    forgeSeedData: {
+      seedHash: String, // SHA-256 of title + source + date
+      seedEmbedding: [Number], // OpenAI embedding for dedupe
+      seedSource: String, // Source from contentScrapper
+      seedDate: Date,
+      seedBody: String, // Full original text
+      rejectionReason: String, // Why rejected
+      processedAt: Date,
+    },
+    forgeArticleRef: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: 'FORGE_ARTICLE',
+      default: null,
+    },
     createdAt: {
       type: Date,
       default: Date.now,
@@ -221,6 +249,8 @@ const articleSchema = new mongoose.Schema(
 articleSchema.index({ title: 1 }, { unique: true })
 articleSchema.index({ dateTime: 1 })
 articleSchema.index({ createdAt: -1 })
+articleSchema.index({ forgeStatus: 1, 'forgeSeedData.processedAt': -1 })
+articleSchema.index({ 'forgeSeedData.seedHash': 1 })
 articleSchema.pre('save', function (next) {
   if (this.author === null) {
     this.author = 'Rapid Recap Team'

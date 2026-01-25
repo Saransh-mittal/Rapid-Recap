@@ -74,6 +74,7 @@ const getTeamById = async ({ teamId }) => {
   const team = await QuickClashTeam.findById(teamId)
     .populate('creator', '_id name inGameName pic quickClashTrophies')
     .populate('members.user', '_id name inGameName pic quickClashTrophies')
+    .populate('members.sessionPlayer', '_id inGameName trophies')
 
   if (!team) {
     throw new Error('Team not found')
@@ -92,6 +93,7 @@ const getTeamByCode = async ({ teamCode }) => {
   const team = await QuickClashTeam.findOne({ teamCode })
     .populate('creator', '_id name inGameName pic quickClashTrophies')
     .populate('members.user', '_id name inGameName pic quickClashTrophies')
+    .populate('members.sessionPlayer', '_id inGameName trophies')
 
   if (!team) {
     throw new Error('Team not found')
@@ -123,12 +125,21 @@ const joinTeamByCode = async ({ teamCode, userId }) => {
         throw new Error('Team is full')
       }
 
-      // Check if user is already in the team
+      // Verify user exists and retrieve fresh data
+      const userDoc = await User.findById(userId).session(session)
+      if (!userDoc) {
+          throw new Error(`User ${userId} not found in database`)
+      }
+
+      console.log(`[TEAM_JOIN] Found team ${team._id}, current members: ${team.members.length}`)
+
+      // Check if already a member
       const existingMember = team.members.find(
-        member => member.user.toString() === userId.toString(),
+        m => (m.user && m.user.toString() === userId.toString())
       )
+
       if (existingMember) {
-        throw new Error('You are already a member of this team')
+        throw new Error('User already in team')
       }
 
       // Check if user exists
@@ -143,7 +154,8 @@ const joinTeamByCode = async ({ teamCode, userId }) => {
       team.members.push({
         user: userId,
         role: 'member',
-        status: 'ready', // Auto-ready since they're explicitly joining
+        status: 'accepted',
+        joinedAt: new Date(),
       })
 
       // Update last active timestamp
@@ -151,14 +163,86 @@ const joinTeamByCode = async ({ teamCode, userId }) => {
 
       await team.save({ session })
 
-      // Emit event
+      // Emit events
       setTimeout(async () => {
-        globalEmitter.emit('quickClash:teamMemberJoined', {
-          team: team._id,
-          user: userId,
-          userName: user.name,
-          userInGameName: user.inGameName,
-        })
+        // 2. Emit team updated event (for real-time list updates)
+        try {
+          // Re-fetch team with populated members to send full update
+          const updatedTeam = await QuickClashTeam.findById(team._id)
+            .populate('members.user', '_id name inGameName pic quickClashTrophies')
+            .lean()
+
+          if (updatedTeam) {
+            // Need to manually populate session players since they are in a different collection
+            const PlaySession = require('../../model/quickClashSchemas/playSessionSchema')
+            const sessionPlayerIds = updatedTeam.members
+              .filter(m => m.sessionPlayer)
+              .map(m => m.sessionPlayer)
+
+            const sessionPlayers = await PlaySession.find({ _id: { $in: sessionPlayerIds } })
+              .select('_id inGameName trophies sessionId') // Added sessionId
+              .lean()
+
+            console.log(`[TEAM_JOIN] Found ${sessionPlayers.length} session players for update`)
+
+            // Filter out nulls
+            const publicMembers = updatedTeam.members.map(m => {
+              if (m.sessionPlayer) {
+                const sp = sessionPlayers.find(sp => sp._id.toString() === m.sessionPlayer.toString())
+                return {
+                  _id: m.sessionPlayer.toString(), // Match getPublicTeamInfo structure
+                  type: 'session',
+                  sessionId: sp?.sessionId, // Include sessionId so client recognizes 'me'
+                  inGameName: sp?.inGameName || 'Player',
+                  trophies: sp?.trophies || 1000,
+                  role: m.role,
+                  status: m.status
+                }
+              } else if (m.user) {
+                if (!m.user.inGameName && !m.user.name) {
+                   console.log('[TEAM_JOIN] Warning: Member user not fully populated', m.user)
+                }
+                return {
+                  _id: m.user._id, // Match getPublicTeamInfo structure
+                  type: 'user',
+                  userId: m.user._id,
+                  inGameName: m.user.inGameName || m.user.name || 'Player',
+                  trophies: m.user.quickClashTrophies || 1000,
+                  role: m.role,
+                  status: m.status,
+                  pic: m.user.pic
+                }
+              }
+              return null
+            }).filter(Boolean)
+
+            console.log('[TEAM_JOIN] Prepared public members:', JSON.stringify(publicMembers.map(m => ({ type: m.type, name: m.inGameName, id: m._id }))))
+
+            const teamInfo = {
+              ...updatedTeam,
+              members: publicMembers,
+              memberCount: publicMembers.length
+            }
+
+            console.log(`[TEAM_JOIN] Emitting teamUpdated for team ${team._id} with ${publicMembers.length} members`)
+            globalEmitter.emit('quickClash:teamUpdated', {
+              teamId: team._id.toString(),
+              team: teamInfo
+            })
+
+            // Also emit teamMemberJoined with team info for reliable state sync
+            globalEmitter.emit('quickClash:teamMemberJoined', {
+              team: team._id,
+              user: userId,
+              userName: user.name,
+              userInGameName: user.inGameName,
+              teamInfo: teamInfo
+            })
+          }
+        } catch (updateError) {
+          console.error('Error emitting team update:', updateError)
+        }
+
         // Send notifications to existing team members
         try {
           const teamWithMembers = await QuickClashTeam.findById(team._id)
@@ -181,7 +265,7 @@ const joinTeamByCode = async ({ teamCode, userId }) => {
             notificationError,
           )
         }
-      }, 0)
+      }, 500)
 
       return team
     })
@@ -317,10 +401,11 @@ const respondToInvitation = async ({ teamId, userId, accept }) => {
  * Leave team
  * @param {Object} params - Parameters
  * @param {string} params.teamId - Team ID
- * @param {string} params.userId - User ID
+ * @param {string} params.playerId - Player ID (user or session player)
+ * @param {boolean} params.isSessionPlayer - Whether the player is a session player
  * @returns {Promise<Object>} Updated team or null if dissolved
  */
-const leaveTeam = async ({ teamId, userId }) => {
+const leaveTeam = async ({ teamId, playerId, isSessionPlayer = false }) => {
   const session = await mongoose.startSession()
 
   try {
@@ -336,10 +421,17 @@ const leaveTeam = async ({ teamId, userId }) => {
         throw new Error('Cannot leave team while in a match')
       }
 
-      // Find the member
-      const memberIndex = team.members.findIndex(
-        member => member.user.toString() === userId.toString(),
-      )
+      // Find the member - check both user and sessionPlayer fields
+      let memberIndex = -1
+      if (isSessionPlayer) {
+        memberIndex = team.members.findIndex(
+          member => member.sessionPlayer && member.sessionPlayer.toString() === playerId.toString(),
+        )
+      } else {
+        memberIndex = team.members.findIndex(
+          member => member.user && member.user.toString() === playerId.toString(),
+        )
+      }
 
       if (memberIndex === -1) {
         throw new Error('Not a member of this team')
@@ -374,20 +466,36 @@ const leaveTeam = async ({ teamId, userId }) => {
 
       await team.save({ session })
 
-      const user = await User.findById(userId).select('_id name inGameName ')
-      if (!user) {
-        throw new Error('User not found')
+      // Get player info for events/notifications
+      let playerName = 'Player'
+      let playerInGameName = 'Player'
+
+      if (isSessionPlayer) {
+        // For session players, get info from the SessionPlayer model
+        const SessionPlayer = require('../../model/quickClashSchemas/sessionPlayerSchema')
+        const sessionPlayer = await SessionPlayer.findById(playerId).select('_id inGameName').session(session)
+        if (sessionPlayer) {
+          playerName = sessionPlayer.inGameName || 'Session Player'
+          playerInGameName = sessionPlayer.inGameName || 'Session Player'
+        }
+      } else {
+        const user = await User.findById(playerId).select('_id name inGameName').session(session)
+        if (user) {
+          playerName = user.name
+          playerInGameName = user.inGameName
+        }
       }
+
       // Emit event
       setTimeout(async () => {
         globalEmitter.emit('quickClash:teamMemberLeft', {
           team: team._id,
-          user: userId,
-          userName: user.name,
-          userInGameName: user.inGameName,
+          user: playerId,
+          userName: playerName,
+          userInGameName: playerInGameName,
         })
 
-        // Send notifications to remaining team members
+        // Send notifications to remaining team members (only for real users, not session players)
         try {
           const teamWithMembers = await QuickClashTeam.findById(team._id)
             .populate('members.user', '_id name inGameName')
@@ -396,9 +504,9 @@ const leaveTeam = async ({ teamId, userId }) => {
           if (teamWithMembers && teamWithMembers.members) {
             await notifyTeamMemberLeft({
               teamId: team._id,
-              userId: userId.toString(),
-              userName: user.name,
-              userInGameName: user.inGameName,
+              userId: playerId.toString(),
+              userName: playerName,
+              userInGameName: playerInGameName,
               teamName: team.name || 'Your Squad',
               teamMembers: teamWithMembers.members,
             })
@@ -476,6 +584,7 @@ const getUserTeams = async ({ userId }) => {
   })
     .populate('creator', '_id name inGameName pic')
     .populate('members.user', '_id name inGameName pic quickClashTrophies')
+    .populate('members.sessionPlayer', '_id inGameName trophies')
     .sort({ lastActive: -1 })
 
   return teams
@@ -667,12 +776,12 @@ const inviteToTeam = async ({ teamId, inviterId, inviteeId }) => {
         throw new Error('Team not found')
       }
 
-      // Verify inviter is a team member with appropriate permissions
+      // Verify inviter is a team member (any member can invite friends)
       const inviter = team.members.find(
-        member => member.user.toString() === inviterId.toString(),
+        member => member.user && member.user.toString() === inviterId.toString(),
       )
-      if (!inviter || inviter.role !== 'leader') {
-        throw new Error('Not authorized to invite members')
+      if (!inviter) {
+        throw new Error('Not a member of this team')
       }
 
       // Check if team is full
@@ -725,6 +834,108 @@ const inviteToTeam = async ({ teamId, inviterId, inviteeId }) => {
   }
 }
 
+/**
+ * Transfer team leadership to another member
+ * @param {Object} params - Parameters
+ * @param {string} params.teamId - Team ID
+ * @param {string} params.currentLeaderId - Current leader user ID
+ * @param {string} params.newLeaderId - New leader user ID
+ * @returns {Promise<Object>} Updated team
+ */
+const transferLeadership = async ({ teamId, currentLeaderId, newLeaderId }) => {
+  const session = await mongoose.startSession()
+
+  try {
+    return await session.withTransaction(async () => {
+      // Find the team
+      const team = await QuickClashTeam.findById(teamId).session(session)
+      if (!team) {
+        throw new Error('Team not found')
+      }
+
+      // Verify current user is team leader
+      const currentLeaderMember = team.members.find(
+        member =>
+          member.user.toString() === currentLeaderId.toString() &&
+          member.role === 'leader',
+      )
+
+      if (!currentLeaderMember) {
+        throw new Error('Only the team leader can transfer leadership')
+      }
+
+      // Prevent transferring to self
+      if (currentLeaderId.toString() === newLeaderId.toString()) {
+        throw new Error('Cannot transfer leadership to yourself')
+      }
+
+      // Prevent transferring while in a match
+      if (team.isInMatch) {
+        throw new Error('Cannot transfer leadership while in a match')
+      }
+
+      // Find the new leader
+      const newLeaderMember = team.members.find(
+        member => member.user.toString() === newLeaderId.toString(),
+      )
+
+      if (!newLeaderMember) {
+        throw new Error('New leader is not a member of this team')
+      }
+
+      // Swap roles
+      currentLeaderMember.role = 'member'
+      newLeaderMember.role = 'leader'
+
+      // Update last active timestamp
+      team.lastActive = new Date()
+
+      await team.save({ session })
+
+      // Get user details for notifications
+      const [oldLeader, newLeader] = await Promise.all([
+        User.findById(currentLeaderId).session(session).select('_id name inGameName'),
+        User.findById(newLeaderId).session(session).select('_id name inGameName'),
+      ])
+
+      // Emit event for real-time updates
+      setTimeout(async () => {
+        globalEmitter.emit('quickClash:teamLeadershipTransferred', {
+          team: team._id,
+          teamName: team.name,
+          oldLeaderId: currentLeaderId,
+          newLeaderId: newLeaderId,
+          oldLeaderName: oldLeader?.inGameName || oldLeader?.name,
+          newLeaderName: newLeader?.inGameName || newLeader?.name,
+        })
+
+        // Notify team members
+        try {
+          const teamWithMembers = await QuickClashTeam.findById(team._id)
+            .populate('members.user', '_id name inGameName')
+            .lean()
+
+          if (teamWithMembers && teamWithMembers.members) {
+            // Notification logic can be added here if needed
+            console.log(
+              `[TEAM] Leadership transferred in ${team.name}: ${oldLeader?.name} → ${newLeader?.name}`,
+            )
+          }
+        } catch (notificationError) {
+          console.error(
+            'Error sending leadership transfer notifications:',
+            notificationError,
+          )
+        }
+      }, 0)
+
+      return team
+    })
+  } finally {
+    session.endSession()
+  }
+}
+
 module.exports = {
   createTeam,
   getTeamById,
@@ -737,4 +948,5 @@ module.exports = {
   getUserTeams,
   updateTeamMatchStatus,
   removeMember,
+  transferLeadership,
 }

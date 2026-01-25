@@ -9,9 +9,11 @@ function progressBar(totalItems) {
     const completed = Math.round((progress / totalItems) * width);
     const remaining = width - completed;
     const bar = "[" + "=".repeat(completed) + " ".repeat(remaining) + "]";
-    process.stdout.clearLine(); // Clear the previous line
-    process.stdout.cursorTo(0); // Move the cursor to the beginning of the line
-    process.stdout.write(bar + " " + percentage + "%"); // Write the progress bar
+    if (typeof process.stdout.clearLine === 'function') {
+      process.stdout.clearLine(); // Clear the previous line
+      process.stdout.cursorTo(0); // Move the cursor to the beginning of the line
+      process.stdout.write(bar + " " + percentage + "%"); // Write the progress bar
+    }
   }
 
   // Initialize the progress bar
