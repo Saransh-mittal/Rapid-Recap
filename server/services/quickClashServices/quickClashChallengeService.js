@@ -837,15 +837,8 @@ const updateChallengeScore = async ({
           `[CHALLENGE_SERVICE] Challenge score updated, notifying completion: ${challengeId}`,
         )
         notifyChallengeCompleted({
-          challenge: {
-            _id: challenge._id,
-            category: challenge.category,
-            winner: challenge.winner,
-            challengerScore: challenge.challengerScore,
-            opponentScore: challenge.opponentScore,
-          },
-          challenger: challenge.challenger,
-          opponent: challenge.opponent,
+          challenge,
+          completedByUserId: userId,
         }).catch(err => {
           console.error('Error sending challenge completed notification:', err)
         })
