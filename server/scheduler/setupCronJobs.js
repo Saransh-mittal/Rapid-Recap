@@ -1,13 +1,6 @@
 // setupCronJobs.js
 const cron = require('node-cron')
 const quickClashSchedules = require('./quickClashScheduleConfig')
-const vectorSchedules = require('./vectorScheduleConfig')
-
-// Setup vector maintenance schedules
-vectorSchedules.forEach(schedule => {
-  cron.schedule(schedule.cronPattern, schedule.task)
-  console.log(`Scheduled ${schedule.name} task`)
-})
 
 // Setup Forge workflow schedules
 const forgeSchedules = require('./forgeScheduleConfig')
