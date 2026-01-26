@@ -2284,8 +2284,181 @@ const updateBattleWithQuizResults = makeRetryable(
           betTrophyChange: 0
         }
 
-        if (challengeDoc && challengeDoc.betting && challengeDoc.betting.enabled) {
-          if (
+        // Check if both players have now completed the challenge
+        // Note: We just updated `battle` object in memory above (or are about to),
+        // but we need to check the state AFTER this current update.
+        // Let's perform the update in memory first to check for completion.
+
+        let challengeComplete = false;
+        let p1Score = 0;
+        let p2Score = 0;
+
+        if (isTeamAUser) {
+           // Current user is Team A
+           p1Score = score;
+           // Check if Team B player text already finished
+           if (battle.challenges[challengeIndex].teamBCompleted) {
+               p2Score = battle.challenges[challengeIndex].teamBScore;
+               challengeComplete = true;
+           }
+        } else {
+           // Current user is Team B
+           p2Score = score;
+           if (battle.challenges[challengeIndex].teamACompleted) {
+               p1Score = battle.challenges[challengeIndex].teamAScore;
+               challengeComplete = true;
+           }
+        }
+
+        // --- NEW START: Update Challenge Document for Stats Service ---
+        // We must update the underlying QuickClashChallenge document so that stats service can find it
+        if (challengeDoc) {
+          // Identify if user is challenger or opponent in the Challenge doc context
+          const isChallengeChallenger = challengeDoc.challenger && challengeDoc.challenger.toString() === userId.toString()
+          const isChallengeOpponent = challengeDoc.opponent && challengeDoc.opponent.toString() === userId.toString()
+
+          if (isChallengeChallenger) {
+            challengeDoc.challengerScore = score
+            challengeDoc.challengerAttempted = true
+          } else if (isChallengeOpponent) {
+            challengeDoc.opponentScore = score
+            challengeDoc.opponentAttempted = true
+          }
+
+          if (challengeComplete) {
+            challengeDoc.status = 'completed'
+            // Winner logic mirrors betting winner logic
+            if (p1Score > p2Score) challengeDoc.winner = challengeDoc.challenger
+            else if (p2Score > p1Score) challengeDoc.winner = challengeDoc.opponent
+            // Tie = winner is null (default)
+          }
+
+          // Save the challenge doc - required because betting block below might strict check betting.enabled
+          // We rely on transaction session for atomicity
+          await challengeDoc.save({ session })
+          console.log(`[TeamBattle] Synced stats to Challenge ${challengeId} (User: ${userId}, Score: ${score}, Complete: ${challengeComplete})`)
+        }
+        // --- NEW END ---
+
+        // If challenge is complete, we must resolve betting NOW
+        if (challengeComplete && challengeDoc && challengeDoc.betting && challengeDoc.betting.enabled) {
+            console.log(`[TeamBattle] Resolving betting for challenge ${challengeId}`);
+
+            // Determine winner
+            let winner = null;
+            if (p1Score > p2Score) winner = 'challenger'; // Team A is challenger in QC context usually? Wait, let's verify roles
+            else if (p2Score > p1Score) winner = 'opponent';
+            else winner = 'tie';
+
+            // IMPORTANT: detailed mapping who is challenger/opponent in the challengeDoc
+            // In TeamBattle, Team A player is stored as `teamAPlayer` in battle.challenges
+            // We need to match that to `challenger` or `opponent` in `challengeDoc`
+
+            const teamAPlayerId = battle.challenges[challengeIndex].teamAPlayer.toString();
+            const teamBPlayerId = battle.challenges[challengeIndex].teamBPlayer.toString();
+
+            const docChallengerId = challengeDoc.challenger ? challengeDoc.challenger.toString() : null;
+            const docOpponentId = challengeDoc.opponent ? challengeDoc.opponent.toString() : null;
+
+            // Logic to update challenge betting
+            // We need to calculate outcomes
+
+            const updateBettingForSide = (side) => {
+               if (!challengeDoc.betting[side]) return;
+               const betAmount = challengeDoc.betting[side].betAmount || 0;
+               if (betAmount <= 0) return;
+
+               let result = 'returned'; // default
+               let trophiesGained = 0;
+
+               // If tie, return bet
+               if (winner === 'tie') {
+                   result = 'returned';
+                   trophiesGained = 0; // Net change 0 (stake returned logic might be upstream, but trophyChange usually implies net from *current* state. Actually, if stake was deducted, +0 means lost stake?
+                   // Wait, "Returned" usually means you get the stake back.
+                   // If logic is: Start 1000 -> Bet 10 -> 990.
+                   // Win (+20) -> 1010 (+10 profit).
+                   // Return (+10) -> 1000 (0 profit).
+                   // Loss (0) -> 990 (-10 loss).
+
+                   // So trophiesGained should be the amount ADDED to the user's CURRENT (post-bet) balance.
+                   // If result is 'returned', we add betAmount back.
+                   trophiesGained = betAmount;
+               } else if (winner === side) {
+                   result = 'won';
+                   // Win gets stake + profit (profit = stake) -> 2x stake
+                   trophiesGained = betAmount * 2;
+               } else {
+                   result = 'lost';
+                   trophiesGained = 0;
+               }
+
+               // Update the doc object in memory
+               challengeDoc.betting[side].betResult = result;
+               challengeDoc.betting[side].trophiesGained = trophiesGained; // Net gain relative to post-bet
+            };
+
+            updateBettingForSide('challenger');
+            updateBettingForSide('opponent');
+
+            // Save the challenge doc betting results
+            await challengeDoc.save({ session });
+            console.log(`[TeamBattle] Saved betting results for challenge ${challengeId}`);
+
+            // SYNC TO BATTLE MEMBERS LOCALLY
+            // We must update BOTH players in the battle object now that the result is final.
+            // Otherwise, the player who finished first will still have 0/pending in their record.
+
+            const updateMemberBettingInBattle = (teamMembers, playerId, side) => {
+                 const mIndex = teamMembers.findIndex(m =>
+                    (m.user && m.user.toString() === playerId) ||
+                    (m.sessionPlayer && m.sessionPlayer.toString() === playerId)
+                 );
+                 if (mIndex !== -1 && challengeDoc.betting[side]) {
+                     teamMembers[mIndex].betAmount = challengeDoc.betting[side].betAmount;
+                     teamMembers[mIndex].betResult = challengeDoc.betting[side].betResult;
+                     teamMembers[mIndex].betTrophyChange = challengeDoc.betting[side].trophiesGained;
+                 }
+            };
+
+            // Identify which side (challenger/opponent) maps to which Player ID
+            // We have docChallengerId and docOpponentId from before
+
+            if (docChallengerId) {
+                // Find who is challenger (could be in Team A or Team B)
+                // usually one is Team A, one is Team B.
+                updateMemberBettingInBattle(battle.teamAMembers, docChallengerId, 'challenger');
+                updateMemberBettingInBattle(battle.teamBMembers, docChallengerId, 'challenger');
+            }
+
+            if (docOpponentId) {
+                updateMemberBettingInBattle(battle.teamAMembers, docOpponentId, 'opponent');
+                updateMemberBettingInBattle(battle.teamBMembers, docOpponentId, 'opponent');
+            }
+
+            // Also update the local `userBetInfo` for the current flow (frontend response)
+            if (
+                challengeDoc.challenger &&
+                challengeDoc.challenger.toString() === userId.toString()
+            ) {
+                 userBetInfo = {
+                    betAmount: challengeDoc.betting.challenger.betAmount,
+                    betResult: challengeDoc.betting.challenger.betResult,
+                    betTrophyChange: challengeDoc.betting.challenger.trophiesGained,
+                 }
+            } else if (
+                challengeDoc.opponent &&
+                challengeDoc.opponent.toString() === userId.toString()
+            ) {
+                 userBetInfo = {
+                    betAmount: challengeDoc.betting.opponent.betAmount,
+                    betResult: challengeDoc.betting.opponent.betResult,
+                    betTrophyChange: challengeDoc.betting.opponent.trophiesGained,
+                 }
+            }
+        } else if (challengeDoc && challengeDoc.betting && challengeDoc.betting.enabled) {
+          // Normal case: Challenge NOT finished, or just reading existing (if already finished and saved?)
+           if (
             challengeDoc.challenger &&
             challengeDoc.challenger.toString() === userId.toString()
           ) {
@@ -2316,6 +2489,7 @@ const updateBattleWithQuizResults = makeRetryable(
 
           if (memberIndex !== -1) {
             battle.teamAMembers[memberIndex].completed = true
+            battle.teamAMembers[memberIndex].participated = true // Ensure participated is true if completed
             battle.teamAMembers[memberIndex].score = score
             // Update betting fields
             battle.teamAMembers[memberIndex].betAmount = userBetInfo.betAmount
@@ -2336,6 +2510,7 @@ const updateBattleWithQuizResults = makeRetryable(
 
           if (memberIndex !== -1) {
             battle.teamBMembers[memberIndex].completed = true
+            battle.teamBMembers[memberIndex].participated = true // Ensure participated is true if completed
             battle.teamBMembers[memberIndex].score = score
             // Update betting fields
             battle.teamBMembers[memberIndex].betAmount = userBetInfo.betAmount

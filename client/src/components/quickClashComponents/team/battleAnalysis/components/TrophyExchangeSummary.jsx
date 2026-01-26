@@ -465,6 +465,62 @@ const TrophyExchangeSummary = ({
               {/* Only show bonuses if they exist */}
               {activeBonuses.length > 0 && (
                 <>
+                  {/* Betting Result Section */}
+                  {userMemberData?.betAmount > 0 && (
+                    <>
+                      <Text
+                        fontSize="md"
+                        color="whiteAlpha.900"
+                        fontWeight="bold"
+                        textAlign="center"
+                        mb={2}
+                      >
+                        {t('Betting Result')}
+                      </Text>
+                      <Flex
+                        justify="space-between"
+                        align="center"
+                        bg={userMemberData.betResult === 'won' ? 'rgba(16, 185, 129, 0.1)' : userMemberData.betResult === 'lost' ? 'rgba(239, 68, 68, 0.1)' : 'rgba(255, 255, 255, 0.05)'}
+                        p={3}
+                        borderRadius="md"
+                        border="1px solid"
+                        borderColor={userMemberData.betResult === 'won' ? 'green.600' : userMemberData.betResult === 'lost' ? 'red.600' : 'whiteAlpha.200'}
+                      >
+                        <HStack spacing={3}>
+                          <Icon
+                            as={Target}
+                            color={userMemberData.betResult === 'won' ? 'green.400' : userMemberData.betResult === 'lost' ? 'red.400' : 'whiteAlpha.700'}
+                            boxSize={5}
+                          />
+                          <VStack align="flex-start" spacing={0.5}>
+                            <Text
+                              fontSize={config.collapsedLabelFontSize}
+                              color="white"
+                              fontWeight="medium"
+                            >
+                              {userMemberData.betResult === 'won' ? t('Bet Won') : userMemberData.betResult === 'lost' ? t('Bet Lost') : t('Bet Returned')}
+                            </Text>
+                            <Text fontSize="xs" color="whiteAlpha.700">
+                             {t(`Wagered {{amount}} trophies`, { amount: userMemberData.betAmount })}
+                            </Text>
+                          </VStack>
+                        </HStack>
+                        <Badge
+                          colorScheme={userMemberData.betResult === 'won' ? 'green' : userMemberData.betResult === 'lost' ? 'red' : 'gray'}
+                          variant="solid"
+                          fontSize="sm"
+                          px={3}
+                          py={1}
+                          borderRadius="full"
+                          fontWeight="bold"
+                        >
+                          {userMemberData.betResult === 'won' ? '+' + (userMemberData.betTrophyChange - userMemberData.betAmount) : userMemberData.betTrophyChange > 0 ? '+' + userMemberData.betTrophyChange : userMemberData.betTrophyChange} {t('trophies')}
+                        </Badge>
+                      </Flex>
+                      <Divider borderColor="whiteAlpha.200" my={2} />
+                    </>
+                  )}
+
                   <Text
                     fontSize="md"
                     color="whiteAlpha.900"

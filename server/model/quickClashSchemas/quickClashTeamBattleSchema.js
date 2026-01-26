@@ -169,6 +169,21 @@ const quickClashTeamBattleSchema = new mongoose.Schema(
           type: Number,
           default: 0,
         },
+        // Detailed Trophy Breakdown
+        trophyBreakdown: {
+          base: { type: Number, default: 0 },
+          bonuses: [
+            {
+              key: String,
+              amount: Number,
+            },
+          ],
+          betting: {
+            stake: { type: Number, default: 0 },
+            result: { type: String, enum: ['won', 'lost', 'returned', null], default: null },
+            profit: { type: Number, default: 0 },
+          },
+        },
         // Betting fields
         betAmount: {
           type: Number,
@@ -277,6 +292,21 @@ const quickClashTeamBattleSchema = new mongoose.Schema(
         trophyChange: {
           type: Number,
           default: 0,
+        },
+        // Detailed Trophy Breakdown
+        trophyBreakdown: {
+          base: { type: Number, default: 0 },
+          bonuses: [
+            {
+              key: String,
+              amount: Number,
+            },
+          ],
+          betting: {
+            stake: { type: Number, default: 0 },
+            result: { type: String, enum: ['won', 'lost', 'returned', null], default: null },
+            profit: { type: Number, default: 0 },
+          },
         },
         // Betting fields
         betAmount: {

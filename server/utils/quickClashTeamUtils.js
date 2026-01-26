@@ -409,15 +409,41 @@ const calculateFinalTrophies = async (battle, session) => {
    * Update trophies for a winning member (user or session player)
    */
   const processWinningMember = async (member, teamId, opponentTeamId, opponentAvgTrophies, bonusesApplied) => {
-    member.trophyChange = perPlayerAmount
-    member.newTrophies = member.previousTrophies + perPlayerAmount
+    const betChange = member.betTrophyChange || 0
+    member.trophyChange = perPlayerAmount + betChange
+    member.newTrophies = member.previousTrophies + member.trophyChange
+
+    // Populate Trophy Breakdown
+    const activeBonuses = bonusesApplied.map(b => ({
+      key: b.key,
+      amount: Math.round(b.amount / 4) // Approximate share
+    }))
+
+    // Reverse engineer base if needed or use passed in calculated base
+    // But since perPlayerAmount includes bonuses, we can just store the breakdown components clearly
+    // Base Share = (adjustedFinalAmount - totalBonuses) / 4 ??
+    // Actually, simple way: perPlayerAmount is global share.
+    // Base component = perPlayerAmount - sum(bonusShares)
+
+    const totalBonusShare = activeBonuses.reduce((sum, b) => sum + b.amount, 0)
+    const baseShare = perPlayerAmount - totalBonusShare
+
+    member.trophyBreakdown = {
+      base: baseShare,
+      bonuses: activeBonuses,
+      betting: {
+        stake: member.betAmount || 0,
+        result: member.betResult,
+        profit: member.betResult === 'won' ? (betChange - (member.betAmount || 0)) : (member.betResult === 'lost' ? -(member.betAmount || 0) : 0)
+      }
+    }
 
     if (isSessionPlayer(member)) {
       // Session player - update SessionPlayer model
       const sessionPlayerId = getMemberIdentifier(member)
       await SessionPlayer.findByIdAndUpdate(
         sessionPlayerId,
-        { $inc: { trophies: perPlayerAmount } },
+        { $inc: { trophies: member.trophyChange } },
         { session }
       )
 
@@ -426,7 +452,7 @@ const calculateFinalTrophies = async (battle, session) => {
         sessionPlayer: sessionPlayerId,
         team: teamId,
         teamBattle: battle._id,
-        trophiesChange: perPlayerAmount,
+        trophiesChange: member.trophyChange,
         trophiesAfter: member.newTrophies,
         opponentTeam: opponentTeamId,
         opponentTeamAvgTrophies: opponentAvgTrophies,
@@ -446,18 +472,29 @@ const calculateFinalTrophies = async (battle, session) => {
       const currentPeak = currentUser?.quickClashStats?.peakTrophies || member.previousTrophies
 
       // Update user trophies in database
+      // Update user trophies in database
       const updateObj = {
         $inc: {
-          quickClashTrophies: perPlayerAmount,
+          quickClashTrophies: member.trophyChange,
           'quickClashStats.totalMatches': 1,
           'quickClashStats.wins': 1,
           'quickClashStats.totalScore': member.score || 0,
+          'quickClashStats.currentWinStreak': 1,
+          'quickClashStats.streakProtectionAvailable': true,
         },
       }
 
-      // Update peakTrophies if new trophies exceed current peak
-      if (member.newTrophies > currentPeak) {
-        updateObj.$set = { 'quickClashStats.peakTrophies': member.newTrophies }
+      // Handle longest streak update
+      const currentStreak = (currentUser.quickClashStats?.currentWinStreak || 0) + 1
+      const longestStreak = currentUser.quickClashStats?.longestStreak || 0
+
+      if (currentStreak > longestStreak) {
+        updateObj.$set = {
+          'quickClashStats.longestStreak': currentStreak,
+          'quickClashStats.peakTrophies': member.newTrophies > currentPeak ? member.newTrophies : currentPeak
+        }
+      } else if (member.newTrophies > currentPeak) {
+         updateObj.$set = { 'quickClashStats.peakTrophies': member.newTrophies }
       }
 
       await User.findByIdAndUpdate(member.user, updateObj, { session })
@@ -467,7 +504,7 @@ const calculateFinalTrophies = async (battle, session) => {
         user: member.user,
         team: teamId,
         teamBattle: battle._id,
-        trophiesChange: perPlayerAmount,
+        trophiesChange: member.trophyChange,
         trophiesAfter: member.newTrophies,
         opponentTeam: opponentTeamId,
         opponentTeamAvgTrophies: opponentAvgTrophies,
@@ -484,11 +521,26 @@ const calculateFinalTrophies = async (battle, session) => {
    * Update trophies for a losing member (user or session player)
    */
   const processLosingMember = async (member, teamId, opponentTeamId, opponentAvgTrophies, bonusesApplied) => {
-    member.trophyChange = -perPlayerAmount
-    member.newTrophies = Math.max(0, member.previousTrophies - perPlayerAmount)
+    const betChange = member.betTrophyChange || 0
+    member.trophyChange = -perPlayerAmount + betChange
+    // Ensure we don't go below 0 (though betChange might make it positive even if team lost)
+
+    // Populate Trophy Breakdown (Loss)
+    // For loss, base is negative share
+    member.trophyBreakdown = {
+      base: -perPlayerAmount, // Loss doesn't usually have bonuses applied in the same way, or they are 0
+      bonuses: [],
+      betting: {
+        stake: member.betAmount || 0,
+        result: member.betResult,
+        profit: member.betResult === 'won' ? (betChange - (member.betAmount || 0)) : (member.betResult === 'lost' ? -(member.betAmount || 0) : 0)
+      }
+    }
+    member.newTrophies = Math.max(0, member.previousTrophies + member.trophyChange)
 
     // Calculate actual trophy change (in case of floor protection)
     const actualChange = member.newTrophies - member.previousTrophies
+    member.trophyChange = actualChange // Update to actual
 
     if (isSessionPlayer(member)) {
       // Session player - update SessionPlayer model
@@ -516,17 +568,25 @@ const calculateFinalTrophies = async (battle, session) => {
       }).save({ session })
     } else {
       // Regular user - update User model
-      // Regular user - update User model
+      // Use pipeline to ensure we update relative to CURRENT balance (post-bet deduction)
+      // and enforce floor of 0.
       await User.findByIdAndUpdate(
         member.user,
-        {
-          $set: { quickClashTrophies: member.newTrophies },
-          $inc: {
-            'quickClashStats.totalMatches': 1,
-            'quickClashStats.losses': 1,
-            'quickClashStats.totalScore': member.score || 0,
-          },
-        },
+        [
+          {
+            $set: {
+              quickClashTrophies: {
+                $max: [0, { $add: ['$quickClashTrophies', member.trophyChange] }]
+              },
+              'quickClashStats.totalMatches': { $add: ['$quickClashStats.totalMatches', 1] },
+              'quickClashStats.losses': { $add: ['$quickClashStats.losses', 1] },
+              'quickClashStats.losses': { $add: ['$quickClashStats.losses', 1] },
+              'quickClashStats.totalScore': { $add: ['$quickClashStats.totalScore', member.score || 0] },
+              'quickClashStats.currentWinStreak': 0,
+              'quickClashStats.streakProtectionAvailable': false
+            }
+          }
+        ],
         { session },
       )
 
@@ -552,17 +612,29 @@ const calculateFinalTrophies = async (battle, session) => {
    * Create tie trophy history for a member (no trophy change)
    */
   const processTieMember = async (member, teamId, opponentTeamId, opponentAvgTrophies, bonusesApplied) => {
-    member.trophyChange = 0
-    member.newTrophies = member.previousTrophies
+    const betChange = member.betTrophyChange || 0
+    member.trophyChange = betChange // 0 + betChange
+    member.newTrophies = Math.max(0, member.previousTrophies + member.trophyChange)
 
     if (isSessionPlayer(member)) {
       // Session player
       const sessionPlayerId = getMemberIdentifier(member)
+      if (member.trophyChange !== 0) {
+        // If trophies changed due to betting, update session player
+        await SessionPlayer.findByIdAndUpdate(
+          sessionPlayerId,
+          { $inc: { trophies: member.trophyChange } },
+          { session }
+        )
+      } else {
+        // Just keeping it safe, maybe no update needed if 0, but okay
+      }
+
       await new QuickClashTeamTrophyHistory({
         sessionPlayer: sessionPlayerId,
         team: teamId,
         teamBattle: battle._id,
-        trophiesChange: 0,
+        trophiesChange: member.trophyChange,
         trophiesAfter: member.newTrophies,
         opponentTeam: opponentTeamId,
         opponentTeamAvgTrophies: opponentAvgTrophies,
@@ -574,11 +646,42 @@ const calculateFinalTrophies = async (battle, session) => {
       }).save({ session })
     } else {
       // Regular user
+      if (member.trophyChange !== 0) {
+        await User.findByIdAndUpdate(
+          member.user,
+          {
+            $inc: {
+              quickClashTrophies: member.trophyChange,
+              'quickClashStats.totalMatches': 1,
+              'quickClashStats.draws': 1,
+              'quickClashStats.totalScore': member.score || 0,
+              'quickClashStats.currentWinStreak': 0,
+              'quickClashStats.streakProtectionAvailable': false,
+            },
+          },
+          { session },
+        )
+      } else {
+        await User.findByIdAndUpdate(
+          member.user,
+          {
+            $inc: {
+              'quickClashStats.totalMatches': 1,
+              'quickClashStats.draws': 1,
+              'quickClashStats.totalScore': member.score || 0,
+              'quickClashStats.currentWinStreak': 0,
+              'quickClashStats.streakProtectionAvailable': false,
+            },
+          },
+          { session },
+        )
+      }
+
       await new QuickClashTeamTrophyHistory({
         user: member.user,
         team: teamId,
         teamBattle: battle._id,
-        trophiesChange: 0,
+        trophiesChange: member.trophyChange,
         trophiesAfter: member.newTrophies,
         opponentTeam: opponentTeamId,
         opponentTeamAvgTrophies: opponentAvgTrophies,
@@ -588,20 +691,16 @@ const calculateFinalTrophies = async (battle, session) => {
         userCompleted: member.completed,
         userScore: member.score,
       }).save({ session })
-
-      // Update user stats for tie
-      await User.findByIdAndUpdate(
-        member.user,
-        {
-          $inc: {
-            'quickClashStats.totalMatches': 1,
-            'quickClashStats.draws': 1,
-            'quickClashStats.totalScore': member.score || 0,
-          },
-        },
-        { session },
-      )
     }
+  }
+
+  // Prepare active bonuses array
+  const activeBonuses = []
+  if (bonuses.strongerTeam.applied) {
+    activeBonuses.push({ key: 'strongerTeam', amount: bonuses.strongerTeam.amount })
+  }
+  if (bonuses.allWins.applied) {
+    activeBonuses.push({ key: 'allWins', amount: bonuses.allWins.amount })
   }
 
   if (battle.winner === 'teamA') {
@@ -614,7 +713,7 @@ const calculateFinalTrophies = async (battle, session) => {
         battle.teamA,
         battle.teamB,
         teamBAvgTrophies,
-        { strongerTeam: bonuses.strongerTeam.applied, allWins: bonuses.allWins.applied }
+        activeBonuses
       )
     }
 
@@ -625,7 +724,7 @@ const calculateFinalTrophies = async (battle, session) => {
         battle.teamB,
         battle.teamA,
         teamAAvgTrophies,
-        { strongerTeam: false, allWins: false }
+        []
       )
     }
   } else if (battle.winner === 'teamB') {
@@ -638,7 +737,7 @@ const calculateFinalTrophies = async (battle, session) => {
         battle.teamB,
         battle.teamA,
         teamAAvgTrophies,
-        { strongerTeam: false, allWins: false }
+        []
       )
     }
 
@@ -649,7 +748,7 @@ const calculateFinalTrophies = async (battle, session) => {
         battle.teamA,
         battle.teamB,
         teamBAvgTrophies,
-        { strongerTeam: bonuses.strongerTeam.applied, allWins: bonuses.allWins.applied }
+        activeBonuses
       )
     }
   } else {
@@ -662,7 +761,7 @@ const calculateFinalTrophies = async (battle, session) => {
         battle.teamA,
         battle.teamB,
         teamBAvgTrophies,
-        { strongerTeam: bonuses.strongerTeam.applied, allWins: bonuses.allWins.applied }
+        activeBonuses
       )
     }
 
@@ -673,7 +772,7 @@ const calculateFinalTrophies = async (battle, session) => {
         battle.teamB,
         battle.teamA,
         teamAAvgTrophies,
-        { strongerTeam: false, allWins: false }
+        []
       )
     }
   }

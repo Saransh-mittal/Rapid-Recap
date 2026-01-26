@@ -503,6 +503,25 @@ const EnhancedBattleResults = ({ battle, userTeam, powerupReward, onClaimRewards
   const teamAvgScore = userTotalScore / (userMembers.filter(m => m.completed).length || 1)
   const scoreContribution = userTotalScore > 0 ? Math.round((userScore / userTotalScore) * 100) : 0
 
+  // Betting Data
+  const betAmount = userMemberData?.betAmount || 0
+  const betResult = userMemberData?.betResult
+  const betTrophyChange = userMemberData?.betTrophyChange || 0
+
+  // Bonus Data Breakdown
+  const bonuses = battle.trophyExchange?.bonuses || {}
+  const activeBonuses = Object.entries(bonuses)
+    .filter(([_, data]) => data?.applied && data?.amount > 0)
+    .map(([key, data]) => ({ key, amount: Math.round(data.amount / 4) })) // Divide by 4 for per-player share
+
+  // Calculate net change and reverse engineer the base component
+  const netTrophyChange = trophyChange - (betAmount || 0)
+  const betProfit = (betAmount > 0 && betResult === 'won') ? (betTrophyChange - betAmount) : 0
+
+  // Base component is the Net - Bet Profit
+  // e.g., Net (-51) - Profit (10) = -61 (Base Loss)
+  const displayBase = netTrophyChange - betProfit
+
   const tabs = [
     { id: 'overview', label: '🏆 Overview', icon: Trophy },
     { id: 'categories', label: '📊 Categories', icon: Target },
@@ -576,12 +595,12 @@ const EnhancedBattleResults = ({ battle, userTeam, powerupReward, onClaimRewards
                   {isWin ? 'Victory!' : isTie ? 'Draw!' : 'Defeat'}
                 </h2>
                 <div className={`ml-2 px-3 py-1 rounded-full flex items-center gap-1.5 text-sm font-bold ${
-                  trophyChange >= 0
+                  (trophyChange - (betAmount || 0)) >= 0
                     ? 'bg-emerald-500/15 text-emerald-400 border border-emerald-500/20'
                     : 'bg-red-500/15 text-red-400 border border-red-500/20'
                 }`}>
                   <Trophy className="w-3.5 h-3.5" />
-                  {trophyChange >= 0 ? '+' : ''}{trophyChange}
+                  {(trophyChange - (betAmount || 0)) >= 0 ? '+' : ''}{trophyChange - (betAmount || 0)}
                 </div>
               </div>
 
@@ -622,6 +641,108 @@ const EnhancedBattleResults = ({ battle, userTeam, powerupReward, onClaimRewards
                     <span className="text-lg font-semibold text-pink-400">{oppTotalScore}</span>
                   </div>
                   <span className="text-[10px] text-white/40">points</span>
+                </div>
+              </motion.div>
+
+              {/* Betting Result Card */}
+              {betAmount > 0 && (
+                <motion.div
+                  initial={{ opacity: 0, y: 10 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ delay: 0.15 }}
+                  className={`mb-4 overflow-hidden rounded-xl border ${
+                    betResult === 'won'
+                      ? 'bg-emerald-500/10 border-emerald-500/20'
+                      : betResult === 'lost'
+                      ? 'bg-red-500/10 border-red-500/20'
+                      : 'bg-white/5 border-white/10'
+                  }`}
+                >
+                  <div className="flex items-center justify-between px-4 py-3">
+                    <div className="flex items-center gap-3">
+                      <div className={`p-2 rounded-lg ${
+                        betResult === 'won' ? 'bg-emerald-500/20' : betResult === 'lost' ? 'bg-red-500/20' : 'bg-white/10'
+                      }`}>
+                        <Target className={`w-4 h-4 ${
+                          betResult === 'won' ? 'text-emerald-400' : betResult === 'lost' ? 'text-red-400' : 'text-white/60'
+                        }`} />
+                      </div>
+                      <div>
+                        <p className={`text-sm font-bold ${
+                          betResult === 'won' ? 'text-emerald-400' : betResult === 'lost' ? 'text-red-400' : 'text-white/60'
+                        }`}>
+                          {betResult === 'won' ? 'Bet Won!' : betResult === 'lost' ? 'Bet Lost' : 'Bet Returned'}
+                        </p>
+                        <p className="text-[10px] text-white/40">
+                          Result from your {betAmount} trophy wager
+                        </p>
+                      </div>
+                    </div>
+                    <div className={`text-lg font-bold ${
+                       betTrophyChange > 0 ? 'text-emerald-400' : betTrophyChange < 0 ? 'text-red-400' : 'text-white/60'
+                    }`}>
+                      {/* Show PROFIT only (Total Return - Stake) for wins */}
+                      {betResult === 'won' ? '+' + (betTrophyChange - betAmount) : betTrophyChange > 0 ? '+' + betTrophyChange : betTrophyChange}
+                    </div>
+                    <div className="text-[9px] text-white/30 text-right mt-0.5 font-medium tracking-wide uppercase">
+                      (Included in Total)
+                    </div>
+                  </div>
+                </motion.div>
+              )}
+
+              {/* Trophy Breakdown */}
+              <motion.div
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                transition={{ delay: 0.2 }}
+                className="mb-4 text-xs"
+              >
+                <div className="flex justify-between items-center px-4 py-2 bg-white/5 rounded-t-lg">
+                  <span className="text-white/60 font-medium">Net Trophy Change</span>
+                  <span className={`font-bold ${(trophyChange - (betAmount || 0)) >= 0 ? 'text-emerald-400' : 'text-red-400'}`}>
+                    {(trophyChange - (betAmount || 0)) >= 0 ? '+' : ''}{trophyChange - (betAmount || 0)} Net
+                  </span>
+                </div>
+                <div className="px-4 py-3 bg-white/[0.02] rounded-b-lg space-y-2 border border-white/5 border-t-0">
+                  {/* Base Reward Breakdown */}
+                  <div className={`flex justify-between ${displayBase >= 0 ? 'text-white/40' : 'text-red-400/60'}`}>
+                    <span>{displayBase >= 0 ? 'Base Team Reward' : 'Base Team Loss'}</span>
+                    <span>{displayBase > 0 ? '+' : ''}{displayBase}</span>
+                  </div>
+
+                  {/* Dynamic Bonuses - Only show if base is positive (bonuses usually don't apply to losses) */}
+                  {displayBase >= 0 && activeBonuses.map(bonus => (
+                    <div key={bonus.key} className="flex justify-between text-purple-400/80">
+                      <span>{bonus.key === 'strongerTeam' ? 'Stronger Team Bonus' : bonus.key === 'allWins' ? 'Perfect Sweep Bonus' : 'Performance Bonus'}</span>
+                      <span>+{bonus.amount}</span>
+                    </div>
+                  ))}
+
+                  {/* Bet Profit */}
+                  {betAmount > 0 && betResult === 'won' && (
+                     <div className="flex justify-between text-emerald-400/80">
+                        <span>Bet Profit</span>
+                        <span>+{betTrophyChange - betAmount}</span>
+                     </div>
+                  )}
+
+                  {/* Bet Loss */}
+                  {betAmount > 0 && betResult === 'lost' && (
+                     <div className="flex justify-between text-red-400/80">
+                        <span>Bet Loss (Stake)</span>
+                        <span>-{betAmount}</span>
+                     </div>
+                  )}
+
+                  {/* Divider for Visual Sum */}
+                  <div className="border-t border-white/5 my-1" />
+
+                   {/* Net Calculation Note */}
+                   <div className="flex justify-between text-white/60 text-[10px] pt-1 font-medium">
+                      <span>Total Net Change</span>
+                      <span>+{(trophyChange - (betAmount || 0))}</span>
+                   </div>
                 </div>
               </motion.div>
 
