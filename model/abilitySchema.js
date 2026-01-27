@@ -15,7 +15,7 @@ const abilitySchema = new mongoose.Schema({
   },
   type: {
     type: String,
-    enum: ['BOOST', 'POWER_UP'],
+    enum: ['BOOST', 'POWER_UP', 'active', 'passive'],
     required: true,
   },
   quantity: {
