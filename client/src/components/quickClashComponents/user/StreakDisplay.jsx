@@ -1,10 +1,11 @@
 // components/quickClashComponents/user/StreakDisplay.jsx
 // Compact streak indicator for the Quick Clash header
-// Shows current streak count with fire emoji
+// Shows current streak count with fire emoji + shield if protected
 
 import React, { memo } from 'react'
-import { motion } from 'framer-motion'
+import { motion, AnimatePresence } from 'framer-motion'
 import usePlayer from '../../../hooks/usePlayer'
+import { Shield } from 'lucide-react'
 
 // Streak tier colors based on streak count
 const getStreakColor = (dayStreak) => {
@@ -18,31 +19,57 @@ const getStreakColor = (dayStreak) => {
 
 const StreakDisplay = memo(() => {
   const { player } = usePlayer()
-  const dayStreak = player?.streak?.dayStreak || 0
+  const dayStreak = player?.quickClashStats?.currentWinStreak || 0
+  const isProtected = player?.quickClashStats?.streakProtectionAvailable && dayStreak >= 3
   const colors = getStreakColor(dayStreak)
 
   return (
     <motion.div
-      className={`flex items-center gap-1 xs:gap-1.5 px-2 xs:px-2.5 py-1 xs:py-1.5 rounded-full bg-gradient-to-r ${colors.bg} border ${colors.border}`}
+      className={`items-center gap-1.5 px-2.5 py-1.5 rounded-full bg-gradient-to-r ${colors.bg} border ${colors.border} flex relative group cursor-help`}
       initial={{ opacity: 0, scale: 0.9 }}
       animate={{ opacity: 1, scale: 1 }}
       transition={{ duration: 0.2 }}
     >
+      {/* Protected Shield Indicator */}
+      {isProtected && (
+        <motion.div
+          initial={{ scale: 0 }}
+          animate={{ scale: 1 }}
+          className="mr-0.5"
+        >
+          <Shield className="w-3.5 h-3.5 text-cyan-400 fill-cyan-400/20" />
+        </motion.div>
+      )}
+
       {/* Fire emoji with subtle animation when streak is active */}
       <motion.span
-        className="text-xs xs:text-sm"
+        className="text-sm"
         animate={dayStreak > 0 ? {
           scale: [1, 1.15, 1],
+          filter: [
+            'drop-shadow(0 0 0px rgba(234,179,8,0))',
+            'drop-shadow(0 0 4px rgba(234,179,8,0.5))',
+            'drop-shadow(0 0 0px rgba(234,179,8,0))'
+          ]
         } : {}}
-        transition={{ duration: 1.5, repeat: Infinity }}
+        transition={{ duration: 2, repeat: Infinity }}
       >
         🔥
       </motion.span>
 
       {/* Streak count */}
-      <span className={`text-xs xs:text-sm font-bold ${colors.text}`}>
+      <span className={`text-sm font-bold ${colors.text}`}>
         {dayStreak}
       </span>
+
+      {/* Protection Tooltip */}
+      {isProtected && (
+        <div className="absolute top-full mb-2 left-1/2 -translate-x-1/2 pt-2 opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none z-50 w-max">
+          <div className="bg-slate-900/90 backdrop-blur-md border border-cyan-500/30 text-cyan-100 text-[10px] px-2 py-1 rounded-lg shadow-xl">
+            Streak Protected
+          </div>
+        </div>
+      )}
     </motion.div>
   )
 })

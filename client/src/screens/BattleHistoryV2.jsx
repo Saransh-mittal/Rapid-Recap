@@ -162,10 +162,24 @@ const BattleHistoryV2 = () => {
   const groupedBattles = useMemo(() => {
     if (!completedBattles || completedBattles.length === 0) return []
 
+    // Helper to get stable date
+    const getStableDate = (b) => {
+      // Prioritize endedAt > expiresAt > createdAt to keep completed battles stable
+      // Avoid updatedAt as it changes when claiming rewards
+      const d = b.endedAt || b.expiresAt || b.createdAt || b.updatedAt
+      return d ? new Date(d) : new Date()
+    }
+
+    // Sort battles by stable date descending first
+    // This ensures consistent order regardless of server return order (which might be by updatedAt)
+    const sortedBattles = [...completedBattles].sort((a, b) => {
+      return getStableDate(b) - getStableDate(a)
+    })
+
     const groups = {}
 
-    completedBattles.forEach(battle => {
-      const date = battle.updatedAt ? new Date(battle.updatedAt) : new Date(battle.createdAt)
+    sortedBattles.forEach(battle => {
+      const date = getStableDate(battle)
       let groupKey
       let groupLabel
 

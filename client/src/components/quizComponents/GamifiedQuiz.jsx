@@ -52,6 +52,7 @@ const GamifiedQuiz = ({
   setLoadingQuiz,
   activePowerups = [],
   isSessionPlayer = false,
+  onPowerupUsed, // Callback to parent
 }) => {
   const { t } = useTranslation('QuickClash')
   const toast = useToast()
@@ -73,7 +74,8 @@ const GamifiedQuiz = ({
 
   // Powerup State
   const [disabledOptions, setDisabledOptions] = useState({}) // { questionIndex: ['a', 'c'] }
-  const [usedPowerups, setUsedPowerups] = useState({}) // { powerupId: true }
+  // We rely on activePowerups prop (filtered by parent) for counts
+  // But we still track per-question limits or loading states locally if needed
   const [powerupLoading, setPowerupLoading] = useState(false)
 
   // Filter available powerups for Quiz
@@ -84,6 +86,24 @@ const GamifiedQuiz = ({
     p.type !== 'PASSIVE' && // Exclude passives from clickable list
     ['ORACLES_EYE'].includes(p.powerupId) // Whitelist supported active powerups
   )
+
+  // Deduplicate for display: showing 3 separate buttons for 3 Oracle Eyes might be clutter
+  // But user wanted "if I had 3, I used one... it disappeared".
+  // Let's show unique buttons with counts? OR show all?
+  // User request: "If the powerup is applicable in the quiz phase also and if left then should be able to use it there also."
+  // And "I had three... used one... it disappeared".
+  // So they expect to see the remaining ones.
+  // We will GROUP them by ID and show a count badge.
+  const uniqueQuizPowerups = useMemo(() => {
+    const grouped = {}
+    quizPowerups.forEach(p => {
+      if (!grouped[p.powerupId]) {
+        grouped[p.powerupId] = { ...p, count: 0 }
+      }
+      grouped[p.powerupId].count++
+    })
+    return Object.values(grouped)
+  }, [quizPowerups])
 
   // Passive Powerups (Visual Only) - Show as active buffs
   // These apply automatically during Quiz phase
@@ -135,14 +155,9 @@ const GamifiedQuiz = ({
 
         if (hasTimeWarp) {
              // Toast is shown by parent (QuickClashSession) - just mark as used
-             // Mark as used in backend
-             try {
-               await axios.post(`${apiBase}/session/${sessionId}/powerup/use`, {
-                 powerupId: 'TIME_WARP'
-               })
-             } catch (err) {
-               console.error("Failed to mark Time Warp as used", err)
-             }
+             // Mark as used in backend happens in parent if detected
+             // So we don't double count here unless needed
+             // Actually parent handles the logic for Time Warp auto-apply on phase start
         }
       } catch (error) {
         console.error('Error fetching questions:', error)
@@ -310,11 +325,15 @@ const GamifiedQuiz = ({
 
   // Powerup Handler
   const handleUsePowerup = async (powerup) => {
-    if (usedPowerups[powerup.powerupId] || powerupLoading) return
+    if (powerupLoading) return
 
     try {
       setPowerupLoading(true)
       const currentQuestion = questions[currentQuestionIndex]
+
+      // Optimistic update handled by parent via refetch or local state,
+      // but we need to wait for API success first.
+
 
       const response = await axios.post(`${apiBase}/session/${sessionId}/powerup/use`, {
         powerupId: powerup.powerupId,
@@ -334,17 +353,12 @@ const GamifiedQuiz = ({
               ...effect.optionsToRemove
             ]
           }))
-
-          toast({
-            title: "Oracle's Eye Activated",
-            description: "Two incorrect options have been removed!",
-            status: "success",
-            duration: 3000,
-          })
         }
 
-        // Mark as used
-        setUsedPowerups(prev => ({ ...prev, [powerup.powerupId]: true }))
+        // Notify parent to update the global count
+        if (onPowerupUsed) {
+          onPowerupUsed(powerup.powerupId)
+        }
       }
     } catch (error) {
       console.error('Error using powerup:', error)
@@ -580,8 +594,10 @@ const GamifiedQuiz = ({
             className="mb-4"
           >
             <Flex justify="center" gap={3} wrap="wrap" align="center">
-              {quizPowerups.map((p, i) => {
-                const isUsed = usedPowerups[p.powerupId] || powerupLoading
+              {uniqueQuizPowerups.map((p, i) => {
+                // Determine if this specific cluster is usable
+                // (Always true since we filtered unused ones, unless loading)
+                const isUsed = powerupLoading
                 const colorSchemes = {
                   TIME_WARP: { bg: 'from-cyan-500/90 to-cyan-600/90', border: 'border-cyan-400/50', text: 'Time Warp', icon: '⏳' },
                   SCORE_SURGE: { bg: 'from-amber-500/90 to-amber-600/90', border: 'border-amber-400/50', text: 'Score 1.1x', icon: '⚡' },
@@ -613,13 +629,13 @@ const GamifiedQuiz = ({
                       {scheme.text}
                     </span>
 
-                    {isUsed && (
+                    {p.count > 1 && (
                       <motion.span
                         initial={{ scale: 0 }}
                         animate={{ scale: 1 }}
-                        className="absolute -top-1 -right-1 w-5 h-5 bg-emerald-500 rounded-full flex items-center justify-center text-white text-xs font-bold shadow-md"
+                        className="absolute -top-2 -right-2 w-6 h-6 bg-purple-600 rounded-full flex items-center justify-center text-white text-xs font-bold shadow-md border border-white/20"
                       >
-                        ✓
+                        x{p.count}
                       </motion.span>
                     )}
                   </motion.button>

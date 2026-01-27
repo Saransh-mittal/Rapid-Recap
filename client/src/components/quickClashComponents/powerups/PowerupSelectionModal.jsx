@@ -31,6 +31,17 @@ const PowerupSelectionModal = ({ isOpen, onClose, battleId, teamId }) => {
   const loadoutHousingUsed = loadout.housingUsed || 0
   const loadoutPercentage = (loadoutHousingUsed / MAX_LOADOUT_HOUSING) * 100
 
+  // Group loadout items by type
+  const groupedLoadout = loadout.items.reduce((acc, item) => {
+    if (!acc[item.powerupId]) {
+      acc[item.powerupId] = { ...item, count: 0 }
+    }
+    acc[item.powerupId].count++
+    return acc
+  }, {})
+
+  const groupedLoadoutItems = Object.values(groupedLoadout)
+
   const handleEquip = async (powerup) => {
     setMessage(null)
     if (loadoutHousingUsed + powerup.cost > MAX_LOADOUT_HOUSING) {
@@ -203,9 +214,14 @@ const PowerupSelectionModal = ({ isOpen, onClose, battleId, teamId }) => {
                 {/* Equipped Items */}
                 {loadout.items.length > 0 && (
                   <div className="space-y-2">
-                    {loadout.items.map((item, index) => (
+                    {groupedLoadoutItems.map((item, index) => (
                       <motion.div key={`${item.powerupId}-${index}`} className="relative">
                         <PowerupCard powerup={item} onClick={() => handleUnequip(item)} isDisabled={processing} isSelected={true} showPhase={true} />
+                        {item.count > 1 && (
+                            <Badge className="absolute -top-2 -right-2 w-6 h-6 flex items-center justify-center rounded-full bg-gradient-to-br from-blue-500 to-cyan-500 text-white text-xs font-bold border-2 border-slate-900 z-10">
+                            {item.count}
+                            </Badge>
+                        )}
                         {processing === item.powerupId && (
                           <div className="absolute inset-0 bg-slate-900/60 backdrop-blur-sm rounded-2xl flex items-center justify-center">
                             <Loader2 className="w-5 h-5 text-cyan-400 animate-spin" />

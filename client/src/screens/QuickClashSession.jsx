@@ -292,26 +292,47 @@ const QuickClashSession = ({ isSessionPlayer = false }) => {
   const [phaseProgress, setPhaseProgress] = useState(0)
   const [completeReadingLoading, setCompleteReadingLoading] = useState(false)
 
-  // Track powerups used during forge phase to filter them out in quiz
-  const [usedPowerupIds, setUsedPowerupIds] = useState(new Set())
+  // Track powerups used during session (forge/quiz) to filter them out
+  // Changed from Set to Map for counting: { powerupId: count }
+  const [usedPowerupCounts, setUsedPowerupCounts] = useState({})
 
   // Streak popup state
   const [showStreakPopup, setShowStreakPopup] = useState(false)
   const [streakResult, setStreakResult] = useState(null)
 
-  // Callback to track when a powerup is used in forge mode
+  // Callback to track when a powerup is used
   const handlePowerupUsed = useCallback((powerupId) => {
-    setUsedPowerupIds(prev => new Set([...prev, powerupId]))
+    setUsedPowerupCounts(prev => ({
+      ...prev,
+      [powerupId]: (prev[powerupId] || 0) + 1
+    }))
   }, [])
 
-  // Compute active powerups with used ones filtered out
+  // Compute active powerups with used ones filtered out based on count
   const filteredActivePowerups = useMemo(() => {
     const powerups = session?.activePowerups || []
-    return powerups.map(p => ({
-      ...p,
-      used: p.used || usedPowerupIds.has(p.powerupId)
-    }))
-  }, [session?.activePowerups, usedPowerupIds])
+
+    // Track how many of each type we've seen so far in this iteration
+    const seenCounts = {}
+
+    return powerups.map(p => {
+      const pId = p.powerupId
+      const currentSeen = seenCounts[pId] || 0
+      const usedCount = usedPowerupCounts[pId] || 0
+
+      // Mark as used if we have already used this many instances
+      // e.g. if we used 1 Time Warp, the first Time Warp in list is used, second is active
+      const isUsed = p.used || currentSeen < usedCount
+
+      // Increment seen count for next iteration
+      seenCounts[pId] = currentSeen + 1
+
+      return {
+        ...p,
+        used: isUsed
+      }
+    })
+  }, [session?.activePowerups, usedPowerupCounts])
 
   // Results modal control
   const {
@@ -489,13 +510,16 @@ const QuickClashSession = ({ isSessionPlayer = false }) => {
         haptics.notification() // Haptic for phase transition
         setPhase('betting')
       } else {
-        // Check for Time Warp (only if not already used in forge phase)
-        const hasTimeWarp = filteredActivePowerups.some(p =>
+        // Check for Time Warp (only if not already used)
+        // Find the first available (unused) Time Warp
+        const timeWarpPowerup = filteredActivePowerups.find(p =>
           p.powerupId === 'TIME_WARP' &&
           (p.phase?.toLowerCase() === 'quiz' || p.phase?.toLowerCase() === 'both') &&
           !p.used
         )
-        if (hasTimeWarp) {
+        if (timeWarpPowerup) {
+          // Mark it as used for the quiz phase
+          handlePowerupUsed('TIME_WARP')
           quizAudioService.playTimeWarp() // Play Time Warp sound
           setQuizTimeLeft(65)
           toast({ title: 'Time Warp Active!', description: '+15s added to quiz timer', status: 'info', duration: 3000 })
@@ -521,13 +545,15 @@ const QuickClashSession = ({ isSessionPlayer = false }) => {
 
   // NEW: Betting Completion Logic
   const handleBettingComplete = useCallback(() => {
-    // Check for Time Warp (only if not already used in forge phase)
-    const hasTimeWarp = filteredActivePowerups.some(p =>
+    // Check for Time Warp (only if not already used)
+    const timeWarpPowerup = filteredActivePowerups.find(p =>
       p.powerupId === 'TIME_WARP' &&
       (p.phase?.toLowerCase() === 'quiz' || p.phase?.toLowerCase() === 'both') &&
       !p.used
     )
-    if (hasTimeWarp) {
+    if (timeWarpPowerup) {
+      // Mark it as used for the quiz phase
+      handlePowerupUsed('TIME_WARP')
       quizAudioService.playTimeWarp() // Play Time Warp sound
       setQuizTimeLeft(65)
       toast({ title: 'Time Warp Active!', description: '+15s added to quiz timer', status: 'info', duration: 3000 })
@@ -1028,6 +1054,7 @@ const QuickClashSession = ({ isSessionPlayer = false }) => {
                   activePowerups={filteredActivePowerups}
                   isSessionPlayer={isSessionPlayer}
                   onComplete={handleQuizComplete}
+                  onPowerupUsed={handlePowerupUsed}
                   setStopTimerOnQuizSubmit={NO_OP}
                   quizTimeLeft={quizTimeLeft}
                   setQuizTimeLeft={setQuizTimeLeft}

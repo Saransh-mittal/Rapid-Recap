@@ -480,6 +480,8 @@ const calculateFinalTrophies = async (battle, session) => {
           'quickClashStats.wins': 1,
           'quickClashStats.totalScore': member.score || 0,
           'quickClashStats.currentWinStreak': 1,
+        },
+        $set: {
           'quickClashStats.streakProtectionAvailable': true,
         },
       }
@@ -489,12 +491,11 @@ const calculateFinalTrophies = async (battle, session) => {
       const longestStreak = currentUser.quickClashStats?.longestStreak || 0
 
       if (currentStreak > longestStreak) {
-        updateObj.$set = {
-          'quickClashStats.longestStreak': currentStreak,
-          'quickClashStats.peakTrophies': member.newTrophies > currentPeak ? member.newTrophies : currentPeak
-        }
+        updateObj.$set['quickClashStats.longestStreak'] = currentStreak
+        updateObj.$set['quickClashStats.peakTrophies'] =
+          member.newTrophies > currentPeak ? member.newTrophies : currentPeak
       } else if (member.newTrophies > currentPeak) {
-         updateObj.$set = { 'quickClashStats.peakTrophies': member.newTrophies }
+        updateObj.$set['quickClashStats.peakTrophies'] = member.newTrophies
       }
 
       await User.findByIdAndUpdate(member.user, updateObj, { session })
@@ -655,6 +656,8 @@ const calculateFinalTrophies = async (battle, session) => {
               'quickClashStats.totalMatches': 1,
               'quickClashStats.draws': 1,
               'quickClashStats.totalScore': member.score || 0,
+            },
+            $set: {
               'quickClashStats.currentWinStreak': 0,
               'quickClashStats.streakProtectionAvailable': false,
             },
@@ -669,6 +672,8 @@ const calculateFinalTrophies = async (battle, session) => {
               'quickClashStats.totalMatches': 1,
               'quickClashStats.draws': 1,
               'quickClashStats.totalScore': member.score || 0,
+            },
+            $set: {
               'quickClashStats.currentWinStreak': 0,
               'quickClashStats.streakProtectionAvailable': false,
             },

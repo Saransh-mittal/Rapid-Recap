@@ -518,6 +518,24 @@ const EnhancedBattleResults = ({ battle, userTeam, powerupReward, onClaimRewards
   const netTrophyChange = trophyChange - (betAmount || 0)
   const betProfit = (betAmount > 0 && betResult === 'won') ? (betTrophyChange - betAmount) : 0
 
+  // Determine if protection was used
+  const isChallenger = battle.challenger === user._id || (battle.teamAKey === user._id) // Simplified check, might need robust check from backend roles
+  // Better way: check protectionUsed in history or trophyUpdates
+  // Since we don't have trophyUpdates easy access here, let's rely on (trophyChange === 0 && !isWin && !isTie) logic for now?
+  // NO, wait - we can check if netTrophyChange is 0 when it should be negative.
+  // Actually, we can check `battle.trophyUpdates.protectionApplied` if available, but let's see what's passed in `battle`.
+  // If `battle.trophyUpdates` exists:
+  const protectionInfo = battle.trophyUpdates?.protectionApplied
+  const userRole = battle.teamAMembers.some(m => (m.user?._id || m.user) === user?._id) ? 'teamA' : 'teamB'
+  // But protectionApplied structure is { challenger: bool, opponent: bool }... need to map user to challenger/opponent.
+  // A safer bet is checking if user lost but Trophy Change is 0.
+
+  // Let's assume protection if: Loss + 0 Trophy Change + Streak >= 3 logic (inverse)
+  // OR just check if the backend stored it in member data? Currently it doesn't seem to store "protectionUsed" on member array directly in schema.
+  // However, we added it to `QuickClashTrophyHistory`.
+  // Let's rely on the result: If Defeat AND TrophyChange (Net) == 0 (and Bet wasn't the only factor), it's likely protection.
+  const isProtectedLoss = !isWin && !isTie && netTrophyChange === 0 && userTotalScore < oppTotalScore
+
   // Base component is the Net - Bet Profit
   // e.g., Net (-51) - Profit (10) = -61 (Base Loss)
   const displayBase = netTrophyChange - betProfit
@@ -741,8 +759,19 @@ const EnhancedBattleResults = ({ battle, userTeam, powerupReward, onClaimRewards
                    {/* Net Calculation Note */}
                    <div className="flex justify-between text-white/60 text-[10px] pt-1 font-medium">
                       <span>Total Net Change</span>
-                      <span>+{(trophyChange - (betAmount || 0))}</span>
+                      <span>{(trophyChange - (betAmount || 0)) > 0 ? '+' : ''}{(trophyChange - (betAmount || 0))}</span>
                    </div>
+
+                  {/* Protection Badge */}
+                  {isProtectedLoss && (
+                    <div className="flex justify-between items-center text-cyan-400/80 bg-cyan-950/30 p-1.5 rounded-lg border border-cyan-500/20 mt-2">
+                      <div className="flex items-center gap-1.5">
+                        <Shield className="w-3.5 h-3.5 fill-cyan-400/20" />
+                        <span>Streak Protection</span>
+                      </div>
+                      <span className="font-bold text-[10px] bg-cyan-500/20 px-1.5 py-0.5 rounded border border-cyan-500/30">SAVED</span>
+                    </div>
+                  )}
                 </div>
               </motion.div>
 

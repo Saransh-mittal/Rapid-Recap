@@ -296,9 +296,14 @@ const BattleCardV2 = ({ battle, onClick, onClaimReward }) => {
 
     // Battle end time for completed battles
     let endedTime = null
-    if (battle.status === 'completed' && battle.updatedAt) {
+    if (battle.status === 'completed') {
       try {
-        endedTime = formatDistanceToNow(new Date(battle.updatedAt), { addSuffix: true })
+        // Use stable timestamp: endedAt > expiresAt > createdAt
+        // updatedAt changes on claim, so we avoid it
+        const endDate = battle.endedAt || battle.expiresAt || battle.createdAt
+        if (endDate) {
+          endedTime = formatDistanceToNow(new Date(endDate), { addSuffix: true })
+        }
       } catch (e) {
         endedTime = null
       }
@@ -392,15 +397,31 @@ const BattleCardV2 = ({ battle, onClick, onClaimReward }) => {
           <div className="flex items-center gap-2">
             <StatusBadge status={battleData.status} outcome={battleData.outcome} />
             {/* Trophy Change for completed battles */}
-            {battleData.status === 'completed' && battleData.trophyChange !== 0 && (
-              <div className={`flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-bold ${
-                battleData.trophyChange > 0
-                  ? 'bg-green-500/20 text-green-400'
-                  : 'bg-red-500/20 text-red-400'
-              }`}>
-                <Trophy className="w-3 h-3" />
-                <span>{battleData.trophyChange > 0 ? '+' : ''}{battleData.trophyChange}</span>
-              </div>
+            {battleData.status === 'completed' && (
+              battleData.trophyChange !== 0 ? (
+                <div className={`flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-bold ${
+                  battleData.trophyChange > 0
+                    ? 'bg-green-500/20 text-green-400'
+                    : 'bg-red-500/20 text-red-400'
+                }`}>
+                  <Trophy className="w-3 h-3" />
+                  <span>{battleData.trophyChange > 0 ? '+' : ''}{battleData.trophyChange}</span>
+                </div>
+              ) : (
+                /* Check if it was a loss that was protected (0 change on defeat) */
+                battleData.outcome === 'defeat' && (
+                  <div className="flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-bold bg-cyan-500/20 text-cyan-400 border border-cyan-500/30 group/shield relative">
+                    <Shield className="w-3 h-3 fill-cyan-400/20" />
+                    <span>Protected</span>
+                    {/* Tooltip */}
+                    <div className="absolute bottom-full mb-2 left-1/2 -translate-x-1/2 opacity-0 group-hover/shield:opacity-100 transition-opacity pointer-events-none z-50 w-max">
+                       <div className="bg-slate-900/90 backdrop-blur-md border border-cyan-500/30 text-cyan-100 text-[10px] px-2 py-1 rounded shadow-xl">
+                          Streak Protection Used
+                       </div>
+                    </div>
+                  </div>
+                )
+              )
             )}
           </div>
           {/* Time info - remaining for active, ended for completed */}

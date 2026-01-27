@@ -122,13 +122,13 @@ const ForgeReadingPhase = ({ sessionId, category, activePowerups = [], isSession
   const isTransitioningRef = useRef(false)
 
   // Powerup State
-  const [usedPowerups, setUsedPowerups] = useState({}) // { powerupId: usedCount } - tracks how many of each type used
   const [oracleUsedThisQuestion, setOracleUsedThisQuestion] = useState(false) // Oracle Eye: 1 per question
   const [activeEffects, setActiveEffects] = useState({
     scoreSurge: false,
   })
   const [disabledOptions, setDisabledOptions] = useState([]) // Array of indices
   const [highlightedAnswer, setHighlightedAnswer] = useState(null) // Index
+  const [powerupLoading, setPowerupLoading] = useState(false) // Prevent double-clicks
 
   // Filter available powerups for Forge - only ACTIVE powerups (passive auto-apply)
   const forgePowerups = activePowerups.filter(p =>
@@ -520,23 +520,20 @@ const ForgeReadingPhase = ({ sessionId, category, activePowerups = [], isSession
 
   // Powerup Handlers
   const handlePowerupClick = async (powerup) => {
+    // Prevent usage if loading or if we shouldn't allow it
+    if (powerupLoading) return
+
     // Oracle Eye: only 1 per question
     if (powerup.powerupId === 'ORACLES_EYE' && oracleUsedThisQuestion) return
 
-    // Count check for stackable powerups - check if all are exhausted
-    const totalOfType = activePowerups.filter(p => p.powerupId === powerup.powerupId && !p.used).length
-    const usedOfType = usedPowerups[powerup.powerupId] || 0
-    if (usedOfType >= totalOfType) return
-
     try {
-      // Mark locally as used immediately (increment count) to prevent double clicks
-      setUsedPowerups(prev => ({ ...prev, [powerup.powerupId]: (prev[powerup.powerupId] || 0) + 1 }))
+      setPowerupLoading(true)
+
       if (powerup.powerupId === 'ORACLES_EYE') {
         setOracleUsedThisQuestion(true)
       }
 
       // Call API to mark as used on server
-      // We do this for ALL powerups now to ensure consistency
       const response = await forgeService.usePowerup(sessionId, powerup.powerupId, { isSessionPlayer })
 
       if (!response.success) {
@@ -549,11 +546,9 @@ const ForgeReadingPhase = ({ sessionId, category, activePowerups = [], isSession
           quizAudioService.playTimeWarp() // Time rewind swoosh
           if (phase === 'question') {
             // Update Max Time ONLY
-            // We do NOT rewind the timer anymore. We just extend the finish line.
             setMaxQuestionTime(prev => prev + 15)
           } else if (phase === 'reading') {
             setMaxReadingTime(prev => prev + 15) // Increase max reading time
-            // Reading timer counts DOWN. So we just add to it.
             setReadingTimer(prev => prev + 15)
           }
           notificationManager.powerup('Time Warp Activated!', '+15 seconds')
@@ -582,19 +577,12 @@ const ForgeReadingPhase = ({ sessionId, category, activePowerups = [], isSession
     } catch (err) {
       console.error('Error using powerup:', err)
       notificationManager.error('Powerup Failed', 'Could not activate powerup')
-      // Revert used state if failed (decrement count)
-      setUsedPowerups(prev => {
-        const newCount = (prev[powerup.powerupId] || 1) - 1
-        if (newCount <= 0) {
-          const newState = { ...prev }
-          delete newState[powerup.powerupId]
-          return newState
-        }
-        return { ...prev, [powerup.powerupId]: newCount }
-      })
+
       if (powerup.powerupId === 'ORACLES_EYE') {
         setOracleUsedThisQuestion(false)
       }
+    } finally {
+      setPowerupLoading(false)
     }
   }
 
@@ -1147,9 +1135,8 @@ const ForgeReadingPhase = ({ sessionId, category, activePowerups = [], isSession
             >
               <div className="flex items-center justify-center gap-3 flex-wrap">
                 {groupedForgePowerups.map((p, i) => {
-                  const usedCount = usedPowerups[p.powerupId] || 0
-                  const remaining = p.total - usedCount
-                  const isExhausted = remaining <= 0
+                  const remaining = p.total // It's already filtered for unused
+                  const isExhausted = remaining <= 0 || powerupLoading
                   // For Oracle Eye, also disable if already used this question
                   const isDisabledForQuestion = p.powerupId === 'ORACLES_EYE' && oracleUsedThisQuestion
                   const isDisabled = isExhausted || isDisabledForQuestion

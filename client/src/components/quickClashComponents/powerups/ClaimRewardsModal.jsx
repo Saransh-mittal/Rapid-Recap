@@ -79,6 +79,14 @@ const ClaimRewardsModal = ({
   const [isClaiming, setIsClaiming] = useState(false)
   const [claimSuccess, setClaimSuccess] = useState(false)
 
+  // Reset state when modal opens
+  React.useEffect(() => {
+    if (isOpen) {
+      setIsClaiming(false)
+      setClaimSuccess(false)
+    }
+  }, [isOpen])
+
   // Check if already claimed (from server data)
   const alreadyClaimed = battleResult?.powerupReward?.claimed || false
 
