@@ -32,7 +32,7 @@ const quickClashTrophyHistorySchema = new mongoose.Schema({
   },
   result: {
     type: String,
-    enum: ['win', 'loss', 'tie'],
+    enum: ['win', 'loss', 'tie', 'bet_placed', 'bet_won', 'bet_lost', 'bet_returned'],
     required: true,
   },
   protectionUsed: {

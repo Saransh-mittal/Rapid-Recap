@@ -40,6 +40,7 @@ const globalEmitter = require('../../eventEmitter')
 const {
   calculateSoloWinProbability,
 } = require('./quickClashWinProbabilityService')
+const QuickClashTrophyHistory = require('../../model/quickClashSchemas/quickClashTrophyHistorySchema')
 
 const CHALLENGE_EXPIRY = 24 * 60 * 60 * 1000 // 24 hours
 
@@ -934,6 +935,17 @@ const placeBet = async ({ challengeId, userId, amount }) => {
       if (amount > 0) {
         user.quickClashTrophies -= amount
         await user.save({ session })
+
+        // Log trophy history for bet deduction
+        await new QuickClashTrophyHistory({
+          user: userId,
+          challenge: challengeId,
+          trophiesChange: -amount,
+          trophiesAfter: user.quickClashTrophies,
+          result: 'bet_placed',
+          opponent: isChallenger ? (challenge.opponent || challenge.challenger) : (challenge.challenger || challenge.opponent), // Best effort to find opponent, might be null if not populated/assigned yet
+          opponentTrophies: 0, // Not relevant for betting deduction
+        }).save({ session })
       }
 
       // Update challenge with bet info
