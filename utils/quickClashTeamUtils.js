@@ -413,6 +413,10 @@ const calculateFinalTrophies = async (battle, session) => {
     member.trophyChange = perPlayerAmount + betChange
     member.newTrophies = member.previousTrophies + member.trophyChange
 
+    // Calculate history trophy change (Net change: Gross - Stake)
+    // This allows history to show "+40" (Profit) instead of "+50" (Profit + Stake return)
+    const historyTrophyChange = member.trophyChange - (member.betAmount || 0)
+
     // Populate Trophy Breakdown
     const activeBonuses = bonusesApplied.map(b => ({
       key: b.key,
@@ -452,7 +456,7 @@ const calculateFinalTrophies = async (battle, session) => {
         sessionPlayer: sessionPlayerId,
         team: teamId,
         teamBattle: battle._id,
-        trophiesChange: member.trophyChange,
+        trophiesChange: historyTrophyChange, // Use NET change for history
         trophiesAfter: member.newTrophies,
         opponentTeam: opponentTeamId,
         opponentTeamAvgTrophies: opponentAvgTrophies,
@@ -475,7 +479,7 @@ const calculateFinalTrophies = async (battle, session) => {
       // Update user trophies in database
       const updateObj = {
         $inc: {
-          quickClashTrophies: member.trophyChange,
+          quickClashTrophies: member.trophyChange, // Use GROSS change for balance update
           'quickClashStats.totalMatches': 1,
           'quickClashStats.wins': 1,
           'quickClashStats.totalScore': member.score || 0,
@@ -505,7 +509,7 @@ const calculateFinalTrophies = async (battle, session) => {
         user: member.user,
         team: teamId,
         teamBattle: battle._id,
-        trophiesChange: member.trophyChange,
+        trophiesChange: historyTrophyChange, // Use NET change for history
         trophiesAfter: member.newTrophies,
         opponentTeam: opponentTeamId,
         opponentTeamAvgTrophies: opponentAvgTrophies,
@@ -543,6 +547,9 @@ const calculateFinalTrophies = async (battle, session) => {
     const actualChange = member.newTrophies - member.previousTrophies
     member.trophyChange = actualChange // Update to actual
 
+    // Calculate history trophy change (Net change: Gross - Stake)
+    const historyTrophyChange = member.trophyChange - (member.betAmount || 0)
+
     if (isSessionPlayer(member)) {
       // Session player - update SessionPlayer model
       const sessionPlayerId = getMemberIdentifier(member)
@@ -557,7 +564,7 @@ const calculateFinalTrophies = async (battle, session) => {
         sessionPlayer: sessionPlayerId,
         team: teamId,
         teamBattle: battle._id,
-        trophiesChange: actualChange,
+        trophiesChange: historyTrophyChange, // Use NET change for history
         trophiesAfter: member.newTrophies,
         opponentTeam: opponentTeamId,
         opponentTeamAvgTrophies: opponentAvgTrophies,
@@ -577,7 +584,7 @@ const calculateFinalTrophies = async (battle, session) => {
           {
             $set: {
               quickClashTrophies: {
-                $max: [0, { $add: ['$quickClashTrophies', member.trophyChange] }]
+                $max: [0, { $add: ['$quickClashTrophies', member.trophyChange] }] // Use GROSS change for balance update
               },
               'quickClashStats.totalMatches': { $add: ['$quickClashStats.totalMatches', 1] },
               'quickClashStats.losses': { $add: ['$quickClashStats.losses', 1] },
@@ -596,7 +603,7 @@ const calculateFinalTrophies = async (battle, session) => {
         user: member.user,
         team: teamId,
         teamBattle: battle._id,
-        trophiesChange: actualChange,
+        trophiesChange: historyTrophyChange, // Use NET change for history
         trophiesAfter: member.newTrophies,
         opponentTeam: opponentTeamId,
         opponentTeamAvgTrophies: opponentAvgTrophies,
@@ -617,6 +624,9 @@ const calculateFinalTrophies = async (battle, session) => {
     member.trophyChange = betChange // 0 + betChange
     member.newTrophies = Math.max(0, member.previousTrophies + member.trophyChange)
 
+    // Calculate history trophy change (Net change: Gross - Stake)
+    const historyTrophyChange = member.trophyChange - (member.betAmount || 0)
+
     if (isSessionPlayer(member)) {
       // Session player
       const sessionPlayerId = getMemberIdentifier(member)
@@ -635,7 +645,7 @@ const calculateFinalTrophies = async (battle, session) => {
         sessionPlayer: sessionPlayerId,
         team: teamId,
         teamBattle: battle._id,
-        trophiesChange: member.trophyChange,
+        trophiesChange: historyTrophyChange, // Use NET change for history
         trophiesAfter: member.newTrophies,
         opponentTeam: opponentTeamId,
         opponentTeamAvgTrophies: opponentAvgTrophies,
@@ -652,7 +662,7 @@ const calculateFinalTrophies = async (battle, session) => {
           member.user,
           {
             $inc: {
-              quickClashTrophies: member.trophyChange,
+              quickClashTrophies: member.trophyChange, // Use GROSS change for balance update
               'quickClashStats.totalMatches': 1,
               'quickClashStats.draws': 1,
               'quickClashStats.totalScore': member.score || 0,
@@ -686,7 +696,7 @@ const calculateFinalTrophies = async (battle, session) => {
         user: member.user,
         team: teamId,
         teamBattle: battle._id,
-        trophiesChange: member.trophyChange,
+        trophiesChange: historyTrophyChange, // Use NET change for history
         trophiesAfter: member.newTrophies,
         opponentTeam: opponentTeamId,
         opponentTeamAvgTrophies: opponentAvgTrophies,

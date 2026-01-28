@@ -695,11 +695,12 @@ const getUserCombinedTrophyHistory = async ({ userId, limit = 10 }) => {
     // Fetch individual trophy history
     const individualHistory = await QuickClashTrophyHistory.find({
       user: userId,
+      result: { $ne: 'bet_placed' }, // Exclude bet placement records
     })
       .sort({ createdAt: -1 })
       .limit(limit * 2) // Fetch more to ensure we have enough after combining
       .populate('opponent', 'name inGameName pic')
-      .populate('challenge', 'category status')
+      .populate('challenge', 'category status fromTeamBattle')
       .lean()
 
     // Fetch team trophy history
@@ -720,7 +721,7 @@ const getUserCombinedTrophyHistory = async ({ userId, limit = 10 }) => {
       result: entry.result,
       opponent: entry.opponent,
       category: entry.challenge?.category || 'Unknown',
-      mode: '1v1',
+      mode: entry.challenge?.fromTeamBattle ? '4v4' : '1v1',
       createdAt: entry.createdAt,
       protectionUsed: entry.protectionUsed,
     }))

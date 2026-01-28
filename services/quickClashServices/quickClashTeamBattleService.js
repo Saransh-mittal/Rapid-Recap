@@ -3050,8 +3050,50 @@ const getUserTeamBattles = async ({
     .skip(skip)
     .limit(limit)
 
+  // ADJUST DISPLAY: Calculate Net Trophy Change for the user
+  // This ensures history displays "+40" (Profit) instead of "+50" (Gross)
+  const adjustedBattles = battles.map(battle => {
+    // Convert to object to allow modification if it's a frozen doc, though usually not needed if not strict
+    // But using toObject() ensures we don't mess with internal Mongoose states
+    const battleObj = battle.toObject ? battle.toObject() : battle
+
+    let member = null
+    const targetId = userId || sessionPlayerId
+
+    // Helper to match member
+    const isMember = m => {
+      if (userId && m.user) {
+        return (m.user._id || m.user).toString() === userId.toString()
+      }
+      if (sessionPlayerId && m.sessionPlayer) {
+        return (m.sessionPlayer._id || m.sessionPlayer).toString() === sessionPlayerId.toString()
+      }
+      return false
+    }
+
+    // Find member in Team A
+    const teamAMemberIndex = battleObj.teamAMembers.findIndex(isMember)
+    if (teamAMemberIndex !== -1) {
+      const m = battleObj.teamAMembers[teamAMemberIndex]
+      const betAmount = m.betAmount || 0
+      // Apply Net Change Logic: Display = Gross - Stake
+      m.trophyChange = (m.trophyChange || 0) - betAmount
+    } else {
+      // Find member in Team B
+      const teamBMemberIndex = battleObj.teamBMembers.findIndex(isMember)
+      if (teamBMemberIndex !== -1) {
+        const m = battleObj.teamBMembers[teamBMemberIndex]
+        const betAmount = m.betAmount || 0
+        // Apply Net Change Logic: Display = Gross - Stake
+        m.trophyChange = (m.trophyChange || 0) - betAmount
+      }
+    }
+
+    return battleObj
+  })
+
   return {
-    battles,
+    battles: adjustedBattles,
     pagination: {
       total,
       page,
