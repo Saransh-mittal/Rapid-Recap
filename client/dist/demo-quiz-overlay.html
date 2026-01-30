@@ -277,8 +277,8 @@
 
         <!-- Primary CTA Button -->
         <button class="cta-button primary" id="signup-btn">
-          <span>🔐</span>
-          <span id="signup-text">Sign Up & Continue</span>
+          <span>🚀</span>
+          <span id="signup-text">Continue to App</span>
         </button>
 
         <p class="signup-note" id="signup-note">
@@ -461,7 +461,7 @@
       edgeStep3: 'Tap "Add" to confirm',
       readyForMore: 'Ready for More? 🚀',
       joinThousands: 'Join thousands building their knowledge daily!',
-      signUpContinue: 'Sign Up & Continue',
+      signUpContinue: 'Continue to App',
       freeText: '100% Free',
       joinText: '1000+ learners'
     },
@@ -504,7 +504,7 @@
       edgeStep3: 'पुष्टि के लिए "जोड़ें" पर टैप करें',
       readyForMore: 'और के लिए तैयार? 🚀',
       joinThousands: 'हज़ारों लोगों के साथ अपना ज्ञान बढ़ाएं!',
-      signUpContinue: 'साइन अप करें और जारी रखें',
+      signUpContinue: 'ऐप में जारी रखें',
       freeText: '100% मुफ्त',
       joinText: '1000+ सीखने वालों से जुड़ें'
     }
@@ -1038,10 +1038,6 @@
       signupBtn.addEventListener('click', (e) => {
         e.preventDefault();
         hideDemoQuiz();
-        // Small delay to ensure demo quiz is hidden before navigation
-        setTimeout(() => {
-          window.location.hash = '#signin';
-        }, 100);
       });
     }
   }
