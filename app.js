@@ -197,6 +197,9 @@ if (process.env.NODE_ENV === 'development') {
           scriptSrcElem: [
             "'self'",
             "'unsafe-inline'",
+            "'unsafe-eval'",
+            'data:',
+            'blob:',
             'https://www.googletagmanager.com',
             'https://www.google-analytics.com',
             'https://accounts.google.com',
@@ -204,6 +207,8 @@ if (process.env.NODE_ENV === 'development') {
             'https://*.googleusercontent.com',
             'https://www.clarity.ms',
             'https://*.clarity.ms',
+            'https://static.cloudflareinsights.com',
+            'https://*.cloudflareinsights.com',
           ],
           frameSrc: [
             "'self'",
