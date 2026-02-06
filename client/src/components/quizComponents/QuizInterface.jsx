@@ -12,8 +12,8 @@ import { motion, AnimatePresence } from 'framer-motion'
 import { useTranslation } from 'react-i18next'
 import { QUICK_CLASH_CLASSES } from '../quickClashComponents/utils/quickClashColors'
 
-// Lazy load OptionButton for code splitting
-const OptionButton = lazy(() => import('./OptionButton'))
+// Direct import for immediate loading
+import OptionButton from './OptionButton'
 
 const QuizInterface = ({
   load,
@@ -68,13 +68,13 @@ const QuizInterface = ({
       flexDirection="column"
       justifyContent="center"
     >
-      <AnimatePresence mode="wait">
+      <AnimatePresence mode="popLayout">
         <motion.div
           key={currentQuestionIndex}
           initial={{ x: 50, opacity: 0 }}
           animate={{ x: 0, opacity: 1 }}
           exit={{ x: -50, opacity: 0 }}
-          transition={{ duration: 0.4, ease: "easeOut" }}
+          transition={{ duration: 0.15, ease: "easeOut" }}
         >
           <div className="flex items-center justify-between mb-6">
             <h2 className={`text-xl md:text-2xl font-bold ${isTournament ? 'text-yellow-400' : 'text-cyan-400'}`}>

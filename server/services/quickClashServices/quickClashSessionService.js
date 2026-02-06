@@ -11,6 +11,8 @@ const { updateChallengeScore } = require('./quickClashChallengeService')
 const mongoose = require('mongoose')
 const User = require('../../model/userSchema')
 const { markUserAsParticipated } = require('./quickClashTeamBattleService')
+const cache = require('memory-cache')
+const CACHE_TTL = 8 * 60 * 1000 // 8 minutes (session duration)
 
 const READING_TIME_LIMIT = 120 // 2 minutes in seconds
 const SESSION_EXPIRY = 8 * 60 * 1000 // 8 minutes (increased for 30s forge reading)
@@ -23,6 +25,69 @@ const FORGE_SCORING = {
   STREAK_BONUS: 2, // Bonus per consecutive correct answer (5 × 0.35)
   MAX_SECTION_TIME: 15000, // 15 seconds max per question
   SECTION_READ_TIME: 30000, // 30 seconds reading time per section
+}
+
+/**
+ * Helper to get cached forge article
+ * Avoids heavy DB population on every request
+ */
+const getCachedForgeArticle = async (forgeArticleId) => {
+  if (!forgeArticleId) return null
+
+  const cacheKey = `forge-article-${forgeArticleId}`
+  // console.time(`CacheCheck-${forgeArticleId}`)
+  let article = cache.get(cacheKey)
+  // console.timeEnd(`CacheCheck-${forgeArticleId}`)
+
+  if (!article) {
+    const start = Date.now()
+    article = await ForgeArticle.findById(forgeArticleId).lean()
+    const time = Date.now() - start
+
+    if (article) {
+      cache.put(cacheKey, article, CACHE_TTL)
+      console.log(`[CACHE] MISS -> DB FETCH (${time}ms) | ID: ${forgeArticleId}`)
+    } else {
+        console.log(`[CACHE] MISS -> DB NOT FOUND | ID: ${forgeArticleId}`)
+    }
+  } else {
+    // console.log(`[CACHE HIT] ForgeArticle found in memory`)
+  }
+
+  return article
+}
+
+/**
+ * Optimistic save helper with retry
+ * Fire-and-forget (run in background)
+ */
+const saveSessionWithRetry = async (sessionDoc, retries = 3) => {
+  try {
+    // console.log('[BG SAVE] Saving session...')
+    await sessionDoc.save()
+  } catch (err) {
+    console.error(`[BG SAVE] FAILED: ${err.message}`)
+    // For now, no complex retry logic to avoid race conditions on stale docs.
+  }
+}
+
+/**
+ * Helper to get cached session (In-Memory State)
+ */
+const getCachedSession = async (sessionId) => {
+  const cacheKey = `session-${sessionId}`
+  let session = cache.get(cacheKey)
+
+  if (!session) {
+      // console.log(`[SESSION MISS] Loading from DB...`)
+      session = await QuickClashSession.findById(sessionId)
+        .populate('challenge', 'forgeArticle')
+
+      if (session) {
+        cache.put(cacheKey, session, 600000) // 10 min TTL
+      }
+  }
+  return session
 }
 
 
@@ -474,12 +539,7 @@ const startForgeMode = async ({ sessionId }) => {
   try {
     return await session.withTransaction(async () => {
       const quizSession = await QuickClashSession.findById(sessionId)
-        .populate({
-          path: 'challenge',
-          populate: {
-            path: 'forgeArticle',
-          },
-        })
+        .populate('challenge', 'forgeArticle')
         .session(session)
 
       if (!quizSession || quizSession.phase !== 'reading') {
@@ -518,8 +578,13 @@ const startForgeMode = async ({ sessionId }) => {
         await quizSession.save({ session })
       }
 
-      // Get the forge article
-      const forgeArticle = quizSession.challenge.forgeArticle
+      await quizSession.save({ session })
+
+      // WARM SESSION CACHE
+      cache.put(`session-${sessionId}`, quizSession, 600000)
+
+      // Get the forge article (Cache Warming)
+      const forgeArticle = await getCachedForgeArticle(quizSession.challenge.forgeArticle)
 
       // Get current section (should be 0 at start)
       const currentSection = forgeArticle.sections[0]
@@ -568,17 +633,12 @@ const submitForgeAnswer = async ({
   timeSpent,
   powerups = {}, // { scoreSurge: boolean }
 }) => {
-  const mongoSession = await mongoose.startSession()
+  // REMOVED TRANSACTION FOR OPTIMISTIC WRITE
+  // const mongoSession = await mongoose.startSession()
   try {
-    return await mongoSession.withTransaction(async () => {
-      const quizSession = await QuickClashSession.findById(sessionId)
-        .populate({
-          path: 'challenge',
-          populate: {
-            path: 'forgeArticle',
-          },
-        })
-        .session(mongoSession)
+    // return await mongoSession.withTransaction(async () => {
+      // OPTIMIZATION: Use In-Memory Cached Session
+      const quizSession = await getCachedSession(sessionId)
 
       if (!quizSession || quizSession.phase !== 'reading') {
         throw new Error('Invalid session or phase')
@@ -601,6 +661,8 @@ const submitForgeAnswer = async ({
         throw new Error('Invalid section timing state')
       }
 
+
+
       const now = Date.now()
 
       // Calculate server-side time spent (authoritative)
@@ -614,8 +676,19 @@ const submitForgeAnswer = async ({
       currentTiming.questionAnsweredTime = now
       currentTiming.questionTimeSpent = validatedTimeSpent
 
+
+
       // Get the forge article and current section
-      const forgeArticle = quizSession.challenge.forgeArticle
+      let forgeArticle = await getCachedForgeArticle(quizSession.challenge.forgeArticle)
+
+      // Fallback
+      if (!forgeArticle) {
+          const populatedChallenge = await QuickClashChallenge.findById(quizSession.challenge._id)
+            .populate('forgeArticle')
+            .lean()
+            .session(mongoSession)
+          forgeArticle = populatedChallenge.forgeArticle
+      }
       const section = forgeArticle.sections[sectionNumber]
 
       if (!section) {
@@ -733,7 +806,9 @@ const submitForgeAnswer = async ({
         currentTiming.readingStartTime = now
       }
 
-      await quizSession.save({ session: mongoSession })
+      // console.time('SessionSave')
+      // await quizSession.save({ session: mongoSession })
+      // console.timeEnd('SessionSave')
 
       // Prepare response
       const response = {
@@ -766,11 +841,19 @@ const submitForgeAnswer = async ({
         response.isLastSection = true
       }
 
+      console.timeEnd('SubmitForgeAnswer')
+
+      // FIRE AND FORGET SAVE
+      saveSessionWithRetry(quizSession)
+
       return response
-    })
-  } finally {
-    mongoSession.endSession()
+    // }) // End transaction
+  } catch (err) {
+      throw err
   }
+  // finally {
+  //   mongoSession.endSession()
+  // }
 }
 
 /**
@@ -781,23 +864,28 @@ const submitForgeAnswer = async ({
  * @returns {Promise<Object>} Next section question or completion status
  */
 const advanceToNextSection = async ({ sessionId }) => {
-  const session = await mongoose.startSession()
+  // const session = await mongoose.startSession() // REMOVED
   try {
-    return await session.withTransaction(async () => {
-      const quizSession = await QuickClashSession.findById(sessionId)
-        .populate({
-          path: 'challenge',
-          populate: {
-            path: 'forgeArticle',
-          },
-        })
-        .session(session)
+    // return await session.withTransaction(async () => { // REMOVED
+      // OPTIMIZATION: Use In-Memory Cached Session
+      const quizSession = await getCachedSession(sessionId)
+        // .session(session) // REMOVED
 
       if (!quizSession || quizSession.phase !== 'reading') {
         throw new Error('Invalid session or phase')
       }
 
-      const forgeArticle = quizSession.challenge.forgeArticle
+      // Get article from cache
+      let forgeArticle = await getCachedForgeArticle(quizSession.challenge.forgeArticle)
+
+      // Fallback
+      if (!forgeArticle) {
+          const populatedChallenge = await QuickClashChallenge.findById(quizSession.challenge._id)
+            .populate('forgeArticle')
+            .lean()
+            .session(session)
+          forgeArticle = populatedChallenge.forgeArticle
+      }
       const currentSectionIndex = quizSession.forgeProgress.currentSection
 
       const now = Date.now()
@@ -821,8 +909,13 @@ const advanceToNextSection = async ({ sessionId }) => {
         quizSession.forgeProgress.completed = true
         quizSession.forgeProgress.endTime = now
 
-        await quizSession.save({ session })
+        // await quizSession.save({ session })
+        // await quizSession.save({ session })
 
+        // FIRE AND FORGET
+        saveSessionWithRetry(quizSession)
+
+        console.timeEnd('AdvanceToNextSection')
         return {
           completed: true,
           totalScore: quizSession.forgeProgress.score,
@@ -852,11 +945,13 @@ const advanceToNextSection = async ({ sessionId }) => {
           readingTimeSpent: null,
         })
 
-        await quizSession.save({ session })
+        // FIRE AND FORGET
+        saveSessionWithRetry(quizSession)
 
         const nextSection = forgeArticle.sections[nextSectionNumber]
 
         // Return next question WITHOUT the correct answer
+        console.timeEnd('AdvanceToNextSection')
         return {
           completed: false,
           sectionNumber: nextSectionNumber,
@@ -879,11 +974,14 @@ const advanceToNextSection = async ({ sessionId }) => {
             serverTime: now,
           },
         }
-      }
-    })
-  } finally {
-    session.endSession()
+        }
+    // }) // End transaction
+  } catch (err) {
+      throw err
   }
+  // finally {
+  //   session.endSession()
+  // }
 }
 
 /**

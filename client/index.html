@@ -1,5 +1,6 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -30,7 +31,7 @@
 
   <!-- Critical Resources Preload - high priority assets required for initial render -->
   <link rel="preload" href="/src/entry-client.jsx" as="script" fetchpriority="high">
-  <link rel="preload" href="/styles/components/css-splash.css" as="style">
+  <link rel="stylesheet" href="/styles/components/css-splash.css">
   <link rel="preload" href="/styles/main.css" as="style">
   <link rel="preload" href="/images/rrlogo_512.png" as="image" fetchpriority="high">
   <link rel="preload" href="/images/rrlogo.webp" as="image" fetchpriority="high">
@@ -41,10 +42,10 @@
 
   <!-- Microsoft Clarity - keeping in head as requested -->
   <script type="text/javascript">
-    (function(c,l,a,r,i,t,y){
-        c[a]=c[a]||function(){(c[a].q=c[a].q||[]).push(arguments)};
-        t=l.createElement(r);t.async=1;t.src="https://www.clarity.ms/tag/"+i;
-        y=l.getElementsByTagName(r)[0];y.parentNode.insertBefore(t,y);
+    (function (c, l, a, r, i, t, y) {
+      c[a] = c[a] || function () { (c[a].q = c[a].q || []).push(arguments) };
+      t = l.createElement(r); t.async = 1; t.src = "https://www.clarity.ms/tag/" + i;
+      y = l.getElementsByTagName(r)[0]; y.parentNode.insertBefore(t, y);
     })(window, document, "clarity", "script", "sd2t5c3mee");
   </script>
 
@@ -63,7 +64,7 @@
   <link rel="icon" type="image/webp" href="/images/rrlogo.webp">
 
   <!-- Add to index.html -->
-<script type="application/ld+json">
+  <script type="application/ld+json">
   {
     "@context": "https://schema.org",
     "@type": "WebSite",
@@ -150,7 +151,73 @@
   <main id="main-content">
     <!-- Loading Screen -->
     <div id="splash-screen" aria-label="Loading screen">
+      <div class="stars"></div>
+
+      <div class="floating-elements">
+        <div class="floating-element quiz-icon">?</div>
+        <div class="floating-element trophy-icon">🏆</div>
+        <div class="floating-element brain-icon">🧠</div>
+        <div class="floating-element lightning-icon">⚡</div>
+        <div class="floating-element star-icon">⭐</div>
+      </div>
+
+      <div class="splash-content">
+        <div class="logo-container">
+          <div class="glow-effect"></div>
+          <img src="/images/rrlogo_512.png" alt="Rapid Recap Logo" class="logo">
+        </div>
+
+        <h1 class="title">Rapid Recap</h1>
+        <p class="subtitle">"The Game That Builds Minds" 🎮💡</p>
+
+        <div class="loading-bar-container">
+          <div class="loading-bar">
+            <div class="loading-progress" id="splash-progress"></div>
+          </div>
+          <p class="loading-text" id="splash-text">Initializing Game Engine...</p>
+        </div>
+      </div>
     </div>
+
+    <script>
+      // Simulate initial progress
+      const progressBar = document.getElementById('splash-progress');
+      const progressText = document.getElementById('splash-text');
+      const splashScreen = document.getElementById('splash-screen');
+
+      let progress = 10;
+      const interval = setInterval(() => {
+        if (progress < 90) {
+          progress += Math.random() * 5;
+          if (progressBar) progressBar.style.width = `${Math.min(progress, 90)}%`;
+        }
+      }, 200);
+
+      // Function to be called by React when ready
+      window.finishLoading = () => {
+        clearInterval(interval);
+        if (progressBar) progressBar.style.width = '100%';
+        if (progressText) progressText.textContent = 'Ready to Battle!';
+
+        setTimeout(() => {
+          if (splashScreen) {
+            splashScreen.style.transition = 'opacity 0.5s ease-out, transform 0.5s ease-out';
+            splashScreen.style.opacity = '0';
+            splashScreen.style.pointerEvents = 'none';
+            splashScreen.style.transform = 'scale(1.05)';
+
+            setTimeout(() => {
+              splashScreen.style.display = 'none';
+            }, 500);
+          }
+        }, 800);
+      };
+
+      // Safety timeout: if app doesn't load in 8s, force hide
+      setTimeout(() => {
+        if (window.finishLoading) window.finishLoading();
+      }, 8000);
+    </script>
     <!-- React Root -->
     <div id="root"><!--ssr-outlet--></div>
   </main>
@@ -158,11 +225,13 @@
   <!-- NoScript Fallback -->
   <noscript>
     <div style="text-align: center; padding: 20px;">
-      Please enable JavaScript to access our AI-powered GK quiz platform. We offer interactive learning experiences that require JavaScript to function.
+      Please enable JavaScript to access our AI-powered GK quiz platform. We offer interactive learning experiences that
+      require JavaScript to function.
     </div>
   </noscript>
 
   <!-- Entry Point with high priority loading -->
   <script type="module" src="/src/entry-client.jsx" fetchpriority="high"></script>
 </body>
+
 </html>

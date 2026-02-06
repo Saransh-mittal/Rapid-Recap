@@ -302,35 +302,23 @@ const App = () => {
         navigationEntries[0].type === 'reload'
       ) {
         setIsReload(true)
-
-        // You can dispatch this to Redux if needed
-        const splashScreen = document.getElementById('splash-screen')
-        if (splashScreen) {
-          splashScreen.style.opacity = '0'
-          splashScreen.style.transition = 'opacity 0.3s ease-out'
-
-          splashScreen.style.display = 'none'
-        }
+        if (window.finishLoading) window.finishLoading()
       } else {
         setIsReload(false)
         setShowLoadingScreen(true)
+        // Also hide splash screen as we transition to React app
+        if (window.finishLoading) window.finishLoading()
       }
     } else {
       // Fallback for browsers that don't support Performance API
       if (sessionStorage.getItem('app_session_id')) {
         setIsReload(true)
-
-        const splashScreen = document.getElementById('splash-screen')
-        if (splashScreen) {
-          splashScreen.style.opacity = '0'
-          splashScreen.style.transition = 'opacity 0.3s ease-out'
-
-          splashScreen.style.display = 'none'
-        }
+        if (window.finishLoading) window.finishLoading()
       } else {
         setIsReload(false)
         setShowLoadingScreen(true)
         sessionStorage.setItem('app_session_id', Date.now().toString())
+        if (window.finishLoading) window.finishLoading()
       }
     }
 

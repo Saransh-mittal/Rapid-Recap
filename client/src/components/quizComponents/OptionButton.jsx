@@ -22,7 +22,7 @@ const OptionButton = React.memo(
         whileHover={{ scale: 1.02, x: 4 }}
         whileTap={{ scale: 0.98 }}
         className={`
-          w-full p-4 rounded-xl border-2 text-left transition-all duration-300 ease-out
+          w-full p-4 rounded-xl border-2 text-left transition-all duration-150 ease-out
           flex items-center gap-4 group relative overflow-hidden
           ${getStyles()}
         `}

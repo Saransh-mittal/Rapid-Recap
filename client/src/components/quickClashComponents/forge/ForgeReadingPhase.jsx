@@ -110,7 +110,7 @@ const ForgeReadingPhase = ({ sessionId, category, activePowerups = [], isSession
   const [transitionTimer, setTransitionTimer] = useState(5) // 5 seconds auto-proceed
 
   // Timer for reading phase (seconds)
-  const [readingTimer, setReadingTimer] = useState(24)
+  const [readingTimer, setReadingTimer] = useState(30)
 
   // Timer for question phase (counting up) with dynamic auto-submit
   const [questionTimer, setQuestionTimer] = useState(0)
@@ -1212,19 +1212,19 @@ const ForgeReadingPhase = ({ sessionId, category, activePowerups = [], isSession
                     className="h-full bg-blue-500"
                     initial={{ width: "100%" }}
                     animate={{ width: "0%" }}
-                    transition={{ duration: 24, ease: "linear" }}
+                    transition={{ duration: 30, ease: "linear" }}
                   />
                 </div>
               </div>
               <motion.button
-                whileHover={readingTimer <= 14 && !continueLoading ? { scale: 1.05 } : {}}
-                whileTap={readingTimer <= 14 && !continueLoading ? { scale: 0.95 } : {}}
+                whileHover={readingTimer <= 20 && !continueLoading ? { scale: 1.05 } : {}}
+                whileTap={readingTimer <= 20 && !continueLoading ? { scale: 0.95 } : {}}
                 onClick={handleManualContinue}
-                disabled={readingTimer > 14 || continueLoading}
+                disabled={readingTimer > 20 || continueLoading}
                 className={`
                   w-full md:w-auto px-8 py-4 rounded-2xl font-bold text-white shadow-lg transition-all
                   flex items-center justify-center gap-3 text-lg relative overflow-hidden
-                  ${readingTimer > 14
+                  ${readingTimer > 20
                     ? 'bg-white/10 cursor-not-allowed opacity-50'
                     : continueLoading
                     ? 'bg-gradient-to-r from-emerald-600 to-cyan-600 shadow-emerald-500/40 cursor-wait'
@@ -1241,10 +1241,10 @@ const ForgeReadingPhase = ({ sessionId, category, activePowerups = [], isSession
                     transition={{ duration: 0.5, ease: 'easeInOut' }}
                   />
                 )}
-                {readingTimer > 14 ? (
+                {readingTimer > 20 ? (
                   <>
                     <Loader2 className="w-5 h-5 animate-spin" />
-                    <span>Reading... {readingTimer - 14}s</span>
+                    <span>Reading... {readingTimer - 20}s</span>
                   </>
                 ) : continueLoading ? (
                   <>

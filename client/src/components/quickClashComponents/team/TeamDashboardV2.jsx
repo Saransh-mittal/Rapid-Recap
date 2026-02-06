@@ -565,7 +565,7 @@ const TeamDashboardV2 = ({ isActive = true }) => {
         />
       ) : (
         <div className="grid gap-4 grid-cols-1 md:grid-cols-2 lg:grid-cols-2">
-          {teams.map((team) => (
+          {teams?.map((team) => (
             <TeamCardV2
               key={team._id}
               team={team}
