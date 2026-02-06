@@ -1,5 +1,7 @@
 // controllers/quickClashController.js
 const asyncHandler = require('express-async-handler')
+const cache = require('memory-cache') // Cache import
+const QUIZ_CACHE_TTL = 8 * 60 * 1000 // 8 minutes (session duration)
 const {
   createChallenge,
   acceptChallenge,
@@ -451,8 +453,16 @@ const getSessionQuiz = asyncHandler(async (req, res) => {
   const { sessionId } = req.params
 
   try {
-    // Get questions without answers for the frontend
-    const questions = await getQuizQuestions({ sessionId })
+    // Check cache first
+    const cacheKey = `quiz-${sessionId}`
+    let questions = cache.get(cacheKey)
+
+    if (!questions) {
+      // Get questions without answers for the frontend
+      questions = await getQuizQuestions({ sessionId })
+      // Cache for session duration
+      cache.put(cacheKey, questions, QUIZ_CACHE_TTL)
+    }
 
     // Start the timer for the quiz attempt
     const session = await QuickClashSession.findById(sessionId)

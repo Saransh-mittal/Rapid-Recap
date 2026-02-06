@@ -1,5 +1,6 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -30,7 +31,7 @@
 
   <!-- Critical Resources Preload - high priority assets required for initial render -->
   <link rel="preload" href="data:text/jsx;base64,Ly8gY2xpZW50L3NyYy9lbnRyeS1jbGllbnQuanN4CmltcG9ydCBSZWFjdCwgeyBsYXp5LCBTdXNwZW5zZSB9IGZyb20gJ3JlYWN0JwppbXBvcnQgUmVhY3RET00gZnJvbSAncmVhY3QtZG9tL2NsaWVudCcKaW1wb3J0IHsgaW5pdGlhbGl6ZUNzcmYgfSBmcm9tICcuL3NlcnZpY2VzL2NzcmZTZXJ2aWNlLmpzJwppbXBvcnQgeyBpbml0aWFsaXplVG9rZW5SZWZyZXNoIH0gZnJvbSAnLi9zZXJ2aWNlcy90b2tlblJlZnJlc2hTZXJ2aWNlLmpzJwppbXBvcnQgeyBOb3RpZmljYXRpb25Qcm92aWRlciB9IGZyb20gJy4vdXRpbHMvbm90aWZpY2F0aW9ucy5qc3gnCi8vIGltcG9ydCB7IFNvY2tldFByb3ZpZGVyIH0gZnJvbSAnLi9jb250ZXh0QVBJL1NvY2tldENvbnRleHQuanN4JwoKLy8gTGF6eSBsb2FkIGFsbCBtYWpvciBjb21wb25lbnRzCmNvbnN0IEJyb3dzZXJSb3V0ZXIgPSBsYXp5KCgpID0+CiAgaW1wb3J0KCdyZWFjdC1yb3V0ZXItZG9tJykudGhlbihtb2R1bGUgPT4gKHsKICAgIGRlZmF1bHQ6IG1vZHVsZS5Ccm93c2VyUm91dGVyLAogIH0pKSwKKQpjb25zdCBTb2NrZXRQcm92aWRlciA9IGxhenkoKCkgPT4gaW1wb3J0KCcuL2NvbnRleHRBUEkvU29ja2V0Q29udGV4dC5qc3gnKSkKY29uc3QgUHJvdmlkZXIgPSBsYXp5KCgpID0+CiAgaW1wb3J0KCdyZWFjdC1yZWR1eCcpLnRoZW4obW9kdWxlID0+ICh7CiAgICBkZWZhdWx0OiBtb2R1bGUuUHJvdmlkZXIsCiAgfSkpLAopCmNvbnN0IENoYWtyYVByb3ZpZGVyID0gbGF6eSgoKSA9PgogIGltcG9ydCgnQGNoYWtyYS11aS9yZWFjdCcpLnRoZW4obW9kdWxlID0+ICh7CiAgICBkZWZhdWx0OiBtb2R1bGUuQ2hha3JhUHJvdmlkZXIsCiAgfSkpLAopCmNvbnN0IEhlbG1ldFByb3ZpZGVyID0gbGF6eSgoKSA9PgogIGltcG9ydCgncmVhY3QtaGVsbWV0LWFzeW5jJykudGhlbihtb2R1bGUgPT4gKHsKICAgIGRlZmF1bHQ6IG1vZHVsZS5IZWxtZXRQcm92aWRlciwKICB9KSksCikKLy8gY29uc3QgQ2hhdFByb3ZpZGVyID0gbGF6eSgoKSA9PiBpbXBvcnQoJy4vY29udGV4dEFQSS9DaGF0UHJvdmlkZXIuanN4JykpCmNvbnN0IEkxOG5leHRQcm92aWRlciA9IGxhenkoKCkgPT4KICBpbXBvcnQoJ3JlYWN0LWkxOG5leHQnKS50aGVuKG1vZHVsZSA9PiAoewogICAgZGVmYXVsdDogbW9kdWxlLkkxOG5leHRQcm92aWRlciwKICB9KSksCikKY29uc3QgQXBwID0gbGF6eSgoKSA9PiBpbXBvcnQoJy4vQXBwLmpzeCcpKQoKLy8gTG9hZGluZyBjb21wb25lbnQgZm9yIHN1c3BlbmRlZCBjb250ZW50CmNvbnN0IExvYWRpbmdGYWxsYmFjayA9ICgpID0+IHsKICByZXR1cm4gbnVsbCAvLyBSZXR1cm4gbnVsbCB0byBrZWVwIHNob3dpbmcgc3BsYXNoIHNjcmVlbiB3aGlsZSBjb21wb25lbnRzIGxvYWQKfQoKLy8gQ3JlYXRlIGEgY29tcG9uZW50IHRoYXQgbG9hZHMgc3RvcmUgZmlyc3QsIHRoZW4gcmVuZGVycyBQcm92aWRlcgpjb25zdCBSZWR1eFdyYXBwZXIgPSAoeyBjaGlsZHJlbiB9KSA9PiB7CiAgY29uc3QgW3N0b3JlLCBzZXRTdG9yZV0gPSBSZWFjdC51c2VTdGF0ZShudWxsKQoKICBSZWFjdC51c2VFZmZlY3QoKCkgPT4gewogICAgLy8gTG9hZCBzdG9yZSBmaXJzdAogICAgaW1wb3J0KCcuL3JlZHV4L3N0b3JlJykudGhlbihtb2R1bGUgPT4gewogICAgICBzZXRTdG9yZShtb2R1bGUuc3RvcmUpCiAgICB9KQogIH0sIFtdKQoKICAvLyBPbmx5IHJlbmRlciBQcm92aWRlciBvbmNlIHN0b3JlIGlzIGxvYWRlZAogIGlmICghc3RvcmUpIHJldHVybiA8TG9hZGluZ0ZhbGxiYWNrIC8+CgogIHJldHVybiAoCiAgICA8U3VzcGVuc2UgZmFsbGJhY2s9ezxMb2FkaW5nRmFsbGJhY2sgLz59PgogICAgICA8UHJvdmlkZXIgc3RvcmU9e3N0b3JlfT57Y2hpbGRyZW59PC9Qcm92aWRlcj4KICAgIDwvU3VzcGVuc2U+CiAgKQp9CgovLyBDcmVhdGUgYSBjb21wb25lbnQgdGhhdCBsb2FkcyBpMThuIGZpcnN0LCB0aGVuIHJlbmRlcnMgSTE4bmV4dFByb3ZpZGVyCmNvbnN0IEkxOG5XcmFwcGVyID0gKHsgY2hpbGRyZW4gfSkgPT4gewogIGNvbnN0IFtpMThuSW5zdGFuY2UsIHNldEkxOG5JbnN0YW5jZV0gPSBSZWFjdC51c2VTdGF0ZShudWxsKQoKICBSZWFjdC51c2VFZmZlY3QoKCkgPT4gewogICAgLy8gTG9hZCBpMThuIGZpcnN0CiAgICBpbXBvcnQoJy4vaTE4bicpLnRoZW4obW9kdWxlID0+IHsKICAgICAgc2V0STE4bkluc3RhbmNlKG1vZHVsZS5kZWZhdWx0KQogICAgfSkKICB9LCBbXSkKCiAgLy8gT25seSByZW5kZXIgSTE4bmV4dFByb3ZpZGVyIG9uY2UgaTE4biBpcyBsb2FkZWQKICBpZiAoIWkxOG5JbnN0YW5jZSkgcmV0dXJuIDxMb2FkaW5nRmFsbGJhY2sgLz4KCiAgcmV0dXJuICgKICAgIDxTdXNwZW5zZSBmYWxsYmFjaz17PExvYWRpbmdGYWxsYmFjayAvPn0+CiAgICAgIDxJMThuZXh0UHJvdmlkZXIgaTE4bj17aTE4bkluc3RhbmNlfT57Y2hpbGRyZW59PC9JMThuZXh0UHJvdmlkZXI+CiAgICA8L1N1c3BlbnNlPgogICkKfQoKLy8gQ2hlY2sgaWYgdGhpcyBpcyBhIGJvdCB2aWV3aW5nIHRoZSBwYWdlCmNvbnN0IGlzQm90ID0gd2luZG93Ll9fSVNfQk9UX18KCi8vIEZvciBib3RzLCB3ZSBkb24ndCBuZWVkIHRvIGh5ZHJhdGUgc2luY2UgdGhleSBnb3Qgc3RhdGljIEhUTUwKaWYgKCFpc0JvdCkgewogIGluaXRpYWxpemVDc3JmKCkKICBpbml0aWFsaXplVG9rZW5SZWZyZXNoKCkKICBSZWFjdERPTS5jcmVhdGVSb290KGRvY3VtZW50LmdldEVsZW1lbnRCeUlkKCdyb290JykpLnJlbmRlcigKICAgIDxTdXNwZW5zZSBmYWxsYmFjaz17PExvYWRpbmdGYWxsYmFjayAvPn0+CiAgICAgIDxCcm93c2VyUm91dGVyPgogICAgICAgIDxTdXNwZW5zZSBmYWxsYmFjaz17PExvYWRpbmdGYWxsYmFjayAvPn0+CiAgICAgICAgICA8UmVkdXhXcmFwcGVyPgogICAgICAgICAgICA8U3VzcGVuc2UgZmFsbGJhY2s9ezxMb2FkaW5nRmFsbGJhY2sgLz59PgogICAgICAgICAgICAgIHsvKiA8Q2hhdFByb3ZpZGVyPiAqL30KICAgICAgICAgICAgICA8U29ja2V0UHJvdmlkZXI+CiAgICAgICAgICAgICAgICA8U3VzcGVuc2UgZmFsbGJhY2s9ezxMb2FkaW5nRmFsbGJhY2sgLz59PgogICAgICAgICAgICAgICAgICA8STE4bldyYXBwZXI+CiAgICAgICAgICAgICAgICAgICAgPFN1c3BlbnNlIGZhbGxiYWNrPXs8TG9hZGluZ0ZhbGxiYWNrIC8+fT4KICAgICAgICAgICAgICAgICAgICAgIDxDaGFrcmFQcm92aWRlcj4KICAgICAgICAgICAgICAgICAgICAgICAgPFN1c3BlbnNlIGZhbGxiYWNrPXs8TG9hZGluZ0ZhbGxiYWNrIC8+fT4KICAgICAgICAgICAgICAgICAgICAgICAgICA8SGVsbWV0UHJvdmlkZXI+CiAgICAgICAgICAgICAgICAgICAgICAgICAgICA8U3VzcGVuc2UgZmFsbGJhY2s9ezxMb2FkaW5nRmFsbGJhY2sgLz59PgogICAgICAgICAgICAgICAgICAgICAgICAgICAgICA8Tm90aWZpY2F0aW9uUHJvdmlkZXI+CiAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgPEFwcCAvPgogICAgICAgICAgICAgICAgICAgICAgICAgICAgICA8L05vdGlmaWNhdGlvblByb3ZpZGVyPgogICAgICAgICAgICAgICAgICAgICAgICAgICAgPC9TdXNwZW5zZT4KICAgICAgICAgICAgICAgICAgICAgICAgICA8L0hlbG1ldFByb3ZpZGVyPgogICAgICAgICAgICAgICAgICAgICAgICA8L1N1c3BlbnNlPgogICAgICAgICAgICAgICAgICAgICAgPC9DaGFrcmFQcm92aWRlcj4KICAgICAgICAgICAgICAgICAgICA8L1N1c3BlbnNlPgogICAgICAgICAgICAgICAgICA8L0kxOG5XcmFwcGVyPgogICAgICAgICAgICAgICAgPC9TdXNwZW5zZT4KICAgICAgICAgICAgICA8L1NvY2tldFByb3ZpZGVyPgogICAgICAgICAgICAgIHsvKiA8L0NoYXRQcm92aWRlcj4gKi99CiAgICAgICAgICAgIDwvU3VzcGVuc2U+CiAgICAgICAgICA8L1JlZHV4V3JhcHBlcj4KICAgICAgICA8L1N1c3BlbnNlPgogICAgICA8L0Jyb3dzZXJSb3V0ZXI+CiAgICA8L1N1c3BlbnNlPiwKICApCn0K" as="script" fetchpriority="high">
-  <link rel="preload" href="/styles/components/css-splash.css" as="style">
+  <link rel="stylesheet" href="/styles/components/css-splash.css">
   <link rel="preload" href="/styles/main.css" as="style">
   <link rel="preload" href="/images/rrlogo_512.png" as="image" fetchpriority="high">
   <link rel="preload" href="/images/rrlogo.webp" as="image" fetchpriority="high">
@@ -41,10 +42,10 @@
 
   <!-- Microsoft Clarity - keeping in head as requested -->
   <script type="text/javascript">
-    (function(c,l,a,r,i,t,y){
-        c[a]=c[a]||function(){(c[a].q=c[a].q||[]).push(arguments)};
-        t=l.createElement(r);t.async=1;t.src="https://www.clarity.ms/tag/"+i;
-        y=l.getElementsByTagName(r)[0];y.parentNode.insertBefore(t,y);
+    (function (c, l, a, r, i, t, y) {
+      c[a] = c[a] || function () { (c[a].q = c[a].q || []).push(arguments) };
+      t = l.createElement(r); t.async = 1; t.src = "https://www.clarity.ms/tag/" + i;
+      y = l.getElementsByTagName(r)[0]; y.parentNode.insertBefore(t, y);
     })(window, document, "clarity", "script", "sd2t5c3mee");
   </script>
 
@@ -53,7 +54,7 @@
   <link rel="preload" href="/assets/i18n.17UCfP-0.jsx" as="script">
 
   <!-- Module Preloads - modern browsers optimizations -->
-  <link rel="modulepreload" href="/assets/App.C2Z9Nqji.jsx">
+  <link rel="modulepreload" href="/assets/App.CWdgl4-m.jsx">
   <link rel="modulepreload" href="/assets/SocketContext.BbnlSS3k.jsx">
   <link rel="modulepreload" href="data:text/jsx;base64,Ly8gLy8gTmF2YmFyQ29udGV4dC5qcwovLyBpbXBvcnQgUmVhY3QsIHsgY3JlYXRlQ29udGV4dCwgdXNlQ29udGV4dCwgdXNlUmVmIH0gZnJvbSAncmVhY3QnCgovLyBjb25zdCBOYXZiYXJDb250ZXh0ID0gY3JlYXRlQ29udGV4dCgpCgovLyBleHBvcnQgY29uc3QgTmF2YmFyUHJvdmlkZXIgPSAoeyBjaGlsZHJlbiB9KSA9PiB7Ci8vICAgY29uc3QgaXNWaXNpYmxlUmVmID0gdXNlUmVmKHRydWUpCgovLyAgIHJldHVybiAoCi8vICAgICA8TmF2YmFyQ29udGV4dC5Qcm92aWRlciB2YWx1ZT17eyBpc1Zpc2libGVSZWYgfX0+Ci8vICAgICAgIHtjaGlsZHJlbn0KLy8gICAgIDwvTmF2YmFyQ29udGV4dC5Qcm92aWRlcj4KLy8gICApCi8vIH0KCi8vIGV4cG9ydCBjb25zdCB1c2VOYXZiYXIgPSAoKSA9PiB1c2VDb250ZXh0KE5hdmJhckNvbnRleHQpCgovLyBOYXZiYXJDb250ZXh0LmpzCmltcG9ydCB7IGNyZWF0ZUNvbnRleHQsIHVzZUNvbnRleHQsIHVzZVN0YXRlIH0gZnJvbSAncmVhY3QnCgpleHBvcnQgY29uc3QgTmF2YmFyQ29udGV4dCA9IGNyZWF0ZUNvbnRleHQoKQoKZXhwb3J0IGNvbnN0IE5hdmJhclByb3ZpZGVyID0gKHsgY2hpbGRyZW4gfSkgPT4gewogIGNvbnN0IFtpc01lbnVPcGVuLCBzZXRJc01lbnVPcGVuXSA9IHVzZVN0YXRlKGZhbHNlKQogIGNvbnN0IFthY3RpdmVMaW5rLCBzZXRBY3RpdmVMaW5rXSA9IHVzZVN0YXRlKCcvaG9tZS9hbGwnKQoKICByZXR1cm4gKAogICAgPE5hdmJhckNvbnRleHQuUHJvdmlkZXIKICAgICAgdmFsdWU9e3sKICAgICAgICBpc01lbnVPcGVuLAogICAgICAgIHNldElzTWVudU9wZW4sCiAgICAgICAgYWN0aXZlTGluaywKICAgICAgICBzZXRBY3RpdmVMaW5rLAogICAgICB9fQogICAgPgogICAgICB7Y2hpbGRyZW59CiAgICA8L05hdmJhckNvbnRleHQuUHJvdmlkZXI+CiAgKQp9CgpleHBvcnQgY29uc3QgdXNlTmF2YmFyID0gKCkgPT4gdXNlQ29udGV4dChOYXZiYXJDb250ZXh0KQo=">
 
@@ -63,7 +64,7 @@
   <link rel="icon" type="image/webp" href="/images/rrlogo.webp">
 
   <!-- Add to index.html -->
-<script type="application/ld+json">
+  <script type="application/ld+json">
   {
     "@context": "https://schema.org",
     "@type": "WebSite",
@@ -143,7 +144,7 @@
     }
   }
   </script>
-  <script type="module" crossorigin src="/assets/js/index.BwhayjqI.js"></script>
+  <script type="module" crossorigin src="/assets/js/index.D9DaQhF0.js"></script>
   <link rel="modulepreload" crossorigin href="/assets/js/react-vendor.DkNVG-am.js">
   <link rel="modulepreload" crossorigin href="/assets/js/ui-vendor.C-Hyu-r2.js">
   <link rel="modulepreload" crossorigin href="/assets/js/utils-vendor.Cwt67yDr.js">
@@ -157,7 +158,73 @@
   <main id="main-content">
     <!-- Loading Screen -->
     <div id="splash-screen" aria-label="Loading screen">
+      <div class="stars"></div>
+
+      <div class="floating-elements">
+        <div class="floating-element quiz-icon">?</div>
+        <div class="floating-element trophy-icon">🏆</div>
+        <div class="floating-element brain-icon">🧠</div>
+        <div class="floating-element lightning-icon">⚡</div>
+        <div class="floating-element star-icon">⭐</div>
+      </div>
+
+      <div class="splash-content">
+        <div class="logo-container">
+          <div class="glow-effect"></div>
+          <img src="/images/rrlogo_512.png" alt="Rapid Recap Logo" class="logo">
+        </div>
+
+        <h1 class="title">Rapid Recap</h1>
+        <p class="subtitle">"The Game That Builds Minds" 🎮💡</p>
+
+        <div class="loading-bar-container">
+          <div class="loading-bar">
+            <div class="loading-progress" id="splash-progress"></div>
+          </div>
+          <p class="loading-text" id="splash-text">Initializing Game Engine...</p>
+        </div>
+      </div>
     </div>
+
+    <script>
+      // Simulate initial progress
+      const progressBar = document.getElementById('splash-progress');
+      const progressText = document.getElementById('splash-text');
+      const splashScreen = document.getElementById('splash-screen');
+
+      let progress = 10;
+      const interval = setInterval(() => {
+        if (progress < 90) {
+          progress += Math.random() * 5;
+          if (progressBar) progressBar.style.width = `${Math.min(progress, 90)}%`;
+        }
+      }, 200);
+
+      // Function to be called by React when ready
+      window.finishLoading = () => {
+        clearInterval(interval);
+        if (progressBar) progressBar.style.width = '100%';
+        if (progressText) progressText.textContent = 'Ready to Battle!';
+
+        setTimeout(() => {
+          if (splashScreen) {
+            splashScreen.style.transition = 'opacity 0.5s ease-out, transform 0.5s ease-out';
+            splashScreen.style.opacity = '0';
+            splashScreen.style.pointerEvents = 'none';
+            splashScreen.style.transform = 'scale(1.05)';
+
+            setTimeout(() => {
+              splashScreen.style.display = 'none';
+            }, 500);
+          }
+        }, 800);
+      };
+
+      // Safety timeout: if app doesn't load in 8s, force hide
+      setTimeout(() => {
+        if (window.finishLoading) window.finishLoading();
+      }, 8000);
+    </script>
     <!-- React Root -->
     <div id="root"><!--ssr-outlet--></div>
   </main>
@@ -165,10 +232,12 @@
   <!-- NoScript Fallback -->
   <noscript>
     <div style="text-align: center; padding: 20px;">
-      Please enable JavaScript to access our AI-powered GK quiz platform. We offer interactive learning experiences that require JavaScript to function.
+      Please enable JavaScript to access our AI-powered GK quiz platform. We offer interactive learning experiences that
+      require JavaScript to function.
     </div>
   </noscript>
 
   <!-- Entry Point with high priority loading -->
 </body>
+
 </html>
