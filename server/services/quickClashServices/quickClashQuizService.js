@@ -4,7 +4,12 @@ const QuickClashSession = require('../../model/quickClashSchemas/quickClashSessi
 const QuickClashQuiz = require('../../model/quickClashSchemas/quickClashQuizSchema')
 const { calculateRQMScore } = require('../../utils/quiz.utils')
 const { updateChallengeScore } = require('./quickClashChallengeService')
-const { makeRetryable } = require('../../utils/retryUtils') // ADD THIS IMPORT
+const { makeRetryable } = require('../../utils/retryUtils')
+const { waitForQueueDrain, markQueueFailed } = require('../../utils/sessionWriteQueue')
+const BackendSyncError = require('../../utils/errors/BackendSyncError')
+
+// Helper function to sleep
+const sleep = (ms) => new Promise(resolve => setTimeout(resolve, ms))
 
 /**
  * Get quiz questions for a session
@@ -13,163 +18,217 @@ const { makeRetryable } = require('../../utils/retryUtils') // ADD THIS IMPORT
  * @returns {Promise<Array>} Questions for the quiz
  */
 const getQuizQuestions = async ({ sessionId }) => {
-  let mongoSession
+  // SYNC BARRIER: Wait for any pending Forge writes to complete
+  const queueStatus = await waitForQueueDrain(sessionId, 2000)
 
-  try {
-    mongoSession = await mongoose.startSession()
-    await mongoSession.startTransaction()
+  if (queueStatus.failed) {
+    console.error(`[getQuizQuestions] Queue failed for session ${sessionId}: ${queueStatus.error}`)
+    // Mark session as having backend error
+    await QuickClashSession.findByIdAndUpdate(sessionId, {
+      'backendError.occurred': true,
+      'backendError.type': 'QUEUE_PROCESSING_FAILED',
+      'backendError.timestamp': new Date(),
+      'backendError.canRetry': true
+    })
+    throw new BackendSyncError('SESSION_BACKEND_ERROR', {
+      message: 'Session sync failed due to server error',
+      canRetry: true,
+      details: { reason: queueStatus.error }
+    })
+  }
 
-    const sessionInstance = await QuickClashSession.findById(sessionId)
-      .populate('quiz')
-      .session(mongoSession)
+  // Retry logic for WriteConflict (code 112)
+  const MAX_RETRIES = 3
+  let lastError = null
 
-    if (!sessionInstance) {
-      console.error(`[getQuizQuestions] Session not found for ID: ${sessionId}`)
-      throw new Error('Session not found')
-    }
+  for (let attempt = 1; attempt <= MAX_RETRIES; attempt++) {
+    let mongoSession
 
-    const quiz = await QuickClashQuiz.findById(sessionInstance.quiz).session(
-      mongoSession,
-    )
+    try {
+      mongoSession = await mongoose.startSession()
+      await mongoSession.startTransaction()
 
-    if (!quiz) {
-      console.error(
-        `[getQuizQuestions] Quiz not found for session ID: ${sessionId}`,
+      const sessionInstance = await QuickClashSession.findById(sessionId)
+        .populate('quiz')
+        .session(mongoSession)
+
+      if (!sessionInstance) {
+        console.error(`[getQuizQuestions] Session not found for ID: ${sessionId}`)
+        throw new Error('Session not found')
+      }
+
+      const quiz = await QuickClashQuiz.findById(sessionInstance.quiz).session(
+        mongoSession,
       )
-      throw new Error('Quiz not found')
-    }
 
-    // Select 5 random questions from the total set
-    let allQuestions = [...quiz.questions]
-    let selectedQuestions = []
-
-    // If we have 5 or fewer questions, use all of them
-    if (allQuestions.length <= 5) {
-      selectedQuestions = allQuestions
-    } else {
-      // Randomly select 5 questions
-      for (let i = 0; i < 5; i++) {
-        const randomIndex = Math.floor(Math.random() * allQuestions.length)
-        selectedQuestions.push(allQuestions[randomIndex])
-        allQuestions.splice(randomIndex, 1)
-      }
-    }
-
-    // Initialize quizAttempt structure if needed
-    if (!sessionInstance.quizAttempt) {
-      sessionInstance.quizAttempt = {
-        responses: [],
-        answerMappings: {},
-        shuffledOptions: {}, // Initialize shuffled options storage
-        completed: false,
-      }
-    }
-
-    // Initialize the answer mappings object if it doesn't exist
-    if (!sessionInstance.quizAttempt.answerMappings) {
-      sessionInstance.quizAttempt.answerMappings = {}
-    }
-
-    // Initialize the shuffled options object if it doesn't exist
-    if (!sessionInstance.quizAttempt.shuffledOptions) {
-      sessionInstance.quizAttempt.shuffledOptions = {}
-    }
-
-    // Create a new answerMappings object to replace the existing one
-    const answerMappings = {}
-    // Create a new shuffledOptions object to replace the existing one
-    const shuffledOptions = {}
-
-    // Store the selected question IDs to know which questions were shown to the user
-    const selectedQuestionIds = selectedQuestions.map(q => q._id.toString())
-    sessionInstance.quizAttempt.selectedQuestionIds = selectedQuestionIds
-
-    // Shuffle options for each question
-    const questionsWithShuffledOptions = selectedQuestions.map(q => {
-      // Create an array of option entries
-      const optionEntries = Object.entries(q.options)
-
-      // Shuffle the entries
-      for (let i = optionEntries.length - 1; i > 0; i--) {
-        const j = Math.floor(Math.random() * (i + 1))
-        ;[optionEntries[i], optionEntries[j]] = [
-          optionEntries[j],
-          optionEntries[i],
-        ]
+      if (!quiz) {
+        console.error(
+          `[getQuizQuestions] Quiz not found for session ID: ${sessionId}`,
+        )
+        throw new Error('Quiz not found')
       }
 
-      // Convert back to an object
-      const shuffledOptionsForQuestion = {}
-      optionEntries.forEach(([key, value], index) => {
-        // Assign new keys (a, b, c, d) based on the shuffled order
-        const newKey = String.fromCharCode(97 + index) // 97 is ASCII for 'a'
-        shuffledOptionsForQuestion[newKey] = value
-      })
+      // Select 5 random questions from the total set
+      let allQuestions = [...quiz.questions]
+      let selectedQuestions = []
 
-      // Store the mapping from original answer to new answer
-      const originalAnswer = q.answer
-      const originalOptionValue = q.options[originalAnswer]
-      let newAnswer = ''
+      // If we have 5 or fewer questions, use all of them
+      if (allQuestions.length <= 5) {
+        selectedQuestions = allQuestions
+      } else {
+        // Randomly select 5 questions
+        for (let i = 0; i < 5; i++) {
+          const randomIndex = Math.floor(Math.random() * allQuestions.length)
+          selectedQuestions.push(allQuestions[randomIndex])
+          allQuestions.splice(randomIndex, 1)
+        }
+      }
 
-      // Find the new key for the original answer value
-      Object.entries(shuffledOptionsForQuestion).forEach(([key, value]) => {
-        if (value === originalOptionValue) {
-          newAnswer = key
+      // Initialize quizAttempt structure if needed
+      if (!sessionInstance.quizAttempt) {
+        sessionInstance.quizAttempt = {
+          responses: [],
+          answerMappings: {},
+          shuffledOptions: {},
+          completed: false,
+        }
+      }
+
+      // Initialize the answer mappings object if it doesn't exist
+      if (!sessionInstance.quizAttempt.answerMappings) {
+        sessionInstance.quizAttempt.answerMappings = {}
+      }
+
+      // Initialize the shuffled options object if it doesn't exist
+      if (!sessionInstance.quizAttempt.shuffledOptions) {
+        sessionInstance.quizAttempt.shuffledOptions = {}
+      }
+
+      // Create a new answerMappings object to replace the existing one
+      const answerMappings = {}
+      // Create a new shuffledOptions object to replace the existing one
+      const shuffledOptions = {}
+
+      // Store the selected question IDs to know which questions were shown to the user
+      const selectedQuestionIds = selectedQuestions.map(q => q._id.toString())
+      sessionInstance.quizAttempt.selectedQuestionIds = selectedQuestionIds
+
+      // Shuffle options for each question
+      const questionsWithShuffledOptions = selectedQuestions.map(q => {
+        // Create an array of option entries
+        const optionEntries = Object.entries(q.options)
+
+        // Shuffle the entries
+        for (let i = optionEntries.length - 1; i > 0; i--) {
+          const j = Math.floor(Math.random() * (i + 1))
+          ;[optionEntries[i], optionEntries[j]] = [
+            optionEntries[j],
+            optionEntries[i],
+          ]
+        }
+
+        // Convert back to an object
+        const shuffledOptionsForQuestion = {}
+        optionEntries.forEach(([key, value], index) => {
+          // Assign new keys (a, b, c, d) based on the shuffled order
+          const newKey = String.fromCharCode(97 + index) // 97 is ASCII for 'a'
+          shuffledOptionsForQuestion[newKey] = value
+        })
+
+        // Store the mapping from original answer to new answer
+        const originalAnswer = q.answer
+        const originalOptionValue = q.options[originalAnswer]
+        let newAnswer = ''
+
+        // Find the new key for the original answer value
+        Object.entries(shuffledOptionsForQuestion).forEach(([key, value]) => {
+          if (value === originalOptionValue) {
+            newAnswer = key
+          }
+        })
+
+        // Store mapping in our local object
+        const questionId = q._id.toString()
+        answerMappings[questionId] = {
+          originalAnswer,
+          newAnswer,
+        }
+
+        // Store the shuffled options in our local object
+        shuffledOptions[questionId] = shuffledOptionsForQuestion
+
+        // Return the question with shuffled options but without the answer
+        return {
+          _id: q._id,
+          question: q.question,
+          options: shuffledOptionsForQuestion,
         }
       })
 
-      // Store mapping in our local object
-      const questionId = q._id.toString()
-      answerMappings[questionId] = {
-        originalAnswer,
-        newAnswer,
-      }
+      // Set the entire answerMappings object at once
+      sessionInstance.quizAttempt.answerMappings = answerMappings
+      // Set the entire shuffledOptions object at once
+      sessionInstance.quizAttempt.shuffledOptions = shuffledOptions
 
-      // Store the shuffled options in our local object
-      shuffledOptions[questionId] = shuffledOptionsForQuestion
+      // Mark the fields as modified to ensure they get saved
+      sessionInstance.markModified('quizAttempt.answerMappings')
+      sessionInstance.markModified('quizAttempt.shuffledOptions')
+      sessionInstance.markModified('quizAttempt.selectedQuestionIds')
 
-      // Return the question with shuffled options but without the answer
-      return {
-        _id: q._id,
-        question: q.question,
-        options: shuffledOptionsForQuestion,
-      }
-    })
+      // Save the session with updated mappings
+      await sessionInstance.save({ session: mongoSession })
 
-    // Set the entire answerMappings object at once
-    sessionInstance.quizAttempt.answerMappings = answerMappings
-    // Set the entire shuffledOptions object at once
-    sessionInstance.quizAttempt.shuffledOptions = shuffledOptions
-
-    // Mark the fields as modified to ensure they get saved
-    sessionInstance.markModified('quizAttempt.answerMappings')
-    sessionInstance.markModified('quizAttempt.shuffledOptions')
-    sessionInstance.markModified('quizAttempt.selectedQuestionIds')
-
-    // Save the session with updated mappings
-    await sessionInstance.save({ session: mongoSession })
-
-    // Verify the save was successful
-    const verifySession = await QuickClashSession.findById(sessionId).session(
-      mongoSession,
-    )
-
-    // Commit the transaction
-    await mongoSession.commitTransaction()
-
-    return questionsWithShuffledOptions
-  } catch (error) {
-    console.error(`[getQuizQuestions] Error: ${error.message}`, error)
-    if (mongoSession) {
-      console.log(`[getQuizQuestions] Aborting transaction due to error`)
-      await mongoSession.abortTransaction()
-    }
-    throw error
-  } finally {
-    if (mongoSession) {
+      // Commit the transaction
+      await mongoSession.commitTransaction()
       mongoSession.endSession()
+
+      return questionsWithShuffledOptions
+
+    } catch (error) {
+      // Clean up session
+      if (mongoSession) {
+        try {
+          await mongoSession.abortTransaction()
+          mongoSession.endSession()
+        } catch (cleanupError) {
+          console.error(`[getQuizQuestions] Error during cleanup: ${cleanupError.message}`)
+        }
+      }
+
+      // Check if this is a WriteConflict (code 112) - retry if so
+      if (error.code === 112 && attempt < MAX_RETRIES) {
+        console.warn(`[getQuizQuestions] WriteConflict on attempt ${attempt}/${MAX_RETRIES}, retrying in 200ms...`)
+        lastError = error
+        await sleep(200 * attempt) // Exponential backoff: 200ms, 400ms, 600ms
+        continue
+      }
+
+      // Non-retryable error or retries exhausted
+      lastError = error
+      console.error(`[getQuizQuestions] Error: ${error.message}`, error)
+      break
     }
   }
+
+  // All retries exhausted for WriteConflict - this is a backend failure
+  if (lastError && lastError.code === 112) {
+    console.error(`[getQuizQuestions] All ${MAX_RETRIES} retries exhausted for WriteConflict`)
+    // Mark session as having backend error
+    await QuickClashSession.findByIdAndUpdate(sessionId, {
+      'backendError.occurred': true,
+      'backendError.type': 'WRITE_CONFLICT_EXHAUSTED',
+      'backendError.timestamp': new Date(),
+      'backendError.canRetry': true
+    })
+    throw new BackendSyncError('SESSION_BACKEND_ERROR', {
+      message: 'Quiz initialization failed due to sync conflict',
+      canRetry: true,
+      details: { reason: 'WriteConflict after retries' }
+    })
+  }
+
+  // Other errors - just throw them (not eligible for free retry)
+  throw lastError
 }
 
 /**
@@ -642,6 +701,7 @@ const getQuizReport = async ({ sessionId, userId }) => {
       nonBoostedRQM: totalScore, // Same in QuickClash
       baseRQM_score:
         quizSession.score?.baseRQM_score || quizScore,
+      speedBonus: (quizSession.score?.RQM_score || 0) - (quizSession.score?.scoreSurgeBonus || 0) - (quizSession.score?.precisionBonus || 0) - (quizSession.score?.baseRQM_score || 0),
       boost: 1, // No boost in QuickClash
       isBoosted: false,
       quizDifficulty: difficulty,

@@ -84,6 +84,7 @@ const parseQuizData = result => {
     timeDilationBoosted: result?.timeDilationBoosted,
     performanceBonus: result?.performanceBonus,
     precisionBonus: result?.score?.precisionBonus || result?.precisionBonus || 0,
+    speedBonus: result?.speedBonus || 0,
     scoreSurgeBonus: result?.score?.scoreSurgeBonus || result?.scoreSurgeBonus || 0,
     forgeScore: result?.forgeScore || 0,
     activePowerups: result?.activePowerups || [],

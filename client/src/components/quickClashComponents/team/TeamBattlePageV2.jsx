@@ -519,7 +519,7 @@ const EnhancedBattleResults = ({ battle, userTeam, powerupReward, onClaimRewards
   const betProfit = (betAmount > 0 && betResult === 'won') ? (betTrophyChange - betAmount) : 0
 
   // Determine if protection was used
-  const isChallenger = battle.challenger === user._id || (battle.teamAKey === user._id) // Simplified check, might need robust check from backend roles
+  const isChallenger = battle?.challenger === user?._id || (battle?.teamAKey === user?._id) // Simplified check, might need robust check from backend roles
   // Better way: check protectionUsed in history or trophyUpdates
   // Since we don't have trophyUpdates easy access here, let's rely on (trophyChange === 0 && !isWin && !isTie) logic for now?
   // NO, wait - we can check if netTrophyChange is 0 when it should be negative.

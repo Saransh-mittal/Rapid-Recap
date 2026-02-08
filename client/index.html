@@ -51,12 +51,7 @@
 
   <!-- Secondary Resources Preload - important but can load after initial render -->
   <link rel="preload" href="/src/redux/store.js" as="script">
-  <link rel="preload" href="/src/i18n.jsx" as="script">
-
-  <!-- Module Preloads - modern browsers optimizations -->
-  <link rel="modulepreload" href="/src/App.jsx">
-  <link rel="modulepreload" href="/src/contextAPI/SocketContext.jsx">
-  <link rel="modulepreload" href="/src/contextAPI/NavbarContext.jsx">
+  <!-- Note: Module preloading is handled automatically by Vite for dynamic imports -->
 
   <!-- Progressive Web App -->
   <link rel="manifest" href="/manifest.json">
@@ -179,7 +174,7 @@
       </div>
     </div>
 
-    <script>
+    <script data-cfasync="false">
       // Simulate initial progress
       const progressBar = document.getElementById('splash-progress');
       const progressText = document.getElementById('splash-text');

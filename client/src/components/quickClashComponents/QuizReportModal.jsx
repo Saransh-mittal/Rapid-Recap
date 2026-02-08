@@ -57,6 +57,7 @@ const QuizReportModal = ({ isOpen, onClose, sessionId }) => {
           questions: response.data.report.questions,
           forgeScore: response.data.report.forgeScore,
           precisionBonus: response.data.report.precisionBonus,
+          speedBonus: response.data.report.speedBonus,
           scoreSurgeBonus: response.data.report.scoreSurgeBonus,
           activePowerups: response.data.report.activePowerups,
           forgeQuestions: response.data.report.forgeQuestions,

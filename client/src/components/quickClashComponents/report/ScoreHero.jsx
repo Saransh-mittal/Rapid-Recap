@@ -3,7 +3,7 @@ import { motion } from 'framer-motion'
 import { Zap, Target, Flame, Sparkles, Star } from 'lucide-react'
 import { cn } from '@/lib/utils'
 
-const ScoreHero = ({ totalScore, quizScore, forgeScore, precisionBonus, scoreSurgeBonus }) => {
+const ScoreHero = ({ totalScore, quizScore, forgeScore, precisionBonus, scoreSurgeBonus, speedBonus }) => {
   const maxScore = 500 // Approximate max score for visualization
   const percentage = Math.min((totalScore / maxScore) * 100, 100)
   const radius = 100
@@ -181,13 +181,22 @@ const ScoreHero = ({ totalScore, quizScore, forgeScore, precisionBonus, scoreSur
       </div>
 
       {/* Bonuses Section */}
-      {(precisionBonus > 0 || scoreSurgeBonus > 0) && (
+      {(precisionBonus > 0 || scoreSurgeBonus > 0 || speedBonus > 0) && (
         <motion.div
           initial={{ opacity: 0, y: 10 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.7 }}
           className="flex gap-3 flex-wrap justify-center"
         >
+          {speedBonus > 0 && (
+            <motion.div
+              whileHover={{ scale: 1.05 }}
+              className="flex items-center gap-2 px-4 py-2.5 bg-blue-500/10 backdrop-blur-xl border border-blue-500/30 rounded-full shadow-[0_0_20px_rgba(59,130,246,0.15)] hover:shadow-[0_0_25px_rgba(59,130,246,0.25)] transition-all duration-300"
+            >
+              <Zap size={14} className="text-blue-300" />
+              <span className="text-xs font-bold text-blue-200">Speed +{speedBonus}</span>
+            </motion.div>
+          )}
           {precisionBonus > 0 && (
             <motion.div
               whileHover={{ scale: 1.05 }}

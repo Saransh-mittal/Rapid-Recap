@@ -1,8 +1,11 @@
 // SparkLayout.jsx
 // Route wrapper for /play/* routes - initializes shared socket
-import React, { useEffect, useState } from 'react'
+import React, { useEffect, useState, Suspense } from 'react'
 import { Outlet, useNavigate } from 'react-router-dom'
 import useSparkSocket from '../../../customHooks/useSparkSocket'
+import usePlayer from '../../../hooks/usePlayer'
+
+const OnboardingOverlay = React.lazy(() => import('../v2/OnboardingOverlay'))
 
 /**
  * SparkLayout - Wrapper component for all /play/* routes
@@ -16,6 +19,22 @@ const SparkLayout = () => {
   const navigate = useNavigate()
   const { isConnected, connectionError, isSocketReady } = useSparkSocket()
   const [showConnectionBanner, setShowConnectionBanner] = useState(false)
+  const { player } = usePlayer()
+  const [showOnboarding, setShowOnboarding] = useState(false)
+
+  // Check onboarding status
+  const hasOnboardingCompleted = player?.tutorialProgress?.quickClashOnboarding
+  const playerLoaded = !!player
+
+  useEffect(() => {
+    if (!playerLoaded) return
+    if (!hasOnboardingCompleted) {
+      const timer = setTimeout(() => {
+        setShowOnboarding(true)
+      }, 300)
+      return () => clearTimeout(timer)
+    }
+  }, [hasOnboardingCompleted, playerLoaded])
 
   // Check for session
   useEffect(() => {
@@ -48,6 +67,14 @@ const SparkLayout = () => {
           <span>Reconnecting...</span>
         </div>
       )}
+
+      {/* Onboarding Overlay - First Run only */}
+      <Suspense fallback={null}>
+        <OnboardingOverlay
+          isOpen={showOnboarding}
+          onComplete={() => setShowOnboarding(false)}
+        />
+      </Suspense>
 
       {/* Child routes */}
       <Outlet />

@@ -12,6 +12,7 @@ const mongoose = require('mongoose')
 const User = require('../../model/userSchema')
 const { markUserAsParticipated } = require('./quickClashTeamBattleService')
 const cache = require('memory-cache')
+const { enqueueWrite } = require('../../utils/sessionWriteQueue')
 const CACHE_TTL = 8 * 60 * 1000 // 8 minutes (session duration)
 
 const READING_TIME_LIMIT = 120 // 2 minutes in seconds
@@ -843,8 +844,10 @@ const submitForgeAnswer = async ({
 
       console.timeEnd('SubmitForgeAnswer')
 
-      // FIRE AND FORGET SAVE
-      saveSessionWithRetry(quizSession)
+      // QUEUED SAVE - Sequential processing to prevent race conditions
+      enqueueWrite(sessionId, async () => {
+        await quizSession.save()
+      })
 
       return response
     // }) // End transaction
@@ -909,11 +912,10 @@ const advanceToNextSection = async ({ sessionId }) => {
         quizSession.forgeProgress.completed = true
         quizSession.forgeProgress.endTime = now
 
-        // await quizSession.save({ session })
-        // await quizSession.save({ session })
-
-        // FIRE AND FORGET
-        saveSessionWithRetry(quizSession)
+        // QUEUED SAVE - Sequential processing to prevent race conditions
+        enqueueWrite(sessionId, async () => {
+          await quizSession.save()
+        })
 
         console.timeEnd('AdvanceToNextSection')
         return {
@@ -945,8 +947,10 @@ const advanceToNextSection = async ({ sessionId }) => {
           readingTimeSpent: null,
         })
 
-        // FIRE AND FORGET
-        saveSessionWithRetry(quizSession)
+        // QUEUED SAVE - Sequential processing to prevent race conditions
+        enqueueWrite(sessionId, async () => {
+          await quizSession.save()
+        })
 
         const nextSection = forgeArticle.sections[nextSectionNumber]
 
@@ -1108,5 +1112,6 @@ module.exports = {
   advanceToNextSection,
   getForgeSummary,
   getForgeReview,
+  getCachedSession, // Exported for powerup controller
 }
 

@@ -107,9 +107,10 @@ const GamifiedQuiz = ({
 
   // Passive Powerups (Visual Only) - Show as active buffs
   // These apply automatically during Quiz phase
+  // Note: TIME_WARP shows even when "used" because being used = bonus is active
   const passivePowerups = activePowerups.filter(p =>
     (p.phase?.toLowerCase() === 'quiz' || p.phase?.toLowerCase() === 'both') &&
-    !p.used && // Only show if not already used
+    (p.powerupId === 'TIME_WARP' || !p.used) && // TIME_WARP shows even when used
     (p.type === 'PASSIVE' ||
      p.powerupId === 'PRECISION_PROTOCOL' ||
      p.powerupId === 'TIME_WARP' ||
@@ -141,24 +142,8 @@ const GamifiedQuiz = ({
         })
 
         setQuizReady(true)
-        setQuizReady(true)
-        // Reset timer in parent, checking for Time Warp
-        // FIX: Check if it's NOT used
-        const timeWarpPowerup = activePowerups.find(p =>
-          p.powerupId === 'TIME_WARP' &&
-          (p.phase?.toLowerCase() === 'quiz' || p.phase?.toLowerCase() === 'both') &&
-          !p.used
-        )
-
-        const hasTimeWarp = !!timeWarpPowerup
-        setQuizTimeLeft(hasTimeWarp ? 65 : 50)
-
-        if (hasTimeWarp) {
-             // Toast is shown by parent (QuickClashSession) - just mark as used
-             // Mark as used in backend happens in parent if detected
-             // So we don't double count here unless needed
-             // Actually parent handles the logic for Time Warp auto-apply on phase start
-        }
+        // Note: Timer is already set by parent QuickClashSession (with Time Warp bonus if applicable)
+        // Do NOT reset the timer here - parent handles the correct initial value
       } catch (error) {
         console.error('Error fetching questions:', error)
         toast({

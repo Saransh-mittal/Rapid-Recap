@@ -1,27 +1,28 @@
 import React from 'react'
 import { motion } from 'framer-motion'
-import { Clock, Target, Zap, Eye, Shield, Sparkles, CheckCircle2, XCircle, Timer } from 'lucide-react'
+import { Clock, Target, Zap, Eye, Shield, Sparkles, CheckCircle2, XCircle, Timer, Activity, Battery } from 'lucide-react'
 import { Badge } from '@/components/ui/badge'
 import { cn } from '@/lib/utils'
 
 /**
- * AbilityBreakdown (renamed from BattleLog)
- * Shows ALL equipped powerups with their activation status and contribution
- *
- * Status types:
- * - activated: Used and had effect
- * - unused: Equipped but not triggered (active powerups)
- * - failed: Passive that didn't trigger (condition not met)
+ * BattleLog (Redesigned)
+ * Shows equipped powerups with a premium cyber-tech aesthetic
  */
 const BattleLog = ({ activePowerups = [], scoreBreakdown = null }) => {
-  // If no powerups were equipped, show empty state
+  // Stats calculation
+  const totalPowerups = activePowerups.length
+  const activatedPowerups = activePowerups.filter(p => p.used || p.effectApplied).length
+  const efficiency = totalPowerups > 0 ? Math.round((activatedPowerups / totalPowerups) * 100) : 0
+
   if (!activePowerups || activePowerups.length === 0) {
     return (
-      <div className="p-6 text-center bg-slate-900/40 backdrop-blur-xl border border-dashed border-cyan-500/20 rounded-2xl relative overflow-hidden">
-        <div className="absolute inset-0 bg-gradient-to-br from-cyan-500/5 to-transparent" />
-        <div className="relative">
-          <Sparkles className="w-8 h-8 text-cyan-400/40 mx-auto mb-3" />
-          <p className="text-sm text-white/50 font-medium">No abilities equipped for this session.</p>
+      <div className="p-8 text-center bg-slate-900/40 backdrop-blur-xl border border-dashed border-cyan-500/20 rounded-2xl relative overflow-hidden group">
+        <div className="absolute inset-0 bg-gradient-to-br from-cyan-500/5 to-transparent opacity-50 group-hover:opacity-100 transition-opacity duration-500" />
+        <div className="relative flex flex-col items-center gap-3">
+          <div className="p-3 rounded-full bg-cyan-500/10 border border-cyan-500/20">
+            <Sparkles className="w-6 h-6 text-cyan-400" />
+          </div>
+          <p className="text-sm text-cyan-200/60 font-medium">No abilities equipped for this session.</p>
         </div>
       </div>
     )
@@ -50,190 +51,188 @@ const BattleLog = ({ activePowerups = [], scoreBreakdown = null }) => {
   }
 
   const getBenefit = (p) => {
-    // Check if powerup was used/applied
     if (p.used || p.effectApplied) {
       switch (p.powerupId) {
-        case 'TIME_WARP': return '+15s timer extension applied'
-        case 'PRECISION_PROTOCOL': return '+50 RQM bonus earned'
-        case 'SCORE_SURGE': return 'Score multiplier applied'
-        case 'ORACLES_EYE': return '2 options eliminated'
-        case 'STREAK_SHIELD': return 'Streak protected once'
-        default: return 'Effect applied'
+        case 'TIME_WARP': return '+15s Extended'
+        case 'PRECISION_PROTOCOL': return '+50 RQM Bonus'
+        case 'SCORE_SURGE': return '1.5x Multiplier'
+        case 'ORACLES_EYE': return '2 Options Removed'
+        case 'STREAK_SHIELD': return 'Streak Saved'
+        default: return 'Effect Applied'
       }
     } else {
-      // Not used
       switch (p.powerupId) {
-        case 'TIME_WARP': return 'Timer extension not needed'
-        case 'PRECISION_PROTOCOL': return 'Required 100% accuracy'
-        case 'SCORE_SURGE': return 'Not activated during session'
-        case 'ORACLES_EYE': return 'Not used during session'
-        case 'STREAK_SHIELD': return 'No streak break occurred'
-        default: return 'Not triggered'
+        case 'TIME_WARP': return 'Standby'
+        case 'PRECISION_PROTOCOL': return 'Missed Target'
+        case 'SCORE_SURGE': return 'Ready'
+        case 'ORACLES_EYE': return 'Ready'
+        case 'STREAK_SHIELD': return 'Safeguard Ready'
+        default: return 'No Trigger'
       }
     }
   }
 
-  const getColorClasses = (id) => {
+  const getTheme = (id) => {
     switch (id) {
-      case 'TIME_WARP': return { bg: 'bg-cyan-500/15', border: 'border-cyan-500/30', text: 'text-cyan-300', iconBg: 'bg-cyan-500/20' }
-      case 'PRECISION_PROTOCOL': return { bg: 'bg-rose-500/15', border: 'border-rose-500/30', text: 'text-rose-300', iconBg: 'bg-rose-500/20' }
-      case 'SCORE_SURGE': return { bg: 'bg-yellow-500/15', border: 'border-yellow-500/30', text: 'text-yellow-300', iconBg: 'bg-yellow-500/20' }
-      case 'ORACLES_EYE': return { bg: 'bg-purple-500/15', border: 'border-purple-500/30', text: 'text-purple-300', iconBg: 'bg-purple-500/20' }
-      case 'STREAK_SHIELD': return { bg: 'bg-emerald-500/15', border: 'border-emerald-500/30', text: 'text-emerald-300', iconBg: 'bg-emerald-500/20' }
-      default: return { bg: 'bg-gray-500/15', border: 'border-gray-500/30', text: 'text-gray-300', iconBg: 'bg-gray-500/20' }
+      case 'TIME_WARP': return 'cyan'
+      case 'PRECISION_PROTOCOL': return 'rose'
+      case 'SCORE_SURGE': return 'yellow'
+      case 'ORACLES_EYE': return 'purple'
+      case 'STREAK_SHIELD': return 'emerald'
+      default: return 'slate'
     }
   }
 
-  const getStatus = (p) => {
+  const getStatusDetails = (p) => {
     if (p.used || p.effectApplied) {
-      return { label: '✓ Activated', color: 'bg-emerald-500', icon: CheckCircle2 }
+      return { label: 'ENGAGED', icon: Activity, style: 'text-emerald-400 bg-emerald-500/10 border-emerald-500/30' }
     }
-    // Check if it's a passive that failed condition
     const isPassive = p.type === 'passive' || ['STREAK_SHIELD', 'PRECISION_PROTOCOL'].includes(p.powerupId)
     if (isPassive) {
-      return { label: 'No Effect', color: 'bg-slate-600', icon: XCircle }
+      return { label: 'PASSIVE', icon: Battery, style: 'text-slate-400 bg-slate-500/10 border-slate-500/20' }
     }
-    return { label: 'Ready', color: 'bg-slate-500', icon: Timer }
+    return { label: 'READY', icon: Timer, style: 'text-cyan-400 bg-cyan-500/10 border-cyan-500/20' }
   }
-
-  const getPhaseLabel = (phase) => {
-    switch (phase?.toLowerCase()) {
-      case 'quiz': return 'Quiz'
-      case 'forge': return 'Forge'
-      case 'both': return 'Both'
-      default: return phase || 'Both'
-    }
-  }
-
-  const getPhaseBadgeColor = (phase) => {
-    switch (phase?.toLowerCase()) {
-      case 'forge': return 'text-orange-400 border-orange-400/40 bg-orange-500/10'
-      case 'quiz': return 'text-cyan-400 border-cyan-400/40 bg-cyan-500/10'
-      default: return 'text-purple-400 border-purple-400/40 bg-purple-500/10'
-    }
-  }
-
-  // Separate powerups by status for visual grouping
-  const usedPowerups = activePowerups.filter(p => p.used || p.effectApplied)
-  const unusedPowerups = activePowerups.filter(p => !p.used && !p.effectApplied)
 
   return (
-    <div className="flex flex-col w-full space-y-4">
-      {/* Header */}
-      <div className="flex items-center justify-between">
-        <div className="flex items-center gap-2">
-          <div className="w-1 h-4 bg-gradient-to-b from-cyan-400 to-cyan-600 rounded-full" />
-          <h3 className="text-sm font-bold text-cyan-400 uppercase tracking-[0.15em]">
-            Ability Breakdown
-          </h3>
+    <div className="flex flex-col w-full space-y-5">
+      {/* Overview Stats */}
+      <div className="grid grid-cols-2 gap-3">
+        <div className="p-3 bg-slate-900/40 backdrop-blur-md rounded-xl border border-white/5 flex flex-col items-center justify-center gap-1">
+            <span className="text-[10px] text-white/40 uppercase tracking-widest font-bold">Activation</span>
+            <div className="flex items-baseline gap-1">
+                <span className="text-xl font-black text-white">{activatedPowerups}</span>
+                <span className="text-xs text-white/40">/ {totalPowerups}</span>
+            </div>
         </div>
-        <Badge
-          variant="outline"
-          className="text-[10px] px-2 py-0.5 text-white/50 border-white/20"
-        >
-          {usedPowerups.length}/{activePowerups.length} activated
-        </Badge>
+        <div className="p-3 bg-slate-900/40 backdrop-blur-md rounded-xl border border-white/5 flex flex-col items-center justify-center gap-1">
+            <span className="text-[10px] text-white/40 uppercase tracking-widest font-bold">Efficiency</span>
+            <div className="flex items-baseline gap-1">
+                <span className={cn("text-xl font-black", efficiency === 100 ? "text-emerald-400" : "text-white")}>
+                    {efficiency}%
+                </span>
+            </div>
+        </div>
       </div>
 
-      {/* Score Contribution (if available) */}
-      {scoreBreakdown && (scoreBreakdown.precisionBonus > 0 || scoreBreakdown.scoreSurgeBonus > 0) && (
-        <motion.div
-          initial={{ opacity: 0, y: 10 }}
-          animate={{ opacity: 1, y: 0 }}
-          className="p-3 rounded-xl bg-gradient-to-r from-emerald-500/10 to-cyan-500/10 border border-emerald-500/20"
-        >
-          <p className="text-xs font-bold text-emerald-400 mb-2">Ability Bonuses</p>
-          <div className="flex flex-wrap gap-3 text-xs text-white/70">
-            {scoreBreakdown.precisionBonus > 0 && (
-              <span className="flex items-center gap-1">
-                <Target className="w-3 h-3 text-rose-400" />
-                +{scoreBreakdown.precisionBonus} Precision
-              </span>
-            )}
-            {scoreBreakdown.scoreSurgeBonus > 0 && (
-              <span className="flex items-center gap-1">
-                <Zap className="w-3 h-3 text-yellow-400" />
-                +{scoreBreakdown.scoreSurgeBonus} Score Surge
-              </span>
-            )}
-          </div>
-        </motion.div>
-      )}
+      <div className="space-y-3">
+        {activePowerups.map((p, i) => {
+          const Icon = getIcon(p.powerupId)
+          const themeName = getTheme(p.powerupId)
+          const status = getStatusDetails(p)
+          const StatusIcon = status.icon
+          const isActivated = p.used || p.effectApplied
 
-      {/* All Powerups */}
-      {activePowerups.map((p, i) => {
-        const IconComponent = getIcon(p.powerupId)
-        const colors = getColorClasses(p.powerupId)
-        const status = getStatus(p)
-        const StatusIcon = status.icon
-        const phaseColor = getPhaseBadgeColor(p.phase)
-        const isActivated = p.used || p.effectApplied
+          const styles = {
+            cyan: {
+              container: 'group-hover:border-cyan-500/40 bg-cyan-500/5 shadow-cyan-500/5',
+              glow: 'bg-cyan-500/80 shadow-[0_0_10px_rgba(6,182,212,0.5)]',
+              iconBg: 'bg-cyan-500/20 text-cyan-300',
+              text: 'text-cyan-300',
+              dot: 'bg-cyan-400'
+            },
+            rose: {
+              container: 'group-hover:border-rose-500/40 bg-rose-500/5 shadow-rose-500/5',
+              glow: 'bg-rose-500/80 shadow-[0_0_10px_rgba(244,63,94,0.5)]',
+              iconBg: 'bg-rose-500/20 text-rose-300',
+              text: 'text-rose-300',
+              dot: 'bg-rose-400'
+            },
+            yellow: {
+              container: 'group-hover:border-yellow-500/40 bg-yellow-500/5 shadow-yellow-500/5',
+              glow: 'bg-yellow-500/80 shadow-[0_0_10px_rgba(234,179,8,0.5)]',
+              iconBg: 'bg-yellow-500/20 text-yellow-300',
+              text: 'text-yellow-300',
+              dot: 'bg-yellow-400'
+            },
+            purple: {
+              container: 'group-hover:border-purple-500/40 bg-purple-500/5 shadow-purple-500/5',
+              glow: 'bg-purple-500/80 shadow-[0_0_10px_rgba(168,85,247,0.5)]',
+              iconBg: 'bg-purple-500/20 text-purple-300',
+              text: 'text-purple-300',
+              dot: 'bg-purple-400'
+            },
+            emerald: {
+              container: 'group-hover:border-emerald-500/40 bg-emerald-500/5 shadow-emerald-500/5',
+              glow: 'bg-emerald-500/80 shadow-[0_0_10px_rgba(16,185,129,0.5)]',
+              iconBg: 'bg-emerald-500/20 text-emerald-300',
+              text: 'text-emerald-300',
+              dot: 'bg-emerald-400'
+            },
+            slate: {
+              container: 'group-hover:border-slate-500/40 bg-slate-500/5 shadow-slate-500/5',
+              glow: 'bg-slate-500/80 shadow-[0_0_10px_rgba(100,116,139,0.5)]',
+              iconBg: 'bg-slate-500/20 text-slate-300',
+              text: 'text-slate-300',
+              dot: 'bg-slate-400'
+            }
+          }
 
-        return (
-          <motion.div
-            key={i}
-            initial={{ opacity: 0, y: 15, scale: 0.98 }}
-            animate={{ opacity: 1, y: 0, scale: 1 }}
-            transition={{ delay: 0.08 * i, duration: 0.3 }}
-            className={cn(
-              "relative p-4 overflow-hidden backdrop-blur-xl border rounded-2xl transition-all duration-300",
-              isActivated
-                ? "bg-slate-900/50 border-white/15"
-                : "bg-slate-900/30 border-white/5 opacity-70"
-            )}
-          >
-            {/* Top accent gradient */}
-            {isActivated && (
-              <div className={cn(
-                "absolute top-0 left-0 w-full h-[2px] bg-gradient-to-r to-transparent opacity-80",
-                colors.text.replace('text-', 'from-')
-              )} />
-            )}
+          const currentStyle = styles[themeName] || styles.slate
 
-            <div className="relative flex justify-between items-start gap-3">
-              <div className="flex gap-3">
-                <motion.div
-                  whileHover={{ scale: 1.05 }}
-                  className={cn(
-                    "p-2.5 rounded-xl border backdrop-blur-sm",
-                    colors.iconBg,
-                    colors.border
-                  )}
-                >
-                  <IconComponent className={cn("w-5 h-5", colors.text)} />
-                </motion.div>
-                <div className="flex flex-col gap-1">
-                  <span className="text-sm font-bold text-white">
-                    {getName(p.powerupId)}
-                  </span>
-                  <span className="text-xs text-white/50">
-                    {getBenefit(p)}
-                  </span>
-                  <div className="flex items-center gap-1.5 mt-1">
-                    <Badge
-                      variant="outline"
-                      className={cn("text-[9px] px-1.5 py-0 h-4 font-semibold rounded-full", phaseColor)}
-                    >
-                      {getPhaseLabel(p.phase)}
-                    </Badge>
-                  </div>
+          return (
+            <motion.div
+              key={i}
+              initial={{ opacity: 0, x: -10 }}
+              animate={{ opacity: 1, x: 0 }}
+              transition={{ delay: 0.1 * i, duration: 0.4 }}
+              className={cn(
+                "group relative overflow-hidden rounded-xl border transition-all duration-300",
+                isActivated
+                    ? cn("border-white/20 bg-slate-900/60 shadow-lg", currentStyle.container)
+                    : "border-white/5 bg-slate-900/30"
+              )}
+            >
+              {/* Active Glow Line */}
+              {isActivated && (
+                <div className={cn(
+                    "absolute left-0 top-0 bottom-0 w-1",
+                    currentStyle.glow
+                )} />
+              )}
+
+              <div className="p-3.5 pl-5 flex items-center justify-between gap-4">
+                {/* Left: Icon & Info */}
+                <div className="flex items-center gap-3.5">
+                    <div className={cn("p-2 rounded-lg", currentStyle.iconBg)}>
+                        <Icon size={18} />
+                    </div>
+                    <div>
+                        <h4 className={cn(
+                            "text-sm font-bold tracking-wide",
+                            isActivated ? "text-white" : "text-white/60"
+                        )}>
+                            {getName(p.powerupId)}
+                        </h4>
+                        <div className="flex items-center gap-2 mt-0.5">
+                            <span className={cn(
+                                "text-xs font-mono",
+                                isActivated ? currentStyle.text : "text-white/30"
+                            )}>
+                                {getBenefit(p)}
+                            </span>
+                        </div>
+                    </div>
+                </div>
+
+                {/* Right: Status Badge */}
+                <div className={cn(
+                    "px-2.5 py-1 rounded-md border text-[10px] font-bold tracking-wider flex items-center gap-1.5 uppercase",
+                    status.style
+                )}>
+                    {isActivated && <motion.div
+                        animate={{ scale: [1, 1.2, 1] }}
+                        transition={{ repeat: Infinity, duration: 2 }}
+                        className={cn("w-1.5 h-1.5 rounded-full", currentStyle.dot)}
+                    />}
+                    {!isActivated && <StatusIcon size={10} />}
+                    {status.label}
                 </div>
               </div>
-
-              {/* Status Badge */}
-              <Badge
-                className={cn(
-                  "text-[10px] px-2 py-1 uppercase tracking-wider border-0 font-bold rounded-full flex items-center gap-1",
-                  status.color
-                )}
-              >
-                <StatusIcon className="w-3 h-3" />
-                {status.label}
-              </Badge>
-            </div>
-          </motion.div>
-        )
-      })}
+            </motion.div>
+          )
+        })}
+      </div>
     </div>
   )
 }

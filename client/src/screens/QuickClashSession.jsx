@@ -29,8 +29,10 @@ import axios from 'axios'
 
 // Component imports
 import QuickClashError from '../components/quickClashComponents/QuickClashError'
-import ResultsModal from '../components/quickClashComponents/ResultsModal'
 import ConfirmationDialog from '../components/quickClashComponents/ConfirmationDialog'
+
+// Lazy-loaded QuizReportModal for full battle report after quiz completion
+const QuizReportModal = lazy(() => import('../components/quickClashComponents/QuizReportModal'))
 import { useDispatch, useSelector } from 'react-redux'
 import useQuickClash from '../customHooks/useQuickClash'
 import useDailyTasks from '../customHooks/useDailyTasks'
@@ -301,12 +303,42 @@ const QuickClashSession = ({ isSessionPlayer = false }) => {
   const [streakResult, setStreakResult] = useState(null)
 
   // Callback to track when a powerup is used
-  const handlePowerupUsed = useCallback((powerupId) => {
+  // skipApiCall: true when called from ForgeReadingPhase/GamifiedQuiz (they already called API)
+  //              false (default) for passive powerups auto-applied at phase transitions
+  const handlePowerupUsed = useCallback(async (powerupId, { skipApiCall = false } = {}) => {
+    // 1. Update local state immediately
     setUsedPowerupCounts(prev => ({
       ...prev,
       [powerupId]: (prev[powerupId] || 0) + 1
     }))
-  }, [])
+
+    // 2. Make API call only if not skipped (for passive powerups like TIME_WARP at phase transition)
+    if (!skipApiCall) {
+      try {
+        const sessionId = getSessionId()
+        if (sessionId) {
+          const endpoint = isSessionPlayer
+            ? `/api/play/session/${sessionId}/powerup/use`
+            : `/api/quickClash/session/${sessionId}/powerup/use`
+
+          await axios.post(endpoint, { powerupId })
+          console.log(`[POWERUP] Passive powerup ${powerupId} usage persisted`)
+        }
+      } catch (err) {
+        console.error('[POWERUP] Failed to persist passive powerup:', err)
+      }
+    } else {
+      console.log(`[POWERUP] Local state updated for ${powerupId} (API already called)`)
+    }
+  }, [getSessionId, isSessionPlayer])
+
+  // Wrapper for component callbacks - they already called API
+  const handleComponentPowerupUsed = useCallback((powerupId) => {
+    handlePowerupUsed(powerupId, { skipApiCall: true })
+  }, [handlePowerupUsed])
+
+
+
 
   // Compute active powerups with used ones filtered out based on count
   const filteredActivePowerups = useMemo(() => {
@@ -522,7 +554,7 @@ const QuickClashSession = ({ isSessionPlayer = false }) => {
           handlePowerupUsed('TIME_WARP')
           quizAudioService.playTimeWarp() // Play Time Warp sound
           setQuizTimeLeft(65)
-          toast({ title: 'Time Warp Active!', description: '+15s added to quiz timer', status: 'info', duration: 3000 })
+          // Note: Tag shown in GamifiedQuiz, no toast needed
         }
         setPhase('quiz')
       }
@@ -556,7 +588,7 @@ const QuickClashSession = ({ isSessionPlayer = false }) => {
       handlePowerupUsed('TIME_WARP')
       quizAudioService.playTimeWarp() // Play Time Warp sound
       setQuizTimeLeft(65)
-      toast({ title: 'Time Warp Active!', description: '+15s added to quiz timer', status: 'info', duration: 3000 })
+      // Note: Tag shown in GamifiedQuiz, no toast needed
     }
     haptics.notification() // Haptic for phase transition
     setPhase('quiz')
@@ -993,7 +1025,7 @@ const QuickClashSession = ({ isSessionPlayer = false }) => {
                       activePowerups={filteredActivePowerups}
                       isSessionPlayer={isSessionPlayer}
                       onComplete={handleReadingComplete}
-                      onPowerupUsed={handlePowerupUsed}
+                      onPowerupUsed={handleComponentPowerupUsed}
                       onError={error => {
                         setError(error)
                         toast({
@@ -1054,7 +1086,7 @@ const QuickClashSession = ({ isSessionPlayer = false }) => {
                   activePowerups={filteredActivePowerups}
                   isSessionPlayer={isSessionPlayer}
                   onComplete={handleQuizComplete}
-                  onPowerupUsed={handlePowerupUsed}
+                  onPowerupUsed={handleComponentPowerupUsed}
                   setStopTimerOnQuizSubmit={NO_OP}
                   quizTimeLeft={quizTimeLeft}
                   setQuizTimeLeft={setQuizTimeLeft}
@@ -1064,15 +1096,14 @@ const QuickClashSession = ({ isSessionPlayer = false }) => {
             )
           })()}
 
-          <ResultsModal
-            isOpen={isResultsOpen}
-            onClose={closeResults}
-            score={score}
-            scoreDetails={scoreDetails}
-            navigateToList={confirmNavigation}
-            challenge={challenge}
-            user={user}
-          />
+          {/* Full Battle Report Modal - replaces simple score modal */}
+          <Suspense fallback={<LoadingFallback />}>
+            <QuizReportModal
+              isOpen={isResultsOpen}
+              onClose={confirmNavigation}
+              sessionId={getSessionId()}
+            />
+          </Suspense>
 
           {/* Navigation Confirmation Dialog */}
           <ConfirmationDialog

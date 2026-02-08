@@ -997,13 +997,13 @@ const updateSessionTutorialProgress = async ({ sessionId, tutorial, completed = 
   }
 
   // Allowed tutorials
-  const validTutorials = ['lobby', 'battle', 'squad_intro', 'coins_shop']
+  const validTutorials = ['lobby', 'battle', 'squad_intro', 'coins_shop', 'quickClashOnboarding']
   if (!validTutorials.includes(tutorial)) {
     throw new Error('Invalid tutorial name')
   }
 
   if (!session.tutorialProgress) {
-    session.tutorialProgress = { lobby: false, battle: false, squad_intro: false }
+    session.tutorialProgress = { lobby: false, battle: false, squad_intro: false, quickClashOnboarding: false }
   }
 
   session.tutorialProgress[tutorial] = completed !== false

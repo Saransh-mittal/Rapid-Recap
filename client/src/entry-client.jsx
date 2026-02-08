@@ -12,7 +12,7 @@ const BrowserRouter = lazy(() =>
     default: module.BrowserRouter,
   })),
 )
-const SocketProvider = lazy(() => import('./contextAPI/SocketContext.jsx'))
+const SocketProvider = lazy(() => import('./contextAPI/SocketContext'))
 const Provider = lazy(() =>
   import('react-redux').then(module => ({
     default: module.Provider,
@@ -34,7 +34,7 @@ const I18nextProvider = lazy(() =>
     default: module.I18nextProvider,
   })),
 )
-const App = lazy(() => import('./App.jsx'))
+const App = lazy(() => import('./App'))
 
 // Loading component for suspended content
 const LoadingFallback = () => {

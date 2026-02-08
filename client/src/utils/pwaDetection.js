@@ -33,10 +33,16 @@ export const isPWA = () => {
   }
 }
 
+import { setDeferredPrompt } from './pwaInstallStore'
+
 // Listen for PWA install
 export const listenForInstall = callback => {
   window.addEventListener('beforeinstallprompt', e => {
+    // Prevent the mini-infobar from appearing on mobile
     e.preventDefault()
+    // Stash the event so it can be triggered later.
+    setDeferredPrompt(e)
+
     callback && callback('prompted')
   })
 

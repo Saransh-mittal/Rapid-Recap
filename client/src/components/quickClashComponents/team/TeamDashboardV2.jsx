@@ -570,7 +570,7 @@ const TeamDashboardV2 = ({ isActive = true }) => {
               key={team._id}
               team={team}
               isLeader={isUserTeamLeader(team)}
-              userId={user._id}
+              userId={user?._id}
               onLeave={handleLeaveTeam}
               onRemoveMember={handleRemoveMember}
               onTransferLeadership={handleTransferLeadership}

@@ -119,6 +119,7 @@ const NewQuizReportModal = ({ result, onClose }) => {
               quizScore={quizData.baseRQM}
               forgeScore={quizData.forgeScore}
               precisionBonus={quizData.precisionBonus}
+              speedBonus={quizData.speedBonus}
               scoreSurgeBonus={quizData.scoreSurgeBonus}
             />
           </motion.div>

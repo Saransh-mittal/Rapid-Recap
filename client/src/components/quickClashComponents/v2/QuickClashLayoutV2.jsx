@@ -43,6 +43,9 @@ const SessionTeamDashboard = lazy(() => import('../team/SessionTeamDashboard'))
 // Streak popup - shown on first daily visit for all players
 const StreakPopup = lazy(() => import('./StreakPopup'))
 
+// First-time user onboarding overlay
+const OnboardingOverlay = lazy(() => import('./OnboardingOverlay'))
+
 // Powerup reward modal - shown after session → Google conversion
 const PowerupRewardModal = lazy(() => import('./PowerupRewardModal'))
 
@@ -316,6 +319,8 @@ const getTabFromPath = (path) => {
 // Key for localStorage to track if welcome modal has been shown
 const WELCOME_SHOWN_KEY = 'qc_session_welcome_shown'
 
+
+
 // Key for localStorage to track last streak popup date
 const STREAK_POPUP_DATE_KEY = 'qc_streak_popup_date'
 
@@ -362,14 +367,39 @@ const QuickClashLayoutV2 = () => {
   const [showRewardModal, setShowRewardModal] = useState(false)
   const [rewardPowerups, setRewardPowerups] = useState(['TIME_WARP', 'ORACLES_EYE'])
 
+  // First-run onboarding overlay state
+  const [showOnboardingOverlay, setShowOnboardingOverlay] = useState(false)
+
   // Track the last location.key to detect real navigation vs replaceState
   const lastLocationKey = useRef(location.key)
 
   // Tutorial Blocking Logic
   const { setBlocked } = useTutorial()
 
+  // Check if first-run onboarding should be shown
+  const hasOnboardingCompleted = player?.tutorialProgress?.quickClashOnboarding
+  const playerLoaded = !!player
+
+  useEffect(() => {
+    // Wait for player to be loaded
+    if (!playerLoaded) return
+
+    if (!hasOnboardingCompleted) {
+      // Delay slightly to let the UI settle
+      const timer = setTimeout(() => {
+        setShowOnboardingOverlay(true)
+      }, 300)
+      return () => clearTimeout(timer)
+    }
+  }, [hasOnboardingCompleted, playerLoaded])
+
   // Block tutorials if any modal is open OR if we are waiting for one to open
   useEffect(() => {
+    // Check if onboarding is pending (not completed yet + not currently open)
+    const isOnboardingPending = player &&
+                                !player.tutorialProgress?.quickClashOnboarding &&
+                                !showOnboardingOverlay
+
     // Check if welcome modal is pending (session player + not seen yet + not currently open)
     // We check localStorage directly to see if it's "to be shown"
     const isWelcomePending = isSession &&
@@ -382,12 +412,14 @@ const QuickClashLayoutV2 = () => {
                             shouldShowStreakPopup() &&
                             !showStreakPopup &&
                             !showWelcomeModal &&
-                            !isWelcomePending
+                            !isWelcomePending &&
+                            !showOnboardingOverlay &&
+                            !isOnboardingPending
 
-    const shouldBlock = showWelcomeModal || showStreakPopup || showSignupPanel || isWelcomePending || isStreakPending
+    const shouldBlock = showOnboardingOverlay || showWelcomeModal || showStreakPopup || showSignupPanel || isOnboardingPending || isWelcomePending || isStreakPending
 
     setBlocked(shouldBlock)
-  }, [showWelcomeModal, showStreakPopup, showSignupPanel, setBlocked, isSession, player])
+  }, [showOnboardingOverlay, showWelcomeModal, showStreakPopup, showSignupPanel, setBlocked, isSession, player])
 
   // Check for pending powerup reward from session conversion
   useEffect(() => {
@@ -705,6 +737,17 @@ const QuickClashLayoutV2 = () => {
       </div>
 
       <BottomNav activeTab={activeTab} onTabChange={handleTabChange} isSession={isSession} pendingInvitationsCount={pendingInvitationsCount} />
+
+      {/* First-Run Onboarding Overlay - shown FIRST for all new users */}
+      <Suspense fallback={null}>
+        <OnboardingOverlay
+          isOpen={showOnboardingOverlay}
+          onComplete={() => {
+            setShowOnboardingOverlay(false)
+            // Progress is saved internally by the component via API
+          }}
+        />
+      </Suspense>
 
       {/* Session Player Welcome Modal */}
       {isSession && (

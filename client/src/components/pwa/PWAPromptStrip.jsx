@@ -12,7 +12,7 @@ import {
 } from '@chakra-ui/react'
 import { X, Download, Info } from 'lucide-react'
 import PWAInfoModal from './PWAInfoModal'
-import { setPWAPromptDismissal } from '../../utils/pwaInstallStore'
+import { setPWAPromptDismissal, getDeferredPrompt, setDeferredPrompt as setGlobalDeferredPrompt } from '../../utils/pwaInstallStore'
 import InstallStepsModal from './InstallStepsModal'
 
 const PWAPromptStrip = ({ onClose }) => {
@@ -22,6 +22,12 @@ const PWAPromptStrip = ({ onClose }) => {
   const [showInstallSteps, setShowInstallSteps] = useState(false)
 
   useEffect(() => {
+    // Check if we captured the event earlier
+    const existingPrompt = getDeferredPrompt()
+    if (existingPrompt) {
+        setDeferredPrompt(existingPrompt)
+    }
+
     // Check if running in standalone mode
     const isStandalone =
       window.matchMedia('(display-mode: standalone)').matches ||
@@ -37,6 +43,7 @@ const PWAPromptStrip = ({ onClose }) => {
     const handleInstallPrompt = e => {
       e.preventDefault()
       setDeferredPrompt(e)
+      setGlobalDeferredPrompt(e)
     }
 
     const handleAppInstalled = () => {
