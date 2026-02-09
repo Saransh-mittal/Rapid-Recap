@@ -637,6 +637,7 @@ const submitForgeAnswer = async ({
   // REMOVED TRANSACTION FOR OPTIMISTIC WRITE
   // const mongoSession = await mongoose.startSession()
   try {
+      console.time(`submitForgeAnswer-total-${sessionId}`)
     // return await mongoSession.withTransaction(async () => {
       // OPTIMIZATION: Use In-Memory Cached Session
       console.time(`getCachedSession-${sessionId}`)
@@ -854,6 +855,7 @@ const submitForgeAnswer = async ({
         await quizSession.save()
       })
 
+      console.timeEnd(`submitForgeAnswer-total-${sessionId}`)
       return response
     // }) // End transaction
   } catch (err) {
@@ -874,6 +876,7 @@ const submitForgeAnswer = async ({
 const advanceToNextSection = async ({ sessionId }) => {
   // const session = await mongoose.startSession() // REMOVED
   try {
+      console.time(`advanceToNextSection-total-${sessionId}`)
     // return await session.withTransaction(async () => { // REMOVED
       // OPTIMIZATION: Use In-Memory Cached Session
       console.time(`advance:getCachedSession-${sessionId}`)
@@ -927,7 +930,10 @@ const advanceToNextSection = async ({ sessionId }) => {
           await quizSession.save()
         })
 
+
+
         console.timeEnd('AdvanceToNextSection')
+        console.timeEnd(`advanceToNextSection-total-${sessionId}`)
         return {
           completed: true,
           totalScore: quizSession.forgeProgress.score,
@@ -964,8 +970,11 @@ const advanceToNextSection = async ({ sessionId }) => {
 
         const nextSection = forgeArticle.sections[nextSectionNumber]
 
+
+
         // Return next question WITHOUT the correct answer
         console.timeEnd('AdvanceToNextSection')
+        console.timeEnd(`advanceToNextSection-total-${sessionId}`)
         return {
           completed: false,
           sectionNumber: nextSectionNumber,
