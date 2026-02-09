@@ -637,12 +637,9 @@ const submitForgeAnswer = async ({
   // REMOVED TRANSACTION FOR OPTIMISTIC WRITE
   // const mongoSession = await mongoose.startSession()
   try {
-      console.time(`submitForgeAnswer-total-${sessionId}`)
     // return await mongoSession.withTransaction(async () => {
       // OPTIMIZATION: Use In-Memory Cached Session
-      console.time(`getCachedSession-${sessionId}`)
       const quizSession = await getCachedSession(sessionId)
-      console.timeEnd(`getCachedSession-${sessionId}`)
 
       if (!quizSession || quizSession.phase !== 'reading') {
         throw new Error('Invalid session or phase')
@@ -683,9 +680,7 @@ const submitForgeAnswer = async ({
 
 
       // Get the forge article and current section
-      console.time(`getCachedForgeArticle-${sessionId}`)
       let forgeArticle = await getCachedForgeArticle(quizSession.challenge.forgeArticle)
-      console.timeEnd(`getCachedForgeArticle-${sessionId}`)
 
       // Fallback
       if (!forgeArticle) {
@@ -694,7 +689,6 @@ const submitForgeAnswer = async ({
             .lean()
             .session(mongoSession)
           forgeArticle = populatedChallenge.forgeArticle
-          console.timeEnd(`getCachedForgeArticle-${sessionId}`) // End timer if fallback used
       }
       const section = forgeArticle.sections[sectionNumber]
 
@@ -848,14 +842,13 @@ const submitForgeAnswer = async ({
         response.isLastSection = true
       }
 
-      console.timeEnd('SubmitForgeAnswer')
+
 
       // QUEUED SAVE - Sequential processing to prevent race conditions
       enqueueWrite(sessionId, async () => {
         await quizSession.save()
       })
 
-      console.timeEnd(`submitForgeAnswer-total-${sessionId}`)
       return response
     // }) // End transaction
   } catch (err) {
@@ -876,12 +869,9 @@ const submitForgeAnswer = async ({
 const advanceToNextSection = async ({ sessionId }) => {
   // const session = await mongoose.startSession() // REMOVED
   try {
-      console.time(`advanceToNextSection-total-${sessionId}`)
     // return await session.withTransaction(async () => { // REMOVED
       // OPTIMIZATION: Use In-Memory Cached Session
-      console.time(`advance:getCachedSession-${sessionId}`)
       const quizSession = await getCachedSession(sessionId)
-      console.timeEnd(`advance:getCachedSession-${sessionId}`)
         // .session(session) // REMOVED
 
       if (!quizSession || quizSession.phase !== 'reading') {
@@ -889,9 +879,7 @@ const advanceToNextSection = async ({ sessionId }) => {
       }
 
       // Get article from cache
-      console.time(`advance:getCachedForgeArticle-${sessionId}`)
       let forgeArticle = await getCachedForgeArticle(quizSession.challenge.forgeArticle)
-      console.timeEnd(`advance:getCachedForgeArticle-${sessionId}`)
 
       // Fallback
       if (!forgeArticle) {
@@ -900,7 +888,6 @@ const advanceToNextSection = async ({ sessionId }) => {
             .lean()
             .session(session)
           forgeArticle = populatedChallenge.forgeArticle
-          console.timeEnd(`advance:getCachedForgeArticle-${sessionId}`) // End if fallback
       }
       const currentSectionIndex = quizSession.forgeProgress.currentSection
 
@@ -932,8 +919,7 @@ const advanceToNextSection = async ({ sessionId }) => {
 
 
 
-        console.timeEnd('AdvanceToNextSection')
-        console.timeEnd(`advanceToNextSection-total-${sessionId}`)
+
         return {
           completed: true,
           totalScore: quizSession.forgeProgress.score,
@@ -973,8 +959,7 @@ const advanceToNextSection = async ({ sessionId }) => {
 
 
         // Return next question WITHOUT the correct answer
-        console.timeEnd('AdvanceToNextSection')
-        console.timeEnd(`advanceToNextSection-total-${sessionId}`)
+
         return {
           completed: false,
           sectionNumber: nextSectionNumber,

@@ -1178,7 +1178,6 @@ const startForgeSession = asyncHandler(async (req, res) => {
  */
 const submitForgeSectionAnswer = asyncHandler(async (req, res) => {
   const { sessionId } = req.params
-  console.time(`Controller:submitForgeSectionAnswer-${sessionId}`)
   const { sectionNumber, userAnswer, timeSpent, powerups } = req.body
 
   // Validate input
@@ -1217,14 +1216,13 @@ const submitForgeSectionAnswer = asyncHandler(async (req, res) => {
         : 'Incorrect answer. Try the next section.',
       data: result,
     })
-    console.timeEnd(`Controller:submitForgeSectionAnswer-${sessionId}`)
   } catch (error) {
     console.error('Error submitting forge answer:', error)
     res.status(400).json({
       success: false,
       message: error.message || 'Error submitting answer',
     })
-    console.timeEnd(`Controller:submitForgeSectionAnswer-${sessionId}`)
+
   }
 })
 
@@ -1236,7 +1234,6 @@ const submitForgeSectionAnswer = asyncHandler(async (req, res) => {
  */
 const moveToNextForgeSection = asyncHandler(async (req, res) => {
   const { sessionId } = req.params
-  console.time(`Controller:moveToNextForgeSection-${sessionId}`)
 
   try {
     const nextSection = await advanceToNextSection({ sessionId })
@@ -1248,14 +1245,13 @@ const moveToNextForgeSection = asyncHandler(async (req, res) => {
         : 'Moved to next section',
       data: nextSection,
     })
-    console.timeEnd(`Controller:moveToNextForgeSection-${sessionId}`)
   } catch (error) {
     console.error('Error advancing to next section:', error)
     res.status(400).json({
       success: false,
       message: error.message || 'Error advancing to next section',
     })
-    console.timeEnd(`Controller:moveToNextForgeSection-${sessionId}`)
+
   }
 })
 
