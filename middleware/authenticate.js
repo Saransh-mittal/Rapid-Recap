@@ -24,7 +24,10 @@ const Authenticate = async (req, res, next) => {
       })
     }
 
+    const authTimerLabel = `Auth-JWT-${Date.now()}-${Math.random().toString(36).substr(2, 5)}`
+    console.time(authTimerLabel)
     jwt.verify(token, process.env.ACCESS_TOKEN_SECRET, (err, decoded) => {
+      console.timeEnd(authTimerLabel)
       if (err) {
         return res.status(401).json({
           message: 'Access token is invalid or expired',
