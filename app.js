@@ -90,6 +90,22 @@ app.use((req, res, next) => {
   next()
 })
 
+// REQUEST TIMING - Add this at the VERY START to measure total request lifecycle
+app.use((req, res, next) => {
+  req._reqStartTime = Date.now()
+  const reqId = `${req.method}:${req.path}-${Date.now()}`
+
+  // Log when response finishes
+  res.on('finish', () => {
+    const duration = Date.now() - req._reqStartTime
+    if (duration > 50) { // Only log slow requests (>50ms)
+      console.log(`[REQ-TIMING] ${reqId} Total: ${duration}ms`)
+    }
+  })
+
+  next()
+})
+
 // Basic middleware setup
 app.use(cookieParser())
 app.use(i18nMiddleware.handle(i18n))
