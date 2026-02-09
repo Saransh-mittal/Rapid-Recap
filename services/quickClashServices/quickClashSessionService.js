@@ -639,7 +639,9 @@ const submitForgeAnswer = async ({
   try {
     // return await mongoSession.withTransaction(async () => {
       // OPTIMIZATION: Use In-Memory Cached Session
+      console.time(`getCachedSession-${sessionId}`)
       const quizSession = await getCachedSession(sessionId)
+      console.timeEnd(`getCachedSession-${sessionId}`)
 
       if (!quizSession || quizSession.phase !== 'reading') {
         throw new Error('Invalid session or phase')
@@ -680,7 +682,9 @@ const submitForgeAnswer = async ({
 
 
       // Get the forge article and current section
+      console.time(`getCachedForgeArticle-${sessionId}`)
       let forgeArticle = await getCachedForgeArticle(quizSession.challenge.forgeArticle)
+      console.timeEnd(`getCachedForgeArticle-${sessionId}`)
 
       // Fallback
       if (!forgeArticle) {
@@ -689,6 +693,7 @@ const submitForgeAnswer = async ({
             .lean()
             .session(mongoSession)
           forgeArticle = populatedChallenge.forgeArticle
+          console.timeEnd(`getCachedForgeArticle-${sessionId}`) // End timer if fallback used
       }
       const section = forgeArticle.sections[sectionNumber]
 
@@ -871,7 +876,9 @@ const advanceToNextSection = async ({ sessionId }) => {
   try {
     // return await session.withTransaction(async () => { // REMOVED
       // OPTIMIZATION: Use In-Memory Cached Session
+      console.time(`advance:getCachedSession-${sessionId}`)
       const quizSession = await getCachedSession(sessionId)
+      console.timeEnd(`advance:getCachedSession-${sessionId}`)
         // .session(session) // REMOVED
 
       if (!quizSession || quizSession.phase !== 'reading') {
@@ -879,7 +886,9 @@ const advanceToNextSection = async ({ sessionId }) => {
       }
 
       // Get article from cache
+      console.time(`advance:getCachedForgeArticle-${sessionId}`)
       let forgeArticle = await getCachedForgeArticle(quizSession.challenge.forgeArticle)
+      console.timeEnd(`advance:getCachedForgeArticle-${sessionId}`)
 
       // Fallback
       if (!forgeArticle) {
@@ -888,6 +897,7 @@ const advanceToNextSection = async ({ sessionId }) => {
             .lean()
             .session(session)
           forgeArticle = populatedChallenge.forgeArticle
+          console.timeEnd(`advance:getCachedForgeArticle-${sessionId}`) // End if fallback
       }
       const currentSectionIndex = quizSession.forgeProgress.currentSection
 
