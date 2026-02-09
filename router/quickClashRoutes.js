@@ -35,6 +35,7 @@ const {
   getForgeSessionSummary,
   getForgeReviewController,
   placeBetController,
+  retrySession,
 } = require('../controllers/quickClashController')
 const {
   joinMatchmakingRoom,
@@ -162,6 +163,9 @@ router.post('/session/:sessionId/reading/complete', completeReadingPhase)
 router.post('/session/:sessionId/quiz/submit', submitQuizAnswers)
 router.get('/session/:sessionId/report', getSessionQuizReport)
 router.post('/session/:sessionId/powerup/use', usePowerupController)
+
+// Session retry route (for backend errors only - free retry)
+router.post('/session/:sessionId/retry', retrySession)
 
 // Challenge analysis routes
 router.post('/analysis/:challengeId/generate', generateAnalysis)

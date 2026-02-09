@@ -18,7 +18,7 @@ const quickClashSessionSchema = new mongoose.Schema({
   },
   phase: {
     type: String,
-    enum: ['reading', 'quiz', 'completed'],
+    enum: ['reading', 'quiz', 'completed', 'retried'],
     default: 'reading',
   },
   language: {
@@ -217,6 +217,26 @@ const quickClashSessionSchema = new mongoose.Schema({
       },
     },
   ],
+  // Backend error tracking - for free retry eligibility
+  backendError: {
+    occurred: {
+      type: Boolean,
+      default: false,
+    },
+    type: {
+      type: String, // 'QUEUE_PROCESSING_FAILED', 'WRITE_CONFLICT_EXHAUSTED', etc.
+    },
+    timestamp: Date,
+    canRetry: {
+      type: Boolean,
+      default: true,
+    },
+  },
+  // If this session was retried, reference to the new session
+  retriedWith: {
+    type: mongoose.Schema.Types.ObjectId,
+    ref: 'QUICK_CLASH_SESSION',
+  },
   createdAt: {
     type: Date,
     default: Date.now,

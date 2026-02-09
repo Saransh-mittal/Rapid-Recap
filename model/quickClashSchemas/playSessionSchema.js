@@ -84,6 +84,7 @@ const playSessionSchema = new mongoose.Schema(
       battle: { type: Boolean, default: false },
       squad_intro: { type: Boolean, default: false },
       coins_shop: { type: Boolean, default: false },
+      quickClashOnboarding: { type: Boolean, default: false },
     },
   },
   {

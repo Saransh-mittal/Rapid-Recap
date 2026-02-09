@@ -17,6 +17,9 @@ const {
 } = require('../services/quickClashServices/quickClashPowerupRewardService')
 const QuickClashSession = require('../model/quickClashSchemas/quickClashSessionSchema')
 const globalEmitter = require('../eventEmitter')
+const { getCachedSession } = require('../services/quickClashServices/quickClashSessionService')
+const { enqueueWrite } = require('../utils/sessionWriteQueue')
+
 
 // Helper to resolve player name
 const getPlayerName = async userId => {
@@ -202,54 +205,101 @@ const getPowerupDefinitions = asyncHandler(async (req, res) => {
  * @desc    Use a powerup during a session
  * @route   POST /api/quickClash/session/:sessionId/powerup/use
  * @access  Private
+ *
+ * OPTIMISTIC UPDATE: Returns immediately with effect, persistence is queued
  */
 const usePowerupController = asyncHandler(async (req, res) => {
   const { sessionId } = req.params
   const { powerupId, questionId } = req.body
-  const userId = req.user._id
+  const userId = req.user?._id || req.player?._id
 
-  // 1. Validate Session
-  const session = await QuickClashSession.findById(sessionId).populate('quiz')
-  if (!session || session.user.toString() !== userId.toString()) {
+  // 1. Get session from cache (fast) or DB
+  const session = await getCachedSession(sessionId)
+  if (!session) {
     res.status(404)
-    throw new Error('Session not found or unauthorized')
+    throw new Error('Session not found')
   }
 
-  // 2. Validate Powerup
+  // Validate user owns this session
+  if (session.user.toString() !== userId.toString()) {
+    res.status(403)
+    throw new Error('Unauthorized session access')
+  }
+
+  // 2. Validate powerup exists and not used (in-memory check)
   const powerup = session.activePowerups.find(p => p.powerupId === powerupId && !p.used)
   if (!powerup) {
-    res.status(400)
-    throw new Error('Powerup not available or already used')
+    // Return graceful response for duplicate attempts (handles double-clicks)
+    return res.status(200).json({
+      success: true,
+      alreadyUsed: true,
+      message: 'Powerup already used',
+      effect: null
+    })
   }
 
-  // 3. Apply Logic
+  // 3. Calculate effect synchronously (before any async operations)
   let effect = {}
+
   if (session.phase === 'reading') {
     // --- FORGE MODE LOGIC ---
-    // Ensure forgeArticle is populated
-    if (!session.challenge.forgeArticle) {
-       await session.populate({ path: 'challenge', populate: { path: 'forgeArticle' } })
+    // Need to get the full forgeArticle with sections
+    if (!session.challenge) {
+      await session.populate('challenge')
     }
-    const forgeArticle = session.challenge.forgeArticle
-    if (!forgeArticle) {
+
+    // Get forgeArticle - check cache first, DB as fallback
+    let forgeArticle = null
+    const forgeArticleId = session.challenge?.forgeArticle?._id || session.challenge?.forgeArticle
+
+    if (forgeArticleId) {
+      const cache = require('memory-cache')
+      const forgeArticleCacheKey = `forge-article-${forgeArticleId}`
+
+      if (session.challenge.forgeArticle?.sections) {
+        forgeArticle = session.challenge.forgeArticle
+      } else if (cache.get(forgeArticleCacheKey)) {
+        forgeArticle = cache.get(forgeArticleCacheKey)
+      }
+      else {
+        const ForgeArticle = require('../model/quickClashSchemas/forgeArticleSchema')
+        forgeArticle = await ForgeArticle.findById(forgeArticleId).lean()
+        if (forgeArticle) {
+          cache.put(forgeArticleCacheKey, forgeArticle, 600000)
+        }
+      }
+    }
+
+
+    if (!forgeArticle || !forgeArticle.sections) {
       res.status(404)
       throw new Error('Forge article not found')
     }
 
-    const currentSectionIndex = session.forgeProgress.currentSection
+    const currentSectionIndex = session.forgeProgress?.currentSection || 0
     const section = forgeArticle.sections[currentSectionIndex]
 
-    if (powerupId === 'ORACLES_EYE') {
-       const correctIndex = section.mcq.correctIndex
-       const allIndices = [0, 1, 2, 3]
-       const incorrectIndices = allIndices.filter(i => i !== correctIndex)
-       const shuffledIncorrect = incorrectIndices.sort(() => 0.5 - Math.random())
-       const indicesToRemove = shuffledIncorrect.slice(0, 2)
+    if (!section) {
+      res.status(400)
+      throw new Error('Current section not found')
+    }
 
-       effect = {
-         type: 'REMOVE_OPTIONS',
-         optionsToRemove: indicesToRemove
-       }
+    if (powerupId === 'ORACLES_EYE') {
+      const correctIndex = section.mcq.correctIndex
+      const allIndices = [0, 1, 2, 3]
+      const incorrectIndices = allIndices.filter(i => i !== correctIndex)
+      const shuffledIncorrect = incorrectIndices.sort(() => 0.5 - Math.random())
+      const indicesToRemove = shuffledIncorrect.slice(0, 2)
+
+      effect = {
+        type: 'REMOVE_OPTIONS',
+        optionsToRemove: indicesToRemove
+      }
+    } else if (powerupId === 'TIME_WARP') {
+      effect = {
+        type: 'TIME_EXTENSION',
+        extraTime: 15000 // 15 seconds
+      }
     }
   } else {
     // --- QUIZ MODE LOGIC ---
@@ -257,6 +307,10 @@ const usePowerupController = asyncHandler(async (req, res) => {
       if (!questionId) {
         res.status(400)
         throw new Error('Question ID required for Oracles Eye')
+      }
+
+      if (!session.quiz) {
+        await session.populate('quiz')
       }
 
       // Find correct answer (using mapping)
@@ -285,18 +339,49 @@ const usePowerupController = asyncHandler(async (req, res) => {
         type: 'REMOVE_OPTIONS',
         optionsToRemove: keysToRemove
       }
+    } else if (powerupId === 'TIME_WARP') {
+      effect = {
+        type: 'TIME_EXTENSION',
+        extraTime: 15000 // 15 seconds
+      }
     }
   }
 
-  // 4. Mark as Used
+  // 4. Mark as used IN MEMORY immediately (prevents double-click race)
   powerup.used = true
-  await session.save()
+  powerup.usedAt = new Date()
 
+  // 5. Queue persistence (fire and forget)
+  enqueueWrite(sessionId, async () => {
+    try {
+      // Fetch fresh session from DB
+      const freshSession = await QuickClashSession.findById(sessionId)
+      if (freshSession) {
+        const targetPowerup = freshSession.activePowerups.find(
+          p => p.powerupId === powerupId && !p.used
+        )
+        if (targetPowerup) {
+          targetPowerup.used = true
+          targetPowerup.usedAt = new Date()
+          await freshSession.save()
+        }
+      }
+    } catch (err) {
+      console.error(`[Powerup] Failed to persist ${powerupId} usage:`, err.message)
+    }
+  })
+
+  // 6. Respond immediately with effect
   res.status(200).json({
     success: true,
-    effect
+    effect,
+    powerupId,
+    message: 'Powerup applied successfully'
   })
 })
+
+
+
 
 /**
  * @desc    Get user's powerup inventory

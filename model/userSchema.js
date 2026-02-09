@@ -499,6 +499,7 @@ const userSchema = new mongoose.Schema(
       battle: { type: Boolean, default: false },
       squad_intro: { type: Boolean, default: false },
       coins_shop: { type: Boolean, default: false },
+      quickClashOnboarding: { type: Boolean, default: false },
     },
     // Flag to track if user received welcome powerups (TIME_WARP + ORACLES_EYE)
     receivedWelcomePowerups: {

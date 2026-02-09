@@ -2,6 +2,8 @@
 const asyncHandler = require('express-async-handler')
 const cache = require('memory-cache') // Cache import
 const QUIZ_CACHE_TTL = 8 * 60 * 1000 // 8 minutes (session duration)
+const BackendSyncError = require('../utils/errors/BackendSyncError')
+const { clearQueue } = require('../utils/sessionWriteQueue')
 const {
   createChallenge,
   acceptChallenge,
@@ -478,6 +480,18 @@ const getSessionQuiz = asyncHandler(async (req, res) => {
     })
   } catch (error) {
     console.error('Error fetching session quiz:', error)
+
+    // Handle BackendSyncError - return canRetry flag for free retry
+    if (error instanceof BackendSyncError || error.name === 'BackendSyncError') {
+      return res.status(500).json({
+        success: false,
+        error: error.code || 'SESSION_BACKEND_ERROR',
+        message: error.message || 'Session sync failed due to server error',
+        canRetry: true,
+        sessionId,
+      })
+    }
+
     res.status(500).json({
       success: false,
       message: 'Error fetching quiz questions',
@@ -1287,6 +1301,80 @@ const getForgeReviewController = asyncHandler(async (req, res) => {
   }
 })
 
+/**
+ * Retry a session that failed due to backend error
+ * Only allows retry if session has backendError.occurred === true
+ * @route POST /api/quickClash/session/:sessionId/retry
+ * @access Private
+ */
+const retrySession = asyncHandler(async (req, res) => {
+  const { sessionId } = req.params
+  const userId = req.user._id
+
+  try {
+    // Find the session and validate it's eligible for free retry
+    const oldSession = await QuickClashSession.findOne({
+      _id: sessionId,
+      user: userId,
+      'backendError.occurred': true,
+      'backendError.canRetry': true,
+    })
+
+    if (!oldSession) {
+      return res.status(400).json({
+        success: false,
+        error: 'RETRY_NOT_ALLOWED',
+        message: 'This session is not eligible for free retry',
+        canRetry: false,
+      })
+    }
+
+    // Don't allow retry if session was already retried
+    if (oldSession.phase === 'retried') {
+      return res.status(400).json({
+        success: false,
+        error: 'ALREADY_RETRIED',
+        message: 'This session has already been retried',
+        canRetry: false,
+      })
+    }
+
+    // Clear the old session's write queue if any
+    clearQueue(sessionId)
+
+    // Create a fresh session for the same challenge
+    const newSession = await createSession({
+      challengeId: oldSession.challenge,
+      userId: userId,
+      language: oldSession.language,
+    })
+
+    // Mark old session as retried
+    oldSession.phase = 'retried'
+    oldSession.retriedWith = newSession._id
+    oldSession.backendError.canRetry = false // Prevent multiple retries
+    await oldSession.save()
+
+    // Clear quiz cache for old session
+    cache.del(`quiz-${sessionId}`)
+
+    console.log(`[retrySession] Session ${sessionId} retried, new session: ${newSession._id}`)
+
+    res.status(200).json({
+      success: true,
+      message: 'Session retry successful',
+      newSessionId: newSession._id,
+      session: newSession,
+    })
+  } catch (error) {
+    console.error('Error retrying session:', error)
+    res.status(500).json({
+      success: false,
+      message: error.message || 'Failed to retry session',
+    })
+  }
+})
+
 module.exports = {
   createNewChallenge,
   handleAcceptChallenge,
@@ -1318,4 +1406,5 @@ module.exports = {
   getForgeSessionSummary,
   getForgeReviewController,
   placeBetController,
+  retrySession,
 }
