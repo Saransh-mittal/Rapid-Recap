@@ -1,7 +1,0 @@
-fix(v2.0.8): add missing session write queue utility and build artifacts
-
-- **Server:** Added `utils/sessionWriteQueue.js` to implement the 'fire-and-forget' session saving strategy (missed in v2.0.6).
-- **Utils:** Added `utils/errors/` directory for error handling.
-- **Scripts:** Added `scripts/analyzeScoreIssue.js`.
-- **Build:** Updated `client/dist` assets.
-- **Patch:** Bumped version to 2.0.8.
