@@ -20,6 +20,7 @@ import quickClashGlobalMatchmakingReducer from './quickClashGlobalMatchmakingSli
 import quickClashAnalysisReducer from './quickClashAnalysisSlice'
 import quickClashProfileReducer from './quickClashProfileSlice'
 import quickClashSocketReducer from './quickClashSocketSlice'
+import soloDrillReducer from './soloDrillSlice'
 import friendsReducer from './friendsSlice'
 import friendsChatReducer from './friendsChatSlice'
 
@@ -46,6 +47,7 @@ export const store = configureStore({
     quickClashAnalysis: quickClashAnalysisReducer,
     quickClashProfile: quickClashProfileReducer,
     quickClashSocket: quickClashSocketReducer,
+    soloDrill: soloDrillReducer,
     friends: friendsReducer,
     friendsChat: friendsChatReducer,
   },

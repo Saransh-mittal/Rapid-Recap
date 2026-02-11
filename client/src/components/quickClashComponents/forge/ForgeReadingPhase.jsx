@@ -34,7 +34,11 @@ import {
   AlertCircle,
   CheckCircle,
   XCircle,
+  X,
   Clock,
+  Pause,
+  Play,
+  Flame,
 } from 'lucide-react'
 
 // Services
@@ -65,11 +69,28 @@ import { quizAudioService } from '../../../services/quizAudioService'
  * @param {string} category - Article category for theming
  * @param {Array} activePowerups - List of active powerups for this session
  * @param {boolean} isSessionPlayer - Whether user is a session player (uses /api/play endpoints)
+ * @param {boolean} isSoloDrill - Whether in Solo Drill mode (uses /api/solo-drill endpoints)
  * @param {function} onComplete - Callback when forge mode completes
  * @param {function} onPowerupUsed - Callback when a powerup is used (receives powerupId)
  * @param {function} onError - Callback for error handling
+ * @param {boolean} isPaused - Whether forge timers/interactions are paused
+ * @param {function} onTogglePause - Pause/resume callback
+ * @param {function} onClose - Optional callback for closing current session UI
  */
-const ForgeReadingPhase = ({ sessionId, category, activePowerups = [], isSessionPlayer = false, onComplete, onPowerupUsed, onError }) => {
+const ForgeReadingPhase = ({
+  sessionId,
+  category,
+  activePowerups = [],
+  isSessionPlayer = false,
+  isSoloDrill = false,
+  initialData = null,
+  onComplete,
+  onPowerupUsed,
+  onError,
+  isPaused = false,
+  onTogglePause = null,
+  onClose = null
+}) => {
   const { t } = useTranslation('QuickClash')
 
   // Get category-based accent color for theming
@@ -177,7 +198,7 @@ const ForgeReadingPhase = ({ sessionId, category, activePowerups = [], isSession
 
   useEffect(() => {
     let interval
-    if (phase === 'question') {
+    if (phase === 'question' && !isPaused) {
       // Don't reset timer here if it's already running (e.g. from previous render),
       // but we do want to reset it when *entering* the phase.
       // We can rely on the fact that we setQuestionTimer(0) in moveToNextSection or init.
@@ -192,11 +213,11 @@ const ForgeReadingPhase = ({ sessionId, category, activePowerups = [], isSession
     return () => {
       clearInterval(interval)
     }
-  }, [phase])
+  }, [phase, isPaused])
 
   // New: State-based Timeout Check
   useEffect(() => {
-    if (phase === 'question' && questionTimer >= maxQuestionTime) {
+    if (phase === 'question' && !isPaused && questionTimer >= maxQuestionTime) {
       if (!selectedAnswer && !isTimeout) {
         setIsTimeout(true)
         notificationManager.warning('Time Up!', 'Moving to content...')
@@ -205,7 +226,7 @@ const ForgeReadingPhase = ({ sessionId, category, activePowerups = [], isSession
         }, 1500)
       }
     }
-  }, [questionTimer, maxQuestionTime, phase, selectedAnswer, isTimeout])
+  }, [questionTimer, maxQuestionTime, phase, selectedAnswer, isTimeout, isPaused])
 
   // Loading and error states
   const [loading, setLoading] = useState(false)
@@ -214,7 +235,7 @@ const ForgeReadingPhase = ({ sessionId, category, activePowerups = [], isSession
   // Reading timer countdown effect
   useEffect(() => {
     let interval
-    if (phase === 'reading' && readingTimer > 0) {
+    if (phase === 'reading' && readingTimer > 0 && !isPaused) {
       interval = setInterval(() => {
         setReadingTimer(prev => {
           if (prev <= 1) {
@@ -228,7 +249,7 @@ const ForgeReadingPhase = ({ sessionId, category, activePowerups = [], isSession
       }, 1000)
     }
     return () => clearInterval(interval)
-  }, [phase, readingTimer])
+  }, [phase, readingTimer, isPaused])
 
   // Track when question was shown (for timeSpent calculation)
   const questionStartTime = useRef(null)
@@ -246,6 +267,21 @@ const ForgeReadingPhase = ({ sessionId, category, activePowerups = [], isSession
    * 3. Display question to user
    */
   useEffect(() => {
+    // Helper to ensure we don't start fetch if initialData is provided
+    if (initialData) {
+      console.log('[FORGE] Using initialData, skipping fetch')
+      setCurrentQuestion(initialData)
+      setProgress(prev => ({
+        ...prev,
+        current: initialData.sectionNumber,
+        total: initialData.totalSections,
+      }))
+      setPhase('question')
+      setQuestionTimer(0)
+      questionStartTime.current = Date.now()
+      return
+    }
+
     // Only initialize when we have a valid sessionId
     if (sessionId) {
       console.log('[FORGE] Initializing with sessionId:', sessionId)
@@ -253,7 +289,7 @@ const ForgeReadingPhase = ({ sessionId, category, activePowerups = [], isSession
     } else {
       console.log('[FORGE] Skipping initialization - no sessionId yet')
     }
-  }, [sessionId])
+  }, [sessionId, initialData]) // Depend on initialData too
 
   const initializeForgeMode = async () => {
     // Double-check sessionId is valid
@@ -269,7 +305,7 @@ const ForgeReadingPhase = ({ sessionId, category, activePowerups = [], isSession
       console.log('[FORGE] Calling forgeService.start for session:', sessionId)
 
       // Initialize session
-      const response = await forgeService.start(sessionId, { isSessionPlayer })
+      const response = await forgeService.start(sessionId, { isSessionPlayer, isSoloDrill })
 
       console.log('[FORGE] Response received:', response)
 
@@ -315,7 +351,7 @@ const ForgeReadingPhase = ({ sessionId, category, activePowerups = [], isSession
    */
   const handleAnswerSubmit = async answerIndex => {
     // Prevent multiple submissions or submission while loading
-    if (selectedAnswer !== null && answerIndex !== null || loading) return
+    if ((selectedAnswer !== null && answerIndex !== null) || loading || isPaused) return
 
     // If timeout (null index), we don't select any answer visually
     if (answerIndex !== null) {
@@ -339,10 +375,14 @@ const ForgeReadingPhase = ({ sessionId, category, activePowerups = [], isSession
           scoreSurge: activeEffects.scoreSurge
         },
         isSessionPlayer,
+        isSoloDrill,
       })
 
-      if (response.success) {
-        const result = response.data
+      // Normalize response: Handle both wrapped {success: true, data: ...} and direct result
+      const result = (response.success && response.data) ? response.data : response
+
+      // Check for success based on valid result data (isCorrect must exist)
+      if (result && typeof result.isCorrect !== 'undefined') {
         setAnswerResult(result)
 
         // Update progress
@@ -403,7 +443,7 @@ const ForgeReadingPhase = ({ sessionId, category, activePowerups = [], isSession
   // Auto-proceed timer for transition screen
   useEffect(() => {
     let interval
-    if (isPhaseComplete && transitionTimer > 0) {
+    if (isPhaseComplete && transitionTimer > 0 && !isPaused) {
       interval = setInterval(() => {
         setTransitionTimer(prev => {
           if (prev <= 1) {
@@ -416,7 +456,7 @@ const ForgeReadingPhase = ({ sessionId, category, activePowerups = [], isSession
       }, 1000)
     }
     return () => clearInterval(interval)
-  }, [isPhaseComplete, transitionTimer, handlePhaseComplete])
+  }, [isPhaseComplete, transitionTimer, handlePhaseComplete, isPaused])
 
   /**
    * Move to next section
@@ -441,7 +481,7 @@ const ForgeReadingPhase = ({ sessionId, category, activePowerups = [], isSession
     try {
       setLoading(true)
 
-      const response = await forgeService.moveNext(sessionId, { isSessionPlayer })
+      const response = await forgeService.moveNext(sessionId, { isSessionPlayer, isSoloDrill })
       const data = response.data || response
 
       if (data.completed) {
@@ -510,7 +550,7 @@ const ForgeReadingPhase = ({ sessionId, category, activePowerups = [], isSession
    * Plays quick sound and instantly transitions to next section
    */
   const handleManualContinue = () => {
-    if (continueLoading) return // Prevent double clicks
+    if (continueLoading || isPaused) return // Prevent double clicks
     setContinueLoading(true)
     haptics.selection()
     // Play quick 200ms sound (no wait - instant transition)
@@ -521,7 +561,7 @@ const ForgeReadingPhase = ({ sessionId, category, activePowerups = [], isSession
   // Powerup Handlers
   const handlePowerupClick = async (powerup) => {
     // Prevent usage if loading or if we shouldn't allow it
-    if (powerupLoading) return
+    if (powerupLoading || isPaused) return
 
     // Oracle Eye: only 1 per question
     if (powerup.powerupId === 'ORACLES_EYE' && oracleUsedThisQuestion) return
@@ -534,10 +574,14 @@ const ForgeReadingPhase = ({ sessionId, category, activePowerups = [], isSession
       }
 
       // Call API to mark as used on server
-      const response = await forgeService.usePowerup(sessionId, powerup.powerupId, { isSessionPlayer })
+      const response = await forgeService.usePowerup(sessionId, powerup.powerupId, { isSessionPlayer, isSoloDrill })
 
       if (!response.success) {
          throw new Error('Failed to activate powerup')
+      }
+      if (response.alreadyUsed) {
+        notificationManager.info('Powerup already used', 'Try another powerup')
+        return
       }
 
       // Apply Client-Side Effects with appropriate sounds
@@ -559,14 +603,18 @@ const ForgeReadingPhase = ({ sessionId, category, activePowerups = [], isSession
           notificationManager.powerup('Score Surge Active!', '2x Points for this question')
           break
         case 'ORACLES_EYE':
+        {
           quizAudioService.playOraclesEye() // Mystical reveal chime
           // Effects returned from server
           const effect = response.effect
-          if (effect.type === 'REMOVE_OPTIONS') {
+          if (effect?.type === 'REMOVE_OPTIONS') {
             setDisabledOptions(prev => [...prev, ...effect.optionsToRemove])
             notificationManager.powerup("Oracle's Eye Activated", "Two incorrect options removed!")
+          } else {
+            throw new Error('Invalid Oracle effect')
           }
           break
+        }
         default:
           quizAudioService.playEquip() // Fallback for unknown powerups
           break
@@ -689,50 +737,59 @@ const ForgeReadingPhase = ({ sessionId, category, activePowerups = [], isSession
   // MAIN RENDER - QUESTION & READING PHASES
   // ============================================================================
 
+  const hasZeroBasedSections =
+    currentQuestion?.sectionNumber === 0 ||
+    progress.unlockedSections?.includes(0)
+
+  const progressSectionDisplay = hasZeroBasedSections
+    ? progress.current + 1
+    : progress.current
+
+  const questionSectionDisplay = hasZeroBasedSections
+    ? (currentQuestion?.sectionNumber ?? 0) + 1
+    : (currentQuestion?.sectionNumber ?? 1)
+
+  // Solo Drill should allow instant manual continue in reading phase.
+  const isContinueLocked = !isSoloDrill && readingTimer > 20
 
 
   return (
-    <div className="h-full flex flex-col overflow-hidden text-white bg-transparent">
-      {/* Header - Progress & Score (Compact) */}
+    <div className="relative h-full flex flex-col overflow-hidden text-white bg-transparent">
+      {/* Header */}
       <div
-        className="flex-none px-4 py-3 border-b border-white/10 bg-black/20 backdrop-blur-md z-10 flex items-center justify-between"
+        className="relative flex-none px-3 py-2.5 border-b border-white/10 bg-black/20 backdrop-blur-md z-10 flex items-center gap-2"
       >
-        {/* Left: Progress */}
-        <div className="flex items-center gap-3">
-          <div className="flex flex-col">
-            <span className="text-xs font-medium text-white/60 uppercase tracking-wider">
-              {t('forge.progress', 'Progress')}
-            </span>
-            <div className="flex items-baseline gap-1">
-              <span className="text-xl font-bold text-white">
-                {progress.current + 1}
-              </span>
-              <span className="text-sm text-white/40">
-                / {progress.total}
-              </span>
-            </div>
-          </div>
+        {/* Progress */}
+        <div className="flex items-center gap-1.5 min-w-0">
+          <span className="text-lg font-bold text-white tabular-nums leading-none">
+            {progressSectionDisplay}
+          </span>
+          <span className="text-sm text-white/30 leading-none">
+            / {progress.total}
+          </span>
         </div>
 
-        {/* Center: Timer (Contextual) */}
-        <div className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2">
+        {/* Timer (compact badge) */}
+        <div className="flex-shrink-0">
           {phase === 'reading' ? (
-            <div className="flex flex-col items-center">
-              <span className="text-[10px] font-bold text-blue-400 uppercase tracking-widest mb-0.5">
-                {t('forge.reading', 'Reading')}
+            <div className="flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-blue-500/10">
+              <span className="text-[9px] font-bold text-blue-400 uppercase tracking-wider leading-none">
+                {t('forge.reading', 'Read')}
               </span>
-              <span className="text-2xl font-black text-white tabular-nums tracking-tight leading-none">
+              <span className="text-sm font-black text-white tabular-nums leading-none">
                 {readingTimer}s
               </span>
             </div>
           ) : phase === 'question' ? (
-            <div className="flex flex-col items-center">
-              <span className={`text-[10px] font-bold uppercase tracking-widest mb-0.5 ${
+            <div className={`flex items-center gap-1.5 px-2.5 py-1 rounded-lg ${
+              questionTimer > 7 ? 'bg-red-500/10' : 'bg-yellow-500/10'
+            }`}>
+              <span className={`text-[9px] font-bold uppercase tracking-wider leading-none ${
                 questionTimer > 7 ? 'text-red-400' : 'text-yellow-400'
               }`}>
                 {t('forge.time', 'Time')}
               </span>
-              <span className={`text-2xl font-black tabular-nums tracking-tight leading-none ${
+              <span className={`text-sm font-black tabular-nums leading-none ${
                 questionTimer > (maxQuestionTime - 3) ? 'text-red-400' : 'text-white'
               }`}>
                 {Math.max(0, maxQuestionTime - questionTimer)}s
@@ -741,14 +798,69 @@ const ForgeReadingPhase = ({ sessionId, category, activePowerups = [], isSession
           ) : null}
         </div>
 
-        {/* Right: Score */}
-        <ScoreDisplay
-          score={progress.score}
-          streak={progress.streak}
-          lastScore={progress.lastScore}
-          accentColor={accentColor}
-          compact={true}
-        />
+        {/* Spacer */}
+        <div className="flex-1" />
+
+        {/* Right group: Score + Pause + Close - all same height */}
+        <div className="flex items-center gap-1.5">
+          {/* Streak badge */}
+          <AnimatePresence>
+            {progress.streak > 1 && (
+              <motion.div
+                initial={{ scale: 0, opacity: 0 }}
+                animate={{ scale: 1, opacity: 1 }}
+                exit={{ scale: 0, opacity: 0 }}
+                className="flex items-center gap-1 px-2 h-8 rounded-full bg-orange-500/15 border border-orange-500/20"
+              >
+                <Flame className="w-3 h-3 text-orange-400 fill-orange-400" />
+                <span className="text-[11px] font-bold text-orange-300">{progress.streak}x</span>
+              </motion.div>
+            )}
+          </AnimatePresence>
+
+          {/* Score chip */}
+          <div className="flex items-center gap-1.5 h-8 px-2.5 rounded-full bg-white/[0.06]">
+            <span className="text-[9px] font-bold text-white/40 uppercase tracking-wider">Pts</span>
+            <motion.span
+              key={progress.score}
+              initial={{ scale: 1.3, color: accentColor }}
+              animate={{ scale: 1, color: '#ffffff' }}
+              className="text-sm font-black tabular-nums leading-none"
+            >
+              {progress.score}
+            </motion.span>
+          </div>
+
+          {/* Pause */}
+          {onTogglePause && (
+            <button
+              type="button"
+              onClick={onTogglePause}
+              className={`
+                h-8 w-8 rounded-full transition-all duration-200 flex items-center justify-center flex-shrink-0
+                ${isPaused
+                  ? 'bg-cyan-500/20 text-cyan-50 shadow-[0_0_12px_rgba(34,211,238,0.2)]'
+                  : 'bg-white/[0.06] text-white/50 hover:bg-white/10 hover:text-white'
+                }
+              `}
+              aria-label={isPaused ? 'Resume drill' : 'Pause drill'}
+            >
+              {isPaused ? <Play className="w-3.5 h-3.5" /> : <Pause className="w-3.5 h-3.5" />}
+            </button>
+          )}
+
+          {/* Close */}
+          {onClose && (
+            <button
+              type="button"
+              onClick={onClose}
+              className="h-8 w-8 rounded-full bg-white/[0.06] text-white/40 hover:bg-white/10 hover:text-white transition-all duration-200 flex items-center justify-center flex-shrink-0"
+              aria-label="Close drill"
+            >
+              <X className="w-3.5 h-3.5" />
+            </button>
+          )}
+        </div>
       </div>
 
       {/* Powerups moved to footer dock - removed floating bar */}
@@ -895,7 +1007,7 @@ const ForgeReadingPhase = ({ sessionId, category, activePowerups = [], isSession
                           {category}
                         </span>
                         <span className="text-[10px] font-bold uppercase tracking-wider px-3 py-1 rounded-full border border-current bg-current/10" style={{ color: accentColor }}>
-                          Section {currentQuestion.sectionNumber + 1}
+                          Section {questionSectionDisplay}
                         </span>
                       </div>
                       <h2 className="text-lg md:text-xl font-bold text-white leading-tight">
@@ -972,14 +1084,14 @@ const ForgeReadingPhase = ({ sessionId, category, activePowerups = [], isSession
                         <motion.button
                           key={visualIndex}
                           onClick={() => !isEliminated && handleAnswerSubmit(originalIndex)}
-                          disabled={loading || phase === 'feedback' || isEliminated}
+                          disabled={loading || phase === 'feedback' || isEliminated || isPaused}
                           className={`
                             relative w-full text-left p-4 rounded-xl border transition-all duration-300 group flex items-center gap-5 cursor-pointer
                             ${buttonBg} ${buttonBorder} ${buttonHover} ${buttonShadow} ${buttonOpacity}
                             ${isEliminated ? 'cursor-not-allowed grayscale opacity-50' : ''}
                           `}
-                          whileHover={!loading && phase !== 'feedback' && !isEliminated ? { scale: 1.01 } : {}}
-                          whileTap={!loading && phase !== 'feedback' && !isEliminated ? { scale: 0.99 } : {}}
+                          whileHover={!loading && phase !== 'feedback' && !isEliminated && !isPaused ? { scale: 1.01 } : {}}
+                          whileTap={!loading && phase !== 'feedback' && !isEliminated && !isPaused ? { scale: 0.99 } : {}}
                           animate={showResult && isCorrectAnswer ? {
                             scale: [1, 1.08, 1],
                             rotate: [0, 2, -2, 0],
@@ -1112,7 +1224,7 @@ const ForgeReadingPhase = ({ sessionId, category, activePowerups = [], isSession
 
                   <div className="prose prose-invert max-w-none">
                     <p className="text-white/95 leading-relaxed whitespace-pre-line font-serif text-base md:text-lg">
-                      {readingContent.content}
+                      {readingContent.body || readingContent.content}
                     </p>
                   </div>
                 </div>
@@ -1136,10 +1248,10 @@ const ForgeReadingPhase = ({ sessionId, category, activePowerups = [], isSession
               <div className="flex items-center justify-center gap-3 flex-wrap">
                 {groupedForgePowerups.map((p, i) => {
                   const remaining = p.total // It's already filtered for unused
-                  const isExhausted = remaining <= 0 || powerupLoading
+                  const isExhausted = remaining <= 0
                   // For Oracle Eye, also disable if already used this question
                   const isDisabledForQuestion = p.powerupId === 'ORACLES_EYE' && oracleUsedThisQuestion
-                  const isDisabled = isExhausted || isDisabledForQuestion
+                  const isDisabled = isExhausted || isDisabledForQuestion || powerupLoading || isPaused
 
                   // Color schemes matching the page theme better
                   const colorSchemes = {
@@ -1217,17 +1329,19 @@ const ForgeReadingPhase = ({ sessionId, category, activePowerups = [], isSession
                 </div>
               </div>
               <motion.button
-                whileHover={readingTimer <= 20 && !continueLoading ? { scale: 1.05 } : {}}
-                whileTap={readingTimer <= 20 && !continueLoading ? { scale: 0.95 } : {}}
+                whileHover={!isContinueLocked && !continueLoading && !isPaused ? { scale: 1.05 } : {}}
+                whileTap={!isContinueLocked && !continueLoading && !isPaused ? { scale: 0.95 } : {}}
                 onClick={handleManualContinue}
-                disabled={readingTimer > 20 || continueLoading}
+                disabled={isContinueLocked || continueLoading || isPaused}
                 className={`
                   w-full md:w-auto px-8 py-4 rounded-2xl font-bold text-white shadow-lg transition-all
                   flex items-center justify-center gap-3 text-lg relative overflow-hidden
-                  ${readingTimer > 20
+                  ${isContinueLocked
                     ? 'bg-white/10 cursor-not-allowed opacity-50'
                     : continueLoading
                     ? 'bg-gradient-to-r from-emerald-600 to-cyan-600 shadow-emerald-500/40 cursor-wait'
+                    : isPaused
+                    ? 'bg-white/10 cursor-not-allowed opacity-60'
                     : 'bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-500 hover:to-indigo-500 shadow-blue-500/30'
                   }
                 `}
@@ -1241,7 +1355,7 @@ const ForgeReadingPhase = ({ sessionId, category, activePowerups = [], isSession
                     transition={{ duration: 0.5, ease: 'easeInOut' }}
                   />
                 )}
-                {readingTimer > 20 ? (
+                {isContinueLocked ? (
                   <>
                     <Loader2 className="w-5 h-5 animate-spin" />
                     <span>Reading... {readingTimer - 20}s</span>
@@ -1276,3 +1390,5 @@ const ForgeReadingPhase = ({ sessionId, category, activePowerups = [], isSession
 }
 
 export default ForgeReadingPhase
+
+

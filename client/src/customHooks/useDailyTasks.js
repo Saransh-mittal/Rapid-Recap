@@ -6,6 +6,7 @@ import {
   updateTaskProgress,
   fetchTaskStatistics,
 } from '../redux/quickClashDailyTasksSlice'
+import { DAILY_TASKS_ENABLED } from '../utils/featureFlags'
 
 /**
  * Custom hook for working with daily tasks and tracking progress
@@ -26,11 +27,18 @@ const useDailyTasks = () => {
   // Check if user is authenticated (not a session player)
   const { user } = useSelector(state => state.auth)
   const isAuthenticated = !!user
+  const currentUserId = user?._id
 
   // Load tasks if they haven't been loaded yet - ONLY for authenticated users
   // Don't retry if there was an error (prevents infinite loop on 401)
   useEffect(() => {
-    if (isAuthenticated && tasks.length === 0 && !tasksLoading && !tasksError) {
+    if (
+      DAILY_TASKS_ENABLED &&
+      isAuthenticated &&
+      tasks.length === 0 &&
+      !tasksLoading &&
+      !tasksError
+    ) {
       dispatch(fetchDailyTasks())
       dispatch(fetchTaskStatistics())
     }
@@ -43,6 +51,10 @@ const useDailyTasks = () => {
    */
   const trackChallengeCompletion = useCallback(
     async params => {
+      if (!DAILY_TASKS_ENABLED) {
+        return
+      }
+
       // Skip for session players - they don't have daily tasks
       if (!isAuthenticated) {
         console.log('Skipping daily task tracking for session player')
@@ -50,8 +62,7 @@ const useDailyTasks = () => {
       }
 
       try {
-        const { score, fromMatchmaking, readingTime, category, challengeId } =
-          params
+        const { score, fromMatchmaking, readingTime, category } = params
 
         // Update basic challenge completion task - this happens regardless of win/loss
         try {
@@ -137,9 +148,16 @@ const useDailyTasks = () => {
    */
   const trackChallengeOutcome = useCallback(
     async params => {
+      if (!DAILY_TASKS_ENABLED) {
+        return
+      }
+
       try {
-        const { challengeId, winnerUserId, loserUserId, isTie } = params
-        const currentUserId = useSelector(state => state.auth.user?._id)
+        const { winnerUserId, loserUserId, isTie } = params
+
+        if (!currentUserId) {
+          return
+        }
 
         // Only proceed if current user is part of this challenge
         if (currentUserId !== winnerUserId && currentUserId !== loserUserId) {
@@ -173,13 +191,17 @@ const useDailyTasks = () => {
         console.error('Error tracking challenge outcome:', error)
       }
     },
-    [dispatch],
+    [dispatch, currentUserId],
   )
 
   /**
    * Track when a user views a challenge analysis
    */
   const trackAnalysisView = useCallback(async () => {
+    if (!DAILY_TASKS_ENABLED) {
+      return
+    }
+
     try {
       await dispatch(
         updateTaskProgress({
@@ -195,6 +217,10 @@ const useDailyTasks = () => {
    * Track when a user challenges a friend
    */
   const trackFriendChallenge = useCallback(async () => {
+    if (!DAILY_TASKS_ENABLED) {
+      return
+    }
+
     try {
       await dispatch(
         updateTaskProgress({
@@ -211,6 +237,10 @@ const useDailyTasks = () => {
    */
   const updateTaskProgressDirect = useCallback(
     async (taskType, incrementBy = 1) => {
+      if (!DAILY_TASKS_ENABLED) {
+        return null
+      }
+
       try {
         return await dispatch(
           updateTaskProgress({
@@ -249,20 +279,24 @@ const useDailyTasks = () => {
 
   return {
     // State
-    tasks,
-    tasksLoading,
-    tasksError,
-    justCompletedTaskId,
-    lastClaimedReward,
-    statistics,
-    statisticsLoading,
+    tasks: DAILY_TASKS_ENABLED ? tasks : [],
+    tasksLoading: DAILY_TASKS_ENABLED ? tasksLoading : false,
+    tasksError: DAILY_TASKS_ENABLED ? tasksError : null,
+    justCompletedTaskId: DAILY_TASKS_ENABLED ? justCompletedTaskId : null,
+    lastClaimedReward: DAILY_TASKS_ENABLED ? lastClaimedReward : null,
+    statistics: DAILY_TASKS_ENABLED ? statistics : {},
+    statisticsLoading: DAILY_TASKS_ENABLED ? statisticsLoading : false,
 
     // Derived data
     progressSummary: getProgressSummary(),
 
     // Actions
-    fetchTasks: () => dispatch(fetchDailyTasks()),
-    fetchStatistics: () => dispatch(fetchTaskStatistics()),
+    fetchTasks: () =>
+      DAILY_TASKS_ENABLED ? dispatch(fetchDailyTasks()) : Promise.resolve([]),
+    fetchStatistics: () =>
+      DAILY_TASKS_ENABLED
+        ? dispatch(fetchTaskStatistics())
+        : Promise.resolve({}),
     trackChallengeCompletion,
     trackChallengeOutcome,
     trackAnalysisView,

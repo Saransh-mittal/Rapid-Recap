@@ -152,6 +152,9 @@ const forgeArticleSchema = new mongoose.Schema(
       tokensUsed: Number,
       cost: Number,
       generatedAt: Date,
+      // Verifier and reassessment audit trail for automated quality control.
+      verifier: mongoose.Schema.Types.Mixed,
+      reassessment: mongoose.Schema.Types.Mixed,
     },
 
     createdAt: {

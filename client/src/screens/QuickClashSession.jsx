@@ -306,30 +306,44 @@ const QuickClashSession = ({ isSessionPlayer = false }) => {
   // skipApiCall: true when called from ForgeReadingPhase/GamifiedQuiz (they already called API)
   //              false (default) for passive powerups auto-applied at phase transitions
   const handlePowerupUsed = useCallback(async (powerupId, { skipApiCall = false } = {}) => {
-    // 1. Update local state immediately
-    setUsedPowerupCounts(prev => ({
-      ...prev,
-      [powerupId]: (prev[powerupId] || 0) + 1
-    }))
-
-    // 2. Make API call only if not skipped (for passive powerups like TIME_WARP at phase transition)
-    if (!skipApiCall) {
-      try {
-        const sessionId = getSessionId()
-        if (sessionId) {
-          const endpoint = isSessionPlayer
-            ? `/api/play/session/${sessionId}/powerup/use`
-            : `/api/quickClash/session/${sessionId}/powerup/use`
-
-          await axios.post(endpoint, { powerupId })
-          console.log(`[POWERUP] Passive powerup ${powerupId} usage persisted`)
-        }
-      } catch (err) {
-        console.error('[POWERUP] Failed to persist passive powerup:', err)
-      }
-    } else {
-      console.log(`[POWERUP] Local state updated for ${powerupId} (API already called)`)
+    const incrementLocalUsage = () => {
+      setUsedPowerupCounts(prev => ({
+        ...prev,
+        [powerupId]: (prev[powerupId] || 0) + 1
+      }))
     }
+
+    // Component already called API (active powerups). Just update local usage count.
+    if (skipApiCall) {
+      incrementLocalUsage()
+      console.log(`[POWERUP] Local state updated for ${powerupId} (API already called)`)
+      return true
+    }
+
+    // Passive path: persist first, then increment local usage.
+    try {
+      const sessionId = getSessionId()
+      if (sessionId) {
+        const endpoint = isSessionPlayer
+          ? `/api/play/session/${sessionId}/powerup/use`
+          : `/api/quickClash/session/${sessionId}/powerup/use`
+
+        const response = await axios.post(endpoint, { powerupId })
+        if (response?.data?.alreadyUsed) {
+          console.log(`[POWERUP] ${powerupId} already used on backend`)
+          return false
+        }
+
+        incrementLocalUsage()
+        console.log(`[POWERUP] Passive powerup ${powerupId} usage persisted`)
+        return true
+      }
+    } catch (err) {
+      console.error('[POWERUP] Failed to persist passive powerup:', err)
+      return false
+    }
+
+    return false
   }, [getSessionId, isSessionPlayer])
 
   // Wrapper for component callbacks - they already called API
@@ -365,6 +379,31 @@ const QuickClashSession = ({ isSessionPlayer = false }) => {
       }
     })
   }, [session?.activePowerups, usedPowerupCounts])
+
+  const applyQuizTimeWarpStack = useCallback(async () => {
+    const availableTimeWarps = filteredActivePowerups.filter(p =>
+      p.powerupId === 'TIME_WARP' &&
+      (p.phase?.toLowerCase() === 'quiz' || p.phase?.toLowerCase() === 'both') &&
+      !p.used
+    )
+
+    const timeWarpCount = availableTimeWarps.length
+    if (!timeWarpCount) return 0
+
+    let appliedCount = 0
+    for (let i = 0; i < timeWarpCount; i++) {
+      // Best-effort persistence for each stacked Time Warp.
+      const applied = await handlePowerupUsed('TIME_WARP')
+      if (applied) appliedCount += 1
+    }
+
+    if (appliedCount > 0) {
+      quizAudioService.playTimeWarp()
+      setQuizTimeLeft(50 + appliedCount * 15)
+    }
+
+    return appliedCount
+  }, [filteredActivePowerups, handlePowerupUsed])
 
   // Results modal control
   const {
@@ -542,20 +581,7 @@ const QuickClashSession = ({ isSessionPlayer = false }) => {
         haptics.notification() // Haptic for phase transition
         setPhase('betting')
       } else {
-        // Check for Time Warp (only if not already used)
-        // Find the first available (unused) Time Warp
-        const timeWarpPowerup = filteredActivePowerups.find(p =>
-          p.powerupId === 'TIME_WARP' &&
-          (p.phase?.toLowerCase() === 'quiz' || p.phase?.toLowerCase() === 'both') &&
-          !p.used
-        )
-        if (timeWarpPowerup) {
-          // Mark it as used for the quiz phase
-          handlePowerupUsed('TIME_WARP')
-          quizAudioService.playTimeWarp() // Play Time Warp sound
-          setQuizTimeLeft(65)
-          // Note: Tag shown in GamifiedQuiz, no toast needed
-        }
+        await applyQuizTimeWarpStack()
         setPhase('quiz')
       }
       setPhaseProgress(0)
@@ -573,27 +599,15 @@ const QuickClashSession = ({ isSessionPlayer = false }) => {
     } finally {
       setCompleteReadingLoading(false)
     }
-  }, [session?._id, toast, t, challenge?.betting?.enabled, isSessionPlayer])
+  }, [session?._id, toast, t, challenge?.betting?.enabled, isSessionPlayer, applyQuizTimeWarpStack])
 
   // NEW: Betting Completion Logic
-  const handleBettingComplete = useCallback(() => {
-    // Check for Time Warp (only if not already used)
-    const timeWarpPowerup = filteredActivePowerups.find(p =>
-      p.powerupId === 'TIME_WARP' &&
-      (p.phase?.toLowerCase() === 'quiz' || p.phase?.toLowerCase() === 'both') &&
-      !p.used
-    )
-    if (timeWarpPowerup) {
-      // Mark it as used for the quiz phase
-      handlePowerupUsed('TIME_WARP')
-      quizAudioService.playTimeWarp() // Play Time Warp sound
-      setQuizTimeLeft(65)
-      // Note: Tag shown in GamifiedQuiz, no toast needed
-    }
+  const handleBettingComplete = useCallback(async () => {
+    await applyQuizTimeWarpStack()
     haptics.notification() // Haptic for phase transition
     setPhase('quiz')
     setPhaseProgress(0)
-  }, [filteredActivePowerups, toast])
+  }, [applyQuizTimeWarpStack])
 
   // ORIGINAL QUIZ COMPLETION LOGIC - WITH REWARD SCREEN
   const handleQuizComplete = useCallback(

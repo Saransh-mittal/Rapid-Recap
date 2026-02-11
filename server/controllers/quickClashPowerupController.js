@@ -226,8 +226,55 @@ const usePowerupController = asyncHandler(async (req, res) => {
     throw new Error('Unauthorized session access')
   }
 
+  const isReadingPhase = session.phase === 'reading'
+  const isOracleEye = powerupId === 'ORACLES_EYE'
+  const isScoreSurgeInReading = isReadingPhase && powerupId === 'SCORE_SURGE'
+  let oracleUsageKey = null
+
+  // Guardrail: only allow powerups that have an explicit effect path for this phase.
+  // Prevents passive/unhandled powerups from being consumed by direct API calls.
+  const allowedInReading = new Set(['ORACLES_EYE', 'TIME_WARP', 'SCORE_SURGE'])
+  const allowedOutsideReading = new Set(['ORACLES_EYE', 'TIME_WARP'])
+  const isAllowedForPhase = isReadingPhase
+    ? allowedInReading.has(powerupId)
+    : allowedOutsideReading.has(powerupId)
+
+  if (!isAllowedForPhase) {
+    return res.status(400).json({
+      success: false,
+      message: isReadingPhase
+        ? `${powerupId} cannot be manually used in Forge phase`
+        : `${powerupId} is passive in Quiz phase and applies automatically when conditions are met`,
+    })
+  }
+
+  // Oracle's Eye rule: max once per question in BOTH forge and quiz phases
+  if (isOracleEye) {
+    if (!isReadingPhase && !questionId) {
+      res.status(400)
+      throw new Error('Question ID required for Oracles Eye')
+    }
+
+    // Forge tracks usage by section; Quiz tracks usage by questionId
+    oracleUsageKey = isReadingPhase
+      ? `forge_${session.forgeProgress?.currentSection ?? 0}`
+      : questionId
+
+    const powerupUsage = session.quizAttempt?.powerupUsage || {}
+    const questionUsage = powerupUsage[oracleUsageKey] || {}
+    if (questionUsage.ORACLES_EYE) {
+      return res.status(200).json({
+        success: true,
+        alreadyUsed: true,
+        message: "Oracle's Eye can only be used once per question",
+        effect: null,
+      })
+    }
+  }
+
   // 2. Validate powerup exists and not used (in-memory check)
-  const powerup = session.activePowerups.find(p => p.powerupId === powerupId && !p.used)
+  const activePowerups = session.activePowerups || []
+  const powerup = activePowerups.find(p => p.powerupId === powerupId && !p.used)
   if (!powerup) {
     // Return graceful response for duplicate attempts (handles double-clicks)
     return res.status(200).json({
@@ -241,7 +288,7 @@ const usePowerupController = asyncHandler(async (req, res) => {
   // 3. Calculate effect synchronously (before any async operations)
   let effect = {}
 
-  if (session.phase === 'reading') {
+  if (isReadingPhase) {
     // --- FORGE MODE LOGIC ---
     // Need to get the full forgeArticle with sections
     if (!session.challenge) {
@@ -300,6 +347,11 @@ const usePowerupController = asyncHandler(async (req, res) => {
         type: 'TIME_EXTENSION',
         extraTime: 15000 // 15 seconds
       }
+    } else if (powerupId === 'SCORE_SURGE') {
+      effect = {
+        type: 'SCORE_SURGE_READY',
+        multiplier: 2,
+      }
     }
   } else {
     // --- QUIZ MODE LOGIC ---
@@ -347,29 +399,62 @@ const usePowerupController = asyncHandler(async (req, res) => {
     }
   }
 
-  // 4. Mark as used IN MEMORY immediately (prevents double-click race)
-  powerup.used = true
-  powerup.usedAt = new Date()
+  // Score Surge in Forge is consumed on answer submit (authoritative scoring path)
+  // to avoid losing the multiplier before score calculation.
+  const shouldDeferUsageMark = isScoreSurgeInReading
 
-  // 5. Queue persistence (fire and forget)
-  enqueueWrite(sessionId, async () => {
-    try {
-      // Fetch fresh session from DB
-      const freshSession = await QuickClashSession.findById(sessionId)
-      if (freshSession) {
-        const targetPowerup = freshSession.activePowerups.find(
-          p => p.powerupId === powerupId && !p.used
-        )
-        if (targetPowerup) {
-          targetPowerup.used = true
-          targetPowerup.usedAt = new Date()
-          await freshSession.save()
-        }
+  if (!shouldDeferUsageMark) {
+    // 4. Mark as used IN MEMORY immediately (prevents double-click race)
+    powerup.used = true
+    powerup.usedAt = new Date()
+
+    if (isOracleEye && oracleUsageKey) {
+      if (!session.quizAttempt) session.quizAttempt = {}
+      if (!session.quizAttempt.powerupUsage) session.quizAttempt.powerupUsage = {}
+      const existingUsage = session.quizAttempt.powerupUsage[oracleUsageKey] || {}
+      session.quizAttempt.powerupUsage[oracleUsageKey] = {
+        ...existingUsage,
+        ORACLES_EYE: true,
+        usedAt: new Date(),
       }
-    } catch (err) {
-      console.error(`[Powerup] Failed to persist ${powerupId} usage:`, err.message)
     }
-  })
+
+    // 5. Queue persistence (fire and forget)
+    enqueueWrite(sessionId, async () => {
+      try {
+        // Fetch fresh session from DB
+        const freshSession = await QuickClashSession.findById(sessionId)
+        if (freshSession) {
+          const targetPowerup = freshSession.activePowerups.find(
+            p => p.powerupId === powerupId && !p.used
+          )
+          if (targetPowerup) {
+            targetPowerup.used = true
+            targetPowerup.usedAt = new Date()
+
+            if (isOracleEye && oracleUsageKey) {
+              if (!freshSession.quizAttempt) freshSession.quizAttempt = {}
+              if (!freshSession.quizAttempt.powerupUsage) {
+                freshSession.quizAttempt.powerupUsage = {}
+              }
+              const existingUsage =
+                freshSession.quizAttempt.powerupUsage[oracleUsageKey] || {}
+              freshSession.quizAttempt.powerupUsage[oracleUsageKey] = {
+                ...existingUsage,
+                ORACLES_EYE: true,
+                usedAt: new Date(),
+              }
+              freshSession.markModified('quizAttempt.powerupUsage')
+            }
+
+            await freshSession.save()
+          }
+        }
+      } catch (err) {
+        console.error(`[Powerup] Failed to persist ${powerupId} usage:`, err.message)
+      }
+    })
+  }
 
   // 6. Respond immediately with effect
   res.status(200).json({
@@ -526,5 +611,3 @@ module.exports = {
   getUnclaimedBattlesController,
   markBattleViewedController,
 }
-
-

@@ -21,6 +21,7 @@ import {
   setIsNotifModalOpen,
   setSelectedNotificationId,
 } from '../redux/appSlice'
+import { DAILY_TASKS_ENABLED } from '../utils/featureFlags'
 
 // Lazy loaded components - EXACTLY as original
 const TaskCompletionHandler = React.lazy(() =>
@@ -111,13 +112,31 @@ const QuickClash = () => {
   const showFloatingMenu =
     typeof window !== 'undefined' && window.innerWidth < 768
   const showDesktopTaskPopup =
-    typeof window !== 'undefined' && window.innerWidth >= 768
+    DAILY_TASKS_ENABLED &&
+    typeof window !== 'undefined' &&
+    window.innerWidth >= 768
 
   // Memoized computed values - EXACTLY as original
   const taskJustCompleted = useMemo(
-    () => !!justCompletedTaskId,
+    () => DAILY_TASKS_ENABLED && !!justCompletedTaskId,
     [justCompletedTaskId],
   )
+
+  const tabConfig = useMemo(() => {
+    if (DAILY_TASKS_ENABLED) {
+      return {
+        names: [t('Active'), t('Daily Tasks'), t('Teams')],
+        icons: ['Swords', 'Calendar', 'Users'],
+        hashes: ['active', 'tasks', 'teams'],
+      }
+    }
+
+    return {
+      names: [t('Active'), t('Teams')],
+      icons: ['Swords', 'Users'],
+      hashes: ['active', 'teams'],
+    }
+  }, [t])
 
   // Get global matchmaking state - EXACTLY as original
   const { checkMatchmakingStatus } = useQuickClashGlobalMatchmaking()
@@ -170,11 +189,10 @@ const QuickClash = () => {
 
     const hash = window.location.hash.substring(1)
     if (hash) {
-      const hashToIndex = {
-        active: 0,
-        tasks: 1,
-        teams: 2,
-      }
+      const hashToIndex = DAILY_TASKS_ENABLED
+        ? { active: 0, tasks: 1, teams: 2 }
+        : { active: 0, teams: 1 }
+
       if (hashToIndex[hash] !== undefined) {
         setActiveTabIndex(hashToIndex[hash])
       }
@@ -216,6 +234,10 @@ const QuickClash = () => {
   }, [onOpen])
 
   const handleViewAllTasks = useCallback(() => {
+    if (!DAILY_TASKS_ENABLED) {
+      return
+    }
+
     window.location.hash = 'tasks'
   }, [])
 
@@ -283,8 +305,9 @@ const QuickClash = () => {
               <CustomTabs
                 initialTabIndex={activeTabIndex}
                 onChange={handleTabChange}
-                tabNames={[t('Active'), t('Daily Tasks'), t('Teams')]}
-                tabIcons={['Swords', 'Calendar', 'Users']}
+                tabNames={tabConfig.names}
+                tabIcons={tabConfig.icons}
+                tabHashes={tabConfig.hashes}
               >
                 <div className="px-0">
                   <Suspense fallback={<LoadingFallback />}>
@@ -292,11 +315,13 @@ const QuickClash = () => {
                   </Suspense>
                 </div>
 
-                <div className="px-0">
-                  <Suspense fallback={<LoadingFallback />}>
-                    <DailyTasksDashboard />
-                  </Suspense>
-                </div>
+                {DAILY_TASKS_ENABLED && (
+                  <div className="px-0">
+                    <Suspense fallback={<LoadingFallback />}>
+                      <DailyTasksDashboard />
+                    </Suspense>
+                  </div>
+                )}
 
                 <div className="px-0">
                   <Suspense fallback={<LoadingFallback />}>
@@ -316,7 +341,7 @@ const QuickClash = () => {
         )}
 
         {/* Task Popup - Desktop Only - EXACTLY as original */}
-        {showDesktopTaskPopup && showTaskPopup && (
+        {DAILY_TASKS_ENABLED && showDesktopTaskPopup && showTaskPopup && (
           <Suspense fallback={null}>
             <TaskPopup
               onViewAllTasks={handleViewAllTasks}
@@ -330,9 +355,11 @@ const QuickClash = () => {
         <NewChallengeModal isOpen={isOpen} onClose={onClose} />
 
         {/* Task Completion Handler - EXACTLY as original */}
-        <Suspense fallback={null}>
-          <TaskCompletionHandler />
-        </Suspense>
+        {DAILY_TASKS_ENABLED && (
+          <Suspense fallback={null}>
+            <TaskCompletionHandler />
+          </Suspense>
+        )}
       </div>
 
       {/* Notification Components - EXACTLY as original */}

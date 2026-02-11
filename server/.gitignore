@@ -28,3 +28,7 @@ Thumbs.db
 scraper_log.txt
 
 package-lock.json
+
+# Forge runtime artifacts (generated reports and batch files)
+reports/*.json
+temp_batch_files/*

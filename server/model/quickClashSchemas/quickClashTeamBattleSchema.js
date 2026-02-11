@@ -205,6 +205,14 @@ const quickClashTeamBattleSchema = new mongoose.Schema(
               type: { type: String }, // 'active', 'passive'
               cost: Number,
               phase: String, // 'forge', 'quiz', 'both'
+              donatedBy: {
+                type: mongoose.Schema.Types.ObjectId,
+                ref: 'USER',
+              },
+              donatedAt: {
+                type: Date,
+                default: Date.now,
+              },
             },
           ],
           housingUsed: {
@@ -329,6 +337,14 @@ const quickClashTeamBattleSchema = new mongoose.Schema(
               type: { type: String }, // 'active', 'passive'
               cost: Number,
               phase: String, // 'forge', 'quiz', 'both'
+              donatedBy: {
+                type: mongoose.Schema.Types.ObjectId,
+                ref: 'USER',
+              },
+              donatedAt: {
+                type: Date,
+                default: Date.now,
+              },
             },
           ],
           housingUsed: {
@@ -393,7 +409,7 @@ const quickClashTeamBattleSchema = new mongoose.Schema(
       housingUsed: {
         type: Number,
         default: 0,
-        max: 150,
+        max: 80,
       },
     },
     teamBPool: {
@@ -416,7 +432,7 @@ const quickClashTeamBattleSchema = new mongoose.Schema(
       housingUsed: {
         type: Number,
         default: 0,
-        max: 150,
+        max: 80,
       },
     },
     // Win Probability Data (Team Mode)

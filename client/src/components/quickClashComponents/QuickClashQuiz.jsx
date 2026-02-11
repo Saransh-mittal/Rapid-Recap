@@ -140,9 +140,10 @@ const QuickClashQuiz = ({
   sessionId,
   onComplete,
   setStopTimerOnQuizSubmit,
-  quizTimeLeft,
   setQuizTimeLeft,
+  quizTimeLeft,
   setLoadingQuiz,
+  isSoloDrill = false,
 }) => {
   const { t } = useTranslation('QuickClash')
   const navigate = useNavigate()
@@ -173,10 +174,39 @@ const QuickClashQuiz = ({
         setLoading(true)
         setLoadingQuiz(true)
 
-        const response = await axios.get(
-          `/api/quickClash/session/${sessionId}/quiz`,
-        )
-        setQuestions(response.data.questions || [])
+        const endpoint = isSoloDrill
+          ? `/api/solo-drill/${sessionId}`
+          : `/api/quickClash/session/${sessionId}/quiz`
+
+        const response = await axios.get(endpoint)
+        // Adapt response structure if needed. Setup assumes questions are at response.data.questions for QuickClash,
+        // but SoloDrill endpoint returns full session which has quizData inside.
+        // Actually, soloDrillController: getSessionController returns session.
+        // Wait, for quiz we need specific questions array.
+        // In SoloDrill mode, getSession response structure:
+        // { ...session, forgeArticle: { quickClashQuiz: { questions: [...] } } }
+        // QuickClash quiz endpoint returns: { questions: [...] } directly.
+
+        let questionsData = []
+        if (isSoloDrill) {
+           // If we hit the session endpoint, we need to extract questions
+           // BUT SoloDrillSession passes `quizData` prop if it has it.
+           // However, QuickClashQuiz fetches its own data usually.
+           // Let's rely on prop passing if possible, but QuickClashQuiz ignores props.
+           // Let's stick to consistent API.
+           // I'll make a dedicated quiz endpoint or use the fetching logic here.
+           // Actually, `getDrillSession` returns populate `forgeArticle`.
+           // Let's assume for now we use the standardized endpoint logic or adapt.
+             if (response.data.forgeArticle && response.data.forgeArticle.quickClashQuiz) {
+                questionsData = response.data.forgeArticle.quickClashQuiz.questions
+             } else if (response.data.questions) {
+                questionsData = response.data.questions
+             }
+        } else {
+             questionsData = response.data.questions
+        }
+
+        setQuestions(questionsData || [])
         setUserAnswers({})
         setTimeSpent({})
         setStartTime(Date.now())
@@ -260,8 +290,12 @@ const QuickClashQuiz = ({
         }
       })
 
+      const submitEndpoint = isSoloDrill
+        ? `/api/solo-drill/${sessionId}/quiz/submit`
+        : `/api/quickClash/session/${sessionId}/quiz/submit`
+
       const response = await axios.post(
-        `/api/quickClash/session/${sessionId}/quiz/submit`,
+        submitEndpoint,
         {
           responses: formattedResponses,
         },

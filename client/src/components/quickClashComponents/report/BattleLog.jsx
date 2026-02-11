@@ -55,7 +55,7 @@ const BattleLog = ({ activePowerups = [], scoreBreakdown = null }) => {
       switch (p.powerupId) {
         case 'TIME_WARP': return '+15s Extended'
         case 'PRECISION_PROTOCOL': return '+50 RQM Bonus'
-        case 'SCORE_SURGE': return '1.5x Multiplier'
+        case 'SCORE_SURGE': return '2x Forge / 1.1x Quiz'
         case 'ORACLES_EYE': return '2 Options Removed'
         case 'STREAK_SHIELD': return 'Streak Saved'
         default: return 'Effect Applied'

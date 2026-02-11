@@ -9,6 +9,18 @@ const { BatchForgeOutputSchema, BATCH_SYSTEM_PROMPT } = require('./forgeBatchAge
 const { processSeed } = require('./contentProcessingService') // Reuse pre-processing logic if possible, or adapt
 const { CostTracker } = require('../utils/costTracker')
 
+const CATEGORY_MAP = {
+  'gk-prime': 'GK Prime',
+  'science-facts-simplified': 'Science Facts Simplified',
+  'everyday-tech': 'Everyday Tech',
+  geography: 'Geography',
+}
+
+function normalizeCategory(category) {
+  const key = String(category || '').trim().toLowerCase()
+  return CATEGORY_MAP[key] || category || 'Unknown'
+}
+
 // ============================================================================
 // CONFIGURATION
 // ============================================================================
@@ -55,6 +67,8 @@ async function prepareBatch() {
 
     const customId = seed._id.toString()
     seedIds.push(customId)
+    const seedCategoryCanonical = normalizeCategory(seed.category)
+    const seedSource = seed?.forgeSeedData?.seedSource || 'unknown'
 
     // Construct the request body for Chat Completions
     const requestLine = {
@@ -65,7 +79,10 @@ async function prepareBatch() {
         model: 'gpt-5-mini', // Supports Structured Outputs
         messages: [
           { role: 'system', content: BATCH_SYSTEM_PROMPT },
-          { role: 'user', content: `TITLE: ${seed.title}\n\nBODY: ${seed.mainText.substring(0, 3000)}` }
+          {
+            role: 'user',
+            content: `SEED_CATEGORY_RAW: ${seed.category || 'unknown'}\nSEED_CATEGORY_CANONICAL: ${seedCategoryCanonical}\nSEED_SOURCE: ${seedSource}\n\nTITLE: ${seed.title}\n\nBODY: ${seed.mainText.substring(0, 3000)}`,
+          },
         ],
         response_format: zodResponseFormat(BatchForgeOutputSchema, 'forge_analysis'),
       }
@@ -204,7 +221,7 @@ async function processBatchResults(job, outputFileId) {
           // publishedAt: new Date(), // Set in Quiz Phase
           llmMetadata: {
             model: 'gpt-5-mini',
-            promptVersion: 'batch-v1',
+            promptVersion: 'batch-v2',
             generatedAt: new Date()
           }
         })

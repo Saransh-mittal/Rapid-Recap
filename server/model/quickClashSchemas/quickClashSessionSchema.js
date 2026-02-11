@@ -183,6 +183,11 @@ const quickClashSessionSchema = new mongoose.Schema({
       type: Object,
       default: {},
     },
+    // Per-question powerup usage metadata (e.g. Oracle's Eye once/question in quiz)
+    powerupUsage: {
+      type: Object,
+      default: {},
+    },
     timeSpent: Number,
     completed: {
       type: Boolean,

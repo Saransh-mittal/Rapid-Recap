@@ -1,4 +1,4 @@
-const VERSION = 'v10.3' // Increment version to force update - Added Google OAuth bypass
+const VERSION = 'v10.4' // Increment version to force update - Added Google OAuth bypass
 const CACHE_NAME = `rapid-recap-${VERSION}`
 const OFFLINE_CACHE = `offline-${VERSION}`
 const DYNAMIC_CACHE = `dynamic-${VERSION}`

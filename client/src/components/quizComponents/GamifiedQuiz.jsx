@@ -1,4 +1,4 @@
-import React, {
+import {
   useState,
   useEffect,
   useCallback,
@@ -13,7 +13,6 @@ import {
   useToast,
   Flex,
   HStack,
-  Progress,
   Center,
   Spinner,
   Badge,
@@ -23,12 +22,14 @@ import {
   ArrowRight,
   CheckCircle,
   Clock,
+  Pause,
+  Play,
   Trophy,
-  Zap,
-  AlertCircle,
+  X,
 } from 'lucide-react'
 import axios from 'axios'
 import { useTranslation } from 'react-i18next'
+import soloDrillService from '../../services/soloDrillService'
 
 // Components
 import GamifiedOptionButton from './GamifiedOptionButton'
@@ -41,24 +42,48 @@ import { haptics } from '../../utils/haptics'
 import { quizAudioService } from '../../services/quizAudioService'
 
 const MotionBox = motion(Box)
-const MotionFlex = motion(Flex)
 
 const GamifiedQuiz = ({
   sessionId,
   onComplete,
-  setStopTimerOnQuizSubmit,
-  quizTimeLeft,
-  setQuizTimeLeft,
-  setLoadingQuiz,
+  setStopTimerOnQuizSubmit = () => {},
+  quizTimeLeft = 50,
+  setQuizTimeLeft = () => {},
+  setLoadingQuiz = () => {},
   activePowerups = [],
   isSessionPlayer = false,
+  isSoloDrill = false,
+  timeWarpApplied = false,
   onPowerupUsed, // Callback to parent
+  isPaused = false,
+  onTogglePause = null,
+  onClose = null,
 }) => {
   const { t } = useTranslation('QuickClash')
   const toast = useToast()
 
   // Helper to get correct API base URL
-  const apiBase = isSessionPlayer ? '/api/play' : '/api/quickClash'
+  const apiBase = isSoloDrill
+    ? '/api/solo-drill'
+    : (isSessionPlayer ? '/api/play' : '/api/quickClash')
+
+  const uiTheme = isSoloDrill
+    ? {
+        spinner: 'cyan.400',
+        headerIconBg: 'cyan.500',
+        headerIconShadow: '0 0 15px rgba(6, 182, 212, 0.45)',
+        progressGradient: 'linear-gradient(90deg, #14B8A6 0%, #06B6D4 100%)',
+        nextGradient: 'linear(to-r, teal.400, cyan.500)',
+        nextGradientHover: 'linear(to-r, teal.300, cyan.400)',
+      }
+    : {
+        spinner: 'purple.500',
+        headerIconBg: 'purple.500',
+        headerIconShadow: '0 0 15px rgba(128, 90, 213, 0.4)',
+        progressGradient: 'linear-gradient(90deg, #805AD5 0%, #4299E1 100%)',
+        nextGradient: 'linear(to-r, purple.500, blue.500)',
+        nextGradientHover: 'linear(to-r, purple.400, blue.400)',
+      }
 
   // State
   const [loading, setLoading] = useState(true)
@@ -74,6 +99,7 @@ const GamifiedQuiz = ({
 
   // Powerup State
   const [disabledOptions, setDisabledOptions] = useState({}) // { questionIndex: ['a', 'c'] }
+  const [oracleUsedThisQuestion, setOracleUsedThisQuestion] = useState(false)
   // We rely on activePowerups prop (filtered by parent) for counts
   // But we still track per-question limits or loading states locally if needed
   const [powerupLoading, setPowerupLoading] = useState(false)
@@ -108,19 +134,28 @@ const GamifiedQuiz = ({
   // Passive Powerups (Visual Only) - Show as active buffs
   // These apply automatically during Quiz phase
   // Note: TIME_WARP shows even when "used" because being used = bonus is active
-  const passivePowerups = activePowerups.filter(p =>
-    (p.phase?.toLowerCase() === 'quiz' || p.phase?.toLowerCase() === 'both') &&
-    (p.powerupId === 'TIME_WARP' || !p.used) && // TIME_WARP shows even when used
-    (p.type === 'PASSIVE' ||
-     p.powerupId === 'PRECISION_PROTOCOL' ||
-     p.powerupId === 'TIME_WARP' ||
-     p.powerupId === 'SCORE_SURGE') // Score Surge gives 1.1x RQM in Quiz
-  )
+  const passivePowerups = activePowerups.filter(p => {
+    const isQuizPowerup =
+      p.phase?.toLowerCase() === 'quiz' || p.phase?.toLowerCase() === 'both'
+    if (!isQuizPowerup) return false
+
+    const isPassiveType =
+      p.type === 'PASSIVE' ||
+      p.powerupId === 'PRECISION_PROTOCOL' ||
+      p.powerupId === 'TIME_WARP' ||
+      p.powerupId === 'SCORE_SURGE'
+    if (!isPassiveType) return false
+
+    if (p.powerupId === 'TIME_WARP' && isSoloDrill) {
+      // In Solo Drill, show Time Warp buff only when it is actually active in quiz.
+      return timeWarpApplied || !p.used
+    }
+
+    return p.powerupId === 'TIME_WARP' || !p.used
+  })
 
   // Refs
   const switchingQuestionRef = useRef(false)
-  const startTimeRef = useRef(Date.now())
-
   // --- Initialization ---
 
   useEffect(() => {
@@ -129,10 +164,30 @@ const GamifiedQuiz = ({
         setLoading(true)
         setLoadingQuiz(true)
 
-        const response = await axios.get(
-          `${apiBase}/session/${sessionId}/quiz`,
-        )
-        setQuestions(response.data.questions || [])
+        let questionsData = []
+
+        if (isSoloDrill) {
+          const quizResponse = await soloDrillService.getQuizQuestions(sessionId)
+          const quizPayload = quizResponse?.data || quizResponse
+          const normalizedQuestions =
+            quizPayload?.questions || quizPayload?.data?.questions || []
+
+          if (Array.isArray(normalizedQuestions) && normalizedQuestions.length > 0) {
+            questionsData = normalizedQuestions
+          } else {
+            // Backward compatibility fallback for frontend-backend version skew.
+            const sessionResponse = await soloDrillService.getSession(sessionId)
+            questionsData =
+              sessionResponse?.data?.forgeArticle?.quickClashQuiz?.questions || []
+          }
+        } else {
+          const response = await axios.get(
+            `${apiBase}/session/${sessionId}/quiz`,
+          )
+          questionsData = response.data?.questions || []
+        }
+
+        setQuestions(questionsData)
         setUserAnswers({})
         setTimeSpent({})
 
@@ -161,13 +216,13 @@ const GamifiedQuiz = ({
     }
 
     fetchQuestions()
-  }, [sessionId, toast, t, setLoadingQuiz, setQuizTimeLeft])
+  }, [sessionId, toast, t, setLoadingQuiz, isSoloDrill, apiBase])
 
   // --- Logic ---
 
   // Timer Logic
   useEffect(() => {
-    if (!quizReady || submitted || submitLoading) return
+    if (!quizReady || submitted || submitLoading || isPaused) return
 
     const timer = setInterval(() => {
       setQuizTimeLeft((prev) => {
@@ -180,23 +235,23 @@ const GamifiedQuiz = ({
     }, 1000)
 
     return () => clearInterval(timer)
-  }, [quizReady, submitted, submitLoading, setQuizTimeLeft])
+  }, [quizReady, submitted, submitLoading, setQuizTimeLeft, isPaused])
 
   // Time Warning Sound (plays once at 15 seconds)
   useEffect(() => {
-    if (quizTimeLeft === 15 && !timeWarningPlayed && quizReady && !submitted) {
+    if (quizTimeLeft === 15 && !timeWarningPlayed && quizReady && !submitted && !isPaused) {
       quizAudioService.playTimeWarning()
       haptics.timeWarning()
       setTimeWarningPlayed(true)
     }
-  }, [quizTimeLeft, timeWarningPlayed, quizReady, submitted])
+  }, [quizTimeLeft, timeWarningPlayed, quizReady, submitted, isPaused])
 
 
 
 
   const handleAnswer = useCallback(
     (answer) => {
-      if (switchingQuestionRef.current || submitted) return
+      if (switchingQuestionRef.current || submitted || isPaused) return
 
       haptics.selection() // Haptic on answer selection
       quizAudioService.playOptionClick() // Audio on answer selection
@@ -206,10 +261,11 @@ const GamifiedQuiz = ({
         [currentQuestionIndex]: answer,
       }))
     },
-    [currentQuestionIndex, submitted]
+    [currentQuestionIndex, submitted, isPaused]
   )
 
   const handleNext = useCallback(() => {
+    if (isPaused) return
     if (currentQuestionIndex < questions.length - 1) {
       haptics.light() // Haptic on next question
       quizAudioService.playNewQuestion() // Audio for next question
@@ -238,10 +294,10 @@ const GamifiedQuiz = ({
         switchingQuestionRef.current = false
       }, 300) // Match animation duration
     }
-  }, [currentQuestionIndex, questions.length])
+  }, [currentQuestionIndex, questions.length, isPaused])
 
   const handleSubmit = useCallback(async () => {
-    if (submitLoading || submitted) return
+    if (submitLoading || submitted || isPaused) return
 
     try {
       setSubmitLoading(true)
@@ -258,14 +314,20 @@ const GamifiedQuiz = ({
           timeSpent: Math.floor((now - currentStart) / 1000)
       }
 
-      const formattedResponses = questions.map((question, index) => ({
-        questionId: question._id,
-        answer: userAnswers[index] || '',
-        timeSpent: finalTimeSpent[index]?.timeSpent || 0,
-      }))
+      const formattedResponses = questions.map((question, index) => {
+        const selectedAnswer = userAnswers[index] || ''
+        return {
+          questionId: question._id,
+          answer: selectedAnswer,
+          userAnswer: selectedAnswer, // Solo Drill backend expects userAnswer
+          timeSpent: finalTimeSpent[index]?.timeSpent || 0,
+        }
+      })
+
+      const submitEndpoint = `${apiBase}/session/${sessionId}/quiz/submit`
 
       const response = await axios.post(
-        `${apiBase}/session/${sessionId}/quiz/submit`,
+        submitEndpoint,
         { responses: formattedResponses }
       )
 
@@ -299,18 +361,26 @@ const GamifiedQuiz = ({
     currentQuestionIndex,
     onComplete,
     setStopTimerOnQuizSubmit,
+    apiBase,
+    isPaused,
   ])
 
   // Watch for time up
   useEffect(() => {
-      if (quizTimeLeft === 0 && !submitted && !submitLoading && quizReady) {
+      if (quizTimeLeft === 0 && !submitted && !submitLoading && quizReady && !isPaused) {
           handleSubmit()
       }
-  }, [quizTimeLeft, submitted, submitLoading, quizReady, handleSubmit])
+  }, [quizTimeLeft, submitted, submitLoading, quizReady, handleSubmit, isPaused])
+
+  // Oracle's Eye can only be used once per quiz question
+  useEffect(() => {
+    setOracleUsedThisQuestion(false)
+  }, [currentQuestionIndex])
 
   // Powerup Handler
   const handleUsePowerup = async (powerup) => {
-    if (powerupLoading) return
+    if (powerupLoading || isPaused) return
+    if (powerup.powerupId === 'ORACLES_EYE' && oracleUsedThisQuestion) return
 
     try {
       setPowerupLoading(true)
@@ -326,6 +396,13 @@ const GamifiedQuiz = ({
       })
 
       if (response.data.success) {
+        if (response.data.alreadyUsed || !response.data.effect) {
+          if (powerup.powerupId === 'ORACLES_EYE') {
+            setOracleUsedThisQuestion(true)
+          }
+          return
+        }
+
         haptics.success() // Haptic on powerup activation
         const effect = response.data.effect
 
@@ -338,6 +415,7 @@ const GamifiedQuiz = ({
               ...effect.optionsToRemove
             ]
           }))
+          setOracleUsedThisQuestion(true)
         }
 
         // Notify parent to update the global count
@@ -366,7 +444,7 @@ const GamifiedQuiz = ({
     return (
       <Center h="60vh">
         <VStack spacing={4}>
-          <Spinner size="xl" color="purple.500" thickness="4px" />
+          <Spinner size="xl" color={uiTheme.spinner} thickness="4px" />
           <Text color="whiteAlpha.800">{t('Loading Challenge...')}</Text>
         </VStack>
       </Center>
@@ -411,9 +489,9 @@ const GamifiedQuiz = ({
           <HStack spacing={4}>
             <Box
               p={2}
-              bg="purple.500"
+              bg={uiTheme.headerIconBg}
               borderRadius="lg"
-              boxShadow="0 0 15px rgba(128, 90, 213, 0.4)"
+              boxShadow={uiTheme.headerIconShadow}
             >
               <Trophy size={20} color="white" />
             </Box>
@@ -427,7 +505,7 @@ const GamifiedQuiz = ({
             </VStack>
           </HStack>
 
-          <HStack spacing={4}>
+          <HStack spacing={2.5}>
               {/* Timer Display - Visual only, logic is in parent/hooks */}
              <Box
               p={2}
@@ -452,6 +530,40 @@ const GamifiedQuiz = ({
               </Text>
             </VStack>
           </HStack>
+
+            {/* Pause / Close buttons (Solo Drill) */}
+            {(onTogglePause || onClose) && (
+              <HStack spacing={1} pl={1}>
+                {onTogglePause && (
+                  <button
+                    type="button"
+                    onClick={onTogglePause}
+                    className={`
+                      h-8 w-8 rounded-full transition-all duration-200 flex items-center justify-center
+                      ${isPaused
+                        ? 'bg-cyan-500/20 text-cyan-50 shadow-[0_0_12px_rgba(34,211,238,0.2)]'
+                        : 'text-white/50 hover:bg-white/10 hover:text-white'
+                      }
+                    `}
+                    style={{ backgroundColor: isPaused ? undefined : 'rgba(255,255,255,0.04)' }}
+                    aria-label={isPaused ? 'Resume drill' : 'Pause drill'}
+                  >
+                    {isPaused ? <Play size={14} /> : <Pause size={14} />}
+                  </button>
+                )}
+                {onClose && (
+                  <button
+                    type="button"
+                    onClick={onClose}
+                    className="h-8 w-8 rounded-full text-white/40 hover:bg-white/10 hover:text-white transition-all duration-200 flex items-center justify-center"
+                    style={{ backgroundColor: 'rgba(255,255,255,0.04)' }}
+                    aria-label="Close drill"
+                  >
+                    <X size={14} />
+                  </button>
+                )}
+              </HStack>
+            )}
         </Flex>
 
         {/* Active Buffs (Passive Powerups) */}
@@ -505,7 +617,7 @@ const GamifiedQuiz = ({
                   transition={{ duration: 0.5, ease: "easeInOut" }}
                   style={{
                       height: '100%',
-                      background: 'linear-gradient(90deg, #805AD5 0%, #4299E1 100%)',
+                      background: uiTheme.progressGradient,
                       borderRadius: '4px'
                   }}
               />
@@ -559,7 +671,7 @@ const GamifiedQuiz = ({
                   optionText={typeof value === 'object' ? value.text : value}
                   isSelected={userAnswers[currentQuestionIndex] === key}
                   onSelect={handleAnswer}
-                  isDisabled={submitted}
+                  isDisabled={submitted || isPaused}
                   isEliminated={disabledOptions[currentQuestionIndex]?.includes(key)}
                 />
               ))}
@@ -582,7 +694,9 @@ const GamifiedQuiz = ({
               {uniqueQuizPowerups.map((p, i) => {
                 // Determine if this specific cluster is usable
                 // (Always true since we filtered unused ones, unless loading)
-                const isUsed = powerupLoading
+                const isDisabledForQuestion =
+                  p.powerupId === 'ORACLES_EYE' && oracleUsedThisQuestion
+                const isUsed = powerupLoading || isDisabledForQuestion || isPaused
                 const colorSchemes = {
                   TIME_WARP: { bg: 'from-cyan-500/90 to-cyan-600/90', border: 'border-cyan-400/50', text: 'Time Warp', icon: '⏳' },
                   SCORE_SURGE: { bg: 'from-amber-500/90 to-amber-600/90', border: 'border-amber-400/50', text: 'Score 1.1x', icon: '⚡' },
@@ -637,17 +751,17 @@ const GamifiedQuiz = ({
               height="56px"
               px={8}
               rightIcon={<ArrowRight />}
-              colorScheme="purple"
+              colorScheme={isSoloDrill ? 'teal' : 'purple'}
               variant="solid"
-              bgGradient="linear(to-r, purple.500, blue.500)"
+              bgGradient={uiTheme.nextGradient}
               _hover={{
-                  bgGradient: "linear(to-r, purple.400, blue.400)",
+                  bgGradient: uiTheme.nextGradientHover,
                   transform: "translateY(-2px)",
                   boxShadow: "0 10px 20px rgba(0,0,0,0.2)"
               }}
               _active={{ transform: "translateY(0)" }}
               onClick={handleNext}
-              isDisabled={!userAnswers[currentQuestionIndex]}
+              isDisabled={!userAnswers[currentQuestionIndex] || isPaused}
               borderRadius="xl"
             >
               {t('Next Question')}
@@ -667,7 +781,7 @@ const GamifiedQuiz = ({
               }}
               onClick={handleSubmit}
               isLoading={submitLoading}
-              isDisabled={!userAnswers[currentQuestionIndex]}
+              isDisabled={!userAnswers[currentQuestionIndex] || isPaused}
               borderRadius="xl"
             >
               {t('Submit Quiz')}
@@ -675,6 +789,7 @@ const GamifiedQuiz = ({
           )}
         </Flex>
       </Box>
+
 
       <style>{`
         @keyframes pulse {

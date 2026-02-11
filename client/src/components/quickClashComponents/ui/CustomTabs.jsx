@@ -1,7 +1,7 @@
 // components/quickClashComponents/ui/CustomTabs.jsx - FAITHFUL CONVERSION to Tailwind with Blue-Cyan Color Scheme
 import React, { useState, useCallback, useEffect, useMemo, useRef } from 'react'
 import { motion } from 'framer-motion'
-import { Swords, Zap, Calendar, Users, Trophy } from 'lucide-react'
+import { Swords, Zap, Calendar, Users } from 'lucide-react'
 import { useTranslation } from 'react-i18next'
 import { useSelector } from 'react-redux'
 
@@ -12,19 +12,7 @@ const MotionDiv = motion.div
 const MotionButton = motion.button
 const MotionSpan = motion.span
 
-// Map tab names to URL hashes - EXACTLY as original
-const TAB_HASH_MAP = {
-  0: 'active',
-  1: 'tasks',
-  2: 'teams',
-}
-
-// Reverse map for looking up index from hash - EXACTLY as original
-const HASH_TAB_MAP = {
-  active: 0,
-  tasks: 1,
-  teams: 2,
-}
+const DEFAULT_TAB_HASHES = ['active', 'tasks', 'teams']
 
 // Map icon names to actual icon components - EXACTLY as original
 const ICON_MAP = {
@@ -164,6 +152,7 @@ const CustomTabs = ({
   onChange,
   tabNames,
   tabIcons = [],
+  tabHashes,
 }) => {
   const { t } = useTranslation('QuickClash')
   const [tabIndex, setTabIndex] = useState(initialTabIndex)
@@ -188,47 +177,73 @@ const CustomTabs = ({
     (prev, next) => prev === next,
   )
 
+  const resolvedTabHashes = useMemo(() => {
+    if (Array.isArray(tabHashes) && tabHashes.length > 0) {
+      return tabHashes
+    }
+
+    if (Array.isArray(tabNames) && tabNames.length > 0) {
+      return DEFAULT_TAB_HASHES.slice(0, tabNames.length)
+    }
+
+    return DEFAULT_TAB_HASHES.slice(0, 2)
+  }, [tabHashes, tabNames])
+
+  const hashTabMap = useMemo(
+    () =>
+      resolvedTabHashes.reduce((accumulator, hash, index) => {
+        accumulator[hash] = index
+        return accumulator
+      }, {}),
+    [resolvedTabHashes],
+  )
+
   // Memoized tab data with blue-cyan color scheme
   const tabs = useMemo(() => {
-    const defaultTabs = [
-      {
-        label: tabNames?.[0] || t('Challenges'),
-        icon: tabIcons[0] ? ICON_MAP[tabIcons[0]] : Swords,
+    const defaultTabsByHash = {
+      active: {
+        label: t('Challenges'),
+        icon: Swords,
         ariaLabel: 'active challenges tab',
         color: 'cyan',
         iconAnimation: createIconAnimationVariants('rotate'),
-        hash: 'active',
       },
-      {
-        label: tabNames?.[1] || t('Tasks'),
-        icon: tabIcons[1] ? ICON_MAP[tabIcons[1]] : Calendar,
-        ariaLabel: 'Daily Tasks tab',
+      tasks: {
+        label: t('Tasks'),
+        icon: Calendar,
+        ariaLabel: 'daily tasks tab',
         color: 'orange',
         iconAnimation: createIconAnimationVariants('bounce'),
-        hash: 'tasks',
       },
-      {
-        label: tabNames?.[2] || t('Teams'),
-        icon: tabIcons[2] ? ICON_MAP[tabIcons[2]] : Users,
-        ariaLabel: 'Teams tab',
+      teams: {
+        label: t('Teams'),
+        icon: Users,
+        ariaLabel: 'teams tab',
         color: 'blue',
         iconAnimation: createIconAnimationVariants('scale'),
-        hash: 'teams',
       },
-    ]
+    }
 
-    return tabNames
-      ? defaultTabs.slice(0, tabNames.length)
-      : defaultTabs.slice(0, 2)
-  }, [tabNames, tabIcons, t])
+    return resolvedTabHashes.map((hash, index) => {
+      const defaults = defaultTabsByHash[hash] || defaultTabsByHash.active
+      return {
+        label: tabNames?.[index] || defaults.label,
+        icon: tabIcons[index] ? ICON_MAP[tabIcons[index]] : defaults.icon,
+        ariaLabel: defaults.ariaLabel,
+        color: defaults.color,
+        iconAnimation: defaults.iconAnimation,
+        hash,
+      }
+    })
+  }, [resolvedTabHashes, tabNames, tabIcons, t])
 
   // ALL ORIGINAL HASH NAVIGATION LOGIC PRESERVED EXACTLY
   const getTabIndexFromHash = useCallback(hash => {
     if (!hash) return 0
     const hashParts = hash.substring(1).split('/')
     const mainRoute = hashParts[0]
-    return HASH_TAB_MAP[mainRoute] !== undefined ? HASH_TAB_MAP[mainRoute] : 0
-  }, [])
+    return hashTabMap[mainRoute] !== undefined ? hashTabMap[mainRoute] : 0
+  }, [hashTabMap])
 
   // Debounced hash sync - EXACTLY as original
   const syncTabWithHash = useCallback(() => {
@@ -267,7 +282,7 @@ const CustomTabs = ({
       setTabIndex(index)
 
       // Update URL hash without triggering a page reload
-      const hash = TAB_HASH_MAP[index] || 'active'
+      const hash = resolvedTabHashes[index] || resolvedTabHashes[0] || 'active'
 
       // For the active tab, preserve sub-routes or default to 1v1
       if (hash === 'active') {
@@ -288,7 +303,7 @@ const CustomTabs = ({
         onChange(index)
       }
     },
-    [onChange],
+    [onChange, resolvedTabHashes],
   )
 
   // Tab color mapping for consistent blue-cyan theme
@@ -383,7 +398,7 @@ const CustomTabs = ({
                 </span>
 
                 {/* Badge for Daily Tasks */}
-                {tab.label === t('Tasks') && (
+                {tab.hash === 'tasks' && (
                   <TabBadge count={pendingTasksCount} />
                 )}
 

@@ -60,6 +60,7 @@ const GlobalMatchmakingButton = React.memo(
     buttonWidth = { base: '100%', md: '240px' },
     buttonHeight = { base: '48px', md: '56px' },
     buttonMinWidth = { base: '140px', md: '240px' },
+    withBottomMargin = true,
     forceOpenModal = false, // External control to open modal
     onForceOpenReset, // Callback to reset the forceOpenModal prop
     onSquadClick, // Callback when button is clicked (for tutorial completion)
@@ -275,7 +276,7 @@ const GlobalMatchmakingButton = React.memo(
                 : 'cursor-pointer hover:-translate-y-1'
             }
             flex items-center justify-center gap-3
-            mb-4
+            ${withBottomMargin ? 'mb-4' : ''}
           `}
           style={{
             background: config.gradient,

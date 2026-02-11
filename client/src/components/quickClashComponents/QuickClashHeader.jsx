@@ -27,6 +27,7 @@ import { fetchUserTrophies } from '../../redux/quickClashSlice'
 import { setIsNotifDrawerOpen } from '../../redux/appSlice'
 import useFriends from '../../customHooks/useFriends'
 import WiseWeb from '../WiseWeb/WiseWeb'
+import { DAILY_TASKS_ENABLED } from '../../utils/featureFlags'
 
 const TaskPopup = lazy(() => import('./dailyTasks/TaskPopup'))
 
@@ -370,7 +371,9 @@ const QuickClashHeader = ({ onNewChallenge }) => {
           <TrophyDisplay />
           <LevelBadge />
           <WiseWebButton isMobile={true} />
-          <TaskProgressIndicator onViewTasks={handleViewTasksClick} size="sm" />
+          {DAILY_TASKS_ENABLED && (
+            <TaskProgressIndicator onViewTasks={handleViewTasksClick} size="sm" />
+          )}
         </div>
       </MotionDiv>
 
@@ -434,7 +437,9 @@ const QuickClashHeader = ({ onNewChallenge }) => {
             )}
           </div>
 
-          <TaskProgressIndicator onViewTasks={handleViewTasksClick} size="sm" />
+          {DAILY_TASKS_ENABLED && (
+            <TaskProgressIndicator onViewTasks={handleViewTasksClick} size="sm" />
+          )}
         </div>
       </MotionDiv>
 
@@ -486,7 +491,7 @@ const QuickClashHeader = ({ onNewChallenge }) => {
       </div>
 
       {/* Task Popup */}
-      {showTaskPopup && (
+      {DAILY_TASKS_ENABLED && showTaskPopup && (
         <Suspense fallback={null}>
           <TaskPopup
             isOpen={showTaskPopup}

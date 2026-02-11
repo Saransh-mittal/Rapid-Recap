@@ -1,9 +1,8 @@
 // components/quickClashComponents/dailyTasks/TaskProgressIndicator.jsx - FAITHFUL CONVERSION to Tailwind with Blue-Cyan Color Scheme
-import React from 'react'
 import { motion } from 'framer-motion'
 import { Gift } from 'lucide-react'
 import { useSelector } from 'react-redux'
-import { useTranslation } from 'react-i18next'
+import { DAILY_TASKS_ENABLED } from '../../../utils/featureFlags'
 
 // Import centralized color scheme
 import { QUICK_CLASH_CLASSES } from '../utils/quickClashColors'
@@ -68,8 +67,11 @@ const CircularProgress = ({ value, size, thickness, children, className }) => {
  * @param {string} props.size - Size of the indicator ('sm', 'md', 'lg')
  */
 const TaskProgressIndicator = ({ onViewTasks, size = 'md' }) => {
-  const { t } = useTranslation('QuickClash')
   const { tasks } = useSelector(state => state.quickClashDailyTasks)
+
+  if (!DAILY_TASKS_ENABLED) {
+    return null
+  }
 
   // Calculate progress - EXACTLY as original
   const completedTasks = tasks.filter(task => task.completed).length

@@ -12,6 +12,8 @@ import { useSelector, useDispatch } from 'react-redux'
 import QuickClashHeaderV2 from '../components/quickClashComponents/v2/QuickClashHeaderV2'
 import ActiveChallengesV2 from '../components/quickClashComponents/v2/ActiveChallengesV2'
 import GlobalMatchmakingButton from '../components/quickClashComponents/globalmatchmaking/GlobalMatchmakingButton'
+import SoloDrillButton from '../components/quickClashComponents/soloDrill/SoloDrillButton'
+import SoloDrillModal from '../components/quickClashComponents/soloDrill/SoloDrillModal'
 
 // Player hook (works for both auth and session players)
 import usePlayer from '../hooks/usePlayer'
@@ -147,11 +149,14 @@ const QuickClashV2 = ({ forceOpenMatchmaking = false, onForceOpenReset }) => {
         {/* Header - direct render */}
         <QuickClashHeaderV2 />
 
-        {/* Matchmaking - DIRECT import, no Suspense */}
-        <div className="mt-4 mb-4">
+        {/* Action Buttons - SQUAD + SOLO DRILL */}
+        <div className="mt-4 mb-4 grid grid-cols-2 gap-3">
           <GlobalMatchmakingButton
             forceOpenModal={forceOpenMatchmaking}
             onForceOpenReset={onForceOpenReset}
+            withBottomMargin={false}
+            buttonWidth="100%"
+            buttonMinWidth={{ base: '0px', md: '0px' }}
             onSquadClick={() => {
               // Complete squad_intro tutorial when user clicks the button
               if (tutorialContext?.activeTutorial === 'squad_intro' && tutorialContext?.completeTutorial) {
@@ -159,7 +164,10 @@ const QuickClashV2 = ({ forceOpenMatchmaking = false, onForceOpenReset }) => {
               }
             }}
           />
+          <SoloDrillButton buttonWidth="100%" />
         </div>
+
+        <SoloDrillModal />
 
         {/* Active Battles */}
         <ActiveChallengesV2 />
