@@ -266,6 +266,23 @@ const revokeAccess = asyncHandler(async (req, res) => {
   })
 })
 
+/**
+ * Get Solo Drill analytics metrics
+ * @route GET /api/admin/analytics/solo-drill
+ * @access Admin only
+ */
+const getSoloDrillAnalytics = asyncHandler(async (req, res) => {
+  const { days = 30 } = req.query
+  const { startDate, endDate } = analyticsService.getDateRange(parseInt(days))
+
+  const soloDrill = await analyticsService.getSoloDrillMetrics({ startDate, endDate })
+
+  res.json({
+    success: true,
+    data: soloDrill,
+  })
+})
+
 module.exports = {
   getAnalyticsOverview,
   getFootfallMetrics,
@@ -277,6 +294,7 @@ module.exports = {
   getViralTrend,
   getConversionMetrics,
   getValidationVerdict,
+  getSoloDrillAnalytics,
   getAccessList,
   grantAccess,
   revokeAccess,

@@ -9,6 +9,7 @@ const QuickClashTeamBattle = require('../../model/quickClashSchemas/quickClashTe
 const QuickClashTeam = require('../../model/quickClashSchemas/quickClashTeamSchema')
 const ApplicationUpdates = require('../../model/applicationUpdatesSchema')
 const AnalyticsAdmin = require('../../model/quickClashSchemas/analyticsAdminSchema')
+const SoloDrillSession = require('../../model/quickClashSchemas/soloDrillSchema')
 
 // ============================================================================
 // HELPER FUNCTIONS
@@ -1216,6 +1217,245 @@ const getSessionToAccountConversion = async ({ startDate, endDate }) => {
 }
 
 // ============================================================================
+// SOLO DRILL ANALYTICS
+// ============================================================================
+
+/**
+ * Get comprehensive Solo Drill metrics
+ * @param {Object} params - { startDate, endDate }
+ * @returns {Promise<Object>} Solo Drill analytics data
+ */
+const getSoloDrillMetrics = async ({ startDate, endDate }) => {
+  // Get bot user IDs for exclusion
+  const botUsers = await User.find({
+    email: { $regex: /^dummy\d+@mail\.com$/ }
+  }).select('_id')
+  const botUserIds = botUsers.map(u => u._id)
+
+  // --- Core counts ---
+  const totalDrills = await SoloDrillSession.countDocuments({
+    startedAt: { $gte: startDate, $lte: endDate },
+    user: { $nin: botUserIds },
+  })
+
+  const completedDrills = await SoloDrillSession.countDocuments({
+    startedAt: { $gte: startDate, $lte: endDate },
+    user: { $nin: botUserIds },
+    status: 'completed',
+  })
+
+  const abandonedDrills = await SoloDrillSession.countDocuments({
+    startedAt: { $gte: startDate, $lte: endDate },
+    user: { $nin: botUserIds },
+    status: 'abandoned',
+  })
+
+  const completionRate = totalDrills > 0 ? (completedDrills / totalDrills) * 100 : 0
+  const abandonRate = totalDrills > 0 ? (abandonedDrills / totalDrills) * 100 : 0
+
+  // --- Unique drillers ---
+  const uniqueDrillers = await SoloDrillSession.distinct('user', {
+    startedAt: { $gte: startDate, $lte: endDate },
+    user: { $nin: botUserIds },
+  })
+  const uniqueDrillerCount = uniqueDrillers.length
+
+  // --- Adoption rate: drillers / active battle users ---
+  const battleParticipants = await QuickClashTeamBattle.aggregate([
+    {
+      $match: {
+        createdAt: { $gte: startDate, $lte: endDate },
+        status: { $in: ['completed', 'active'] },
+      },
+    },
+    {
+      $project: {
+        allMembers: { $concatArrays: ['$teamAMembers', '$teamBMembers'] },
+      },
+    },
+    { $unwind: '$allMembers' },
+    {
+      $match: {
+        'allMembers.user': { $nin: botUserIds, $ne: null },
+      },
+    },
+    {
+      $group: {
+        _id: null,
+        uniqueUsers: { $addToSet: '$allMembers.user' },
+      },
+    },
+  ])
+  const activeBattleUsers = battleParticipants[0]?.uniqueUsers?.length || 0
+  const adoptionRate = activeBattleUsers > 0 ? (uniqueDrillerCount / activeBattleUsers) * 100 : 0
+
+  // --- Scoring averages (completed only) ---
+  const scoreAgg = await SoloDrillSession.aggregate([
+    {
+      $match: {
+        startedAt: { $gte: startDate, $lte: endDate },
+        user: { $nin: botUserIds },
+        status: 'completed',
+      },
+    },
+    {
+      $group: {
+        _id: null,
+        avgForgeScore: { $avg: '$forgeScore' },
+        avgQuizScore: { $avg: '$quizScore' },
+        avgTotalScore: { $avg: '$totalScore' },
+      },
+    },
+  ])
+
+  const avgForgeScore = scoreAgg[0]?.avgForgeScore?.toFixed(1) || '0'
+  const avgQuizScore = scoreAgg[0]?.avgQuizScore?.toFixed(1) || '0'
+  const avgTotalScore = scoreAgg[0]?.avgTotalScore?.toFixed(1) || '0'
+
+  // --- Benchmark distribution ---
+  const benchmarkAgg = await SoloDrillSession.aggregate([
+    {
+      $match: {
+        startedAt: { $gte: startDate, $lte: endDate },
+        user: { $nin: botUserIds },
+        status: 'completed',
+        benchmark: { $ne: null },
+      },
+    },
+    {
+      $group: {
+        _id: '$benchmark',
+        count: { $sum: 1 },
+      },
+    },
+  ])
+
+  const benchmarkDistribution = {
+    rookie: 0,
+    bronze: 0,
+    silver: 0,
+    gold: 0,
+    diamond: 0,
+  }
+  benchmarkAgg.forEach(b => {
+    if (benchmarkDistribution.hasOwnProperty(b._id)) {
+      benchmarkDistribution[b._id] = b.count
+    }
+  })
+
+  // --- Source split ---
+  const sourceAgg = await SoloDrillSession.aggregate([
+    {
+      $match: {
+        startedAt: { $gte: startDate, $lte: endDate },
+        user: { $nin: botUserIds },
+      },
+    },
+    {
+      $group: {
+        _id: '$source',
+        count: { $sum: 1 },
+      },
+    },
+  ])
+
+  const sourceSplit = { daily_free: 0, purchased: 0 }
+  sourceAgg.forEach(s => {
+    if (sourceSplit.hasOwnProperty(s._id)) {
+      sourceSplit[s._id] = s.count
+    }
+  })
+
+  // --- Top categories ---
+  const categoryAgg = await SoloDrillSession.aggregate([
+    {
+      $match: {
+        startedAt: { $gte: startDate, $lte: endDate },
+        user: { $nin: botUserIds },
+      },
+    },
+    {
+      $group: {
+        _id: '$category',
+        count: { $sum: 1 },
+      },
+    },
+    { $sort: { count: -1 } },
+    { $limit: 5 },
+  ])
+
+  const topCategories = categoryAgg.map(c => ({
+    category: c._id,
+    count: c.count,
+  }))
+
+  // --- Daily trend ---
+  const dailyTrend = await SoloDrillSession.aggregate([
+    {
+      $match: {
+        startedAt: { $gte: startDate, $lte: endDate },
+        user: { $nin: botUserIds },
+      },
+    },
+    {
+      $group: {
+        _id: { $dateToString: { format: '%Y-%m-%d', date: '$startedAt' } },
+        starts: { $sum: 1 },
+        completions: {
+          $sum: { $cond: [{ $eq: ['$status', 'completed'] }, 1, 0] },
+        },
+      },
+    },
+    { $sort: { _id: 1 } },
+  ])
+
+  const dailyData = dailyTrend.map(d => ({
+    date: d._id,
+    starts: d.starts,
+    completions: d.completions,
+  }))
+
+  // --- Previous period for trend ---
+  const periodLength = endDate - startDate
+  const prevStartDate = new Date(startDate - periodLength)
+  const prevEndDate = new Date(startDate)
+
+  const prevTotalDrills = await SoloDrillSession.countDocuments({
+    startedAt: { $gte: prevStartDate, $lte: prevEndDate },
+    user: { $nin: botUserIds },
+  })
+  const prevCompletedDrills = await SoloDrillSession.countDocuments({
+    startedAt: { $gte: prevStartDate, $lte: prevEndDate },
+    user: { $nin: botUserIds },
+    status: 'completed',
+  })
+  const prevCompletionRate = prevTotalDrills > 0 ? (prevCompletedDrills / prevTotalDrills) * 100 : 0
+
+  return {
+    totalDrills,
+    completedDrills,
+    abandonedDrills,
+    inProgressDrills: totalDrills - completedDrills - abandonedDrills,
+    completionRate: completionRate.toFixed(1),
+    abandonRate: abandonRate.toFixed(1),
+    completionStatus: completionRate >= 50 ? 'pass' : completionRate >= 35 ? 'conditional' : 'fail',
+    uniqueDrillers: uniqueDrillerCount,
+    activeBattleUsers,
+    adoptionRate: adoptionRate.toFixed(1),
+    adoptionStatus: adoptionRate >= 10 ? 'pass' : adoptionRate >= 5 ? 'conditional' : 'fail',
+    avgForgeScore,
+    avgQuizScore,
+    avgTotalScore,
+    benchmarkDistribution,
+    sourceSplit,
+    topCategories,
+    dailyTrend: dailyData,
+    trend: calculateTrend(totalDrills, prevTotalDrills).toFixed(1),
+    completionTrend: (completionRate - prevCompletionRate).toFixed(1),
+  }
+}
+
+// ============================================================================
 // VALIDATION VERDICT
 // ============================================================================
 
@@ -1226,13 +1466,14 @@ const getSessionToAccountConversion = async ({ startDate, endDate }) => {
  */
 const getValidationVerdict = async ({ startDate, endDate }) => {
   // Gather all metrics
-  const [d1, d7, bpu, multiBattle, streak, conversion] = await Promise.all([
+  const [d1, d7, bpu, multiBattle, streak, conversion, soloDrill] = await Promise.all([
     getD1Retention({ startDate, endDate }),
     getD7Retention({ startDate, endDate }),
     getBattlesPerUser({ startDate, endDate }),
     getMultiBattleRate({ startDate, endDate }),
     getStreakDistribution({ startDate, endDate }),
     getSessionToAccountConversion({ startDate, endDate }),
+    getSoloDrillMetrics({ startDate, endDate }),
   ])
 
   // Evaluate each criterion
@@ -1279,6 +1520,18 @@ const getValidationVerdict = async ({ startDate, endDate }) => {
       conditionalMin: 15,
       status: conversion.status,
     },
+    drillAdoption: {
+      value: parseFloat(soloDrill.adoptionRate),
+      target: 10,
+      conditionalMin: 5,
+      status: soloDrill.adoptionStatus,
+    },
+    drillCompletionRate: {
+      value: parseFloat(soloDrill.completionRate),
+      target: 50,
+      conditionalMin: 35,
+      status: soloDrill.completionStatus,
+    },
   }
 
   // Count statuses
@@ -1322,7 +1575,7 @@ const getValidationVerdict = async ({ startDate, endDate }) => {
  * @returns {Promise<Object>} All KPIs for dashboard header
  */
 const getAnalyticsOverview = async ({ startDate, endDate }) => {
-  const [footfall, d1, d7, bpu, kCoef, bounce, verdict] = await Promise.all([
+  const [footfall, d1, d7, bpu, kCoef, bounce, verdict, soloDrill] = await Promise.all([
     getTotalFootfall({ startDate, endDate }),
     getD1Retention({ startDate, endDate }),
     getD7Retention({ startDate, endDate }),
@@ -1330,6 +1583,7 @@ const getAnalyticsOverview = async ({ startDate, endDate }) => {
     getViralCoefficient({ startDate, endDate }),
     getBounceRates({ startDate, endDate }),
     getValidationVerdict({ startDate, endDate }),
+    getSoloDrillMetrics({ startDate, endDate }),
   ])
 
   return {
@@ -1339,6 +1593,15 @@ const getAnalyticsOverview = async ({ startDate, endDate }) => {
     bpu,
     kCoefficient: kCoef,
     bounceRate: bounce,
+    soloDrill: {
+      totalDrills: soloDrill.totalDrills,
+      completionRate: soloDrill.completionRate,
+      completionStatus: soloDrill.completionStatus,
+      adoptionRate: soloDrill.adoptionRate,
+      adoptionStatus: soloDrill.adoptionStatus,
+      uniqueDrillers: soloDrill.uniqueDrillers,
+      trend: soloDrill.trend,
+    },
     verdict,
     dateRange: {
       start: startDate.toISOString(),
@@ -1454,6 +1717,9 @@ module.exports = {
   // Viral
   getViralCoefficient,
   getViralTrend,
+
+  // Solo Drill
+  getSoloDrillMetrics,
 
   // Conversion
   getSessionToAccountConversion,

@@ -114,6 +114,18 @@ export const getConversionMetrics = async (days = 30) => {
 }
 
 /**
+ * Get Solo Drill analytics metrics
+ * @param {number} days - Number of days
+ * @returns {Promise<Object>} Solo Drill data
+ */
+export const getSoloDrillMetrics = async (days = 30) => {
+  const response = await axios.get(`${API_BASE}/solo-drill`, {
+    params: { days },
+  })
+  return response.data
+}
+
+/**
  * Get validation verdict
  * @param {number} days - Number of days
  * @returns {Promise<Object>} Verdict data
@@ -168,6 +180,7 @@ export default {
   getViralCoefficient,
   getViralTrend,
   getConversionMetrics,
+  getSoloDrillMetrics,
   getValidationVerdict,
   getAccessList,
   grantAccess,

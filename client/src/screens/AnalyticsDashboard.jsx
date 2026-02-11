@@ -5,7 +5,7 @@
 import React, { useState, useEffect, useCallback } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { useSelector } from 'react-redux'
-import { RefreshCw, ArrowLeft, Users, Activity, Target, Zap, DoorOpen, TrendingUp } from 'lucide-react'
+import { RefreshCw, ArrowLeft, Users, Activity, Target, Zap, DoorOpen, TrendingUp, Crosshair } from 'lucide-react'
 
 import {
   KPICard,
@@ -16,6 +16,7 @@ import {
   FootfallChart,
   StreakDistribution,
   ConversionFunnel,
+  SoloDrillChart,
   DateRangePicker,
 } from '../components/analytics'
 
@@ -43,6 +44,7 @@ const AnalyticsDashboard = () => {
   const [viral, setViral] = useState(null)
   const [viralTrend, setViralTrend] = useState([])
   const [conversion, setConversion] = useState(null)
+  const [soloDrill, setSoloDrill] = useState(null)
 
   // Per-section loading states for progressive loading
   const [loadingStates, setLoadingStates] = useState({
@@ -53,6 +55,7 @@ const AnalyticsDashboard = () => {
     streaks: true,
     viral: true,
     conversion: true,
+    soloDrill: true,
   })
 
   // Helper to update a specific loading state
@@ -79,6 +82,7 @@ const AnalyticsDashboard = () => {
       streaks: true,
       viral: true,
       conversion: true,
+      soloDrill: true,
     })
 
     // Fetch overview (KPI cards) - highest priority
@@ -160,6 +164,17 @@ const AnalyticsDashboard = () => {
       .catch(err => {
         console.error('[Analytics] Conversion error:', err)
         setLoadingState('conversion', false)
+      })
+
+    // Fetch Solo Drill metrics
+    analyticsService.getSoloDrillMetrics(days)
+      .then(res => {
+        setSoloDrill(res.data)
+        setLoadingState('soloDrill', false)
+      })
+      .catch(err => {
+        console.error('[Analytics] Solo Drill error:', err)
+        setLoadingState('soloDrill', false)
       })
 
     // Set refreshing to false after a short delay (UI feedback)
@@ -354,6 +369,44 @@ const AnalyticsDashboard = () => {
           />
         </div>
 
+        {/* Row 2.5: Solo Drill KPIs */}
+        <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
+          <KPICard
+            title="Drill Adoption"
+            value={overview?.soloDrill?.adoptionRate || soloDrill?.adoptionRate || '0'}
+            unit="%"
+            target={10}
+            status={overview?.soloDrill?.adoptionStatus || soloDrill?.adoptionStatus}
+            icon={Crosshair}
+            description={`${overview?.soloDrill?.uniqueDrillers || soloDrill?.uniqueDrillers || 0} drillers`}
+            loading={loadingStates.overview && loadingStates.soloDrill}
+          />
+          <KPICard
+            title="Drill Completion"
+            value={overview?.soloDrill?.completionRate || soloDrill?.completionRate || '0'}
+            unit="%"
+            target={50}
+            status={overview?.soloDrill?.completionStatus || soloDrill?.completionStatus}
+            icon={Target}
+            description={`${soloDrill?.completedDrills || 0} / ${soloDrill?.totalDrills || 0}`}
+            loading={loadingStates.overview && loadingStates.soloDrill}
+          />
+          <KPICard
+            title="Total Drills"
+            value={overview?.soloDrill?.totalDrills?.toLocaleString() || soloDrill?.totalDrills?.toLocaleString() || '0'}
+            trend={overview?.soloDrill?.trend || soloDrill?.trend || 0}
+            icon={Activity}
+            loading={loadingStates.overview && loadingStates.soloDrill}
+          />
+          <KPICard
+            title="Avg Score"
+            value={soloDrill?.avgTotalScore || '0'}
+            icon={Zap}
+            description={`F: ${soloDrill?.avgForgeScore || '0'} / Q: ${soloDrill?.avgQuizScore || '0'}`}
+            loading={loadingStates.soloDrill}
+          />
+        </div>
+
         {/* Verdict Banner */}
         <VerdictBanner
           verdict={overview?.verdict?.verdict}
@@ -402,6 +455,12 @@ const AnalyticsDashboard = () => {
             loading={loadingStates.conversion}
           />
         </div>
+
+        {/* Charts Row 4: Solo Drill (full width) */}
+        <SoloDrillChart
+          data={soloDrill || {}}
+          loading={loadingStates.soloDrill}
+        />
       </main>
 
       {/* Footer */}
