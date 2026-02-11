@@ -513,7 +513,7 @@ const completeQuiz = async ({ sessionId, responses }) => {
       await updateChallengeScore({
         challengeId: quizSession.challenge,
         userId: quizSession.user,
-        score: RQM_score,
+        score: final_RQM_score,
         session,
       })
 
@@ -687,7 +687,6 @@ const submitForgeAnswer = async ({
           const populatedChallenge = await QuickClashChallenge.findById(quizSession.challenge._id)
             .populate('forgeArticle')
             .lean()
-            .session(mongoSession)
           forgeArticle = populatedChallenge.forgeArticle
       }
       const section = forgeArticle.sections[sectionNumber]
@@ -698,6 +697,26 @@ const submitForgeAnswer = async ({
 
       // Validate answer
       const isCorrect = userAnswer === section.mcq.correctIndex
+      const activePowerups = quizSession.activePowerups || []
+
+      // Consume Forge Score Surge at answer submit time.
+      // This keeps scoring authoritative and prevents pre-consumption races.
+      let applyScoreSurgeMultiplier = false
+      if (powerups.scoreSurge) {
+        const scoreSurgePowerup = activePowerups.find(
+          p =>
+            p.powerupId === 'SCORE_SURGE' &&
+            !p.used &&
+            (p.phase?.toLowerCase() === 'forge' ||
+              p.phase?.toLowerCase() === 'both'),
+        )
+
+        if (scoreSurgePowerup) {
+          scoreSurgePowerup.used = true
+          scoreSurgePowerup.effectApplied = true
+          applyScoreSurgeMultiplier = isCorrect
+        }
+      }
 
       // Update streak
       let currentStreak = quizSession.forgeProgress.streak || 0
@@ -707,7 +726,6 @@ const submitForgeAnswer = async ({
           (quizSession.forgeProgress.correctAnswers || 0) + 1
       } else {
         // Apply Powerup: Streak Shield (Passive - auto-check from activePowerups)
-        const activePowerups = quizSession.activePowerups || []
         const streakShield = activePowerups.find(
           p => p.powerupId === 'STREAK_SHIELD' &&
           (p.phase?.toLowerCase() === 'forge' || p.phase?.toLowerCase() === 'both') &&
@@ -744,9 +762,15 @@ const submitForgeAnswer = async ({
         if (timeRatio <= 0.5) {
           speedBonus = FORGE_SCORING.SPEED_BONUS_MAX // 10 pts for very fast
         } else if (timeRatio <= 1.0) {
-          // Linear scale from 10 to 5
-          speedBonus = Math.floor(
-            FORGE_SCORING.SPEED_BONUS_MAX - (timeRatio - 0.5) * 10,
+          // Linear scale from max -> min between 0.5x and 1.0x time ratio
+          const normalized = (timeRatio - 0.5) / 0.5
+          const interpolated =
+            FORGE_SCORING.SPEED_BONUS_MAX -
+            normalized *
+              (FORGE_SCORING.SPEED_BONUS_MAX - FORGE_SCORING.SPEED_BONUS_MIN)
+          speedBonus = Math.max(
+            FORGE_SCORING.SPEED_BONUS_MIN,
+            Math.min(FORGE_SCORING.SPEED_BONUS_MAX, Math.round(interpolated)),
           )
         } else {
           speedBonus = FORGE_SCORING.SPEED_BONUS_MIN // 5 pts for slow but correct
@@ -757,18 +781,9 @@ const submitForgeAnswer = async ({
 
         questionScore += speedBonus + streakBonus
 
-        // Apply Powerup: Score Surge
-        if (powerups.scoreSurge) {
+        // Apply Powerup: Score Surge (2x for this correct question)
+        if (applyScoreSurgeMultiplier) {
           questionScore *= 2
-
-          // Mark the SCORE_SURGE powerup as used to prevent double application in quiz phase
-          const scoreSurgePowerup = activePowerups.find(
-            p => p.powerupId === 'SCORE_SURGE' && !p.used
-          )
-          if (scoreSurgePowerup) {
-            scoreSurgePowerup.used = true
-            scoreSurgePowerup.effectApplied = true
-          }
         }
       }
 
@@ -842,7 +857,7 @@ const submitForgeAnswer = async ({
         response.isLastSection = true
       }
 
-
+      console.timeEnd('SubmitForgeAnswer')
 
       // QUEUED SAVE - Sequential processing to prevent race conditions
       enqueueWrite(sessionId, async () => {
@@ -886,7 +901,6 @@ const advanceToNextSection = async ({ sessionId }) => {
           const populatedChallenge = await QuickClashChallenge.findById(quizSession.challenge._id)
             .populate('forgeArticle')
             .lean()
-            .session(session)
           forgeArticle = populatedChallenge.forgeArticle
       }
       const currentSectionIndex = quizSession.forgeProgress.currentSection
@@ -917,9 +931,7 @@ const advanceToNextSection = async ({ sessionId }) => {
           await quizSession.save()
         })
 
-
-
-
+        console.timeEnd('AdvanceToNextSection')
         return {
           completed: true,
           totalScore: quizSession.forgeProgress.score,
@@ -956,10 +968,8 @@ const advanceToNextSection = async ({ sessionId }) => {
 
         const nextSection = forgeArticle.sections[nextSectionNumber]
 
-
-
         // Return next question WITHOUT the correct answer
-
+        console.timeEnd('AdvanceToNextSection')
         return {
           completed: false,
           sectionNumber: nextSectionNumber,
@@ -1118,4 +1128,3 @@ module.exports = {
   getForgeReview,
   getCachedSession, // Exported for powerup controller
 }
-

@@ -8,6 +8,10 @@ const quickClashTeamBattleService = require('./quickClashServices/quickClashTeam
 const jwt = require('jsonwebtoken')
 const bcrypt = require('bcryptjs')
 const crypto = require('crypto')
+const {
+  TUTORIAL_PROGRESS_KEYS,
+  sanitizeTutorialProgress,
+} = require('../utils/tutorialProgress.utils')
 
 // Import coin and streak services for session conversion
 const { transferCoinsToUser } = require('./quickClashServices/quickClashCoinService')
@@ -985,7 +989,7 @@ const getActiveBattleForPlayer = async ({ userId, sessionId }) => {
  * Update session tutorial progress
  * @param {Object} params
  * @param {string} params.sessionId
- * @param {string} params.tutorial - 'lobby' or 'battle'
+ * @param {string} params.tutorial
  * @param {boolean} [params.completed=true]
  * @returns {Promise<Object>} Updated session
  */
@@ -997,16 +1001,14 @@ const updateSessionTutorialProgress = async ({ sessionId, tutorial, completed = 
   }
 
   // Allowed tutorials
-  const validTutorials = ['lobby', 'battle', 'squad_intro', 'coins_shop', 'quickClashOnboarding']
-  if (!validTutorials.includes(tutorial)) {
+  if (!TUTORIAL_PROGRESS_KEYS.includes(tutorial)) {
     throw new Error('Invalid tutorial name')
   }
 
-  if (!session.tutorialProgress) {
-    session.tutorialProgress = { lobby: false, battle: false, squad_intro: false, quickClashOnboarding: false }
-  }
+  session.tutorialProgress = sanitizeTutorialProgress(session.tutorialProgress)
 
   session.tutorialProgress[tutorial] = completed !== false
+  session.markModified('tutorialProgress')
   await session.save()
 
   return session

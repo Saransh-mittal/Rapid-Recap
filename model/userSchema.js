@@ -495,9 +495,9 @@ const userSchema = new mongoose.Schema(
       default: null,
     },
     tutorialProgress: {
-      lobby: { type: Boolean, default: false },
       battle: { type: Boolean, default: false },
       squad_intro: { type: Boolean, default: false },
+      solo_drill: { type: Boolean, default: false },
       coins_shop: { type: Boolean, default: false },
       quickClashOnboarding: { type: Boolean, default: false },
     },

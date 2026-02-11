@@ -1,4 +1,6 @@
+const fs = require('fs')
 const path = require('path')
+const { spawn } = require('child_process')
 require('dotenv').config({ path: path.join(__dirname, '../config.env') })
 
 const { runForgeScraper } = require('./runForgeScraper')
@@ -72,6 +74,74 @@ async function waitForBatchCompletion(batchId, pollInterval = 30000, maxWait = 7
   return { completed: false, error: 'timeout' }
 }
 
+/**
+ * Run AI verifier gate for draft Forge articles and archive failing ones.
+ * This is a pre-quiz safeguard so low-quality content doesn't get published.
+ */
+async function runAIVerifierGate({
+  db = 'default',
+  model = 'gpt-5-mini',
+  archiveMode = 'overall_fail',
+  status = 'draft',
+} = {}) {
+  return new Promise((resolve, reject) => {
+    const scriptPath = path.join(__dirname, 'forgeAIVerifier.js')
+    const outputPath = path.join(__dirname, '../reports/forge_ai_gate_latest.json')
+
+    const args = [
+      scriptPath,
+      `--db=${db}`,
+      `--status=${status}`,
+      '--sample=all',
+      `--model=${model}`,
+      '--apply=archive',
+      `--archive-mode=${archiveMode}`,
+      `--output=${outputPath}`,
+    ]
+
+    const proc = spawn(process.execPath, args, {
+      env: process.env,
+      stdio: ['ignore', 'pipe', 'pipe'],
+    })
+
+    let stdout = ''
+    let stderr = ''
+    proc.stdout.on('data', (d) => {
+      const t = d.toString()
+      stdout += t
+      process.stdout.write(t)
+    })
+    proc.stderr.on('data', (d) => {
+      const t = d.toString()
+      stderr += t
+      process.stderr.write(t)
+    })
+
+    proc.on('error', (err) => reject(err))
+    proc.on('close', (code) => {
+      if (code !== 0) {
+        return reject(
+          new Error(`AI verifier gate failed with code ${code}. stderr: ${stderr || stdout}`),
+        )
+      }
+
+      let report = null
+      try {
+        if (fs.existsSync(outputPath)) {
+          report = JSON.parse(fs.readFileSync(outputPath, 'utf8'))
+        }
+      } catch (err) {
+        return reject(new Error(`AI verifier gate report parse failed: ${err.message}`))
+      }
+
+      resolve({
+        outputPath,
+        report,
+      })
+    })
+  })
+}
+
 // ============================================================================
 // MAIN WORKFLOW
 // ============================================================================
@@ -83,6 +153,9 @@ async function runCompleteWorkflow(options = {}) {
     skipScraping = false, // Skip scraping (only process existing)
     skipProcessing = false, // Skip content processing
     skipQuiz = false, // Skip quiz generation
+    skipAIGate = false, // Skip AI verifier gate
+    aiGateModel = 'gpt-5-mini', // AI verifier model
+    aiGateArchiveMode = 'overall_fail', // overall_fail | strict_any_fail
     waitForCompletion = false, // Wait for batch to complete (polling)
   } = options
 
@@ -94,6 +167,7 @@ async function runCompleteWorkflow(options = {}) {
   const workflowResults = {
     scraping: null,
     processing: null,
+    aiGate: null,
     quiz: null,
     costs: null,
     totalTime: 0,
@@ -250,6 +324,51 @@ async function runCompleteWorkflow(options = {}) {
     }
 
     // ========================================================================
+    // PHASE 2.5: AI VERIFIER GATE (PRE-QUIZ)
+    // ========================================================================
+    if (!skipQuiz && !skipAIGate) {
+      console.log('\n' + '='.repeat(80))
+      console.log('🛡️  PHASE 2.5: AI VERIFIER GATE')
+      console.log('='.repeat(80))
+
+      const ForgeArticle = require('../model/quickClashSchemas/forgeArticleSchema')
+      const draftBefore = await ForgeArticle.countDocuments({ status: 'draft' })
+
+      if (draftBefore === 0) {
+        console.log('No draft articles found for AI gate.')
+        workflowResults.aiGate = { status: 'skipped', reason: 'no_drafts' }
+      } else {
+        console.log(`Draft articles to verify: ${draftBefore}`)
+        const gateResult = await runAIVerifierGate({
+          db: 'default',
+          model: aiGateModel,
+          archiveMode: aiGateArchiveMode,
+          status: 'draft',
+        })
+
+        const draftAfter = await ForgeArticle.countDocuments({ status: 'draft' })
+        const auto = gateResult.report?.autoAction || {}
+        workflowResults.aiGate = {
+          status: 'completed',
+          model: aiGateModel,
+          archiveMode: aiGateArchiveMode,
+          draftBefore,
+          draftAfter,
+          archivedSelected: auto.selectedCount || 0,
+          archivedModified: auto.modifiedCount || 0,
+          reportPath: gateResult.outputPath,
+          summary: gateResult.report?.summary || null,
+        }
+      }
+
+      console.log('\n' + '-'.repeat(80))
+      console.log('✅ AI GATE PHASE COMPLETE')
+      console.log('-'.repeat(80))
+    } else if (skipAIGate) {
+      console.log('\n⏭️  PHASE 2.5: SKIPPED (skipAIGate = true)\n')
+    }
+
+    // ========================================================================
     // PHASE 3: QUIZ BATCH PROCESSING
     // ========================================================================
 
@@ -377,6 +496,23 @@ async function runCompleteWorkflow(options = {}) {
       }
     }
 
+    if (workflowResults.aiGate) {
+      console.log('\n🛡️  AI Gate Results:')
+      if (workflowResults.aiGate.status === 'completed') {
+        console.log(`   Status:              Completed`)
+        console.log(`   Model:               ${workflowResults.aiGate.model}`)
+        console.log(`   Archive mode:        ${workflowResults.aiGate.archiveMode}`)
+        console.log(`   Draft before:        ${workflowResults.aiGate.draftBefore}`)
+        console.log(`   Archived selected:   ${workflowResults.aiGate.archivedSelected}`)
+        console.log(`   Archived modified:   ${workflowResults.aiGate.archivedModified}`)
+        console.log(`   Draft after:         ${workflowResults.aiGate.draftAfter}`)
+        console.log(`   Report:              ${workflowResults.aiGate.reportPath}`)
+      } else if (workflowResults.aiGate.status === 'skipped') {
+        console.log(`   Status:              Skipped`)
+        console.log(`   Reason:              ${workflowResults.aiGate.reason}`)
+      }
+    }
+
     if (workflowResults.quiz) {
       console.log('\n⚔️  Quiz Generation Results:')
       if (workflowResults.quiz.status === 'completed') {
@@ -439,6 +575,9 @@ async function main() {
     skipScraping: false,
     skipProcessing: false,
     skipQuiz: false,
+    skipAIGate: false,
+    aiGateModel: 'gpt-5-mini',
+    aiGateArchiveMode: 'overall_fail',
     waitForCompletion: false,
   }
 
@@ -453,6 +592,12 @@ async function main() {
       options.skipProcessing = true
     } else if (arg === '--skip-quiz') {
       options.skipQuiz = true
+    } else if (arg === '--skip-ai-gate') {
+      options.skipAIGate = true
+    } else if (arg.startsWith('--ai-gate-model=')) {
+      options.aiGateModel = arg.split('=')[1]
+    } else if (arg.startsWith('--ai-gate-archive-mode=')) {
+      options.aiGateArchiveMode = arg.split('=')[1]
     } else if (arg === '--wait') {
       options.waitForCompletion = true
     } else if (arg === '--help' || arg === '-h') {
@@ -467,6 +612,10 @@ OPTIONS:
   --max-processing=N      Process max N seeds (default: 100)
   --skip-scraping         Skip scraping phase (only process)
   --skip-processing       Skip processing phase (only scrape)
+  --skip-ai-gate          Skip AI verifier gate phase
+  --skip-quiz             Skip quiz generation phase
+  --ai-gate-model=MODEL   Model for AI verifier gate (default: gpt-5-mini)
+  --ai-gate-archive-mode=MODE  AI gate archive mode: overall_fail|strict_any_fail
   --wait                  Wait for batch to complete (polls every 30s)
   --help, -h              Show this help message
 

@@ -5,7 +5,7 @@ const mongoose = require('mongoose')
 // Note: User provided "6986e1f6d2e03afdf56981f5" - this is 24 chars which is valid ObjectId
 const BATTLE_ID = '6986e1f6d2e03afdf56981f5'
 const USER_ID = '69760057f69626c3681f2702'
-const DB_URI = process.env.SOURCE_DB_URI
+const DB_URI = process.env.DATABASE
 
 console.log('Looking for Battle:', BATTLE_ID)
 console.log('Looking for User:', USER_ID)

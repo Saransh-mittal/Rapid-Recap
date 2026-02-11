@@ -1,0 +1,10 @@
+feat(v2.1.0): implement solo drill mode, forge AI verifier, and refactor tutorial progress
+
+- **Feature (Solo Drill):** Launched 'Solo Drill' game mode with dedicated frontend screens, strict session management, and backend limits.
+- **Feature (Forge AI Verifier):** Added `forgeAiVerifier.js` and `forgeDataVerifier.js` scripts using OpenAI to audit article quality, category alignment, and question solvability.
+- **Refactor (Tutorial Structure):** Cleaned up tutorial progress tracking by removing deprecated `lobby` field, explicitly adding `solo_drill`, and centralizing key constants in `tutorialProgress.utils.js`.
+- **Backend (User Schema):** Updated `userSchema` to support the new tutorial structure and remove legacy fields.
+- **Backend (Controller):** Refactored `updateTutorialProgress` to use the new `sanitizeTutorialProgress` utility for safer updates.
+- **Feature Flags:** Introduced `DAILY_TASKS_ENABLED` flag for easier feature toggling.
+- **Build:** Updated frontend build artifacts.
+- **Minor:** Bumped version to 2.1.0.

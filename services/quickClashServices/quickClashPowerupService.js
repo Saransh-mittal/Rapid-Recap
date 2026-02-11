@@ -54,6 +54,16 @@ const MAX_POOL_HOUSING = 80 // Reduced from 150 for tighter economy
 const MAX_LOADOUT_HOUSING = 30
 const MAX_USER_DONATION = 20 // New constant for donation limit
 
+const validatePowerupMutationState = ({ battle, member }) => {
+  if (battle.status !== 'active') {
+    throw new Error('Powerups can only be changed while the battle is active')
+  }
+
+  if (member?.participated) {
+    throw new Error('You have already participated. Powerups cannot be changed.')
+  }
+}
+
 /**
  * Donate a powerup from user inventory to team pool
  */
@@ -66,11 +76,25 @@ const donatePowerup = async ({
 }) => {
   const battle = await QuickClashTeamBattle.findById(battleId).session(session)
   if (!battle) throw new Error('Battle not found')
+  if (!teamId) throw new Error('Team ID is required')
 
-  // Determine which pool to use
-  const isTeamA = battle.teamA.toString() === teamId.toString()
+  // Determine which pool to use and validate team belongs to this battle
+  let isTeamA
+  if (battle.teamA.toString() === teamId.toString()) {
+    isTeamA = true
+  } else if (battle.teamB.toString() === teamId.toString()) {
+    isTeamA = false
+  } else {
+    throw new Error('Invalid team for this battle')
+  }
   const poolKey = isTeamA ? 'teamAPool' : 'teamBPool'
+  const membersKey = isTeamA ? 'teamAMembers' : 'teamBMembers'
   const pool = battle[poolKey]
+
+  // Ensure donor belongs to the selected team
+  const member = findMemberByUserId(battle[membersKey], userId)
+  if (!member) throw new Error('User not in selected team')
+  validatePowerupMutationState({ battle, member })
 
   // Validate Powerup
   const powerupDef = POWERUPS[powerupId]
@@ -81,7 +105,7 @@ const donatePowerup = async ({
     throw new Error('Team Pool is full!')
   }
 
-  // Check User Donation Limit (Max 30)
+  // Check User Donation Limit
   const userDonatedTotal = pool.items
     .filter(i => i.donatedBy && i.donatedBy.toString() === userId.toString())
     .reduce((sum, i) => sum + i.cost, 0)
@@ -145,8 +169,16 @@ const equipPowerup = async ({
 }) => {
   const battle = await QuickClashTeamBattle.findById(battleId).session(session)
   if (!battle) throw new Error('Battle not found')
+  if (!teamId) throw new Error('Team ID is required')
 
-  const isTeamA = battle.teamA.toString() === teamId.toString()
+  let isTeamA
+  if (battle.teamA.toString() === teamId.toString()) {
+    isTeamA = true
+  } else if (battle.teamB.toString() === teamId.toString()) {
+    isTeamA = false
+  } else {
+    throw new Error('Invalid team for this battle')
+  }
   const poolKey = isTeamA ? 'teamAPool' : 'teamBPool'
   const membersKey = isTeamA ? 'teamAMembers' : 'teamBMembers'
 
@@ -154,6 +186,7 @@ const equipPowerup = async ({
   const member = findMemberByUserId(battle[membersKey], userId)
 
   if (!member) throw new Error('User not in team')
+  validatePowerupMutationState({ battle, member })
 
   // Find item in pool
   const itemIndex = pool.items.findIndex(item => item.powerupId === powerupType)
@@ -173,7 +206,8 @@ const equipPowerup = async ({
       loadoutItem => loadoutItem.powerupId === powerupType
     )
     if (alreadyEquipped) {
-      throw new Error(`You already have ${powerupDef.name} equipped. This powerup can only be equipped once.`)
+      const powerupName = POWERUPS[powerupType]?.name || powerupType
+      throw new Error(`You already have ${powerupName} equipped. This powerup can only be equipped once.`)
     }
   }
 
@@ -185,7 +219,9 @@ const equipPowerup = async ({
       powerupId: item.powerupId,
       type: item.type,
       cost: item.cost,
-      phase: item.phase
+      phase: item.phase,
+      donatedBy: item.donatedBy,
+      donatedAt: item.donatedAt,
   })
   member.loadout.housingUsed += item.cost
 
@@ -205,13 +241,23 @@ const unequipPowerup = async ({
 }) => {
     const battle = await QuickClashTeamBattle.findById(battleId).session(session)
     if (!battle) throw new Error('Battle not found')
+    if (!teamId) throw new Error('Team ID is required')
 
-    const isTeamA = battle.teamA.toString() === teamId.toString()
+    let isTeamA
+    if (battle.teamA.toString() === teamId.toString()) {
+      isTeamA = true
+    } else if (battle.teamB.toString() === teamId.toString()) {
+      isTeamA = false
+    } else {
+      throw new Error('Invalid team for this battle')
+    }
     const poolKey = isTeamA ? 'teamAPool' : 'teamBPool'
     const membersKey = isTeamA ? 'teamAMembers' : 'teamBMembers'
 
     const pool = battle[poolKey]
     const member = findMemberByUserId(battle[membersKey], userId)
+    if (!member) throw new Error('User not in team')
+    validatePowerupMutationState({ battle, member })
 
     // Find item in loadout
     const itemIndex = member.loadout.items.findIndex(item => item.powerupId === powerupType)
@@ -233,10 +279,8 @@ const unequipPowerup = async ({
         type: item.type,
         cost: item.cost,
         phase: item.phase,
-        donatedBy: userId, // We lose original donor info here if we don't track it in loadout.
-        // For now, assume the unequipper "donates" it back.
-        // Or we should persist donor info in loadout.
-        donatedAt: new Date()
+        donatedBy: item.donatedBy || userId,
+        donatedAt: item.donatedAt || new Date()
     })
     pool.housingUsed += item.cost
 

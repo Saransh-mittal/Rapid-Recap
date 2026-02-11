@@ -6,7 +6,6 @@ const QuickClashTeamTrophyHistory = require('../../model/quickClashSchemas/quick
 const QuickClashChallenge = require('../../model/quickClashSchemas/quickClashChallengeSchema')
 const User = require('../../model/userSchema')
 const {
-  getSourceArticle,
   generateHindiTranslation,
 } = require('./quickClashArticleService')
 const {
@@ -245,46 +244,26 @@ const getForgeArticle = async ({ category, session }) => {
 }
 
 /**
- * Decide whether to use forge article or traditional article for a category
+ * Select a published forge article for a category.
  * @param {Object} params - Parameters
  * @param {string} params.category - Category
  * @param {mongoose.ClientSession} [params.session] - Optional session
- * @returns {Promise<Object>} { useForge: boolean, data: article or forgeArticle }
+ * @returns {Promise<Object>} { useForge: true, data: forgeArticle, type: 'forge' }
  */
 const selectArticleTypeForCategory = async ({ category, session }) => {
-  // Try to get a forge article
+  // Published forge content is mandatory for this game mode.
   const forgeArticle = await getForgeArticle({ category, session })
   if (!forgeArticle) {
-    // No forge article available, use traditional article
-    console.log(
-      `[TeamBattle] Using traditional article for category: ${category}`,
+    throw new Error(
+      `[TeamBattle] No published forge article available for category: ${category}`,
     )
-    const article = await getSourceArticle({ category, session })
-    return {
-      useForge: false,
-      data: article,
-      type: 'traditional',
-    }
   }
-  const useForge = true
 
-  if (useForge) {
-    console.log(`[TeamBattle] Using FORGE article for category: ${category}`)
-    return {
-      useForge: true,
-      data: forgeArticle,
-      type: 'forge',
-    }
-  } else {
-    console.log(
-      `[TeamBattle] Using traditional article for category: ${category}`,
-    )
-    const article = await getSourceArticle({ category, session })
-    return {
-      useForge: false,
-      data: article,
-      type: 'traditional',
-    }
+  console.log(`[TeamBattle] Using FORGE article for category: ${category}`)
+  return {
+    useForge: true,
+    data: forgeArticle,
+    type: 'forge',
   }
 }
 
@@ -603,12 +582,24 @@ const createTeamBattle = makeRetryable(
           session,
         })
 
-        const useForge = articleSelection.useForge
-        const sourceData = articleSelection.data
+        let useForge = articleSelection.useForge
+        let sourceData = articleSelection.data
 
-        console.log(
-          `[TeamBattle] Article type selected: ${articleSelection.type}`,
-        )
+        // Defensive guard: this game mode must use published forge content only.
+        if (!useForge) {
+          throw new Error(
+            `[TeamBattle] Traditional article path is disabled for category: ${category}`,
+          )
+        }
+        if (!sourceData || sourceData.status !== 'published') {
+          throw new Error(
+            `[TeamBattle] Selected forge article is not published for category: ${category} (id: ${
+              sourceData?._id || 'unknown'
+            })`,
+          )
+        }
+
+        console.log(`[TeamBattle] Article type selected: forge`)
 
         // Prepare challenge data based on article type
         let challengeData = {

@@ -43,12 +43,12 @@ const BatchForgeOutputSchema = z.object({
         question: z.string().describe('Prediction hook question shown BEFORE content (Max 15 words). User guesses, then content reveals answer.'),
         options: z.array(z.string()).length(4).describe('4 plausible guess options (Max 5-7 words each). All should seem reasonable to someone who hasn\'t read the content.'),
         correctIndex: z.number().min(0).max(3).describe('Index of the option that the content will REVEAL as correct'),
-        hint: z.string().optional().describe('Helps user make educated guess without spoiling'),
+        hint: z.string().nullable().describe('Helps user make educated guess without spoiling'),
         contextNugget: z.string().describe('Brief learning path cue connecting to section theme'),
       })
-    })).length(5).optional().describe('Rewritten sections (Required if suitable=true)'),
+    })).length(5).nullable().describe('Rewritten sections (Required if suitable=true)'),
 
-    tags: z.array(z.string()).optional(),
+    tags: z.array(z.string()).nullable(),
   }).nullable().describe('Rewritten article data (Null if unsuitable)'),
 })
 
@@ -72,6 +72,23 @@ This means: The MCQ is NOT a comprehension test. It's a PREDICTION HOOK that pri
 Determine if the content is suitable for Forge Mode (Ages 13-30).
 - **Suitable:** Factual, educational, science/tech/geography/history, >150 words.
 - **Unsuitable:** Opinion pieces, politics, breaking news, listicles, too short.
+
+=== CATEGORY ROUTING RULES (STRICT) ===
+Input includes:
+- SEED_CATEGORY_RAW
+- SEED_CATEGORY_CANONICAL
+- SEED_SOURCE
+
+You MUST treat SEED_CATEGORY_CANONICAL as the default category.
+
+Only override category when the article body clearly and strongly contradicts the seed category.
+If you override, reasoning MUST explicitly include:
+"CATEGORY_OVERRIDE: <why seed category is clearly wrong for this content>"
+
+Override threshold:
+- Keep category if evidence is mixed.
+- Keep category if article still fits the seed lens (especially Geography climate/environment/place topics).
+- Override only for obvious domain mismatch (e.g., pure device/software tutorial vs Geography seed).
 
 **STEP 2: REWRITE (Only if Suitable)**
 If suitable, rewrite into the Forge format:

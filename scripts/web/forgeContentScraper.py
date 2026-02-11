@@ -18,6 +18,7 @@ import os
 from pymongo import MongoClient
 from bson import ObjectId
 import hashlib
+import certifi
 
 # ============================================================================
 # MONGODB CONNECTION
@@ -28,10 +29,11 @@ def get_mongodb_connection():
     Connect to MongoDB using connection string from environment
     """
     # Get MongoDB URI from environment or use default
-    mongo_uri = os.getenv('MONGODB_URI', 'mongodb://localhost:27017/rapidrecap')
+    mongo_uri = os.getenv('MONGODB_URI', 'mongodb://localhost:27017/rapidrecap').strip()
 
     try:
-        client = MongoClient(mongo_uri)
+        # Atlas TLS can fail on some hosts unless CA bundle is provided explicitly.
+        client = MongoClient(mongo_uri, tls=True, tlsCAFile=certifi.where())
         db = client.get_database()
         return db
     except Exception as e:
@@ -173,40 +175,40 @@ SOURCES = {
         "category": "Geography",
         "sources": [
             {
-                "name": "BBC News World",
-                "type": "rss",
-                "url": "http://feeds.bbci.co.uk/news/world/rss.xml",
-                "subtype": "Global Basics"
-            },
-            {
-                "name": "EarthSky",
-                "type": "rss",
-                "url": "https://earthsky.org/feed/",
-                "subtype": "Climate & Environment"
-            },
-            {
-                "name": "NASA Earth Observatory",
-                "type": "rss",
-                "url": "https://earthobservatory.nasa.gov/feeds/image-of-the-day.rss",
-                "subtype": "Climate & Environment"
-            },
-            {
                 "name": "The Guardian Environment",
                 "type": "rss",
                 "url": "https://www.theguardian.com/environment/rss",
                 "subtype": "Global Environment"
-            },
-             {
-                "name": "LiveScience Planet Earth",
-                "type": "rss",
-                "url": "https://www.livescience.com/feeds/planet-earth",
-                "subtype": "Geology & Nature"
             },
             {
                 "name": "Mongabay",
                 "type": "rss",
                 "url": "https://news.mongabay.com/feed/",
                 "subtype": "Nature & Conservation"
+            },
+            {
+                "name": "UN News Climate",
+                "type": "rss",
+                "url": "https://news.un.org/feed/subscribe/en/news/topic/climate-change/feed/rss.xml",
+                "subtype": "Climate & Policy"
+            },
+            {
+                "name": "Yale Climate Connections",
+                "type": "rss",
+                "url": "https://yaleclimateconnections.org/feed/",
+                "subtype": "Climate Impacts"
+            },
+            {
+                "name": "Climate Home News",
+                "type": "rss",
+                "url": "https://www.climatechangenews.com/feed/",
+                "subtype": "Global Climate"
+            },
+            {
+                "name": "Euronews Green",
+                "type": "rss",
+                "url": "https://www.euronews.com/rss?level=theme&name=green",
+                "subtype": "Geo-Environment Briefs"
             }
         ]
     }
@@ -492,15 +494,14 @@ class ForgeScraper:
         }
 
     def fetch_rss(self, url: str, max_articles: int = 5) -> List[Dict]:
-        """Fetch articles from RSS feed"""
+        """Fetch articles from RSS feed."""
         try:
-            import socket
-            old_timeout = socket.getdefaulttimeout()
-            socket.setdefaulttimeout(10)
+            # Feedparser can fail TLS verification when fetching URL directly in
+            # some environments. Fetch the XML with requests first, then parse.
+            response = self.session.get(url, timeout=20, allow_redirects=True)
+            response.raise_for_status()
 
-            feed = feedparser.parse(url)
-            socket.setdefaulttimeout(old_timeout)
-
+            feed = feedparser.parse(response.content)
             if not feed.entries:
                 return []
 
@@ -513,7 +514,7 @@ class ForgeScraper:
                 })
             return articles
         except Exception as e:
-            print(f"RSS fetch error: {e}", file=sys.stderr)
+            print(f"RSS fetch error ({url}): {e}", file=sys.stderr)
             return []
 
     def process_source(self, source: Dict, category: str) -> None:

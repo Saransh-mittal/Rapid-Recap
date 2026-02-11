@@ -2,6 +2,7 @@
 // Spark Engine - PlaySession controller for frictionless viral invites
 const asyncHandler = require('express-async-handler')
 const playSessionService = require('../services/playSessionService')
+const { sanitizeTutorialProgress } = require('../utils/tutorialProgress.utils')
 
 /**
  * @desc    Create a new PlaySession
@@ -843,7 +844,7 @@ const getSessionInfo = asyncHandler(async (req, res) => {
         lastActiveAt: session.lastActiveAt,
         streak: session.streak,
         coins: session.coins || 0,
-        tutorialProgress: session.tutorialProgress,
+        tutorialProgress: sanitizeTutorialProgress(session.tutorialProgress),
       },
     })
   } catch (error) {
@@ -1246,7 +1247,7 @@ const updateSessionTutorialProgress = asyncHandler(async (req, res) => {
 
     res.status(200).json({
       message: 'Tutorial progress updated',
-      tutorialProgress: session.tutorialProgress
+      tutorialProgress: sanitizeTutorialProgress(session.tutorialProgress),
     })
   } catch (error) {
     res.status(400).json({ error: error.message })
@@ -1291,4 +1292,3 @@ module.exports = {
   getActiveBattle,
   updateSessionTutorialProgress,
 }
-
