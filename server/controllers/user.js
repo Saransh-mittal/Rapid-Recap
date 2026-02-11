@@ -71,6 +71,10 @@ const {
 const {
   grantWelcomePowerups,
 } = require('../services/welcomePowerupService.js')
+const {
+  TUTORIAL_PROGRESS_KEYS,
+  sanitizeTutorialProgress,
+} = require('../utils/tutorialProgress.utils')
 
 const registerUser = async (req, res) => {
   const { name, email, pic, password, cpassword, inGameName } = req.body
@@ -478,8 +482,7 @@ const updateTutorialProgress = asyncHandler(async (req, res) => {
   }
 
   // Allowed tutorials
-  const validTutorials = ['lobby', 'battle', 'squad_intro', 'coins_shop', 'quickClashOnboarding']
-  if (!validTutorials.includes(tutorial)) {
+  if (!TUTORIAL_PROGRESS_KEYS.includes(tutorial)) {
     return res.status(400).json({ error: 'Invalid tutorial name' })
   }
 
@@ -488,13 +491,16 @@ const updateTutorialProgress = asyncHandler(async (req, res) => {
 
     const user = await User.findByIdAndUpdate(
       userId,
-      { [updateField]: completed !== false }, // Default to true if not specified
+      {
+        [updateField]: completed !== false, // Default to true if not specified
+        $unset: { 'tutorialProgress.lobby': 1 },
+      },
       { new: true }
     ).select('tutorialProgress')
 
     res.status(200).json({
       message: 'Tutorial progress updated',
-      tutorialProgress: user.tutorialProgress
+      tutorialProgress: sanitizeTutorialProgress(user.tutorialProgress)
     })
   } catch (error) {
     console.error('Update tutorial progress error:', error)

@@ -157,6 +157,7 @@ const QuickClashV2 = ({ forceOpenMatchmaking = false, onForceOpenReset }) => {
             withBottomMargin={false}
             buttonWidth="100%"
             buttonMinWidth={{ base: '0px', md: '0px' }}
+            isTutorialHighlighted={tutorialContext?.activeTutorial === 'squad_intro'}
             onSquadClick={() => {
               // Complete squad_intro tutorial when user clicks the button
               if (tutorialContext?.activeTutorial === 'squad_intro' && tutorialContext?.completeTutorial) {
@@ -164,7 +165,15 @@ const QuickClashV2 = ({ forceOpenMatchmaking = false, onForceOpenReset }) => {
               }
             }}
           />
-          <SoloDrillButton buttonWidth="100%" />
+          <SoloDrillButton
+            buttonWidth="100%"
+            isTutorialHighlighted={tutorialContext?.activeTutorial === 'solo_drill'}
+            onSoloDrillClick={() => {
+              if (tutorialContext?.activeTutorial === 'solo_drill' && tutorialContext?.completeTutorial) {
+                tutorialContext.completeTutorial('solo_drill')
+              }
+            }}
+          />
         </div>
 
         <SoloDrillModal />

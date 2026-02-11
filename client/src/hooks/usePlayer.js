@@ -161,7 +161,7 @@ export const usePlayer = () => {
           dayStreak: userStreak.dayStreak || 0,
           longestStreak: userStreak.longestStreak || 0,
           isActive: userStreak.isActive || false,
-          needsPlayToday: userStreak.needsPlayToday || true,
+          needsPlayToday: userStreak.needsPlayToday ?? true,
         } : null,
         tutorialProgress: user.tutorialProgress,
       },

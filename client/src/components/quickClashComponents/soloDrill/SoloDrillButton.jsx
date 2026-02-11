@@ -7,7 +7,11 @@ import { QUICK_CLASH_CLASSES } from '../utils/quickClashColors'
 
 const MotionButton = motion.button
 
-const SoloDrillButton = ({ buttonWidth = { base: '100%', md: '50%' } }) => {
+const SoloDrillButton = ({
+  buttonWidth = { base: '100%', md: '50%' },
+  onSoloDrillClick,
+  isTutorialHighlighted = false,
+}) => {
   const {
     fetchLimits,
     openDrillModal
@@ -20,17 +24,23 @@ const SoloDrillButton = ({ buttonWidth = { base: '100%', md: '50%' } }) => {
   }, [])
 
   const widthClass = typeof buttonWidth === 'object' ? 'w-full' : 'w-full'
+  const handleOpenDrill = () => {
+    onSoloDrillClick?.()
+    openDrillModal()
+  }
 
   return (
     <MotionButton
       type="button"
-      onClick={openDrillModal}
+      onClick={handleOpenDrill}
       whileHover={{
         scale: 1.02,
         y: -3,
         boxShadow: '0 16px 48px rgba(6,182,212,0.45), 0 0 0 1px rgba(6,182,212,0.30) inset'
       }}
       whileTap={{ scale: 0.98 }}
+      animate={isTutorialHighlighted ? { scale: [1, 1.04, 1] } : {}}
+      transition={isTutorialHighlighted ? { duration: 0.9, repeat: Infinity, ease: 'easeInOut' } : {}}
       className={`
         ${widthClass}
         ${QUICK_CLASH_CLASSES.focusRing}
@@ -38,10 +48,13 @@ const SoloDrillButton = ({ buttonWidth = { base: '100%', md: '50%' } }) => {
         h-[48px] md:h-[56px] px-4 md:px-5 cursor-pointer
         transition-all duration-300
         flex items-center justify-center gap-3
+        ${isTutorialHighlighted ? 'ring-2 ring-cyan-300 ring-offset-2 ring-offset-slate-900' : ''}
       `}
       style={{
         background: 'linear-gradient(135deg, #06B6D4 0%, #0891B2 50%, #0E7490 100%)',
-        boxShadow: '0 8px 32px rgba(6,182,212,0.35), 0 0 0 1px rgba(6,182,212,0.15) inset',
+        boxShadow: isTutorialHighlighted
+          ? '0 10px 36px rgba(6,182,212,0.5), 0 0 18px rgba(34,211,238,0.45), 0 0 0 1px rgba(6,182,212,0.25) inset'
+          : '0 8px 32px rgba(6,182,212,0.35), 0 0 0 1px rgba(6,182,212,0.15) inset',
       }}
       aria-label="Open solo drill"
     >
@@ -74,6 +87,8 @@ SoloDrillButton.propTypes = {
       md: PropTypes.string,
     }),
   ]),
+  onSoloDrillClick: PropTypes.func,
+  isTutorialHighlighted: PropTypes.bool,
 }
 
 export default SoloDrillButton

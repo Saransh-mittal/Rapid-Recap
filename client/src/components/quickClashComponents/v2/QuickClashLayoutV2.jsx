@@ -323,6 +323,7 @@ const WELCOME_SHOWN_KEY = 'qc_session_welcome_shown'
 
 // Key for localStorage to track last streak popup date
 const STREAK_POPUP_DATE_KEY = 'qc_streak_popup_date'
+const STREAK_FIRST_VISIT_KEY_PREFIX = 'qc_streak_first_visit_seen_'
 
 // Check if streak popup should be shown today
 const shouldShowStreakPopup = () => {
@@ -330,6 +331,13 @@ const shouldShowStreakPopup = () => {
   const lastShownDate = localStorage.getItem(STREAK_POPUP_DATE_KEY)
   const today = new Date().toLocaleDateString('en-US', { timeZone: Intl.DateTimeFormat().resolvedOptions().timeZone })
   return lastShownDate !== today
+}
+
+const getStreakFirstVisitKey = (player, isSession) => {
+  if (!player) return null
+  const playerId = isSession ? player.sessionId : player._id
+  if (!playerId) return null
+  return `${STREAK_FIRST_VISIT_KEY_PREFIX}${playerId}`
 }
 
 const QuickClashLayoutV2 = () => {
@@ -372,6 +380,8 @@ const QuickClashLayoutV2 = () => {
 
   // Track the last location.key to detect real navigation vs replaceState
   const lastLocationKey = useRef(location.key)
+  // Suppress daily streak popup for the current mount (first-ever visit only)
+  const [suppressStreakPopupThisVisit, setSuppressStreakPopupThisVisit] = useState(false)
 
   // Tutorial Blocking Logic
   const { setBlocked } = useTutorial()
@@ -379,6 +389,11 @@ const QuickClashLayoutV2 = () => {
   // Check if first-run onboarding should be shown
   const hasOnboardingCompleted = player?.tutorialProgress?.quickClashOnboarding
   const playerLoaded = !!player
+  const activePlayerId = isSession ? player?.sessionId : player?._id
+
+  useEffect(() => {
+    setSuppressStreakPopupThisVisit(false)
+  }, [activePlayerId])
 
   useEffect(() => {
     // Wait for player to be loaded
@@ -410,6 +425,7 @@ const QuickClashLayoutV2 = () => {
     // Check if streak popup is pending (player loaded + should show today + not currently open + welcome not pending/open)
     const isStreakPending = player &&
                             shouldShowStreakPopup() &&
+                            !suppressStreakPopupThisVisit &&
                             !showStreakPopup &&
                             !showWelcomeModal &&
                             !isWelcomePending &&
@@ -419,7 +435,7 @@ const QuickClashLayoutV2 = () => {
     const shouldBlock = showOnboardingOverlay || showWelcomeModal || showStreakPopup || showSignupPanel || isOnboardingPending || isWelcomePending || isStreakPending
 
     setBlocked(shouldBlock)
-  }, [showOnboardingOverlay, showWelcomeModal, showStreakPopup, showSignupPanel, setBlocked, isSession, player])
+  }, [showOnboardingOverlay, showWelcomeModal, showStreakPopup, showSignupPanel, setBlocked, isSession, player, suppressStreakPopupThisVisit])
 
   // Check for pending powerup reward from session conversion
   useEffect(() => {
@@ -583,6 +599,26 @@ const QuickClashLayoutV2 = () => {
       return
     }
 
+    // First-ever visit suppression for fresh 0-day streak users:
+    // skip popup on first app opening, then allow on subsequent openings.
+    const dayStreak = player?.streak?.dayStreak ?? 0
+    const longestStreak = player?.streak?.longestStreak ?? 0
+    const isFreshStreakProfile = dayStreak === 0 && longestStreak === 0
+    const firstVisitKey = getStreakFirstVisitKey(player, isSession)
+    if (
+      isFreshStreakProfile &&
+      firstVisitKey &&
+      !localStorage.getItem(firstVisitKey)
+    ) {
+      localStorage.setItem(firstVisitKey, 'true')
+      setSuppressStreakPopupThisVisit(true)
+      return
+    }
+
+    if (suppressStreakPopupThisVisit) {
+      return
+    }
+
     // Check if already shown today
     if (!shouldShowStreakPopup()) {
        return
@@ -605,7 +641,7 @@ const QuickClashLayoutV2 = () => {
     }, delay)
 
     return () => clearTimeout(timer)
-  }, [player, isSession, showWelcomeModal, location.state, location.pathname, location.search, navigate])
+  }, [player, isSession, showWelcomeModal, location.state, location.pathname, location.search, navigate, suppressStreakPopupThisVisit])
 
   const handleTabChange = useCallback((tabId) => {
     if (tabId === activeTab) return

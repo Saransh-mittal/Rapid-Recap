@@ -3,6 +3,8 @@
 // 4-slide carousel covering: battle format, gameplay loop, scoring, and competitive spirit
 
 import React, { memo, useState, useCallback } from 'react'
+import { useDispatch, useSelector } from 'react-redux'
+import { setUser } from '../../../redux/authSlice'
 import { motion, AnimatePresence } from 'framer-motion'
 import {
   Swords,
@@ -183,8 +185,18 @@ const OnboardingOverlay = memo(({ isOpen, onComplete }) => {
   const [direction, setDirection] = useState(1)
 
   const { isSession, refresh, player } = usePlayer()
+  const dispatch = useDispatch()
+  const { user } = useSelector(state => state.auth || {})
 
   const handleComplete = useCallback(async () => {
+    // For auth users, optimistically update Redux so blocking logic sees the change immediately
+    if (!isSession && user) {
+      dispatch(setUser({
+        ...user,
+        tutorialProgress: { ...user.tutorialProgress, quickClashOnboarding: true }
+      }))
+    }
+
     try {
       const endpoint = isSession ? '/api/play/session/tutorial-progress' : '/api/user/tutorial-progress'
       await axios.post(endpoint, {
@@ -198,7 +210,7 @@ const OnboardingOverlay = memo(({ isOpen, onComplete }) => {
     }
 
     onComplete()
-  }, [isSession, refresh, onComplete, player])
+  }, [isSession, refresh, onComplete, player, user, dispatch])
 
   const isLastSlide = currentSlide === ONBOARDING_SLIDES.length - 1
   const isFirstSlide = currentSlide === 0

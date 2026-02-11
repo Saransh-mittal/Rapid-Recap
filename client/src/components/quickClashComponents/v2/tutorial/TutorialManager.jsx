@@ -2,6 +2,7 @@ import React, { createContext, useContext, useEffect, useState, useCallback } fr
 import { useDispatch, useSelector } from 'react-redux'
 import { useLocation } from 'react-router-dom'
 import axios from 'axios'
+import { setUser } from '../../../../redux/authSlice'
 import TutorialOverlay from './TutorialOverlay'
 import { usePlayer } from '../../../../hooks/usePlayer'
 
@@ -15,14 +16,15 @@ export const TutorialProvider = ({ children }) => {
 
   // Get user/player state using unified hook
   const { player, isSession, isAuthenticated, refresh: refreshPlayer, loading } = usePlayer()
+  const { user } = useSelector(state => state.auth || {})
 
   // Local state for tutorials
   const [activeTutorial, setActiveTutorial] = useState(null)
   const [stepIndex, setStepIndex] = useState(0) // Lifted state
   const [tutorialProgress, setTutorialProgress] = useState({
-    lobby: false,
     battle: false,
     squad_intro: false,
+    solo_drill: false,
     coins_shop: false
   })
 
@@ -54,12 +56,11 @@ export const TutorialProvider = ({ children }) => {
     // Auto-dismiss: If there's an active tutorial but user navigated away from its page
     if (activeTutorial) {
       const isBattleTutorial = activeTutorial === 'battle'
-      const isLobbyTutorial = activeTutorial === 'lobby'
       const isSquadIntroTutorial = activeTutorial === 'squad_intro'
+      const isSoloDrillTutorial = activeTutorial === 'solo_drill'
       const isCoinsShopTutorial = activeTutorial === 'coins_shop'
 
       const isOnBattlePage = location.pathname.startsWith('/play/battle/') || location.pathname.startsWith('/quickclash/teamBattle/')
-      const isOnLobbyPage = location.pathname === '/play/lobby'
       const isOnQuickClashPage = location.pathname === '/quickclash' || location.pathname === '/quickclash/'
 
       // Dismiss if tutorial doesn't match current page
@@ -67,11 +68,11 @@ export const TutorialProvider = ({ children }) => {
         setActiveTutorial(null)
         return
       }
-      if (isLobbyTutorial && !isOnLobbyPage) {
+      if (isSquadIntroTutorial && !isOnQuickClashPage) {
         setActiveTutorial(null)
         return
       }
-      if (isSquadIntroTutorial && !isOnQuickClashPage) {
+      if (isSoloDrillTutorial && !isOnQuickClashPage) {
         setActiveTutorial(null)
         return
       }
@@ -84,18 +85,7 @@ export const TutorialProvider = ({ children }) => {
     // Don't trigger if blocked by other modals
     if (isBlocked) return
 
-    // 1. Lobby Tutorial
-    if (location.pathname === '/play/lobby') {
-      if (!tutorialProgress.lobby && !activeTutorial) {
-        const timer = setTimeout(() => {
-           setActiveTutorial('lobby')
-           setStepIndex(0) // Reset step
-        }, 1000)
-        return () => clearTimeout(timer)
-      }
-    }
-
-    // 2. Battle Tutorial (matches both legacy /play/battle/ and new /quickclash/teamBattle/)
+    // 1. Battle Tutorial (matches both legacy /play/battle/ and new /quickclash/teamBattle/)
     if (location.pathname.startsWith('/play/battle/') || location.pathname.startsWith('/quickclash/teamBattle/')) {
         if (!tutorialProgress.battle && !activeTutorial) {
              const timer = setTimeout(() => {
@@ -106,7 +96,7 @@ export const TutorialProvider = ({ children }) => {
         }
     }
 
-    // 3. Squad Intro Tutorial (GameHub / QuickClash)
+    // 2. Squad Intro Tutorial (GameHub / QuickClash)
     if (location.pathname === '/quickclash' || location.pathname === '/quickclash/') {
         if (!tutorialProgress.squad_intro && !activeTutorial) {
              const timer = setTimeout(() => {
@@ -116,9 +106,18 @@ export const TutorialProvider = ({ children }) => {
              return () => clearTimeout(timer)
         }
 
-        // 4. Coins Shop Tutorial (Auth users with 70+ coins, after squad_intro is done)
+        // 3. Solo Drill Tutorial (after squad_intro is done)
+        if (tutorialProgress.squad_intro && !tutorialProgress.solo_drill && !activeTutorial) {
+          const timer = setTimeout(() => {
+            setActiveTutorial('solo_drill')
+            setStepIndex(0)
+          }, 1200)
+          return () => clearTimeout(timer)
+        }
+
+        // 4. Coins Shop Tutorial (Auth users with 70+ coins, after squad_intro + solo_drill are done)
         if (isAuthenticated && !isSession && userCoins >= 70) {
-          if (tutorialProgress.squad_intro && !tutorialProgress.coins_shop && !activeTutorial) {
+          if (tutorialProgress.squad_intro && tutorialProgress.solo_drill && !tutorialProgress.coins_shop && !activeTutorial) {
             const timer = setTimeout(() => {
               setActiveTutorial('coins_shop')
               setStepIndex(0)
@@ -140,6 +139,13 @@ export const TutorialProvider = ({ children }) => {
     try {
       if (isAuthenticated) {
         await axios.post('/api/user/tutorial-progress', { tutorial: step, completed: true })
+        // Update Redux user state so blocking logic sees the change immediately
+        if (user) {
+          dispatch(setUser({
+            ...user,
+            tutorialProgress: { ...user.tutorialProgress, [step]: true }
+          }))
+        }
       } else {
         // Session Player
         const sessionId = player?.sessionId || localStorage.getItem('playSessionId')
@@ -158,14 +164,14 @@ export const TutorialProvider = ({ children }) => {
       console.error('Failed to save tutorial progress', err)
       // Silent fail is okay for tutorials, don't block user
     }
-  }, [isAuthenticated, player, refreshPlayer])
+  }, [isAuthenticated, player, refreshPlayer, user, dispatch])
 
-  // Dismiss only skips the CURRENT step, not the entire tutorial
+  // Dismiss marks the current tutorial as completed
   const dismissTutorial = useCallback(() => {
       if (activeTutorial) {
-          setStepIndex(prev => prev + 1) // Just move to next step
+          completeTutorial(activeTutorial)
       }
-  }, [activeTutorial])
+  }, [activeTutorial, completeTutorial])
 
   // Helper to advance step programmatically
   const nextStep = useCallback(() => {

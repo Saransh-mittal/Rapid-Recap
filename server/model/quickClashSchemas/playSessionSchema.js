@@ -80,9 +80,9 @@ const playSessionSchema = new mongoose.Schema(
       default: 0,
     },
     tutorialProgress: {
-      lobby: { type: Boolean, default: false },
       battle: { type: Boolean, default: false },
       squad_intro: { type: Boolean, default: false },
+      solo_drill: { type: Boolean, default: false },
       coins_shop: { type: Boolean, default: false },
       quickClashOnboarding: { type: Boolean, default: false },
     },

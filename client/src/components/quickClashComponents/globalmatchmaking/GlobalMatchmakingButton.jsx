@@ -64,6 +64,7 @@ const GlobalMatchmakingButton = React.memo(
     forceOpenModal = false, // External control to open modal
     onForceOpenReset, // Callback to reset the forceOpenModal prop
     onSquadClick, // Callback when button is clicked (for tutorial completion)
+    isTutorialHighlighted = false,
     ...otherProps
   }) => {
     const { t } = useTranslation('QuickClash')
@@ -190,12 +191,13 @@ const GlobalMatchmakingButton = React.memo(
               ${QUICK_CLASH_CLASSES.focusRing}
               transition-all duration-300
               ${isLoading ? 'opacity-60 cursor-not-allowed' : 'cursor-pointer'}
+              ${isTutorialHighlighted ? 'ring-2 ring-cyan-300 ring-offset-2 ring-offset-slate-900' : ''}
             `}
             style={{
               background: config.gradient,
-              boxShadow: `0 0 ${
-                config.shadowIntensity === 'xl' ? '40px' : '20px'
-              } ${config.glowColor}40`,
+              boxShadow: isTutorialHighlighted
+                ? `0 10px 36px ${config.glowColor}80, 0 0 18px ${config.glowColor}60, 0 0 0 1px ${config.glowColor}40 inset`
+                : `0 0 ${config.shadowIntensity === 'xl' ? '40px' : '20px'} ${config.glowColor}40`,
             }}
             whileHover={!isLoading ? { scale: 1.1, rotate: 5 } : {}}
             whileTap={!isLoading ? { scale: 0.95 } : {}}
@@ -209,11 +211,14 @@ const GlobalMatchmakingButton = React.memo(
                       `0 0 20px ${config.glowColor}40`,
                     ],
                   }
+                : isTutorialHighlighted
+                ? { scale: [1, 1.04, 1] }
                 : {}
             }
             transition={{
-              duration: 1.5,
-              repeat: buttonState === 'ready' ? Infinity : 0,
+              duration: isTutorialHighlighted ? 0.9 : 1.5,
+              repeat: (buttonState === 'ready' || isTutorialHighlighted) ? Infinity : 0,
+              ease: isTutorialHighlighted ? 'easeInOut' : 'linear',
             }}
             {...otherProps}
           >
@@ -277,13 +282,16 @@ const GlobalMatchmakingButton = React.memo(
             }
             flex items-center justify-center gap-3
             ${withBottomMargin ? 'mb-4' : ''}
+            ${isTutorialHighlighted ? 'ring-2 ring-cyan-300 ring-offset-2 ring-offset-slate-900' : ''}
           `}
           style={{
             background: config.gradient,
             width: sizeConfig.width,
             height: sizeConfig.height,
             minWidth: sizeConfig.minWidth,
-            boxShadow: `0 8px 32px ${config.glowColor}40, 0 0 0 1px ${config.glowColor}20 inset`,
+            boxShadow: isTutorialHighlighted
+              ? `0 10px 36px ${config.glowColor}80, 0 0 18px ${config.glowColor}60, 0 0 0 1px ${config.glowColor}40 inset`
+              : `0 8px 32px ${config.glowColor}40, 0 0 0 1px ${config.glowColor}20 inset`,
             textShadow: '0 2px 8px rgba(0,0,0,0.5)',
           }}
           whileHover={
@@ -304,11 +312,14 @@ const GlobalMatchmakingButton = React.memo(
                     `0 8px 32px ${config.glowColor}40, 0 0 0 1px ${config.glowColor}20 inset`,
                   ],
                 }
+              : isTutorialHighlighted
+              ? { scale: [1, 1.04, 1] }
               : {}
           }
           transition={{
-            duration: 1.5,
-            repeat: buttonState === 'ready' ? Infinity : 0,
+            duration: isTutorialHighlighted ? 0.9 : 1.5,
+            repeat: (buttonState === 'ready' || isTutorialHighlighted) ? Infinity : 0,
+            ease: isTutorialHighlighted ? 'easeInOut' : 'linear',
           }}
           {...otherProps}
         >

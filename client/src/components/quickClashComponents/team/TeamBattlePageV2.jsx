@@ -430,7 +430,7 @@ const CategoryCard = ({ challenge, onSelect, onDeselect, onBegin, onReport, load
           <div className="flex-shrink-0" onClick={e => e.stopPropagation()}>
             {state === 'done' && (
               <motion.button
-                onClick={() => { quizAudioService.playButtonClick(); onReport(challenge.challenge?._id) }}
+                onClick={() => { quizAudioService.playButtonClick(); onReport(challenge.challenge?._id || challenge.challenge) }}
                 disabled={loading}
                 whileTap={{ scale: 0.9 }}
                 className="p-2.5 rounded-xl bg-emerald-500/20 hover:bg-emerald-500/30 transition-colors"
@@ -1517,12 +1517,44 @@ const TeamBattlePageV2 = React.memo(() => {
     quizAudioService.playQuizStart() // Audio for starting battle
     currentBattle && beginChallenge(currentBattle._id)
   }, [currentBattle, beginChallenge])
-  const viewReport = useCallback(async id => {
-    if (!id) return
+  const viewReport = useCallback(async challengeId => {
+    if (!challengeId) return
+
     setReportLoading(true)
-    try { const r = await fetch(`/api/quickClash/challenge/${id}/sessions?userId=${user?._id}`); const d = await r.json(); if (d?.sessionId) { setSelectedSessionId(d.sessionId); setIsReportOpen(true) } }
-    finally { setReportLoading(false) }
-  }, [user])
+    try {
+      const sessionPlayerId =
+        typeof window !== 'undefined'
+          ? localStorage.getItem('playSessionId')
+          : null
+      const config = sessionPlayerId
+        ? { headers: { 'X-Session-Id': sessionPlayerId } }
+        : undefined
+
+      const response = await axios.get(
+        `/api/quickClash/challenge/${challengeId}/sessions`,
+        config,
+      )
+      const sessionId = response.data?.sessionId
+
+      if (!sessionId) {
+        notificationManager.error(
+          'Report unavailable',
+          'Could not find a completed session report for this category.',
+        )
+        return
+      }
+
+      setSelectedSessionId(sessionId)
+      setIsReportOpen(true)
+    } catch (error) {
+      notificationManager.error(
+        'Failed to load report',
+        error.response?.data?.message || 'Unable to open report right now.',
+      )
+    } finally {
+      setReportLoading(false)
+    }
+  }, [])
 
   // Loading
   if (battleDetailsLoading && !currentBattle) {

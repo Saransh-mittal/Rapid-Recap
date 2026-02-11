@@ -115,6 +115,10 @@ router.get('/profile/:userId/statistics', flexAuth, getUserStatistics)
 // Leaderboard routes (session-compatible)
 router.get('/leaderboard', flexAuth, getQuickClashLeaderboard)
 
+// Report routes (session-compatible)
+router.get('/challenge/:challengeId/sessions', flexAuth, getSessionIdFromChallenge)
+router.get('/session/:sessionId/report', flexAuth, getSessionQuizReport)
+
 // ============================================================
 // AUTHENTICATED-ONLY ROUTES (require JWT token)
 // ============================================================
@@ -151,7 +155,6 @@ router.get(
   '/challenge/:challengeId/win-probability',
   getWinProbabilityExplanation,
 )
-router.get('/challenge/:challengeId/sessions', getSessionIdFromChallenge)
 router.post('/challenge/:challengeId/markRevenge', markChallengeRevenge)
 router.post('/challenge/:challengeId/bet', placeBetController)
 
@@ -161,7 +164,6 @@ router.get('/session/:sessionId/quiz', getSessionQuiz)
 router.post('/session/:sessionId/reading/start', startReadingPhase)
 router.post('/session/:sessionId/reading/complete', completeReadingPhase)
 router.post('/session/:sessionId/quiz/submit', submitQuizAnswers)
-router.get('/session/:sessionId/report', getSessionQuizReport)
 router.post('/session/:sessionId/powerup/use', usePowerupController)
 
 // Session retry route (for backend errors only - free retry)

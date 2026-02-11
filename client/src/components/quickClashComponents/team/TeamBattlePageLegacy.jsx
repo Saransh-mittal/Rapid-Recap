@@ -5,6 +5,7 @@ import { useSelector } from 'react-redux'
 import { motion, AnimatePresence } from 'framer-motion'
 import { ArrowLeft, AlertTriangle, Loader2 } from 'lucide-react'
 import { useTranslation } from 'react-i18next'
+import axios from 'axios'
 
 // Custom hooks
 import useQuickClashTeamBattle from '../../../customHooks/useQuickClashTeamBattle'
@@ -196,10 +197,10 @@ const TeamBattlePage = React.memo(() => {
       setReportModalLoading(true)
 
       try {
-        const response = await fetch(
-          `/api/quickClash/challenge/${challengeId}/sessions?userId=${user._id}`,
+        const response = await axios.get(
+          `/api/quickClash/challenge/${challengeId}/sessions`,
         )
-        const data = await response.json()
+        const data = response.data
 
         if (data && data.sessionId) {
           setSelectedSessionId(data.sessionId)
@@ -213,7 +214,7 @@ const TeamBattlePage = React.memo(() => {
         setReportModalLoading(false)
       }
     },
-    [user],
+    [],
   )
 
   // Loading state - minimal, works with app background

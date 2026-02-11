@@ -544,7 +544,14 @@ const getCompletedChallenges = asyncHandler(async (req, res) => {
  */
 const getSessionQuizReport = asyncHandler(async (req, res) => {
   const { sessionId } = req.params
-  const userId = req.user._id
+  const userId = req.user?._id || req.player?._id
+
+  if (!userId) {
+    return res.status(401).json({
+      success: false,
+      message: 'Authentication required',
+    })
+  }
 
   try {
     const report = await getQuizReport({
@@ -567,7 +574,16 @@ const getSessionQuizReport = asyncHandler(async (req, res) => {
 
 const getSessionIdFromChallenge = asyncHandler(async (req, res) => {
   const { challengeId } = req.params
-  const { userId } = req.query
+  const authenticatedUserId = req.user?._id || req.player?._id
+  const requestedUserId = req.query.userId
+  const userId = authenticatedUserId || requestedUserId
+
+  if (!userId) {
+    return res.status(401).json({
+      success: false,
+      message: 'Authentication required',
+    })
+  }
 
   try {
     // Find the session for this challenge and user

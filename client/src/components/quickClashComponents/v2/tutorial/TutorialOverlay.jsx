@@ -1,6 +1,6 @@
 import React, { useState } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
-import { X, Users, Zap, BookOpen, Trophy, ArrowRight, MousePointerClick, Swords, Coins } from 'lucide-react'
+import { X, Zap, BookOpen, Trophy, ArrowRight, MousePointerClick, Swords, Coins, Target } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 
 const TutorialOverlay = ({ type, isSessionPlayer, stepIndex, onNext, onComplete, onDismiss }) => {
@@ -8,23 +8,6 @@ const TutorialOverlay = ({ type, isSessionPlayer, stepIndex, onNext, onComplete,
 
   const getSteps = () => {
     switch(type) {
-      case 'lobby':
-        return [
-          {
-            title: "🚀 Welcome to Quick Clash!",
-            description: "Read. Learn. Battle. Compete in real-time quiz battles, master new topics, and climb the global leaderboard!",
-            icon: <Swords className="w-16 h-16 text-emerald-400" />,
-            action: "Cool!",
-            gradient: "from-emerald-500/30 to-teal-600/30"
-          },
-          {
-            title: "🎮 Ready to Battle?",
-            description: "Team up with friends for a 75% higher win rate! Invite your squad and dominate the arena together.",
-            icon: <Users className="w-16 h-16 text-cyan-400" />,
-            action: "Let's Go!",
-            gradient: "from-cyan-500/30 to-blue-600/30"
-          }
-        ]
       case 'squad_intro':
         return [{
           title: "⚔️ Join the Battle!",
@@ -40,6 +23,14 @@ const TutorialOverlay = ({ type, isSessionPlayer, stepIndex, onNext, onComplete,
           icon: <Coins className="w-16 h-16 text-amber-400" />,
           action: "Got it!",
           gradient: "from-amber-500/30 to-orange-600/30"
+        }]
+      case 'solo_drill':
+        return [{
+          title: "🎯 Train with Solo Drill",
+          description: "Want quick practice? Tap the SOLO DRILL button to run focused Forge + Quiz drills anytime.",
+          icon: <Target className="w-16 h-16 text-cyan-400" />,
+          action: null,
+          gradient: "from-cyan-500/30 to-sky-600/30"
         }]
       case 'battle':
         const steps = []
@@ -154,9 +145,10 @@ const TutorialOverlay = ({ type, isSessionPlayer, stepIndex, onNext, onComplete,
   // Special "Dialogue Box" style for Battle (smaller, lower)
   const isDialogueStyle = type === 'battle'
   // Tooltip style for Squad Intro and Coins Shop (positioned near top)
-  const isTooltipStyle = type === 'squad_intro' || type === 'coins_shop'
+  const isTooltipStyle = type === 'squad_intro' || type === 'coins_shop' || type === 'solo_drill'
   // Coins-specific styling (top-left position for coins display area)
   const isCoinsStyle = type === 'coins_shop'
+  const isSoloDrillStyle = type === 'solo_drill'
   // Powerup intro and equip prompt step - position below centered powerup box
   const isPowerupStep = stepType === 'powerup_intro' || stepType === 'equip_prompt'
   // Modal overlay steps - render inside modals with higher z-index
@@ -176,18 +168,6 @@ const TutorialOverlay = ({ type, isSessionPlayer, stepIndex, onNext, onComplete,
       } pointer-events-none`}
       style={isPowerupStep ? { paddingTop: 'calc(50vh + 40px)' } : {}}>
 
-
-        {/* Backdrop - only for Lobby (full dark), Squad Intro (lighter) */}
-        {type === 'lobby' && (
-           <motion.div
-             initial={{ opacity: 0 }}
-             animate={{ opacity: 1 }}
-             exit={{ opacity: 0 }}
-             className="absolute inset-0 bg-black/60 backdrop-blur-sm pointer-events-auto"
-             onClick={onDismiss}
-           />
-        )}
-        {/* Squad Intro - No backdrop, floating modal only */}
 
         {/* Modal/Dialogue Card */}
         <motion.div
@@ -264,10 +244,18 @@ const TutorialOverlay = ({ type, isSessionPlayer, stepIndex, onNext, onComplete,
                       <div className={`p-3 rounded-xl border ${
                         isCoinsStyle
                           ? 'bg-amber-500/20 border-amber-400/30'
+                          : isSoloDrillStyle
+                            ? 'bg-cyan-500/20 border-cyan-400/30'
                           : 'bg-emerald-500/20 border-emerald-400/30'
                       }`}>
                           {React.cloneElement(currentStep.icon, {
-                            className: `w-10 h-10 ${isCoinsStyle ? 'text-amber-400' : 'text-emerald-400'}`
+                            className: `w-10 h-10 ${
+                              isCoinsStyle
+                                ? 'text-amber-400'
+                                : isSoloDrillStyle
+                                  ? 'text-cyan-400'
+                                  : 'text-emerald-400'
+                            }`
                           })}
                       </div>
 
@@ -296,8 +284,12 @@ const TutorialOverlay = ({ type, isSessionPlayer, stepIndex, onNext, onComplete,
                       ) : (
                         /* Squad Intro: Pulsing arrow pointing UP */
                         <div className="mt-2 flex flex-col items-center animate-bounce">
-                          <div className="w-0 h-0 border-l-8 border-r-8 border-b-8 border-l-transparent border-r-transparent border-b-emerald-400" />
-                          <span className="text-xs text-emerald-400 font-semibold mt-1">Tap above!</span>
+                          <div className={`w-0 h-0 border-l-8 border-r-8 border-b-8 border-l-transparent border-r-transparent ${
+                            isSoloDrillStyle ? 'border-b-cyan-400' : 'border-b-emerald-400'
+                          }`} />
+                          <span className={`text-xs font-semibold mt-1 ${isSoloDrillStyle ? 'text-cyan-400' : 'text-emerald-400'}`}>
+                            Tap above!
+                          </span>
                         </div>
                       )}
                    </div>
