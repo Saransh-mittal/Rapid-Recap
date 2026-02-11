@@ -16,6 +16,7 @@ const {
   getViralTrend,
   getConversionMetrics,
   getValidationVerdict,
+  getSoloDrillAnalytics,
   getAccessList,
   grantAccess,
   revokeAccess,
@@ -112,6 +113,13 @@ router.get('/viral/trend', getViralTrend)
 
 // GET /api/admin/analytics/conversion - Get session to account conversion
 router.get('/conversion', getConversionMetrics)
+
+// ============================================================================
+// SOLO DRILL
+// ============================================================================
+
+// GET /api/admin/analytics/solo-drill - Get Solo Drill deep analytics
+router.get('/solo-drill', getSoloDrillAnalytics)
 
 // ============================================================================
 // VERDICT
