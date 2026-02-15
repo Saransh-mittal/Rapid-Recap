@@ -1176,6 +1176,265 @@ const getDrillHistory = async ({ userId, page = 1, limit = 10 }) => {
   }
 }
 
+// ============================================================================
+// CUSTOM DRILL SUPPORT
+// ============================================================================
+
+const CUSTOM_DRILL_CONFIG = {
+  DAILY_FREE_DRILLS: 3,
+  PURCHASE_COST: 200,
+  DRILLS_PER_PURCHASE: 3,
+}
+
+/**
+ * Get custom drill limits for a user
+ */
+const getCustomDrillLimits = async ({ userId }) => {
+  let limits = await SoloDrillLimit.findOne({ user: userId })
+
+  if (!limits) {
+    limits = await SoloDrillLimit.create({
+      user: userId,
+      dailyDrillsUsed: 0,
+      lastResetDate: new Date(),
+    })
+  }
+
+  // Check for daily reset
+  const now = new Date()
+  const todayMidnight = new Date(now)
+  todayMidnight.setUTCHours(0, 0, 0, 0)
+  const lastCustomReset = new Date(limits.lastCustomResetDate || limits.lastResetDate)
+  const lastResetMidnight = new Date(lastCustomReset)
+  lastResetMidnight.setUTCHours(0, 0, 0, 0)
+
+  if (todayMidnight > lastResetMidnight) {
+    limits.dailyCustomDrillsUsed = 0
+    limits.lastCustomResetDate = now
+    await limits.save()
+  }
+
+  const dailyRemaining = Math.max(0, CUSTOM_DRILL_CONFIG.DAILY_FREE_DRILLS - (limits.dailyCustomDrillsUsed || 0))
+  const totalRemaining = dailyRemaining + (limits.purchasedCustomDrillsRemaining || 0)
+
+  return {
+    dailyCustomDrillsRemaining: dailyRemaining,
+    purchasedCustomDrillsRemaining: limits.purchasedCustomDrillsRemaining || 0,
+    totalCustomDrillsRemaining: totalRemaining,
+    dailyCustomUsed: limits.dailyCustomDrillsUsed || 0,
+    nextReset: new Date(todayMidnight.getTime() + 24 * 60 * 60 * 1000),
+  }
+}
+
+/**
+ * Consume a custom drill credit (daily first, then purchased)
+ */
+const consumeCustomDrill = async ({ userId }, session = null) => {
+  const limits = await SoloDrillLimit.findOne({ user: userId }).session(session)
+  if (!limits) throw new Error('Limit record not found')
+
+  // Reset check
+  const now = new Date()
+  const todayMidnight = new Date(now)
+  todayMidnight.setUTCHours(0, 0, 0, 0)
+  const lastCustomReset = new Date(limits.lastCustomResetDate || limits.lastResetDate)
+  const lastResetMidnight = new Date(lastCustomReset)
+  lastResetMidnight.setUTCHours(0, 0, 0, 0)
+
+  if (todayMidnight > lastResetMidnight) {
+    limits.dailyCustomDrillsUsed = 0
+    limits.lastCustomResetDate = now
+  }
+
+  const dailyRemaining = Math.max(0, CUSTOM_DRILL_CONFIG.DAILY_FREE_DRILLS - (limits.dailyCustomDrillsUsed || 0))
+
+  if (dailyRemaining > 0) {
+    limits.dailyCustomDrillsUsed = (limits.dailyCustomDrillsUsed || 0) + 1
+  } else if ((limits.purchasedCustomDrillsRemaining || 0) > 0) {
+    limits.purchasedCustomDrillsRemaining -= 1
+  } else {
+    throw new Error('No custom drills remaining')
+  }
+
+  await limits.save({ session })
+}
+
+/**
+ * Purchase extra custom drills (200 coins for 3)
+ */
+const purchaseCustomDrills = async ({ userId }) => {
+  const session = await mongoose.startSession()
+  session.startTransaction()
+
+  try {
+    const currentCoins = await getPlayerCoins(userId, false)
+    if (currentCoins < CUSTOM_DRILL_CONFIG.PURCHASE_COST) {
+      throw new Error('Insufficient coins')
+    }
+
+    await awardCoins({
+      playerId: userId,
+      isSessionPlayer: false,
+      amount: -CUSTOM_DRILL_CONFIG.PURCHASE_COST,
+      reason: 'custom_drill_purchase',
+      session,
+    })
+
+    const limits = await SoloDrillLimit.findOne({ user: userId }).session(session)
+    if (!limits) throw new Error('Limit record not found')
+
+    limits.purchasedCustomDrillsRemaining = (limits.purchasedCustomDrillsRemaining || 0) + CUSTOM_DRILL_CONFIG.DRILLS_PER_PURCHASE
+    limits.totalCoinSpent += CUSTOM_DRILL_CONFIG.PURCHASE_COST
+    limits.purchaseHistory.push({
+      purchasedAt: new Date(),
+      drillsBought: CUSTOM_DRILL_CONFIG.DRILLS_PER_PURCHASE,
+      coinsCost: CUSTOM_DRILL_CONFIG.PURCHASE_COST,
+    })
+
+    await limits.save({ session })
+    await session.commitTransaction()
+
+    return {
+      success: true,
+      purchasedCustomDrillsRemaining: limits.purchasedCustomDrillsRemaining,
+      newCoinBalance: currentCoins - CUSTOM_DRILL_CONFIG.PURCHASE_COST,
+    }
+  } catch (error) {
+    await session.abortTransaction()
+    throw error
+  } finally {
+    session.endSession()
+  }
+}
+
+/**
+ * Start a Custom Drill Session
+ * Saves the generated article to ForgeArticle collection, then creates a normal SoloDrillSession.
+ */
+const startCustomDrillSession = async ({ userId, customArticle, loadout, text }) => {
+  const session = await mongoose.startSession()
+  session.startTransaction()
+
+  try {
+    const { loadout: sanitizedLoadout, housingUsed } = normalizeAndValidateLoadout(loadout || [])
+
+    // 1. Consume custom drill credit
+    await consumeCustomDrill({ userId }, session)
+
+    // 2. Save the generated article to ForgeArticle collection
+    const savedArticle = new ForgeArticle({
+      ...customArticle,
+      createdBy: userId,
+      status: 'custom', // Ensures it's never served in normal drills
+    })
+    await savedArticle.save({ session })
+
+    // 3. Prepare sections
+    const orderedSections = getOrderedSections(savedArticle)
+    const playableSections = orderedSections.slice(0, Math.min(orderedSections.length, 5))
+    if (playableSections.length === 0) {
+      throw new Error('Generated article has no playable sections')
+    }
+
+    const startSectionNum = playableSections[0].sectionNumber
+
+    // 4. Create Session
+    const drillSession = new SoloDrillSession({
+      user: userId,
+      category: 'Custom',
+      forgeArticle: savedArticle._id,
+      source: 'custom',
+      customInput: text,
+      loadout: sanitizedLoadout,
+      activePowerups: sanitizedLoadout.map(p => ({
+        powerupId: p.powerupId,
+        type: p.type,
+        cost: p.cost,
+        phase: p.phase,
+        used: false,
+      })),
+      loadoutHousingUsed: housingUsed,
+      forgeProgress: {
+        currentSection: startSectionNum,
+        unlockedSections: [startSectionNum],
+        totalTimeAllowed: 100000,
+        globalStartTime: new Date(),
+        startTime: new Date(),
+        oracleUsedSections: [],
+      },
+    })
+
+    await drillSession.save({ session })
+    await session.commitTransaction()
+
+    // 5. Populate and cache
+    const populatedSession = await SoloDrillSession.findById(drillSession._id).populate('forgeArticle')
+    setCachedSoloSession(populatedSession)
+    cache.put(
+      getSoloForgeArticleCacheKey(savedArticle._id.toString()),
+      savedArticle.toObject ? savedArticle.toObject() : savedArticle,
+      SOLO_DRILL_CACHE_TTL
+    )
+    cache.del(getSoloQuizCacheKey(drillSession._id.toString()))
+
+    // 6. Construct initial question payload
+    const initialForgeQuestion = constructForgeQuestionPayload(
+      populatedSession,
+      savedArticle,
+      playableSections[0]
+    )
+
+    return {
+      session: populatedSession,
+      initialForgeQuestion,
+    }
+  } catch (error) {
+    await session.abortTransaction()
+    throw error
+  } finally {
+    session.endSession()
+  }
+}
+
+/**
+ * Get custom drill history for a user
+ */
+const getCustomDrillHistory = async ({ userId, page = 1, limit = 20 }) => {
+  const safeLimit = Math.min(limit, 50)
+  const skip = (page - 1) * safeLimit
+
+  const [sessions, total] = await Promise.all([
+    SoloDrillSession.find({
+      user: userId,
+      source: 'custom',
+      status: 'completed',
+    })
+      .select(
+        'category totalScore forgeScore quizScore benchmark completedAt ' +
+        'forgeProgress.responses forgeProgress.correctAnswers forgeProgress.maxStreak ' +
+        'quizAttempt.responses forgeArticle customInput'
+      )
+      .populate('forgeArticle', 'title sections quickClashQuiz')
+      .sort({ completedAt: -1 })
+      .skip(skip)
+      .limit(safeLimit)
+      .lean(),
+    SoloDrillSession.countDocuments({
+      user: userId,
+      source: 'custom',
+      status: 'completed',
+    }),
+  ])
+
+  return {
+    sessions,
+    page,
+    limit: safeLimit,
+    total,
+    hasMore: skip + sessions.length < total,
+  }
+}
+
 module.exports = {
   getDrillLimits,
   purchaseDrills,
@@ -1190,4 +1449,9 @@ module.exports = {
   getUserDrillStats,
   usePowerup,
   getDrillHistory,
+  // Custom Drill
+  getCustomDrillLimits,
+  purchaseCustomDrills,
+  startCustomDrillSession,
+  getCustomDrillHistory,
 }

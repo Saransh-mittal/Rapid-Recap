@@ -18,7 +18,16 @@ import {
   fetchDrillSession,
   markPowerupUsed,
   setQuizResult,
-  setPhaseHistory
+  setPhaseHistory,
+  // Custom Drill
+  startCustomDrill,
+  fetchCustomLimits,
+  purchaseCustomDrills,
+  fetchCustomHistory,
+  setCustomText,
+  setPhaseCustomInput,
+  setPhaseCustomHistory,
+  launchCustomDrill,
 } from '../redux/soloDrillSlice'
 
 const useSoloDrill = () => {
@@ -77,7 +86,20 @@ const useSoloDrill = () => {
 
     resetDrill: () => dispatch(resetFlow()),
     resumeSession: (sessionId) => dispatch(fetchDrillSession(sessionId)),
-    markPowerupUsed: (powerupId) => dispatch(markPowerupUsed(powerupId))
+    markPowerupUsed: (powerupId) => dispatch(markPowerupUsed(powerupId)),
+
+    // Custom Drill
+    goToCustomInput: () => dispatch(setPhaseCustomInput()),
+    goToCustomHistory: () => dispatch(setPhaseCustomHistory()),
+    launchDrill: () => dispatch(launchCustomDrill()),
+    setCustomText: (text) => dispatch(setCustomText(text)),
+    startCustomSession: async (text, loadout, imageBase64) => {
+      const result = await dispatch(startCustomDrill({ text, loadout, imageBase64 }))
+      return result.payload
+    },
+    fetchCustomLimits: () => dispatch(fetchCustomLimits()),
+    purchaseCustomDrills: () => dispatch(purchaseCustomDrills()),
+    fetchCustomHistory: (page = 1) => dispatch(fetchCustomHistory({ page })),
   }
 }
 

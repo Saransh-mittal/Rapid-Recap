@@ -12,8 +12,13 @@ const soloDrillLimitSchema = new mongoose.Schema({
   dailyDrillsUsed: { type: Number, default: 0 },
   lastResetDate: { type: Date, default: Date.now },
 
+  // Custom Drill daily tracking
+  dailyCustomDrillsUsed: { type: Number, default: 0 },
+  lastCustomResetDate: { type: Date, default: Date.now },
+
   // Purchased extra drills (don't expire)
   purchasedDrillsRemaining: { type: Number, default: 0 },
+  purchasedCustomDrillsRemaining: { type: Number, default: 0 },
 
   // Purchase history
   purchaseHistory: [

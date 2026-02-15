@@ -271,14 +271,13 @@ const GlobalMatchmakingButton = React.memo(
           disabled={isLoading}
           className={`
             relative overflow-hidden rounded-2xl
-            ${config.borderColor} border-2
             ${sizeConfig.fontSize} font-bold text-white
             ${QUICK_CLASH_CLASSES.focusRing}
             transition-all duration-300
             ${
               isLoading
                 ? 'opacity-60 cursor-not-allowed'
-                : 'cursor-pointer hover:-translate-y-1'
+                : 'cursor-pointer'
             }
             flex items-center justify-center gap-3
             ${withBottomMargin ? 'mb-4' : ''}
@@ -291,13 +290,15 @@ const GlobalMatchmakingButton = React.memo(
             minWidth: sizeConfig.minWidth,
             boxShadow: isTutorialHighlighted
               ? `0 10px 36px ${config.glowColor}80, 0 0 18px ${config.glowColor}60, 0 0 0 1px ${config.glowColor}40 inset`
-              : `0 8px 32px ${config.glowColor}40, 0 0 0 1px ${config.glowColor}20 inset`,
-            textShadow: '0 2px 8px rgba(0,0,0,0.5)',
+              : `0 8px 32px ${config.glowColor}59, 0 0 0 1px ${config.glowColor}26 inset`,
+            textShadow: '0 1px 6px rgba(0,0,0,0.4)',
           }}
           whileHover={
             !isLoading
               ? {
-                  boxShadow: `0 12px 48px ${config.glowColor}60, 0 0 0 1px ${config.glowColor}40 inset`,
+                  scale: 1.02,
+                  y: -3,
+                  boxShadow: `0 16px 48px ${config.glowColor}73, 0 0 0 1px ${config.glowColor}4D inset`,
                 }
               : {}
           }
@@ -307,9 +308,9 @@ const GlobalMatchmakingButton = React.memo(
               ? {
                   scale: [1, 1.02, 1],
                   boxShadow: [
-                    `0 8px 32px ${config.glowColor}40, 0 0 0 1px ${config.glowColor}20 inset`,
+                    `0 8px 32px ${config.glowColor}59, 0 0 0 1px ${config.glowColor}26 inset`,
                     `0 12px 48px ${config.glowColor}80, 0 0 0 1px ${config.glowColor}60 inset`,
-                    `0 8px 32px ${config.glowColor}40, 0 0 0 1px ${config.glowColor}20 inset`,
+                    `0 8px 32px ${config.glowColor}59, 0 0 0 1px ${config.glowColor}26 inset`,
                   ],
                 }
               : isTutorialHighlighted
@@ -323,25 +324,18 @@ const GlobalMatchmakingButton = React.memo(
           }}
           {...otherProps}
         >
-          {/* Multi-layer glass effects */}
-          <div className="absolute inset-0 bg-white/10 backdrop-blur-sm" />
-          <div className="absolute inset-0 bg-gradient-to-br from-white/20 via-transparent to-black/10" />
+          {/* Glass layer */}
+          <div className="absolute inset-0 bg-gradient-to-b from-white/15 via-transparent to-black/15" />
 
-          {/* Animated shine effect */}
+          {/* Animated shine sweep */}
           <motion.div
-            className="absolute inset-0 bg-gradient-to-r from-transparent via-white/20 to-transparent"
-            animate={{
-              x: ['-100%', '100%'],
-            }}
-            transition={{
-              duration: 3,
-              repeat: Infinity,
-              repeatDelay: 2,
-            }}
+            className="absolute inset-0 bg-gradient-to-r from-transparent via-white/15 to-transparent"
+            animate={{ x: ['-100%', '100%'] }}
+            transition={{ duration: 3, repeat: Infinity, repeatDelay: 2 }}
           />
 
           {/* Content */}
-          <div className="relative z-10 flex items-center gap-3">
+          <div className="relative z-10 flex items-center gap-2.5">
             {/* Left Icon */}
             {isLoading ? (
               <div className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin" />
@@ -350,14 +344,14 @@ const GlobalMatchmakingButton = React.memo(
                 animate={{ rotate: 360 }}
                 transition={{ duration: 2, repeat: Infinity, ease: 'linear' }}
               >
-                <IconComponent className="w-5 h-5" />
+                <IconComponent className="w-5 h-5 text-white" />
               </motion.div>
             ) : (
-              <IconComponent className="w-5 h-5" />
+              <IconComponent className="w-5 h-5 text-white" strokeWidth={2.4} />
             )}
 
             {/* Button Text */}
-            <span className="font-extrabold tracking-wide">
+            <span className="font-extrabold tracking-wide text-sm md:text-base text-white" style={{ textShadow: '0 1px 6px rgba(0,0,0,0.4)' }}>
               {isLoading ? t('Joining...') : t(config.text)}
             </span>
 
@@ -370,7 +364,7 @@ const GlobalMatchmakingButton = React.memo(
                 }}
                 transition={{ duration: 2, repeat: Infinity }}
               >
-                <Sparkles className="w-4 h-4" />
+                <Sparkles className="w-4 h-4 text-white" />
               </motion.div>
             )}
           </div>

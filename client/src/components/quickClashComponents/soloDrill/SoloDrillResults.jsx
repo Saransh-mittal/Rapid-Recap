@@ -3,7 +3,7 @@ import { motion, AnimatePresence } from 'framer-motion'
 import Confetti from 'react-confetti'
 import {
   RotateCcw, X, ChevronDown, Zap, Brain, Trophy, Target, Shield,
-  Award, Star, Flame, CheckCircle2, XCircle, Clock
+  Award, Star, Flame, CheckCircle2, XCircle, Clock, Swords
 } from 'lucide-react'
 import useSoloDrill from '../../../customHooks/useSoloDrill'
 
@@ -525,6 +525,25 @@ const SoloDrillResults = () => {
         >
           <RotateCcw size={16} />
           Drill Again
+        </motion.button>
+
+        {/* Play Battle CTA — nudge to competitive mode */}
+        <motion.button
+          onClick={() => {
+            closeDrillModal()
+            // Navigate handled by closing modal — user lands back on battle page
+          }}
+          whileHover={{ scale: 1.01, y: -1 }}
+          whileTap={{ scale: 0.98 }}
+          className="w-full flex items-center justify-center gap-2 py-3 rounded-xl font-semibold text-sm transition-all"
+          style={{
+            background: 'rgba(30, 41, 59, 0.5)',
+            border: '1px solid rgba(100, 116, 139, 0.12)',
+            color: '#94a3b8',
+          }}
+        >
+          <Swords size={15} />
+          Test in Battle Mode
         </motion.button>
 
         <button

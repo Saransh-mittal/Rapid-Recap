@@ -30,6 +30,18 @@ const soloDrillService = {
   getCategories: () => axios.get('/api/solo-drill/categories'),
   getStats: () => axios.get('/api/solo-drill/stats'),
   getHistory: (page = 1, limit = 10) => axios.get(`/api/solo-drill/history?page=${page}&limit=${limit}`),
+
+  // Custom Drill
+  startCustomSession: async (text, loadout, imageBase64) => {
+    await fetchCsrfToken()
+    return axios.post('/api/custom-drill/start', { text, imageBase64, loadout })
+  },
+  getCustomLimits: () => axios.get('/api/custom-drill/limits'),
+  purchaseCustomDrills: async () => {
+    await fetchCsrfToken()
+    return axios.post('/api/custom-drill/purchase')
+  },
+  getCustomHistory: (page = 1, limit = 10) => axios.get(`/api/custom-drill/history?page=${page}&limit=${limit}`),
 }
 
 export default soloDrillService

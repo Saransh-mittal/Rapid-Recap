@@ -94,7 +94,7 @@ app.use(
 )
 
 // Body parser middleware
-app.use(bodyParser.json())
+app.use(bodyParser.json({ limit: '4mb' }))
 require('./db/conn')
 
 // ADD: Initialize feedback tracking middleware BEFORE routes
@@ -198,7 +198,7 @@ webpush.setVapidDetails(
 // } = require('./scheduler/tasks/dummyUserTournamentTasks')
 // simulateBotQuizParticipation()
 
-app.use(express.json())
+app.use(express.json({ limit: '4mb' }))
 // Error Handling middlewares
 // app.use(notFound);
 app.use(errorHandler)
@@ -236,6 +236,7 @@ authRouter.use('/leaderboard', leaderboardRoutes)
 authRouter.use('/abilities', abilityRoutes)
 authRouter.use('/quickClash', quickClashRoutes)
 authRouter.use('/solo-drill', soloDrillRoutes)
+authRouter.use('/custom-drill', require('./router/customDrillRoutes'))
 authRouter.use('/special-categories', publicSpecialCategoryRoutes)
 app.use('/api', authRouter)
 

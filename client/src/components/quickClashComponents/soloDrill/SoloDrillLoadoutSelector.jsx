@@ -22,7 +22,9 @@ const SoloDrillLoadoutSelector = () => {
     selectedCategory,
     startSession,
     loading,
-    error
+    error,
+    goToCustomInput,
+    setLoadout,
   } = useSoloDrill()
 
   const [loadout, setLocalLoadout] = useState([])
@@ -56,6 +58,14 @@ const SoloDrillLoadoutSelector = () => {
       cost: p.cost,
       phase: p.phase,
     }))
+
+    if (selectedCategory === 'Custom') {
+      // Save loadout to Redux so CustomDrillInput can read it
+      setLoadout(formattedLoadout)
+      goToCustomInput()
+      return
+    }
+
     startSession(selectedCategory, formattedLoadout)
   }
 

@@ -135,6 +135,60 @@ export const fetchHistory = createAsyncThunk(
   }
 )
 
+// ── Custom Drill Thunks ──
+
+export const startCustomDrill = createAsyncThunk(
+  'soloDrill/startCustom',
+  async ({ text, loadout, imageBase64 }, { rejectWithValue }) => {
+    try {
+      const response = await soloDrillService.startCustomSession(text, loadout, imageBase64)
+      return response.data
+    } catch (error) {
+      return rejectWithValue(error.response?.data?.message || 'Failed to generate custom drill')
+    }
+  }
+)
+
+export const fetchCustomLimits = createAsyncThunk(
+  'soloDrill/fetchCustomLimits',
+  async (_, { rejectWithValue }) => {
+    try {
+      const response = await soloDrillService.getCustomLimits()
+      return response.data
+    } catch (error) {
+      return rejectWithValue(error.response?.data?.message || 'Failed to fetch custom limits')
+    }
+  }
+)
+
+export const purchaseCustomDrills = createAsyncThunk(
+  'soloDrill/purchaseCustom',
+  async (_, { dispatch, getState, rejectWithValue }) => {
+    try {
+      const response = await soloDrillService.purchaseCustomDrills()
+      const { auth } = getState()
+      if (auth.user && response.data.newCoinBalance !== undefined) {
+        dispatch(setUser({ ...auth.user, coins: response.data.newCoinBalance }))
+      }
+      return response.data
+    } catch (error) {
+      return rejectWithValue(error.response?.data?.message || 'Purchase failed')
+    }
+  }
+)
+
+export const fetchCustomHistory = createAsyncThunk(
+  'soloDrill/fetchCustomHistory',
+  async ({ page = 1 } = {}, { rejectWithValue }) => {
+    try {
+      const response = await soloDrillService.getCustomHistory(page)
+      return response.data
+    } catch (error) {
+      return rejectWithValue(error.response?.data?.message || 'Failed to fetch custom history')
+    }
+  }
+)
+
 const initialState = {
   // Limits
   dailyDrillsRemaining: 5,
@@ -170,6 +224,16 @@ const initialState = {
   loading: false,
   purchasing: false,
   error: null,
+
+  // Custom Drill
+  customText: '',
+  customDrillLimits: null,
+  isCustomDrill: false,
+  processingCustom: false,
+  customHistory: [],
+  customHistoryLoading: false,
+  customHistoryPage: 1,
+  customHistoryHasMore: true,
 }
 
 const soloDrillSlice = createSlice({
@@ -243,7 +307,25 @@ const soloDrillSlice = createSlice({
       state.history = []
       state.historyPage = 1
       state.historyHasMore = true
-    }
+    },
+    // Custom Drill
+    setCustomText: (state, action) => {
+      state.customText = action.payload
+    },
+    setPhaseCustomInput: (state) => {
+      state.phase = 'custom_input'
+      state.isCustomDrill = true
+      state.error = null
+    },
+    setPhaseCustomHistory: (state) => {
+      state.phase = 'custom_history'
+      state.customHistory = []
+      state.customHistoryPage = 1
+      state.customHistoryHasMore = true
+    },
+    launchCustomDrill: (state) => {
+      state.phase = 'forge'
+    },
   },
   extraReducers: (builder) => {
     builder
@@ -357,6 +439,58 @@ const soloDrillSlice = createSlice({
       .addCase(fetchHistory.rejected, (state) => {
         state.historyLoading = false
       })
+      // ── Custom Drill ──
+      .addCase(startCustomDrill.pending, (state) => {
+        state.processingCustom = true
+        state.error = null
+      })
+      .addCase(startCustomDrill.fulfilled, (state, action) => {
+        state.processingCustom = false
+        state.isCustomDrill = true
+        state.activeSession = action.payload.session
+        state.sessionId = action.payload.session._id
+        state.initialForgeQuestion = action.payload.initialForgeQuestion
+        state.phase = 'custom_ready'
+      })
+      .addCase(startCustomDrill.rejected, (state, action) => {
+        state.processingCustom = false
+        state.error = action.payload
+      })
+      .addCase(fetchCustomLimits.fulfilled, (state, action) => {
+        state.customDrillLimits = action.payload
+      })
+      .addCase(purchaseCustomDrills.pending, (state) => {
+        state.purchasing = true
+      })
+      .addCase(purchaseCustomDrills.fulfilled, (state, action) => {
+        state.purchasing = false
+        if (state.customDrillLimits) {
+          state.customDrillLimits.purchasedCustomDrillsRemaining = action.payload.purchasedCustomDrillsRemaining
+          state.customDrillLimits.totalCustomDrillsRemaining =
+            state.customDrillLimits.dailyCustomDrillsRemaining + action.payload.purchasedCustomDrillsRemaining
+        }
+      })
+      .addCase(purchaseCustomDrills.rejected, (state, action) => {
+        state.purchasing = false
+        state.error = action.payload
+      })
+      .addCase(fetchCustomHistory.pending, (state) => {
+        state.customHistoryLoading = true
+      })
+      .addCase(fetchCustomHistory.fulfilled, (state, action) => {
+        state.customHistoryLoading = false
+        const { sessions, page, hasMore } = action.payload
+        if (page === 1) {
+          state.customHistory = sessions
+        } else {
+          state.customHistory = [...state.customHistory, ...sessions]
+        }
+        state.customHistoryPage = page
+        state.customHistoryHasMore = hasMore
+      })
+      .addCase(fetchCustomHistory.rejected, (state) => {
+        state.customHistoryLoading = false
+      })
   }
 })
 
@@ -370,6 +504,10 @@ export const {
   markPowerupUsed,
   setQuizResult,
   setPhaseHistory,
+  setCustomText,
+  setPhaseCustomInput,
+  setPhaseCustomHistory,
+  launchCustomDrill,
 } = soloDrillSlice.actions
 
 export default soloDrillSlice.reducer

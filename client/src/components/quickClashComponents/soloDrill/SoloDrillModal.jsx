@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react'
 import { createPortal } from 'react-dom'
 import { motion, AnimatePresence } from 'framer-motion'
-import { X, Clock, ChevronRight, History } from 'lucide-react'
+import { X, Clock, History } from 'lucide-react'
 import useSoloDrill from '../../../customHooks/useSoloDrill'
 import SoloDrillCategoryCard from './SoloDrillCategoryCard'
 import SoloDrillPurchasePrompt from './SoloDrillPurchasePrompt'
@@ -9,6 +9,7 @@ import SoloDrillLoadoutSelector from './SoloDrillLoadoutSelector'
 import SoloDrillSession from './SoloDrillSession'
 import SoloDrillResults from './SoloDrillResults'
 import SoloDrillHistory from './SoloDrillHistory'
+import CustomDrillInput from './CustomDrillInput'
 import FixedBackground from '../../miscellaneous/FixedBackground'
 
 const SoloDrillModal = () => {
@@ -20,6 +21,7 @@ const SoloDrillModal = () => {
     fetchStats,
     availableCategories,
     fetchLimits,
+    fetchCustomLimits,
     totalRemaining,
     dailyDrillsRemaining,
     dailyUsed,
@@ -34,6 +36,7 @@ const SoloDrillModal = () => {
       fetchCategories()
       fetchLimits()
       fetchStats()
+      fetchCustomLimits()
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [modalOpen])
@@ -77,6 +80,9 @@ const SoloDrillModal = () => {
         return <SoloDrillResults />
       case 'history':
         return <SoloDrillHistory />
+      case 'custom_input':
+      case 'custom_ready':
+        return <CustomDrillInput />
       case 'category_select':
       default:
         return (
@@ -223,6 +229,10 @@ const SoloDrillModal = () => {
       ? 'Loadout'
       : phase === 'history'
       ? 'Drill History'
+      : phase === 'custom_input' || phase === 'custom_ready'
+      ? 'Custom Drill'
+      : phase === 'custom_history'
+      ? 'Custom History'
       : 'Results'
 
   return createPortal(
