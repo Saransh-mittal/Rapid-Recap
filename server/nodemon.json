@@ -1,0 +1,10 @@
+{
+  "ignore": [
+    "temp_batch_files/*",
+    "reports/*",
+    "scraper_log.txt",
+    "data/*",
+    "*.jsonl",
+    "*.txt"
+  ]
+}
