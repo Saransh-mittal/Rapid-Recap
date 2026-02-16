@@ -207,9 +207,9 @@ app.use(errorHandler)
 // const generateGoogleNewsSitemap = require('./google-sitemap-generator')
 // // generateGoogleNewsSitemap()
 // const { runCompleteWorkflow } = require('./scripts/runCompleteForgeWorkflow')
-// runCompleteWorkflow({waitForCompletion:true,skipScraping:true,skipProcessing:true})
+// runCompleteWorkflow({waitForCompletion:true,skipScraping:true,skipProcessing:true,skipAIGate:true})
 // require('./utils/deletion.utils/removeForgeData.del')
-require('./scheduler/setupCronJobs')
+// require('./scheduler/setupCronJobs')
 
 const PORT = process.env.PORT
 authRouter.use(cookieParser())

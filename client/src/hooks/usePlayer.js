@@ -157,12 +157,13 @@ export const usePlayer = () => {
         pic: user.pic,
         trophies: user.quickClashTrophies,
         // Include streak data from Redux quickClash slice
-        streak: userStreak ? {
-          dayStreak: userStreak.dayStreak || 0,
-          longestStreak: userStreak.longestStreak || 0,
-          isActive: userStreak.isActive || false,
-          needsPlayToday: userStreak.needsPlayToday ?? true,
-        } : null,
+        streak: {
+          dayStreak: user.quickClashStats?.dayStreak || userStreak?.dayStreak || 0,
+          longestStreak: user.quickClashStats?.longestStreak || userStreak?.longestStreak || 0,
+          isActive: userStreak?.isActive ?? false,
+          needsPlayToday: userStreak?.needsPlayToday ?? true,
+          streakProtectionAvailable: user.quickClashStats?.streakProtectionAvailable || userStreak?.streakProtectionAvailable || false,
+        },
         tutorialProgress: user.tutorialProgress,
       },
       playerId: user._id,

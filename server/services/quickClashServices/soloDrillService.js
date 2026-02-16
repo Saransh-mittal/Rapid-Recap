@@ -914,9 +914,9 @@ const submitQuizAnswers = async ({ sessionId, userId, responses }) => {
 }
 
 const getCategories = async () => {
-   // Dynamically fetch unique categories from ForgeArticle collection
-   const categories = await ForgeArticle.distinct('category')
-   return categories.filter(cat => cat) // Filter out any null/undefined
+   // Return canonical categories from the single source of truth
+   const { getCategories: getCanonicalCategories } = require('../../data/categories')
+   return getCanonicalCategories()
 }
 
 const getUserDrillStats = async ({ userId }) => {

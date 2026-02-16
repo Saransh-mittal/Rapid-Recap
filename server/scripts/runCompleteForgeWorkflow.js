@@ -83,6 +83,7 @@ async function runAIVerifierGate({
   model = 'gpt-5-mini',
   archiveMode = 'overall_fail',
   status = 'draft',
+  createdAfter = null,
 } = {}) {
   return new Promise((resolve, reject) => {
     const scriptPath = path.join(__dirname, 'forgeAIVerifier.js')
@@ -98,6 +99,10 @@ async function runAIVerifierGate({
       `--archive-mode=${archiveMode}`,
       `--output=${outputPath}`,
     ]
+
+    if (createdAfter) {
+      args.push(`--created-after=${createdAfter.toISOString()}`)
+    }
 
     const proc = spawn(process.execPath, args, {
       env: process.env,
@@ -344,6 +349,7 @@ async function runCompleteWorkflow(options = {}) {
           model: aiGateModel,
           archiveMode: aiGateArchiveMode,
           status: 'draft',
+          createdAfter: new Date(startTime),
         })
 
         const draftAfter = await ForgeArticle.countDocuments({ status: 'draft' })
@@ -576,7 +582,7 @@ async function main() {
     skipProcessing: false,
     skipQuiz: false,
     skipAIGate: false,
-    aiGateModel: 'gpt-5-mini',
+    aiGateModel: 'gpt-5-nano',
     aiGateArchiveMode: 'overall_fail',
     waitForCompletion: false,
   }

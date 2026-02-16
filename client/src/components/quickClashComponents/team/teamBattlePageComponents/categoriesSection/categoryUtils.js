@@ -32,6 +32,32 @@ export const getCategoryInfo = category => {
   const categoryLower = category.toLowerCase()
 
   const categoryStyles = {
+    // ── New Forge Categories (used in 4v4 battles & solo drills) ──
+    'india & world': {
+      primaryColor: '#3B82F6',
+      secondaryColor: '#1E40AF',
+      iconComponent: Globe2,
+      battleIcon: Target,
+    },
+    'science & technology': {
+      primaryColor: '#06B6D4',
+      secondaryColor: '#0891B2',
+      iconComponent: FlaskConical,
+      battleIcon: Star,
+    },
+    'tech innovations': {
+      primaryColor: '#8B5CF6',
+      secondaryColor: '#5B21B6',
+      iconComponent: Cpu,
+      battleIcon: Zap,
+    },
+    'geography & environment': {
+      primaryColor: '#84CC16',
+      secondaryColor: '#65A30D',
+      iconComponent: Leaf,
+      battleIcon: Shield,
+    },
+    // ── Legacy news categories (kept for backward compatibility) ──
     world: {
       primaryColor: '#3B82F6',
       secondaryColor: '#1E40AF',
