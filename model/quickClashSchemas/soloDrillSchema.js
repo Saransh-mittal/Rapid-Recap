@@ -135,9 +135,12 @@ const soloDrillSessionSchema = new mongoose.Schema({
   // Source tracking
   source: {
     type: String,
-    enum: ['daily_free', 'purchased'],
+    enum: ['daily_free', 'purchased', 'custom'],
     default: 'daily_free',
   },
+
+  // Original user text (custom drills only)
+  customInput: { type: String },
 
   // Timing
   startedAt: { type: Date, default: Date.now },

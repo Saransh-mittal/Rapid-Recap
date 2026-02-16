@@ -16,9 +16,9 @@ const PRICING = {
     output: 0.20,      // $0.20 per 1M output tokens
   },
   'gpt-5-mini': {
-    input: 0.125,      // $0.125 per 1M input tokens
-    cached: 0.0125,    // $0.0125 per 1M cached tokens
-    output: 1.00,      // $1.00 per 1M output tokens
+    input: 0.125,      // $0.125 per 1M input tokens (Batch)
+    cached: 0.0125,    // $0.0125 per 1M cached tokens (Batch)
+    output: 1.00,      // $1.00 per 1M output tokens (Batch)
   },
   // Fallback for unknown models (use gpt-5-nano rates)
   'default': {

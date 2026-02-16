@@ -8,10 +8,15 @@ const Article = require('../model/articleSchema')
 const ForgeArticle = require('../model/quickClashSchemas/forgeArticleSchema')
 
 const CATEGORY_MAP = {
-  'gk-prime': 'GK Prime',
-  'science-facts-simplified': 'Science Facts Simplified',
-  'everyday-tech': 'Everyday Tech',
-  geography: 'Geography',
+  'gk-prime': 'India & World',
+  'science-facts-simplified': 'Science & Technology',
+  'everyday-tech': 'Tech Innovations',
+  'geography': 'Geography & Environment',
+  'india-&-world': 'India & World',
+  'general-knowledge-&-current-affairs': 'India & World',
+  'science-&-technology': 'Science & Technology',
+  'tech-innovations': 'Tech Innovations',
+  'geography-&-environment': 'Geography & Environment',
 }
 
 // Hard rule: content explicitly requires missing visual context.

@@ -9,10 +9,15 @@ const Article = require('../model/articleSchema')
 const ForgeArticle = require('../model/quickClashSchemas/forgeArticleSchema')
 
 const CATEGORY_MAP = {
-  'gk-prime': 'GK Prime',
-  'science-facts-simplified': 'Science Facts Simplified',
-  'everyday-tech': 'Everyday Tech',
-  geography: 'Geography',
+  'gk-prime': 'India & World',
+  'science-facts-simplified': 'Science & Technology',
+  'everyday-tech': 'Tech Innovations',
+  'geography': 'Geography & Environment',
+  'india-&-world': 'India & World',
+  'general-knowledge-&-current-affairs': 'India & World',
+  'science-&-technology': 'Science & Technology',
+  'tech-innovations': 'Tech Innovations',
+  'geography-&-environment': 'Geography & Environment',
 }
 
 const HARD_VISUAL_DEP_RE =
@@ -23,7 +28,7 @@ function parseArgs(argv) {
     db: 'default',
     sample: 30,
     output: null,
-    model: 'gpt-5-mini',
+    model: 'gpt-5-nano',
   }
 
   for (const raw of argv) {
@@ -31,6 +36,7 @@ function parseArgs(argv) {
     else if (raw.startsWith('--sample=')) args.sample = Number(raw.split('=')[1])
     else if (raw.startsWith('--output=')) args.output = raw.split('=')[1]
     else if (raw.startsWith('--model=')) args.model = raw.split('=')[1]
+    else if (raw.startsWith('--created-after=')) args.createdAfter = raw.split('=')[1]
     else if (raw === '--help' || raw === '-h') args.help = true
   }
 
@@ -123,7 +129,12 @@ Examples:
   const openai = new OpenAI({ apiKey: process.env.OPENAI_API_KEY })
   await mongoose.connect(uri)
 
-  const allForge = await ForgeArticle.find({})
+  const query = {}
+  if (args.createdAfter) {
+    query.createdAt = { $gt: new Date(args.createdAfter) }
+  }
+
+  const allForge = await ForgeArticle.find(query)
     .select('_id title category seedArticleId sections createdAt')
     .lean()
 
@@ -194,7 +205,22 @@ Examples:
         ],
       })
 
+      const usage = resp.usage
       parsed = JSON.parse(resp.choices?.[0]?.message?.content || '{}')
+      if (usage) {
+        parsed._usage = {
+          input: usage.prompt_tokens || 0,
+          output: usage.completion_tokens || 0,
+          total: usage.total_tokens || 0
+        }
+      }
+      if (usage) {
+        parsed._usage = {
+          input: usage.prompt_tokens || 0,
+          output: usage.completion_tokens || 0,
+          total: usage.total_tokens || 0
+        }
+      }
     } catch (err) {
       parsed = {
         error: err.message,
@@ -219,8 +245,21 @@ Examples:
   let overallFail = 0
   let errors = 0
 
+  const COST_RATES = {
+    input: 0.25,   // $0.25 per 1M input (Standard)
+    output: 2.00   // $2.00 per 1M output (Standard)
+  }
+  let totalInputTokens = 0
+  let totalOutputTokens = 0
+
   for (const r of results) {
     const ai = r.ai || {}
+    // Accumulate tokens
+    if (ai._usage) {
+      totalInputTokens += ai._usage.input
+      totalOutputTokens += ai._usage.output
+    }
+
     if (ai.error) {
       errors++
       continue
@@ -236,6 +275,15 @@ Examples:
     }
     if (ai.overallPass === false) overallFail++
   }
+
+  const estCost =
+    (totalInputTokens / 1_000_000 * COST_RATES.input) +
+    (totalOutputTokens / 1_000_000 * COST_RATES.output)
+
+  // To track cost, I need to modify the loop above (lines 181-217).
+  // Since I am in replace_file_content for lines 227-244, I can't reach the loop.
+  // I will abort this specific replacement and do a multi-replace or bigger replace.
+
 
   const report = {
     meta: {
@@ -254,6 +302,12 @@ Examples:
       aiSectionPredictionHookIssues: sectionPredictionIssue,
       aiSectionDerivabilityIssues: sectionDerivabilityIssue,
       aiOverallFail: overallFail,
+      estimatedCost: Number(estCost.toFixed(4)),
+      tokens: {
+        input: totalInputTokens,
+        output: totalOutputTokens,
+        total: totalInputTokens + totalOutputTokens
+      }
     },
     results,
   }
@@ -270,6 +324,7 @@ Examples:
     `AI section derivability issues: ${report.summary.aiSectionDerivabilityIssues}`,
   )
   console.log(`AI overall fail: ${report.summary.aiOverallFail}`)
+  console.log(`Estimated Cost: $${report.summary.estimatedCost}`)
   console.log('=================================\n')
 
   if (args.output) {

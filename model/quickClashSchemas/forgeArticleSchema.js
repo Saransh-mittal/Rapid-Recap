@@ -8,11 +8,16 @@ const forgeArticleSchema = new mongoose.Schema(
       index: true,
     },
 
-    // Original seed reference
+    // Original seed reference (not required for custom drills)
     seedArticleId: {
       type: mongoose.Schema.Types.ObjectId,
       ref: 'ARTICLE',
-      required: true,
+    },
+
+    // Owner (set only for custom drill articles, ensures exclusivity)
+    createdBy: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: 'USER',
     },
 
     // Forge content structure (5 sections for 24s read each)
@@ -87,7 +92,7 @@ const forgeArticleSchema = new mongoose.Schema(
     // Publishing
     status: {
       type: String,
-      enum: ['draft', 'published', 'archived'],
+      enum: ['draft', 'published', 'archived', 'custom'],
       default: 'draft',
       index: true,
     },

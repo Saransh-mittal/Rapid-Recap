@@ -1,8 +1,8 @@
 const categories = [
-  'GK Prime',
-  'Science Facts Simplified',
-  'Everyday Tech',
-  'Geography',
+  'India & World',
+  'Science & Technology',
+  'Tech Innovations',
+  'Geography & Environment',
 ]
 
 // Include extra tournament categories that shouldn't have badge text

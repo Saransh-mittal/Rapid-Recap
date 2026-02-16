@@ -476,33 +476,29 @@ const calculateFinalTrophies = async (battle, session) => {
       const currentPeak = currentUser?.quickClashStats?.peakTrophies || member.previousTrophies
 
       // Update user trophies in database
-      // Update user trophies in database
-      const updateObj = {
-        $inc: {
-          quickClashTrophies: member.trophyChange, // Use GROSS change for balance update
-          'quickClashStats.totalMatches': 1,
-          'quickClashStats.wins': 1,
-          'quickClashStats.totalScore': member.score || 0,
-          'quickClashStats.currentWinStreak': 1,
-        },
-        $set: {
-          'quickClashStats.streakProtectionAvailable': true,
-        },
-      }
-
-      // Handle longest streak update
+      // Use pipeline update to safely handle null quickClashStats fields
       const currentStreak = (currentUser.quickClashStats?.currentWinStreak || 0) + 1
       const longestStreak = currentUser.quickClashStats?.longestStreak || 0
 
-      if (currentStreak > longestStreak) {
-        updateObj.$set['quickClashStats.longestStreak'] = currentStreak
-        updateObj.$set['quickClashStats.peakTrophies'] =
-          member.newTrophies > currentPeak ? member.newTrophies : currentPeak
-      } else if (member.newTrophies > currentPeak) {
-        updateObj.$set['quickClashStats.peakTrophies'] = member.newTrophies
+      const pipelineSet = {
+        quickClashTrophies: { $add: [{ $ifNull: ['$quickClashTrophies', 0] }, member.trophyChange] },
+        'quickClashStats.totalMatches': { $add: [{ $ifNull: ['$quickClashStats.totalMatches', 0] }, 1] },
+        'quickClashStats.wins': { $add: [{ $ifNull: ['$quickClashStats.wins', 0] }, 1] },
+        'quickClashStats.totalScore': { $add: [{ $ifNull: ['$quickClashStats.totalScore', 0] }, member.score || 0] },
+        'quickClashStats.currentWinStreak': { $add: [{ $ifNull: ['$quickClashStats.currentWinStreak', 0] }, 1] },
+        'quickClashStats.streakProtectionAvailable': true,
       }
 
-      await User.findByIdAndUpdate(member.user, updateObj, { session })
+      // Handle longest streak update
+      if (currentStreak > longestStreak) {
+        pipelineSet['quickClashStats.longestStreak'] = currentStreak
+        pipelineSet['quickClashStats.peakTrophies'] =
+          member.newTrophies > currentPeak ? member.newTrophies : currentPeak
+      } else if (member.newTrophies > currentPeak) {
+        pipelineSet['quickClashStats.peakTrophies'] = member.newTrophies
+      }
+
+      await User.findByIdAndUpdate(member.user, [{ $set: pipelineSet }], { session })
 
       // Create trophy history entry for user
       await new QuickClashTeamTrophyHistory({
@@ -584,12 +580,11 @@ const calculateFinalTrophies = async (battle, session) => {
           {
             $set: {
               quickClashTrophies: {
-                $max: [0, { $add: ['$quickClashTrophies', member.trophyChange] }] // Use GROSS change for balance update
+                $max: [0, { $add: [{ $ifNull: ['$quickClashTrophies', 0] }, member.trophyChange] }] // Use GROSS change for balance update
               },
-              'quickClashStats.totalMatches': { $add: ['$quickClashStats.totalMatches', 1] },
-              'quickClashStats.losses': { $add: ['$quickClashStats.losses', 1] },
-              'quickClashStats.losses': { $add: ['$quickClashStats.losses', 1] },
-              'quickClashStats.totalScore': { $add: ['$quickClashStats.totalScore', member.score || 0] },
+              'quickClashStats.totalMatches': { $add: [{ $ifNull: ['$quickClashStats.totalMatches', 0] }, 1] },
+              'quickClashStats.losses': { $add: [{ $ifNull: ['$quickClashStats.losses', 0] }, 1] },
+              'quickClashStats.totalScore': { $add: [{ $ifNull: ['$quickClashStats.totalScore', 0] }, member.score || 0] },
               'quickClashStats.currentWinStreak': 0,
               'quickClashStats.streakProtectionAvailable': false
             }
@@ -656,41 +651,24 @@ const calculateFinalTrophies = async (battle, session) => {
         userScore: member.score,
       }).save({ session })
     } else {
-      // Regular user
-      if (member.trophyChange !== 0) {
-        await User.findByIdAndUpdate(
-          member.user,
-          {
-            $inc: {
-              quickClashTrophies: member.trophyChange, // Use GROSS change for balance update
-              'quickClashStats.totalMatches': 1,
-              'quickClashStats.draws': 1,
-              'quickClashStats.totalScore': member.score || 0,
-            },
-            $set: {
-              'quickClashStats.currentWinStreak': 0,
-              'quickClashStats.streakProtectionAvailable': false,
-            },
-          },
-          { session },
-        )
-      } else {
-        await User.findByIdAndUpdate(
-          member.user,
-          {
-            $inc: {
-              'quickClashStats.totalMatches': 1,
-              'quickClashStats.draws': 1,
-              'quickClashStats.totalScore': member.score || 0,
-            },
-            $set: {
-              'quickClashStats.currentWinStreak': 0,
-              'quickClashStats.streakProtectionAvailable': false,
-            },
-          },
-          { session },
-        )
+      // Regular user - use pipeline update to safely handle null fields
+      const tieSet = {
+        'quickClashStats.totalMatches': { $add: [{ $ifNull: ['$quickClashStats.totalMatches', 0] }, 1] },
+        'quickClashStats.draws': { $add: [{ $ifNull: ['$quickClashStats.draws', 0] }, 1] },
+        'quickClashStats.totalScore': { $add: [{ $ifNull: ['$quickClashStats.totalScore', 0] }, member.score || 0] },
+        'quickClashStats.currentWinStreak': 0,
+        'quickClashStats.streakProtectionAvailable': false,
       }
+
+      if (member.trophyChange !== 0) {
+        tieSet.quickClashTrophies = { $add: [{ $ifNull: ['$quickClashTrophies', 0] }, member.trophyChange] }
+      }
+
+      await User.findByIdAndUpdate(
+        member.user,
+        [{ $set: tieSet }],
+        { session },
+      )
 
       await new QuickClashTeamTrophyHistory({
         user: member.user,

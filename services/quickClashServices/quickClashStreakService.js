@@ -276,7 +276,7 @@ const getPlayerStreak = async (playerId, isSessionPlayer, timezone = 'Asia/Kolka
     if (isSessionPlayer) {
       const player = await PlaySession.findById(playerId).select('streak').lean()
       if (!player) return null
-      streakData = player.streak || { dayStreak: 0, lastPlayedDate: null, longestStreak: 0 }
+      streakData = player.streak || { dayStreak: 0, lastPlayedDate: null, longestStreak: 0, streakProtectionAvailable: false }
     } else {
       const player = await User.findById(playerId).select('quickClashStats').lean()
       if (!player) return null
@@ -284,6 +284,7 @@ const getPlayerStreak = async (playerId, isSessionPlayer, timezone = 'Asia/Kolka
         dayStreak: player.quickClashStats?.dayStreak || 0,
         lastPlayedDate: player.quickClashStats?.lastPlayedDate || null,
         longestStreak: player.quickClashStats?.longestStreak || 0,
+        streakProtectionAvailable: player.quickClashStats?.streakProtectionAvailable || false,
       }
     }
 
@@ -319,6 +320,7 @@ const getPlayerStreak = async (playerId, isSessionPlayer, timezone = 'Asia/Kolka
       isActive,
       needsPlayToday,
       streakExpired: !isActive && streakData.dayStreak > 0,
+      streakProtectionAvailable: streakData.streakProtectionAvailable,
       multiplier: tierInfo.multiplier,
       tierLabel: tierInfo.label,
       tierEmoji: tierInfo.emoji,

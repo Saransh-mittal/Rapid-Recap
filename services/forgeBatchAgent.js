@@ -16,10 +16,10 @@ const BatchForgeOutputSchema = z.object({
 
   // Classification Fields
   category: z.enum([
-    'GK Prime',
-    'Science Facts Simplified',
-    'Everyday Tech',
-    'Geography',
+    'India & World',
+    'Science & Technology',
+    'Tech Innovations',
+    'Geography & Environment',
     'Unsuitable'
   ]).describe('Main category classification'),
 
@@ -72,6 +72,15 @@ This means: The MCQ is NOT a comprehension test. It's a PREDICTION HOOK that pri
 Determine if the content is suitable for Forge Mode (Ages 13-30).
 - **Suitable:** Factual, educational, science/tech/geography/history, >150 words.
 - **Unsuitable:** Opinion pieces, politics, breaking news, listicles, too short.
+
+=== ASPIRANT FOCUS (CRITICAL) ===
+Target Audience: Indian students preparing for competitive exams (UPSC, SSC, CAT).
+- **Contextualize for India:** When explaining concepts, ALWAYS try to find an Indian angle, example, or comparison.
+  - *Rivers?* Mention Ganga/Brahmaputra.
+  - *Space?* Mention ISRO/Chandrayaan.
+  - *Economy?* Mention RBI/Indian Budget.
+  - *History?* Relate to Indian freedom struggle or ancient India if applicable.
+- **Tone:** Informative, concise, authoritative yet engaging.
 
 === CATEGORY ROUTING RULES (STRICT) ===
 Input includes:

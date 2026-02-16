@@ -45,15 +45,35 @@ def get_mongodb_connection():
 # ============================================================================
 
 SOURCES = {
-    "GK_PRIME": {
-        "category": "GK Prime",
+    "GK_CURRENT_AFFAIRS": {
+        "category": "India & World",
         "sources": [
+            # -- INDIAN SOURCES (80%) --
             {
-                "name": "Science News for Students",
+                "name": "Press Information Bureau (PIB)",
                 "type": "rss",
-                "url": "https://www.sciencenewsforstudents.org/feed",
-                "subtype": "Spotlight Facts"
+                "url": "https://pib.gov.in/RssMain.aspx?ModId=6&Lang=1&Regid=3",
+                "subtype": "Government Schemes & Policy"
             },
+            {
+                "name": "The Hindu National",
+                "type": "rss",
+                "url": "https://www.thehindu.com/news/national/feeder/default.rss",
+                "subtype": "National Affairs"
+            },
+            {
+                "name": "Indian Express Explained",
+                "type": "rss",
+                "url": "https://indianexpress.com/section/explained/feed/",
+                "subtype": "In-Depth Analysis"
+            },
+            {
+                "name": "ISRO News",
+                "type": "rss",
+                "url": "https://www.isro.gov.in/rss.xml",
+                "subtype": "Space & Science"
+            },
+            # -- GLOBAL SOURCES (20%) --
             {
                 "name": "BBC News Science",
                 "type": "rss",
@@ -61,154 +81,112 @@ SOURCES = {
                 "subtype": "World Basics"
             },
             {
-                "name": "ScienceDaily",
-                "type": "rss",
-                "url": "https://www.sciencedaily.com/rss/all.xml",
-                "subtype": "How Things Work"
-            },
-            {
-                "name": "Mental Floss",
-                "type": "rss",
-                "url": "https://www.mentalfloss.com/rss.xml",
-                "subtype": "Curious Facts"
-            },
-            {
-                "name": "Atlas Obscura",
-                "type": "rss",
-                "url": "https://www.atlasobscura.com/feeds/latest",
-                "subtype": "Hidden Wonders"
-            },
-            {
-                "name": "History Extra",
-                "type": "rss",
-                "url": "https://www.historyextra.com/feed/",
-                "subtype": "Historical Trivia"
-            },
-            {
                 "name": "Smithsonian Smart News",
                 "type": "rss",
                 "url": "https://www.smithsonianmag.com/rss/smart-news/",
                 "subtype": "History & Culture"
-            },
-            {
-                "name": "HistoryNet",
-                "type": "rss",
-                "url": "https://www.historynet.com/feed",
-                "subtype": "War & History"
             }
         ]
     },
 
-    "SCIENCE_FACTS": {
-        "category": "Science Facts Simplified",
+    "SCIENCE_TECH": {
+        "category": "Science & Technology",
         "sources": [
+            # -- INDIAN SOURCES --
+            {
+                "name": "Down To Earth Science",
+                "type": "rss",
+                "url": "https://www.downtoearth.org.in/rss/science-technology",
+                "subtype": "Environment & Science"
+            },
+            {
+                "name": "India Science Wire",
+                "type": "rss",
+                "url": "https://vigyanprasar.gov.in/isw/rss",
+                "subtype": "Indian Research"
+            },
+            # -- GLOBAL SOURCES --
             {
                 "name": "LiveScience",
                 "type": "rss",
                 "url": "https://www.livescience.com/feeds/all",
-                "subtype": "Human Body & Biology"
+                "subtype": "Biology & Health"
             },
-            {
-                "name": "Space.com",
+             {
+                "name": "Phys.org",
                 "type": "rss",
-                "url": "https://www.space.com/feeds/all",
-                "subtype": "Space & Earth Science"
+                "url": "https://phys.org/rss-feed/",
+                "subtype": "Physics & Tech"
             },
             {
                 "name": "Scientific American",
                 "type": "rss",
                 "url": "http://rss.sciam.com/ScientificAmerican-Global",
                 "subtype": "Science in Daily Life"
-            },
-            {
-                "name": "New Scientist",
-                "type": "rss",
-                "url": "https://www.newscientist.com/feed/home",
-                "subtype": "Science in Daily Life"
-            },
-            {
-                "name": "Phys.org",
-                "type": "rss",
-                "url": "https://phys.org/rss-feed/",
-                "subtype": "Physics & Tech"
             }
         ]
     },
 
-    "EVERYDAY_TECH": {
-        "category": "Everyday Tech",
+    "TECH_INNOVATIONS": {
+        "category": "Tech Innovations",
         "sources": [
+            # -- INDIAN SOURCES --
             {
-                "name": "TechCrunch",
+                "name": "Medianama",
                 "type": "rss",
-                "url": "https://techcrunch.com/feed/",
-                "subtype": "Apps & Algorithms"
+                "url": "https://www.medianama.com/feed/",
+                "subtype": "Digital Policy & India"
             },
             {
-                "name": "The Verge",
+                "name": "Inc42",
                 "type": "rss",
-                "url": "https://www.theverge.com/rss/index.xml",
-                "subtype": "Internet & Devices"
+                "url": "https://inc42.com/feed/",
+                "subtype": "Startups & Innovation"
             },
+            {
+                "name": "The Hindu Sci-Tech",
+                "type": "rss",
+                "url": "https://www.thehindu.com/sci-tech/feeder/default.rss",
+                "subtype": "Science & Tech"
+            },
+             # -- GLOBAL SOURCES --
             {
                 "name": "Ars Technica",
                 "type": "rss",
                 "url": "http://feeds.arstechnica.com/arstechnica/index",
                 "subtype": "Tech Behind Daily Life"
-            },
-            {
-                "name": "Wired",
-                "type": "rss",
-                "url": "https://www.wired.com/feed/rss",
-                "subtype": "AI & Privacy"
-            },
-            {
-                "name": "CNET News",
-                "type": "rss",
-                "url": "https://www.cnet.com/rss/news/",
-                "subtype": "Internet & Devices"
             }
         ]
     },
 
-    "GEOGRAPHY": {
-        "category": "Geography",
+    "GEOGRAPHY_ENV": {
+        "category": "Geography & Environment",
         "sources": [
+             # -- INDIAN SOURCES --
             {
-                "name": "The Guardian Environment",
+                "name": "Mongabay India",
                 "type": "rss",
-                "url": "https://www.theguardian.com/environment/rss",
-                "subtype": "Global Environment"
-            },
-            {
-                "name": "Mongabay",
-                "type": "rss",
-                "url": "https://news.mongabay.com/feed/",
+                "url": "https://india.mongabay.com/feed/",
                 "subtype": "Nature & Conservation"
             },
             {
+                "name": "The Hindu Environment",
+                "type": "rss",
+                "url": "https://www.thehindu.com/sci-tech/energy-and-environment/feeder/default.rss",
+                "subtype": "Environment & Climate"
+            },
+            # -- GLOBAL SOURCES --
+             {
                 "name": "UN News Climate",
                 "type": "rss",
                 "url": "https://news.un.org/feed/subscribe/en/news/topic/climate-change/feed/rss.xml",
                 "subtype": "Climate & Policy"
             },
-            {
-                "name": "Yale Climate Connections",
+             {
+                "name": "The Guardian Environment",
                 "type": "rss",
-                "url": "https://yaleclimateconnections.org/feed/",
-                "subtype": "Climate Impacts"
-            },
-            {
-                "name": "Climate Home News",
-                "type": "rss",
-                "url": "https://www.climatechangenews.com/feed/",
-                "subtype": "Global Climate"
-            },
-            {
-                "name": "Euronews Green",
-                "type": "rss",
-                "url": "https://www.euronews.com/rss?level=theme&name=green",
-                "subtype": "Geo-Environment Briefs"
+                "url": "https://www.theguardian.com/environment/rss",
+                "subtype": "Global Environment"
             }
         ]
     }
