@@ -1453,6 +1453,115 @@ const getSoloDrillMetrics = async ({ startDate, endDate }) => {
     trend: calculateTrend(totalDrills, prevTotalDrills).toFixed(1),
     completionTrend: (completionRate - prevCompletionRate).toFixed(1),
   }
+
+  // --- CUSTOM DRILL ANALYTICS ---
+  // Specific metrics for "Custom Solo Drills" (source: 'custom')
+
+  // 1. Total & Completed
+  const customTotal = await SoloDrillSession.countDocuments({
+    startedAt: { $gte: startDate, $lte: endDate },
+    user: { $nin: botUserIds },
+    source: 'custom',
+  })
+
+  const customCompleted = await SoloDrillSession.countDocuments({
+    startedAt: { $gte: startDate, $lte: endDate },
+    user: { $nin: botUserIds },
+    source: 'custom',
+    status: 'completed',
+  })
+
+  const customCompletionRate = customTotal > 0 ? (customCompleted / customTotal) * 100 : 0
+
+  // 2. Average Scores (Completed Custom Drills only)
+  const customScoreAgg = await SoloDrillSession.aggregate([
+    {
+      $match: {
+        startedAt: { $gte: startDate, $lte: endDate },
+        user: { $nin: botUserIds },
+        source: 'custom',
+        status: 'completed',
+      },
+    },
+    {
+      $group: {
+        _id: null,
+        avgForge: { $avg: '$forgeScore' },
+        avgQuiz: { $avg: '$quizScore' },
+        avgTotal: { $avg: '$totalScore' },
+      },
+    },
+  ])
+
+  const customAvgScores = {
+    forge: customScoreAgg[0]?.avgForge?.toFixed(1) || '0',
+    quiz: customScoreAgg[0]?.avgQuiz?.toFixed(1) || '0',
+    total: customScoreAgg[0]?.avgTotal?.toFixed(1) || '0',
+  }
+
+  // 3. Unique Custom Drillers
+  const uniqueCustomDrillers = await SoloDrillSession.distinct('user', {
+    startedAt: { $gte: startDate, $lte: endDate },
+    user: { $nin: botUserIds },
+    source: 'custom',
+  })
+
+  // 4. Popular Topics (Group by customInput)
+  const popularTopicsAgg = await SoloDrillSession.aggregate([
+    {
+      $match: {
+        startedAt: { $gte: startDate, $lte: endDate },
+        user: { $nin: botUserIds },
+        source: 'custom',
+        customInput: { $ne: null }, // Ensure input exists
+      },
+    },
+    {
+      $group: {
+        _id: '$customInput', // Group by the input text
+        count: { $sum: 1 },
+      },
+    },
+    { $sort: { count: -1 } },
+    { $limit: 5 }, // Top 5
+  ])
+
+  const popularTopics = popularTopicsAgg.map(t => ({
+    topic: t._id,
+    count: t.count,
+  }))
+
+  return {
+    totalDrills,
+    completedDrills,
+    abandonedDrills,
+    inProgressDrills: totalDrills - completedDrills - abandonedDrills,
+    completionRate: completionRate.toFixed(1),
+    abandonRate: abandonRate.toFixed(1),
+    completionStatus: completionRate >= 50 ? 'pass' : completionRate >= 35 ? 'conditional' : 'fail',
+    uniqueDrillers: uniqueDrillerCount,
+    activeBattleUsers,
+    adoptionRate: adoptionRate.toFixed(1),
+    adoptionStatus: adoptionRate >= 10 ? 'pass' : adoptionRate >= 5 ? 'conditional' : 'fail',
+    avgForgeScore,
+    avgQuizScore,
+    avgTotalScore,
+    benchmarkDistribution,
+    sourceSplit,
+    topCategories,
+    dailyTrend: dailyData,
+    trend: calculateTrend(totalDrills, prevTotalDrills).toFixed(1),
+    completionTrend: (completionRate - prevCompletionRate).toFixed(1),
+    // NEW: Explicit Custom Drill Analytics
+    customDrills: {
+      total: customTotal,
+      completed: customCompleted,
+      completionRate: customCompletionRate.toFixed(1),
+      avgScores: customAvgScores,
+      uniqueDrillers: uniqueCustomDrillers.length,
+      popularTopics,
+    },
+  }
 }
 
 // ============================================================================
