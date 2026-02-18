@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react'
+import { useEffect, useMemo, useState } from 'react'
 import { createPortal } from 'react-dom'
 import { motion, AnimatePresence } from 'framer-motion'
 import { X, Clock, History } from 'lucide-react'
@@ -42,6 +42,14 @@ const SoloDrillModal = () => {
   }, [modalOpen])
 
   const [timeLeft, setTimeLeft] = useState('')
+
+  const categoriesWithCustom = useMemo(() => {
+    const serverCategories = Array.isArray(availableCategories) ? availableCategories : []
+    const withoutCustom = serverCategories.filter(
+      (category) => typeof category === 'string' && category.trim().toLowerCase() !== 'custom'
+    )
+    return ['Custom', ...withoutCustom]
+  }, [availableCategories])
 
   useEffect(() => {
     if (!nextReset) return
@@ -111,9 +119,6 @@ const SoloDrillModal = () => {
                 const dailyMax = 5
                 const used = dailyUsed || 0
                 const purchased = purchasedDrillsRemaining || 0
-                const totalCapacity = dailyMax + purchased
-                // How many drills have been used out of total capacity
-                const totalUsed = used + (purchased > 0 ? Math.max(0, used - (dailyMax - dailyDrillsRemaining)) : 0)
 
                 return (
                   <div className="flex gap-1">
@@ -203,11 +208,11 @@ const SoloDrillModal = () => {
                 )}
               </div>
               <div className="grid grid-cols-2 md:grid-cols-2 lg:grid-cols-3 gap-3">
-                {availableCategories.map((cat, idx) => (
+                {categoriesWithCustom.map((cat) => (
                   <SoloDrillCategoryCard
-                    key={idx}
+                    key={cat}
                     category={cat}
-                    disabled={totalRemaining === 0}
+                    disabled={cat === 'Custom' ? false : totalRemaining === 0}
                   />
                 ))}
               </div>

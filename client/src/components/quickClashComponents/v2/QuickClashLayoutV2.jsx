@@ -358,6 +358,7 @@ const QuickClashLayoutV2 = () => {
 
   // Signup panel state (for session player account creation)
   const [showSignupPanel, setShowSignupPanel] = useState(false)
+  const [signupContent, setSignupContent] = useState(null) // Content for the signup panel
 
   // Streak popup state (for daily streak reminder)
   const [showStreakPopup, setShowStreakPopup] = useState(false)
@@ -682,10 +683,11 @@ const QuickClashLayoutV2 = () => {
   }, [])
 
   // Handler for "Create Account" actions - opens signup panel
-  const handleCreateAccount = useCallback(() => {
+  const handleCreateAccount = useCallback((content = null) => {
     haptics.impact()
     quizAudioService.playSubmit()
     // Open the signup slide-over panel
+    setSignupContent(content)
     setShowSignupPanel(true)
   }, [])
 
@@ -712,6 +714,7 @@ const QuickClashLayoutV2 = () => {
           <QuickClashV2
             forceOpenMatchmaking={forceOpenMatchmaking}
             onForceOpenReset={() => setForceOpenMatchmaking(false)}
+            onCreateAccount={handleCreateAccount}
           />
         </TabContent>
 
@@ -813,8 +816,12 @@ const QuickClashLayoutV2 = () => {
         <Suspense fallback={null}>
           <SessionSignupPanel
             isOpen={showSignupPanel}
-            onClose={() => setShowSignupPanel(false)}
+            onClose={() => {
+              setShowSignupPanel(false)
+              setSignupContent(null)
+            }}
             sessionPlayer={player}
+            customContent={signupContent}
           />
         </Suspense>
       )}

@@ -21,6 +21,7 @@ import {
   Flame,
   Star,
   Zap,
+  Sparkles,
 } from 'lucide-react'
 
 /**
@@ -56,6 +57,12 @@ export const getCategoryInfo = category => {
       secondaryColor: '#65A30D',
       iconComponent: Leaf,
       battleIcon: Shield,
+    },
+    custom: {
+      primaryColor: '#14B8A6',
+      secondaryColor: '#0891B2',
+      iconComponent: Sparkles,
+      battleIcon: Zap,
     },
     // ── Legacy news categories (kept for backward compatibility) ──
     world: {

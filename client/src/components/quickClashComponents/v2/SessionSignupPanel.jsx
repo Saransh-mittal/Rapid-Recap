@@ -88,7 +88,7 @@ const GoogleSignupButton = memo(({ onSuccess, onError, isLoading }) => {
 })
 GoogleSignupButton.displayName = 'GoogleSignupButton'
 
-const SessionSignupPanel = memo(({ isOpen, onClose, sessionPlayer }) => {
+const SessionSignupPanel = memo(({ isOpen, onClose, sessionPlayer, customContent }) => {
   const dispatch = useDispatch()
 
   // State
@@ -224,8 +224,8 @@ const SessionSignupPanel = memo(({ isOpen, onClose, sessionPlayer }) => {
                   <Sparkles className="w-5 h-5 text-white" />
                 </div>
                 <div>
-                  <h2 className="text-lg font-bold text-white">Create Account</h2>
-                  <p className="text-xs text-white/50">Keep your progress forever</p>
+                  <h2 className="text-lg font-bold text-white">{customContent?.title || 'Create Account'}</h2>
+                  <p className="text-xs text-white/50">{customContent?.subtitle || 'Keep your progress forever'}</p>
                 </div>
               </div>
               <button
@@ -273,8 +273,8 @@ const SessionSignupPanel = memo(({ isOpen, onClose, sessionPlayer }) => {
 
                   {/* Benefits List */}
                   <div className="space-y-3">
-                    <p className="text-sm text-white/60 font-medium">What you'll get:</p>
-                    {benefits.map((benefit, index) => (
+                    <p className="text-sm text-white/60 font-medium">{customContent?.benefitsTitle || "What you'll get:"}</p>
+                    {(customContent?.benefits || benefits).map((benefit, index) => (
                       <motion.div
                         key={index}
                         initial={{ opacity: 0, x: 20 }}
@@ -282,7 +282,7 @@ const SessionSignupPanel = memo(({ isOpen, onClose, sessionPlayer }) => {
                         transition={{ delay: index * 0.1 }}
                         className="flex items-center gap-3 p-3 rounded-lg bg-white/5"
                       >
-                        <benefit.icon className={`w-5 h-5 ${benefit.color}`} />
+                        <benefit.icon className={`w-5 h-5 ${benefit.color || 'text-cyan-400'}`} />
                         <span className="text-sm text-white/80">{benefit.text}</span>
                       </motion.div>
                     ))}

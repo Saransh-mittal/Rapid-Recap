@@ -1,21 +1,37 @@
 import { useEffect } from 'react'
 import PropTypes from 'prop-types'
 import { motion } from 'framer-motion'
-import { Target } from 'lucide-react'
+import { Target, Zap, BarChart2, Trophy, Clock } from 'lucide-react'
 import useSoloDrill from '../../../customHooks/useSoloDrill'
+import usePlayer from '../../../hooks/usePlayer' // Import usePlayer
 import { QUICK_CLASH_CLASSES } from '../utils/quickClashColors'
 
 const MotionButton = motion.button
+
+const SOLO_DRILL_SIGNUP_CONTENT = {
+  title: 'Unlock Solo Drills',
+  subtitle: 'Master your skills in private',
+  benefitsTitle: 'Why go Solo?',
+  benefits: [
+    { icon: Target, text: 'Practice specific categories', color: 'text-cyan-400' },
+    { icon: Zap, text: 'No time pressure mode', color: 'text-yellow-400' },
+    { icon: BarChart2, text: 'Track detailed performance', color: 'text-purple-400' },
+    { icon: Trophy, text: 'Earn trophies for milestones', color: 'text-emerald-400' },
+  ]
+}
 
 const SoloDrillButton = ({
   buttonWidth = { base: '100%', md: '50%' },
   onSoloDrillClick,
   isTutorialHighlighted = false,
+  onCreateAccount, // Accept onCreateAccount prop
 }) => {
   const {
     fetchLimits,
     openDrillModal
   } = useSoloDrill()
+
+  const { isSession } = usePlayer() // Get player status
 
   useEffect(() => {
     fetchLimits()
@@ -26,6 +42,13 @@ const SoloDrillButton = ({
   const widthClass = typeof buttonWidth === 'object' ? 'w-full' : 'w-full'
   const handleOpenDrill = () => {
     onSoloDrillClick?.()
+
+    // If session player, trigger signup with custom content
+    if (isSession) {
+      onCreateAccount?.(SOLO_DRILL_SIGNUP_CONTENT)
+      return
+    }
+
     openDrillModal()
   }
 
@@ -89,6 +112,7 @@ SoloDrillButton.propTypes = {
   ]),
   onSoloDrillClick: PropTypes.func,
   isTutorialHighlighted: PropTypes.bool,
+  onCreateAccount: PropTypes.func,
 }
 
 export default SoloDrillButton

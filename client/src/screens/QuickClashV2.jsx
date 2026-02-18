@@ -54,7 +54,7 @@ import { ModalLoader } from '../components/Header-Footer/modernNavbarComponents/
 // MAIN COMPONENT
 // ============================================================================
 
-const QuickClashV2 = ({ forceOpenMatchmaking = false, onForceOpenReset }) => {
+const QuickClashV2 = ({ forceOpenMatchmaking = false, onForceOpenReset, onCreateAccount }) => {
   const { t } = useTranslation('QuickClash')
   const dispatch = useDispatch()
   const toast = useToast()
@@ -173,6 +173,7 @@ const QuickClashV2 = ({ forceOpenMatchmaking = false, onForceOpenReset }) => {
                 tutorialContext.completeTutorial('solo_drill')
               }
             }}
+            onCreateAccount={onCreateAccount}
           />
         </div>
 
