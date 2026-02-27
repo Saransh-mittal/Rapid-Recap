@@ -66,13 +66,17 @@ Powerups are not just "cheats"; they are resource management choices.
     *   *Score Surge:* Reward amplification (high risk/high reward).
     *   *Precision Protocol:* Skill check (bonus for perfection).
 
-### F. Solo Drill Mode (Single-Player Practice)
-A dedicated single-player practice mode with its own progression system, independent of the competitive 4v4 ladder.
-*   **Function:** Provides a low-pressure environment for users to sharpen skills before entering competitive matches.
-*   **Mechanics:**
-    *   Users play through Forge + Quiz phases solo, without opponents or team dependencies.
-    *   The system tracks **session limits** (to prevent burnout/abuse), **detailed history** (past drill results), and provides **specific result screens** distinct from battle results.
-*   **Theory:** This is the "Training Grounds" concept from competitive gaming. It removes the social anxiety of team play and lets users build muscle memory for the timed mechanics at their own pace.
+### F. Solo Drill Mode & Custom Drills (Single-Player Practice)
+A dedicated single-player practice suite independent of the competitive 4v4 ladder, containing both curated and user-generated practice modes.
+*   **Function:** Provides a low-pressure environment for users to sharpen skills, or study specific real-world materials, before entering competitive matches.
+*   **Mechanics (Standard Solo Drill):**
+    *   Users play through Forge + Quiz phases solo using curated categories.
+    *   The system tracks **session limits** (to prevent burnout/abuse), **detailed history**, and provides **specific result screens** distinct from battle results.
+*   **Mechanics (Custom Drill - Bring Your Own Content):**
+    *   Users can upload their own study material (up to 2,500 characters of text or a screenshot, like a textbook page).
+    *   The AI dynamically generates a fully structured Forge article and Quiz session based strictly on the uploaded content.
+    *   It operates on a separate purchase and limit economy from standard drills.
+*   **Theory:** This serves as the "Training Grounds" concept. It removes the social anxiety of team play while validating a player's ability to read and react. More importantly, the **Custom Drill** bridges the gap between competitive gaming and actual homework—letting users apply high-retention MOBA mechanics to exactly what they need to study *right now*.
 
 ### G. Tutorial & Onboarding System (Guided First Experience)
 A robust state machine that tracks user progress through sequential tutorial stages.
@@ -99,4 +103,4 @@ An automated quality gate that audits articles and questions before they reach p
 ---
 
 **Context Summary:**
-Quick Clash V2 is a "Gamified Learning Environment" that uses the mechanics of competitive gaming (teams, ranks, economies, special abilities) to solve the engagement crisis in education. It is designed to be felt as a sport, where "Knowledge" is the ammunition and "Reading Speed" is the aim. It now includes a dedicated Solo Drill practice mode, a guided tutorial onboarding flow, AI-powered content quality assurance, and significant backend performance optimizations.
+Quick Clash V2 is a "Gamified Learning Environment" that uses the mechanics of competitive gaming (teams, ranks, economies, special abilities) to solve the engagement crisis in education. It is designed to be felt as a sport, where "Knowledge" is the ammunition and "Reading Speed" is the aim. It now includes a dedicated Solo Drill / Custom Drill practice suite, a guided tutorial onboarding flow, AI-powered content quality assurance, and significant backend performance optimizations.
