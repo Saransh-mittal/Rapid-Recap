@@ -38,6 +38,15 @@ const soloDrillSessionSchema = new mongoose.Schema({
           streakBonus: { type: Number, default: 0 },
           total: { type: Number, default: 0 },
         },
+        confidenceScore: { type: Number, min: 0, max: 100 },
+        telemetry: {
+          hoverBounces: { type: Number, default: 0 },
+          pathEfficiency: { type: Number, default: 100 },
+          tapDuration: { type: Number, default: 0 },
+          swaps: { type: Number, default: 0 },
+          fidgetTouches: { type: Number, default: 0 },
+          screenFreezeDuration: { type: Number, default: 0 }
+        }
       },
     ],
     // Global time tracking
@@ -79,6 +88,15 @@ const soloDrillSessionSchema = new mongoose.Schema({
         userAnswer: String,
         isCorrect: Boolean,
         timeSpent: Number,
+        confidenceScore: { type: Number, min: 0, max: 100 },
+        telemetry: {
+          hoverBounces: { type: Number, default: 0 },
+          pathEfficiency: { type: Number, default: 100 },
+          tapDuration: { type: Number, default: 0 },
+          swaps: { type: Number, default: 0 },
+          fidgetTouches: { type: Number, default: 0 },
+          screenFreezeDuration: { type: Number, default: 0 }
+        }
       },
     ],
     answerMappings: { type: Object, default: {} },
