@@ -519,10 +519,11 @@ const QuickClashLayoutV2 = () => {
 
   // Check if welcome modal should be shown for session players
   useEffect(() => {
+    const autoMatchmaking = location.state?.autoMatchmaking
+
     if (isSession) {
       const hasSeenWelcome = localStorage.getItem(WELCOME_SHOWN_KEY)
       const showWelcomeFromNav = location.state?.showWelcome
-      const autoMatchmaking = location.state?.autoMatchmaking
 
       if (!hasSeenWelcome || showWelcomeFromNav) {
         // Delay modal to let the UI load first
@@ -544,6 +545,14 @@ const QuickClashLayoutV2 = () => {
         }, 300)
         return () => clearTimeout(timer)
       }
+    } else if (autoMatchmaking) {
+      // For authenticated users, directly open matchmaking
+      const timer = setTimeout(() => {
+        setForceOpenMatchmaking(true)
+        // Clear the navigation state to prevent re-triggering
+        navigate(location.pathname, { replace: true, state: {} })
+      }, 300)
+      return () => clearTimeout(timer)
     }
   }, [isSession, location.state, location.pathname, navigate])
 

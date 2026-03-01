@@ -64,7 +64,7 @@ export const forgeService = {
    * @param {boolean} answerData.isSoloDrill - Use solo drill endpoints
    * @returns {Promise<Object>} Answer validation result and reading content if correct
    */
-  submitAnswer: async (sessionId, { sectionNumber, answerIndex, timeSpent, powerups, isSessionPlayer = false, isSoloDrill = false }) => {
+  submitAnswer: async (sessionId, { sectionNumber, answerIndex, timeSpent, powerups, telemetry, isSessionPlayer = false, isSoloDrill = false }) => {
     const baseUrl = getBaseUrl(isSessionPlayer, isSoloDrill)
     const response = await axios.post(
       `${baseUrl}/session/${sessionId}/forge/answer`,
@@ -73,6 +73,7 @@ export const forgeService = {
         userAnswer: answerIndex, // Backend expects 'userAnswer' not 'answerIndex'
         timeSpent,
         powerups,
+        telemetry,
       },
     )
     return response.data

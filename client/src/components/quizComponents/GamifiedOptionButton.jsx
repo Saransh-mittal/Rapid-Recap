@@ -12,12 +12,37 @@ const GamifiedOptionButton = ({
   onSelect,
   isDisabled,
   isEliminated,
+  onHover,
+  onPointerDownOption,
+  onPointerUpOption,
+  onPointerCancelOption,
 }) => {
   return (
     <MotionBox
       as="button"
       onClick={() => !isDisabled && !isEliminated && onSelect(optionKey)}
+      onMouseEnter={() => !isDisabled && !isEliminated && onHover && onHover(optionKey)}
+      onPointerDown={(e) => {
+        if (!isDisabled && !isEliminated) {
+          e.currentTarget.setPointerCapture(e.pointerId);
+          onPointerDownOption && onPointerDownOption(e, optionKey);
+        }
+      }}
+      onPointerUp={(e) => {
+        if (!isDisabled && !isEliminated) {
+          e.currentTarget.releasePointerCapture(e.pointerId);
+          onPointerUpOption && onPointerUpOption(e, optionKey);
+        }
+      }}
+      onPointerCancel={(e) => {
+        if (!isDisabled && !isEliminated) {
+          try { e.currentTarget.releasePointerCapture(e.pointerId); } catch(err){}
+          onPointerCancelOption && onPointerCancelOption(e, optionKey);
+        }
+      }}
+      onPointerLeave={(e) => !isDisabled && !isEliminated && onPointerCancelOption && onPointerCancelOption(e, optionKey)}
       disabled={isDisabled || isEliminated}
+      style={{ touchAction: 'none' }}
       width="100%"
       position="relative"
       overflow="hidden"

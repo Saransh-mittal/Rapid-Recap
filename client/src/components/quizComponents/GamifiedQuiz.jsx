@@ -34,6 +34,7 @@ import soloDrillService from '../../services/soloDrillService'
 // Components
 import GamifiedOptionButton from './GamifiedOptionButton'
 import SubmittedQuizInterface from './SubmittedQuizInterface'
+import useBiometricTelemetry from '../../customHooks/useBiometricTelemetry'
 
 // Haptic feedback for gaming interactions
 import { haptics } from '../../utils/haptics'
@@ -96,6 +97,10 @@ const GamifiedQuiz = ({
   const [result, setResult] = useState(null)
   const [quizReady, setQuizReady] = useState(false)
   const [timeWarningPlayed, setTimeWarningPlayed] = useState(false)
+
+  // Telemetry
+  const telemetryHook = useBiometricTelemetry(true)
+  const [questionTelemetry, setQuestionTelemetry] = useState({})
 
   // Powerup State
   const [disabledOptions, setDisabledOptions] = useState({}) // { questionIndex: ['a', 'c'] }
@@ -256,12 +261,17 @@ const GamifiedQuiz = ({
       haptics.selection() // Haptic on answer selection
       quizAudioService.playOptionClick() // Audio on answer selection
 
-      setUserAnswers((prev) => ({
-        ...prev,
-        [currentQuestionIndex]: answer,
-      }))
+      setUserAnswers((prev) => {
+        if (prev[currentQuestionIndex] !== undefined && prev[currentQuestionIndex] !== answer) {
+          telemetryHook.recordSwap()
+        }
+        return {
+          ...prev,
+          [currentQuestionIndex]: answer,
+        }
+      })
     },
-    [currentQuestionIndex, submitted, isPaused]
+    [currentQuestionIndex, submitted, isPaused, telemetryHook]
   )
 
   const handleNext = useCallback(() => {
@@ -273,6 +283,14 @@ const GamifiedQuiz = ({
 
       // Record time
       const now = Date.now()
+
+      // Save telemetry before moving
+      setQuestionTelemetry(prev => ({
+        ...prev,
+        [currentQuestionIndex]: telemetryHook.getTelemetryData()
+      }))
+      telemetryHook.resetTelemetry()
+
       setTimeSpent((prev) => {
         const currentStart = prev[currentQuestionIndex]?.startTime || now
         return {
@@ -314,6 +332,10 @@ const GamifiedQuiz = ({
           timeSpent: Math.floor((now - currentStart) / 1000)
       }
 
+      // Finalize telemetry
+      const finalQuestionTelemetry = { ...questionTelemetry }
+      finalQuestionTelemetry[currentQuestionIndex] = telemetryHook.getTelemetryData()
+
       const formattedResponses = questions.map((question, index) => {
         const selectedAnswer = userAnswers[index] || ''
         return {
@@ -321,6 +343,7 @@ const GamifiedQuiz = ({
           answer: selectedAnswer,
           userAnswer: selectedAnswer, // Solo Drill backend expects userAnswer
           timeSpent: finalTimeSpent[index]?.timeSpent || 0,
+          telemetry: finalQuestionTelemetry[index] || {}
         }
       })
 
@@ -471,6 +494,12 @@ const GamifiedQuiz = ({
       display="flex"
       flexDirection="column"
       overflow="hidden"
+      onMouseMove={telemetryHook.handleMouseMove}
+      onPointerDown={(e) => telemetryHook.handlePointerDown(e, false)}
+      onPointerMove={(e) => telemetryHook.handlePointerMove(e)}
+      onPointerUp={(e) => telemetryHook.handlePointerUp(e, false)}
+      onPointerCancel={(e) => telemetryHook.handlePointerCancel(e, false)}
+      onPointerLeave={(e) => telemetryHook.handlePointerCancel(e, false)}
     >
       {/* Header Section (Fixed) */}
       <Box flexShrink={0} px={1}>
@@ -673,6 +702,10 @@ const GamifiedQuiz = ({
                   onSelect={handleAnswer}
                   isDisabled={submitted || isPaused}
                   isEliminated={disabledOptions[currentQuestionIndex]?.includes(key)}
+                  onHover={telemetryHook.handleOptionHover}
+                  onPointerDownOption={(e, optionKey) => telemetryHook.handlePointerDown(e, true)}
+                  onPointerUpOption={(e, optionKey) => telemetryHook.handlePointerUp(e, true)}
+                  onPointerCancelOption={(e, optionKey) => telemetryHook.handlePointerCancel(e, true)}
                 />
               ))}
             </VStack>
@@ -761,6 +794,7 @@ const GamifiedQuiz = ({
               }}
               _active={{ transform: "translateY(0)" }}
               onClick={handleNext}
+              onPointerDown={(e) => e.stopPropagation()}
               isDisabled={!userAnswers[currentQuestionIndex] || isPaused}
               borderRadius="xl"
             >
@@ -780,6 +814,7 @@ const GamifiedQuiz = ({
                   boxShadow: "0 10px 20px rgba(0,0,0,0.2)"
               }}
               onClick={handleSubmit}
+              onPointerDown={(e) => e.stopPropagation()}
               isLoading={submitLoading}
               isDisabled={!userAnswers[currentQuestionIndex] || isPaused}
               borderRadius="xl"

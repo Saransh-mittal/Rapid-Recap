@@ -12,6 +12,7 @@ const {
   awardCoins,
   getPlayerCoins,
 } = require('./quickClashCoinService')
+const { calculateConfidenceScore } = require('../../utils/confidenceScoreUtility')
 
 // Configuration
 const SOLO_DRILL_CONFIG = {
@@ -547,6 +548,7 @@ const submitForgeAnswer = async ({
   answerIndex,
   timeSpent,
   powerups = {},
+  telemetry = {},
 }) => {
   const session = await getCachedSoloSession(sessionId)
   if (!session) throw new Error('Session not found')
@@ -643,7 +645,9 @@ const submitForgeAnswer = async ({
       speedBonus,
       streakBonus,
       total: questionScore
-    }
+    },
+    confidenceScore: calculateConfidenceScore(safeTimeSpent, FORGE_SCORING.MAX_SECTION_TIME, 'forge', telemetry),
+    telemetry
   })
 
   session.forgeScore += questionScore
@@ -876,14 +880,19 @@ const submitQuizAnswers = async ({ sessionId, userId, responses }) => {
   }
 
   // Save Quiz Attempt
-  session.quizAttempt.responses = responses.map(r => ({
-    questionId: r.questionId,
-    userAnswer: r.userAnswer ?? r.answer ?? '',
-    isCorrect: getQuizCorrectAnswer(
-      quiz.questions.find(q => q._id.toString() === r.questionId)
-    ) === (r.userAnswer ?? r.answer ?? ''),
-    timeSpent: Number.isFinite(r.timeSpent) ? r.timeSpent : 0,
-  }))
+  session.quizAttempt.responses = responses.map(r => {
+    const timeSpent = Number.isFinite(r.timeSpent) ? r.timeSpent : 0;
+    return {
+      questionId: r.questionId,
+      userAnswer: r.userAnswer ?? r.answer ?? '',
+      isCorrect: getQuizCorrectAnswer(
+        quiz.questions.find(q => q._id.toString() === r.questionId)
+      ) === (r.userAnswer ?? r.answer ?? ''),
+      timeSpent,
+      confidenceScore: calculateConfidenceScore(timeSpent, 10000, 'quiz', r.telemetry),
+      telemetry: r.telemetry || {}
+    }
+  })
   session.quizAttempt.completed = true
   session.quizAttempt.endTime = new Date()
 

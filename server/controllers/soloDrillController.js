@@ -72,7 +72,7 @@ const submitForgeAnswerController = asyncHandler(async (req, res) => {
   const { sessionId } = req.params
   // Frontend sends 'userAnswer', not 'answerIndex'
   // We also accept 'answerIndex' for backward compatibility or direct API usage
-  const { sectionNumber, userAnswer, answerIndex, timeSpent, powerups } = req.body
+  const { sectionNumber, userAnswer, answerIndex, timeSpent, powerups, telemetry } = req.body
 
   const finalAnswerIndex = userAnswer !== undefined ? userAnswer : answerIndex
 
@@ -83,6 +83,7 @@ const submitForgeAnswerController = asyncHandler(async (req, res) => {
     answerIndex: finalAnswerIndex,
     timeSpent,
     powerups,
+    telemetry,
   })
   res.json(result)
 })

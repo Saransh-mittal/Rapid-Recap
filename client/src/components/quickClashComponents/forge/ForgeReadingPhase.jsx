@@ -60,6 +60,7 @@ import { getCategoryInfo } from '../team/teamBattlePageComponents/categoriesSect
 // Haptic and audio feedback
 import { haptics } from '../../../utils/haptics'
 import { quizAudioService } from '../../../services/quizAudioService'
+import useBiometricTelemetry from '../../../customHooks/useBiometricTelemetry'
 
 /**
  * Main Forge Reading Phase Component
@@ -141,6 +142,9 @@ const ForgeReadingPhase = ({
 
   // Transition guard to prevent double moveToNextSection calls
   const isTransitioningRef = useRef(false)
+
+  // Telemetry
+  const telemetryHook = useBiometricTelemetry(false)
 
   // Powerup State
   const [oracleUsedThisQuestion, setOracleUsedThisQuestion] = useState(false) // Oracle Eye: 1 per question
@@ -365,6 +369,7 @@ const ForgeReadingPhase = ({
 
       // Calculate time spent on this question
       const timeSpent = Date.now() - questionStartTime.current
+      const currentTelemetry = telemetryHook.getTelemetryData()
 
       const response = await forgeService.submitAnswer(sessionId, {
         sectionNumber: currentQuestion.sectionNumber,
@@ -374,6 +379,7 @@ const ForgeReadingPhase = ({
         powerups: {
           scoreSurge: activeEffects.scoreSurge
         },
+        telemetry: currentTelemetry,
         isSessionPlayer,
         isSoloDrill,
       })
@@ -515,6 +521,7 @@ const ForgeReadingPhase = ({
         setMaxReadingTime(30) // Reset max time
         setQuestionTimer(0) // Reset timer
         questionStartTime.current = Date.now()
+        telemetryHook.resetTelemetry()
 
         // Reset transition guard for next section
         isTransitioningRef.current = false
@@ -754,7 +761,15 @@ const ForgeReadingPhase = ({
 
 
   return (
-    <div className="relative h-full flex flex-col overflow-hidden text-white bg-transparent">
+    <div
+      className="relative h-full flex flex-col overflow-hidden text-white bg-transparent"
+      onMouseMove={telemetryHook.handleMouseMove}
+      onPointerDown={(e) => telemetryHook.handlePointerDown(e, false)}
+      onPointerMove={(e) => telemetryHook.handlePointerMove(e)}
+      onPointerUp={(e) => telemetryHook.handlePointerUp(e, false)}
+      onPointerCancel={(e) => telemetryHook.handlePointerCancel(e, false)}
+      onPointerLeave={(e) => telemetryHook.handlePointerCancel(e, false)}
+    >
       {/* Header */}
       <div
         className="relative flex-none px-3 py-2.5 border-b border-white/10 bg-black/20 backdrop-blur-md z-10 flex items-center gap-2"
@@ -1084,7 +1099,28 @@ const ForgeReadingPhase = ({
                         <motion.button
                           key={visualIndex}
                           onClick={() => !isEliminated && handleAnswerSubmit(originalIndex)}
+                          onMouseEnter={() => !isEliminated && telemetryHook.handleOptionHover(originalIndex)}
+                          onPointerDown={(e) => {
+                            if (!isEliminated) {
+                              e.currentTarget.setPointerCapture(e.pointerId);
+                              telemetryHook.handlePointerDown(e, true);
+                            }
+                          }}
+                          onPointerUp={(e) => {
+                            if (!isEliminated) {
+                              e.currentTarget.releasePointerCapture(e.pointerId);
+                              telemetryHook.handlePointerUp(e, true);
+                            }
+                          }}
+                          onPointerCancel={(e) => {
+                            if (!isEliminated) {
+                              try { e.currentTarget.releasePointerCapture(e.pointerId); } catch(err){}
+                              telemetryHook.handlePointerCancel(e, true);
+                            }
+                          }}
+                          onPointerLeave={(e) => !isEliminated && telemetryHook.handlePointerCancel(e, true)}
                           disabled={loading || phase === 'feedback' || isEliminated || isPaused}
+                          style={{ touchAction: 'none' }}
                           className={`
                             relative w-full text-left p-4 rounded-xl border transition-all duration-300 group flex items-center gap-5 cursor-pointer
                             ${buttonBg} ${buttonBorder} ${buttonHover} ${buttonShadow} ${buttonOpacity}
