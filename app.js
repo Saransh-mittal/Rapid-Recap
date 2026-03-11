@@ -96,6 +96,51 @@ app.use((req, res, next) => {
 
 // Basic middleware setup
 app.use(cookieParser())
+
+// Serve dynamic robots.txt
+app.get('/robots.txt', (req, res) => {
+  const robotsTxt = `User-agent: *
+Allow: /$
+Allow: /manual/
+Allow: /manual/*
+Allow: /contact
+Allow: /quickclash/leaderboard
+
+Disallow: /play/*
+Disallow: /quickclash/*
+Disallow: /dashboard
+Disallow: /admin/*
+Disallow: /referral
+Disallow: /profile/*
+Disallow: /article/*
+Disallow: /gamehub/*
+Disallow: /home/*
+
+Sitemap: https://rapidrecap.ai/sitemap.xml`;
+  res.setHeader('Content-Type', 'text/plain');
+  res.status(200).send(robotsTxt);
+});
+
+// 301 Redirects for Legacy URLs
+app.use((req, res, next) => {
+  const legacyRedirects = [
+    { regex: /^\/hall-of-champions\/?$/, target: '/quickclash/leaderboard' },
+    { regex: /^\/leaderboard\/?$/, target: '/quickclash/leaderboard' },
+    { regex: /^\/home(\/.*)?$/, target: '/' },
+    { regex: /^\/gamehub(\/.*)?$/, target: '/' },
+    { regex: /^\/article(\/.*)?$/, target: '/' },
+    { regex: /^\/referral\/?$/, target: '/' },
+    { regex: /^\/profile(\/.*)?$/, target: '/' },
+  ];
+
+  for (const rule of legacyRedirects) {
+    if (rule.regex.test(req.url)) {
+      return res.redirect(301, rule.target);
+    }
+  }
+  next();
+});
+
 app.use(i18nMiddleware.handle(i18n))
 app.use(bodyParser.json({ limit: '10mb' }))
 app.use(bodyParser.urlencoded({ extended: true, limit: '10mb' }))
@@ -336,8 +381,8 @@ webpush.setVapidDetails(
 // Initialize bot tracking
 initBotTracking()
 // require('./scripts/script_prepare_article_data')()
-// const generateSitemap = require('./generate-sitemap')
-// generateSitemap()
+const generateSitemap = require('./generate-sitemap')
+generateSitemap()
 // const generateGoogleNewsSitemap = require('./google-sitemap-generator')
 const {
   languageDetectionMiddleware,
@@ -345,7 +390,7 @@ const {
 // generateGoogleNewsSitemap()
 
 // Load scheduler
-require('./scheduler/setupCronJobs')
+// require('./scheduler/setupCronJobs')
 
 // ============== KEEP-ALIVE FUNCTIONALITY ==============
 // Check if we're running on Railway

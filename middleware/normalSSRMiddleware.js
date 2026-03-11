@@ -86,8 +86,122 @@ async function createSSRMiddleware(app) {
           'utf-8',
         )
 
+        // Generate dynamic SEO tags & JSON-LD schemas
+        let dynamicHeadTags = '';
+        if (url === '/') {
+           dynamicHeadTags = `
+             <title>Quick Clash – 4v4 Competitive Learning Game | Rapid Recap</title>
+             <meta name="description" content="Join Quick Clash for an immersive 4v4 learning game. Experience the Forge Phase and Quiz Phase to master current affairs through high-pressure competitive gameplay.">
+             <meta property="og:title" content="Quick Clash – 4v4 Competitive Learning Game | Rapid Recap">
+             <meta property="og:description" content="Join Quick Clash for an immersive 4v4 learning game. Experience the Forge Phase and Quiz Phase to master current affairs through high-pressure competitive gameplay.">
+             <meta property="og:image" content="https://rapidrecap.ai/og-image.jpg">
+             <meta property="og:url" content="https://rapidrecap.ai/">
+             <meta property="og:type" content="website">
+             <meta name="twitter:card" content="summary_large_image">
+             <meta name="twitter:title" content="Quick Clash – 4v4 Competitive Learning Game | Rapid Recap">
+             <meta name="twitter:description" content="Join Quick Clash for an immersive 4v4 learning game. Experience the Forge Phase and Quiz Phase to master current affairs through high-pressure competitive gameplay.">
+             <meta name="twitter:image" content="https://rapidrecap.ai/og-image.jpg">
+             <link rel="canonical" href="https://rapidrecap.ai/">
+             <script type="application/ld+json">
+             {
+               "@context": "https://schema.org",
+               "@graph": [
+                 {
+                   "@type": "WebSite",
+                   "@id": "https://rapidrecap.ai/#website",
+                   "url": "https://rapidrecap.ai/",
+                   "name": "Rapid Recap",
+                   "description": "4v4 Competitive Learning Game Platform"
+                 },
+                 {
+                   "@type": "Organization",
+                   "@id": "https://rapidrecap.ai/#organization",
+                   "name": "Rapid Recap",
+                   "url": "https://rapidrecap.ai/",
+                   "logo": "https://rapidrecap.ai/og-image.jpg"
+                 }
+               ]
+             }
+             </script>
+           `;
+        } else if (url.startsWith('/manual')) {
+           const manualRouteData = {
+              '/manual': { title: 'Rulebook & Game Manual – Quick Clash | Rapid Recap', desc: 'The complete guide to playing Quick Clash. Learn about game mechanics, scoring system, the Spark Engine, and how to win in Solo Drills and Team Battles.' },
+              '/manual/quick-clash-v2-overview': { title: 'Quick Clash V2 Overview – Game Manual', desc: 'Learn the core Quick Clash experience, the 4v4 format, and two-phase battle mechanics.' },
+              '/manual/forge-phase': { title: 'The Forge Phase Mechanics – Quick Clash', desc: 'Master the Forge Phase. Learn about progressive content unlocks and reading timers.' },
+              '/manual/quiz-phase': { title: 'The Quiz Phase Strategy – Quick Clash', desc: 'Win the Quiz Phase. Understand the 10-question competitive format and RQM scoring.' },
+              '/manual/powerups': { title: 'Powerups & Strategy – Quick Clash', desc: 'Optimize your Quick Clash loadout with Time Warp, Score Surge, Oracle Eye and more.' },
+              '/manual/matchmaking-teams': { title: 'Teams & Matchmaking – Quick Clash', desc: 'Learn how the 4v4 Spark Engine matchmaking system auto-forms teams instantly.' },
+              '/manual/profile-progression': { title: 'Profile & Trophy Progression – Quick Clash', desc: 'Track your battle history, win rate, and navigate the high-stakes trophy betting system.' },
+              '/manual/solo-custom-drills': { title: 'Solo & Custom Drills – Quick Clash', desc: 'Upload your own personalized content in Custom Drills or practice in Standard Solo Drills.' },
+           };
+           
+           // Clean the URL (remove query params for lookup)
+           const cleanPath = url.split('?')[0];
+           const pageData = manualRouteData[cleanPath] || manualRouteData['/manual'];
+
+           dynamicHeadTags = `
+             <title>${pageData.title}</title>
+             <meta name="description" content="${pageData.desc}">
+             <meta property="og:title" content="${pageData.title}">
+             <meta property="og:description" content="${pageData.desc}">
+             <meta property="og:image" content="https://rapidrecap.ai/og-image.jpg">
+             <meta property="og:url" content="https://rapidrecap.ai${cleanPath}">
+             <meta property="og:type" content="article">
+             <meta name="twitter:card" content="summary_large_image">
+             <meta name="twitter:title" content="${pageData.title}">
+             <meta name="twitter:description" content="${pageData.desc}">
+             <meta name="twitter:image" content="https://rapidrecap.ai/og-image.jpg">
+             <link rel="canonical" href="https://rapidrecap.ai${cleanPath}">
+             <script type="application/ld+json">
+             {
+               "@context": "https://schema.org",
+               "@type": "FAQPage",
+               "mainEntity": [
+                 {
+                   "@type": "Question",
+                   "name": "What is Quick Clash?",
+                   "acceptedAnswer": {
+                     "@type": "Answer",
+                     "text": "Quick Clash V2 is a fast-paced, 4v4 team-based competitive learning game. Matches take approximately 30 seconds to find. It tests knowledge and reading speed in a high-stakes format."
+                   }
+                 },
+                 {
+                   "@type": "Question",
+                   "name": "How does RQM scoring work in Quick Clash?",
+                   "acceptedAnswer": {
+                     "@type": "Answer",
+                     "text": "Scores are determined by the Rapid Quiz Mastery (RQM) metric — a balance of accuracy, speed bonus, and a precision bonus. Higher accuracy and faster completion yield maximum RQM."
+                   }
+                 },
+                 {
+                   "@type": "Question",
+                   "name": "What is the Spark Engine Auto-Formation?",
+                   "acceptedAnswer": {
+                     "@type": "Answer",
+                     "text": "The Spark Engine ensures nobody waits in queues. Solo players and partial teams (1 to 3 players) are instantly integrated into temporary Auto-Formed teams, ensuring 4v4 matches happen immediately."
+                   }
+                 },
+                 {
+                   "@type": "Question",
+                   "name": "What are Custom Drills (Bring Your Own Content)?",
+                   "acceptedAnswer": {
+                     "@type": "Answer",
+                     "text": "Custom Drills allow users to directly upload up to 2,500 characters of their own personal study material. The AI dynamically generates a fully structured, playable Forge article and Quiz session based strictly on your text."
+                   }
+                 }
+               ]
+             }
+             </script>
+           `;
+        }
+
         // Inject splash screen content
         let processedTemplate = template.replace('<!--ssr-outlet-->', '')
+        
+        if (dynamicHeadTags) {
+           processedTemplate = processedTemplate.replace('</head>', `${dynamicHeadTags}</head>`);
+        }
 
         processedTemplate = processedTemplate
           .replace(
