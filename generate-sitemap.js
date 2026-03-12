@@ -16,8 +16,8 @@ async function generateSitemap() {
       { url: '/manual/forge-phase', priority: 0.8, changefreq: 'weekly' },
       { url: '/manual/quiz-phase', priority: 0.8, changefreq: 'weekly' },
       { url: '/manual/powerups', priority: 0.8, changefreq: 'weekly' },
-      { url: '/manual/matchmaking-spark-engine', priority: 0.8, changefreq: 'weekly' },
-      { url: '/manual/solo-drill-custom-drill', priority: 0.8, changefreq: 'weekly' },
+      { url: '/manual/matchmaking-teams', priority: 0.8, changefreq: 'weekly' },
+      { url: '/manual/solo-custom-drills', priority: 0.8, changefreq: 'weekly' },
       { url: '/quickclash/leaderboard', priority: 0.8, changefreq: 'daily' },
       { url: '/contact', priority: 0.5, changefreq: 'monthly' },
       { url: '/contact/feedback', priority: 0.5, changefreq: 'monthly' }
@@ -42,7 +42,7 @@ async function generateSitemap() {
     const sitemap = root.end({ pretty: true })
 
     // Write sitemap to file
-    const outputPath = path.join(__dirname, './client/dist', 'sitemap.xml')
+    const outputPath = path.join(__dirname, '../client/dist', 'sitemap.xml')
     await fs.writeFile(outputPath, sitemap)
 
     console.log(`Sitemap generated successfully at ${outputPath}`)
