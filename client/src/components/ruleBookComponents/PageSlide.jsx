@@ -1,5 +1,5 @@
 // src/components/ruleBookComponents/PageSlide.jsx
-import React, { memo, useMemo } from 'react'
+import React, { memo, useMemo, useState } from 'react'
 import {
   Box,
   Text,
@@ -9,199 +9,193 @@ import {
   Collapse,
   useBreakpointValue,
 } from '@chakra-ui/react'
-import { motion, AnimatePresence } from 'framer-motion'
-import { Book, Info, ChevronDown } from 'lucide-react'
+import { motion } from 'framer-motion'
+import { Info, ChevronDown, Sparkles } from 'lucide-react'
 
 const MotionBox = motion(Box)
 
-// Memoized ListItem component
 const ListItem = memo(({ item, index, isMobile }) => {
-  const [isOpen, setIsOpen] = React.useState(false)
+  const [isOpen, setIsOpen] = useState(false)
 
-  // Simplified animation for weaker devices
   const animation = useMemo(
     () => ({
-      initial: { opacity: 0 },
-      animate: { opacity: 1 },
-      transition: { delay: index * 0.03 },
+      initial: { opacity: 0, x: -10 },
+      animate: { opacity: 1, x: 0 },
+      transition: { delay: 0.1 + (index * 0.05), type: 'spring', stiffness: 100 },
     }),
     [index],
   )
 
   return (
-    <MotionBox {...animation} position="relative">
+    <MotionBox {...animation} position="relative" mb={{ base: 4, md: 6 }}>
+      {/* 
+        Instead of a heavy box, we use a delicate layout. 
+        When open, a subtle blur backdrop and glowing left border appears.
+      */}
       <Box
         onClick={() => item.hasDetails && setIsOpen(!isOpen)}
         cursor={item.hasDetails ? 'pointer' : 'default'}
-        borderRadius="xl"
-        bg="rgba(20, 17, 35, 0.7)"
-        p={3}
-        mb={2}
-        border="1px solid"
-        borderColor={isOpen ? 'pink.400' : 'transparent'}
-        transition="all 0.2s"
-        _hover={{
-          bg: item.hasDetails
-            ? 'rgba(20, 17, 35, 0.9)'
-            : 'rgba(20, 17, 35, 0.7)',
-          borderColor: item.hasDetails ? 'pink.400' : 'transparent',
-        }}
+        p={isMobile ? 4 : 5}
+        borderRadius="2xl"
+        bg={isOpen ? 'rgba(30, 41, 59, 0.4)' : 'transparent'}
+        backdropFilter={isOpen ? 'blur(10px)' : 'none'}
+        transition="all 0.3s cubic-bezier(0.4, 0, 0.2, 1)"
+        position="relative"
+        overflow="hidden"
+        role="group"
+        _hover={item.hasDetails ? {
+          bg: 'rgba(30, 41, 59, 0.6)',
+          transform: 'translateX(4px)'
+        } : {}}
       >
-        <HStack spacing={3}>
-          <Icon
-            as={Info}
-            w={4}
-            h={4}
-            color={item.hasDetails ? 'pink.400' : 'whiteAlpha.400'}
-          />
+        {/* Delicate Left Border Glow */}
+        <Box
+          position="absolute"
+          left={0}
+          top={0}
+          bottom={0}
+          w="4px"
+          bg={isOpen ? 'cyan.400' : 'whiteAlpha.200'}
+          borderRadius="full"
+          transition="all 0.3s"
+          _groupHover={item.hasDetails ? { bg: 'cyan.300', boxShadow: '0 0 10px rgba(34, 211, 238, 0.5)' } : {}}
+        />
 
-          <Text flex={1} fontSize={isMobile ? 'sm' : 'md'} color="white">
-            {item.text}
-          </Text>
+        <HStack spacing={4} align="flex-start" pl={2}>
+          <Box mt={1}>
+            <Icon
+              as={Info}
+              w={isMobile ? 5 : 6}
+              h={isMobile ? 5 : 6}
+              color={isOpen ? 'cyan.300' : 'whiteAlpha.400'}
+              transition="color 0.2s"
+              _groupHover={item.hasDetails ? { color: 'cyan.200' } : {}}
+            />
+          </Box>
+
+          <Box flex={1}>
+            <Text 
+              fontSize={{ base: 'md', md: 'xl' }} 
+              color={isOpen ? 'white' : 'whiteAlpha.900'} 
+              fontWeight={isOpen ? '600' : '400'}
+              letterSpacing="wide"
+              lineHeight="1.5"
+              transition="all 0.2s"
+            >
+              {item.text}
+            </Text>
+
+            {item.hasDetails && (
+              <Collapse in={isOpen} animateOpacity>
+                <Box mt={4} pt={4} borderTop="1px solid" borderColor="whiteAlpha.100">
+                  <Text
+                    color="whiteAlpha.700"
+                    fontSize={{ base: 'sm', md: 'md' }}
+                    lineHeight="1.8"
+                    letterSpacing="wide"
+                  >
+                    {item.explanation}
+                  </Text>
+                </Box>
+              </Collapse>
+            )}
+          </Box>
 
           {item.hasDetails && (
             <Icon
               as={ChevronDown}
-              w={4}
-              h={4}
-              color="pink.400"
+              w={5}
+              h={5}
+              mt={1}
+              color={isOpen ? 'cyan.400' : 'whiteAlpha.300'}
               transform={isOpen ? 'rotate(180deg)' : 'rotate(0deg)'}
-              transition="transform 0.2s"
+              transition="all 0.3s cubic-bezier(0.4, 0, 0.2, 1)"
             />
           )}
         </HStack>
       </Box>
-
-      <Collapse in={isOpen} animateOpacity>
-        <Box
-          ml={4}
-          p={3}
-          bg="rgba(20, 17, 35, 0.5)"
-          borderRadius="lg"
-          borderLeft="2px solid"
-          borderColor="pink.400"
-        >
-          <Text
-            color="whiteAlpha.800"
-            fontSize={isMobile ? 'xs' : 'sm'}
-            lineHeight="1.6"
-          >
-            {item.explanation}
-          </Text>
-        </Box>
-      </Collapse>
     </MotionBox>
   )
 })
 
-// Memoized Section component
-const Section = memo(({ title, subtitle, items, isMobile }) => (
-  <Box mb={6}>
-    <Box bg="rgba(20, 17, 35, 0.8)" p={4} borderRadius="xl" mb={4}>
-      <HStack spacing={3} mb={2}>
-        <Icon
-          as={Book}
-          color="pink.400"
-          w={isMobile ? 4 : 5}
-          h={isMobile ? 4 : 5}
-        />
-        <Text
-          color="purple.300"
-          fontWeight="bold"
-          fontSize={isMobile ? 'md' : 'lg'}
-        >
-          {subtitle}
-        </Text>
-      </HStack>
-    </Box>
+const Section = memo(({ subtitle, items, isMobile, sectionIndex }) => (
+  <MotionBox 
+    mb={{ base: 12, md: 16 }}
+    initial={{ opacity: 0, y: 20 }}
+    animate={{ opacity: 1, y: 0 }}
+    transition={{ delay: sectionIndex * 0.1, duration: 0.5 }}
+  >
+    {/* Clean, editorial section header */}
+    <HStack spacing={3} mb={6} align="center">
+      <Box p={2} bg="rgba(34, 211, 238, 0.1)" borderRadius="lg">
+        <Icon as={Sparkles} color="cyan.400" w={5} h={5} />
+      </Box>
+      <Text
+        color="white"
+        fontWeight="800"
+        fontSize={{ base: '2xl', md: '3xl' }}
+        fontFamily="'Outfit', sans-serif"
+        letterSpacing="tight"
+      >
+        {subtitle}
+      </Text>
+    </HStack>
 
-    <VStack spacing={2} align="stretch">
+    <VStack spacing={0} align="stretch" pl={{ base: 0, md: 2 }}>
       {items.map((item, i) => (
         <ListItem key={i} item={item} index={i} isMobile={isMobile} />
       ))}
     </VStack>
-  </Box>
+  </MotionBox>
 ))
 
-// Main PageSlide component
 const PageSlide = ({ content, title }) => {
   const isMobile = useBreakpointValue({ base: true, md: false })
 
-  // Simplified header animation for weaker devices
-  const headerAnimation = {
-    initial: { opacity: 0 },
-    animate: { opacity: 1 },
-    transition: { duration: 0.3 },
+  const slideAnimation = {
+    initial: { opacity: 0, y: 20 },
+    animate: { opacity: 1, y: 0 },
+    exit: { opacity: 0, y: -20 },
+    transition: { duration: 0.4, ease: [0.25, 0.1, 0.25, 1] },
   }
 
   return (
-    <Box
-      bg="rgba(20, 17, 35, 0.95)"
-      borderRadius={isMobile ? 'lg' : '2xl'}
-      overflow="hidden"
-      border="1px solid"
-      borderColor="whiteAlpha.200"
-      height="full"
+    <MotionBox
+      {...slideAnimation}
+      w="full"
       position="relative"
     >
-      {/* Header */}
-      <MotionBox
-        {...headerAnimation}
-        p={isMobile ? 4 : 6}
-        borderBottom="1px solid"
-        borderColor="whiteAlpha.100"
-        bg="rgba(20, 17, 35, 0.95)"
+      {/* 
+        We removed the heavy border/background wrapper entirely.
+        This provides a clean, editorial reading experience.
+      */}
+      <Box 
+        pt={{ base: 4, md: 0 }}
+        pb={24} // Extra padding for the bottom mobile nav
       >
-        <HStack spacing={3}>
-          <Box bg="rgba(236, 72, 153, 0.1)" p={2} borderRadius="lg">
-            <Icon
-              as={Book}
-              color="pink.400"
-              w={isMobile ? 5 : 6}
-              h={isMobile ? 5 : 6}
-            />
-          </Box>
+        <Text
+          fontSize={{ base: '3xl', md: '5xl', lg: '6xl' }}
+          fontWeight="900"
+          color="white"
+          fontFamily="'Outfit', sans-serif"
+          letterSpacing="tight"
+          mb={{ base: 10, md: 16 }}
+          lineHeight="1.1"
+        >
+          {title}
+        </Text>
 
-          <Text
-            fontSize={isMobile ? 'xl' : '2xl'}
-            fontWeight="bold"
-            bgGradient="linear(to-r, pink.400, purple.400)"
-            bgClip="text"
-          >
-            {title}
-          </Text>
-        </HStack>
-      </MotionBox>
-
-      {/* Content */}
-      <Box
-        p={isMobile ? 3 : 5}
-        overflowY="auto"
-        maxH={isMobile ? 'calc(100vh - 150px)' : 'calc(100vh - 200px)'}
-        sx={{
-          '&::-webkit-scrollbar': {
-            width: '2px',
-          },
-          '&::-webkit-scrollbar-track': {
-            background: 'transparent',
-          },
-          '&::-webkit-scrollbar-thumb': {
-            background: 'rgba(255,255,255,0.2)',
-            borderRadius: '1px',
-          },
-        }}
-      >
         {Object.entries(content).map(([subtitle, items], index) => (
           <Section
             key={subtitle}
-            title={title}
             subtitle={subtitle}
             items={items}
             isMobile={isMobile}
+            sectionIndex={index}
           />
         ))}
       </Box>
-    </Box>
+    </MotionBox>
   )
 }
 

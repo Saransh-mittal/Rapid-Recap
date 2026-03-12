@@ -97,6 +97,50 @@ app.use(
 app.use(bodyParser.json({ limit: '4mb' }))
 require('./db/conn')
 
+// Serve dynamic robots.txt
+app.get('/robots.txt', (req, res) => {
+  const robotsTxt = `User-agent: *
+Allow: /$
+Allow: /manual/
+Allow: /manual/*
+Allow: /contact
+Allow: /quickclash/leaderboard
+
+Disallow: /play/*
+Disallow: /quickclash/*
+Disallow: /dashboard
+Disallow: /admin/*
+Disallow: /referral
+Disallow: /profile/*
+Disallow: /article/*
+Disallow: /gamehub/*
+Disallow: /home/*
+
+Sitemap: https://rapidrecap.ai/sitemap.xml`;
+  res.setHeader('Content-Type', 'text/plain');
+  res.status(200).send(robotsTxt);
+});
+
+// 301 Redirects for Legacy URLs
+app.use((req, res, next) => {
+  const legacyRedirects = [
+    { regex: /^\/hall-of-champions\/?$/, target: '/quickclash/leaderboard' },
+    { regex: /^\/leaderboard\/?$/, target: '/quickclash/leaderboard' },
+    { regex: /^\/home(\/.*)?$/, target: '/' },
+    { regex: /^\/gamehub(\/.*)?$/, target: '/' },
+    { regex: /^\/article(\/.*)?$/, target: '/' },
+    { regex: /^\/referral\/?$/, target: '/' },
+    { regex: /^\/profile(\/.*)?$/, target: '/' },
+  ];
+
+  for (const rule of legacyRedirects) {
+    if (rule.regex.test(req.url)) {
+      return res.redirect(301, rule.target);
+    }
+  }
+  next();
+});
+
 // ADD: Initialize feedback tracking middleware BEFORE routes
 console.log('Initializing feedback tracking system...')
 

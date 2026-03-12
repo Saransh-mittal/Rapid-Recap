@@ -1,5 +1,5 @@
 // src/components/ruleBookComponents/SearchComponents.jsx
-import React, { memo, useMemo, useCallback } from 'react'
+import React, { memo, useMemo, useCallback, useState, useRef, useEffect } from 'react'
 import {
   Box,
   Input,
@@ -8,6 +8,7 @@ import {
   Text,
   Icon,
   useBreakpointValue,
+  Portal,
 } from '@chakra-ui/react'
 import { Search, X, ArrowRight, Zap, Info } from 'lucide-react'
 import { motion, AnimatePresence } from 'framer-motion'
@@ -17,21 +18,17 @@ const MotionBox = motion(Box)
 
 // Result category grouping and scoring
 const processSearchResults = (query, pages) => {
-  const results = new Map() // Map to store grouped results
-  const searchTerms = query
-    .toLowerCase()
-    .split(' ')
-    .filter(term => term.length > 0)
+  const results = new Map()
+  const searchTerms = query.toLowerCase().split(' ').filter(term => term.length > 0)
 
   if (searchTerms.length === 0) return []
 
   pages.forEach(page => {
     Object.entries(page.content).forEach(([subtitle, items]) => {
       items.forEach(item => {
-        const text = item.text || item // Handle both new and old data structure
+        const text = item.text || item
         const explanation = item.explanation || ''
 
-        // Calculate relevance score
         let score = 0
         searchTerms.forEach(term => {
           if (page.title.toLowerCase().includes(term)) score += 3
@@ -51,276 +48,264 @@ const processSearchResults = (query, pages) => {
               pageId: page.id,
             })
           }
-          results.get(key).items.push({
-            text,
-            explanation,
-            score,
-          })
+          results.get(key).items.push({ text, explanation, score })
         }
       })
     })
   })
 
-  // Convert Map to array and sort by score
   return Array.from(results.values())
     .sort((a, b) => b.score - a.score)
-    .slice(0, 5) // Limit to top 5 most relevant sections
+    .slice(0, 5)
 }
 
 const SearchResultItem = memo(({ result, onSelect, index, isMobile }) => {
-  const handleClick = useCallback(() => {
-    onSelect(result.pageId)
-  }, [result.pageId, onSelect])
-
   return (
     <MotionBox
-      initial={{ opacity: 0, x: -20 }}
-      animate={{
-        opacity: 1,
-        x: 0,
-        transition: { delay: index * 0.03 },
-      }}
-      exit={{ opacity: 0, x: -20 }}
+      initial={{ opacity: 0, y: 10 }}
+      animate={{ opacity: 1, y: 0, transition: { delay: index * 0.05, type: 'spring', stiffness: 200, damping: 20 } }}
+      exit={{ opacity: 0, y: -10 }}
       cursor="pointer"
-      onClick={handleClick}
-      p={isMobile ? 2 : 3}
-      _hover={{ bg: 'rgba(255, 255, 255, 0.05)' }}
-      borderBottom="1px solid"
+      onClick={() => onSelect(result.pageId)}
+      p={isMobile ? 4 : 5}
+      mb={3}
+      bg="whiteAlpha.50"
+      backdropFilter="blur(10px)"
+      borderRadius="2xl"
+      border="1px solid"
       borderColor="whiteAlpha.100"
-      transition="all 0.2s"
+      transition="all 0.2s cubic-bezier(0.4, 0, 0.2, 1)"
       role="group"
       position="relative"
+      _hover={{ transform: 'translateY(-2px)', bg: 'whiteAlpha.100', borderColor: 'cyan.400' }}
     >
-      <HStack spacing={3} align="flex-start">
-        {/* Score indicator */}
-        <Box
-          w="3px"
-          h="full"
-          bg="pink.400"
-          position="absolute"
-          left={0}
-          opacity={result.score > 2 ? 0.8 : 0.4}
-          transition="opacity 0.2s"
-          _groupHover={{ opacity: 1 }}
-        />
+      <HStack spacing={4} align="flex-start">
+        <Box 
+          mt={1} 
+          p={2} 
+          borderRadius="xl" 
+          bg={result.score > 2 ? 'cyan.400' : 'whiteAlpha.100'}
+          color={result.score > 2 ? 'gray.900' : 'cyan.300'}
+          transition="all 0.2s"
+          _groupHover={{ bg: 'cyan.400', color: 'gray.900', transform: 'scale(1.1)' }}
+        >
+          <Icon as={result.score > 2 ? Zap : Info} w={4} h={4} />
+        </Box>
 
-        <Box flex={1} pl={2}>
-          <HStack mb={1} spacing={2}>
-            <Icon
-              as={result.score > 2 ? Zap : Info}
-              color="pink.300"
-              w={isMobile ? 3 : 4}
-              h={isMobile ? 3 : 4}
-            />
-            <Text
-              color="pink.300"
-              fontSize={isMobile ? 'xs' : 'sm'}
-              fontWeight="bold"
-            >
-              {result.section}
-            </Text>
-          </HStack>
-
+        <Box flex={1}>
           <Text
-            color="purple.200"
+            color="white"
             fontSize={isMobile ? 'sm' : 'md'}
+            fontWeight="700"
+            fontFamily="'Outfit', sans-serif"
             mb={1}
-            pl={6}
           >
-            {result.subtitle}
+            {result.section} <Box as="span" color="whiteAlpha.500" fontWeight="normal">/ {result.subtitle}</Box>
           </Text>
 
           {result.items.slice(0, 2).map((item, i) => (
             <Text
               key={i}
-              color="whiteAlpha.700"
+              color="whiteAlpha.600"
               fontSize={isMobile ? 'xs' : 'sm'}
-              pl={6}
               noOfLines={1}
+              mb={1}
             >
-              • {item.text}
+              {item.text}
             </Text>
           ))}
-
-          {result.items.length > 2 && (
-            <Text color="whiteAlpha.500" fontSize="xs" pl={6} mt={1}>
-              +{result.items.length - 2} more matches
-            </Text>
-          )}
         </Box>
 
-        <Icon
-          as={ArrowRight}
-          w={isMobile ? 4 : 5}
-          h={isMobile ? 4 : 5}
-          color="pink.300"
-          opacity={0}
-          transform="translateX(-10px)"
-          transition="all 0.2s"
-          _groupHover={{
-            opacity: 1,
-            transform: 'translateX(0)',
-          }}
-        />
+        <Box alignSelf="center">
+          <Icon
+            as={ArrowRight}
+            w={5}
+            h={5}
+            color="cyan.400"
+            opacity={0}
+            transform="translateX(-10px)"
+            transition="all 0.2s"
+            _groupHover={{ opacity: 1, transform: 'translateX(0)' }}
+          />
+        </Box>
       </HStack>
     </MotionBox>
   )
 })
 
-export const SearchResults = memo(({ results, onSelect }) => {
-  const isMobile = useBreakpointValue({ base: true, md: false })
-
-  return (
-    <MotionBox
-      initial={{ opacity: 0, y: -10 }}
-      animate={{ opacity: 1, y: 0 }}
-      exit={{ opacity: 0, y: -10 }}
-      position="absolute"
-      top="calc(100% + 8px)"
-      left={0}
-      right={0}
-      bg="rgba(20, 17, 35, 0.95)"
-      backdropFilter="blur(12px)"
-      borderRadius="xl"
-      overflow="hidden"
-      zIndex={20}
-      maxH={isMobile ? '300px' : '400px'}
-      overflowY="auto"
-      border="1px solid"
-      borderColor="whiteAlpha.200"
-      boxShadow="0 4px 20px rgba(0,0,0,0.3)"
-      css={{
-        '&::-webkit-scrollbar': {
-          width: '2px',
-        },
-        '&::-webkit-scrollbar-track': {
-          background: 'rgba(0,0,0,0.1)',
-        },
-        '&::-webkit-scrollbar-thumb': {
-          background: 'rgba(255,255,255,0.2)',
-          borderRadius: '1px',
-        },
-      }}
-    >
-      <Box p={isMobile ? 2 : 3}>
-        <Text color="whiteAlpha.600" fontSize={isMobile ? 'xs' : 'sm'} mb={2}>
-          Found matches in {results.length} sections
-        </Text>
-
-        {results.map((result, index) => (
-          <SearchResultItem
-            key={`${result.section}-${result.subtitle}`}
-            result={result}
-            onSelect={onSelect}
-            index={index}
-            isMobile={isMobile}
-          />
-        ))}
-      </Box>
-    </MotionBox>
-  )
-})
-
 export const SearchBar = memo(({ pages, onSelectResult }) => {
-  const [query, setQuery] = React.useState('')
-  const [isActive, setIsActive] = React.useState(false)
+  const [query, setQuery] = useState('')
+  const [isActive, setIsActive] = useState(false)
   const isMobile = useBreakpointValue({ base: true, md: false })
   const navigate = useNavigate()
+  const inputRef = useRef(null)
 
   const searchResults = useMemo(() => {
     if (!query || query.length < 2) return []
     return processSearchResults(query, pages)
   }, [query, pages])
 
-  const handleQueryChange = useCallback(e => {
-    setQuery(e.target.value)
-  }, [])
-
-  const clearQuery = useCallback(() => {
+  const handleResultSelect = useCallback(pageId => {
+    navigate(`/manual/${pageId}`)
     setQuery('')
-  }, [])
-  const handleResultSelect = useCallback(
-    pageId => {
-      navigate(`/manual/${pageId}`) // Navigate to the correct route
-      setQuery('')
-      setIsActive(false)
-    },
-    [navigate],
-  )
+    setIsActive(false)
+    inputRef.current?.blur()
+  }, [navigate])
+
+  // Lock body scroll when active on mobile
+  useEffect(() => {
+    if (isMobile && isActive) {
+      document.body.style.overflow = 'hidden'
+    } else {
+      document.body.style.overflow = 'unset'
+    }
+    return () => { document.body.style.overflow = 'unset' }
+  }, [isActive, isMobile])
 
   return (
-    <Box position="relative" mb={4}>
-      <Box position="relative" role="group">
-        <Box
-          position="absolute"
-          inset={0}
-          borderRadius="xl"
-          bg="whiteAlpha.100"
-          opacity={0}
-          transition="opacity 0.2s"
-          _groupHover={{ opacity: 1 }}
-        />
-
-        <Box
-          position="absolute"
-          left={4}
-          top="50%"
-          transform="translateY(-50%)"
-          color="pink.300"
-        >
-          <Search size={isMobile ? 16 : 18} />
-        </Box>
-
-        <Input
-          placeholder="Search manual..."
-          value={query}
-          onChange={handleQueryChange}
-          onFocus={() => setIsActive(true)}
-          onBlur={() => setTimeout(() => setIsActive(false), 200)}
-          pl={12}
-          pr={query ? 12 : 4}
-          py={isMobile ? 2 : 3}
-          bg="rgba(20, 17, 35, 0.6)"
-          color="white"
-          borderRadius="xl"
-          border="1px solid"
-          borderColor="whiteAlpha.200"
-          _hover={{ borderColor: 'pink.300' }}
-          _focus={{
-            borderColor: 'pink.300',
-            boxShadow: '0 0 0 1px var(--chakra-colors-pink-300)',
-          }}
-          fontSize={isMobile ? 'sm' : 'md'}
-          transition="all 0.2s"
-        />
-
-        {query && (
-          <Button
-            position="absolute"
-            right={3}
-            top="50%"
-            transform="translateY(-50%)"
-            color="whiteAlpha.600"
-            variant="ghost"
-            size="sm"
-            onClick={clearQuery}
-            _hover={{ color: 'pink.300' }}
-            zIndex={1}
-          >
-            <X size={isMobile ? 16 : 18} />
-          </Button>
-        )}
-      </Box>
-
+    <>
+      {/* Cinematic Blur Overlay when focused */}
       <AnimatePresence>
-        {isActive && searchResults.length > 0 && (
-          <SearchResults
-            results={searchResults}
-            onSelect={handleResultSelect}
-          />
+        {isActive && (
+          <Portal>
+            <MotionBox
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              transition={{ duration: 0.3 }}
+              position="fixed"
+              inset={0}
+              bg="rgba(15, 23, 42, 0.7)"
+              backdropFilter="blur(20px)"
+              zIndex={100}
+              onClick={() => setIsActive(false)}
+            />
+          </Portal>
         )}
       </AnimatePresence>
-    </Box>
+
+      <Box 
+        position={isActive ? { base: 'fixed', md: 'relative' } : 'relative'}
+        top={isActive && isMobile ? '20px' : 'auto'}
+        left={isActive && isMobile ? '4' : 'auto'}
+        right={isActive && isMobile ? '4' : 'auto'}
+        zIndex={101}
+        w="full"
+      >
+        <Box position="relative">
+          {/* Search Icon */}
+          <Box position="absolute" left={isMobile ? 5 : 6} top="50%" transform="translateY(-50%)" color={isActive ? "cyan.400" : "whiteAlpha.400"} zIndex={2} transition="color 0.2s">
+            <Search size={20} strokeWidth={2.5} />
+          </Box>
+
+          {/* Pill Input */}
+          <Input
+            ref={inputRef}
+            placeholder="Search the manual..."
+            value={query}
+            onChange={e => setQuery(e.target.value)}
+            onFocus={() => setIsActive(true)}
+            pl={isMobile ? 14 : 16}
+            pr={query ? 14 : 6}
+            py={isMobile ? 6 : 8}
+            bg={isActive ? 'rgba(255,255,255,0.05)' : 'rgba(255,255,255,0.02)'}
+            backdropFilter="blur(12px)"
+            border="1px solid"
+            borderColor={isActive ? 'cyan.400' : 'whiteAlpha.100'}
+            borderRadius="full"
+            color="white"
+            fontSize={{ base: 'md', md: 'xl' }}
+            fontFamily="'Outfit', sans-serif"
+            fontWeight="500"
+            _placeholder={{ color: 'whiteAlpha.300', fontWeight: '400' }}
+            _focus={{
+              boxShadow: '0 0 0 1px var(--chakra-colors-cyan-400), 0 10px 40px -10px rgba(34, 211, 238, 0.3)',
+              bg: 'rgba(255,255,255,0.05)'
+            }}
+            transition="all 0.3s cubic-bezier(0.4, 0, 0.2, 1)"
+          />
+
+          {/* Clear Button */}
+          {query && (
+            <Button
+              position="absolute"
+              right={4}
+              top="50%"
+              transform="translateY(-50%)"
+              color="whiteAlpha.500"
+              variant="unstyled"
+              minW="auto"
+              h="auto"
+              p={2}
+              onClick={() => { setQuery(''); inputRef.current?.focus() }}
+              _hover={{ color: 'white' }}
+              zIndex={2}
+            >
+              <X size={20} />
+            </Button>
+          )}
+
+          {/* Cancel button on mobile when active */}
+          {isMobile && isActive && !query && (
+            <Button
+              position="absolute"
+              right={4}
+              top="50%"
+              transform="translateY(-50%)"
+              color="whiteAlpha.700"
+              variant="unstyled"
+              minW="auto"
+              h="auto"
+              fontWeight="500"
+              onClick={() => setIsActive(false)}
+              zIndex={2}
+            >
+              Cancel
+            </Button>
+          )}
+        </Box>
+
+        {/* Floating Results Popover */}
+        <AnimatePresence>
+          {isActive && query.length >= 2 && (
+            <MotionBox
+              initial={{ opacity: 0, y: 10, scale: 0.98 }}
+              animate={{ opacity: 1, y: 0, scale: 1 }}
+              exit={{ opacity: 0, y: 10, scale: 0.98 }}
+              transition={{ type: 'spring', stiffness: 200, damping: 20 }}
+              position="absolute"
+              top={isMobile ? 'calc(100% + 16px)' : 'calc(100% + 24px)'}
+              left={0}
+              right={0}
+              maxH={isMobile ? 'calc(100vh - 120px)' : '500px'}
+              overflowY="auto"
+              zIndex={102}
+              css={{
+                '&::-webkit-scrollbar': { width: '0' },
+                scrollbarWidth: 'none',
+              }}
+            >
+              {searchResults.length > 0 ? (
+                searchResults.map((result, index) => (
+                  <SearchResultItem
+                    key={`${result.section}-${result.subtitle}`}
+                    result={result}
+                    onSelect={handleResultSelect}
+                    index={index}
+                    isMobile={isMobile}
+                  />
+                ))
+              ) : (
+                <Box p={8} textAlign="center" bg="whiteAlpha.50" backdropFilter="blur(10px)" borderRadius="2xl" border="1px solid" borderColor="whiteAlpha.100">
+                  <Text color="whiteAlpha.500" fontSize="lg">No matches found for "{query}"</Text>
+                  <Text color="whiteAlpha.300" fontSize="sm" mt={2}>Try searching for "Forge", "Quiz", or "Powerups"</Text>
+                </Box>
+              )}
+            </MotionBox>
+          )}
+        </AnimatePresence>
+      </Box>
+    </>
   )
 })
 

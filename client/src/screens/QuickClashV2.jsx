@@ -14,6 +14,7 @@ import ActiveChallengesV2 from '../components/quickClashComponents/v2/ActiveChal
 import GlobalMatchmakingButton from '../components/quickClashComponents/globalmatchmaking/GlobalMatchmakingButton'
 import SoloDrillButton from '../components/quickClashComponents/soloDrill/SoloDrillButton'
 import SoloDrillModal from '../components/quickClashComponents/soloDrill/SoloDrillModal'
+import { Helmet } from 'react-helmet'
 
 // Player hook (works for both auth and session players)
 import usePlayer from '../hooks/usePlayer'
@@ -145,6 +146,9 @@ const QuickClashV2 = ({ forceOpenMatchmaking = false, onForceOpenReset, onCreate
   // Main content - NO lazy loading, NO entrance animations
   return (
     <>
+      <Helmet>
+        <title>Dashboard - Quick Clash | Rapid Recap</title>
+      </Helmet>
       <div className="relative z-10 w-full max-w-lg mx-auto px-3 pt-2 pb-20 md:pb-8 md:max-w-4xl lg:max-w-6xl">
         {/* Header - direct render */}
         <QuickClashHeaderV2 />
