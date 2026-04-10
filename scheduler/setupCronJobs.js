@@ -4,10 +4,10 @@ const quickClashSchedules = require('./quickClashScheduleConfig')
 
 // Setup Forge workflow schedules
 const forgeSchedules = require('./forgeScheduleConfig')
-forgeSchedules.forEach(schedule => {
-  cron.schedule(schedule.cronPattern, schedule.task)
-  console.log(`Scheduled ${schedule.name} task`)
-})
+// forgeSchedules.forEach(schedule => {
+//   cron.schedule(schedule.cronPattern, schedule.task)
+//   console.log(`Scheduled ${schedule.name} task`)
+// })
 // Setup Quick Clash schedules
 quickClashSchedules.forEach(schedule => {
   // Check if this schedule needs seconds-level precision
