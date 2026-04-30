@@ -16,7 +16,7 @@ const cleanupFeedbackDuplicates = async () => {
 
     // Connect to MongoDB
     await mongoose.connect(
-      'mongodb+srv://rapidrecap2k23:rapidrecaptest@test.e3opspf.mongodb.net/test',
+      '...',
     )
     console.log('✅ Connected to MongoDB')
 
